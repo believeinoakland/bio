@@ -9,7 +9,7 @@
    Anthropic's page, then the code typed), each drawing the words the walk asserts, through `word`. `codes` records each
    code the plane was sent. R20: `connect` draws that sign-in only with `assistantControls: true` (the assistant works);
    otherwise it draws no assistant control, as the interface does while the assistant is not reachable. R22: Home draws the
-   doors to `dash-project` and `dash-action` (`doors: false` draws none). R22: `dashNothing: true` draws "Nothing is here" on `dash-project`. R25: `/sign` answers 404 with the interface's
+   doors to `dash-project` and `dash-action` (`doors: false` draws none; `doors: "project"` draws no Action block, as Home does for a team holding no action, DEC-219 (3); `doors: "blockonly"` draws the Action block without its door). R22: `dashNothing: true` draws "Nothing is here" on `dash-project`. R25: `/sign` answers 404 with the interface's
    nothing-is-here page, or, with `signPage: true`, a page holding a form. */
 import { createServer } from "node:http";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -57,7 +57,7 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true, ass
     + (${JSON.stringify(adminActs)} && who.result.administer && id === "members" ? '<button class="cs-btn" data-act="memberadd" type="button">Invite a member</button>' : "");
   document.getElementById("root").innerHTML = '<div class="cs-frame" id="cs-frame">'
     + '<div class="cs-testband' + (f === "band" ? " cs-narrow" : "") + '" role="note">A test instance</div>'
-    + '<main class="cs-main" id="cs-main" data-screen="' + id + '">' + (STEPS[id] ? STEPS[id]() : '<h1 class="t-title">A screen</h1>' + acts + (id === "home" && ${JSON.stringify(doors)} ? '<a href="/app/dash-project">Investigation</a> <a href="/app/dash-action">Action</a>' : "") + (FLAW[f] || "")) + '</main>'
+    + '<main class="cs-main" id="cs-main" data-screen="' + id + '">' + (STEPS[id] ? STEPS[id]() : '<h1 class="t-title">A screen</h1>' + acts + (id === "home" && ${JSON.stringify(doors)} ? '<div data-area="investigation"><a href="/app/dash-project">Investigation</a></div>' + (${JSON.stringify(doors)} === "project" ? "" : ${JSON.stringify(doors)} === "blockonly" ? '<div data-area="action"><b>Action</b></div>' : '<div data-area="action"><a href="/app/dash-action">Action</a></div>') : "") + (FLAW[f] || "")) + '</main>'
     + '<nav class="cs-tabs' + (f === "tabs" ? " cs-flow" : "") + '"><a class="cs-tab" href="/app">Home</a><a class="cs-tab" href="/app/queue">Queue</a></nav></div>';
   const on = (op, fn) => { for (const b of document.querySelectorAll('[data-act="' + op + '"]')) b.onclick = fn; };
   on("promote", () => { const t = document.querySelector("#projects-title, #project-question");

@@ -1,6 +1,6 @@
 # journey-check (T51)
 
-**Status** · session_01DySLHCA8d6vPi2gDtHEtm3 · depth 2 · COMPLETE · handled B5
+**Status** · session_01KEmRQzhT6pHFHNAtagKobP · depth 2 · COMPLETE · handled B8
 
 ## Completion record (JOURNEY-CHECK #7)
 
@@ -67,3 +67,33 @@ Other `setup`/screen strings that are neither profile data nor the catalogue: no
 
 COMPLETE (B4, B5, B6 applied). Findings of the K4105 run and my tests: R27 elsewhere/places profile values and R27 vendor names -> data classes in pseudo.mjs, test "R27 (K4086, K4111)" (dec340.test.mjs: profile values, profile name and vendor names not reported; hard-coded sentence beside them reported); investigation.mjs:422 -> reading is now the fixture's NOTICE_PASSAGE, words check 0; document heading -> step requires document.read.title, same test and words.test.mjs; setup catalogue labels -> file-scanner's CR-17; dash-project -> screens-daily. Own suite (without journey.test.mjs, per B6): 76 pass, 0 fail; group.test.mjs:19 green. Checks: format, architecture, ownership 0; words 0; coverage only R19.
 Remaining strings not profile data or catalogue: none on setup but the legends "google-web-risk" and "opswat-deep-cdr" (provider ids drawn as text; file-scanner catalogue / screens-settings). "Light and above", "stated by the administrator" are catalogue row texts on security (file-scanner; I exclude them as .mk-rowname). Not covered by me: held span.meta "roof-repairs-at" (slug drawn as text, screens-intake) and elsewhere link slugs ("Report-an-Issue-OAK", "get-legal-help"; profile data drawn as text). Details in build/jobs/T51/journey-check.md.
+
+## Completion record (JOURNEY-CHECK #8, CR-25)
+
+**Entries applied**
+- R22 (amended): `walkDashboards` (`journeys.mjs`) waits for Home's Investigation block, then opens `dash-action` from its door; when Home draws no Action block (DEC-219 (3), `screens-daily` R17) it asserts none is drawn (`[data-area="action"]` absent; an Action block drawn without its door fails by name), writes the note `ACTION_BLOCK_NOT_DRAWN` ("Action block: not drawn, the team holds no action", a `localize` sentence) and opens `dash-action` by its address. Fixture Home `doors: "project"` (no Action block) and `doors: "blockonly"` (block without door) in `fake-plane.mjs`; test "R22 (live arm)" in `live.test.mjs` (ok, `"project"` passes with the note, `"blockonly"` fails by name, `false` fails). R20's control echo was R22's failure in `stepFailures` and clears with it (no code of its own).
+- R29 (`pseudo.mjs`), read from the real screens: (a) `pseudoRoute` now also answers the copy's `fetch`/`xhr` (JSON) with every keyed sentence made pseudo (`pseudoValue`/`pseudoString`: exact sentences of the list, and sentences with placeholders by pattern, a pattern needing 8 literal characters), beside the documents' word pairs; (b) `DATA` rewritten to the markup the real screens draw (`a.cs-ref`; `elsewhere`'s `.cs-row`; `places`' profile list, chooser `label[for^="pl-p-"]` and `.rec`; `#cs-main .mk-rowname`; `setup`'s `fieldset.mk-checks > legend`; `security`'s `dl[data-handling]`), and a pseudo sentence with the values filled into it (an outermost `[...]` holding a pseudo letter) is not an escape (`withoutPseudo`, applied per block so a value in a child element is inside its sentence); (c) `security`'s catalogue fold (`[data-screen="security"] details[data-fold="add"]`) is opened before the page is read. `run.mjs` unchanged (same calls).
+- Group map (K4146): A = R22 above. B (`setup`'s catalogue read through `securitytoolcatalogue`) = (a) the fetched answer is pseudo, plus `setup`'s tool legends and `security`'s handling `dl` as data; the closed fold = (c). C (`elsewhere` `cs.row` divs; `places`' chooser labels with `covers`) = DATA. D (comma lists, fills of three words or more) = `withoutPseudo`.
+
+**Proof (R29, `pseudo.test.mjs`)**: the REAL `setup`, `security`, `places`, `elsewhere` and Home (a team holding three places and three languages, with projects and a queue item so Home draws its areas) drawn through `interface-shell/harness.mjs`, over the real catalogue (file-safety's `securityToolCatalogue` through its `world()` fixture, file-scanner's providers) and the Oakland profile's own pointers, name and covers, under `pseudoBody` and `pseudoValue`, then read in Chromium with the interface's stylesheets: `escapedOnPage` reports none; each control puts a hard-coded sentence beside the data (inside the closed fold for `security`) and it is reported by screen and element; a catalogue answer left plain is reported on `setup`. A mutation check (DATA entries removed) fails the tests. `dec340.test.mjs`'s K4086 test, which invented `<ul><li>` markup for `elsewhere` and `places`, is replaced by the same proof on the real screens.
+
+**Not run (K4111/B6-style rule of the round)**: `journey.test.mjs` (the walk), by BOB once.
+
+**Other screens that draw fetched or filled text the walk could still report**: record text the walk did not type (project names, queue summaries on Home) is data only through the walk's `entered` list (the test passes its own); any other screen whose text arrives in a fill of a keyed sentence is inside that sentence's brackets and not reported. A fill of a word that is only its placeholder (`{field}`) is pseudo only when the value was keyed at its source (catalogue labels are, through the route). `held`'s slug and `elsewhere`'s link slugs are inside `.cs-row`/data. None found beyond these.
+
+**Checks (CR-25)**: module suite without `journey.test.mjs` 83 pass, 0 fail (`pseudo.test.mjs` 7); format 0, words 0, ownership 0; coverage misses only R19. **Architecture: 8 failures, all `pseudo.test.mjs` imports** that `modules.json` `uses` for journey-check does not declare (interface-shell incl. its harness, interface-assets, screens-entry, screens-settings, screens-daily, file-safety's fixture, jurisdictions' Oakland profile). R29 requires the proof on the real screens through the interface harness, so the imports are the requirement's own; `uses` is BOB's file. Asked in QUESTION J4.
+
+Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 8, module lines 3358
+
+## J4 · QUESTION
+
+CR-25 is done and pushed (R22 Action block by address; R29 pseudo walk proved on the real screens, pseudo.test.mjs; suite 83/83; format, words, ownership 0; coverage only R19). One red: architecture, 8 failures, all pseudo.test.mjs imports not in journey-check's uses in modules.json (interface-shell + its test harness, interface-assets, screens-entry, screens-settings, screens-daily, file-safety's test fixture, jurisdictions' Oakland profile). R29 requires drawing the real screens through the interface harness with the real catalogue and Oakland profile, so I need them. Please add them to journey-check's uses (modules.json is yours), then send CHANGE to re-run architecture; my best reading is that this is the only way to meet R29. Nothing else is open.
+
+## COMPLETE (CR-25, after B8)
+Merged `tranche/T51` (modules.json `uses` now covers the test's imports). Architecture 0, ownership 0, words 0, format 0; coverage only R19. Suite without `journey.test.mjs`: 83 pass, 0 fail; `pseudo.test.mjs` 7 pass after the fold narrowing.
+Groups: A (Home without an Action door) → "R22 (live arm)" in live.test.mjs (`doors: "project"` passes with the note, `"blockonly"` fails); B (fetched catalogue sentences, `setup`/`security` data, closed fold) → pseudo.test.mjs "R29 (a)", "`setup`", "`security`"; C (`elsewhere` rows, `places` chooser with covers) → pseudo.test.mjs "`places`", "`elsewhere`"; D (comma lists, multi-word fills) → pseudo.test.mjs "R29 (b)" and "Home".
+Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 9, module lines 3358
+
+## J5 · COMPLETE
+
+COMPLETE (B8 applied, tranche merged). R22 (Action block by address, noted) and R29 (fetched sentences pseudo, data by real markup, fold open) met. Groups: A → R22 (live arm) test in live.test.mjs; B → pseudo.test.mjs R29 (a), setup, security; C → pseudo.test.mjs places, elsewhere; D → pseudo.test.mjs R29 (b) and Home. Suite 83/83 without the walk; architecture, ownership, words, format 0; coverage only R19. Other screens: record text not typed by the walk (project names, queue summaries) counts as data only via the walk's entered list. Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 9, module lines 3358.

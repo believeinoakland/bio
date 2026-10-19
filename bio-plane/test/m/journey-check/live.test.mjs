@@ -17,6 +17,7 @@ import { sweepScreens } from "../../../src/journey-check/screens.mjs";
 import { developerWords, assetsCommit, designMock, WIDTHS } from "../../../src/journey-check/design.mjs";
 import { fakePlane } from "./fake-plane.mjs";
 import { STEP_NAMES } from "../../../src/journey-check/investigation.mjs";
+import { ACTION_BLOCK_NOT_DRAWN } from "../../../src/journey-check/journeys.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
 
 const SRC = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
@@ -241,6 +242,15 @@ test("R22 (live arm): both dashboards are walked from Home's doors, drawn and no
   assert.equal(ok.ok, true, ok.report);
   const none = await walked({ admins: { ada: true }, doors: false }, { screens: only("members") });
   assert.ok(none.walk.failures.some((f) => /Home draws no door to dash-project/.test(f.detail)), none.report);
+  /* DEC-219 (3), K4146: a team holding no action has no Action block on Home; the walk notes it and opens dash-action by its address */
+  const noAction = await walked({ admins: { ada: true }, doors: "project" }, { screens: only("members", "dash-project", "dash-action") });
+  assert.equal(noAction.ok, true, noAction.report);
+  assert.ok(noAction.walk.notes.includes(ACTION_BLOCK_NOT_DRAWN), noAction.report);
+  assert.ok(noAction.walk.steps.filter((s) => /^dashboard dash-/.test(s.label)).length === 2 && noAction.walk.steps.filter((s) => /^dashboard dash-/.test(s.label)).every((s) => s.ok), noAction.report);
+  assert.ok(!ok.walk.notes.includes(ACTION_BLOCK_NOT_DRAWN), "a Home that draws the Action block is not noted");
+  /* control: an Action block drawn without its door is a fault, and is not excused by the address */
+  const blockOnly = await walked({ admins: { ada: true }, doors: "blockonly" }, { screens: only("members") });
+  assert.ok(blockOnly.walk.failures.some((f) => /Home draws the Action block without a door to dash-action/.test(f.detail)), blockOnly.report);
   const nothing = await walked({ admins: { ada: true }, dashNothing: true }, { screens: only("members") });
   assert.ok(nothing.walk.failures.some((f) => /dash-project draws "Nothing is here"/.test(f.detail)), nothing.report);
 });

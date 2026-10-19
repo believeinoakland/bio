@@ -447,17 +447,29 @@ export function sweepAsFounder(walk, page, base, { handle, screens = undefined }
 
 /* ---------- R22, R25: the dashboards, and the signing page gone ---------- */
 
-/* R22 (K3815; screens-inquiry R79, screens-action R30): `dash-project` and `dash-action` opened from Home's own doors as
-   working screens, drawn, neither drawing "Nothing is here" (interface-shell R61) nor the failed state. */
+/* R22 (K3815, K4146; screens-inquiry R79, screens-action R30, screens-daily R17): `dash-project` and `dash-action` opened as
+   working screens, drawn, neither drawing "Nothing is here" (interface-shell R61) nor the failed state. Home's
+   Investigation block opens `dash-project`. Home's Action block opens `dash-action` when Home draws that block; when the team holds no action Home
+   draws no Action block (DEC-219 (3): no empty block), which is asserted and noted, and `dash-action` is then opened by its address. */
 export const DASHBOARDS = Object.freeze(["dash-project", "dash-action"]);
+export const ACTION_BLOCK_NOT_DRAWN = localize("journey-check.journeys.action_block_not_drawn_the_team_holds", "Action block: not drawn, the team holds no action");
 export async function walkDashboards(walk, page, base) {
   for (const id of DASHBOARDS) {
     await walk.step(page, localize("journey-check.journeys.dashboard_id_opened_from_the_door", "dashboard {id}: opened from the door on Home", { id: String(id) }), async (p) => {
       await open(walk, p, base, "/app", "home");
       const door = p.locator(`#cs-main a[href^="/app/${id}"]`).first();
-      try { await door.waitFor({ state: "visible", timeout: 8000 }); } catch { throw new Error(`Home draws no door to ${id}`); }
-      await door.click();
-      await settle(p);
+      let byAddress = false;
+      /* Home's areas are drawn together: once the Investigation block is there, an Action block that is not has been left out */
+      if (id === "dash-action") await p.locator('#cs-main a[href^="/app/dash-project"], #cs-main a[href="/app/projects"]').first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+      try { await door.waitFor({ state: "visible", timeout: id === "dash-action" ? 1500 : 8000 }); } catch {
+        if (id !== "dash-action") throw new Error(`Home draws no door to ${id}`);
+        /* DEC-219 (3): no Action block for a team with no action; a block drawn without its door is a fault */
+        if (await p.locator('#cs-main [data-area="action"]').count()) throw new Error(`Home draws the Action block without a door to ${id}`);
+        walk.notes.push(ACTION_BLOCK_NOT_DRAWN);
+        byAddress = true;
+      }
+      if (byAddress) await open(walk, p, base, `/app/${id}`, id);
+      else { await door.click(); await settle(p); }
       await requireDrawn(walk, p, id);
       const main = (await p.locator("#cs-main").innerText()).replace(/\s+/g, " ");
       if (drawsWord(main, "shell.unavailable.nothing.title")) throw new Error(`${id} draws "Nothing is here"`);
