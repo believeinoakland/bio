@@ -5361,3 +5361,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) `screens/words-reads-mod-3.json`: `member-roster` reads its `WORD_KEYS` (46 keys, evaluated from tranche/T51's code), with the 11 unkeyed strings that moved with its code (listener registration, the roster acts' names); `membership` reads its own 15 (its `WORD_KEYS` less member-roster's), with its 4 project refusals' details; `handle.changeable`, `handle.fixed` and `handle.formerly` are read by neither and leave the list. (2) The lists are now generated from tranche/T51's source (`git archive origin/tranche/T51 bio-plane/src newgroup bio-plane/public/newgroup`), the newest tranche, not main; `words-reads-mod-5.json` is regenerated with it (instance-setup reads 99 keys). (3) `words-reads.src.mjs` counts a T49 decision whose string and key have both left its module as moot rather than a problem (decision 94: plane's `screen.front.purpose`, the front page's sentence moved with its screen). The words check gives 0 failures on member-roster and membership.
 reasoning recorded in: this entry; `screens/words-reads-mod-3.json`, `screens/words-reads-mod-5.json`, `screens/words-reads.src.mjs`, `screens/words-reads.json`.
 owed: nothing.
+
+### DEC-346 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B346, R3's close)
+for: design
+question: capture's two strings no member reads.
+why it is Bob's: it is not (P17): the design's list.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: list data.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: `screens/words-reads-handoffs.json` (DEC-344) gains capture's `index.mjs`:699, the `HASH_DISAGREEMENT` 500's detail, and :1832, the render allowance's deferral reason, each with CAPTURE #37's reason; the words check on tranche/T51 gives capture 0 failures.
+reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
+owed: nothing.
