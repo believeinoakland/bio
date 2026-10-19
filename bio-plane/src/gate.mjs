@@ -1413,10 +1413,10 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
                     detail: localize("promotion.gate.registered_capture_is_held_only", "registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole"),
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (!probe.present)
-      errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,
+      errors.push({ check: "PLANE_MISSING_BYTES", detail: localize("promotion.gate.capture_absent_from_bucket", "registered capture is absent from the working bucket"),
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (typeof r.bytes === "number" && probe.bytes !== r.bytes)
-      errors.push({ check: "PLANE_SIZE", detail: `capture bytes differ from the register`,
+      errors.push({ check: "PLANE_SIZE", detail: localize("promotion.gate.capture_bytes_differ", "capture bytes differ from the register"),
                     where: { path: r.path, want: r.bytes, got: probe.bytes } });
   }
 
