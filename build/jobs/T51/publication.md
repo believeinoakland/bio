@@ -29,3 +29,7 @@ T51-140 · publication: complete.
 ## J2 · REPORT
 
 Started on T51-234. One edge for BOB (a uses edge is BOB's): publication's code now imports setup-words (deliverer.mjs, and checks.mjs/index.mjs next), and the architecture check fails with 'setup-words, which publication does not declare in uses'. Please add "setup-words" to publication's uses in build/modules.json (as for case-carriage, K3911) and the requirements' Uses list if wanted. I carry on with the words conversion meanwhile and merge tranche/T51 when it lands.
+
+## J3 · BLOCKED
+
+BLOCKED (cause: needs BOB, one act): add "setup-words" to publication's uses in build/modules.json (K3911, as for case-carriage; a uses edge is BOB's). The words conversion is done and pushed on job/T51/publication (commit 5d679fdcca): words check 0 failures (inline 0, plain 0, testcopy 0); publication tests 151 (150 pass, 0 fail, the 1 todo was there); format 0 failures; coverage 48 of 48; ownership 0 failures. The only open check is architecture: 8 failures, every one 'imports setup-words, which publication does not declare in uses' (src: deliverer, checks, index, door; tests: fixture, t28, t35, t45). Once the edge is on tranche/T51 I merge it, re-run architecture and post COMPLETE. No refusal text was judged unread: all 14 plain findings were member-facing and converted.
