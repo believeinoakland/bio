@@ -56,6 +56,36 @@ test("R74 an update stops, changing and deleting nothing, when the copy holds a 
   restoreSigners();
 });
 
+test("R74 the Workers on the copy's member names are examined too: one that this installer did not upload (no VERSION) stops an update, and an install that continues an unfinished copy, with the same key and nothing changed; a marked Worker of a member the release dropped is named once and left; control: a Worker of another copy, or a copy's own, stops nothing", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, members: ["agent-worker", "pdf-worker"] });
+  const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
+  const slug = "r74-wk";
+  const writes = (w) => w.calls.filter((c) => c.method !== "GET" && c.u.startsWith("https://api.cloudflare.com")).map((c) => `${c.method} ${c.u}`);
+  const own = { [slug]: planeBase(slug), [`agent-worker-${slug}`]: old, [`pdf-worker-${slug}`]: old };
+  const foreignWorker = await run({ slug, mode: "update", rel, pre: { ...own, [`pdf-worker-${slug}`]: [{ type: "plain_text", name: "OTHER", text: "x" }] } });
+  assert.equal(foreignWorker.page.failed.said, word("installer.update.stopped.foreign"));
+  assert.equal(foreignWorker.planePuts.length, 0, "nothing uploaded");
+  assert.deepEqual(writes(foreignWorker).filter((x) => !/bio-install-lock/.test(x)), [], "nothing created, changed or deleted");
+  assert.ok(foreignWorker.acct.has(`pdf-worker-${slug}`), "the Worker is left where it is");
+  /* An install that continues an unfinished copy meets the same check. */
+  const half = heldCopy({ slug: "r74-wk-resume", finished: false, members: [], version: "0.1.0" });
+  const resumed = await run({ slug: "r74-wk-resume", rel, ...half, pre: { ...half.pre, "pdf-worker-r74-wk-resume": [] } });
+  assert.equal(resumed.page.failed.said, word("installer.update.stopped.foreign"));
+  assert.equal(resumed.planePuts.length, 0, "nothing uploaded");
+  assert.ok(!resumed.page.steps.includes("install"), "the install did not begin");
+  /* Control: the copy's own members update; a Worker of another copy (another slug) is not judged. */
+  const clean = await run({ slug, mode: "update", rel, pre: { ...own, "pdf-worker-someone-else": [] } });
+  assert.equal(clean.page.failed, null);
+  assert.ok(!clean.page.done.includes('id="retired-parts"'));
+  /* A Worker with the mark on the name of a member this release does not have is a retired part: named once, left. */
+  const retired = await run({ slug, mode: "update", rel, pre: { ...own, [`sheet-worker-${slug}`]: old } });
+  assert.equal(retired.page.failed, null);
+  assert.ok(retired.page.done.includes(h(word("installer.update.retired", { parts: `sheet-worker-${slug}` }))));
+  assert.ok(retired.acct.has(`sheet-worker-${slug}`), "left in place");
+  restoreSigners();
+});
+
 /* ------------------------------------------------------------------------------------------------ R78 */
 
 test("R78 an install, a resumed install and an update's read: an install and a resumed install of a copy that records no team record the run's short name themselves, once, with the ADMIN_TOKEN they generated in an Authorization header and in no address, and draw no telling; a copy that records its team is asked nothing more; an update never seeds", async () => {

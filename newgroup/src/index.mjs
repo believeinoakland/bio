@@ -547,7 +547,7 @@ const memberNamesOf = (release) => [...new Set([...BINDING_OF.keys(), ...RELEASE
    read is not a stop (R74 stops on what it finds); an application on another copy's Workers (R64) is not this copy's to judge. */
 async function foreignContainers(api, names, release, loaded) {
   const memberScripts = new Map(memberNamesOf(release).map((m) => [names.member(m), m]));
-  const [spaces, apps] = await Promise.all([listNamespaces(api), listApps(api)]);
+  const [spaces, apps, scripts] = await Promise.all([listNamespaces(api), listApps(api), listScripts(api)]);
   const mine = new Map(spaces.filter((s) => s && (s.script === names.slug || memberScripts.has(s.script))).map((s) => [s.id, s]));
   const wanted = new Set((loaded?.members || []).flatMap((L) => (L.classes || []).map((c) => `${L.m.member}/${c.class_name}`)));
   const retired = [];
@@ -558,6 +558,18 @@ async function foreignContainers(api, names, release, loaded) {
     const own = member !== undefined && (a.name === names.app(member, ns.class, false) || a.name === names.app(member, ns.class, true));
     if (!own) return { foreign: true, retired };
     if (!wanted.has(`${member}/${ns.class}`)) retired.push(a.name);
+  }
+  /* F11: the Workers on the copy's member names are examined too. One of this installer's carries the `VERSION` it was
+     uploaded with (every member upload states it); a Worker on a member's name that does not is something else standing on the
+     copy's name: foreign. A Worker with the mark on the name of a member this release no longer has is a retired part: named, left.
+     A Worker whose settings cannot be read is not judged (R74 stops on what it finds). */
+  const inRelease = new Set((release?.man?.fleet || []).map((m) => m && m.member));
+  for (const [script, member] of memberScripts) {
+    if (!scripts.has(script)) continue;
+    const bindings = await bindingsOf(api, script);
+    if (bindings === null) continue;
+    if (!bindings.some((b) => b.name === "VERSION" && b.type === "plain_text")) return { foreign: true, retired };
+    if (!inRelease.has(member) && !(loaded?.members || []).some((L) => L.m.member === member)) retired.push(script);
   }
   return { foreign: false, retired };
 }
@@ -718,6 +730,15 @@ async function installRun(emit0, code, saved, guard) {
     if (e && e.source) return emit.fail(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
     throw e;
   }
+  /* R74 (F11): an install that continues an unfinished copy meets the same check as an update, before it creates anything. */
+  let retiredParts = [];
+  if (resumed) {
+    try {
+      const found = await foreignContainers(api, names, release, loaded);
+      if (found.foreign) return emit.fail(word("installer.update.stopped.foreign"));
+      retiredParts = found.retired;
+    } catch (e) { if (special(e)) throw e; /* the list could not be read: R74 stops on what it finds */ }
+  }
 
   /* Evidence storage is part of what a team's copy IS: captured documents, web pages, and their timestamp certificates
      live there. If storage cannot be created, nothing is installed, and the page explains the one Cloudflare prerequisite in
@@ -869,7 +890,8 @@ async function installRun(emit0, code, saved, guard) {
   let markLag = null;
   try { await putSecret(token, acct.id, slug, MARK, release.version); }
   catch (e) { if (approve(e)) throw e; markLag = word("installer.mark.failed", { said: e.message }); }
-  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts, markLag ? [markLag] : [], told));
+  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts,
+    [...(retiredParts.length ? [word("installer.update.retired", { parts: retiredParts.join(", ") })] : []), ...(markLag ? [markLag] : [])], told));
 }
 
 const NO_KEY = word("installer.success.nokey");
