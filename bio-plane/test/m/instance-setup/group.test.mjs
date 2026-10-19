@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { boot, stubOver, doAnswer } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import { GROUP_SLUG_RE, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, NO_GROUP_RECORDED, instanceSetupOps } from "../../../src/setup.mjs";
 
@@ -69,7 +70,7 @@ test("R4 instanceGroupSeed: GROUP_SLUG_MALFORMED (C-64.2), GROUP_ALREADY_RECORDE
   }
   const ok = w.m.instanceGroupSeed({ slug: " late-town ", author: "class:admin" });
   assert.deepEqual([ok.ok, ok.group, ok.source, ok.recorded_by], [true, "late-town", "seed", "class:admin"]);
-  assert.match(ok.note, /NOT rewritten/);
+  assert.equal(ok.note, word("setup.note.document_store_writes"));
   const anon = await boot({ env: {} });
   assert.equal(anon.m.instanceGroupSeed({ slug: "anon-town" }).recorded_by, null);
   const again = w.m.instanceGroupSeed({ slug: "other-town", author: "class:admin" });

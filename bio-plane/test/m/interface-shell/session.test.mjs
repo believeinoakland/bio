@@ -152,6 +152,8 @@ test("R3 driving every screen and act with a sentinel token, the token is in eac
       assert.ok(!r.url.includes(SENTINEL), r.url);
       assert.ok(!JSON.stringify(r.body ?? "").includes(SENTINEL), r.op);
     }
+    /* R92: the version poll is public and carries no session at all */
+    for (const r of p.polls) { assert.equal(r.headers.Authorization, undefined, "the poll carries no session token"); assert.ok(!r.url.includes(SENTINEL)); }
     assert.ok(!p.root().innerHTML.includes(SENTINEL));
     assert.ok(!pushed.some((u) => u.includes(SENTINEL)));
     for (const [k, v] of p.local) if (k !== STORE_KEY) assert.ok(!String(v).includes(SENTINEL), k);

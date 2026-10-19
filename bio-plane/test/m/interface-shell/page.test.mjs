@@ -59,6 +59,8 @@ test("R2 no resource on another origin in any src, href, @import, url() or fetch
   for (const el of p.root().querySelectorAll("[href], [src]")) assert.match(el.getAttribute("href") || el.getAttribute("src"), /^\/(?!\/)/);
   assert.ok(p.requests.length > 3);
   for (const r of p.requests) assert.match(r.url, /^\/api\/\?op=/);
+  /* R92: the version poll is the one address that is no op: a public text address of its own */
+  for (const r of p.polls) assert.equal(r.url, "/version");
 });
 
 test("R2 no inline event-handler attribute, no javascript: address and no script made from a string, in the page or anything it draws", async () => {

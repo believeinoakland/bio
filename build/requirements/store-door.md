@@ -48,6 +48,7 @@ Terms. **The door** is `dispatch(req)`, reached only from the Worker through `pl
 - Used by `plane` (`plane/store.mjs`:69–70).
 - (T36; K2152) `file-safety`: its reads' names, for R2's route list in its tests only.
 - (T40; N812; K2373) `ai-use`: `useCheck` (its R3; R10), a new edge.
+- (T51-143; K4068) `translations`: `translationDraftRefusal`, `translationDraft` (its own, called directly in place of `instance-setup`'s delegates).
 - (T41; K2500) `answers`: `askAccount` (its R30; R10) and `logRead` with a grant's `use` (its R2; R11); already a use.
 
 ### Invariants

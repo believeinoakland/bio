@@ -22,5 +22,5 @@
  * (`RELEASE_KEYS`), and this array is read from it when the module loads, so the installer and every plane module that
  * verifies a release trust exactly the same keys and a rotation is one edit, there. The array stays an array of its own so
  * that a test can arm another key for one act; the shipped contents are `RELEASE_KEYS`'. */
-import { RELEASE_KEYS } from "../../bio-plane/src/sshsig.mjs";
+import { RELEASE_KEYS } from "../../../bio-plane/src/sshsig.mjs";
 export const ARMED_SIGNERS = [...RELEASE_KEYS];

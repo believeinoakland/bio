@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { word } from "../bio-plane/src/setup-words/index.mjs";
 
-export const SITE_COMMIT = "7be06eb4cb";
+export const SITE_COMMIT = "2a64c5ae77";
 const ROOT = new URL("../", import.meta.url);
 const SCREENS = "docs/development/ux-substrate/screens/";
 const OUT = new URL("src/pages.mjs", import.meta.url);

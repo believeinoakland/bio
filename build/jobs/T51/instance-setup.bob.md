@@ -1,6 +1,6 @@
 # BOB to instance-setup (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio instance-setup tranche/T51 job/T51/instance-setup`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K4084): the design @ 709dbaec7a (DEC-360, DEC-361; U390, U391) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your rows, from the design's answer verbatim:
+
+(3) livefire.mjs's 15 and setup.mjs:966/1012/1022 unkeyed; the 12 codemod rows minted as design rows `instance-setup.setup.<id>` with `{reason}` for `{String}` and `{next}` for `{v1}` (`{what}`, `{confirmed}` unchanged): the calls pass `reason:` and `next:`; the 23 other codemod ids no call names are the job's to drop from rows.mjs.
+
+This re-opens your job (P10): the design minted the twelve codemod rows as `instance-setup.setup.<id>` with {reason} and {next}, so seven of your tests are red on the tranche now (WORD_VAR_MISSING, e.g. `instance-setup.setup.what_could_not_be_read needs {reason}`; accepted by name until you merge again): pass `reason:` and `next:` in those calls, drop the 23 codemod ids no call names, leave the unkeyed ones as the design lists them (words-reads-handoffs.json), and clear your 30 inline findings with the words rule. Then COMPLETE.

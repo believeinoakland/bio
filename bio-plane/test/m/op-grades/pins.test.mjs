@@ -4,6 +4,7 @@
    imported: what affordances read from an owner's op map or checks table is named here as the requirements name it. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { reqText, between, ticked, tickedAll, worded, joinedCodes, asksNotTheAccount, readRows } from "./declared.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
@@ -28,48 +29,38 @@ const bandsOf = (rungs) => {
 const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
 
 /* ---- R1, R3: RUNGS as a closed partition ---------------------------------------------------------------------------- */
+/* DEC-88's three bands, as op-grades R1 states them (the backticked ops of its sentence, read from the requirement) */
+const R1_TEXT = reqText(1);
+const DEC88_TEXT = R1_TEXT.slice(R1_TEXT.indexOf("DEC-88's three bands"));
+const DEC88_BAND = (from, to) => ticked(between(DEC88_TEXT, from, to));
 const DEC88 = {
-  reversible: ["suggest", "extractpropose", "contradictionpropose", "themepropose", "standardpropose", "comparisonpropose",
-    "theorypropose", "actionriskpropose", "actionlawspropose", "filingprepare", "contentmint", "casedraft", "reviewcomment",
-    "taskforward", "taskresolve", "thread", "connectionchoose", "themedeclare", "themeplace", "entityalias", "goallink",
-    "versionkeep", "airunopen", "airunclose", "projectfork"],
-  reasoned: ["testify", "lead", "leadlook", "leadshare", "transcribe", "transcriptionattest", "attesttext", "resolve",
-    "resolvetestify", "entitycreate", "versionadopt", "progressiondefine", "goaldeclare", "aspirationdeclare",
-    "aspirationdeadend", "objectivecondition", "biasadopt", "strengthbar", "standarddeclare", "standardadopt",
-    "consequencerecord", "actioncorrespond", "filingsent", "escalationopen", "escalationattach", "counselpacket",
-    "attribute", "statementack", "workobjective", "inboxresolve"],
-  terminal: ["escalationend", "filingapprove"],
+  reversible: DEC88_BAND("reversible ", "; reasoned "),
+  reasoned: DEC88_BAND("reasoned ", " (DEC-88 banded"),
+  terminal: DEC88_BAND("terminal "),
 };
-const T41_REASONED = ["projectaikeepaway", "milestoneremove", "milestoneitemremove", "projectclosewithgaps",
-  "hypothesissetaside", "guidereview", "guideretire", "stepaccept"];
-const T41_REVERSIBLE = ["stepcreate", "stepstart", "stepend", "stepwait", "stepwaitremove", "stepcostadd", "stepcostremove",
-  "questionfollow", "stepsrunai", "milestoneset", "milestonerevise", "hypothesistakeup", "noteshare", "noteunshare",
-  "approvalruleset", "actionseekspropose", "stepoutcome", "stepbywhen", "guidepropose"];
-const T41_UNDETERMINED = ["stepdelete", "steprefer", "stepproduct", "costmessage", "findaccept", "reportkeep",
-  "interviewkeep", "narrativeclaim", "claimfindstep", "claimfound", "planaccept", "projectwatch", "proposalaccept",
-  "bearingnote", "guidedraft", "guideoffer", "guideadopt", "accountpropose", "caseapprove", "grouptestset",
-  "captureupload", "steplearn", "guideproposetocivicsmith"];
+/* R1's first sentences state the other bands as plain words */
+const R1_BAND = (from, to) => worded(between(R1_TEXT, from, to));
+/* R30 (T41): its backticked ops, band by band; K2583 adds the guides' two (`guidepropose` as `extractpropose`,
+   `guideproposetocivicsmith` as `guideoffer`) */
+const R30 = reqText(30);
+const K2583 = ticked(between(R30, "(K2583)", " `undetermined`"));
+const T41_REASONED = ticked(between(R30, "assigns `reasoned` to", "; `reversible` to"));
+const T41_REVERSIBLE = [...ticked(between(R30, "; `reversible` to", ". `RUNG_ABSENT`")), K2583[0]];
+const T41_UNDETERMINED = [...ticked(between(R30, "`undetermined` (R3's rule):", "(K2570); `caller-owned` also")), K2583[2]];
+/* the ops a requirement assigns to a rung in its first bullet: "assigns `<rung>` to `op`" */
+const ASSIGNED = (n, rung) => ticked(between(reqText(n), `assigns \`${rung}\` to`, " ("))[0];
 
 test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one a requirement ranks, in its band, and no other; "
    + "DEC-88's three bands word for word among them; a misbanded op, or one of the 57 left out, is seen", () => {
   const want = {
     irreversible: ["publishat", "publishatmove" /* R14 */],
-    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount", "noticepost" /* R7 */, "docketpost" /* R9 */],
+    attested: [...R1_BAND("attested ", "; terminal"), ASSIGNED(7, "attested") /* R7 */, ASSIGNED(9, "attested") /* R9 */],
     terminal: ["retire", "actionholdrelease" /* R8 */, "publish" /* R37 (T47; K3100 doubt 9) */],
-    reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
-      "versionhide", "versionrevert", "sourceconsentwithdraw", "scenarioset", "importwatch", "importunwatch" /* R12 */,
+    reversible: [...R1_BAND("; reversible ", "; reasoned"), "importwatch", "importunwatch" /* R12 */,
       "publishatcancel" /* R14 */, "inboxpull" /* R35 (T47) */, ...DEC88.reversible],
-    reasoned: ["actionmove", "actionrisktier", "addressedrecord", "adminremove", "aliaswithdraw", "aspirationdepart",
-      "aspirationretire", "biasdebtresolve", "conclude", "connectionassert", "consequencerevise", "determine", "discharge",
-      "dispose", "escalationadvance", "escalationdecline", "escalationevaluate", "escalationsuspend", "filemembershipjudge",
-      "goalclose", "inquirydivide", "inquiryground", "narrow", "projectownerremove", "projectownerrescue", "proposedispose",
-      "reevaluationrecord", "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever", "themewithdraw",
-      "triage", "versionconsider", "versionreject", "withdrawconclusion", "contradictionclarify", "contradictiondismiss",
-      "contradictionresolve", "contradictiontakeup", "resolutiondefect", "sourcedisclose", "sourcelink", "sourceconsent",
-      "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose", "actionhold", "templateretire",
-      "factconfirm", "declinetoescalate", "heldsetaside", "heldrestore", "addressfrequencyset", "docketfile",
-      "docketdecline", "importaccept", "importacceptwithdraw", "importflag", "importflagclear", "wizardretire",
-      ...DEC88.reasoned],
+    reasoned: [...R1_BAND("; reasoned ", "DEC-88's three bands"), "templateretire", "factconfirm" /* R6 */,
+      "docketfile", "docketdecline" /* R9 */, "importaccept", "importacceptwithdraw", "importflag", "importflagclear" /* R10 */,
+      "wizardretire" /* R11 */, ...DEC88.reasoned],
   };
   want.terminal.push(...DEC88.terminal);
   /* R13, R17, R22: the per-tranche tables, each pinned op by op in owners.test.mjs and t35.test.mjs */
@@ -111,19 +102,20 @@ test("R1 R8 R14 R32 R33 R37 (N891): the closed `terminal` set is retire, DEC-88'
    + "filingsecondapprove and (T47, R37) publish and publishcheck, which prepare; `irreversible` is the two that set when a "
    + "signed edition publishes", () => {
   const of = (r) => Object.keys(RUNGS).filter((op) => RUNGS[op] === r && !Object.hasOwn(OP_ALIASES, op)).sort();
-  assert.deepEqual(of("terminal"), ["actionholdrelease", "escalationend", "filingapprove", "filingsecondapprove", "publish",
-    "publishcheck", "retire"]);
+  const TERMINAL = [...R1_BAND("; terminal ", "; reversible "), ASSIGNED(8, "terminal") /* R8 */, ...DEC88.terminal,
+    "filingsecondapprove" /* R33 */, "publish", "publishcheck" /* R37: graded as publish */];
+  assert.deepEqual(of("terminal"), TERMINAL.sort());
   assert.deepEqual(of("irreversible"), ["publishat", "publishatmove"]);
   /* negative control */
-  assert.notDeepEqual(of("terminal"), ["actionholdrelease", "escalationend", "filingapprove", "retire"]);
+  assert.notDeepEqual(of("terminal"), TERMINAL.filter((op) => op !== "publish"));
 });
 
 /* ---- R3: the `undetermined` ground, closed, with its tally ----------------------------------------------------------- */
-/* R3's 21, less inboxpull, which R35 (T47) moves to `reversible`, and planopen, which R47 (T50) moves too */
-const R3_LEFT = ["contradictionrecommend", "contradictionoptin", "contradictionrespond", "communicationprepare",
-  "templatesave", "actioncreate", "actionpressure", "optionadd", "optionpropose", "optionadopt",
-  "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
-  "templatereview", "templatecomment", "templateapprove"];
+/* R3's 21 (its plain words, and K921's seven in backticks), less inboxpull, which R35 (T47) moves to `reversible`, and
+   planopen, which R47 (T50) moves too */
+const R3_TEXT = reqText(3);
+const R3_LEFT = [...worded(between(R3_TEXT, "leaving 21 `undetermined`:", " and K921's seven")),
+  ...tickedAll(between(R3_TEXT, "K921's seven (R6:", ")"))].filter((op) => op !== "inboxpull" && op !== "planopen");
 test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21 less inboxpull (R35) and the ops ruled onto "
    + "it later on R3's rule, deepercheck no longer among them, and no other; the 78 held before DEC-88 are the 21 and "
    + "DEC-88's 57; a later op left out, or one of the 57 left there, is seen", () => {
@@ -162,42 +154,31 @@ test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21
 });
 
 /* ---- R2, R5: layer 9's NON_ACTS and read rows ------------------------------------------------------------------------ */
-const LAYER9_RUNGS = ["standarddeclare", "standardpropose", "standardadopt", "comparisonpropose", "consequencerecord",
-  "planopen" /* R47 (T50): reversible, so no longer stated absent */,
-  "filingprepare", "filingapprove", "filingsent", "counselpacket", "theorypropose", "escalationopen", "escalationattach",
-  "escalationend", "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline",
-  "escalationsuspend", "escalationresume", "determine", "plansubjectadd", "plansubjectremove", "optionrevise",
-  "optiondispose", "planclose", "scenarioset", "actionhold"];
-const LAYER9_ABSENT = { counselpacketexport: "substrate", communicationprepare: "undetermined",
-  templatesave: "undetermined", actioncreate: "undetermined", actionpressure: "undetermined",
-  optionadd: "undetermined", optionpropose: "undetermined", optionadopt: "undetermined", checkpointrecord: "undetermined",
-  optionstart: "undetermined", reminderset: "caller-owned", reminderanswer: "caller-owned" };
-/* reads with no NEEDS row: named in no registry (a row for an ungated op reads `stale`, affordances R12) */
-const LAYER9_UNGATED_READS = ["standard", "standards", "determination", "determinations", "comparison", "comparisonfacts",
-  "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions", "escalation",
-  "escalationsdue", "action", "actions", "plan", "plans", "planproposals", "monitoring", "escalationstatus",
-  "doorbellrefused", "provenanceroutes", "projectstage", "contradictionmeasures", "securitycount"];
+/* the stated absences R2 names for layer 9 (K705, K723, K732), with the ground it gives them; planopen left the ground at R47 */
+const R2_TEXT = reqText(2);
+const LAYER9_ABSENT = Object.fromEntries([
+  ...ticked(between(R2_TEXT, "It holds (K705, K723)", ", ground `undetermined`")).map((op) => [op, "undetermined"]),
+  ...ticked(between(R2_TEXT, "and (K732)", ", ground `undetermined`")).filter((op) => op !== "planopen").map((op) => [op, "undetermined"]),
+  ...ticked(between(R2_TEXT, "`optionstart`, ground `undetermined`, and ", ", ground `caller-owned`")).map((op) => [op, "caller-owned"]),
+]);
 const LAYER9_GATED_READS = ["optionstartpreview", "standardinforce"];
-test("R2 R5 (N891): layer 9's 41 writes each carry a NON_ACTS reason of more than ten characters and no capture act, its "
-   + "stated absences their sentence and ground, its two gated reads a `read:` reason writing nothing and no grade, "
-   + "actionriskpropose named, and its ungated reads named in no table", () => {
-  const writes = [...LAYER9_RUNGS, ...Object.keys(LAYER9_ABSENT)];
-  assert.equal(writes.length, 41);
-  /* (T45; R8, R32) the ones affordances R51 makes ACTS rows are named in NON_ACTS no longer */
-  const ACTS_NOW = ["actionhold", "actionpressure", "escalationopen", "escalationattach", "filingprepare", "filingapprove",
-    "filingsent", "counselpacket", "communicationprepare", "reminderset"];
-  for (const op of writes.filter((op) => !ACTS_NOW.includes(op)))
-    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
-  for (const op of ACTS_NOW) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
-  for (const op of LAYER9_RUNGS) assert.ok(Object.hasOwn(RUNGS, op), op);
+test("R2 R5 (N891): layer 9's stated absences (R2) carry their sentence and ground, and a NON_ACTS reason of more than ten "
+   + "characters and no capture act unless affordances R51 makes them ACTS rows; its two gated reads a `read:` reason writing "
+   + "nothing and no grade; actionriskpropose named", () => {
+  /* the ones affordances R51 makes ACTS rows are named in NON_ACTS no longer (R32's T45 bullet; R33 adds the two escalation acts) */
+  const ACTS_NOW = [...ticked(between(reqText(32), "leave `NON_ACTS`:", "(and `holdnoticeprepare`")), "escalationstoppursuing",
+    "escalationreopen"];
+  assert.ok(Object.keys(LAYER9_ABSENT).length >= 10);
   for (const [op, ground] of Object.entries(LAYER9_ABSENT)) {
     assert.equal(RUNG_ABSENT[op]?.ground, ground, op);
     assert.ok(RUNG_ABSENT[op].is.length > 20, op);
+    if (ACTS_NOW.includes(op)) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
+    else assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
   }
+  for (const op of ACTS_NOW.filter((op) => Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)))
+    assert.ok(!Object.hasOwn(NON_ACTS, op), op);
   for (const op of LAYER9_GATED_READS) { assert.ok(readWritesNothing(op), op); assert.ok(ungraded(op), op); }
   assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
-  for (const op of LAYER9_UNGATED_READS)
-    for (const t of [NON_ACTS, RUNGS, RUNG_ABSENT]) assert.ok(!Object.hasOwn(t, op), op);
   /* negative control */
   assert.ok(Object.hasOwn({ ...NON_ACTS, monitoring: "read: x" }, "monitoring"));
 });
@@ -269,82 +250,59 @@ test("R13 R17 (N891): the merged tables carry each entry of T33's tables op for 
 });
 
 /* ---- R1, R19: the justification family's exclusions --------------------------------------------------------------- */
-test("R1 (N891): JUSTIFICATION_REFUSALS holds only codes that ask the member's account, the codes its reasoned ops refuse "
-   + "with among them, and every code that asks an object, an identifier, a choice, a form or a member stays out", () => {
+test("R1 (N891): JUSTIFICATION_REFUSALS holds only codes that ask the member's account, the codes the requirements say join "
+   + "it among them, and no code that asks an object, an identifier, a choice, a form or a member", () => {
   for (const c of JUSTIFICATION_REFUSALS) assert.match(c, /^[A-Z_]+$/);
-  for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
-    "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
-    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION",
-    "REEVALUATION_NOTE_MALFORMED", "ACTION_MOVE_NO_REASON", "INTENT_NO_REASON", "CONFORMANCE_NO_REASON",
-    "ESCALATION_NO_REASON", "TEMPLATE_REASON_REFUSED", "FACT_HOW_REFUSED", "NO_EVIDENCE", "DISMISSAL_REASON_UNKNOWN",
-    "CLARIFY_NO_EXPLANATION", "WRONG_SIDE_NO_REASON", "TAKE_UP_NO_QUESTION", "TESTIMONY_NO_WORDS", "TRANSCRIBE_NO_TEXT",
-    "ATTEST_NO_NOTE", "LEAD_NO_WORDS", "LEAD_LOOK_NO_DETAIL", "LEAD_SHARE_NO_REASON", "ENTITY_NO_NOTE", "NO_BASIS",
-    "RESOLVE_NO_REASON", "SET_ASIDE_NO_REASON", "FREQUENCY_NO_REASON", "BIAS_ADOPTION_NO_REASON", "ATTRIBUTION_NO_REASON",
-    "BAR_NO_REASON", "PURSUIT_UNSTATED", "NO_NOTE", "STANDARD_NO_REASON", "PACKET_NO_REASON", "STATEMENT_ACK_NO_REASON",
-    "VERSION_ADOPT_NO_REASON", "NO_RATIONALE", "HYPOTHESIS_NO_REASON", "DUTY_NO_REASON", "DOCKET_NO_REASON",
-    "IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE", "WIZARD_REASON_REFUSED"])
-    assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
-  const OUT = [
-    /* objects, identifiers and documents (R1's deliberate exclusions) */
-    "NO_TARGET", "NO_ID", "NO_KIND", "ENTITY_NO_LABEL", "PROGRESSION_NO_LABEL", "EXPERTISE_NO_LABEL", "NO_SUCH_KNOCK",
-    "NO_SUCH_COMPARISON", "NOT_AN_ADMIN", "NO_CITATION", "NO_BODY", "NO_TITLE",
-    /* contradiction's (N345) */
-    "NO_CANDIDATE", "NO_SUCH_CANDIDATE", "MACHINE_CANNOT_ACT_ON_CANDIDATE", "NOT_A_CONTRADICTION_INQUIRY",
-    "CLARIFY_CHOICE_UNKNOWN", "TAKE_UP_NO_FRAME",
-    /* the template library's and the local facts' (R6) */
-    "NO_SUCH_TEMPLATE", "TEMPLATE_TEXT_REFUSED", "NOT_A_DRAFT", "NO_SUCH_FACT", "FACT_ACT_REFUSED", "FACT_VALUE_REFUSED",
-    "MACHINE_CANNOT_CONFIRM", "REVIEW_REFUSED",
-    /* DEC-88's and T22's owners' others */
-    "KNOCK_EMPTY", "NO_IDS", "BAD_FREQUENCY", "NOT_A_SOURCE_OWNER", "ALREADY_OPEN", "NEITHER_CAPTURE_NOR_TESTIMONY",
-    "MACHINE_CANNOT_SET_ASIDE", "LEAD_TOO_LONG", "STANDARD_NO_TEXT", "NO_COUNSEL",
-    /* the docket's (R9) */
-    "DOCKET_KIND_UNKNOWN", "DOCKET_NO_CAPTURE", "NO_SUCH_DOCKET_ENTRY", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE",
-    "DOCKET_SIGNATURE_REFUSED",
-    /* the wizard library's (R11) */
-    "WIZARD_NAME_REFUSED", "WIZARD_STEP_REFUSED", "WIZARD_WHY_REFUSED", "WIZARD_SCOPE_REFUSED",
-    "MACHINE_CANNOT_APPROVE_WIZARD", "WIZARD_ALREADY_ENDED",
-    /* the note ops' (R15) */
-    "MACHINE_CANNOT_NOTE", "NOTE_NO_TEXT", "NOTE_TOO_LONG", "NOTE_TURN_UNKNOWN", "NOTE_TURN_NOT_MADE",
-    "NOTE_TOO_LONG_FOR_HUNCH", "HYPOTHESIS_NO_STATEMENT"];
-  for (const c of OUT) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
-  /* negative control */
-  assert.ok([...JUSTIFICATION_REFUSALS, "NO_TARGET"].includes("NO_TARGET"));
+  /* the codes op-grades' own requirements say join the family (R6, R9–R11, R15, R23–R25, R28, R30, R32, R36, R38, R40) */
+  const JOINED = joinedCodes(G);
+  assert.ok(JOINED.length >= 20);
+  for (const c of JOINED) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+  /* R1's deliberate exclusions, as a rule over a code (a refusal of an object, an identifier, a choice, a form, a member or
+     a machine) rather than a list of other modules' codes (BOB K4072) */
+  assert.deepEqual(JUSTIFICATION_REFUSALS.filter(asksNotTheAccount), []);
+  /* negative controls: the rule sees such a code, and the family is no wider than the rule allows */
+  for (const c of ["NO_TARGET", "NO_SUCH_KNOCK", "NOT_AN_ADMIN", "ENTITY_NO_LABEL"]) assert.ok(asksNotTheAccount(c), c);
+  assert.ok(asksNotTheAccount("MACHINE_CANNOT_ACT_ON_CANDIDATE") && asksNotTheAccount("NOTE_TOO_LONG"));
+  assert.ok([...JUSTIFICATION_REFUSALS, "NO_TARGET"].filter(asksNotTheAccount).length === 1);
 });
 
 /* ---- R2, R5: the owners' reads write nothing ----------------------------------------------------------------------- */
-test("R2 R5 (N891): every owner's read this module names writes nothing and takes no grade — the sources' and doorbell's, "
-   + "capture's held reads, T23's, the hold reads, the docket's, the imports', the wizard library's, the template "
+test("R2 R5 (N891): every read row of NON_ACTS writes nothing and takes no grade, the closing words aside — the sources', "
+   + "doorbell's and capture's reads, T23's, the hold reads, the docket's, the imports', the wizard library's, the template "
    + "library's, publishschedule, notes, and every T33 read; the public reads take no grade", () => {
-  const READS = ["sourceof", "sourcepublishable", "knocksof", "pulledknocks",
-    "lateattestations", "captureaccounts", "publishpreflight", "heldcaptures", "gradenote", "doorbelltally",
-    "escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices", "actionholdpreview", "projectholds",
-    "docket", "docketprepare", "docketinvitation", "importedcases", "importedcase", "wizards", "wizardread", "wizardsat",
-    "wizarduse", "wizardcandidates", "wizardcheck", "baseupdates", "startfrom", "templates", "factstatus", "factsdue",
-    "publishschedule", "notes", "optionstartpreview"];
-  for (const op of READS) { assert.ok(readWritesNothing(op), op); assert.ok(ungraded(op), op); }
-  /* two source reads name who may read them in place of the closing words, and the two grant-door reads end on the door */
-  for (const op of ["sourcerung", "sourcereadlog"]) { assert.ok(NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 40, op); assert.ok(ungraded(op), op); }
-  for (const op of ["templateread", "templatecomments"]) {
-    assert.match(NON_ACTS[op], /^read: .*; writes nothing; reached also through a review grant's door$/, op);
-    assert.ok(ungraded(op), op);
-  }
-  for (const op of ["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
-    "contradictionresponses", "publishtensions"]) { assert.ok(NON_ACTS[op].startsWith("read: "), op); assert.ok(ungraded(op), op); }
+  const rows = readRows(NON_ACTS);
+  assert.ok(rows.length > 250);
+  /* R39 grades `securitymap` caller-owned (an administrator's own read); no other read has a grade */
+  const GRADED = tickedAll(reqText(39));
+  for (const op of rows) if (!GRADED.includes(op)) assert.ok(ungraded(op), op);
+  /* the reads whose sentence ends on its closing words: they write nothing */
+  const WRITES_NOTHING = rows.filter((op) => /writes nothing$/.test(NON_ACTS[op]));
+  assert.ok(WRITES_NOTHING.length >= 200);
+  for (const op of WRITES_NOTHING) assert.ok(readWritesNothing(op), op);
+  /* the public reads, and the two grant-door reads, end otherwise (R6; DEC-85) */
+  const PUBLIC = rows.filter((op) => NON_ACTS[op] === "read: public, no credential");
+  assert.ok(PUBLIC.length >= 8);
+  const DOOR = ticked(between(reqText(6), "`templatereview`, `templatecomment` and the reads", " add")).filter((op) => Object.hasOwn(NON_ACTS, op));
+  assert.equal(DOOR.length, 2);
+  for (const op of DOOR) assert.match(NON_ACTS[op], /^read: .*; writes nothing; reached also through a review grant's door$/, op);
+  /* every other read names what it reads and who may read it */
+  for (const op of rows.filter((op) => !WRITES_NOTHING.includes(op) && !PUBLIC.includes(op))) assert.ok(NON_ACTS[op].length > 30, op);
+  /* the reads the requirements name (R5's contradiction reads, R6–R15's) are among those that write nothing */
+  const NAMED = tickedAll(["5", "6", "7", "8", "9", "10", "11", "14", "15"].map((n) => reqText(n)).join("\n"))
+    .filter((op) => rows.includes(op) && !PUBLIC.includes(op));
+  assert.ok(NAMED.length >= 25);
+  for (const op of NAMED) { assert.ok(NON_ACTS[op].startsWith("read: "), op); assert.ok(ungraded(op), op); }
+  const R5_READS = ticked(reqText(5)).filter((op) => rows.includes(op));
+  assert.equal(R5_READS.length, 6);
   const T33_READS = Object.keys(T33_NON_ACTS).filter((op) => T33_NON_ACTS[op].startsWith("read: "));
   assert.ok(T33_READS.length > 80);
   for (const op of T33_READS) { assert.match(NON_ACTS[op], /writes nothing$/, op); assert.ok(ungraded(op), op); }
-  for (const op of ["activitymethod", "noticespublic", "groupkeyspublic", "docketpublic", "docketfeed", "casechecker",
-    "casefilespec", "credit"]) {
-    assert.equal(NON_ACTS[op], "read: public, no credential", op);
-    assert.ok(ungraded(op), op);
-  }
-  /* the stated absences whose sentences the reads stand beside */
-  for (const op of ["signerregister", "signerrevoke", "knockerconsent", "contradictionrecommend",
-    "contradictionoptin", "contradictionrespond", "whatchangedpropose", "docketpressure", "caseimport",
-    "caseimportdocument", "notewrite", "noteturn", "wizardrevise", "wizardpropose", "wizardsubmit",
-    "wizardapprove", "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress", "templatereviewgrant",
-    "templategrantrevoke", "templatedraft", "templaterevise", "templatepropose", "templatesubmit", "templatereview",
-    "templatecomment", "templateapprove"]) assert.ok(RUNG_ABSENT[op].is.length > 40, op);
+  /* the stated absences whose sentences the reads stand beside: every op R2 and R6–R15 name that RUNG_ABSENT holds */
+  const ABSENT_TEXT = ["2", "6", "7", "9", "10", "11", "15"].map((n) => reqText(n)).join("\n");
+  const LIKENED = [...ABSENT_TEXT.matchAll(/\bas `([a-z0-9]+)`/g)].map((m) => m[1]); // "as `knock`": the comparison, not the row
+  const ABSENT = tickedAll(ABSENT_TEXT).filter((op) => Object.hasOwn(RUNG_ABSENT, op) && !LIKENED.includes(op));
+  assert.ok(ABSENT.length >= 28);
+  for (const op of ABSENT) assert.ok(RUNG_ABSENT[op].is.length > 40, op);
   /* negative control: a read that wrote would be seen */
   assert.equal(readWritesNothing("dispose"), false);
 });

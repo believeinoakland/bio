@@ -37,13 +37,13 @@ test("R55: mute a kind in a case and an item; the list shows both with their ins
   const l = listed(w);
   assert.deepEqual(Object.keys(l), ["ok", "muted", "count"], "in place of the feed: no items, no blocks");
   assert.deepEqual(l, { ok: true, count: 3, muted: [
-    { item: "CONDITION::governor-holding-host::h.example", class: "CONDITION", at: iso(NOW + 3000) },
+    { item: "CONDITION::governor-holding-host::h.example", class: "CONDITION", kind: "governor-holding-host", title: null, at: iso(NOW + 3000) },
     { kind: "source-modified", case: { id: "PRJ-1", title: "Roof project" }, at: iso(NOW + 2000) },
     { kind: "render-deferred", case: { id: "INQ-1", title: "Is the roof sound?" }, at: iso(NOW + 1000) } ] });
   // the row's act is queuemute with unmute (R20): the case form removes the kind's row, the item form the item's
   const r = mute(w, { case: "INQ-1", kinds: ["render-deferred"], unmute: true });
   assert.deepEqual([r.ok, r.removed], [true, ["render-deferred"]]);
-  assert.deepEqual(listed(w).muted.map((x) => x.kind ?? x.item), ["CONDITION::governor-holding-host::h.example", "source-modified"]);
+  assert.deepEqual(listed(w).muted.map((x) => x.item ?? x.kind), ["CONDITION::governor-holding-host::h.example", "source-modified"]);
   assert.equal(mute(w, { item: "CONDITION::governor-holding-host::h.example", unmute: true }).ok, true);
   assert.deepEqual(listed(w), { ok: true, count: 1, muted: [
     { kind: "source-modified", case: { id: "PRJ-1", title: "Roof project" }, at: iso(NOW + 2000) }] });
@@ -67,8 +67,8 @@ test("R55: a kind muted before its instant was kept answers at null, never back-
     "muted afresh after an unmute it is dated by that mute");
   // the instants sort as times, not as text: ".500Z" sorts before "Z" as text and half a second after it as a time
   const t = setup();
-  t.run(`INSERT INTO queue_item_mutes VALUES ('alice','FINDING::x::1','FINDING','2026-09-01T00:00:00Z')`);
-  t.run(`INSERT INTO queue_item_mutes VALUES ('alice','FINDING::x::2','FINDING','2026-09-01T00:00:00.500Z')`);
+  t.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','FINDING::x::1','FINDING','2026-09-01T00:00:00Z')`);
+  t.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','FINDING::x::2','FINDING','2026-09-01T00:00:00.500Z')`);
   assert.deepEqual(listed(t).muted.map((x) => x.item), ["FINDING::x::2", "FINDING::x::1"]);
 });
 
@@ -127,8 +127,12 @@ test("R55: every kind a member may mute has the plain name the muted list's sent
   const mutable = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
   assert.deepEqual(mutable.filter((k) => !hasWord(`queue.kind.${k}`)), []);
   assert.ok(mutable.includes("watched-changed") && hasWord("queue.kind.watched-changed"), "DEC-328 (3)");
-  for (const k of ["queue.muted.title", "queue.muted.help", "queue.muted.kind", "queue.muted.by", "queue.muted.by.undated", "queue.muted.unmute"])
-    assert.ok(hasWord(k), k);
+  assert.ok(hasWord("queue.muted.title"), "the list's title");
+  assert.ok(hasWord("queue.muted.help"), "the list's help");
+  assert.ok(hasWord("queue.muted.kind"), "a kind muted in a case");
+  assert.ok(hasWord("queue.muted.by"), "when it was muted");
+  assert.ok(hasWord("queue.muted.by.undated"), "a mute with no instant");
+  assert.ok(hasWord("queue.muted.unmute"), "the unmute act");
   assert.equal(mutable.some((k) => classOfKind(k) === "OBLIGATION"), false, "no row can be an obligation (R31)");
 });
 
@@ -236,7 +240,7 @@ test("R57, R19, R31: project-invitation and project-request muted, by kind or by
   assert.equal(w.all(`SELECT count(*) c FROM queue_state`)[0].c + w.all(`SELECT count(*) c FROM queue_item_mutes`)[0].c, 0);
   // R31: even rows that name them (the write refuses these) suppress neither
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','INQ-1','project-invitation,project-request')`);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice','OBLIGATION::project-invitation::INV-1','OBLIGATION','2026-09-01T00:00:00Z')`);
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','OBLIGATION::project-invitation::INV-1','OBLIGATION','2026-09-01T00:00:00Z')`);
   const f = w.feed("alice");
   assert.deepEqual(f.mute.suppressed, []);
   assert.ok(byId(f)["OBLIGATION::project-invitation::INV-1"] && byId(f)["OBLIGATION::project-request::REQ-1"]);
@@ -259,7 +263,7 @@ test("R57, R20, R55: watched-changed is mutable, by case and by item, and its ro
   const byItem = mute(w, { item: "FINDING::watched-changed::W-1", at: iso(NOW + 1000) });
   assert.deepEqual([byItem.ok, byItem.item_class], [true, "FINDING"]);
   assert.deepEqual(listed(w).muted, [
-    { item: "FINDING::watched-changed::W-1", class: "FINDING", at: iso(NOW + 1000) },
+    { item: "FINDING::watched-changed::W-1", class: "FINDING", kind: "watched-changed", title: "DOC-1", at: iso(NOW + 1000) },
     { kind: "watched-changed", case: { id: "INQ-1", title: "Roof question" }, at: iso(NOW) }]);
   const f = w.feed("alice");
   assert.equal(f.mute.suppressed.length, 1, "the item mute suppresses it, personally");

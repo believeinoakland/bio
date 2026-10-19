@@ -15,8 +15,22 @@ import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { queueProducersOf } from "../../../src/queue-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { tidy } from "../../../src/queue-producers/words.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+/** A day `YYYY-MM-DD` as a sentence names it (R43): `date.daymonth`, or `date.daymonthyear` when `year` says the year is named. */
+export const dayWord = (ymd, year = false) => {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return word(year ? "date.daymonthyear" : "date.daymonth", { month: word(`date.month.${MONTHS[m - 1]}`), day: String(d), year: String(y) });
+};
+/** A 24-hour clock as `time.clock` writes it (DEC-335). */
+export const clockWord = (hour, minute) => word("time.clock", { hour: String(hour % 12 === 0 ? 12 : hour % 12), minute: String(minute).padStart(2, "0"), ampm: word(hour < 12 ? "time.am" : "time.pm") });
+/** `time.at`: a day and a clock. */
+export const atWord = (ymd, hour, minute, year = false) => word("time.at", { date: dayWord(ymd, year), time: clockWord(hour, minute) });
+/** What `summary` or `detail` should equal: the key's word with the fills, a blank fill closed up as the module closes it. */
+export const said = (key, vars = {}) => tidy(word(key, vars));
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
