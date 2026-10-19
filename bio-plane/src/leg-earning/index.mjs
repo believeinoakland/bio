@@ -97,8 +97,7 @@ export function legCapped(stated, earned, targetId) {
   if (earned.grade == null)
     return { grade: null,
              why: earned.why
-               ?? `what this document's capture can support is undetermined, so this leg claims nothing `
-                + `on the capture axis` };
+               ?? word("leg-earning.why.document_capture_support") };
   if (GRADE_RANK[stated] <= GRADE_RANK[earned.grade]) return null;
   /* The letters are interpolated and never typed: the grade vocabulary is their one home. */
   return { grade: earned.grade,
