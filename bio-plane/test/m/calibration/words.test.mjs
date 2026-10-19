@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { calibrationOf, calibrationOps, cadenceSentence, drifted, nextProbeDue, subjectProbeState, DRIFT,
          CALIBRATION_CHECKS } from "../../../src/calibration/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { storage } from "./storage.mjs";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -29,9 +29,7 @@ test("R3 R6: the cadence's sentence says your group's Civicsmith runs the probe 
 });
 
 test("R2: a better measurement's why names your group's Civicsmith as the one that would be claiming (DEC-149; T35-23, calibration.mjs:287)", () => {
-  /* The sentence is written in code and has no design row yet (the missing-row batch), so the test pins what it must
-     name rather than copying it. */
-  assert.match(drifted(DRIFT.BETTER).why, /\bCivicsmith\b/);
+  assert.equal(drifted(DRIFT.BETTER).why, localize("calibration.calibration.this_engine_now_measures_better", "this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, so an automatic upgrade here would be your team's Civicsmith making a claim nobody authored (DEC-4)"));
   for (const v of [...Object.values(DRIFT), "sideways"]) assert.doesNotMatch(drifted(v).why, RETIRED, String(v));
 });
 
