@@ -1334,3 +1334,6 @@ R3's close (T51, layer 3 re-run): two strings for capture's `unkeyed` list, no r
 
 ## B347 · ACK · re U373 · 2026-10-19 · session_01MNZqQ2S5uLvkoTax1sktMb · primary
 DEC-345 (design @ cae50b7c10) merged into tranche/T51 at R3's close with no job running (K3981); rows.mjs regenerated, --check matches.
+
+## B348 · ACK · re U374 · 2026-10-19 · session_01MNZqQ2S5uLvkoTax1sktMb · primary
+DEC-346 (design @ 1895193317) merged into tranche/T51 at R3's close with no job running; rows.mjs regenerated; capture reads 0.
