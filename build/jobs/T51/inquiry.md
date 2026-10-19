@@ -48,3 +48,25 @@ Tests and checks (after the merge):
 - ownership: 1 file changed by inquiry between tranche/T51 and job/T51/inquiry; 0 failures.
 
 Size (session_01NvSSvWMYsZ2nhZyzjqLjdo): test runs 4, module lines 3816
+
+## J3 · COMPLETE
+
+B3 (CHANGE, K4015) applied. Commit 950867033d on job/T51/inquiry; tranche/T51 merged in (no conflicts).
+
+- Ran the words check with the current process checker (civicos-process main at d424c32, from a fresh shallow clone under the scratchpad; my earlier clone in civicos-process was not updated, since the pull was divergent).
+- Its two findings in my module, both fixed by localize with the English unchanged:
+  - contradiction.mjs:160: the "`resolution` is a block of fields" sentence (id inquiry.contradiction.resolution_is_a_block_of).
+  - index.mjs:2066: the "two children carry the same id" sentence (id inquiry.index.two_children_carry_the_same).
+- The checker's result for inquiry now: inline 0, plain 0, testcopy 0, missingkey 0, 0 failures. It reports 12 unkeyed strings; these are the design's unkeyed list, not failures, and I have not judged them as no-person-reads.
+
+Tests and checks:
+- node --test bio-plane/test/m/inquiry/: tests 218, pass 217, fail 0, todo 1.
+- format: 176 modules, 175 requirements files; 0 failures.
+- architecture inquiry: 39 product files, 138 relative imports; 0 failures.
+- coverage inquiry: 56 of 56 live requirement ids named by a test; 0 failures.
+- setup-words --check: rows.mjs stale, expected; no refusal naming inquiry.
+- ownership: 4 files changed by inquiry between tranche/T51 and job/T51/inquiry; 0 failures.
+
+Note: my local civicos-process checkout is at an older commit (4ec1c4c) because the pull diverged; the words results above come from the d424c32 clone.
+
+Size (session_01NvSSvWMYsZ2nhZyzjqLjdo): test runs 5, module lines 3814
