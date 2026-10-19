@@ -302,12 +302,15 @@ export const finder = Object.freeze({
         if (!el.dataset.handle) return { refuse: "screen.finder.holdfirst" };
         if (el.dataset.cite) return view.parts.finderStates().citeSend(view, el, cs);
         cs.set("citeDone", null);
+        const held = view.data.selection;
+        cs.set("citeHeld", held && held.state === "ok" && held.value && Array.isArray(held.value.members) ? held.value.members.map(String) : null);
         cs.set("cite", true);
         return null;
       },
       done: function (view, answer, cs) {
         const a = answer && (answer.cited || answer.alreadyCited) ? answer : (answer && answer.result) || {};
-        cs.set("citeDone", { cited: Array.isArray(a.cited) ? a.cited : [], alreadyCited: Array.isArray(a.alreadyCited) ? a.alreadyCited : [] });
+        const chosen = cs.value("finder-cite-role");
+        cs.set("citeDone", { role: Array.isArray(chosen) && chosen[0] === "against" ? "cuts_against" : "supports", cited: Array.isArray(a.cited) ? a.cited : [], alreadyCited: Array.isArray(a.alreadyCited) ? a.alreadyCited : [] });
       } },
     { op: "frontier", label: "act.frontier.label.finder", rereads: ["frontier"],
       send: function (view, el, cs) { cs.set("frontier", true); return { query: { level: "document" } }; } },

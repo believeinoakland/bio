@@ -75,7 +75,7 @@ export const projects = Object.freeze({
     // and by `mine` (project-roster R38); nothing is sent and nothing in any project changes.
     const ui = view.ui || {};
     // The words typed are page memory like a choice (the shell redraws on `change` and keeps `choice:<id>`), so the list narrows
-    // as the field is left or Enter is pressed; "Search projects" is a plain button that moves focus off the field.
+    // as the field is left or Enter is pressed (DEC-359: "Search projects" is a field of the kit, no act; narrowing as typed is the kit's).
     if (typeof ui["choice:projects-search"] !== "string") ui["choice:projects-search"] = "";
     const typed = ui["choice:projects-search"];
     const words = typed.toLowerCase().split(/\s+/).filter(Boolean);
@@ -92,7 +92,7 @@ export const projects = Object.freeze({
           .replace('<input id="projects-search"', '<input id="projects-search" data-shell="choice" data-choice="projects-search"')
         + cs.choice("projects-filter", "screen.projects.filter.label", [["all", "screen.projects.filter.all"], ["in", "screen.projects.filter.in"], ["own", "screen.projects.filter.own"]], { value: "all", acts: {} })
         + '<p class="mk-small muted">' + cs.w("screen.projects.filter.help") + "</p>"
-        + '<button type="button" class="cs-btn">' + cs.w("screen.projects.search.go") + "</button></div>" : "";
+        + "</div>" : "";
     const invitedList = all.filter(function (p) { return narrowed(p) && place[String(p.id)] === "invited"; });
     const rows = view.parts.projectRows(cs, view, "screen.projects", true);
     const rowsJoin = view.parts.projectRows(cs, view, "screen.projects", true, "act.projectjoin.label.projects", place);

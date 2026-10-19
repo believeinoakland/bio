@@ -218,22 +218,36 @@ export function finderStates() {
     const qs = ui.citeQs.state === "ok" ? ui.citeQs.value : [];
     const asked = qs.length ? cs.choice("finder-cite-q", "screen.document.cite.question", qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || "") }; }), { value: String(qs[0].bundle_id), acts: {} })
       : ui.citeQs.state === "ok" ? '<p class="mk-note">' + cs.w("screen.document.cite.noquestion") + "</p>" : cs.state({ state: ui.citeQs.state }, null);
-    const roles = '<fieldset class="mk-checks" id="finder-cite-role"><legend>' + cs.w("screen.document.cite.role") + "</legend>"
-      + ["supports", "against"].map(function (r) { return '<label><input type="radio" name="finder-cite-role" id="finder-cite-role-' + r + '" value="' + r + '"> ' + cs.w("screen.findin.cite." + r) + "</label>"; }).join("") + "</fieldset>";
+    const roles = '<fieldset class="mk-checks" id="finder-cite-role"><legend>' + cs.w("screen.finder.cite.legend") + "</legend>"
+      + ["supports", "against"].map(function (r) { return '<label><input type="radio" name="finder-cite-role" id="finder-cite-role-' + r + '" value="' + r + '"> ' + cs.w("screen.finder.cite." + (r === "supports" ? "support" : "against")) + "</label>"; }).join("") + "</fieldset>";
     const done = ui.citeDone && typeof ui.citeDone === "object" ? ui.citeDone : null;
     const nameOf = function (id) { return titles[String(id)] ? '<span class="rec">' + cs.esc(titles[String(id)]) + "</span>" : ""; };
     const didRows = done ? (Array.isArray(done.cited) ? done.cited : []).map(function (id) {
       const n = nameOf(id);
-      return n ? cs.row(cs.icon("accepted"), "<b>" + cs.w("act.cite.label.find-in") + "</b> " + n + '<span class="meta">' + cs.w("screen.finder.a17.newly_cited_supporting_the_question") + "</span>", "", "") : "";
+      return n ? cs.row(cs.icon("accepted"), "<b>" + cs.w("screen.finder.cite.cited") + "</b> " + n + '<span class="meta">' + (done.role === "cuts_against" ? cs.w("screen.finder.cite.newly_against") : cs.w("screen.finder.a17.newly_cited_supporting_the_question")) + "</span>", "", "") : "";
     }).concat((Array.isArray(done.alreadyCited) ? done.alreadyCited : []).map(function (id) {
       const n = nameOf(id);
       return n ? cs.row(cs.icon("clock"), "<b>" + cs.w("screen.finder.a17.left_as_it_was") + "</b> " + n + '<span class="meta">' + cs.w("screen.finder.a17.the_question_already_cited_it") + "</span>", "", "") : "";
     })).filter(Boolean).join("") : "";
+    // What moved in the held set since it was held for citing: added after, gone since (a document no longer held is not cited).
+    const held0 = Array.isArray(ui.citeHeld) ? ui.citeHeld.map(String) : null;
+    const moved = held0 && sel && sel.state === "ok" ? {
+      added: members.filter(function (id) { return held0.indexOf(id) < 0; }), gone: held0.filter(function (id) { return members.indexOf(id) < 0; }) } : null;
+    const changed = moved && (moved.added.length || moved.gone.length)
+      ? '<p class="mk-note">' + cs.w("screen.finder.cite.set_changed") + "</p>" + cs.sheet(moved.added.map(function (id) {
+        const n = nameOf(id);
+        return n ? cs.row(cs.icon("hold"), n + '<span class="meta">' + cs.w("screen.finder.cite.added_since") + "</span>", "", "") : "";
+      }).concat(moved.gone.map(function (id) {
+        const n = nameOf(id);
+        return n ? cs.row(cs.icon("clock"), n + '<span class="meta">' + cs.w("screen.finder.cite.gone_since") + "</span>", "", "") : "";
+      })).filter(Boolean).join("")) : "";
     return '<h2 class="mk-h2">' + cs.w("act.cite.label.finder") + "</h2>"
       + '<p class="mk-sub">' + cs.w("screen.finder.a17.cite_every_document_you_hold_together_in") + "</p>" + heldRows + asked + roles
       + '<p class="mk-note">' + cs.w("screen.finder.a17.each_document_is_cited_whole_as_its_own_") + " " + cs.w("screen.finder.a17.a_document_the_question_already_cites_is") + " "
       + cs.w("screen.finder.a17.if_the_set_changed_after_you_held_it_wha") + "</p>"
-      + '<span class="mk-acts">' + cs.act("cite", { label: "act.cite.label.finder", tone: "primary", data: { handle: String(ui.handle), cite: "1" } }) + "</span>"
+      + changed
+      + '<span class="mk-acts">' + cs.act("cite", { label: "act.cite.label.finder", tone: "primary", data: { handle: String(ui.handle), cite: "1" } })
+      + '<a class="cs-btn" data-tone="quiet" data-nav href="/app/finder">' + cs.w("screen.finder.cite.back") + '</a></span><p class="mk-small muted">' + cs.w("screen.finder.cite.back.help") + "</p>"
       + (didRows ? cs.sec("queue.answered.col.did", cs.sheet(didRows)) : "");
   };
   // The state's own act: `cite` over the handle, the question chosen and the role (citation R1: no role is refused in place).

@@ -12,7 +12,9 @@ export function queueStates() {
   const FEEDS = ["membership", "people", "money-checks", "answers", "duties", "inquiry", "credentials", "following", "file-safety", "ai-use",
     "ai-accounts", "question-explorer", "steps", "investigation", "review", "retrieval", "notice-producers", "noticeItems", "action-clock-overdue",
     "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold", "litigation-hold-released", "template-review-requested",
-    "local-fact-due", "member-left-items", "watch-keep-or-stop", "plan-review-due", "plan-look-again", "request-unsent"];
+    "local-fact-due", "member-left-items", "watch-keep-or-stop", "plan-review-due", "plan-look-again", "request-unsent",
+    "tasks", "bias-debts", "sources", "proposals", "shared-inquiries", "leads", "exports", "references", "objectives", "machinery", "contradictions", "signing-keys",
+    "action", "attribution", "docket", "cited-cases", "wizards", "schedule", "places", "projects"];
   const link = function (cs, href, key) { return '<a class="cs-btn" data-tone="quiet" data-nav href="' + href + '">' + cs.w(key) + "</a>"; };
   // A moment as people read it: its day and the time on the 12-hour clock (`time.at`, `time.clock`, DEC-335).
   const when = function (cs, iso) {
@@ -130,7 +132,7 @@ export function queueStates() {
       const it = items.filter(function (x) { return x && String(x.id) === r.id; })[0] || null;
       const title = it ? wordsOf(it) : cs.esc(r.id);
       if (r.applied) return cs.row(cs.icon("accepted"), "<b>" + cs.w("queue.multi.done") + "</b> · " + title + '<span class="meta">' + cs.w("queue.done", { what: { html: cs.w("act." + o.op + ".label.queue") } }) + "</span>", "", "");
-      const why = r.instead === "filingapprove" ? cs.w("queue.multi.why.letter") : r.why ? cs.esc(r.why) : "";
+      const why = r.instead === "filingapprove" ? cs.w("queue.multi.why.letter") : it && it.kind === "check" ? cs.w("queue.multi.why.check") : r.why ? cs.esc(r.why) : "";
       return cs.row(cs.icon("refused"), "<b>" + cs.w("queue.multi.refused") + "</b> · " + title
         + '<span class="meta">' + why + (it && r.instead ? " " + doorOf(it, r.instead) : "") + "</span>", "", "");
     }).join("");
@@ -187,7 +189,7 @@ export function queueStates() {
     }
     if (r.act === "forwarded") {
       const who = r.to === null || r.to === undefined || r.to === "" ? "" : String(r.to);
-      return cs.row(cs.icon("accepted"), (who ? cs.w("queue.answered.forwarded", { item: { html: title }, member: who }) : title)
+      return cs.row(cs.icon("accepted"), (who ? cs.w("queue.answered.forwarded", { item: { html: title }, member: who }) : cs.w("queue.answered.forwarded.unnamed", { item: { html: title } }))
         + '<span class="meta">' + cs.w("queue.answered.byyou", { when: { html: at } }) + "</span>", "", "");
     }
     if (r.act === "snoozed") {

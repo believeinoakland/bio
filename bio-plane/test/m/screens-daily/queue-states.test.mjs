@@ -62,6 +62,16 @@ test("R58: Mark them done sends taskresolve once with the chosen items; the outc
   assert.ok(p.byOp("queue").length >= 1);
 });
 
+test("R58: an item that is a check another member asked of you stays with the check's reason, its own door beside it", async () => {
+  const check = task("C1", { kind: "check", disposition: { available: false, instead: "taskresolve" }, options: [] });
+  const p = await open("/app/queue/choose", { queue: queueOf([task("T1"), check]),
+    taskresolve: ok({ ok: false, code: "SET_ITEMS_RETAINED", reason: "SET_ITEMS_RETAINED", count: 1, applied: 1, retained: 0, items: [{ index: 0, outcome: "applied", asked: { id: "T1" } }] }) });
+  await choose(p, ["T1", "C1"]);
+  await press(p, "taskresolve", { nth: 0 });
+  const t = text(p);
+  assert.ok(t.includes(word("queue.multi.why.check")) && !t.includes(word("queue.multi.why.letter")));
+});
+
 test("R58: Forward sends taskforward once with items and the one member; Dismiss sends proposedispose once with items, the one reason and to dismissed; a call over the bound is sent in further calls in order", async () => {
   const many = Array.from({ length: 103 }, (_, i) => task("M" + i));
   const items = [task("T1"), task("T2"), finding("F1"), finding("F2"), ...many];
@@ -122,6 +132,7 @@ test("R59: the answered page reads queue with answered true and draws each answe
   assert.ok(t.includes(word("queue.source.untitled", { date: dmy("2026-10-09") })), "a to-do with no title is named by the untitled word");
   assert.ok(t.includes(word("queue.answered.forwarded", { item: "The clause check", member: "rosa" })));
   assert.ok(!t.includes(word("queue.answered.forwarded", { item: "An earlier one", member: "null" })), "control: an earlier forward names nobody, never guessed");
+  assert.ok(t.includes(word("queue.answered.forwarded.unnamed", { item: "An earlier one" })), "an earlier forward is its own sentence, naming nobody");
   assert.ok(t.includes(word("queue.answered.snoozed", { item: "Pothole repairs", date: dmy("2026-10-20") })));
   assert.ok(t.includes(word("queue.answered.snoozed.meta")));
   const rows = main(p).querySelectorAll(".cs-row").map((r) => text(p, r));
@@ -141,6 +152,11 @@ test("R60: a feed that did not answer is named at the head of a queue with items
   assert.ok(retry && [...main(withItems).querySelectorAll("a")].some((a) => a.textContent === word("queue.tryagain")));
   const named = await open("/app/queue", { queue: queueOf([task("T1")], feeds(["retrieval"])) });
   assert.ok(text(named).includes(word("queue.allclear.failed.feed", { feed: word("queue.feed.retrieval") })));
+  for (const id of ["tasks", "bias-debts", "proposals", "shared-inquiries", "leads", "exports", "references", "objectives", "machinery", "contradictions", "signing-keys",
+    "action", "attribution", "docket", "cited-cases", "wizards", "schedule", "places", "projects"]) {
+    const one = await open("/app/queue", { queue: queueOf([task("T1")], feeds([id])) });
+    assert.ok(text(one).includes(word("queue.allclear.failed.feed", { feed: word("queue.feed." + id) })), id);
+  }
   const bare = await open("/app/queue", { queue: queueOf([task("T1")], feeds(["tasks-x"])) });
   assert.ok(text(bare).includes(word("queue.allclear.withheld")), "a feed the word list does not name is not named, and the class stays withheld");
   const withheld = await open("/app/queue", { queue: queueOf([], feeds(["sources"])) });

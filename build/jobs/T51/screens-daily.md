@@ -36,6 +36,11 @@
 1. R54's rest, after interface-shell R90 merges: `says: "home.strip.ours_passed.opens"` on Home's strip reading; `here` on `cs.act` for Home's "Start a project" (`act.promote.here.home`; remove the `startNote` paragraph that stands in for it), the muted list's "Turn back on" (`act.queuemute.here.queue_kind`, `.queue_project`) and the unsent request's drop (`act.actionmove.here.queue`); `placeholder` on Find's words field; then `refresh: true` on Find's browse and `cs.fresh` (R93), `cs.stateChip` (R95), and `redraw` for the choices if wanted.
 2. Then: all tests, `format`, `architecture`, `coverage`, `ownership`, `words`, `run.mjs`, `setup-words/build.mjs --check`; COMPLETE.
 
+## B4 handled (SCREENS-DAILY #9)
+- (2c) applied with tests: the cite state's words `screen.finder.cite.*` (legend, support, against, cited, newly_against, set_changed, added_since, gone_since, back, back.help; the set moved is compared with the set held when the state opened, `citeHeld`); `screen.finder.pick`, `.pickfirst` already used; resolved rows are their title alone; `queue.answered.forwarded.unnamed`; the 20 new `queue.feed.<id>` names (`sources` keeps its own sentence, `queue.allclear.failed`); `queue.multi.why.check` for an item of kind `check`, `.why.letter` for `filingapprove`.
+- (2a) the "Search projects" button is gone (and its word); the field redraws on `change` until the kit narrows as typed.
+- (2b) NOT drawn yet: `<div class="tw">` around Find's table makes the shell refuse every screen at boot (served stylesheet defines no `tw`, interface-shell's class check) until interface-assets takes the class; do it on the CHANGE that carries it.
+
 ## J1 · BLOCKED
 
 BLOCKED (cause: context). screens-daily #8 is at half its window and has stopped at a clean step; my record (`build/jobs/T51/screens-daily.md`, "Progress") lists what is done, what is next, and the REPORTs/QUESTIONs for you. Pushed: `job/T51/screens-daily` @ d980f1010c.

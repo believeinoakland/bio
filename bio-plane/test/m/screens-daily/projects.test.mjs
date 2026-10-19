@@ -223,7 +223,7 @@ test("R63: projects draws a search by name and a filter (all, in, own), narrowin
   ] });
   const p = await open("/app/projects", { projectlist: three, projectquestions: QUESTIONS }, { screens: withScreens("project") });
   const names = () => rows(p).map((r) => r.querySelector("a.cs-ref").textContent);
-  assert.ok(hasWord("screen.projects.search.label") && hasWord("screen.projects.search.help") && hasWord("screen.projects.search.go"));
+  assert.ok(hasWord("screen.projects.search.label") && hasWord("screen.projects.search.help"));
   assert.ok(main(p).querySelector('label[for="projects-search"]') && text(p).includes(word("screen.projects.search.help")));
   assert.equal(text(p, main(p).querySelector('label[for="projects-filter"]')), word("screen.projects.filter.label"));
   assert.deepEqual(main(p).querySelectorAll("#projects-filter option").map((o) => o.textContent), ["screen.projects.filter.all", "screen.projects.filter.in", "screen.projects.filter.own"].map((k) => word(k)));

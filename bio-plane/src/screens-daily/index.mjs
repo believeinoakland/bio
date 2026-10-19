@@ -95,7 +95,7 @@ const WORDS_OF = {
     // R58 to R61: choosing several items, what was answered, the feeds' honesty and the set-aside findings.
     "queue.multi.entry", "queue.multi.choose", "queue.multi.head", "queue.multi.head2", "queue.multi.chosen", "queue.multi.chosen.one", "queue.multi.done",
     "queue.multi.forward", "queue.multi.snooze", "queue.multi.snooze.help", "queue.multi.dismiss", "queue.multi.refused", "queue.multi.result", "queue.multi.result.one",
-    "queue.multi.why.letter", "queue.multi.back", "screen.finder.pick", "screen.finder.pickfirst", "shell.unread",
+    "queue.multi.why.letter", "queue.multi.why.check", "queue.answered.forwarded.unnamed", "queue.multi.back", "screen.finder.pick", "screen.finder.pickfirst", "shell.unread",
     "queue.answered.title", "queue.answered.head", "queue.answered.heading", "queue.answered.help", "queue.answered.byyou", "queue.answered.bymember", "queue.answered.byother",
     "queue.answered.forwarded", "queue.answered.snoozed", "queue.answered.snoozed.meta", "time.at", "time.clock", "time.am", "time.pm",
     "queue.aside.help", "queue.aside.help2", "queue.aside.dismissed", "queue.aside.dismissed.bymember", "queue.aside.deferred", "queue.aside.deferred.bymember", "queue.aside.v2",
@@ -105,7 +105,7 @@ const WORDS_OF = {
     "projects.empty.sub", "projects.empty.note", "projects.invited.head", "projects.invited.says", "projects.findable.head", "projects.findable.says", "projects.findable.meta",
     "projects.request.asked", "act.projectrequest.label.projects", "act.projectrequestwithdraw.label.projects", "screen.projects.nocreate", "member.founder.unnamed",
     "theme.section", "theme.across", "theme.never.evidence", "theme.every", ...START, "file.trigger.projects", "screen.projects.title.needed",
-    "screen.projects.search.label", "screen.projects.search.help", "screen.projects.search.go", "screen.projects.filter.label", "screen.projects.filter.help",
+    "screen.projects.search.label", "screen.projects.search.help", "screen.projects.filter.label", "screen.projects.filter.help",
     "screen.projects.filter.all", "screen.projects.filter.in", "screen.projects.filter.own",
     ...PROJECT_ROWS("screen.projects")],
   finder: [...SHARED, "screen.finder.name", "screen.finder.purpose", "mark.origin.search.name", "mark.origin.search.means", "mark.gap.nobody.name", "mark.gap.nobody.means",
@@ -113,7 +113,7 @@ const WORDS_OF = {
     "screen.finder.sub", "screen.finder.words", "screen.finder.wordsfirst", "screen.finder.total.one", "screen.finder.total.many", "screen.finder.noresult",
     "screen.finder.covers", "screen.finder.captureit", "screen.finder.widen", "screen.finder.pick", "screen.finder.held.one", "screen.finder.held.many",
     "screen.finder.until", "screen.finder.nobody", "screen.finder.nobody.one", "screen.finder.nobody.none", "screen.finder.count.question", "screen.finder.count.from", "screen.finder.count.to",
-    "screen.finder.counted", "screen.finder.pickfirst", "screen.finder.holdfirst",
+    "screen.finder.counted", "screen.finder.pickfirst", ...["legend", "support", "against", "cited", "newly_against", "set_changed", "added_since", "gone_since", "back", "back.help"].map((k) => `screen.finder.cite.${k}`), "screen.finder.holdfirst",
     // R44, R45: the browse, its marks, and Watch, Flag and Clear.
     "find.query.placeholder", "find.browse.says", "find.browse.new.means", "find.browse.nosince", "find.browse.nosince.summary", "find.browse.more", "find.browse.showmore",
     "find.kind.label", "find.kind.all", "find.kind.document", "find.kind.question", "find.kind.action", "find.kind.entity", "find.kind.plan",

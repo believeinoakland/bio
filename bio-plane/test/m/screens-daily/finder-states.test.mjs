@@ -145,6 +145,30 @@ test("R57: Cite these together opens the cite state over the held set; a role mu
   assert.ok(ops(p).includes("selectionrelease"), "the held set is not released by citing");
 });
 
+test("R57: the cite state's own words: the legend, Support it and Cut against it, Cited, and the way back; cutting against says so; a set that moved says what was added and dropped", async () => {
+  const items = [ITEM("INF-1", "document", "Work orders", "verified", "2026-10-12T10:00:00Z"), ITEM("INF-2", "document", "Council report", "verified", "2026-10-11T10:00:00Z"),
+    ITEM("INF-3", "document", "Budget memo", "verified", "2026-10-10T10:00:00Z")];
+  const qs = ok({ total: 1, hits: [{ bundle_id: "INQ-1", title: "Are potholes repaired?", object_type: "inquiry" }] });
+  let members = ["INF-1", "INF-2"];
+  const p = await open("/app/finder", { ...PLANE, browse: BROWSE(items), select: ok({ ok: true, handle: "sel-1", n: 2 }), selection: () => ok({ ok: true, handle: "sel-1", n: members.length, members }),
+    search: qs, cite: ok({ ok: true, cited: ["INF-2"], alreadyCited: [] }) });
+  await press(p, "select", { values: { "finder-pick-INF-1": true, "finder-pick-INF-2": true, "finder-pick-INF-3": true } });
+  await press(p, "cite", { nth: 0 });
+  const t = text(p);
+  for (const k of ["legend", "support", "against", "back", "back.help"]) assert.ok(t.includes(word(`screen.finder.cite.${k}`)), k);
+  const back = main(p).querySelectorAll("a[data-nav]").find((a) => a.textContent === word("screen.finder.cite.back"));
+  assert.equal(back.getAttribute("href"), "/app/finder", "the way out sends nothing and cites nothing");
+  assert.ok(!t.includes(word("screen.finder.cite.set_changed")), "control: a set that has not moved says nothing");
+  members = ["INF-2", "INF-3"];
+  p.doc.getElementById("finder-cite-role-against").checked = true;
+  const stateAct = () => main(p).querySelectorAll('button[data-act="cite"]').findIndex((b) => b.dataset.cite === "1");
+  await press(p, "cite", { nth: stateAct() });
+  const after = text(p);
+  assert.equal(last(p, "cite").query.role, "cuts_against");
+  assert.ok(after.includes(word("screen.finder.cite.cited")) && after.includes(word("screen.finder.cite.newly_against")));
+  assert.ok(after.includes(word("screen.finder.cite.set_changed")) && after.includes(word("screen.finder.cite.added_since")) && after.includes(word("screen.finder.cite.gone_since")));
+});
+
 test("R34: every key Find reads is a word of the list", () => {
   for (const k of screen("finder").words) assert.ok(hasWord(k), k);
 });
