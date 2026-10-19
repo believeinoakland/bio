@@ -1259,6 +1259,9 @@
    "refusal.BAD_RENDER",
    "refusal.MACHINE_CANNOT_FOLLOW",
    "refusal.MACHINE_CANNOT_LINK_WATCH",
+   "refusal.MACHINE_CANNOT_MARK",
+   "refusal.MARK_NO_ITEM",
+   "refusal.MARK_NO_SUCH_ITEM",
    "refusal.NOT_GATED",
    "refusal.NOT_READ",
    "refusal.NOT_THE_AUTHOR",
@@ -1275,6 +1278,8 @@
    "refusal.NO_SUCH_WATCH",
    "refusal.PERSON_QUERY_NOT_NAMED",
    "refusal.PRICE_FIRST",
+   "refusal.SECOND_LOOK_NOT_OPEN",
+   "refusal.SECOND_LOOK_NO_NOTE",
    "refusal.WATCH_ENDED",
    "refusal.WATCH_NOT_ASKED",
    "refusal.WATCH_RELIED_ON"

@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4700,
+  "screen": 4712,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -228,7 +228,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15361,
+  "total": 15373,
   "protected": 933
  },
  "words": [
@@ -57634,6 +57634,90 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "screen.home.rd.document",
+   "en": "document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular"
+  },
+  {
+   "key": "screen.home.rd.documents",
+   "en": "documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural"
+  },
+  {
+   "key": "screen.home.rd.case",
+   "en": "case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular"
+  },
+  {
+   "key": "screen.home.rd.cases",
+   "en": "cases",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural"
+  },
+  {
+   "key": "screen.home.rd.followed.one",
+   "en": "person followed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular: a person or office the team follows"
+  },
+  {
+   "key": "screen.home.rd.followed.other",
+   "en": "people followed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural: people and offices the team follows"
+  },
+  {
+   "key": "screen.home.rd.clock",
+   "en": "clock running",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular: a deadline clock the team is running on an action"
+  },
+  {
+   "key": "screen.home.rd.clocks",
+   "en": "clocks running",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural"
+  },
+  {
+   "key": "screen.home.rd.security",
+   "en": "security level",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the label after the level word, which is one of screen.home.rd.level.*"
+  },
+  {
+   "key": "screen.home.rd.level.ordinary",
+   "en": "ordinary",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the security level as a reading, the word of screen.security.level.ordinary in lower case"
+  },
+  {
+   "key": "screen.home.rd.level.raised",
+   "en": "raised",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the security level as a reading, as screen.security.level.raised"
+  },
+  {
+   "key": "screen.home.rd.level.high",
+   "en": "high",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the security level as a reading, as screen.security.level.high"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

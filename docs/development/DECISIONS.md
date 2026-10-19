@@ -5466,3 +5466,33 @@ decided: 2026-10-19 · the design session (P17)
 the design: neither gets a row nor an entry, as DEC-351 did for the details the check does not count (`bio-plane/src/member-roster/index.mjs` 819 and 903 on tranche/T51). The member's own refusals for these cases stay those the screens draw (`refusal.TARGET_NOT_AN_ADMIN`, `refusal.EXPERTISE_IS_NOT_ASSIGNED` where worded). If the check later counts them, they go on member-roster's unkeyed list with this reason.
 reasoning recorded in: this entry.
 owed: nothing.
+
+### DEC-353 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's HANDOFF B359, FOLLOWING #10 J1)
+for: design
+question: Following's reads list lacks five refusal keys it reads.
+why it is Bob's: it is not (P17): the design's lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: `refusal.MARK_NO_ITEM`, `refusal.MARK_NO_SUCH_ITEM`, `refusal.SECOND_LOOK_NO_NOTE`, `refusal.SECOND_LOOK_NOT_OPEN` and `refusal.MACHINE_CANNOT_MARK` join following's reads in `words-reads-mod-3.json`; `words-reads.json` regenerated from tranche/T51.
+reasoning recorded in: this entry; `screens/words-reads-mod-3.json`, `screens/words-reads.json`.
+owed: nothing.
+
+### DEC-354 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's HANDOFF B360; T51-118, screens-daily R64; DEC-218, DEC-219)
+for: design
+question: Home draws five readings (documents, cases, people followed, clocks running, security level) with no rows.
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: `.one`/`.other` keys on new names, as B360 offered; rejected for documents, cases and clocks, since home's other readings are label pairs (`screen.home.rd.member`/`members`) and one form reads easier for the job; the security level's value from `screen.security.level.*`, rejected since those rows are capitalized sentences with periods ("Ordinary.").
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: rows, each a label after its number as home's other readings: `screen.home.rd.document`/`documents`, `screen.home.rd.case`/`cases`, `screen.home.rd.followed.one` ("person followed")/`.other` ("people followed"), `screen.home.rd.clock` ("clock running")/`clocks`, `screen.home.rd.security` ("security level") after its value `screen.home.rd.level.ordinary`/`raised`/`high` (the security screen's levels in lower case). The drawing's "usual" becomes "ordinary", the security screen's own word. A reading at zero is never shown (DEC-219).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: nothing.
