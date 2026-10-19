@@ -177,8 +177,8 @@ export function biasNotInForce(args = {}) {
   return { check: row.check, code: "BIAS_APPLICATION_NOT_IN_FORCE", translation: row.translation,
            statement: id, where: at, in_force: inForce === null ? null : false,
            detail: localize("inquiry.index.v1_names_the_bias_statement", "{v1} names the bias statement {v2}, {v3}", { v1: String(at ?? "a bias application"), v2: String(id === null ? "(none)" : `'${fmSafe(id)}'`), v3: String(inForce === null
-                   ? `and whether it is in ${lens} could not be read, so the application is refused rather than trusted`
-                   : `which is not in ${lens}`) }) };
+                   ? localize("inquiry.index.whether_it_is_in_lens_could", "and whether it is in {lens} could not be read, so the application is refused rather than trusted", { lens })
+                   : localize("inquiry.index.which_is_not_in_lens", "which is not in {lens}", { lens })) }) };
   /* END DEC-49 REGION is-bias-application-in-force */
 }
 
@@ -635,11 +635,9 @@ export class Inquiry {
         if (missing.length || invented.length)
           return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId, missing, not_siblings: invented,
                    detail: (missing.length
-                     ? `this child does not name ${missing.join(", ")}, which ${parentId} was also divided `
-                     + `into. A reader who can see one half of a divided inquiry must be able to see that `
-                     + `the other half EXISTS (R4). `
+                     ? localize("inquiry.index.this_child_does_not_name", "this child does not name {missing}, which {parentId} was also divided into. A reader who can see one half of a divided inquiry must be able to see that the other half EXISTS (R4). ", { missing: missing.join(", "), parentId: String(parentId) })
                      : "")
-                   + (invented.length ? `it also names ${invented.join(", ")}, which ${parentId} was not divided into.` : "") };
+                   + (invented.length ? localize("inquiry.index.it_also_names_which_was", "it also names {invented}, which {parentId} was not divided into.", { invented: invented.join(", "), parentId: String(parentId) }) : "") };
       }
     }
     /* R3 / R29: the basis is a DAG, enforced at the write that would close the cycle, naming the path. Not exempt on
@@ -723,7 +721,7 @@ export class Inquiry {
         if (!e || (e.determined !== true && e.undetermined_because !== "OCCURRENCE_UNDETERMINED"))
           out.push({ check: "C-2.8", code: "NO_SUCH_OCCURRENCE", target: t,
                      detail: localize("inquiry.index.basis_i_rests_on_t_2", "basis[{i}] rests on {t}, which the record does not hold: {v1}", { i: String(i), t: String(t), v1: String(e && e.why ? e.why
-                       : "no duty the record holds derives it") }) });
+                       : localize("inquiry.index.no_duty_the_record_holds", "no duty the record holds derives it")) }) });
       } else if (CALCULATION_REF_RE.test(t) || /^CALC-/.test(t)) {
         /* R11 (T34-29; N576, N596, K1601, K1639): calculations' synchronous status read (its R31), as the author sees it */
         const s = this.#calcStatus(t, viewer);
@@ -1710,7 +1708,7 @@ export class Inquiry {
     if (!sel.ok) return sel;
     if (!sel.members.length)
       return { ok: false, reason: "EMPTY_SELECTION", handle, drift: sel.drift,
-               detail: "this selection resolves to no members, so there is nothing to dispose" };
+               detail: localize("inquiry.index.this_selection_resolves_to", "this selection resolves to no members, so there is nothing to dispose") };
 
     /* Refused WHOLE, offenders named, never narrowed to the valid subset. The
        operator picked a set; disposing part of it decides something they did
@@ -1828,15 +1826,13 @@ export class Inquiry {
         const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
         if (!liveMd || liveMd.content === null)
           return { ok: false, reason: "NO_DOCUMENT", bundleId: id,
-                   detail: "this inquiry has no readable bundle.md, so its state cannot be moved; nothing was moved" };
+                   detail: localize("inquiry.index.this_inquiry_has_no_readable", "this inquiry has no readable bundle.md, so its state cannot be moved; nothing was moved") };
         /* C-4.2: prior_state obliges a state_history ENTRY (timestamp, from_state, to_state, blurb, author). */
         let text = appendStateHistory(liveMd.content, {
           timestamp: when, from_state: cur.current_state, to_state: to, blurb: why, author: author || "member" });
         if (!text)
           return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id,
-                   detail: "this document's state_history block is not in a shape this grammar can extend in "
-                         + "place, and a disposition that recorded no transition would leave prior_state "
-                         + "pointing at a history the document does not carry (C-4.2); nothing was moved" };
+                   detail: localize("inquiry.index.this_documents_state_history_block", "this document's state_history block is not in a shape this grammar can extend in place, and a disposition that recorded no transition would leave prior_state pointing at a history the document does not carry (C-4.2); nothing was moved") };
         text = setScalar(text, "prior_state", cur.current_state);
         text = setScalar(text, "current_state", to);
         /* D-169: setOrAdd, because C-2.8 requires the reason and an intake document may carry no such line. */
@@ -1994,7 +1990,7 @@ export class Inquiry {
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
       return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+               detail: localize("inquiry.index.this_inquiry_has_no_readable_2", "this inquiry has no readable bundle.md, so its state cannot be moved") };
     const parentText = liveMd.content;
     const fm = parseFrontmatter(parentText).data || {};
 
@@ -2118,7 +2114,7 @@ export class Inquiry {
       return { ok: false, reason: "NO_APPORTIONMENT", target,
                orphans: orphans.map((i) => ({ ord: i, target: legs[i].target ?? null, role: legs[i].role ?? null })),
                cuts_against_orphans: cutting.length,
-               detail: localize("inquiry.index.every_leg_gets_a_home", "every leg gets a home. {length} leg(s) were apportioned to no child{v1}. Division RE-HOMES material and only severance REMOVES it, which is why dividing cannot do severance's work at a discount (R4): apportion them, or sever them with a reason, which is the act that takes material out of a question.", { length: String(orphans.length), v1: String(cutting.length ? `, and ${cutting.length} of them CUT AGAINST this inquiry` : "") }) };
+               detail: localize("inquiry.index.every_leg_gets_a_home", "every leg gets a home. {length} leg(s) were apportioned to no child{v1}. Division RE-HOMES material and only severance REMOVES it, which is why dividing cannot do severance's work at a discount (R4): apportion them, or sever them with a reason, which is the act that takes material out of a question.", { length: String(orphans.length), v1: String(cutting.length ? localize("inquiry.index.and_of_them_cut_against", ", and {cutting} of them CUT AGAINST this inquiry", { cutting: String(cutting.length) }) : "") }) };
     }
 
     const when = this.#when();
@@ -2534,10 +2530,7 @@ export class Inquiry {
                detail: "grouping authors the structure of ONE question: pass target=<inquiry id>" };
     if (grounds === undefined)
       return { ok: false, reason: "NO_PARTITION", target,
-               detail: "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per "
-                     + "group, where each ord is a leg's position in this question's basis. Pass an EMPTY "
-                     + "array to remove the grouping entirely and let the answer read as its weakest leg "
-                     + "again; that is a restructuring like any other and takes a reason." };
+               detail: localize("inquiry.index.pass_grounds_an_array", "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per group, where each ord is a leg's position in this question's basis. Pass an EMPTY array to remove the grouping entirely and let the answer read as its weakest leg again; that is a restructuring like any other and takes a reason.") };
 
     /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
        inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
@@ -2568,7 +2561,7 @@ export class Inquiry {
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
       return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its structure cannot be authored" };
+               detail: localize("inquiry.index.this_inquiry_has_no_readable_3", "this inquiry has no readable bundle.md, so its structure cannot be authored") };
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
     const all = Array.isArray(fm.basis) ? fm.basis : [];
@@ -2746,8 +2739,8 @@ export class Inquiry {
       + `Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) — `
           + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ")
           : `grouping removed; ${legs.length} leg(s) read as necessary again`}.\n`
-      + (restructure ? `Reason: ${why}\n` : "First grouping: no earlier structure to revise.\n")
-      + (before ? `Strength before: ${w(before)}.\n` : "Strength before: not stated (no module answers it here).\n"));
+      + (restructure ? `Reason: ${why}\n` : localize("inquiry.index.first_grouping_no_earlier", "First grouping: no earlier structure to revise.\n"))
+      + (before ? `Strength before: ${w(before)}.\n` : localize("inquiry.index.strength_before_not_stated", "Strength before: not stated (no module answers it here).\n")));
 
     /* R65: the act and the pair after it are recorded in the promotion's own transaction (the Session Log, being part of
        the bytes promoted, cannot hold the pair after), so a refusal after the write leaves neither. */
