@@ -27,3 +27,10 @@ T51-80 (red #34, N1223, DEC-327, U343, K3729): done, all tests green.
 - `checks/run.mjs /home/user/bio`: format and architecture 0 failures. Its coverage step fails 23 other modules (for example affordances R67, interface-shell R90–R101), none case-import. Not mine; not investigated.
 
 Size (session_01Bph2yYGTh5kCEUU4yTWpfn): test runs 4, module lines 2236.
+
+## J2 · REPORT
+
+Found in another module (P9), not changed by this job:
+
+- `handlist` at `bio-plane/test/m/plane/accepted.test.mjs:154`: the plane test hand-lists case-influence op names (`caseimport`, `caseimportdocument`, `importedcases`, `importedcase`, ...). Plane's job should take the list from its declaration: `CASE_IMPORT_OPS`, exported by `bio-plane/src/case-import/index.mjs` from this job (its ten ops, K3268), or from `caseImportOps`' keys.
+- `inline` at `bio-plane/src/queue-producers/index.mjs:2154`: an English sentence in product source ("an unreadable docket is case-import's fact about this copy's latest..."). queue-producers' job should read it through `localize`, or it is a word-pass item for that module.
