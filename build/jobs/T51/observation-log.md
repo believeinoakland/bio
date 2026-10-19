@@ -25,3 +25,33 @@ Reading: the requirements (whole), the T51-34 plan entry, the BOB START, and `vo
 Commit 9b6fd6e936 on job/T51/observation-log.
 
 Size (session_018EFM1gtb8uU1diGsNZYq71): test runs 1, module lines 3290
+
+## J2 · REPORT
+
+Words after T51-200 (observation-log): items for the design stream (K3944). The conversion is in commit 37ccba91f7; nothing below changed a member's text.
+
+1. Wire-grammar hints, kept as they were (not converted). Each names a caller's parameter and reads as usage, not as prose. Each is the detail of a refusal for a missing parameter:
+   - `pass lead=<LEAD-…>: the id op=lead returned` (index.mjs, leadFor)
+   - `pass project=<PROJ-…>: the project to share this lead to` (index.mjs, leadShare)
+   - `pass reason=<your words>: why this lead is disclosed to {pid}` (index.mjs, leadShare; part English)
+   - `pass detail=<your words>: where you looked and what you found` (index.mjs, leadLook)
+   If the design reads refusal details as member text, these four convert.
+
+2. Developer text, kept: the thrown Error messages (`observation-log: … was refused …`, `record-core refused its table declaration`, `provenance refused its testimony registration`), SQL, and the `(via …)` machine token in a stored detail.
+
+3. Design rows whose words differ from the code's words. The code's text is kept under a new id, so the output does not change. Which text is the member's is the design's call:
+   - observation-log.lead_list_note: row says "never looked"; code says "NEVER_LOOKED" (observation-log.index.lead_list_note)
+   - observation-log.never_followed: row says "This is never looked"; code says "This is NEVER_LOOKED" (observation-log.vocabulary.frontier_never_followed)
+   - observation-log.address: row says "normalized"; code says "normalised" (observation-log.vocabulary.subject_address)
+   - observation-log.says.undetermined_derivation_over: row says "The log stores whole seconds"; code says "`observation_log.at` stores whole seconds" (observation-log.vocabulary.derived_watermark_band)
+   - observation-log.capture_session_ttl_expiring: row drops "(CAPTURE-SCALING)" (observation-log.vocabulary.condition_capture_session_ttl_expiring)
+   - observation-log.why.capture_content_level: row ends ": {cause}"; code names OBSERVATION-LOG-DESIGN.md section 5.1 before the cause (observation-log.vocabulary.capture_no_content_row)
+   - observation-log.why.reading_persisted_capture_reader: row drops "(section 5.1)" (observation-log.vocabulary.no_reader_run_recorded)
+   - observation-log.partial.looked_got_part: row drops the parenthetical "(SWH's crawl status; CPDF-5's measured 88% case)" that the code keeps (observation-log.vocabulary.state_partial). OBSERVATION_STATE_WORDS strips that note either way.
+   The design rows also drop developer notes such as "(S-7)" and "(D-104)" from condition sentences, where the code keeps them. Whether those notes stay in member text is a design question.
+
+4. Tests. The words rule binds tests, so two tests no longer hold a sentence:
+   - test/m/observation-log/registrations.test.mjs imports AUTHORED_EXTRACTION_DETAIL, a new export of index.mjs (R30's detail), instead of copying it.
+   - test/m/observation-log/vocabulary.test.mjs (R36, render-deferred) asserts the opening "a render your team's" and the ending "conditionsRenderDeferred" instead of the whole sentence. R36's exact-wording pin is weaker until a words.json row exists for observation-log.vocabulary.condition_render_deferred; if the design adds that row, the test can pin it with hasWord.
+
+5. rows.mjs is stale for the 70 new ids (`setup-words/build.mjs --check` says so, as B2 expects). BOB regenerates it at the layer close.
