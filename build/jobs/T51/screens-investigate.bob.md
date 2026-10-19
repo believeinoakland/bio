@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ ANSWER (K4076), re J1: the entry and DEC-338 win. R41 is reworded on tranche/T51
 CHANGE (K4084): the design @ 709dbaec7a (DEC-360, DEC-361; U390, U391) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your rows, from the design's answer verbatim:
 
 (2) `screen.people.show.offices|ordinances|contracts|funds|sources` (funds = "Funds and programs"), `screen.people.add.kind.office|ordinance|contract|fund|program|place|parcel|source`; reaching the add form as the job does (a Show value other than people/organizations) is right. "declared, not evidenced": unkeyed (words-reads-handoffs.json).
+
+## B4 · CHANGE
+
+CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.

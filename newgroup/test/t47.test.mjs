@@ -11,7 +11,7 @@ import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
 import { PROFILE_CHOICES, ALLOWED, BEFORE_CLOUDFLARE_CONTROL, STYLESHEET, ASSET_PREFIX, UPDATE_KEEPS, LEFT_OUT, PAGE_CSS } from "../src/ui.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 import { word } from "../src/words.mjs";
-import { pageWorld, req, run, begin, callback, script, realFetch, release, armWith, restoreSigners, SIGNER, bump, VPC_ID, jres } from "./fixture.mjs";
+import { pageWorld, req, run, begin, callback, script, realFetch, release, armWith, restoreSigners, SIGNER, bump, VPC_ID, jres, headOf } from "./fixture.mjs";
 
 const text = async (path) => (await req(path)).text();
 const NEXT = bump(RELEASE_VERSION);
@@ -34,7 +34,6 @@ function section(page, id) {
 const controls = (html) => [...html.matchAll(/<(input|select|textarea)\b([^>]*)>/g)]
   .map((m) => `${m[1]}#${m[2].match(/\bid="([^"]+)"/)?.[1] ?? ""}${m[2].match(/\bname="([^"]+)"/) ? "[" + m[2].match(/\bname="([^"]+)"/)[1] + "]" : ""}`);
 /* The part of a key's sentence before its `{said}`: what tells one stop from another. */
-const headOf = (key, vars = {}) => word(key, { said: "\u0000", ...vars }).split("\u0000")[0];
 const words = (html) => html.replace(/<[^>]+>/g, " ").replace(/&#39;/g, "'").replace(/&ldquo;|&rdquo;/g, "\"").replace(/\s+/g, " ")
   .replace(/ ([.,])/g, "$1");
 

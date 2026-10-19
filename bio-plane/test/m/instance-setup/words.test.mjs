@@ -49,7 +49,7 @@ test("R63 R53 R55 R96 the assistant's sentences (T36: the keep-away state and it
   assert.equal(unread.detail, localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."));
   /* this module's own sentence on the gate: a provider that throws is the store's silence */
   const thrown = (await boot({ prov: { ...w.prov, aiAccounts: { aiKeptAway() { throw new Error("x"); } } } })).m.assistantGate();
-  assert.equal(thrown.detail, localize("instance-setup.setup.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({String}), so no ask is put to an assistant and no run starts.", { String: "x" }));
+  assert.equal(thrown.detail, localize("instance-setup.setup.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({reason}), so no ask is put to an assistant and no run starts.", { reason: "x" }));
   for (const s of [kept.detail, stateDetail, unread.detail, kept.translation, thrown.detail]) assert.doesNotMatch(s, RETIRED, s);
 });
 

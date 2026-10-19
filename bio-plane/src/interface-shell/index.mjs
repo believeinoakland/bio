@@ -6,6 +6,7 @@
    table and writes nothing; every read and act is an op the plane serves, from the browser. */
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { WORD_ROWS, word } from "../setup-words/index.mjs";
+import * as DECLARATIONS from "../op-declarations/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, MARKS, phoneOf } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
@@ -59,6 +60,11 @@ export const PATHS = Object.freeze({
   "group-identity": ["settings", "screen.group-identity.name"], security: ["settings", "screen.security.name"],
   translations: ["settings", "screen.translations.name"], wizards: ["settings", "screen.wizards.name"],
   updates: ["settings", "screen.updates.name"],
+  /* R101 (T51): `glossary` and `actionnew` from the rail place and the screen's title (the drawings' `crumbs`), `teamai` from `PATH` */
+  glossary: ["settings", "screen.glossary.name"], teamai: ["settings", "screen.teamai.name"],
+  actionnew: ["projects", "@project", "screen.actionnew.name"],
+  /* K4078: the two dashboards Home opens, as `PATH` draws them: the action dashboard by its name, the project's by the project's title */
+  "dash-action": ["screen.dash-action.name"], "dash-project": ["projects", "@project"],
   group: ["settings", "screen.group.name"], places: ["settings", "screen.places.name"], recovery: ["settings", "screen.recovery.name"],
   unavailable: ["screen.unavailable.name"],
 });
@@ -109,6 +115,18 @@ export const ADDRESSES = Object.freeze({ review: "review-outside" });
    address: `/doorbell` and `/tour`. Every other path outside `/` and `/app` draws `unavailable` in the public frame. */
 export const PUBLIC_ADDRESSES = Object.freeze({ doorbell: "doorbell", tour: "tour" });
 
+/* R102 (T51; N1184 B-19, B-22; DEC-340): the nine named pages: the registry's `public` and `published` frames and the setup
+   frame's `join`. The tab title of each is `page.title.public`, and none draws a weight mark, in the frame or the page. */
+export const PUBLIC_PAGES = Object.freeze(["front", "tour", "reset", "forgot", "doorbell", "published", "docket-public", "review-outside", "join"]);
+
+/* R100 (T51; `op-declarations` R76): the acts done in the page alone, read from `op-declarations`' table (`{screen, census,
+   registry}` per act; the table is that module's and none is kept here). An absent table is the empty one. */
+export function browserActs() {
+  const t = DECLARATIONS.BROWSER_ACTS;
+  return t && typeof t === "object" ? t : {};
+}
+const isBrowserAct = (op, screenId) => Object.hasOwn(browserActs(), op) && browserActs()[op].screen === screenId;
+
 /* R21, R73 (T50): the ops a screen may name beyond the registry's acts (its declared, function and owed acts, each owed one
    under its op name, `wizard-scripts` R13, R41): `infolevelset` on any screen (`ANY_SCREEN_OPS`), and the one op a screen
    needs that the registry does not list for it, until it does: `stepsourcewithdraw` on `explore` (R55). A test fails on an
@@ -134,6 +152,9 @@ export const ADMIN_ACTS = Object.freeze(new Set([
   "passwordresetlink", "signerset", "groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset",
   "hostingaccessset", "profilesset", "placewanted", "officesseed", "translationgrant", "translationrevert",
   "securitytools", "securitytoolcatalogue", "securitytoolevents", "securitytooladd", "securitytooltest", "securitytoolremove",
+  /* R101 (T51): a member's signing key added by an administrator (`credentials` R6), and the root of trust's seeding of the
+     team (`instance-setup` R4) */
+  "signeradd", "instancegroupseed",
 ]));
 
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
@@ -157,6 +178,11 @@ export function checkScreens(screens) {
     const allowed = new Set([...reg.acts, ...(reg.owed || []).map((o) => o.op), ...(RE_POINTS[id] || []), ...ANY_SCREEN_OPS]);
     for (const a of s.acts) {
       const op = a && a.op;
+      /* R100: an act the page does alone is admitted for the screen `BROWSER_ACTS` names it for, and for no other */
+      if (typeof op === "string" && !Object.hasOwn(OPS, op) && Object.hasOwn(browserActs(), op)) {
+        if (!isBrowserAct(op, id)) throw new Error(`interface-shell: screen ${id}'s act ${op} is a browser act of another screen (BROWSER_ACTS), not of this one`);
+        continue;
+      }
       if (typeof op !== "string" || !Object.hasOwn(OPS, op)) throw new Error(`interface-shell: screen ${id}'s act names ${String(op)}, which OPS does not hold`);
       if (!allowed.has(op)) throw new Error(`interface-shell: screen ${id}'s act ${op} is not the registry's for it, nor a named re-point`);
       /* R30: a screen drawn without a session calls only public ops (R46: `unlock`, under the locked session's token) */
@@ -211,7 +237,7 @@ export function wordsOf(screens) {
 /* The words the page carries (R70: the keys of `setup-words`' list, read from it, never English held here): the families the shell and its kit draw (R5–R7, R10, R11, R13, R14, R16, R32–R36, R40),
    each act's label and explanation, each registered screen's, and every key a screen (or the guide) names. */
 const FAMILIES = ["shell.", "rail.", "tab.", "state.", "weight.", "mark.", "level.", "date.", "refusal.", "ai.refused.", "session.",
-  "signing.ceremony.", "instance.test.", "page.", "unavailable."];
+  "signing.ceremony.", "instance.test.", "page.", "unavailable.", "list.", "form.choose.passage"];
 function pageWords(screens, ops) {
   const named = new Set(screens.flatMap((s) => (s.words || []).map((x) => (Array.isArray(x) ? x[0] : x))));
   const ids = screens.map((s) => s.id).filter(Boolean).concat(Object.keys(PATHS), ["unavailable", "more"]);
@@ -260,6 +286,10 @@ function dataOf(screens, guide) {
        `OP_ALIASES`); never one run on press (a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`: the
        credential acts `knock`, `enroll`, `recover` stay on the phone) */
     larger: [...ops].filter((op) => Object.hasOwn(OPS, op) && rungOf(op) !== "none" && phoneOf(op) === false),
+    /* R100: the acts the page does alone, `{act: screen}` (never an op: no weight, no friction, no request) */
+    browserActs: Object.fromEntries(all.flatMap((s) => s.acts.map((a) => a.op).filter((op) => typeof op === "string" && isBrowserAct(op, s.id)).map((op) => [op, s.id]))),
+    /* R102: the pages that carry no weight mark and are titled by `page.title.public` */
+    publicPages: PUBLIC_PAGES,
     paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, cardWordOnly: CARD_WORD_ONLY, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES, publicAddresses: PUBLIC_ADDRESSES,
     places: [...Object.keys(PLACE_SCREENS), "more"],
     idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS, absence: ABSENCE.source, adminScreens: ADMIN_SCREENS,
@@ -274,7 +304,7 @@ function dataOf(screens, guide) {
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
-@media (max-width:${PHONE_WIDTH}px){.cs-mast .mk-grp{white-space:normal;overflow-wrap:anywhere;min-width:0;flex:1 1 auto}
+@media (max-width:${PHONE_WIDTH}px){
 .cs-main{overflow-x:hidden}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
@@ -289,6 +319,7 @@ export const HOOK_CLASSES = Object.freeze({
   "cs-r": "a row of `cs.rows`, read by the screen modules' tests",
   "cs-panel": "a row's panel, read by the shell's ring (R31) and `cs.fieldOf`, and by the screen modules' tests",
   "mk-lvlbtn": "the explanation-level control (R65), read by the design's script and journey-check (`mock-shell.js`:47)",
+  "mk-updband": "the newer-version band (R92): the design's `cs-testband` with this hook, read by the shell's tests and journey-check (`mock-shell.js` `updBand`)",
 });
 
 /* R56: every class a served stylesheet defines: `civicsmith.css` (whose own elements' classes count with it), `shell.css`

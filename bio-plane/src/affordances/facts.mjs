@@ -26,13 +26,16 @@
  * REACHED as `affordancesOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`). The modules it
  * asks are reached through their factories on the same host at the moment of the call, when the Durable Object has
  * already made each of them with its own options; `deps` (a test's) replaces any of `record`, `membership`,
- * `connections`, `citation`, `inquiry`, `caseTensions`, `basisVersions`, `ratification`, `contradiction`, `wizardScripts`.
+ * `connections`, `citation`, `inquiry`, `caseTensions`, `basisVersions`, `ratification`, `contradiction`, `wizardScripts`, `actions` (and `combine`, R67).
+ *
+ * R67, R68 (T51): the third route, `op=affordancevocab`, answers what only the instance's active profiles know of the
+ * vocabularies the answer publishes (`profileVocabularies`).
  *
  * R37 (N528): the second route, `op=affordancescreens`, answers what the untargeted `op=affordances` publishes of
  * `wizard-scripts`: the registered screens and, for each, the offered scripts that start there for this viewer. */
 
 import { normalizeType, parseFrontmatter, isMachineIdentity, isMachineStamp } from "../record-grammar/index.mjs";
-import { recordOf } from "../record-core/index.mjs";
+import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { membershipOf, Membership } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { citationOf } from "../citation/index.mjs";
@@ -49,6 +52,8 @@ import { escalationOf, STOPPED as ESCALATION_STOPPED, ACCOUNTABILITY_PURPOSES } 
 import { conformanceOf } from "../conformance/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { actionClocksOf, CLOSED_ACTION_STATES, REMINDERS_PER_ACTION_MAX } from "../action-clocks/index.mjs";
+import { PRODUCT_KINDS } from "../action-grammar/index.mjs";
+import { combine } from "../../../jurisdictions/index.mjs";
 import { explainRefusal } from "../affordances.mjs";
 
 /* R15: the `by` a roster position is asked of, or null when none can be: no stamp sent, or a credential's stamp (N874). */
@@ -80,6 +85,8 @@ class AffordanceFacts {
     this.actionClocks = of("actionClocks", actionClocksOf);
     const storage = host && host.storage ? host.storage : host;
     this.sql = d.sql || (storage && storage.sql);
+    /* R67: `jurisdictions.combine` of the active profiles, replaced by a test's stand-in through `deps.combine` */
+    this.combine = d.combine || combine;
   }
 
   /* One row of record-core's `bundles` read contract (its R37: `bundle_id`, `object_type`, `current_state`,
@@ -450,6 +457,45 @@ class AffordanceFacts {
              action: type === "action" ? this.#actionFacts(id, viewer, author) : null };
   }
 
+  /** R67, R68 (T51; N1236, K3771; DEC-329 (5), K3806): WHAT THE ACTIVE PROFILES ADD TO THE VOCABULARIES, read at the moment of the
+   *  call as `action_kind` is (R26) and never held. `proceeding_kinds`: `[{kind, label, forum_kind}]` of `jurisdictions.combine`'s
+   *  view over the instance's `jurisdiction_profiles` (`jurisdictions` R51), in the combined view's order, every kind once, an
+   *  entry without a string `kind` left out; `[]` with no profile active. `action_kind_labels`: from the view `actions.kinds()`
+   *  reads (`actions.governingView`, so that this map and `action_kind` cannot disagree), each `action_kinds` entry whose kind is
+   *  not among the product's own and whose `label` is a non-empty string, kind to label; `{}` with no profile active. A view that
+   *  cannot be read leaves its key out (absent, never empty), so a surface can tell "none" from "could not ask". The label is the
+   *  profile's own text as record data, not a word of this module's. A read: writes nothing (R22) and never throws. */
+  profileVocabularies() {
+    let ids = null, readable = true;
+    try { ids = this.record().getSetting("jurisdiction_profiles", { strict: true }); } catch { readable = false; }
+    if (ids === SETTING_UNREADABLE) readable = false;
+    if (typeof ids === "string") { try { ids = JSON.parse(ids); } catch { readable = false; } }
+    const active = !readable ? null : Array.isArray(ids) ? ids : ids === null || ids === undefined ? [] : null;
+    const out = { ok: true };
+    if (active !== null) {
+      if (!active.length) out.proceeding_kinds = [];
+      else {
+        let view = null;
+        try { const c = this.combine(active); view = c && c.ok ? c.view : null; } catch { view = null; }
+        if (view) {
+          const seen = new Set();
+          out.proceeding_kinds = (Array.isArray(view.proceeding_kinds) ? view.proceeding_kinds : [])
+            .filter((k) => k && typeof k.kind === "string" && !seen.has(k.kind) && seen.add(k.kind))
+            .map((k) => ({ kind: k.kind, label: typeof k.label === "string" ? k.label : null, forum_kind: k.forum_kind ?? null }));
+        }
+      }
+    }
+    let governing = null;
+    try { governing = this.actions().governingView(); } catch { governing = null; }
+    if (governing && typeof governing === "object") {
+      out.action_kind_labels = {};
+      for (const k of Array.isArray(governing.action_kinds) ? governing.action_kinds : [])
+        if (k && typeof k.kind === "string" && !PRODUCT_KINDS.includes(k.kind) && typeof k.label === "string" && k.label.trim()
+            && !Object.hasOwn(out.action_kind_labels, k.kind)) out.action_kind_labels[k.kind] = k.label;
+    } else if (active !== null && !active.length) out.action_kind_labels = {};
+    return out;
+  }
+
   /** R41 (Q1-7): a refusal an op gave, explained from its catalogue row (`rowOf`, handed in) and, with a target, a dry
    *  run of the acts this caller may take on it now: R13–R14's facts asked as the acts would be, `deriveActs` over them,
    *  nothing performed. Never throws. */
@@ -499,5 +545,7 @@ export function affordancesOps(a, url) {
                                                author: q("author"), by: q("by") }),
     /* R37: the screens and the offered wizard scripts the untargeted answer publishes, for the stamped viewer. */
     affordancescreens: () => a.screens({ viewer: q("viewer") }),
+    /* R67, R68: what the active profiles add to the vocabularies, asked beside the kinds on both arms of the answer. */
+    affordancevocab: () => a.profileVocabularies(),
   };
 }

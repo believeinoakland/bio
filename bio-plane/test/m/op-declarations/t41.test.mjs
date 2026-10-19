@@ -9,6 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
@@ -309,8 +310,7 @@ test("R46 (K2457, K2443, K2554): recordcapturedlocator is a store-internal route
 
 test("R34 (T41; K2593): every member op T41 declares is explained in affordances' ACT_HELP or named under one ground of ACT_HELP_ABSENT, never both — R41's and R42's ten owed acts explained (affordances R48, merged: PR #19's owed texts held under their ops), the other reads under the read ground, the other acts under the last; handlecheck, public, under none (negative control: an unnamed op is seen)", () => {
   const ground = (op) => Object.entries(ACT_HELP_ABSENT).find(([, g]) => g.ops.includes(op))?.[0] ?? null;
-  const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
-  const OWED = ["accountusesset", "ailimitset", "exploreapprove", "handlechange", "projectaccountremove", "projectaccountswitch",
+    const OWED = ["accountusesset", "ailimitset", "exploreapprove", "handlechange", "projectaccountremove", "projectaccountswitch",
                 "projectaikeepaway", "projectkeynoticeseen", "projectkeyset", "projectsigninset"];
   for (const op of OWED) {
     assert.ok(explained(op), `${op}: no ACT_HELP text`);

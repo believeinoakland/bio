@@ -5601,3 +5601,48 @@ decided: 2026-10-19 · the design session (P17)
 the design: eighteen wizard-scripts refusals close with "Nothing was written." as their siblings do; "unticked" becomes "unchecked" (row and drawing); `queue.feed.action` "Actions and their deadlines", `queue.feed.wizards` "Wizards waiting for approval or a newer version"; `installer.update.retired` "Left as it was: {parts}. They came from an earlier release, and this one no longer uses them."; "Agree: remove {member} as an administrator" (row and drawing), matching its heading; Home's no-place vouch takes "the", and both vouch rows gain a `.one` form; the link tally's one form reads "1 of them leads". Left as they are: the skill doctrine's rule references (the assistant's own instructions cite them), code rows' placeholder names the calls already pass (`{k}`, `{v}`, `{n}`), and instance-setup's operator fragments.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 owed: nothing.
+
+### DEC-362 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01MBG5FH3gL4kdDPTNgGsGex; the development process also runs on his primary account since K1428) (BOB's HANDOFF B375, installer-steps T51-127; K4085, K3930)
+for: design
+question: Rows installer-steps' REPORT names, the shape of the left-out list, and its reads entry.
+why it is Bob's: it is not (P17): the design's words and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: each entry of `installer.fleet.partial.*`'s {list} is `installer.fleet.left.item` "{member} ({why})", {why} always an `installer.fleet.why.*` fragment, never a whole sentence; new fragments for a failed fingerprint (`why.integrity`), an HTTP error (`why.http` {status}) and a failed second read at upload (`why.refetch`), and list forms of the six `installer.image.*` reasons (the `installer.image.*` sentences stay the notice's); `installer.fleet.why.container.<cause>` for parse, class, policy, size, bindings, path and duplicate (the bare row for a cause not named); `installer.fleet.skip.manifest.reason` carries the manifest's reason. `words-reads.json` gains an `installer-steps` entry whose reads are exactly STEP_KEYS' 68 keys (`words-reads-mod-5.src.mjs`).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads-mod-5.src.mjs`, `screens/words-reads.json`.
+owed: nothing.
+
+### DEC-363 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01MBG5FH3gL4kdDPTNgGsGex; the development process also runs on his primary account since K1428) (BOB's HANDOFF B376, screens-daily T51-118; K4086)
+for: design
+question: Home's edition line for a draft with exactly one comment on a case with no published edition.
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: `screen.home.area.edition.draftonly.comments.one` "A draft of {case} is shared for review until {until}, 1 comment to answer"; `.draftonly.comments` is for two or more.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: nothing.
+
+### DEC-364 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01MBG5FH3gL4kdDPTNgGsGex; the development process also runs on his primary account since K1428) (BOB's HANDOFF B379, screens-inquiry T51-119 and installer-steps; K4089)
+for: design
+question: screens-inquiry's key gaps after DEC-360, and installer-steps' reads entry after its STEP_KEYS grew.
+why it is Bob's: it is not (P17): the design's words and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: question: "Change your decision" for the fold's summary; an axis without a citation reads `screen.question.compare.axis` "{axis}: {change}", with one `say054` carries the "since … was cited" tail. dash-project: `next.vouch.one`; its borrowed rows (`shell.reason`, `.help`, `screen.home.area.meetbar`, `screen.projects.owner`, `.lastchange`, `screen.project.stage.*`) mean the same thing there and are confirmed. project: `…dev.is.standing.down.as` reworded with {member}; the table's "(now)" and its three-owner cells "{votes} of {owners}", "{voters} of {owners} may vote"; `network-notices.level.very_active` and `.some_work` complete the level family. document: the decided row's no-reason forms; `revisions.truncated` reworded to the count held ("Not every revision is shown here: {n} are, and this copy has more."); "Fingerprint: {digest}" for the compare panel. installer-steps' reads entry is STEP_KEYS' 78 keys (read from its job branch until it merges).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads.json`.
+owed: nothing.
