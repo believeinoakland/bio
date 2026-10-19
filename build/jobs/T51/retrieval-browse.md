@@ -71,3 +71,23 @@ Size (session_01AFeyrJPobdYm3SJyPqCdRf): test runs 2, module lines 1365
 ## J3 · COMPLETE
 
 B3 (K4003) done on job/T51/retrieval-browse. Fixture stand-in refusal is now a neutral string, not retrieval's sentence. Merged tranche/T51 (fast-forward). Tests 51/51; words, coverage, architecture, ownership 0 failures for retrieval-browse. Record: Completion again (B3). No product code changed.
+
+## J4 · COMPLETE
+
+CR-29 · retrieval-browse complete (B4, K4149).
+
+**Entry applied.** `bio-plane/test/m/retrieval-browse/t36.test.mjs`: the recorded-not-read check for the read that answered another shape asserted `/another shape/` against `recorded_not_read[3].why`. It now asserts equality with `WORD("retrieval-browse.findin.read_another_shape")`, the reason's word-table text (the reason is `localize` on that key in `findin.mjs`). Test-only; no product code changed. Commit 3568b42416.
+
+**Deferred.** None.
+
+**Found in other modules.** None. The coverage failures in the full run (agent-harness R17, agent-runner R36 R37 R38 R40, installer-steps R26 R31, journey-check R19) are other modules'; none names retrieval-browse.
+
+**Checks.**
+- `node --test bio-plane/test/m/retrieval-browse/`: 51 tests, 51 pass, 0 fail.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; words 0 failures (retrieval-browse: inline 0, plain 0, testcopy 0, missingkey 0); coverage 4 failures, all other modules (above).
+- `node checks/words.mjs /home/user/bio retrieval-browse`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio retrieval-browse`: 15 product files, 0 failures.
+- `node checks/ownership.mjs /home/user/bio retrieval-browse tranche/T51 job/T51/retrieval-browse`: 1 file changed, 0 failures.
+- Journey test not run (per BOB's note).
+
+Size (session_01G1CAemApraurD9bkv8qb3W): test runs 1, module lines 1365
