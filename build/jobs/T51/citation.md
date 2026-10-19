@@ -57,3 +57,23 @@ Checks:
 Earlier pass (CR-11, J2): unchanged; this COMPLETE supersedes it.
 
 Size (session_018wkgQYFa889na4frSPWfKx): test runs 5, module lines 1415
+
+## J4 · COMPLETE
+
+B3 done (K4015): the words check on citation is clean. Pushed on job/T51/citation as "T51 citation (B3): the NO_ROLE translation is read through the list".
+
+Finding fixed: checks.mjs:21, the NO_ROLE translation (C-33.16) was a literal joined by + that copied the row refusal.NO_ROLE. It now reads word('refusal.NO_ROLE'); the text is equal to the row.
+
+Unkeyed items kept: none. The module's remaining unkeyed count is 0.
+
+Checks after the fix:
+- node checks/words.mjs /home/user/bio citation: 0 failures (inline 0, testcopy 0, unkeyed 0). The check is run from the pulled process main (d424c32).
+- node --test bio-plane/test/m/citation/: 102 pass, 0 fail.
+- node checks/format.mjs /home/user/bio: 0 failures.
+- node checks/architecture.mjs /home/user/bio citation: 0 failures.
+- node checks/coverage.mjs /home/user/bio citation: 15 of 15 live ids, 0 failures.
+- node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation: 10 files, 0 failures.
+- node --test checks/test/*.test.mjs tools/test/*.test.mjs (process repo): 0 failures.
+- node bio-plane/src/setup-words/build.mjs --check: no refusal naming citation.
+
+Size (session_018wkgQYFa889na4frSPWfKx): test runs 7, module lines 1412
