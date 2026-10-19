@@ -5646,3 +5646,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: question: "Change your decision" for the fold's summary; an axis without a citation reads `screen.question.compare.axis` "{axis}: {change}", with one `say054` carries the "since … was cited" tail. dash-project: `next.vouch.one`; its borrowed rows (`shell.reason`, `.help`, `screen.home.area.meetbar`, `screen.projects.owner`, `.lastchange`, `screen.project.stage.*`) mean the same thing there and are confirmed. project: `…dev.is.standing.down.as` reworded with {member}; the table's "(now)" and its three-owner cells "{votes} of {owners}", "{voters} of {owners} may vote"; `network-notices.level.very_active` and `.some_work` complete the level family. document: the decided row's no-reason forms; `revisions.truncated` reworded to the count held ("Not every revision is shown here: {n} are, and this copy has more."); "Fingerprint: {digest}" for the compare panel. installer-steps' reads entry is STEP_KEYS' 78 keys (read from its job branch until it merges).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads.json`.
 owed: nothing.
+
+### DEC-365 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01MBG5FH3gL4kdDPTNgGsGex; the development process also runs on his primary account since K1428) (BOB's HANDOFF B381, installer, installer-steps and journey-check; K4094, K3944)
+for: design
+question: Three installer rows and journey-check's harness strings.
+why it is Bob's: it is not (P17): the design's words and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: `installer.team.unrecorded.how.finished` for a finished copy (what stays refused; only the hosting account's holder can set it; no instruction that loops back); `screen.install.stopped.plan.done` "Check again"; `installer.fleet.why.pullfailed` for an image placed but not started. journey-check's 27 step labels, state names and run diagnostics filed unkeyed (ADMIN_READING is not counted by the check, so it needs no entry, DEC-351).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
+owed: nothing.

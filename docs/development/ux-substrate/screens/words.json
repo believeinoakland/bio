@@ -49,11 +49,11 @@
   "session": 11,
   "updates": 34,
   "home": 19,
-  "installer": 417,
+  "installer": 419,
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4923,
+  "screen": 4924,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15749,
+  "total": 15752,
   "protected": 934
  },
  "words": [
@@ -60337,6 +60337,27 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-364 (B379 A): screens-inquiry, document; a file's digest in the compare panel, {digest} shortened as the page draws fingerprints"
+  },
+  {
+   "key": "installer.team.unrecorded.how.finished",
+   "en": "The installer can't record it for a copy that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)"
+  },
+  {
+   "key": "screen.install.stopped.plan.done",
+   "en": "Check again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-365 (B381 2): installer F2; the Workers Paid stop's button, beside screen.install.stopped.containers.done"
+  },
+  {
+   "key": "installer.fleet.why.pullfailed",
+   "en": "its software was placed in your account but couldn't be started from there",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-365 (B381 3): installer-steps F5; a container image that failed to pull once placed"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
