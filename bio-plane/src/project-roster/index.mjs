@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R37; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R38; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests, R38 `mine` and `scope` on the list). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `said`); T47 (R26) lists the
@@ -277,7 +277,7 @@ export class ProjectRoster {
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" }); if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project may propose another owner of it" };
+               detail: localize("project-roster.index.owner_add_needs_an_owner", "only an owner of this project may propose another owner of it") };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
@@ -290,7 +290,7 @@ export class ProjectRoster {
       const row = PROJECT_ROSTER_CHECKS.TARGET_NOT_JOINED;
       return { ok: false, reason: "TARGET_NOT_JOINED", code: "TARGET_NOT_JOINED", check: row.check,
                translation: row.translation, handle, ...(p ? { state: p.state } : {}),
-               detail: "an owner is a joined participant with the owner flag, so the member joins the project first" };
+               detail: localize("project-roster.index.owner_must_be_joined_first", "an owner is a joined participant with the owner flag, so the member joins the project first") };
     }
     /* END DEC-49 REGION is-owner-target-joined */
     if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
@@ -309,7 +309,7 @@ export class ProjectRoster {
       if (awaiting.length)
         return { ok: false, reason: "CONSENSUS_REQUIRED", projectId, handle,
                  have: have.sort().map((x) => this.#nm(x)), awaiting: awaiting.sort().map((x) => this.#nm(x)),
-                 detail: "every existing owner must agree to an addition beyond the second" };
+                 detail: localize("project-roster.index.owner_add_needs_every_owner", "every existing owner must agree to an addition beyond the second") };
     }
     const deciders = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter).sort();
     this.m.participationWrite("ownerOn", { projectId, memberId: target.member_id, by, at: now });   /* membership R118 */
@@ -344,7 +344,7 @@ export class ProjectRoster {
     if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
     if (blocked) return named(blocked);
     const why = String(reason ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("project-roster.index.rescue_needs_a_reason", "authority changes are recorded with a reason") };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
@@ -368,13 +368,13 @@ export class ProjectRoster {
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" }); if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project votes on its ownership" };
+               detail: localize("project-roster.index.owner_remove_needs_an_owner", "only an owner of this project votes on its ownership") };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (!this.m.isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
     const why = String(reason ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("project-roster.index.owner_remove_needs_a_reason", "ownership changes are recorded with a reason") };
 
     /* DEC-49 REGION is-owner-floor — REC-64/C-33.28. */
     const owners = this.m.projectOwners(projectId);
@@ -393,7 +393,7 @@ export class ProjectRoster {
     /* At three and above the target does not vote. At two they must, which is the whole divergence from §4.7. */
     if (!math.targetMayVote && by === target.member_id)
       return { ok: false, reason: "TARGET_CANNOT_VOTE", ...math,
-               detail: "the target is counted in the denominator but does not vote" };
+               detail: localize("project-roster.index.owner_remove_target_cannot_vote", "the target is counted in the denominator but does not vote") };
 
     if (this.#one(
       `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? AND voter=?`,
@@ -569,11 +569,10 @@ export class ProjectRoster {
         localize("project-roster.index.stringify_is_not_a_scope", "{stringify} is not a scope: a project is a counsel matter (counsel_matter), a member's own project (own), or neither (none). Nothing was written.", { stringify: String(JSON.stringify(String(scope ?? "").slice(0, 40))) }));
     const why = ProjectRoster.#reason(reason);
     if (!why) return ProjectRoster.#noReason(
-      `a project's scope is set with a reason of at most ${ProjectRoster.REASON_MAX} characters. Nothing was written.`);
+      localize("project-roster.index.scope_set_needs_a_reason", "a project's scope is set with a reason of at most {max} characters. Nothing was written.", { max: String(ProjectRoster.REASON_MAX) }));
     if (this.m.visibilityOf(projectId) !== "hidden")
       return refusal("PROJECT_SCOPE_NEEDS_HIDDEN",
-        "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was "
-        + "written.");
+        localize("project-roster.index.scope_needs_a_hidden_project", "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was written."));
     if (scope === "own" || current === "own") {
       const participants = this.#one(`SELECT COUNT(*) AS n FROM project_participants WHERE project_id=?`, projectId).n;
       if (!this.m.isProjectOwner(projectId, by) || participants !== 1)
@@ -619,18 +618,18 @@ export class ProjectRoster {
       if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project sets which of its acts need a second member's approval" };
+               detail: localize("project-roster.index.approval_set_needs_an_owner", "only an owner of this project sets which of its acts need a second member's approval") };
     const refusal = (code, detail, extra) => ProjectRoster.#scopeRefusal(code, projectId, detail, extra);
     /* DEC-49 REGION is-project-approval-set */
     if (!Array.isArray(needs))
-      return refusal("APPROVAL_RULE_INVALID", "the rules are a list, empty to restore one member's approval. Nothing "
-        + "was written.", { entry: null, index: null });
+      return refusal("APPROVAL_RULE_INVALID", localize("project-roster.index.approval_rules_are_a_list", "the rules are a list, empty to restore one member's approval. Nothing was written."),
+        { entry: null, index: null });
     const clean = [];
     for (const [i, e] of needs.entries()) {
       const n = ProjectRoster.#approvalEntry(e);
       if (!n)
-        return refusal("APPROVAL_RULE_INVALID", `rule ${i + 1} is not one of {kind}, {tier} (1, 2 or 3) or `
-          + "{public: true}. Nothing was written.", { entry: e ?? null, index: i });
+        return refusal("APPROVAL_RULE_INVALID", localize("project-roster.index.approval_rule_is_not_valid", "rule {n} is not one of {kind}, {tier} (1, 2 or 3) or {public: true}. Nothing was written.", { n: String(i + 1), kind: "{kind}", tier: "{tier}" }),
+          { entry: e ?? null, index: i });
       clean.push(n);
     }
     const held = clean.some((n) => n.kind) ? this.#actionKinds() : new Set();
@@ -640,8 +639,7 @@ export class ProjectRoster {
     /* END DEC-49 REGION is-project-approval-set */
     const why = ProjectRoster.#reason(reason);
     if (!why) return ProjectRoster.#noReason(
-      `a project's approval setting is set with a reason of at most ${ProjectRoster.REASON_MAX} characters. Nothing `
-      + "was written.");
+      localize("project-roster.index.approval_set_needs_a_reason", "a project's approval setting is set with a reason of at most {max} characters. Nothing was written.", { max: String(ProjectRoster.REASON_MAX) }));
     const at = new Date().toISOString();
     this.sql.exec(`INSERT INTO project_approval_settings (project_id, needs, reason, set_by, at) VALUES (?,?,?,?,?)`,
       projectId, JSON.stringify(clean), why, by, at);
@@ -842,6 +840,9 @@ export class ProjectRoster {
    *
    *  R34 (T50): each row's `participation`, the viewer's own state.
    *
+   *  R38 (T51; N1184, DEC-340): each row's `mine`, `{in, owner}` (the viewer's own stamp only: `in` joined to it, `owner`
+   *  holding its owner flag, membership R54, R65) and `scope` (R23's, `none`, `own` or `counsel_matter`).
+   *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked = {}) {
@@ -871,9 +872,15 @@ export class ProjectRoster {
     /* R34 (T50; N1118): the viewer's own state in each project as membership records it; null for a non-participant. */
     const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
     const own = new Map(me && page.length ? this.#rows(
-      `SELECT project_id, state FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
-      me, ...page.map((r) => r.id)).map((x) => [x.project_id, x.state]) : []);
-    const projects = page.map((r) => ({ id: r.id, participation: own.get(r.id) ?? null,
+      `SELECT project_id, state, owner FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
+      me, ...page.map((r) => r.id)).map((x) => [x.project_id, x]) : []);
+    /* R38 (T51; N1184): each project's scope, the latest record's (R23's rule, read for the page in one statement). */
+    const scopes = new Map(page.length ? this.#rows(
+      `SELECT project_id, scope FROM project_scopes WHERE project_id IN (${page.map(() => "?").join(",")}) ORDER BY seq`,
+      ...page.map((r) => r.id)).map((x) => [x.project_id, x.scope]) : []);
+    const projects = page.map((r) => ({ id: r.id, participation: own.get(r.id)?.state ?? null,
+      mine: { in: own.get(r.id)?.state === "joined", owner: !!own.get(r.id)?.owner },
+      scope: scopes.get(r.id) ?? "none",
       name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
       owner: r.founder ? this.#person(ROOT_ADMIN, null)
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
@@ -1149,7 +1156,7 @@ export class ProjectRoster {
     /* DEC-49 REGION is-join-request-answer */
     if (!this.m.isProjectOwner(projectId, by))
       return refusal("PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
-        localize("project-roster.index.a_request_to_join_string", "a request to join {String} is answered by its OWNERS (Membership Architecture v2 §7.14; only owners invite, §7.2), and {String_2} is not one of them. Administrators see requests and answer none. Nothing was written.", { String: String(String(projectId).slice(0, 80)), String_2: String(String(this.#nm(by) ?? "an unnamed caller").slice(0, 80)) }));
+        localize("project-roster.index.a_request_to_join_string", "a request to join {String} is answered by its OWNERS (Membership Architecture v2 §7.14; only owners invite, §7.2), and {String_2} is not one of them. Administrators see requests and answer none. Nothing was written.", { String: String(String(projectId).slice(0, 80)), String_2: String(String(this.#nm(by) ?? localize("project-roster.index.an_unnamed_caller", "an unnamed caller")).slice(0, 80)) }));
     if (!ProjectRoster.JOIN_REQUEST_ANSWERS.includes(want))
       return refusal("PROJECT_REQUEST_UNKNOWN_ANSWER",
         localize("project-roster.index.stringify_is_not_an_answer", "{stringify} is not an answer: a request is granted or declined, and nothing else. Nothing was written.", { stringify: String(JSON.stringify(want.slice(0, 40))) }));
