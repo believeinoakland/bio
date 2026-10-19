@@ -79,7 +79,7 @@
 - The stewards' service (Bob, K2819, "1. C 2. A 3. A 4. A 5. A"): stewards named inside the service, shown publicly only as "Civicsmith's stewards" with Believe in Oakland responsible; contact kept 90 days, report 1 year; anonymous reports accepted; text and links only; a public register of withdrawals and the group told; folded in `stewards` R3, R5, R13, R15, R22, R23.
 - A member's own hidden project is never rescued; Civicsmith's stewards' reporting service is built now (T45), its contact address named by Bob before any public release, which is not cut without it (Bob, K2782, K2799).
 - Members' words (K3472: "team", never "group", in any text people read, from T50): "record", never "bundle", in any text a member reads, the assistant's relayed text included (identifiers stay); "your group's Civicsmith" to members, "this group's Civicsmith" to a reader without credentials, never "copy", "instance" or "plane". (K106, K158, K899, K902, K1821)
-- No member or administrator meets an old interface (Bob, K3052): the new interface replaces the setup page at `/` and legacy-ui for every user; until each is retired, it is a defect on the plan with an entry, never a kept choice. legacy-ui and the setup page are touched only by the jobs that retire them.
+- No member or administrator meets an old interface (Bob, K3052): the new interface replaced the setup page at `/` and legacy-ui for every user; both are retired (the setup page at T47-74, legacy-ui at T51-126, K4100), and an old interface brought back is a defect, never a kept choice.
 
 ## 4. Operational lessons
 
