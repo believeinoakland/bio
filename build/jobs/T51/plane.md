@@ -32,3 +32,10 @@ Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 5, module lines 2295
 ## J1 · COMPLETE
 
 T51-125 applied; plane suite 264/264, migrate-released 1/1; format, architecture, coverage (66/66), ownership and words checks 0 failures. Details and findings for other modules in the record.
+
+## Record: CHANGE B2 (K4076, instance-setup R95)
+- `door.mjs` `publicOp`: the bootstrap report is handed `caller` as the control plane resolves it (`caseReader`, admission's `readerOf`): `{cls: "admin"}` for an admin-class token or an administrator's session, none otherwise (no credential, a member or unknown token, a store silence).
+- `worker.test.mjs`: an admin token is told the seven facts; no credential, a member token and an unknown token are not (key set read from `BOOTSTRAP_FACT_KEYS`). `door.test.mjs`: 45 routes, `bootstrapfacts` driven.
+- Verified with instance-setup's branch merged without committing (`git merge --no-commit`, then aborted): plane suite 265/265. `tranche/T51` does not yet hold instance-setup's change, so the two new assertions need it to merge first; on the tranche alone the admin assertion fails and the route count is 44.
+- Checks: format, architecture, coverage (66/66), words, ownership: 0 failures.
+- Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 7, module lines 2306
