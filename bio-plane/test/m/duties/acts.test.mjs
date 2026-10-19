@@ -93,7 +93,7 @@ test("R1 refusals for a duty's fields, in order, each writing nothing, with a pa
 
 test("R2 a proposed duty is stored apart and labelled, never tracked until a member adopts it in one act naming the clause", () => {
   const w = world();
-  const p = w.duties.propose({ ...w.fields(), by: MACHINE, why: "computed from the profile rule" });
+  const p = w.duties.propose({ ...w.fields(), by: MACHINE, why: "a stated reason" });
   assert.equal(p.ok, true);
   assert.deepEqual(p.label, { by: MACHINE, machine_work: true, state: "machine_proposed" });
   assert.equal(p.tracked, false);
@@ -116,7 +116,7 @@ test("R2 a proposed duty is stored apart and labelled, never tracked until a mem
   assert.equal(again.duty_id, "DUT-2026-0001");
   const read = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty;
   assert.deepEqual(read.proposal, { proposal_id: p.proposal_id, by: MACHINE, machine_work: true, state: "machine_proposed",
-                                     why: "computed from the profile rule", at: "2026-03-02T12:00:00Z" });
+                                     why: "a stated reason", at: "2026-03-02T12:00:00Z" });
   assert.deepEqual(read.adoption, { by: BOB, at: "2026-03-02T12:00:00Z", clause: "s7922(a)" });
   /* a member's proposal is labelled the member's */
   assert.deepEqual(w.duties.propose({ ...w.fields(), by: CAROL }).label, { by: CAROL, machine_work: false, state: "member_proposed" });
