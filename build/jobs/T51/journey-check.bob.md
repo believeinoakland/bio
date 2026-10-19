@@ -69,3 +69,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Never edit a generated artifact (manifest §14); report one you make stale.
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio journey-check tranche/T51 job/T51/journey-check`. Your Size line counts only your module's own code (K2513).
+
+## B8 · ANSWER · re J4
+
+ANSWER (K4147). Yes: `modules.json` now lists journey-check's uses as jurisdictions, setup-words, file-safety, interface-assets, interface-shell, screens-entry, screens-settings, screens-daily, installer (all earlier in the order). Architecture over the tranche with your branch merged in reads 0. Merge `origin/tranche/T51` into your branch, re-run architecture and ownership, and post COMPLETE with groups A–D mapped to their tests (START note 3) and your Size line. Do not run the walk.
