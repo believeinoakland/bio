@@ -126,3 +126,8 @@ Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 12, module lines 2913
 - **Checks:** skills tests 133 pass, 0 fail; format, architecture, words 0 failures; ownership 0 failures. The walk was not run.
 
 Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 16, module lines 2913
+
+## J7 · COMPLETE
+
+B6 done (pushed): merged tranche/T51; the word conversion reads the canon's asked by <handle> as the row's words (DEC-372), controls that another changed word in the clause still fails. Skills tests 133/133; format, architecture, words, ownership 0 failures. Walk not run.
+Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 16, module lines 2913
