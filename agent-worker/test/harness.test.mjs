@@ -119,6 +119,7 @@ import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { driveMember, SUBSESSION_LIMIT } from "./inprocess.mjs";
 import { planeEntry } from "./plane-world.mjs";
 import { PLANE_OPS_PINNED } from "./owners.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -1512,7 +1513,7 @@ console.log("\n--- FT1 · FL-11: a run over a QUESTION seeds its target, and its
   })).json();
   const stOut = await mockState(mfOut);
   t("FT1 (FL-11): the run publishes its target as the context question, and says why",
-    [out.target?.id ?? null, out.target?.basis ?? null], ["INQ-FL11", "the run's context question"]);
+    [out.target?.id ?? null, out.target?.basis ?? null], ["INQ-FL11", localize("agent-harness.harness.the_runs_context_question", "the run's context question")]);
   t("FT1b (FL-11): dedup read `op=basisversions` under the RUN's target, never under an empty id",
     st.bvIds, ["INQ-FL11"]);
   t("FT1c (FL-11): the table-made level-empty candidate AND the untargeted reading LANDED on the run's question",
@@ -1561,7 +1562,7 @@ const projectRun = async (cfg, candidates) => {
   t("FT2 (D-451): a project run citing ONE question seeds THAT question as its target, and says why — never "
     + "the project id",
     [out.target?.id ?? null, out.target?.basis ?? null],
-    ["INQ-CITED", "the one question the run's project confirmed-cites"]);
+    ["INQ-CITED", localize("agent-harness.harness.the_one_question_the_runs", "the one question the run's project confirmed-cites")]);
   t("FT2b (FL-11): no call this run made named the project as a suggestion's target",
     st.log.filter((l) => l.op === "suggest" && l.body?.target === "PROJ-FL11").length, 0);
   t("FT2c (FL-11): a reading aimed at a question the project confirmed-cites LANDS",

@@ -60,8 +60,8 @@ const ARMS = [
   { name: "the route left out of SURFACE", file: INDEX, ids: ["R34"],
     from: `  transcribe: { method: "POST", mutating: false },\n`, to: "" },
   { name: "the UNKNOWN refusal not naming the route", file: INDEX, ids: ["R31"],
-    from: localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only."),
-    to: localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only.").replace(" POST /transcribe or", " or") },
+    from: `localize("agent-worker.index.post_run_post_ask_post", ${JSON.stringify(localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only."))})`,
+    to: `localize("agent-worker.index.control_unlisted_route_words", ${JSON.stringify(localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only.").replace(" POST /transcribe or", " or"))})` },
   { name: "the one sentence not naming /transcribe", file: INDEX, ids: ["R58"],
     from: "or transcription (/transcribe) has turns", to: "has turns" },
 ];
