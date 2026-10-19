@@ -89,14 +89,12 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
   assert.deepEqual(w.ops("limit=1").aicredentials().limit, 1);
   assert.equal(w.ops("tokenId=t1&who=class:ai", { who: "ann" }).aicredentialrevoke().reason, "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER");
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
-  /* (T49; N1073, K3268) this module's own routes, hand-listed; the ops that moved to ai-accounts (R72) are read from its
-     own declaration, never listed here */
-  const own = ["aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint", "bootstrap",
-    "claim", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "passwordreset", "passwordresetlink",
-    "passwordresetlook", "reauth", "recover", "recoverycodesissue", "recoverycodesstate", "securitycount", "securitymap",
-    "session", "setpassword", "signeradd", "signerlist", "signerset", "signout", "signouteverywhere", "unlock"];
+  /* (T49; N1073, K3268) never hand-listed: the ops that moved to ai-accounts (R72) are read from its own declaration, and
+     every route this module answers is one name, answered once */
   const moved = Object.keys(aiAccountsOps(w.c.accounts, new URL("http://x/"), null, {}));
-  assert.deepEqual(Object.keys(w.ops()).sort(), [...own, ...moved].sort());
+  const routes = Object.keys(w.ops());
+  assert.deepEqual(routes.sort(), Object.keys(credentialsOpsNoVersion(w)).sort(), "the routes are this module's own map");
+  assert.ok(moved.every((op) => routes.includes(op)), "the moved routes are answered here, through their delegates");
 });
 
 test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {

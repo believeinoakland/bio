@@ -17,7 +17,7 @@ const at = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
    refusals carry, each `en` verbatim, read by key: the translation of each of the five rows that file keys is the word
    itself, never a copy. `{time}` in SIGN_IN_PAUSED's is left for the screen. */
 export const CREDENTIALS_WORDS = Object.freeze({
-  'refusal.SIGN_IN_PAUSED': 'Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn\'t a judgment on you. Try again at {time}.',
+  'refusal.SIGN_IN_PAUSED': word('refusal.SIGN_IN_PAUSED', { time: '{time}' }),
   'refusal.NOT_SIGNED_IN': word('refusal.NOT_SIGNED_IN'),
   'refusal.RECOVERY_REFUSED': word('refusal.RECOVERY_REFUSED'),
   'refusal.CURRENT_PASSWORD_WRONG': word('refusal.CURRENT_PASSWORD_WRONG'),
