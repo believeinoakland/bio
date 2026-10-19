@@ -371,8 +371,7 @@ export default {
     if (readNothing(a) || readNothing(b))
       return { meaningful: null, significance: null, events: [], confirmed: null,
                sections_compared: false, sections_why: localize("doctypes.regulation.one_side_unread", "nothing was read from one of the readings, so nothing is said about its sections"),
-               why: "nothing could be read from this instrument this time, so nothing is claimed "
-                  + "about it either way" };
+               why: localize("doctypes.regulation.unread_either", "nothing could be read from this instrument this time, so nothing is claimed about it either way") };
 
     const events = [];
     /* AN INSTRUMENT'S OWN TEXT MOVING AT THE SAME ADDRESS IS THE SERIOUS ONE. This is

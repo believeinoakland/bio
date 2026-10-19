@@ -30,7 +30,7 @@
  */
 import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, readerView, practiceValue } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity, unescapeHtml } from "../site-profiles/index.mjs";
-import { evaluateRule, localDay } from "../bio-plane/src/civil-time/index.mjs";
+import { evaluateRule, localDay, reasonText } from "../bio-plane/src/civil-time/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* How long after a meeting minutes stop being merely late is the JURISDICTION'S
@@ -64,7 +64,7 @@ function minutesDue(ctx, day) {
   catch (e) { return { due: null, why: localize("doctypes.meeting-calendar.period_uncounted", "the period could not be counted: {reason}", { reason: String((e && e.message) || e) }) }; }
   const unit = count === "business" ? "business days" : "days";
   if (!r || r.refused || r.undetermined || !r.due)
-    return { due: null, unit, why: localize("doctypes.meeting-calendar.period_not_counted_here", "the jurisdiction's {amount} {unit} could not be counted from this meeting: {reason}", { amount: String(p.value), unit, reason: String((r && r.why) || "no due day") }) };
+    return { due: null, unit, why: localize("doctypes.meeting-calendar.period_not_counted_here", "the jurisdiction's {amount} {unit} could not be counted from this meeting: {reason}", { amount: String(p.value), unit, reason: r && r.why ? reasonText(r.why) : "no due day" }) };
   /* An uncertain due is the body's latest candidate: lateness is only raised after it (K1444 (i)). */
   const d = r.due.candidates ? r.due.candidates[r.due.candidates.length - 1] : r.due;
   return { due: String(d.value).slice(0, 10), unit, amount: p.value, zone };

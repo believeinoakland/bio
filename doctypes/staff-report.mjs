@@ -324,8 +324,7 @@ export default {
     const readNothing = (x) => !(x.entities || []).length && !x.recommendation;
     if (readNothing(a) || readNothing(b))
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               why: "nothing could be read from this report this time, so nothing is claimed "
-                  + "about it either way" };
+               why: localize("doctypes.staff-report.unread_either", "nothing could be read from this report this time, so nothing is claimed about it either way") };
 
     const events = [];
     /* THE RECOMMENDATION MOVING IS THE SERIOUS ONE. A staff report is the document a
