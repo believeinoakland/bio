@@ -29,3 +29,7 @@ Your reading holds (K4041): actions R108 now says the author's reply mints or fi
 ## B3 · CHANGE
 
 filing-templates has merged into `tranche/T51` (K4045): R35 `unofferedFor` is there for your R65; merge `tranche/T51` into your branch. actions has not merged yet; I will tell you when it has.
+
+## B4 · CHANGE
+
+From ACTION-CLOCKS #14 J1 (K4050; complete, merges after actions and action-grammar): `computeDeadline.why`, `proposal.undetermined` and `CLOCK_PROPOSAL_UNDETERMINED.why` now reach you as sentences already rendered (through civil-time's `reasonText`), never `{key, vars}`. Your `packet.test.mjs`:241, :290 reds clear once action-clocks merges if you pass that text on as is; render with `word` only a `{key, vars}` reason you receive from elsewhere. Merge `tranche/T51` when I tell you action-clocks has merged.
