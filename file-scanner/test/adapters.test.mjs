@@ -10,7 +10,7 @@ import { LOG_COUNT_KINDS, PROVIDER_TIMEOUT_MS, SANDBOX_TIMEOUT_MS, REPUTATION_LI
 import { makeZip } from '../../bio-plane/test/make-zip.mjs';
 import { memoryBucket, putCapture, putDerived, depsWith, post, enc, EICAR, NOW } from './helpers.mjs';
 import { vendorNet, vendorSockets, specs, infected, has, WEB_RISK_TEST } from './vendors.mjs';
-import { NOT_HONOURED_CODE, EICAR_NOT_FOUND } from '../src/providers/routes.mjs';
+import { NOT_HONOURED_CODE, EICAR_FOUND, EICAR_NOT_FOUND } from '../src/providers/routes.mjs';
 
 const SCAN = ['scanii', 'metadefender-cloud', 'metadefender-core', 'icap', 'defender-storage', 'sophos-intelix'];
 const SANDBOX = ['joe-sandbox', 'vmray', 'falcon-sandbox', 'wildfire', 'sophos-intelix'];
@@ -306,6 +306,7 @@ test('R28 every catalogued tool\'s test probe passes through its own adapter; a 
     const r = await w.jsonCall('/provider/test', { tool: w.specs[d.provider_id] });
     assert.equal(r.body.ok, true, d.provider_id);
     assert.equal(r.body.passed, true, `${d.provider_id}: ${r.body.detail}`);
+    if (d.kinds.includes('scan') || d.kinds.includes('sandbox')) assert.equal(r.body.detail, EICAR_FOUND, d.provider_id);
     assert.ok(!w.bucket.calls.some(([, k]) => k.includes('captures')), 'no capture read');
   }
   const w = world();
