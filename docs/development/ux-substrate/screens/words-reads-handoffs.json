@@ -764,6 +764,550 @@
     "text": "a registration names its module and its function",
     "why": "a start-up registration diagnostic for the wiring; never shown to a member (B349, RETRIEVAL #22 J4)"
    }
+  ],
+  "run-rules": [
+   {
+    "file": "bio-plane/src/run-rules/checks.mjs",
+    "line": 259,
+    "text": "src/ai-runs/index.mjs groupTestSet, reached from the team's test investigations",
+    "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+   },
+   {
+    "file": "bio-plane/src/run-rules/checks.mjs",
+    "line": 321,
+    "text": "src/run-rules/rules.mjs levelEmptyHolds, called from agent-harness before it composes a level-empty candidate",
+    "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+   },
+   {
+    "file": "bio-plane/src/run-rules/deployment.mjs",
+    "line": 213,
+    "text": "nothing of the record: only the passage of the team's own writing the door hands in, to be put into the asking member's language",
+    "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+   },
+   {
+    "file": "bio-plane/src/run-rules/deployment.mjs",
+    "line": 230,
+    "text": "and draft's flag alone never deploys them",
+    "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+   },
+   {
+    "file": "bio-plane/src/run-rules/deployment.mjs",
+    "line": 299,
+    "text": "modes' state and whatever ask's or draft's flag",
+    "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+   },
+   {
+    "file": "bio-plane/src/run-rules/deployment.mjs",
+    "line": 71,
+    "text": "threat model the doctrine names",
+    "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+   }
+  ],
+  "answers": [
+   {
+    "file": "bio-plane/src/answers/check.mjs",
+    "line": 59,
+    "text": "the summary names the sentences it rests on, as s<i>",
+    "why": "an ANSWER_MALFORMED detail naming the model contract's wire tokens; the member reads only the row's translation (B350, ANSWERS #12 J1)"
+   },
+   {
+    "file": "bio-plane/src/answers/sentences.mjs",
+    "line": 92,
+    "text": "a sentence's support names holdings, rule items or looks as h<i>, r<i>, l<i>",
+    "why": "an ANSWER_MALFORMED detail naming the model contract's wire tokens; the member reads only the row's translation (B350, ANSWERS #12 J1)"
+   }
+  ],
+  "agent-harness": [
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 1042,
+    "text": "the same gate: refuse a mode that is not deployed, before anything is spent",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 1061,
+    "text": "which options to propose, in order of strength, and why",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 1080,
+    "text": "how to answer the refusal",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 1085,
+    "text": "the one exit, naming the bound (C-22.5). Terminal",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 320,
+    "text": "form candidate versions from the reports",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 321,
+    "text": "what each level's reports mean, and what the version says",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 329,
+    "text": "whether this reading differs in substance",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 344,
+    "text": "how to answer the refusal",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 349,
+    "text": "the pass counter and the loop's termination — neither is the model's to decide",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/harness.mjs",
+    "line": 355,
+    "text": "the one exit, naming the bound (C-22.5). Terminal",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/subsession.mjs",
+    "line": 116,
+    "text": "nobody looked at this level for this subject",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/subsession.mjs",
+    "line": 117,
+    "text": "we looked and it is positively not there",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/subsession.mjs",
+    "line": 118,
+    "text": "we looked and could not tell",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/subsession.mjs",
+    "line": 119,
+    "text": "we looked and it is there",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   },
+   {
+    "file": "agent-harness/src/subsession.mjs",
+    "line": 581,
+    "text": "never a title, a text or a byte comparison",
+    "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+   }
+  ],
+  "agent-runner": [
+   {
+    "file": "agent-runner/src/entry.mjs",
+    "line": 111,
+    "text": "the first frame must be a conversation request",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/manifest.mjs",
+    "line": 16,
+    "text": "the manifest names no image repository",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/manifest.mjs",
+    "line": 18,
+    "text": "the image has no sha256 digest yet; the release writes it when it publishes the image",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 106,
+    "text": "no tool named {}",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 146,
+    "text": "the request carries no usable credential",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 147,
+    "text": "no Claude sign-in is held for this member: connect Claude again",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 155,
+    "text": "Anthropic refused this member's Claude sign-in: connect Claude again",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 199,
+    "text": "the query ended with no result",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 201,
+    "text": "stopped after {} turns (max_turns {})",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 36,
+    "text": "model must be a non-empty string",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 37,
+    "text": "system must be a string",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 38,
+    "text": "prompt must be a non-empty string",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 40,
+    "text": "max_turns must be an integer from 1 to {}",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 41,
+    "text": "effort must be one of {}",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 42,
+    "text": "tools must be an array",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 46,
+    "text": "tool {}: description must be a string",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 48,
+    "text": "tool {}: input_schema must be an object",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 75,
+    "text": "an image block's media_type must be {}",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 76,
+    "text": "an image block's data must be base64",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/runner.mjs",
+    "line": 90,
+    "text": "the picture was not passed: {}",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/signin.mjs",
+    "line": 125,
+    "text": "stty cols {} rows {}; exec {}",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/worker.mjs",
+    "line": 122,
+    "text": "Failed to reach the container: {}",
+    "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   },
+   {
+    "file": "agent-runner/src/entry.mjs",
+    "line": 97,
+    "text": "HTTP/1.1 404 Not Found\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
+    "why": "wire grammar the runner answers (an HTTP status line and headers); the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+   }
+  ],
+  "strength": [
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 279,
+    "text": "How {} grades a finding (method {}).",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 284,
+    "text": "for it, and they are never combined into one figure. Grades run from A, the strongest, to D.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 288,
+    "text": "on a leg to another question, or to another {}'s finding, has nothing to grade and is listed, not counted.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 291,
+    "text": "strength is stated as undetermined: unknown, not low.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 292,
+    "text": "4. Another {}'s work. A leg to a finding of another {}'s case that this {} has accepted contributes the ",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 294,
+    "text": "that finding cannot be read, the strength is undetermined. Withdrawing the acceptance later changes no grade.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 298,
+    "text": "strength is then the weaker of the legs needed by every set and that strongest set.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 301,
+    "text": "stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 302,
+    "text": "7. Anonymous testimony and evidence. Testimony from a member credited only to the {} or the project, and ",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 308,
+    "text": "name is graded as usual.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 309,
+    "text": "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. ",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 310,
+    "text": "It also states how many hunches it left out.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 321,
+    "text": "that cannot be read, makes the strength undetermined.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 323,
+    "text": "that standard at the version cited; if the record holds no text at that version, the strength is undetermined.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 326,
+    "text": "the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
+    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/index.mjs",
+    "line": 232,
+    "text": "{}\n## Session Log\n\n{}",
+    "why": "the session log's document grammar (B350, STRENGTH #16 J4)"
+   }
+  ],
+  "contradiction": [
+   {
+    "file": "bio-plane/src/contradiction.mjs",
+    "line": 31,
+    "text": "You are judging CANDIDATE CONTRADICTIONS for a civic research record. For each pair below, a deterministic pairing\nput two assertions side by side for a stated reason (its KEY). You propose ONE label per pair. A member of the team\nwill see your proposal and decide; you decide nothing.\n\nKEYS (why the two were paired):\n- K1: two SOURCES one inquiry rests on, one cited as supporting and one as cutting against it.\n- K2: two claims our team HOLDS, on two inquiries about the same subject.\n- K3: two claims our team HOLDS, both resting on the same source passage (given as context).\n- K4: two SOURCES about the same entity, of different document kinds or dates (each side's doctype/date given).\n\nLABELS — exactly one per pair:\n- world: the two SOURCES say incompatible things about the same matter (e.g. a rule requires X and the record shows\n  the body did not-X; a body said X at one date and the contrary at another). Only for source sides (K1, K4).\n- record: two things our team HOLDS cannot both be true. Only for held claims (K2, K3).\n- precision: the same fact stated at different precision or with different emphasis — rounded vs exact figures,\n  \"approximately N\" vs a stated number, a summary vs the table it summarises, \"reduced a little\" vs \"dropped a lot\".\n  NOT a contradiction.\n- unrelated: the two are not about the same matter after all (same entity, different subject).\n- undetermined: you cannot tell from what is shown. Use it honestly; never force a label.\n\nRULES:\n- A FALSE CONFLICT IS THE WORST ERROR. Label world/record only when both statements cannot be true at the same time\n  about the same matter. Differences of wording, rounding, emphasis, or vague magnitude are precision.\n- Two statements at DIFFERENT DATES can both be true if the thing changed; that is world only when the later source\n  contradicts what the earlier one says held (e.g. a body stating X, then stating not-X about the same thing), or\n  a rule is contradicted by an act. Read dates and doctypes when given.\n- Read figures, units and dates carefully, in full.\n- Do not assign a CAUSE (misquote, opinion, double-speak) — only the label.\n- Use only what is shown. Do not assume facts not in the two sides and their context.\n\nOUTPUT: a JSON array, one object per pair, in input order: {\"n\": <pair number>, \"label\": \"<label>\", \"reason\": \"<one sentence>\"}.\nOutput the JSON only.\n",
+    "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+   },
+   {
+    "file": "bio-plane/src/contradiction.mjs",
+    "line": 99,
+    "text": "You are recommending, for CONTRADICTIONS a civic research record holds, the RESPECTS in which the two sides\nof each pair may differ, so that they need not conflict. A member of the team will see your recommendation and\ndecide; you decide nothing.\n\nEach pair carries its KEY (why the two were paired) and the RESPECTS you may name for it:\n- For K1-K4 pairs: time_or_occasion, scope, meaning, observer_or_method, subject.\n- For K5 pairs (two projects' conclusions on one question): scope, time_or_occasion, standard, evidence_set,\n  weighing.\n\nRULES:\n- Name only respects from the pair's own list. Never say which side is wrong. Never name a kind of conflict\n  (misquote, error, double-speak, reversal, a conflict of norms). Never assign a cause.\n- Name a respect only when something SHOWN in the two sides suggests they differ in it (e.g. different dates or\n  occasions; one about a part and one about the whole; a word used in two senses; two methods or observers; two\n  different subjects under one name). Give one sentence saying what you saw.\n- If nothing shown suggests a respect, name none for that pair. An empty answer is honest; never force one.\n- Use only what is shown. Do not assume facts not in the two sides and their context.\n\nOUTPUT: a JSON array, one object per pair, in input order:\n{\"n\": <pair number>, \"coordinates\": [{\"coordinate\": \"<respect>\", \"reason\": \"<one sentence>\"}]}.\nOutput the JSON only.\n",
+    "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+   },
+   {
+    "file": "bio-plane/src/contradiction/index.mjs",
+    "line": 2001,
+    "text": "contradiction {}: candidate {}",
+    "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+   },
+   {
+    "file": "bio-plane/src/contradiction/index.mjs",
+    "line": 361,
+    "text": "a run gate is registered by a module name and a function",
+    "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+   },
+   {
+    "file": "bio-plane/src/contradiction/index.mjs",
+    "line": 364,
+    "text": "the run gate is already registered by {}",
+    "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+   },
+   {
+    "file": "bio-plane/src/contradiction.mjs",
+    "line": 84,
+    "text": "PAIR {} · key {}\n  A: {}\n  B: {}",
+    "why": "the model's pinned input (the pair line) or the session log's grammar (B350, CONTRADICTION #11 J2, J3)"
+   },
+   {
+    "file": "bio-plane/src/contradiction/text.mjs",
+    "line": 43,
+    "text": "{}\n## Session Log\n\n{}\n",
+    "why": "the model's pinned input (the pair line) or the session log's grammar (B350, CONTRADICTION #11 J2, J3)"
+   }
+  ],
+  "basis-versions": [
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 105,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 110,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 115,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 120,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 129,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 134,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 139,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 172,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 183,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 188,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 193,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 198,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 203,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 217,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   },
+   {
+    "file": "bio-plane/src/basis-versions/checks.mjs",
+    "line": 236,
+    "text": "src/basis-versions/index.mjs #moveVersionState, reached from the four acts that move a state",
+    "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+   }
+  ],
+  "agent-worker": [
+   {
+    "file": "agent-worker/src/ops.mjs",
+    "line": 26,
+    "text": "who the plane says this credential is (FL-2's round trip, kept)",
+    "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+   },
+   {
+    "file": "agent-worker/src/ops.mjs",
+    "line": 27,
+    "text": "the run object: its conditions, its live budget",
+    "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+   },
+   {
+    "file": "agent-worker/src/ops.mjs",
+    "line": 50,
+    "text": "log-always and budget spend, through the plane's own producer",
+    "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+   },
+   {
+    "file": "agent-worker/src/ops.mjs",
+    "line": 53,
+    "text": "the ordinary exit, naming the bound (C-22.5)",
+    "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+   }
   ]
  }
 }

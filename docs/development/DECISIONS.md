@@ -5391,3 +5391,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) retrieval's start-up registration diagnostic (index.mjs 293, 306, 318, 331, 367) joins `screens/words-reads-handoffs.json`; events' OWNER_HOST whys, its ListenerFailure prefix and `where`, and money's 956 already read as builder strings (0 failures), so nothing is added for them; money's three unkeyed entries now keyed by `localize` (R13) leave its list. (2) `label.connectionkinds.event_<kind>` for events' 24 kinds (16 roles, `concerns`, 7 links), each as events' own word (`events.seconder` "seconded" and the rest). (3) Reviewed from code: `retrieval-browse.findin.read_another_shape` reworded for a member (it named a requirement); `observation-log.vocabulary.condition_governor_holding_host` takes the pacing sentence's meaning in member words; `observation-log.index.who_s_lead_is_recorded` takes `observation-log.says.lead_recorded_somewhere`'s sentence (no op name). (4) lines' five rows no longer read (`lines.text.date_read`, `.lines_hold_post`, `.lines_read_holds`, `.line_naming_office`, `lines.undetermined.line_covers_date`) leave the table and lines' reads. (5) lines' 68 and local-facts' 10 code rows written into the table: 70 builder details kept as written (American spelling; four K references removed), 8 a member reads reworded (placeholders kept). The words check on tranche/T51 gives 0 failures on all seven modules.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-347 blocks), `screens/words-mod-1.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads-mod-1.json`, `screens/words-reads-mod-3.json`.
 owed: (BOB) observation-log may read `observation-log.says.lead_recorded_somewhere` and `machinery-producers.summary.pacing_holding_captures` in place of its two duplicates, if its code allows; nothing else.
+
+### DEC-348 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B350, R6's batch, K3944, K3957)
+for: design
+question: R6's strings no member reads; citation's converted entries; capture-requests' stale wording.
+why it is Bob's: it is not (P17): the design's lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: list data.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) `screens/words-reads-handoffs.json` gains 88 strings, each with its job's reason, taken whole from the words check on tranche/T51: run-rules 6, answers 2, agent-harness 15, agent-runner 23, strength 16, contradiction 7, basis-versions 15, agent-worker 4 (ops.mjs 26, 27, 50, 53; index.mjs 774, which the HANDOFF does not name, is left counted). reading-guides and skills already read 0. (2) citation's 61 unkeyed entries leave its list (`words-reads-mod-2.json`): its job converted them (K4010), and the check gives citation 0 with none listed. (3) capture-requests' five entries say "your team's" (`words-reads-mod-4.json`, K3472). The words check on T51 gives 0 on eleven of the twelve modules; contradiction's two `+`-joined strings (contradiction.mjs 84, text.mjs 43) are listed but still counted, because the check's stitched arm does not consult the unkeyed list.
+reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads-mod-2.json`, `screens/words-reads-mod-4.json`, `screens/words-reads.json`.
+owed: (BOB, civicos-process) the words check's stitched arm reads the design's unkeyed list as the plain arm does; agent-worker index.mjs 774 to be judged by its job.
