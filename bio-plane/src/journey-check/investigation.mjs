@@ -285,6 +285,7 @@ export async function assistantControls(page) {
 /* The not-ready assertion on the screen at `path`, as a step of its own labelled `label`; `names` are the walk's steps
    that would have used it, each reported as not walked. */
 export async function notReady(walk, page, base, { label, path, screen, names }) {
+  for (const n of names) walk.notWalked(n);
   await walk.step(page, label, async (p) => {
     await open(walk, p, base, path, screen);
     const drawn = await assistantControls(p);
@@ -295,7 +296,6 @@ export async function notReady(walk, page, base, { label, path, screen, names })
       if (code) throw new Error(`${screen} says why the assistant cannot work in a code, ${code.word}, not in the words of ${NOT_READY_KEYS.join(" or ")}`);
     }
   });
-  for (const n of names) walk.notWalked(n);
 }
 
 /* The conclusion on the member's own reading (R16, `screens-inquiry` R50): the choice "Write the reading yourself" beside
