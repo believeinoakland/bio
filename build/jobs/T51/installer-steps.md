@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_014EVFpcuKfLr1hY4LJt8xfV · depth 2 · COMPLETE · handled B3
+**Status** · session_014EVFpcuKfLr1hY4LJt8xfV · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -53,3 +53,15 @@ Keys stage (R36, your B3) is complete. Pushed on job/T51/installer-steps (tip eb
 **Other for BOB.** The bundle (`newgroup/dist`) and `rows.mjs`/`words-unreviewed.json` are stale until your layer close (setup-words `--check`: "words-unreviewed.json is stale or absent"; expected). `scripts/build.mjs` needs no change: `bundledKeys()` already finds every literal `word("…")` in a bundled input, so my 68 keys are cut in; `STEP_KEYS` is there for the words-reads entry (`docs/development/ux-substrate/screens/words-reads.json` is the design's file, not mine to edit): its `newgroup/src/steps/*.mjs` entry lists those 68 keys.
 
 **Checks** (row filled locally, never committed): words 0 failures for the module; architecture 0 (86 relative imports); format 0; coverage 34 of 36 (R26, R31 unbuilt by design, K3718 (2)); steps tests 78 pass. Size (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 24, module lines 1760 (+ words.mjs).
+
+## J4 · COMPLETE
+
+B4 (DEC-362) applied; pushed on job/T51/installer-steps (tip 4a9292ef04, tranche/T51 merged in).
+
+The left-out list is drawn with the design's rows: each entry is `installer.fleet.left.item` {member} ({why}), {why} always an `installer.fleet.why.*` fragment: `integrity` (a bundle or part failing its hash, at either read), `http` {status}, `refetch` (any other failure of the second read, R18), `unpinned`/`unpullable` (images), `freeplan`/`planunknown`/`nopermission`/`permissionunknown` (the container conditions), `class`, `part`, `program`, `limits`, and `container.parse|class|policy|size|bindings|path|duplicate` for the container description's causes. The manifest skip carries `installer.fleet.skip.manifest.reason` with `installer.fleet.why.part` as its {reason} (the closest fragment; say if the design wants another). What the copy then lacks is no longer glued to the why: `left[].lacks` (absent when nothing is lacked) and the sentence follows the notes on the fleet line.
+
+STEP_KEYS is now 78 keys. Against the design's `installer-steps` reads entry (68): added `installer.fleet.left.item`, `skip.manifest.reason`, `why.class|integrity|http|refetch|unpinned|unpullable|freeplan|planunknown|nopermission|permissionunknown`, `why.container.bindings|class|duplicate|parse|path|policy|size`; dropped `installer.fleet.skip.manifest`, `installer.fleet.why.container` (the bare row, now unused), `installer.image.freeplan|noclass|nopermission|permissionunknown|planunknown|unpinned|unpullable`. The reads entry needs the same 78 (the design's file; yours to carry).
+
+For installer's job (K4085), what it reads from steps that changed: `left[].why` is a fragment without the lacks sentence (`left[].lacks` holds it); `imageSaid(why)` answers the fragment (one argument); `containerDescriptor(bytes)` and `containerClasses(parts, bytesOf)` lost the part argument; `conditionWhy(c)` takes no part; `withLacks` is now `lacksFor(m)`. Unchanged: `IMAGE_UNPINNED`/`IMAGE_UNPULLABLE` (still the identities `installer.image.unpinned/.unpullable`, which installer's own `images.mjs` says with its `installer.image.*` sentences), `lacksOf`, `imageWhy`, `LIMITS_NOT_STATED`, the fleet/bind/logs/lag lines.
+
+Checks (row filled locally, not committed): words check on the module 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); architecture 0 (87 relative imports); format 0; steps tests 78 pass; coverage as before (R26, R31 unbuilt). Size (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 30, module lines 1815.
