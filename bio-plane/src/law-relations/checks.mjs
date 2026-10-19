@@ -23,9 +23,7 @@ export const LAW_RELATIONS_CHECKS = Object.freeze({
   },
   LAW_RELATION_NO_CITATION: {
     check: 'C-112.26', where: at("refuseNoCitation", "is-law-relation-cited"),
-    translation: 'A relation between laws is recorded with the passage that makes it: the amending or referring words, '
-      + 'or the court\'s words, as captured among the standard\'s own text. None of those was named. Nothing was '
-      + 'written.',
+    translation: word('refusal.LAW_RELATION_NO_CITATION'),
   },
   LAW_RELATION_NO_EFFECTIVE: {
     check: 'C-112.27', where: at("#relateRefusal", "is-temporal-effective"),
@@ -49,8 +47,7 @@ export const LAW_RELATIONS_CHECKS = Object.freeze({
   },
   LAW_RELATION_SELF: {
     check: 'C-112.32', where: at("refuseSelf", "is-relation-two-ends"),
-    translation: 'A relation joins two different standards or portions, and both ends named are the same. Nothing was '
-      + 'written.',
+    translation: word('refusal.LAW_RELATION_SELF'),
   },
   /* T35 (R9; ST2, ST5): new, awaiting promotion's stamp. */
   LAW_RELATION_NO_EDITION: {
