@@ -50,3 +50,15 @@ Red: R28's census arm (t47.test.mjs) fails because `src/actions/index.mjs` holds
 Needs: actions (its R108 job) draws `DEC-49 REGION is-minutes` around the minutes act in actionCorrespond, and raises the two codes there. Once that is on tranche/T51, the census arm passes on my next run and I COMPLETE again. If you would rather the rows wait for actions' merge, say so and I will hold them off the branch.
 
 Size is not re-stated: the earlier COMPLETE (J2) stands for everything except these two rows.
+
+## J4 · COMPLETE
+
+COMPLETE for B2 (rows C-117.59 and C-117.60), after K4049 (B3).
+
+Applied: MINUTES_NOT_PUBLIC_COMMENT (C-117.59) and BAD_MINUTES (C-117.60), where `src/actions/index.mjs actionCorrespond > is-minutes`, translations via localize, committed fb40d9bbe8 on job/T51/action-grammar.
+
+Accepted red, per K4049: R28's census arm (test/m/action-grammar/t47.test.mjs) fails until actions draws `DEC-49 REGION is-minutes` in actionCorrespond. Every other test in the module passes (79 of 80 with that one red). I have not weakened the arm.
+
+Checks: format 0 failures; architecture 0 failures; coverage 29 of 29 ids named; words 0 failures for action-grammar.
+
+Size (session_01Wkof3P16pbHsMX1b882161): test runs 14, module lines 2600 (src/action-grammar, its own code).
