@@ -146,8 +146,8 @@ const BODY_CALL_MS = 5000;
    on an enabled network domain, so a render whose network domain will not enable fails, as one whose interception will
    not. `data:` and `blob:` addresses reach no host and are let go. */
 export const RENDER_BLOCKED_REASONS = Object.freeze({
-  NOT_A_PUBLIC_LOCATOR: "it is not a public https address",
-  OWN_HOST: "its host is one of your team's own (where your team's Civicsmith or its fleet is reached)",
+  NOT_A_PUBLIC_LOCATOR: localize("capture-sources.browserrender.it_is_not_a_public", "it is not a public https address"),
+  OWN_HOST: localize("capture-sources.browserrender.its_host_is_one_of", "its host is one of your team's own (where your team's Civicsmith or its fleet is reached)"),
 });
 const FETCH_PATTERNS = Object.freeze([{ urlPattern: "*", requestStage: "Request" }]);
 const SOCKET_PATTERNS = Object.freeze(["ws://*", "wss://*"]);

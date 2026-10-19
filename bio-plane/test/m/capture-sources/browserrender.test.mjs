@@ -14,7 +14,7 @@
  * be spent on purpose. The driver's own polling and CDP timeouts still use real timers. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderWithBinding, browserBindingRenderer } from "../../../src/browserrender.mjs";
+import { renderWithBinding, browserBindingRenderer, RENDER_BLOCKED_REASONS } from "../../../src/browserrender.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX } from "../../../src/subresources.mjs";
 import { renderBlock } from "../../../src/render.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -496,7 +496,7 @@ test("R64: a refused navigation fails naming the address; a render whose hold ca
     const b = fakeBinding(HOSTILE);
     const a = await renderWithBinding(b, { url, own_hosts: OWN, wait: { timeout_ms: 1000 } }, { now: scaled() });
     assert.equal(a.ok, false);
-    assert.ok(a.error.includes(`could not navigate to ${url}: ${url} was refused before it was sent (${reason}:`), a.error);
+    assert.ok(a.error.includes(`could not navigate to ${url}: ${word("browserrender.text.refused_sent", { url, reason, render_blocked_reasons: RENDER_BLOCKED_REASONS[reason] })}`), a.error);
     assert.equal(b.stats.acquires, 0);
     assert.deepEqual(b.stats.sent, []);
   }
