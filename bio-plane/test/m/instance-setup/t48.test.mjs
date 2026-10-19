@@ -320,7 +320,7 @@ test("R89 the reads write nothing", async () => {
   const w = await world();
   await found(w);
   const mark = w.st.statements.length;
-  for (let i = 0; i < 3; i += 1) { w.m.updateNotice({ viewer: "admin" }); w.m.updateNoticeState(); w.m.updateCheckWake(); w.m.readingLanguage({ member: "x" }); }
+  for (let i = 0; i < 3; i += 1) { w.m.updateNotice({ viewer: "admin" }); w.m.updateNoticeState(); w.m.updateCheckWake(); }
   assert.deepEqual(w.st.statements.slice(mark).filter((q) => /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)/i.test(q)), []);
 });
 

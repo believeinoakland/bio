@@ -106,3 +106,23 @@ Found, not mine (no change made):
 Commit `55489f90f3` on `job/T51/instance-setup`, pushed.
 
 Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 8, module lines 3607
+
+## J8 · COMPLETE · re B5
+
+COMPLETE (re B5). R99 is met: the last translation delegate is gone.
+
+Entries applied:
+- Merged `tranche/T51` (plane's CR-24 is on it; `plane/src/ask.mjs` now calls `translations`' `readingLanguage`).
+- R99: `readingLanguage` and `#translations()` leave `setup.mjs`. No translation delegate remains. The member-language registration still runs at start, through a self-contained `#registerLanguage()`; an unstarted InstanceSetup registers nothing.
+- Tests: the R99 test names the removal, asserts the module has no translation delegate, and controls that `translations`' `readingLanguage` still answers (LANGUAGE_NOT_SET for a member with no language). The R94 tests ask `translations` directly. `t48` no longer calls the removed delegate.
+
+Checks and tests:
+- instance-setup: `node --test test/m/instance-setup/*.test.mjs`: 194 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs instance-setup`: 0 failures. `checks/coverage.mjs instance-setup`: 71 of 71 live ids named; 0 failures.
+- `checks/run.mjs /home/user/bio`: `words`: 0 failures, 0 findings for this module. `coverage`: 4 failures, none in instance-setup (other modules).
+- `checks/ownership.mjs instance-setup tranche/T51 job/T51/instance-setup`: 3 files changed by instance-setup, 0 failures.
+- Journey-check's walk not run, per your instruction.
+
+Commit on `job/T51/instance-setup`, pushed.
+
+Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 11, module lines 3589

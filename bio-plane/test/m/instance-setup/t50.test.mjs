@@ -1,7 +1,7 @@
 /* T50 (T50-23): the translation workspace leaves (R94), at the module's interface: the module over the real
    record-core, the REAL membership, credentials and ai-accounts (credentials' own test world: the founder `admin`, a
    second administrator `second`, members `ruth`, `sam` and `tom`), the real `translations` (its one instance, which the
-   nine routes it owns are answered by) and the one delegate the plane still asks, `readingLanguage`. Every refusal has a
+   nine routes it owns are answered by) and the plane's reading of a member's language, `readingLanguage`. Every refusal has a
    control (K874). */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -73,11 +73,11 @@ test("R94 memberLanguageSet then interfacewords with no language answers the set
   const r = T.interfaceWords({ viewer: "sam" });
   assert.equal(r.language, "es");
   assert.equal(r.words.find((x) => x.key === ORDINARY.key).text, "Algo");
-  assert.deepEqual(w.m.readingLanguage({ member: "sam" }), { ok: true, language: "es", source: "member" });
+  assert.deepEqual(T.readingLanguage({ member: "sam" }), { ok: true, language: "es", source: "member" });
   const none = T.interfaceWords({ viewer: "tom" });
   assert.equal(none.language, null);
   assert.equal(none.words.every((x) => x.fallback === true && x.text === x.en), true);
-  assert.equal(w.m.readingLanguage({ member: "tom" }).reason, "LANGUAGE_NOT_SET");
+  assert.equal(T.readingLanguage({ member: "tom" }).reason, "LANGUAGE_NOT_SET");
 });
 
 /* This module over a bare storage and its own stand-ins, never started. */
@@ -90,29 +90,41 @@ function bare() {
   return { store, ctx, m: new InstanceSetup(ctx, {}, { record, membership: p.membership, aiAccounts: p.aiAccounts, jurisdictions }) };
 }
 
-test("R94 an InstanceSetup built and not started answers its delegates with the member's language (the read is registered on the first use of a delegate); a second registration is only PROVIDER_DECLARED, harmless", async () => {
+test("R94 an InstanceSetup built and not started registers no member-language read (its start does), so the translations answer every word in English until then; the first registration stands", async () => {
   const { ctx, m } = bare();
   m.migrate();
   m.memberLanguageSet({ language: "es", by: "sam" });
-  assert.equal(m.readingLanguage({ member: "sam" }).language, "es", "unstarted, yet the member's language is read");
   const T = translationsOf(ctx);
-  assert.equal(T.interfaceWords({ viewer: "sam" }).language, "es", "the translations read it through the registration");
+  assert.equal(T.interfaceWords({ viewer: "sam" }).language, null, "not started: no read registered");
+  const read = ({ viewer = null } = {}) => ({ ok: true, language: viewer === "sam" ? "es" : null });
+  assert.equal(T.registerMemberLanguageRead(read).ok, true);
   const again = T.registerMemberLanguageRead(() => ({ ok: true, language: "fr" }));
   assert.equal(again.reason, "PROVIDER_DECLARED");
   assert.equal(T.interfaceWords({ viewer: "sam" }).language, "es", "the first registration stands");
   assert.equal(T.interfaceWords({ viewer: "tom" }).language, null, "control: a member with none set reads English");
 });
 
+
 test("R94 this module's declaration lists none of the seven translation tables and creates none of them; `translations` holds them; the word list is re-exported as `translations` holds it", async () => {
   for (const t of TABLES) {
     assert.equal(INSTANCE_SETUP_TABLES.includes(t), false, t);
     assert.equal(INSTANCE_SETUP_TABLE_DECLARATIONS.some((d) => d.name === t), false, t);
   }
-  const { store, m } = bare();
+  const { store, ctx, m } = bare();
   m.migrate();
   const has = (t) => store.db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`).get(t);
   for (const t of TABLES) assert.equal(has(t), undefined, `${t} is not created by this module's migrate`);
-  m.readingLanguage({ member: "sam" });
+  translationsOf(ctx);
   for (const t of TABLES) assert.ok(has(t), `${t} is created by translations, at its construction`);
   assert.equal(INTERFACE_WORDS, TRANSLATIONS_WORDS);
+});
+
+test("R99 the module exports no readingLanguage and holds no translation delegate; control: translations' readingLanguage still answers the plane's ask", async () => {
+  assert.equal("readingLanguage" in InstanceSetup.prototype, false);
+  for (const name of ["translationDraft", "translationDraftRecord", "translationGrant", "translationAdopt", "translationConfirm",
+    "translationRevert", "translationMark", "translations", "interfaceWords", "translationDraftRefusal"]) {
+    assert.equal(name in InstanceSetup.prototype, false, name);
+  }
+  const w = await world();
+  assert.equal(translationsOf(w.ctx).readingLanguage({ member: "sam" }).reason, "LANGUAGE_NOT_SET");
 });

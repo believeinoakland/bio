@@ -43,8 +43,8 @@ import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "./setup-fleet.mjs";
 /* A machine is told apart by record-grammar's one predicate, never by a reading of this module's own. */
 import { isMachineIdentity } from "./record-grammar/index.mjs";
-/* R94 (T50; N1084; CR-12): the translation workspace is `translations'`; this module keeps one delegate (`readingLanguage`),
-   the registration of the member's language (R64) and, for `store-door`'s test until it re-points, a re-export of the word list. */
+/* R94 (T50; N1084; CR-12; R99): the translation workspace is `translations'`; this module keeps the registration of the member's
+   language (R64) and, for `store-door`'s test until it re-points, a re-export of the word list. */
 import { translationsOf } from "./translations/index.mjs";
 import { TRANSLATIONS_CHECKS } from "./translations/checks.mjs";
 /* R76 (T45; grammar doubt 11): whether a records law's stages are stages of a records request is action-grammar's check
@@ -997,7 +997,7 @@ export class InstanceSetup {
     catch (e) { out.places = { compared: false, detail: localize("instance-setup.setup.the_place_could_not_be", "the place could not be compared: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     out.arrivals = this.#registerArrivals();
     out.identity = this.#registerIdentity();
-    out.language = this.#registerLanguage(this.#translations());
+    out.language = this.#registerLanguage();
     /* The instance's start reconciles (scheduler R11), now that this consumer is registered: never `arm`, the producers'
        door, which would start the test seam's probe at every boot (K419). */
     try { out.armed = await this.#scheduler().start(); } catch { out.armed = null; /* the next arm reconciles */ }
@@ -2411,31 +2411,23 @@ export class InstanceSetup {
 
 
   /* =====================================================================
-   * THE TRANSLATION WORKSPACE IS `translations`' (R94; T50; N1084; K3696). One delegate remains, for the caller that has
-   * not re-pointed (the plane's `ask`, reading the member's language, `plane/ask.mjs`); it goes when that caller does.
-   * The workspace's code, tables, rows and routes are `translations`' own.
+   * THE TRANSLATION WORKSPACE IS `translations`' (R94; T50; N1084; K3696; R99). No delegate remains: the routes and the
+   * plane's reading of a member's language are `translations`' own.
    * ===================================================================== */
 
-  /* R94: `translations`' one instance on this storage, built over this module's own record, membership, ai-accounts,
-     profiles and clock, and given the member's language (R64) on its first construction, so a built and not yet started
-     InstanceSetup answers its delegates with the member's language. */
-  #translations() {
-    const me = this;
-    /* `aiAccounts` is a getter: `translations` asks for it only when a draft reaches the keep-away gate. */
-    const t = this.#deps.translations ?? translationsOf(this.#ctx, { record: this.#record(), membership: this.#membership(),
-      get aiAccounts() { return me.#aiAccounts(); }, jurisdictions: this.#deps.jurisdictions, now: this.#deps.now });
-    this.#registerLanguage(t);
-    return t;
-  }
-  /* R94, R64: `memberLanguage` registered once with `translations` (its R11), which reads the member's own language
-     through it; a second registration is only `PROVIDER_DECLARED`, harmless. Answered in the start's report. */
-  #registerLanguage(t) {
+  /* R94, R64: `memberLanguage` registered once with `translations` (its R11), at start, so the translations read the member's
+     own language through it; a second registration is only `PROVIDER_DECLARED`, harmless. Answered in the start's report. */
+  #registerLanguage() {
     if (this.#languageRegistered) return this.#languageRegistered;
-    try { this.#languageRegistered = t.registerMemberLanguageRead(({ viewer = null } = {}) => this.memberLanguage({ viewer })); }
-    catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
+    const me = this;
+    try {
+      /* `aiAccounts` is a getter: `translations` asks for it only when a draft reaches the keep-away gate. */
+      const t = this.#deps.translations ?? translationsOf(this.#ctx, { record: this.#record(), membership: this.#membership(),
+        get aiAccounts() { return me.#aiAccounts(); }, jurisdictions: this.#deps.jurisdictions, now: this.#deps.now });
+      this.#languageRegistered = t.registerMemberLanguageRead(({ viewer = null } = {}) => this.memberLanguage({ viewer }));
+    } catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
     return this.#languageRegistered;
   }
-  readingLanguage(a) { return this.#translations().readingLanguage(a); }
 
   /* =====================================================================
    * UPDATES OF THE GROUP'S CIVICSMITH (R88–R91; T48; N1047; K3158, Bob's; DEC-226; K3189; `build/plan/draft-updates.md`).
