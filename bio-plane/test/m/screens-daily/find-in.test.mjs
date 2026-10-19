@@ -220,7 +220,7 @@ test("R5: standingquestionset keeps finding over the scope; search is \"See all 
   assert.equal(all[0].dataset.term, "closed");
   assert.ok(all[0].textContent.startsWith(word("act.search.label.find-in")));
   await press(p, "search", { reason: R });
-  assert.equal(last(p, "search").query.q, "(closed) OR (passage:closed)", "Find's own read of the term asks its passages too (R35)");
+  assert.equal(last(p, "search").query.q, "closed", "Find's own read of the term sends the words to the fields route (R56)");
   assert.equal(p.location.pathname, "/app/finder/closed");
 });
 

@@ -124,7 +124,9 @@ test("R43: Find's Theme filter lists what was placed in the chosen theme, then i
   assert.ok(p.doc.getElementById("finder-theme"), "the Theme choice");
   assert.deepEqual(p.doc.getElementById("finder-theme").querySelectorAll("option").map((o) => o.textContent), [word("theme.filter.any"), "Deferred maintenance"]);
   assert.ok(text(p).includes(word("theme.filter.help")));
-  await press(p, "themeread", { values: { "finder-theme": "THM-1" } });
+  // R54: the choice reads at once, with no second press.
+  const pickTheme = async (v) => { const el = p.doc.getElementById("finder-theme"); el.value = v; p.fire(el, "change"); await settle(); };
+  await pickTheme("THM-1");
   assert.equal(last(p, "themeread").query.id, "THM-1");
   const heads = main(p).querySelectorAll("section h2").map((h) => h.textContent);
   assert.deepEqual(heads, [word("theme.placed"), word("theme.hunches")], "what was placed, then its hunches apart");
@@ -132,6 +134,6 @@ test("R43: Find's Theme filter lists what was placed in the chosen theme, then i
   assert.ok(text(p, placed).includes("Work orders") && !text(p, placed).includes("Budget memo"));
   assert.ok(text(p, hunches).includes("Budget memo") && text(p, hunches).includes(word("theme.hunch.note")));
   // Control: back to "Any theme" lists the browse again.
-  await press(p, "themeread", { values: { "finder-theme": "" } });
+  await pickTheme("");
   assert.ok(!text(p).includes(word("theme.placed")));
 });
