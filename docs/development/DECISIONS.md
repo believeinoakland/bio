@@ -5721,3 +5721,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: reworded in place, meaning unchanged, each brace group said in words: `lines.index.a_line_rests_on_a` "a line rests on a passage (a capture and its extent), a system rule (a rule and its source) or a member's testimony (a statement)"; `lines.index.a_system_rules_source_is` "a system rule's source is a held capture or a profile entry (a profile and an entry in it)"; `lines.index.at_is_a_day_an` "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time (a value, its precision and its time zone)". A scan of every row in `words.json` finds no other brace that is not a single `{name}` placeholder.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`.
 owed: nothing.
+
+### DEC-370 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01EkYGWQGqSXhiemwre3NyZq; the development process also runs on his primary account since K1428) (BOB's HANDOFF B390, from SCREENS-SETTINGS #8 J7; K4134, K4072)
+for: design
+question: `screens/words-reads.json` lists `act.claim.label.setup` among the keys screens-settings (and screens-entry) read, though neither draws it; its R39 test fails.
+why it is Bob's: it is not (P17): the design's reads lists.
+provisional: as below.
+alternative: retiring the row, set aside: it is the design registry's label for the setup screen's claim act, and setup-words still carries every row.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: the reads generator matched the key through each module's `act.${op}.label.${screen}` pattern only because the module holds `claim` (as an op) and `setup` (as a screen) apart; the setup screen's claim button reads `screen.setup.claim.button`, so neither module reads the registry's setup claim label. `words-reads.src.mjs` gains `NOT_READ` (screens-entry and screens-settings: `act.claim.label.setup`), removed after the derivation; the lists are regenerated from a fresh extract of `tranche/T51`, which also brings in what the tranche's merged code reads since the last run (installer's 13 rows, screens-inquiry's 21 including DEC-368's `document.kind.*`, journey-check's harness text triaged unkeyed as DEC-365).
+reasoning recorded in: this entry; `screens/words-reads.src.mjs`, `screens/words-reads.json`, `screens/words-reads-mod-5.json`.
+owed: nothing.

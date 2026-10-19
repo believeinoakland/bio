@@ -5508,7 +5508,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 22415
+    "generatedRows": 22456
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -8748,7 +8748,6 @@
     "act.checkrequest.does",
     "act.cite.does",
     "act.claim.does",
-    "act.claim.label.setup",
     "act.clockadopt.does",
     "act.clockproposals.does",
     "act.clockpropose.does",
@@ -9389,7 +9388,7 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 698,
+    "reads": 697,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 113,
@@ -9478,6 +9477,7 @@
     "act.retire.label.document",
     "act.search.label.question",
     "act.sever.label.question",
+    "act.signerregisterown.label.account",
     "act.suggest.label.assistant",
     "act.themeplace.here.question",
     "act.themewithdraw.label.document",
@@ -9589,6 +9589,20 @@
     "document.held.says",
     "document.image.unread",
     "document.image.unread.summary",
+    "document.kind.csv",
+    "document.kind.docx",
+    "document.kind.html",
+    "document.kind.jpeg",
+    "document.kind.odp",
+    "document.kind.ods",
+    "document.kind.odt",
+    "document.kind.pdf",
+    "document.kind.png",
+    "document.kind.pptx",
+    "document.kind.text",
+    "document.kind.undetermined",
+    "document.kind.xlsx",
+    "document.kind.zip",
     "document.links.held",
     "document.links.help",
     "document.links.title",
@@ -9601,9 +9615,11 @@
     "document.read.cite.help",
     "document.read.help",
     "document.read.next",
+    "document.read.original.card",
     "document.read.page",
     "document.read.prev",
     "document.read.select",
+    "document.read.tab.compare",
     "document.read.tab.page",
     "document.read.title",
     "document.retire.fold",
@@ -10355,7 +10371,6 @@
     "shell.card.capture",
     "shell.card.case-editor",
     "shell.card.ceremony",
-    "shell.card.cited",
     "shell.card.dash-project",
     "shell.card.docket",
     "shell.card.document",
@@ -10393,6 +10408,10 @@
     "shell.unavailable.notyours.title",
     "shell.unread",
     "signing.ceremony.declined",
+    "size.gb",
+    "size.kb",
+    "size.mb",
+    "size.small",
     "stake.history",
     "stake.none",
     "stake.project.group",
@@ -10432,14 +10451,14 @@
     "translate.read"
    ],
    "counts": {
-    "reads": 1024,
+    "reads": 1044,
     "minted": 2,
     "keyedRows": 0,
-    "literalKeys": 906,
+    "literalKeys": 914,
     "inline": 2,
     "inlineKeyed": 2,
     "inlineUnkeyed": 0,
-    "computedKeys": 118
+    "computedKeys": 130
    },
    "unkeyed": []
   },
@@ -12482,7 +12501,6 @@
     "act.checkrequest.does",
     "act.cite.does",
     "act.claim.does",
-    "act.claim.label.setup",
     "act.clockadopt.does",
     "act.clockproposals.does",
     "act.clockpropose.does",
@@ -14044,7 +14062,7 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1630,
+    "reads": 1629,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 1621,
@@ -14341,10 +14359,16 @@
   },
   "journey-check": {
    "reads": [
+    "act.owed_pubprint.label.published",
     "dock.run.yours",
+    "document.read.page",
+    "document.read.title",
     "founder.handle.done",
     "founder.handle.later.help",
     "founder.handle.says",
+    "page.title",
+    "page.title.public",
+    "person.graph.none",
     "question.adddoc",
     "question.conclude.own.choice",
     "question.conclude.own.field",
@@ -14354,29 +14378,116 @@
     "question.empty.heading",
     "question.proposal.heading",
     "question.reading.by.member",
+    "refusal.AGENT_WORKER_UNBOUND",
+    "refusal.ASSISTANT_REMOTE_NOT_READY",
+    "screen.account.name",
+    "screen.action.name",
+    "screen.actionnew.name",
     "screen.answers.machine",
+    "screen.answers.name",
+    "screen.archive.name",
+    "screen.assistant.name",
     "screen.assistant.run.ended",
+    "screen.calculation.name",
     "screen.capture.address.done",
     "screen.capture.file.done",
+    "screen.capture.name",
+    "screen.case-editor.name",
+    "screen.ceremony.name",
+    "screen.connect.name",
     "screen.connect.own.subscription",
-    "screen.document.passages.head",
+    "screen.counsel.name",
+    "screen.dash-action.name",
+    "screen.dash-project.name",
+    "screen.docket-public.name",
+    "screen.docket.name",
+    "screen.document.name",
+    "screen.document.passage.where",
+    "screen.doorbell.name",
+    "screen.due-date.name",
+    "screen.elsewhere.name",
+    "screen.explore.name",
+    "screen.find-in.name",
+    "screen.finder.name",
+    "screen.forgot.name",
+    "screen.front.name",
+    "screen.glossary.name",
+    "screen.group-identity.name",
+    "screen.group.name",
+    "screen.grouprules.name",
+    "screen.held.name",
     "screen.held.released",
+    "screen.help-records.name",
+    "screen.help.name",
+    "screen.hold.name",
+    "screen.holdnotice.name",
+    "screen.home.name",
+    "screen.imported.name",
+    "screen.inbox.name",
+    "screen.install.name",
+    "screen.join.name",
+    "screen.matter.name",
+    "screen.members.name",
+    "screen.money.name",
+    "screen.more.name",
+    "screen.notes.name",
+    "screen.open-file.name",
+    "screen.people.name",
+    "screen.person.name",
+    "screen.places.name",
     "screen.plan.ask.ended",
     "screen.plan.ask.running",
+    "screen.plan.name",
+    "screen.proceeding.name",
+    "screen.project.name",
+    "screen.projectai.name",
+    "screen.projects.name",
+    "screen.published.back.to.the.whole.case",
+    "screen.published.finding",
+    "screen.published.name",
+    "screen.published.no.finding.in.this.case",
+    "screen.published.show.only.findings.this.strong",
+    "screen.published.signed.for.lakeshore.tenants.by",
+    "screen.published.this.is.part.of.the",
+    "screen.published.this.is.part.of.the.many",
+    "screen.question.name",
+    "screen.queue.name",
+    "screen.recovery.name",
+    "screen.request.name",
+    "screen.reset.name",
+    "screen.review-copy.name",
+    "screen.review-outside.name",
     "screen.security.level.ordinary",
+    "screen.security.name",
+    "screen.settings.name",
+    "screen.setup.name",
     "screen.site.create",
+    "screen.site.name",
     "screen.site.start",
-    "shell.menu.signout"
+    "screen.standard.name",
+    "screen.start-send.name",
+    "screen.teamai.name",
+    "screen.theme.name",
+    "screen.ties.name",
+    "screen.timeline.name",
+    "screen.tour.name",
+    "screen.translations.name",
+    "screen.unavailable.name",
+    "screen.update.name",
+    "screen.updates.name",
+    "screen.wizards.name",
+    "shell.menu.signout",
+    "shell.unavailable.nothing.title"
    ],
    "counts": {
-    "reads": 26,
+    "reads": 119,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 26,
-    "inline": 197,
+    "literalKeys": 42,
+    "inline": 274,
     "inlineKeyed": 0,
-    "inlineUnkeyed": 197,
-    "computedKeys": 0
+    "inlineUnkeyed": 274,
+    "computedKeys": 77
    },
    "unkeyed": [
     {
@@ -14437,6 +14548,72 @@
      "file": "journey-check/account.mjs",
      "line": 171,
      "text": "the walk's fake account does not answer this",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 43,
+     "text": "the tab title is \"${…}\", not the word of screen.${…}.name (${…})",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 50,
+     "text": "a public page draws ${…} weight mark${…}",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 64,
+     "text": "it ends in an ellipsis",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 65,
+     "text": "it is clipped",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 66,
+     "text": "it runs ${…}px past the viewport",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 67,
+     "text": "the team's name in the masthead is cut: ${…}",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 104,
+     "text": "the explanation of ${…} covers ${…}",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 105,
+     "text": "the explanation of ${…} runs outside the page",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 121,
+     "text": "${…}${…} has no accessible name",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 136,
+     "text": "a person with no connections draws a graph",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/checks.mjs",
+     "line": 137,
+     "text": "a person with no connections is offered Explore",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
@@ -14542,6 +14719,24 @@
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/design.mjs",
+     "line": 155,
+     "text": "the mock draws no such screen",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/design.mjs",
+     "line": 156,
+     "text": "the mock offers no control {control}",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/design.mjs",
+     "line": 157,
+     "text": "the mock's {control} offers no state like /{option}/",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/fake-model.mjs",
      "line": 19,
      "text": "The city's housing notice ${…} orders the landlord to repair the roof: \"${…}\"",
@@ -14639,427 +14834,475 @@
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 16,
+     "line": 17,
      "text": "Get the roof repaired",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 17,
+     "line": 18,
      "text": "Roof repairs at 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 18,
+     "line": 19,
      "text": "Has the landlord been ordered to repair the roof of 14 Lakeshore Row?",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 21,
+     "line": 22,
      "text": "Flat 4, 14 Lakeshore Row. Water came through the ceiling on 29 September and again on 1 October 2026.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 23,
+     "line": 24,
      "text": "repair the roof",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 69,
+     "line": 70,
      "text": "4 · connect an assistant by her own Claude subscription",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 84,
+     "line": 85,
      "text": "2 · start a project with a title, and open it",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 86,
+     "line": 87,
      "text": "Tenants of 14 Lakeshore Row report water coming in.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 93,
+     "line": 94,
      "text": "3 · open a question in it",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 94,
+     "line": 95,
      "text": "This is what the tenants need answered.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 112,
+     "line": 113,
      "text": "5 · capture by address into the question, from its \"Add a document\"",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 119,
+     "line": 120,
      "text": "5 · capture by upload into the question",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 128,
+     "line": 129,
      "text": "Flat 4, 14 Lakeshore Row, 1 October 2026",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 129,
+     "line": 130,
      "text": "My note of when the water came through the ceiling.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 136,
+     "line": 137,
      "text": "6 · see both held, and vouch for one",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 143,
+     "line": 144,
      "text": "The copy is the notice the city published at that address",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 143,
+     "line": 144,
      "text": "None remains",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 153,
+     "line": 155,
+     "text": "document: its first page reads Page 1",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 167,
+     "text": "document: the capture states no page, so none is drawn",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 175,
      "text": "{v1}open the document, see its words, and Find-in a passage",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 172,
+     "line": 194,
      "text": "{v1}cite it with a role (supports)",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 177,
+     "line": 199,
      "text": "The notice orders the repair.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 186,
+     "line": 208,
      "text": "9 · run the assistant on the question from the dock",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 196,
+     "line": 218,
      "text": "10 · read its run's answer and its suggested reading",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 210,
+     "line": 232,
      "text": "11 · Ask, and read the answer",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 231,
+     "line": 253,
      "text": "12 · accept a reading, stand on it for the project, and conclude",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 235,
+     "line": 257,
      "text": "I read the notice; it says the repair was ordered.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 236,
+     "line": 258,
      "text": "The project stands on the city's own order.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 237,
+     "line": 259,
      "text": "The city withdrawing or amending notice 2026-118",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 238,
+     "line": 260,
      "text": "The city's notice orders the landlord to repair the roof within 28 days.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 239,
+     "line": 261,
      "text": "The notice answers the question.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 256,
+     "line": 320,
+     "text": "The notice answers the question.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 335,
+     "text": "assistant not ready: the connect screen",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 341,
      "text": "What did the city order the landlord to do, and by when?",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 266,
+     "line": 344,
+     "text": "assistant not ready: the question's dock",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 345,
+     "text": "assistant not ready: the Ask screen",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 347,
+     "text": "12 · conclude on her own reading, as the project's",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 348,
+     "text": "The city withdrawing or amending notice 2026-118",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 348,
+     "text": "The city's notice orders the landlord to repair the roof within 28 days.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 366,
      "text": "the administrator invites her to the project",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 268,
+     "line": 368,
      "text": "She lives in flat 4.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 271,
+     "line": 371,
      "text": "she connects her own Claude subscription",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 273,
+     "line": 373,
      "text": "she joins the project she was invited to (projectjoin)",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 275,
+     "line": 375,
      "text": "I was invited.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 279,
+     "line": 379,
      "text": "she opens the project and a question of her own",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 282,
+     "line": 382,
      "text": "When did the tenants first report the leak to the landlord?",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 283,
+     "line": 383,
      "text": "The timeline matters for the order.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 287,
+     "line": 387,
      "text": "the project's assistant page, as hers (projectai)",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 293,
+     "line": 393,
      "text": "plan help, as hers (planask)",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 295,
+     "line": 395,
      "text": "The tenants want the repair made.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 300,
+     "line": 400,
      "text": "Ask the assistant for options.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 311,
+     "line": 411,
      "text": "Who has the tenants' reports of the leak?",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 322,
+     "line": 422,
      "text": "Heating at 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 323,
+     "line": 423,
      "text": "Has the landlord been ordered to restore the heating of flat 6 at 14 Lakeshore Row?",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 324,
+     "line": 424,
      "text": "The city's notice 2026-131 orders the landlord to restore the heating of flat 6 within 7 days.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 334,
+     "line": 434,
      "text": "nothing to conclude on yet: no citation",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 339,
+     "line": 439,
      "text": "search: look for a source the team already holds",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 344,
+     "line": 444,
      "text": "capture by address, from the question's \"Add a document\"",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 352,
+     "line": 452,
      "text": "see it held, and vouch for it",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 357,
+     "line": 457,
      "text": "The copy is the notice the city published at that address",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 357,
+     "line": 457,
      "text": "None remains",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 361,
+     "line": 461,
      "text": "conclude on her own reading",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 373,
+     "line": 462,
      "text": "The city withdrawing or amending notice 2026-131",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 374,
+     "line": 462,
      "text": "The city's notice orders the heating restored within 7 days.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 374,
-     "text": "The notice answers the question.",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/investigation.mjs",
-     "line": 387,
+     "line": 472,
      "text": "install: the installer's first page",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 388,
+     "line": 473,
      "text": "install: each step finishes, the checks pass",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 390,
+     "line": 475,
      "text": "4 · connect an assistant",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 391,
+     "line": 476,
      "text": "home: a new team's home",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 392,
+     "line": 477,
      "text": "security: a first look at Security",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 393,
+     "line": 478,
      "text": "2 · start a project",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 394,
+     "line": 479,
      "text": "3 · open a question",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 395,
+     "line": 480,
      "text": "9 · run the assistant",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 396,
+     "line": 481,
      "text": "9 · run the assistant",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 397,
+     "line": 482,
      "text": "9 · run the assistant",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 399,
+     "line": 484,
      "text": "capture by address",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 400,
+     "line": 485,
      "text": "see it held",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 402,
+     "line": 487,
      "text": "10 · read its run's answer",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 403,
+     "line": 488,
      "text": "conclude on her own reading",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/investigation.mjs",
-     "line": 404,
+     "line": 489,
      "text": "conclude on her own reading",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
@@ -15370,6 +15613,18 @@
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/journeys.mjs",
+     "line": 455,
+     "text": "dashboard {id}: opened from the door on Home",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 472,
+     "text": "sign: /sign answers the nothing-is-here page",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/local.mjs",
      "line": 115,
      "text": "not reachable from the local arm",
@@ -15394,44 +15649,218 @@
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/published.mjs",
+     "line": 21,
+     "text": "published: no case on this instance",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/published.mjs",
+     "line": 37,
+     "text": "published at {width}px: the case, signed out",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/published.mjs",
+     "line": 42,
+     "text": "published, ${…}px, signed out",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/published.mjs",
+     "line": 46,
+     "text": "published: a minimum strength, the filtered view and the way back",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/published.mjs",
+     "line": 61,
+     "text": "published: a finding's page, and back",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/published.mjs",
+     "line": 68,
+     "text": "published: Print the case, the browser's print stubbed",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/run.mjs",
-     "line": 107,
+     "line": 116,
      "text": "Teo, from flat 9",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 118,
+     "line": 126,
      "text": "she signs in on her own computer",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 177,
+     "line": 127,
+     "text": "assistant not ready: her connect screen",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 132,
+     "text": "she signs in on her own computer",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 155,
+     "text": "Roof repairs at 14 Lakeshore Row",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 155,
+     "text": "Mai, from flat 4",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 155,
+     "text": "Teo, from flat 9",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 155,
+     "text": "Interpreting, Spanish and English",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 156,
+     "text": "Water has come through the ceiling of flat 4 since Monday; reported twice.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 156,
+     "text": "Flat 4, second floor",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 156,
+     "text": "Housing notice 2026-118: repair order, 14 Lakeshore Row",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 157,
+     "text": "Housing notice 2026-131: heating order, 14 Lakeshore Row",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 157,
+     "text": "When did the tenants first report the leak to the landlord?",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 157,
+     "text": "The city withdrawing or amending notice",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 158,
+     "text": "The city's notice orders",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 158,
+     "text": "City repair order",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 158,
+     "text": "Flat 4, 14 Lakeshore Row",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 158,
+     "text": "My note of when the water came through the ceiling.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 159,
+     "text": "The copy is the notice the city published at that address",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 159,
+     "text": "Recorded by the release walk.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 159,
+     "text": "This is what the tenants need answered.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 159,
+     "text": "Tenants of 14 Lakeshore Row report water coming in.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 225,
      "text": "1 · sign in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 184,
+     "line": 232,
      "text": "she signs in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 203,
+     "line": 233,
+     "text": "assistant not ready: her connect screen",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 241,
+     "text": "she signs in by her handle",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 262,
+     "text": "{id}: not drawn signed out at its bare address, so its title and weight marks were not checked ({why})",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 283,
      "text": "the live arm needs the test instance's address (--live",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 204,
+     "line": 284,
      "text": "the environment does not hold ${…}",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 223,
+     "line": 303,
      "text": "${…}: open / and sign in",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
@@ -15556,40 +15985,154 @@
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/states.mjs",
+     "line": 14,
+     "text": "the held copy",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 15,
+     "text": "an owner standing down",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 16,
+     "text": "an owner preparing a notice",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 17,
+     "text": "an owner whose notice is published",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 17,
+     "text": "notice is published",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 18,
+     "text": "a project the member is not in",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 18,
+     "text": "isn't in this project",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 19,
+     "text": "the hidden project's rescue",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 19,
+     "text": "every owner is gone",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 20,
+     "text": "deferred for the project",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 21,
+     "text": "dismissed for the project",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 22,
+     "text": "each passage is asked",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 22,
+     "text": "each passage is asked",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 23,
+     "text": "concluded on a member's own reading",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 24,
+     "text": "saved as a file",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 24,
+     "text": "as a file",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 25,
+     "text": "the project's plans",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 27,
+     "text": "the date passed with no reply",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 27,
+     "text": "no reply recorded",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 28,
+     "text": "asking about the silence",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 29,
+     "text": "a member who may read and not act",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 29,
+     "text": "read and not act",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 30,
+     "text": "other things the record follows",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/states.mjs",
+     "line": 63,
+     "text": "{name}: not reached on this instance",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/walker.mjs",
      "line": 17,
      "text": "Your accountability record",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "bio-plane/src/journey-check/investigation.mjs",
-     "line": 155,
-     "text": "document: its first page reads Page 1",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/investigation.mjs",
-     "line": 167,
-     "text": "document: the capture states no page, so none is drawn",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/investigation.mjs",
-     "line": 335,
-     "text": "assistant not ready: the connect screen",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/investigation.mjs",
-     "line": 344,
-     "text": "assistant not ready: the question's dock",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/investigation.mjs",
-     "line": 345,
-     "text": "assistant not ready: the Ask screen",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
     },
     {
      "file": "bio-plane/src/journey-check/journeys.mjs",
@@ -15607,42 +16150,6 @@
      "file": "bio-plane/src/journey-check/journeys.mjs",
      "line": 328,
      "text": "capture: her first testimony, labelled as hers",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/journeys.mjs",
-     "line": 472,
-     "text": "sign: /sign answers the nothing-is-here page",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/published.mjs",
-     "line": 21,
-     "text": "published: no case on this instance",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/published.mjs",
-     "line": 46,
-     "text": "published: a minimum strength, the filtered view and the way back",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/published.mjs",
-     "line": 61,
-     "text": "published: a finding's page, and back",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/published.mjs",
-     "line": 68,
-     "text": "published: Print the case, the browser's print stubbed",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/run.mjs",
-     "line": 127,
-     "text": "assistant not ready: her connect screen",
      "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
     },
     {
@@ -15673,48 +16180,6 @@
      "file": "bio-plane/src/journey-check/runner.mjs",
      "line": 100,
      "text": "the local arm's runner has no fake model bound",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/states.mjs",
-     "line": 16,
-     "text": "an owner preparing a notice",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/states.mjs",
-     "line": 17,
-     "text": "an owner whose notice is published",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/states.mjs",
-     "line": 18,
-     "text": "a project the member is not in",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/states.mjs",
-     "line": 23,
-     "text": "concluded on a member's own reading",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/states.mjs",
-     "line": 27,
-     "text": "the date passed with no reply",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/states.mjs",
-     "line": 29,
-     "text": "a member who may read and not act",
-     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
-    },
-    {
-     "file": "bio-plane/src/journey-check/states.mjs",
-     "line": 30,
-     "text": "other things the record follows",
      "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
     }
    ]
@@ -47864,6 +48329,16 @@
     "refusal.ACCEPT_MUST_REAUTHOR",
     "refusal.NO_BASIS",
     "refusal.NO_CITATION",
+    "screen.forgot.help.heading",
+    "screen.forgot.help.s1",
+    "screen.forgot.help.s2",
+    "screen.hosting.guide",
+    "screen.hosting.heading",
+    "screen.hosting.s1",
+    "screen.hosting.s2",
+    "screen.hosting.s3",
+    "screen.hosting.s4",
+    "screen.hosting.s5",
     "screen.install.address.help",
     "screen.install.approveagain",
     "screen.install.cf.asks",
@@ -47929,6 +48404,7 @@
     "screen.install.short.heading",
     "screen.install.stopped.containers",
     "screen.install.stopped.containers.do",
+    "screen.install.stopped.containers.done",
     "screen.install.stopped.exists",
     "screen.install.stopped.lasting",
     "screen.install.stopped.lasting.do",
@@ -47938,13 +48414,15 @@
     "screen.install.stopped.nametaken.do",
     "screen.install.stopped.plan",
     "screen.install.stopped.plan.do",
+    "screen.install.stopped.plan.done",
     "screen.install.stopped.source",
     "screen.install.stopped.source.do",
     "screen.install.sub",
+    "setup-fleet.name.replace_time_password",
     "weight.irreversible.name"
    ],
    "counts": {
-    "reads": 567,
+    "reads": 580,
     "unkeyed": 0
    },
    "unkeyed": [],
