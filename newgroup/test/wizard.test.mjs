@@ -118,7 +118,8 @@ import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
-import { signer } from "./fixture.mjs";
+import { signer, like } from "./fixture.mjs";
+const unesc = (t) => t.replace(/&#39;/g, "'");
 import { word } from "../src/words.mjs";
 
 let pass = 0, fail = 0;
@@ -989,7 +990,7 @@ const fleetRoutes = (slug, sub) => [
   t("the wasm part is uploaded under its manifest path with its STATED module type",
     (mput.init.body.get("assets/x.wasm"))?.type, "application/wasm");
   t("the page says all members installed, by name",
-    body.includes("capability workers installed") && body.includes("probe-member"), true);
+    [like("installer.fleet.done.one", { names: /[\s\S]*probe-member[\s\S]*/ }), like("installer.fleet.done.other", { n: /\d+/, names: /[\s\S]*probe-member[\s\S]*/ })].some((re) => re.test(unesc(body))), true);
 }
 
 console.log("\n--- fleet: a manifest without the /2 upload facts refuses by name ---");
@@ -1007,7 +1008,7 @@ console.log("\n--- fleet: a manifest without the /2 upload facts refuses by name
   t("no member reached the account",
     calls.some((c) => c.method === "PUT" && /\/scripts\/probe-member-[a-z0-9-]+$/.test(c.u)), false);
   t("the page says the manifest does not state how members are uploaded",
-    body.includes("does not state how they are uploaded"), true);
+    like("installer.fleet.skip.manifest").test(unesc(body)), true);
   t("the plane itself installed normally",
     calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/bare-fleet")), true);
 }
@@ -1027,7 +1028,7 @@ console.log("\n--- fleet: a DROPPED member invalidates the set signature ---");
   t("dropping a member kills the whole fleet's signature — nothing installs",
     calls.some((c) => c.method === "PUT" && /\/scripts\/probe-member-[a-z0-9-]+$/.test(c.u)), false);
   t("and the page says the signature did not verify",
-    body.includes("fleet signature did not verify"), true);
+    like("installer.fleet.skip.signature").test(unesc(body)), true);
 }
 
 console.log("\n--- fleet: one failing member degrades ALONE, and is named ---");
@@ -1265,31 +1266,31 @@ async function d116Update(slug, after) {
   const r = await d116Update("stale-store", { storeVersion: "0.1.0",
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("A STALE DURABLE OBJECT under a current address is NAMED, with the build it runs",
-    r.body.includes("the record store of your team&#39;s Civicsmith still runs 0.1.0"), true);
+    like("installer.lag.store.version", { version: "0.1.0" }).test(unesc(r.body)), true);
   t("and the update is NOT reported done", [/<b>Updated (from|to)/.test(r.body), r.body.includes("not yet confirmed")], [false, true]);
 }
 {
   const r = await d116Update("old-store", { memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("A DO STILL ON PRE-D-116 CODE (no storeVersion at all, after a release that has it) is named, not taken as absent",
-    [r.body.includes("record store of your team&#39;s Civicsmith has not reported its version"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
+    [like("installer.lag.store.unreported").test(unesc(r.body)), /<b>Updated (from|to)/.test(r.body)], [true, false]);
 }
 {
   const r = await d116Update("stale-member", { storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": SERVING("0.1.0"), ...OTHERS } });
   t("A STALE MEMBER, read back through the plane's binding, is NAMED with the build it runs",
-    [r.body.includes("the capability worker agent-worker still runs 0.1.0"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
+    [like("installer.lag.member.version", { name: "agent-worker", version: "0.1.0" }).test(unesc(r.body)), /<b>Updated (from|to)/.test(r.body)], [true, false]);
 }
 {
   const r = await d116Update("loose-member", { storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
   t("A MEMBER THIS STEP INSTALLED but the plane cannot reach is NAMED — uploaded is not usable",
-    [r.body.includes("agent-worker was installed, but your team&#39;s Civicsmith holds no connection to it"), /<b>Updated (from|to)/.test(r.body)],
+    [like("installer.lag.member.unbound", { name: "agent-worker" }).test(unesc(r.body)), /<b>Updated (from|to)/.test(r.body)],
     [true, false]);
 }
 {
   const r = await d116Update("members-mute", { storeVersion: FLEET_VER });
   t("a capable plane that does not report its members is named, never read as none",
-    r.body.includes("did not report its capability workers"), true);
+    like("installer.lag.members.unreported").test(unesc(r.body)), true);
 }
 {
   /* The built-in release predates D-116 in this tree: its store's and members' builds are UNDETERMINED, and said. */
@@ -1315,7 +1316,7 @@ async function d116Update(slug, after) {
     /* Once DIST cuts a release carrying D-116 and embeds it, the built-in release CAN report, and this fixture (which
        serves no storeVersion) is a stale DO — which is named. Both branches are asserted so the arm survives the cut. */
     t("THE BUILT-IN RELEASE CAN REPORT BUILDS: a copy answering no storeVersion after it is a stale DO, named",
-      body.includes("record store of your team&#39;s Civicsmith has not reported its version"), true);
+      like("installer.lag.store.unreported").test(unesc(body)), true);
   }
 }
 console.log("\n--- D-116: an INSTALL names a part not on the release, and still hands over the credentials ---");
@@ -1501,14 +1502,14 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     r.targets, { ...RIGHT_OF("broken-ocr"), OCR_WORKER: null });
   t("and nothing was refused: no binding to a worker that is not there", r.refused, []);
   t("and the page NAMES the missing binding and does NOT report the copy running",
-    [r.body.includes("ocr-worker could not be installed, so your team&#39;s Civicsmith has no OCR_WORKER connection"),
+    [like("installer.lag.member.failed", { name: "ocr-worker" }).test(unesc(r.body)),
      r.body.includes("Your team's Civicsmith is running.")], [true, false]);
 }
 {
   const r = await dist6("broken-agent-up", { mode: "update", broken: "agent-worker",
     pre: { "broken-agent-up": planeBase("broken-agent-up") } });
   t("UPDATE, agent-worker's upload FAILED: AGENT_WORKER unbound, the missing binding NAMED, the update NOT reported done",
-    [r.svc("AGENT_WORKER"), r.body.includes("agent-worker could not be installed, so your team&#39;s Civicsmith has no AGENT_WORKER connection"),
+    [r.svc("AGENT_WORKER"), like("installer.lag.member.failed", { name: "agent-worker" }).test(unesc(r.body)),
      /<b>Updated (from|to)/.test(r.body)], [null, true, false]);
 }
 
