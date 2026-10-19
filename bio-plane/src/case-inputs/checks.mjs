@@ -12,6 +12,12 @@ import { word, localize } from '../setup-words/index.mjs';
 
 const at = (fn, region) => `src/case-inputs/index.mjs ${fn} > ${region}`;
 
+/* A word read by key with its `{placeholders}` kept as they stand, for the caller (`fillWords`) or the screen to fill: the
+   list's sentence is `word`'s, never a copy, and a placeholder is passed as itself. */
+const keep = (key, ...names) => word(key, Object.fromEntries(names.map((n) => [n, `{${n}}`])));
+/* The facts of one open-request row (R8) a sign-step sentence may name. */
+const ROW_FACTS = ['whom', 'asked_at', 'window_closes', 'answered', 'claims'];
+
 /* R10, R17 (T46: DEC-194, N913; T47: DEC-198 (7), DEC-199, N992): the words of `words.json`
    (`docs/development/ux-substrate/screens/words.json`) this module answers, each `en` verbatim, read by key, as
    membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: R9's six rows (`refusal.<CODE>`) and the sign
@@ -20,27 +26,18 @@ const at = (fn, region) => `src/case-inputs/index.mjs ${fn} > ${region}`;
 export const CASE_INPUTS_WORDS = Object.freeze({
   'refusal.MACHINE_CANNOT_CARRY_OUTCOME': word('refusal.MACHINE_CANNOT_CARRY_OUTCOME'),
   'refusal.CARRY_NOT_A_PARTICIPANT': word('refusal.CARRY_NOT_A_PARTICIPANT'),
-  'refusal.BAD_CARRIED_OUTCOME': 'An outcome carried into a case needs its kind (a success, a correction by the office, or a '
-    + 'harm addressed), your statement on one line with no quotation marks or backslash and at most 2,000 characters, what '
-    + 'it cites, and the date it happened. {field} is missing or isn\'t in that form. Nothing was written.',
+  'refusal.BAD_CARRIED_OUTCOME': keep('refusal.BAD_CARRIED_OUTCOME', 'field'),
   'refusal.NO_SUCH_CARRIED_OUTCOME': word('refusal.NO_SUCH_CARRIED_OUTCOME'),
   'refusal.CARRIED_OUTCOME_SETTLED': word('refusal.CARRIED_OUTCOME_SETTLED'),
   'refusal.CARRY_NO_REASON': word('refusal.CARRY_NO_REASON'),
-  'signing.openrequest.line': '{whom} was asked for comment on {asked_at}. The window for a reply closes on '
-    + '{window_closes}; the reply answers {answered} of the {claims} claims the request laid out.',
-  'signing.openrequest.noreply': '{whom} was asked for comment on {asked_at}. The window for a reply closes on '
-    + '{window_closes}; no reply is recorded.',
-  'signing.openrequest.notlaidout': '{whom} was asked for comment on {asked_at}. The window for a reply closes on '
-    + '{window_closes}; no reply laid out claim by claim is recorded.',
-  'signing.openrequest.nowindow.line': '{whom} was asked for comment on {asked_at}, with no date given for the window to '
-    + 'close; the reply answers {answered} of the {claims} claims the request laid out.',
-  'signing.openrequest.nowindow.noreply': '{whom} was asked for comment on {asked_at}, with no date given for the window to '
-    + 'close; no reply is recorded.',
-  'signing.openrequest.nowindow.notlaidout': '{whom} was asked for comment on {asked_at}, with no date given for the window '
-    + 'to close; no reply laid out claim by claim is recorded.',
+  'signing.openrequest.line': keep('signing.openrequest.line', ...ROW_FACTS),
+  'signing.openrequest.noreply': keep('signing.openrequest.noreply', ...ROW_FACTS),
+  'signing.openrequest.notlaidout': keep('signing.openrequest.notlaidout', ...ROW_FACTS),
+  'signing.openrequest.nowindow.line': keep('signing.openrequest.nowindow.line', ...ROW_FACTS),
+  'signing.openrequest.nowindow.noreply': keep('signing.openrequest.nowindow.noreply', ...ROW_FACTS),
+  'signing.openrequest.nowindow.notlaidout': keep('signing.openrequest.nowindow.notlaidout', ...ROW_FACTS),
   'signing.openrequest.unread': word('signing.openrequest.unread'),
-  'signing.openrequest.noquote': '{whom}\'s reply asks not to be quoted, so the case says what it says without quoting '
-    + 'its words.',
+  'signing.openrequest.noquote': keep('signing.openrequest.noquote', 'whom'),
 });
 
 /* R10: a word read by key, with its `{placeholders}` filled from `fill`; a throw for a key the list lacks, because a

@@ -31,10 +31,6 @@ const CARRIED = {
   CARRIED_OUTCOME_SETTLED: ["C-136.7", AT("withdrawCarriedOutcome", "is-carried-outcome-pending")],
   CARRY_NO_REASON: ["C-136.8", AT("withdrawCarriedOutcome", "is-carry-reasoned")],
 };
-/* C-136.5 as T46 left it (case-authoring R73): R17 re-takes it, so it is answered no longer. */
-const T46_BAD_CARRIED_OUTCOME = "An outcome carried into a case is its kind (a success, a cure or a harm addressed), your "
-  + "statement on one line of at most 2,000 characters with no quote or backslash, what it cites, and the date it happened. "
-  + "One of these is missing or malformed, and is named. Nothing was written.";
 /* C-82.2–C-82.8 as this module holds them: the canonical JSON's sha256 of the family, so no check, `where` or translation
    moves (each translation is case-authoring's, word for word; each `where` this module's). */
 const C82 = { count: 7, sha256: "3409003afeb4ce8483647ae08a128ed74bc9f415ea88bbda79091326388d1fa9" };
@@ -72,10 +68,8 @@ test("R12: C-82.2–C-82.8 (STATEMENT_ACK_CHECKS) move whole, ids, codes and tra
     ["STATEMENT_ACK_NO_REASON", "C-82.8", AT("acknowledgeStatement", "is-statement-ack-reasoned")]]);
   assert.deepEqual([Object.keys(STATEMENT_ACK_CHECKS).length, sha256HexSync(canonicalJson(STATEMENT_ACK_CHECKS))],
     [C82.count, C82.sha256], "no row's check, where or translation moved");
-  /* C-82.8's translation is the requirements' own, word for word (DEC-88) */
-  assert.equal(STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.translation, "An acknowledgement of a statement is recorded "
-    + "with your own words on it, and none were given, or they are longer than 2,000 characters. Write them. Nothing was "
-    + "written.");
+  /* C-82.8's translation is words.json's, by key (DEC-88) */
+  assert.equal(STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.translation, en("refusal.STATEMENT_ACK_NO_REASON"));
   /* the families this module's checks file holds: exactly the two, each code and each id once */
   const families = Object.entries(CHECKS).filter(([, v]) => v && typeof v === "object" && Object.values(v).every((r) => r && r.check));
   assert.deepEqual(families.map(([k]) => k).sort(), ["CARRIED_OUTCOME_CHECKS", "STATEMENT_ACK_CHECKS"]);
@@ -136,11 +130,10 @@ test("R10: each re-worded refusal is answered by carryOutcome and withdrawCarrie
   assert.deepEqual(w.snapshot(), after, "nothing written");
 });
 
-test("R17: C-136.5 BAD_CARRIED_OUTCOME takes its translation from refusal.BAD_CARRIED_OUTCOME with {field} the field R9 names, a sentence true of a missing and a malformed field alike; T46's own sentence is answered no longer; nothing is written", () => {
+test("R17: C-136.5 BAD_CARRIED_OUTCOME takes its translation from refusal.BAD_CARRIED_OUTCOME with {field} the field R9 names, a sentence true of a missing and a malformed field alike; nothing is written", () => {
   const { w, caseId } = carried();
   const row = CARRIED_OUTCOME_CHECKS.BAD_CARRIED_OUTCOME;
   assert.equal(row.translation, en("refusal.BAD_CARRIED_OUTCOME"), "the row holds the key's sentence, {field} for the screen");
-  assert.notEqual(row.translation, T46_BAD_CARRIED_OUTCOME, "T46's words no longer");
   const before = w.snapshot();
   for (const [over, field] of [[{ kind: undefined }, "kind"], [{ kind: "story" }, "kind"],
                                [{ text: undefined }, "text"], [{ text: "a\nb" }, "text"],
@@ -151,10 +144,8 @@ test("R17: C-136.5 BAD_CARRIED_OUTCOME takes its translation from refusal.BAD_CA
       [false, "BAD_CARRIED_OUTCOME", "BAD_CARRIED_OUTCOME", "C-136.5", field, fill("refusal.BAD_CARRIED_OUTCOME", { field })],
       JSON.stringify(over));
     assert.ok(!r.translation.includes("{field}"), "filled");
-    assert.ok(r.translation.includes(`${field} is missing or isn't in that form`));
   }
   assert.deepEqual(w.snapshot(), before, "nothing written");
-  /* control: a well-shaped outcome is carried, and no refusal carries T46's words */
+  /* control: a well-shaped outcome is carried */
   assert.equal(w.ci.carryOutcome({ case: caseId, ...OUTCOME, by: "alice" }).ok, true);
-  assert.ok(!JSON.stringify(CARRIED_OUTCOME_CHECKS).includes(T46_BAD_CARRIED_OUTCOME));
 });
