@@ -1108,7 +1108,7 @@ export class Actions {
   }
 
   /* R108: the minutes as the act is given them, an object or its JSON: `{meeting, date, passage: {captureSha, extent}}`.
-     Only the shape is judged here (`BAD_MINUTES`); the date, the kind and the passage are judged where the record is read. */
+     Only the shape is judged here (`{ok: false}`, which `actionCorrespond` answers as `BAD_MINUTES`). */
   static #minutesGiven(v) {
     if (v === null || v === undefined || v === "") return { ok: true, minutes: null };
     let m = v;
@@ -1117,11 +1117,9 @@ export class Actions {
     const sha = m && typeof m === "object" && m.passage && typeof m.passage.captureSha === "string"
       ? m.passage.captureSha.trim().replace(/^sha256:/, "").toLowerCase() : "";
     const ext = m && typeof m === "object" && m.passage ? m.passage.extent : null;
-    /* DEC-49 REGION is-minutes-shape */
     if (!m || typeof m !== "object" || Array.isArray(m) || !line(m.meeting) || typeof m.date !== "string"
         || !/^[0-9a-f]{64}$/.test(sha) || !ext || typeof ext !== "object" || Array.isArray(ext))
-      return refuse("BAD_MINUTES", localize("actions.index.minutes_are_the_meeting_one", "minutes are a meeting, a date and a passage: the meeting named on one line of 1 to 200 characters with no quote or backslash, the day it was held, and the passage of the minutes as a capture and the part of it. Nothing was written."), { max: MINUTES_MEETING_MAX });
-    /* END DEC-49 REGION is-minutes-shape */
+      return { ok: false };
     return { ok: true, minutes: { meeting: m.meeting.trim(), date: m.date.trim(), passage: { captureSha: sha, extent: ext } } };
   }
 
@@ -1129,29 +1127,24 @@ export class Actions {
      them (`MINUTES_NOT_PUBLIC_COMMENT`); the passage cites a capture the author sees, an unseen one answered as an absent one
      (`NO_SUCH_BUNDLE`), at an extent content's grammar admits (its refusals, as content answers them), and one the entry can
      hold flat. */
-  #minutesRefusal(direction, kind, minutes, viewer) {
-    /* DEC-49 REGION is-minutes-public-comment */
-    if (direction !== "received" || kind !== PUBLIC_COMMENT || !this.kinds().includes(PUBLIC_COMMENT))
-      return refuse("MINUTES_NOT_PUBLIC_COMMENT", word("screen.action.minutes.notpublic"), { direction });
-    /* END DEC-49 REGION is-minutes-public-comment */
+  #minutesRefusal(minutes, viewer) {
     const { captureSha, extent } = minutes.passage;
     const gate = viewerPredicate(viewer);
     const home = this.#one(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.capture_sha=? AND (${gate.sql}) LIMIT 1`, captureSha, ...gate.args);
-    if (!home) return { ok: false, reason: "NO_SUCH_BUNDLE", target: captureSha };
+    if (!home) return { foreign: { ok: false, reason: "NO_SUCH_BUNDLE", target: captureSha } };
     const context = this.content.contentContextFor(captureSha);
     const bad = checkContentExtent(extent, context);
-    if (bad) return bad;
+    if (bad) return { foreign: bad };
     const kept = Actions.#minutesKept(minutes);
     const back = Actions.minutesOf(kept);
     let same = false;
     try { same = !!back && canonicalExtent(back.passage.extent) === canonicalExtent(extent); } catch { same = false; }
-    if (!same)
-      return refuse("BAD_MINUTES", localize("actions.index.the_passage_has_a_part", "the passage has a part that cannot be kept on the reply's entry: name it by its kind and the fields that kind has. Nothing was written."), { max: MINUTES_MEETING_MAX });
+    if (!same) return { bad: "passage" };
     /* R108 (K4041): the passage is recorded as content by the author's act (mint or find, content R12, R13), and the row's
        id is kept beside the capture and the extent, so a reader of the minutes (filings R64) reads its text by that id. */
     const m = this.content.mint({ bundleId: home.bundle_id, captureSha, extent, mintedBy: viewer, context });
-    if (!m || m.ok === false) return m || { ok: false, reason: "BAD_MINUTES" };
+    if (!m || m.ok === false) return m ? { foreign: m } : { bad: "passage" };
     minutes.passage.content_id = m.content_id;
     return null;
   }
@@ -1712,12 +1705,6 @@ export class Actions {
        date are judged here with the entry's other values; what needs the action (its kind) and the record (the capture
        the passage cites) is judged once the action is found. */
     const minutesGiven = Actions.#minutesGiven(minutes);
-    if (!minutesGiven.ok) return { target, ...minutesGiven };
-    if (minutesGiven.minutes) {
-      const dateRefusal = this.records.correspondEntryRefusal({ at: minutesGiven.minutes.date, artifactSha: "", account: "x" },
-        { target, detail: CORRESPOND_DETAIL });
-      if (dateRefusal) return dateRefusal;
-    }
     /* D-148: the quote, as the entry will carry it. Only keys a caller SENT are
        written, so an entry with no quote parameter is byte-identical to before. */
     const quote = {};
@@ -1786,12 +1773,24 @@ export class Actions {
     /* R108: a reply carries minutes only on a received entry of a public comment, and the passage is of a capture the
        author sees, an extent the content grammar admits. */
     let minutesFields = {};
-    if (minutesGiven.minutes) {
+    /* DEC-49 REGION is-minutes */
+    if (minutes !== null && minutes !== undefined && minutes !== "") {
+      const badMinutes = (detail) => refuse("BAD_MINUTES", detail, { target, max: MINUTES_MEETING_MAX });
+      if (!minutesGiven.ok)
+        return badMinutes(localize("actions.index.minutes_are_the_meeting_one", "minutes are a meeting, a date and a passage: the meeting named on one line of 1 to 200 characters with no quote or backslash, the day it was held, and the passage of the minutes as a capture and the part of it. Nothing was written."));
       const held = this.#heldFm(target);
-      const r = this.#minutesRefusal(direction, held ? held.action_kind : null, minutesGiven.minutes, viewer ?? who);
-      if (r) return { target, ...r };
+      if (direction !== "received" || !held || held.action_kind !== PUBLIC_COMMENT || !this.kinds().includes(PUBLIC_COMMENT))
+        return refuse("MINUTES_NOT_PUBLIC_COMMENT", word("screen.action.minutes.notpublic"), { target, direction });
+      const dateRefusal = this.records.correspondEntryRefusal({ at: minutesGiven.minutes.date, artifactSha: "", account: "x" },
+        { target, detail: CORRESPOND_DETAIL });
+      if (dateRefusal) return dateRefusal;
+      const r = this.#minutesRefusal(minutesGiven.minutes, viewer ?? who);
+      if (r && r.foreign) return { target, ...r.foreign };
+      if (r)
+        return badMinutes(localize("actions.index.the_passage_has_a_part", "the passage has a part that cannot be kept on the reply's entry: name it by its kind and the fields that kind has. Nothing was written."));
       minutesFields = Actions.#minutesKept(minutesGiven.minutes);
     }
+    /* END DEC-49 REGION is-minutes */
     /* Resolved here as well as at promote, so the member is told which half of
        the capture-or-testify choice failed rather than being handed a write
        refusal after the lease was taken. */

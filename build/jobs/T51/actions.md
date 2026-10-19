@@ -42,3 +42,7 @@ Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 14, module lines 3510
 ## J2 · COMPLETE
 
 B2 applied on job/T51/actions: R108's passage is minted as content by the author (content.mint) and minutes.passage keeps content_id; t51 tests the id and that a second reply at the same extent finds the same row. t34:101 already compares with localize (no finding). Module tests 142/142; words, format, architecture, coverage, ownership 0 failures.
+
+## B3 (CHANGE), part done before action-grammar merges
+
+`DEC-49 REGION is-minutes` is drawn in `actionCorrespond` around the whole minutes act (shape `BAD_MINUTES`, `MINUTES_NOT_PUBLIC_COMMENT`, the day, the passage's refusals, the content mint); both refusals are minted there by `refuse`, which reads the catalogue rows (code, check, translation) through `withRow` as soon as action-grammar's C-117.59 and C-117.60 are on my branch. Module tests 142/142. To do on BOB's word: merge `tranche/T51` after action-grammar merges, assert the rows on both refusals in `t51`, COMPLETE again.
