@@ -313,6 +313,8 @@ const UNDETERMINED_BUILDS = word("installer.verify.undetermined");
    carried as `fail`'s third argument) is named beside it. The shell holds exactly one script, before every streamed one. */
 
 const STATE_WORD = Object.freeze({ go: word("installer.state.go"), ok: word("installer.state.ok"), no: word("installer.state.no") });
+/* R69: how long a progress page may hear nothing before it says the run stopped (longer than the 5-minute wait it draws for Cloudflare). */
+const STREAM_QUIET_MS = 8 * 60e3;
 function progressShell(title, slug, retry = null) {
   return `${pageHead(title, { noindex: true })}
 <body class="cs"><main class="cs-frame ng">
@@ -328,14 +330,15 @@ ${pageMark()}
 ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);const rows={};const W=${JSON.stringify(STATE_WORD)};
+let ended=false,seen=Date.now();const touch=()=>{seen=Date.now();};
 function mark(d,r,label){d.dataset.r=r;d.firstChild.textContent=W[r];if(label)d.children[1].textContent=label;}
-function step(id,label){const d=document.createElement("div");d.className="cs-row";d.id="r-"+id;
+function step(id,label){touch();const d=document.createElement("div");d.className="cs-row";d.id="r-"+id;
  d.innerHTML='<span class="mk"></span><span></span><span></span>';mark(d,"go",label);$("#log").appendChild(d);rows[id]=d;}
-function says(t){$("#says").textContent=t;$("#says").hidden=false;}
-function waiting(t){$("#waiting").textContent=t;$("#waiting").hidden=false;}
-function ok(id,label){const d=rows[id];if(d){mark(d,"ok",label);$("#waiting").hidden=true;}}
-function no(id,label){const d=rows[id];if(d)mark(d,"no",label);}
-function fail(p,d,s){$("#waiting").hidden=true;$("#fail").hidden=false;$("#fail-p").textContent=p;$("#fail-d").textContent=d||"";$("#fail-s").textContent=s||"";}
+function says(t){touch();$("#says").textContent=t;$("#says").hidden=false;}
+function waiting(t){touch();$("#waiting").textContent=t;$("#waiting").hidden=false;}
+function ok(id,label){touch();const d=rows[id];if(d){mark(d,"ok",label);$("#waiting").hidden=true;}}
+function no(id,label){touch();const d=rows[id];if(d)mark(d,"no",label);}
+function fail(p,d,s){ended=true;$("#waiting").hidden=true;$("#fail").hidden=false;$("#fail-p").textContent=p;$("#fail-d").textContent=d||"";$("#fail-s").textContent=s||"";}
 async function go(body,err){try{const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
  const j=await r.json();if(!j.ok){err.textContent=j.error||"";return;}location.href=j.authorize;}catch(e){err.textContent=String(e.message||e);}}
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
@@ -352,11 +355,16 @@ function wire(){
  const n=E("alongside-no");if(n)n.addEventListener("click",()=>E("alongside-dialog").close());
  const t=E("typed"),c=E("confirm-remove");
  if(t&&c){c.disabled=true;t.addEventListener("input",()=>{c.disabled=t.value.trim()!==c.dataset.slug;});}}
-function done(html){$("#done").innerHTML=html;$("#done").hidden=false;wire();
+function done(html){ended=true;$("#fail").hidden=true;$("#done").innerHTML=html;$("#done").hidden=false;wire();
  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
   await navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent);
   const t=b.textContent;b.textContent=${jsLit(word("installer.copy.done"))};setTimeout(()=>b.textContent=t,1400);}));
  const h=$("#handover");if(h)h.addEventListener("click",()=>{location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent);});}
+/* R33, R69 (F2): a stream that ends, or goes quiet, with neither a panel nor a stop is a stop too, named at the step in progress. */
+const LOST=${jsLit(word("installer.stopped.unexpected", { said: "\u0001" }))},AT=${jsLit(word("installer.stopped.at", { step: "\u0001" }))};
+function lost(){if(ended)return;const rs=document.querySelectorAll("#log .cs-row");const last=rs[rs.length-1];
+ const at=last&&last.children[1]?AT.replace("\\u0001",last.children[1].textContent):"";fail(LOST.replace("\\u0001",at),"","");ended=false;}
+window.addEventListener("load",lost);setInterval(()=>{if(!ended&&Date.now()-seen>${STREAM_QUIET_MS})lost();},15000);
 </script>`;
 }
 

@@ -143,3 +143,48 @@ test("R80 the installer delegates the account and the fleet to installer-steps a
   const copied = (f) => (...a) => f(...a);
   assert.ok(copied(index.planeLimits) !== steps.planeLimits, "a copy of a moved function is a different value, which the loop above would name");
 });
+
+/* ------------------------------------------------------------------------------------------------ R69, R33 (F2: S2) */
+
+/* The progress page's own script, run against a stand-in for the few elements it touches. */
+function shellWorld(raw, clock = { now: 0 }) {
+  const els = new Map(), logRows = [], listeners = {}, timers = [];
+  const el = (sel) => { if (sel === "#handover") return null; if (!els.has(sel)) els.set(sel, { hidden: true, textContent: "", innerHTML: "", dataset: {}, appendChild(d) { if (sel === "#log") logRows.push(d); } }); return els.get(sel); };
+  const make = () => { const d = { dataset: {}, className: "", id: "" };
+    Object.defineProperty(d, "innerHTML", { set() { d.firstChild = { textContent: "" }; d.children = [d.firstChild, { textContent: "" }, { textContent: "" }]; } }); return d; };
+  const document = { querySelector: el, querySelectorAll: (q) => (q === "#log .cs-row" ? logRows : []), createElement: make, getElementById: () => null };
+  const window = { addEventListener: (k, f) => { (listeners[k] ||= []).push(f); } };
+  const [js] = [...raw.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  const DateStub = { now: () => clock.now };
+  new Function("document", "window", "setInterval", "Date", "navigator", "location", "fetch", js + "\nglobalThis.__p = { step, ok, no, done, fail, waiting };")(document, window, (f) => timers.push(f), DateStub, {}, {}, () => {});
+  return { el, p: globalThis.__p, load: () => (listeners.load || []).forEach((f) => f()), tick: () => timers.forEach((f) => f()), clock };
+}
+
+test("R69 R33 a progress stream that ends, or goes quiet, with neither a panel nor a stop is a named stop, never nothing: it says the step in progress and the way on (the installer's first page; a reopened run continues); control: a stream that ended with its panel or its stop draws no second stop, and a stream that is still speaking is not stopped", async () => {
+  const w = await run({ slug: "shell-end" });
+  const lostAt = (step) => word("installer.stopped.unexpected", { said: word("installer.stopped.at", { step }) });
+  /* The stream ends (the page loads) with a step in progress and nothing after it. */
+  const a = shellWorld(w.raw);
+  a.p.step("fleet", "Step one");
+  assert.equal(a.el("#fail").hidden, true);
+  a.load();
+  assert.equal(a.el("#fail").hidden, false, "a stop is drawn");
+  assert.equal(a.el("#fail-p").textContent, lostAt("Step one"), "it names the step in progress and the way on");
+  /* The stream goes quiet (a dropped connection fires no load) for longer than a wait it would draw. */
+  const b = shellWorld(w.raw);
+  b.p.step("fleet", "Step two");
+  b.clock.now += 60e3; b.tick();
+  assert.equal(b.el("#fail").hidden, true, "control: a minute of quiet is not a stop");
+  b.clock.now += 9 * 60e3; b.tick();
+  assert.equal(b.el("#fail-p").textContent, lostAt("Step two"));
+  /* Control: the panel, or the stop, ended the stream: the load draws nothing more; a late panel replaces a stop drawn too early. */
+  const c = shellWorld(w.raw);
+  c.p.step("fleet", "Step three"); c.p.done("<p>x</p>"); c.load();
+  assert.equal(c.el("#fail").hidden, true);
+  const d = shellWorld(w.raw);
+  d.p.step("fleet", "Step four"); d.p.fail("Stopped", "", ""); d.el("#fail-p").textContent = "Stopped"; d.load();
+  assert.equal(d.el("#fail-p").textContent, "Stopped", "the stream's own stop is kept");
+  const e = shellWorld(w.raw);
+  e.p.step("fleet", "Step five"); e.load(); e.p.done("<p>y</p>");
+  assert.equal(e.el("#fail").hidden, true, "a late panel takes the stop away");
+});
