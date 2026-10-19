@@ -99,5 +99,5 @@ test("R5 R14–R16 R25 R28–R33 R37 R41 each screen draws its requirements' act
       assert.ok(s.words.includes(a.label), `${a.label} listed`);
     }
   }
-  assert.deepEqual(SCREENS.map((s) => s.id), ["project", "question", "document", "assistant", "projectai"]);
+  assert.deepEqual(SCREENS.map((s) => s.id), ["project", "dash-project", "question", "document", "assistant", "projectai"]);
 });
