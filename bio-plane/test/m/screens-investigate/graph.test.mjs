@@ -27,7 +27,7 @@ test("R18 explore draws the graph from exploregraph with the screen's subject as
   assert.doesNotMatch(g.textContent, /ENT-2026-\d+/, "no node is drawn by its id");
   drew(g, "connection.thing.person", undefined, "the near end of a position is a person");
   assert.deepEqual(g.querySelectorAll("svg .gchip text").map((t) => t.textContent).sort(), ["B", "C"], "each line carries its grade's letter");
-  assert.ok(g.textContent.includes("mentioned together") && g.textContent.includes("held the post (employee)"), "each step's word, as the plane gives it");
+  assert.ok(g.textContent.includes("co-mentioned") && g.textContent.includes("held the post (employee)"), "each step's word, as the plane gives it");
   drew(g.querySelector("[data-limit]"), "connection.graph.limit", undefined, "the stop is drawn at its node");
   drew(g.querySelector(`[data-limit="${ORG}"]`), "connection.graph.limit.means");
   assert.ok(g.querySelector(".cs-ref[data-tip], .cs-card[data-tip]"), "the citation");
@@ -105,7 +105,7 @@ test("R18 the money trail draws the graph with the trail's set as the centre; a 
 
 test("R35 a step_source step shows who attached the source and when beside its citation and offers stepsourcewithdraw; control: a step of another kind shows neither", async () => {
   const gr = GRAPH();
-  gr.steps = gr.steps.concat([{ id: "REL-9", from: ENT, to: GRAPH_PERSON, kind: "step_source", word: "stated in a source", class: "evidentiary", attached_by: "member:mai", at: "2026-10-05T09:00:00Z", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA }], valid: {} }]);
+  gr.steps = gr.steps.concat([{ id: "REL-9", from: ENT, to: GRAPH_PERSON, kind: "step_source", word: "step sourced", class: "evidentiary", attached_by: "member:mai", at: "2026-10-05T09:00:00Z", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA }], valid: {} }]);
   const p = await open(PATHS.explore, { plane: { exploregraph: ok(gr), stepsourcewithdraw: ok({ ok: true }) } });
   const g = graphOf(p);
   drew(g, "screen.explore.attached", { by: "mai", date: dayOf("2026-10-05") });

@@ -7,6 +7,7 @@
 import { PARTS } from "./parts.mjs";
 import { TIMELINE_PARTS } from "./timeline-parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
+import { WHY_KEYS } from "./whywords.mjs";
 
 /* R33 (4): the addresses. State a is the project (`/app/timeline/<project>`); state b one matter the project follows,
  * `<project>/matter/<progression>/<entity>`; state c one progression, `<project>/progression/<progression>`. */
@@ -56,8 +57,9 @@ function render(cs, view) {
     const people = ps.map((x) => cs.w(S + "role", { role: cs.w(S + "roles." + (["decider", "voted", "signatory", "actor", "party", "present", "speaker", "author"].includes(x.role) ? x.role : "actor")) })
       + " " + P.refOf(cs, x.entity_id, x.entity_id, [x.role || ""]) + (x.role === "voted" && x.vote_value ? " (" + cs.esc(x.vote_value) + ")" : "")
       + (x.grades && /^[A-D]$/.test(x.grades.attestation || "") ? " " + cs.grade("capture", x.grades.attestation) : "")).join("; ");
+    /* K3996, events R54: an event placed nowhere gives its `grade_why` as `{key, vars}`, drawn by its word */
     const grade = /^[A-D]$/.test(it.grade || "") ? cs.grade("capture", it.grade)
-      : cs.mark("gap", "unrated", { reason: it.grade_why || "" });
+      : cs.mark("gap", "unrated") + (it.grade_why ? ` <span class="mk-small">${P.why(cs, it.grade_why)}</span>` : "");
     return `<span class="mk-small">${people || cs.w(S + "nobody")}${total > ps.length ? " " + cs.w(S + "more.people", { n: String(total - ps.length) }) : ""}</span> ${grade}`;
   };
   /* R20: two events dates leave unordered, ordered by a cited relation: said so, the relation a reference */
@@ -110,7 +112,7 @@ function render(cs, view) {
       + (ourItems.map((x) => `<div class="mk-ev us"><span class="mk-date">${cs.date(x.at) || cs.esc(String(x.at || ""))}</span> <b>${P.refOf(cs, x.ref, x.label || x.ref, [x.kind || ""], /^ACTN-/.test(String(x.ref)) ? "action" : undefined)}</b></div>`).join(""))
       + ourFails.map((s) => cs.mark("gap", "undetermined", { reason: cs.w(S + "lane.failed", { source: s.source || "" }) })).join("") + "</section></div>";
     return lanes
-      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>`)).join(""))) : "")
+      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
       ;
   }));
   /* R33 (1): the matters the project follows through a progression, each a reference to its steps (state b) */
@@ -272,7 +274,8 @@ const TIMELINE_KEYS = [
 const PROGRESSION_KEYS = [
   "progression.follows", "progression.followed", "progression.steps", "progression.threadedby", "progression.req.always", "progression.req.usually",
   "progression.req.sometimes", "progression.req.unless", "progression.req.never", "progression.nodoc", "progression.expects", "progression.expects.undetermined",
-  "progression.finding.never", "progression.thread", "progression.discharge", "progression.setaside", "progression.chain", "progression.chain.undetermined",
+  "progression.finding.never", "progression.finding.state.open", "progression.finding.state.dismissed", "progression.finding.state.deferred", "progression.finding.state.help",
+  "progression.steps.label.key", "progression.steps.label.label", "progression.steps.label.after", "progression.steps.label.within", "progression.steps.label.required", "progression.steps.label.cardinality", "progression.steps.help", "progression.revise.help", "progression.thread", "progression.discharge", "progression.setaside", "progression.chain", "progression.chain.undetermined",
   "progression.findings", "progression.basis", "progression.basis.help", "progression.revise", "progression.define", "progression.define.go", "progression.threadedto",
   "screen.timeline.tip.progressions", "screen.timeline.tip.steps", "screen.timeline.tip.sure", "screen.timeline.tip.findings", "screen.timeline.tip.stepsdef",
   "screen.timeline.tip.basis", "screen.timeline.step.none.optional", "screen.timeline.step.within", "screen.timeline.progression.sub", "screen.timeline.progression.steps.note",
@@ -286,6 +289,6 @@ const words = [...new Set(["screen.timeline.name", "screen.timeline.purpose", ..
   ...["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold", "findin"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  "screen.timeline.method.member", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...TIMELINE_KEYS])];
+  "screen.timeline.method.member", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...WHY_KEYS, ...TIMELINE_KEYS])];
 
 export const TIMELINE_SCREEN = Object.freeze({ id: "timeline", reads, place, render, acts, words, parts: Object.freeze(Object.assign({}, PARTS, TIMELINE_PARTS)) });

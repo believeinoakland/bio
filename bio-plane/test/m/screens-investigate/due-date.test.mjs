@@ -54,7 +54,7 @@ test("R7 \"Download to my calendar\" saves clocksics' calendar for the action (c
 test("R7 a refused proposal is drawn beside the act (control)", async () => {
   const p = await open(at, { plane: { clockpropose: refusedIn("NO_SUCH_RULE", "No such rule for this action.") } });
   await press(p, "clockpropose");
-  assert.ok(main(p).textContent.includes("No such rule for this action."), "the refusal by its words");
+  assert.ok(main(p).textContent.includes(word("refusal.NO_SUCH_RULE")), "the refusal by its words");
 });
 
 test("R7 the subject `<action>~<entry position>` (screens-action's links, K3149) reads the action and opens at that entry; the action alone still opens (control)", async () => {

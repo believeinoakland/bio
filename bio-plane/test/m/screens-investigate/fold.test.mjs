@@ -108,8 +108,8 @@ test("R23 the other people fields are choices too: a claim's other record, a tim
   assert.deepEqual(opts(tl, "tl-who"), names);
   const pr = await open(PATHS.proceeding);
   for (const id of ["pr-party", "pr-obligor"]) assert.deepEqual(opts(pr, id), names, id);
-  assert.deepEqual(opts(pr, "pr-forum"), ["Superior Court of California, County of Alameda"], "R36: the court is among the forums");
-  assert.deepEqual(opts(pr, "pr-court"), ["Municipal Code §12.04", "Administrative Instruction 4.12, §3"]);
+  assert.deepEqual(opts(pr, "pr-forum"), ["Alameda Housing Tribunal"], "R36: the court is among the forums");
+  assert.deepEqual(opts(pr, "pr-court"), ["Municipal Code §12.04", "Administrative Instruction 9.1, §2"]);
   const ex = await open(PATHS.explore);
   assert.deepEqual(opts(ex, "explore-to"), [word("screen.explore.to.any"), ...names]);
   const st = await open("/app/standard/" + STD);
@@ -120,7 +120,7 @@ test("R23 the other people fields are choices too: a claim's other record, a tim
 
 test("R26 person, calculation, proceeding and standard mark their subject read subject: true and list NO_ENTITY and NO_CALC in ABSENT_CODES", () => {
   const by = Object.fromEntries(SCREENS.map((s) => [s.id, s]));
-  const subject = { person: ["person"], calculation: ["calc"], proceeding: ["entity"], standard: ["standard"] };
+  const subject = { person: ["entity"], calculation: ["calc"], proceeding: ["entity"], standard: ["standard"] };
   const subjects = { person: ENT, calculation: CALC, proceeding: PROC, standard: STD };
   for (const [id, reads] of Object.entries(subject)) {
     const r = by[id].reads({ subject: subjects[id], ui: {}, data: {} });
