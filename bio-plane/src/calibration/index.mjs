@@ -43,6 +43,11 @@ export const CALIBRATION_LIMIT_MAX = 5000;
 const safeJson = (s) => { try { return JSON.parse(s); } catch { return null; } };
 const nonEmpty = (v) => typeof v === "string" && v.trim().length > 0;
 
+/** R8: the state of a subject's probe that its `why` names: never probed, or probed at its own cadence. */
+export const subjectProbeState = (lastProbeMs) => lastProbeMs == null
+  ? localize("calibration.index.nothing_has_ever_probed", "Nothing has ever probed it, so a probe is due immediately")
+  : localize("calibration.index.next_probe_at_cadence", "The next probe is due at its own cadence");
+
 class Calibration {
   #sql; #record; #order; #now;
   #listeners = [];        // R12: {module, fn, seq}, kept in the modules' order
@@ -262,8 +267,7 @@ class Calibration {
                obligations,
                obligations_truncated: truncated,
                regraded: 0,
-               why: word("calibration.why.records_probe_measured", { id: String(id), probe_id: String(cal.probe_id), engine: String(cal.engine), version: String(cal.version), at: String(cal.at), cap: String(cal.cap ?? "undetermined"), why: String(d.why), value: String(obligations ? `` : `. No module derives obligations from calibrations in your team's Civicsmith, so `
-                                      + `none are named here (null, not none found)`) }) };
+               why: word("calibration.why.records_probe_measured", { id: String(id), probe_id: String(cal.probe_id), engine: String(cal.engine), version: String(cal.version), at: String(cal.at), cap: String(cal.cap ?? "undetermined"), why: String(d.why), value: obligations ? "" : word("calibration.why.module_derives_obligations") }) };
     });
   }
 
@@ -295,8 +299,7 @@ class Calibration {
              subjects, subjects_truncated: subj.truncated,
              why: subjects.length
                ? word("calibration.why.group_civicsmith_probes", { subjects: String(subjects.length), value: String(cadenceSentence()) })
-               : `no engine is registered for calibration in your team's Civicsmith, so no probe is scheduled `
-                 + `and this consumer holds no alarm at all` };
+               : word("calibration.why.engine_registered_calibration") };
   }
 
   /* ---------------------------------------------------------------- R7: the announcement watch */
@@ -338,8 +341,7 @@ class Calibration {
              next_probe: next,
              armed: !!subject,
              changed_grades: 0, stood_in_for_probe: false,
-             why: word("calibration.why.recorded_announced_something", { source: String(sig.source), engine: String(sig.engine), value: String(subject ? `` : `. No calibration subject is registered for this engine, so there is no probe `
-                                + `for it to accelerate — the announcement is kept as a fact and does nothing else`) }) };
+             why: word("calibration.why.recorded_announced_something", { source: String(sig.source), engine: String(sig.engine), value: subject ? "" : word("calibration.why.calibration_subject_registered") }) };
   }
 
   /* ---------------------------------------------------------------- R8: registering an engine */
@@ -358,11 +360,10 @@ class Calibration {
        written for a MEASUREMENT: untrue of an act that measures nothing and asks no version (one code, one
        condition, D-484). */
     if (!engine)
-      return this.#refuse("CAL_SUBJECT_UNNAMED", `registering a calibration subject names the engine to be probed`);
+      return this.#refuse("CAL_SUBJECT_UNNAMED", localize("calibration.index.registering_names_the_engine", "registering a calibration subject names the engine to be probed"));
     if (!probeId)
       return this.#refuse("CAL_SUBJECT_NO_PROBE",
-        `registering a calibration subject names the PROBE that will measure it. A subject with no probe is a `
-        + `promise to measure something by some means nobody stated`);
+        localize("calibration.index.registering_names_the_probe", "registering a calibration subject names the PROBE that will measure it. A subject with no probe is a promise to measure something by some means nobody stated"));
     /* END DEC-49 REGION is-calibration-subject */
     const enabled = p.enabled === false ? 0 : 1;
     this.#sql.exec(
@@ -381,9 +382,7 @@ class Calibration {
              cadence_ms: CALIBRATION_CADENCE_MS, cadence: cadenceSentence(),
              next_probe: next,
              measured: false,
-             why: word("calibration.why.registered_calibration_group", { engine: String(engine), last_probe_ms: String(s.last_probe_ms == null
-                    ? `Nothing has ever probed it, so a probe is due immediately`
-                    : `The next probe is due at its own cadence`), cadence_sentence: String(cadenceSentence()) }) };
+             why: word("calibration.why.registered_calibration_group", { engine: String(engine), last_probe_ms: subjectProbeState(s.last_probe_ms), cadence_sentence: String(cadenceSentence()) }) };
   }
 
   /* ---------------------------------------------------------------- R9: for the scheduler */
