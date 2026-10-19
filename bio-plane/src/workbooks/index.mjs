@@ -25,7 +25,7 @@ import { GRID, cellAt, cellName, splitRange, cellValue, sourceValue, sameValue, 
 import { indexWorkbook, inputCells, lintFindings, LINT_KINDS } from "./lint.mjs";
 import { buildExport } from "./export.mjs";
 import { XLSX_CONTENT_TYPE } from "./xlsxwrite.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { WORKBOOKS_SCHEMA, WORKBOOKS_TABLES } from "./schema.mjs";
 export { LINT_KINDS } from "./lint.mjs";
@@ -513,8 +513,7 @@ export class Workbooks {
       results: cells.filter((c) => c.formula !== null && c.formula !== undefined)
         .map((c) => ({ cell: `${c.sheet}!${c.cell}`, derivation_step: ENGINE_STEP.step, grade: ENGINE_STEP.grade })),
       method: { graded: false, disclosed: this.#methodNotes(wb).find((n) => n.current) || null },
-      rule: "K1447 (ii): each bound input at its capture grade capped by its derivation; an unbound input is testimony (D); "
-        + "a third-party engine's value is a derivation step, undetermined until measured; the method is disclosed, not graded",
+      rule: localize("workbooks.index.k1447_grade_rule", "K1447 (ii): each bound input at its capture grade capped by its derivation; an unbound input is testimony (D); a third-party engine's value is a derivation step, undetermined until measured; the method is disclosed, not graded"),
     };
   }
 
