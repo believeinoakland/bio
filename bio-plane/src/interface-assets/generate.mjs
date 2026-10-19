@@ -9,7 +9,7 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
-const COMMIT = "20c8001300"; // R10 (T51): the design branch's last merge into tranche/T51 (DEC-353, DEC-354), the commit `site` takes
+const COMMIT = "2a64c5ae77"; // R10 (T51): the design branch's last merge into tranche/T51 (DEC-359), the commit `site` takes
 const DIR = "docs/development/ux-substrate/visual-language";
 const PAGE = "docs/development/ux-substrate/screens/page.src.html";
 
@@ -18,8 +18,8 @@ const PHONE = '.mk-device[data-device="phone"] ';
 const PHONE_QUERY = "@media (max-width: 760px)";
 const PHONE_WEIGHT = ":root:root "; // K3295: the prefix's (0,2,0), matching every element, so each phone rule wins as in the design
 /* K3295: the design's unprefixed product classes that carried mk- components draw: the graph's edges (.e, .e-*) and
-   chips (.gchip), the areas' .cell, the front's states (.st and its .st-a…), and .row. */
-const PRODUCT = /^(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row)$/;
+   chips (.gchip), the areas' .cell, the front's states (.st and its .st-a…), .row, and .tw (a table's scrolling wrapper, K4081). */
+const PRODUCT = /^(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row|tw)$/;
 const MOCK_ONLY = ["mk-device", "mk-scaler", "mk-mockctl", "mk-osprompt", "vtabs", "vstage", "vhead", "vnav", "vdots", "vwhat", "vsay"];
 const PAGE_OWN = ["anat", "asfig", "viewer", "vlist"];
 const EXCLUDED = new Set([...MOCK_ONLY, ...PAGE_OWN]);

@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -36,3 +36,7 @@ CHANGE (K4079): wizard-scripts is merged into tranche/T51 (registry, front doors
 ## B4 · CHANGE
 
 CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 and `rows.mjs` regenerated: merge tranche/T51. Your rows, from the design's answer verbatim: (2a) "Search projects" is a kit field that narrows the drawn list as typed: no op, no registry act. (2b) shell.css carries `.tw{overflow-x:auto}` (from the design's page; interface-assets takes it at its next re-take, so draw the wrapper). (2c) `screen.finder.cite.*` (legend, support, against, cited, newly_against, set_changed, added_since, gone_since, back, back.help); the choose box is `screen.finder.pick` "Pick {title}" and the empty press `screen.finder.pickfirst`; a resolved row is its title alone (queue R59), so `queue.answered.photos`, `.photos.one`, `.granted`, `.granted.meta` are retired; `queue.answered.forwarded.unnamed` "Forwarded {item}"; `queue.feed.<id>` for tasks, bias-debts, sources, proposals, shared-inquiries, leads, exports, references, objectives, machinery, contradictions, signing-keys, action, attribution, docket, cited-cases, wizards, schedule, places, projects; `queue.multi.why.letter` when the door is `filingapprove`, `.why.check` when the item is a check another member asked of you, else the owner's why.
+
+## B5 · CHANGE
+
+CHANGE (K4083), re J3: interface-assets is merged again with .tw carried in shell.css (ASSETS_COMMIT 2a64c5ae77). Merge tranche/T51 and draw B4 (2b) (the table). interface-shell's and op-declarations' merges are still to come (each a CHANGE). The 'narrows as typed' search field: interface-shell has the debounced typed-input hook on its branch (K4076); use it once interface-shell merges.

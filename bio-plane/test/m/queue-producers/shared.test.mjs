@@ -105,10 +105,10 @@ test("R2: new-version-arrived-from-another-team reads the team from the run's co
   const V = "queue.new-version-arrived-from-another-team";
   assert.equal(items[0].summary, word(`${V}.summary`, { version: "opening account", question: "the transfer question", project: "A" }));
   assert.equal(items[0].detail, [word(`${V}.detail`, { question: "the transfer question", n: 2, project: "A", version: "opening account" }),
-    word(`${V}.detail.by`, { who: "ruth" }), word(`${V}.detail.at`, { date: dayWord("2026-07-03") })].join(" "),
-    "the reading's state is a bare code in basis-versions and the list holds no key for it: its sentence is left out (named in the REPORT)");
+    word(`${V}.detail.state`, { state: word("queue.fill.state.accepted") }), word(`${V}.detail.by`, { who: "ruth" }), word(`${V}.detail.at`, { date: dayWord("2026-07-03") })].join(" "),
+    "the reading's state through queue.fill.state.<code>");
   assert.equal(items[1].detail, [word(`${V}.detail`, { question: "the transfer question", n: 2, project: "B", version: "the audit alone" }),
-    word(`${V}.detail.hidden`), word(`${V}.detail.by`, { who: "ruth" }), word(`${V}.detail.at`, { date: dayWord("2026-07-04") })].join(" "));
+    word(`${V}.detail.state`, { state: word("queue.fill.state.accepted") }), word(`${V}.detail.hidden`), word(`${V}.detail.by`, { who: "ruth" }), word(`${V}.detail.at`, { date: dayWord("2026-07-04") })].join(" "));
   assert.deepEqual([items[1].basis.state, items[1].basis.hidden], ["accepted", true], "a hidden reading is returned and flagged, never filtered");
   assert.deepEqual(r.facts.unattributed, { count: 2, inquiries: [INQ] },
     "D-266: the silence is counted, both ways of being unattributable, as an exact figure, naming no reading");
