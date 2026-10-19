@@ -3078,7 +3078,10 @@ export async function groupLogoAsset(env, storeName, io) {
 
 /** R17, op=bootstrap: this isolate's `version`, `bootstrapConfigured` (a live ADMIN_TOKEN), membership's
  *  `bootstrapState` and the store's own `storeVersion` from the Durable Object's route, and with `members` each
- *  member's own build (D-116: THREE BUILDS, EACH READ FROM WHERE IT RUNS — `storeVersion` is never written here). */
+ *  member's own build (D-116: THREE BUILDS, EACH READ FROM WHERE IT RUNS — `storeVersion` is never written here).
+ *  R95 (T51): to a credentialed `caller` only (`{cls: "admin"}` for an admin-class token, `{administrator: true}` for an
+ *  administrator's signed-in session, as the control plane resolved it) it adds the seven flat facts of the copy, read from
+ *  the store's own `bootstrapfacts` route; a caller with none, or of another class, is answered exactly R132's key set. */
 export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null }) {
   const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
   if (!out.answered) return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal });
