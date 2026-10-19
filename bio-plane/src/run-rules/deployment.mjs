@@ -1,6 +1,6 @@
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { AI_RUN_OWN_CHECKS } from "./checks.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R9 (was ai-runs R44; K102, K182 (3), N156) and R14 (K660 (5)): THE ONE DEPLOYMENT ORDER, held here because `skills`
  * (whose `skilldoctrine.mjs` wrote it first, SK-4) and `agent-worker` (whose `MODES` is pinned to it) both come after
@@ -292,8 +292,7 @@ export const ENQUIRE_MODE = Object.freeze({
   interactive: true,
   writes_run_row: false,
   writes: "nothing: its proposals are stored by investigation R12, R20 and steps R24, each by its own act",
-  why: "it interviews one member about their matter and proposes questions and steps inside that member's act, and is "
-    + "no run: it writes no run row and keeps nothing itself",
+  why: word("run-rules.why.interviews_member_matter"),
   deploys_apart: true,
   deployed: false,
   when: "only by a reviewed change of its own that sets this flag, once R19's test bar is held for it, whatever the run "
