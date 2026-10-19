@@ -24,7 +24,7 @@ My backstop (a `send_later` into my session, ~06:45) and WATCH #220 `trig_01LYvh
 ## What comes next, in order
 
 1. Take over (§5.1): archive BOB #220 once idle (BOB-final row under T51); create your WATCH and backstop.
-2. **AGENT-WORKER #33** (`session_01WuXNA6bcbYEWzWXRuvLaq3`): its COMPLETE after B6 → ownership, merge again, words over R6's modules (only the accepted diagnostics), its tests (`npm test` in `agent-worker/`, never stopped midway; only R45 stale-bundle red was reported, cleared by R6's regeneration).
+2. **AGENT-WORKER #33** (`session_01WuXNA6bcbYEWzWXRuvLaq3`): its COMPLETE after B6 → ownership, merge again, words over R6's modules (only the accepted diagnostics), its tests (`npm test` in `agent-worker/`, never stopped midway; on the tranche after R6's regeneration it read 22 pass, 0 fail, BOB #220).
 3. **Finish R6's close (§5.6):** if agent-worker changed sources, regenerate artifacts again (bundles); `checks/run.mjs`; archive R6's 24 sessions with their rows (`r6-sessions` list = the plan's Jobs line for R6 modules; Size lines in each record).
 4. **Start R7** (§5.3): intent (T51-222), investigation (T51-223, its START has K4010's note), reevaluation (T51-224); bodies in `build/plan/starts-T51-R7/`; branches at the tip; models per START.
 5. **R8** (bodies ready, `starts-T51-R8/`; case-checker R27 and the DEC-340 folds are written). Then **RW** (bodies in `build/plan/starts-T51-RW/`, 12 modules incl. agent-harness; re-read the list from `checks/words.mjs` at R8's close). L9 only when the words check reads zero over L1–L8.
