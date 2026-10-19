@@ -142,3 +142,11 @@ Size (session_017VMvhjxUfKRwS5rFeW66NT): test runs 14, module lines 3986
 - `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio bundler`: 0 failures. `checks/coverage.mjs /home/user/bio bundler`: 38 of 38 live ids named. `checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`: 0 failures.
 
 Size (session_01Gz6er9hUWEo63Fj3mY19bH): test runs 5, module lines 4024
+
+## J7 · REPORT
+
+Other modules, found by checks/run.mjs (not changed here; described against their requirements):
+- coverage: 8 live ids named by no test: agent-harness R17; agent-runner R36, R37, R38, R40; credentials R80; extraction R77; installer-steps R26, R31; journey-check R19; screens-inquiry R81, R82; setup-words R19.
+- words: 15 inline findings, all in instance-setup (12) and promotion (3).
+- Consumer: installer-steps' MEMBER_OBJECTS can go once the release carries agent-worker's Durable Objects (BOB's note 1). The installer's workerDescriptor already reads the new durable_objects field (F10).
+- Release output changes at the next cut: agent-worker gains a signed worker.json; agent-runner and file-scanner parts gain durable_objects.
