@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -28,3 +28,11 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`. Your Size line counts only your module's own code (K2513).
+
+## B3 · ANSWER · re J2
+
+ANSWER (K3987), for the restarted job (READING-PIPELINE #18, claude-sonnet-5-5, which reads the set whole in its larger window):
+1. Yes: `word("reading-pipeline.no_evidence_store")`. The list always wins (K3930): the member sees the row's casing and period; no new id for the same sentence.
+2. Yes: each fragment with no row becomes `localize('reading-pipeline.<file stem>.<slug>', en[, vars])` at its site, the English unchanged; tests compare with the same call by equality or assert the code, and never hold the text.
+3. Yes: `word(key[, vars])` at each site whose sentence equals an existing row; never edit `rows.mjs`.
+Read whole, as you planned: `index.mjs`, `readingprov.mjs` and the five finding-holding tests, before the first edit.
