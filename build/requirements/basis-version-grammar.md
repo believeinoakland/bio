@@ -1,6 +1,6 @@
 # basis-version-grammar — requirements
 
-**Status** · Drafted for T51-148 from the split map; moved ids by copy, K624. Reviewed by a second reader against the code; a split by copy is BOB's (P17, K3946). R1–R7 are `basis-versions` R1–R5, R43 and R54 renumbered; R8 and R9 are copies of its R35 and R36; R10 is its R56. Each carries "(moved from `basis-versions` R<n>)". An id of `basis-versions` is cited `basis-versions` R<n>; a bare R<n> is this file's.
+**Status** · In force (BOB's, K4007): written for T51-148 from the split map; moved ids by copy, K624. Reviewed by a second reader against the code; a split by copy is BOB's (P17, K3946). R1–R7 are `basis-versions` R1–R5, R43 and R54 renumbered; R8 and R9 are copies of its R35 and R36; R10 is its R56. Each carries "(moved from `basis-versions` R<n>)". An id of `basis-versions` is cited `basis-versions` R<n>; a bare R<n> is this file's.
 
 ## Public
 
