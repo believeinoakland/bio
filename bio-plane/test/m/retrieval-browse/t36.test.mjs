@@ -11,6 +11,7 @@ import { RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED } from
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
 import { fresh, hold, doc, docx, wp, wr } from "../extraction/fixture.mjs";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 
 const page = (n) => ({ kind: "pdf-page", page: n });
 
@@ -153,7 +154,7 @@ test("R1, R4 (N715): recorded_read names the reads that answered; recorded_not_r
   assert.match(ans.recorded_not_read[0].why, /refused: EXTENT_MALFORMED/);
   assert.match(ans.recorded_not_read[1].why, /threw: standards broke/);
   assert.match(ans.recorded_not_read[2].why, /promise/);
-  assert.match(ans.recorded_not_read[3].why, /another shape/);
+  assert.equal(ans.recorded_not_read[3].why, WORD("retrieval-browse.findin.read_another_shape"));
   assert.deepEqual(ans.recorded_not_read[4], { module: null, why: RECORDED_NONE_REGISTERED });
   assert.ok(ans.kinds.every((k) => k.items.length && k.items.every((m) => Array.isArray(m.recorded) && m.recorded.length === 0)));
   /* Nothing else moved: the same find with four quiet reads answers the same kinds, bar the recorded lists. */
