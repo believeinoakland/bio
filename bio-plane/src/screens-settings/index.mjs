@@ -79,8 +79,8 @@ const WORDS = {
   translations: [...STATES, "screen.translations.name", ...own("screen.translations."),
     ...LABELS("translations", ["translationdraft", "translationadopt", "translationgrant", "translationconfirm", "translationrevert"])],
   glossary: [...STATES, "screen.glossary.name", ...own("screen.glossary.", "glossary.term.", "state.item.")],
-  grouprules: [...STATES, "screen.grouprules.name", ...own("screen.grouprules.", "screen.start-send.kind."), "member.founder.unnamed", "refusal.RULE_NEEDS_QUALIFICATION",
-    ...LABELS("grouprules", ["ruleconfirm", "rulewithdraw", "ruledraft"])],
+  grouprules: [...STATES, "screen.grouprules.name", ...own("screen.grouprules.", "screen.start-send.kind."), "member.founder.unnamed", "refusal.RULE_NEEDS_QUALIFICATION", "screen.group-identity.draft.label", "ai.label.untested",
+    ...own("screen.action.kind."), ...LABELS("grouprules", ["ruleconfirm", "rulewithdraw", "ruledraft", "writinghelp"])],
 };
 
 const PARTS = Object.freeze({ aiPanel, aiPanelSend, aiUsageBars });

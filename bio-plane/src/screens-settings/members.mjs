@@ -30,6 +30,8 @@ export const members = {
       r.recovery = { op: "adminrecoverystep" };
       r.signers = { op: "signerlist" };
       r.arith = { op: "adminarith" };
+      // a removal under way (member-roster R75; R56 item 4)
+      r.removals = { op: "adminremovalsopen" };
     }
     return r;
   },
@@ -204,10 +206,22 @@ export const members = {
         const listed = activeList.filter((m) => m.role === "admin").length;
         const diff = live.administrators - listed;
         if (diff > 0) h += `<details class="mk-details" data-fold="reconcile"><summary>${W(S + "founder.if.the.count.is.higher")}</summary><p class="mk-note">${W(S + (diff === 1 ? "founder.the.count.includes.1.administrator" : "founder.the.count.includes.n.administrators"), { n: diff })} ${W(S + "founder.the.founder.holds.the.team")} ${W(S + "founder.they.are.counted.because.the")}</p></details>`;
-        h += `<details class="mk-details" data-fold="arith"><summary>${W(S + "how.it.changes.with.the")}</summary><p class="mk-note">${W(S + "removal.takes.a.majority.of")} ${W(S + "the.one.facing.removal.is")} ${W(S + "a.lone.administrator.can.never")}</p></details>`;
+        // the scale: one row for each count of administrators, the live row marked now (R56 item 3)
+        const table = Array.isArray(v.table) ? v.table : [];
+        const scale = table.length ? `<div class="tw"><table class="mk-table" data-list="scale"><thead><tr><th>${W(S + "scale.head.admins")}</th><th>${W(S + "scale.head.takes")}</th><th>${W(S + "scale.head.who")}</th></tr></thead><tbody>${table.map((t) => {
+          const now = t.administrators === live.administrators;
+          return `<tr${now ? ' aria-current="true"' : ""}><td>${E(t.administrators)}${now ? " " + W(S + "scale.now") : ""}</td><td>${t.possible ? W(S + "scale.takes", { k: t.votesNeeded, n: t.administrators }) : W(S + "scale.not_removable")}</td><td>${t.possible ? W(S + "scale.who", { v: t.eligibleVoters, n: t.administrators }) : W(S + "scale.no_majority")}</td></tr>`;
+        }).join("")}</tbody></table></div>` : "";
+        h += `<details class="mk-details" data-fold="arith"><summary>${W(S + "how.it.changes.with.the")}</summary>${scale}<p class="mk-note">${W(S + "removal.takes.a.majority.of")} ${W(S + "the.one.facing.removal.is")} ${W(S + "a.lone.administrator.can.never")}</p></details>`;
         return h;
       };
-      out.push(cs.sec(S + "what.removing.an.administrator.takes", `${cs.state(data.arith, arithOf)}<p class="mk-small">${W(S + "nothing.here.changes.anything.explain")}</p>`, { help: S + "the.team.s.own.rule.explain" }));
+      // a removal under way, from the answer alone: who faces it, how many of those who may vote have agreed, and who it waits for (R56 item 4)
+      const removalsOf = (v) => (Array.isArray(v.removals) ? v.removals : []).map((r) => {
+        const eligible = (Array.isArray(r.voters) ? r.voters.length : 0) + (Array.isArray(r.awaiting) ? r.awaiting.length : 0);
+        const target = whoOf(r.target) || String(r.target);
+        return `<div data-removal="${E(String(r.target))}"><p>${W(S + "2.of.3.have.agreed", { n: r.have, total: eligible })}</p><p>${W(S + "teo.is.counted.but.doesn", { member: target, n: eligible })}</p>${(r.awaiting || []).map((x) => `<p class="mk-small">${W(S + "the.removal.waits.for.ana", { member: whoOf(x) || String(x) })}</p>`).join("")}</div>`;
+      }).join("");
+      out.push(cs.sec(S + "what.removing.an.administrator.takes", `${cs.state(data.arith, arithOf)}${cs.state(data.removals, removalsOf)}<p class="mk-small">${W(S + "nothing.here.changes.anything.explain")}</p>`, { help: S + "the.team.s.own.rule.explain" }));
     }
 
     return out.join("");

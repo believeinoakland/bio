@@ -94,6 +94,8 @@ export function membersTable(over = {}) {
     signeradd: (q, b) => env({ ok: true, keyB64: b.keyB64, memberId: b.memberId, status: "active", origin: "admin", registered_by: "rosa" }),
     // R56: three administrators are listed (the founder's row, rosa, lu) and three are counted
     adminarith: ARITH(3),
+    // member-roster R75: none under way
+    adminremovalsopen: env({ ok: true, removals: [] }),
     passwordresetlink: (q, b) => env({ ok: true, member: b.member, link: "rl-0123456789", expiresAt: "2026-10-19T00:00:00Z" }),
     ...over,
   };
@@ -377,8 +379,16 @@ export const GROUP_RULES = [
   rule(5, { section: "legal_facts", state: "confirmed", entry: { key: "three-minutes", trigger: "pending_measure_or_candidate", statement: "Each speaker gets three minutes", citation: "Planning Commission Bylaws, Article 5", applies_to: ["public_comment"], effective_from: "2026-01-01" }, applies_to: ["public_comment"], tier: 1, drafted_at: "2026-09-22T00:00:00Z", confirmer: "lu", confirmed_at: "2026-09-24T00:00:00Z" }),
   rule(6, { state: "withdrawn", entry: { rule: "A withdrawn rule never drawn", starts: "filed", citation: "x", effective_from: "2026-01-01" }, withdrawn: { by: "lu", at: "2026-10-01T00:00:00Z", reason: "wrong" } }),
 ];
+/** `rulefields` (local-facts R18) for deadlines: the kinds of action, claim first; `heldcaptures` rows and a `reading`'s text units for the draft form (DEC-357). */
+export const RULE_KINDS = ["claim", "request_for_comment", "public_comment", "party_participation"];
+export const DOC_SHA = "d".repeat(64);
+export const UNITS_OF_DOC = [{ seq: 1, text: "Comments close five days\nbefore the meeting.", extent: { kind: "pdf-page", page: 2 } }, { seq: 2, text: "Speakers register by noon.", extent: { kind: "pdf-page", page: 3 } }];
 export function grouprulesTable(over = {}) {
   return {
+    rulefields: env({ ok: true, section: "deadlines", count: 2, fields: [{ field: "rule", required: true, kind: "text" }, { field: "applies_to", required: true, kind: "choice", choices: RULE_KINDS }] }),
+    heldcaptures: env({ ok: true, held: [{ title: "Parks Commission rules of procedure", capture: { sha256: DOC_SHA } }, { title: "Untitled", capture: { sha256: "e".repeat(64) } }] }),
+    reading: env({ ok: true, text_units: UNITS_OF_DOC }),
+    ruledraft: (q, b) => env({ ok: true, rule: "GR-0009", state: "drafted" }),
     grouprules: env({ ok: true, rules: GROUP_RULES, count: GROUP_RULES.length }),
     memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     ruleconfirm: (q, b) => env({ ok: true, rule: b.rule, state: "confirmed", at: "2026-10-12T00:00:00Z", tier: 1, with_statement: !!b.statement }),
