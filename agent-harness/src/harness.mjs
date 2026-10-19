@@ -1,10 +1,9 @@
 /* agent-harness (T33-54): copied from `agent-worker/src/harness.mjs` with no change of meaning; its requirements are
  * `build/requirements/agent-harness.md` R1–R10, tested in `agent-harness/test/`. The suites this header names
  * (`test/harness.test.mjs` and the like) are agent-worker's, which drive the Worker shell. R3's default pass limit
- * (`passLimit`) is held here since this copy. The run's plane ops, its namespaces and its meaning arm (`PLANE_OPS`,
- * `NAMESPACES`, `MEANING_ARM`) are `agent-worker`'s, declared once in its `ops.mjs` (T51-65 moves `MEANING_ARM` to
- * `agent-steps`); this module exports none of them
- * (R9, T34-37). */
+ * (`passLimit`) is held here since this copy. The run's plane ops and its namespaces (`PLANE_OPS`, `NAMESPACES`) are
+ * `agent-worker`'s, declared once in its `ops.mjs`; its meaning arm (`MEANING_ARM`) is `agent-steps`', declared in its
+ * `names.mjs`; this module exports none of them (R9, T34-37). */
 /* FL-3 / IS-9 — THE RUN HARNESS, AS A DETERMINISTIC CONTROL FLOW TABLE.
  *
  * `INVESTIGATIVE-SESSION.md` §14b.4 is the whole item in one sentence: *"do not
