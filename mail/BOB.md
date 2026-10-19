@@ -1557,3 +1557,6 @@ HANDOFF (K4086): screens-daily (T51-118, J4) after DEC-360: Home's edition line 
 
 ## B377 · ACK · re U392 · 2026-10-19 · session_0156d5zZSgV8PMUy52CP1rVA · primary
 ACK U392: the design @ 82cdc1716e merged into tranche/T51 mid-layer (K4087); rows regenerated; installer-steps has its rows by CHANGE.
+
+## B378 · ACK · re U393 · 2026-10-19 · session_0156d5zZSgV8PMUy52CP1rVA · primary
+ACK U393: the design @ 112748edcf merged mid-layer (K4088); screens-daily has its row by CHANGE.
