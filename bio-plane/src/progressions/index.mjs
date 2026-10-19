@@ -993,8 +993,7 @@ export class Progressions {
         .filter((x) => typeof x === "string").map((x) => x.trim()).filter(Boolean))];
       /* DEC-49 REGION is-set-named */
       if (!ids.length)
-        return refusal("NO_SET", "the matters a project follows are read for an explicit set of entity ids, which the caller resolves "
-                                 + "from the project; none was named");
+        return refusal("NO_SET", localize("progressions.index.set_none_named", "the matters a project follows are read for an explicit set of entity ids, which the caller resolves from the project; none was named"));
       /* END DEC-49 REGION is-set-named */
       /* DEC-49 REGION is-set-bounded */
       if (ids.length > INSTANCES_SET_MAX)

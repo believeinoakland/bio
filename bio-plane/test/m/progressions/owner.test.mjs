@@ -63,7 +63,7 @@ test("R40: for an entity its placements, for an event or a document the instance
   // a document with no event: from its bundle; no own date: unstated, marked undetermined
   const u = byId.get(ids.und);
   assert.deepEqual([u.from, u.valid.from, u.valid.to], [B_UND, null, null]);
-  assert.ok(u.undetermined && /no start is stated/.test(u.undetermined.why));
+  assert.equal(u.undetermined.why.key, "civil-time.start_stated");
   // the event node: every instance it is placed on; the document's bundle node likewise
   assert.deepEqual(ask(EVT).items.map((x) => x.id).sort(), [ids.in, ids.in2].sort());
   assert.deepEqual(ask(B_OUT, MEMBER, { value: "2026-03-01", precision: "day", zone: ZONE }).items.map((x) => x.id), [ids.out]);
