@@ -133,7 +133,7 @@ export const dashAction = Object.freeze({
   acts: [
     {
       // R30: "Start an action": opens the composer on the project chosen; nothing is written here.
-      op: "actioncreate",
+      op: "actioncreate", reasonField: "reason",
       send: function (view, el, cs) { const p = cs.value("dash-project"); if (p) cs.go("actionnew", p); return null; },
     },
     {
