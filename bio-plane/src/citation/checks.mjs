@@ -18,10 +18,7 @@ export const CITE_CHECKS = {
   NO_ROLE: {
     check: 'C-33.16',
     where: 'src/citation/index.mjs cite > is-cite-role',
-    translation: 'A leg of a question\'s basis has to say what the material DOES for the answer, '
-      + 'and this one does not say. It is never assumed: material that cuts against the case is '
-      + 'first-class here, and guessing would put a claim about your reasoning in the record that '
-      + 'you did not make.',
+    translation: word('refusal.NO_ROLE'),
   },
   BAD_ROLE: {
     check: 'C-33.17',
