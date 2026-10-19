@@ -55,19 +55,19 @@ test("R8 a standard whose access is not free is carried by its designation, edit
   const items = Object.fromEntries(p.sections.standards.items.map((i) => [i.standard, i]));
   const s = items[S3];
   assert.deepEqual([s.cite, s.kind, s.issuer, s.designation, s.edition, s.access], ["TS 101:2024", "standard", "Test Standards Body", "TS 101", "2024", "undetermined"]);
-  assert.match(s.access_says, /not stated, so it is carried as not free/);
+  assert.equal(s.access_says, word("filings.standard_text_read"));
   assert.equal("text" in s, false, "no list of its text");
   /* the comparison row's requires, with the row's content ids that are passages of its text (the act's evidence is not) */
   assert.deepEqual(s.requires, [{ requires: ROW, content_ids: [P0, WHOLE], row: 0, source: S3 }]);
   /* the passages relied on: the row's, then the finding's leg; each quoted, the whole document named and not quoted */
   assert.deepEqual(s.passages.map((q) => [q.content_id, q.text]), [[P0, WORDS[0]], [WHOLE, null], [P1, WORDS[1]]]);
-  assert.match(s.passages[1].text_why, /whole document, so it is not quoted/);
+  assert.equal(s.passages[1].text_why, word("filings.passage_cited_whole"));
   assert.deepEqual(s.passages[0].relied_on_by, [{ comparison_row: 0, source: S3 }]);
   assert.deepEqual(s.passages[2].relied_on_by, [{ finding_leg: CODE, source: p.sections.facts.items[0].source }]);
   /* another stating no access and no edition: not free, and nothing of its text relied on, so no passage */
   assert.deepEqual([items[S5].access, items[S5].passages, "text" in items[S5], items[S5].edition], ["undetermined", [], false, null]);
-  assert.match(items[S5].edition_says, /states no edition/);
-  assert.match(items[S5].says, /no passage of its text is relied on/);
+  assert.equal(items[S5].edition_says, word("filings.record_states_edition"));
+  assert.equal(items[S5].says, word("filings.says.passage_text_relied"));
   /* never the whole text, nor any other passage: P2 is in both standards' text and relied on by nothing */
   const v2 = pack();
   const read = f.counselPacketRead({ id: p.id, version: 1, viewer: V("bo") });
@@ -90,7 +90,7 @@ test("R8 a standard's adoption is the edition the act's body had adopted on the 
   const { x, pack, S3 } = heldBack();
   const none = pack().sections.standards.items.find((i) => i.standard === S3).adoption;
   assert.deepEqual([none.state, none.body, none.date, none.edition], ["undetermined", "Port Ellery Selectboard", "2026-03-02", null]);
-  assert.match(none.why, /no adoption by Port Ellery Selectboard/);
+  assert.equal(none.why, x.standards.editionInForce({ standard: S3, body: "Port Ellery Selectboard", date: "2026-03-02", viewer: V("olive") }).why, "standards' own reason");
   /* the Selectboard adopts edition 2024 by an ordinance of its own (standards R40) */
   x.doc(ACTS);
   const cite = x.content.transcribe({ bundleId: ACTS, extent: { kind: "pdf-page", page: 0 }, text: "TS 101:2024 is adopted by reference.",

@@ -8,7 +8,7 @@ import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
 import { FILING_TEMPLATE_CHECKS, rfcQuotingRefusal } from "../../../src/filing-templates/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 R54 R55 R57 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
   const x = world();
@@ -153,23 +153,23 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
                                       actions: x.actions, standards: x.standards, filingTemplates: x.f.filingTemplates,
                                       now: () => x.clock.now });
   const d = noConformance.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
-  assert.match(d.unfilled.find((u) => u.name === "act").why, /no module answers determinations/);
+  assert.equal(d.unfilled.find((u) => u.name === "act").why, word("filings.module_answers_determinations"));
   const T3 = x.action({ kind: "commitment_claim" });
   const p = noConformance.counselPacket({ reason: WHY, action: T3, counsel: { name: "A", organisation: "B" }, author: V("bo"), viewer: V("bo") });
   assert.deepEqual([p.ok, p.sections.facts.items], [true, []], "T45 (R8): no determination is read, and none is needed");
-  assert.match(p.sections.facts.says, /no determination is held/);
+  assert.equal(p.sections.facts.says, word("filings.says.determination_held_action"));
   /* no filing-templates module: a template is not readable, refused with that module's code; the member's words serve */
   const noTemplates = new Filings({ storage: x.st, record: x.record, publication: x.p, provenance: x.prov, content: x.content,
                                     actions: x.actions, standards: x.standards, conformance: x.conformance, now: () => x.clock.now });
   assert.equal(noTemplates.filingTemplates, null);
   const nt = noTemplates.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   assert.equal(nt.reason, "NO_SUCH_TEMPLATE");
-  assert.match(nt.detail, /no module answers the team's templates/);
+  assert.equal(nt.detail, localize("filings.index.no_module_answers_the_templates_readable", "no module answers the team's templates here, so none is readable"));
   assert.equal(noTemplates.filingPrepare({ action: A, text: WORDS, preparer: V("bo"), viewer: V("bo") }).ok, true);
   const block = noConformance.evidenceBlock({ caseId: "CASE-2026-0001", edition: 1, findings: ["INQ-2026-0001"] });
   assert.equal(block.determinations_read, false);
   assert.deepEqual(block.determinations, []);
-  assert.match(block.says, /undetermined/);
+  assert.equal(block.says, word("filings.says.module_answers_determinations"));
 });
 
 test("R1 R8 R13 R14 every missing action is answered through actions' noSuchAction (its R43, N217): absent, invisible and not an action alike, byte-identical to actions' own answer, its row actions'", async () => {

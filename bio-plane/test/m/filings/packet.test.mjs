@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, DOC, sha, WHY } from "./fixture.mjs";
 import { counselMarking, deadlineDate, Filings, INBAND_RULE, FILINGS_CHECKS, PACKET_REASON_MAX } from "../../../src/filings/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, WORD_ROWS } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const MARK = counselMarking(COUNSEL);
@@ -103,7 +103,7 @@ test("R8 PACKET_NO_REASON (C-115.44): a reason absent, not a string, blank or on
   assert.deepEqual([read(v1.id, 1).reason, read(v1.id, 2).reason, read(v1.id).reason, read(t1.id).reason],
                    [`  ${WHY}  `, long, long, wide], "each version reads back its own reason");
   assert.deepEqual(x.rows(`SELECT version, reason FROM counsel_packets WHERE packet_id=? ORDER BY version`, v1.id),
-                   [{ version: 1, reason: `  ${WHY}  ` }, { version: 2, reason: long }], "recorded with the version");
+                   [{ version: 1, reason: `  ${WHY}  ` }, { version: 2, reason: long }], "stored on each version row");
   assert.deepEqual(x.f.filingsFor({ action: x.A, viewer: V("bo") }).packets.map((p) => [p.version, p.reason]), [[1, `  ${WHY}  `], [2, long]]);
   /* through the op: the reason from the body, never the query */
   const op = (query, body) => x.op("counselpacket", { author: V("olive"), viewer: V("olive"), ...query }, { action: x.A, counsel: COUNSEL, ...body });
@@ -154,7 +154,7 @@ test("R9 the six sections, each item naming its record source: facts, the chrono
   assert.deepEqual(s.standards.items[0].text, [x.evidenceCid]);
   /* theories: empty, said in words */
   assert.deepEqual(s.theories.items, []);
-  assert.match(s.theories.says, /no candidate theory/);
+  assert.equal(s.theories.says, word("filings.says.candidate_theory_remedy"));
   /* deadlines: every profile deadline that applies to a claim (a defence deadline, `defends: true`, is no claim's) */
   const claimRules = combine([PROFILE]).view.deadlines.filter((r) => r.applies_to === "claim" && r.defends !== true).map((r) => r.rule);
   assert.deepEqual(s.deadlines.items.map((d) => d.rule), claimRules);
@@ -193,18 +193,18 @@ test("R9 an exhibit's attestations are attestation.attestationsOf's answer (its 
   const e = exhibit(answering((s) => (s === evSha ? { attestations: [other] } : {})));
   assert.deepEqual(e.attestations.items, [other]);
   assert.ok(asked.includes(evSha) && asked.includes(docSha), "asked for every exhibit");
-  assert.deepEqual([e.coattested, e.coattested_why], [false, "the record holds a co-archive but no trusted timestamp for it"]);
+  assert.deepEqual([e.coattested, e.coattested_why], [false, word("filings.record_holds", { stamp: word("filings.archive_trusted_timestamp") })]);
   /* its undetermined, carried with why; co-attestation then undetermined too */
   const u = exhibit(answering(() => ({ attestations: [], undetermined: "its home's register cannot be read" })));
   assert.deepEqual([u.attestations.items, u.attestations.undetermined, u.coattested], [[], "its home's register cannot be read", null]);
-  assert.match(u.coattested_why, /undetermined: its home's register cannot be read/);
+  assert.equal(u.coattested_why, word("filings.whether_attested_undetermined", { undetermined: "its home's register cannot be read" }));
   /* a read that fails or refuses, and no module to ask: undetermined, said so, never an empty "none recorded" */
-  for (const [att, why] of [[{ attestationsOf: () => { throw new Error("down"); } }, /could not be read/],
-                            [{ attestationsOf: () => ({ ok: false, reason: "BAD_SHA" }) }, /could not be read/],
-                            [null, /no module answers a capture's attestations/]]) {
+  for (const [att, why] of [[{ attestationsOf: () => { throw new Error("down"); } }, word("filings.attestations_read")],
+                            [{ attestationsOf: () => ({ ok: false, reason: "BAD_SHA" }) }, word("filings.attestations_read")],
+                            [null, word("filings.module_answers_capture")]]) {
     const n = exhibit(att);
     assert.deepEqual([n.attestations.items, n.coattested], [[], null]);
-    assert.match(n.attestations.undetermined, why);
+    assert.equal(n.attestations.undetermined, why);
   }
   /* a draft's exhibits read the same (R25) */
   const d = x.filingsWith({ attestation: answering((s) => (s === evSha ? { attestations: [other] } : {})) })
@@ -238,8 +238,9 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
                "31 Dec, 1 Jan a holiday, Saturday 2 Jan, Sunday 3 Jan the weekend, Monday 4 Jan");
   const past = deadlineDate({ start: "2027-12-30", days: 3, count: "business", view });
   assert.equal(past.state, "undetermined");
-  assert.match(past.why, /reaches 2028/);
-  assert.equal(past.why.endsWith(" (or withholds, the active profiles disagreeing), so it is not counted"), true, "filings.why.withholds_active_profiles");
+  assert.ok(past.why.includes("2028"), "names the year the count reaches");
+  assert.equal(past.why.endsWith(word("filings.why.withholds_active_profiles", { why: "" })), true, "filings.why.withholds_active_profiles");
+  assert.equal(past.why.includes("[object Object]"), false, "a reason is said in words, never through String()");
   assert.equal(deadlineDate({ start: "2026-01-31", days: 30, count: "calendar" }).date, "2026-03-02");
   assert.equal(deadlineDate({ start: null, days: 3, count: "calendar" }).state, "undetermined");
   assert.equal(deadlineDate({ start: "2026-01-31", days: 3, count: null }).state, "undetermined");
@@ -268,7 +269,7 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
   assert.equal(a.date.calendar.status, "unconfirmed");
   assert.deepEqual(a.date.calendar.years.map((y) => y.path).sort(), [all, office].sort(), "the entries for all offices and the office's own");
   assert.deepEqual(b.date.calendar.years.map((y) => y.path), [all]);
-  assert.ok(a.date.calendar.says.every((s) => /^counted on an unconfirmed calendar \(/.test(s)));
+  assert.ok(a.date.calendar.says.every((s) => s.startsWith(WORD_ROWS.find((r) => r[0] === "action-clocks.counted_unconfirmed_calendar")[1].split("{")[0])));
   assert.equal(dl(A).claim_cal.date.calendar, undefined, "a calendar count reads no holiday and states none");
   /* confirmed: counted as today */
   const act = (path, o) => assert.equal(x.localFacts.factConfirm({ path, how: "the clerk's published calendar", by: V("olive"),
@@ -282,12 +283,13 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
   a = dl(A).claim_act;
   assert.deepEqual([a.date.date, a.date.calendar.status], ["2026-08-15", "corrected"], "13th closed instead: 14th, then Saturday 15th");
   /* the member's act at 2026-09-28T01:00Z is 27 September on the profile's local day (America/Halifax; K1581) */
-  assert.match(a.date.calendar.says.join(" "), /corrected locally by member:olive, 2026-09-27/);
+  assert.ok(a.date.calendar.says.join(" ").includes(word("action-clocks.corrected_locally", { by: V("olive"), at: "2026-09-27" })));
   /* disputed: undetermined, with why */
   act(all, { act: "dispute" });
   a = dl(A).claim_act;
   assert.equal(a.date.state, "undetermined");
-  assert.match(a.date.why, /disputed/);
+  assert.ok(a.date.why.endsWith(word("filings.why.withholds_active_profiles", { why: "" })), "said through the profiles-withhold sentence");
+  assert.equal(a.date.why.includes("[object Object]"), false, "a reason is said in words, never through String()");
   /* a reader with no local facts: counted, the calendar `not_read` */
   assert.equal(deadlineDate({ start: "2026-08-12", days: 2, count: "business", view: combine([PROFILE]).view }).calendar.status, "not_read");
 });
@@ -326,7 +328,7 @@ test("R10 with no counsel named (Tier 1 or 2) every section, the head and every 
   const heads = e.bytes.split("\n").map((l, i, all) => (l.startsWith("#") ? all[i + 2] : null)).filter((l) => l !== null);
   assert.ok(heads.length >= 8);
   for (const h of heads) assert.equal(h, OWN, "the line under every heading is the group's marking");
-  assert.equal(e.bytes.includes("Prepared for review by"), false);
+  assert.equal(e.bytes.includes(counselMarking(COUNSEL)), false, "counsel's marking is not on a packet naming none");
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("bo") }).marking, OWN, "read back the same");
   assert.equal(x.f.filingsFor({ action: A, viewer: V("bo") }).packets[0].counsel, null);
   /* negative control: counsel named at Tier 1 carries counsel's marking */

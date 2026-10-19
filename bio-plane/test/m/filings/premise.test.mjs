@@ -43,15 +43,17 @@ test("R3 the addressee's blanks follow its arm (actions R9): an office fills rol
     const why = Object.fromEntries(r.unfilled.map((u) => [u.name, u.why]));
     for (const n of left) {
       assert.ok(r.text.includes(`${n}=${unfilledMarker(n)}`), `${arm}: ${n} left visible`);
-      const article = arm === "audience" ? "an audience" : arm === "office" ? "an office" : `a ${arm}`;
-      assert.ok(why[n] && why[n].includes(`addressed to ${article}`), `${arm}: ${n}: ${why[n]}`);
+      const part = n.replace("counterparty_", "");
+      const expected = arm === "audience" ? word("filings.action_addressed_audience", { part })
+        : arm === "office" ? word("filings.action_addressed_office", { part }) : word("filings.action_addressed_arm", { arm, part });
+      assert.equal(why[n], expected, `${arm}: ${n}`);
     }
   }
   /* undetermined: every addressee blank unfilled as undetermined, never defaulted */
   const U = x.action({ counterparty: { state: "undetermined", basis: "not yet known" } });
   const u = Object.fromEntries(prep(x, U).unfilled.map((b) => [b.name, b.why]));
   for (const n of ["counterparty_role", "counterparty_body", "counterparty_organisation", "counterparty_description"])
-    assert.match(u[n], /undetermined/, n);
+    assert.equal(u[n], word("filings.action_counterparty_undetermined"), n);
 });
 
 test("R8 an action stating a premise override and no live determination gets a counsel packet: assembled with R24's disclosure, its facts section saying in words that no determination is held; without the override it is assembled too (T45), with no disclosure", async () => {
@@ -59,19 +61,20 @@ test("R8 an action stating a premise override and no live determination gets a c
   const bare = x.action({ kind: "commitment_claim", legs: [] });
   const plain = x.f.counselPacket({ reason: WHY, action: bare, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.deepEqual([plain.ok, plain.disclosure], [true, null]);
-  assert.match(plain.sections.facts.says, /no determination is held/);
+  assert.equal(plain.sections.facts.says, word("filings.says.determination_held_action"));
   const O = x.action({ kind: "commitment_claim", legs: [], breach: true, override: REASON });
   const o = x.read(O).premise_override;
   assert.equal(o.reason, REASON, "actions holds the override");
   const p = x.f.counselPacket({ reason: WHY, action: O, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   const line = overrideDisclosure(o);
-  assert.equal(line, `${OVERRIDE_HEAD} ${REASON}; on the ground of a legal deadline, Test Stat. § 9.20, falling on 2026-04-01 (stated by ${o.by} at ${o.at})`,
+  assert.equal(line, word("filings.stated_by_at", { override_head: OVERRIDE_HEAD, reason: REASON,
+    grade: word("filings.ground", { grade: word("filings.legal_deadline_falling", { citation: "Test Stat. § 9.20", date: "2026-04-01" }) }), by: o.by, at: o.at }),
                "its reason, its ground (actions R74), who and when");
   assert.deepEqual([p.disclosure, p.head.disclosure], [line, line]);
   assert.deepEqual(p.sections.facts.items, []);
-  assert.match(p.sections.facts.says, /no determination is held/);
-  assert.match(p.sections.standards.says, /no determination is held/);
+  assert.equal(p.sections.facts.says, word("filings.says.determination_held_action"));
+  assert.equal(p.sections.standards.says, word("filings.says.determination_held_standard"));
   assert.equal(p.sections.chronology.set.some((e) => e.is === word("filings.the_act_s_event")), false, "no act is set out (R33)");
   assert.equal(p.fileable, false);
   /* nothing drawn from a determination can change: no basis_changed */
@@ -87,7 +90,8 @@ test("R24 a draft, packet or communication prepared from an action carrying a pr
   const o = x.read(O).premise_override;
   assert.deepEqual([typeof o.by, typeof o.at], ["string", "string"], "stamped by actions with who and when");
   const line = overrideDisclosure(o);
-  assert.equal(line, `${OVERRIDE_HEAD} ${REASON}; on the ground of a legal deadline, Test Stat. § 9.20, falling on 2026-04-01 (stated by ${o.by} at ${o.at})`,
+  assert.equal(line, word("filings.stated_by_at", { override_head: OVERRIDE_HEAD, reason: REASON,
+    grade: word("filings.ground", { grade: word("filings.legal_deadline_falling", { citation: "Test Stat. § 9.20", date: "2026-04-01" }) }), by: o.by, at: o.at }),
                "its reason, its ground (actions R74), who and when");
   /* a filing draft: first on its face, before the template's text */
   const d = prep(x, O);

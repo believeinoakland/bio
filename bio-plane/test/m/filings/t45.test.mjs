@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, actionsWith, templatesOver } from "./fixture.mjs";
 import { FILINGS_CHECKS, sentencesOf, groupLine, counselMarking } from "../../../src/filings/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { RFC_QUOTING_SENTENCE, rfcQuotingRefusal } from "../../../src/filing-templates/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -78,15 +78,17 @@ test("R35 R24 everything prepared from an action resting on held findings says s
   assert.ok(h.text.startsWith(`${held}\n\n`), h.text);
   const c = comm(f, C);
   const [first, second] = c.text.split("\n");
-  assert.equal(first, "Rests on findings of Hayward Parents for Accountability (edition of 2026-09-03), accepted by us on 2026-09-20. "
-    + "Its public identity: Hayward Parents, hpa.example. Its declared stake: parents of pupils.", "in its order, the accepted first");
+  assert.equal(first, `${word("prepared.rests.accepted", { group: "Hayward Parents for Accountability", date: "2026-09-03", date_accepted: "2026-09-20" })} `
+    + word("filings.public_identity_declared", { name: "Hayward Parents, hpa.example", stake: "parents of pupils" }), "in its order, the accepted first");
   assert.equal(second, held);
   const pk = f.counselPacket({ reason: WHY, action: C, author: V("olive"), viewer: V("olive") });
-  assert.ok(pk.disclosure.startsWith("Rests on findings of Hayward Parents"));
+  assert.ok(pk.disclosure.startsWith(word("prepared.rests.accepted", { group: "Hayward Parents for Accountability", date: "2026-09-03", date_accepted: "2026-09-20" })));
   const p = prep(f, P);
   assert.deepEqual([p.disclosure, p.text.includes("Rests on")], [null, false], "control: published findings only");
   const o = prep(f, O);
-  assert.match(o.text, /^Rests on an unestablished premise: the deadline falls before a case; on the ground of a legal deadline, Test Stat\. § 9\.20, falling on 2026-04-01 \(stated by member:olive at 2026-03-01T00:00:00Z\)/);
+  assert.ok(o.text.startsWith(word("filings.stated_by_at", { override_head: word("filings.rests_unestablished_premise"), reason: "the deadline falls before a case",
+    grade: word("filings.ground", { grade: word("filings.legal_deadline_falling", { citation: "Test Stat. § 9.20", date: "2026-04-01" }) }),
+    by: "member:olive", at: "2026-03-01T00:00:00Z" })));
 });
 
 test("R22 an approved text's stamp carries the group's public identity and declared stake (public-read's groupFields) beside the quartet, outside its hash: the body fingerprint is the same with any group's fields", async () => {
@@ -168,11 +170,12 @@ test("R37 documenting an infraction: assembled from the record with AI off (the 
   const names = m.parts.map((p) => p.part);
   for (const n of ["the act", "the standard", "a point", "evidence", "still uncertain"]) assert.ok(names.includes(n), n);
   for (const p of m.parts) assert.ok(p.source || p.part === "still uncertain" || p.undetermined, JSON.stringify(p));
-  assert.match(m.text, /The act: the adoption recorded as EVT-.*by Selectboard, Port Ellery Selectboard/);
+  assert.ok(m.text.includes(word("filings.act", { words: `the adoption recorded as ${x.ACT_EVENT}`,
+    office: localize("filings.index.by_office", ", by {office}", { office: "Selectboard, Port Ellery Selectboard" }) })));
   assert.equal(m.text.includes(RFC_QUOTING_SENTENCE), false, "members: no request for comment");
   const vp = doc({ audience: "violating_party" });
   assert.ok(vp.text.includes(RFC_QUOTING_SENTENCE));
-  assert.match(vp.text, /We invite your review and response by 2026-04-01 \(P\.E\.B\.L\. § 4\)/);
+  assert.ok(vp.text.includes(word("filings.invite_review_response", { date: "2026-04-01", basis: "P.E.B.L. § 4" })));
   assert.equal((await approve(f, vp.id, { text: vp.text.replace(RFC_QUOTING_SENTENCE, "") })).reason, "RFC_QUOTING_MISSING");
   /* the assistant's draft: a labelled proposal, approved per version */
   const ai = doc({ audience: "oversight", text: "The office let the works order without a vote.", preparer: MACHINE, viewer: MACHINE });
@@ -185,7 +188,7 @@ test("R38 the chance to fix: a notice of what correcting the act and remedying i
   const A = x.action();
   const n = f.communicationPrepare({ action: A, purpose: "chance_to_fix", language: "en", preparer: V("bo"), viewer: V("bo") });
   assert.equal(n.ok, true, JSON.stringify(n).slice(0, 300));
-  assert.match(n.text, /Correcting the act would look like this: a vote of the Selectboard/);
+  assert.ok(n.text.includes(word("filings.correcting_act_look", { requires: ["a vote of the Selectboard", "a vote of the Selectboard"].join("; ") })), "one requirement per standard, each as the comparison states it");
   assert.ok(n.parts.some((p) => p.part === "a time"));
   const ok = await approve(f, n.id);
   assert.equal(ok.ok, true, `the assembled notice asks only for the standard's act: ${JSON.stringify(ok).slice(0, 300)}`);
@@ -214,7 +217,7 @@ test("R39 when the member marks that a text names a pending measure or a candida
   const g = comm(f, A, { voice: "group", text: "We support the new budget. The vote was on 2 March." });
   assert.deepEqual(g.outward.pointed.position.pointed.map((p) => p.index), [0]);
   assert.equal("position" in comm(f, A, { text: "We support the new budget." }).outward.pointed, false, "not a comment as the group's act");
-  assert.equal((await approve(f, g.id)).ok, true, "pointed out, never refused");
+  assert.equal((await approve(f, g.id)).ok, true, "pointed, still approved");
 });
 
 test("R40 a draft or communication for a request for comment carries the sentence that the reply may be quoted unless it says otherwise; an approved text without it is refused RFC_QUOTING_MISSING; with it, approved", async () => {
@@ -335,12 +338,12 @@ test("R46 a press action's review copy carries the embargo and release times on 
   const N = x.action({ counterparty: press });
   const f = f45(x);
   const d = comm(f, P, { text: "Our findings, for your story." });
-  assert.ok(d.text.startsWith("Review copy. Embargoed until 2026-10-01T09:00; for release at 2026-10-02T09:00."));
+  assert.ok(d.text.startsWith(word("filings.review_copy.terms", { embargo: "2026-10-01T09:00", release: "2026-10-02T09:00" })));
   const ap = await approve(f, d.id);
   assert.match(ap.inband.hash.over, /embargo_until/);
   const s = f.filingRecordSent({ filing: d.id, at: "2026-09-30", account: "emailed to the reporter", author: V("bo"), viewer: V("bo") });
   assert.deepEqual([s.ok, s.review_copy.review_copy], [true, true]);
-  assert.match(s.review_copy.says, /review copy/);
+  assert.equal(s.review_copy.says, word("filings.says.recorded_review_copy", { release_at: "2026-10-02T09:00" }));
   assert.ok(comm(f, N, { text: "Words." }).text.startsWith(word("filings.review_copy.no_embargo")));
   assert.equal(comm(f, x.action(), { text: "Words." }).text, "Words.", "not a press action: no line");
 });
@@ -354,9 +357,11 @@ test("R47 holdNoticePrepare: for a hold in place (action-holds R2), a plain noti
   assert.equal(h.actionHoldRelease({ target: R, reason: "settled", author: V("olive"), viewer: V("olive") }).ok, true);
   const n = x.f.holdNoticePrepare({ place: { target: A }, preparer: V("bo"), viewer: V("bo") });
   assert.equal(n.ok, true, JSON.stringify(n).slice(0, 300));
-  assert.match(n.text, /a solicitor's letter/);
-  assert.match(n.text, /since 2026-/);
-  assert.match(n.text, /Keep, outside Civicsmith/);
+  assert.ok(n.text.includes(word("filings.reason_stated", { reason: "a solicitor's letter" })));
+  const [placePre, placePost] = word("filings.hold_place", { where: localize("filings.index.the_action_a", "the action {action}", { action: A }), at: "\u0000" }).split("\u0000");
+  const placeLine = n.text.split("\n")[1];
+  assert.ok(placeLine.startsWith(placePre) && placeLine.endsWith(placePost) && /^2026-/.test(placeLine.slice(placePre.length)), "the place and the day the hold was put");
+  assert.ok(n.text.includes(word("filings.keep_outside_civicsmith", { kinds: word("filings.documents_letters_emails") })));
   for (const m of ["olive", "bo", "cy"]) assert.equal(n.text.includes(m), false, "names no member");
   assert.equal(n.label.state, "member_proposed");
   const r = x.f.holdNoticePrepare({ place: { target: R }, preparer: V("bo"), viewer: V("bo") });
@@ -404,7 +409,7 @@ test("R8 R9 a packet needs no determination and no override: with none, the fact
   const facts = claim.sections.facts.items;
   assert.deepEqual(facts.map((i) => [i.finding, i.kind, i.determined]), [[Q, "unpublished", false]]);
   assert.ok(facts.every((i) => i.grade), "each with its grade");
-  assert.match(claim.sections.facts.says, /not determined/);
+  assert.equal(claim.sections.facts.says, word("filings.says.determination_held_matter"));
   for (const k of ["challenged", "pressure", "defence_deadlines"]) assert.equal(k in claim.sections, false, `a claim packet has no ${k}`);
   /* a defence packet on an action resting on the determination of the case's finding: the case's docket marks */
   const B = x.action({ kind: "commitment_claim" });

@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V, F, WHY, MACHINE, actionsWith } from "./fixture.mjs";
 import { wordsRead, WORDS_OWED, CHRONOLOGY_MAX, PRESSURE_MAX } from "../../../src/filings/index.mjs";
-import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { word, hasWord, localize } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const READS = async () => JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules.filings.reads;
@@ -116,13 +116,13 @@ test("R52 a documenting version and a chance-to-fix notice are assembled in the 
   assert.equal(doc.ok, true, JSON.stringify(doc).slice(0, 300));
   const by = Object.fromEntries(doc.parts.map((p) => [p.part, p.text]));
   assert.equal(by["still uncertain"], word("filings.uncertain_nothing_record"));
-  assert.equal(by["a time for review and response"], word("filings.time_review_response_undetermined"));
+  assert.equal(by[localize("filings.time_review_response", "a time for review and response")], word("filings.time_review_response_undetermined"));
   assert.equal(by["the act"], word("filings.act", { words: word("state.undetermined", { reason: word("filings.action_rests_live") }), office: "" }));
   assert.equal(by["the standard"], word("filings.standard_measured_against", { words: word("state.undetermined", { reason: word("filings.action_rests_live") }) }));
   const fix = f.communicationPrepare({ action: bare, purpose: "chance_to_fix", preparer: V("bo"), viewer: V("bo"), language: "en" });
   const parts = Object.fromEntries(fix.parts.map((p) => [p.part, p.text]));
-  assert.equal(parts["correcting the act"], word("filings.correcting_act_undetermined"));
-  assert.equal(parts["remedying the harm"], word("filings.remedying_harm_consequence"));
+  assert.equal(parts[localize("filings.correcting_act", "correcting the act")], word("filings.correcting_act_undetermined"));
+  assert.equal(parts[localize("filings.remedying_harm", "remedying the harm")], word("filings.remedying_harm_consequence"));
   assert.equal(parts["a time"], word("filings.time_undetermined_profile"));
   /* the group's own window, when the action's clock states one */
   const win = x.action({ kind: "recognition_letter", legs: [], clock: [] });
