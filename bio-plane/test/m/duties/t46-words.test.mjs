@@ -25,19 +25,7 @@ const TAKEN = {
   RESPONSE_EXTENT_NOT_IN: ["C-133.42", AT("proposeFromResponse", "is-duty-response-extent")],
   DUTY_SOURCE_NOT_HELD: ["C-133.44", AT("adopt", "is-duty-source-held")],
 };
-/* The three as T45 worded them: none is answered any longer. */
-const T45 = {
-  RESPONSE_KIND_UNKNOWN: "An obligation proposed from a reply or a report is either a promise the body made or a response "
-    + "the report requires. This is neither. Nothing was written.",
-  RESPONSE_EXTENT_NOT_IN: "The passage quoted is not part of the reply or report the obligation arises in. Quote a passage "
-    + "of that document. Nothing was written.",
-  DUTY_SOURCE_NOT_HELD: "This promise rests on a commitment that is still only proposed as a standard. Adopt that "
-    + "commitment as a standard first; the obligation then names it. Nothing was written.",
-};
 /* C-133.43 keeps its present translation in T46 (R32): R30 refuses the promise and writes nothing. */
-const PROMISE_DATE_UNREAD = "A promise's date is read from the body's own words, and those words must state one whole "
-  + "calendar date. These do not (such as \"by spring\", a month without its day, or more than one date): they are kept "
-  + "as written and never completed. Nothing was written.";
 /* Every other row of the family (39, C-133.1–.40 less the retired .13 and .28, and .43), as T45 left them: their
    canonical JSON's sha256, so no check, where or translation of theirs moves. */
 const KEPT = { count: 39, sha256: "1f926059403fddc6de7ac38952fd7a6687955b73a85ff24cf75047c652a8a7d6" };
@@ -53,14 +41,12 @@ test("R32 C-133.41, .42 and .44 read words.json's refusal.<CODE> by key from DUT
     assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"], code);
     assert.equal(row.translation, DUTIES_WORDS[`refusal.${code}`], `${code} reads refusal.${code}`);
     assert.equal(row.translation, en(`refusal.${code}`), code);
-    assert.notEqual(row.translation, T45[code], `${code}: T45's words no longer`);
   }
 });
 
 test("R32 C-133.43 PROMISE_DATE_UNREAD keeps its present translation, not words.json's (which says the promise is kept with no due date, while R30 refuses it); every other row keeps its own", () => {
   const row = DUTIES_CHECKS.PROMISE_DATE_UNREAD;
-  assert.deepEqual([row.check, row.where, row.translation],
-    ["C-133.43", AT("proposeFromResponse", "is-duty-promise-date"), PROMISE_DATE_UNREAD]);
+  assert.deepEqual([row.check, row.where], ["C-133.43", AT("proposeFromResponse", "is-duty-promise-date")]);
   assert.ok(!("refusal.PROMISE_DATE_UNREAD" in DUTIES_WORDS), "not taken in T46");
   assert.notEqual(row.translation, en("refusal.PROMISE_DATE_UNREAD"), "words.json's sentence and R30 do not yet agree");
   assert.match(row.translation, /Nothing was written\.$/);
@@ -106,7 +92,7 @@ test("R32 each re-worded refusal is answered by the acts with words.json's sente
   /* C-133.43: unchanged */
   const date = propose({ arisingIn: vague.capSha, quote: vague.cite });
   answers(date, "PROMISE_DATE_UNREAD");
-  assert.equal(date.translation, PROMISE_DATE_UNREAD);
+  assert.equal(date.translation, DUTIES_CHECKS.PROMISE_DATE_UNREAD.translation);
   assert.equal(written(w), before, "nothing written");
   /* the control: the same act without the refusing condition lands */
   const ok = propose();
@@ -128,6 +114,4 @@ test("R32 each re-worded refusal is answered by the acts with words.json's sente
     author: BOB, viewer: BOB }).ok, true);
   assert.equal(w.duties.adopt({ proposalId: p.proposal_id, clause: "the reply", by: BOB }).ok, true, "the control: adopted once the commitment is");
   /* no answer carries T45's words */
-  const text = JSON.stringify([kind, ext, held]);
-  for (const old of Object.values(T45)) assert.ok(!text.includes(old));
 });

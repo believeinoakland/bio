@@ -37,7 +37,7 @@ import { membershipOf, listenerRefusal, MODULE_ORDER } from "../membership/index
 import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
 import { noSuchStandard, standardsOf } from "../standards/index.mjs";
 import { noSuchEvent, eventsOf } from "../events/index.mjs";
-import { linesOf } from "../lines/index.mjs";
+import { linesOf, reasonText } from "../lines/index.mjs";
 import { noSuchFact, moneyOf } from "../money/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent } from "../content/index.mjs";
@@ -51,8 +51,10 @@ import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { DUTIES_CHECKS, refusal, reasonWords } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
-         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED, STATED_BASIS } from "./vocab.mjs";
+         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS as KIND_VOCAB, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED, STATED_BASIS } from "./vocab.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+/* the connection kinds with the members' words; `duties.word.owed` and `duties.word.holds_power` are read by key here, since vocab.mjs imports nothing */
+export const CONNECTION_KINDS = Object.freeze(KIND_VOCAB.map(({ wordKey, ...kind }) => Object.freeze(wordKey ? { ...kind, word: word(wordKey) } : kind)));
 
 export { DUTIES_CHECKS, DUTIES_WORDS, DUTIES_REASON_WORDS } from "./checks.mjs";
 export { DUTIES_SCHEMA, DUTIES_TABLES, DUTIES_TABLE_NAMES } from "./schema.mjs";
@@ -305,8 +307,8 @@ export class Duties {
       /* DEC-49 REGION is-duty-public */
       if (!acting)
         return refusal("NOT_ACTING_FOR_PUBLIC", (ORGANISATION_KINDS.includes(obligor.kind)
-          ? `this organisation's sector is ${obligor.sector ?? "undetermined"}, and no ${ACTING_LINES.join(" or ")} line, and no source it rests on, ties it to a public body.`
-          : `an entity of kind ${obligor.kind} owes no obligation.`) + stays, { obligor: f.obligor });
+          ? localize("duties.index.sector_no_acting_line", "this organisation's sector is {sector}, and no {lines} line, and no source it rests on, ties it to a public body.", { sector: String(obligor.sector ?? "undetermined"), lines: String(ACTING_LINES.join(" or ")) })
+          : localize("duties.index.entity_kind_owes_no_obligation", "an entity of kind {kind} owes no obligation.", { kind: String(obligor.kind) })) + stays, { obligor: f.obligor });
       /* END DEC-49 REGION is-duty-public */
       /* DEC-49 REGION is-duty-enforcer */
       if (!said(f.enforcer))
@@ -322,8 +324,7 @@ export class Duties {
     /* DEC-49 REGION is-duty-basis */
     if (!BASIS_KINDS.includes(tm.basis))
       return refusal("UNKNOWN_BASIS_KIND", localize("duties.index.a_due_dates_basis_is", "a due date's basis is one of {BASIS_KINDS}.{v1}", { BASIS_KINDS: String(BASIS_KINDS.join(", ")), v1: String(tm.basis === STATED_BASIS
-        ? " A deadline the other side has stated is a deadline on the team, as are the team's own obligations to a venue: "
-          + "they are the team's own deadlines on its actions, never a body's obligation here." : "") }), { bases: [...BASIS_KINDS] });
+        ? localize("duties.index.stated_basis_team_deadline", " A deadline the other side has stated is a deadline on the team, as are the team's own obligations to a venue: they are the team's own deadlines on its actions, never a body's obligation here.") : "") }), { bases: [...BASIS_KINDS] });
     /* END DEC-49 REGION is-duty-basis */
     /* DEC-49 REGION is-duty-time */
     if (tm.basis === "rule" && !said(tm.rule) && !isObj(tm.response_to))
@@ -540,7 +541,7 @@ export class Duties {
   /** R2: a duty a rule computed or the machine (or a member) proposed, stored apart and labelled, never tracked. */
   propose(a = {}) {
     const b = isObj(a) ? a : {};
-    if (!said(b.by)) return memberOnly(b.by, "proposing an obligation with no stamp");
+    if (!said(b.by)) return memberOnly(b.by, localize("duties.index.proposing_obligation_no_stamp", "proposing an obligation with no stamp"));
     const fields = Duties.#fields(b);
     const r = this.fieldRefusal(fields, {}, { pending: true });
     if (r) return r;
@@ -582,7 +583,7 @@ export class Duties {
    *  cited revision cycle (`cycle`) when one is given. Refused under R1 and R29 as any duty is. */
   proposeReview(a = {}) {
     const b = isObj(a) ? a : {};
-    if (!said(b.by)) return memberOnly(b.by, "proposing a review with no stamp");
+    if (!said(b.by)) return memberOnly(b.by, localize("duties.index.proposing_review_no_stamp", "proposing a review with no stamp"));
     const std = this.#standard(b.standard);
     if (!std) return noSuchStandard(said(b.standard) ? b.standard : null);
     const due = this.#policyWords(std, b.reviewDue, "review_due", b.by);
@@ -637,17 +638,17 @@ export class Duties {
     if (!sha) return noSha(`${field} cites an extent of the policy's text, named by its capture sha256`);
     const home = /^[0-9a-f]{64}$/.test(sha) && this.provenance ? this.provenance.homeOf(sha) : null;
     if (!home || (this.membership && !this.membership.inSight(home.bundleId, isMember(by) ? str(by) : SYSTEM_VIEWER)))
-      return { ok: false, reason: "CAPTURE_NOT_HELD", detail: "the record holds no such capture you can see", [field]: sha.slice(0, 80) };
+      return { ok: false, reason: "CAPTURE_NOT_HELD", detail: localize("duties.index.capture_not_seen", "the record holds no such capture you can see"), [field]: sha.slice(0, 80) };
     if (!isObj(c.extent)) return { ok: false, reason: "NO_EXTENT", detail: localize("duties.index.field_names_the_extent_of", "{field} names the extent of the capture that states it", { field: String(field) }) };
     let bad;
     try { bad = checkContentExtent(c.extent, this.content.contentContextFor(sha)); }
     catch (e) { bad = { code: "CONTENT_EXTENT_UNREADABLE", detail: String(e && e.message || e).slice(0, 200) }; }
-    if (bad) return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: "the extent names no part of that capture", extent_refusal: bad };
+    if (bad) return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: localize("duties.index.extent_names_no_part", "the extent names no part of that capture"), extent_refusal: bad };
     const mine = own(sha);
     if (mine) return mine;
     const m = this.content.mint({ bundleId: home.bundleId, captureSha: sha, extent: c.extent, mintedBy: str(by) });
     if (!m || m.ok === false || !said(m.content_id))
-      return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: "the extent names no part of that capture", extent_refusal: m || null };
+      return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: localize("duties.index.extent_names_no_part", "the extent names no part of that capture"), extent_refusal: m || null };
     let words = null;
     try { words = this.content.passageText(m.content_id); } catch { words = null; }
     return { ok: true, words, cite: { capture_sha: sha, extent: clone(c.extent), content_id: m.content_id } };
@@ -661,7 +662,7 @@ export class Duties {
    *  Refused under R1 and R29 as any duty is. */
   proposeFromResponse(a = {}) {
     const b = isObj(a) ? a : {};
-    if (!said(b.by)) return memberOnly(b.by, "proposing an obligation from a response with no stamp");
+    if (!said(b.by)) return memberOnly(b.by, localize("duties.index.proposing_response_no_stamp", "proposing an obligation from a response with no stamp"));
     /* DEC-49 REGION is-duty-response-kind */
     if (!RESPONSE_KINDS.includes(b.kind))
       return refusal("RESPONSE_KIND_UNKNOWN", localize("duties.index.the_kind_is_one_of", "the kind is one of {RESPONSE_KINDS}.", { RESPONSE_KINDS: String(RESPONSE_KINDS.join(", ")) }), { kinds: [...RESPONSE_KINDS] });
@@ -967,7 +968,7 @@ export class Duties {
     if (!said(b.entity)) return noEntity("duties are listed for one entity, named by its id");
     const as = b.as === undefined || b.as === null ? "obligor" : b.as;
     if (!["obligor", "obligee", "enforcer"].includes(as))
-      return { ok: false, reason: "BAD_PLACE", detail: "as is one of obligor, obligee, enforcer" };
+      return { ok: false, reason: "BAD_PLACE", detail: localize("duties.index.place_one_of", "as is one of obligor, obligee, enforcer") };
     const n = Number(b.limit);
     const limit = Number.isInteger(n) ? Math.min(Math.max(n, 1), LIST_MAX) : LIST_DEFAULT;
     const date = said(b.at) ? b.at.slice(0, 10) : this.#stamp().slice(0, 10);
@@ -1027,7 +1028,7 @@ export class Duties {
       const evs = r ? [...(Array.isArray(r.events) ? r.events : Array.isArray(r.items) ? r.items : []),
                        ...(Array.isArray(r.placed_nowhere) ? r.placed_nowhere : [])] : [];
       if (r && r.truncated) errors.push({ source: "events", error: localize("duties.index.the_events_read_stopped_at", "the events read stopped at its bound of {v1}", { v1: String(r.limit ?? LIST_MAX) }), truncated: true });
-      if (!this.events) errors.push({ source: "events", error: "the events service is not available" });
+      if (!this.events) errors.push({ source: "events", error: localize("duties.index.events_not_available", "the events service is not available") });
       for (const ev of evs) {
         if (ev.kind !== undefined && ev.kind !== t.event_kind) continue;
         const date = this.#whenOf(ev);
@@ -1041,14 +1042,14 @@ export class Duties {
       if (r.refused || r.undetermined) errors.push({ source: "recurrence", error: r.why });
       else {
         for (const i of r.instances) out.push({ kind: "recurrence", ref: i.value, date: { value: i.value, precision: i.precision, zone: i.zone } });
-        if (r.truncated) errors.push({ source: "recurrence", error: "the expansion stopped at its bound (24 months or 500 instances)", truncated: true });
+        if (r.truncated) errors.push({ source: "recurrence", error: localize("duties.index.expansion_stopped_at_bound", "the expansion stopped at its bound (24 months or 500 instances)"), truncated: true });
       }
     } else if (t.kind === "date") {
       const date = this.#dt(t.date, zone);
       if (inWindow(date)) out.push({ kind: "date", ref: typeof t.date === "string" ? t.date : t.date.value, date });
     } else if (t.kind === "source") {
       const s = this.#sources.find((x) => x.module === t.source);
-      if (!s) errors.push({ source: t.source, error: "no module has registered this trigger source" });
+      if (!s) errors.push({ source: t.source, error: localize("duties.index.trigger_source_unregistered", "no module has registered this trigger source") });
       else {
         let items;
         /* R16 (N595, K1649): the source reads as its reader does, so a member's read sees what the member may see */
@@ -1109,7 +1110,7 @@ export class Duties {
     if (onTime === "not_overdue") return { state: "met", why: word("duties.why.matching_event_falls") };
     const late = overdueOn({ due, at: b.earliest, side: "body" });
     if (late === "overdue") return { state: "met_late", why: word("duties.why.matching_event_falls_due") };
-    return { state: "undetermined", why: word("duties.why.matching_event_falls_due_date", { say: String(isObj(onTime) ? onTime.why : isObj(late) ? late.why : "the precision held does not say") }),
+    return { state: "undetermined", why: word("duties.why.matching_event_falls_due_date", { say: String(isObj(onTime) ? onTime.why : isObj(late) ? late.why : word("duties.why.precision_held_say")) }),
              rc: hasCandidates(due) ? "due_between_days" : "order_unsettled" };
   }
 
@@ -1201,7 +1202,7 @@ export class Duties {
       /* R28 (K1431, D241): the body's own review date passed with no review recorded: noticed, never a legal deadline */
       occ.label = NOTICED;
       occ.why = word("duties.why.body_review_date");
-      occ.question = word("duties.question.policy_reviewed_date", { date: String(due.due && due.due.value ? due.due.value : "its stated review date") });
+      occ.question = word("duties.question.policy_reviewed_date", { date: String(due.due && due.due.value ? due.due.value : word("duties.text.stated_review_date")) });
     } else if (occ.state === "overdue") {
       const dueWords = typeof due.due === "string" ? due.due : due.due && due.due.value ? due.due.value
         : due.due && due.due.candidates ? `${due.due.candidates[0].value}–${due.due.candidates[1].value}` : word("duties.text.due_date");
@@ -1228,7 +1229,7 @@ export class Duties {
    *  correctable by a later act that keeps this one. */
   matchEvent(a = {}) {
     const b = isObj(a) ? a : {};
-    const m = memberOnly(b.by, "matching an event to an obligation");
+    const m = memberOnly(b.by, localize("duties.index.matching_event_to_obligation", "matching an event to an obligation"));
     if (m) return m;
     const n = noReason(b.reason);
     if (n) return n;
@@ -1387,7 +1388,7 @@ export class Duties {
      order: `{placed, nowhere, error}`. Read once per call and shared by every power the call answers. */
   #scanUses(viewer, from = null, to = null) {
     if (!this.events || typeof this.events.usesOf !== "function")
-      return { placed: [], nowhere: [], error: "the events service cannot answer the uses of a power" };
+      return { placed: [], nowhere: [], error: localize("duties.index.events_cannot_answer_uses", "the events service cannot answer the uses of a power") };
     const placed = [], nowhere = new Map();
     let after;
     for (let page = 0; page < 1000; page++) {
@@ -1396,7 +1397,7 @@ export class Duties {
         r = this.events.usesOf({ ...(from ? { from } : {}), ...(to ? { to } : {}), ...(after ? { after } : {}), limit: LIST_MAX,
                                  viewer: Duties.#reader(viewer) });
       } catch (e) { return { placed, nowhere: [...nowhere.values()], error: String(e && e.message || e).slice(0, 200) }; }
-      if (!r || r.ok === false) return { placed, nowhere: [...nowhere.values()], error: r && (r.detail || r.reason) || "the uses could not be read" };
+      if (!r || r.ok === false) return { placed, nowhere: [...nowhere.values()], error: r && (r.detail || r.reason) || localize("duties.index.uses_could_not_be_read", "the uses could not be read") };
       const items = Array.isArray(r.items) ? r.items : Array.isArray(r.events) ? r.events : [];
       placed.push(...items);
       for (const x of Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []) if (x && x.event_id) nowhere.set(x.event_id, x);
@@ -1449,9 +1450,11 @@ export class Duties {
       if (!at) { why = word("duties.why.event_date_recorded"); continue; }
       try { h = this.lines.holderAt({ office: obligor, at, viewer: Duties.#reader(viewer) }); } catch { h = null; }
       if (h && h.ok !== false && said(h.holder)) { if (h.holder === dec) return { value: true, holding: h.line ? h.line.line_id ?? null : null }; continue; }
-      why = h && h.ok !== false && Array.isArray(h.lines) && h.lines.length && said(h.undetermined)
-        ? word("duties.text.decider_person_held", { undetermined: String(h.undetermined) })
-        : word("duties.text.decider_person_holding", { undetermined: String(h && said(h.undetermined) ? ` (${h.undetermined})` : "") });
+      /* lines R24: an undetermined holder carries its reason as a key; read it into words here */
+      const undetermined = h && h.ok !== false && h.undetermined === true ? reasonText(h.why) : null;
+      why = Array.isArray(h && h.lines) && h.lines.length && undetermined !== null
+        ? word("duties.text.decider_person_held", { undetermined })
+        : word("duties.text.decider_person_holding", { undetermined: undetermined !== null ? ` (${undetermined})` : "" });
     }
     return why ? { value: "undetermined", why } : { value: false };
   }
@@ -1517,7 +1520,7 @@ export class Duties {
 
   #linkAct(a, act) {
     const b = isObj(a) ? a : {};
-    const m = memberOnly(b.by, act === "link" ? "linking a use to a power" : "unlinking a use from a power");
+    const m = memberOnly(b.by, act === "link" ? localize("duties.index.linking_use_to_power", "linking a use to a power") : localize("duties.index.unlinking_use_from_power", "unlinking a use from a power"));
     if (m) return m;
     const p = this.#power(b.dutyId);
     if (p.refused) return p.refused;
@@ -1643,7 +1646,7 @@ export class Duties {
   neighbours(a = {}) {
     const b = isObj(a) ? a : {};
     if (b.viewer === undefined || b.viewer === null || b.viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: word("duties.why.read_names_member") };
     const kinds = Array.isArray(b.kinds) ? b.kinds : CONNECTION_KINDS.map((k) => k.kind);
     const at = b.at;
     const zone = this.#zone();
@@ -1711,7 +1714,7 @@ export class Duties {
       let v;
       try { v = at === undefined ? "in" : validAtOf(c, at); } catch { v = { undetermined: true, why: word("duties.why.date_asked_readable") }; }
       if (v === "out") continue;
-      marked.push(v === "in" ? c : { ...c, undetermined: { why: v.why || "undetermined at the date asked" } });
+      marked.push(v === "in" ? c : { ...c, undetermined: { why: v.why || word("duties.why.undetermined_date_asked") } });
     }
     items = marked.sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
     if (items.length > BOUNDS.hub) return { items: [], hub: { set_size: items.length, why: word("duties.why.connections_node", { hub: String(BOUNDS.hub) }) } };

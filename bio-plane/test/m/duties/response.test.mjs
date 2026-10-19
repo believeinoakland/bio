@@ -337,7 +337,7 @@ test("R5 over the real local-facts: a group rule a member drafts and another con
   const w = world({ deps: { view: null } });
   const lf = w.duties.localFacts;
   assert.equal(typeof lf.governingView, "function");
-  const RULE = { rule: "group_notice", applies_to: "bylaw_complaint", units: "days", amount: 3, count: "calendar", starts: "act", citation: "Test Bylaw § 10" };
+  const RULE = { rule: "group_notice", applies_to: "bylaw_complaint", units: "days", amount: 3, count: "calendar", starts: "act", citation: "Test Bylaw § 10", effective_from: "2026-01-01" };
   const a = w.declare({ trigger: { kind: "date", date: "2026-02-02" }, time: { basis: "rule", rule: RULE.rule, applies_to: RULE.applies_to } });
   assert.equal(a.ok, true, JSON.stringify(a));
   const occ = () => w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0];

@@ -109,7 +109,7 @@ test("R10 an uncertain due date: a body is overdue only after the latest candida
   const o = at("2026-03-01T16:00:00Z");
   assert.deepEqual(o.due.date.candidates.map((c) => c.value), ["2026-02-28", "2026-03-01"]);
   assert.equal(o.state, "undetermined");
-  assert.match(o.why, /^possibly overdue: undetermined, because/);
+  assert.equal(o.why.key, "civil-time.rules.possibly_overdue_day");
   assert.equal(at("2026-02-28T16:00:00Z").state, "pending");
   assert.equal(at("2026-03-02T16:00:00Z").state, "overdue");
 });
@@ -220,5 +220,5 @@ test("R16 registerTriggerSource: once per module; its items trigger occurrences;
   const ob = occ(w, b.duty_id);
   assert.deepEqual(ob.occurrences, []);
   assert.deepEqual(ob.source_errors, [{ source: "filings", error: "filings unreadable" }]);
-  assert.deepEqual(occ(w, c.duty_id).source_errors, [{ source: "escalation", error: "no module has registered this trigger source" }]);
+  assert.deepEqual(occ(w, c.duty_id).source_errors, [{ source: "escalation", error: localize("duties.index.trigger_source_unregistered", "no module has registered this trigger source") }]);
 });
