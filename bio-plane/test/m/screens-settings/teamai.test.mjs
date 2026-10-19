@@ -1,7 +1,8 @@
 /* Settings › The team's assistant at the module's interface (R48; the reads and acts R47 moved here from Members: R1, R2, R8, R10 over `owner: "group"`). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, ancestor, day, has, lacks, open, said, textOf, SCREENS } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, said, textOf, registryOps, SCREENS } from "./kit.mjs";
+import { SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { ADMIN, MEMBER, env, teamaiTable, KEEPAWAY_ON } from "./fixtures.mjs";
 
 const parts = (o) => all(o.tree, (e) => e.tag === "details" && /\bcs-part\b/.test(e.attrs.class || ""));
@@ -13,7 +14,7 @@ test("R48 the reads: the key, the keep-away and the team's account (owner group)
   const reads = a.p.requests.map((r) => [r.op, r.query]);
   for (const want of [["groupkeystate", {}], ["aikeepawaystate", {}], ["accountuses", { owner: "group" }], ["ailimits", { owner: "group" }], ["aiusage", { owner: "group" }], ["accounthistory", { owner: "group" }], ["aiuseovertime", { owner: "group" }]])
     assert.ok(reads.some((r) => JSON.stringify(r) === JSON.stringify(want)), JSON.stringify(want));
-  assert.deepEqual(SCREENS.find((s) => s.id === "teamai").acts.map((x) => x.op).sort(), ["accountusesset", "aikeepaway", "ailimitset", "groupkeyremove", "groupkeyset", "groupkeyswitch"]);
+  assert.deepEqual(SCREENS.find((s) => s.id === "teamai").acts.map((x) => x.op).sort(), registryOps("teamai"), "the registry's six acts (N1073)");
   has(a, "screen.teamai.sub");
 });
 
@@ -88,7 +89,10 @@ test("R48 a member never reaches the page: for one who does not administer it dr
   const m = await open("teamai", { me: MEMBER, table: teamaiTable() });
   has(m, "screen.teamai.purpose");
   assert.deepEqual(SCREENS.find((s) => s.id === "teamai").reads({ me: MEMBER }), {}, "the screen asks nothing of a member");
-  assert.deepEqual(m.p.requests.filter((r) => ["aikeepawaystate", "accountuses", "ailimits", "aiusage", "accounthistory", "aiuseovertime"].includes(r.op)), [], "nothing the owners refuse a member is read");
+  // what the screen reads of an administrator beyond the frame's own reads: the owners refuse each to a member
+  const refused = Object.values(SCREENS.find((s) => s.id === "teamai").reads({ me: ADMIN })).map((r) => r.op).filter((op) => !SHELL_OPS.includes(op) && op !== "memberlist");
+  assert.ok(refused.length >= 5);
+  assert.deepEqual(m.p.requests.filter((r) => refused.includes(r.op)), [], "nothing the owners refuse a member is read");
   assert.deepEqual(acts(m.tree), []);
   assert.equal(parts(m).length, 0);
   assert.ok(!m.html.includes("cs-part"));

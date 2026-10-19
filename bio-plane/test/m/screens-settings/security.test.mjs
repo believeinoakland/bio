@@ -99,7 +99,7 @@ test("R43 an ordinary period leads with one sentence under its mark, the period 
   // the catalogue is drawn only inside the fold
   const add = all(a.tree, (e) => e.tag === "details" && e.attrs["data-fold"] === "add")[0];
   assert.ok(add && textOf(add).includes(said("screen.security.add.fold")) && textOf(add).includes("Acme"));
-  assert.ok(!a.text.replace(textOf(add), "").includes("Acme · Scan"), "no list of outside-tool kinds outside the fold");
+  assert.ok(!all(a.tree, (e) => e.tag === "table" && e.attrs["data-table"] === "catalogue" && !ancestor(e, (x) => x === add)).length && !a.text.replace(textOf(add), "").includes(said("screen.security.does.scan")), "no list of outside-tool kinds outside the fold");
   // files are said once, while the scanner is built in
   assert.equal(a.text.split(said("screen.security.files.on")).length, 2);
 });
@@ -148,4 +148,14 @@ test("R43 a start after the end sends nothing and draws the refusal in a fold, o
   const m = await open("security", { me: MEMBER, table: securityTable() });
   has(m, "screen.security.admins", { admins: `${said("member.founder.unnamed")}, rosa, lu` });
   assert.deepEqual(ops(m), []);
+});
+
+test("R15 a tool in use is named by its provider's display name (vendor and product from the catalogue), never by its slug", async () => {
+  const a = await open("security", { me: ADMIN, table: securityTable() });
+  const row = all(a.tree, (e) => e.tag === "tr" && textOf(e).includes("Acme · Scan"))[0];
+  assert.ok(row, "named by vendor and product");
+  assert.ok(!a.text.includes("acme-scan"), "the slug is drawn nowhere");
+  // with the catalogue unread the row says what it is by the column's word, still no slug
+  const u = await open("security", { me: ADMIN, table: securityTable({ securitytoolcatalogue: "none" }) });
+  assert.ok(!u.text.includes("acme-scan"));
 });

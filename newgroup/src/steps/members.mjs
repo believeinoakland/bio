@@ -48,21 +48,21 @@ export const MEMBER_OBJECTS = Object.freeze({
 });
 /* The migration a member's upload carries, given the tag the script holds now (null: it holds none): every step after that
    tag, in order, in one `steps` list ending at the last tag; nothing when it already holds the last. */
-export function objectMigrations(member, heldTag) {
-  const o = MEMBER_OBJECTS[member];
+export function objectMigrations(member, heldTag, objects) {
+  const o = objects ?? MEMBER_OBJECTS[member];
   if (!o) return null;
   const at = heldTag ? o.migrations.findIndex((x) => x.tag === heldTag) : -1;
   const rest = o.migrations.slice(at + 1);
   if (!rest.length) return null;
   return { ...(heldTag ? { old_tag: heldTag } : {}), new_tag: rest.at(-1).tag, steps: rest.map((x) => ({ new_sqlite_classes: [...x.classes] })) };
 }
-const objectBindings = (member) => (MEMBER_OBJECTS[member]?.bindings || []).map((b) => ({ type: "durable_object_namespace", name: b.name, class_name: b.class_name }));
+const objectBindings = (member, objects) => ((objects ?? MEMBER_OBJECTS[member])?.bindings || []).map((b) => ({ type: "durable_object_namespace", name: b.name, class_name: b.class_name }));
 
 async function uploadMember(token, acct, slug, m, version, bundle, partBytes, extra = {}) {
   const names = extra.names;
   /* R59: the member's own Durable Objects (agent-worker), migrated from the tag the script holds. */
   const held = extra.heldTag ?? null;
-  const migrations = extra.migrations ?? objectMigrations(m.member, held);
+  const migrations = extra.migrations ?? objectMigrations(m.member, held, extra.objects);
   const meta = {
     main_module: "index.mjs",
     /* COPIED from the signed manifest, which copied it from the member's own
@@ -80,7 +80,7 @@ async function uploadMember(token, acct, slug, m, version, bundle, partBytes, ex
       ...(m.services || []).map((sv) => ({ type: "service", name: sv.binding,
         service: sv.service === "bio-plane" ? slug : (extra.fleet && extra.fleet.has(sv.service) ? names.member(sv.service) : sv.service) })),
       /* R59 (agent-worker's own objects). */
-      ...objectBindings(m.member),
+      ...objectBindings(m.member, extra.objects),
       /* R38: a container member's Durable Object class, bound cross-script into each member its descriptor names. */
       ...(extra.bindings || []),
     ],

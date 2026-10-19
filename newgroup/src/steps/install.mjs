@@ -1,6 +1,6 @@
 /* R17, R19, R20, R22, R23: every verified member installed beside the plane, then the plane bound to them. */
 import { apiOf, special, approve } from "./api.mjs";
-import { listScripts } from "./account.mjs";
+import { listScripts, listNamespaces } from "./account.mjs";
 import { PLAN_PROBE } from "./probes.mjs";
 import { BINDING_OF } from "./bindings.mjs";
 import { uploadUpdate } from "./uploads.mjs";
@@ -11,16 +11,27 @@ import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 /* Install (or refresh — the PUT is the same act) every member `loadFleet` verified. DEGRADES PER MEMBER, never fails the
    install: a team's plane must not be lost over a member it can add at the next update, and what was left out is SAID
    (D-115's "quietly doing less" is the defect; the cure is the saying, not the refusing). `ctx.vpc`: the Workers VPC service
-   the operator named (R45), or none. `ctx.names`: the copy's names (R64). Answers `{done, left, imageLags, completed}`. */
+   the operator named (R45), or none. `ctx.names`: the copy's names (R64). Answers `{done, left, imageLags, completed, containers}`; `containers` is each
+   placed application `{member, id, appName, config}`, which `confirmContainers` (verify.mjs) restarts when its member still serves the old build. */
+/* F10: a class a later release adds to a container member that is already installed is created by a migration from the tag it
+   holds, in order, on an update as on a first install; nothing when it holds every class. */
+function classMigration(heldTag, heldClasses, classes) {
+  const missing = classes.map((d) => d.class_name).filter((c) => !heldClasses.includes(c));
+  if (!missing.length) return {};
+  const at = /^v([0-9]+)$/.exec(heldTag || "");
+  return { migrations: { ...(heldTag ? { old_tag: heldTag } : {}), new_tag: `v${at ? Number(at[1]) + 1 : 2}`, new_sqlite_classes: missing } };
+}
+
 async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) {
   await emit.step("fleet", word("installer.step.helpers"));
   if (loaded.skip) { emit.ok("fleet", loaded.skip); return; }
   const names = ctx.names;
   const man = release.man;
-  const done = [], left = [], notes = [], imageLags = [], completed = [];
+  const done = [], left = [], notes = [], imageLags = [], completed = [], containers = [];
   const classOf = new Map();
   let conditions = null, leftover = false, vpcTaken = false;
   const scripts = await listScripts(apiOf(token, acct)).catch((e) => { if (approve(e)) throw e; return new Map(); });
+  const spaces = await listNamespaces(apiOf(token, acct)).catch((e) => { if (approve(e)) throw e; return []; });
   for (const L of loaded.members) {
     const m = L.m;
     /* R15, R38 (K3793): a container member that never reached its upload (its image not pullable or not pinned, no Containers
@@ -43,7 +54,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       const vpcBindings = vpcServiceOk(ctx.vpc) && m.member === VPC_MEMBER ? [{ type: "vpc_service", name: VPC_BINDING, service_id: ctx.vpc }] : [];
       const heldTag = scripts.get(names.member(m.member))?.migration_tag ?? null;
       const send = (extra) => uploadMember(token, acct, slug, m, String(man.version), held.bundle, held.partBytes,
-        { ...extra, names, fleet: loaded.fleet, heldTag });
+        { ...extra, names, fleet: loaded.fleet, heldTag, objects: own.durable_objects });
       /* R45: a VPC binding refused (the permission may not reach the service, or the id names none) leaves out that
          binding alone, named; the member is uploaded again without it. */
       const upload = async (extra) => {
@@ -85,6 +96,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       const selfBinds = classes.flatMap((d) => d.bind.filter((b) => b.member === m.member)
         .map((b) => ({ type: "durable_object_namespace", name: b.binding, class_name: d.class_name })));
       const fresh = !scripts.has(names.member(m.member));
+      const heldClasses = spaces.filter((n) => n && n.script === names.member(m.member)).map((n) => n.class);
       conditions ??= await containerConditions(token, acct, ctx);
       leftover = !!conditions.leftover;
       if (!conditions.ok) {
@@ -96,11 +108,12 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       await fetchHeld();
       attempted = true;
       await upload({ limits, bindings: [...(classOf.get(m.member) || []), ...selfBinds],
-        ...(fresh ? { migrations: { new_tag: "v1", new_sqlite_classes: classes.map((d) => d.class_name) } } : {}) });
+        ...(fresh ? { migrations: { new_tag: "v1", new_sqlite_classes: classes.map((d) => d.class_name) } } : classMigration(heldTag, heldClasses, classes)) });
       uploaded = true;
       for (const d of classes) {
         const placed = await placeContainer(token, acct, m, d, names.app(m.member, d.class_name, multi), names);
         if (placed.lag) imageLags.push(placed.lag);
+        if (placed.id) containers.push({ member: m.member, id: placed.id, appName: placed.appName, config: placed.config });
       }
       await schedule();
       binds();
@@ -126,7 +139,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
   }
   /* D-116: WHICH members this act uploaded, so the verify step can require each of them to answer THROUGH the plane's
      binding. Every early return above uploads nothing and returns undefined, which the caller reads as none. */
-  return { done, left, imageLags, completed };
+  return { done, left, imageLags, completed, containers };
 }
 
 /* DIST-6, step 3 of the order at BINDING_OF: RE-PUT the plane bound to every bindable member now present — those

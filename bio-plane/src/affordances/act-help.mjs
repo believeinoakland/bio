@@ -28,6 +28,7 @@
  *   - T51 (R70; DEC-340, U366): `holdnoticeprepare` and `counselpacket` are held (`actionhold`'s and `holdnoticesent`'s texts are the
  *     design's new ones, read by key), as are `noticeprepare`, `noticepost`, `signeradd` and `versionnotice`, whose `does` words the
  *     design's reads list for this module gives (R62); `op-declarations`' `ACT_HELP_ABSENT` keeps none of them;
+ *   - T51 (K4093; DEC-359): `actionholdrelease`, which the design @ `2a64c5ae77` explains, is held (R70 re-taken at that design);
  *   - T51 (R69): the seven browser acts, `BROWSER_ACTS`, are held under their own names from `act.owed_<name>.does`;
  *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61).
  * A retired op is not held. */
@@ -89,7 +90,7 @@ export const ACT_HELP_OPS = Object.freeze([
   "publish", "publishatmove", "publishatcancel", "publishat", "verify", "publishedcase", "caseimport", "importaccept",
   "importflag", "importwatch", "docketfile", "docketpost", "inboxpull", "inboxresolve", "sourcelink", "knock",
   "secondlookclear", "reauth", "aliaswithdraw", "factconfirm", "projectrequest", "projectrequestwithdraw", "projectrequestanswer",
-  "holdnoticeprepare", "counselpacket", "noticeprepare", "noticepost", "signeradd", "versionnotice",
+  "holdnoticeprepare", "counselpacket", "noticeprepare", "noticepost", "signeradd", "versionnotice", "actionholdrelease",
 ]);
 
 /** R69 (T51; DEC-330 owed, U348, K3810; `op-declarations` R76): the seven browser acts, each explained under its own name though none

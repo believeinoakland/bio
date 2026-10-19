@@ -1,5 +1,5 @@
 /* R20, R22, R23, R25: a container member, and the description a Worker member states of its own buckets and schedule. */
-import { cf, special } from "./api.mjs";
+import { cf, special, sleep, WAIT_BOUND_MINUTES } from "./api.mjs";
 import { establishPlan } from "./probes.mjs";
 import { imageWhy, imageSaid, lacksOf } from "./images.mjs";
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
@@ -97,7 +97,15 @@ export function workerDescriptor(bytes) {
     return { ok: false, why: word("installer.fleet.why.program") };
   if (!Array.isArray(crons) || crons.length > 3 || !crons.every((c) => typeof c === "string" && CRON.test(c)))
     return { ok: false, why: word("installer.fleet.why.program") };
-  return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons] } };
+  /* F10: a member's own Durable Objects, bindings and migrations in order, as its signed release states them; none stated, the installer's table is used. */
+  const objects = d.durable_objects;
+  if (objects !== undefined && !(objects && Array.isArray(objects.bindings) && Array.isArray(objects.migrations)
+      && objects.bindings.every((b) => b && BINDING_NAME.test(b.name) && CLASS_NAME.test(b.class_name))
+      && objects.migrations.every((x) => x && /^v[0-9]+$/.test(x.tag) && Array.isArray(x.classes) && x.classes.every((c) => CLASS_NAME.test(c)))))
+    return { ok: false, why: word("installer.fleet.why.program") };
+  return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons],
+    ...(objects === undefined ? {} : { durable_objects: { bindings: objects.bindings.map(({ name, class_name }) => ({ name, class_name })),
+      migrations: objects.migrations.map(({ tag, classes }) => ({ tag, classes: [...classes] })) } }) } };
 }
 
 /* R44 (T36): what file-scanner then lacks, when its release carries no `Worker` part. */
@@ -143,12 +151,41 @@ function conditionWhy(c) {
   return word("installer.fleet.why.planunknown");
 }
 
+/* A full rollout of one application to `config`: the platform's way to start a new image, and, asked again, to restart. */
+const rolloutApp = (token, acct, id, appName, config) => cf(token, `/accounts/${acct}/containers/applications/${id}/rollouts`, { method: "POST",
+  body: JSON.stringify({ description: "Civicsmith installer: " + appName, strategy: "rolling", kind: "full_auto", step_percentage: 100,
+    target_configuration: config }) });
+
+/* F5: whether the platform could pull the image. It is read from the application after the create or the rollout:
+   `health.instances.failed > 0`, or the rollout's `status` === "failed". It waits (nominal seconds, inside WAIT_BOUND_MINUTES, drawn
+   through `onWait`) only while a rollout is `pending` or `in_progress`, or `health.instances.starting > 0`; an application that
+   starts nothing (`instances: 0`) is not waited on. Answers true when the pull failed. A read that fails says nothing. */
+const PENDING_ROLLOUT = new Set(["pending", "in_progress", "progressing"]);
+const PULL_EVERY_S = 5;
+async function pullFailed(token, acct, id, rolloutId) {
+  const bound = WAIT_BOUND_MINUTES * 60;
+  const read = async (path) => { try { return await cf(token, `/accounts/${acct}/containers/applications/${path}`); }
+    catch (e) { if (special(e)) throw e; return null; } };
+  for (let waited = 0; ; waited += PULL_EVERY_S) {
+    const app = await read(id);
+    const roll = rolloutId ? await read(`${id}/rollouts/${rolloutId}`) : null;
+    const status = roll?.status ?? app?.rollout?.status ?? null;
+    const inst = app?.health?.instances;
+    if ((inst && inst.failed > 0) || status === "failed") return true;
+    if (!(PENDING_ROLLOUT.has(status) || (inst && inst.starting > 0)) || waited >= bound) return false;
+    if (token.onWait) await token.onWait(waited, bound);
+    await sleep(PULL_EVERY_S * 1000);
+  }
+}
+
 /* The Containers application for one class's namespace, created with the image, or rolled out to it. The application is named
    under the copy's own names (R64: a member with one class by the member and the slug, with several by member, class and slug).
-   R60: the size the descriptor states is passed per class, to the create call and to a rollout. R68 (S11): the image the
-   platform then holds for the application is read back and compared with the digest the release names; where it is another
-   (a rollout answered "no changes" and kept the old one), one further rollout is asked, and an image still another is
-   returned as a lag, never success. Answers `{action, lag}`, `lag` null when the image deployed is the release's. */
+   R60: the size the descriptor states is passed per class, to the create call and to a rollout. F5: a pull the platform could not
+   do is thrown as the member's own refusal (`installer.fleet.why.unpullable`), after the upload was attempted. R68 (S11): the
+   image the platform then holds for the application is read back and compared with the digest the release names; where it is
+   another (a rollout answered "no changes" and kept the old one), one further rollout is asked, and an image still another is
+   returned as a lag, never success. Answers `{action, lag, id, appName, config}`, `lag` null when the image deployed is the release's;
+   `id`, `appName` and `config` are what a later restart (S9, `confirmContainers`) needs. */
 async function placeContainer(token, acct, m, d, appName, names) {
   const spaces = await cf(token, `/accounts/${acct}/workers/durable_objects/namespaces?per_page=1000`);
   const script = names.member(m.member);
@@ -157,22 +194,20 @@ async function placeContainer(token, acct, m, d, appName, names) {
   const apps = await cf(token, `/accounts/${acct}/containers/applications`);
   const app = (Array.isArray(apps) ? apps : []).find((a) => a && a.name === appName);
   const config = { image: d.image, ...(d.instance_type ? { instance_type: d.instance_type } : {}) };
-  const rollout = (id) => cf(token, `/accounts/${acct}/containers/applications/${id}/rollouts`, { method: "POST", body: JSON.stringify({
-    description: "Civicsmith installer: " + appName, strategy: "rolling", kind: "full_auto", step_percentage: 100,
-    target_configuration: config }) });
   const deployed = async (id) => { try { return (await cf(token, `/accounts/${acct}/containers/applications/${id}`))?.configuration?.image ?? null; }
     catch (e) { if (special(e)) throw e; return null; } };
-  let id, action;
+  let id, action, rolled = null;
   if (!app) {
     const made = await cf(token, `/accounts/${acct}/containers/applications`, { method: "POST", body: JSON.stringify({
       name: appName, scheduling_policy: "default", instances: 0, max_instances: d.max_instances,
       configuration: config, durable_objects: { namespace_id: ns.id } }) });
     id = made && made.id; action = "created";
-  } else { id = app.id; await rollout(id); action = "rolled out"; }
-  if (!id) return { action, lag: null };
+  } else { id = app.id; rolled = await rolloutApp(token, acct, id, appName, config); action = "rolled out"; }
+  if (!id) return { action, lag: null, id: null, appName, config };
+  if (await pullFailed(token, acct, id, rolled && rolled.id)) throw new Error(word("installer.fleet.why.unpullable"));
   let got = await deployed(id);
-  if (got !== d.image && action === "rolled out") { await rollout(id); got = await deployed(id); }
-  return { action, lag: got === d.image ? null
+  if (got !== d.image && action === "rolled out") { await rolloutApp(token, acct, id, appName, config); got = await deployed(id); }
+  return { action, id, appName, config, lag: got === d.image ? null
     : got ? word("installer.image.lag.older", { name: appName }) : word("installer.image.lag.unread", { name: appName }) };
 }
 
@@ -181,4 +216,4 @@ async function setSchedules(token, acct, script, crons) {
   return cf(token, `/accounts/${acct}/workers/scripts/${script}/schedules`,
     { method: "PUT", body: JSON.stringify(crons.map((cron) => ({ cron }))) });
 }
-export { DESCRIPTOR_PARTS, containerPartsOf, lacksFor, WORKER_PART_LACKS, containerConditions, conditionWhy, placeContainer, setSchedules };
+export { DESCRIPTOR_PARTS, containerPartsOf, lacksFor, WORKER_PART_LACKS, containerConditions, conditionWhy, placeContainer, rolloutApp, setSchedules };

@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15749 design words, 934 protected; SHA-256
-   e6dfdbb1706df8b1916c287f98d4c74250b331f59f30bae7b4afdd0fdc6df901) followed by 6663 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15752 design words, 934 protected; SHA-256
+   9b67ad8c13e24ee01d783aadf0088a4fe4d3e8322fe7d5bb760cde04e372aeb9) followed by 6663 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "e6dfdbb170";
+export const WORDS_COMMIT = "9b67ad8c13";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8696,6 +8696,9 @@ export const WORD_ROWS = Object.freeze([
   ["screen.document.a34.kept.noreason","Kept citing the earlier version, by {member}, {date}","DEC-364 (B379 A): screens-inquiry, document R69; a keep with no reason given",null,false,"design"],
   ["screen.document.a34.moved.noreason","Citations moved to this copy by {member}, {date}","DEC-364 (B379 A): screens-inquiry, document R69; a move with no reason given",null,false,"design"],
   ["screen.document.compare.fingerprint","Fingerprint: {digest}","DEC-364 (B379 A): screens-inquiry, document; a file's digest in the compare panel, {digest} shortened as the page draws fingerprints",null,false,"design"],
+  ["installer.team.unrecorded.how.finished","The installer can't record it for a copy that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.","DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)",null,false,"design"],
+  ["screen.install.stopped.plan.done","Check again","DEC-365 (B381 2): installer F2; the Workers Paid stop's button, beside screen.install.stopped.containers.done",null,false,"design"],
+  ["installer.fleet.why.pullfailed","its software was placed in your account but couldn't be started from there","DEC-365 (B381 3): installer-steps F5; a container image that failed to pull once placed",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],

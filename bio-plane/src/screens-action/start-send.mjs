@@ -4,7 +4,7 @@
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT } from "./send-steps.mjs";
 
 // R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -32,6 +32,7 @@ export const startSend = Object.freeze({
       // R21: the matter's stake and whether the question is asked (`filings` R60 to R62), and the team's name
       stake: { op: "stakeatpreparation", query: { action: s }, empty: function () { return false; } },
       identity: { op: "groupidentity", empty: function () { return false; } },
+      vocab: { op: "affordances", query: {}, empty: function () { return false; } },
     };
     const plan = s.slice(0, at), option = s.slice(at + 1);
     const body = { plan: plan, option: option, kind: view.ui.kind || "records_request", breach: view.ui.breach === true };
@@ -40,6 +41,7 @@ export const startSend = Object.freeze({
       plan: { op: "plan", query: { id: plan }, subject: true },
       projects: { op: "list", query: { type: "project", limit: "500" } },
       preview: { op: "optionstartpreview", body: body },
+      vocab: { op: "affordances", query: {}, empty: function () { return false; } },
     };
   },
 
@@ -47,7 +49,7 @@ export const startSend = Object.freeze({
     draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
     stakeLines: stakeLines, stakeAsk: stakeAsk,
     isRequest: function () { return false; },
-    kinds: function () { return ["records_request", "request_for_comment", "other"]; },
+    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf,
     // R2: the preview's answer drawn: the kind, the office by its role, what it rests on, the clock, the breach, and the
     // refusal it would meet, first.
     preview: function (cs, view, pv) {
@@ -64,10 +66,17 @@ export const startSend = Object.freeze({
       const clock = Array.isArray(a.clock) && a.clock.length ? a.clock.map(function (c) {
         return cs.date(c.date) + " · " + cs.esc(c.basis || "");
       }).join("<br>") : cs.w("screen.start-send.noclock");
-      const k = view.parts.kinds().includes(a.kind) ? a.kind : "other";
-      const refused = pv && pv.refusal ? '<div class="cs-gap" data-gap="refused" role="alert"><b>' + cs.w("screen.start-send.wouldrefuse") + "</b><p>"
-        + cs.esc(pv.refusal.translation || pv.refusal.detail || pv.refusal.reason || pv.refusal.code || "") + "</p><p>" + cs.w("screen.start-send.resolve") + "</p></div>" : "";
-      return refused + '<dl class="mk-dl"><dt>' + cs.w("screen.start-send.kind") + "</dt><dd>" + cs.w("screen.start-send.kind." + k)
+      // R28: the kind in lower case by its key, a profile's own by its label (DEC-342: a refusal is read by `refusal.<CODE>`, else
+      // the answer's own translation, else the shell's uncatalogued path; its builder's `detail` is never drawn)
+      const voc = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies : {};
+      const kindName = view.parts.kindWord(cs, a.kind || "other", true, voc.action_kind_labels);
+      const rf = pv && pv.refusal ? pv.refusal : null;
+      const code = rf ? String(rf.code || rf.reason || "") : "";
+      const refusalWords = !rf ? "" : code && cs.w("refusal." + code) !== cs.esc("refusal." + code) ? cs.w("refusal." + code)
+        : typeof rf.translation === "string" && rf.translation ? cs.esc(rf.translation) : cs.w("refusal.uncatalogued") + (code ? " <code>" + cs.esc(code) + "</code>" : "");
+      const refused = rf ? '<div class="cs-gap" data-gap="refused" role="alert"><b>' + cs.w("screen.start-send.wouldrefuse") + "</b><p>"
+        + refusalWords + "</p><p>" + cs.w("screen.start-send.resolve") + "</p></div>" : "";
+      return refused + '<dl class="mk-dl"><dt>' + cs.w("screen.start-send.kind") + "</dt><dd>" + kindName
         + "</dd><dt>" + cs.w("screen.start-send.to") + "</dt><dd>" + to
         + "</dd><dt>" + cs.w("screen.start-send.rests") + "</dt><dd>" + rests
         + "</dd><dt>" + cs.w("screen.start-send.clock") + "</dt><dd>" + clock
@@ -82,7 +91,7 @@ export const startSend = Object.freeze({
     if (s.indexOf("~") < 0) {
       // Step 2: the action started.
       return cs.state("action", function (a) {
-        return cs.title(null)
+        return P.readOnly(cs, "screen.start-send.name") + cs.title(null)
           + '<p class="mk-sub">' + cs.w("screen.start-send.titlestarted") + " · " + cs.esc(a.addressee ? [a.addressee.role, a.addressee.body].filter(Boolean).join(", ") : "") + "</p>"
           + cs.sec("screen.start-send.step2", cs.state("filings", function (f) { return P.sendSteps(cs, view, f, {}); }));
       });
@@ -91,14 +100,14 @@ export const startSend = Object.freeze({
     return cs.state("plan", function (p) {
       const o = (p.options || []).find(function (x) { return x.id === option; });
       if (!o) return '<p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
-      const head = cs.title(null) + '<p class="mk-sub">' + cs.w("screen.start-send.title", { option: o.summary || o.id }) + "</p>"
+      const head = P.readOnly(cs, "screen.start-send.name") + cs.title(null) + '<p class="mk-sub">' + cs.w("screen.start-send.title", { option: o.summary || o.id }) + "</p>"
         + '<p class="mk-sub">' + cs.w("screen.start-send.nothingruns") + "</p>";
       if (o.action && o.action.id)
         return head + '<p class="mk-note">' + cs.w("screen.start-send.alreadystarted") + "</p>"
           + '<a class="cs-ref" href="/app/start-send/' + encodeURIComponent(o.action.id) + '" data-nav>' + cs.w("screen.start-send.tostep2") + "</a>";
       const pv = view.ui.preview || null;
       const shown = pv ? P.preview(cs, view, pv) : cs.state("preview", function (v) { return P.preview(cs, view, v); });
-      const kinds = P.kinds().map(function (k) { return [k, "screen.start-send.kind." + k]; });
+      const kinds = P.kindsOf(cs, view, true);
       const form = cs.choice("start-kind", "screen.start-send.kind", kinds, { value: view.ui.kind || "records_request" })
         + cs.checks("start-breach", "screen.start-send.breach", [["yes", "screen.start-send.breach.tick", view.ui.breach === true]])
         + cs.field("start-override", "screen.start-send.override", { help: "screen.start-send.override.help", value: view.ui.override || "" })

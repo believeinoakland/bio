@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -46,3 +46,7 @@ Merge tranche/T51 first. Then COMPLETE, listing what each item became.
 ## B6 · RESUME
 
 RESUME (K4094): you are INSTALLER-STEPS #2 (sonnet), restarted from #1 at half its window. Read your record (J5 says what is done and designs the rest) and this mailbox; merge tranche/T51. Then: (1) item 2 (F5) as J5 designs it (read the application after placing; decide a pull failure from health.instances.failed or the rollout status; wait only while pending; the fake gains the options); the pull failure's row is asked of the design (HANDOFF): leave the member out with why.unpullable until it exists, named, with its lacks. (2) item 1 (S9) as J5 designs it: confirmContainers after bindMembers, via memberVersions, a further rollout as the restart, still old a named lag (installer.lag.member.version); placeContainer returns {id, appName}; tell installer (by REPORT to me) the call it must add beside verifyServing. (3) From installer's review: scriptHash (readback.mjs) and readCopyFacts (account.mjs) use plain fetch: route both through patiently/cfCall so a 429/5xx backs off and a 401 becomes ApproveAgain. (4) Post one REPORT listing every Cloudflare API assumption these rest on (field names, restart by rollout), which BOB's live walk checks. bundler writing durable_objects into the signed Worker part is CR-15 (K4094); MEMBER_OBJECTS stays until then. F9 stays as it is. Then COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (K4098): you are merged (J7; 88 pass). The design @ 4cd21d28fe (DEC-365, merged) adds your pull-failure row, verbatim: installer.fleet.why.pullfailed "its software was placed in your account but couldn't be started from there". Use it for F5's pull failure in place of why.unpullable, add it to STEP_KEYS, test it. Your R20 and R28 now name containers, the pull-failure read and confirmContainers (K4098). Merge tranche/T51; then COMPLETE.

@@ -6,7 +6,10 @@
    R65) from their answers to a few questions: the draft is filled into the focus and purpose fields (`cs.fill`,
    interface-shell R27), labeled "Draft · the assistant's, asked by <handle>" (and as untested where its answer says so,
    R11), and kept only by the administrator's own save (DEC-152). Every function is self-contained (interface-shell
-   R21). */
+   R21).
+   T51 (R58; DEC-331 (2), DEC-336 (1), DEC-338): the team's short name is not asked for here: `instancegroupseed` is drawn nowhere
+   (the installer's act, K3868). The screen says once, above its title, that the short name was recorded at installation, or, for
+   an older installation whose `groupidentity` answers `group: null`, that it is not recorded yet; it draws no field or act. */
 
 export const identity = {
   id: "group-identity",
@@ -25,8 +28,10 @@ export const identity = {
     const ui = view.ui || {};
     const data = view.data || {};
     const KINDS = ["professional", "issue", "community", "catch-all", "other"];
-    const out = [cs.title()];
     const id = data.identity && data.identity.state === "ok" ? data.identity.value : null;
+    // R58: said once, above the title, to every session: recorded, or not recorded yet; a read that did not answer says neither
+    const seed = id && id.group ? S + "seed.recorded" : id && id.group === null ? S + "seed.unrecorded" : null;
+    const out = [seed ? `<p class="mk-note" data-note="seed">${W(seed)}</p>` : "", cs.title()];
     if (id && id.display_name) out.push(`<p data-state="group">${W(S + "group", { name: id.display_name })}</p>`);
 
     // what the group has said of itself; a group that has not is told nothing of it (R28)

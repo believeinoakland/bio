@@ -9,6 +9,8 @@
  * Every function takes `api(path, init)`, the Cloudflare call already bound to the run's permission and account path
  * prefix (`/accounts/<id>`), so this file holds no token and no address of its own. */
 
+import { patiently } from "./api.mjs";
+
 export const SLUG_SCHEME = "slug";
 export const LEGACY_SCHEME = "legacy";
 export const LEGACY_BUCKETS = Object.freeze({ captures: "bio-captures", published: "bio-published" });
@@ -124,14 +126,21 @@ export function freeName(slug, taken, validate) {
 export const FACT_KEYS = Object.freeze({ team: "team_name", installed: "installed_at", used: "last_used_at", release: "version",
   projects: "count_projects", documents: "count_documents", published: "count_published", members: "count_members" });
 
-export async function readCopyFacts(address) {
-  let reply = null, why = "silent";
+/* A rate limit or a server error is waited out (R1's back-off, a minute at most, drawn through `onWait`); no answer at all is not
+   waited on, since an address that is not there is the usual state of a copy that was removed. It never throws. */
+export async function readCopyFacts(address, onWait = null) {
+  let reply = null;
   if (address) {
     try {
-      const r = await fetch(`${address}/api/?op=bootstrap`);
-      if (r.ok) { const j = await r.json(); if (j && typeof j === "object") reply = j; else why = "silent"; }
-      else why = "silent";
-    } catch { why = "silent"; }
+      const j = await patiently(async () => {
+        let r;
+        try { r = await fetch(`${address}/api/?op=bootstrap`); } catch { return null; }
+        if (r.status === 429 || r.status >= 500) throw Object.assign(new Error(`HTTP ${r.status}`), { status: r.status,
+          retryAfter: Number(r.headers.get("retry-after")) || undefined });
+        return r.ok ? await r.json().catch(() => null) : null;
+      }, { onWait, minutes: 1 });
+      if (j && typeof j === "object") reply = j;
+    } catch { reply = null; }
   }
   const facts = {};
   for (const [name, wire] of Object.entries(FACT_KEYS)) {

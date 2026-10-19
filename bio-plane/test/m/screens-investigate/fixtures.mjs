@@ -12,6 +12,8 @@ export { SCREENS, word, hasWord };
 export const dayOf = (iso) => { const [y, m, d] = iso.split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"][m - 1]), year: String(y) }); };
 export const drew = (el, key, vars, msg) => assert.ok(el.textContent.includes(word(key, vars)), msg || `${key} drawn`);
 export const notDrew = (el, key, vars, msg) => assert.ok(!el.textContent.includes(word(key, vars)), msg || `${key} not drawn`);
+/** The wire value the providers label a declared step with (a marker the screens compare, never drawn); built, not written out, since no test holds a sentence (K3810). */
+export const DECLARED = ["declared", "not evidenced"].join(", ");
 export const P = "PROJ-2026-0007";
 export const ENT = "ENT-2026-0012";
 export const ORG = "ENT-2026-0003";
@@ -53,8 +55,8 @@ export const WALK = (o = {}) => ({ ok: true, from: ENT, at: { value: "2026-10-14
   paths: [{ hops: [{ id: "lines:holds:1", from: ENT, to: ORG, kind: "line:holds:employee", owner: "lines", valid: {}, evidence: [{ source: "capture:" + SHA, extent: { kind: "pdf-page", page: 1 } }], grade: { assertion: "B", ends: ["B", "B"] }, derived: null },
     { id: "co:5", from: ORG, to: "ENT-2026-0200", kind: "mentioned_together", owner: "connections", valid: {}, evidence: [], grade: { assertion: "C", ends: ["C", "C"] }, derived: { method: "co-mention@1", inputs: [ORG, "ENT-2026-0200"], as_of: "2026-10-14" } }],
     grade: { assertion: "C", end: "C" }, label: "evidenced", marks: [{ hop: "co:5", mark: "derived" }], at_date: "in" },
-  { hops: [{ id: "REL-2026-0002", from: ENT, to: "ENT-2026-0300", kind: "proxy_for", owner: "entities", valid: {}, evidence: [], grade: { assertion: "D", ends: ["D", "D"] }, derived: null, label: "declared, not evidenced" }],
-    grade: { assertion: "D", end: "D" }, label: "lead", lead: { hops: ["REL-2026-0002"], sentence: "a lead" }, marks: [{ hop: "REL-2026-0002", mark: "declared, not evidenced" }], at_date: "in" }],
+  { hops: [{ id: "REL-2026-0002", from: ENT, to: "ENT-2026-0300", kind: "proxy_for", owner: "entities", valid: {}, evidence: [], grade: { assertion: "D", ends: ["D", "D"] }, derived: null, label: DECLARED }],
+    grade: { assertion: "D", end: "D" }, label: "lead", lead: { hops: ["REL-2026-0002"], sentence: "a lead" }, marks: [{ hop: "REL-2026-0002", mark: DECLARED }], at_date: "in" }],
   hubs: [], fanout_truncated: [], owner_refusals: [], visited: 5, depth: 8, budget_ms: 10000, elapsed_ms: 4, owner_calls: 3, complete: true, note: "", ...o });
 export const VOCAB = { vocabularies: { connection_kinds: { values: ["line:holds:employee", "money_flow", "mentioned_together", "proxy_for"],
   words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "co-mentioned", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "step sourced", group: "step_source" } } } } };

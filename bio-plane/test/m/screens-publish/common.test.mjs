@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { interfacePage, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
+import { OPS, BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
 import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
@@ -109,11 +109,15 @@ test("R10 (interface-shell R21) the nine registry screens, each drawing exactly 
   for (const s of SCREENS) {
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
-    assert.deepEqual(s.acts.map((a) => a.op).sort(), reg.acts.map((a) => a.op).sort(), s.id);
+    /* op-declarations R76: the registry keeps an act done in the browser alone as `owed:<act> DEC-330`; the table names it for the screen */
+    const browser = (op) => Object.hasOwn(BROWSER_ACTS, op) && BROWSER_ACTS[op].screen === s.id;
+    const named = reg.acts.map((a) => (Object.entries(BROWSER_ACTS).find(([, b]) => b.screen === s.id && b.registry === a.op) || [a.op])[0]);
+    assert.deepEqual(s.acts.map((a) => a.op).sort(), named.sort(), s.id);
     for (const a of s.acts) {
-      assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
-      assert.equal(a.label, `act.${a.op}.label.${s.id}`);
+      assert.ok(browser(a.op) ? !Object.hasOwn(OPS, a.op) : Object.hasOwn(OPS, a.op), `${a.op} is a browser act or in OPS`);
+      assert.equal(a.label, browser(a.op) ? `act.owed_${a.op}.label.${s.id}` : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
+      if (browser(a.op)) assert.ok(s.words.includes(`act.owed_${a.op}.does`), `${a.op}: its explanation listed`);
     }
     assert.ok(Object.isFrozen(s) && typeof s.render === "function" && typeof s.reads === "function");
   }

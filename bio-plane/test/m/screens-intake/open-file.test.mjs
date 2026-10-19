@@ -1,17 +1,22 @@
 /* screens-intake R5, R6: the `open-file` screen on the real served page: its reads, its three states and its five acts. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { open, html, text, main, btn, fill, press, ok, refused, bytes, ADMIN, rawKeys, word, hasWord, says, saysIn } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 const day = (d, m, y) => word("date.daymonthyear", { day: String(d), month: word(`date.month.${m}`), year: String(y) });
 
 const SHA = "f".repeat(64);
+/* R39: an original is checked in the browser against the capture's fingerprint, so a test that opens one serves bytes whose SHA-256
+   is the subject's: `OPENED` are those bytes, `DSHA` their digest, the subject of the page that opens them */
+const OPENED = "%PDF-1.7";
+const DSHA = createHash("sha256").update(OPENED, "utf8").digest("hex");
 const NOTE = { note_id: 1, kind: "scan", tool: "Built-in scanner", engine: "ClamAV", engine_version: "1.4.2", scanned_at: "2026-10-06T03:10:00Z", result: "clean", findings: [] };
 const BASE = { verdictnotes: ok({ ok: true, notes: [NOTE] }), scanfindings: ok({ ok: true, findings: [] }) };
 const STATES = {
   low: { threatof: ok({ ok: true, threat: "low", reasons: [], scan_hold: null }), originalstate: ok({ may_open: true, path: "plain", why: null }) },
-  warned: { threatof: ok({ ok: true, threat: "high", reasons: [{ code: "active:macro", translation: "It contains a macro." }], scan_hold: null }),
+  warned: { threatof: ok({ ok: true, threat: "high", reasons: [{ code: "active:macro", translation: "macro in the document" }], scan_hold: null }),
             originalstate: ok({ may_open: true, path: "warned", why: null }) },
   deeper: { threatof: ok({ ok: true, threat: "high", reasons: [], scan_hold: null }), originalstate: ok({ may_open: true, path: "deeper", why: null }) },
   closed: { threatof: ok({ ok: true, threat: "high", reasons: [], scan_hold: null }), originalstate: ok({ may_open: false, path: null, why: "NOT_SCANNED" }) },
@@ -19,7 +24,8 @@ const STATES = {
           originalstate: ok({ may_open: false, path: null, why: "SCAN_HOLD" }),
           scanfindings: ok({ ok: true, findings: [{ captureSha: SHA, findings: ["Xls.Downloader.Agent-917"], held: true }, { captureSha: "0".repeat(64), findings: ["Other"] }] }) },
 };
-const at = (k, plane = {}, o = {}) => open(`/app/open-file/${SHA}`, { plane: { ...BASE, ...STATES[k], ...plane }, ...o });
+const at = (k, plane = {}, o = {}, sha = SHA) => open(`/app/open-file/${sha}`, { plane: { ...BASE, ...STATES[k], ...plane }, ...o });
+const atBytes = (k, plane = {}, o = {}) => at(k, plane, o, DSHA);
 
 test("R5 reads threatof, originalstate, verdictnotes and scanfindings for the capture; scanstatus only for a session that administers", async () => {
   const p = await at("low");
@@ -47,12 +53,12 @@ test("R5 a low-risk file draws openoriginal with its checks, and offers no warne
 });
 
 test("R5 a high-risk file draws safeview first and deepercheck; openwithwarning only on the warned path, sent only with both confirmations", async () => {
-  const p = await at("warned", { openwithwarning: bytes("doc-bytes", "application/msword") });
+  const p = await atBytes("warned", { openwithwarning: bytes(OPENED, "application/msword") });
   const h = html(p);
   assert.ok(main(p).querySelector('[data-risk="high"]'));
   assert.ok(h.indexOf('data-act="safeview"') < h.indexOf('data-act="deepercheck"'));
   assert.ok(h.indexOf('data-act="safeview"') < h.indexOf('data-act="openwithwarning"'));
-  assert.match(text(p), /It contains a macro\./);
+  assert.ok(text(p).includes("macro in the document"), "the reason is data the plane gave");
   fill(p, { "co-device": true });
   const r = await press(p, "openwithwarning");
   assert.equal(p.byOp("openwithwarning").length, 0, "nothing sent before both are ticked");
@@ -60,7 +66,7 @@ test("R5 a high-risk file draws safeview first and deepercheck; openwithwarning 
   fill(p, { "co-device": true, "co-macros": true });
   await press(p, "openwithwarning");
   const q = p.byOp("openwithwarning")[0];
-  assert.equal(q.query.capture, SHA);
+  assert.equal(q.query.capture, DSHA);
   assert.deepEqual(q.body, { warned: { own_device: true, no_macros: true } });
   assert.equal(p.files.length, 1, "handed to the browser as a file");
   /* control: no path open (not checked this week): no warned path, no original; the reason stated */
@@ -69,7 +75,7 @@ test("R5 a high-risk file draws safeview first and deepercheck; openwithwarning 
   assert.equal(btn(c, "openoriginal"), null);
   assert.ok(says(c, "screen.open-file.closed", { why: "NOT_SCANNED" }));
   /* the deeper path (a fresh clean deeper check) opens the original by override */
-  const d = await at("deeper", { openoriginal: bytes("pdf") });
+  const d = await atBytes("deeper", { openoriginal: bytes(OPENED) });
   await press(d, "openoriginal");
   assert.equal(d.byOp("openoriginal")[0].query.override, "1");
 });
@@ -121,7 +127,7 @@ test("R5 deepercheck asks for the capture and draws its state", async () => {
 });
 
 test("R6 opening the original is a download under the session header, its address naming only the capture; its object address released; no link carries a token", async () => {
-  const p = await at("low", { openoriginal: bytes("%PDF-1.7") });
+  const p = await atBytes("low", { openoriginal: bytes(OPENED) });
   await press(p, "openoriginal");
   const q = p.byOp("openoriginal")[0];
   assert.deepEqual(Object.keys(q.query).sort(), ["capture", "op"]);
@@ -132,10 +138,64 @@ test("R6 opening the original is a download under the session header, its addres
   assert.ok(says(p, "screen.open-file.opened"));
   for (const k of Object.keys(STATES)) assert.doesNotMatch((await at(k)).root().innerHTML, /tok-1/);
   /* a refusal is drawn beside the act with the owner's words, and nothing is saved */
-  const r = await at("low", { openoriginal: refused("SCAN_PENDING", "It is being checked.") });
+  const r = await atBytes("low", { openoriginal: refused("SCAN_PENDING_NOT_WORDED", "It is being checked.") });
   await press(r, "openoriginal");
   assert.equal(r.files.length, 0);
   assert.match(text(r), /It is being checked\./);
+  /* a code the table holds is drawn by its word, not by the answer's text (DEC-342) */
+  assert.ok(hasWord("refusal.SCAN_PENDING"));
+  const w = await atBytes("low", { openoriginal: refused("SCAN_PENDING", "builder detail that is never drawn") });
+  await press(w, "openoriginal");
+  assert.ok(says(w, "refusal.SCAN_PENDING"));
+  assert.doesNotMatch(text(w), /builder detail/);
+});
+
+test("R39 matching bytes open and the screen says the fingerprint was checked; the sentence that the original was handed over stays its own", async () => {
+  const p = await atBytes("low", { openoriginal: bytes(OPENED) });
+  assert.ok(!says(p, "screen.open-file.digest.checked"), "nothing is said before an opening");
+  await press(p, "openoriginal");
+  assert.equal(p.files.length, 1);
+  assert.ok(says(p, "screen.open-file.digest.checked"));
+  assert.ok(says(p, "screen.open-file.opened"));
+  /* the warned path is checked the same way */
+  const w = await atBytes("warned", { openwithwarning: bytes(OPENED, "application/msword") });
+  fill(w, { "co-device": true, "co-macros": true });
+  await press(w, "openwithwarning");
+  assert.equal(w.files.length, 1);
+  assert.ok(says(w, "screen.open-file.digest.checked"));
+});
+
+test("R39 altered bytes hand nothing over: refusal.DIGEST_MISMATCH beside the act, nothing said as checked or opened, and the act is usable again", async () => {
+  const held = ok({ ok: true, held: true, copy: {}, versions: 1, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } });
+  const p = await atBytes("low", { openoriginal: bytes("altered bytes"), heldat: held });
+  await press(p, "openoriginal");
+  assert.equal(p.files.length, 0, "nothing is saved");
+  assert.ok(says(p, "refusal.DIGEST_MISMATCH"));
+  assert.ok(!says(p, "refusal.DIGEST_MISMATCH.unheld"));
+  assert.ok(!says(p, "screen.open-file.digest.checked") && !says(p, "screen.open-file.opened"));
+  assert.ok(!btn(p, "openoriginal").hasAttribute("disabled"), "the act stays usable");
+  assert.deepEqual(p.byOp("heldat").map((r) => r.query), [{ op: "heldat", sha256: DSHA }], "the one read made to tell which sentence: by digest, no check, nothing of the member's");
+  /* where the team holds no file under that fingerprint, its own sentence */
+  const u = await atBytes("low", { openoriginal: bytes("altered bytes"), heldat: ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } }) });
+  await press(u, "openoriginal");
+  assert.equal(u.files.length, 0);
+  assert.ok(says(u, "refusal.DIGEST_MISMATCH.unheld"));
+  /* a warned opening of altered bytes is refused the same way */
+  const w = await atBytes("warned", { openwithwarning: bytes("altered bytes", "application/msword"), heldat: held });
+  fill(w, { "co-device": true, "co-macros": true });
+  await press(w, "openwithwarning");
+  assert.equal(w.files.length, 0);
+  assert.ok(says(w, "refusal.DIGEST_MISMATCH"));
+});
+
+test("R39 controls: the safe view is not verified against the original's digest; no digest of the member's is kept", async () => {
+  const p = await atBytes("warned", { safeview: bytes("derived pages, not the original's bytes") });
+  await press(p, "safeview", { reason: "to read it" });
+  assert.equal(p.files.length, 1, "the safe view downloads though its bytes are not the original's");
+  assert.ok(!says(p, "refusal.DIGEST_MISMATCH") && !says(p, "screen.open-file.digest.checked"));
+  assert.equal(p.byOp("heldat").length, 0);
+  assert.deepEqual([...p.store.keys()], []);
+  for (const k of p.local.keys()) assert.match(k, /^(cs-|bio-session(:active)?$)/);
 });
 
 test("R26 every key the open-file screen reads is a word of the list, and its three states draw word(key, vars)", async () => {

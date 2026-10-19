@@ -8,7 +8,13 @@
    T47: each row's name is the member's reference (R12, `cs.rows`' `name`, interface-shell R27); a row offers "Make a
    reset link" (`passwordresetlink`, the link shown once with the sentence that no email is sent) and "Withdraw
    <handle>'s signing key" (`signerset`) for a lost or stolen device; "More for administrators" links `group`, `places`
-   and `recovery` (R23). */
+   and `recovery` (R23).
+   T51 (R55, R56; DEC-330 A72, A74, B5; DEC-332 (3), (4)): to an administrator, a section of the members' signing keys beside the
+   roster (`signerlist`): who registered each and when, Withdraw (not on one's own key, which `account` revokes), a withdrawn key's
+   line with Reactivate (never for a member who has left), "no signing key yet"; and "Register a key for this member"
+   (`signeradd`: a pasted public line, split here into `keyB64` and `comment`). Then what removing an administrator takes
+   (`adminarith`: the live count in words, the founder's reconcile fold, the fold of how it changes). A removal under way is not
+   drawn (N1248, T52's); R23's withdraw in a row's panel moved to the keys section. */
 
 export const members = {
   id: "members",
@@ -23,6 +29,9 @@ export const members = {
     if (admin) {
       r.recovery = { op: "adminrecoverystep" };
       r.signers = { op: "signerlist" };
+      r.arith = { op: "adminarith" };
+      // a removal under way (member-roster R75; R56 item 4)
+      r.removals = { op: "adminremovalsopen" };
     }
     return r;
   },
@@ -117,10 +126,6 @@ export const members = {
             const c = cs.act("passwordresetlink", { label: "act.owed_passwordresetlink.label.members", data: { member: id } });
             if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="mk-msg" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);
           }
-          // the member's active signing keys, each withdrawn for a lost or stolen device (credentials R10)
-          const sg = okv(data.signers);
-          for (const k of sg && Array.isArray(sg.signers) ? sg.signers.filter((x) => x.member_id === id && x.status === "active") : [])
-            p.push(`<p>${W(S + "signer.held", { key: "…" + String(k.key_b64).slice(-8), date: D(k.added) })}</p>${cs.act("signerset", { label: S + "signer.withdraw", fills: { handle: label }, data: { key: k.key_b64 } })}`);
           for (const e of expOf(m)) if (e.state === "declared" && !e.confirmed) p.push(`<p>${W(S + "expertise.declared", { label: e.label })}</p>${cs.act("expertiseconfirm", { data: { member: id, label: e.label } })}`);
           return p.join("");
         },
@@ -144,6 +149,90 @@ export const members = {
       if (ui.websiteKey) shown += `<div class="mk-msg" data-shown="websitekey"><p>${W(S + "website.keyshown")}</p><p><code>${E(ui.websiteKey)}</code></p></div>`;
       if (ui.joinLink) shown += `<div class="mk-msg" data-shown="joinlink"><p>${W(S + "website.linkshown")}</p><p><code>${E(ui.joinLink)}</code></p></div>`;
       out.push(cs.sec(S + "website.heading", `<p>${W(S + "website.what")}</p>${shown}${cs.field("mw-cap", S + "website.cap")}${cs.field("mw-days", S + "website.days")}${wk}${jl}`));
+    }
+
+    if (admin) {
+      const activeList = (Array.isArray(okv(data.roster) && data.roster.value.members) ? data.roster.value.members : []).slice()
+        .sort((x, y) => (y.founder === true || y.member_id === "admin" ? 1 : 0) - (x.founder === true || x.member_id === "admin" ? 1 : 0)).filter((m) => m.status === "active");
+      const isF = (m) => m.founder === true || m.member_id === "admin";
+      const labelOf = (m) => (isF(m) ? founderName() : m.handle || T(S + "nohandle"));
+      // who: a member id, `admin` (the founder), or `not recorded` (credentials R21): named by handle through the roster, else not at all
+      const whoOf = (id) => {
+        const x = String(id == null ? "" : id).replace(/^member:/, "");
+        if (!x || x === "not recorded") return null;
+        if (x === "admin") return founderName();
+        const m = roster.find((r) => r.member_id === x);
+        return m ? labelOf(m) : x;
+      };
+      // R55: the members' signing keys, beside the roster; each member's row, then the key an administrator registers for one
+      const rowsOf = (v) => {
+        const keys = Array.isArray(v.signers) ? v.signers : [];
+        return `<ul class="mk-list" data-list="keys">${activeList.map((m) => {
+          const label = labelOf(m);
+          const mine = keys.filter((k) => k.member_id === m.member_id);
+          const line = (k) => {
+            if (k.status === "active") {
+              const by = whoOf(k.registered_by), when = k.added ? D(k.added) : null;
+              const w1 = by && when ? W(S + "key.registered.by.rosa.3", { member: by, date: when }) : W(S + "key.registered.unrecorded");
+              // not on the viewer's own key: she revokes it herself on `account` (DEC-336 (7))
+              const out1 = k.member_id === me.member ? "" : cs.act("signerset", { label: S + "signer.withdraw", fills: { handle: label }, data: { key: k.key_b64, status: "revoked" } });
+              return `<span data-key-state="active">${w1}</span>${out1}`;
+            }
+            const by = whoOf(k.status_by), when = k.status_at ? D(k.status_at) : null;
+            const w2 = by && when ? W(S + "key.react.key.withdrawn.by.rosa.12", { member: by, date: when }) : W(S + "key.withdrawn.unrecorded");
+            // never for a member who has left: credentials R7 refuses it
+            const back = k.member_status === "active"
+              ? cs.act("signerset", { label: S + "key.react.reactivate.devs.signing.key", fills: { member: label }, data: { key: k.key_b64, status: "active" } }) : "";
+            const tip = [S + "key.react.help", S + "key.react.help2", S + "key.react.help3"].map((x) => W(x)).join(" ");
+            return `<span data-key-state="withdrawn">${w2} · ${W(S + "key.react.it.does.not.sign")}</span>${back ? `<span class="k" tabindex="0" data-level="1" data-tip="${tip}">${back}</span>` : ""}`;
+          };
+          return `<li data-member="${E(m.member_id)}"><b>${E(label)}</b> ${mine.length ? mine.map(line).join(" ") : `<span class="mk-small">${W(S + "no.signing.key.yet")}</span>`}</li>`;
+        }).join("")}</ul>`;
+      };
+      // a member to register for: an active member who has a handle (record data); the founder is no member of the roster to `signeradd`
+      const who = activeList.filter((m) => !isF(m) && m.handle).map((m) => ({ value: m.member_id, text: m.handle }));
+      const reg = cs.act("signeradd");
+      const form = reg && who.length ? `${cs.choice("ms-who", S + "keys.whose", who)}${cs.field("ms-line", S + "keys.public", { help: S + "keys.public.help", autocomplete: "off" })}${reg}<p class="mk-note">${W(S + "the.one.line.the.member")} ${W(S + "it.is.the.public.half")}</p><p class="mk-note">${W(S + "the.record.shows.that.you")} ${W(S + "they.see.it.under.your")}</p>` : "";
+      out.push(cs.sec(S + "keys.heading", `<p class="mk-note">${W(S + "a.signing.key.lets.a")} ${W(S + "civicsmith.holds.only.the.public")} ${W(S + "use.this.when.a.member")}</p>${cs.state(data.signers, rowsOf)}<p class="mk-note">${W(S + "key.react.withdraw.a.key.when.a")} ${W(S + "key.react.a.key.a.member.withdrew")}</p>${form}`));
+
+      // R56: what removing an administrator takes, worked out for the number there are; nothing here changes anything
+      const arithOf = (v) => {
+        const live = v && v.live ? v.live : null;
+        if (!live) return "";
+        let h = live.possible
+          ? `<p data-state="arith">${W(S + "this.takes.3.of.4", { n: live.votesNeeded, total: live.administrators })}</p>`
+          : `<p data-state="arith">${live.administrators === 1 ? W(S + "with.1.administrator.no.administrator", { n: live.administrators }) + " " : ""}${W(S + "a.majority.that.leaves.out")} ${W(S + "that.is.the.rule.holding")}</p>`;
+        // the founder's reconcile note: only while more administrators are counted than the roster lists (B314's rule: no line claims what the record does not hold)
+        const listed = activeList.filter((m) => m.role === "admin").length;
+        const diff = live.administrators - listed;
+        if (diff > 0) h += `<details class="mk-details" data-fold="reconcile"><summary>${W(S + "founder.if.the.count.is.higher")}</summary><p class="mk-note">${W(S + (diff === 1 ? "founder.the.count.includes.1.administrator" : "founder.the.count.includes.n.administrators"), { n: diff })} ${W(S + "founder.the.founder.holds.the.team")} ${W(S + "founder.they.are.counted.because.the")}</p></details>`;
+        // the scale: one row for each count of administrators, the live row marked now (R56 item 3)
+        const table = Array.isArray(v.table) ? v.table : [];
+        const scale = table.length ? `<table class="mk-table" data-list="scale"><thead><tr><th>${W(S + "scale.head.admins")}</th><th>${W(S + "scale.head.takes")}</th><th>${W(S + "scale.head.who")}</th></tr></thead><tbody>${table.map((t) => {
+          const now = t.administrators === live.administrators;
+          return `<tr${now ? ' aria-current="true"' : ""}><td>${E(t.administrators)}${now ? " " + W(S + "scale.now") : ""}</td><td>${t.possible ? W(S + "scale.takes", { k: t.votesNeeded, n: t.administrators }) : W(S + "scale.not_removable")}</td><td>${t.possible ? W(S + "scale.who", { v: t.eligibleVoters, n: t.administrators }) : W(S + "scale.no_majority")}</td></tr>`;
+        }).join("")}</tbody></table>` : "";
+        h += `<details class="mk-details" data-fold="arith"><summary>${W(S + "how.it.changes.with.the")}</summary>${scale}<p class="mk-note">${W(S + "removal.takes.a.majority.of")} ${W(S + "the.one.facing.removal.is")} ${W(S + "a.lone.administrator.can.never")}</p></details>`;
+        return h;
+      };
+      // a removal under way, from the answer alone: who faces it, how many of those who may vote have agreed, and who it waits for (R56 item 4)
+      const removalsOf = (v) => (Array.isArray(v.removals) ? v.removals : []).map((r) => {
+        const voters = (Array.isArray(r.voters) ? r.voters : []).map((x) => x && x.voter), awaiting = Array.isArray(r.awaiting) ? r.awaiting : [];
+        const eligible = voters.length + awaiting.length;
+        const nameOf2 = (id) => whoOf(id) || String(id);
+        const target = nameOf2(r.target);
+        // every administrator named in one list, the one facing removal among them (Intl's conjunction list)
+        const everyone = [...voters, ...awaiting, r.target].map(nameOf2);
+        const list = new Intl.ListFormat("en", { style: "long", type: "conjunction" }).format(everyone);
+        // "Agree" is drawn on the viewer's own row only: an administrator who has not voted, on a removal that is not theirs
+        const agree = awaiting.indexOf(me.member) >= 0 ? `${cs.field("rm-" + r.target, S + "remove.reason", { area: true, rec: true, max: 2000 })}${cs.act("adminremove", { label: S + "agree.remove.teo.as.administrator", fills: { member: target }, data: { member: r.target } })}` : "";
+        // one row for each administrator: who agreed (the day beneath), who has not voted (and that the removal waits for them), the one facing removal
+        const rows = voters.map((x, i) => `<li data-voter="${E(String(x))}"><b>${W(S + "removal.agreed", { member: nameOf2(x) })}</b> <span class="mk-small">${E(D(r.voters[i].at))}</span></li>`).join("")
+          + awaiting.map((x) => `<li data-awaiting="${E(String(x))}"><b>${W(S + "removal.notyet", { member: nameOf2(x) })}</b> <span class="mk-small">${W(S + "the.removal.waits.for.ana", { member: nameOf2(x) })}</span></li>`).join("")
+          + `<li data-faces="${E(String(r.target))}"><b>${W(S + "removal.faces", { member: target })}</b> <span class="mk-small">${W(S + "counted.in.the.4.doesn", { n: eligible + 1 })}</span></li>`;
+        return `<div data-removal="${E(String(r.target))}"><h3>${W(S + "removing.teo.as.an.administrator", { member: target })}</h3><p>${W(S + "four.administrators.rosa.dev.ana", { n: eligible + 1, members: list })}</p><h4>${W(S + "removal.heading")}</h4><p>${W(S + "teo.is.counted.but.doesn", { member: target, n: eligible })}</p><ul class="mk-list">${rows}</ul><p>${W(S + "2.of.3.have.agreed", { n: r.have, total: eligible })}</p>${agree}</div>`;
+      }).join("");
+      out.push(cs.sec(S + "what.removing.an.administrator.takes", `${cs.state(data.arith, arithOf)}${cs.state(data.removals, removalsOf)}<p class="mk-small">${W(S + "nothing.here.changes.anything.explain")}</p>`, { help: S + "the.team.s.own.rule.explain" }));
     }
 
     return out.join("");
@@ -180,7 +269,8 @@ export const members = {
     // its reason in the administrator's own words, from the row's field (membership R7; interface-shell R11's `reasonField`)
     { op: "adminremove", rereads: ["roster", "recovery"], reasonField: "reason",
       send(view, el, cs) {
-        const reason = String(cs.value("mr-" + el.dataset.member) || "").trim();
+        // the reason in the field of the member's row, or of the removal under way (R56 item 4)
+        const reason = String(cs.value("mr-" + el.dataset.member) || cs.value("rm-" + el.dataset.member) || "").trim();
         return reason && reason.length <= 2000 ? { body: { memberId: el.dataset.member, reason } } : { refuse: "screen.members.remove.noreason" };
       } },
     { op: "expertiseconfirm", rereads: ["roster", "expertise"],
@@ -192,8 +282,21 @@ export const members = {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         if (a && a.link) cs.set("reset", { member: a.member, expires: a.expiresAt, link: (view.origin || "") + "/app/reset#reset=" + encodeURIComponent(a.link) });
       } },
+    // Withdraw (`revoked`) or Reactivate (`active`) a member's key; the button carries which (R55)
     { op: "signerset", rereads: ["signers"],
-      send(view, el) { return { body: { keyB64: el.dataset.key, status: "revoked" } }; } },
+      send(view, el) { return { body: { keyB64: el.dataset.key, status: el.dataset.status === "active" ? "active" : "revoked" } }; } },
+    // the public line the member gave, split: its base64 field and any words after it (R55); a line not of that shape sends nothing
+    { op: "signeradd", rereads: ["signers"],
+      send(view, el, cs) {
+        const memberId = String(cs.value("ms-who") || "").trim();
+        const parts = String(cs.value("ms-line") || "").trim().split(/\s+/);
+        if (!memberId) return { refuse: "refusal.NO_SUCH_MEMBER" };
+        if (parts.length < 2 || !/^[a-z][a-z0-9@.-]*$/.test(parts[0]) || !/^AAAA[A-Za-z0-9+/=]+$/.test(parts[1])) return { refuse: "refusal.BAD_KEY" };
+        const comment = parts.slice(2).join(" ");
+        return { body: comment ? { memberId, keyB64: parts[1], comment } : { memberId, keyB64: parts[1] } };
+      },
+      // the public line is not kept in the field once it is registered
+      done(view, answer, cs) { cs.fill("ms-line", ""); } },
     { op: "invitewithdraw", rereads: ["roster"],
       send(view, el) { return { body: { memberId: el.dataset.member } }; } },
     { op: "websitekeycreate", rereads: [],

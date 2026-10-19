@@ -8,6 +8,8 @@
    (R19): each sentence is a key read through the kit's `cs.w`, and the plan names its project and its questions by their
    titles, each a reference (R18). */
 
+import { readOnly } from "./send-steps.mjs";
+
 export const plan = Object.freeze({
   id: "plan",
 
@@ -15,7 +17,7 @@ export const plan = Object.freeze({
   // only the project's id).
   place: function (view) {
     const p = view.data.plan;
-    const v = p && p.state === "ok" ? p.value : null;
+    const v = /^PROJ-/.test(String(view.subject || "")) ? { project: String(view.subject) } : p && p.state === "ok" ? p.value : null;
     if (!v || !v.project) return {};
     const l = view.data.projects;
     const rows = l && l.state === "ok" && l.value && Array.isArray(l.value.bundles) ? l.value.bundles : [];
@@ -24,6 +26,11 @@ export const plan = Object.freeze({
   },
 
   reads: function (view) {
+    // R25: a project as the subject reads its plans, not one plan
+    if (/^PROJ-/.test(String(view.subject || ""))) return {
+      plans: { op: "plans", query: { project: view.subject, limit: "200" }, subject: true, empty: function () { return false; } },
+      projects: { op: "list", query: { type: "project", limit: "500" } },
+    };
     const r = {
       plan: { op: "plan", query: { id: view.subject }, subject: true },
       projects: { op: "list", query: { type: "project", limit: "500" } },
@@ -37,6 +44,39 @@ export const plan = Object.freeze({
   },
 
   parts: {
+    readOnly: readOnly,
+    // R25: a project's plans: its one live plan opens at once, several or only closed ones are listed (live ones first, newest
+    // first, then the closed), none says where one is started. A plan the viewer may not see is not listed.
+    projectPlans: function (cs, view) {
+      const P = view.parts;
+      const projects = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.bundles)
+        ? view.data.projects.value.bundles : [];
+      const hit = projects.find(function (b) { return b.bundle_id === view.subject; });
+      const ro = P.readOnly(cs, "screen.plan.name");
+      return cs.state("plans", function (v) {
+        const rows = Array.isArray(v.items) ? v.items : [];
+        const byNewest = function (x, y) { return String(y.opened_at || "") < String(x.opened_at || "") ? -1 : String(y.opened_at || "") > String(x.opened_at || "") ? 1 : 0; };
+        const live = rows.filter(function (x) { return x.state === "open" || x.state === "paused"; }).sort(byNewest);
+        const closed = rows.filter(function (x) { return !(x.state === "open" || x.state === "paused"); }).sort(byNewest);
+        const title = cs.title(cs.w("screen.plan.list.title")) + (hit && hit.title ? '<p class="mk-sub">' + cs.esc(hit.title) + "</p>" : "");
+        if (!rows.length) return ro + title + '<p class="mk-note">' + cs.w("screen.plan.none") + "</p>";
+        if (live.length === 1) {
+          // the one live plan opens at once; coming back from it lists the plans instead of opening it again
+          const k = "plan-went:" + view.subject;
+          if (cs.now() - (Number(cs.kept(k)) || 0) > 30000) {
+            cs.keep(k, String(cs.now()));
+            cs.later(0, function (kit) { kit.go("plan", live[0].id); });
+            return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + cs.w("state.loading") + "</p>";
+          }
+        }
+        const who = function (by) { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? cs.w("member.founder.unnamed") : cs.esc(id); };
+        return ro + title + (v.truncated ? '<p class="mk-note">' + cs.w("screen.plan.list.more") + "</p>" : "") + cs.sec("screen.plan.list", cs.sheet(live.concat(closed).map(function (x) {
+          const st = ["open", "paused", "closed"].includes(x.state) ? x.state : "closed";
+          return cs.row("", '<a class="cs-ref" href="/app/plan/' + encodeURIComponent(x.id) + '" data-nav>' + cs.esc(x.title || x.id) + "</a>"
+            + '<span class="meta">' + cs.w("screen.plan.state." + st) + (x.opened_at && x.opened_by ? " · " + cs.w("screen.plan.opened", { date: { html: cs.date(x.opened_at) }, name: { html: who(x.opened_by) } }) : "") + "</span>", "", "");
+        }).join("")), { help: "screen.plan.list.help" });
+      });
+    },
     // R18: a matter's own line, named by its title as the record answers it (never an `INQ-…` reference), each a reference
     // the kit links; a determination links its screen.
     matterName: function (cs, s, titles) {
@@ -119,6 +159,7 @@ export const plan = Object.freeze({
 
   render: function (cs, view) {
     const P = view.parts;
+    if (/^PROJ-/.test(String(view.subject || ""))) return P.projectPlans(cs, view);
     const CATS = ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"];
     return cs.state("plan", function (p) {
       const open = p.state !== "closed";
@@ -135,7 +176,7 @@ export const plan = Object.freeze({
       // the plan's opening: when and by whom
       const opened = p.opened_at && p.opened_by
         ? cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) }, name: String(p.opened_by).replace(/^member:/, "") }) : "";
-      const head = cs.title(p.title || p.id)
+      const head = P.readOnly(cs, "screen.plan.name") + cs.title(p.title || p.id)
         + '<p class="mk-sub">' + cs.w("screen.plan.state." + (["open", "paused", "closed"].includes(p.state) ? p.state : "open"))
         + (opened ? " · " + opened : "") + (projectRef ? " · " + projectRef : "") + "</p>"
         + (p.closed ? '<p class="mk-sub">' + cs.w("screen.plan.closedwhy", { reason: p.closed.reason || "" }) + "</p>" : "");

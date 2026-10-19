@@ -4705,6 +4705,11 @@ W.append(dict(key='screen.document.a34.kept.noreason', en='Kept citing the earli
 W.append(dict(key='screen.document.a34.moved.noreason', en='Citations moved to this copy by {member}, {date}', protected=False, note='DEC-364 (B379 A): screens-inquiry, document R69; a move with no reason given'))
 W.append(dict(key='screen.document.compare.fingerprint', en='Fingerprint: {digest}', protected=False, note="DEC-364 (B379 A): screens-inquiry, document; a file's digest in the compare panel, {digest} shortened as the page draws fingerprints"))
 
+# DEC-365: B381 (installer, installer-steps)
+W.append(dict(key='installer.team.unrecorded.how.finished', en="The installer can't record it for a copy that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.", protected=False, note='DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)'))
+W.append(dict(key='screen.install.stopped.plan.done', en='Check again', protected=False, note="DEC-365 (B381 2): installer F2; the Workers Paid stop's button, beside screen.install.stopped.containers.done"))
+W.append(dict(key='installer.fleet.why.pullfailed', en="its software was placed in your account but couldn't be started from there", protected=False, note='DEC-365 (B381 3): installer-steps F5; a container image that failed to pull once placed'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
