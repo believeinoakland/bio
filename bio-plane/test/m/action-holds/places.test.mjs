@@ -7,10 +7,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, received } from "./fixture.mjs";
 import * as holds from "../../../src/action-holds/index.mjs";
+import { noSuchProject } from "../../../src/membership/index.mjs";
+import { correspondEntryRefusal } from "../../../src/action-records/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", I = "INFO-2026-0001-d";
 const ALICE = V("alice"), BOB = V("bob"), CAROL = V("carol");
 const ABSENT = "PROJ-2026-0404-absent";
+const MARK_CODES = { machine: "MACHINE_CANNOT_MARK_PRESSURE", shape: "PRESSURE_REFUSED" };
 
 /* P alice's hidden project, D alice's discoverable one, Q carol's hidden one; A in P with two received entries (the
    first marked legal), B in no project with one; a case CASE-1 owned by P and CASE-3 by Q (publication's `cases`, its
@@ -200,8 +203,12 @@ test("R12 pressureRecord: refusals in R12's order; a record lands in a project t
   assert.deepEqual([R({ author: MACHINE, ...worse }), R({ author: "", ...worse }), R({ ...worse }), R({ ...worse, pressure: undefined }),
     R({ ...worse, pressure: { kind: "legal", note: "n" } }), R({ ...worse, pressure: { kind: "legal", note: "n" }, project: ABSENT }),
     R({ at: "nope", artifactSha: s }), R({ artifactSha: s }), R({ account: "" })].map((r) => r.reason),
-    ["MACHINE_CANNOT_MARK_PRESSURE", "MACHINE_CANNOT_MARK_PRESSURE", "PRESSURE_REFUSED", "PRESSURE_REFUSED", "NO_SUCH_PROJECT",
-     "NO_SUCH_PROJECT", "BAD_DATE", "CAPTURE_AND_TESTIMONY", "NEITHER_CAPTURE_NOR_TESTIMONY"]);
+    /* the other modules' codes are read from the producers that mint them (membership's `noSuchProject`; action-records'
+       R16 site, `correspondEntryRefusal`), never hand-listed (K3268) */
+    [MARK_CODES.machine, MARK_CODES.machine, MARK_CODES.shape, MARK_CODES.shape, noSuchProject(Q).reason, noSuchProject(ABSENT).reason,
+     correspondEntryRefusal({ at: "nope", account: "a" }, {}).reason,
+     correspondEntryRefusal({ at: "2026-09-20", artifactSha: s, account: "a" }, {}).reason,
+     correspondEntryRefusal({ at: "2026-09-20" }, {}).reason]);
   assert.equal(w.h.pressureRecord({ project: D, pressure: { kind: "legal", note: "n" }, account: "a", at: "2026-09-20", viewer: BOB,
                                     author: BOB }).reason, "NO_SUCH_PROJECT", "a project seen only at EXISTENCE is answered as absent");
   assert.equal(R({ pressure: { kind: "legal", note: 'a"b' } }).reason, "PRESSURE_REFUSED");

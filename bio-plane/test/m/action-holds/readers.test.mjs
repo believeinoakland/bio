@@ -44,7 +44,7 @@ test("R4 doorbell asks this module's reader: no hold, may clear; a place whose l
   assert.equal(w.h.holdInPlace(), false);
   /* a hold in place on A's entry 0: A is in a project, and no viewer is asked (one who sees nothing still holds it) */
   hold(w, A, 0, "in_place");
-  assert.equal(w.a.actionRead({ id: A, viewer: "nobody" }).reason, "NO_SUCH_BUNDLE", "invisible to this viewer");
+  assert.equal(w.a.actionRead({ id: A, viewer: "nobody" }).reason, "NO_SUCH_ACTION", "invisible to this viewer (actions R106)");
   const held = ask();
   assert.deepEqual([held.may, held.basis], [false, "action-holds reports a litigation hold in place"]);
   assert.equal(w.h.holdInPlace(), true);

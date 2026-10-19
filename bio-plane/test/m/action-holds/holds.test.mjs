@@ -105,7 +105,7 @@ test("R2 in_place then released: both statements kept, the latest stands; pressu
   const read = () => w.h.pressureFor({ action: A, viewer: ALICE }).items;
   const before = read();
   assert.deepEqual([before[0].holds, before[0].hold], [[], null], "null while none is stated");
-  assert.ok(!("hold" in before[1]) && !("holds" in before[1]), "a mark of another kind carries no hold");
+  assert.ok(!("holds" in before[1]) && before[1].hold === null, "a mark of another kind carries no statements; its hold is null (R18)");
   const text = w.text(A);
   const one = w.h.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: ALICE, author: ALICE });
   assert.deepEqual(one, { ok: true, target: A, ord: 0, hold: "in_place", reason: "preserving the emails", by: ALICE,
