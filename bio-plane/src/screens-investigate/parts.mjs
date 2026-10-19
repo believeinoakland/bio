@@ -206,6 +206,7 @@ export const PARTS = Object.freeze({
     const list = nodes.map((n) => {
       const t = thingOf(n.id);
       return cs.row("", `<b>${cs.ref(/^ENT-/.test(n.id) ? "person" : /^(INFO|INF)-/.test(n.id) ? "document" : "record", n.id, label(n.id), isUnnamed(n.id) ? [tipOf(n.id).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]))] : [])}</b>${t ? ` <span class="mk-small"${isUnnamed(n.id) ? ` data-tip="${cs.esc(tipOf(n.id))}"` : ""}>${cs.w("connection.thing." + t)}</span>` : ""}`
+        + (o && o.idonly && o.idonly[n.id] && isUnnamed(n.id) ? `<br><span class="mk-small" data-why="${cs.esc(n.id)}">${cs.w("screen.explore.unnamed.why", { n: String(o.idonly[n.id]) })}</span>` : "")
         + (limit.has(n.id) && n.id !== centre ? ` <span class="mk-small" data-limit="${cs.esc(n.id)}"><b>${cs.w("connection.graph.limit")}</b> · ${cs.w("connection.graph.limit.means")}</span>` : ""),
         n.id === centre ? `<span class="mk-small">${cs.w("connection.graph.center.means")}</span>` : press(n.id));
     }).join("");
@@ -229,6 +230,18 @@ export const PARTS = Object.freeze({
       + `<span class="li" data-tip="${cs.esc(cs.w("connection.graph.grade.means"))}">${cs.w("connection.graph.legend.grade")}</span></div>`;
     return `<div class="mk-graph" data-centre="${cs.esc(centre)}">${trailHtml}<div class="gwrap"><svg class="g" viewBox="0 0 ${W} ${H}" role="group" aria-label="${cs.esc(label(centre))}">${edgeSvg}${nodeSvg}</svg></div>${legend}`
       + (stops.length ? `<p class="mk-small">${cs.w("connection.graph.limit.means")}</p>` : "") + cs.sheet(list) + (stepList ? cs.sheet(stepList) : "") + "</div>";
+  },
+  /** R43: the entity ids of the unnamed `ENT-` nodes of a graph answer, comma-separated, at most 500 (what one `entityidonly` takes); "" for none. */
+  unnamedIds(g) {
+    const ids = (g && Array.isArray(g.nodes) ? g.nodes : []).filter((n) => n && /^ENT-/.test(String(n.id)) && !(typeof n.label === "string" && n.label.trim())).map((n) => n.id);
+    return [...new Set(ids)].slice(0, 500).join(",");
+  },
+  /** R43: `{entity id: n}` from an `entityidonly` outcome (`later`'s object), only the counts above 0; a read not yet answered or failed gives none. */
+  idonlyMap(io) {
+    const out = {};
+    const rows = io && io.state === "ok" && io.value && Array.isArray(io.value.entities) ? io.value.entities : [];
+    for (const r of rows) if (r && typeof r.entity_id === "string" && Number(r.documents) > 0) out[r.entity_id] = Number(r.documents);
+    return out;
   },
   /** R24, R27: the group a connection kind belongs to (`pos`, `part`, `money`, `ment`, `same`, `step_source`), from the vocabulary `affordances` answers. */
   groupMap(v) {

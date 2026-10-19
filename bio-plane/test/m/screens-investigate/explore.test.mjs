@@ -186,3 +186,42 @@ test("R17 an attachment without its passage or without the member's words sends 
   await press(p, "stepsource", { within: lead() });
   assert.ok(main(p).textContent.includes(word("refusal.EXTENT_MALFORMED")), "the refusal by its words");
 });
+
+/* R43, R46 (T51-120) */
+test("R43 an unnamed node in the graph says how many documents name it only by an identifier (entityidonly, asked once for the unnamed nodes' ids); a count of 0 or a failed read draws no why line; a named node draws neither", async () => {
+  const p = await open(at, { plane: { entityidonly: ok({ ok: true, count: 1, entities: [{ entity_id: ORG, documents: 3 }] }) } });
+  const q = p.byOp("entityidonly");
+  assert.equal(q.length, 1);
+  assert.equal(q[0].query.ids, ORG, "the unnamed node's id alone");
+  const why = main(p).querySelector(`[data-why="${ORG}"]`);
+  drew(why, "screen.explore.unnamed.why", { n: "3" });
+  assert.equal(main(p).querySelectorAll("[data-why]").length, 1, "the named nodes draw none");
+  for (const variant of [ok({ ok: true, entities: [{ entity_id: ORG, documents: 0 }] }), refusedIn("TOO_MANY_IDS", "x")]) {
+    const z = await open(at, { plane: { entityidonly: variant } });
+    assert.equal(main(z).querySelectorAll("[data-why]").length, 0, "no why line, never 0 documents");
+    drew(main(z), "connection.node.unnamed", undefined, "the node is still drawn unnamed");
+  }
+});
+
+test("R43 an explored hop is worded From {from} to {to} with a name of each end, an end with no name an unnamed item, with the vocabulary's kind word; R46 a hop's cited page counts from one, page 0 drawn", async () => {
+  const w = WALK();
+  w.paths[0].hops[0].from = ENT;
+  w.paths[0].hops[0].to = "ENT-2026-0777";
+  w.paths[0].hops[0].evidence = [{ capture_sha: SHA, extent: { kind: "pdf-page", page: 0 } }];
+  const p = await walked({ plane: { explore: ok(w), entityidonly: ok({ ok: true, entities: [{ entity_id: "ENT-2026-0777", documents: 2 }] }) } });
+  const hop = main(p).querySelector('[data-hop="lines:holds:1"]');
+  drew(hop, "screen.explore.hop", { from: "L. Chen", to: word("screen.explore.hop.unnamed") });
+  assert.ok(hop.textContent.includes("held the post (employee)"), "the vocabulary's kind word");
+  drew(hop, "screen.explore.unnamed.why", { n: "2" });
+  assert.ok(hop.querySelector(`[data-tip*="${word("screen.explore.page", { page: "1" })}"]`), "page 0 is drawn as page 1");
+  const named = main(p).querySelector('[data-hop="co:5"]');
+  assert.equal(named.querySelectorAll("[data-unnamed]").length, 0, "control: a hop whose ends are named draws no unnamed line");
+  drew(named, "screen.explore.hop", { from: "Public Works Department", to: "R. Alvarez" });
+});
+
+test("R46 the assertion form's page counts from 1: a typed 1 sends page 0; a page the record states is the record's own in the request", async () => {
+  const p = await walked();
+  fill(p, { "explore-assert-sha": SHA, "explore-assert-page": "1", "explore-assert-basis": "The minutes name him." });
+  await press(p, "stepsource", { within: main(p).querySelectorAll("div.mk-msg[data-chain]")[1] });
+  assert.deepEqual(p.byOp("stepsource")[0].body.extent, { kind: "pdf-page", page: 0 });
+});

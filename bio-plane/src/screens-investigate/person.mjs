@@ -142,7 +142,7 @@ function render(cs, view) {
   if (!(gq.state === "ok" && none(gq.value))) out.push(`<div class="mk-acts">${cs.act("explore", { label: "act.explore.label.person", data: { entity: id } })}</div>`);
   out.push(cs.sec(S + "connections", cs.state(gq, (g) => (none(g)
     ? `<p class="cs-state" data-state="empty">${cs.w("person.graph.none")}</p>`
-    : P.graph(cs, g, { groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
+    : P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
       words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached", withdraw: "screen.explore.withdraw" } })))));
   /* R22: a section that holds nothing is not drawn (loading and failed are still drawn) */
   if (!p || (p.posts || []).length) out.push(cs.sec(S + "positions", cs.state(d, (v) => {
