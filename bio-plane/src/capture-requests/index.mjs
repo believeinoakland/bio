@@ -501,8 +501,7 @@ export class CaptureRequests {
       return { ok: false, step: q.step, reason: (a && (a.reason || a.code)) || null,
                detail: String((a && a.detail) || "the step did not take the capture").slice(0, 300) };
     } catch {
-      return { ok: false, step: q.step, detail: "the tie to the step did not complete and your team's Civicsmith did not "
-                                              + "record why" };
+      return { ok: false, step: q.step, detail: localize("capture-requests.index.tie_to_step_not_complete", "the tie to the step did not complete and your team's Civicsmith did not record why") };
     }
   }
 

@@ -82,3 +82,14 @@ For Bob, not decided here:
 3. rows.mjs is stale; not regenerated (BOB regenerates at the layer close).
 
 No PR opened, per JOB step 1.
+
+## Completion again (CHANGE B3, K4015: the words check folds pure-literal `+` chains)
+
+**Change applied.** The check now judges a `+` chain of literals as one sentence. It found one more: `index.mjs` 504–505, the step-tie fallback ("the tie to the step did not complete and your team's Civicsmith did not record why"). The design's unkeyed list has that sentence spelled "group", so the text did not match and it was not counted. It now reads `localize("capture-requests.index.tie_to_step_not_complete", …)`. No sentence is judged unread, so none goes to the unkeyed list.
+
+**Checks after the change.**
+- `checks/words.mjs /home/user/bio capture-requests`: 0 failures (inline 0, plain 0, testcopy 0; unkeyed 55).
+- `node --test bio-plane/test/m/capture-requests/*.test.mjs`: 127 of 127 pass.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs capture-requests`: 0 failures. `checks/coverage.mjs capture-requests`: 56 of 56, 0 failures.
+
+**Size (session_019pe7uRW2gPXhRG61G9zuCe): test runs 5, module lines 2559.**
