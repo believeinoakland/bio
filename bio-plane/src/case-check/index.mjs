@@ -120,7 +120,8 @@ export class CaseCheck {
       const pre = this.caseAuthoring.publishPreflight(given, calculationFacts);
       if (!pre || pre.ready !== true) {
         const first = pre?.first ?? null, blockers = Array.isArray(pre?.blockers) ? pre.blockers : [];
-        const lead = first || blockers[0] || { reason: "PREFLIGHT_UNDETERMINED", detail: "the pre-flight gave no answer" };
+        const lead = first || blockers[0] || { reason: "PREFLIGHT_UNDETERMINED",
+                                               detail: localize("case-check.index.the_pre_flight_gave_no_answer", "the pre-flight gave no answer") };
         const { ok: _ok, ...shown } = lead;
         return { ...shown, ok: false, ready: false, held: false, first, blockers };
       }
@@ -143,7 +144,7 @@ export class CaseCheck {
       const stored = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`, caseId, edition);
       if (!stored || !stored.doc_sha)
         return { ok: false, reason: "PREPARATION_UNDETERMINED",
-                 detail: "the preparation was not found where publication stores it, so no check was recorded" };
+                 detail: localize("case-check.index.the_preparation_was_not_found_where_publication_stores_it", "the preparation was not found where publication stores it, so no check was recorded") };
       const roles = prepared.roles && typeof prepared.roles === "object" ? prepared.roles : {};
       const members = (Array.isArray(prepared.findings) ? prepared.findings : [])
         .map((f) => ({ bundle_id: f.target, version_sha: f.bundleSha ?? null, role: f.role ?? roles[f.target] ?? null }));
