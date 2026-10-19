@@ -32,3 +32,16 @@ T51-204 · standards: the words check's findings are fixed (B1, layer 5 re-run, 
 **Attribution note:** the commit message omits the Co-Authored-By line naming the model (the Model identity rule forbids model identifiers in commits); the Claude-Session line is kept.
 
 Size (session_01GMf4vYSoxxQorhQmm2FhQa): test runs 2, module lines 3570
+
+## J2 · COMPLETE
+
+K3992 (CHANGE B2) done: events' `when` reason is passed on as given.
+
+- `index.mjs` `#eventDay`: a reason events gives as `{key, vars}` returns unchanged; a string reason still reads through `standards.why.event_record_read`. Same change in the bounds relay (`standards.bounds`), the override reason (`standards.why.overrides_portion_whether`) and the undetermined branch of `#versionAtPeriod`, where a keyed bound reason is returned as given (this also covers civil-time's keyed `why` in the overrides path, which `String()` would have stringified).
+- Test added: `inforce.test.mjs` "K3992 a reason events gives as {key, vars} reaches inForceAt as given" (keyed reason returned by deepEqual; a plain string reason still matches its sentence).
+- Commit `9994d2b84b`, pushed to `job/T51/standards`.
+
+Tests: `node --test test/m/standards/*.test.mjs`: tests 105, pass 105, fail 0.
+Checks (`node checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; channels 0 failures; coverage 30 failures, none in standards; words: no finding in `src/standards/` or `test/m/standards/` (repo-wide 3791 failures are other modules'). Ownership (`standards tranche/T51 job/T51/standards`): 3 files changed by standards, 0 failures. `setup-words --check`: the expected stale-rows note for `standards.index.cited_by_names_where_cited` only.
+
+Size (session_01GMf4vYSoxxQorhQmm2FhQa): test runs 4, module lines 3570
