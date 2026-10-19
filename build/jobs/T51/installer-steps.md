@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_01Qx72VGHw5GbtYV5ejL6hfD · depth 2 · WORKING · handled B6
+**Status** · session_01Qx72VGHw5GbtYV5ejL6hfD · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
