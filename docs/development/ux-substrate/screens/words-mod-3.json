@@ -937,46 +937,16 @@
    "note": "DEC-260: case-grammar, text"
   },
   {
-   "key": "case-grammar.text.case_states_account",
-   "en": "This case states no account.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, text"
-  },
-  {
-   "key": "case-grammar.blocks_predate_sentence",
-   "en": "this case document's format predates the statement of each capture's grade, co-attestation and source, so it states none; that is not a statement that there were none",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =BLOCKS_PREDATE_SENTENCE"
-  },
-  {
-   "key": "case-grammar.block_unreadable_sentence",
-   "en": "this case document declares a format that states each capture's grade, co-attestation and source, but carries no readable block for it, so what it stated is undetermined",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =BLOCK_UNREADABLE_SENTENCE"
-  },
-  {
    "key": "case-grammar.text.person",
    "en": "the same person as {source}",
    "protected": false,
    "note": "DEC-260: case-grammar, text"
   },
   {
-   "key": "case-grammar.withheld_source_reason",
-   "en": "the source has not consented to being named, and no public record names them",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =WITHHELD_SOURCE_REASON"
-  },
-  {
    "key": "case-grammar.one_line.received",
    "en": "{withheld_source_label}: {withheld_source_reason}; received as {digest} at {time}",
    "protected": false,
    "note": "DEC-260: case-grammar, oneLine()#0"
-  },
-  {
-   "key": "case-grammar.text.unreadable_value",
-   "en": "an unreadable value",
-   "protected": false,
-   "note": "DEC-260: case-grammar, text"
   },
   {
    "key": "case-grammar.freeze.claims",
@@ -987,42 +957,6 @@
   {
    "key": "case-grammar.freeze.findings",
    "en": "The findings",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.freeze.documents_observations",
-   "en": "The documents and observations",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.freeze.searched",
-   "en": "What was searched",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.freeze.declared_bias",
-   "en": "The declared bias",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.freeze.disclosed_contradictions",
-   "en": "Disclosed contradictions",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.freeze.how_grades_worked",
-   "en": "How grades are worked out",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.freeze.how_check_case",
-   "en": "How to check this case yourself",
    "protected": false,
    "note": "DEC-260: case-grammar, Object.freeze()#0"
   },
@@ -1045,92 +979,14 @@
    "note": "DEC-260: case-grammar, =ACCOUNT_HEADING"
   },
   {
-   "key": "case-grammar.review_comments_heading",
-   "en": "What reviewers said",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =REVIEW_COMMENTS_HEADING"
-  },
-  {
    "key": "case-grammar.agrees",
    "en": "recomputed at publication, and the result agrees with the one stored",
    "protected": false,
    "note": "DEC-260: case-grammar, agrees"
   },
   {
-   "key": "case-grammar.differs",
-   "en": "recomputed at publication, and the result differs from the one stored",
-   "protected": false,
-   "note": "DEC-260: case-grammar, differs"
-  },
-  {
-   "key": "case-grammar.unbound",
-   "en": "not recomputed at publication: an input it names was not bound",
-   "protected": false,
-   "note": "DEC-260: case-grammar, unbound"
-  },
-  {
-   "key": "case-grammar.not_recomputed",
-   "en": "not recomputed here: a workbook this team's Civicsmith did not recompute",
-   "protected": false,
-   "note": "DEC-260: case-grammar, not_recomputed"
-  },
-  {
-   "key": "case-grammar.two_strengths_sentence",
-   "en": "A case has two strengths, never one.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =TWO_STRENGTHS_SENTENCE"
-  },
-  {
-   "key": "case-grammar.capture",
-   "en": "Capture: how faithfully the documents this rests on were taken in, so that someone else can check they are what they say. A is the strongest, D the weakest. It never says whether the finding is true.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, capture"
-  },
-  {
-   "key": "case-grammar.connection",
-   "en": "Connection: how firmly those documents are tied to what the finding is about, so that someone else can follow the link. A is the strongest, D the weakest. It never says whether the finding is true.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, connection"
-  },
-  {
-   "key": "case-grammar.testimony",
-   "en": "Testimony: a member's own firsthand account, graded beside the two and never combined with them.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, testimony"
-  },
-  {
    "key": "case-grammar.text.made",
    "en": "Made with {product}",
-   "protected": false,
-   "note": "DEC-260: case-grammar, text"
-  },
-  {
-   "key": "case-grammar.text.location_stated",
-   "en": "no location stated",
-   "protected": false,
-   "note": "DEC-260: case-grammar, text"
-  },
-  {
-   "key": "case-grammar.text.unreadable_location",
-   "en": "an unreadable location",
-   "protected": false,
-   "note": "DEC-260: case-grammar, text"
-  },
-  {
-   "key": "case-grammar.title.case_file_readable",
-   "en": "A case file with no readable case document",
-   "protected": false,
-   "note": "DEC-260: case-grammar, title"
-  },
-  {
-   "key": "case-grammar.p.case_file_carries",
-   "en": "This case file carries no readable case document, so nothing of the case can be shown from it.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.text.bar_declared",
-   "en": "no bar declared",
    "protected": false,
    "note": "DEC-260: case-grammar, text"
   },
@@ -1159,18 +1015,6 @@
    "note": "DEC-260: case-grammar, said()#1"
   },
   {
-   "key": "case-grammar.p.case_document_lists",
-   "en": "This case document lists no materials.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.document_observation_reached",
-   "en": "No document or observation is reached by this case's findings.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
    "key": "case-grammar.li.extracted_text_fingerprint",
    "en": "Extracted text fingerprint: {text_sha}",
    "protected": false,
@@ -1189,24 +1033,6 @@
    "note": "DEC-260: case-grammar, li()"
   },
   {
-   "key": "case-grammar.li.included_whole_case",
-   "en": "Included whole in this case file.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, li()"
-  },
-  {
-   "key": "case-grammar.li.finding_case_relies",
-   "en": "A finding this case relies on rests on it.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, li()"
-  },
-  {
-   "key": "case-grammar.li.supporting_findings_rest",
-   "en": "Only supporting findings rest on it.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, li()"
-  },
-  {
    "key": "case-grammar.li.source",
    "en": "Source: {withheld_source_label}: {withheld_source_reason}.",
    "protected": false,
@@ -1217,12 +1043,6 @@
    "en": "Source: {withheld_source_label}",
    "protected": false,
    "note": "DEC-260: case-grammar, li()"
-  },
-  {
-   "key": "case-grammar.p.case_document_state",
-   "en": "This case document does not state what was searched.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
   },
   {
    "key": "case-grammar.p.computed_over_subject",
@@ -1261,22 +1081,10 @@
    "note": "DEC-260: case-grammar, li()"
   },
   {
-   "key": "case-grammar.p.case_disclosed_contradiction",
-   "en": "This case disclosed no contradiction.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
    "key": "case-grammar.li.seen_side_state",
    "en": "{finding}: {sentence} Seen side: {text}. State: {state}.",
    "protected": false,
    "note": "DEC-260: case-grammar, li()"
-  },
-  {
-   "key": "case-grammar.p.finding_graded_capture",
-   "en": "Each finding is graded on its own, on capture and on connection separately, as this case read it. Nothing combines them, and this case has no strength of its own.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
   },
   {
    "key": "case-grammar.li.frozen_strength_recorded",
@@ -1293,12 +1101,6 @@
   {
    "key": "case-grammar.p.case_graded_method",
    "en": "This case was graded by method {grading}, whose words this rendering does not hold.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.case_document_state_grading",
-   "en": "This case document does not state the grading method it was graded by.",
    "protected": false,
    "note": "DEC-260: case-grammar, p()"
   },
@@ -1321,44 +1123,8 @@
    "note": "DEC-260: case-grammar, p()"
   },
   {
-   "key": "case-grammar.p.run_checker_part",
-   "en": "2. Run the checker on every part of this case file. It checks every fingerprint and signature, finds each passage where it is said to be, works each grade out again by the method stated above, checks each relied-on finding against the bar, and runs the same publication checks.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.finding_recreated_recreated",
-   "en": "3. Each finding is then recreated, recreated in part (naming what is missing, such as a document to fetch: a document whose fingerprint matches completes it), or did not recreate (naming what differs).",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.recreating_case_shows",
-   "en": "Recreating a case shows it is intact and consistent. It does not show that it is true.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.title.case_file_read",
-   "en": "A case file that could not be read",
-   "protected": false,
-   "note": "DEC-260: case-grammar, title"
-  },
-  {
-   "key": "case-grammar.p.case_file_read",
-   "en": "This case file could not be read whole, so nothing of the case is shown from it.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
    "key": "case-grammar.p.already_shown_chain",
    "en": "{finding} is already shown above in this chain.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.chain_goes_deeper",
-   "en": "This chain goes deeper than six steps; the steps below are not followed.",
    "protected": false,
    "note": "DEC-260: case-grammar, p()"
   },
@@ -1399,20 +1165,8 @@
    "note": "DEC-260: case-grammar, li()"
   },
   {
-   "key": "case-grammar.li.case_states_acceptance",
-   "en": "This case states no acceptance for it.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, li()"
-  },
-  {
    "key": "case-grammar.li.open_flag_disclosed",
    "en": "An open flag is disclosed: {issue} (flagged {flagged_at}){owner_words}.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, li()"
-  },
-  {
-   "key": "case-grammar.li.chain_stops_finding",
-   "en": "The chain stops here: what that finding rests on is in its own case file.",
    "protected": false,
    "note": "DEC-260: case-grammar, li()"
   },
@@ -1421,30 +1175,6 @@
    "en": "The passages {finding} relies on:",
    "protected": false,
    "note": "DEC-260: case-grammar, esc()"
-  },
-  {
-   "key": "case-grammar.p.did_did_two",
-   "en": "What they did and what we did are two lists, never mixed. Each item shows the record it rests on.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.stated_lane",
-   "en": "Nothing is stated in this lane.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.calculation_reached_case",
-   "en": "No calculation is reached by this case's findings.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.calculation_stated_anyone",
-   "en": "Each calculation is stated so that anyone can run its recipe again on the same inputs. A result is a computed fact, never a judgment.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
   },
   {
    "key": "case-grammar.li.recipe",
@@ -1501,38 +1231,8 @@
    "note": "DEC-260: case-grammar, li()"
   },
   {
-   "key": "case-grammar.p.account_publisher_sentence",
-   "en": "The account is the publisher's own, sentence by sentence; every sentence rests on what it cites. A sentence framed by the team's declared bias is marked, and its statement named.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.outcome_carried_edition",
-   "en": "No outcome is carried into this edition.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.publisher_included_reviewer",
-   "en": "The publisher included no reviewer's comment.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.how_many_reviewers",
-   "en": "How many reviewers' comments were left out is not stated.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
    "key": "case-grammar.p.reviewer_comment_left",
    "en": "{left_out} reviewer's comment{were} left out by the publisher.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
-   "key": "case-grammar.p.approval_rule_force",
-   "en": "No approval rule was in force when this case was signed.",
    "protected": false,
    "note": "DEC-260: case-grammar, p()"
   },
@@ -1543,22 +1243,10 @@
    "note": "DEC-260: case-grammar, p()"
   },
   {
-   "key": "case-grammar.p.named",
-   "en": "no one named",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
-  },
-  {
    "key": "case-grammar.li.approved",
    "en": "Approved by {by}{at}.",
    "protected": false,
    "note": "DEC-260: case-grammar, li()"
-  },
-  {
-   "key": "case-grammar.p.approval_recorded",
-   "en": "No approval is recorded.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, p()"
   },
   {
    "key": "case-grammar.text.attested_member_group",
@@ -1603,48 +1291,6 @@
    "note": "DEC-260: case-grammar, p()"
   },
   {
-   "key": "case-grammar.scrutiny",
-   "en": "a source this team checks more closely before relying on it",
-   "protected": false,
-   "note": "DEC-260: case-grammar, scrutiny"
-  },
-  {
-   "key": "case-grammar.inference",
-   "en": "an inference this team allows or refuses to draw",
-   "protected": false,
-   "note": "DEC-260: case-grammar, inference"
-  },
-  {
-   "key": "case-grammar.pattern",
-   "en": "a pattern this team has evidence an institution or source follows",
-   "protected": false,
-   "note": "DEC-260: case-grammar, pattern"
-  },
-  {
-   "key": "case-grammar.freeze.everyone_investigates_looks",
-   "en": "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.freeze.group_declares_lens",
-   "en": "This team declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, Object.freeze()#0"
-  },
-  {
-   "key": "case-grammar.lens_none_sentence",
-   "en": "No manifest was in force when this case was published: no bias set stood adopted for it. That is stated, not left blank: it is a different fact from a lens with nothing in it.",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =LENS_NONE_SENTENCE"
-  },
-  {
-   "key": "case-grammar.lens_undetermined_sentence",
-   "en": "The lens this case was produced under is undetermined, so no statement is printed and nothing is claimed either way",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =LENS_UNDETERMINED_SENTENCE"
-  },
-  {
    "key": "case-grammar.text.acknowledgment_stated",
    "en": "No acknowledgment is stated.",
    "protected": false,
@@ -1661,30 +1307,6 @@
    "en": "{withheld} (which ones is not stated)",
    "protected": false,
    "note": "DEC-260: case-grammar, made.flatMap()#0"
-  },
-  {
-   "key": "case-grammar.group",
-   "en": "the team that publishes this case",
-   "protected": false,
-   "note": "DEC-260: case-grammar, team"
-  },
-  {
-   "key": "case-grammar.project",
-   "en": "the project that produced it",
-   "protected": false,
-   "note": "DEC-260: case-grammar, project"
-  },
-  {
-   "key": "case-grammar.cover",
-   "en": "the cover the team knows its author by",
-   "protected": false,
-   "note": "DEC-260: case-grammar, cover"
-  },
-  {
-   "key": "case-grammar.name.name_author_chose",
-   "en": "the name its author chose to appear under",
-   "protected": false,
-   "note": "DEC-260: case-grammar, name"
   },
   {
    "key": "case-grammar.text.case_rests_directly",
@@ -1711,12 +1333,6 @@
    "note": "DEC-260: case-grammar, .map()#0"
   },
   {
-   "key": "case-grammar.citations_undetermined_sentence",
-   "en": "version undetermined (signed before capture pins): this document was signed before a case's citation edges were pinned to the capture they were made against, and it carries neither",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =CITATIONS_UNDETERMINED_SENTENCE"
-  },
-  {
    "key": "case-grammar.map.cite_kind_stated",
    "en": "a cite of a kind not stated",
    "protected": false,
@@ -1739,12 +1355,6 @@
    "en": "Relied on",
    "protected": false,
    "note": "DEC-260: case-grammar, load_bearing"
-  },
-  {
-   "key": "case-grammar.text.role_case_stated",
-   "en": "Its role in this case is not stated",
-   "protected": false,
-   "note": "DEC-260: case-grammar, text"
   },
   {
    "key": "case-grammar.line.project_declared_bar",
@@ -1777,34 +1387,10 @@
    "note": "DEC-260: case-grammar, line"
   },
   {
-   "key": "case-grammar.line.standing_against_project",
-   "en": "Its standing against this project's bar could not be read",
-   "protected": false,
-   "note": "DEC-260: case-grammar, line"
-  },
-  {
    "key": "case-grammar.explained_not_shown",
    "en": "explained, not yet shown",
    "protected": false,
    "note": "DEC-260: case-grammar, explained_not_shown"
-  },
-  {
-   "key": "case-grammar.tension_depth_sentence",
-   "en": "a disclosure reaches one level: the contradictions on what each finding rests on directly; deeper findings disclose their own when published",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =TENSION_DEPTH_SENTENCE"
-  },
-  {
-   "key": "case-grammar.tensions_predate_sentence",
-   "en": "this case document's format predates the disclosure of contradictions, so it states none; that is not a statement that none existed",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =TENSIONS_PREDATE_SENTENCE"
-  },
-  {
-   "key": "case-grammar.tensions_unreadable_sentence",
-   "en": "this case document declares a format that discloses contradictions, but carries no readable tension section, so what it disclosed is undetermined",
-   "protected": false,
-   "note": "DEC-260: case-grammar, =TENSIONS_UNREADABLE_SENTENCE"
   },
   {
    "key": "case-grammar.by.case_owner",

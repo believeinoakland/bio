@@ -1339,7 +1339,6 @@
    "case-disclosures.copy_state_read_answered_refused",
    "case-disclosures.copy_state_read_answered_shape",
    "case-disclosures.credited_level_chose",
-   "case-disclosures.document_case_findings",
    "case-disclosures.document_case_rests",
    "case-disclosures.document_grade_attestation",
    "case-disclosures.document_observation_case",
