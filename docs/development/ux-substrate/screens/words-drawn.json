@@ -13946,15 +13946,15 @@
   },
   {
    "key": "screen.members.removing.teo.as.an.administrator",
-   "en": "Removing Teo as an administrator",
+   "en": "Removing {member} as an administrator",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal (adminremovalsopen target)"
   },
   {
    "key": "screen.members.four.administrators.rosa.dev.ana",
-   "en": "Four administrators: Rosa, Dev, Ana and Teo.",
+   "en": "{n} administrators: {members}.",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} every administrator counted, the one facing removal included; {members} their names as one list in the language's own list form (Intl.ListFormat, conjunction); who voted and who is awaited are the rows below it, one per member (screen.members.removal.*)"
   },
   {
    "key": "screen.members.this.takes.3.of.4",
@@ -13976,15 +13976,15 @@
   },
   {
    "key": "screen.members.agree.remove.teo.as.administrator",
-   "en": "Agree: remove Teo as administrator",
+   "en": "Agree: remove {member} as administrator",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal"
   },
   {
    "key": "screen.members.counted.in.the.4.doesn",
-   "en": "counted in the 4, doesn't vote",
+   "en": "counted in the {n}, doesn't vote",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} the administrators counted; the member's name heads the row, so the row needs no {member}"
   },
   {
    "key": "screen.members.2.of.3.have.agreed",
