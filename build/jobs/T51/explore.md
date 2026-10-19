@@ -1,6 +1,29 @@
 # explore (T51)
 
-**Status** · session_01DhoM1bGsPDhJhF74swQt5C · depth 2 · WORKING · handled B1
+**Status** · session_01DhoM1bGsPDhJhF74swQt5C · depth 2 · WORKING · handled B2
+
+## Completion (EXPLORE #7)
+
+**Entries applied.** T51-196 (the words pass, K3949): every finding in `build/plan/words-pass/explore.md` fixed, and the check (`checks/words.mjs explore`) shows 0. The three test copies of "declared, not evidenced" compare with `DECLARED_LABEL`. The inline and plain sentences are read through `localize` with fixed ids: `explore.answer.viewer_missing`, `explore.answer.bad_date_detail`, `explore.answer.date_named_why`, `explore.rederive.scope_derived`, `explore.rederive.scope_chain`, `explore.rederive.step_is_neither`, `explore.walk.kinds_is_list`, `explore.walk.sort_by_names`, `explore.walk.scope_names_one`, `explore.graph.rings_is_one_or_two`, `explore.presets.no_to_named`, `explore.timeline.set_is_over`, `explore.timeline.no_events_record`. The viewer sentence's en equals `duties.why.read_names_member`'s row; explore's own id reads it (BOB may prefer `word` on the duties row, K3992). The three "a scope is {inquiry}" sentences are reworded "a scope names one inquiry": `{inquiry}` would read as a placeholder.
+
+**Red tests (K3958, civil-time's keyed reasons): green.** A path's `undetermined.why` is now a list of `{hop, why}`, each `why` the reason as civil-time gives it (`{key, vars}`), not a joined string; overlaps' `why` and a date refusal's undetermined reason pass on the same way. Walk R4 and graph-chain R6/R4 assert the key `civil-time.end_stated`.
+
+**Tests asserted by key, not by text.** The timeline refusal is exported as `NO_EVENTS_RECORD` and compared by equality (`verify-timeline-ops`). `order.by`, `order.quantity`, `absence.reach`, `note`, `stopped_sentence`, `depth_sentence` and the tampered-id `why` are compared with `word`, `PATH_ORDER`, `QUANTITY_OF_PATH` or the same `word` key, not a regex on their text.
+
+**Not done / deferred.**
+- Regex assertions on explore's own sentence fragments remain (not counted by `checks/words.mjs`, so outside the findings list): `presets.test.mjs` 59, 88, 117; `verify-timeline-ops.test.mjs` 34–38, 64, 74, 129; `walk.test.mjs` 297–298; `graph-chain.test.mjs` 61. Each needs its word and its fills at the assertion. Left for BOB to rule whether to convert them in this pass.
+- Regex fragments of connection-grammar's `exhausted` reasons (`time budget`, `5000 nodes`, `visited its bound of 5000 nodes`) are another module's words. Left.
+
+**Found elsewhere (REPORT to BOB).**
+1. `connections` (not explore): `src/connections/stepsources.mjs:179` and `src/connections/mentioned.mjs:131` answer `undetermined: { why: <plain string> }`. connection-grammar's neighbours contract (K3958) requires a keyed reason, so explore refuses `connections` as `OWNER_NONCONFORMING` and `real-connections.test.mjs` (R24 over the real owners) stays red. Its fix belongs to `connections`.
+2. `checks/run.mjs` on the whole repo: 3,786 words failures in other modules (`wizard-scripts` test copies, 2,107 unkeyed, 247 dev). None in explore.
+3. `setup-words build.mjs --check`: `rows.mjs` is stale, as expected until BOB regenerates it. It names the new explore ids as missing rows; no refusal names explore.
+
+**Environment.** The M-X1a wall-clock tests pass on this container this session: 6 of 6, the 4,000-vote walk in 1,799 ms of 10,000 (K1726 chain 266–283 ms). The last session's note that they fail here is not reproduced.
+
+**Tests and checks.** `node --test test/m/explore`: 54 pass, 0 fail, excluding `real-connections.test.mjs` (1 test, red for the connections reason above). M-X1a: 6 pass. Checks: format 0 failures (175 modules); architecture explore 0 failures; coverage explore 26 of 26 live ids named; words explore 0 failures, rerun after the tranche merge; ownership explore `tranche/T51` → `job/T51/explore` 0 failures. Tranche merged (43dbc5e937, no change to explore or connections paths).
+
+Size (session_01DhoM1bGsPDhJhF74swQt5C): test runs 10, module lines 1094
 
 ## Completion (EXPLORE #6)
 
