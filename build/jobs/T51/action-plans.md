@@ -46,3 +46,7 @@ BOB's CHANGE applied. `refusal.PHASE_MALFORMED` is now read by `word` in `checks
 Checks rerun: 88 of 88 action-plans tests pass; `checks/words.mjs` 0 failures for action-plans; `checks/architecture.mjs` and `checks/format.mjs` 0 failures; `checks/coverage.mjs` 51 of 51.
 
 Test runs: 7 (6 before, 1 after the change). Size (session_014XCjtGo1PwP3JkN5NxAqDd): test runs 7, module lines 3330
+
+## J2 · COMPLETE
+
+Change B2 applied on job/T51/action-plans (commit after e867f14aef): PHASE_MALFORMED reads refusal.PHASE_MALFORMED by word; the localize id a_phase_has_an_id is retired; R47 title drops the control clause. 88 of 88 tests pass; words, architecture, format, coverage and ownership show 0 failures for action-plans. Record: build/jobs/T51/action-plans.md, section "Change B2".
