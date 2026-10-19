@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { subscriptionSignin, subscriptionDisconnect, signoutLeaver, leaverOf, tokenRefusedSeen, signintrace,
          memberRefOf, testInstanceOf, SIGNIN_WORDS, TRACE_HEADER, MEMBER_REF_HEADER } from "../../../src/signin-door/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const ANN = "member:ann";
 const TEST_ENV = { CIVICSMITH_TEST_INSTANCE: "civ-test", INSTANCE_NAME: "civ-test" };
@@ -131,8 +132,8 @@ test("R1: with no `AGENT_WORKER` binding the door answers 503 AGENT_WORKER_UNBOU
     .go({ step: "start" });
   assert.deepEqual([absent.status, absent.body.code, absent.body.reason, absent.body.detail, absent.body.translation],
                    [503, "RUNNER_NOT_CONFIGURED", "RUNNER_NOT_CONFIGURED", "x", SIGNIN_WORDS["ai.refused.signinabsent"]]);
-  assert.equal(SIGNIN_WORDS["ai.refused.signinabsent"], "Signing in with Claude is not installed in your team's Civicsmith yet. "
-    + "Whoever installed your team's Civicsmith can add it.");
+  assert.ok(hasWord("ai.refused.signinabsent"), "the translation is held by key");
+  assert.equal(SIGNIN_WORDS["ai.refused.signinabsent"], word("ai.refused.signinabsent"));
   const kept = await world({ reply: () => json(503, { ok: false, reason: "RUNNER_NOT_CONFIGURED", translation: "theirs" }) }).go({ step: "start" });
   assert.equal(kept.body.translation, "theirs");
 });

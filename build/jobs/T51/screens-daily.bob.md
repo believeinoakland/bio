@@ -52,3 +52,7 @@ And DEC-361 (U391): `queue.feed.action`, `queue.feed.wizards` reworded; `screen.
 ## B7 · CHANGE
 
 CHANGE (K4088), re J4: the design @ 112748edcf (DEC-363, U393) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your row, from the design's answer verbatim: `screen.home.area.edition.draftonly.comments.one` "A draft of {case} is shared for review until {until}, 1 comment to answer"; `.draftonly.comments` is for two or more.
+
+## B8 · CHANGE
+
+CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.

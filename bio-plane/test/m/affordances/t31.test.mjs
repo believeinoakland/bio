@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { caseImportOps } from "../../../src/case-import/index.mjs";
+import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 import * as ci from "../case-import/fixture.mjs";
 
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, decorate, unaccounted } = A;
@@ -95,10 +96,11 @@ test("R36 R11 R17: every decorated act, capture act and set act op=affordances c
 });
 
 /* ============================================================ wizard-scripts' ops (op-grades R11) */
-const WIZARD_WRITES = ["wizardretire", "wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit", "wizardapprove",
-  "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress"];
-const WIZARD_READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck",
-  "baseupdates" /* op-grades R11 (DEC-158 (4)) */, "startfrom" /* op-grades R17 (op-declarations R28) */];
+/* The ops are wizard-scripts' own op map's; a write is one op-grades ranks (a rung or a stated absence), a read the rest
+   (op-grades R11: DEC-158 (4)'s `baseupdates`, R17's `startfrom` among them), so an op the map gains is seen. */
+const WIZARD_OPS = Object.keys(wizardScriptsOps({}, new URL("http://x/"), {}));
+const WIZARD_WRITES = WIZARD_OPS.filter((op) => Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op));
+const WIZARD_READS = WIZARD_OPS.filter((op) => !WIZARD_WRITES.includes(op));
 
 test("R1 R12 R24: wizard-scripts' ops — each write decorates with a rung or a stated absence, none is an act — and with "
    + "the control plane's rows nothing is unaccounted; one left out is seen", () => {
@@ -162,11 +164,13 @@ test("R19: importwatch and importunwatch, graded `reversible`, ask no reason —
 
 /* ============================================================ R37: the no-target answer; wizardretire's backing (R19) */
 import * as wz from "../wizard-scripts/fixture.mjs";
-import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 
-test("R12: wizard-scripts' op map holds exactly the ops op-grades grades and names for it", () => {
-  const ops = Object.keys(wizardScriptsOps({}, new URL("http://x/"), {})).sort();
-  assert.deepEqual(ops, [...WIZARD_WRITES, ...WIZARD_READS].sort());
+test("R12: wizard-scripts' op map holds exactly the ops op-grades grades and names for it — each write ranked, each read named "
+   + "in NON_ACTS, and the map is neither empty of writes nor of reads", () => {
+  assert.ok(WIZARD_WRITES.length > 0 && WIZARD_READS.length > 0);
+  assert.deepEqual(WIZARD_WRITES.filter((op) => !Object.hasOwn(NON_ACTS, op)), [], "every write is named in NON_ACTS");
+  assert.deepEqual(WIZARD_READS.filter((op) => !Object.hasOwn(NON_ACTS, op)), [], "every read is named in NON_ACTS");
+  assert.deepEqual(WIZARD_READS.filter((op) => Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)), [], "no read is ranked");
 });
 
 /* A wizard world: frank's script in P approved by alice (starting on case-home), a second draft of frank's still a

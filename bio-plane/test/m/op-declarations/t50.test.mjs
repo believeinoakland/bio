@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import { T50_SHARES, T50_FAMILIES } from "../../../src/op-declarations/t50.mjs";
 import { needsRows } from "../../../src/op-capabilities/index.mjs";
 import { SCREEN_REGISTRY, INSTALLER_ROUTES, registryActGaps } from "../../../src/wizard-scripts/index.mjs";
@@ -33,7 +34,6 @@ const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
 const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
   .filter((n) => !["FAMILY_OPS", "FAMILY_SESSION_OPS"].includes(n)).sort();
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 /* a caller not arriving by a session is judged against machineClasses where given (admission R5) */
 const machineAdmits = (op) => ["admin", "member", "probe", "daemon", "ai"].filter((c) => (OPS[op].machineClasses ?? OPS[op].classes ?? []).includes(c));
 
@@ -388,11 +388,14 @@ test("R75 (T50; affordances R64, R66; DEC-264, DEC-309 (5)): reauth leaves ACT_H
 
 test("R73, R21 (T50; wizard-scripts R41, B2 CHANGE): every act of the registry has a declaration — registryActGaps over SCREEN_REGISTRY and the declared ops finds none, the installer's four own routes excluded by name — and the check sees a gap (negative control: an op withdrawn from the declared set is found)", () => {
   const declared = new Set(Object.keys(OPS));
-  assert.deepEqual(registryActGaps({ screens: SCREEN_REGISTRY, declared }), []);
+  /* T51 (R76): the seven browser acts are owed rows of the registry and no op, a class of their own: they are the only gaps */
+  const gapsOf = (d) => registryActGaps({ screens: SCREEN_REGISTRY, declared: d });
+  assert.deepEqual(gapsOf(declared).filter((g) => !Object.hasOwn(O.BROWSER_ACTS, g.act)), []);
+  assert.deepEqual(gapsOf(declared).map((g) => g.act).sort(), Object.keys(O.BROWSER_ACTS).sort());
   for (const op of INSTALLER_ROUTES) assert.equal(Object.hasOwn(OPS, op), false, `${op}: declared`);
   for (const op of ["watchitem", "secondlook", "secondlookclear", "projectstakeset", "actionstake", "actioninquiry"]) assert.ok(declared.has(op), op);
   const without = new Set([...declared].filter((op) => op !== "secondlookclear"));
-  assert.deepEqual(registryActGaps({ screens: SCREEN_REGISTRY, declared: without }).map((g) => g.act), ["secondlookclear"]);
+  assert.deepEqual(gapsOf(without).filter((g) => !Object.hasOwn(O.BROWSER_ACTS, g.act)).map((g) => g.act), ["secondlookclear"]);
 });
 
 test("R73, R3 (T50; B3, screens-investigate R31): themeread and instances are in both session sets, so the act gate answers session for a member and the theme screen draws its Search act; their specs are unchanged and no NEEDS row gates them (negative control: an op in neither set answers machine)", () => {
