@@ -139,3 +139,31 @@ So "R151's test passes unchanged, module suite green" cannot hold: the reads-lis
 **Size**: no change to the module's source from this job; module lines 1625 as at J6.
 
 Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 4, module lines 1625
+
+## J8 · COMPLETE
+
+**COMPLETE**, for B7 (ANSWER to J7, K4037), on `job/T51/membership` (commit `0751660c3e`); `tranche/T51` merged first.
+
+**Entries applied**
+1. **`WORD_KEYS` is the module's own keys (DEC-345).** `index.mjs`: its own rows (`MEMBERSHIP_CHECKS` minus member-roster's codes; the project and case-authority tables) and `SENTENCE_KEYS`, which is exactly the 15 keys of `membership`'s `words-reads.json` entry. Member-roster's keys stay on member-roster's own `WORD_KEYS`.
+2. **Four union assertions re-pointed, not weakened.** `t50-words.test.mjs` (the count bound, the refusal-row loop, the table-codes loop) and `t41-sight-words.test.mjs` (`handle.refused.paused` and the negative control) now check against `HELD = [...WORD_KEYS, ...member-roster's WORD_KEYS]`, read from member-roster's own export (K3268). The count bound is now the union's count (≥ 60). The reads-list test (`t50-words.test.mjs`:36) is unchanged and passes.
+3. **Test copy found by `run.mjs`.** `t35-words.test.mjs`:65 held member-roster's sentence "setting a member's capabilities"; it now reads `localize("member-roster.index.setting_a_members_capabilities", …)`, the id member-roster's `index.mjs` uses (K3810). The membership words check (`words.mjs membership`) listed no testcopy for it; `run.mjs` on the tranche did, so I fixed it.
+
+**Deferred**: none.
+
+**Found in other modules** (not changed): none new. `run.mjs` on `/home/user/bio` has no finding naming `membership`.
+
+**Checks**, from the process repository:
+- `format.mjs /home/user/bio`: 0 failures.
+- `architecture.mjs /home/user/bio membership`: 0 failures.
+- `coverage.mjs /home/user/bio membership`: 49 of 49 live ids named; 0 failures.
+- `words.mjs /home/user/bio membership`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures.
+- `ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`: 0 failures (5 files changed by membership, all in its paths or its record).
+- `run.mjs /home/user/bio`: no line names `membership`.
+- `setup-words/build.mjs --check`: stale-rows note only (expected; BOB regenerates at the layer close).
+
+**Tests**: `node --test test/m/membership/*.test.mjs test/members.test.mjs` from `bio-plane/`: 172 pass, 0 fail (the R151 reads-list test passes unchanged).
+
+**Raw lines of source**: `bio-plane/src/membership/` four files: 1,627 (was 1,625; the import swap and the own-keys block).
+
+Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 8, module lines 1627
