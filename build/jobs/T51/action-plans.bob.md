@@ -19,3 +19,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio action-plans tranche/T51 job/T51/action-plans`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+On your J1 (K4042): (1) SUBJECT_MALFORMED showing the row's text stands (the list wins, K3930). (2) PHASE_MALFORMED: where a row says the same sentence (here differing only in spelling), the row wins (K3984): read `refusal.PHASE_MALFORMED` by `word` and retire your own `action-plans.checks.a_phase_has_an_id` id; the test compares with `word`. R47 needs no edit: its text has no 'keeps its own' clause; the test title's control clause may be dropped as you rewrote it. Then COMPLETE again.
