@@ -1,6 +1,6 @@
 # journey-check (T51)
 
-**Status** · session_01DySLHCA8d6vPi2gDtHEtm3 · depth 2 · COMPLETE · handled B3
+**Status** · session_01DySLHCA8d6vPi2gDtHEtm3 · depth 2 · COMPLETE · handled B5
 
 ## Completion record (JOURNEY-CHECK #7)
 
@@ -51,3 +51,19 @@ R27 escaped texts (last full local walk, 1280 px; the 390 px pass repeats them),
 Not counted now, as data: profile display names, a.cs-ref record kinds ("Firsthand observation, observed"), the elsewhere organisation names, descriptions and addresses, the security catalogue row names ("Light and above" and the vendor names among them).
 
 Harness text for the design's unkeyed list (K3944), no member reads it: step labels (investigation.mjs: "document: its first page reads Page 1", "document: the capture states no page, so none is drawn", "assistant not ready: the connect screen" / "the question's dock" / "the Ask screen" / "her connect screen" (run.mjs x2); journeys.mjs: "sign: /sign answers the nothing-is-here page", the 3 old labels at :197 :212 :328; published.mjs: "published: no case on this instance", "...a minimum strength, the filtered view and the way back", "...a finding's page, and back", "...Print the case, the browser's print stubbed"); the states table in states.mjs (descriptive state names, 7 flagged); diagnostics run.mjs:278 and :360, runner.mjs:94, :99, :100; ADMIN_READING (investigation.mjs, walk data typed into a form).
+
+## B4–B6 (CHANGE K4105, K4107, K4111)
+Merged `tranche/T51`; R1 (a) and the six tests after it were not run (B6, accepted red until BOB's one walk). Module's own suite without journey.test.mjs: 76 pass, 0 fail (group.test.mjs :19 now green after DEC-355). Checks: format, architecture, ownership 0 failures; words 0; coverage misses only R19.
+Findings of the K4105 run, and their tests:
+- R27 on `elsewhere`/`places` profile values: data (`pseudo.mjs` DATA, `[data-screen="elsewhere"|"places"] li`); test "R27 (K4086, K4111)" in dec340.test.mjs (profile values and the profile's display name not reported; a hard-coded sentence beside them reported; control).
+- R27 on vendor/product names: data (`.mk-rowname`, `a.cs-ref`); same test (vendor names not reported, control).
+- R27 on `setup` catalogue labels: file-scanner's (CR-17), not mine.
+- `investigation.mjs`:422 fixture text: the walk's own reading is now `NOTICE_PASSAGE` (city.mjs fixture), no inline sentence; words check 0.
+- `document` heading: step requires `document.read.title` (B5); same test requires it and rejects "Passages"; words.test.mjs key list updated.
+- `dash-project` from Home: screens-daily's; my step unchanged (R22).
+Other `setup`/screen strings that are neither profile data nor the catalogue: none left on `setup` except the legends "google-web-risk", "opswat-deep-cdr" (provider ids drawn as text: file-scanner catalogue / screens-settings). "Light and above" and "stated by the administrator" are catalogue row texts on `security` (file-scanner catalogue; excluded as `.mk-rowname`, so if BOB wants them keyed they are file-scanner's). Also not covered by me: `held` span.meta "roof-repairs-at" (a slug drawn as text; screens-intake) and `elsewhere` link slugs ("Report-an-Issue-OAK", "get-legal-help": profile data drawn as text).
+
+## J3 · COMPLETE
+
+COMPLETE (B4, B5, B6 applied). Findings of the K4105 run and my tests: R27 elsewhere/places profile values and R27 vendor names -> data classes in pseudo.mjs, test "R27 (K4086, K4111)" (dec340.test.mjs: profile values, profile name and vendor names not reported; hard-coded sentence beside them reported); investigation.mjs:422 -> reading is now the fixture's NOTICE_PASSAGE, words check 0; document heading -> step requires document.read.title, same test and words.test.mjs; setup catalogue labels -> file-scanner's CR-17; dash-project -> screens-daily. Own suite (without journey.test.mjs, per B6): 76 pass, 0 fail; group.test.mjs:19 green. Checks: format, architecture, ownership 0; words 0; coverage only R19.
+Remaining strings not profile data or catalogue: none on setup but the legends "google-web-risk" and "opswat-deep-cdr" (provider ids drawn as text; file-scanner catalogue / screens-settings). "Light and above", "stated by the administrator" are catalogue row texts on security (file-scanner; I exclude them as .mk-rowname). Not covered by me: held span.meta "roof-repairs-at" (slug drawn as text, screens-intake) and elsewhere link slugs ("Report-an-Issue-OAK", "get-legal-help"; profile data drawn as text). Details in build/jobs/T51/journey-check.md.

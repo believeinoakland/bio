@@ -175,7 +175,7 @@ async function readAndCite(walk, page, { document, question, phrase = FIND_PHRAS
   await walk.step(page, localize("journey-check.investigation.v1_open_the_document_see", "{v1}open the document, see its words, and Find-in a passage", { v1: String(prefix ? prefix : "7 · ") }), async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
-    await requireWord(p, "screen.document.passages.head", { within: "#cs-main" });
+    await requireWord(p, "document.read.title", { within: "#cs-main" });
     /* its words (extraction R76's `text_units`, K3399): the notice's passage drawn on its page */
     if (!(await p.locator("#cs-main").textContent()).replace(/\s+/g, " ").includes(passage))
       throw new Error("the document's words are not drawn on its page");
@@ -344,7 +344,7 @@ export async function walkAdministrator(walk, page, { base, founder, codeOf = nu
     await notReady(walk, page, base, { label: "assistant not ready: the question's dock", path: new URL(question).pathname, screen: "question", names: [STEP_NAMES.run, STEP_NAMES.read] });
     await notReady(walk, page, base, { label: "assistant not ready: the Ask screen", path: "/app/answers", screen: "answers", names: [STEP_NAMES.ask] });
     /* step 12 on the member's own reading, which needs no assistant (R16, screens-inquiry R50) */
-    await concludeOwn(walk, page, { label: "12 · conclude on her own reading, as the project's", question, reading: ADMIN_READING,
+    await concludeOwn(walk, page, { label: "12 · conclude on her own reading, as the project's", question, reading: NOTICE_PASSAGE,
       falsifier: "The city withdrawing or amending notice 2026-118", commentary: "The city's notice orders the landlord to repair the roof within 28 days." });
   }
   return { project, question };
@@ -419,7 +419,6 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
    address, the copy vouched for, its passage cited, and the conclusion made on her own reading, which the screen offers
    beside the readings to conclude on (`question.conclude.own.choice`, `.field`, `.help`) and draws as hers
    (`question.reading.by.member`). Each is asserted by its key (R14). The steps are labelled "no assistant · …". */
-export const ADMIN_READING = "The city's notice 2026-118 orders the roof repaired within 28 days.";
 export const OWN_PROJECT = "Heating at 14 Lakeshore Row";
 export const OWN_QUESTION = "Has the landlord been ordered to restore the heating of flat 6 at 14 Lakeshore Row?";
 export const OWN_READING = "The city's notice 2026-131 orders the landlord to restore the heating of flat 6 within 7 days.";
