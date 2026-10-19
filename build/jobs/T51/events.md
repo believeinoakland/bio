@@ -11,3 +11,7 @@
 **Tests and checks.** events: 86 pass, 0 fail. Users of events (30 modules): 2898 tests, 35 fail, the same 35 fail identically on `tranche/T51` (inherited: lines, people, progressions, duties, explore, calculations, op-declarations and others), none from this job. format 0 failures; architecture (events) 0; coverage (events) 54 of 54; ownership 0 failures (17 files); words: no finding in events; `setup-words build --check`: stale-rows note only.
 
 Size (session_016Bd2g2kmHNsaxikJ2F4Zmh): test runs 8, module lines 2778
+
+## J1 · COMPLETE
+
+events CR-7 complete on job/T51/events: R54 keys, owner words from the list, 5+60 words findings and other refusal sentences converted, tests rewritten, R54 test added. Events 86/86; users' 35 reds are identical on tranche/T51 (inherited). All checks 0 failures. REPORT items (diagnostic strings, missing label.connectionkinds.event_* rows, proceedingStatusAt string whys, timeline item why now keyed) are in my record.
