@@ -14,22 +14,13 @@ export const PUBLISHED = Object.freeze({
   reads: function (view) {
     if (!view.parts.subject(view, 1)) return {}; // K3171: no subject in the address, no subject read
     const s = String(view.subject || "").split("/");
-    // R37: one finding's page is `publishedcase` asked by the finding's id, at the case and edition the address names (public-read
-    // R39); a finding several cases pin is answered by the cases it names, drawn as references.
-    const query = s[2] ? { id: s[2], caseId: s[0] } : { id: s[0], caseId: s[0] };
+    // R37: one finding's page is `publishedcase` asked by the finding's id, which `render` reads once, asynchronously (R36), so that a
+    // finding several cases pin can be answered by the cases it names (the shell gives a read's refusal no kit to draw them with).
+    const query = { id: s[0], caseId: s[0] };
     if (s[1]) query.edition = s[1];
-    return {
+    return s[2] ? { group: { op: "groupidentity" } } : {
       group: { op: "groupidentity" },
-      edition: { op: "publishedcase", query: query, subject: true, refusals: {
-        FINDING_IN_SEVERAL_CASES: function (r, cs) {
-          const m = Array.isArray(r.memberships) ? r.memberships : [];
-          const asked = String(r.target || "");
-          return cs.w("refusal.FINDING_IN_SEVERAL_CASES", r) + " " + m.map(function (x) {
-            const sub = encodeURIComponent([x.case_id, x.edition, asked].join("/"));
-            return '<a href="/app/published/' + sub + '" data-nav>' + cs.esc(x.case_id) + "</a>";
-          }).join(" · ");
-        },
-      } },
+      edition: { op: "publishedcase", query: query, subject: true },
     };
   },
 
@@ -38,10 +29,23 @@ export const PUBLISHED = Object.freeze({
     const P = view.parts, ui = view.ui;
     const g = view.data.group && view.data.group.state === "ok" ? view.data.group.value : null;
     const group = g ? g.display_name || g.group || "" : "";
-    const e = P.answer(view);
     const sub = String(view.subject || "").split("/");
+    // R37: one finding's own page, from the read asked by its id (public-read R39), at the case and edition the address names
+    const L = sub[2] ? P.later(cs, view, "finding", "publishedcase", { query: Object.assign({ id: sub[2], caseId: sub[0] }, sub[1] ? { edition: sub[1] } : {}) }) : null;
+    const e = L ? (L.state === "ok" ? L.value : null) : P.answer(view);
     const out = [cs.title(e ? e.scope || e.project_reference || e.caseId || null : null, { thing: "case" })];
-    if (!e) { out.push(cs.state("edition", function () { return ""; })); return out.join(""); }
+    if (L && L.state === "failed" && L.refusal) {
+      const code = L.refusal.code, f = L.fields || {};
+      // a finding nothing published answers is "Nothing is here"; one several cases pin is answered by the cases it names
+      if (code === "NOT_PUBLISHED" || /^NO_SUCH_/.test(code)) return P.nothing(cs, "public");
+      if (code === "FINDING_IN_SEVERAL_CASES") {
+        const m = Array.isArray(f.memberships) ? f.memberships : [];
+        return out.join("") + '<p class="cs-state" data-state="failed" role="alert">' + L.refusal.words + " " + m.map(function (x) {
+          return '<a href="' + P.hrefOf(x.case_id, x.edition, f.target || sub[2]) + '" data-nav>' + cs.esc(x.case_id) + "</a>";
+        }).join(" · ") + "</p>";
+      }
+    }
+    if (!e) { out.push(L ? cs.state(L, function () { return ""; }) : cs.state("edition", function () { return ""; })); return out.join(""); }
     const caseId = String(e.caseId || sub[0]);
 
     // R37: one finding's own page; a finding the edition does not hold is "Nothing is here"

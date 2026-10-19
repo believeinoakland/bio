@@ -179,3 +179,25 @@ export function choose(p, id, bytes) {
   const el = p.doc.getElementById(id);
   el.files = [{ name: "f.pdf", size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) }];
 }
+
+/* ---------- T51-121: one finding's page, a reader's minimum, printing, the review copy as a file ---------- */
+
+export const F1 = "FND-2026-0031";
+export const F2 = "FND-2026-0032";
+/** The signer's key as the answer states it (an SSH wire key, base64): its fingerprint is the SHA-256 of these bytes. */
+export const SIGNER_KEY = Buffer.from("civicsmith-test-signer-key-bytes").toString("base64");
+export const leg = (target, role, grade, axis, o = {}) => ({ target, role, grade, grade_axis: axis, grade_source: "case", target_edition: 1, served: false, cited_edition: null, detail: null, ...o });
+/** A published finding entry of `publishedcase` (public-read R39), with the bytes it was published from. */
+export const FINDING = (id, o = {}) => ({ bundle_id: id, title: "A finding", edition: 1, bundle_sha: B1, version_sha: B1, role: "load_bearing", ratified_at: "2026-11-18T10:00:00Z",
+  attestor: { member: "rosa", key_b64: SIGNER_KEY }, delivered_by: "dev",
+  body: { state: "published", from_sha: B1, question: "Were the 2024 rent adjustments lawful?", conclusion: "The 2024 adjustments were made without the council vote the lease requires.",
+    authored: { conclusion: "x", falsifier: "A council vote on the 2024 adjustments, in the minutes of any meeting between January and March 2024.", falsifier_override: null } },
+  strength: [{ axis: "capture", grade: "B" }, { axis: "connection", grade: "B" }],
+  standing: { role: "load_bearing", bar: { capture: "B", connection: "B" }, meets: true, short: [], line: "" },
+  basis: [], serves: [], names: [], unresolved: [], division: { parent: null, siblings: [], detail: null }, ...o });
+/** A case answer holding `findings`, as `publishedcase` gives it for a case, or for one finding (`asked`). */
+export const CASE_WITH = (findings, o = {}) => ({ caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z",
+  editions: [{ edition: 1 }, { edition: 2 }], manifest_sha: SHA, files: [], findings, method: { timeline: [] }, people: [], captures: [], corrections: { count: 0, last: null }, ...o });
+export const publishedPlane = (findings, o = {}) => ({ publishedcase: ok(CASE_WITH(findings, o)) });
+/** The address of a finding's own page. */
+export const findingPath = (id, edition = 2) => `/app/published/${encodeURIComponent(`${C}/${edition}/${id}`)}`;

@@ -17,7 +17,7 @@ export const PARTS = Object.freeze({
         const r = a && a.result !== undefined ? a.result : a;
         if (!a || a.ok === false || (r && r.ok === false)) {
           const f = r && r.ok === false ? r : a || {};
-          settle({ state: "failed", refusal: { code: String(f.code || f.reason || ""), words: view.parts.refusalText(cs, f) || cs.w("shell.unread") } });
+          settle({ state: "failed", fields: f, refusal: { code: String(f.code || f.reason || ""), words: view.parts.refusalText(cs, f) || cs.w("shell.unread") } });
         } else if (typeof isEmpty === "function" && isEmpty(r)) settle({ state: "empty", value: r });
         else settle({ state: "ok", value: r });
       }, function () { settle({ state: "failed", refusal: null }); });
