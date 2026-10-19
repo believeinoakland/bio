@@ -38,3 +38,7 @@ COMPLETE · screens-investigate · T51-120 applied in full; one inherited-text c
 **Tests and checks** (from `bio-plane`): `node --test test/m/screens-investigate/`: 155 pass, 0 fail (it was 140 pass, 9 fail at the START). The tests of the modules that name my module (`plane/t47`, `plane/t50`, `op-declarations/t50`, `control-plane/t46-app`, `people/why`) pass; `interface-shell/t50` fails on a case not mine (Report 7). From the process repository: `format` 0 failures; `architecture screens-investigate` 0 failures (the one failure over the whole tree is answer-envelope's); `coverage screens-investigate` 48 of 48 live ids named by a test, 0 failures; `ownership … tranche/T51 job/T51/screens-investigate` 21 files, 0 failures; `words` over the whole tree names my module on the eight lines of Report 1 only; `setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match words.json and the source.
 
 Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 38, module lines 2,855
+
+## J3 · COMPLETE
+
+COMPLETE (re B3, K4084): merged tranche/T51; People's Show choice and the add form's kinds now read the design's keys (screen.people.show.offices..sources, screen.people.add.kind.office..source) in place of the find.row.kind stand-ins. 155 pass, 0 fail; format, architecture, coverage (48/48), ownership 0 failures; words names this module only on the eight "declared, not evidenced" lines (now unkeyed by the design). Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 41, module lines 2,855
