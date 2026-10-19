@@ -550,7 +550,7 @@ export class LocalFacts {
       }
       if (year === null)
         return { ok: true, path: null, via: "none", lines: [],
-                 why: "the year is undetermined: give `year`, or `at` with a profile time zone to read its local year" };
+                 why: localize("local-facts.index.the_year_is_undetermined", "the year is undetermined: give `year`, or `at` with a profile time zone to read its local year") };
     }
     /* the path of `office`'s own fact in the profile, or null */
     const own = (office) => {
@@ -586,7 +586,7 @@ export class LocalFacts {
     if (!entity) return fallback(word("local-facts.registry_entity_given"));
     if (!this.lines && this.host) { try { this.lines = linesOf(this.host); } catch { this.lines = null; } }
     if (!this.lines || typeof this.lines.structureAt !== "function")
-      return fallback("`lines` is not reachable on this host, so no part_of line was followed");
+      return fallback(localize("local-facts.index.lines_is_not_reachable", "`lines` is not reachable on this host, so no part_of line was followed"));
     if (!at) return fallback(word("local-facts.date_given_part"));
     const followed = [], seen = new Set([entity]);
     let cur = entity;
