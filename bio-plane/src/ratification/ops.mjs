@@ -137,7 +137,7 @@ async function caseCeremony(req, stub, ctx, later) {
 
     if (facts.doc.doc_sha !== body.expectedSha)
       return json({ ok: false, reason: "CASE_RATIFY_STALE",
-                    detail: "the case document has changed since it was reviewed; read it again and re-sign",
+                    detail: localize("ratification.ops.the_case_document_has_changed", "the case document has changed since it was reviewed; read it again and re-sign"),
                     expected: facts.doc.doc_sha, got: body.expectedSha,
                     store: storeName, tokenClass: cls }, 409);
     /* R49 (T41; D60): APPROVAL_MISSING (C-58.11), after CASE_RATIFY_STALE and before the signature is weighed, asked of
@@ -153,7 +153,7 @@ async function caseCeremony(req, stub, ctx, later) {
        you" — the same sentence op=ratify carries, for the same reason. */
     if (!facts.signers.length)
       return json({ ok: false, reason: "NO_SIGNERS",
-                    detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
+                    detail: localize("ratification.ops.no_active_registered_signing_keys", "no active registered signing keys; an admin must register a member key before anything can be ratified"),
                     store: storeName, tokenClass: cls }, 409);
     const sv = await verifySshsig(body.sig,
                                   caseRatifyStatement(facts.doc.case_id, facts.doc.edition, facts.doc.doc_sha),
@@ -279,7 +279,7 @@ async function caseCeremony(req, stub, ctx, later) {
                   next: r.awaiting?.length
                     ? localize("ratification.ops.the_case_is_committed_length", "the case is committed. {length} member finding(s) still to ratify (op=ratify): {awaiting}. This edition becomes servable as a container when the last of them lands.", { length: String(r.awaiting.length), awaiting: String(r.awaiting.join(", ")) })
                     : localize("ratification.ops.the_case_is_committed_and", "the case is committed and every member finding is already ratified at the version this case pinned{v1}", { v1: String(container && container.manifest_sha
-                        ? `, so its container is assembled (${container.zip}).` : ".") }),
+                        ? localize("ratification.ops.so_its_container_is_assembled", ", so its container is assembled ({zip}).", { zip: String(container.zip) }) : ".") }),
                   store: storeName, tokenClass: cls });
 }
 
@@ -467,7 +467,7 @@ export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
   if (early) return refuse(early.body, early.status);
   if (!facts.signers.length)
     return refuse({ ok: false, reason: "NO_SIGNERS",
-                    detail: "no active registered signing keys; an admin must register a member key before anything can be ratified" }, 409);
+                    detail: localize("ratification.ops.no_active_registered_signing_keys", "no active registered signing keys; an admin must register a member key before anything can be ratified") }, 409);
   const sv = await verifySshsig(sig, ratifyStatement(bundleId, expectedSha), NS_RATIFY,
                                 keys || facts.signers.map((s) => s.key_b64));
   if (!sv.ok)
