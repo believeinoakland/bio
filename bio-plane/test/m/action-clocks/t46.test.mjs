@@ -8,6 +8,7 @@ import { world, V, MACHINE, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import { get } from "../../../../jurisdictions/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
@@ -85,10 +86,10 @@ test("R20 clockProposalsFor answers the standing proposals on a visible action, 
     [p.proposal.key, "records_answer", "2026-09-07", null, p.proposal.entry.basis, MACHINE, "2026-09-28T12:00:00Z"]);
   assert.deepEqual(mach.entry, p.proposal.entry, "the entry R2 proposed");
   assert.deepEqual(mach.trace, p.proposal.trace, "the trace R2 answered");
-  assert.match(mach.trace_line, /^5 business days after 2026-09-01/);
+  assert.ok(mach.trace_line.startsWith(localize("action-clocks.count.amount_unit_after_anchor", "{amount} {unit} after {anchor}", { amount: "5", unit: "business days", anchor: "2026-09-01" })));
   assert.deepEqual(mach.label, { by: MACHINE, state: "machine_proposed", machine_work: true, says: p.proposal.says });
   assert.deepEqual([mine.key, mine.date, mine.label.state, mine.label.machine_work], [u.proposal.key, null, "member_proposed", false]);
-  assert.match(mine.undetermined, /no sent entry/, "undetermined, with why");
+  assert.ok([word("action-clocks.why.action_ledger_holds"), word("action-clocks.why.action_ledger_holds_sent")].includes(mine.undetermined), "undetermined, with why");
   assert.equal(mine.undetermined, u.proposal.undetermined);
   /* the key it answers is the one clockadopt takes; once adopted, it no longer stands (control). */
   assert.equal(w.c.clockAdopt({ target: A, proposal: mach.key, author: M, viewer: M }).ok, true);

@@ -120,7 +120,7 @@ test("R7 overdue is derived at the read and a stored status is reported beside t
   w.actions.actionCorrespond({ target: A, direction: "received", at: "2026-09-01", account: "got it", viewer: M, author: M });
   const t2 = w.text(A);
   const p = w.c.clockPropose({ target: A, rule: "records_answer", proposer: MACHINE, viewer: MACHINE });
-  assert.ok(p.proposal.entry.basis.length > 0 && /Test Stat/.test(p.proposal.entry.basis), "every deadline names its basis");
+  assert.ok(p.proposal.entry.basis.length > 0 && /Test Stat/.test(p.proposal.entry.basis), "the proposal states a basis");
   assert.equal(w.text(A), t2, "a proposal writes no date into the record");
   assert.notEqual(text, t2);
 });

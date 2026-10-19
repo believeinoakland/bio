@@ -110,13 +110,13 @@ test("R12 negative controls: an entry naming no local fact, a factStatus that th
   /* an answer local-facts cannot give: a status outside its vocabulary, none, or a shape that throws when read. */
   for (const status of ["maybe", undefined, 4]) {
     const r = clocks.factReader({ factStatus: () => ({ ok: true, status }) }, M)(CLERK26);
-    assert.deepEqual([r.status, r.path], ["absent", pathOf(CLERK26)]); assert.match(r.why, /no status it gives/);
+    assert.deepEqual([r.status, r.path], ["absent", pathOf(CLERK26)]); assert.equal(r.why, word("action-clocks.why.local_facts_answered", { status: String(status ?? "none") }));
   }
   const trap = clocks.factReader({ factStatus: () => ({ ok: true, status: "confirmed", get governs() { throw new Error("x"); } }) }, M)(CLERK26);
   assert.deepEqual([trap.status, trap.why], ["absent", word("action-clocks.why.local_facts_answered_shape")]);
   /* each such answer makes a business count undetermined, with why, and nothing is thrown. */
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({ factStatus: () => { throw new Error("storage gone"); } }, M) });
-  assert.equal(n.date, null); assert.match(n.why, /cannot be read in your team's Civicsmith: local facts' read failed: storage gone/);
+  assert.equal(n.date, null); assert.ok(n.why.endsWith(word("action-clocks.why.local_facts_read", { m: ": storage gone" })));
   /* the viewer is passed through: local-facts reads for the viewer named. */
   const seen = [];
   clocks.factReader({ factStatus: (a) => { seen.push(a); return { ok: true, status: "confirmed" }; } }, BOB)(CLERK26);

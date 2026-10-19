@@ -62,8 +62,6 @@ export const ACTION_CLOCK_CHECKS = {
   CLOCK_ENTRY_REFUSED: {
     check: 'C-123.8',
     where: 'src/action-clocks/index.mjs clockEntryRefused > is-clock-entry-refused',
-    translation: 'A deadline needs its words, a date written year-month-day, what it rests on and who owes it (the '
-      + 'team, the body, or not stated), and any time of day falls on that date. This one did not meet one of those, '
-      + 'so nothing was written.',
+    translation: word('refusal.CLOCK_ENTRY_REFUSED'),
   },
 };

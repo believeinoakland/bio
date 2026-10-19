@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, actionMd, CP, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
@@ -78,7 +79,7 @@ test("R14 a one-off file the member saves: no address is published, nothing is p
   const w = setUp();
   const r = w.c.clocksIcs({ actions: [A], viewer: M });
   assert.ok(!/https?:|webcal:|mailto:/i.test(r.ics) && !("url" in r), "no address to subscribe to, no outside channel");
-  assert.match(r.says, /nothing is published or sent/);
+  assert.equal(r.says, word("action-clocks.says.file_save_nothing"));
   assert.deepEqual(w.c.clocksIcs({ actions: [A, "ACTN-2026-0404-x"], viewer: M }), actions.noSuchAction("ACTN-2026-0404-x"));
   assert.deepEqual(w.c.clocksIcs({ actions: [A], viewer: "nobody" }), actions.noSuchAction(A));
   for (const a of [[], "", null, Array.from({ length: 201 }, (_, i) => `ACTN-2026-${String(i + 1).padStart(4, "0")}-z`)])

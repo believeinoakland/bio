@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import * as actions from "../../../src/actions/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a";
@@ -34,7 +34,7 @@ test("R13 a member adopts a standing proposal in one act: the entry, with its ba
   assert.deepEqual([e.text, e.date, e.status, e.basis_kind, e.proposal, e.proposed_by, e.adopted_by, e.adopted_at, e.adopted_why],
     ["records_answer", "2026-09-07", "pending", "rule", key, MACHINE, M, "2026-09-28T12:00:00Z", "the clerk's deadline"]);
   assert.match(e.basis, /Test Stat\. § 1\.140 \(profile basis: TEST/, "the rule's citation and profile basis (R7)");
-  assert.match(e.trace, /^5 business days after 2026-09-01; counted on the closure list town; 1 closed day skipped/, "R2's trace, in one line");
+  assert.ok(e.trace.startsWith([localize("action-clocks.count.amount_unit_after_anchor", "{amount} {unit} after {anchor}", { amount: "5", unit: "business days", anchor: "2026-09-01" }), word("action-clocks.counted_closure_list", { closures: "town" }), word("action-clocks.closed_day_skipped", { skipped: "1", plural: "" })].join("; ")), "R2's trace, in one line");
   assert.deepEqual(r.entry, Object.fromEntries(Object.entries(e).filter(([k]) => k in r.entry)), "the answer is the entry written");
   const row = w.rows(`SELECT adopted_by, adopted_at, adopted_ord, trace_json FROM action_clock_proposals WHERE bundle_id=? AND proposed_by=?`, A, MACHINE)[0];
   assert.deepEqual([row.adopted_by, row.adopted_at, row.adopted_ord], [M, "2026-09-28T12:00:00Z", 0]);
@@ -72,7 +72,7 @@ test("R13 refusals in order: MACHINE_CANNOT_ADOPT_CLOCK, NO_SUCH_ACTION, NO_SUCH
   const u = w.c.clockPropose({ target: B, rule: "records_answer", proposer: M, viewer: M });
   const und = w.c.clockAdopt({ target: B, proposal: u.proposal.key, author: M, viewer: M, date: "2026-10-01" });
   assert.deepEqual([und.reason, und.check, und.translation], ["CLOCK_PROPOSAL_UNDETERMINED", "C-123.6", rowOf("CLOCK_PROPOSAL_UNDETERMINED").translation]);
-  assert.match(und.why, /no sent entry/);
+  assert.ok([word("action-clocks.why.action_ledger_holds"), word("action-clocks.why.action_ledger_holds_sent")].includes(und.why));
   /* the revision's own: an amended date that is no calendar day, and another member's lease on the action. */
   assert.equal(adopt(w, { proposal: key, date: "2026-02-30" }).reason, "CLOCK_ENTRY_REFUSED");
   assert.equal(w.record.acquireLease(A, BOB, 30000).ok, true);
