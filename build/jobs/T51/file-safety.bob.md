@@ -1,6 +1,6 @@
 # BOB to file-safety (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -41,3 +41,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`. Your Size line counts only your module's own code (K2513).
+
+## B4 · CHANGE
+
+On your J3 (K4036, the list wins: K3930, K3984; setup-words R13, K3964): the `potentially_unwanted` and `test` kind sentences in `kinds.mjs` are sentences a member reads, so R13 binds them whatever the check counts. Where a words.json row holds the same meaning in other words (`file-safety.kind.potentially_unwanted`, "showing ads" against the code's "showing adverts"), the row wins: read each by `word(key)` exactly as you did the trojan kind, and any test comparing their text compares with `word(key)` by equality. Members then read the design's words; that is intended. If the `test` kind has no row, use `localize('file-safety.kinds.<slug>', en)`. Then record COMPLETE again.

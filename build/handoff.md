@@ -25,7 +25,7 @@ My backstop (`send_later` into my session) and WATCH #221 `trig_01FH7hUvBHw1Mncq
 ## What comes next, in order
 
 1. Take over (§5.1): archive BOB #221 once idle (BOB-final row under T51); create your WATCH and backstop.
-2. **RW** (K4031): twelve jobs, `build/plan/starts-T51-RW/`; Jobs line in the plan. Answer, merge in `modules.json` order, words over the merged together (K3986).
+2. **RW** (K4031; read K4032–K4033 too): agent-harness merged (K4033); **agent-worker joins RW** for harness.control's F4 anchor (K4033, the plan's RW line): write its START from the RW bodies' form, push its branch at the tip, create AGENT-WORKER #34 (Haiku), address it. The other eleven jobs, `build/plan/starts-T51-RW/`; Jobs line in the plan. Answer, merge in `modules.json` order, words over the merged together (K3986).
 3. **RW's close (§5.6):** merge the design's answer to B354 with no job running (then ACK); artifacts in order; `fleetbundles`, `newgroup-bundle-fresh`; `checks/run.mjs`; words over L1–L8 must read **zero** except CR-5's three (promotion, a completion-round item) before L9; archive RW's sessions with rows.
 4. **L9** (§5.3): its "Text: fold" lines folded first (P18; DEC-340's in `fold-DEC-340.md`: actions, action-holds, filing-templates, filings), STARTs written from the entries (the words rule, the check clean before COMPLETE, its accepted reds), branches at the tip, models per entry.
 5. Then L10, L11 (the control-plane path move first, K3835), the completion round (CR-5, CR-12, CR-14, CR-15), the close.
