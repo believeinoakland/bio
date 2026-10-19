@@ -555,7 +555,9 @@ test("R99 cs.print() asks the window to print once; the frame, the main column a
 /* ---------- R100 ---------- */
 
 const NAMES = ["revisioncompare", "hashcopy", "linkopen", "pubfloorset", "pubfloorclear", "pubprint", "reviewexport"];
-const browserScreen = (op, screen) => ({ id: screen, reads: () => ({}), acts: [{ op, send(view, el, cs) { cs.set("did", op); return null; } }], render: (cs, view) => cs.act(op) + '<i id="did">' + cs.esc(view.ui.did || "") + "</i>" });
+/* a screen's functions are self-contained: the act is baked into the render by source, and send reads it from its button */
+const browserScreen = (op, screen) => ({ id: screen, reads: () => ({}), acts: [{ op, send(view, el, cs) { cs.set("did", el.getAttribute("data-act")); return null; } }],
+  render: new Function("cs", "view", "return cs.act(" + JSON.stringify(op) + ") + '<i id=\"did\">' + cs.esc(view.ui.did || '') + '</i>'") });
 
 test("R100 BROWSER_ACTS (op-declarations) names the acts done in the page alone; the shell reads that table; each of the seven is drawn on its screen, calls its send and sends no request; published draws its three with no session; no weight mark", async () => {
   const table = browserActs();
