@@ -18,6 +18,7 @@ export const KEYS = Object.freeze([
   "act.actioncorrespond.does",
   "act.actioncreate.does",
   "act.actionhold.does",
+  "act.actionholdrelease.does",
   "act.actionlaws.does",
   "act.actionlawspropose.does",
   "act.actionmove.does",
