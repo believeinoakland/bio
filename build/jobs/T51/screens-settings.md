@@ -1,0 +1,57 @@
+# screens-settings (T51)
+
+**Status** · session_017yqdpyhi5axta4sFg6PFUd · depth 2 · COMPLETE · handled B9
+
+## J1 · QUESTION
+
+QUESTION (SCREENS-SETTINGS #7, T51-116). I carry on with everything not named here. Five things need BOB; the first four stop only the part named.
+
+**1. R61 `grouprules`: the drawing's draft form does not match `ruleFields` or `ruledraft`.** `ruledraft` takes `{section, entry, source: {captureSha, extent}, reason}`; local-facts R18's `ruleFields` (op `rulefields`, a read; OPS does not hold it yet, op-declarations T51-107) answers 11 deadline fields (rule, applies_to, units, amount, count, direction, starts, owed_by, due_at, citation, effective_from) and 6 legal-fact fields (key, trigger, statement, citation, applies_to, effective_from). `SCR.grouprules` "Draft a rule" draws kind, trigger, "What it requires", citation, link, "In effect from", a source choice ("A capture your team holds / Capture the source first") and "Why": no applies_to, units, amount, starts, count, direction, owed_by, due_at; no way to pick a held capture or the passage (`{captureSha, extent}`); the words hold no label for those fields. The registry also lists `writinghelp` on `grouprules` (label "Help me write this"), which the drawing and R61 do not draw ("The assistant may show you a draft" is its sentence). Per rule 10 I stop the draft form (`ruledraft`'s fields and its send; `writinghelp`) and draw everything else of R61: Waiting for a second member, Rules in force, Confirm (with the qualification for tier 2, 3 or null), Withdraw with a reason, the notes. Please ask UX-DESIGN: (a) the draft form's fields per `ruleFields` with their words, (b) how a held capture and its passage are chosen, (c) whether `writinghelp` is drawn. My best reading until answered: `ruledraft` is listed in `SCREENS.grouprules.acts` (registry contract) with a send that refuses `screen.grouprules.src.help2` ("A rule with no source held here is not drafted.") and no form drawn.
+
+**2. R56 table and two sentences: no keys.** The design holds no words for the arithmetic table's column headers ("Administrators", "Votes it takes", "Who votes"), its cells ("{k} of {n}", "{v} of {n} may vote") or the "(now)" mark; `…with.1.administrator.no.administrator` is now `{n}`-filled but singular, so I draw it only for 1 administrator (for 2, `possible` is false too: I draw `a.majority.that.leaves.out` and `that.is.the.rule.holding` alone). Without the table's keys I draw the fold with its three notes and no table; the "(now)" row test waits. Please ask UX-DESIGN for: the three headers, `{k} of {n}`, `{v} of {n} may vote`, the now mark.
+
+**3. R59 vs interface-shell R95: seven of the sixteen states have no chip.** R95's `cs.stateChip` knows nine kinds (review, reviewed, retired, open, concluded, published, waiting, flagged, watched) and answers "" for any other; R59 draws a chip for each of sixteen (also deferred, dismissed, divided, planned, active, resolved, abandoned). The words hold `state.item.<kind>.name/.means/.can/.cannot` for all sixteen. My reading: the row draws `cs.stateChip(kind)` when it answers a chip, else the state's own name `state.item.<kind>.name` as plain text beside the same `.means`; BOB please settle with the interface-shell job (the chip for all sixteen is the better answer).
+
+**4. Not yet merged, so not testable yet:** my work needs, from earlier jobs of L11 (all started, none merged): wizard-scripts' regeneration of `screen-registry.mjs` (the generated one is at `7be06eb4cb`: no `glossary`, no `grouprules`, no `signeradd` on `members`, no `instancegroupseed`), interface-shell R90/R95/R97/R101 (`cs.stateChip`, `cs.term`, `cs.signer.register({keep, passphrase, defer})`, `ADMIN_ACTS` gaining `signeradd`), op-declarations' `rulefields`. I write against their contracts and prove with those branches merged locally (uncommitted) until BOB merges them; I will run the full module tests again after I merge `tranche/T51` with them.
+
+**5. Nothing else.** R58 (the seed sentence), R60, R55, R57, the glossary and the module's words findings I do now.
+
+## J2 · QUESTION
+
+QUESTION (SCREENS-SETTINGS #7, T51-116; J2; replaces nothing: J1 stands as BOB answered it in B2).
+
+**R56 item 4 against the plan's CR-4 line.** The requirement (R56 item 4, K3868) says a removal under way is NOT drawn in T51: no read answers it. The plan's CR-4 line and the T51-116 entry (K3946) say member-roster R75 (`adminRemovalsOpen`, `{target, voters, awaiting, have, need}`) is built by T51-145, its op declared by T51-107 and routed by T51-123, "so screens-settings R56 draws the block (T51-116)" and "K3868's 'absent in T51' no longer holds". The requirement text was not changed with it. Today `OPS` holds no op for that read (I found `adminarith`, `adminendorse`, `adminremove`, `adminresign`, none for removals under way), and the design's four sentences for the block are still samples with names and numbers written in (R56's own list). **My reading until you answer: the requirement stands (the block is not drawn), because the op is not declared and four of its sentences have no fill.** If you want it drawn, I need: the op's name once T51-107 declares it, the four sentences with fills from UX-DESIGN (`agree.remove.teo.as.administrator`, `removing.teo.as.an.administrator`, `four.administrators.rosa.dev.ana`, `counted.in.the.4.doesn`), and R56 item 4 reworded; I would add it as a CHANGE after those merge.
+
+Done so far (pushed, `bfdd70b252`): R55, R56 (without the table and the removal under way), R57 (kept-on-device path proven; the passphrase path waits for interface-shell R97), R58, R59 (the chip test waits for R95), R60, R61 (without the draft form), the contract reds and the five words findings; module tests 169, words check 0, format, architecture, coverage (60 of 60) and ownership 0 failures. Nothing here waits for an answer; I wait for the providers' CHANGEs for the last parts.
+
+## J3 · REPORT
+
+REPORT (SCREENS-SETTINGS #7, T51-116; J3; answers B3). Pushed `c8b0915c8d`.
+
+Done on B3: R56's scale table (the eight DEC-356 rows; live row marked `(now)` and `aria-current`; "not removable" and "no majority…" for a count that cannot remove); R56 item 4 reads `adminremovalsopen` and draws, from the answer alone, `{have} of {eligible} have agreed so far`, the one facing removal as counted and not voting, and "the removal waits for <who>" for each awaiting; `[]` draws nothing; R61's "Draft the rule" on DEC-357's fields (one name → stored `rule`/`key`; deadline fields; legal-fact fold; kinds from `rulefields` with `claim` first; the document among `heldcaptures`; the passage found in `reading`'s `text_units`, its place sent as `source.extent`; `pass.notfound1`/`2` when not found; the 12-hour time sent as HH:MM; `writinghelp` only under "What it says" and only while the assistant is reachable; the member's `why` is the act's reason).
+
+Proof: in a scratch tree (not on my branch) with `job/T51/interface-shell` (R95, R97), `job/T51/op-declarations` and `job/T51/wizard-scripts` merged: module tests 176 pass, 0 fail (the glossary's sixteen chips and the passphrase path included). On my own branch, until those three merge, the glossary chip test, the passphrase test and every test of a screen the old registry lacks (`glossary`, `grouprules`, `signeradd`) and of `adminremovalsopen` / `rulefields` fail: that is the dependency, not the module. Words check over every module: 0 lines naming this module; format, architecture, coverage (60 of 60) and ownership 0 failures.
+
+Still owed, each a CHANGE when it exists:
+1. The four N1248 sentences with fills (`agree.remove.teo.as.administrator`, `removing.teo.as.an.administrator`, `four.administrators.rosa.dev.ana`, `counted.in.the.4.doesn`), and the two rows the removal block still needs and no key holds: "<who> · agreed" with the day, and "<who> · hasn't voted yet" (plus the block's "What it takes" heading). Until then each voter's day is not drawn.
+2. `grouprules`: the headings "Rules in force" and "Draft a rule" have no keys (drawn without a heading); `screen.grouprules.src.help2` doubles as the refusal for "Capture the source first".
+3. Requirement text: R61 still describes the old form ("`.text.label`, one field per `ruleFields` entry"); BOB's fold of DEC-357 into it is owed.
+4. R39's design reads list and `KEYS` now include 1,500 keys; nothing to do.
+
+I wait for the three providers' merges and the CHANGE for item 1.
+
+## Completion (SCREENS-SETTINGS #7, T51-116)
+
+- **Entries applied:** R55 (signing keys for others: withdrawn, reactivated, `signeradd`), R56 (arithmetic, the founder's reconcile fold, the scale table, a removal under way from `adminremovalsopen`, DEC-359/360 rows), R57 (key made on the page's terms, registered-for-you line, glossary link), R58 (seed note), R59 (`glossary`, sixteen chips), R60 (places with no profile), R61 (`grouprules`: waiting, in force, confirm with qualification, withdraw, the draft form on DEC-357's fields with the passage found in `reading`'s text units, `writinghelp` under "What it says"); the two inherited reds (contract:23, :68) and the five words findings; stale comment index.mjs:4.
+- **Deferred / reported:** R23's withdraw in a member's row panel moved to the keys section (R55); `ruleconfirm` and `ruledraft` carry the shell's reason friction (op-grades); a profile offered to choose is still drawn when a place is named and none is active (R60).
+- **Found in other modules:** none beyond what J1–J3 reported (all answered).
+- **Tests and checks:** module suite 177 pass, 0 fail against the merged providers; format 0 failures; architecture 0; coverage 60 of 60; ownership 0; `checks/words.mjs` over every module names none of this module; setup-words `--check` reports only the expected stale-rows note from other modules' words.
+- Size (session_017yqdpyhi5axta4sFg6PFUd): test runs 30, module lines 4285
+
+## J4 · COMPLETE
+
+COMPLETE: T51-116 screens-settings met; 177 module tests pass against the merged providers; format, architecture, coverage (60 of 60), ownership and the words check clean. Record: build/jobs/T51/screens-settings.md.
+
+## J5 · COMPLETE
+
+COMPLETE (re B9, K4094). This module draws no legend from a provider slug: `security` has no fieldset legend and draws no `google-web-risk` or `opswat-deep-cdr`; those legends are on the setup page's scanner list, which is not this module's (installer / instance-setup, please check). What I did find and fix here: the "tools in use" table drew each tool by `provider_id`, a slug. It now draws the provider's display name (vendor and product from the catalogue the screen already reads), and, with the catalogue unread, the column's word, never the slug; test added (R15). Catalogue labels and hints are drawn as read. Suite 178 pass, 0 fail; words check clean. Pushed.

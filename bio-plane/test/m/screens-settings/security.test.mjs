@@ -149,3 +149,13 @@ test("R43 a start after the end sends nothing and draws the refusal in a fold, o
   has(m, "screen.security.admins", { admins: `${said("member.founder.unnamed")}, rosa, lu` });
   assert.deepEqual(ops(m), []);
 });
+
+test("R15 a tool in use is named by its provider's display name (vendor and product from the catalogue), never by its slug", async () => {
+  const a = await open("security", { me: ADMIN, table: securityTable() });
+  const row = all(a.tree, (e) => e.tag === "tr" && textOf(e).includes("Acme Scan"))[0];
+  assert.ok(row, "named by vendor and product");
+  assert.ok(!a.text.includes("acme-scan"), "the slug is drawn nowhere");
+  // with the catalogue unread the row says what it is by the column's word, still no slug
+  const u = await open("security", { me: ADMIN, table: securityTable({ securitytoolcatalogue: "none" }) });
+  assert.ok(!u.text.includes("acme-scan"));
+});
