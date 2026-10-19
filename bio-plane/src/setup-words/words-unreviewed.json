@@ -4376,6 +4376,13 @@
       "line": 159
     },
     {
+      "id": "agent-worker.transcribe.the_ais_reading",
+      "en": "the AI's reading",
+      "module": "agent-worker",
+      "file": "agent-worker/src/transcribe.mjs",
+      "line": 30
+    },
+    {
       "id": "agent-worker.transcribe.the_model_could_not_be",
       "en": "the model could not be reached, so nothing was transcribed.",
       "module": "agent-worker",
