@@ -44,3 +44,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B5 · CHANGE
 
 CHANGE (K4025): case-inputs R19's `minutesLine(row)` is built as `{key, says, left: {key, says}, right: {key, says}, comparison: {key, says}}` (CASE-INPUTS #5 J4/J5; `comparison` is signing.minutes.same or .differs by `same`); R77 carries it on each row unchanged. R77 carries no sentence for an unreadable source (`minutes: {undetermined: true}` only; the screen draws signing.minutes.unread). case-inputs merges before you: merge tranche/T51 once it lands (I will say so).
+
+## B6 · CHANGE
+
+CHANGE (K4028): case-inputs (R19: registerMinutesComparisons, minutesComparisonsOn, minutesLine) is merged on tranche/T51, with case-checker, case-import, case-disclosures and case-account. Merge tranche/T51 into your branch and write R77 as B5 says; then COMPLETE.
