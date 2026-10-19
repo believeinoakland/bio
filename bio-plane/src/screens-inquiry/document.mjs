@@ -99,11 +99,11 @@ function render(cs, view) {
     ? `<p class="${ui.outcome[key].ok ? "mk-note" : "mk-msg"}" role="${ui.outcome[key].ok ? "status" : "alert"}" data-outcome="${key}">${ui.outcome[key].html}</p>` : "");
   /* a section that holds nothing is not drawn (R20): a read answered empty, or a body that draws nothing, makes no
      section; a read still pending or failed is drawn as such */
-  const secOf = (titleKey, r, inner) => {
+  const secOf = (titleKey, r, inner, opts) => {
     const read = typeof r === "string" ? d[r] : r;
     if (read && read.state === "empty") return "";
     const body = cs.state(read, inner);
-    return body ? cs.sec(titleKey, body) : "";
+    return body ? cs.sec(titleKey, body, opts) : "";
   };
   const doc = d.capture && d.capture.state === "ok" ? view.parts.front(d.capture.value["bundle.md"]) : null;
   if (doc) doc.source = doc.maps.source || {};
@@ -205,7 +205,7 @@ function render(cs, view) {
   for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), text: String(c.title || c.question) });
   const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value)));
   const preset = heldFor.length ? String(heldFor[0].question) : "";
-  out.push(secOf("screen.document.passages.head", reading, (r) => {
+  out.push(secOf("document.read.title", reading, (r) => {
     /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
     const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
@@ -216,9 +216,9 @@ function render(cs, view) {
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
-    const pickHelp = cites.length ? `<p class="mk-small">${cs.w("screen.document.cite.question.help")}</p>` : "";
+    const pickHelp = cites.length ? `<p class="mk-small">${cs.w("screen.document.cite.question.help")}</p><p class="mk-small">${cs.w("document.read.cite.help")}</p>` : "";
     const none = ui.citeNone ? `<details class="mk-details" data-cite="none" open><summary>${cs.w("screen.document.cite.none.summary")}</summary><p class="mk-small">${cs.w("screen.find-in.questionfirst")}</p></details>` : "";
-    return list.map((p, i) => {
+    return `<p class="mk-small">${cs.w("document.read.select")}</p>` + list.map((p, i) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
@@ -227,7 +227,7 @@ function render(cs, view) {
         + (extent && cites.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + pickHelp + none + own("cite");
-  }));
+  }, { help: "document.read.help" }));
 
   /* the pages its reading could not make out (extraction R27), and the two ways to their words */
   if (reading.state === "ok" && Array.isArray(reading.value.unread_pages) && reading.value.unread_pages.length) {
@@ -301,17 +301,21 @@ function render(cs, view) {
       const closed = mine.filter((o) => stateOf(o) === "adopted" || stateOf(o) === "kept")
         .sort((a, b) => String(a.closed_at || "").localeCompare(String(b.closed_at || "")));
       const ans = askedFor[qid] || null;
-      const place = places.join(", ");
       const unseen = (inner) => `<span class="mk-small" data-leg-state="asked">${inner}</span>`;
       let acts = "", meta = [];
       if (ptitle) meta.push(cs.esc(ptitle));
-      if (places.length) meta.push(places.map((n) => W("screen.document.passage.where", { page: n })).join(", "));
+      if (places.length) meta.push(W("screen.document.place.restson", { page: pagesText(places) }));
       if (!open.length && closed.length) {
         /* decided: what she chose, who and when, in her own words; nothing more is offered for that capture */
         const c = closed[closed.length - 1];
-        meta.push(`<span data-leg-state="decided" data-decided="${cs.esc(stateOf(c))}">${W(stateOf(c) === "adopted" ? "act.adoptversion.label.document" : "act.keepversion.label.document")}`
-          + (c.closed_by ? " · " + cs.esc(who(c.closed_by)) : "") + (c.closed_at ? " · " + dayOf(c.closed_at) : "")
-          + (c.why ? ` · <span class="rec">“${cs.esc(String(c.why))}”</span>` : "") + "</span>");
+        const sentence = c.why && c.closed_by && c.closed_at
+          ? W(stateOf(c) === "adopted" ? "screen.document.a34.moved" : "screen.document.a34.kept", { member: who(c.closed_by), date: { html: dayOf(c.closed_at) }, why: String(c.why) })
+          : null;
+        /* the sentence holds all three fills; a keep with no reason stated has no key, so what the record holds is drawn beside the act's own label */
+        meta.push(`<span data-leg-state="decided" data-decided="${cs.esc(stateOf(c))}">` + (sentence !== null ? sentence
+          : W(stateOf(c) === "adopted" ? "act.adoptversion.label.document" : "act.keepversion.label.document")
+            + (c.closed_by ? " · " + cs.esc(who(c.closed_by)) : "") + (c.closed_at ? " · " + dayOf(c.closed_at) : "")
+            + (c.why ? ` · <span class="rec">“${cs.esc(String(c.why))}”</span>` : "")) + "</span>");
       } else if (ans || open.length) {
         const lines = [];
         const legs = ans && ans.state === "ok" ? ans.legs.filter((n) => n && String(n.target) === id) : [];
@@ -322,14 +326,15 @@ function render(cs, view) {
           : open.map((o) => ({ state: "newer_capture", affects: o.affects || null, date: dateOfSha(String(o.newer_capture || "")) }));
         if (ans && ans.state === "failed") lines.push(cs.state({ state: "failed", refusal: ans.words ? { words: ans.words } : null }, () => ""));
         for (const it of items) {
-          if (it.state === "no_newer_capture") continue;
+          if (it.state === "no_newer_capture") { lines.push(`<span data-leg="none">${W("screen.document.a34.no_newer")}</span>`); continue; }
           if (it.state === "chain_unread" || it.state === "not_asked" || !it.state) {
             /* never "none": the record could not tell, and it does not guess */
             lines.push(`<span data-leg="unread">${cs.mark("gap", "undetermined")} ${W("screen.document.a34.it_does_not_guess")}</span>`);
             continue;
           }
           if (it.date) lines.push(`<span data-leg="newer">${W("screen.document.a34.a_newer_copy_exists_captured_2_october", { date: { html: dayOf(it.date) } })}</span>`);
-          if (it.affects === "unaffected" && place) lines.push(`<span data-leg="same">${W("screen.document.a34.section_3_reads_the_same_in_both", { section: place })}</span>`);
+          if (it.affects === "unaffected" && places.length) lines.push(`<span data-leg="same">${W("screen.document.a34.page_same", { page: pagesText(places) })}</span>`);
+          else if (it.affects === "affected" && places.length) lines.push(`<span data-leg="differs">${W("screen.document.a34.page_differs", { page: pagesText(places) })}</span>`);
           else if (it.affects === "undetermined") lines.push(`<span data-leg="undetermined">${cs.mark("gap", "undetermined")}</span>`);
         }
         if (lines.length) meta.push(unseen(lines.join(" · ")));
@@ -387,12 +392,12 @@ function render(cs, view) {
     const hop = regDocs[0] && Array.isArray(regDocs[0].provenance_chain) ? regDocs[0].provenance_chain[0] : null;
     const rel = hop && typeof hop.who === "string" ? /Civicsmith\/([^\s)]+)/.exec(hop.who) : null;
     const parts = [];
-    if (rel) parts.push(cs.sheet(cs.row("", `<b class="id" data-release="1">${cs.esc(rel[1])}</b>`, "", W("screen.document.a27.the_release_of_civicsmith_that_wrote_thi"))));
+    if (rel) parts.push(cs.sheet(cs.row("", `<b>${W("screen.document.record.release", { version: { html: `<span class="id" data-release="1">${cs.esc(rel[1])}</span>` } })}</b>`, "", W("screen.document.a27.the_release_of_civicsmith_that_wrote_thi"))));
     const first = revs.length ? revs[revs.length - 1] : null;
     const log = [];
     if (first) {
       const f0 = factsOf(revs.length - 1);
-      log.push(cs.row("", `<b>${cs.esc(who(first.author))}</b>`, "", [at(first.at), f0 && f0.standing === "collected" ? W("screen.document.a27.held_until_vouched_for") : "",
+      log.push(cs.row("", `<b>${W("screen.document.record.added", { member: who(first.author) })}</b>`, "", [at(first.at), f0 && f0.standing === "collected" ? W("screen.document.a27.held_until_vouched_for") : "",
         locator ? `<span class="id">${cs.esc(locator)}</span>` : ""].filter(Boolean).join(" · ")));
     }
     for (const s of states) {
@@ -416,9 +421,9 @@ function render(cs, view) {
         const edit = (same, left, inner) => (same ? inner : left ? `<del>${inner}</del>` : `<ins>${inner}</ins>`);
         const standingLine = (st) => (st === "collected" ? W("screen.document.a27.standing_held_until_vouched_for") : st === "verified" ? W("screen.document.a27.standing_used_by_the_team")
           : st === "retired" ? W("state.item.retired.name") : undetermined(st));
-        const lines = (f, g, left) => (!f ? `<p>${cs.mark("gap", "undetermined")}</p>`
+        const lines = (f, g, left) => (!f ? `<p>${cs.mark("gap", "undetermined")} ${W("screen.document.revision.nobytes")}</p>`
           : `<p>${edit(!g || f.standing === g.standing, left, standingLine(f.standing))}</p>`
-          + `<p>${edit(!g || f.grade === g.grade, left, f.grade ? cs.grade("capture", f.grade) : cs.mark("gap", "undetermined"))}</p>`
+          + `<p>${W("screen.document.compare.grade")} ${edit(!g || f.grade === g.grade, left, f.grade ? cs.grade("capture", f.grade) : cs.mark("gap", "undetermined"))}</p>`
           + `<p>${edit(!g || f.vouched === g.vouched, left, f.vouched ? W("screen.document.a27.vouched_for_by_dev.2", { member: who(f.vouched) }) : W("screen.document.a27.vouched_for_by_nobody"))}</p>`);
         const side = (i, f, g, left) => `<div><h3>${cs.esc(titleOf(revs[i]))}</h3><span class="mk-date">${at(revs[i].at)} · ${cs.esc(who(revs[i].author))}</span>${lines(f, g, left)}</div>`;
         /* a set of files: the files that changed between the two, each with its digest on either side */
@@ -437,6 +442,7 @@ function render(cs, view) {
         + cs.act("revisioncompare", { label: "screen.document.revisions.compare.act" }) + panel
         + (isSet ? `<p class="mk-note">${W("screen.document.a27.a_copy_that_came_as_a_set_of_files_such_")}</p>` : "") + "</details>");
     }
+    if (h.truncated === true) parts.push(`<p class="mk-note" data-truncated="1">${W("screen.document.revisions.truncated", { n: String(revs.length) })}</p>`);
     return parts.join("");
   };
   if (hist.state !== "empty") {
@@ -493,10 +499,15 @@ function render(cs, view) {
       const leave = leaving && g.outside.some((r) => String(r.address) === leaving)
         ? `<div class="cs-dialog" role="dialog" data-dialog="leave" aria-label="${W("screen.document.a30.you_are_about_to_leave_the_record")}"><b>${W("screen.document.a30.you_are_about_to_leave_the_record")}</b>`
           + `<div class="ends">${W("screen.document.a30.this_page_carried_this_address_and_the_r")} ${W("screen.document.a30.what_is_at_the_address_now_the_record_do")} ${W("screen.document.a27.opening_it_leaves_the_record_and_nothing")}</div>`
-          + `<div class="id">${cs.esc(leaving)}</div><span class="mk-acts">${cs.act("linkopen", { label: "act.owed_linkopen.label.document", data: { address: leaving, step: "open" } })}`
+          + `<div class="id">${cs.esc(leaving)}</div><span class="mk-acts">${cs.act("linkopen", { label: "screen.document.a30.open_anyway", data: { address: leaving, step: "open" } })}`
           + `${cs.act("linkopen", { label: "screen.document.a30.stay_in_the_record", data: { step: "stay" }, tone: "quiet" })}</span></div>` : "";
+      const total = g.inside.length + g.beside.length + g.held.length + g.outside.length + g.refused.length;
+      const tally = g.outside.length === 0 ? W("screen.document.a30.tally.none", { n: String(total) })
+        : g.outside.length === 1 ? W("screen.document.a30.tally.one", { n: String(total) })
+        : W("screen.document.a30.6_links_on_this_page_4_lead_outside_the_", { n: String(total), outside: String(g.outside.length) });
       out.push(cs.sec("document.links.title",
-        groupOf("inside", g.inside, (r) => cs.row("", addr(r), "", meta(verdictOf(r, "inside"), W("screen.document.a30.a_pointer_into_this_very_copy_settled_wh"))))
+        `<p class="mk-note" data-tally="1">${tally} ${W("screen.document.links.navleft")}</p>`
+        + groupOf("inside", g.inside, (r) => cs.row("", addr(r), "", meta(verdictOf(r, "inside"), W("screen.document.a30.a_pointer_into_this_very_copy_settled_wh"))))
         + groupOf("beside", g.beside, (r) => cs.row("", addr(r), "", meta(verdictOf(r, "beside"), W("screen.document.a64.captured_together_with_this_page_and_che"))))
         + groupOf("held", g.held, (r) => cs.row("", cs.ref("document", String(r.target_bundle), String(r.title || r.address || T("state.undetermined", { reason: "" })), []), "",
             meta(verdictOf(r, "held"), (r.verdict === "contemporaneous" ? W("screen.document.a27.the_copy_your_team_holds_is_the_one_this") : "")
@@ -530,7 +541,9 @@ function render(cs, view) {
           : W("document.names.chosen.record");
         const page = op && op.occurrence ? pg(Number(op.occurrence.page)) : null;
         const count = Number.isInteger(n.mentions) ? n.mentions : c && Number.isInteger(c.occurrences) ? c.occurrences : null;
-        const said = page !== null && count !== null ? W("document.names.row", { n: String(count), page: String(page), chosen: { html: chosen } }) : chosen;
+        const how = W("screen.document.names.matched." + (["identifier", "reference", "reference_key", "label", "testimony"].includes(n.matched_by) ? n.matched_by : "none"));
+        const said0 = page !== null && count !== null ? W("document.names.row", { n: String(count), page: String(page), chosen: { html: chosen } }) : chosen;
+        const said = how + " · " + said0;
         const grade = /^[A-D]$/.test(String(n.grade || "")) ? cs.grade("subject", String(n.grade)) : cs.mark("gap", "undetermined");
         return cs.row("", `<span class="rec">${cs.esc(String(n.label || n.entity_id))}</span>`,
           (c ? cs.act("connectionchoose", { label: "act.connectionchoose.label.document", data: { capture: sha, other: String(other || ""), entity: String(n.entity_id), ref: String((op && op.ref) || "") } }) : "")
@@ -813,13 +826,16 @@ const words = Object.freeze([
     "a27.vouched_for_by_dev.2", "a27.a_copy_that_came_as_a_set_of_files_such_", "a27.who_added_this_copy_who_vouched_for_it_a",
     "a27.the_copy_your_team_holds_is_the_one_this", "a27.opening_it_leaves_the_record_and_nothing",
     "a30.a_pointer_into_this_very_copy_settled_wh", "a30.the_other_verdicts_a_held_link_can_carry", "a30.you_are_about_to_leave_the_record",
-    "a30.this_page_carried_this_address_and_the_r", "a30.what_is_at_the_address_now_the_record_do", "a30.stay_in_the_record",
+    "a30.this_page_carried_this_address_and_the_r", "a30.what_is_at_the_address_now_the_record_do", "a30.stay_in_the_record", "a30.tally.one", "a30.tally.none", "a30.6_links_on_this_page_4_lead_outside_the_", "a30.open_anyway", "links.navleft",
     "a30.not_an_address_the_record_will_carry", "a30.this_is_a_refusal_not_a_gap_in_what_was_",
     "a31.the_grade_on_each_name_says_how_the_matc", "a31.it_says_nothing_about_how_far_to_trust_t", "a31.a_connection_to_another_document_takes_t",
     "a34.your_citations_leg_by_leg", "a34.a_newer_copy_never_moves_a_citation_by_i", "a34.each_reasoning_that_rests_on_this_docume",
-    "a34.a_newer_copy_exists_captured_2_october", "a34.section_3_reads_the_same_in_both", "a34.not_checked_yet", "a34.it_does_not_guess",
+    "a34.a_newer_copy_exists_captured_2_october", "a34.page_same", "a34.page_differs", "a34.no_newer", "a34.moved", "a34.kept", "a34.not_checked_yet", "a34.it_does_not_guess",
     "a34.one_line_for_each_question_that_rests_on", "a64.captured_together_with_this_page_and_che",
     "a64.not_established_means_the_record_cannot_"].map((k) => "screen.document." + k),
+  "document.read.title", "document.read.help", "document.read.select", "document.read.cite.help",
+  ...["record.release", "record.added", "revisions.truncated", "revision.nobytes", "compare.grade", "place.restson", "names.matched.identifier",
+    "names.matched.reference", "names.matched.reference_key", "names.matched.label", "names.matched.testimony", "names.matched.none"].map((k) => "screen.document." + k),
   ...["captured", "copy", "fingerprint", "fingerprint.means", "passages.head", "passage.where", "cite.question", "cite.role",
     "cite.noquestion", "unread.head", "unread.page", "unread.words", "unread.empty", "gradenote.head", "gradenote.none",
     "backlinks.head", "backlinks.hidden", "versions.head", "versions.changed", "versions.this", "claim.label",

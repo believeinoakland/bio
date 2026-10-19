@@ -51,6 +51,9 @@ test("R65 the record of this copy: the release, what was done oldest first with 
   assert.ok(s, "the section is drawn where the read answers");
   assert.equal(s.querySelector("[data-release]").textContent, "2026.10.2", "the release the first hop's `who` states");
   assert.ok(says(s, "screen.document.a27.the_release_of_civicsmith_that_wrote_thi"));
+  assert.ok(says(s, "screen.document.record.release", { version: "2026.10.2" }), "\"Recorded by Civicsmith release <version>\" by its key");
+  assert.ok(says(s, "screen.document.record.added", { member: "dev" }), "the first revision as \"Added by <member>\" by its key");
+  assert.ok(!says(s, "screen.document.revisions.truncated", { n: "3" }), "control: a whole history says nothing is cut");
   assert.ok(says(s, "screen.document.a27.everything_done_to_this_copy_s_standing_") && says(s, "screen.document.a27.none_of_it_is_ever_changed_or_removed"));
   const rows = s.querySelectorAll(".cs-row");
   const log = rows.slice(1, 3);
@@ -85,7 +88,7 @@ test("R65 control: an answer with no states draws only the first revision's row 
 test("R65 a refusal of the history is drawn in the section by its words, and the document's own page stands", async () => {
   const p = await open(at, { plane: { bundlehistory: refusedIn("NO_SUCH_BUNDLE", "The record of this copy could not be read just now.") } });
   assert.ok(record(p).textContent.includes("The record of this copy could not be read just now."));
-  assert.ok(main(p).querySelector("h1") && section(p, "screen.document.passages.head"), "never the page's absence");
+  assert.ok(main(p).querySelector("h1") && section(p, "document.read.title"), "never the page's absence");
   const bare = await open(at, { plane: { bundlehistory: refusedIn("NO_SUCH_BUNDLE") } });
   assert.ok(says(record(bare), "refusal.NO_SUCH_BUNDLE"), "without the plane's words, the word held for the code");
 });
@@ -112,6 +115,7 @@ test("R65 two revisions compared in the page: choosing two and pressing the comp
   assert.ok(says(left, "screen.document.revision.title", { n: "1" }) && says(right, "screen.document.revision.title", { n: "3" }));
   assert.ok(says(left.querySelector("del"), "screen.document.a27.standing_held_until_vouched_for") && says(right.querySelector("ins"), "screen.document.a27.standing_used_by_the_team"), "the standing");
   assert.equal(left.querySelectorAll("del").length, 3, "standing, grade and who vouched all differ");
+  assert.ok(says(left, "screen.document.compare.grade") && says(right, "screen.document.compare.grade"), "the grade line's label by its key");
   assert.ok(left.querySelector("del .cs-grade").textContent.endsWith("C") && right.querySelector("ins .cs-grade").textContent.endsWith("B"), "the grade, C to B");
   assert.ok(says(left.querySelectorAll("del")[2], "screen.document.a27.vouched_for_by_nobody") && says(right.querySelectorAll("ins")[2], "screen.document.a27.vouched_for_by_dev.2", { member: "dev" }));
   /* revisions 2 and 3 are both used by the team: only the grade differs, and the standing line is not marked */
@@ -126,7 +130,7 @@ test("R65 two revisions compared in the page: choosing two and pressing the comp
   fill(q, { "document-rev-a": "1", "document-rev-b": "3" });
   await press(q, "revisioncompare");
   const pane = main(q).querySelector('[data-compare="revisions"]');
-  assert.ok(pane.querySelector(".cs-gap[data-gap=\"undetermined\"]"), "it says so");
+  assert.ok(pane.querySelector(".cs-gap[data-gap=\"undetermined\"]") && says(pane, "screen.document.revision.nobytes"), "it says so, by its key");
   assert.equal(pane.querySelectorAll("del").length + pane.querySelectorAll("ins").length, 0, "nothing marked against bytes it does not hold");
 });
 
@@ -211,6 +215,16 @@ test("R67 the links in five groups, in order, each only when it holds a link, ea
   assert.equal(s.querySelectorAll('a[href^="https://example.org/311"], a[href^="javascript:"]').length, 0);
   assert.equal(s.querySelectorAll("a[data-outward]").length, 0);
   assert.equal(writes(p).length, 0);
+  /* the tally: the groups' lengths (6 links, 2 outside), the navigation note beside it */
+  assert.ok(says(s, "screen.document.a30.6_links_on_this_page_4_lead_outside_the_", { n: "6", outside: "2" }) && says(s, "screen.document.links.navleft"));
+});
+
+test("R67 the tally has its own sentence for one link leading outside and for none; the numbers are the groups' lengths", async () => {
+  const one1 = await open(at, { plane: { links: ok({ ok: true, links: [LINKS[0], LINKS[3]] }) } });
+  assert.ok(says(linksSection(one1), "screen.document.a30.tally.one", { n: "2" }));
+  const none = await open(at, { plane: { links: ok({ ok: true, links: [LINKS[0], LINKS[1], LINKS[5]] }) } });
+  assert.ok(says(linksSection(none), "screen.document.a30.tally.none", { n: "3" }));
+  assert.ok(!says(linksSection(none), "screen.document.a30.6_links_on_this_page_4_lead_outside_the_", { n: "3", outside: "0" }));
 });
 
 test("R67 control: a group with no link is not drawn, and the page with none draws no section", async () => {
@@ -236,6 +250,7 @@ test("R67 pressing an outside link opens the warning and not the address; \"Open
   assert.deepEqual(opened, [], "the address is not opened by the press");
   const dlg = main(p).querySelector('[data-dialog="leave"]');
   assert.ok(says(dlg, "screen.document.a30.you_are_about_to_leave_the_record") && says(dlg, "screen.document.a30.what_is_at_the_address_now_the_record_do"));
+  assert.ok(says(dlg.querySelector('button[data-step="open"]'), "screen.document.a30.open_anyway"), "\"Open it anyway\" by its key");
   assert.equal(dlg.querySelector(".id").textContent, "https://example.org/311", "the address in the data face");
   await p.click(dlg.querySelector('button[data-step="open"]'));
   assert.deepEqual(opened, [["https://example.org/311", "_blank", "noopener"]]);
@@ -276,6 +291,7 @@ test("R68 each name drawn with its grade as one mark (A, B, C), the number of me
   assert.ok(says(rows[0], "document.names.row", { n: "4", page: String(one(0)), chosen: word("document.names.chosen.record") }));
   assert.ok(says(rows[1], "document.names.row", { n: "9", page: String(one(0)), chosen: word("document.names.chosen.member", { who: "dev", date: day("2026-10-03T10:00:00Z"), why: "the department that issued it" }) }));
   assert.ok(says(rows[2], "document.names.row", { n: "2", page: String(one(5)), chosen: word("document.names.chosen.record") }), "the mention's page drawn from one");
+  assert.ok(says(rows[0], "screen.document.names.matched.identifier") && says(rows[1], "screen.document.names.matched.reference_key") && says(rows[2], "screen.document.names.matched.label"), "how each was matched, by its key");
   for (const k of ["screen.document.a31.the_grade_on_each_name_says_how_the_matc", "screen.document.a31.it_says_nothing_about_how_far_to_trust_t", "screen.document.a31.a_connection_to_another_document_takes_t"])
     assert.ok(says(s, k), k);
   /* a person is claimed from here; an organization is not */
@@ -288,6 +304,8 @@ test("R68 control: a name whose grade or basis the read does not hold draws neit
   const row = section(p, "document.names.title").querySelectorAll(".cs-row")[3];
   assert.equal(row.querySelector(".cs-grade"), null, "no letter the read does not hold");
   assert.ok(row.querySelector('.cs-gap[data-gap="undetermined"]'));
+  assert.ok(says(row, "screen.document.names.matched.none"), "a null basis says so by its key");
+  for (const k of ["identifier", "reference_key", "label", "testimony"]) assert.ok(!says(row, "screen.document.names.matched." + k), "and draws no guess: " + k);
   const none = await open(at, { plane: { resolutions: ok({ ok: true, names: [] }), connections: CONNS } });
   assert.equal(section(none, "document.names.title"), undefined, "R20: no names, no section");
   const failed = await open(at, { plane: { resolutions: refusedIn("NO_SHA", "The names could not be read just now.") } });
@@ -311,7 +329,7 @@ test("R69 every question that rests on the document is a row, not yet checked, w
   assert.equal(legs(p).length, 2);
   for (const r of legs(p)) {
     assert.ok(says(r, "screen.document.a34.not_checked_yet"));
-    assert.ok(says(r, "screen.document.passage.where", { page: one(2) }), "the place it rests on, drawn from one");
+    assert.ok(says(r, "screen.document.place.restson", { page: String(one(2)) }), "the place it rests on, drawn from one");
     assert.ok(text(r).includes("Pothole repairs"), "its project");
     assert.deepEqual(actsIn(r), ["versionnotice"]);
   }
@@ -328,7 +346,8 @@ test("R69 asking for one row sends versionnotice for that question alone and dra
   assert.deepEqual(p.byOp("versionnotice").map((r) => r.query.target), [Q]);
   const r = legs(p)[0];
   assert.ok(says(r, "screen.document.a34.a_newer_copy_exists_captured_2_october", { date: day("2026-10-09T09:00:00Z") }));
-  assert.ok(says(r, "screen.document.a34.section_3_reads_the_same_in_both", { section: String(one(2)) }));
+  assert.ok(says(r, "screen.document.a34.page_same", { page: String(one(2)) }));
+  assert.ok(says(r, "screen.document.place.restson", { page: String(one(2)) }), "the place it rests on, by its key and drawn from one");
   assert.ok(says(legs(p)[1], "screen.document.a34.not_checked_yet"), "the other row has not been asked");
   assert.equal(writes(p).length, 0, "asking writes nothing");
 });
@@ -366,6 +385,7 @@ test("R69 a notice the sweep raised is a read of the record: its row is drawn as
   const done = legs(p)[0];
   assert.ok(done.querySelector('[data-leg-state="decided"]') && done.querySelector('[data-decided="adopted"]'));
   assert.ok(text(done).includes("mai") && text(done).includes(day("2026-10-12T10:00:00Z")) && text(done).includes("“the newer one adds the supervisor”"));
+  assert.ok(says(done, "screen.document.a34.moved", { member: "mai", date: day("2026-10-12T10:00:00Z"), why: "the newer one adds the supervisor" }), "the decided row by its key, its three fills read from the notice");
   assert.deepEqual(actsIn(done), []);
 });
 
@@ -400,4 +420,33 @@ test("R78 a theme's placement page and the mention that counts are drawn from on
   const p = await open(at, { plane: { themeread: (r) => ok(r.query.id ? { ok: true, members: [{ target: D, page: 0, placer_handle: "dev", placed_at: "2026-10-03T10:00:00Z", note: "backlog" }], hunches: [] }
     : { ok: true, themes: [{ theme_id: "TH-1", name: "Deferred maintenance" }] }) } });
   assert.ok(says(section(p, "theme.section"), "screen.document.theme.page", { page: String(one(0)), name: "dev", date: day("2026-10-03T10:00:00Z"), note: "backlog" }));
+});
+
+test("R68 a name matched by a held reference and one by a member's testimony draw their own sentences", async () => {
+  const more = [{ entity_id: "ENT-31", label: "Ref Name", kind: "organization", grade: "B", matched_by: "reference", mentions: 1 }, { entity_id: "ENT-32", label: "Told Name", kind: "organization", grade: "C", matched_by: "testimony", mentions: 1 }];
+  const p = await open(at, { plane: { resolutions: NAMED({ more }), connections: CONNS } });
+  const rows = section(p, "document.names.title").querySelectorAll(".cs-row");
+  assert.ok(says(rows[3], "screen.document.names.matched.reference") && says(rows[4], "screen.document.names.matched.testimony"));
+});
+
+test("R65 a history the plane says is cut is said so with the number of revisions shown, never read as the whole", async () => {
+  const many = Array.from({ length: 250 }, (_, i) => ({ seq: 250 - i, snapKey: "K" + (250 - i), kind: "promotion", author: "dev", at: T1, sha256: "a".repeat(64), files: [{ path: "bundle.md", sha256: "1".repeat(64), bytes: 1 }] }));
+  const p = await open(at, withHistory({ hist: { revisions: many, truncated: true } }));
+  assert.ok(says(record(p), "screen.document.revisions.truncated", { n: "250" }));
+  assert.equal(writes(p).length, 0);
+});
+
+test("R69 an answer that the cited section differs says so by page; no newer copy says none exists; a kept notice is drawn by its own sentence", async () => {
+  const p = await open(at, { images: { ...QPROJECT(LEG), ...TWO }, plane: { backlinks: () => backlinks2, versionnotice: ANSWER("newer_capture_matched", "affected") } });
+  await p.click(legs(p)[0].querySelector('button[data-act="versionnotice"]'));
+  await p.settle();
+  assert.ok(says(legs(p)[0], "screen.document.a34.page_differs", { page: String(one(2)) }));
+  assert.ok(!says(legs(p)[0], "screen.document.a34.page_same", { page: String(one(2)) }));
+  const q = await open(at, { images: { ...QPROJECT(LEG), ...TWO }, plane: { backlinks: () => backlinks2, versionnotice: ANSWER("no_newer_capture", null, { newer: false, candidates: [] }) } });
+  await q.click(legs(q)[0].querySelector('button[data-act="versionnotice"]'));
+  await q.settle();
+  assert.ok(says(legs(q)[0], "screen.document.a34.no_newer"));
+  const kept = (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ ...NOTICE_Q, state: "kept", closed_by: "dev", closed_at: "2026-10-13T10:00:00Z", why: "the cited wording is the one we need" }] : [] });
+  const k = await open(at, { images: { ...QPROJECT(LEG), ...TWO }, plane: { backlinks: () => backlinks2, reevaluationnotices: kept } });
+  assert.ok(says(legs(k)[0], "screen.document.a34.kept", { member: "dev", date: day("2026-10-13T10:00:00Z"), why: "the cited wording is the one we need" }));
 });

@@ -48,7 +48,8 @@ test("R3 R32 the document drawn: title, source as an outside link, its grade as 
   const passages = m.querySelectorAll("blockquote");
   assert.equal(passages.length, 2);
   assert.ok(says(passages[0], "screen.document.passage.where", { page: one(2) }), "R78: the record's page 2 is drawn from one");
-  assert.equal(section(p, "screen.document.passages.head").querySelectorAll('button[data-act="cite"]').length, 2, "each passage citable");
+  assert.equal(section(p, "document.read.title").querySelectorAll('button[data-act="cite"]').length, 2, "each passage citable");
+  assert.ok(says(section(p, "document.read.title"), "document.read.select") && says(section(p, "document.read.title"), "document.read.cite.help"), "the Read it section's own words");
   assert.ok(says(m, "document.unread.pages", { pages: `${one(7)}–${one(9)}` }));
   assert.ok(m.querySelector('[data-changed="true"]'), "a newer version marked changed");
   const cites = section(p, "screen.document.backlinks.head");
@@ -245,7 +246,7 @@ test("R3 (K3387) the document's words are the reading's text_units; a reading wi
   assert.equal(q.length, 2);
   assert.ok(q[0].textContent.includes("within seven calendar days"));
   const none = await open(at, { plane: { reading: ok(READING({ text_units: [], reading: { passages: [{ text: "invented" }], units: [{ text: "invented" }], text: "invented" } })) } });
-  const s = section(none, "screen.document.passages.head");
+  const s = section(none, "document.read.title");
   assert.ok(says(s, "state.empty"));
   assert.ok(!main(none).textContent.includes("invented"), "passages, units and text are never read");
 });
