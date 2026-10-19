@@ -71,7 +71,7 @@ test("R3 in the page: \"Record a new wizard\" puts the dock's guide in recording
   // an act pressed on the screen (here, the Drafts state) is heard as {screen, act}
   await p.click(p.root().querySelector('button[data-act="wizards"][data-state="draft"]'));
   await p.settle(60);
-  const pairs = dock().querySelectorAll("ul li");
+  const pairs = dock().querySelectorAll('.mk-list[role="list"] [role="listitem"]');
   assert.equal(pairs.length, 1);
   assert.equal(pairs[0].textContent.trim().replace(/\s+/g, " ").replace(/\s*Remove step.*$/, ""),
     said("screen.guide.recording.pair", { i: "1", screen: said("screen.wizards.name"), act: said("act.wizards.label.wizards") }));
@@ -126,7 +126,7 @@ test("R7 in the page: after join the welcome offer sits on Home; \"Not now\" fol
   const join = { id: "home", reads: () => ({}), render: (cs) => cs.act("startfrom", { data: { j: "1" } }),
     acts: [{ op: "startfrom", send(view, el, cs) { cs.wizard("WIZ-7db08189cc0e58c3", null, { joined: true }); return null; } }] };
   const p = await boot({ screens: [join, ...SCREENS], guide: GUIDE, path: "/app",
-    plane: plane({ wizardread: (req) => ok({ ok: true, script: { id: "WIZ-7db08189cc0e58c3", name: "Welcome a new member", origin: "civicsmith" }, version: { id: "WIZ-7db08189cc0e58c3@1", state: "approved", steps: [{ screen: "join", act: null, what: "a", why: "b" }, { screen: "join", act: null, what: "c", why: "d" }, { screen: "home", act: null, what: "e", why: "f" }] } }) }) });
+    plane: plane({ wizardread: (req) => ok({ ok: true, script: { id: "WIZ-7db08189cc0e58c3", name: said("wizard.WIZ-7db08189cc0e58c3.name"), origin: "civicsmith" }, version: { id: "WIZ-7db08189cc0e58c3@1", state: "approved", steps: [{ screen: "join", act: null, what: "a", why: "b" }, { screen: "join", act: null, what: "c", why: "d" }, { screen: "home", act: null, what: "e", why: "f" }] } }) }) });
   await p.settle(80);
   await p.click(p.root().querySelector('button[data-act="startfrom"]'));
   await reasonIfAsked(p);

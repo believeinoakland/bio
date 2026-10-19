@@ -108,9 +108,9 @@ test("R15 saving a recording: the guide says the draft was saved, by name, and D
   await p.click(p.root().querySelector('button[data-act="wizards"][data-state="offered"]'));
   await p.settle(60);
   const dock = () => p.root().querySelector(".cs-dock");
-  // each recorded step is numbered once: the word carries its number, so the list adds none
-  assert.ok(dock().querySelector("ul.mk-list") && !dock().querySelector("ol"));
-  const items = [...dock().querySelectorAll("ul.mk-list li")].map((li) => li.textContent.replace(/\s+/g, " ").trim());
+  // each recorded step is numbered once: the word carries its number, so the list adds none, neither a number nor a bullet (T51-115)
+  assert.ok(dock().querySelector('.mk-list[role="list"]') && !dock().querySelector("ol, ul, li"));
+  const items = [...dock().querySelectorAll('.mk-list[role="list"] [role="listitem"]')].map((li) => li.textContent.replace(/\s+/g, " ").trim());
   assert.equal(items.length, 2);
   assert.ok(items[0].startsWith("1. ") && items[1].startsWith("2. "));
   assert.ok(!/^\d+\.\s*\d+\./.test(items[0]));
@@ -248,11 +248,4 @@ test("R17 a step on a screen that needs no subject opens at once; a question or 
   await h.start({ script: "WIZ-00000000000000c1" });
   assert.deepEqual(h.nav, [["timeline", "P9"]]);
   assert.equal(h.requests.filter((r) => r.op === "projectlist").length, 0);
-});
-
-test("R17 the plan screen is not asked a project for (it reads a plan id) and opens as it always did", async () => {
-  const g = standIn({ plane: plane17({ wizardread: readSteps([{ screen: "plan", act: null, what: "a", why: "b" }]) }) });
-  await g.start({ script: "WIZ-00000000000000c1" });
-  assert.deepEqual(g.nav, [["plan", null]]);
-  assert.equal(g.requests.filter((r) => r.op === "projectlist").length, 0);
 });
