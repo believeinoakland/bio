@@ -74,3 +74,29 @@ Two points for BOB from CR-19 (screens-inquiry), and failures found outside this
 3. Failing on this branch by `node checks/run.mjs /home/user/bio` in modules this job did not change (screens-inquiry has 0 findings):
    coverage: agent-harness R17; agent-runner R36 R37 R38 R40; file-scanner R33; installer-steps R26 R31; journey-check R19; screens-settings R62; setup-words R19.
    words: 12 inline copy strings in bio-plane/src/setup-fleet.mjs (instance-setup), lines 30 to 67.
+
+## J9 · COMPLETE
+
+COMPLETE, CR-19 · screens-inquiry. Commit 55a6271d96, pushed to job/T51/screens-inquiry.
+
+Entries applied:
+- R81, the compare tab. The document's second "Read it" tab is drawn only where a question's basis leg (`extent_capture`) cites an earlier revision (index 1 or later) by `bundlehistory`'s `capture_sha`. Its act `revisioncompare` carries the pair (the cited revision and the current copy) and sends nothing. The fold's own compare still works.
+- R82, the original-file card. Its kind comes from the reading's `text_container` (text for a text/plain content type, `undetermined` for an id with no row) and its size from `bytes` (size.small, size.kb, size.mb, size.gb). No `bytes`, no card.
+- Words: no word row added. The tab, card and size keys already exist in words.json. The kind list is shared through the module's parts (common.mjs `KIND_IDS`, `COMMON.kinds`), and documentScreen adds the `document.kind.*` words, so the served page carries them.
+
+Deferred: none in the module.
+Found elsewhere: see the REPORT just before this message.
+
+Tests: test/m/screens-inquiry/cr19-document.test.mjs has 5 tests naming R81 and R82; all pass. Full module suite: 234 pass, 0 fail (229 existing and the 5 new).
+
+Checks, run from civicos-process against /home/user/bio:
+- format: 175 modules, 0 failures.
+- architecture screens-inquiry: 0 failures.
+- coverage screens-inquiry: 82 of 82 live ids named by a test, 0 failures.
+- ownership screens-inquiry tranche/T51: 0 failures.
+- run.mjs: screens-inquiry has 0 findings; the rest are in the REPORT.
+Not run: the journey-check walk (per your note).
+
+Draft PR: none opened. The module job's role says to open no pull request, but the harness asks for a draft after a push. Please rule whether a draft is wanted.
+
+Size (session_013FqAXHU9wuVwLZqxBYLrmn): test runs 7, module lines 4088
