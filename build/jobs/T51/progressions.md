@@ -35,3 +35,24 @@ Tests and checks (module tests run with `node --test bio-plane/test/m/progressio
 - checks/run.mjs: 3833 lines of failures, none naming progressions (the only "progression" hit is action-grammar's own check).
 
 Size (session_01DtreWyrLe5DTkd3njA9rev): test runs 4, module lines 2189.
+
+## J3 · COMPLETE
+
+COMPLETE again after CHANGE B3 (K3991). Branch job/T51/progressions at 5c9c47c6a8, tranche/T51 merged in.
+
+Entries applied:
+- B3: `NOT_A_DISPOSITION_DETAIL` in src/progressions/checks.mjs is `localize("progressions.checks.not_a_disposition_detail", en)`, English unchanged. R35's fixed sentence stays one fixed sentence; the detail check now compares it through the one constant, unchanged in the tests.
+- Earlier work (J2): the words testcopy and plain findings, and the keyed-reason red tests (overdue, owndates, owner), are as reported in J2.
+
+Deferred: none. Found elsewhere: none new.
+
+Tests and checks:
+- tests: 79 pass, 0 fail (`node --test bio-plane/test/m/progressions/*.test.mjs`).
+- format: 175 modules, 174 requirements files; 0 failures.
+- architecture progressions: 20 product files; 0 failures.
+- coverage progressions: 46 of 46 live ids named (checked before B3; B3 adds no id).
+- ownership progressions tranche/T51 job/T51/progressions: 0 failures (6 files, all in its paths and record).
+- checks/run.mjs: no finding names progressions (words, testcopy or coverage).
+- setup-words --check: rows.mjs stale, expected; it names progressions.checks.not_a_disposition_detail and progressions.index.set_none_named. No refusal naming this module.
+
+Size (session_01DtreWyrLe5DTkd3njA9rev): test runs 5, module lines 2188.
