@@ -78,7 +78,7 @@ import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PRE
          isMachineIdentity } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 export * from "./checks.mjs";
 export { MONITORING_SCHEMA, MONITORING_TABLES, monitoringOwns } from "./schema.mjs";
@@ -917,7 +917,7 @@ export class Monitoring {
           if (sniffed.format === "html") {
             await outcome("source_refused");
             const observation = monitorLook({ outcome: "unreachable",
-              reason: localize("monitoring.index.the_drive_export_address_served", "the Drive export address served HTML under `{v1}`", { v1: String(servedType || "no content type") }) });
+              reason: localize("monitoring.index.the_drive_export_address_served", "the Drive export address served HTML under `{v1}`", { v1: String(servedType || word("monitoring.content_type")) }) });
             this.#recordRun(addressNorm, false, checked);
             return answer({ ok: false, reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
               ...driveRow("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"), op, bundleId, status: res.status,
@@ -1142,8 +1142,7 @@ export class Monitoring {
          reads Google's export, not the page at the document's own address, and
          a Session Log that does not say so leaves a reader to assume the page. */
       + (driveTick && driveTick.harvestable
-          ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export composed `
-            + `from the Drive ${driveTick.kind} in ${driveTick.address}`
+          ? localize("monitoring.index.fetched_the_opendocument_export", " — fetched {exportAddress}, the OpenDocument export composed from the Drive {kind} in {address}", { exportAddress: String(driveTick.exportAddress), kind: String(driveTick.kind), address: String(driveTick.address) })
           : "") + (capLine ? ` — ${capLine}` : ""));
 
     const carried = [];
@@ -1197,7 +1196,7 @@ export class Monitoring {
          for is D-179's (C-53.13): those bytes are already another bundle's capture, and one capture
          has one home. */
       if (first && first.ok === false) {
-        monCap.why = localize("monitoring.why.promotion_filing_refused", "the promotion filing them was refused ({reason}{detail})", { reason: String(first.reason || first.code || "no reason given"), detail: String(first.detail ? `: ${String(first.detail).slice(0, 160)}` : "") });
+        monCap.why = localize("monitoring.why.promotion_filing_refused", "the promotion filing them was refused ({reason}{detail})", { reason: String(first.reason || first.code || word("monitoring.reason_given")), detail: String(first.detail ? `: ${String(first.detail).slice(0, 160)}` : "") });
         promoted = await promoteWith(false);
       } else if (first?.ok) monCap.registered = true;
       observation = monitorLook(monCap.registered
@@ -1678,8 +1677,7 @@ export class Monitoring {
         continue;
       }
       const undeterminedEnd = end.until && today === null
-        ? { end_undetermined: "no time zone is held for the instance, so today's local day cannot be read against the "
-                              + "address's end date; it is watched until it can be" } : {};
+        ? { end_undetermined: word("monitoring.time_zone_held") } : {};
       const iv = monitorIntervalMs(r.monitor_frequency);
       if (iv === null) {
         /* REC-191: nothing authored and nothing read — the check is how the type is read. */
@@ -1920,8 +1918,7 @@ export class Monitoring {
     return { ok: true, address: norm, setting: history[history.length - 1], history,
              says: frequency === null
                ? localize("monitoring.says.recorded_address_returns", "recorded: the address returns to the frequency its documents set; every earlier setting stays readable")
-               : "recorded: this frequency governs the address over its documents' own until a later setting replaces it; "
-                 + "every earlier setting stays readable" };
+               : word("monitoring.says.recorded_frequency_governs") };
   }
 
   /* ================================================================== *
@@ -2551,8 +2548,7 @@ export class Monitoring {
           "source:", `  locator: ${JSON.stringify(filed.locator)}`, `  retrieved: ${retrieved}`,
           "monitoring:", "  enabled: false", "  frequency: none",
           "---", "", "## Summary", "",
-          localize("monitoring.index.v1_its_bytes_are_file", "{v1} Its bytes are `{file}`, exactly as served; nothing here summarises them.", { v1: String(say ? say.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q.id} `
-            + `of ${q.bundle}.`), file: String(doc.file) }), "",
+          localize("monitoring.index.v1_its_bytes_are_file", "{v1} Its bytes are `{file}`, exactly as served; nothing here summarises them.", { v1: String(say ? say.summary : word("monitoring.document_served_gathered", { locator: String(filed.locator), id: String(q.id), bundle: String(q.bundle) })), file: String(doc.file) }), "",
           "## Provenance Notes", "",
           say ? say.notes : localize("monitoring.index.gathered_for_the_named_request", "Gathered for the named request {id}, carried by {bundle}'s data/gathering.json, which authorised the fetch; locator {v1} of {length} in the request's order. Collected {at}. Filed at {GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.", { id: String(q.id), bundle: String(q.bundle), v1: String(q.locators.indexOf(filed.locator) + 1), length: String(q.locators.length), at: String(at), GATHERING_LANDS_AT: String(GATHERING_LANDS_AT) }), "",
           "## Session Log", "",
@@ -3091,8 +3087,8 @@ export class Monitoring {
       key: `monitoring::${project}::${b.bundle}`, source: "monitoring", kind: "monitor-source", grade: null,
       basis: { project, bundle: b.bundle, locator: b.locator, captures: b.captures, rests_on: [...b.rests],
                ...(b.findings.size ? { findings: [...b.findings] } : {}),
-               says: localize("monitoring.says.project_rests_document", "{has} of this project rests on this document, and it is not monitored: a member may set monitoring.enabled on it; the daemon never enables it", { has: String(b.rests.has("objective") && b.rests.has("finding") ? "an objective and a published finding"
-                        : b.rests.has("finding") ? "a published finding" : "an objective") }) },
+               says: localize("monitoring.says.project_rests_document", "{has} of this project rests on this document, and it is not monitored: a member may set monitoring.enabled on it; the daemon never enables it", { has: String(b.rests.has("objective") && b.rests.has("finding") ? word("monitoring.says.objective_published_finding")
+                        : b.rests.has("finding") ? word("monitoring.says.published_finding") : localize("monitoring.says.an_objective", "an objective")) }) },
       instances: [{ bundle: b.bundle, documents: [b.bundle] }], surfaced_by: "machine" }));
   }
 

@@ -8,17 +8,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
 import { DRIVE_TICK_CHECKS, MONITORING_CHECKS } from "../../../src/monitoring/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const OLD_NAMES = /\b(this|the|our|its|your)\s+(?:(?:civicsmith|group's)\s+)?(instance|copy|plane)\b/i;
-const IS_THE_SHELL = "The check of that Google Drive document did not run: the export address answered with a web page "
-  + "rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. "
-  + "Nothing was compared and nothing about the record changed — what is known is that your team's Civicsmith could "
-  + "not see the document today.";
-const BYTES_ARE_THE_SHELL = "The check of that Google Drive document did not run: the export address said it was sending a "
-  + "document and sent a web page instead. Your team's Civicsmith reads the bytes rather than the label, so the "
-  + "application page was recognised and not compared against the captured document — comparing it would report a "
-  + "change on every visit that nobody made.";
+const IS_THE_SHELL = word("refusal.DRIVE_TICK_EXPORT_IS_THE_SHELL");
+const BYTES_ARE_THE_SHELL = localize("monitoring.checks.the_check_of_that_google", "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. Your team's Civicsmith reads the bytes rather than the label, so the application page was recognised and not compared against the captured document — comparing it would report a change on every visit that nobody made.");
 const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/edit";
 const EXPORT = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/export?format=odt";
 const tick = (w, id) => w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON });
@@ -46,7 +40,7 @@ test("R1 DEC-149: a Drive address of an unrecognised shape is refused with a det
   w.promote(id, infoMd(id, "https://docs.google.com/zzz/abc"));
   const r = await tick(w, id);
   assert.equal(r.body.reason, "DRIVE_SHAPE_UNRECOGNISED");
-  const own = " A shape your team's Civicsmith cannot read is a shape it cannot promise to be watching.";
+  const own = localize("monitoring.index.why_a_shape_your_teams", "{why} A shape your team's Civicsmith cannot read is a shape it cannot promise to be watching.", { why: "" });
   assert.ok(r.body.detail.endsWith(own), r.body.detail);
   assert.doesNotMatch(own, OLD_NAMES);
 });

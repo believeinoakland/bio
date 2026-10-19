@@ -26,6 +26,7 @@ import { monitoringOf } from "../../../src/monitoring/index.mjs";
 import { actionsOf, actionFacts } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { PROJECTION_SCHEMA, PROJECTION_TABLE } from "../../../src/retrieval/schema.mjs";
 import { registerDoctype, CONTRACT, CONFIDENCE } from "../../../../docprofile/registry.mjs";
 
@@ -301,7 +302,7 @@ export function sweepShare() {
       const bad = (field, message, extra) => out.push({ check: "C-18.5", severity: "error", field, message, ...extra });
       for (const k of Object.keys(entry)) if (!["id", "title", "terms"].includes(k)) bad(null, `carries '${k}', which is not a sweep's field (id, title, terms)`);
       if (typeof entry.id !== "string") bad("id", "id is missing");
-      else if (ids.has(entry.id)) bad("id", `id '${entry.id}' is not unique within the file`);
+      else if (ids.has(entry.id)) bad("id", `id ${localize("link-sweep.checks.id_is_not_unique_within", "'{id}' is not unique within the file", { id: String(entry.id) })}`);
       else ids.add(entry.id);
       for (const [j, t] of (Array.isArray(entry.terms) ? entry.terms : []).entries())
         if (t === "/(?=x)/") bad(`terms[${j}]`, `terms[${j}] SWEEP_TERM_REFUSED: a lookahead`, { code: "SWEEP_TERM_REFUSED", refusal: this.row });
