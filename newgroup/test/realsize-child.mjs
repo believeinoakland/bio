@@ -174,8 +174,7 @@ console.log(JSON.stringify({
   peakMB: Math.round(peak / MB), baselineMB: Math.round(baseline / MB), maxRssMB: Math.round(process.resourceUsage().maxRSS / 1e3), rssGrowthMB: Math.round((process.resourceUsage().maxRSS - rssPeak0) / 1e3),
   samples, uploads, reads, version, members: [...members.keys()],
   verify: status("verify"), up: status("up"), install: status("install"), failed,
-  running: /<b>Your team&#39;s Civicsmith is running\.<\/b>|<b>Your team's Civicsmith is running\.<\/b>/.test(done),
-  byteLag: /is not the [0-9.]+ release/.test(done), mismatch: /hashes to [0-9a-f]{16}/.test(done), unread: /could not be read back/.test(done),
+  done,
   lags: [...done.matchAll(/<li>(.*?)<\/li>/g)].map((m) => m[1]).slice(0, 6), fleet: (raw.match(/<script>ok\("fleet",(.*?)\)<\/script>/s) || [])[1] || null,
   page: raw.length,
 }));
