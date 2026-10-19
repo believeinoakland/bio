@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, testView, MEMBER, MACHINE } from "./fixture.mjs";
 import { ROLES } from "../../../src/events/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const doc = { kind: "document" };
 
@@ -21,7 +22,7 @@ test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTIT
   assert.equal(add({ entityId: "ENT-2026-9999", role: "payer" }).reason, "NO_SUCH_ENTITY");
   const payer = add({ role: "payer", attestation: null });
   assert.equal(payer.reason, "UNKNOWN_ROLE");
-  assert.match(payer.detail, /money fact/);
+  assert.equal(payer.detail, localize("events.index.a_role_is_one_of", "a role is one of {ROLES}; a payer or payee lives on the money fact, never on an event", { ROLES: ROLES.join(", ") }));
   assert.ok(!ROLES.includes("payer") && !ROLES.includes("payee"));
   assert.equal(add({ attestation: null, voteValue: "" }).reason, "NO_ATTESTATION");
   assert.equal(add({ attestation: 999 }).reason, "NO_SUCH_ATTESTATION");
@@ -61,7 +62,7 @@ test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTIT
   assert.equal(w2.ev.addParticipant({ eventId: e2.event_id, entityId: q, role: "voted", attestation: e2.attestation_ids[0], voteValue: "Abstain", by: MEMBER }).ok, true);
   const v = w2.ev.readEvent({ eventId: e2.event_id, viewer: MEMBER }).event.participants[0];
   assert.deepEqual([v.vote_value, v.vote_value_checked], ["Abstain", false]);
-  assert.match(v.vote_value_why, /no active jurisdiction profile names vote values/);
+  assert.equal(v.vote_value_why, word("events.vote_value_why"));
   assert.equal(w2.ev.addParticipant({ eventId: e2.event_id, entityId: w2.entity("Xo"), role: "voted", attestation: e2.attestation_ids[0], voteValue: " ", by: MEMBER }).reason, "NO_VOTE_VALUE");
 });
 
