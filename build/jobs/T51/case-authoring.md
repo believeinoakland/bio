@@ -64,3 +64,19 @@ CHANGE B2 done. Inline English in standardsUseWords replaced by setup-words word
 ## J3 · COMPLETE
 
 COMPLETE for B2 and B3. B2: standardsUseWords reads setup-words keys (case-authoring.text.*), no inline English. B3: document and lens/attribution spelled in bio-case-document/8; three R14 tests moved to /8 (BOB's note said five; three titles were failing). Module tests 190/190. format, architecture, coverage and ownership pass for case-authoring (ownership: 7 files, the module, its tests and the record). run.mjs: the same 23 coverage failures in other modules, none case-authoring. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.
+
+## J4 · REPORT
+
+REPORT (T51-161, words part done and pushed on job/T51/case-authoring, commit fe21d4aef6; R77 waits for case-inputs' merge).
+
+Done: every finding of build/plan/words-pass/case-authoring.md (the 57, the 13 plain, the 4 code copies) is fixed. node checks/words.mjs shows no finding in case-authoring. Bytes of signed text are unchanged: each localize's en is the old sentence character for character. Module tests 190 of 190. Beyond the check's count I also read through localize the sentences it does not count (refusal details, the sign steps' stated/next/says, the document's Session Log and strength rows, the searched section's detail, the details NOT_CONCLUDED stitched). Ids are case-authoring.<checks|document|index|searched>.<slug>, fixed once. Test copies now compare with word/localize by equality (case-disclosures' and case-grammar's sentences by their own ids; the fixture stub's "a new case" is now an opaque token).
+
+Judged not sentences a member reads, kept as they are (settle them with the design stream, K3944):
+1. The sign-step names `photos`, `the account`, `approvals`, `sign` in publishPreflight's steps: tests and screens find a step by its name (code compares them), so identifiers (K3971).
+2. The case document's section headings and front-matter keys (`## Scope`, `## Findings In This Case`, `## What Was Searched`, `## Session Log`, `### What they did`, `### What we did` and the rest): the signed grammar other modules locate by exact text (case-inputs' acknowledgement splice, publication's block readers); a signed text changes only as a new version (K1333).
+3. Values passed into word rows or written as row values: `(unpinned)`, `(unnamed)`, the role terms LOAD-BEARING / supporting in the findings list, and the `undetermined` / `nowhere` words of a timeline row's `when` (events' own vocabulary).
+4. The Symbol description of the pre-flight rollback and the one-word `statement` label: developer-only.
+
+Two details for the design: NO_WHAT_CHANGED and NO_SUCH_WHAT_CHANGED_DRAFT name the argument `(whatChanged: {text})` in braces, so their localize passes `text: "{text}"` as its own fill to keep the braces literal; reword if the design prefers. And a generated artifact is now stale: bio-plane/dist/bio-plane.bundled.mjs (and its manifest) holds this module's source (manifest §14); regenerate at the layer close.
+
+Waiting: R77 (the sign step's minutes) needs case-inputs' minutesComparisonsOn and minutesLine, which are not on tranche/T51 yet. I read the B5 CHANGE: rows carry minutesLine unchanged; an unreadable source answers `minutes: {undetermined: true}` only. Tell me when case-inputs has merged; I then merge tranche/T51, write R77 with its tests, run the checks and COMPLETE.
