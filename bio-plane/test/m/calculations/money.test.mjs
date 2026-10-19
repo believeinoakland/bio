@@ -96,7 +96,7 @@ test("R14 adoptBinding records a member's adoption of a table's money roles; ing
   assert.equal(w.c.bindingOf(b.binding).table, t.sha);
   assert.equal(w.c.bindingOf("nope"), null);
   /* ingestMoney's refusals */
-  assert.equal(code(await w.c.ingestMoney({ binding: b.binding, rows: [0], by: MACHINE })), "MEMBER_ACT_ONLY", "only at a member's request");
+  assert.equal(code(await w.c.ingestMoney({ binding: b.binding, rows: [0], by: MACHINE })), "MEMBER_ACT_ONLY");
   assert.equal(code(await w.c.ingestMoney({ binding: "x", rows: [0], by: V("bob") })), "NO_SUCH_BINDING", "only from an adopted binding");
   assert.equal(code(await w.c.ingestMoney({ binding: b.binding, rows: [], by: V("bob") })), "NO_ROWS");
   assert.equal(code(await w.c.ingestMoney({ binding: b.binding, rows: "all", by: V("bob") })), "NO_REASON", "every row only with a stated reason");

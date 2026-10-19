@@ -7,7 +7,7 @@
 import { FIELD_TYPES, parseFigure } from "../calc-grammar/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
 import { sha256HexSync, createSha256 } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R1: the bounds of a table, in bytes of canonical CSV and in cells (N571: a held table is evaluated as calc-grammar's
  *  streamed table, its R22, read row by row from its canonical text, so 1,000,000 cells fit a Worker's heap). */
@@ -120,7 +120,7 @@ export const shaOf = (text) => sha256HexSync(text);
 /** R1: `null` when the schema is a Table Schema over the declared header, else `{field, why}` naming the field. */
 export function schemaFault(schema, header) {
   if (!plain(schema) || !Array.isArray(schema.fields) || !schema.fields.length)
-    return { field: null, why: "a Table Schema is {fields: [{name, type}]} with one field per column" };
+    return { field: null, why: localize("calculations.tables.a_table_schema_is", "a Table Schema is {fields: [{name, type}]} with one field per column") };
   const extra = Object.keys(schema).filter((k) => k !== "fields");
   if (extra.length) return { field: extra[0], why: word("calculations.why.part_table_schema") };
   if (schema.fields.length !== header.length)

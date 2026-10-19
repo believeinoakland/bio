@@ -185,7 +185,7 @@ test("R33 applicationRecipes lists the recipes of application as data; outcome_r
   const rep = (await app(w, "reasons_repeated", f.sha)).results.application;
   assert.equal(num(rep.distinct_reasons), "2");
   assert.deepEqual([rep.share_repeated.numerator, rep.share_repeated.denominator].map(num), ["2", "3"]);
-  assert.deepEqual(rep.reasons.rows[0], { reason_fold: "granted in the interest of the public", count: "2" }, "each reason listed with its count");
+  assert.deepEqual(rep.reasons.rows[0], { reason_fold: "granted in the interest of the public", count: "2" });
   assert.doesNotMatch(JSON.stringify(rep), /boilerplate/i, "never named so by the machine");
   /* waiver_share */
   const ws = (await app(w, "waiver_share", f.sha)).results.application.groups[0].shares.waiver;
