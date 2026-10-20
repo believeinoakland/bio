@@ -866,8 +866,16 @@ export class ProjectRoster {
         WHERE b.object_type = 'project' AND (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
         ORDER BY b.bundle_id
         LIMIT ?`, ROOT_ADMIN, ...gate.args, cursor, cursor, cap + 1);
-    const truncated = rows.length > cap;
-    const page = truncated ? rows.slice(0, cap) : rows;
+    /* R39 (T51 fix round; C84): an administrator's list also holds each hidden project the rescue is open to her for,
+       merged into R26's rows in id order, so paging counts them as it counts any row. */
+    const asker = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
+    const admin = !!asker && this.m.isAdministrator(asker);
+    const rescue = admin ? this.#rescueOpenRows(asker, viewer, gate, cursor, cap + 1) : [];
+    const merged = rescue.length ? [...rows, ...rescue].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).slice(0, cap + 1) : rows;
+    const truncated = merged.length > cap;
+    const both = truncated ? merged.slice(0, cap) : merged;
+    const open = new Set(rescue.map((r) => r.id));
+    const page = both.filter((r) => !open.has(r.id));
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
     /* R34 (T50; N1118): the viewer's own state in each project as membership records it; null for a non-participant. */
     const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
@@ -878,16 +886,43 @@ export class ProjectRoster {
     const scopes = new Map(page.length ? this.#rows(
       `SELECT project_id, scope FROM project_scopes WHERE project_id IN (${page.map(() => "?").join(",")}) ORDER BY seq`,
       ...page.map((r) => r.id)).map((x) => [x.project_id, x.scope]) : []);
-    const projects = page.map((r) => ({ id: r.id, participation: own.get(r.id)?.state ?? null,
+    const projects = both.map((r) => open.has(r.id)
+      /* R39: at an administrator's EXISTENCE of the project, nothing of it beyond its id and name, and the mark. */
+      ? { id: r.id, participation: null, mine: { in: false, owner: false }, scope: null, name: this.#bundle(r.id)?.title ?? null,
+          stage: null, owner: null, members: [], activity: Array(ProjectRoster.ACTIVITY_WEEKS).fill(0), lastChange: null,
+          rescue_open: true }
+      : { id: r.id, participation: own.get(r.id)?.state ?? null,
       mine: { in: own.get(r.id)?.state === "joined", owner: !!own.get(r.id)?.owner },
       scope: scopes.get(r.id) ?? "none",
       name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
       owner: r.founder ? this.#person(ROOT_ADMIN, null)
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
       members: members.get(r.id) ?? [], activity: activity.get(r.id) ?? Array(ProjectRoster.ACTIVITY_WEEKS).fill(0),
-      lastChange: lastChange.get(r.id) ?? null }));
+      lastChange: lastChange.get(r.id) ?? null, ...(admin ? { rescue_open: false } : {}) });
     return { ok: true, projects, count: projects.length, limit: cap, truncated,
              next: truncated ? projects[projects.length - 1].id : null };
+  }
+
+  /* R39 (T51 fix round; C84): THE HIDDEN PROJECTS THE RESCUE IS OPEN TO `asker` FOR, up to `n`, in id order after `cursor`:
+     the project is hidden and `viewer`'s sight of it is EXISTENCE (`#rescueAtExistence`, R5's), membership's
+     `rescueRefusal` answers null (an administrator, owner rows, every owner inactive) and its scope is not `own` (R22).
+     The statement only narrows what is read to hidden projects below FULL sight whose owners are all inactive; each is
+     then asked of the act's own predicates, so the mark and the act cannot disagree. Writes nothing. */
+  #rescueOpenRows(asker, viewer, gate, cursor, n) {
+    const out = [];
+    for (const c of this.#rows(
+      `SELECT b.bundle_id AS id FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
+        WHERE b.object_type = 'project' AND s.setting = 'hidden' AND NOT (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
+          AND EXISTS (SELECT 1 FROM project_participants o WHERE o.project_id = b.bundle_id AND o.owner = 1)
+          AND NOT EXISTS (SELECT 1 FROM project_participants o JOIN members om ON om.member_id = o.member_id AND om.status = 'active'
+                           WHERE o.project_id = b.bundle_id AND o.owner = 1)
+        ORDER BY b.bundle_id`, ...gate.args, cursor, cursor)) {
+      if (out.length >= n) break;
+      if (!this.#rescueAtExistence(c.id, viewer) || this.m.rescueRefusal(c.id, asker) !== null
+          || this.projectScope(c.id).scope === "own") continue;
+      out.push({ id: c.id });
+    }
+    return out;
   }
 
   /** R35 (T51; N1209): THE VIEWER'S OWN INVITATIONS, each project where her participation is `invited`, `{projectId, name,
@@ -1264,6 +1299,34 @@ const parseList = (v) => { try { return JSON.parse(v); } catch { return v; } };
 /* R31: the query carries `stake` as text; the exact word `null` clears it, a missing parameter is malformed. */
 const stakeParam = (url) => (!url.searchParams.has("stake") ? undefined
   : url.searchParams.get("stake") === "null" ? null : url.searchParams.get("stake"));
+
+/* R40, R41 (T51 fix round; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send,
+   declared by their owner beside the ops map: each row's class, weight and description are the op's existing rows' (the
+   hand rows of `op-declarations` and `op-grades`, with which they agree), its fields are what the arm below reads from
+   the request (the stamps `by` and `viewer` excluded). `reason` is accepted where the arm reads one of its own. */
+export const DECLARED_OPS = Object.freeze({
+  projectowneradd: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectowneradd", "roster act on a project"),
+    fields: { accepts: ["projectId", "handle"], requires: ["projectId", "handle"] } },
+  projectownerremove: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned",
+    description: "act.projectownerremove.does",
+    fields: { accepts: ["projectId", "handle", "reason"], requires: ["projectId", "handle", "reason"] } },
+  projectownerrescue: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned",
+    description: "act.projectownerrescue.does",
+    fields: { accepts: ["projectId", "handle", "reason"], requires: ["projectId", "handle", "reason"] } },
+  projectrequest: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequest", "request to join (§7.14): made at EXISTENCE sight, where no object is before the caller — reached from op=projectdirectory's row, not from a target's control strip"),
+    fields: { accepts: ["projectId", "comment"], requires: ["projectId"] } },
+  projectrequestwithdraw: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequestwithdraw", "request to join (§7.14): the requester's act on their own REQUEST, not on a bundle — listed by op=projectrequests"),
+    fields: { accepts: ["projectId"], requires: ["projectId"] } },
+  projectrequestanswer: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequestanswer", "request to join (§7.14): an owner's grant or decline of a REQUEST, not a state of the project — listed in the owner's queue by op=projectrequests"),
+    fields: { accepts: ["projectId", "handle", "answer", "comment"], requires: ["projectId", "handle", "answer"] } },
+  projectstakeset: { classes: ["admin", "member", "probe"], mutating: true, weight: "reversible",
+    description: localize("project-roster.declared.projectstakeset", "project-directed: a project's declared stake, every value kept, keyed by project; moves no bundle"),
+    fields: { accepts: ["projectId", "stake"], requires: ["projectId", "stake"] } },
+});
 
 export function projectRosterOps(r, url, body, env) {
   const q = (k) => url.searchParams.get(k);

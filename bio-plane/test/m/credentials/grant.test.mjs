@@ -179,9 +179,10 @@ test("R32 aiGrantMintStanding: refusals in order (not active, NO_ACCOUNT, STANDI
   w.c.accountReferenceRemove({ member: "bob", by: "bob" });
   const standing = (member, question = "what is new on the budget?") => w.c.aiGrantMintStanding({ member, question });
   const before = w.snapshot();
-  for (const member of ["dee", "cal", "ghost", "admin", "class:ai", null, ""])
+  for (const member of ["dee", "cal", "ghost", "class:ai", null, ""])
     assert.deepEqual(shape(await standing(member)), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"), String(member));
   assert.deepEqual(shape(await standing("bob")), refusal("NO_ACCOUNT"), "no reference, no group key");
+  assert.deepEqual(shape(await standing("admin")), refusal("NO_ACCOUNT"), "the founder is an active member (member-roster R76) with no account of her own");
   assert.deepEqual(shape(await standing("ann")), refusal("STANDING_SWITCH_OFF"), "her own account's switch is off");
   assert.equal(w.snapshot(), before, "no refusal mints");
   w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });

@@ -45,7 +45,7 @@ test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither tabl
   await p.click(btn(p, "captureupload"));
   assert.equal(p.byOp("captureupload").length, 0, "asks a reason first");
   assert.ok(p.root().querySelector('[data-slot="m:0"] textarea'));
-  const o = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal" }], render: (cs) => cs.act("openoriginal") };
+  const o = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal", send: fitSend("openoriginal") }], render: (cs) => cs.act("openoriginal") };
   const q = await boot({ screens: [o], path: "/app/open-file/ab" });
   /* R64, R77: its kit mark is Reversible, so none is drawn; it runs on press */
   assert.equal(btn(q, "openoriginal").querySelector(".w"), null);
@@ -193,7 +193,7 @@ test("R21 an act's send: null sends nothing; {refuse: key} draws that word besid
   const q = await boot({ screens: ALL, plane: { promote: ok({ project: "P9" }), projectdirectory: ok({ projects: [] }) } });
   q.doc.getElementById("home-title").value = "New";
   await q.click(btn(q, "promote"));
-  assert.deepEqual(q.byOp("promote")[0].body, { title: "New" });
+  assert.deepEqual(q.byOp("promote")[0].body, { ...declaredFit("promote"), meta: { title: "New" } }, "the declared fields, the typed title carried as meta");
   assert.equal(q.location.pathname, "/app/project/P9", "done opened another screen");
   let reads = 0;
   const s = { id: "held", reads: () => ({ a: { op: "heldcaptures" }, b: { op: "gradenote" } }), render: (cs) => cs.act("heldrestore"),
@@ -221,7 +221,7 @@ test("R21 (K2999) a picked-rows act receives the picked keys as extra.picked; se
 });
 
 test("R21 (K2999) cs.download hands a byte answer to the browser as a file, its object address released once the download starts; a refusal answers {ok: false}", async () => {
-  const s = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal", async send(view, el, cs) { const r = await cs.download("openoriginal", { query: { sha256: "ab" } }); el.setAttribute("data-got", String(r.ok)); return null; } }],
+  const s = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal", async send(view, el, cs) { const r = await cs.download("openoriginal", { query: { capture: "ab" } }); el.setAttribute("data-got", String(r.ok)); return null; } }],
     render: (cs) => cs.act("openoriginal") };
   const p = await boot({ screens: [s], path: "/app/open-file/ab", plane: { openoriginal: bytes("%PDF-1.7") } });
   const press = async (x) => { await x.click(btn(x, "openoriginal")); };

@@ -2,7 +2,7 @@
    interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, has, lacks, said, all, actOps, links, JOINED } from "./kit.mjs";
+import { open, has, lacks, said, all, actOps, links, textOf, squash, JOINED } from "./kit.mjs";
 
 const INVITE = "inv-sentinel-88aa";
 const LINKID = "jl-sentinel-21bb";
@@ -133,4 +133,18 @@ test("R7 joined but the sign-in refused: it says so and links front; no codes ar
   assert.ok(!o.requests.some((r) => r.op === "recoverycodesissue" || r.op === "memberlanguageset"));
   assert.deepEqual(o.wizards, []);
   assert.ok(links(o.tree).includes("/app/front"));
+});
+
+test("R30 the button that reads the invitation says so again once it has been read (screen.join.invite.reread); nothing is drawn to read while the read is pending", async () => {
+  const pending = await open("join", { fragment: { invite: INVITE }, table: plane({ invitelook: "pending" }) });
+  assert.deepEqual(actOps(pending.tree), [], "before the read, nothing to read again");
+  const o = await open("join", { fragment: { invite: INVITE }, table: plane() });
+  const btn = all(o.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "invitelook");
+  assert.equal(btn.length, 1);
+  assert.equal(squash(textOf(btn[0])), said("screen.join.invite.reread"));
+  assert.notEqual(said("act.invitelook.label.join"), said("screen.join.invite.reread"), "control: the old key's words differ");
+  assert.ok(!btn.some((b) => squash(textOf(b)) === said("act.invitelook.label.join")), "the old label is not drawn");
+  // pressing it reads the invitation again, with the invitation in the body
+  const r = await o.press("invitelook");
+  assert.deepEqual(r.sent.map((x) => [x.op, x.body]).slice(0, 1), [["invitelook", { invite: INVITE }]]);
 });

@@ -1,6 +1,6 @@
 # people (T51)
 
-**Status** · session_011qciUiMoVjk9Zn2kHVnzVS · depth 2 · COMPLETE · handled B5
+**Status** · session_01VLYyVmHthCsTAnJoos37ea · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -123,3 +123,22 @@ Deferred: none. Found in other modules: none new in this round.
 Note for the record: the commit message for 3976b9f286 carries a Co-Authored-By line naming a model. That breaks the no-model-identifier rule for commits; the commit is already pushed, and I did not rewrite it (no force-push). Bob may want the line removed at the layer's merge.
 
 Size (session_011qciUiMoVjk9Zn2kHVnzVS): test runs 3, module lines 2240
+
+## J9 · COMPLETE
+
+**FR-64 · people (I-32, DEC-384, K4214): claims and candidates serve organizations. COMPLETE.**
+
+Entries applied
+- `claimIdentity` (R1) accepts two distinct registered entities of one kind among `person`, `institution`, `body`, `movement` (`CLAIM_ENTITY_KINDS`). Any other kind (office, fund, source) stays `NOT_A_PERSON` naming the end; two ends of different kinds (person and organization, institution and body) are refused `KIND_MISMATCH` naming both kinds, writing nothing. The `name` basis's shared-name test is within the ends' own kind.
+- `samePersonCandidates` (R7) proposes candidates of the entity's own kind (name fold and scheme identifier); a kind no claim joins is `NOT_A_PERSON`.
+- `identityOf` and `personAt`'s `claims` (R5, R39) already answered any registered entity; now tested for an organization. Person facts (R9) stay persons' only (tested control). No op's fields changed, so `DECLARED_OPS` (R42) is unchanged.
+- Requirements: R1 and R7 amended in `build/requirements/people.md` (Status line too); both already named by tests, so no *(not yet met)* marker.
+
+Tests (new `orgclaims.test.mjs`, 4 tests naming R1/R7): an organization pair claimed `same_as`, read back through identity, the page's claims and candidates, then withdrawn; body and movement pairs; office refused; cross-kind refused KIND_MISMATCH writing nothing (control: same-kind claimed; candidates of person and institution never mix); person pair as before.
+- `node --test test/m/people/*.test.mjs` (from bio-plane): tests 77, pass 77, fail 0.
+- Users of people (retrieval, calculations, strength, answers, corpus-export, ratification, case-disclosures, case-authoring, consequences, scheduler, affordances, notice-producers, op-declarations, control-plane, plane, screens-investigate, explore, retrieval-browse): 2725 tests, 8 fail, all in screens/op-declarations tests (R73/R21 registryActGaps, R47, R46, R4, R36, R24, R17, R10), none touching a claim or candidate; I did not diff them against the tranche.
+- Checks (process repo): format 0; architecture people 0; coverage people 42 of 42; words people 0 (two new sentences are `localize` ids `people.index.registered_no_claim_joins`, `people.index.claim_joins_one_kind`; rows.mjs stale for them, BOB regenerates); ownership 1 file, 0 failures; setup-words --check: stale-rows note only, none naming people.
+
+Deferred: none. Found elsewhere: nothing new; screens-investigate (FR-29) can now fill the organization page from these reads.
+
+Size (session_01VLYyVmHthCsTAnJoos37ea): test runs 6, module lines 2276

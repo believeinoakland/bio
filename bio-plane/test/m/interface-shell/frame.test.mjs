@@ -111,7 +111,7 @@ const pathAt = (commit) => {
   return new Function(/(const PATH = \{[\s\S]*?\n\};)/.exec(src)[1] + "; return PATH;")();
 };
 const PROJECTS = new Set(["The Coliseum lease", "Pothole repairs", "Sewer fund transfers"]);
-const step = (s) => (s === "@project" ? "@project" : /^(shell|screen)\./.test(s) ? word(s) : word("rail." + s + ".name"));
+const step = (s) => (s === "@project" ? "@project" : /\.crumb$/.test(s) ? word(s, { name: "<name>" }) : /^(shell|screen)\./.test(s) ? word(s) : word("rail." + s + ".name"));
 const T46 = ["home", "queue", "inbox", "finder", "answers", "capture", "held", "open-file", "find-in", "project", "document", "question", "assistant", "members", "account", "connect", "notes"];
 
 test("R8 each screen's path is mock-shell.js' PATH for its id at 3f40899950, a project's step its title (members: Settings › Members; held: Add › Held captures; document: Projects › <project> › Document)", () => {
@@ -130,7 +130,8 @@ test("R28 every screen of the new screen modules has its path from mock-shell.js
   const NEW = ["wizards", "person", "explore", "timeline", "money", "calculation", "proceeding", "due-date", "standard", "ties", "case-editor", "review-copy", "ceremony", "imported", "docket", "plan", "start-send", "request", "action", "matter", "archive", "group-identity", "security", "translations"];
   /* the design's PATH is in its words of the day; the interface says "team" where it said "group" (setup-words) */
   const team = (x) => x.replace(/\bgroup('s)?\b/g, "team$1");
-  for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team), id);
+  /* R110 (K4217): the standard's last step is the design's crumb word (DEC-384 entry 9), not its name; every step before it is the design's */
+  for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team).map((x, i, all) => (id === "standard" && i === all.length - 1 ? step("screen.standard.crumb") : x)), id);
   for (const id of ["people", "settings", "projects", "group", "places", "recovery"]) assert.deepEqual(PATHS[id].map(step).map(team), B[id].map(team), id);
   assert.deepEqual(PATHS.plan.map(step), [word("rail.projects.name"), "@project", word("screen.plan.name")]);
   assert.deepEqual(PATHS.wizards.map(step), [word("rail.settings.name"), word("screen.wizards.name")]);

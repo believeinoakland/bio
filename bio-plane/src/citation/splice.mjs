@@ -137,6 +137,8 @@ export function spliceBasis(text, legs) {
   const block = legs.map((l) => [
     `  - target: ${l.target}`,
     `    role: ${l.role}`,
+    /* R16: a leg on another team's finding names the one edition it rests on, and no grade of its own */
+    ...(Number.isInteger(l.target_edition) ? [`    target_edition: ${l.target_edition}`] : []),
     ...(l.grade ? [`    grade: ${l.grade}`] : []),
     ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
     ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
@@ -162,6 +164,45 @@ export function spliceBasis(text, legs) {
     break;
   }
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+}
+
+/** R17: REMOVE the legs on `target` from the `basis` block, touching nothing else: the entries are found as
+ *  `spliceEdgeStatus` finds a reference's, by the `target:` line, and dropped whole; a block left empty becomes
+ *  `basis: []`. Answers `{text, editions}` (the `target_edition` of each leg removed, in order, null for a leg naming
+ *  none), or null when the block is not in a shape this grammar can edit in place or holds no leg on `target`. */
+export function removeBasisLegs(text, target) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  const gone = new Set(), editions = [];
+  starts.forEach((from, s) => {
+    const to = (s + 1 < starts.length ? starts[s + 1] : last + 1) - 1;
+    let found = null, edition = null;
+    for (let i = from; i <= to; i++) {
+      const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+      if (t && found === null) found = t[1].replace(/^["']|["']$/g, "");
+      const e = /^\s*(?:- )?target_edition:\s*(\d+)\s*$/.exec(lines[i]);
+      if (e) edition = Number(e[1]);
+    }
+    if (found === target) { for (let i = from; i <= to; i++) gone.add(i); editions.push(edition); }
+  });
+  if (!gone.size) return null;
+  if (gone.size >= starts.length && starts.every((f, s) => gone.has(f))) {
+    return { text: [...lines.slice(0, bi), "basis: []", ...lines.slice(last + 1)].join("\n"), editions };
+  }
+  return { text: lines.filter((_, i) => !gone.has(i)).join("\n"), editions };
 }
 
 /** Set a top-level frontmatter scalar that is already there (copied from the retired legacy store, K57); the text unchanged when the

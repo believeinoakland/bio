@@ -1,6 +1,6 @@
 # BOB to credentials (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -74,3 +74,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B6 · ANSWER · re J5
 
 ANSWER J5 (K4210). (1) Yes: write R81's test now, see it fail for member-roster's reason, and finish C80 when BOB's CHANGE says member-roster (R76) is merged. (2) Right: subscriptionsignin is control-plane's (its door arm); BOB sends it to CONTROL-PLANE #39. (3) securitymap: op-grades drops its RUNG_ABSENT row (CHANGE to OP-GRADES #16, its NON_ACTS row states the read); declare securitymap as weight read with accepts/requires from,to now; the registration agrees once op-grades merges. fp as a door stamp and the fixed-refusal requires readings are accepted. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (K4218): member-roster R76 is merged on tranche/T51. Merge the tranche, run R81's test (it should pass with no code of yours, as you said), and COMPLETE.

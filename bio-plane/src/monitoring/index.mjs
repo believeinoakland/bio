@@ -78,6 +78,7 @@ import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PRE
          isMachineIdentity } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
+import { namedRequestSet, namedRequests, writeGathering } from "./named-requests.mjs";
 import { localize, word } from "../setup-words/index.mjs";
 
 export * from "./checks.mjs";
@@ -532,6 +533,9 @@ function startOfDayAfter(day, zone) {
   const t = r && typeof r.end === "string" ? Date.parse(r.end) : NaN;
   return Number.isFinite(t) ? t : null;
 }
+
+/* R75–R77: what `named-requests.mjs` reads of this file, handed over so it imports nothing from here */
+const HELPERS = Object.freeze({ withSessionEntry, monitorIntervalMs });
 
 const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n > 0 ? Math.min(n, max) : dflt; };
 
@@ -2059,6 +2063,19 @@ export class Monitoring {
   }
 
   /* ================================================================== *
+   * A member's door to a bundle's named requests (R75, R76) and the one writer of its file (R77); T51, K4189
+   * ================================================================== */
+
+  /** R75 (K4189; UC-035): a member plants one named request in a bundle's `data/gathering.json`, or revises one, by one
+   *  promotion authored by the member, through R77's writer (`named-requests.mjs`). Fetches nothing: an open new request
+   *  is due at the next cadence tick (R28). Answers `{ok, bundle, request, status, revision}`. */
+  namedRequestSet(a) { return namedRequestSet(this, a, HELPERS); }
+
+  /** R76 (K4189; UC-034, UC-035): every request of every `data/gathering.json` the viewer may see, with its last attempt
+   *  and when it is next due. Writes nothing and never throws. */
+  namedRequests(a) { return namedRequests(this, a, HELPERS); }
+
+  /* ================================================================== *
    * For `scheduler` (R19–R24, R45)
    * ================================================================== */
 
@@ -2779,7 +2796,10 @@ export class Monitoring {
    *    land(request, filed, at, say?)        R28's landing: `request` `{id, bundle, locators, target}`, `filed` `{locator,
    *                                          doc}` (capture's `document`); `say` `{title, summary, notes, trigger}`.
    *    gate(viewer)                          membership's viewer predicate, the sight R32's reads use.
-   *    recheckMs()                           the archive tick's interval (R20). */
+   *    recheckMs()                           the archive tick's interval (R20).
+   *    write({bundle, mutate, author, viewer, log})  R77: the one writer of `data/gathering.json` (`named-requests.mjs`);
+   *                                          `mutate` edits the parsed object in place and returns it, `log` is the Session
+   *                                          Log sentence; R27's check and the sweep fence run in the promotion. */
   sweepHost() {
     return this.#host ||= Object.freeze({
       paused: () => this.paused(),
@@ -2791,6 +2811,7 @@ export class Monitoring {
       land: (request, filed, at, say = null) => this.#land(request, filed, at, say),
       gate: (viewer) => viewerPredicate(viewer),
       recheckMs: () => this.#archiveTickMs(),
+      write: (a) => writeGathering(this, a, HELPERS),
     });
   }
   #host = null;
@@ -3302,6 +3323,38 @@ export function monitoringOf(host, deps) {
   return m;
 }
 
+/** K4168, K4202 (T51): the whole declaration of each op this module serves that a screen sends, or that T51 adds, read from
+ *  the op's arm in `monitoringOps` (below) whole. `classes`, `machineClasses`, `mutating`, `weight` and `description` of
+ *  the first five are the hand rows' in `op-declarations` and `op-grades`, copied; `accepts` is every field the arm reads
+ *  from `url` and `body`, the stamps (`viewer`, `author`, `by`, and the control plane's `actor`, `actorClass`) excluded;
+ *  `requires` the ones it refuses without, as its refusal names them. `namedrequestset` and `namedrequests` (R75, R76) are
+ *  new: no hand row holds them, so `namedrequestset` names its capability (`needs`) and its stamps. */
+export const DECLARED_OPS = Object.freeze({
+  monitor: { classes: ["admin", "member", "probe", "daemon"], mutating: true, weight: "observational",
+    description: localize("monitoring.declared.monitor", "capture-directed: the monitor tick on a captured source (metadata published in capture_acts)"),
+    fields: { accepts: ["bundleId"], requires: ["bundleId"] } },
+  monitoring: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("monitoring.declared.monitoring", "read: the watched addresses a viewer may see, each with its frequency, when it was last checked, when it is next due and its end date; writes nothing"),
+    fields: { accepts: ["now", "limit"], requires: [] } },
+  monitorpause: { classes: ["admin", "member"], machineClasses: ["admin"], mutating: true, weight: "credential",
+    description: localize("monitoring.declared.monitorpause", "an administrator's setting over the instance's own fetching, refused NOT_AN_ADMIN to a member who is not one; not an act on an object"),
+    fields: { accepts: ["paused"], requires: ["paused"] } },
+  monitorset: { classes: ["admin", "member", "probe"], machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("monitoring.declared.monitorset", "bundle-directed: whether a captured document is watched, and how often; a member's own revision of the bundle; fetches nothing"),
+    fields: { accepts: ["bundleId", "enabled", "frequency"], requires: ["bundleId", "enabled"] } },
+  monitorslate: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("monitoring.declared.monitorslate", "read: the due slate, the watched addresses, named requests and sweeps now due, as a prompt a member runs by hand; writes nothing"),
+    fields: { accepts: ["now", "limit"], requires: [] } },
+  namedrequestset: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reversible",
+    needs: "contribute", stamps: ["author", "viewer"],
+    description: localize("monitoring.declared.namedrequestset", "bundle-directed: a named request in a bundle's gathering file, planted or revised by a member; fetches nothing, the daemon gathers it at its cadence"),
+    fields: { accepts: ["bundle", "request", "target", "locators", "authority", "criticality", "cadence", "status"],
+              requires: ["bundle", "target", "locators", "authority", "criticality"] } },
+  namedrequests: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("monitoring.declared.namedrequests", "read: every named request of the bundles a viewer may see, with its last attempt and when it is next due; writes nothing"),
+    fields: { accepts: [], requires: [] } },
+});
+
 /** The module's routes in the Durable Object (K3), as entries of the plane's store op map (`plane/store.mjs`). `viewer`, `actorClass`
  *  and `actor` are the control plane's stamps, read from the query, so a caller's own copy never wins. */
 export function monitoringOps(m, url, body) {
@@ -3322,6 +3375,12 @@ export function monitoringOps(m, url, body) {
                                      author: q("author"), viewer: q("viewer") }),
     /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
     addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q("author"), viewer: q("viewer") }),
+    /* R75, R76 (T51; K4189): a member's act planting or revising one named request, and the read of them; the body's
+       fields, then the stamps. */
+    namedrequestset: () => m.namedRequestSet({ bundle: b.bundle ?? null, request: b.request ?? null, target: b.target,
+      locators: b.locators, authority: b.authority, criticality: b.criticality, cadence: b.cadence, status: b.status,
+      author: q("author"), viewer: q("viewer") }),
+    namedrequests: () => m.namedRequests({ viewer: q("viewer") }),
   };
 }
 

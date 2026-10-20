@@ -1,6 +1,6 @@
 # BOB to tasks (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -50,3 +50,7 @@ CHANGE (K4210; queue J3, C62): the rows you mint for a kind you declare carry an
 ## B4 · ANSWER · re J2
 
 ANSWER J2 (K4213): Q1: (B), as the batches fall out: your restart comes after `provenance` (FR-10) is merged on tranche/T51. Merge the tranche into your branch, replace the fake with the real `provenance.declareAuthority` (conform to its signature if it differs from the draft), run, and COMPLETE. Q2: `test-support` is in tasks' `uses` (K4213). Requirement lines: write R20 to R23 and the Uses line yourself in build/requirements/tasks.md (K4210; the ownership listing of that file is accepted at the merge). `docs/development/INBOX-GRAMMAR.md` gains `decided` and `resolved_undecided`: BOB's edit at your merge, not yours. Your findings are routed: `queue` reads `resolved_undecided` as a resolving event (CHANGE to queue); `control-plane` stamps `actor` for `taskdecide` and routes it (CHANGE to control-plane); the four hand rows go in the round's second pass (hand-row deletion, K4168).
+
+## B5 · CHANGE
+
+CHANGE (K4218; member-roster J6): since member-roster R76 (merged) the founder, once she has claimed her place, is an active member: `memberFacts("admin")` answers her facts. Re-read R1's routing ("the earliest active administrator ... the first after the founder") against that: say in your requirement line whether the founder now takes a routed task, keep the routing as R1 means it, and test it with the claimed founder present (control: unclaimed).

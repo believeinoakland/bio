@@ -2,7 +2,7 @@
    screen, and the password asked again. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fitSend, boot, ok, refused, STORE_KEY } from "./harness.mjs";
+import { declaredFit, fitSend, boot, ok, refused, STORE_KEY } from "./harness.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -127,7 +127,8 @@ test("R34 an act answered REAUTH_DUE opens the password dialog (session.reauth),
   p.doc.getElementById("cs-reauth-pw").value = "pw";
   await p.click('[data-shell="reauth"]');
   assert.equal(p.root().querySelector('[data-overlay="reauth"]'), null);
-  assert.deepEqual(p.byOp("promote").map((r) => r.body), [{ title: "New" }, { title: "New" }], "sent once more, the same");
+  const sent = { ...declaredFit("promote"), meta: { title: "New" } };
+  assert.deepEqual(p.byOp("promote").map((r) => r.body), [sent, sent], "sent once more, the same");
   assert.deepEqual(p.byOp("reauth").map((r) => [r.headers.Authorization, r.body.password]), [["Bearer tok-1", "nope"], ["Bearer tok-1", "pw"]]);
   assert.equal(p.location.pathname, "/app/project/P1", "its done ran");
 });

@@ -79,3 +79,15 @@ ANSWER J6 (K4210): (1) yes: entries 1, 5 and 4's iterable part now; a REPORT, th
 ## B8 · ANSWER · re J7
 
 ANSWER J7 (K4213): (1) `sources` is in plane's `uses` (K4213). (2) `capture-sources` (FR-11) and `investigation` (FR-15) are merged on tranche/T51 (K4214): merge the tranche, spread `captureSourcesOps` and `investigationOps` (entries 2 and 3), test them, re-run R71. (3) Also yours (link-sweep J2): `store.mjs:863` calls `linkSweepOps(linkSweepOf(ctx), url)` without the body; `sweepset` and `sweepratify` read it: pass `body` as every neighbour does. (4) R24's red (`screen.bias.purpose` absent from words.json) is the design's: HANDOFF to UX-DESIGN; accepted red by name at your merge until the design's merge clears it.
+
+## B9 · CHANGE
+
+CHANGE (K4219): (a) case-import's four new ops `importregrade`, `rerunstart`, `rerunpair`, `rerunread` need a route in the route map, and `accepted.test.mjs`:155 reads case-import's ops from its `DECLARED_OPS`, never a hand list (K3268); (b) citation's ops map is called without the body (`store.mjs`:772); pass `body` as for link-sweep (B8 (3)).
+
+## B10 · CHANGE
+
+CHANGE (K4221): case-inputs is merged (R20–R29). Call `registerCaseInputsPublicReads(ctx, {publicRead})` at start beside `registerCaseCheckerPublicReads` (`plane/store.mjs`, near line 332), so the public read `casedetailspublic` is registered in the running plane; route it through public-read's door as `casechecker` is (if the route map is control-plane's, REPORT and BOB forwards it). Merge `tranche/T51` first.
+
+## B11 · CHANGE
+
+CHANGE (K4226): (1) queue is merged: `op=queue` answers `feeds[].ms` and `feeds_ms`; your tests R2, R5 (N13) and R45, R48 (T47) mask instants only and go red on them: mask those timing fields too (they vary by run), never drop the assertion. (2) The acquire timings hop (control-plane R115, acquisition R95): `plane/door.mjs` `gatedOp` destructures a fixed set of ctx keys and drops `timings`; pass `ctx.timings` to the handler as `h.timings` (capture's arm forwards it, CAPTURE #39), and add the end-to-end test: a timed-out `acquire` through the door answers the stages that ran. Merge `tranche/T51` first.

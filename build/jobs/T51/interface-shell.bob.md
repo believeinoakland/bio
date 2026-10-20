@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J9
+**Read** · handled J10
 
 ## B1 · START
 
@@ -129,3 +129,11 @@ CHANGE (K4217): two entries, re-opening your job.
 1. **Your stand-ins meet the owners' new declarations.** On tranche/T51 since K4214's merges your suite is 220 pass, 13 fail: the guard now checks declarations that merged after your COMPLETE: nine tests send `promote` with `title` (promotion R61 declares `accepts` the package fields, `requires` `files`, `meta`, `snapKey`), one sends `promote` with none of the three, and three send `openoriginal` with `id`, `sha256` or no capture (file-safety R48). Bring each stand-in to the declared request with `declaredFit`/`fitSend` as you did at J9, never loosening an assertion; where a test's point was the old field, assert the declared one. Merge the tranche first.
 2. **The standard's crumb (screens-investigate J6, DEC-384 entry 9).** `screens-investigate`'s `place(view)` now returns `{project, last}`; the shell's path reads `last` and draws the last crumb as `screen.standard.crumb` with `{name}` (`PATH.standard`, R8), the project's crumb from `project`. Test with a control (a `place` returning a string keeps today's crumb).
 Write your requirement lines yourself (K4210).
+
+## B21 · CHANGE
+
+CHANGE (K4219; project-roster J4): `design.test.mjs` (R107) sends `projectowneradd` with `who` and without `projectId`/`handle`; project-roster R40 declares it: bring the stand-in to the declared request (`declaredFit`), as entry 1 of B20.
+
+## B22 · CHANGE
+
+CHANGE (K4228), a new job session (INTERFACE-SHELL #10, sonnet): screens-publish R68 (DEC-384 H2, the crumb before joining) needs the path's project step to read `crumb.project.unjoined` when the viewer has not joined the project. `place(view)` cannot say so today (it gets no word function). Extend R110's `place` answer: `{project, last, projectKey?}` where `projectKey` is a word key the shell renders (with `{name}` = the project's title, escaped) in place of the title; absent, today's behaviour. Test and control; R110's line amended (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

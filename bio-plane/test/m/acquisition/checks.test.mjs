@@ -207,8 +207,11 @@ test("R29 (C-68.1, K850): acquire without evidence storage answers as before, by
   const error = word("capture.response.group_civicsmith_evidence");
   const r = await run(world({ evidence: false }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
   assert.equal(r.status, 503);
-  assert.equal(JSON.stringify(r.body), JSON.stringify(acquireBody(error)), "acquire's body unchanged: ok, reason, check, translation, op, error; no code");
-  assert.deepEqual({ status: r.status, body: r.body }, evidenceStorageAbsent("acquire", error, { code: false }), "raised through the export");
+  /* R95: the one key `acquire` adds to any answer is set aside by name; every other key is the raiser's */
+  const { timings, ...bare } = r.body;
+  assert.ok(timings && typeof timings === "object", "the refusal carries the times of the stages that ran (none)");
+  assert.equal(JSON.stringify(bare), JSON.stringify(acquireBody(error)), "acquire's body unchanged: ok, reason, check, translation, op, error; no code");
+  assert.deepEqual({ status: r.status, body: bare }, evidenceStorageAbsent("acquire", error, { code: false }), "raised through the export");
 });
 
 /* The source-text check that no second site mints C-68.1 is retired (P7, K3627): t50.test.mjs proves at the interface that every path

@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -46,3 +46,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B4 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · ANSWER · re J3
+
+ANSWER J3 (K4219): part 1 (R95) is complete: post COMPLETE now and BOB merges it. Part 2 waits on the redeploy's live timings (P19 (2), a measurement outside the tranche's code); it returns as its own entry after the redeploy, with the timings. control-plane carries the timings into `ACQUIRE_TIMED_OUT` before the redeploy (CHANGE to it). Keep R95, R96 as the START gave.

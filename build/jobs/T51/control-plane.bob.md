@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J3
+**Read** · handled J7
 
 ## B1 · START
 
@@ -61,3 +61,15 @@ CHANGE (K4210): one more op is yours to declare with the four of entry 1: subscr
 ## B8 · CHANGE
 
 CHANGE (K4213; tasks J2): `taskdecide` (tasks R20, a new op of FR-21) needs the same body stamp of `actor` that `index.mjs` :3206 gives `taskforward`, `taskresolve`, `taskdrain` and `biasdebtresolve`, and its route to `tasks`. Add both; test that a member's `taskdecide` reaches the arm with `actor` stamped and a body `actor` is overwritten.
+
+## B9 · ANSWER · re J4
+
+ANSWER J4 (K4219): (1) `action-clocks` is in control-plane's `uses` (K4219). (2) `tasks` restarts now; merge the tranche when it has merged and re-run R113. (3) Accepted (K4210). CHANGE, two more entries: (a) case-import's four new ops (`importregrade`, `rerunstart`, `rerunpair`, `rerunread`) get their routes, and your "R49, R2, R26" test reads case-import's ops from its `DECLARED_OPS`, never a hand list (K3268); (b) acquisition R95: hand `opts.timings` to the acquire call and add acquisition's `stageTimes(timings)` to the body of the 25 s `ACQUIRE_TIMED_OUT` refusal (R105), so a timed-out capture says where its time went; test with a control.
+
+## B10 · ANSWER · re J5
+
+ANSWER (K4222): neither item is Bob's. (1) tasks is merged (R20–R24, `taskdecide` declared): merge `tranche/T51` and re-run R113. (2) acquisition is merged with R95 (`timings` on every answer, exported `stageTimes`): build CHANGE (b) now: hand `opts.timings` to `acquire` and carry `stageTimes(timings)` in `ACQUIRE_TIMED_OUT`'s body, with a control. Your case-import report is read: its five undeclared ops keep their hand rows (K4208: a pass declares only the ops the round's jobs send or change); the plane registers case-import's `DECLARED_OPS` at start (PLANE #44's entry).
+
+## B11 · ANSWER · re J6
+
+ANSWER (K4226): not Bob's. Your half of R115 is done and tested at the door; the hop is placed: plane's `gatedOp` forwards `ctx.timings` (PLANE #44, with the end-to-end test), capture's arm hands it to `acquire` (CAPTURE #39). Strike nothing; record R115 as met at your door (its end-to-end proof is plane's test) and set COMPLETE now.

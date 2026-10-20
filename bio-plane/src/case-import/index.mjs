@@ -33,6 +33,13 @@
  * through the registration this module fills at start (R16, R24); `case-authoring` reads `acceptanceOf` and `openFlagsOn`
  * directly (R9).
  *
+ * (T51; K4169; UC-076) A member may read an imported edition under another lens (R27, R28): `regradeImported` re-weighs it
+ * through `case-checker`'s `reweigh` as published, with the source's bias removed, or under this group's own lens, and
+ * names for each finding the statement that moved it. A project of this group may be declared a rerun of an imported
+ * edition by its owner (R29), a member of the project may pair one of its findings with one of the source's (R30), and
+ * `rerunRead` (R31) shows the pairs side by side with the difference between the two printed lenses, as a difference the
+ * system computed and never a cause it established. None of it edits an import, a bundle or a grade (R32).
+ *
  * A NEW MODULE (T28, layer 8, directly after `case-checker`). REACHED as `caseImportOf(host, deps)` (K61): one instance
  * per host. At creation it creates its tables, declares them to record-core's purge (whole store only, R13), registers
  * its figures (record-core R63) and fills `accepted-work`'s registration (R16). `deps` (each reached through its factory
@@ -56,7 +63,7 @@
  * here (R15). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
-import { membershipOf, Membership } from "../membership/index.mjs";
+import { membershipOf, Membership, noSuchProject } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
@@ -75,6 +82,7 @@ import { say } from "./words.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
 import * as caseChecker from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
+import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { evaluate as evaluateRecipe, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -116,7 +124,7 @@ export const NOT_ACCEPTED_WHY = Object.freeze({
   gaps_unstated: say("case-import.gaps_unstated"),
 });
 const AXES = Object.freeze(["capture", "connection", "testimony"]);
-const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM" };
+const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM", rerun: "IMR", pairing: "IMQ" };
 /** R18 check 1: the docket entry's format, one format under two labels, as `docket` spells them (its R6; DEC-124, K1365). */
 export const DOCKET_ENTRY_FORMATS = ENTRY_FORMATS;
 /** R17: the query a watch's docket address carries: the route `public-read` R21 and R25 serve, answering `docket` R24's
@@ -133,6 +141,23 @@ export const WATCH_PAGE_MAX = 200;
 /** R19: what an import's reads say beside a `publisher` of null (DEC-116 item 8: never that nothing changed). */
 export const NO_MOVE_SEEN = say("case-import.no_move_seen");
 export { DOCKET_UNREADABLE };
+
+/* ================================================================ R27–R31 (T51; K4169): regrade and rerun */
+
+/** R27: the lenses an edition can be regraded under: R23's three. */
+export const REGRADE_LENSES = Object.freeze(["as_published", "removed", "own"]);
+/** R27: the sentence a finding the case file records no application for carries (nothing in any lens touches it). */
+export const REGRADE_UNTOUCHED = localize("case-import.index.nothing_in_lens_touches", "nothing in the lens touches this finding: the case file records no statement applied to it");
+/** R28: `own` with no group statement in force reads as `removed`, and says so. */
+export const REGRADE_NO_OWN_LENS = localize("case-import.index.team_lens_holds_none", "this team's lens holds none of the statements this case applies, so under it every one reads as removed");
+/** R31: what every rerun read states about the disagreement it names. */
+export const RERUN_DISAGREEMENT = localize("case-import.index.disagreement_is_lens_difference", "the disagreement shown is the difference between the two printed lenses and the members' pairings, not a cause the system established");
+/** R31: when a lens cannot be read, the difference between the two is not stated, and never read as none. */
+export const RERUN_LENS_UNREADABLE = localize("case-import.index.lens_difference_not_stated", "a lens could not be read, so the difference between the two lenses is not stated");
+/** R31: the axes a pairing compares. */
+const PAIR_AXES = Object.freeze(["capture", "connection"]);
+/** R30: the most findings of a project read, and the page. */
+const PROJECT_FINDINGS_PAGE = 500;
 
 /* ================================================================ R4 (T46; N903): the source group's identity and stake */
 
@@ -448,6 +473,8 @@ export class CaseImport {
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record }); }
   get bias() { return this.#deps.bias ||= biasOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  /* R30: the questions a project draws on (`basis-versions` R41), the one reader of which inquiries are a project's */
+  get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get #checkCaseFile() { return this.#deps.checkCaseFile || checkCaseFile; }
   /* R23: `case-checker`'s synchronous re-weighing under a lens (its R23), a test passes its own; the carried applications
      are `case-grammar`'s reading (its R24) */
@@ -942,9 +969,7 @@ export class CaseImport {
                          pair: null, bar_met: null, against_own_bar: null, changed_by: [], lens_changes: [] }) });
     try {
       if (!rec) return none(LENS_NOT_REWEIGHED);
-      const docRow = this.#one(`SELECT path FROM case_import_files WHERE import_id=? AND edition=? AND kind='case_document'`, i.import_id, ed);
-      const doc = docRow ? this.fileOf({ import: i.import_id, edition: ed, path: docRow.path }) : null;
-      const fm = doc ? this.#call(() => parseFrontmatter(new TextDecoder().decode(doc.bytes)).data) : null;
+      const fm = this.#documentFront(i.import_id, ed);
       const readApps = this.#applicationsOf;
       if (!isObj(fm) || typeof readApps !== "function") return none(LENS_NOT_REWEIGHED);
       const read = this.#call(() => readApps(fm), null);
@@ -1015,6 +1040,321 @@ export class CaseImport {
     const bar = r && r.ok && isObj(r.bar) ? barAxes(r.bar) : null;
     return bar ? { whose: "this_group", group: r.group ?? null, bar, set: true }
       : { whose: "this_group", group: r && r.ok ? r.group ?? null : null, bar: null, set: false, stated: NO_OWN_BAR };
+  }
+
+  /* R23, R27, R31: the case document's front matter of an edition as held, or null when the edition holds none. */
+  #documentFront(importId, ed) {
+    const docRow = this.#one(`SELECT path FROM case_import_files WHERE import_id=? AND edition=? AND kind='case_document'`, importId, ed);
+    const doc = docRow ? this.fileOf({ import: importId, edition: ed, path: docRow.path }) : null;
+    const fm = doc ? this.#call(() => parseFrontmatter(new TextDecoder().decode(doc.bytes)).data) : null;
+    return isObj(fm) ? fm : null;
+  }
+  /* R27, R31: the applications the case document carries (`case-grammar` R24), each naming a finding and a statement. */
+  #applicationsIn(fm) {
+    const read = fm ? this.#call(() => this.#applicationsOf(fm), null) : null;
+    return (Array.isArray(read) ? read : []).filter((a) => isObj(a) && str(a.finding) && str(a.statement));
+  }
+  /* R27, R31: the statements the edition prints as its lens (`case-grammar` R9), or null when it prints none. */
+  #printedLens(fm) {
+    const l = fm ? this.#call(() => caseGrammar.lensOf(fm), null) : null;
+    return isObj(l) && Array.isArray(l.statements) ? l.statements : null;
+  }
+  /* R27: a printed statement an application names, by its id or by its key (`case-grammar` R9). */
+  static #printedStatement(printed, statement) {
+    return (printed || []).find((r) => r.id === statement || caseGrammar.lensStatementKey(r.bundle, r.id) === statement) ?? null;
+  }
+
+  /* ================================================================ R27, R28: regrade another group's case under a lens */
+
+  /* R27: whether a pair meets a bar, as `meets`; null (undetermined, never false) when the finding has no pair. */
+  #meets(role, pair, bar) {
+    return pair === null || pair === undefined ? null : againstBar(role, pair, bar).meets;
+  }
+
+  /** R27, R28 (K4169; UC-076): one imported edition read under `lens` (`as_published`, `removed` or `own`, R23's reader
+   *  lens), each finding with its pair and its standing against this group's bar and against the source's, as the
+   *  source published it and under the lens, whether it moved, and the statements that moved it. A viewer who is not an
+   *  active member, an import not held and an edition not held are answered as R4 answers. Writes nothing; never throws. */
+  regradeImported({ import: importId = null, edition = null, lens = null, viewer = null } = {}) {
+    const i = this.#isActiveMember(viewer) ? this.#import(importId) : null;
+    const e = i ? this.#edition(i.import_id, edition) : null;
+    if (!e) return this.#noSuchEdition(importId, edition);
+    /* DEC-49 REGION is-regrade-lens */
+    if (!REGRADE_LENSES.includes(lens))
+      return refuse("REGRADE_LENS_UNKNOWN", localize("case-import.index.lens_is_as_published_removed", "lens is as_published, removed or own"),
+                    { lens: typeof lens === "string" ? lens.slice(0, 40) : null });
+    /* END DEC-49 REGION is-regrade-lens */
+    const ed = Number(e.edition);
+    const rec = this.#recreationView(i.import_id, ed);
+    const own = this.#ownBar();
+    const sourceBar = barAxes(e.source_bar ? parse(e.source_bar) : null);
+    const bars = (role, pair) => ({ own: this.#meets(role, pair, own.bar), source: this.#meets(role, pair, sourceBar) });
+    const head = { ok: true, import: i.import_id, group: i.source_group, case: i.case_id, edition: ed, requested_lens: lens,
+                   source_bar: { whose: "source", label: SOURCE_BAR, group: i.source_group, bar: sourceBar }, own_bar: own,
+                   limit: LENS_LIMIT, wrote: false };
+    const base = (rec ? rec.findings : []).map((f) => ({ finding: f.finding, ref: importedFindingRef(i.import_id, f.finding), role: f.role ?? null,
+                                                          published: { pair: f.pair ?? null, bar_met: bars(f.role, f.pair ?? null) } }));
+    /* R28: a lens that cannot be read is stated, and no finding is read as moved or as unmoved */
+    const undetermined = (stated) => ({ ...head, lens: "undetermined", stated, findings: base.map((f) => ({ ...f, pair: null, bar_met: null })) });
+    try {
+      if (!rec) return undetermined(LENS_NOT_REWEIGHED);
+      const fm = this.#documentFront(i.import_id, ed);
+      const apps = this.#applicationsIn(fm);
+      const printed = this.#printedLens(fm);
+      let reader = lens, note = null;
+      if (lens === "own") {
+        /* each statement the edition applies, asked once of the lens in force here, as R23 asks */
+        const asked = new Map();
+        for (const id of [...new Set(apps.map((a) => str(a.statement)))].sort())
+          asked.set(id, this.#call(() => this.bias.statementInForce({ statement: id, scope: "instance", viewer }), null));
+        if ([...asked.values()].some((v) => !v || v.in_force === null)) return undetermined(LENS_UNDETERMINED);
+        const inForce = [...asked.values()].filter((v) => v.in_force === true).map((v) => v.statement);
+        reader = { statements: inForce, applications: [] };
+        if (!inForce.length) note = REGRADE_NO_OWN_LENS;
+      }
+      const fn = this.#reweigh;
+      const parts = this.#parts(i.import_id, ed);
+      if (typeof fn !== "function" || parts.some((p) => !p)) return undetermined(LENS_NOT_REWEIGHED);
+      const lastAnswer = parse(this.#latestCheck(i.import_id, ed)?.answer, {});
+      const out = fn({ parts, documents: this.#documents(i.import_id, ed), answer: { ...lastAnswer, findings: rec.findings.map((f) => ({ ...f })) }, lens: reader });
+      if (!isObj(out) || typeof out.then === "function" || (isObj(out.lens) && str(out.lens.departure))) return undetermined(LENS_NOT_REWEIGHED);
+      const byFinding = new Map((Array.isArray(out.findings) ? out.findings.filter(isObj) : []).map((x) => [x.finding, x]));
+      const findings = base.map((f) => {
+        const r = byFinding.get(f.finding);
+        if (!r) return { ...f, pair: null, bar_met: null };
+        const pair = r.pair === undefined ? null : r.pair;
+        const barMet = bars(f.role, pair);
+        const because = (Array.isArray(r.lens_changes) ? r.lens_changes.filter(isObj) : []).map((c) => {
+          const row = CaseImport.#printedStatement(printed, str(c.statement));
+          return { statement: str(c.statement), kind: row?.kind ?? null, subject: row?.subject ?? null, text: row?.text ?? null,
+                   touched: { target: c.target ?? null, ord: c.ord ?? null, effect: c.effect ?? null, from: c.from ?? null, to: c.to ?? null,
+                              ...(c.through !== undefined ? { through: c.through } : {}) } };
+        });
+        const moved = canonicalJson(pair) !== canonicalJson(f.published.pair) || canonicalJson(barMet) !== canonicalJson(f.published.bar_met);
+        return { ...f, pair, bar_met: barMet, moved, because, ...(apps.some((a) => a.finding === f.finding) ? {} : { stated: REGRADE_UNTOUCHED }) };
+      });
+      return { ...head, lens, findings, ...(note ? { lens_note: note } : {}) };
+    } catch {
+      return undetermined(LENS_NOT_REWEIGHED);
+    }
+  }
+
+  /* ================================================================ R29–R31: re-running another group's work */
+
+  /* R29, R30: the caller of a rerun act, a member and no machine (R1's first refusal, in the rerun's own code). */
+  #rerunCaller(by) {
+    const member = this.#member(by);
+    /* DEC-49 REGION is-rerun-caller */
+    if (!member)
+      return { refusal: refuse("MACHINE_CANNOT_RERUN", str(by)
+        ? localize("case-import.index.rerun_is_a_members_act", "a re-run, and every pairing in one, is a member's act, signed in as themselves; this caller is not one")
+        : localize("case-import.index.no_member_named_rerunning", "no member is named as the one acting: this call carries nobody")) };
+    /* END DEC-49 REGION is-rerun-caller */
+    return { member };
+  }
+  /* R29, R30: the identity `membership.projectAuthority` is asked of: the founder's bare `admin` is `member:admin`. */
+  #identityOf(by) {
+    const id = String(by).trim();
+    return id === Membership.ROOT_ADMIN ? `member:${id}` : id;
+  }
+  /* R29–R31: the project a viewer sees at FULL (`membership.inSight`) and the record holds as a project; else `membership` R78's
+     one answer, the same for a project absent, one not seen and an id that is no project. */
+  #projectSeen(project, viewer) {
+    const pid = str(project);
+    const info = pid && this.membership.inSight(pid, viewer) ? this.#call(() => this.record.bundleInfo(pid)) : null;
+    return info && info.type === "project" ? { pid } : { refusal: noSuchProject(pid) };
+  }
+  /* R30: the findings a project draws on, as `basis-versions` R41 reads them, all pages. */
+  #projectFindings(pid) {
+    const out = [];
+    let after = null;
+    for (let n = 0; n < 100; n++) {
+      const page = this.#call(() => this.basisVersions.projectQuestions({ project: pid, after, limit: PROJECT_FINDINGS_PAGE }), null);
+      if (!page || !Array.isArray(page.items)) break;
+      out.push(...page.items.map((x) => x.inquiry).filter(Boolean));
+      if (!page.cursor) break;
+      after = page.cursor;
+    }
+    return out;
+  }
+  /* R30: the one place NO_SUCH_SOURCE_FINDING is minted. */
+  #noSuchSource(detail, extra) {
+    /* DEC-49 REGION is-rerun-source-finding */
+    return refuse("NO_SUCH_SOURCE_FINDING", detail, extra);
+    /* END DEC-49 REGION is-rerun-source-finding */
+  }
+
+  /** R29 (K4169): declares a project of this group a rerun of an imported edition. The owner's act; it records one row of
+   *  this module's own and nothing else: the import stays read-only, the project's record is not touched, and a rerun is
+   *  no acceptance. */
+  rerunStart({ project = null, import: importId = null, edition = null, by = null, viewer = null } = {}) {
+    const k = this.#rerunCaller(by);
+    if (k.refusal) return k.refusal;
+    const seen = this.#projectSeen(project, viewer);
+    if (seen.refusal) return seen.refusal;
+    const denied = this.membership.projectAuthority(seen.pid, this.#identityOf(by), "owner", "rerunstart");
+    if (denied) return denied;
+    const i = this.#isActiveMember(viewer) ? this.#import(importId) : null;
+    const e = i ? this.#edition(i.import_id, edition) : null;
+    if (!e) return this.#noSuchEdition(importId, edition);
+    const ed = Number(e.edition);
+    const held = () => this.#one(`SELECT 1 AS x FROM case_import_reruns WHERE project=? AND import_id=? AND edition=?`, seen.pid, i.import_id, ed);
+    const already = () => {
+      /* DEC-49 REGION is-rerun-already */
+      return refuse("RERUN_ALREADY", localize("case-import.index.project_is_already_declared_edition", "this project is already declared a re-run of edition {edition}; a later edition can be declared", { edition: String(ed) }),
+                    { project: seen.pid, import: i.import_id, edition: ed });
+      /* END DEC-49 REGION is-rerun-already */
+    };
+    if (held()) return already();
+    const at = this.#stamp();
+    let rn = null;
+    const out = this.record.transact(() => {
+      if (held()) return already();
+      this.sql.exec(`INSERT INTO case_import_reruns (project, import_id, edition, by_member, at) VALUES (?,?,?,?,?)`, seen.pid, i.import_id, ed, k.member, at);
+      rn = Number(this.#one(`SELECT MAX(rn) AS rn FROM case_import_reruns`).rn);
+      return { ok: true };
+    });
+    if (!out || out.ok !== true) return out;
+    return { ok: true, rerun: idOf("rerun", rn), project: seen.pid, import: i.import_id, group: i.source_group, case: i.case_id, edition: ed,
+             by: k.member, at };
+  }
+
+  /** R30 (K4169): a member of the project states that one of its findings answers the same claim as one imported finding of
+   *  a rerun, or takes that statement back. Appended, never rewritten; the latest entry for a pair stands. */
+  rerunPair({ project = null, source_finding: sourceFinding = null, own_finding: ownFinding = null, edition = null, withdraw = false,
+              by = null, viewer = null } = {}) {
+    const k = this.#rerunCaller(by);
+    if (k.refusal) return k.refusal;
+    const seen = this.#projectSeen(project, viewer);
+    if (seen.refusal) return seen.refusal;
+    const denied = this.membership.projectAuthority(seen.pid, this.#identityOf(by), "joined", "rerunpair");
+    if (denied) return denied;
+    const ref = typeof sourceFinding === "string" ? parseImportedFindingRef(sourceFinding.trim()) : null;
+    if (!ref)
+      return this.#noSuchSource(localize("case-import.index.source_finding_is_reference", "source_finding is the reference of an imported finding"), { source_finding: str(sourceFinding) });
+    const declared = this.#rows(`SELECT edition FROM case_import_reruns WHERE project=? AND import_id=? ORDER BY edition`, seen.pid, ref.import)
+      .map((r) => Number(r.edition));
+    const named = !(edition === null || edition === undefined || edition === "");
+    const asked = named ? int(edition) : null;
+    const ed = !named ? declared.at(-1) : asked !== null && declared.includes(asked) ? asked : undefined;
+    /* DEC-49 REGION is-not-a-rerun */
+    if (ed === undefined)
+      return refuse("NOT_A_RERUN", localize("case-import.index.project_is_declared_no_rerun", "this project is declared no re-run of that edition of that import"),
+                    { project: seen.pid, import: ref.import, edition: asked });
+    /* END DEC-49 REGION is-not-a-rerun */
+    if (!this.#resultsOf(ref.import, ed).some((r) => r.finding === ref.finding))
+      return this.#noSuchSource(localize("case-import.index.source_finding_not_this_edition", "source_finding is not a finding of the edition this project re-runs"),
+                                { source_finding: str(sourceFinding), import: ref.import, edition: ed });
+    const own = str(ownFinding);
+    /* DEC-49 REGION is-rerun-own-finding */
+    if (!own || !this.membership.inSight(own, viewer) || !this.#projectFindings(seen.pid).includes(own))
+      return refuse("NO_SUCH_OWN_FINDING", localize("case-import.index.own_finding_is_finding_of_project", "own_finding is a finding of this project, and one you can see"),
+                    { project: seen.pid, own_finding: own });
+    /* END DEC-49 REGION is-rerun-own-finding */
+    const withdrawn = withdraw === true || withdraw === "true" || withdraw === 1 || withdraw === "1";
+    const at = this.#stamp();
+    let rn = null;
+    const out = this.record.transact(() => {
+      this.sql.exec(`INSERT INTO case_import_rerun_pairs (project, import_id, edition, source_finding, own_finding, withdrawn, by_member, at)
+                     VALUES (?,?,?,?,?,?,?,?)`, seen.pid, ref.import, ed, ref.finding, own, withdrawn ? 1 : 0, k.member, at);
+      rn = Number(this.#one(`SELECT MAX(rn) AS rn FROM case_import_rerun_pairs`).rn);
+      return { ok: true };
+    });
+    if (!out || out.ok !== true) return out;
+    return { ok: true, pairing: idOf("pairing", rn), project: seen.pid, import: ref.import, edition: ed,
+             source_finding: importedFindingRef(ref.import, ref.finding), own_finding: own, withdrawn, by: k.member, at };
+  }
+
+  /* R31: the project's own effective lens (`bias.biasManifest` at project scope) as `[{kind, subject, text}]`; `[]` where no
+     manifest is in force there; null where it cannot be read (undetermined, never none). */
+  #projectLens(pid, viewer) {
+    try {
+      const statements = [];
+      for (let offset = 0, n = 0; n < 50; n++) {
+        const m = this.bias.biasManifest({ scope: "project", scopeId: pid, viewer, limit: 2000, offset });
+        if (!isObj(m) || m.ok !== true || m.in_force === null || m.in_force === undefined) return null;
+        if (m.in_force !== true) return [];
+        statements.push(...(Array.isArray(m.statements) ? m.statements.filter(isObj) : []));
+        if (m.truncated !== true || !Number(m.count)) break;
+        offset += Number(m.count);
+      }
+      return statements.map((s) => ({ kind: s.kind ?? null, subject: s.subject ?? null, text: s.text ?? null }));
+    } catch { return null; }
+  }
+  /* R31: an own finding's pair on the capture and connection axes (`strength.strengthOf`, read now), or null. */
+  #ownPair(id) {
+    const r = this.#call(() => this.strength.strengthOf(id), null);
+    if (!isObj(r) || r.ok === false) return null;
+    const norm = (x) => ({ state: isObj(x) ? x.state ?? null : null, grade: isObj(x) ? x.grade ?? null : null });
+    return Object.fromEntries(PAIR_AXES.map((a) => [a, norm(r[a])]));
+  }
+  /* R31: whether two pairs agree on both axes: true, false, or "undetermined" where either is not graded on both. */
+  static #agree(source, own) {
+    const graded = (p) => isObj(p) && PAIR_AXES.every((a) => isObj(p[a]) && p[a].state === "graded" && typeof p[a].grade === "string");
+    if (!graded(source) || !graded(own)) return "undetermined";
+    return PAIR_AXES.every((a) => source[a].grade === own[a].grade);
+  }
+  /* R31: the statements of two lenses that only one holds, and the count both hold, matching by kind, subject and text. */
+  static #lensDifference(source, own) {
+    if (!Array.isArray(source) || !Array.isArray(own)) return null;
+    const key = (s) => canonicalJson([s.kind ?? null, s.subject ?? null, s.text ?? null]);
+    const row = (s) => ({ kind: s.kind ?? null, subject: s.subject ?? null, text: s.text ?? null });
+    const ownKeys = new Set(own.map(key)), sourceKeys = new Set(source.map(key));
+    return { only_source: source.filter((s) => !ownKeys.has(key(s))).map(row), only_own: own.filter((s) => !sourceKeys.has(key(s))).map(row),
+             shared: [...sourceKeys].filter((x) => ownKeys.has(x)).length };
+  }
+
+  /* R31: one declared rerun, read. */
+  #rerunView(r, projectLens) {
+    const i = this.#import(r.import_id);
+    const ed = Number(r.edition);
+    const e = i ? this.#edition(i.import_id, ed) : null;
+    if (!e) return null;
+    const fm = this.#documentFront(i.import_id, ed);
+    const apps = this.#applicationsIn(fm);
+    const printed = this.#printedLens(fm);
+    const history = this.#rows(`SELECT * FROM case_import_rerun_pairs WHERE project=? AND import_id=? AND edition=? ORDER BY rn`, r.project, i.import_id, ed);
+    const latest = new Map();
+    for (const h of history) latest.set(`${h.source_finding}\u0000${h.own_finding}`, h);
+    const standing = [...latest.values()].filter((h) => Number(h.withdrawn) === 0).sort((a, b) => Number(a.rn) - Number(b.rn));
+    const ownPairs = new Map();
+    const findings = this.#resultsOf(i.import_id, ed).map((f) => {
+      const pairings = standing.filter((h) => h.source_finding === f.finding).map((h) => {
+        if (!ownPairs.has(h.own_finding)) ownPairs.set(h.own_finding, this.#ownPair(h.own_finding));
+        const pair = ownPairs.get(h.own_finding);
+        return { own_finding: h.own_finding, pair, agree: CaseImport.#agree(f.pair, pair) };
+      });
+      const lensStatements = [...new Set(apps.filter((a) => a.finding === f.finding).map((a) => str(a.statement)))].map((id) => {
+        const row = CaseImport.#printedStatement(printed, id);
+        return { statement: id, kind: row?.kind ?? null, subject: row?.subject ?? null, text: row?.text ?? null };
+      });
+      return { finding: f.finding, ref: importedFindingRef(i.import_id, f.finding), role: f.role ?? null,
+               source: { pair: f.pair ?? null, lens_statements: lensStatements }, paired: pairings.length > 0, pairings };
+    });
+    const difference = CaseImport.#lensDifference(printed, projectLens);
+    return { rerun: idOf("rerun", r.rn), project: r.project, import: i.import_id, group: i.source_group, case: i.case_id, edition: ed,
+             declared_by: r.by_member, declared_at: r.at, findings, lens_difference: difference,
+             ...(difference === null ? { lens_difference_stated: RERUN_LENS_UNREADABLE } : {}),
+             pairing_history: history.map((h) => ({ pairing: idOf("pairing", h.rn), source_finding: importedFindingRef(i.import_id, h.source_finding),
+                                                     own_finding: h.own_finding, withdrawn: Number(h.withdrawn) === 1, by: h.by_member, at: h.at })) };
+  }
+
+  /** R31 (K4169): a project's reruns, to a viewer who sees the project at FULL. Per declared rerun and source finding: the
+   *  source's pair as published and its lens statements, each standing pairing with the own finding's pair and whether
+   *  the two agree; once per rerun the difference between the edition's printed lens and the project's own. Every
+   *  answer says the disagreement is that difference and the members' pairings, not a cause. Writes nothing. */
+  rerunRead({ project = null, viewer = null } = {}) {
+    const seen = this.#projectSeen(project, viewer);
+    if (seen.refusal) return seen.refusal;
+    const tail = { limit: LENS_LIMIT, disagreement_note: RERUN_DISAGREEMENT, wrote: false };
+    try {
+      const projectLens = this.#projectLens(seen.pid, viewer);
+      const reruns = this.#rows(`SELECT * FROM case_import_reruns WHERE project=? ORDER BY rn`, seen.pid)
+        .map((r) => this.#rerunView(r, projectLens)).filter(Boolean);
+      return { ok: true, project: seen.pid, reruns, ...tail };
+    } catch {
+      return { ok: true, project: seen.pid, reruns: [], complete: false, ...tail };
+    }
   }
 
   /* ================================================================ R5: completion */
@@ -1744,7 +2084,8 @@ export class CaseImport {
 }
 
 /* The member acts and reads answer their own refusals with code, check and translation (DEC-49). */
-for (const m of ["importedCase", "acceptImported", "withdrawAcceptance", "flagImported", "clearFlag", "watchImport", "unwatchImport"]) {
+for (const m of ["importedCase", "acceptImported", "withdrawAcceptance", "flagImported", "clearFlag", "watchImport", "unwatchImport",
+                 "regradeImported", "rerunStart", "rerunPair", "rerunRead"]) {
   const fn = CaseImport.prototype[m];
   CaseImport.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
@@ -1785,11 +2126,13 @@ export function caseImportOwns(t) {
   return CASE_IMPORT_TABLES.includes(name);
 }
 
-/** R2: the ten member ops `caseImportOps` answers, by name (the test set of ops is this declaration). */
+/** R2: the member ops `caseImportOps` answers, by name (the test set of ops is this declaration): the ten of T28–T34 and
+ *  R27, R29, R30 and R31's four. */
 export const CASE_IMPORT_OPS = Object.freeze(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
-  "importedcase", "importedcases", "importflag", "importflagclear", "importunwatch", "importwatch"]);
+  "importedcase", "importedcases", "importflag", "importflagclear", "importregrade", "importunwatch", "importwatch",
+  "rerunpair", "rerunread", "rerunstart"]);
 
-/** The module's ten member ops: `by` and `viewer` are the control plane's stamps, read from the query, never the
+/** The module's member ops: `by` and `viewer` are the control plane's stamps, read from the query, never the
  *  body. `op-declarations` declares them, `control-plane` routes them and `plane` composes them (L11). Bytes arrive in
  *  the body as base64 text (`parts`, a list; `bytes`). */
 export function caseImportOps(m, url, body) {
@@ -1813,5 +2156,47 @@ export function caseImportOps(m, url, body) {
     importflagclear: () => m.clearFlag({ flag: pick("flag"), reason: pick("reason"), by, viewer }),
     importwatch: () => m.watchImport({ import: pick("import"), publisher: pick("publisher"), by, viewer }),
     importunwatch: () => m.unwatchImport({ import: pick("import"), by, viewer }),
+    /* R27, R29–R31 (T51; K4169): regrade another group's case, and re-run its work in a project of this group */
+    importregrade: () => m.regradeImported({ import: pick("import"), edition: pick("edition"), lens: pick("lens"), viewer }),
+    rerunstart: () => m.rerunStart({ project: pick("project"), import: pick("import"), edition: pick("edition"), by, viewer }),
+    rerunpair: () => m.rerunPair({ project: pick("project"), source_finding: pick("source_finding"), own_finding: pick("own_finding"),
+      edition: pick("edition"), withdraw: pick("withdraw"), by, viewer }),
+    rerunread: () => m.rerunRead({ project: pick("project"), viewer }),
   };
 }
+
+/* R33 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that a screen sends or this
+   tranche adds, declared beside the ops map. Of the five that have hand rows (`op-declarations`, `op-grades`) each row's
+   classes, `mutating`, weight and description are theirs, copied (`op-grades`' act help, which a declaration must equal); of the four new ones they are R32's table, and each also gives its stamps and capability. `fields.accepts` is every field the arm reads from `url` and `body` (the stamps
+   `viewer` and `by` excluded), `fields.requires` each field it refuses without. */
+/* the one sentence `op-grades` holds for each of the five ops (its act help), which a declaration must equal (its R50) */
+const IMPORT_DIRECTED = localize("case-import.declared.import_directed", "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle");
+export const DECLARED_OPS = Object.freeze({
+  caseimport: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    description: IMPORT_DIRECTED,
+    fields: { accepts: ["parts", "groupFields", "group_fields"], requires: ["parts"] } },
+  importaccept: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reasoned", refusal: "IMPORT_ACCEPT_NO_REASON",
+    description: IMPORT_DIRECTED,
+    fields: { accepts: ["import", "edition", "findings", "checked", "reason", "gaps"], requires: ["import", "edition", "findings", "checked", "reason"] } },
+  importacceptwithdraw: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reasoned", refusal: "IMPORT_ACCEPT_NO_REASON",
+    description: IMPORT_DIRECTED,
+    fields: { accepts: ["import", "edition", "reason"], requires: ["import", "edition", "reason"] } },
+  importflag: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reasoned", refusal: "IMPORT_FLAG_NO_ISSUE",
+    description: IMPORT_DIRECTED,
+    fields: { accepts: ["import", "edition", "finding", "issue"], requires: ["import", "edition", "issue"] } },
+  importwatch: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reversible",
+    description: IMPORT_DIRECTED,
+    fields: { accepts: ["import", "publisher"], requires: ["import", "publisher"] } },
+  importregrade: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read",
+    description: localize("case-import.declared.importregrade", "read: one imported case read under a lens (as the source published it, with the source's bias removed, or under this team's own), each finding that moved with the statement that moved it; writes nothing"),
+    fields: { accepts: ["import", "edition", "lens"], requires: ["import", "edition", "lens"] } },
+  rerunstart: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: "contribute", weight: "reversible",
+    description: localize("case-import.declared.rerunstart", "project-directed: an owner declares one of the team's projects a re-run of an imported edition's work, keyed by project and import; writes this module's rows and moves no bundle"),
+    fields: { accepts: ["project", "import", "edition"], requires: ["project", "import", "edition"] } },
+  rerunpair: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: "contribute", weight: "reversible",
+    description: localize("case-import.declared.rerunpair", "project-directed: a member of a re-run's project states that one of its findings answers the same claim as an imported finding, or takes that statement back; appended, never rewritten"),
+    fields: { accepts: ["project", "source_finding", "own_finding", "edition", "withdraw"], requires: ["project", "source_finding", "own_finding"] } },
+  rerunread: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read",
+    description: localize("case-import.declared.rerunread", "read: a project's re-runs of imported editions, the source's findings beside the project's paired findings, and the difference between the two lenses; writes nothing"),
+    fields: { accepts: ["project"], requires: ["project"] } },
+});
