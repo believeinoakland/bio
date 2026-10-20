@@ -163,3 +163,7 @@ ANSWER (K4239) to J11. A: the missing rows go to UX-DESIGN as HANDOFF B427, list
 ## B20 · CHANGE
 
 CHANGE (K4239): interface-shell is merged with R12 (a read is drawn by its classes): merge tranche/T51; your updates, group exportlog and bias reads now draw. export's founder reach follows OP-DECLARATIONS #30; bootstrap's members follows CREDENTIALS #24 (BOB tells you at each merge).
+
+## B21 · CHANGE
+
+CHANGE (K4239): credentials is merged: bootstrap accepts members. Merge tranche/T51; the updates screen's "Show what each part runs" may send members=1.
