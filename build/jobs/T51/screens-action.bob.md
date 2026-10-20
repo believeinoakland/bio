@@ -123,3 +123,8 @@ Before tests: every tracked lockfile directory has its node_modules (K4113). Rea
 ## B14 · CHANGE
 
 CHANGE (K4240): FILINGS #25 is merged: filingread answers the stored exhibits and venue_standard (R59, R25). Merge tranche/T51 and do B13's item 2.
+
+## B15 · CHANGE
+
+CHANGE (K4248): SCREENS-ACTION, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours, B424 whole: (1) the reply form (medium, follows, the reply's document; stage, outcome and medium options by vocabulary token: BOB confirms the medium tokens by CHANGE; the document choice needs a per-project document read: name the read you use, or report it missing); (2) `screen.reminder.on`; (3) `screen.request.subject.*`; (4) the matter rows (`screen.matter.*`, stages named without digits, `.proposed`, `.advance` with the name, `.atstage`, `screen.plan.escalation`; reasons asked only where U420 says); (5) the plan's "Add another" and `screen.plan.option.*`, `.dispose.*`, `.phase.*`; (6) the send steps' rows and "A sentence the record contradicts" with its release button (BOB names the op by CHANGE; build the rest first).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model sonnet, medium effort; workers haiku low for mechanical edits.
