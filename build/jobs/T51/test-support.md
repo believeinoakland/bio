@@ -74,3 +74,13 @@ FR-01 · test-support: applied (commit 1c23c02de0 on job/T51/test-support).
 - `checks/ownership.mjs`: 2 failures, the path above and the requirements file.
 
 Size (session_0191CQmcSf7uN8VoqE7fDryB): test runs 5, module lines 111
+
+## J5 · COMPLETE
+
+CHANGE B4 applied (commit 7f5f85e069 on job/T51/test-support, tranche/T51 merged in first).
+
+`declaredOpsOf` now takes a file only when it has a real export: a line-anchored `^export const DECLARED_OPS\b`, so a comment or string that only mentions the phrase (including its own source) is not imported. A file with that line that exports no object still rejects naming the file. The R16 test with two fake modules gained a file that only mentions the phrase in a comment and a string and throws if imported; it is not imported. The helper's breach messages are now direct arguments of `new Error(...)` (the words check read them as plain sentences once the path was owned).
+
+Tests and checks: `node --test bio-plane/test/m/test-support/`: 61 pass, 0 fail, 0 skipped (R16 on this repository green). `checks/words.mjs test-support`: 0 failures. `checks/coverage.mjs test-support`: 16 of 16. `checks/architecture.mjs test-support`: 0 failures. `checks/run.mjs`: format 0, channels 0, architecture 0, words 0; coverage failures only in other modules (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring). `checks/ownership.mjs`: only `build/requirements/test-support.md` listed, the requirement lines the START told me to write and B4 accepted.
+
+Size (session_0191CQmcSf7uN8VoqE7fDryB): test runs 9, module lines 112
