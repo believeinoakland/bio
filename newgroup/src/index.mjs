@@ -32,7 +32,7 @@ import { word } from "./words.mjs";
 import { CF_API, RELEASE_LATEST, RELEASE_TAGGED, Session, patiently, WAIT_BOUND_MINUTES,
   namesFor, schemeOf, SLUG_SCHEME, LEGACY_SCHEME, MARK, allCopies, inventory, freeName, readCopyFacts, countsViaApi, resourcesOf,
   deleteResources, takeLock, touchLock, dropLock, listScripts, listBuckets, listNamespaces, listApps, bindingsOf,
-  relHeaders, hex, vcmp, b64url, rand, cf, special, approve, apiOf, scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, readBack,
+  relHeaders, Sha256, hex, vcmp, b64url, rand, cf, special, approve, apiOf, scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, readBack,
   BINDING_OF, membersPresent, instanceAiOk, SEAL_BINDING, heldBindings, hostOf, planeLimits, reportsBuilds, vpcServiceOk,
   uploadInstall, uploadUpdate, planeInSync, putSecret, rotateSecrets, loadFleet, installFleet, bindMembers, ensureSubdomain,
   verifyInstall, failedLags, verifyServing, confirmContainers, offerSubdomain, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
@@ -41,7 +41,7 @@ import { CF_API, RELEASE_LATEST, RELEASE_TAGGED, Session, patiently, WAIT_BOUND_
 import { describeCopy } from "./held.mjs";
 /* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
-import { RELEASE_BINARY, RELEASE_VERSION, RELEASE_MANIFEST, RELEASE_CONTAINERS } from "./release.mjs";
+import { RELEASE_PACKED, RELEASE_FACTS, RELEASE_VERSION, RELEASE_MANIFEST, RELEASE_CONTAINERS } from "./release.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
@@ -91,14 +91,34 @@ async function fetchRepoManifest() {
   if (!rj.ok) throw new Error("manifest http " + rj.status);
   return rj.json();
 }
+/* R33 (K3441, K4234) — THE BLOB, MADE AS THE BYTES ARRIVE. A release is held once in the form an upload needs, a Blob, and its
+   hash is taken from the chunks as they come (`Sha256`, a 64-byte block of state), so the download is never gathered whole beside
+   the Blob and never read whole by the engine (`arrayBuffer()` holds the chunks and then their concatenation). Chunks are folded
+   into the Blob a few MB at a time, so the pending pieces are few. `take` answers `{blob, sha}`. */
+const BLOB_TYPE = "application/javascript+module", BLOB_STEP = 1 << 22;
+async function blobOf(stream) {
+  const sha = new Sha256(), reader = stream.getReader();
+  let blob = new Blob([], { type: BLOB_TYPE }), pending = [], held = 0;
+  const fold = () => { if (pending.length) blob = new Blob([blob, ...pending], { type: BLOB_TYPE }); pending = []; held = 0; };
+  for (let r = await reader.read(); !r.done; r = await reader.read()) {
+    sha.update(r.value); pending.push(r.value); held += r.value.length;
+    if (held >= BLOB_STEP) fold();
+  }
+  fold();
+  return { blob, sha: sha.hex() };
+}
 async function fetchRepoAsset(man) {
   const ra = await fetch(CFG.RELEASE_LATEST + "/" + (man.asset || "bio-plane.bundled.mjs"), { redirect: "follow", headers: relHeaders });
   if (!ra.ok) throw new Error("asset http " + ra.status);
-  const bytes = new Uint8Array(await ra.arrayBuffer());
-  const got = hex(await crypto.subtle.digest("SHA-256", bytes));
+  const { blob, sha: got } = await blobOf(ra.body ?? new Blob([]).stream());
   if (got !== man.sha256) {
     const e = new Error("integrity"); e.integrity = true; throw e;
   }
+  /* What is read from the verified bytes (R20's limits, R15's build fields, the signature) is read from one view of the Blob,
+     made now and let go at the end of this function, so the release is held as the Blob and, for this moment only, as the view
+     (the signature check takes its message whole). They are never decoded into a string (a 29 MB module with a few non-Latin-1
+     characters is a 58 MB string). */
+  const bytes = new Uint8Array(await blob.arrayBuffer());
   if (ARMED_SIGNERS.length) {
     if (typeof man.sig !== "string" || !man.sig.trim()) {
       const e = new Error("unsigned"); e.unsigned = true; throw e;
@@ -108,35 +128,33 @@ async function fetchRepoAsset(man) {
       const e = new Error("signature"); e.signature = true; e.reason = v.reason; throw e;
     }
   }
-  /* R33 (K3441, memory): the verified bytes ARE the release. They are never decoded into a string (a 21 MB module with a
-     few non-Latin-1 characters is a 43 MB string). What is read from them (R20's limits, R15's build fields) is read here,
-     as bytes, and what is kept is one Blob of them, uploaded as it is by every upload of this act (a Blob is shared, never
-     copied again) and, with the hash just verified, which the read-back is compared with. The downloaded bytes are then
-     let go, so the release is held once, not twice. */
-  return { blob: new Blob([bytes], { type: "application/javascript+module" }), sha: got,
-    limits: planeLimits(bytes), capable: reportsBuilds(bytes) };
+  return { blob, sha: got, limits: planeLimits(bytes), capable: reportsBuilds(bytes) };
 }
 
-/* R33 (K3441, K3442; N1240) — THE BUILT-IN RELEASE, HELD ONCE. `release.mjs` carries the signed plane as a binary string (one
-   character per byte, so the engine holds it one byte each: 29 MB at 0.86.0, where the same release as text is two bytes each
-   because a few characters are above 255). What an act uploads is one Blob made from it, built a few MB at a time (never a
-   whole second copy of the bytes beside the string and the Blob), kept for every upload of the act and the isolate's life. Its
-   limits and build fields are read from the string as text (they are ASCII). Its hash is the signed manifest's: the embed
-   step refuses unless the embedded bytes hash to it (R26), so a pass over the Blob's 29 MB to learn it again would only hold
-   a third copy; the read-back compares the account's bytes with it. The bytes uploaded are exactly the signed release's. */
-const BUILT_IN_TYPE = "application/javascript+module", BUILT_IN_STEP = 1 << 22;
+/* R33 (K3441, K3442, K4210; N1240) — THE BUILT-IN RELEASE, HELD ONCE, AND CARRIED PACKED. `release.mjs` carries the signed plane as
+   the base64 of its gzip (10 MB where the plane is 29 MB), and the two facts the installer reads from its text, its limits (R20) and
+   whether it reports builds (R15), taken by the embed step from the verified bytes. What an act uploads is one Blob made from it,
+   expanded once by `DecompressionStream` as the packed text is fed in a few MB at a time (never the packed bytes, the expanded
+   bytes and the Blob side by side), kept for every upload of the act and the isolate's life. Its hash is taken as the bytes come out
+   and must equal the signed manifest's (the embed step refused unless the embedded bytes hash to it, R26): a release that does not
+   expand to the signed bytes is not uploaded. The bytes uploaded are exactly the signed release's. */
+const PACKED_STEP = 1 << 22;                       /* base64 characters fed at a time: a multiple of 4 */
+async function unpackBuiltIn() {
+  let at = 0;
+  const packed = new ReadableStream({ pull(c) {
+    if (at >= RELEASE_PACKED.length) return c.close();
+    const bin = atob(RELEASE_PACKED.slice(at, at += PACKED_STEP)), part = new Uint8Array(bin.length);
+    for (let i = 0; i < part.length; i++) part[i] = bin.charCodeAt(i);
+    c.enqueue(part);
+  } });
+  const { blob, sha } = await blobOf(packed.pipeThrough(new DecompressionStream("gzip")));
+  if (sha !== RELEASE_MANIFEST.sha256) throw new Error("the built-in release does not expand to the release that was signed");
+  return blob;
+}
 let builtInBlob = null;
-function builtInRelease() {
-  if (!builtInBlob) {
-    let blob = new Blob([], { type: BUILT_IN_TYPE });
-    for (let at = 0; at < RELEASE_BINARY.length; at += BUILT_IN_STEP) {
-      const part = new Uint8Array(Math.min(BUILT_IN_STEP, RELEASE_BINARY.length - at));
-      for (let i = 0; i < part.length; i++) part[i] = RELEASE_BINARY.charCodeAt(at + i);
-      blob = new Blob([blob, part], { type: BUILT_IN_TYPE });
-    }
-    builtInBlob = blob;
-  }
-  return { blob: builtInBlob, sha: RELEASE_MANIFEST ? RELEASE_MANIFEST.sha256 : undefined, capable: reportsBuilds(RELEASE_BINARY) };
+async function builtInRelease() {
+  builtInBlob ??= unpackBuiltIn().catch((e) => { builtInBlob = null; throw e; });
+  return { blob: await builtInBlob, sha: RELEASE_MANIFEST.sha256, capable: RELEASE_FACTS.capable };
 }
 
 /* R61: the built-in release is installed with ITS OWN signed manifest (embedded with it, `RELEASE_MANIFEST`), and its members are
@@ -182,13 +200,13 @@ async function selectRelease(emit) {
   }
   /* R20: the built-in is held to the same rule. One that states no readable limits is refused by name, before any plane
      upload; the caller stops the act (`refused`) and nothing installs. */
-  const lim = planeLimits(RELEASE_BINARY);
+  const lim = RELEASE_FACTS.limits;
   if (!lim.ok) {
     emit.no("rel", said);
     return { refused: lim.why === "none" ? word("installer.release.refused.none", { builtin }) : word("installer.release.refused.unreadable", { builtin }) };
   }
   emit.ok("rel", said);
-  return { version: RELEASE_VERSION, ...builtInRelease(), from: "built-in", man: RELEASE_MANIFEST, base: builtInBase(man), limits: lim.limits };
+  return { version: RELEASE_VERSION, ...(await builtInRelease()), from: "built-in", man: RELEASE_MANIFEST, base: builtInBase(man), limits: lim.limits };
 }
 
 /* R55 (T48; N1047; DEC-226 (4); K3158) — THE UPDATE INSTALLS THE RELEASE CHOSEN AND NO OTHER. `V` is the version the team's
@@ -223,10 +241,10 @@ async function selectChosen(emit, V) {
     emit.ok("rel", UPDATE_WORDS.progressVerified(V));
     return { version: V, ...rest, from: "repository", man, limits: lim.limits };
   }
-  const lim = planeLimits(RELEASE_BINARY);
+  const lim = RELEASE_FACTS.limits;
   if (!lim.ok) return unlimited(lim);
   emit.ok("rel", UPDATE_WORDS.progressVerified(V));
-  return { version: V, ...builtInRelease(), from: "built-in", man: RELEASE_MANIFEST, base: builtInBase(man), limits: lim.limits };
+  return { version: V, ...(await builtInRelease()), from: "built-in", man: RELEASE_MANIFEST, base: builtInBase(man), limits: lim.limits };
 }
 
 /* ------------------------------------------------------------------ utils */
