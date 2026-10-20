@@ -37,7 +37,9 @@ const IMAGES = { [A_DOC]: { "bundle.md": docMd(A_DOC, "Lease amendment, March 20
   [INQ]: { "bundle.md": ["---", `id: ${INQ}`, "object_type: inquiry", "title: \"Which date does the rent adjustment take effect?\"", `project: ${P}`, "---", ""].join("\n") } };
 const view = (c, o = {}) => ({ images: IMAGES, plane: { contradictioncandidates: answer(c), contradictionfacts: ok(FACTS), contradictionnotices: notices(null),
   contradictionresponses: ok({ ok: true, responses: [] }), ...(o.plane || {}) } });
-export const open = async (path, o = {}) => { const p = await boot({ screens: [CONTRADICTION_SCREEN], path, plane: plane(o) }); await p.settle(); return p; };
+/* the other screens are served beside it, so a reference to a document or a question is a link (the kit draws a link only to a registered screen) */
+const SERVED = [...SCREENS.filter((s) => s.id !== "contradiction"), CONTRADICTION_SCREEN];
+export const open = async (path, o = {}) => { const p = await boot({ screens: SERVED, path, plane: plane(o) }); await p.settle(); return p; };
 const acts = (el) => [...new Set(el.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act")))].sort();
 const stateOf = (p) => main(p).querySelector("[data-cd]").getAttribute("data-cd");
 const act = (p, op, choice) => main(p).querySelector(`button[data-act="${op}"]${choice ? `[data-choice="${choice}"]` : ""}`);
@@ -161,8 +163,9 @@ test("R105 state f, nothing proposed (the assistant is held): the screen says so
   assert.ok(says(m, S + "until.it.is.available.no.document") && says(m, S + "a.pair.that.was.proposed.before"));
   assert.deepEqual(acts(m), []);
   assert.equal(p.requests.filter((r) => /^contradiction/.test(r.op)).length, 0, "nothing is read or sent");
-  const one = says(m, S + "finding.passages.that.may.conflict.is"), two = says(m, S + "finding.passages.that.may.conflict.is.2");
-  assert.ok(one !== two, "exactly one of the assistant's two notes");
+  assert.ok(says(m, S + "finding.passages.that.may.conflict.is.2") && !says(m, S + "finding.passages.that.may.conflict.is"), "the assistant is off for her");
+  const q = await open("/app/contradiction", { ...view(null), plane: { ...view(null).plane, assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  assert.ok(says(main(q), S + "finding.passages.that.may.conflict.is") && !says(main(q), S + "finding.passages.that.may.conflict.is.2"), "reachable: it is not available yet");
 });
 
 test("R105 a candidate that answers nothing and no notice is Nothing is here (the shell's R61), never a form", async () => {
@@ -193,15 +196,17 @@ test("R105 R32 clarify, they differ: the ways ticked, her words, the qualifiers 
     qualifiers: { a: "the 2024 date", b: "the date in the notice" }, evidence: [{ fact: "time_or_occasion" }], reason: "The notice is the later document." });
 });
 
-test("R105 R32 clarify, they differ, with nothing ticked or no words of her own: nothing is sent and the design's words are drawn in place (controls)", async () => {
+test("R105 R32 clarify, they differ, with no words of her own: nothing is sent and the design's words are drawn in place; with no way ticked the plane refuses it (control)", async () => {
   const p = await open("/app/contradiction/" + CAND, view(cand()));
-  fill(p, { "cd-expl": "Words of my own." });
-  await p.click(act(p, "contradictionclarify", "differs"));
-  assert.equal(p.byOp("contradictionclarify").length, 0, "no way ticked");
   tick(p, "cd-coords", 1); fill(p, { "cd-expl": "" });
   await p.click(act(p, "contradictionclarify", "differs"));
   assert.equal(p.byOp("contradictionclarify").length, 0, "no words of her own");
   assert.ok(says(main(p), S + "you.named.a.respect.but.gave"));
+  const q = await open("/app/contradiction/" + CAND, view(cand(), { plane: { contradictionclarify: refusedIn("CLARIFY_COORDINATE_UNKNOWN", "Name a respect.") } }));
+  fill(q, { "cd-expl": "Words of my own." });
+  await q.click(act(q, "contradictionclarify", "differs"));
+  assert.equal(q.byOp("contradictionclarify")[0].body.coordinates.length, 0, "the plane, not the page, refuses an empty list");
+  assert.ok(says(main(q), "refusal.CLARIFY_COORDINATE_UNKNOWN"));
   /* control: the evidence the page offers is only a fact the record states (the stated dates), never the undetermined one */
   assert.equal(p.doc.getElementById("cd-evid").querySelectorAll("input").length, 1);
 });
@@ -255,7 +260,7 @@ test("R105 R36 conclude, they do not really conflict: the kind, the respects the
   fill(p, { "cd-rqa": "the 2024 date", "cd-concl": "They differ in time.", "cd-fals": "A letter dated after both." });
   await p.click(act(p, "contradictionresolve"));
   assert.deepEqual(p.byOp("contradictionresolve")[0].body, { inquiry: INQ, resolution: { kind: "dissolved", coordinates: ["time_or_occasion", "precision"], qualifiers: { a: "the 2024 date" } },
-    conclusion: "They differ in time.", falsifier: "A letter dated after both." });
+    conclusion: "They differ in time.", version: "main", falsifier: "A letter dated after both." });
 });
 
 test("R105 R36 conclude, one is wrong, two rules conflict, and nothing could change it: the wrong side and reason, the canon, and noFalsifier travel as the plane reads them", async () => {
@@ -264,15 +269,21 @@ test("R105 R36 conclude, one is wrong, two rules conflict, and nothing could cha
   tick(p, "cd-nofals");
   await p.click(act(p, "contradictionresolve"));
   assert.deepEqual(p.byOp("contradictionresolve")[0].body, { inquiry: INQ, resolution: { kind: "misquote", wrong_side: "b", reason: "It misquotes." },
-    conclusion: "The notice is wrong.", noFalsifier: true });
+    conclusion: "The notice is wrong.", version: "main", noFalsifier: true });
   const q = await open("/app/contradiction/" + CAND, TAKEN());
   fill(q, { "cd-kind": "conflict_of_norms", "cd-canon": "later_over_earlier", "cd-concl": "The later rule governs.", "cd-fals": "A repeal." });
   await q.click(act(q, "contradictionresolve"));
   assert.deepEqual(q.byOp("contradictionresolve")[0].body, { inquiry: INQ, resolution: { kind: "conflict_of_norms", canon: "later_over_earlier" },
-    conclusion: "The later rule governs.", falsifier: "A repeal." });
+    conclusion: "The later rule governs.", version: "main", falsifier: "A repeal." });
+  /* control: a question with no accepted reading offers none and sends no version (the plane's NO_CLAIM is then its answer) */
+  const r = await open("/app/contradiction/" + CAND, { ...TAKEN(), plane: { ...TAKEN().plane, basisversions: ok({ ok: true, inquiry: INQ, versions: [] }) } });
+  fill(r, { "cd-concl": "C.", "cd-fals": "F." });
+  assert.equal(r.doc.getElementById("cd-version"), null);
+  await r.click(act(r, "contradictionresolve"));
+  assert.ok(!("version" in r.byOp("contradictionresolve")[0].body));
 });
 
-test("R105 R36 conclude with her conclusion, or what would change it (or the box), missing: nothing is sent and the design's words are drawn (controls)", async () => {
+test("R105 R36 conclude with her conclusion missing: nothing is sent and the design's words are drawn; with what would change it missing the plane refuses it (controls)", async () => {
   const p = await open("/app/contradiction/" + CAND, TAKEN());
   fill(p, { "cd-fals": "x" });
   await p.click(act(p, "contradictionresolve"));
@@ -280,11 +291,8 @@ test("R105 R36 conclude with her conclusion, or what would change it (or the box
   assert.ok(says(main(p), S + "the.question.could.not.be.concluded"));
   fill(p, { "cd-concl": "Done.", "cd-fals": "" });
   await p.click(act(p, "contradictionresolve"));
-  assert.equal(p.byOp("contradictionresolve").length, 0, "no falsifier and the box not ticked");
-  fill(p, { "cd-kind": "corrected", "cd-concl": "Done.", "cd-fals": "x", "cd-rwhy": "" });
-  await p.click(act(p, "contradictionresolve"));
-  assert.equal(p.byOp("contradictionresolve").length, 0, "a kind that names the wrong side asks why");
-  assert.ok(says(main(p), S + "part.of.your.answer.is.missing"));
+  assert.equal(p.byOp("contradictionresolve").length, 1, "the plane's NO_FALSIFIER is the answer to no falsifier and the box not ticked");
+  assert.ok(!("falsifier" in p.byOp("contradictionresolve")[0].body) && !("noFalsifier" in p.byOp("contradictionresolve")[0].body));
 });
 
 test("R105 R51 ask to resolve: the candidate, her project and her words are sent (the shell asks its reason first, a shell mark); the project chosen is the one the notice came to", async () => {
@@ -337,7 +345,8 @@ test("R105 every refusal the plane makes of the six acts is drawn beside the act
     ["contradictiondismiss", "CANDIDATE_TAKEN_UP", [S + "someone.already.dismissed.or.resolved.it", S + "it.stays.as.they.left.it"]],
     ["contradictionresolve", "NOT_A_CONTRADICTION_INQUIRY", [S + "this.is.not.a.question.taken", S + "open.it.from.the.contradiction.itself"]],
     ["contradictionresolve", "RESOLUTION_INCOMPLETE", [S + "part.of.your.answer.is.missing", S + "fill.in.that.part.and.try"]],
-    ["contradictionresolve", "NO_CLAIM", [S + "the.question.could.not.be.concluded", S + "add.what.is.missing.then.try"]],
+    ["contradictionresolve", "NO_FALSIFIER", [S + "the.question.could.not.be.concluded", S + "add.what.is.missing.then.try"]],
+    ["contradictionresolve", "NO_CONCLUSION", [S + "the.question.could.not.be.concluded", S + "add.what.is.missing.then.try"]],
     ["contradictionoptin", "NOT_A_PARTY", [S + "that.project.does.not.rest.on", S + "choose.a.project.that.does"]],
     ["contradictionoptin", "NOT_A_PROJECT_CONFLICT", [S + "this.is.a.lead.not.a"]],
     ["contradictionoptin", "CANDIDATE_CLOSED", [S + "someone.already.closed.it.and.it"]],
@@ -377,18 +386,21 @@ test("R105 every refusal the plane makes of the six acts is drawn beside the act
 /* ---- writing help (entry 25): beside the fields she words herself, never beside a reason ---- */
 
 test("R105 writinghelp: offered beside her own-words fields while the assistant is reachable, told only what she typed, its draft filled into the field as a labeled draft; none beside a reason field (control); none while the assistant is not reachable (control)", async () => {
-  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
-  const p = await boot({ screens: [CONTRADICTION_SCREEN], path: "/app/contradiction/" + CAND, plane: { ...plane(view(cand())), ...reach } });
-  await p.settle();
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), writinghelp: ok({ ok: true, text: "The notice is the later of the two.", untested: true }) };
+  const p = await open("/app/contradiction/" + CAND, { ...view(cand()), plane: { ...view(cand()).plane, ...reach } });
   const helps = main(p).querySelectorAll('button[data-act="writinghelp"]');
   assert.deepEqual(helps.map((b) => b.getAttribute("data-field")).sort(), ["explanation", "question"]);
   for (const id of ["cd-why", "cd-wrong"]) assert.ok(!helps.some((b) => b.getAttribute("data-for") === id), "no help beside a reason");
   fill(p, { "cd-expl": "The notice is later." });
   await p.click(helps.find((b) => b.getAttribute("data-field") === "explanation"));
   assert.deepEqual(p.byOp("writinghelp")[0].body, { op: "contradictionclarify", field: "explanation", told: "The notice is later." });
+  assert.equal(p.doc.getElementById("cd-expl").value, "The notice is the later of the two.", "the draft is filled into her field, hers to edit");
+  assert.ok(says(main(p), "draft.machine.label") && says(main(p), "ai.label.untested.writinghelp"));
   /* control: nothing told, nothing sent */
-  await p.click(helps.find((b) => b.getAttribute("data-field") === "question"));
-  assert.equal(p.byOp("writinghelp").length, 2, "the default question is hers to be told");
+  fill(p, { "cd-q": "" });
+  await p.click(main(p).querySelector('button[data-act="writinghelp"][data-field="question"]'));
+  assert.equal(p.byOp("writinghelp").length, 1);
+  assert.ok(main(p).querySelector('button[data-act="writinghelp"][data-field="question"]').closest(".mk-actwrap").querySelector('[data-gap="refused"]'), "told nothing: it says so beside the help");
   const q = await open("/app/contradiction/" + CAND, view(cand()));
   assert.equal(main(q).querySelector('button[data-act="writinghelp"]'), null, "not reachable: no help");
 });

@@ -24,9 +24,9 @@ const COND = { progression: "PRG-rent", entity: "ENT-city", relation: null, filt
 const short = (id, label, why) => ({ entity_id: id, entity_label: label, grade: "C", grade_determined: true, why });
 const PROGRESS = { ok: true, project: P, objective: "Whether the city kept the terms of its lease.", condition: COND, set_by: "dev", set_at: "2026-10-08T09:00:00Z",
   computable: true, matched: 12, meeting: 9, satisfied: false, computed_at: "2026-10-20T09:00:00Z", limit: 1000, truncated: false,
-  short: [short("ENT-p1", "Payment of $14,200, March 2026", { stages_missing: ["authorized"] }),
-    short("ENT-p2", "Payment of $9,800, April 2026", { grade_reached: "C", grade_required: "B", weakest_link: null }),
-    short("ENT-p3", "Payment of $11,500, May 2026", { stages_missing: ["invoiced", "authorized"] })],
+  short: [short("ENT-p1", "Invoice 14200 for March", { stages_missing: ["authorized"] }),
+    short("ENT-p2", "Invoice 9800 for April", { grade_reached: "C", grade_required: "B", weakest_link: null }),
+    short("ENT-p3", "Invoice 11500 for May", { stages_missing: ["invoiced", "authorized"] })],
   undetermined: [{ entity_id: "ENT-p4", entity_label: "Payment 4", why: "x" }] };
 const NOCOND = { ok: true, project: P, objective: "Whether the city kept the terms of its lease.", condition: null, computable: false, why: "x",
   matched: null, meeting: null, short: null, undetermined: null, satisfied: null, computed_at: "2026-10-20T09:00:00Z" };
@@ -34,24 +34,24 @@ const GAPS = { ok: true, project: P, condition: COND, gaps: PROGRESS.short.map((
   grade: s.grade, basis: s.why.stages_missing ? { stages_missing: s.why.stages_missing, says: "x" } : { grade_reached: s.why.grade_reached, grade_required: s.why.grade_required, says: "x" },
   instances: [{ entity_id: s.entity_id, entity_label: s.entity_label, documents: [] }], surfaced_by: "machine" })) };
 const PROPOSALS = { ok: true, project: P, proposals: [GAPS.gaps[0],
-  { key: "PRG-rent::authorized", source: "progressions", kind: "missing_predecessor", progression_key: "PRG-rent", progression_label: "Rent payments under the lease",
-    stage_key: "authorized", stage_label: "Authorized by council vote", instances: [{ entity_id: "ENT-city", entity_label: "The City of Oakland", grade: "C", grade_determined: true }], n: 1 }],
+  { key: "PRG-rent::authorized", source: "progressions", kind: "missing_predecessor", progression_key: "PRG-rent", progression_label: "Lease rent flow",
+    stage_key: "authorized", stage_label: "Council signed off", instances: [{ entity_id: "ENT-city", entity_label: "Springfield Parks Dept", grade: "C", grade_determined: true }], n: 1 }],
   count: 2, set_aside: [] };
 const ASP_TEAM = { id: "ASP-2026-0001", scope: "group", owner: null, statement: "Ask for every record in writing.", entities: [], progressions: [], state: "held", author: "rosa", at: "2026-09-01T09:00:00Z" };
 const ASP_OURS = { id: "ASP-2026-0002", scope: "project", owner: P, statement: "Check every amount against a second document.", entities: [], progressions: [], state: "held", author: "dev", at: "2026-09-10T09:00:00Z" };
 const ASPIRATIONS = { ok: true, project: P, member: "mai", aspirations: [ASP_TEAM, ASP_OURS],
   departures: [{ aspiration: ASP_TEAM.id, reason: "The city only answers phone requests here.", author: "dev", at: "2026-10-12T09:00:00Z", notable: true }], precedence: null };
-const GOAL = { id: "GOAL-2026-0001", statement: "End unvoted collections on city land.", bounds: "only leases the council has the right to amend",
+const GOAL = { id: "GOAL-2026-0001", statement: "Close the unvoted collections loophole.", bounds: "only leases the council has the right to amend",
   aspiration: null, objectives: [{ project: P, by: "dev", at: "2026-10-09T09:00:00Z" }], state: "open", closed_reason: null, author: "rosa", at: "2026-10-01T09:00:00Z" };
 
 function plane(o = {}) {
   return {
     objectiveprogress: ok(PROGRESS), objectivegaps: ok(GAPS), intentproposals: ok(PROPOSALS), aspirations: ok(ASPIRATIONS),
     pursuit: (r) => ok({ ok: true, aspiration: r.query.id === ASP_OURS.id ? ASP_OURS : ASP_TEAM, goals: [], dead_ends: r.query.id === ASP_OURS.id ? [{ at: "2026-09-30T09:00:00Z", author: "dev", note: "We asked the Authority for the 2019 vote record." }] : [], taught: null }),
-    list: ok({ bundles: [{ bundle_id: GOAL.id, title: "End unvoted collections on city land" }] }),
+    list: ok({ bundles: [{ bundle_id: GOAL.id, title: "Close the unvoted collections loophole" }] }),
     goal: ok({ ok: true, goal: GOAL }),
-    progression: ok({ ok: true, found: true, progression_key: "PRG-rent", label: "Rent payments under the lease", stages: [{ stage_key: "invoiced", label: "Invoiced" }, { stage_key: "authorized", label: "Authorized by council vote" }] }),
-    entity: ok({ ok: true, found: true, entity: { entity_id: "ENT-city", label: "The City of Oakland", kind: "organization" } }),
+    progression: ok({ ok: true, found: true, progression_key: "PRG-rent", label: "Lease rent flow", stages: [{ stage_key: "invoiced", label: "Invoiced" }, { stage_key: "authorized", label: "Council signed off" }] }),
+    entity: ok({ ok: true, found: true, entity: { entity_id: "ENT-city", label: "Springfield Parks Dept", kind: "organization" } }),
     projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 0 }] }),
     assistantstate: ok({ on: true }), accountreference: ok({ held: true }),
     writinghelp: ok({ ok: true, text: "A drafted reason." }),
@@ -82,8 +82,8 @@ test("R106 state a: success means (the sentence from the condition), how it is g
   const p = await open();
   assert.equal(main(p).querySelector("h1").textContent, word("screen.objective.name"));
   assert.ok(text(p).includes(PROGRESS.objective), "the objective's text");
-  assert.ok(says(p, KEY("success-is-reached-when-at-least-of-the-made-for"), { share: "90%", flow: "Rent payments under the lease", party: "The City of Oakland",
-    stage: "Authorized by council vote", grade: "B" }));
+  assert.ok(says(p, KEY("success-is-reached-when-at-least-of-the-made-for"), { share: "90%", flow: "Lease rent flow", party: "Springfield Parks Dept",
+    stage: "Council signed off", grade: "B" }));
   assert.ok(!says(p, KEY("this-objective-has-no-measure-of-success-yet-so")));
   assert.ok(heads(p).includes(word(KEY("how-it-is-going"))));
   assert.ok(says(p, KEY("rent-payments-meet-the-measure-are-short"), { met: "9", short: "3" }));
@@ -93,8 +93,8 @@ test("R106 state a: success means (the sentence from the condition), how it is g
   assert.ok(heads(p).includes(word(KEY("what-is-still-short"))));
   const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word(KEY("what-is-still-short")));
   assert.equal(sec.querySelectorAll(".cs-row").length, 3);
-  assert.ok(sec.textContent.includes("Payment of $14,200, March 2026"));
-  assert.ok(sec.textContent.includes(word("queue.objective-gap.detail.stages", { stages: "Authorized by council vote" })));
+  assert.ok(sec.textContent.includes("Invoice 14200 for March"));
+  assert.ok(sec.textContent.includes(word("queue.objective-gap.detail.stages", { stages: "Council signed off" })));
   assert.ok(sec.textContent.includes(word("queue.objective-gap.detail.grade", { reached: "C", required: "B" })));
   assert.ok(sec.querySelector(".cs-grade"), "a shortfall's grade is one mark");
   assert.ok(says(p, KEY("each-shortfall-is-also-offered-to-you-as-a-propo")));
@@ -169,7 +169,7 @@ test("R106 proposals: Decide sends the proposal's key, the act chosen, the proje
   assert.ok(heads(p).includes(W(KEY("proposals-to-decide"))));
   assert.ok(says(p, KEY("things-the-record-suggests-this-objective-should")));
   assert.ok(says(p, KEY("nothing-happens-until-a-member-decides")));
-  assert.ok(says(p, KEY("a-missing-step-in"), { flow: "Rent payments under the lease" }));
+  assert.ok(says(p, KEY("a-missing-step-in"), { flow: "Lease rent flow" }));
   await p.click(button(p, "triage"));
   assert.equal(ops(p, "triage").length, 0, "no choice, nothing sent");
   tick(p, "ob-tr-do-0");
@@ -180,7 +180,7 @@ test("R106 proposals: Decide sends the proposal's key, the act chosen, the proje
   await p.click(slot.querySelector('[data-shell="reason-send"]'));
   assert.deepEqual(ops(p, "triage")[0].body, { proposal: GAPS.gaps[0].key, act: "adopt", project: P, reason: "It belongs in the objective." });
   for (const [n, act] of [[1, "question"], [2, "defer"], [3, "dismiss"]]) {
-    tick(p, "ob-tr-do-" + n);
+    for (let m = 0; m < 4; m++) tick(p, "ob-tr-do-" + m, m === n);
     await p.click(button(p, "triage"));
     const s2 = p.root().querySelector(`[data-slot="${button(p, "triage").getAttribute("data-ai")}"]`);
     s2.querySelector('textarea[id^="cs-reason-"]').value = "Because " + act;
@@ -230,14 +230,14 @@ test("R106 aspirationdeclare: a project's aspiration sends scope, owner (the pro
   fill(p, { "ob-asp-st": "Name a second source for every claim." });
   p.doc.getElementById("ob-asp-scope").value = "project";
   await press();
-  assert.deepEqual(ops(p, "aspirationdeclare")[0].body, { scope: "project", owner: P, statement: "Name a second source for every claim." });
+  assert.deepEqual(ops(p, "aspirationdeclare")[0].body, { scope: "project", owner: P, statement: "Name a second source for every claim.", reason: "r" });
   p.doc.getElementById("ob-asp-scope").value = "group";
   await press();
-  assert.deepEqual(ops(p, "aspirationdeclare")[1].body, { scope: "group", statement: "Name a second source for every claim." });
+  assert.deepEqual(ops(p, "aspirationdeclare")[1].body, { scope: "group", statement: "Name a second source for every claim.", reason: "r" });
   p.doc.getElementById("ob-asp-scope").value = "member";
   fill(p, { "ob-asp-ent": "ENT-city", "ob-asp-prog": "PRG-rent" });
   await press();
-  assert.deepEqual(ops(p, "aspirationdeclare")[2].body, { scope: "member", owner: "mai", statement: "Name a second source for every claim.", entities: ["ENT-city"], progressions: ["PRG-rent"] });
+  assert.deepEqual(ops(p, "aspirationdeclare")[2].body, { scope: "member", owner: "mai", statement: "Name a second source for every claim.", entities: ["ENT-city"], progressions: ["PRG-rent"], reason: "r" });
 });
 
 test("R106 aspirationdeclare: control: the plane's NOT_AN_ADMIN is drawn by its key", async () => {
@@ -292,7 +292,7 @@ test("R106 goals: the goal is listed with its limit and that this objective serv
   const s = p.root().querySelector(`[data-slot="${button(p, "goaldeclare").getAttribute("data-ai")}"]`);
   s.querySelector('textarea[id^="cs-reason-"]').value = "r";
   await p.click(s.querySelector('[data-shell="reason-send"]'));
-  assert.deepEqual(ops(p, "goaldeclare")[0].body, { statement: "End unvoted collections.", bounds: "Only council-amendable leases.", aspiration: ASP_TEAM.id });
+  assert.deepEqual(ops(p, "goaldeclare")[0].body, { statement: "End unvoted collections.", bounds: "Only council-amendable leases.", aspiration: ASP_TEAM.id, reason: "r" });
   p.doc.getElementById("ob-goal-link").value = GOAL.id;
   await p.click(button(p, "goallink"));
   assert.deepEqual(ops(p, "goallink")[0].body, { goal: GOAL.id, project: P });
@@ -335,4 +335,59 @@ test("R106 the member's own reads: aspirations are read for her (project and mem
   assert.equal(ops(p, "aspirations")[0].query.member, "mai");
   for (const op of ["objectivegaps", "intentproposals"]) assert.equal(ops(p, op)[0].query.project, P);
   assert.equal(p.requests.filter((r) => r.method !== "GET" && !["writinghelp"].includes(r.op) && r.op !== "whoami" && r.body !== undefined && /^(objectivecondition|triage|aspiration|goal)/.test(r.op)).length, 0);
+});
+
+test("R44 every `screen.objective.*` key the screen's source draws is held (listed in its words) or one of the design words reported pending; none is both", () => {
+  const src = String(SCREEN.render) + SCREEN.acts.map((a) => String(a.send || "")).join("");
+  const stems = new Set([...src.matchAll(/(?:K\("|"screen\.objective\.)([a-z0-9-]+)"/g)].map((m) => m[1]));
+  assert.ok(stems.size > 60);
+  for (const stem of stems) {
+    const key = KEY(stem);
+    if (!PENDING_WORDS.includes(key)) { assert.ok(hasWord(key), `${key} is held`); assert.ok(SCREEN.words.includes(key), `${key} is listed`); }
+  }
+  for (const k of PENDING_WORDS) assert.ok(stems.has(k.slice("screen.objective.".length)), `${k} is drawn`);
+});
+
+test("R106 the measure: Stop is offered only where a measure is set; a typed minimum with $ sends USD, one without a currency is sent as typed for the plane to refuse in words", async () => {
+  const none = await open({ objectiveprogress: ok(NOCOND) });
+  assert.equal(main(none).querySelectorAll('button[data-act="objectivecondition"]').length, 1, "only Save");
+  const p = await open();
+  fill(p, { "ob-why": "Because.", "ob-share": "90", "ob-min": "$1,000" });
+  await p.click(button(p, "objectivecondition", 0));
+  assert.deepEqual(ops(p, "objectivecondition")[0].body.condition.filter, { amount: { min: "1000", currency: "USD" } });
+  fill(p, { "ob-min": "1000" });
+  await p.click(button(p, "objectivecondition", 0));
+  assert.deepEqual(ops(p, "objectivecondition")[1].body.condition.filter, { amount: { min: "1000" } });
+});
+
+test("R106 with no flow or party to name (no measure, no proposal) the measure takes them as typed keys; Save sends them", async () => {
+  const p = await open({ objectiveprogress: ok(NOCOND), intentproposals: ok({ ok: true, project: P, proposals: [], count: 0, set_aside: [] }) });
+  assert.equal(p.doc.getElementById("ob-flow").localName, "input");
+  fill(p, { "ob-flow": "PRG-rent", "ob-ent": "ENT-city", "ob-share": "50", "ob-why": "Because." });
+  await p.click(button(p, "objectivecondition", 0));
+  assert.deepEqual(ops(p, "objectivecondition")[0].body, { project: P, reason: "Because.", condition: { progression: "PRG-rent", entity: "ENT-city", required: { stages: [] }, satisfied: { share: 50 } } });
+});
+
+test("R106 R20 no aspiration: nothing to depart from, record a dead end on or retire is offered, and declaring one still is; no goal link or close without an open goal", async () => {
+  const p = await open({ aspirations: ok({ ok: true, project: P, aspirations: [], departures: [] }), list: ok({ bundles: [] }) });
+  for (const op of ["aspirationdepart", "aspirationdeadend", "aspirationretire", "goallink", "goalclose"]) assert.equal(button(p, op), undefined, op);
+  for (const op of ["aspirationdeclare", "goaldeclare"]) assert.ok(button(p, op), op);
+});
+
+test("R106 each read in its own state: pending is loading, refused and unanswered are failed, and no key is drawn bare beyond the design's pending words", async () => {
+  for (const op of ["objectivegaps", "aspirations", "list"]) for (const [name, answer] of [["refused", refusedIn("SOME_REFUSAL", "The plane refused this read.")], ["silent", { silent: true }], ["pending", { pending: true }]]) {
+    const p = await open({ [op]: answer });
+    assert.ok(main(p).querySelector("h1"), `${op} ${name}: the screen stays`);
+    if (op !== "objectivegaps") assert.ok(main(p).querySelector(`[data-state="${name === "pending" ? "loading" : "failed"}"]`), `${op} ${name}`);
+    assert.deepEqual(rawKeys(p.root()).filter((k) => !PENDING_WORDS.includes(k)), [], `${op} ${name}`);
+  }
+});
+
+test("R106 a goal closed with its reason is listed with that reason and is offered neither to link nor to close (control: an open goal is)", async () => {
+  const closed = { ...GOAL, id: "GOAL-2026-0002", statement: "Old aim.", state: "closed", closed_reason: "It was met." };
+  const p = await open({ list: ok({ bundles: [{ bundle_id: GOAL.id, title: "t" }, { bundle_id: closed.id, title: "u" }] }), goal: (r) => ok({ ok: true, goal: r.query.id === closed.id ? closed : GOAL }) });
+  assert.ok(text(p).includes("It was met.") && text(p).includes("Old aim."));
+  const options = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.getAttribute("value"));
+  assert.deepEqual(options("ob-goal-link"), [GOAL.id]);
+  assert.deepEqual(options("ob-goal-cl"), [GOAL.id]);
 });

@@ -14,7 +14,6 @@ const at = "/app/question/" + Q;
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
 const grouped = (o = {}) => inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)), grounds: GROUNDS, ...o });
 const A = { images: { [Q]: { "bundle.md": grouped() } } };
-const DOC_TITLE = "Pothole repair policy, Administrative Instruction 4.12";
 const legRow = (p, target) => section(p, "screen.question.supports.head").querySelectorAll(".cs-row").find((r) => r.querySelector(`a.cs-ref[href="/app/document/${target}"]`));
 const count = (text, part) => String(text).split(part).length - 1;
 const PB = "PROJ-2026-0099";
@@ -132,18 +131,19 @@ test("R89 the strength reading names what it leaves out: ungraded (legs not load
 const UNRATED = (n, extra = {}) => ({ state: "unrated", grade: null, weakest: null, load_bearing: 0, population: n, detail: "UNRATED on capture: no leg carries a grade. Not load-bearing: " + D + ", INFO-2026-0006.", ...extra });
 
 test("R116 the ungraded legs are named by their documents' titles, never their ids, each once; a leg whose document has no title draws a plain 'a document' word by key", async () => {
-  const nlb = [{ target_id: D }, { target_id: "INFO-2026-0006" }, { target_id: D }];
-  const p = await open(at, { ...A, plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: { state: "graded", grade: "B", weakest: { title: POLICY } }, connection: UNRATED(3, { not_load_bearing: nlb }) }) } });
+  const nlb = [{ target_id: D }, { target_id: "INFO-2026-0077" }, { target_id: D }];
+  const p = await open(at, { ...A, plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: { state: "graded", grade: "B" }, connection: UNRATED(3, { not_load_bearing: nlb }) }) } });
   const box = main(p).querySelector(".mk-strengthbox");
-  const legs = DOC_TITLE + ", " + word("shell.card.document");
+  const legs = POLICY + ", " + word("shell.card.document");
   assert.ok(says(box, "strength.arithmetic.unrated_no_leg_on_this_axis", { axis: word("mark.scale.connection.name"), legs }), "the titles once, joined; the untitled leg by the plain word");
-  assert.equal(count(box.textContent, DOC_TITLE), 1, "each leg once");
-  assert.doesNotMatch(main(p).textContent, /INFO-2026-0004|INFO-2026-0006/, "never an id");
+  assert.equal(count(box.textContent, POLICY), 1, "each leg once");
+  assert.doesNotMatch(main(p).textContent, /INFO-2026-0004|INFO-2026-0077/, "never an id");
   assert.ok(!box.textContent.includes("Not load-bearing"), "not the plane's sentence with its ids");
   /* control: a leg whose document has a title but a second leg of the same document is not drawn twice; the concluded block adds no second copy */
   const concluded = await open(at, { ...A, plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: { state: "graded", grade: "B" }, connection: UNRATED(1, { not_load_bearing: [{ target_id: D }] }) }),
     basisversions: (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {})) } });
-  assert.equal(count(main(concluded).textContent, DOC_TITLE), 1, "once in the whole conclusion block");
+  assert.equal(count(main(concluded).querySelector(".mk-strengthbox").textContent, POLICY), 1, "named once, in the strength box");
+  assert.equal(count(section(concluded, "question.concluded.heading").textContent, POLICY), 0, "the concluded block adds no second copy");
   assert.doesNotMatch(main(concluded).textContent, /INFO-2026-0004/);
 });
 
@@ -160,10 +160,10 @@ test("R120 the strength sentences that take {legs} are drawn by key with the tit
   };
   const axis = word("mark.scale.connection.name");
   await sentence(UNRATED(0), "strength.arithmetic.unrated_this_inquiry_rests_on_nothing", { axis });
-  await sentence(UNRATED(2, { not_load_bearing: two, grounds: [{ ground: "part 1" }, { ground: "part 2" }] }), "strength.arithmetic.unrated_no_leg_on_any_set", { axis, count: "2", legs: DOC_TITLE + ", Work orders" });
-  await sentence(UNRATED(2, { not_load_bearing: two }), "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: DOC_TITLE + ", Work orders" });
-  const listed = await sentence({ state: "graded", grade: "C", weakest: { target_id: D, title: POLICY }, not_load_bearing: two, detail: "plane sentence" }, "strength.arithmetic.present_and_not_yet_load_bearing", { legs: DOC_TITLE + ", Work orders" });
-  assert.equal(count(listed.textContent, DOC_TITLE), 1);
+  await sentence(UNRATED(2, { not_load_bearing: two, grounds: [{ ground: "part 1" }, { ground: "part 2" }] }), "strength.arithmetic.unrated_no_leg_on_any_set", { axis, count: "2", legs: POLICY + ", Work orders" });
+  await sentence(UNRATED(2, { not_load_bearing: two }), "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: POLICY + ", Work orders" });
+  const listed = await sentence({ state: "graded", grade: "C", not_load_bearing: two, detail: "plane sentence" }, "strength.arithmetic.present_and_not_yet_load_bearing", { legs: POLICY + ", Work orders" });
+  assert.equal(count(listed.textContent, POLICY), 1);
   /* control: nothing left out, no such sentence */
   const clean = await open(at, { ...A, plane: strength({}) });
   assert.ok(!says(main(clean), "strength.arithmetic.present_and_not_yet_load_bearing", { legs: "0" }));

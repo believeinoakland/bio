@@ -221,8 +221,10 @@ test("R29 R40 R54 members: one row each with role, the founder unnamed by key, n
   assert.deepEqual(actsIn(rows[1]), ["projectownerremove"], "her own row: stand down");
   assert.deepEqual(actsIn(rows[2]).sort(), ["projectowneradd", "projectremove"], "a member's row, to an owner");
   assert.ok(says(s, "project.owners.rule"));
-  await press(p, "projectowneradd", { within: rows[2] });
+  /* K4199 (interface-shell R107): the shell opens its reason box before "Make an owner"; she gives the reason as a member does */
+  await press(p, "projectowneradd", { within: rows[2], reason: "she has done the work" });
   assert.deepEqual([p.byOp("projectowneradd")[0].query.projectId, p.byOp("projectowneradd")[0].query.handle], [P, "ana"]);
+  assert.equal(p.byOp("projectowneradd")[0].body.reason, "she has done the work", "and the shell sends it with the act");
   await press(p, "projectremove", { within: section(p, "screen.project.members.head").querySelectorAll(".cs-row")[2] });
   assert.equal(p.byOp("projectremove")[0].query.handle, "ana");
   assert.ok(!("comment" in p.byOp("projectremove")[0].query), "an empty reason is not refused, and none is sent");

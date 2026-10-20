@@ -34,6 +34,7 @@
  * `extent_capture` to `bundlehistory`'s `capture_sha`), by the browser act `revisioncompare`; the original-file card draws the
  * file's kind from the reading's format id and its size from `bytes`, and none without `bytes`. */
 
+import { checkOutcome } from "../screens-intake/index.mjs";
 
 /** R3: the reads that need only the document's id; the rest follow from its front matter. */
 function reads(view) {
@@ -152,7 +153,7 @@ function render(cs, view) {
   out.push(cs.title(titled || T("state.undetermined", { reason: "" }), { thing: "document" }));
   if (!doc) { out.push(cs.state("capture", view, () => "")); return out.join(""); }
   const project = /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
-  if (project) later("project:" + project, "image", { id: project });
+  const pimg = project ? later("project:" + project, "image", { id: project }) : null;
   /* R32: the address an outside link, unquoted; a testimony's source drawn as its words */
   out.push(`<p class="mk-sub">${cs.w("screen.document.captured", {
     date: { html: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : doc.created ? cs.date(String(doc.created), { year: true }) : "" },
@@ -162,15 +163,16 @@ function render(cs, view) {
   /* R54: this copy's grade is `capturegrade`'s own answer for its digest, not the project's list of held captures; the row of
      that list (R49, R61) still says what the capture was held for. R55: the viewer's own held captures say whether this copy
      is hers and not yet vouched for. */
+  /* R111 (L1): `heldcaptures` answers `{held: rows}` (capture R77), each row `{bundle_id, capture: {sha256}, captured_for, ...}` */
+  const heldRows = (a) => (a && a.state === "ok" && a.value && Array.isArray(a.value.held) ? a.value.held : []);
+  const isThis = (r) => !!r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id);
   const held = project && sha ? later("held", "heldcaptures", { project, limit: "500" }) : null;
-  const row = held && held.state === "ok" && Array.isArray(held.value.rows || held.value.items || held.value.captures)
-    ? (held.value.rows || held.value.items || held.value.captures).find((r) => r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id || r.document === id || r.id === id)) : null;
+  const row = heldRows(held).find(isThis) || null;
   const gr = sha ? later("grade", "capturegrade", { capture: sha }) : null;
   const gradeObj = gr && gr.state === "ok" && gr.value && gr.value.grade ? gr.value.grade : null;
   const letter = gradeObj && /^[A-D]$/.test(String(gradeObj.grade || "")) ? String(gradeObj.grade) : "";
   const mineHeld = project && sha && view.me && view.me.member ? later("minehelds", "heldcaptures", { project, member: String(view.me.member), limit: "500" }) : null;
-  const mineRows = mineHeld && mineHeld.state === "ok" && mineHeld.value ? (mineHeld.value.rows || mineHeld.value.items || mineHeld.value.captures || []) : [];
-  const isHeld = mineRows.some((r) => r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id || r.document === id || r.id === id));
+  const isHeld = heldRows(mineHeld).some(isThis);
   const vouched = ui.outcome && ui.outcome.release && ui.outcome.release.ok === true;
   if (isHeld && !vouched) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
     + cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
@@ -181,10 +183,19 @@ function render(cs, view) {
   if (!titled && outside) { let site = ""; try { site = new URL(locator).hostname; } catch { site = ""; }
     out[0] = cs.title(site ? T("document.untitled.web", { site, date: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : "" }) : T("state.undetermined", { reason: "" }), { thing: "document" }); }
   const note = sha ? later("gradenote", "gradenote", { capture: sha }) : { state: "empty" };
+  /* R3, R96: the reading is read as soon as the digest is known: its passages, and how complete its text is (full, partial, none or
+     unread). A reading never made is unread; one made with no words in it holds none; one with pages it could not make out is partial. */
+  const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
+  const rv0 = reading.state === "ok" && reading.value && typeof reading.value === "object" ? reading.value : null;
+  const words0 = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.filter((p) => p && String(p.text || "").trim()) : [];
+  const blind0 = rv0 && Array.isArray(rv0.unread_pages) ? rv0.unread_pages.filter((n) => Number.isInteger(n) && n >= 0) : [];
+  const textState = !sha ? "" : reading.state === "empty" ? "unread" : rv0 ? (!words0.length ? "none" : blind0.length ? "partial" : "full") : "";
   /* R66: the head's fingerprint is the first one shortened, with its tip */
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha, letter }, tone: "quiet" }) + "</span></div>"
+    + (textState ? `<div><span class="v"><span data-text-state="${textState}"${textState === "full" || textState === "none" ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
+      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") : "") + "</span></span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
   if (ui.gradenote) {
@@ -198,16 +209,30 @@ function render(cs, view) {
     : cs.act("findin", { label: "act.findin.label.document", data: { capture: sha } }));
 
   /* passages: the reading's, each citable in a question the member chooses (citation R1's `found`) */
-  const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
   const qs = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles) ? d.questions.value.bundles : [];
   /* R49 (K3560): the question the capture was held for (its held row's `captured_for`, the questions she may see) is
      preselected, else none is; the document's own project's questions come first, then the others she may cite into */
   const pq = project ? later("projectq:" + project, "projectquestions", { project, limit: "100" }) : { state: "empty" };
   const ownQ = new Set(pq.state === "ok" && Array.isArray(pq.value.items) ? pq.value.items.filter((x) => x && x.inquiry).map((x) => String(x.inquiry)) : []);
   const heldFor = row && row.captured_for && Array.isArray(row.captured_for.questions) ? row.captured_for.questions.filter((x) => x && x.question) : [];
-  const askable = qs.map((q) => ({ value: String(q.bundle_id), text: String(q.title || q.bundle_id) }));
-  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), text: String(c.title || c.question) });
-  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value)));
+  /* R118 (A6, I-11): each question is named with its project, `screen.document.cite.option`. The projects she is in are `projectlist`'s
+     (project-roster R26) and each one's questions `projectquestions`'; a question no project of hers draws is named by its title alone. */
+  const plist = later("projects", "projectlist", { limit: "200" });
+  const projects = plist.state === "ok" && plist.value && Array.isArray(plist.value.projects) ? plist.value.projects.filter((x) => x && x.id) : [];
+  const ownTitle = (() => {
+    const t = pimg && pimg.state === "ok" && pimg.value && typeof pimg.value["bundle.md"] === "string" ? view.parts.front(pimg.value["bundle.md"]).title : "";
+    return t ? String(t) : "";
+  })();
+  const projectOf = new Map();
+  for (const pr of projects) {
+    const q = String(pr.id) === project ? pq : later("projectq:" + pr.id, "projectquestions", { project: String(pr.id), limit: "100" });
+    for (const x of q.state === "ok" && q.value && Array.isArray(q.value.items) ? q.value.items : []) if (x && x.inquiry && !projectOf.has(String(x.inquiry))) projectOf.set(String(x.inquiry), String(pr.name || ""));
+  }
+  if (project && ownTitle) for (const qid of ownQ) if (!projectOf.has(qid)) projectOf.set(qid, ownTitle);
+  const optionOf = (value, title) => (projectOf.get(value) ? { value, key: "screen.document.cite.option", fills: { question: title, project: projectOf.get(value) } } : { value, text: title });
+  const askable = qs.map((q) => ({ value: String(q.bundle_id), title: String(q.title || q.bundle_id) }));
+  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), title: String(c.title || c.question) });
+  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value))).map((o) => optionOf(o.value, o.title));
   const preset = heldFor.length ? String(heldFor[0].question) : "";
   /* the reading section is built once the revisions it compares are read (R81), in the slot it holds here */
   const readingAt = out.push("") - 1;
@@ -216,9 +241,10 @@ function render(cs, view) {
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
     const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
     if (!list.length) return originalCard + `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
-    /* a blank first choice, so that none is preselected unless the capture was held for one; a cite with it blank is refused */
+    /* nothing is preselected unless the capture was held for a question: then the first choice says to choose one, never a blank
+       (R118); a cite with it unchosen is refused in place */
     const pick = cites.length
-      ? cs.choice("document-cite-question", "screen.document.cite.question", [{ value: "", text: "" }].concat(cites), { value: preset })
+      ? cs.choice("document-cite-question", "screen.document.cite.question", (preset ? [] : [{ value: "", key: "screen.document.cite.choose" }]).concat(cites), { value: preset })
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
@@ -232,12 +258,20 @@ function render(cs, view) {
       return null; };
     const nums = list.map(numOf).filter((n) => n !== null);
     const unreadN = Array.isArray(r.unread_pages) ? r.unread_pages.filter((n) => Number.isInteger(n) && n >= 0).map((n) => n + 1) : [];
-    const total = nums.length ? Math.max(...nums, ...unreadN) : 0;
-    const paged = total > 1;
-    const first = paged ? Math.min(...nums) : 0;
+    const pdfTotal = nums.length ? Math.max(...nums, ...unreadN) : 0;
+    const pagedByNumber = pdfTotal > 1;
+    /* R112 (L5): a reading whose passages carry no page is drawn in blocks of a stated size (20 passages), with the same page bar, so a
+       captured web page of hundreds of passages is not drawn whole, each with its own Cite control */
+    const BLOCK = 20;
+    const blocks = pagedByNumber ? 0 : Math.ceil(list.length / BLOCK);
+    const blocked = blocks > 1;
+    const paged = pagedByNumber || blocked;
+    const total = pagedByNumber ? pdfTotal : blocked ? blocks : 0;
+    const first = pagedByNumber ? Math.min(...nums) : blocked ? 1 : 0;
     const asked = Number(ui.readpage);
     const cur = paged ? (Number.isInteger(asked) && asked >= 1 && asked <= total ? asked : first) : 0;
-    const shown = paged ? list.map((p, i) => [p, i]).filter(([p]) => { const n = numOf(p); return n === cur || (n === null && cur === first); }) : list.map((p, i) => [p, i]);
+    const shown = pagedByNumber ? list.map((p, i) => [p, i]).filter(([p]) => { const n = numOf(p); return n === cur || (n === null && cur === first); })
+      : blocked ? list.map((p, i) => [p, i]).slice((cur - 1) * BLOCK, cur * BLOCK) : list.map((p, i) => [p, i]);
     /* R81: the second tab, the comparison with the revision a question cites, is drawn only where that revision is found (citedRev);
        the compare tab shows the comparison in place of the passages and their pages */
     const compareOn = citedRev >= 0 && ui.readtab === "compare";
@@ -272,6 +306,29 @@ function render(cs, view) {
       + cs.act("transcribe", { label: "act.transcribe.label.document", data: { document: id } })));
   }
   out.push(own("transcribe") + own("pagetranscribe"));
+  /* R96 (C21; DEC-375): a copy whose text is not full can be read again with OCR (`pdfstructure`, `ocr=1`), which looks for the words in the
+     page images; a full one offers no such act. The pages with no text are named where the reading names them. */
+  if (textState && textState !== "full" && sha) {
+    const act = cs.act("pdfstructure", { label: "act.pdfstructure.label.document", data: { sha } });
+    out.push(textState === "partial" && blind0.length ? cs.sheet(cs.row("", W("screen.document.ocr.says", { pages: pagesText(blind0.map((n) => n + 1)) }), act)) : `<div class="mk-acts">${act}</div>`);
+  }
+  /* R97 (C22; DEC-375): a page another member typed is confirmed by a second member (`transcriptionattest`); the typist's own page
+     offers her no confirmation, since the plane refuses it (content R25). The typings are the document's `transcriptions`. */
+  if (textState && textState !== "full") {
+    const ty = later("typed", "transcriptions", { bundleId: id });
+    const typed = ty.state === "ok" && ty.value && Array.isArray(ty.value.transcriptions) ? ty.value.transcriptions.filter((t) => t && t.content_id) : [];
+    const meIds = [view.me && view.me.member, view.me && view.me.handle].filter(Boolean).map(String);
+    if (typed.length) out.push(`<details class="mk-details" open data-fold="typed"><summary>${W("screen.document.attest.summary")}</summary>` + typed.map((t) => {
+      const mine = meIds.includes(String(t.transcriber));
+      const ext = t.extent && typeof t.extent === "object" ? t.extent : null;
+      const page = ext && Number.isInteger(ext.page) ? pg(ext.page) : null;
+      const name = who(t.transcriber);
+      return `<div data-typed="${cs.esc(String(t.content_id))}">` + cs.sheet(cs.row("", `<span class="rec">${W("screen.document.attest.row", { page: page !== null ? String(page) : String(t.ref || ""), name, date: { html: dayOf(t.at) } })}</span>`
+          + `<br><span class="mk-sub">${W("screen.document.attest.status", { name })}</span>`))
+        + (mine ? "" : cs.field("document-attest-note-" + String(t.content_id), "screen.document.attest.note", { area: true, rec: true, help: "screen.document.attest.note.help" })
+          + `<p class="mk-note">${W("screen.document.attest.at")}</p>` + cs.act("transcriptionattest", { label: "act.transcriptionattest.label.document", data: { content: String(t.content_id) } })) + "</div>";
+    }).join("") + own("transcriptionattest") + "</details>");
+  }
   /* R55: a picture whose text the reading could not make out, and a table read flat, say so */
   if (reading.state === "ok" && reading.value && reading.value.reading) {
     const rd0 = reading.value.reading;
@@ -294,9 +351,14 @@ function render(cs, view) {
         if (list.length < 2) return "";
         const at0 = Number.isInteger(v.at_index) ? v.at_index : list.findIndex((x) => x && (x.capture_sha === sha || x.sha256 === sha));
         const newer = at0 >= 0 && at0 < list.length - 1;
+        /* R86 (C32): each other version is a reference opening that version's document; this copy is not, and a version the record holds
+           no document for is a date alone */
         return (newer ? `<p class="cs-due" data-changed="true">${cs.w("screen.document.versions.changed")}</p>` : "")
-          + cs.sheet(list.map((x, i) => cs.row("", x && x.first_retrieved ? cs.date(String(x.first_retrieved), { year: true }) : "",
-              i === at0 ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "")).join(""));
+          + cs.sheet(list.map((x, i) => {
+            const when = x && x.first_retrieved ? cs.date(String(x.first_retrieved), { year: true }) : "";
+            return cs.row("", i !== at0 && x && x.bundle_id && when ? cs.ref("document", String(x.bundle_id), when, []) : when,
+              i === at0 ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "");
+          }).join(""));
       })() : "";
     if (vbody) out.push(cs.sec("screen.document.versions.head", vbody));
   }
