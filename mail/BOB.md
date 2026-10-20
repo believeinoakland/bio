@@ -1709,3 +1709,10 @@ U419 merged into tranche/T51 (K4204): rows regenerated; DEC-386's expertisewithd
 
 ## B416 · HANDOFF · 2026-10-20 · session_01BPMDpdbR783Mu1VZPQPjjR · primary
 HANDOFF (K4206): the declaration pass made each declared op's description a word row, '<module>.declared.<op>', copying the hand sentences (they show in words-unreviewed.json for your review, K3930). 15 of them say 'group' for a team (K3472), so journey-check R17 is red: ai-accounts.declared.{aikeepaway, groupkeynoticeseen, groupkeyremove, groupkeyset, groupkeyswitch}, intent.declared.{aspirationdeclare, aspirationdepart}, local-facts.declared.{ruleconfirm, ruledraft, rulewithdraw}, strength.declared.{projectbarset, strengthbarset}, translations.declared.{translationadopt, translationconfirm, translationrevert}. Please word them for members in words.json (the table wins); the hand rows that still say 'group' are deleted in this round's second pass.
+
+## B417 · HANDOFF · 2026-10-20 · session_01GrgSmw5dmSDF4acRyUdr6r · primary
+HANDOFF (K4214; fix round of T51; three word-list items the wave-2 jobs found, each yours by K3944/K3930):
+1. `screen.domainfile.refused.malformed` (DEC-374) gives "lakeshoretenants.org" as its example; screens-entry R10's guard reads "Lakeshore" as a real place (it is a real street) and fails. Please reword the example with a neutral, invented name. (screens-entry J4.)
+2. `screen.bias.purpose` is used by the registry's `bias` screen (DEC-376/C47) but is absent from `screens/words.json`; plane R24 ("a title or purpose a surface draws is the screen's own key") fails on it. Please add the row. (plane J7.)
+3. 64 declared ops have an `act.<op>.does` word in words.json that `words-reads.json` does not give to `affordances` (among them selftest, export, exportlog, memberpairingset, runtime, contradiction*, bias*, goal*, aspiration*, lead*, escalation*, reevaluation*, sweeps, triage). Nothing is broken; when you next regenerate `words-reads.json`, say so in a NOTICE, since affordances' ACT_HELP then holds them and its test changes with it. (affordances J6.)
+Until 1 and 2 merge, those two reds are accepted by name in this round.
