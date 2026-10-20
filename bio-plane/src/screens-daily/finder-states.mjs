@@ -122,7 +122,9 @@ export function finderStates() {
     };
     const fieldRows = cs.sheet(hs.map(function (h) {
       const id = String(h.bundle_id);
-      const title = String(h.title || "");
+      // R78: the document's title heads the hit, never its file part or id; one with no title says so.
+      const title = typeof h.title === "string" && h.title.trim() ? h.title : h.document && typeof h.document.title === "string" && h.document.title.trim() ? h.document.title
+        : cs.w("queue.source.untitled", { date: { html: cs.date(String(h.last_updated || h.captured || "")) } });
       const grade = h.grade ? cs.grade("capture", String(h.grade)) + " " : "";
       const where = h.snippet ? excerpt(h.snippet) : "";
       return cs.row(pickBox(id, title), cs.ref(screenOf(h.object_type, id), id, title, []) + '<span class="meta">' + grade + cs.mark("origin", "search") + (where ? " <span>" + where + "</span>" : "") + "</span>", "", "");
@@ -166,10 +168,12 @@ export function finderStates() {
     const nothing = answeredAll && !ftotal && !ptotal && !scount;
     if (nothing) {
       // R12: no result: the words searched, what search covers, and "Capture it".
+      // R78: when the wider reading finds documents (`widen.total` above 0) the partial match is told apart from "nothing matches".
       const widen = f && f.value && f.value.widen;
-      return scopes + '<div class="mk-note" data-state="empty"><p><b>' + cs.w("screen.finder.noresult", { q: q }) + "</b> " + cs.w("screen.finder.covers") + "</p>"
+      const wider = widen && typeof widen.total === "number" && widen.total > 0;
+      return scopes + '<div class="mk-note" data-state="empty"><p><b>' + (wider ? cs.w("screen.finder.noresult.partial", { q: q }) : cs.w("screen.finder.noresult", { q: q })) + "</b> " + cs.w("screen.finder.covers") + "</p>"
         + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
-        + (widen && typeof widen.total === "number" && widen.total > 0 ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "");
+        + (wider ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + '</h3><p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "");
     }
     const total = f && f.state === "ok" ? "" : "";
     return scopes + fieldsSec + passagesSec + subjectsSec + total + (drawn.length > 1 || plain ? '<p class="mk-small muted">' + cs.w("screen.finder.route.apart") + "</p>" : "") + cross;
@@ -183,10 +187,11 @@ export function finderStates() {
     if (!src) return "";
     const sc = src.value.scope;
     const levels = src.value.levels && typeof src.value.levels === "object" ? src.value.levels : {};
-    const reason = levels.meaning && typeof levels.meaning === "object" ? String(levels.meaning.reason || levels.meaning.says || "") : "";
+    // R76: the plane answers the reason as `why` (`retrieval/levels.mjs`); with none the row would end in a stub, so it is not drawn.
+    const reason = levels.meaning && typeof levels.meaning === "object" && typeof levels.meaning.why === "string" ? levels.meaning.why.trim() : "";
     const existence = Array.isArray(sc.existence_only_projects) ? sc.existence_only_projects.length : typeof sc.existence_only_projects === "number" ? sc.existence_only_projects : typeof sc.existence_only_count === "number" ? sc.existence_only_count : 0;
     const rows = [];
-    rows.push(cs.row(cs.icon("finding"), "<b>" + cs.w("screen.finder.covered.rests") + '</b><span class="meta">' + cs.w("state.undetermined", { reason: reason }) + "</span>", "", ""));
+    if (reason) rows.push(cs.row(cs.icon("finding"), "<b>" + cs.w("screen.finder.covered.rests") + '</b><span class="meta">' + cs.w("state.undetermined", { reason: reason }) + "</span>", "", ""));
     if (typeof sc.documents === "number") {
       const rest = typeof sc.documents_without_rows === "number" ? sc.documents_without_rows : Math.max(0, sc.documents - (Number(sc.documents_with_rows) || 0));
       const read = typeof sc.documents_with_rows === "number" ? sc.documents_with_rows : sc.documents - rest;
@@ -197,6 +202,48 @@ export function finderStates() {
     }
     rows.push(cs.row(cs.icon("nobody"), "<b>" + cs.w("screen.finder.covered.looked") + "</b>", "", "") + nobody);
     return cs.sec("screen.finder.covered.heading", '<p class="mk-small">' + cs.w("screen.finder.covered.levels") + "</p>" + cs.sheet(rows.join("")));
+  };
+
+  /* ---- R67, R77: the frontier at four levels ---- */
+  // One row for each level `frontier` answered: the places nobody looked at (`never_looked_count`), else what its `tally` says was
+  // looked at; a level this reader does not read (`built: false`) is undetermined with the answer's note, a failed read is failed.
+  // "Somebody has looked everywhere" (R77) is said only when every level answered, was read and has no place left unlooked.
+  const frontier = function (cs, view) {
+    const LEVELS = ["document", "content", "meaning", "internet"];
+    const STATES = ["LOOKED_FOUND", "LOOKED_ABSENT", "NOT_LOOKED"];
+    let everywhere = true;
+    let answered = 0;
+    const rows = LEVELS.map(function (level) {
+      const r = view.data["frontier_" + level];
+      if (!r || r.state === "loading") { everywhere = false; return ""; }
+      if (r.state === "failed") { everywhere = false; answered++; return cs.row(cs.icon("nobody"), "<b>" + cs.w("screen.answers.level." + level) + "</b>" + cs.state("frontier_" + level, null), "", ""); }
+      const v = r.value && typeof r.value === "object" ? r.value : null;
+      if (!v) { everywhere = false; return ""; }
+      answered++;
+      const name = "<b>" + cs.w("screen.answers.level." + level) + "</b>";
+      if (v.built === false || v.found === false) {
+        everywhere = false;
+        return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.w("state.undetermined", { reason: String(v.note || "") }) + "</span>", "", "");
+      }
+      const n = typeof v.never_looked_count === "number" ? v.never_looked_count : (Array.isArray(v.never_looked) ? v.never_looked.length : 0);
+      if (n > 0) {
+        everywhere = false;
+        const items = (Array.isArray(v.never_looked) ? v.never_looked : []).slice(0, 20).map(function (x) {
+          const label = x && typeof x === "object" ? (x.title || x.referent || x.authority || x.detail || "") : String(x);
+          return "<li>" + cs.esc(String(label)) + "</li>";
+        }).join("");
+        return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</span>"
+          + (items ? '<ul class="mk-list">' + items + "</ul>" : ""), "", "");
+      }
+      // Nothing left unlooked: the states its tally names (a count apiece), "looked, found" and "looked, not found".
+      const tally = v.tally && typeof v.tally === "object" ? v.tally : {};
+      const said = Object.keys(tally).filter(function (s) { return Number(tally[s]) > 0 && s !== "NEVER_LOOKED"; }).map(function (s) {
+        return cs.w("screen.answers.look", { level: { html: cs.w("screen.answers.level." + level) }, state: { html: STATES.indexOf(s) >= 0 ? cs.w("screen.answers.state." + s) : cs.w("screen.answers.state.other", { state: s }) } }) + " (" + cs.esc(String(tally[s])) + ")";
+      });
+      return cs.row(cs.icon("nobody"), name + (said.length ? '<span class="meta">' + said.join(" · ") + "</span>" : ""), "", "");
+    }).filter(Boolean);
+    const all = everywhere && answered === LEVELS.length;
+    return (rows.length ? cs.sheet(rows.join("")) : "") + (all ? '<p class="mk-note">' + cs.w("screen.finder.nobody.none") + "</p>" : "");
   };
 
   /* ---- R57: citing the whole held set ---- */
@@ -260,5 +307,5 @@ export function finderStates() {
     return { query: { handle: el.dataset.handle, project: q, role: role }, body: {} };
   };
 
-  return { hits: hits, keyOf: keyOf, table: table, routes: routes, covered: covered, cite: cite, citeSend: citeSend, chip: chip };
+  return { hits: hits, keyOf: keyOf, table: table, routes: routes, covered: covered, frontier: frontier, cite: cite, citeSend: citeSend, chip: chip };
 }

@@ -337,8 +337,13 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   const OWED_HAND = ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER];
   assert.deepEqual([...owed].filter((o) => !DECLARED_NOW.includes(o)).sort(), OWED_HAND.filter((o) => !DECLARED_NOW.includes(o)).sort());   // T48 (R65, R66): DEC-226's three, declared by R66
   for (const op of OWED) assert.ok(regActs.some((a) => a.op === op && a.status === "declared"), `${op} is not a declared act`);
-  for (const op of [...OWED, ...owed].filter((o) => !OWED_T49.includes(o) && !LEFT_OUT.includes(o) && !BROWSER.includes(o)))
+  for (const op of [...OWED, ...owed].filter((o) => !OWED_T49.includes(o) && !LEFT_OUT.includes(o) && !BROWSER.includes(o) && !DECLARED_NOW.includes(o)))
     assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.member.has(op), op);
+  /* R80: an owed act an owner declares is that op, in a session set unless its declaration makes it public */
+  for (const op of owed.filter((o) => DECLARED_NOW.includes(o) && !BROWSER.includes(o) && !OWED_T49.includes(o))) {
+    assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), op);
+    assert.equal(SESSION_OPS.member.has(op), OPS[op].classes !== null, op);
+  }
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
   for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);

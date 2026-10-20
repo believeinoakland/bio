@@ -49,3 +49,8 @@ test("R91 retrieval declares search: its requires alone raise no refusal naming 
   await declaredOpHolds({ op: "search", declaration: DECLARED_OPS["search"], call: mk("search", {"viewer":"member:vera"}),
     refusedNaming: named({}, true), same: sameCode });
 });
+
+test("R91 retrieval declares list: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "list", declaration: DECLARED_OPS["list"], call: mk("list", {"viewer":"member:vera"}),
+    refusedNaming: named({}, true), same: sameCode });
+});

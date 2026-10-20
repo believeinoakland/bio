@@ -7,6 +7,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
+import { composeNeeds } from "../../../src/op-declarations/compose.mjs";
 import { explained } from "./help.mjs";
 import { T51_SHARES, T51_FAMILIES } from "../../../src/op-declarations/t51.mjs";
 import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
@@ -337,4 +339,39 @@ test("R77 (K3826, K3852): heldat's `by` is the session's member alone — stampe
   assert.equal(OPS.heldat.mutating, false);
   assert.ok(!machineAdmits("heldat").includes("ai"));
   assert.ok(!Object.hasOwn(NEEDS, "heldat") || NEEDS.heldat === null);
+});
+
+test("R82 (T51 fix round; K4227; screens-investigate R51; amends R18): standardinforce, standards' in-force read, is in SESSION_OPS.member and SESSION_OPS.admin, so the shell's act gate answers session for it and draws its button — its spec, stamps and NEEDS row are the ones standards declares (admin, member, probe; not mutating; viewer; null), it is explained or named under the read ground (R34), and an `ai` credential is no class of it (negative control: standard and standards, its siblings, stay out of the session sets; an op in no set answers machine)", () => {
+  const owner = REGISTERED.standards.standardinforce;
+  assert.ok(owner, "standards declares no standardinforce");
+  assert.deepEqual(plain(OPS.standardinforce), { classes: [...owner.classes], mutating: owner.mutating });
+  /* its viewer stamp is the action layer's read list (R4), not a family's: unchanged by being a session op */
+  assert.deepEqual(listsOf("standardinforce"), ["ACTION_LAYER_READS", "STANDARDS_READS"]);
+  assert.deepEqual([...(owner.stamps ?? ["viewer"])], ["viewer"]);
+  assert.equal(NEEDS.standardinforce, owner.needs ?? null);
+  assert.ok(SESSION_OPS.member.has("standardinforce") && SESSION_OPS.admin.has("standardinforce"), "standardinforce is not in both session sets");
+  assert.equal(ACT_GATE.mode("standardinforce"), "session");
+  assert.equal(explained("standardinforce") !== ground("standardinforce").length > 0, true, "explained, or named under one ground, never both or neither");
+  assert.ok(!machineAdmits("standardinforce").includes("ai"));
+  /* controls: the siblings are not drawn as session acts, and a name in no set answers machine */
+  for (const op of ["standard", "standards"]) assert.ok(!SESSION_OPS.member.has(op) && ACT_GATE.mode(op) === "machine", op);
+  assert.equal(ACT_GATE.mode("nosuchop"), "machine");
+});
+
+test("R83 (T51 fix round; K4237; screens-settings C30): export, the copy of the group's records, is in SESSION_OPS.admin — the founder's session — and in no other set, so the founder's session can take a copy and the shell's act gate answers admin-session for it; its spec (classes admin, mutating) and NEEDS row are unchanged, and it is in no member set (negative control: a member session's set lacks it, the gate answers admin-session, never session; its siblings exportlog and exportpage stay out of the admin set; an `ai` credential is no class of it)", () => {
+  assert.deepEqual(plain(OPS.export), { classes: ["admin"], mutating: true });
+  assert.ok(SESSION_OPS.admin.has("export"), "the founder's session set lacks export");
+  assert.ok(!SESSION_OPS.member.has("export"), "a member session's set holds export");
+  assert.equal(ACT_GATE.mode("export"), "admin-session");
+  assert.ok(!machineAdmits("export").includes("ai") && !machineAdmits("export").includes("member"));
+  assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, "export"));
+  /* a session reaches a mutating op, so it has a NEEDS row (R3's census): a present null, no working capability */
+  assert.ok(Object.hasOwn(NEEDS, "export") && NEEDS.export === null && ACT_GATE.needs("export") === null);
+  /* the composition refuses a founder-session row for an op another part holds (R3's control) */
+  assert.throws(() => composeNeeds({ export: null }, {}, { export: null }), (e) => e instanceof TypeError && e.message.includes("export"));
+  assert.deepEqual(composeNeeds({ a: null }, { b: "contribute" }, { c: null }), { a: null, b: "contribute", c: null });
+  /* controls: the neighbours it was declared beside are not drawn to the founder's session, and a member's set holds none of the three */
+  for (const op of ["exportpage"]) assert.ok(!SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
+  assert.ok(!SESSION_OPS.member.has("export") && ACT_GATE.mode("exportlog") !== "admin-session");
+  assert.ok(!ground("export").length, "export is not a member op: R34's partition does not run over it");
 });

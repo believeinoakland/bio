@@ -1,13 +1,13 @@
 /* The `leads` screen (Add › Leads; R44; DEC-375 C18), at `/app/leads` and `/app/leads/<a lead's id>`: write down something you were
  * told, record who looked and what they found, and share it with a project (`lead`, `leadread`, `leadlook`, `leadshare`,
  * `writinghelp`). "Lead" is the member's own note here; a contradiction is what the assistant proposes (the two words are not mixed).
- * The plane lists no leads (`observation-log` answers one by its id, R18): the leads written this visit are kept in page memory, and
- * a lead is opened by its id. Self-contained functions over the kit `cs` (interface-shell R21 (1)). */
+ * The list is `leadlist` (`observation-log` R20): the leads this viewer may read, newest first, read again after a lead is written;
+ * the screen keeps no list of its own. A lead is opened by its id (`leadread`). Self-contained functions over the kit `cs` (interface-shell R21 (1)). */
 
 /* R44: the projects the member has joined (the share's choices), the team's members (who looked), and, at a lead's address, the lead. */
 function leadsReads(view) {
   const id = typeof view.subject === "string" && /^LEAD-[A-Za-z0-9-]+$/.test(view.subject) ? view.subject : "";
-  return { projects: { op: "projectlist" }, members: { op: "memberlist" },
+  return { list: { op: "leadlist" }, projects: { op: "projectlist" }, members: { op: "memberlist" },
            ...(id ? { one: { op: "leadread", query: { id }, subject: true } } : {}) };
 }
 
@@ -15,7 +15,7 @@ function renderLeads(cs, view) {
   const U = view.ui || {}, D = view.data || {};
   const id = typeof view.subject === "string" && /^LEAD-[A-Za-z0-9-]+$/.test(view.subject) ? view.subject : "";
   const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
-  const mine = Array.isArray(U.mine) ? U.mine : [];
+  const mine = D.list && D.list.state === "ok" && D.list.value && Array.isArray(D.list.value.leads) ? D.list.value.leads.filter((l) => l && typeof l.lead_id === "string") : [];
   const projects = D.projects && D.projects.state === "ok" && D.projects.value && Array.isArray(D.projects.value.projects) ? D.projects.value.projects : [];
   const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
   const handleOf = (m) => { const x = String(m || "").replace(/^member:/, ""); return (roster.find((r) => r && r.member_id === x) || {}).handle || ""; };
@@ -33,7 +33,7 @@ function renderLeads(cs, view) {
     + `<div class="mk-acts">${cs.act("lead", { tone: "primary" })}</div>`
     + `<p class="mk-note">${cs.w("screen.leads.write.note1")} ${cs.w("screen.leads.write.note2")}</p></div>`);
   const list = !mine.length ? "" : cs.sec("screen.leads.mine.head", cs.sheet(mine.map((l) =>
-    cs.row(cs.icon("hint"), `<span class="rec">${cs.esc(l.words)}</span>`, cs.act("leadread", { tone: "quiet", data: { id: l.id } }), stateWord(l.state))).join("")),
+    cs.row(cs.icon("hint"), `<span class="rec">${cs.esc(l.words)}</span>`, cs.act("leadread", { tone: "quiet", data: { id: l.lead_id } }), stateWord(l.state))).join("")),
     { help: "screen.leads.list.help" });
   let one = "";
   if (open && typeof open.lead_id === "string") {
@@ -61,25 +61,18 @@ function renderLeads(cs, view) {
       + `<p class="mk-note">${cs.w("screen.leads.share.note1")} ${cs.w("screen.leads.share.note2")}</p></div>`;
     one = cs.sec("screen.leads.one.head", `<div style="display:grid;gap:14px">${cs.sheet(rows)}${record}${share}</div>`);
   }
-  const failed = id && D.one && D.one.state === "failed" ? cs.state(D.one, () => "") : "";
+  const failed = (id && D.one && D.one.state === "failed" ? cs.state(D.one, () => "") : "") + (D.list && D.list.state === "failed" ? cs.state(D.list, () => "") : "");
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.leads.intro1")} ${cs.w("screen.leads.intro2")}</p></div>` + write + list + failed + one;
 }
 
 /* R44: "Write down the lead" (`lead`): what the member was told or suspects, and where it might be found; their own words, the shell's
- * reason field (`reasonField`). The lead is kept in page memory under its id for this visit. */
+ * reason field (`reasonField`). It appears in the list by the shell reading every read again after an act, never from a copy kept here. */
 function sendLead(view, el, cs) {
   const words = String(cs.value("ld-words") || "").trim(), where = String(cs.value("ld-where") || "").trim();
   cs.set("words", ""); cs.set("where", "");
-  cs.set("pending", { words });
   return { body: where ? { words, locator: where } : { words } };
 }
-function doneLead(view, answer, cs) {
-  const a = answer || {}, p = (view.ui && view.ui.pending) || {};
-  const mine = (Array.isArray(view.ui && view.ui.mine) ? view.ui.mine : []).slice();
-  if (typeof a.lead_id === "string") mine.push({ id: a.lead_id, words: String(p.words || ""), state: a.state || "NEVER_LOOKED" });
-  cs.set("mine", mine);
-  cs.set("draft", null);
-}
+function doneLead(view, answer, cs) { cs.set("draft", null); }
 
 /* R44: "Open a lead" (`leadread`): the lead by its id, with every look and where it was shared. */
 function sendRead(view, el, cs) { return { query: { id: el && el.dataset ? String(el.dataset.id || "") : "" } }; }

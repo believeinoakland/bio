@@ -49,11 +49,11 @@ export const finder = Object.freeze({
       }
     }
     if (ui.handle) out.selection = { op: "selection", query: { handle: String(ui.handle) } };
+    // R67: "See where nobody looked" reads the frontier at each of its four levels; a level's answer is never "empty" (it states what was looked at).
     if (ui.frontier) {
-      out.frontier = {
-        op: "frontier", query: { level: "document" },
-        empty: function (v) { return !v || !Array.isArray(v.never_looked) || v.never_looked.length === 0; },
-      };
+      ["document", "content", "meaning", "internet"].forEach(function (level) {
+        out["frontier_" + level] = { op: "frontier", query: { level: level }, empty: function () { return false; } };
+      });
     }
     return out;
   },
@@ -223,16 +223,7 @@ export const finder = Object.freeze({
       results = st.routes(cs, view, q, screenOf, pickBox);
     }
 
-    const nobody = (ui.frontier && view.data.frontier ? cs.state("frontier", function (f) {
-      const n = typeof f.never_looked_count === "number" ? f.never_looked_count : (f.never_looked || []).length;
-      // R21: no count at zero.
-      if (!n) return '<p class="mk-note">' + cs.w("screen.finder.nobody.none") + "</p>";
-      return '<p class="mk-note">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</p>"
-        + '<ul class="mk-list">' + (f.never_looked || []).slice(0, 20).map(function (x) {
-          const t = x && typeof x === "object" ? (x.title || x.referent || x.authority || x.detail || "") : String(x);
-          return "<li>" + cs.esc(String(t)) + "</li>";
-        }).join("") + "</ul>";
-    }, { empty: "screen.finder.nobody.none" }) : "")
+    const nobody = (ui.frontier ? st.frontier(cs, view) : "")
       + '<span class="mk-acts">' + cs.act("frontier", { label: "act.frontier.label.finder" }) + "</span>";
 
     // The hold strip (interface-shell R19's): how many are held together and until when, from `selection`; R45's Watch and
@@ -355,7 +346,7 @@ export const finder = Object.freeze({
         const chosen = cs.value("finder-cite-role");
         cs.set("citeDone", { role: Array.isArray(chosen) && chosen[0] === "against" ? "cuts_against" : "supports", cited: Array.isArray(a.cited) ? a.cited : [], alreadyCited: Array.isArray(a.alreadyCited) ? a.alreadyCited : [] });
       } },
-    { op: "frontier", label: "act.frontier.label.finder", rereads: ["frontier"],
+    { op: "frontier", label: "act.frontier.label.finder", rereads: ["frontier_document", "frontier_content", "frontier_meaning", "frontier_internet"],
       send: function (view, el, cs) { cs.set("frontier", true); return { query: { level: "document" } }; } },
     // "Count": a count over the held set, as a calculation with its method shown (calculations R4).
     { op: "calculationcreate", label: "act.calculationcreate.label.finder", rereads: [],

@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
-import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
@@ -220,7 +220,9 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
   for (const op of INSTALLER_ROUTES) assert.ok(owed.includes(op) && !Object.hasOwn(OPS, op), `${op}: owed and declared, or not owed`);
   /* T51 (R76; DEC-330 owed, U348): the seven browser acts are owed rows too, read as a class of their own (b), no op */
   const BROWSER = browserActs(registry);
-  assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...OWED_T47, ...OWED_T48, ...OWED_T49, ...OWED_T50, ...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND, ...BROWSER].sort());
+  /* R80: an owed act an owner declares is read as served by its declaration (`register-owners.mjs`), an op like any other */
+  assert.deepEqual([...new Set(owed)].sort(), [...new Set([...STILL_OWED, ...OWED_T47, ...OWED_T48, ...OWED_T49, ...OWED_T50, ...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND, ...OWED_SERVED_BY_OWNERS, ...BROWSER])].sort());
+  for (const op of OWED_SERVED_BY_OWNERS) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: declared by its owner and not an op`);
   assert.ok(Object.hasOwn(OP_FAMILIES.membership.kinds, "founderhandleset") && SESSION_OPS.admin.has("founderhandleset")
             && !SESSION_OPS.member.has("founderhandleset"), "founderhandleset: not membership's founder-only op");
   for (const op of OWED_T48) assert.ok(both(op) && OP_FAMILIES["instance-setup"].kinds[op] === "admin", `${op}: not an instance-setup admin act`);

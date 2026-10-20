@@ -12,10 +12,16 @@ import { itemWords } from "./item-words.mjs";
 import { startProject } from "./start-project.mjs";
 import { participation } from "./participation.mjs";
 import { homeReadings } from "./home-readings.mjs";
+import { doors } from "./doors.mjs";
+import { routed, ROUTED_REFUSALS } from "./routed.mjs";
+import { OPS } from "../op-declarations/index.mjs";
+
+// An act whose op the owners have not yet declared is not registered (screens-action's rule): `taskdecide` is `tasks`' alone.
+const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : []; };
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors, routed },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -36,6 +42,9 @@ export const home = Object.freeze({
       published: { op: "publishedlist" },
       followed: { op: "peopledirectory", query: { show: "people", limit: "1" }, empty: function () { return false; } },
       clocks: { op: "clocksrunning" },
+      // R65: the doors to Held captures and the Inbox.
+      held: view.parts.doors().reads().held,
+      inbox: view.parts.doors().reads().inbox,
     };
     if (view.me && view.me.member && !(view.me.administer === true || (Array.isArray(view.me.capabilities) && view.me.capabilities.indexOf("create_projects") >= 0))) {
       out.members = { op: "memberlist", empty: list("members") };
@@ -136,10 +145,12 @@ export const home = Object.freeze({
         words = cs.w("home.update.ready", { version: String(d.version || it.version || ""), security: security ? cs.w("home.update.security") : "" });
         open = '<a class="cs-btn" data-tone="quiet" data-nav href="/app/updates">' + cs.w("queue.update.see") + "</a>";
       } else {
+        // R75: the decisions the record routes to a member: the authority form, an endorsement, an owner vote, an expertise.
+        const rt = view.parts.routed().draw(cs, it, { screen: "home", id: "hr-" + (seq++), ref: iw.subject(cs, it) });
         // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
         const wd = iw.words(cs, it);
-        words = wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
-        open = actsOf(it);
+        words = rt ? rt.summary + '<span class="meta">' + rt.detail + "</span>" : wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
+        open = rt ? rt.acts : actsOf(it);
         if (!open) {
           const to = iw.open(it);
           open = '<a class="cs-btn" data-tone="quiet" data-nav href="' + (to || "/app/queue") + '">' + cs.w("screen.home.open") + "</a>";
@@ -362,7 +373,8 @@ export const home = Object.freeze({
         return cs.row("", cs.ref("project", String(p.id), p.name || String(p.id), []), '<span class="muted">' + cs.w("screen.home.since.changed", { date: cs.date(String(p.lastChange)) }) + "</span>", "");
       }).join(""))) : "";
 
-    return strip + heading + queueFailed + needsYou + needsGroup + joinPart + areas + projects + recent + front;
+    // R65: the doors to Held captures and the Inbox, each only when it holds something.
+    return strip + heading + queueFailed + needsYou + needsGroup + view.parts.doors().draw(cs, view, "home") + joinPart + areas + projects + recent + front;
   },
 
   acts: [
@@ -377,6 +389,21 @@ export const home = Object.freeze({
       } },
     { op: "keepversion", label: "act.keepversion.label.home", rereads: ["queue"],
       send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
+    // R75: the decisions the record routes to a member, and passing a task on; each item leaves with the next read of the queue.
+    { op: "taskforward", label: "act.taskforward.label.home", rereads: ["queue"],
+      send: function (view, el, cs) {
+        const to = String(cs.value(el.dataset.f + "-to") || "").trim().replace(/^@/, "");
+        return to ? { body: { id: el.dataset.item, to: to } } : { refuse: "screen.home.fieldfirst" };
+      } },
+    { op: "adminendorse", label: "act.adminendorse.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.memberId ? { body: { memberId: el.dataset.memberId } } : null; } },
+    { op: "projectowneradd", label: "act.projectowneradd.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.projectId && el.dataset.handle ? { query: { projectId: el.dataset.projectId, handle: el.dataset.handle } } : null; } },
+    { op: "expertiseconfirm", label: "act.expertiseconfirm.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.memberId && el.dataset.label ? { body: { memberId: el.dataset.memberId, label: el.dataset.label } } : null; } },
+    // The authority form: the member's decision with its basis, the basis being the act's reason (`taskdecide` is Reasoned).
+    ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.home", reasonField: "basis", refusals: ROUTED_REFUSALS, rereads: ["queue"],
+      send: function (view, el, cs) { return view.parts.routed().decide(cs, el); } }),
     // R29: "Join", a project the member is invited to; the projects are read again, her place in it now joined.
     { op: "projectjoin", label: "act.projectjoin.label.home", rereads: ["projects"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
@@ -393,8 +420,9 @@ export const home = Object.freeze({
           return null;
         }
         if (!el.dataset.door) return null;
+        // R81: `startfrom` takes only `message` and `parts`; which door is open is the page's memory, and the press asks the doors again.
         cs.set("door", el.dataset.door);
-        return { query: { door: el.dataset.door } };
+        return { query: {} };
       },
     },
     // R42: ask to join a findable project, and withdraw the request; the ways in are read again.
@@ -414,8 +442,8 @@ export const home = Object.freeze({
       label: "act.promote.label.home",
       rereads: ["projects"],
       send: function (view, el, cs) {
-        const body = view.parts.startProject().body(cs, view, "home", "file.trigger.home");
-        return body ? { body: body } : { refuse: "screen.home.title.needed" };
+        const made = view.parts.startProject().body(cs, view, "home", "file.trigger.home");
+        return made.body ? { body: made.body } : { refuse: made.refuse || "screen.home.title.needed" };
       },
       // R1: opening `project` on success.
       done: function (view, answer, cs) {

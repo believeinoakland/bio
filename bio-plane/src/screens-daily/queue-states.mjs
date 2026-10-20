@@ -25,6 +25,17 @@ export function queueStates() {
   };
   // An answer to a call made by `cs.call`: the result when there is one, else the body (a refusal carries its fields).
   const bodyOf = function (a) { return a && typeof a === "object" ? (a.result && typeof a.result === "object" ? a.result : a) : null; };
+  // R79 (c): the day a snooze comes back is chosen on a date input whose earliest day is tomorrow, helped by `screen.queue.snooze.pick`;
+  // a day before tomorrow is not sent.
+  const tomorrow = function (cs) { return new Date(cs.now() + 86400000).toISOString().slice(0, 10); };
+  const dayField = function (cs, id) {
+    return cs.field(id, "screen.queue.snooze.until", { type: "date", help: "screen.queue.snooze.pick" }).replace('type="date"', 'type="date" min="' + tomorrow(cs) + '"');
+  };
+  const dayOf = function (cs, id) {
+    const until = String(cs.value(id) || "").trim();
+    if (!until) return { refuse: "screen.queue.fieldfirst" };
+    return until < tomorrow(cs) ? { refuse: "screen.queue.snooze.pick" } : { until: until };
+  };
 
   /* ---- R58: choosing several items ---- */
   // The route's entry to the two other states, drawn on the queue's list.
@@ -35,7 +46,8 @@ export function queueStates() {
   const identity = function (op, it, near) {
     const d = it.disposition || {};
     if (op === "proposedispose") {
-      if (d.key) return { key: String(d.key), definition_version: d.definition_version };
+      // R70: the word `proposedispose` reads is `definitionVersion`.
+      if (d.key) return d.definition_version === undefined || d.definition_version === null ? { key: String(d.key) } : { key: String(d.key), definitionVersion: d.definition_version };
       const project = d.project ? String(d.project) : Array.isArray(d.projects) && d.projects[0] ? String(d.projects[0]) : near ? String(near.id) : "";
       return { project: project, finding: String(d.finding || it.id) };
     }
@@ -78,9 +90,9 @@ export function queueStates() {
       shared.to = to;
     }
     if (op === "queuesnooze") {
-      const until = String(cs.value("qm-until") || "").trim();
-      if (!until) return Promise.resolve({ refuse: "screen.queue.fieldfirst" });
-      shared.until = until;
+      const day = dayOf(cs, "qm-until");
+      if (day.refuse) return Promise.resolve(day);
+      shared.until = day.until;
     }
     if (op === "proposedispose") { shared.to = "dismissed"; if (extra && extra.reason !== undefined) shared.reason = extra.reason; }
     const rows = chosen.map(function (it) { return { it: it, sent: false, applied: false, why: "" }; });
@@ -149,7 +161,7 @@ export function queueStates() {
     return '<div class="cs-hold mk-hold">' + cs.icon("hold") + '<span><span class="n">' + (n === 1 ? cs.w("queue.multi.chosen.one") : cs.w("queue.multi.chosen", { n: String(n) })) + '</span></span><span class="acts">'
       + act("taskresolve", "queue.multi.done", "")
       + act("taskforward", "queue.multi.forward", cs.field("qm-to", "screen.queue.forward.to", {}))
-      + act("queuesnooze", "queue.multi.snooze", cs.field("qm-until", "screen.queue.snooze.until", {}) + '<p class="mk-small muted">' + cs.w("queue.multi.snooze.help") + "</p>")
+      + act("queuesnooze", "queue.multi.snooze", dayField(cs, "qm-until") + '<p class="mk-small muted">' + cs.w("queue.multi.snooze.help") + "</p>")
       + act("proposedispose", "queue.multi.dismiss", "") + "</span></div>";
   };
 
@@ -181,11 +193,13 @@ export function queueStates() {
   const answeredRow = function (cs, r) {
     const title = typeof r.title === "string" && r.title.trim() ? '<span class="rec">' + cs.esc(r.title) + "</span>" : cs.w("queue.source.untitled", { date: { html: cs.date(String(r.at || "")) } });
     const at = when(cs, r.at);
+    // R79 (d): each row says what was done, never a name and a day alone.
+    const said = function (key, fills) { return cs.w(key, fills); };
     if (r.act === "resolved") {
       const byYou = r.by_you === true;
       const meta = r.by === null || r.by === undefined ? at
         : byYou ? cs.w("queue.answered.byyou", { when: { html: at } }) : cs.w("queue.answered.bymember", { member: String(r.by), when: { html: at } }) + " · " + cs.w("queue.answered.byother");
-      return cs.row(cs.icon("accepted"), title + (meta ? '<span class="meta">' + meta + "</span>" : ""), "", "");
+      return cs.row(cs.icon("accepted"), said("queue.answered.done", { item: { html: title } }) + (meta ? '<span class="meta">' + meta + "</span>" : ""), "", "");
     }
     if (r.act === "forwarded") {
       const who = r.to === null || r.to === undefined || r.to === "" ? "" : String(r.to);
@@ -198,7 +212,37 @@ export function queueStates() {
       return cs.row(cs.icon("clock"), cs.w("queue.answered.snoozed", { item: { html: '<span class="rec">' + cs.esc(String(c.title || c.id || "")) + "</span>" }, date: { html: day } })
         + '<span class="meta">' + (at ? cs.w("queue.answered.byyou", { when: { html: at } }) + " · " : "") + cs.w("queue.answered.snoozed.meta") + "</span>", "", "");
     }
-    return "";
+    // The findings set aside are R61's list on this page.
+    if (r.act === "set_aside") return "";
+    const meta = at ? '<span class="meta">' + cs.w("queue.answered.byyou", { when: { html: at } }) + "</span>" : "";
+    if (r.act === "dismissed") {
+      const reason = typeof r.reason === "string" && r.reason.trim() ? r.reason.trim() : "";
+      return cs.row(cs.icon("refused"), (reason ? cs.w("queue.answered.dismissed", { item: { html: title }, reason: reason }) : cs.w("queue.answered.dismissed.noreason", { item: { html: title } })) + meta, "", "");
+    }
+    if (r.act === "muted" && typeof r.kind === "string" && r.kind) return cs.row(cs.icon("refused"), cs.w("queue.answered.muted", { kind: { html: cs.w("queue.kind." + r.kind) } }) + meta, "", "");
+    return cs.row(cs.icon("accepted"), cs.w("queue.answered.generic", { item: { html: title } }) + meta, "", "");
+  };
+  // R69: the snoozed cases, apart from the list, each with the day it comes back and "Bring back" (`queuesnooze` with `clear`, the
+  // case); the words are the answered row's and the muted list's "Turn back on" until the design holds its own.
+  const snoozed = function (cs, items) {
+    const cases = [];
+    const at = {};
+    (Array.isArray(items) ? items : []).forEach(function (it) {
+      const snz = it && it.snoozed && Array.isArray(it.snoozed.cases) ? it.snoozed.cases : [];
+      const ancestors = it && it.case && Array.isArray(it.case.ancestors) ? it.case.ancestors : [];
+      snz.forEach(function (x) {
+        if (!x || !x.case || (x.case in at)) return;
+        const a = ancestors.filter(function (y) { return y && String(y.id) === String(x.case); })[0];
+        at[x.case] = cases.length;
+        cases.push({ id: String(x.case), title: a && typeof a.title === "string" && a.title.trim() ? a.title : String(x.case), until: x.until });
+      });
+    });
+    if (!cases.length) return "";
+    return '<section class="cs-section mk-sec">' + cs.sheet(cases.map(function (c) {
+      const back = cs.act("queuesnooze", { label: "queue.muted.unmute", data: { project: c.id, clear: "1" } });
+      return cs.row(cs.icon("clock"), cs.w("queue.answered.snoozed", { item: { html: cs.ref("project", c.id, c.title, []) }, date: { html: cs.date(String(c.until || "")) } })
+        + '<span class="meta">' + cs.w("queue.answered.snoozed.meta") + (back ? " " + back : "") + "</span>", "", "");
+    }).join("")) + "</section>";
   };
   // The answered rows (`op=queue` with `answered: true`), then the set-aside findings (R61) on the same page.
   const answered = function (cs, view, asideRows) {
@@ -231,11 +275,11 @@ export function queueStates() {
         : (you ? cs.w("queue.aside.deferred", { date: { html: cs.date(String(r.at || "")) } }) : cs.w("queue.aside.deferred.bymember", { member: String(r.decided_by || ""), date: { html: cs.date(String(r.at || "")) } }));
       const version = r.definition_version !== null && r.definition_version !== undefined ? " · " + cs.w("queue.aside.v2", { n: String(r.definition_version) }) : "";
       const reason = typeof r.reason === "string" && r.reason.trim() ? ' · <span class="rec">' + cs.esc(r.reason) + "</span>" : "";
-      const again = !dismissed ? cs.act("proposedispose", { label: "act.proposedispose.label.queue", data: { project: r.project ? String(r.project) : "", finding: String(r.finding || ""), key: r.key ? String(r.key) : "", version: r.definition_version === null || r.definition_version === undefined ? "" : String(r.definition_version) } }) : "";
+      const again = !dismissed ? cs.act("proposedispose", { label: "act.proposedispose.label.queue", data: { to: "dismissed", project: r.project ? String(r.project) : "", finding: String(r.finding || ""), key: r.key ? String(r.key) : "", version: r.definition_version === null || r.definition_version === undefined ? "" : String(r.definition_version) } }) : "";
       return cs.row(cs.icon(dismissed ? "refused" : "clock"), ref + '<span class="meta">' + decision + reason + version + (again ? " " + again : "") + "</span>", "", "");
     }).filter(Boolean).join("");
     return cs.sec("progression.finding.state.dismissed", '<p class="mk-small muted">' + cs.w("queue.aside.help2") + "</p>" + cs.sheet(body), { help: "queue.aside.help" });
   };
 
-  return { PER_ITEM_MAX: PER_ITEM_MAX, entry: entry, run: run, outcome: outcome, strip: strip, failedFeeds: failedFeeds, allClear: allClear, answered: answered, aside: aside, when: when };
+  return { PER_ITEM_MAX: PER_ITEM_MAX, entry: entry, run: run, outcome: outcome, strip: strip, failedFeeds: failedFeeds, allClear: allClear, answered: answered, aside: aside, when: when, dayField: dayField, dayOf: dayOf, snoozed: snoozed };
 }

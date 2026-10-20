@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_017CpAHUqZY2t5XBCS52jgiU · depth 2 · COMPLETE · handled B12
+**Status** · session_01FT9GgSLGmUqkGFtMCTxFqA · depth 2 · COMPLETE · handled B17
 
 ## J1 · QUESTION
 
@@ -124,3 +124,60 @@ Both failed before (`importregrade: no spec`, the list diffs); they pass with th
 Commit `9747460e05` pushed to `job/T51/op-declarations`.
 
 Size (session_017CpAHUqZY2t5XBCS52jgiU): test runs 7, module lines 3452
+
+## J14 · BLOCKED
+
+Cause: context (reading). Stopping before any change; nothing is edited or committed beyond the start.
+
+**Done so far (this session, depth 2)**
+- Attached civicos-process; read roles/JOB.md whole. Merged `origin/tranche/T51` into `job/T51/op-declarations` (the prior job head `e158183a040` is kept in its history); `mail start` recorded (`fdefb24683`).
+- Installed `node_modules` for every tracked lockfile directory that lacked one (K4113).
+- Baseline, `node --test test/m/op-declarations/*.test.mjs`: two reds, both caused by owners that now declare ops my tests do not register:
+  - `t23.test.mjs` "R10, R6 (N506, K1207)": link-sweep's map serves `sweepset` and `sweepratify`, which link-sweep now declares (`link-sweep/index.mjs` ~98–102) but which have no spec here.
+  - `t33.test.mjs` "R19, R6": `tasks: taskdecide has no spec`. tasks declares `taskdecide` (`tasks/index.mjs` ~1275), not registered in my tests.
+
+**Findings for B14 (register every owner)**
+- `declaredOpsOf` (test-support, `bio-plane/test/declared-ops.mjs`) collects 378 ops across all owners, no duplicates.
+- Registering all of them is refused by one owner: `link-sweep`, `sweepset: NEEDS_MISSING (R80)`. A probe that registers each owner alone found no other refusal. This is link-sweep's defect (a mutating op with no `needs`); it goes to BOB as a REPORT, not worked here.
+- Plan for the next session: `register-owners.mjs` registers every owner except link-sweep (via `declaredOpsOf`, root `../../../..` from the test directory); `t23`'s R10 test reads link-sweep's served list from its map and treats an op with no spec as owed (`OWED_BY_FIX_ROUND` from `browser.mjs`) rather than hand-listing `["sweeps"]`. Check whether the architecture check accepts the test importing test-support (B14: REPORT to add `test-support` to uses if not).
+
+**Finding for B15 (standardinforce)**
+- `standardinforce` has a hand row at `src/op-declarations/index.mjs:1211` (classes admin, member, probe; not mutating). `standards` also declares it (`standards/index.mjs` ~2827). Neither `SESSION_OPS.member` nor `SESSION_OPS.admin` holds it. Registration does not merge a hand-held op (R80), so the fix is a hand entry in both session lists beside its siblings, with a control test. The `STANDARDS_READS` list is at `index.mjs:1968`, and the session composition starts around `index.mjs:2182`.
+
+**Reading disclosure (the reason for this BLOCKED)**
+- `build/requirements/op-declarations.md`: read lines 1–176 of 375 only (the Read tool truncated the page). Lines 177–375 are unread.
+- `src/op-declarations/index.mjs` (2,919 lines): read by excerpt only (grep and targeted ranges). Not read whole.
+- `t23.test.mjs`: read in part. `t33.test.mjs`: read in part.
+- Under JOB.md I may not act on partial reads, so the next session reads these whole before editing.
+
+**Next step:** a fresh job session reads requirements, `index.mjs` and the two tests whole, then applies B14 (register owners, link-sweep excluded and reported) and B15 (both session sets, with control), reruns the suite, checks, and posts COMPLETE.
+
+Size: not yet measured; no module code changed.
+
+## J15 · REPORT
+
+Three things in other modules, found while doing B14, B15 and B17 (op-declarations #30):
+
+1. **Architecture edge (B14).** `register-owners.mjs` now registers every owner through test-support's `declaredOpsOf`; the architecture check refuses it: `bio-plane/test/m/op-declarations/register-owners.mjs imports bio-plane/test/declared-ops.mjs of test-support, which op-declarations does not declare in uses`. Please add `test-support` to op-declarations' `uses` in `build/modules.json` (the requirements' Uses line already names it, tests only). Every owner registers without a refusal (link-sweep's `needs: "contribute"` is merged); no owner is excluded.
+2. **B17 (`export` in `SESSION_OPS.admin`) turns admission's tests red, and it does not yet let the founder take a copy.** Admission answers a session's call to `export` `ROOT_OF_TRUST_REQUIRED` (C-38.4) before it reads the session sets. Its tests pin that: `admission.test.mjs` R8 (:42, :48), the order test (:66–70, :209), R14 and `invariants.test.mjs` (:22, :26) use `export` as the op a session cannot reach; `control-plane` R28 (the gates' order) goes red with it. Admission's job must change its gate and re-pin those tests (use `purge` or `instancegroupseed` as the unreachable op); I changed only the tables, as B17 says. Without the change in admission the founder's button is drawn and the call is refused.
+3. **screens-investigate R51 (standardinforce).** With B15 the shell now draws `standardinforce`, but `test/m/screens-investigate/standard.test.mjs:89` ("a date sends standardinforce with the declared fields") fails on a field `op: 'standardinforce'` in the sent fields, which is that module's own test and drawing, not a table of mine. The 12 reds in `interface-shell`, the others in `screens-*` and the 20 in `control-plane`/8 in `plane` are the same with and without my changes (checked by reverting `index.mjs`), apart from item 2.
+
+## J16 · COMPLETE
+
+**Entries applied (OP-DECLARATIONS #30; B13 entries 1 and 2, B14, B15, B17; B16 sets the order).**
+
+1. **K3268 / B14: every owner registered, no hand list.** `test/m/op-declarations/register-owners.mjs` now registers every owner's `DECLARED_OPS` through test-support's `declaredOpsOf` (378 ops, no duplicate, link-sweep included, none excluded). Because registration is asynchronous, `browser.mjs` (which reads `OPS` as it is evaluated) imports it first. `t23`'s R10 test reads link-sweep's served list from its map (`sweeps` is R10's hand row, `sweepset` and `sweepratify` its declarations). The totality tests (`t34`, `t46`, `t47`, `t48`) read the owed acts an owner declares as served, from `browser.mjs`' `OWED_SERVED_BY_OWNERS` (derived from the registry file and the registered declarations, never listed); `t48`'s fresh-process count compares the child's ops with this process's and requires the difference to be declarations. `t28`'s two tests (case-import's four new ops `importregrade`, `rerunstart`, `rerunpair`, `rerunread`) are green, with the control that an op in no table and no declaration is refused.
+2. **R73 (R21) `registryActGaps` on `expertisewithdraw`:** green by the declaration (member-roster R79 merged and registered); no change needed.
+3. **B15 / R82:** `standardinforce` is in `SESSION_OPS.member` and `SESSION_OPS.admin` (a hand entry beside its siblings, since a hand-held op keeps its hand row, R80; its spec, stamps and `NEEDS` row are what standards declares, and a test reads them from the declaration); named in `ACT_HELP_ABSENT`'s read ground until `ACT_HELP` holds a text (R34). Test and controls: `t51` R82 (written first, seen failing).
+4. **B17 / R83:** `export` is in `SESSION_OPS.admin` only. A session reaches a mutating op, so it needs a `NEEDS` row: `null`, composed as a third part of the table (`composeNeeds(hand, family, founderRows)`, refusing an overlap; `FOUNDER_SESSION_NEEDS`), which `op-capabilities` could hold instead if BOB prefers (its module, not touched). Test and controls: `t51` R83 (written first, seen failing); `tables.test.mjs` R3 and `t49` pins updated (the founder's set adds `export`; 881 NEEDS keys).
+
+**Requirement lines for BOB (written in `build/requirements/op-declarations.md`, the ownership listing of that file accepted at the merge):** the Status line; **R82** (`standardinforce`, amends R18); **R83** (`export`, amends R3, with a sentence in R3's third part); a Uses line for `test-support` (`declaredOpsOf`, tests only; a new `modules.json` edge, BOB's, see the REPORT).
+
+**Deferred / found in other modules:** see the REPORT (the architecture edge for `test-support`; admission's gate and tests for `export`; screens-investigate's R51 test).
+
+**Tests and checks run**
+- `node --test test/m/op-declarations/*.test.mjs` (bio-plane): tests 244, pass 244, fail 0 (before: 2 red at START; B14's registration first turned 6 red until the totality tests read the declarations).
+- Dependent modules, same with and without my changes except `export`: `affordances` 280/280, `corpus-export` 27/27; `admission` 55/58 (the 3 are B17's `export`, REPORT 2); `control-plane` 303/324 (20 are the tranche's, 1 is B17's R28); `plane` 258/266 (the tranche's); `interface-shell` 223/235 (the tranche's).
+- From the process repository: `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `checks/coverage.mjs /home/user/bio op-declarations`: 82 of 82 live requirement ids named, 0 failures. `checks/words.mjs /home/user/bio op-declarations`: 0 failures (the product-wide run shows 27 words failures, all in op-grades, strength). `checks/architecture.mjs /home/user/bio op-declarations`: 1 failure, the missing `test-support` edge (REPORT 1). `checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 14 files changed, 1 failure, the requirements file (accepted at the merge, B13).
+
+Size (session_01FT9GgSLGmUqkGFtMCTxFqA): test runs 24, module lines 3458

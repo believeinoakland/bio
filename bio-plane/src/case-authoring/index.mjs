@@ -94,6 +94,8 @@ import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS
          isPublicHttpsLocator, idPattern } from "../record-grammar/index.mjs";
 /* R63, R69 (N839, K2608): the account's machinery is `case-account`'s, asked in R69's order. */
 import { caseAccountOf } from "../case-account/index.mjs";
+/* B10 (K4240): `capture`, the one instance on the host, which records the members who captured each capture (its R69). */
+import { captureOf } from "../capture/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
 import { calculationsLines, timelineLines, materialsOf, passagesOf } from "../case-grammar/index.mjs";
 /* R63, R68 (T41; D56, D60): case-grammar's account and approval blocks (its R23, R26), the one spelling of each, and the
@@ -269,6 +271,8 @@ export class CaseAuthoring {
   /* R69 (N839, K2608): `case-account`, the one instance on this host, asked in R69's order; created at this module's
      creation (`caseAuthoringOf`), so its tables exist and are declared at every boot (its R12). */
   get account() { return this.#deps.account ||= caseAccountOf(this.#deps.host); }
+  /* B10 (K4240): `capture`, the one instance on this host (`captureOf`), read for who captured what the pre-flight lists. */
+  get capture() { return this.#deps.capture ||= captureOf(this.#deps.host); }
   /* R14, R34, R38, R74 (T47; N908; K2982): `case-inputs`, the one instance on this host, which holds what other acts
      record about a case (the statement's acknowledgements and writer, the drafts of what changed, the open requests, the
      outcomes carried); created at this module's creation (`caseAuthoringOf`), so its tables exist and are declared at
@@ -1664,6 +1668,24 @@ export class CaseAuthoring {
     return { reached: false, refusals: [undetermined], why: undetermined.detail ?? word("case-authoring.why.ratification_pre_flight") };
   }
 
+  /* B10 (K4240; screens-publish J9 (3)): each capture the case rests on that is not co-attested, with the member the record
+     holds as capturing it (`capture`'s R69 actors, the first by time, the `member:` tag dropped; a machine is no member, so
+     `by` is null when none) and the findings resting on it, each once. */
+  #notCoAttested(captures) {
+    const rows = new Map();
+    for (const c of captures) {
+      if (c.co_attested) continue;
+      if (!rows.has(c.capture)) {
+        const actors = this.capture.captureAccountsOf(c.capture).actors || [];
+        const first = actors.find((x) => typeof x.actor === "string" && /^member:./.test(x.actor) && !isMachineIdentity(x.actor));
+        rows.set(c.capture, { capture: c.capture, by: first ? first.actor.replace(/^member:/, "") : null, findings: [] });
+      }
+      const row = rows.get(c.capture);
+      if (!row.findings.includes(c.member)) row.findings.push(c.member);
+    }
+    return [...rows.values()];
+  }
+
   /* R34: the six steps (DEC-80 item 2; the Photos step, DEC-180 (3)), each read from the rolled-back run when it
      published, and each part it could not reach stated as not reached, never filled. Step three carries R32's read as
      the ceremony shows it. */
@@ -1705,7 +1727,7 @@ export class CaseAuthoring {
                    self_attested: seen.captures.filter((c) => c.self_attested_only)
                      .map((c) => ({ capture: c.capture, member: c.member, reason: c.acknowledgement.reason,
                                     sentence: SELF_ATTESTED_SENTENCE })),
-                   not_co_attested: [...new Set(seen.captures.filter((c) => !c.co_attested).map((c) => c.capture))],
+                   not_co_attested: this.#notCoAttested(seen.captures),
                    sources: seen.sources,
                    /* R34 (DEC-112 (5)): each source the case shows as "Withheld" (`case-disclosures` R4). */
                    withheld: seen.sources.filter((x) => x.basis === null) }
