@@ -104,3 +104,29 @@ Reports for BOB from the B9 change (K4213), commit 2b20a2926d on job/T51/strengt
    - `recomputePair` at `/1`–`/3` counts a cutting leg as those versions were published (`cuttingFolds`); `/4` and the live walk do not. So a published case still recomputes to its own grade.
    - A cutting leg's entries go to an axis answer's `cutting` list, present only when non-empty, with the leg's own grade (or null and its why). A hunch on a cutting leg is named there, not in `not_load_bearing` (R5 still holds; the existing `pair.test.mjs` assertion moved to match).
    - In the version's `graded` list a cutting leg carries `role: cuts_against`; no other entry gains a key.
+
+## J9 · COMPLETE
+
+B9 (K4213) applied on job/T51/strength, commit 2b20a2926d (tranche/T51 merged first, latest tip).
+
+Entries applied:
+- **B9 · cutting legs (R42, new).** A leg whose `role` is `cuts_against` is in no part and in no ground. It keeps its own result beside the axis, in the axis answer's `cutting` list, computed by the same member code as any leg. Code: `src/strength/method.mjs` (`levelPair`, the cutting pool; `recomputePair` passes `cuttingFolds` for `/1`–`/3`), `src/strength/arithmetic.mjs` (`axisResult`'s `cutting`), `src/strength/index.mjs` (the version's `graded` entries carry `role`).
+- **Versions (R31, R32 amended).** `GRADING_METHOD_VERSION` = `bio-grading/4`; `GRADING_METHOD_VERSIONS` = [1, 2, 3, 4]; rule 11 added to the words (unkeyed, see REPORT 1); the rule "what is named" is now 12.
+- **Amended R4 and R9** (cutting legs in no part; listed in `graded` with `role`), each marked *(not yet met: T51)* until the tests name them.
+- **Requirement lines written by me (K4210, B7/B8):** R4, R9, R31, R32 amended and R42 new, all in `build/requirements/strength.md` and marked *(not yet met: T51)*. FR-50 (B6, applied in ccce37c487) and B5 added no requirement line.
+- **Tests.** New `test/m/strength/cutting.test.mjs` (R42 ×4: the reading A beside C with the cutting C kept; the same facts at `bio-grading/4` read A and at `/3` read C, the control; an undetermined cutting leg kept with its reason and not undetermining the answer; no cutting list when none cuts). `method.test.mjs`: version assertions moved to /4, the unknown-version examples to `/5`, the version-3 words test to `V3`, and a new R31 test for version 4's words (rule 11 is the only difference from version 3). `pair.test.mjs` R26: the hunch on a cutting leg is asserted in `cutting` (R5 still holds).
+- **Deferred:** nothing.
+
+Found outside this module: REPORT 2 and 3 (`program.mjs`, the plane bundle, and the reds in other modules).
+
+Tests and checks:
+- `node --test test/m/strength/` (run from bio-plane): 168 pass, 0 fail (3 runs of the suite; the first two had failures I fixed: a version literal, the R26 hunch assertion, and one of my own test grounds).
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio strength`: 0 failures.
+- `checks/coverage.mjs /home/user/bio strength`: 42 of 42 live ids named by a test.
+- `checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`: 1 failure, `build/requirements/strength.md` (accepted per B7/B8 at merge; see REPORT 4).
+- `checks/words.mjs /home/user/bio strength`: 1 finding, the signed rule 11 text (REPORT 1).
+- `checks/run.mjs /home/user/bio`: strength has 0 coverage and 0 architecture findings; the reds listed in REPORT 3 are other modules'.
+- `bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only; no refusal naming strength.
+
+Size (session_0117HE2QceqtD8WwzcpPzSAr): test runs 3, module lines 2969
