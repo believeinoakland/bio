@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01Sy13QU3XNn8qQ1dY4WHoab · depth 2 · COMPLETE · handled B20
+**Status** · session_01TP4eDyx3cz3mY4jPr8VbyZ · depth 2 · COMPLETE · handled B23
 
 ## J1 · BLOCKED
 
@@ -162,3 +162,33 @@ Stand-ins that mirror a real screen's request: the fixture `home` `promote` mirr
 **Checks.** Module suite 235 of 235. `checks/run.mjs`: format 0, architecture 0, words 0 failures for interface-shell (the run's other failures are other modules': coverage in agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring; testcopy in op-grades); `coverage.mjs interface-shell` 107 of 107; ownership 0 failures.
 
 Size (session_01Sy13QU3XNn8qQ1dY4WHoab): test runs 8, module lines 2876
+
+## J11 · COMPLETE
+
+COMPLETE (B21, B22; B20 was J10) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**B22 (R110, K4228).** `place(view)` may answer `{project, last, projectKey?}`: when `projectKey` is a string the page holds (the screen lists it in its `words`) the project's step draws that word with `{name}` = the project's title, escaped data, in place of the title; absent, not a string or an unknown key, the title as before. Tests in `fixround.test.mjs`: the word replaces the title and the last step is unchanged, a `{name}` word gets the title as typed (`<b>&` escaped), and the control (none, unknown, non-string, empty keep the title). **Requirement line (ownership bars me from `build/requirements/interface-shell.md`, as at J7; please enter it):** R110 (K4228, `screens-publish` R68) — append: *`place` may also answer `projectKey`, a word key the screen holds in its `words`: the project's step then draws that word, `{name}` = the project's title (HTML-escaped data), in place of the title; where `projectKey` is absent, not a string, or not a key the page holds, the step is the title as before. Test: `projectKey` draws that word for the project's step, a `{name}` word gets the title as data; control: none, an unknown key or a non-string keeps the title.* Status: `Last changed T51 (K4228: R110 amended, projectKey)`. **Screens-publish must list `crumb.project.unjoined` in its `words`** (it is in `rows.mjs`, design row) or the key is not held and the title is drawn.
+
+**B21.** `projectowneradd` stand-in (`b17.test.mjs`, shared by `memberadd`, `memberset`, `membercaps`, `expertiseconfirm`, `memberlanguageset`) now sends the declared fields (`fitSend`). The tranche merge brought further declarations; the guard also found and I brought to the declared request: `cite` (fixture screen: `extent_para` and `content_id` with the declared required fields; `acts.test` asserts them, `frame.test` stand-in), `enroll` (fixture: `invite` always present), `wizarddraft` (`kit.test`), the fixture members screen's `memberadd` and `membercaps`. No assertion loosened.
+
+**Checks.** Module suite 236 of 236. `format`, `architecture`, `coverage` (107 of 107), `ownership` 0 failures.
+
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 9, module lines 2876
+
+## J12 · COMPLETE
+
+COMPLETE (B21, B22) — see J11 in my record. R110 projectKey applied with test and control; stand-ins brought to the owners' declarations (projectowneradd and the other member acts, cite, enroll, wizarddraft). Module suite 236/236; format, architecture, coverage (107/107), ownership 0 failures. Needs your edit: the R110 requirement line (ownership bars me from the requirements file), text in J11. Screens-publish must list crumb.project.unjoined in its words.
+
+## J13 · COMPLETE
+
+COMPLETE (B23) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**R12 (K4237).** `can` draws a read (`OPS[op].mutating` false) that no `SESSION_OPS` set holds when the session's class is among `OPS[op].classes`, or when the op is public (`classes: null`, `bootstrap`); the page data gains `readClasses` (`pick` over `OPS`). Tests in `fixround.test.mjs`: `selftest`, `runtime`, `bootstrap` (updates), `exportlog` (group), `biasmanifest`, `biasinhale`, `biasdebt` (bias) drawn for an admin and a member session, all in neither set; controls: `export` (mutating, outside the set) not drawn, and `selftest` not drawn to a session of class `agent`, which it does not list. The first test fails without the change. `export`'s session reach stays OP-DECLARATIONS #30's. R110's projectKey line is BOB's at the merge (J11).
+
+**Checks.** Module suite 239 of 239; format, architecture, coverage, ownership below.
+
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 4, module lines 2880
+
+## J14 · COMPLETE
+
+COMPLETE (B23) — see J13. R12: a read in no SESSION_OPS set is drawn when the session's class is among OPS[op].classes (a public read too); the eight acts' reads (selftest, runtime, bootstrap, exportlog, biasmanifest, biasinhale, biasdebt) now draw; export (mutating) stays outside, as you said. Test and controls; module suite 239/239; format, architecture, coverage 107/107, ownership 0 failures.

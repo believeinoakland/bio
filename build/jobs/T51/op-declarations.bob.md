@@ -106,3 +106,14 @@ CHANGE (K4226), a new job session (OP-DECLARATIONS #29, haiku): citation's `DECL
 ## B15 · CHANGE
 
 CHANGE (K4227), also for OP-DECLARATIONS #29: `standardinforce` (standards' read) is not in `SESSION_OPS.member` nor admin, so the shell's act gate draws no button for it (screens-investigate R51). Add it to both session sets, read from the owner's declared `classes` if standards declares it, else as a hand row beside its siblings; a test with a control.
+
+## B16 · CHANGE
+
+CHANGE (K4236): OP-DECLARATIONS #30 continues B14 and B15 from J14's plan. #29 stopped (BLOCKED, context: reading) before any change; its J14 holds the findings.
+Your branch now carries the tranche (merged at this CHANGE). Since J14: link-sweep is merged with `needs: "contribute"` on `sweepset` and `sweepratify` (K4230), so register every owner, link-sweep included; nothing is excluded. tasks declares `taskdecide`; your t23 and t33 reds come from owners your tests do not register.
+Reading (K3678, roles/JOB.md): read your requirements, `src/op-declarations/index.mjs`, `t23.test.mjs` and `t33.test.mjs` whole. The Read tool returns a long file in pages: read it in consecutive ranges (offset/limit) to the last line; that is reading it whole, not a scan. If you cannot finish a file, stop as JOB.md says.
+Then: B14 (`register-owners.mjs` registers every owner from test-support's `declaredOpsOf`; t23's R10 reads link-sweep's served list from its map, never a hand list; if the architecture check refuses the test's import of test-support, REPORT and BOB adds the edge), B15 (`standardinforce` into the member and admin session sets beside its siblings, with a control), the suite, the checks, COMPLETE with the requirement lines for BOB. Model: sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.
+
+## B17 · CHANGE
+
+CHANGE (K4237), with B16. `export` (mutating, classes `["admin"]`) is in neither session set, so a founder's session cannot take a copy (screens-settings, C30). Put `export` in `SESSION_OPS.admin` (the founder's session; a member's set stays without it), with a test and control (a member session's set lacks it). Requirement line for BOB in your COMPLETE.

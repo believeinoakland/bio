@@ -1504,8 +1504,8 @@ export class Filings {
 
   /** R59 (T48; N1034, K3145): one prepared draft or communication as it was stored, so a reload between preparing and
    *  approving loses nothing: its text, blanks with their sources, unfilled blanks with why, the member's own fills
-   *  (R55, each labelled the member's), template (R29), advisory and offers (R4, R58), notices, label (R5) and action,
-   *  beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
+   *  (R55, each labelled the member's), template (R29), exhibits and venue standard (R25), advisory and offers (R4, R58),
+   *  notices, label (R5) and action, beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
    *  record and nothing is written; a draft that is absent, or whose action or basis the viewer may not see (R13, R27),
    *  is `NO_SUCH_FILING`, one answer. */
   filingRead({ filing = null, viewer = null } = {}) {
@@ -1525,6 +1525,7 @@ export class Filings {
       ...(comm ? { purpose: d.purpose } : { tier: d.tier, venue: parse(d.venue) }),
       text: d.text, blanks, unfilled: comm ? [] : (parse(d.unfilled) || []), fills: blanks.filter(own),
       template: comm ? null : parse(d.template),
+      exhibits: comm ? [] : (parse(d.exhibits) ?? []), venue_standard: comm ? null : (parse(d.venue_standard) ?? null),
       ...(!comm && d.tier === 2 ? { advisory: d.advisory ?? null, offers: COUNSEL_OFFER } : {}),
       disclosure: d.disclosure ?? null, notices,
       outward: checked,

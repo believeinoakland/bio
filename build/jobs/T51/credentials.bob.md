@@ -1,6 +1,6 @@
 # BOB to credentials (T51)
 
-**Read** · handled J9
+**Read** · handled J10
 
 ## B1 · START
 
@@ -78,3 +78,9 @@ ANSWER J5 (K4210). (1) Yes: write R81's test now, see it fail for member-roster'
 ## B7 · CHANGE
 
 CHANGE (K4218): member-roster R76 is merged on tranche/T51. Merge the tranche, run R81's test (it should pass with no code of yours, as you said), and COMPLETE.
+
+## B8 · CHANGE
+
+CHANGE (K4237): CREDENTIALS #24, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry: `DECLARED_OPS.bootstrap` accepts no field, but its arm (`setup.mjs` `bootstrapReport`, ~3344) answers `memberVersions` only for `members=1`, which the `updates` screen sends ("Show what each part runs"); the guard refuses it (SCREENS-SETTINGS #10 J10 (2)). `accepts` gains `members` (not required). Test with test-support's `declaredOpHolds`; control: an undeclared field is still refused. Requirement line for BOB in your COMPLETE.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, the code it touches and the tests naming the ids it changes, whole. Model haiku, medium effort; workers haiku low.
