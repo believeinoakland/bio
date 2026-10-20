@@ -2781,9 +2781,10 @@ export function captureOwns(t) {
 
 /* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
    them in, and control-plane's `dispatch` answers every store request over it). `url` carries the control plane's
-   stamps; `body` the parsed body. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
+   stamps; `body` the parsed body; `h` the handler's in-process parts (R73; K4226), of which `timings` is forwarded to
+   `acquire` as its `opts.timings` when given. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
    defaults to READ_LIMIT's), and pages by `after`. */
-export function captureOps(c, url, body, env) {
+export function captureOps(c, url, body, env, h = {}) {
   const q = (k) => url.searchParams.get(k);
   const viewerOf = () => (url.searchParams.has("viewer") ? q("viewer") : undefined);
   const page = { limit: q("limit") || READ_LIMIT.default, after: q("after") || null };
@@ -2834,7 +2835,7 @@ export function captureOps(c, url, body, env) {
     captureaccounts: () => c.captureAccountsOf(q("capture") ?? (body && body.captureSha), { viewer: q("viewer") ?? "" }),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
     acquire: () => c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
-                                          storeName: q("store") || "bio" }),
+                                          storeName: q("store") || "bio", ...(h.timings ? { timings: h.timings } : {}) }),
     archivelookup: () => c.archiveLookup({ address: (body && body.address) || q("address") }),
     /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
        plane's stamps, never the body's, and the body names only the archive. */
