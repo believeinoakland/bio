@@ -39,6 +39,13 @@ def op_universe(ref):
             txt = t.extractfile(m).read().decode('utf-8', 'replace')
             for o in re.findall(r'op=([a-z]+)', txt): declared.setdefault(o, set()).add(mod)
             for f in re.findall(r'\b([a-z][a-zA-Z0-9]+)\(\{', txt): functions.setdefault(f.lower(), set()).add(mod)
+    # An op declared in op-declarations (the plane's one table of ops) counts as declared even where its module's
+    # requirements name only the function (intent's setCondition is op objectivecondition; DEC-374, B398 C46).
+    try:
+        od = subprocess.check_output(['git', 'show', ref + ':bio-plane/src/op-declarations/index.mjs'], cwd=ROOT, stderr=subprocess.DEVNULL).decode('utf-8', 'replace')
+        for o in re.findall(r'^  ([a-z]+):\s+\{\s*classes', od, re.M): declared.setdefault(o, set()).add('op-declarations')
+    except subprocess.CalledProcessError:
+        pass
     return ref, declared, functions
 
 def load(src, name):
