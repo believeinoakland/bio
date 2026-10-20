@@ -32,6 +32,7 @@
    amounts `money` holds for one transfer (its read contract `money_facts`, R19 there, and `reconcile`, R11 there); the
    module registers as a connection owner (`connection-grammar`, R58 here) and declares its tables explicitly (R59). */
 import { recordOf } from "../record-core/index.mjs";
+import { viewerMember, baseViewer, ROOT_ADMIN } from "../member-roster/index.mjs";
 import { viewerPredicate, GATE_MARK, membershipOf, noSuchProject, notAParticipant } from "../membership/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -303,6 +304,13 @@ export class Contradiction {
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #x() { return typeof this.#extraction === "function" ? (this.#extraction = this.#extraction()) : this.#extraction; }
+  /** The member id a viewer's session names, as membership R154 reads it (`member-roster` R73): the id in `member:<id>`,
+   *  and for the founder's bare `admin` the founder's own id, so the founder is judged a joined participant (or not)
+   *  like any member. Null for a machine credential and for a spelling nothing admits. */
+  #memberOf(viewer) {
+    return viewerMember(viewer, baseViewer(viewer) === ROOT_ADMIN ? `member:${ROOT_ADMIN}` : null);
+  }
+
   /* Each service reached on first use: a function given is called once and its answer kept. */
   #m() { return typeof this.#membership === "function" ? (this.#membership = this.#membership()) : this.#membership; }
   #p() { return typeof this.#promotion === "function" ? (this.#promotion = this.#promotion()) : this.#promotion; }
@@ -1450,7 +1458,7 @@ export class Contradiction {
        read under the viewer's own sight: a project hidden from them is neither named nor counted (N366; R19, R55). */
     const parties = reaches ? this.#parties(row) : null;
     const shownReach = reaches ? this.#parties(row, viewer) : null;
-    const member = viewerPredicate(viewer).member;
+    const member = this.#memberOf(viewer);
     const m = this.#m();
     const between = parties && isProjectConflict(view.weight, view.state) && member
       ? parties.all.filter((p) => m && typeof m.isJoinedParticipant === "function" && m.isJoinedParticipant(p, member))
@@ -1674,7 +1682,7 @@ export class Contradiction {
       /* DEC-85: seen half. Told only to a joined participant of a party reached through the side they may see, and
          carrying nothing of the other side. */
       if (!isProjectConflict(view.weight, view.state)) return [];
-      const member = viewerPredicate(viewer).member;
+      const member = this.#memberOf(viewer);
       const m = this.#m();
       if (!member || !m || typeof m.isJoinedParticipant !== "function") return [];
       return this.#reachOf(row[which]).projects.filter((p) => m.isJoinedParticipant(p, member))
@@ -2695,7 +2703,7 @@ export class Contradiction {
     if (ex) return { refusal: ex };
     const held = pid ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid) : null;
     if (!held || held.object_type !== "project" || !this.#sees(pid, viewer)) return { refusal: noSuchProject(pid || null) };
-    const member = viewerPredicate(viewer).member;
+    const member = this.#memberOf(viewer);
     if (!member || !m || !m.isJoinedParticipant(pid, member)) return { refusal: notAParticipant(pid, member) };
     return { project: pid, member };
   }

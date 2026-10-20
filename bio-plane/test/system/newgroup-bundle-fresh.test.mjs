@@ -11,8 +11,8 @@
  * fleet): the build is re-run from source in memory, with `newgroup/package.json`'s own `build` flags and the same
  * esbuild the lockfiles pin, and byte-compared to the committed artifact.
  *
- * Arms: (A) the bundle embeds the RELEASE_VERSION `src/release.mjs` carries; (B) its RELEASE_BINARY literal, evaluated,
- * hashes equal to `src/release.mjs`'s RELEASE_BINARY; (C) the WHOLE bundle is byte-identical to a fresh build of
+ * Arms: (A) the bundle embeds the RELEASE_VERSION `src/release.mjs` carries; (B) its RELEASE_PACKED literal (the release's gzip as base64, R33), evaluated
+ * and expanded, hashes equal to `src/release.mjs`'s RELEASE_PACKED expanded; (C) the WHOLE bundle is byte-identical to a fresh build of
  * `newgroup/src`. (C) implies (A) and (B); they are kept so a failure NAMES which kind of staleness it is.
  * The fix for any failure is one act: `cd newgroup && npm run build`, and commit the bundle.
  *
@@ -27,6 +27,7 @@
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { gunzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 import * as esbuild from "esbuild";
@@ -40,8 +41,8 @@ const t = (name, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : `  want ${JSON.stringify(want)} got ${JSON.stringify(got)}`}`);
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
-/* A binary string (one character per byte, newgroup R33) hashed as the bytes it holds. */
-const shaBinary = (s) => createHash("sha256").update(Buffer.from(s ?? "", "latin1")).digest("hex");
+/* The packed release (newgroup R33: the signed bytes gzipped, as base64) hashed as the bytes it holds once expanded. */
+const shaPacked = (s) => createHash("sha256").update(gunzipSync(Buffer.from(s ?? "", "base64"))).digest("hex");
 /* The literal `NAME = "…"` or `NAME = '…'` evaluated, found by scanning its escapes (the esbuild output re-quotes it). */
 const literal = (src, name) => {
   const i = src.indexOf(name + " = ");
@@ -54,7 +55,7 @@ const literal = (src, name) => {
 console.log("\n--- DIST-13: newgroup's committed bundle equals a fresh build of newgroup/src ---");
 const committed = readFileSync(DIST, "utf8");
 const releaseSrc = readFileSync(NG + "src/release.mjs", "utf8");
-const want = { version: literal(releaseSrc, "RELEASE_VERSION"), source: shaBinary(literal(releaseSrc, "RELEASE_BINARY")) };
+const want = { version: literal(releaseSrc, "RELEASE_VERSION"), source: shaPacked(literal(releaseSrc, "RELEASE_PACKED")) };
 
 /* The build is READ from newgroup/package.json, never restated here: `npm run build` embeds the release and then runs
    `scripts/build.mjs`, which holds the esbuild options (T50, R72: the same bundle as a plain esbuild one, with `setup-words`' rows
@@ -68,8 +69,8 @@ t("PIN: newgroup's build is the script this guard mirrors (scripts/build.mjs: bu
 
 t("(A) the bundle embeds the RELEASE_VERSION src/release.mjs carries",
   literal(committed, "RELEASE_VERSION"), want.version);
-t("(B) the bundle's RELEASE_BINARY is the one src/release.mjs carries (by sha256)",
-  shaBinary(literal(committed, "RELEASE_BINARY")), want.source);
+t("(B) the bundle's RELEASE_PACKED expands to the release src/release.mjs carries (by sha256)",
+  shaPacked(literal(committed, "RELEASE_PACKED")), want.source);
 
 const fresh = await bundleText(esbuild);
 /* N1254: the test closes what it opens. esbuild's service is a child process that holds the suite's stdout pipe: left running it

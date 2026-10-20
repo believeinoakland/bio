@@ -4,7 +4,7 @@
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, WRITE_HELP } from "./send-steps.mjs";
 
 // R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -41,6 +41,8 @@ export const startSend = Object.freeze({
       plan: { op: "plan", query: { id: plan }, subject: true },
       projects: { op: "list", query: { type: "project", limit: "500" } },
       preview: { op: "optionstartpreview", body: body },
+      // R47: the members the team's contact is chosen from (`memberlist`); a roster that cannot be read offers no one
+      roster: { op: "memberlist", empty: function () { return false; } },
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
     };
   },
@@ -48,6 +50,26 @@ export const startSend = Object.freeze({
   parts: {
     draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
     stakeLines: stakeLines, stakeAsk: stakeAsk,
+    // R48: the approved filing kept as the team's template, from the approval on (the step is second, send or sent). A filing
+    // that needs counsel first (a tier of 3, read from the draft, the action or the stake read) is offered only as a brief.
+    templateKeep: function (cs, view, d, step) {
+      if (step !== "second" && step !== "send" && step !== "sent") return "";
+      const held = d.open || d.sent;
+      const save = held && held.filing ? cs.act("templatesave", { data: { filing: held.filing } }) : "";
+      if (!save) return "";
+      const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : {};
+      const st = view.data.stake && view.data.stake.state === "ok" && view.data.stake.value ? view.data.stake.value : {};
+      const counsel = held.tier === 3 || a.risk_tier === 3 || st.governing_tier === 3;
+      const uses = (counsel ? [] : [["file", "screen.start-send.template.use.help1"]]).concat([["brief", "screen.start-send.template.use.brief"]]);
+      const help = view.reachable ? cs.act("writinghelp", { data: { field: "notes", id: "template-notes", forop: "templatesave" } }) : "";
+      return cs.sec("screen.start-send.template.heading", '<p class="mk-note">' + cs.w("screen.start-send.template.note1") + " " + cs.w("screen.start-send.template.note2") + " "
+        + cs.w("screen.start-send.template.note3") + "</p>"
+        + cs.field("template-name", "screen.start-send.template.heading", { max: 200, help: ["screen.start-send.template.name.help1", "screen.start-send.template.name.help2"] })
+        + cs.choice("template-use", "screen.start-send.template.use.label", uses, { value: counsel ? "brief" : "file" })
+        + '<p class="mk-small">' + cs.w("screen.start-send.template.use.help2") + "</p>"
+        + cs.field("template-notes", "screen.start-send.template.notes.label", { area: true, rec: true, help: "screen.start-send.template.notes.help" })
+        + '<div class="mk-acts">' + save + help + "</div>");
+    },
     isRequest: function () { return false; },
     readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf,
     // R2: the preview's answer drawn: the kind, the office by its role, what it rests on, the clock, the breach, and the
@@ -108,7 +130,14 @@ export const startSend = Object.freeze({
       const pv = view.ui.preview || null;
       const shown = pv ? P.preview(cs, view, pv) : cs.state("preview", function (v) { return P.preview(cs, view, v); });
       const kinds = P.kindsOf(cs, view, true);
+      // R47: the team's contact for the action, optional: no one first, then the active members the roster lists by handle
+      const roster = view.data.roster && view.data.roster.state === "ok" && view.data.roster.value && Array.isArray(view.data.roster.value.members) ? view.data.roster.value.members : [];
+      const contacts = [{ value: "", key: "screen.start-send.noaddressee" }].concat(roster.filter(function (m) {
+        return m && m.status === "active" && typeof m.member_id === "string" && typeof m.handle === "string" && m.handle.trim();
+      }).map(function (m) { return { value: m.member_id, text: m.handle }; }));
       const form = cs.choice("start-kind", "screen.start-send.kind", kinds, { value: view.ui.kind || "records_request" })
+        + cs.choice("start-contact", "screen.start-send.contact.label", contacts, { value: view.ui.contact || "" })
+        + '<p class="mk-small">' + cs.w("screen.start-send.contact.help1") + " " + cs.w("screen.start-send.contact.help2") + " " + cs.w("screen.start-send.contact.help3") + "</p>"
         + cs.checks("start-breach", "screen.start-send.breach", [["yes", "screen.start-send.breach.tick", view.ui.breach === true]])
         + cs.field("start-override", "screen.start-send.override", { help: "screen.start-send.override.help", value: view.ui.override || "" })
         + '<div class="mk-acts">' + cs.act("optionstartpreview", { data: { option: option } })
@@ -145,7 +174,22 @@ export const startSend = Object.freeze({
           breach: (cs.value("start-breach") || []).includes("yes") };
         if (override) body.premise_override = { reason: override };
         if (extra && typeof extra.reason === "string" && extra.reason.trim()) body.why_first = extra.reason.trim().slice(0, 500);
+        // R47: the team's contact, where one was chosen; the choice is kept while a refusal is resolved
+        const contact = String(cs.value("start-contact") || "");
+        if (contact) body.contact = contact;
+        view.ui.contact = contact;
         return { body: body };
+      },
+      refusals: {
+        // R47: the contact is not a member of the team (the design's words under "When the contact is not a member")
+        CONTACT_NOT_A_MEMBER: function (refusal, cs) {
+          return cs.w("screen.start-send.contact.refused.body1") + " " + cs.w("screen.start-send.contact.refused.body2");
+        },
+        // L20 (K4195): the code's words, then each finding's own detail as the record answers it (escaped record data)
+        ACTION_BASIS_REFUSED: function (refusal, cs) {
+          const found = Array.isArray(refusal.findings) ? refusal.findings.filter(function (f) { return f && typeof f.detail === "string" && f.detail.trim(); }) : [];
+          return cs.w("refusal.ACTION_BASIS_REFUSED") + (found.length ? '<ul class="mk-list">' + found.map(function (f) { return "<li>" + cs.esc(f.detail) + "</li>"; }).join("") + "</ul>" : "");
+        },
       },
       done: function (view, answer, cs) { if (answer && answer.action) cs.go("start-send", answer.action); return { stay: true }; },
     },
@@ -155,5 +199,7 @@ export const startSend = Object.freeze({
     Object.assign({}, APPROVE, { rereads: ["filings"] }),
     Object.assign({}, SECOND, { rereads: ["filings"] }),
     Object.assign({}, RECORD_SENT, { rereads: ["filings", "action"] }),
+    TEMPLATE_SAVE,
+    WRITE_HELP,
   ],
 });

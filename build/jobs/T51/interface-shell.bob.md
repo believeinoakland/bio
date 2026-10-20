@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -137,3 +137,9 @@ CHANGE (K4219; project-roster J4): `design.test.mjs` (R107) sends `projectownera
 ## B22 · CHANGE
 
 CHANGE (K4228), a new job session (INTERFACE-SHELL #10, sonnet): screens-publish R68 (DEC-384 H2, the crumb before joining) needs the path's project step to read `crumb.project.unjoined` when the viewer has not joined the project. `place(view)` cannot say so today (it gets no word function). Extend R110's `place` answer: `{project, last, projectKey?}` where `projectKey` is a word key the shell renders (with `{name}` = the project's title, escaped) in place of the title; absent, today's behaviour. Test and control; R110's line amended (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B23 · CHANGE
+
+CHANGE (K4237), re-opens the job. Merge tranche/T51 first (R12 amended there).
+R12: `can` asks `SESSION_OPS` membership of every act, a read included, but `SESSION_OPS` gates mutating ops alone (op-declarations' own rule; the door serves a read to any session whose class the op lists). So eight acts of screens-settings are never drawn: `selftest`, `bootstrap`, `runtime`, `exportlog`, `biasmanifest`, `biasinhale`, `biasdebt` (reads) and `export` (SCREENS-SETTINGS #10 J10 (1)). R12 now reads: the op is in the session's set, or, for a read (`OPS[op].mutating` false), the session's class is among `OPS[op].classes`. Test at the interface: a read in no set but whose classes hold the session's class is drawn; controls: a mutating op outside the set is not drawn; a read whose classes exclude the session's class is not drawn. (`export`'s session reach is OP-DECLARATIONS #30's.)
+R110's projectKey line from J11 is written by BOB at your merge.
