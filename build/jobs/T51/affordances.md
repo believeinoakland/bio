@@ -156,3 +156,20 @@ My own suite: the R2/R41 tests in t41, t31, services, catalogue and backing all 
 Change in my module this round: t34 "R1 R12" (commit b42e5414d9). groupdescriptiondraft is a read now (K4247; store-door declares it, op-grades R39 gives it no row), so the test carries it as a gated read. Carried as a write it reads unranked. The test had carried it as a write.
 
 Checks: t34 9 of 9; whole suite 281 tests, 249 pass, 32 fail (all the runtime registration refusal); architecture 0 failures; words 0 failures; ownership 5 files changed by affordances, 0 failures.
+
+## J14 · COMPLETE · re B11
+
+COMPLETE (re B11, K4250). Commit b42e5414d9 on job/T51/affordances, pushed; tranche/T51 merged first (no conflicts).
+
+Entries applied: (1) noted, no change needed (my J9 reading was wrong; the start-up refusal was link-sweep's `sweeps` row, now fixed). (2) R2/R41: no change in `unaccounted`. The twenty ops are accounted once the owners' declarations register, and they do not register while `groupkeynoticeseen`'s description disagrees between op-declarations and op-grades (REPORT J13). My R2/R41 tests pass. The t34 test follows groupdescriptiondraft's read status (K4247).
+
+Deferred: none. Found in other modules: the registration refusal above (op-declarations and op-grades); control-plane's totality test runs without its owners' registration.
+
+Tests and checks:
+- node --test test/m/affordances/t34.test.mjs: 9 pass, 0 fail
+- node --test test/m/affordances/*.test.mjs: 281 tests, 249 pass, 32 fail (all the plane-runtime registration refusal)
+- checks/architecture.mjs affordances: 34 product files, 384 relative imports; 0 failures
+- checks/words.mjs affordances: 6791 string literals read; 0 failures
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 5 files changed by affordances; 0 failures
+
+Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 7, module lines 2775
