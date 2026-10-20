@@ -188,3 +188,6 @@ COMPLETE (PLANE #44; B15): pushed. `gatedOp` hands `trace` to captureOp; the obj
 - For BOB (requirement lines): R68 names `wizard-scripts`, `queue` and `control-plane` among the owners assembled. R71: an op reached through the control-plane door's own map or registered as a public read counts as reachable. R73's text is still yours to write (earlier entry).
 - Size (session_01CLRkcMHppRTA6yFfn5t1Zg): test runs 8, module lines 8 new (declarations 6; tests 4 changed lines)
 
+## J12 · COMPLETE
+
+COMPLETE (PLANE #45; B16): R68, R71, R5 fixed; R24 is the design's. Details in the record. (3) R68: declarations.mjs assembles wizard-scripts, queue, control-plane. (4) R71: test counts the control-plane door's own ops (subscriptionsignin) and registered public reads (casedetailspublic) as reachable; both were routed. (2) R5: test expects sweeps, sweepset, sweepratify. (1) R24: screen.contradiction.purpose is missing in the design's words.json (SCREEN_HELP in mock-refs.js has no contradiction entry); the design's to add; test unchanged, red. Suite 279 of 280 (only R24); t46-e2e, t47-e2e 7 of 7. Checks: format, architecture, coverage 73/73, ownership 0 failures. Requirement lines: R68 lists wizard-scripts, queue, control-plane among assembled owners; R71 counts door-own ops and public reads as reachable. R73 text still yours.
