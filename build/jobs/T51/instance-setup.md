@@ -126,3 +126,11 @@ Checks and tests:
 Commit on `job/T51/instance-setup`, pushed.
 
 Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 11, module lines 3589
+
+## J9 · QUESTION
+
+QUESTION (K4202, the census; pass §3 step 5). Two ops of the sixteen have no existing row I may copy, so I declare nothing for them yet and declare the other fourteen.
+
+1. `runtime` and `selftest` (sent by registry/updates): `op-declarations` gives each its classes (`admin`, `member`, `probe`, `mutating: false`), but `op-grades` holds no row for either (no `RUNGS`, `RUNG_ABSENT` or `NON_ACTS` entry; reads need none today), so there is no weight and no description to copy. Fields are plain: `runtime` and `selftest` read nothing from the address or the body (their `cls` and `viewer` are stamps), so `fields: {accepts: [], requires: []}`.
+   My best reading: declare both with `weight: "read"`, `mutating: false`, the classes above, `machineClasses` omitted, and a description of my own, `localize("instance-setup.declared.runtime", "read: what the instance was measured to cost and where its limits lie (the runtime's measurements, the CPU probe's trail, the subrequest ceiling)")` and `("instance-setup.declared.selftest", "read: whether the deployment is healthy (its bindings, the store's stats and a storage round trip); it never returns a secret")`, taken from R37 and R18. Please confirm that, or give the sentences.
+2. `grouplogoset` is judgment only in shape: the screen sends the file as the request's body with `rawType` in the address (R86), or JSON `{raw, rawType}`; I declare `accepts: ["raw", "rawType"]`, `requires: ["raw"]` (`raw: null` clears). Its refusal for no file (`LOGO_REFUSED`, "the logo is sent as the file's bytes, and none was sent") does not name the field, so the test maps `raw` to that code (the pass's `named` table). Say if that is not acceptable.
