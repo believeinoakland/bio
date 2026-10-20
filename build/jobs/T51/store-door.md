@@ -43,3 +43,11 @@ Checks (store-door):
 - ownership store-door tranche/T51 job/T51/store-door: 1 file changed; 0 failures
 
 Size (session_01JifjKBEkxVwREXfmY1gSL5): test runs 3, module lines 650
+
+## J5 · REPORT
+
+Found in another module (instance-setup, its R65 `groupDescriptionDraft`, setup.mjs:2369). Not changed here; for Bob to decide.
+
+The door's own admin check (store-door dispatch.mjs, `adminRefusal`) strips a `member:` prefix from `by` and admits the administrator. The handler then tests `isAdministrator(by)` with the value as given, so `by=member:ann` is refused NOT_AN_ADMIN, while `by=ann` drafts. I reproduced both on the real record fixture. My arm passes `by` unchanged, as it did before.
+
+The question: which form does the Worker stamp into `by` for `groupdescriptiondraft`? I did not verify it. My declaration and test use the bare id, as the Worker's stamp form is what the declaration describes. If the Worker stamps `member:<id>`, every administrator's group draft is refused today. The fix belongs to instance-setup (or to the stamp), not to the door; say which.
