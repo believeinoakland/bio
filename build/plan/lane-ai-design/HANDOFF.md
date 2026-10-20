@@ -106,3 +106,6 @@ Bob redirected the lane: no more provider-document chasing; the job is requireme
 
 ## A19 · 2026-10-21 · Q3 done as requirements: `BOUNDARY-REQUIREMENTS.md`
 Read first, as BOB directed: K1364 (B3: "the words a script fills in are always the member's"; machine words are labelled drafts that become the member's only by the member's act; no step submits; code refuses a draft on any act a machine is refused) and the Capability Ladders "Labelled drafts" row; they are carried as BR29. Document: layers (catalogue, provider interface, adapters, credential resolver, account resolver, usage and limits, evidence and test), 32 boundary requirements BR1–BR32, packaging options for BOB (recommended: evolve `agent-model`, `ai-accounts`, `ai-use`, add `ai-catalogue` and `ai-gate`), required boundary tests, four questions. Nothing decided. Next: Q4 (suite and procedures as requirements, thresholds Bob's), then Q6 (kept, adapted, retired).
+
+## A20 · 2026-10-21 · Bob on the four boundary questions
+(1) Packaging: Bob: "a technical question": BOB's to decide (P17); the lane's recommendation (Option 1) stands for BOB. (2) Cross-owner failover consent and (3) streaming: Bob asked for plain explanations; given in the session, awaiting his answer. (4) Health reports opt-in, content-free: Bob: "ok" (provisional, BOB to record).
