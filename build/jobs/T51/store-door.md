@@ -77,3 +77,26 @@ Found in another module (REPORT posted separately): instance-setup's group draft
 Whole-product run, not store-door's: coverage reds in agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; link-sweep R13, R14, R15. Words: 18 testcopy findings, all in op-grades tests (copies of op-grades' own sentences, one of them the sentence this declaration also carries), and one inline in strength/method.mjs:349. Not touched by this round.
 
 Size (session_01VKHhG6NACRGhAiYZCkJSez): test runs 6, module lines 661
+
+## J7 · COMPLETE
+
+COMPLETE · CHANGE B6 (K4247) applied. Commit 1694d05423 on job/T51/store-door, pushed.
+
+Entries applied:
+- B6 (K4247): `groupdescriptiondraft` in DECLARED_OPS (bio-plane/src/store-door/dispatch.mjs:397) is `weight: "read"`, `mutating: false`. Classes, stamps, description and fields are unchanged. The row is a read, as writinghelp is.
+- Requirement line for BOB (written by me, build/requirements/store-door.md R17): the row's weight is `read`; op-grades R49 registers it without refusal (K4247).
+
+Tests (bio-plane/test/m/store-door/declared-ops.test.mjs):
+- Control on the row changed: now asserts weight "read".
+- NEW registration test: registers the real owner row through a fresh op-grades instance. RED on the tranche today: `DECLARED_OP_DISAGREES: groupdescriptiondraft weight hand=caller-owned owner=read`. The hand row is op-grades bio-plane/src/op-grades/t48.mjs:52 (RUNG_ABSENT ground "caller-owned"). This test goes green when OP-GRADES #20 withdraws that row. Merge the two together, as you said. I did not weaken the test.
+- NEW control: the same row declared with weight "reasoned" is refused by op-grades, `DECLARED_OP_BAD_WEIGHT` naming the op and `rung-on-read`. Passes.
+- Full store-door suite: 1 failure (the registration test above), the rest pass.
+
+Checks:
+- node checks/run.mjs /home/user/bio (process repo, pulled to a4c42ff): format 0 failures; architecture 0 failures; no finding naming store-door in coverage, words or any other check. Other modules red, not ours: coverage agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19; words: screens-intake missingkey (t51-about-knocker, t51-watching*), op-grades testcopy (owners, t35, t36, t37, t41, t46, t47, t48, t49), strength inline (method.mjs:349).
+- node checks/ownership.mjs /home/user/bio store-door tranche/T51 job/T51/store-door: 1 file changed; 0 failures.
+- setup-words --check: stale rows only (expected; BOB regenerates at the layer close). No refusal naming store-door.
+
+Deferred: none. Found in another module: the op-grades testcopy and missingkey findings above (not store-door's); for OP-GRADES #20 the t48.mjs:52 hand row.
+
+Size (session_01EKV3w3RDWaapU3s2BdW4wC): test runs 2, module lines 661.
