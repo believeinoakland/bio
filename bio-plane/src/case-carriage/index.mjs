@@ -1394,3 +1394,12 @@ export function caseCarriageOps(cc, url, body) {
     obscuremarkwithdraw: () => cc.obscureMarkWithdraw({ captureSha: sha(), mark: b.mark, reason: b.reason, by: q("by") }),
   };
 }
+
+/* R23 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  obscuremark: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("case-carriage.declared.obscuremark", "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to obscure in the published copy; withdrawn only by a reasoned act, never erased (R28); moves no bundle"),
+    fields: { accepts: ["captureSha","capture","areas"], requires: [["captureSha","capture"],"areas"] } },
+  obscuremarkwithdraw: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("case-carriage.declared.obscuremarkwithdraw", "photo-directed: keyed by a photo's capture and one mark, reached from the Photos step; a member's reasoned withdrawal of a mark, recorded beside it, never erased; moves no bundle"),
+    fields: { accepts: ["captureSha","capture","mark","reason"], requires: [["captureSha","capture"],"mark","reason"] } },
+});

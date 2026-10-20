@@ -2243,3 +2243,10 @@ export function conformanceOps(c, url, body) {
                                                viewer: qp("viewer") }),
   };
 }
+
+/* R42 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  determine: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("conformance.declared.determine", "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle"),
+    fields: { accepts: ["project","act","findings","standards","rows","questions","supersedes","reason","proposal","cause"], requires: ["project","act","findings","standards","rows"] } },
+});

@@ -1279,6 +1279,25 @@ export function moneyOps(money, url, body) {
   };
 }
 
+/* R27 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  recordfact: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("money.declared.recordfact", "money-directed: keyed by a new MNY- id; holds one source's reading of one amount and moves no bundle"),
+    fields: { accepts: ["amount","as_read","currency","sign","precision","kind","phase","stage","adjusts","basis","period","from","to","codes","balance_class","buys","concerns","source","method","question"], requires: ["amount","as_read","currency","sign","precision","kind","phase","basis","period","source"] } },
+  createset: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("money.declared.createset", "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle"),
+    fields: { accepts: ["purpose","label","concerns"], requires: ["purpose","label"] } },
+  include: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("money.declared.include", "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle"),
+    fields: { accepts: ["setId","factId","reason"], requires: ["setId","factId","reason"] } },
+  exclude: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("money.declared.exclude", "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle"),
+    fields: { accepts: ["setId","factId","reason"], requires: ["setId","factId","reason"] } },
+  reconcile: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.reconcile", "read: whether two money facts are consistent, or each dimension that differs; writes nothing"),
+    fields: { accepts: ["a","b"], requires: ["a","b"] } },
+  committedagainstpaid: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.committedagainstpaid", "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing"),
+    fields: { accepts: ["contract","at"], requires: ["contract"] } },
+  authoritychain: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.authoritychain", "read: the chain of authorising events toward the event a fact concerns, bounded; writes nothing"),
+    fields: { accepts: ["id"], requires: ["id"] } },
+});
+
 /* ---- R17: the closed lists, module-level (query-language and affordances import them; K1563) ---- */
 
 export const kinds = () => MONEY_KINDS;

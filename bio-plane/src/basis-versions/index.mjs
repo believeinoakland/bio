@@ -1639,3 +1639,26 @@ export function basisVersionsOps(bv, url, body) {
                                             viewer: q("viewer"), author: q("author"), identity: q("identity") }),
   };
 }
+
+/* R57 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  versionaccept: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: "act.versionaccept.does",
+    fields: { accepts: ["target","version","reason","project","hidden","preview","affirmed"], requires: ["target","version"] } },
+  versionreject: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.versionreject.does",
+    fields: { accepts: ["target","version","reason","project","hidden","preview","affirmed"], requires: ["target","version","reason"] } },
+  versionconsider: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.versionconsider.does",
+    fields: { accepts: ["target","version","reason","project","hidden","preview","affirmed"], requires: ["target","version","reason"] } },
+  versionrevert: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: "act.versionrevert.does",
+    fields: { accepts: ["target","version","reason","project","hidden","preview","affirmed"], requires: ["target","version"] } },
+  versioncurrent: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: "act.versioncurrent.does",
+    fields: { accepts: ["target","version","reason","project","hidden","preview","affirmed"], requires: ["target","version","project"] } },
+  versionhide: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: "act.versionhide.does",
+    fields: { accepts: ["target","version","reason","project","hidden","preview","affirmed"], requires: ["target","version"] } },
+  narrow: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("basis-versions.declared.narrow", "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing"),
+    fields: { accepts: ["target","version","ord","name","description","extent"], requires: ["target","version","ord","name","description","extent"] } },
+  conclude: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.conclude.does",
+    fields: { accepts: ["target","conclusion","falsifier","no_falsifier","project","commentary","version","reading","preview","affirmed","bias_applied"], requires: ["target",["falsifier","no_falsifier"],["conclusion","project","reading"]] } },
+  withdrawconclusion: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.withdrawconclusion.does",
+    fields: { accepts: ["target","project","reason"], requires: ["reason","target","project"] } },
+});

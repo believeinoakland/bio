@@ -7,13 +7,12 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T38_RUNGS, T38_NON_ACTS } from "../../../src/op-grades/t38.mjs";
 import * as T38 from "../../../src/op-grades/t38.mjs";
+import { declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const R28_WRITES = { obscuremarkwithdraw: "reasoned", obscuremark: "reversible" };
-const WITHDRAW = "photo-directed: keyed by a photo's capture and one mark, reached from the Photos step; a member's "
-  + "reasoned withdrawal of a mark, recorded beside it, never erased; moves no bundle";
-const MARK = "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to "
-  + "obscure in the published copy; withdrawn only by a reasoned act, never erased (R28); moves no bundle";
+const WITHDRAW = declaredSentence("case-carriage", "obscuremarkwithdraw");
+const MARK = declaredSentence("case-carriage", "obscuremark");
 
 test("R28: obscuremarkwithdraw `reasoned`, backed by case-carriage R14's WITHDRAW_NO_REASON (C-141.10) in "
    + "JUSTIFICATION_REFUSALS, with R28's photo-directed reason; obscuremark leaves RUNG_ABSENT for `reversible`, taken "

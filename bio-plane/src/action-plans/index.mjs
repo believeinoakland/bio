@@ -2431,3 +2431,28 @@ export function actionPlansOps(m, url, body) {
     planask: () => m.planAsk(stamped({ plan: pick("plan") })),
   };
 }
+
+/* R52 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  planopen: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("action-plans.declared.planopen", "project-directed: a member opens a plan for one project over named subjects, keyed by project; writes a PLN- record object"),
+    fields: { accepts: ["project","subjects","title"], requires: ["project","title","subjects"] } },
+  plansubjectadd: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("action-plans.declared.plansubjectadd", "plan-directed: a member adds a subject to a plan with a reason, keyed by (plan, subject); kept in the plan's history"),
+    fields: { accepts: ["plan","subject","reason"], requires: ["plan","subject","reason"] } },
+  planclose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("action-plans.declared.planclose", "plan-directed: a member closes a plan with a reason, keyed by plan id; the plan stays readable"),
+    fields: { accepts: ["id","plan","reason","note"], requires: [["id","plan"],"reason"] } },
+  optionadd: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("action-plans.declared.optionadd", "plan-directed: a member adds an option to a plan, keyed by plan; writes an option row"),
+    fields: { accepts: ["plan","summary","detail","category","subjects","addressee","dates","tier","lobbying","enforces"], requires: ["plan","summary","category","subjects"] } },
+  optiondispose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("action-plans.declared.optiondispose", "option-directed: a member disposes of one or more options (open, chosen, declined, done, blocked), keyed by (plan, options); every change kept in the option's history"),
+    fields: { accepts: ["plan","options","disposition","reason","reminders"], requires: ["plan","options","disposition"] } },
+  scenarioset: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("action-plans.declared.scenarioset", "plan-directed: a member sets one of a plan's scenarios whole, keyed by (plan, scenario); the earlier version kept in history"),
+    fields: { accepts: ["plan","scenario","name","phases"], requires: ["plan","scenario","name","phases"] } },
+  checkpointrecord: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("action-plans.declared.checkpointrecord", "scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once"),
+    fields: { accepts: ["plan","scenario","phase","judged","note"], requires: ["plan","scenario","phase","judged"] } },
+  optionstart: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("action-plans.declared.optionstart", "option-directed: a member starts a chosen option as an action, keyed by (plan, option); composes and promotes the action"),
+    fields: { accepts: ["plan","option","kind","contact","breach","premise_override","why_first"], requires: ["plan","option","kind"] } },
+  optionstartpreview: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("action-plans.declared.optionstartpreview", "read: what starting a chosen option would do at this instant, keyed by (plan, option) — the action it would compose, the reminders it would set, and whether it would start or the refusal it would answer; allocates no id, sets no reminder and writes nothing"),
+    fields: { accepts: ["plan","option","kind","contact","breach","premise_override","why_first"], requires: ["plan","option","kind"] } },
+  planask: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("action-plans.declared.planask", "plan-directed: keyed by a plan; a member asks the assistant for options on it, opening one planning run whose proposals reach the member's tray; writes no option and moves no bundle"),
+    fields: { accepts: ["plan"], requires: ["plan"] } },
+});

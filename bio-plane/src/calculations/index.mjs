@@ -2240,3 +2240,18 @@ export function calculationsOps(c, url, body) {
     patternswitch: () => c.switchPattern({ ...strip(b), by }),
   };
 }
+
+/* R42 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  tabledeclare: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.tabledeclare", "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle"),
+    fields: { accepts: ["source","schema","header","roles","vintage"], requires: ["source","schema","header"] } },
+  calculationcreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationcreate", "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle"),
+    fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project"], requires: ["question","period","inputs","kind"] } },
+  calculationaccept: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationaccept", "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute"),
+    fields: { accepts: ["id","calcId"], requires: [["id","calcId"]] } },
+  calculationdraw: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationdraw", "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle"),
+    fields: { accepts: ["set","n","seed","question","project"], requires: ["set","n"] } },
+  spotcheckvisit: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("calculations.declared.spotcheckvisit", "draw-directed: keyed by a draw and one drawn item, reached from the spot-check; ties the visitor's own testimony to the item; moves no bundle"),
+    fields: { accepts: ["draw","item","testimony","finding","exhibits"], requires: ["draw","item","testimony","finding"] } },
+});

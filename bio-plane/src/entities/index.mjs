@@ -2071,3 +2071,22 @@ export function entitiesOps(e, url, body) {
                                aName: q("a_name"), bName: q("b_name"), referent: q("referent"), viewer: q("viewer") }),
   };
 }
+
+/* R62 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  entitycreate: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.entitycreate", "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)"),
+    fields: { accepts: ["kind","label","note","aliases","sector","proceeding","forum_kind"], requires: ["kind","label","note"] } },
+  entityalias: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("entities.declared.entityalias", "registry write, keyed by entity"),
+    fields: { accepts: ["entityId","alias"], requires: ["entityId","alias"] } },
+  aliaswithdraw: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.aliaswithdraw", "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn"),
+    fields: { accepts: ["entityId","alias","reason"], requires: ["entityId","alias","reason"] } },
+  relationdeclare: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.relationdeclare", "registry write, keyed by entity pair"),
+    fields: { accepts: ["fromEntity","toEntity","relation","justification","citation"], requires: ["fromEntity","toEntity","relation","justification","citation"] } },
+  resolve: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolve", "recogniser write, keyed by capture sha"),
+    fields: { accepts: ["captureSha","ref","items"], requires: [["captureSha","items"]] } },
+  resolvetestify: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolvetestify", "recogniser testimony, keyed by capture sha"),
+    fields: { accepts: ["captureSha","ref","entityId","basis"], requires: ["captureSha","ref","entityId","basis"] } },
+  resolutiondefect: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution"),
+    fields: { accepts: ["captureSha","ref","entityId","reason","source"], requires: ["captureSha","ref","entityId","reason"] } },
+});

@@ -1097,3 +1097,16 @@ export function observationLogOps(o, url, body) {
   };
 }
 
+/* R39 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  lead: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("observation-log.declared.lead", "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence"),
+    fields: { accepts: ["words","locator"], requires: ["words"] } },
+  leadlook: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("observation-log.declared.leadlook", "lead-directed: a member records following a lead, keyed by lead id; with the looker's words on where they looked and what they found, now required (observation-log R17, C-54.11; DEC-88: `reasoned`); writes one observation_log row under authority_kind lead"),
+    fields: { accepts: ["lead","state","resultKind","resultRef","condition","detail"], requires: ["lead","state","detail"] } },
+  leadshare: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("observation-log.declared.leadshare", "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project), with the sharer's reason for telling that project, now required (observation-log R16, C-54.12; DEC-88: `reasoned`); writes a `lead_shares` row and no edge"),
+    fields: { accepts: ["lead","project","reason"], requires: ["lead","project","reason"] } },
+  leadread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("observation-log.declared.leadread", "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope"),
+    fields: { accepts: ["id","limit"], requires: ["id"] } },
+});
+

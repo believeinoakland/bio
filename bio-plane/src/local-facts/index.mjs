@@ -661,6 +661,19 @@ export function localFactsOps(s, url, body) {
   };
 }
 
+/* R20 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  ruledraft: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("local-facts.declared.ruledraft", "rule-directed: keyed by a profile section and an entry; a member drafts a rule from its primary source, with a reason; the group's own rule beside the profiles, never a profile's; moves no bundle"),
+    fields: { accepts: ["section","entry","source","reason"], requires: ["section","entry","source","reason"] } },
+  ruleconfirm: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("local-facts.declared.ruleconfirm", "rule-directed: keyed by group rule; a member other than its drafter confirms it, and it applies from then; the group's own rule beside the profiles, never a profile's; moves no bundle"),
+    fields: { accepts: ["rule","statement"], requires: ["rule"] } },
+  rulewithdraw: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("local-facts.declared.rulewithdraw", "rule-directed: keyed by group rule; a member withdraws it with a reason, kept and never deleted; the group's own rule beside the profiles, never a profile's; moves no bundle"),
+    fields: { accepts: ["rule","reason"], requires: ["rule","reason"] } },
+  factconfirm: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("local-facts.declared.factconfirm", "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle"),
+    fields: { accepts: ["path","act","how","value","source"], requires: ["path","act","how"] } },
+});
+
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. Its tables are created with it and declared

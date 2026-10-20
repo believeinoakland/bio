@@ -25,3 +25,12 @@ export function exploreOps(explore, url, body) {
     exploregraph: () => explore.neighbourhood({ ...args, viewer }),
   };
 }
+
+/* R27 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  explore: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("explore.declared.explore", "read: the paths from a node over the registered kinds as of a date, each hop cited and graded, within the bounds; writes nothing"),
+    fields: { accepts: ["from","to","kinds","at","depth","sortBy","scope"], requires: ["from","at"] } },
+  explorepreset: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("explore.declared.explorepreset", "read: one preset walk — chain, flows, relations, a path between two nodes, overlaps — or the presets; writes nothing"),
+    fields: { accepts: ["preset","from","to","event","at","period","depth","a","b","kinds"], requires: ["preset"] } },
+});

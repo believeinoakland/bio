@@ -752,3 +752,10 @@ export function caseTensionsOps(c, url, body) {
                                               reason: b.reason ?? null, by: q("by") }),
   };
 }
+
+/* R12 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  attribute: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("case-tensions.declared.attribute", "author-directed: an observation's author chooses its attribution level for one prepared case edition, keyed by (case, edition, observation); writes an `observation_attributions` row and re-authors the unsigned case document"),
+    fields: { accepts: ["caseId","edition","observation","capture","level","reason"], requires: ["caseId","edition",["observation","capture"],"level","reason"] } },
+});

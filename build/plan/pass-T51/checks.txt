@@ -1,0 +1,66 @@
+format: 175 modules, 175 requirements files; 0 failures
+architecture: 3711 product files, 12701 relative imports (38 naming no tracked file, not judged); 0 failures
+FAIL  agent-harness: 1 of 19 live ids named by no test: R17
+FAIL  agent-runner: 4 of 41 live ids named by no test: R36 R37 R38 R40
+FAIL  bias: 1 of 50 live ids named by no test: R50
+FAIL  capture: 1 of 50 live ids named by no test: R97
+FAIL  citation: 3 of 18 live ids named by no test: R16 R17 R18
+FAIL  corpus-export: 1 of 11 live ids named by no test: R11
+FAIL  doorbell: 1 of 26 live ids named by no test: R26
+FAIL  entities: 1 of 62 live ids named by no test: R62
+FAIL  following: 1 of 36 live ids named by no test: R36
+FAIL  hypotheses: 1 of 24 live ids named by no test: R24
+FAIL  installer-steps: 2 of 37 live ids named by no test: R26 R31
+FAIL  intent: 1 of 34 live ids named by no test: R34
+FAIL  journey-check: 1 of 29 live ids named by no test: R19
+FAIL  link-sweep: 3 of 15 live ids named by no test: R13 R14 R15
+FAIL  monitoring: 3 of 64 live ids named by no test: R75 R76 R77
+FAIL  observation-log: 1 of 39 live ids named by no test: R39
+FAIL  promotion: 1 of 60 live ids named by no test: R60
+FAIL  provenance-routes: 1 of 14 live ids named by no test: R14
+FAIL  reevaluation: 1 of 39 live ids named by no test: R39
+FAIL  standards: 1 of 52 live ids named by no test: R61
+coverage: 175 modules, 6114 of 6144 live requirement ids named by a test; 20 failures
+channels: 2 participants, 1252 outbox commits read; 0 failures
+FAIL  inline ai-accounts bio-plane/src/ai-accounts/index.mjs:1719 [plain] "credential governance: a member clears their own subscription fact;..."
+FAIL  inline ai-accounts bio-plane/src/ai-accounts/index.mjs:1721 [plain] "personal state, keyed by member: the notice of the group's key seen..."
+FAIL  inline ai-accounts bio-plane/src/ai-accounts/index.mjs:1723 [plain] "credential governance: the group's assistant key, an administrator's"
+FAIL  inline ai-accounts bio-plane/src/ai-accounts/index.mjs:1725 [plain] "the copy's configuration: whether the group's assistant key is on; ..."
+FAIL  inline ai-accounts bio-plane/src/ai-accounts/index.mjs:1727 [plain] "credential governance: the group's assistant key, an administrator'..."
+FAIL  inline ai-accounts bio-plane/src/ai-accounts/index.mjs:1729 [plain] "credential governance: a member's own assistant account reference, ..."
+FAIL  inline ai-accounts bio-plane/src/ai-accounts/index.mjs:1731 [plain] "credential governance: a member removes their own account reference..."
+FAIL  inline bias bio-plane/src/bias/index.mjs:1249 [plain] "read: one run's bias debt and what settled it, keyed by run id — th..."
+FAIL  inline capture bio-plane/src/capture/index.mjs:2850 [plain] "read: a held archive's entries, each one's state and, when not file..."
+FAIL  inline capture bio-plane/src/capture/index.mjs:2852 [plain] "read: the collected documents not set aside, awaiting a member's de..."
+FAIL  inline capture bio-plane/src/capture/index.mjs:2854 [plain] "held-directed: a member sets one or more held documents aside with ..."
+FAIL  inline capture bio-plane/src/capture/index.mjs:2856 [plain] "self-attested-capture-directed: asks a timestamp authority, and for..."
+FAIL  inline capture bio-plane/src/capture/index.mjs:2858 [plain] "upload-directed: a member's bytes held as a capture under their dig..."
+FAIL  inline capture bio-plane/src/capture/index.mjs:2860 [plain] "held-directed: a member restores documents set aside, with one reas..."
+FAIL  inline corpus-export bio-plane/src/corpus-export/index.mjs:455 [plain] "writes an export manifest of what is already there"
+FAIL  inline doorbell bio-plane/src/doorbell/index.mjs:794 [plain] "an unauthenticated request to be let in"
+FAIL  inline doorbell bio-plane/src/doorbell/index.mjs:796 [plain] "read: the knocks that presented the same knocker secret, keyed by p..."
+FAIL  inline doorbell bio-plane/src/doorbell/index.mjs:798 [plain] "knock-directed: a member pulls one knock into the record, keyed by ..."
+FAIL  inline entities bio-plane/src/entities/index.mjs:2080 [plain] "registry write, keyed by entity"
+FAIL  inline entities bio-plane/src/entities/index.mjs:2082 [plain] "registry correction, keyed by (entity, alias): withdraws a mistaken..."
+FAIL  inline entities bio-plane/src/entities/index.mjs:2084 [plain] "registry write, keyed by entity pair"
+FAIL  inline entities bio-plane/src/entities/index.mjs:2086 [plain] "registry correction, keyed by a resolution: reports with a reason t..."
+FAIL  inline entities bio-plane/src/entities/index.mjs:2088 [plain] "recogniser write, keyed by capture sha"
+FAIL  inline entities bio-plane/src/entities/index.mjs:2090 [plain] "recogniser testimony, keyed by capture sha"
+FAIL  inline following bio-plane/src/following/index.mjs:1710 [plain] "register-directed: keyed by the register's address; a member's foll..."
+FAIL  inline hypotheses bio-plane/src/hypotheses/index.mjs:916 [plain] "hypothesis-directed: keyed by hypothesis; a new statement with its ..."
+FAIL  inline hypotheses bio-plane/src/hypotheses/index.mjs:918 [plain] "hypothesis-directed: keyed by hypothesis; keeps it, shown withdrawn"
+FAIL  inline hypotheses bio-plane/src/hypotheses/index.mjs:920 [plain] "note-directed: a member's own note, keyed by the note and answered ..."
+FAIL  inline hypotheses bio-plane/src/hypotheses/index.mjs:922 [plain] "note-directed: a member's own note, keyed by the note and answered ..."
+FAIL  inline hypotheses bio-plane/src/hypotheses/index.mjs:924 [plain] "note-directed: a member's own note, keyed by the note and answered ..."
+FAIL  inline hypotheses bio-plane/src/hypotheses/index.mjs:926 [plain] "note-directed: a member's own note, keyed by the note and answered ..."
+FAIL  inline intent bio-plane/src/intent/index.mjs:1728 [plain] "goal-directed: a member declares a goal, keyed by the new goal; act..."
+FAIL  inline intent bio-plane/src/intent/index.mjs:1730 [plain] "goal-directed: the author's dated claim that a project's objective ..."
+FAIL  inline intent bio-plane/src/intent/index.mjs:1732 [plain] "goal-directed: a member closes a goal with its reason, keyed by goa..."
+FAIL  inline intent bio-plane/src/intent/index.mjs:1734 [plain] "aspiration-directed: a member declares an aspiration of the group, ..."
+FAIL  inline intent bio-plane/src/intent/index.mjs:1736 [plain] "aspiration-directed: a project records its departure from a held gr..."
+FAIL  inline intent bio-plane/src/intent/index.mjs:1738 [plain] "aspiration-directed: a dead end appended to an aspiration's pursuit..."
+FAIL  inline intent bio-plane/src/intent/index.mjs:1740 [plain] "aspiration-directed: a member retires an aspiration with what pursu..."
+FAIL  inline observation-log bio-plane/src/observation-log/index.mjs:1109 [plain] "read: one lead by id — its words, its author, and every look record..."
+FAIL  inline reading-guides bio-plane/src/reading-guides/index.mjs:671 [plain] "read: the procedure guides for a kind of action and their items, wi..."
+FAIL  inline standards bio-plane/src/standards/index.mjs:2828 [plain] "read: whether one standard was in force on a date, with why; writes..."
+words: 175 modules, 600976 string literals read, 17559 words; inline 41, plain 41, testcopy 0, missingkey 0, handlist 0 (0 tagged ?), marker 0, dev 264, unkeyed 1976; 41 failures

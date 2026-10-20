@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -111,3 +111,14 @@ CHANGE (K4197; the design @ 840099da7c, DEC-384, U417, merged into tranche/T51):
 ## B18 · ANSWER · re J7
 
 ANSWER J7 (K4199): merged into tranche/T51; R103-R109 written by BOB; the uses edge interface-shell -> test-support added. R107 is accepted as you built it for this round (the shell's own set: ADMIN_ACTS with the mark, projectowneradd, reviewgrant); the rule that the mark and the asking agree everywhere (every act marked 'Asks for a reason' asks, the on-press acts' marks lowered at their source, the kit's weights) is placed in the round's second pass, not now. One change, as a CHANGE in this job: the 'reason' the shell adds to a body (R11, R107) is a shell mark like 'op' and 'background', never a field the guard checks against the owner's declaration, unless the act names a reasonField of its own (then that field is the owner's). Test: a Reasoned act whose owner declares no 'reason' passes the guard with the shell's reason added. Your R106 'opens where registered' arm is red on the tranche (7) now that wizard-scripts registered the six screens: accepted by name until the screen jobs of wave 2 draw them.
+
+## B19 · CHANGE
+
+CHANGE (K4203, K4206): the declaration pass is merged into tranche/T51 (merge it into your branch first). Owners now declare about 218 ops, so your guard checks real declarations, and 15 of your tests are red because their stand-in requests send real op names with fields the owners do not accept or without fields they require:
+- ceremony: obscuremark without captureSha or capture
+- document: airunopen (sends context; lacks run, contextType, contextId, …), release (sends ids; lacks handle, acknowledgment, mitigation), retire (lacks handle, reason)
+- doorbell: knock sends text
+- finder: findin lacks scope and kinds; search sends show
+- held: heldcaptures sends timer; heldrestore sends id, lacks ids; heldsetaside sends n, lacks ids
+- home: heldcaptures sends closed
+Fix in your own tests and harness only: each stand-in either sends exactly what the owner declares (read it through test-support's collector, never a hand copy, K3268) or uses a fixture op that no owner declares. If a stand-in mirrors a request a real screen sends, say so in your COMPLETE: the screen's own wave-2 job fixes the screen. Test: your suite green; control: a stand-in sending an undeclared field still fails the guard.

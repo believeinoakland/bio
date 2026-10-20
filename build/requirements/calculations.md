@@ -124,3 +124,5 @@ Terms. A **recipe** is `calc-grammar`'s (`bio-calc/1`), evaluated only by it. A 
 ## Open for Bob
 
 None: the meaning is the ladders' and Bob's rulings. Open technical points for BOB are in the drafting report.
+
+- **R42** *(not yet met: T51)* (T51; K4168; the T51 declaration pass; op-declarations R80, R81; op-grades R49, R50; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: a frozen object keyed by the op's door name, each row `{classes, machineClasses?, mutating, weight, description, fields: {accepts, requires}}`, its class, weight and description copied from the op's existing rows and its fields read from the arm whole (the stamps and the shell's `reason` are not accepts unless the arm reads a `reason` of its own): `tabledeclare`, `calculationcreate`, `calculationaccept`, `calculationdraw`, `spotcheckvisit`. Test: `declaredOpHolds` for each, with only its requires, without each, and with a field outside its accepts (`declared-ops.test.mjs`).

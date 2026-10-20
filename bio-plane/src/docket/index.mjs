@@ -1321,3 +1321,12 @@ export function docketOps(m, url, body) {
     docketinvitation: () => m.docketInvitation({ entry: q("entry"), viewer }),
   };
 }
+
+/* R31 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  docketfile: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("docket.declared.docketfile", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
+    fields: { accepts: ["case","edition","kind","from","capture","contests","proposed","reason","answers","takesBack","outcome","summary"], requires: ["case","reason",["edition","takesBack"],["from","takesBack"],["capture","takesBack"],["kind","takesBack"],["proposed","takesBack"]] } },
+  docketpost: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "attested", description: localize("docket.declared.docketpost", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
+    fields: { accepts: ["digest","signature","acknowledged"], requires: ["digest","signature","acknowledged"] } },
+});

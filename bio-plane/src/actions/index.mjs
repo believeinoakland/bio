@@ -3334,3 +3334,20 @@ export function actionsOps(a, url, body) {
       viewer: q("viewer") }),
   };
 }
+
+/* R109 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  actionmove: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actionmove.does",
+    fields: { accepts: ["target","to","reason","resolution"], requires: ["target","to","reason"] } },
+  actionlaws: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: "act.actionlaws.does",
+    fields: { accepts: ["target","laws"], requires: ["target","laws"] } },
+  actionrisktier: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actionrisktier.does",
+    fields: { accepts: ["target","tier","reason"], requires: ["target","tier","reason"] } },
+  actioncorrespond: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actioncorrespond.does",
+    fields: { accepts: ["target","direction","at","medium","party","artifact_sha","account","quote_amount","quote_currency","quote_basis","quote_answers","quote_revises","stage","follows","outcome","exemptions","due_by","due_cite","speaker","office_status","found_elsewhere","minutes","pressure","pressure_kind","pressure_note"], requires: ["target","direction","at",["account","artifact_sha"]] } },
+  actioncreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("actions.declared.actioncreate", "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle"),
+    fields: { accepts: ["document"], requires: ["document"] } },
+  addresseesuggest: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("actions.declared.addresseesuggest", "read: the offices the record holds as responsible for an action's subject on its date, as a suggestion; writes nothing"),
+    fields: { accepts: ["action","subject"], requires: ["subject"] } },
+});

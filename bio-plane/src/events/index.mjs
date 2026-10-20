@@ -1488,3 +1488,16 @@ export function eventsOps(ev, url, body) {
     proceedingstatus: () => ev.proceedingStatusAt({ proceeding: q("proceeding"), at: q("at"), viewer: q("viewer") }),
   };
 }
+
+/* R55 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  recorddatedfact: { classes: ["admin","member","probe"], mutating: true, weight: "observational", description: localize("events.declared.recorddatedfact", "dated-fact-directed: keyed by (capture, extent); holds a document's own stated date and moves no bundle"),
+    fields: { accepts: ["captureSha","extent","kind","value","method","question"], requires: ["captureSha","extent","kind","value","method"] } },
+  createevent: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("events.declared.createevent", "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle"),
+    fields: { accepts: ["kind","status","where","concerns","attestations","participants"], requires: ["kind","attestations"] } },
+  addparticipant: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("events.declared.addparticipant", "event-directed: keyed by (event, entity, role); writes events' rows and moves no bundle"),
+    fields: { accepts: ["eventId","entityId","role","attestation","voteValue"], requires: ["eventId","entityId","role","attestation"] } },
+  relate: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("events.declared.relate", "event-directed: keyed by the two events; writes a cited relation and moves no bundle"),
+    fields: { accepts: ["from","to","kind","attestation"], requires: ["from","to","kind","attestation"] } },
+});

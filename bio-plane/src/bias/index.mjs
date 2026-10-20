@@ -1242,3 +1242,18 @@ export function biasOps(b, url, body) {
     biasdebt: () => b.biasDebt({ run: q("run"), viewer: q("viewer"), limit: q("limit") }),
   };
 }
+
+/* R50 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  biasdebt: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("bias.declared.biasdebt", "read: one run's bias debt and what settled it, keyed by run id — the record behind the queue item, never an act on an object"),
+    fields: { accepts: ["run","limit"], requires: [] } },
+  biasdebtresolve: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("bias.declared.biasdebtresolve", "bias-debt act, keyed by the RUN whose lens moved and gated by that run's read; travels with the queue item via op=queue, never beside a bundle"),
+    fields: { accepts: ["run","reason"], requires: ["run","reason"] } },
+  biasmanifest: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.biasmanifest.label.bias",
+    fields: { accepts: ["scope","scopeId","limit","offset"], requires: [] } },
+  biasinhale: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.biasinhale.label.bias",
+    fields: { accepts: ["policy","source","retrieved","adopt","limit"], requires: [] } },
+  biasadopt: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("bias.declared.biasadopt", "governance: the authored, attributed adoption that puts a declared-bias set in force for a scope (DEC-54 c/d), keyed by (scope, bias bundle) and not by any object's state — the disclose half of the pair `strengthbar` is the gate half of"),
+    fields: { accepts: ["bundleId","scope","scopeId","reason"], requires: ["bundleId","reason"] } },
+});

@@ -787,3 +787,16 @@ export function doorbellOps(d, url, body) {
     pulledknocks: () => d.pulledKnocksOf(q("capture") ?? (body && body.captureSha)),
   };
 }
+
+/* R26 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  knock: { classes: null, mutating: true, weight: "credential", description: localize("doorbell.declared.knock", "an unauthenticated request to be let in"),
+    fields: { accepts: ["content","contentB64","note","contact","knockerSecret","generateSecret"], requires: [] } },
+  knocksof: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.knocksof", "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing"),
+    fields: { accepts: ["pseudonym","limit","after"], requires: ["pseudonym"] } },
+  inboxpull: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("doorbell.declared.inboxpull", "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle"),
+    fields: { accepts: ["knockId","id"], requires: [["knockId","id"]] } },
+  inboxresolve: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("doorbell.declared.inboxresolve", "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)"),
+    fields: { accepts: ["knockId","status","reason"], requires: ["knockId","status","reason"] } },
+});

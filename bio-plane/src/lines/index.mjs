@@ -837,3 +837,10 @@ export function linesOps(lines, url, body) {
   };
 }
 
+/* R25 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  recordline: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("lines.declared.recordline", "line-directed: keyed by a new LIN- id between two entities; writes lines' rows and moves no bundle"),
+    fields: { accepts: ["kind","from","to","role","capacity","title","valid","basis"], requires: ["kind","from","to","basis"] } },
+});
+

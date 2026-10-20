@@ -64,6 +64,7 @@ const ACT_HELP = {
   selftest: 'Checks that the team\'s record answers and that stored files can be written and read back. It changes nothing for the team.',
   runtime: 'Shows how much work the copy\'s requests have done, to see how close it runs to Cloudflare\'s limits. It changes nothing.',
   expertiseconfirm: 'Confirms a member\'s declared expertise, so it can be asked for when a check needs it.',
+  owed_expertisewithdraw: 'Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it.',
   invitewithdraw: 'Cancels an invitation nobody has used yet. The link stops working at once.',
   websitekeycreate: 'Creates a key that lets your team\'s website invite people, through an open form or an application someone approves.',
   joinlinkenable: 'Turns on one reusable link anyone with it can use to ask to join. You can turn it off at any time.',

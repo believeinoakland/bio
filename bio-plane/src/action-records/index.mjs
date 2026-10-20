@@ -889,3 +889,16 @@ export function actionRecordsOps(r, url, body) {
       viewer: q("viewer"), author: q("author") }),
   };
 }
+
+/* R20 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  actionlawspropose: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("action-records.declared.actionlawspropose", "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labeled machine work and never the action's own list"),
+    fields: { accepts: ["target","laws"], requires: ["target","laws"] } },
+  actionscope: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: "act.actionscope.does",
+    fields: { accepts: ["target","confidential","reason"], requires: ["target","confidential","reason"] } },
+  actionstake: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("action-records.declared.actionstake", "action-directed: an action's declared stake, every value kept, keyed by action; moves no bundle"),
+    fields: { accepts: ["target","stake"], requires: ["target","stake"] } },
+  actioninquiry: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("action-records.declared.actioninquiry", "action-directed: a question opened with an action as its reference, keyed by action; reached from the action, and writes this module's rows, never a bundle's state"),
+    fields: { accepts: ["action","question"], requires: ["action","question"] } },
+});

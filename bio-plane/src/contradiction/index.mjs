@@ -2998,3 +2998,20 @@ export function contradictionOps(c, url, body) {
                                                         limit: v("limit"), viewer: q("viewer") }),
   };
 }
+
+/* R60 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  contradictionresolve: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.contradictionresolve.label.contradiction",
+    fields: { accepts: ["inquiry","resolution","conclusion","version","falsifier","noFalsifier","accepted"], requires: ["inquiry","resolution","conclusion"] } },
+  contradictiondismiss: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("contradiction.declared.contradictiondismiss", "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted"),
+    fields: { accepts: ["candidate","reason","words"], requires: ["candidate","reason"] } },
+  contradictionclarify: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("contradiction.declared.contradictionclarify", "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side"),
+    fields: { accepts: ["candidate","choice","coordinates","explanation","evidence","qualifiers","wrongSide","reason","accepted"], requires: ["candidate","choice"] } },
+  contradictiontakeup: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("contradiction.declared.contradictiontakeup", "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side"),
+    fields: { accepts: ["candidate","question","frame"], requires: ["candidate","question","frame"] } },
+  contradictionoptin: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("contradiction.declared.contradictionoptin", "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn"),
+    fields: { accepts: ["candidate","project","words"], requires: ["candidate","project"] } },
+  contradictionrespond: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("contradiction.declared.contradictionrespond", "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other"),
+    fields: { accepts: ["candidate","project","text","disclose"], requires: ["candidate","project","text"] } },
+});

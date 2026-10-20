@@ -2977,3 +2977,18 @@ export function reevaluationOps(r, url, body) {
                                                      author: q("author"), viewer: q("viewer") }),
   };
 }
+
+/* R39 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  versionnotice: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("reevaluation.declared.versionnotice", "read: whether the document a citation rests on has a newer version at its address, and whether a passage at the same extent is in it — a candidate or UNDETERMINED — and whether the update AFFECTS the cited part, graded A/B (unaffected), C/NOT_FOUND (affected) or UNDETERMINED with its reason; moves nothing and writes nothing (D-394, REC-221)"),
+    fields: { accepts: ["target","content","limit"], requires: [["target","content"]] } },
+  adoptversion: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("reevaluation.declared.adoptversion", "notice-directed: adopts the newer capture a version notice names, keyed by notice, with the member's reason for adopting it, now required (reevaluation R15; DEC-88: `reasoned`); travels with the notice (reevaluation R14)"),
+    fields: { accepts: ["notice","why"], requires: ["notice","why"] } },
+  keepversion: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("reevaluation.declared.keepversion", "notice-directed: keeps a reference on the earlier capture, keyed by notice; travels with the notice (reevaluation R14)"),
+    fields: { accepts: ["notice","why"], requires: ["notice"] } },
+  reevaluationrecord: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("reevaluation.declared.reevaluationrecord", "cause-directed: a member records a re-evaluation of a dependent against one standing cause, keyed by (dependent, cause), with its note"),
+    fields: { accepts: ["dependent","target","source","since","note"], requires: ["dependent","target","source","note"] } },
+  reevaluations: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.reevaluations.label.question",
+    fields: { accepts: ["target"], requires: [] } },
+});

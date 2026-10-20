@@ -1703,3 +1703,16 @@ export function followingOps(f, url, body) {
     watchquestions: () => f.watchQuestions({ after: q("after"), limit: q("limit"), viewer: q("viewer") }),
   };
 }
+
+/* R36 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  followregister: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("following.declared.followregister", "register-directed: keyed by the register's address; a member's follow, moving no bundle"),
+    fields: { accepts: ["address","render","gated","cadence","home","ends","proceeding"], requires: ["address"] } },
+  watchitem: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("following.declared.watchitem", "item-directed: a member's own watch on one followed item, read back only to its setter; moves no bundle"),
+    fields: { accepts: ["item","on"], requires: ["item"] } },
+  secondlook: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("following.declared.secondlook", "item-directed: a member asks a second look at one followed item, seen by every member with the date and note; moves no bundle"),
+    fields: { accepts: ["item","note"], requires: ["item","note"] } },
+  secondlookclear: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("following.declared.secondlookclear", "item-directed: a member clears a second look at one followed item, with who and when; moves no bundle"),
+    fields: { accepts: ["item","flag"], requires: [["item","flag"]] } },
+});

@@ -970,6 +970,15 @@ export function networkNoticesOps(m, url, body) {
   };
 }
 
+/* R31 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  noticeprepare: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("network-notices.declared.noticeprepare", "read: a working-on notice's next revision composed for its owner to sign, keyed by project, with its statement and digest; stores nothing and writes nothing"),
+    fields: { accepts: ["project","notice","wording","body","matter","since","collaborate","handoff","final"], requires: ["project","wording","since"] } },
+  noticepost: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "attested", description: localize("network-notices.declared.noticepost", "project-directed: keyed by a project, reached from the project; an owner's signed notice"),
+    fields: { accepts: ["digest","signature","acknowledged"], requires: ["digest","signature","acknowledged"] } },
+});
+
 /** The credential-free reads served at the group's public address (`public-read` R18), under the names K1150 fixed:
  *  name → `{read(params), params}`; a read is handed only the parameters it declares. */
 export function networkNoticesPublicReads(m) {

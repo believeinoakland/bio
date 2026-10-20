@@ -3,7 +3,8 @@
    the table's `registry` string; the totality tests subtract them from the acts the registry still marks `owed`, and
    check that what is left is declared or named as before. */
 import assert from "node:assert/strict";
-import { BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
+import { readFileSync } from "node:fs";
+import { BROWSER_ACTS, OPS } from "../../../src/op-declarations/index.mjs";
 
 export const browserActs = (registry) => {
   const rows = registry.screens.flatMap((s) => s.acts.filter((a) => a.status === "owed").map((a) => ({ screen: s.id, op: a.op })));
@@ -16,12 +17,13 @@ export const browserActs = (registry) => {
   return names;
 };
 
-/* The fix round of T51 (DEC-378; K4165, K4169, K4168): the acts the screen registry now marks `owed` whose ops their owners
-   build and declare in this round (`case-inputs` C12, `case-import` C49, `tasks` C62), each in its owner's `DECLARED_OPS`
-   and none a hand row here, so each has no spec in `OPS` (R6) until the plane registers the owners' declarations
-   (`registerDeclaredOps`, R80); the totality tests read them as still owed, class (c) of R21, with the ruling that owes
-   them. Beside them the three NO-OP ops whose controls DEC-381 draws (`provenance` C23, `capture-sources` C20,
-   `investigation` C65), and DEC-382's (`citation`, `monitoring`, `link-sweep`), declared by their owners in the same round. */
-export const OWED_BY_FIX_ROUND = ["capturecredentiallist", "capturecredentialsupply", "capturecredentialwithdraw", "casedetails",
-  "casedetailspublic", "casedetailsset", "declareorigin", "importregrade", "projectclose", "rerunpair", "rerunread", "rerunstart",
-  "taskdecide", "citeimported", "withdrawimported", "namedrequests", "namedrequestset", "sweepset", "sweepratify"];
+/* The fix round of T51 (DEC-374 to DEC-385; K4165, K4168, K4169): the acts the screen registry marks `owed` whose ops their
+   owners build and declare in this round (`DECLARED_OPS`, registered by the plane, R80). None is a hand row here, so each has
+   no spec in `OPS` (R6) until then; the totality tests read them as still owed, class (c) of R21. Derived from the
+   registry's own owed rows (K3268: no hand list): every owed act that is no op, no browser act (R76) and no installer
+   route; an act leaves the list when it becomes an op. */
+const INSTALLER = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
+const registryRows = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
+export const OWED_BY_FIX_ROUND = [...new Set(registryRows.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed")
+  .map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))]
+  .filter((act) => !Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act) && !INSTALLER.includes(act)).sort();

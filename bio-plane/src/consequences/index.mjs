@@ -1716,3 +1716,16 @@ export function consequencesOps(c, url, body) {
     outcomecarry: () => c.outcomeCarry({ ...b, ...stamps }),
   };
 }
+
+/* R26 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  consequencerecord: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("consequences.declared.consequencerecord", "determination-directed: a member records one consequence part against one standard's noncompliant outcome, keyed by (determination, standard); writes a CONS- bundle"),
+    fields: { accepts: ["determination","standard","affected","measure","period","basis","causation"], requires: ["determination","standard","affected","period"] } },
+  consequencerevise: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("consequences.declared.consequencerevise", "consequence-directed: a member revises a consequence part with its reason, keyed by part id; writes a successor CONS- bundle, the earlier one kept"),
+    fields: { accepts: ["id","reason","affected","measure","period","basis","causation"], requires: ["id","reason"] } },
+  addressedrecord: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("consequences.declared.addressedrecord", "consequence-directed: a member records a part addressed or not addressed, with a reason, keyed by part id; writes a `consequence_addressed` row"),
+    fields: { accepts: ["id","state","evidence","reason","words"], requires: ["id","state","evidence","reason"] } },
+  successrecord: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("consequences.declared.successrecord", "success-directed: keyed by a new SUC- id in a project; a member's statement of what changed and when, on evidence; never a consequence part; moves no bundle"),
+    fields: { accepts: ["project","matter","statement","changed_on","evidence","figures","sequence","cause"], requires: ["project","statement","changed_on","evidence"] } },
+});

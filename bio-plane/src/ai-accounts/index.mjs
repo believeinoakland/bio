@@ -1712,3 +1712,36 @@ export function aiAccountsOps(a, url, body, env) {
                                                              viewer: url.searchParams.get("viewer") }),
   };
 }
+
+/* R35 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  subscriptiondisconnect: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.subscriptiondisconnect", "credential governance: a member clears their own subscription fact; the subject is a credential, not a bundle"),
+    fields: { accepts: [], requires: [] } },
+  groupkeynoticeseen: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("ai-accounts.declared.groupkeynoticeseen", "personal state, keyed by member: the notice of the group's key seen by them"),
+    fields: { accepts: [], requires: [] } },
+  groupkeyremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.groupkeyremove", "credential governance: the group's assistant key, an administrator's"),
+    fields: { accepts: [], requires: [] } },
+  groupkeyswitch: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("ai-accounts.declared.groupkeyswitch", "the copy's configuration: whether the group's assistant key is on; an administrator's, not an act on an object"),
+    fields: { accepts: ["on"], requires: [] } },
+  groupkeyset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.groupkeyset", "credential governance: the group's assistant key, an administrator's; never answered"),
+    fields: { accepts: ["key"], requires: ["key"] } },
+  accountreferenceset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.accountreferenceset", "credential governance: a member's own assistant account reference, never answered; the subject is a credential, not a bundle"),
+    fields: { accepts: ["kind","secret"], requires: ["kind","secret"] } },
+  accountreferenceremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.accountreferenceremove", "credential governance: a member removes their own account reference; the subject is a credential, not a bundle"),
+    fields: { accepts: [], requires: [] } },
+  projectkeyset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectkeyset", "credential governance: an owner holds the project's API key, never answered; the subject is who pays for the assistant, not a bundle"),
+    fields: { accepts: ["project","key"], requires: ["project","key"] } },
+  projectsigninset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectsigninset", "credential governance: the sole participant's own sign-in made the project's account; the subject is who pays for the assistant, not a bundle"),
+    fields: { accepts: ["project"], requires: ["project"] } },
+  projectaccountremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectaccountremove", "credential governance: an owner removes the project's account; the subject is who pays for the assistant, not a bundle"),
+    fields: { accepts: ["project"], requires: ["project"] } },
+  projectaccountswitch: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("ai-accounts.declared.projectaccountswitch", "the account's configuration: whether the project's account is on; an owner's; moves no document, claim or grade"),
+    fields: { accepts: ["project","on"], requires: ["project"] } },
+  projectaikeepaway: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("ai-accounts.declared.projectaikeepaway", "setting: whether a project keeps its material away from the assistant, an owner's act with a reason; moves no bundle"),
+    fields: { accepts: ["project","on","uses","reason"], requires: ["project"] } },
+  projectkeynoticeseen: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("ai-accounts.declared.projectkeynoticeseen", "personal state, keyed (member, project): the notice of the project's account seen by them"),
+    fields: { accepts: ["project"], requires: ["project"] } },
+  aikeepaway: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("ai-accounts.declared.aikeepaway", "setting: whether the group keeps its material away from every assistant, an administrator's act with a reason; moves no bundle"),
+    fields: { accepts: ["on","uses","reason"], requires: [] } },
+});

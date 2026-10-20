@@ -1858,6 +1858,13 @@ export function dutiesOps(s, url, body) {
   };
 }
 
+/* R34 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  declare: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("duties.declared.declare", "duty-directed: keyed by a new DUT- id; writes duties' rows and moves no bundle"),
+    fields: { accepts: ["clause","modality","obligor","obligee","performance","source","trigger","time","exceptions","enforcer","observed_by","arising_in","reported_status","delegation","project","review","response"], requires: ["clause","modality","obligor","source","trigger","time","performance"] } },
+});
+
 const instances = new WeakMap();
 const live = new Set();
 

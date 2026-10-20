@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import * as T47 from "../../../src/op-grades/t47.mjs";
-import { readRows } from "./declared.mjs";
+import { readRows, declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -71,8 +71,7 @@ test("R36: projectbarset `reasoned`, PROJECT_BAR_NO_REASON joining JUSTIFICATION
    + "group's bar, gating nothing; no consequence statement, unlike strengthbar", () => {
   assert.equal(RUNGS.projectbarset, "reasoned");
   assert.equal(JUSTIFICATION_REFUSALS.filter((c) => c === "PROJECT_BAR_NO_REASON").length, 1);
-  assert.equal(NON_ACTS.projectbarset, "project-directed: keyed by a project; the project's own required strength, set "
-    + "with the member's reason; never the group's bar, and it gates nothing (`strength` R21)");
+  assert.equal(NON_ACTS.projectbarset, declaredSentence("strength", "projectbarset"));
   assert.ok(!Object.hasOwn(CONSEQUENCE_STATEMENTS, "projectbarset"));
   /* control: the group's bar keeps its statement and its own code */
   assert.ok(Object.hasOwn(CONSEQUENCE_STATEMENTS, "strengthbar"));
