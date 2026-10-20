@@ -82,8 +82,8 @@ export const action = Object.freeze({
     entriesOf: function (cs, corr) {
       return corr.map(function (c, i) {
         const ord = typeof c.ord === "number" ? c.ord : i;
-        const kind = typeof c.stage === "string" && cs.w("screen.action.reply.stage." + c.stage) !== cs.esc("screen.action.reply.stage." + c.stage)
-          ? String(cs.w("screen.action.reply.stage." + c.stage)).toLowerCase() : "";
+        const fam = c.direction === "sent" ? "screen.action.sent.stage." : "screen.action.reply.stage.";
+        const kind = typeof c.stage === "string" && cs.w(fam + c.stage) !== cs.esc(fam + c.stage) ? String(cs.w(fam + c.stage)).toLowerCase() : "";
         return { ord: ord, c: c, kind: kind };
       });
     },
@@ -225,7 +225,8 @@ export const action = Object.freeze({
       const earlier = P.entriesOf(cs, corr);
       const pre = [{ value: "", key: "screen.action.reply.follows.none" }];
       const followsOpts = pre.concat(earlier.filter(function (x) { return x.c.direction === "sent" || x.kind; }).map(function (x) {
-        return x.c.direction === "sent" ? { value: String(x.ord), key: "screen.action.reply.follows.request", fills: { date: { html: cs.date(x.c.at) } } }
+        // a sent entry is "the request" unless its stage is another kind of sending (a fee-waiver request, an appeal, a court filing)
+        return x.c.direction === "sent" && (!x.kind || x.c.stage === "request") ? { value: String(x.ord), key: "screen.action.reply.follows.request", fills: { date: { html: cs.date(x.c.at) } } }
           : { value: String(x.ord), key: "screen.action.reply.follows.reply", fills: { kind: { html: x.kind }, date: { html: cs.date(x.c.at) } } };
       }));
       const answersOpts = [{ value: "", text: "" }].concat(earlier.filter(function (x) { return x.c.direction === "sent"; }).map(function (x) {

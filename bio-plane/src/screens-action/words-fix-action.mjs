@@ -23,6 +23,7 @@ export const WORDS = Object.freeze([
   "screen.action.reply.currency.usd", "screen.action.it.answers.this.sending", "screen.action.the.earlier.sending.the.quote.responds",
   "screen.action.it.revises.this.quote", "screen.action.only.when.the.office.changes.a", "screen.reminder.on",
   // the stages and outcomes the vocabulary names, by token (none is the empty choice)
+  "screen.action.sent.stage.request", "screen.action.sent.stage.fee_waiver_request", "screen.action.sent.stage.appeal", "screen.action.sent.stage.court_filing",
   "screen.action.reply.stage.none", "screen.action.reply.stage.acknowledgement", "screen.action.reply.stage.fee_estimate", "screen.action.reply.stage.fee_waiver_decision",
   "screen.action.reply.stage.extension_notice", "screen.action.reply.stage.production", "screen.action.reply.stage.denial", "screen.action.reply.stage.appeal_decision",
   "screen.action.reply.stage.court_decision", "screen.action.reply.outcome.none", "screen.action.reply.outcome.granted", "screen.action.reply.outcome.denied",

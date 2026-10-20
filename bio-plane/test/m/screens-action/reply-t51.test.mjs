@@ -90,3 +90,11 @@ test("R38 (B15 (1)): a quoted fee carries the currency, what it is for, which se
   const q = await open(ROUTES.action, plane({ action: ok(ACTION) }));
   assert.equal(q.doc.getElementById("reply-fee-revises"), null);
 });
+
+test("R38 (B17, DEC-389): a sent entry of another kind (an appeal) is offered under 'It follows' by its stage's key; the request stays 'the request'", async () => {
+  for (const t of ["request", "fee_waiver_request", "appeal", "court_filing"]) assert.ok(hasWord("screen.action.sent.stage." + t), t);
+  const act = { ...WITH, correspondence: [{ ...ACTION.correspondence[0], stage: "request" }, { ord: 2, direction: "sent", at: "2026-10-09", stage: "appeal", party: "x" }] };
+  const p = await open(ROUTES.action, plane({ action: ok(act) }));
+  assert.deepEqual(optionsOf(p, "reply-follows"), [["", W("screen.action.reply.follows.none")], ["1", W("screen.action.reply.follows.request", { date: D("2026-10-02") })],
+    ["2", W("screen.action.reply.follows.reply", { kind: W("screen.action.sent.stage.appeal").toLowerCase(), date: D("2026-10-09") })]]);
+});
