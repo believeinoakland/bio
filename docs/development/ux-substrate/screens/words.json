@@ -66411,7 +66411,7 @@
   },
   {
    "key": "screen.case-editor.acknowledgements_from_whoever_wrote_it_are",
-   "en": "Acknowledgements from whoever wrote it are not counted.",
+   "en": "Acknowledgments from whoever wrote it are not counted.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
@@ -72032,7 +72032,7 @@
   },
   {
    "key": "screen.capture.address.checked.unknown",
-   "en": "Checked {title} just now, but it could not be told whether the page changed: {note}",
+   "en": "Checked {title} just now, but could not tell whether the page changed: {note}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-387: B419 1: capture, Check it now, status unknown; {note} the answer's own note"
@@ -72970,7 +72970,7 @@
   },
   {
    "key": "screen.queue.snoozed.holds",
-   "en": "Items you hid until a day you chose. They return on that day, or now with Bring back.",
+   "en": "Items you snoozed until a day you chose. They return on that day, or now with Bring back.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-387: B426: help under the Snoozed heading"
@@ -73453,7 +73453,7 @@
   },
   {
    "key": "screen.matter.way.cannot",
-   "en": "Cannot be undone",
+   "en": "Can't be undone",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-387: B424 4: a way a part was addressed"

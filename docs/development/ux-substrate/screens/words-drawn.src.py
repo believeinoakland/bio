@@ -5583,7 +5583,7 @@ W.append(dict(key='screen.case-editor.this_case_leaves_nothing_material_out', en
 W.append(dict(key='screen.case-editor.an_empty_list_is_a_claim', en='An empty list is a claim too, and it is allowed.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.silence_is_not_say_either_what', en='Silence is not: say either what is left out or that nothing is.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.another_member_of_your_team_acknowledges', en='Another member of your team acknowledges what the case does not cover, so readers are told it was read by a second person.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
-W.append(dict(key='screen.case-editor.acknowledgements_from_whoever_wrote_it_are', en='Acknowledgements from whoever wrote it are not counted.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
+W.append(dict(key='screen.case-editor.acknowledgements_from_whoever_wrote_it_are', en='Acknowledgments from whoever wrote it are not counted.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.when_it_cant_be_saved', en="When it can't be saved", protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.an_item_names_nothing_or_has', en='An item names nothing, or has no reason.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.say_what_is_left_out_and', en='Say what is left out and why, or remove the item.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
@@ -6450,7 +6450,7 @@ W.append(dict(key='screen.capture.address.checked.summary', en='What checking it
 W.append(dict(key='screen.capture.address.checked.modified', en='Checked {title} just now: the page reads differently from the copy your team holds. Nothing was captured; capture it again to keep the new copy.', protected=False, note="DEC-387: B419 1: capture, Check it now, answer status modified; {title} the document's title; a Capture the new copy door beside it"))
 W.append(dict(key='screen.capture.address.checked.removed', en='Checked {title} just now: the site no longer gives this page. The copy your team holds is kept.', protected=False, note='DEC-387: B419 1: capture, Check it now, status removed'))
 W.append(dict(key='screen.capture.address.checked.unchanged', en='Checked {title} just now: the site still gives the same document your team holds.', protected=False, note='DEC-387: B419 1: capture, Check it now, status unchanged'))
-W.append(dict(key='screen.capture.address.checked.unknown', en='Checked {title} just now, but it could not be told whether the page changed: {note}', protected=False, note="DEC-387: B419 1: capture, Check it now, status unknown; {note} the answer's own note"))
+W.append(dict(key='screen.capture.address.checked.unknown', en='Checked {title} just now, but could not tell whether the page changed: {note}', protected=False, note="DEC-387: B419 1: capture, Check it now, status unknown; {note} the answer's own note"))
 W.append(dict(key='screen.standard.inforce.day.label', en='The day', protected=False, note="DEC-387: B419 2: standard, Was it in force on a date?: the day field's label (in place of act.standardinforce.label.standard)"))
 W.append(dict(key='screen.standard.inforce.result.line', en='On {date} it was: {state}', protected=False, note="DEC-387: B419 2: standard: the answer's line; {state} is one of the four state words below, bold; {date} the day asked"))
 W.append(dict(key='screen.standard.inforce.state.in_force', en='In force', protected=False, note='DEC-387: B419 2: standard: answer state in_force'))
@@ -6597,7 +6597,7 @@ ROWS = [
 ('screen.queue.defer', 'Defer', 'B426: the button beside Dismiss with a reason on a hint or finding in the Queue; it puts the item aside until a day with a reason'),
 ('screen.queue.bringback', 'Bring back', 'B426: the button on a snoozed or deferred row that returns the item to the Queue now'),
 ('screen.queue.snoozed.head', 'Snoozed', 'B426: the section of What you answered that holds items hidden until a day you chose'),
-('screen.queue.snoozed.holds', 'Items you hid until a day you chose. They return on that day, or now with Bring back.', 'B426: help under the Snoozed heading'),
+('screen.queue.snoozed.holds', 'Items you snoozed until a day you chose. They return on that day, or now with Bring back.', 'B426: help under the Snoozed heading'),
 ('screen.queue.snoozed.until', 'comes back {date}', 'B426: a snoozed row'),
 ('screen.home.waiting.counts', 'Waiting for a member to look: held captures {held}, Inbox items {inbox}.', 'B426: one status line on Home; both counts shown, a zero shown as 0, never worded as a plural'),
 ('screen.queue.routed.auth.cannot', 'I could not tell', 'B426: the second choice of Who issued this document?'),
@@ -6670,7 +6670,7 @@ ROWS = [
 ('screen.matter.f.partwas', 'This part was', 'B424 4: choice'),
 ('screen.matter.f.addressed', 'Addressed', 'B424 4: choice'),
 ('screen.matter.f.notaddressed', 'Not addressed', 'B424 4: choice'),
-('screen.matter.way.cannot', 'Cannot be undone', 'B424 4: a way a part was addressed'),
+('screen.matter.way.cannot', "Can't be undone", 'B424 4: a way a part was addressed'),
 ('screen.matter.f.describe', 'Describe them', 'B424 4: field for who or what was affected'),
 ('screen.matter.kind.class', 'People as a class', 'B424 4: kind of who or what was affected'),
 ('screen.matter.kind.fund', 'A fund', 'B424 4: kind of who or what was affected'),
