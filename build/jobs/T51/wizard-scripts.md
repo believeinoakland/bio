@@ -152,3 +152,13 @@ REPORT (others' suites; none mine)
 - screens-wizards 59/0, instance-setup 194/0, translations 32/0: green.
 
 Size (session_01WMjLF8CWtt2TqjEkixFjxh): test runs 24, module lines 2840
+
+## J9 · COMPLETE
+
+COMPLETE · B9 (K4198) applied; supersedes J8's commit. Registry, library and front doors re-taken at 1cc4a957f0 (R45 as amended); commit 4511117260 on job/T51/wizard-scripts, pushed; tranche merged first.
+
+- Pins, vendored files (registry.json, library-1cc4a957f0.json; library-840099da7c.json removed) and tests moved from 840099da7c to 1cc4a957f0. 83 screens, 554 acts. Only WIZ-7db08189cc0e58c3 (Welcome a new member) differs in the library, so it is version 3 (source 1cc4a957f0, BOB 2026-10-20 K2241), versions 1 and 2 kept whole; the doors are unchanged in content. `--check` green. expertiseconfirm carried once on members, as ruled.
+- Module suite 107 pass, 0 fail. format 0; architecture 0; coverage 45 of 45; words 0 failures; ownership 0 failures (15 files).
+- Others: interface-shell 191/1 (R64 test 32 'Reasoned' vs 'Asks for a reason', words change from the design merge, not mine); screens-wizards 59/0. Wave-2 reds from J7 unchanged (op-declarations 210, plane 72, screens-intake 64, affordances 235).
+
+Size (session_01WMjLF8CWtt2TqjEkixFjxh): test runs 28, module lines 2840
