@@ -527,7 +527,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         if (phone() && (weight === "signed" || weight === "irreversible" || D.larger.includes(op)))
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
         const key = inst.key + "|" + op + "|" + JSON.stringify(o.data || {});
-        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser }) - 1;
+        /* R107: an act drawn with no weight but carrying the Reasoned mark, and listed in `D.markAsks`, asks its reason before it runs */
+        const asks = weight === "none" && D.marks[op] === "reasoned" && D.markAsks.includes(op) && !inst.pub && !browser;
+        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser, asks }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
         /* R64 (`op-grades` R42): an act drawn with no weight carries the design kit's mark, as a mark and its explanation
            only; its friction stays R11's (it runs on press). R77 (U2c; DEC-295): only an act above Reversible draws dots and a
@@ -1846,7 +1848,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (RING && RING.op === d.op) RING = null;
     /* R31, K3143: the guide hears each act pressed on the screen, by its op and screen only, never a value */
     if (inst === MAIN) guideCall("pressed", { op: d.op, screen: MAIN.spec.id });
-    const weight = d.weight;
+    const weight = d.asks ? "reasoned" : d.weight;
     if (weight === "reversible" || weight === "none") return run(inst, d, btn, ai, {});
     /* R11 (DEC-88): an act whose own field carries the member's authored words sends them as its reason, asking none */
     if (weight === "reasoned" && d.spec.reasonField) return run(inst, d, btn, ai, { own: true });
@@ -1967,14 +1969,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     TIP = el;
     el.setAttribute("aria-describedby", "cs-tip");
     if (el.getBoundingClientRect && t.style) {
-      /* R103 (R84): below what it explains, else to its right, else its left, else above: the first that covers no other control
-         and stays inside the page; failing that, the first inside the page, else below */
+      /* R103 (R84; T-10): below what it explains, else above it: the first that covers no other control and stays inside the page;
+         failing that, the first inside the page, else below. Never beside it. */
       const r = el.getBoundingClientRect();
       const tw = Number(t.offsetWidth) || 0, th = Number(t.offsetHeight) || 0, vw = Number(win.innerWidth) || 0, vh = Number(win.innerHeight) || 0, gap = 6;
       const at = [
         { left: Math.max(8, Math.round(r.left)), top: Math.round(r.bottom + gap) },
-        { left: Math.round(r.right + gap), top: Math.round(r.top) },
-        { left: Math.round(r.left - gap - tw), top: Math.round(r.top) },
         { left: Math.max(8, Math.round(r.left)), top: Math.round(r.top - gap - th) },
       ];
       const inside = (c) => c.left >= 0 && c.top >= 0 && (!vw || c.left + tw <= vw) && (!vh || c.top + th <= vh);
@@ -2179,6 +2179,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (e.altKey && e.shiftKey && (e.key === "W" || e.key === "w" || e.code === "KeyW") && GUIDEI) { e.preventDefault(); guideCall("ring"); }
     });
     win.addEventListener("pointerup", () => { WORDDRAG = null; });
+    /* R103 (T-10): an explanation closes on the next tap anywhere but on it, and on any scroll */
+    doc.addEventListener("pointerdown", (e) => { if (TIP && !onTipOrEl(e.target)) closeTip(); }, true);
+    doc.addEventListener("scroll", () => { if (TIP) closeTip(); }, true);
     win.addEventListener("popstate", () => route());
     win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); closing(GUIDEI); SITTING = null; stopVersion(); });
     /* R32: every tab sees a sign-in, a lock, a sign-out or an end through the storage event */

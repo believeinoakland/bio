@@ -53,7 +53,8 @@ test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither tabl
   assert.equal(q.byOp("openoriginal").length, 1, "runs on press");
   const a = await boot({ screens: ALL, path: "/app/members", plane: { whoami: ok(ADMIN) } });
   await a.click(btn(a, "memberadd"));
-  assert.equal(a.byOp("memberadd").length, 1, "memberadd runs on press, its mark Reasoned or not");
+  assert.equal(a.byOp("memberadd").length, 0, "memberadd, an administrator's act marked Reasoned, asks its reason first (R107)");
+  assert.ok(a.root().querySelector('[data-shell="reason-send"]'), "the reason box is open");
 });
 
 test("R11 (DEC-88) a reasoned act whose screen names a reasonField sends the member's own words in that field as its reason and asks no second one; with that field empty it sends nothing and says so", async () => {

@@ -315,7 +315,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
       continue;
     }
     assert.equal(w.getAttribute("data-mark"), String(MARKS[op]).toLowerCase(), op);
-    assert.equal(w.textContent, MARKS[op], op + ": the weight's own name");
+    assert.equal(w.textContent, word("weight." + String(MARKS[op]).toLowerCase() + ".name"), op + ": the weight's own name, read by key");
     assert.ok(w.textContent.length > 3, op + " named");
     assert.ok(b.getAttribute("data-tip").includes(w.textContent + ":"), op + " explained");
     await p.click(b);

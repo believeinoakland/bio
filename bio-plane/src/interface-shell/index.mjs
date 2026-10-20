@@ -171,6 +171,11 @@ export const ADMIN_ACTS = Object.freeze(new Set([
   "signeradd", "instancegroupseed",
 ]));
 
+/* R107 (T51 fix round; K4197 T-07): the acts that carry the Reasoned mark and no weight (`op-grades` `MARKS`, R64) and that the
+   walk found asking no reason: the administrator's acts on a member or the team (`ADMIN_ACTS`), a project's owner added, and a
+   review granted. The shell asks their reason before they run, as it does for a Reasoned weight (R11). */
+export const MARK_ASKS_EXTRA = Object.freeze(["projectowneradd", "reviewgrant"]);
+
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
 export const SHELL_OPS = Object.freeze(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "infolevelset",
   "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "signout", "unlock", "reauth", "bootstrap"]);
@@ -292,6 +297,7 @@ function dataOf(screens, guide) {
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
+    markAsks: [...ops].filter((op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op)),
     rungs: pick(rungOf),
     /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only */
     marks: pick((op) => (rungOf(op) === "none" && Object.hasOwn(MARKS, op) ? String(MARKS[op]).toLowerCase() : undefined)),
@@ -323,7 +329,14 @@ const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:f
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
 .cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button{min-height:44px;min-width:44px}
-.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px}}
+.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px}
+.cs-main,.cs-main>*,.cs-section,.cs-section>*,.cs-sheet,.cs-row>*,.mk-card,.cs-field,.mk-acts>*{min-width:0;max-width:100%}
+.cs-main :is(p,li,dt,dd,td,th,h1,h2,h3,.rec,.mk-data,.meta,a.cs-ref,code){overflow-wrap:anywhere}
+.mk-cards{grid-template-columns:minmax(0,1fr)}.cs-row .meta,.mk-acts{flex-wrap:wrap}.tw{max-width:100%;overflow-x:auto}
+.cs-field :is(input,select,textarea){box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+.cs-btn{max-width:100%;white-space:normal;text-align:left}
+.cs-path a,.cs-mast a,.cs-mast button,.cs-part>summary{display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px}
+.cs-dock:not(:has(.body>*)),.cs-band:empty{display:none}.cs-tip{max-width:min(300px,calc(100vw - 32px));pointer-events:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`;
 
 /* R56: the script-hook classes, each with what reads it; a class here needs no style. */
