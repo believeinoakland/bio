@@ -111,3 +111,11 @@ CHANGE (K4210): also drop RUNG_ABSENT.securitymap (t48.mjs; ground caller-owned)
 ## B15 · CHANGE
 
 CHANGE (K4213; review J4, wizard-scripts J11): two more entries. (1) `t47.test.mjs:250` copies `NON_ACTS.reviewcomment`'s sentence, which review's `DECLARED_OPS.reviewcomment` now makes a word (`review.declared.reviewcomment`): read the expected text through the word or the declaration (P7's mechanical fix, as part D's `declaredSentence`). (2) `owners.test.mjs:118` copies the start of the hand description the five wizard-drafting ops share; wizard-scripts now declares `writinghelp`, `wizards`, `startfrom`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire` with descriptions `act.<op>.does`: read the test's expectation through the declaration, and where your hand row's description for one of them disagrees with the declared key, make the hand row agree (it is deleted in the second pass anyway). Your branch merges just before wizard-scripts'; say in your COMPLETE which of the eight you changed.
+
+## B16 · CHANGE
+
+CHANGE (K4217): one more entry of the same kind as B15 (1): seven `testcopy` findings on tranche/T51 since file-safety's `DECLARED_OPS` (R48) made its op descriptions words: `t36.test.mjs` lines 47, 49, 52, 55, 59, `t47.test.mjs`:36, `t48.test.mjs`:34 copy those sentences. Read each expected text through the declaration or the word (`declaredSentence`), keeping every control; `node checks/words.mjs /home/user/bio op-grades` must read 0.
+
+## B17 · CHANGE
+
+CHANGE (K4218; member-roster J6): three more copies of the same kind: `t41.test.mjs`:24 and `t46.test.mjs`:195 (`handlecheck`) and `t49.test.mjs`:27 (`founderhandleset`) copy sentences member-roster's `localize` calls now hold (member-roster R80, R81). Read them through `declaredSentence` as the others.

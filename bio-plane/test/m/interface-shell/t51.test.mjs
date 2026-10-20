@@ -689,7 +689,7 @@ test("R103 an explanation opens below what it explains, else above: the first th
 
 const SEARCHING = {
   id: "finder", words: [["screen.finder.t.l", "fx l", false], ["screen.finder.t.a", "fx a", false], ["screen.finder.t.b", "fx b", false], ["screen.finder.t.h1", "fx h1", false], ["screen.finder.t.h2", "fx h2", false]],
-  reads: (view) => ({ list: { op: "search", query: { show: view.ui.show || "a" }, refusals: { BAD: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }),
+  reads: (view) => ({ list: { op: "search", query: { q: view.ui.show || "a" }, refusals: { BAD: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }),
   acts: [],
   render(cs, view) {
     return cs.choice("c1", "screen.finder.t.l", [["a", "screen.finder.t.a"], ["b", "screen.finder.t.b"]], { redraw: "show" })
@@ -710,7 +710,7 @@ test("R90 (K4072) a choice that redraws re-runs the screen's reads with the choi
   assert.equal(p.byOp("search").length, 1, "no read beyond the redraw's");
   await pickIn(p, "c1", "b");
   assert.equal(p.byOp("search").length, 2, "read once more");
-  assert.equal(p.byOp("search")[1].query.show, "b", "with the new query");
+  assert.equal(p.byOp("search")[1].query.q, "b", "with the new query");
 });
 
 test("R90 (K4073) cs.sec and cs.field take help as one key or a list, each its own sentence; a read's own refusal function is handed the kit; cs.checks takes the redraw option", async () => {
