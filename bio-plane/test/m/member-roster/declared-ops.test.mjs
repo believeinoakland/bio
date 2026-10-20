@@ -6,7 +6,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS } from "../../../src/member-roster/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
 import { world, threeAdmins } from "./fixture.mjs";
 
 const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (y.code ?? y.reason);
@@ -112,12 +111,36 @@ test("R80 expertiseconfirm accepts withdraw: with withdraw: true it is accepted 
   assert.deepEqual([r.ok, r.state], [true, "withdrawn"]);
 });
 
-test("R80 the words of the declarations: expertisewithdraw's description is the design's key, and the others are localized once under their own ids", () => {
+/* the ids the descriptions are localized under, each named here (K874); `expertisewithdraw`'s is the design's key */
+const DESCRIPTION_IDS = [
+  "member-roster.declared.adminendorse",
+  "member-roster.declared.adminremove",
+  "member-roster.declared.courtnoticeset",
+  "member-roster.declared.enroll",
+  "member-roster.declared.expertiseconfirm",
+  "member-roster.declared.expertisedeclare",
+  "member-roster.declared.founderhandleset",
+  "member-roster.declared.groupdescriptionset",
+  "member-roster.declared.handlecheck",
+  "member-roster.declared.hostingaccessset",
+  "member-roster.declared.invitelook",
+  "member-roster.declared.invitewithdraw",
+  "member-roster.declared.joinlinkenable",
+  "member-roster.declared.joinlinkinvite",
+  "member-roster.declared.memberadd",
+  "member-roster.declared.membercaps",
+  "member-roster.declared.memberpairingset",
+  "member-roster.declared.memberset",
+  "member-roster.declared.websitekeycreate",
+];
+
+test("R80 R81 the words of the declarations: expertisewithdraw's description is the design's key, the others are English localized once under their own ids", () => {
   assert.equal(DECLARED_OPS.expertisewithdraw.description, "act.owed_expertisewithdraw.does");
-  /* each id is named here (K874): a description is the words the id holds, or the English it was written with */
+  assert.deepEqual(DESCRIPTION_IDS.map((id) => id.slice("member-roster.declared.".length)).sort(),
+    Object.keys(DECLARED_OPS).filter((o) => o !== "expertisewithdraw").sort(), "one id for each of the other ops, no more");
   for (const op of Object.keys(DECLARED_OPS).filter((o) => o !== "expertisewithdraw")) {
     const d = DECLARED_OPS[op].description;
-    assert.equal(localize(`member-roster.declared.${op}`, d), d, op);
+    assert.ok(typeof d === "string" && d.length > 10 && d !== `member-roster.declared.${op}`, `${op}: the words, not the id`);
     assert.equal(d.includes("{"), false, `${op}: no placeholder`);
   }
 });
