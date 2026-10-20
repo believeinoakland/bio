@@ -1,6 +1,6 @@
 # ocr-worker (T51)
 
-**Status** · session_01DuirV8btJ9Ff4eRbjgcxEv · depth 2 · WORKING · handled B2
+**Status** · session_01DuirV8btJ9Ff4eRbjgcxEv · depth 2 · WORKING · handled B3
 
 ## J1 · COMPLETE
 
