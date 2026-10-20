@@ -3,7 +3,7 @@
    `matter` and `help-records`, built to interface-shell R21's screen contract: each `{id, reads, render, acts, words}`,
    every function self-contained, every read and act an op through the shell. The member decides and sends; the group's
    Civicsmith proposes, prepares and records, and sends nothing. Pure: this module reads no table and writes nothing. */
-import { SCREEN_WORDS } from "./words.mjs";
+import { SCREEN_WORDS, FIX } from "./words.mjs";
 import { plan } from "./plan.mjs";
 import { startSend } from "./start-send.mjs";
 import { request } from "./request.mjs";
@@ -76,7 +76,7 @@ const wordsOf = (s) => {
     || (SHARED_OWN[id] || []).includes(k));
   const noun = s.acts.length ? `shell.readonly.noun.${id}` : null;
   const acts = s.acts.flatMap((a) => [a.label || `act.${a.op}.label.${id}`, OWED.includes(a.op) ? `act.owed_${a.op}.does` : `act.${a.op}.does`]);
-  return Object.freeze([...new Set([...SHARED, ...(noun ? [noun] : []), `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id], ...own])]);
+  return Object.freeze([...new Set([...SHARED, ...(noun ? [noun] : []), `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id], ...FIX.flatMap((f) => f.EXTRA[id] || []), ...own])]);
 };
 
 /** The screens, in the order a member meets them: the plan, starting and sending, a records request, one action, one matter, the

@@ -1,0 +1,57 @@
+/* screens-action's T51 fix round (FR-31) on `request`: R39 (which name the records concern is asked first; `addresseesuggest` is sent that
+   name, never the project) and R46 (a request that knows no office points to the organization's page where its records lines are kept).
+   Every request is checked against its owner's declaration by the harness. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import { SCREENS, open, main, text, ops, press, last, ok, W, hasWord, DATA_PLANE, PROJECT, ADMIN } from "./page.mjs";
+import { DECLARED_FIELDS } from "./declared.mjs";
+
+const NEW = `/app/request/${PROJECT}`;
+const SUBJECT = "ENT-2026-2222222222222222";
+const NAMES = { rows: [{ entity: "ENT-2026-1111111111111111", kind: "organisation", name: "Public Works" }, { entity: SUBJECT, kind: "office", name: "Pothole repair program" }], truncated: false };
+const OFFICES = { ok: true, subject: SUBJECT, offices: [{ addressee: { state: "named", kind: "office", role: "City Clerk", body: "Office of the City Clerk", entity_id: "ENT-1" } }], suggestion: true };
+
+test("R39: a request opened for a project sends no `addresseesuggest` with the project's id, asks which name it concerns first, and after the pick sends that id; the offices are then drawn", async () => {
+  const p = await open(NEW, { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok(OFFICES) });
+  assert.equal(p.byOp("addresseesuggest").length, 0, "nothing is asked with the project's id on load");
+  assert.ok(text(p).includes(W("screen.person.keeper.subject.label")), "which name it concerns is asked first");
+  assert.deepEqual(ops(p), ["addresseesuggest"], "only the ask is drawn before a name is picked");
+  assert.equal(p.doc.getElementById("req-office"), null, "no office before the ask is answered");
+  // control: pressing with no name picked sends nothing
+  await press(p, "addresseesuggest", { values: { "req-subject": "" } });
+  assert.equal(p.byOp("addresseesuggest").length, 0, "no name, no ask");
+  await press(p, "addresseesuggest", { values: { "req-subject": SUBJECT } });
+  const sent = p.byOp("addresseesuggest");
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].query.subject, SUBJECT, "the name she picked");
+  assert.notEqual(sent[0].query.subject, PROJECT);
+  for (const name of Object.keys(sent[0].query).filter((k) => k !== "op")) assert.ok(DECLARED_FIELDS("addresseesuggest").includes(name), `${name} is declared`);
+  assert.match(text(p), /City Clerk, Office of the City Clerk/, "the offices the record holds for that name are drawn");
+  assert.ok(p.doc.getElementById("req-office"));
+});
+
+test("R46: a records request that knows no office points to the organization's page; with offices none; a request opened with no name known to ask about draws no pointer", async () => {
+  const none = { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok({ ok: true, subject: SUBJECT, offices: [], suggestion: true }), whoami: ok(ADMIN) };
+  const p = await open(NEW, none);
+  assert.equal(main(p).querySelector('[data-list="person"]'), null, "nothing is pointed to before an office is known to be missing");
+  await press(p, "addresseesuggest", { values: { "req-subject": SUBJECT } });
+  const link = main(p).querySelector('[data-list="person"] a[data-screen="person"]');
+  assert.ok(link, "the reference");
+  assert.equal(link.getAttribute("href"), `/app/person/${encodeURIComponent(SUBJECT)}`);
+  assert.equal(link.textContent.trim(), W("screen.person.name"));
+  for (const k of ["screen.request.nooffice.pointer.a", "screen.request.nooffice.pointer.b", "screen.person.purpose"]) assert.ok(text(p).includes(W(k)), k);
+  const known = await open(NEW, { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok(OFFICES), whoami: ok(ADMIN) });
+  await press(known, "addresseesuggest", { values: { "req-subject": SUBJECT } });
+  assert.equal(main(known).querySelector('[data-list="person"]'), null, "control: with offices none");
+  const nameless = await open(NEW, { ...DATA_PLANE, peopledirectory: ok({ rows: [], truncated: false }), whoami: ok(ADMIN) });
+  assert.equal(main(nameless).querySelector('[data-list="person"]'), null, "control: no name picked, no page to point to");
+});
+
+test("R39, R46 (R19): each key the new lines name is a word of setup-words, on the screen that draws it", () => {
+  const words = new Set(SCREENS.find((s) => s.id === "request").words);
+  for (const k of ["screen.person.keeper.subject.label", "screen.person.keeper.subject.help.a", "screen.person.keeper.subject.help.b", "screen.request.nooffice.pointer.a",
+    "screen.request.nooffice.pointer.b", "screen.person.name", "screen.person.purpose"]) {
+    assert.ok(hasWord(k), `${k} is a word`);
+    assert.ok(words.has(k), `request reads ${k}`);
+  }
+});
