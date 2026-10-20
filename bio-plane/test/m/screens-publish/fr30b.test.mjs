@@ -1,7 +1,9 @@
 /* screens-publish FR-30, second part (K4165, K4168, K4192, K4194, K4197; DEC-374 to DEC-378, DEC-382, DEC-384): R44, R46, R51, R53, R57
  * on the case editor and the ceremony; R47, R54 on the published page; R58, R59 on the imported page. Each sentence is asserted by its
  * key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
-import "./register.mjs";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
@@ -142,6 +144,20 @@ test("R51 self-attestation without a reason is refused in place and nothing is s
   assert.equal(p.byOp("publishpreflight").length, 1, "only the page's own read was sent");
   assert.ok(drew(p, "screen.ceremony.conf.refused.noreason1"));
   assert.ok(!ops(p).includes("captureaccount"), "only the member who captured it adds an account");
+});
+
+test("R69 a document without a second confirmation names the member who captured it and each finding resting on it; an entry with no capturer draws none (control)", async () => {
+  const entry = { capture: B64, by: "mai", findings: [F1, "FND-2026-0032"] };
+  const p = await open(CER, { plane: { ...DOCS, publishpreflight: ok(WITH(STEP3({ not_co_attested: [entry] }))) } });
+  const who = p.doc.querySelector(`[data-capturer="${B64}"]`);
+  assert.ok(who && who.textContent === "mai", "the capturer is drawn");
+  const rests = p.doc.querySelectorAll(`[data-rests="${B64}"]`);
+  assert.equal(rests.length, 2, "one sentence for each finding resting on it");
+  assert.ok(drewIn(rests[0], "screen.ceremony.conf.intro2", { finding: F1 }) && drewIn(rests[1], "screen.ceremony.conf.intro2", { finding: "FND-2026-0032" }));
+  const q = await open(CER, { plane: { ...DOCS, publishpreflight: ok(WITH(STEP3({ not_co_attested: [{ capture: B64, by: null, findings: [F1] }] }))) } });
+  assert.ok(q.doc.querySelector(`[data-unconfirmed="${B64}"]`), "the document is listed");
+  assert.ok(!q.doc.querySelector(`[data-capturer="${B64}"]`), "no capturer is drawn when none is recorded");
+  assert.equal(q.doc.querySelectorAll(`[data-rests="${B64}"]`).length, 1);
 });
 
 const md = (refs) => ["---", `id: ${P}`, "object_type: project", "title: \"The Coliseum lease\"", "references:",
