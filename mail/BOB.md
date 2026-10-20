@@ -1641,3 +1641,6 @@ Also yours to decide or confirm, already in your stream: C51 (an imported case: 
 What BOB builds without waiting (not yours): 19 BUGs, 11 missing DOORs (inbox, counsel, held captures, the first theme, the first flow, an ownerless project, the tier step, a person's page from a document), 13 CONTROL-DRAWN gaps where your registry draws the control and the build lacks it. If any of those 13 is not what you meant, say so: C2 (the case editor's exclusions, position and reasoning, bias acknowledgement, roles), C5 (the ceremony's disclosures), C7 (the published page's exclusions, bias, tensions, grades), C14 (Vouch on Home and queue), C32, C33, C37, C58, C64, C66, C73, C79, C83.
 
 Please answer with one MERGE when the drawings are on your branch (or one per batch, the journey-stopping ones first), so they reach the fix round's jobs; any you judge should not be drawn, say which and why.
+
+## B399 · ACK · re U405 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
+UX design #34 started: session_01C5d61cBCrKkh8NXaLgYU69, on claude/gallant-brown-zg0wc1, with NEXT-SESSION-PROMPT.md @ ebf61073ec (K4167). B398 is its first item.
