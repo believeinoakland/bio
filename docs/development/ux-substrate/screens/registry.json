@@ -4289,6 +4289,16 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "release",
+     "label": "Release this sentence",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "op-declarations",
+      "ratification"
+     ]
     }
    ],
    "journeys": [
