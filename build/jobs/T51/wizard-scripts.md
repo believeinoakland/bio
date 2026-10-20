@@ -174,3 +174,20 @@ Size (session_01WMjLF8CWtt2TqjEkixFjxh): test runs 28, module lines 2840
 - Tests: the suite `node --test bio-plane/test/m/wizard-scripts/*.test.mjs` is **108 pass, 0 fail**. The pins that named the current registry commit or its counts (library, t47, t48, t50, t51) now name `aa8bdcd0b4`, the counts above, and the owed-op count 42. The R45 control in t51 now flips `aa8bdcd0b4` (not `1cc4a957f0`). A new test in t51 names R45 amended (FR-49): the pin, `expertisewithdraw` owed on `members`, and the old pin no longer carried. The duplicate-act control in t51 now asserts the file lists `expertiseconfirm` once.
 - Checks: `format` 0 failures; `architecture` 0; `coverage` 45 of 45 live ids for wizard-scripts; `ownership` 0 failures (9 files); `words` 0 failures across the product (`checks/run.mjs`).
 - Not yet done: the census in entry 2 (K4202). See the QUESTION that follows.
+
+## J11 · QUESTION
+
+**B10 entry 2 (K4202, the census): BOB's ruling needed before I can finish it.** The rest of the job is done; this is the one part that waits.
+
+What is stuck, op by op (from `build/plan/pass-T51/RECORD-C.md` and the words check):
+
+1. **`writinghelp`**: already held in `op-declarations`' wizard-scripts family (`op-declarations/index.mjs` lines 481–483, `writinghelp: "ownread"`) and in `op-grades` (`index.mjs` line 1548; `marks.mjs` line 220). The door routes it (`store-door/dispatch.mjs` line 475, `wizardScriptsOf(ctx).writingHelp`) with the fields `op`, `field`, `told`, `draftHeld`. My reading: nothing new to declare in `DECLARED_OPS`; the door's route is the declaration. Recommend: confirm that, and I record it as declared by its owner rather than adding a second declaration. If you want a `DECLARED_OPS` entry in this module anyway, say so and I will write it with `accepts: [field, told, draftHeld]`, `requires: [field, told]`.
+2. **`wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`**: the words check's **testcopy** arm fails. `op-grades`' own test (`owners.test.mjs:118`) copies the start of the hand description these five share, so a repeated description in my declaration fails it. That test is op-grades', so I cannot change it here.
+3. **`wizards`, `startfrom`**: no registry label key exists for them, and `wizard-scripts` is a drawn-screen module, so a `localize` call fails the **marker** arm and a raw sentence fails the inline arm.
+
+Options, with my recommendation:
+- (A, recommended) The design stream adds one description row per op (`wizard-scripts.declared.<op>`, seven rows), and the five drafting ops take their own rows, so the testcopy arm sees distinct text. I write the seven declarations against those keys, with the `declared-ops.test.mjs` the census asks for.
+- (B) A ruling that the testcopy arm does not apply to the drafting ops in `op-grades`' test, so I may repeat the hand text. That is a change to another module's test, so it would go to that module's job.
+- (C) Leave all eight undeclared for this round and carry them to the next tranche. Recommended only if (A) cannot land before T51 closes.
+
+I have not written any declaration for these eight yet, so nothing is half-done in the module. Please answer which of A, B or C, and confirm item 1.
