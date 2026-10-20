@@ -47,11 +47,17 @@
  * Containers is refused by name before anything is pulled, pushed or deployed —
  * 0.80.0 shipped without its container for exactly that (K1705 (3)).
  *
- * usage (bundler R19, R20, R26; moved from the old process's `tools/` in T19), from the repository root:
- *   node bio-plane/scripts/deploy-fleet.mjs <member> --instance <slug>
+ * A TEST DEPLOY (bundler R40; K4180, K4186): `--test-instance` deploys a named branch's BUILT member, unsigned, for a trial
+ * copy. The copy must be the one the environment marks (CIVICSMITH_TEST_INSTANCE names it) and the member's pinned
+ * account the test account; anything else is refused before a request is made. It reads no signed release. It logs the
+ * artifact deployed and the target it can return to (the bytes now deployed under the member's name).
+ *
+ * usage (bundler R19, R20, R26, R40; moved from the old process's `tools/` in T19), from the repository root:
+ *   node bio-plane/scripts/deploy-fleet.mjs <member> --instance <slug> [--test-instance]
  *   node bio-plane/scripts/deploy-fleet.mjs agent-worker --instance biosmoke7 --dry-run
  */
 import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -62,6 +68,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
 const DRY = argv.includes("--dry-run");
+const TEST = argv.includes("--test-instance");
+const TEST_ACCOUNT = "20b533579290b9b93168345edd3b7f72";   /* R40: the one account a test deploy may reach */
 const member = argv.find((a) => !a.startsWith("--") && argv[argv.indexOf(a) - 1] !== "--instance");
 const instance = flag("--instance");
 
@@ -80,6 +88,10 @@ if (!member) die("NO_MEMBER", "name the fleet member to deploy.",
 if (!instance) die("NO_INSTANCE",
   "--instance is required and has NO DEFAULT, deliberately.",
   "A default would be a hardcoded instance name, which is the defect (D-292) this tool exists to fix.");
+/* R40: a test deploy goes only to the copy the environment marks, checked before anything is read or requested. */
+if (TEST && process.env.CIVICSMITH_TEST_INSTANCE !== instance)
+  die("NOT_A_TEST_INSTANCE", `\`${instance}\` is not marked as a test instance: CIVICSMITH_TEST_INSTANCE is ${process.env.CIVICSMITH_TEST_INSTANCE ? `\`${process.env.CIVICSMITH_TEST_INSTANCE}\`` : "not set"}.`,
+    "A test deploy goes only to the copy the environment marks. Nothing was requested or deployed.");
 
 /* STRUCTURAL: this tool deploys FLEET MEMBERS. Membership is decided by the
    member's own marker file (D-117), not by a name list here, so it cannot be
@@ -134,6 +146,11 @@ if (!cfg.account_id) {
     "defaults to the neo persona. A deploy would SUCCEED into the wrong account with no\n" +
     "error to notice (CLAUDE.md, measured 2026-07-31).");
 }
+
+/* R40: and only to the test account, whatever the member's own configuration pins. */
+if (TEST && cfg.account_id !== TEST_ACCOUNT)
+  die("WRONG_ACCOUNT", `a test deploy goes to account ${TEST_ACCOUNT} only; ${member}/wrangler.jsonc pins ${cfg.account_id}.`,
+    "Nothing was requested or deployed.");
 
 /* R26: what a container member deploys is stated by its own files before any request: the image by digest in its
    marker, and the container in its own config. Neither is defaulted. */
@@ -222,6 +239,36 @@ if (CONTAINER) {
   } catch (e) { unreachable(`no answer: ${e.message}`); }
   if (!r.ok) unreachable(`http ${r.status}`);
   console.log(`preflight: Containers reachable in ${cfg.account_id}`);
+}
+
+/* R40: what this step deploys and where it can return to: the bytes now deployed under the member's name. */
+if (TEST) {
+  const name = cfg.name || member;
+  const artifact = marker.bundle && marker.bundle.outfile;
+  const artifactBytes = artifact && existsSync(join(memberDir, artifact)) ? readFileSync(join(memberDir, artifact)) : null;
+  console.log(`test deploy: ${member} to ${instance} from ${artifact || "(no bundle)"} sha256 ${artifactBytes ? createHash("sha256").update(artifactBytes).digest("hex") : "(absent)"}`
+    + " (a branch's built artifact: no release/ signature is read)");
+  let was = null;
+  try {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfg.account_id}/workers/scripts/${name}`,
+      { headers: { authorization: `Bearer ${TOKEN}`, accept: "application/javascript+module" } });
+    if (r.ok) {
+      const ct = r.headers.get("content-type") || "", body = Buffer.from(await r.arrayBuffer());
+      let script = body;
+      const mp = /multipart/i.test(ct) ? /boundary=(.+)$/i.exec(ct) : null;
+      if (/multipart/i.test(ct)) {
+        script = null;
+        if (mp) {
+          const part = body.toString("binary").split("--" + mp[1].replace(/"/g, "")).filter((p) => /\.mjs/.test(p))[0];
+          if (part) script = Buffer.from(part.slice(part.indexOf("\r\n\r\n") + 4).replace(/\r\n$/, ""), "binary");
+        }
+      }
+      if (script) was = createHash("sha256").update(script).digest("hex");
+    }
+  } catch { /* unreadable is not a target */ }
+  console.log(was
+    ? `rollback : ${name} was ${was.slice(0, 16)}\u2026 \u2014 deploy those bytes again to return to it`
+    : `rollback : ${name} is not deployed in ${cfg.account_id} (or is unreadable); delete the script to return to none`);
 }
 
 if (DRY) { console.log(`\n--dry-run: nothing was ${CONTAINER ? "pushed or " : ""}deployed.`); process.exit(0); }
