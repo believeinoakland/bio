@@ -70,3 +70,13 @@ Size (session_01DhBxoHRd3fUcaMLx8zTL85): test runs 7, module lines 2108
 - `build.mjs --check`: rows.mjs stale at action-plans' id, not mine.
 
 Size (session_01V7byxdmjg2NpBgmASX69w6): test runs 7, module lines 2133
+
+## J3 · COMPLETE · re B3
+
+CHANGE B3 (K4227) done. `clockPropose`'s `NO_SUCH_RULE` now also answers `deadlines: [{rule, label?, citation?}]`: the active view's deadlines that apply to the action's kind (the rules clockPropose accepts), `[]` when none applies or no profile is active; code, target, rule and detail unchanged; a valid rule's answer has no `deadlines`. Exported pure helper `deadlinesFor(view, kind)`. No sentence, refusal or word row added.
+
+Two things for BOB:
+1. Requirement line (yours to apply; ownership refuses a job's edit of build/requirements/action-clocks.md, so I reverted mine). Suggested text for R2's refusals, after "`NO_SUCH_RULE` (no active profile states a deadline of that rule for the action's kind, naming both": "; T51, K4227, a field added: it also answers `deadlines: [{rule, label?, citation?}]`, the deadlines the active profiles state that apply to the action's kind, what this call would accept as `rule`, each with its `label` and `citation` where the profile gives them, `[]` when none applies; the code and the rest of the answer are unchanged; controls: a valid rule's answer carries no `deadlines`)".
+2. Finding for jurisdictions: a deadline in the profile grammar (R26) has no `label` field and the combined view never carries one, so today each item has `rule` and `citation` only. The due-date screen (screens-investigate R59) should draw the citation until a label exists.
+
+Tests (t51.test.mjs, each naming R2): list for a kind with deadlines, the empty list (kind with none; no profile), control of a valid rule. Module suite 83/83; consumers (due-date 6/6, action-plans, affordances t45/t46, plane compose, monitoring) 283/283. format, architecture, coverage (25/25), words, ownership: 0 failures; checks/run.mjs lists words failures only in op-grades. Size (session_01V7byxdmjg2NpBgmASX69w6): test runs 7, module lines 2133.
