@@ -1778,4 +1778,6 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["level","limit"], requires: [] } },
   search: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.search.label.finder",
     fields: { accepts: ["q","sort","dir","limit","offset","mode","facets","facetmode","widen","snippet","scope"], requires: [] } },
+  list: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("retrieval.declared.list", "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing"),
+    fields: { accepts: ["type","state","after","limit"], requires: [] } },
 });
