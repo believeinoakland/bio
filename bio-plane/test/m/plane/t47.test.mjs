@@ -23,7 +23,7 @@ import { answersOf } from "../../../src/answers/index.mjs";
 import { draftOnObject } from "../../../src/plane/ask.mjs";
 
 /* Instants and minted ids differ between two objects; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 const SESSION = "s".repeat(64);
 const member = (x, id, role = "member") => x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status,
   capabilities, created, updated) VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);

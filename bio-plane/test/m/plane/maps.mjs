@@ -220,7 +220,7 @@ export const opsServedBy = (ctx, url, env, owners) =>
  *  answers called directly, on a twin store (instants masked). Answers the ops served, and each op that did not. */
 export async function servedThroughDoor(x, twin, owners, { skip = NOT_COMPARED } = {}) {
   const u = new URL("http://do/");
-  const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+  const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
   const keys = Object.keys(x.s.routes(u, null));
   const served = opsServedBy(x.ctx, u, x.env, owners), failed = [];
   for (const [op, owner] of served) {

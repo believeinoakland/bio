@@ -114,7 +114,7 @@ const DRIVES = [
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
 /* Instants differ between two runs; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(at|ms|elapsed_ms|recorded_ms)":\d{10,}/g, '"$1":<n>');
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(at|ms|elapsed_ms|recorded_ms)":\d{10,}/g, '"$1":<n>').replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 test("R1: the class whose fetch is control-plane's door: at construction it starts instance-setup once per object, and a second construction on the same storage starts nothing", async () => {
   const o = object();
