@@ -36323,6 +36323,354 @@
    "en": "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.",
    "protected": false,
    "note": "DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence"
+  },
+  {
+   "key": "screen.objective.what-success-means",
+   "en": "What success means",
+   "protected": false,
+   "note": "DEC-391: B435 1: heading: heading of the section that sets and shows how the success of this objective is measured"
+  },
+  {
+   "key": "screen.objective.proposals-to-decide",
+   "en": "Proposals to decide",
+   "protected": false,
+   "note": "DEC-391: B435 1: heading: heading of the section listing the proposals the assistant made for this objective"
+  },
+  {
+   "key": "screen.objective.aspirations",
+   "en": "Aspirations",
+   "protected": false,
+   "note": "DEC-391: B435 1: heading: heading of the section listing the aspirations in force for this project"
+  },
+  {
+   "key": "screen.objective.declare-an-aspiration",
+   "en": "Declare an aspiration",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to declare an aspiration"
+  },
+  {
+   "key": "screen.objective.whose-it-is",
+   "en": "Whose it is",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice, in the declare-an-aspiration form, of who holds the aspiration"
+  },
+  {
+   "key": "screen.objective.the-whole-team-s",
+   "en": "The whole team's",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of Whose it is: an aspiration the whole team holds"
+  },
+  {
+   "key": "screen.objective.this-project-s",
+   "en": "This project's",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of Whose it is: an aspiration this project holds"
+  },
+  {
+   "key": "screen.objective.mine",
+   "en": "Mine",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of Whose it is: an aspiration the viewer holds personally"
+  },
+  {
+   "key": "screen.objective.about-which-party",
+   "en": "About which party",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice, in the measure form, of the party the measure counts"
+  },
+  {
+   "key": "screen.objective.which-aspiration",
+   "en": "Which aspiration",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice of aspiration in the depart, dead-end and retire forms"
+  },
+  {
+   "key": "screen.objective.which-goal",
+   "en": "Which goal",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice of goal in the link-to-a-goal and close-a-goal forms"
+  },
+  {
+   "key": "screen.objective.which-proposal",
+   "en": "Which proposal",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice of proposal in the decide-a-proposal form"
+  },
+  {
+   "key": "screen.objective.open-a-goal",
+   "en": "Open a goal",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to open a goal"
+  },
+  {
+   "key": "screen.objective.what-it-pursues",
+   "en": "What it pursues",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the field, in the open-a-goal form, for the aim the goal pursues"
+  },
+  {
+   "key": "screen.objective.what-limits-it",
+   "en": "What limits it",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the field, in the open-a-goal form, for the limits that bound the goal"
+  },
+  {
+   "key": "screen.objective.close-a-goal",
+   "en": "Close a goal",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to close a goal"
+  },
+  {
+   "key": "screen.objective.why-it-closes",
+   "en": "Why it closes",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the field, in the close-a-goal form, for the reason the goal closes"
+  },
+  {
+   "key": "screen.objective.put-it-off",
+   "en": "Put it off",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of What to do with it: defer the proposal, with a reason"
+  },
+  {
+   "key": "screen.objective.dismiss-it",
+   "en": "Dismiss it",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of What to do with it: dismiss the proposal, with a reason"
+  },
+  {
+   "key": "screen.objective.retire-an-aspiration",
+   "en": "Retire an aspiration",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to retire an aspiration"
+  },
+  {
+   "key": "screen.objective.held-by-this-project",
+   "en": "Held by this project",
+   "protected": false,
+   "note": "DEC-391: B435 1: tag: tag on an aspiration row: this project holds it"
+  },
+  {
+   "key": "screen.objective.held-by-me",
+   "en": "Held by me",
+   "protected": false,
+   "note": "DEC-391: B435 1: tag: tag on an aspiration row: the viewer holds it personally"
+  },
+  {
+   "key": "screen.objective.this-project-departed",
+   "en": "This project departed",
+   "protected": false,
+   "note": "DEC-391: B435 1: tag: tag on a team aspiration row: this project has departed from it"
+  },
+  {
+   "key": "screen.contradiction.first.passage",
+   "en": "First passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the heading over the first of the two passages, on the screen Two documents in tension"
+  },
+  {
+   "key": "screen.contradiction.second.passage",
+   "en": "Second passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the heading over the second of the two passages"
+  },
+  {
+   "key": "screen.contradiction.they.differ.in",
+   "en": "They differ in",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label over the ticks naming the respects in which the two passages differ (say how they differ; conclude it)"
+  },
+  {
+   "key": "screen.contradiction.time.or.occasion",
+   "en": "Time or occasion",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: one of the respects they may differ in: they speak of different times or occasions"
+  },
+  {
+   "key": "screen.contradiction.meaning",
+   "en": "Meaning",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: one of the respects they may differ in: the same words mean different things"
+  },
+  {
+   "key": "screen.contradiction.precision",
+   "en": "Precision",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: one of the respects they may differ in (concluding): one is more exact than the other"
+  },
+  {
+   "key": "screen.contradiction.what.shows.it",
+   "en": "What shows it",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label over the ticks naming what in the record shows the difference"
+  },
+  {
+   "key": "screen.contradiction.the.first.passage",
+   "en": "The first passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a choice: names the first passage (which one is wrong; ask it around)"
+  },
+  {
+   "key": "screen.contradiction.the.second.passage",
+   "en": "The second passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a choice: names the second passage (which one is wrong; ask it around)"
+  },
+  {
+   "key": "screen.contradiction.optional.at.most.200.characters",
+   "en": "Optional. At most 200 characters.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: help under the two short notes on what holds for each passage"
+  },
+  {
+   "key": "screen.contradiction.optional.at.most.500.characters",
+   "en": "Optional. At most 500 characters.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: help under the optional words when dismissing a lead"
+  },
+  {
+   "key": "screen.contradiction.dismiss.it",
+   "en": "Dismiss it",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading for dismissing a lead"
+  },
+  {
+   "key": "screen.contradiction.anything.to.add",
+   "en": "Anything to add",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the optional words under the reason for dismissing a lead"
+  },
+  {
+   "key": "screen.contradiction.ask.it.around",
+   "en": "Ask it around",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the choice of which passage the new question is asked around"
+  },
+  {
+   "key": "screen.contradiction.taken.up",
+   "en": "Taken up",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading, on a contradiction already taken up, above the question it became"
+  },
+  {
+   "key": "screen.contradiction.conclude.it",
+   "en": "Conclude it",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading for concluding the question a contradiction became"
+  },
+  {
+   "key": "screen.contradiction.your.conclusion",
+   "en": "Your conclusion",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the field for her own words on what the contradiction turned out to be"
+  },
+  {
+   "key": "screen.contradiction.two.rules.conflict",
+   "en": "Two rules conflict",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a choice of what it turned out to be: the two passages are rules that conflict (the next choice says how they are reconciled)"
+  },
+  {
+   "key": "screen.contradiction.ask.for",
+   "en": "Ask for",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the choice of which of your projects asks to resolve a conflict with a record you cannot see"
+  },
+  {
+   "key": "screen.contradiction.the.projects",
+   "en": "The projects",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading over the projects now named to each other, once every project has asked"
+  },
+  {
+   "key": "screen.contradiction.responses",
+   "en": "Responses",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading over the responses already sent between the projects"
+  },
+  {
+   "key": "screen.contradiction.respond",
+   "en": "Respond",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading over the form for sending your own response"
+  },
+  {
+   "key": "screen.contradiction.your.response",
+   "en": "Your response",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the response field"
+  },
+  {
+   "key": "screen.contradiction.share.with.the.other.projects",
+   "en": "Share with the other projects",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label over the ticks for what of you the response shows"
+  },
+  {
+   "key": "screen.contradiction.my.cover.name",
+   "en": "My cover name",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a tick: show your cover name with the response"
+  },
+  {
+   "key": "screen.contradiction.my.email.address",
+   "en": "My email address",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a tick: show your email address with the response"
+  },
+  {
+   "key": "screen.contradiction.your.email.address",
+   "en": "Your email address",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the email address field, shown only if the tick above is on"
+  },
+  {
+   "key": "screen.contradiction.send.my.response",
+   "en": "Send my response",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the button that sends the response to the other projects"
+  },
+  {
+   "key": "screen.contradiction.your.project.can.ask.to.resolve.it",
+   "en": "Your project can ask to resolve it.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: first sentence of the section on what you can do about a conflict with a record you cannot see; the sentence after it says what happens once every project asks"
+  },
+  {
+   "key": "screen.contradiction.help.needed",
+   "en": "Write something first; the help works from what you typed.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the refusal of the writing help when the field it would help with is empty"
+  },
+  {
+   "key": "screen.contradiction.when.it.cannot.be.concluded",
+   "en": "When it cannot be concluded",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the fold heading over the reasons concluding is refused"
+  },
+  {
+   "key": "screen.contradiction.stated.dates",
+   "en": "Stated dates: {first} · {second}",
+   "protected": false,
+   "note": "DEC-391: B435 2: the facts row with the two passages' stated dates (fact stated_date), first then second"
+  },
+  {
+   "key": "screen.contradiction.kinds",
+   "en": "Kinds: {first} · {second}",
+   "protected": false,
+   "note": "DEC-391: B435 2: the facts row with the two documents' kinds (fact doctype), first then second"
+  },
+  {
+   "key": "screen.contradiction.passage.meta",
+   "en": "Dated {date} · {kind} · captured by {member} on {captured}",
+   "protected": false,
+   "note": "DEC-391: B435 2: the small line under a passage: its stated date, its document kind, who captured it and when"
+  },
+  {
+   "key": "screen.contradiction.party.asked",
+   "en": "Asked on {date}",
+   "protected": false,
+   "note": "DEC-391: B435 2: a project line under The projects: the day that project asked to resolve it"
   }
  ],
  "rewrite": {

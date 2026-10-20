@@ -6809,6 +6809,12 @@ W.append(dict(key='screen.contradiction.your.project.can.ask.to.resolve.it', en=
 W.append(dict(key='screen.contradiction.help.needed', en='Write something first; the help works from what you typed.', protected=False, note='DEC-391: B435 item 2: the refusal of the writing help when the field it would help with is empty'))
 W.append(dict(key='screen.contradiction.when.it.cannot.be.concluded', en='When it cannot be concluded', protected=False, note='DEC-391: B435 item 2: the fold heading over the reasons concluding is refused'))
 
+# DEC-391: B435 (K4258) item 2, keys the code has not yet named (minted by the design for screens-inquiry to use)
+W.append(dict(key='screen.contradiction.stated.dates', en='Stated dates: {first} · {second}', protected=False, note='DEC-391: B435 2: the facts row with the two passages\' stated dates (fact stated_date), first then second'))
+W.append(dict(key='screen.contradiction.kinds', en='Kinds: {first} · {second}', protected=False, note='DEC-391: B435 2: the facts row with the two documents\' kinds (fact doctype), first then second'))
+W.append(dict(key='screen.contradiction.passage.meta', en='Dated {date} · {kind} · captured by {member} on {captured}', protected=False, note='DEC-391: B435 2: the small line under a passage: its stated date, its document kind, who captured it and when'))
+W.append(dict(key='screen.contradiction.party.asked', en='Asked on {date}', protected=False, note='DEC-391: B435 2: a project line under The projects: the day that project asked to resolve it'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
