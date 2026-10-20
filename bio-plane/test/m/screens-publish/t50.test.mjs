@@ -86,7 +86,7 @@ test("R27 with no zone held, an administrator is told to set it and a member to 
   const noZone = { reviewcopy: ok(COPY({ zone: null, grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone: null }] })) };
   const a = await open(`/app/review-copy/${P}`, { plane: { ...noZone, whoami: ok({ ...ADMIN, member: "rosa", handle: "rosa", capabilities: ["contribute", "create_projects", "publish"] }) } });
   fill(a, { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-20" });
-  await press(a, "reviewgrant");
+  await press(a, "reviewgrant", { reason: "so the reader can comment before publication" });
   const fold = main(a).querySelector('[data-fold="screen.review-copy.until.nozone.summary"]');
   assert.ok(fold && drewIn(fold, "screen.review-copy.until.nozone") && !drewIn(fold, "screen.review-copy.until.nozone.member"));
   assert.equal(a.byOp("reviewgrant").length, 0);

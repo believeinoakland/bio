@@ -111,7 +111,9 @@ test("R10 (interface-shell R21) the nine registry screens, each drawing exactly 
     assert.ok(reg, `${s.id} is a registry screen`);
     /* op-declarations R76: the registry keeps an act done in the browser alone as `owed:<act> DEC-330`; the table names it for the screen */
     const browser = (op) => Object.hasOwn(BROWSER_ACTS, op) && BROWSER_ACTS[op].screen === s.id;
-    const named = reg.acts.map((a) => (Object.entries(BROWSER_ACTS).find(([, b]) => b.screen === s.id && b.registry === a.op) || [a.op])[0]);
+    /* an act the registry holds as `owed:<op> <ref>` is the op itself once its owner declares it (FR-30: `casedetails`, `casedetailsset`) */
+    const owed = (op) => { const m = /^owed:(\S+)/.exec(op); return m && Object.hasOwn(OPS, m[1]) ? m[1] : op; };
+    const named = reg.acts.map((a) => (Object.entries(BROWSER_ACTS).find(([, b]) => b.screen === s.id && b.registry === a.op) || [owed(a.op)])[0]);
     assert.deepEqual(s.acts.map((a) => a.op).sort(), named.sort(), s.id);
     for (const a of s.acts) {
       assert.ok(browser(a.op) ? !Object.hasOwn(OPS, a.op) : Object.hasOwn(OPS, a.op), `${a.op} is a browser act or in OPS`);
@@ -201,7 +203,7 @@ test("R24 no word is drawn with a placeholder left unfilled on any screen, in th
   await press(ready, "publish", { reason: "r" });
   seen.push(["ceremony prepared and signing", ready]);
   const shared = await open(`/app/review-copy/${P}`, { plane: { reviewgrant: ok({ grantId: "GRT-2", draftId: DR, recipient: "Ana", secret: GRANT_SECRET }), publishpreflight: ok({ steps: [{ publish_at: { zone: "America/Los_Angeles" } }] }) } });
-  await press(shared, "reviewgrant", { values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
+  await press(shared, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
   seen.push(["review-copy with the reader's link", shared]);
   const first = await open(`/app/case-editor/${P}`, { plane: { casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: DR, case: { case_id: C, edition: 1, identity: "The Coliseum lease" }, created_by: "dev" }] }) } });
   seen.push(["case-editor, a first edition", first]);

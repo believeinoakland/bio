@@ -86,7 +86,7 @@ test("R40 an answer with no stamp makes no file and draws the could-not-be-stamp
 
 /* ---------- R41: the first share reads the zone from the copy ---------- */
 
-const share = (p, until, name = "Ana") => press(p, "reviewgrant", { values: { "rc-name": name, "rc-role": "editor", "rc-until": until } });
+const share = (p, until, name = "Ana") => press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": name, "rc-role": "editor", "rc-until": until } });
 
 test("R41 a draft with no grant and a team zone shares with the end day counted in that zone, and publishpreflight is not sent", async () => {
   const first = { reviewcopy: ok(COPY({ zone: "Asia/Tokyo", grants: [] })) };

@@ -13,7 +13,7 @@ const withGrants = (grants) => ({ reviewcopy: ok(COPY({ grants })) });
 /* R27 (`review` R35): the zone the copy answer carries on each roster row; a zone of null is "none held". */
 const zoned = (zone) => ({ reviewcopy: ok(COPY({ zone, grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone }] })) });
 const PACIFIC = "Pacific Time, Los Angeles";
-const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
+const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
 
 test("R2 R18 each named reader is a row with what they may read and until when, drawn \"until <date>\" from the grant's own end in the group's zone (not the UTC day), offering \"Stop sharing\"", async () => {
   const p = await open(PATH);
@@ -81,9 +81,9 @@ test("R2 \"Share with a named reader\" takes a name, a role and an end date, is 
   const p = await open(PATH, { plane: zoned("America/Los_Angeles") });
   const b = main(p).querySelector('button[data-act="reviewgrant"]');
   assert.ok(tipOf(b).includes(word("mark.outward.means")), "mark.outward.means");
-  await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "", "rc-until": "2099-10-20" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Prof. N. Iyer", "rc-role": "", "rc-until": "2099-10-20" } });
   assert.equal(p.byOp("reviewgrant").length, 0);
-  await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "housing law", "rc-until": "" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Prof. N. Iyer", "rc-role": "housing law", "rc-until": "" } });
   assert.equal(p.byOp("reviewgrant").length, 0, "no end date: nothing shared");
   await share(p, "2099-10-20");
   assert.equal(last(p, "reviewgrant").body.draft, DR);
@@ -91,7 +91,7 @@ test("R2 \"Share with a named reader\" takes a name, a role and an end date, is 
 
 test("R2 R11 the grant's secret is shown once as the reader's link with \"Civicsmith sends no email\", and kept in no storage, address or later request", async () => {
   const p = await open(PATH, { plane: { ...zoned("America/Los_Angeles"), reviewgrant: ok({ grantId: "GRT-2", draftId: DR, recipient: "Ana", secret: GRANT_SECRET, secretIsShownOnce: true }) } });
-  await press(p, "reviewgrant", { values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
   const link = main(p).querySelector("[data-reader-link]");
   assert.ok(link);
   assert.match(link.textContent, new RegExp(`https://group\\.example/app/review#grant=${GRANT_SECRET}`));
