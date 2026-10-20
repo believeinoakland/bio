@@ -4,6 +4,7 @@
    the object's door, the Worker's gated hook) with a negative control (K874). The fixtures are made for this suite with
    Pillow 12.3.0: `t43-photo-o6.jpg`, a 3200×2400 baseline colour JPEG whose EXIF Orientation is 6, and `t43-page.png`,
    an 800×600 colour PNG. */
+import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

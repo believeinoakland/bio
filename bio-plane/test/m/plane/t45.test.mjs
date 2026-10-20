@@ -3,6 +3,7 @@
    one held once before the first request; and `action-holds`' `purgeHeld` the reader the door is handed (hold.test.mjs).
    Each module's own behaviour is its own tests'; these check the composition through the plane's interface:
    construction over a storage, the route map and the object's door. Each test carries a negative control (K874). */
+import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
