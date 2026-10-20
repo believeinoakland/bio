@@ -291,16 +291,16 @@ const streamed = (p, lines, type = "application/x-ndjson") => async () => {
 };
 const ASKER = {
   id: "answers", reads: () => ({}),
-  acts: [{ op: "ask", reasonField: "q", send: (view, el, cs) => ({ body: { q: cs.value("q") }, onEvent: (ev) => { window.__seen = (window.__seen || []).concat([ev]); } }),
+  acts: [{ op: "ask", reasonField: "question", send: (view, el, cs) => ({ body: { question: cs.value("question") }, onEvent: (ev) => { window.__seen = (window.__seen || []).concat([ev]); } }),
     done(view, answer, cs) { window.__whole = answer.length; cs.set("n", String(answer.length)); } }],
-  render: (cs) => cs.field("q", "shell.reason") + cs.act("ask") + '<p id="n">' + String((window.__seen || []).length) + "</p>",
+  render: (cs) => cs.field("question", "shell.reason") + cs.act("ask") + '<p id="n">' + String((window.__seen || []).length) + "</p>",
 };
 
 test("R78 a streamed answer is handed on as it arrives: onEvent is called with each complete line at the instant it arrives, in order, the screen redrawn at each; the promise still answers the whole list, the answer the last; control: an ok:false last line is still a refusal beside the act, and a body that is not ndjson is read whole", async () => {
   const p = await boot({ screens: [ASKER], path: "/app/answers" });
   const real = p.win.fetch;
   p.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(p, [{ event: "a" }, { event: "b" }, { ok: true, answer: "c" }])() : real(url, init));
-  p.doc.getElementById("q").value = "why";
+  p.doc.getElementById("question").value = "why";
   await p.click(btn(p, "ask"));
   const seen = () => (p.win.__seen || []).length;
   assert.equal(seen(), 0);
@@ -315,20 +315,20 @@ test("R78 a streamed answer is handed on as it arrives: onEvent is called with e
   const q = await boot({ screens: [ASKER], path: "/app/answers" });
   const realQ = q.win.fetch;
   q.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(q, [{ event: "a" }, { ok: false, code: "ZZ_STOP", translation: "Stopped." }])() : realQ(url, init));
-  q.doc.getElementById("q").value = "why";
+  q.doc.getElementById("question").value = "why";
   await q.click(btn(q, "ask"));
   await q.clock.tick(2000); await q.clock.tick(2000); await q.settle();
   assert.equal(q.root().querySelector('[data-slot="m:0"] [data-gap="refused"]').textContent, "Stopped.");
-  assert.equal(q.doc.getElementById("q").value, "why", "the form keeps what was typed");
+  assert.equal(q.doc.getElementById("question").value, "why", "the form keeps what was typed");
   /* control: a body that is not ndjson is read whole */
   const r = await boot({ screens: [ASKER], path: "/app/answers", plane: { ask: ok({ answer: "whole" }) } });
-  r.doc.getElementById("q").value = "why";
+  r.doc.getElementById("question").value = "why";
   await r.click(btn(r, "ask"));
   assert.equal(r.byOp("ask").length, 1);
   assert.equal(r.win.__seen, undefined, "no event for an answer that is not streamed");
   /* the harness's whole-text ndjson answer still reaches done as the list */
   const t = await boot({ screens: [ASKER], path: "/app/answers", plane: { ask: ndjson([{ event: "x" }, { ok: true }]) } });
-  t.doc.getElementById("q").value = "why";
+  t.doc.getElementById("question").value = "why";
   await t.click(btn(t, "ask"));
   assert.equal(t.win.__whole, 2);
 });
