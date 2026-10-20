@@ -1,6 +1,6 @@
 # strength (T51)
 
-**Status** · session_01VDy17VXpJGNDxKUojKpxFw · depth 2 · COMPLETE · handled B4
+**Status** · session_01JVgH2AekHaSanQHFLLsZ4A · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -64,3 +64,25 @@ Size (session_01VDy17VXpJGNDxKUojKpxFw): test runs 12, module lines 2932
 ## J6 · COMPLETE
 
 B5 done: pulled process main (d424c32), merged tranche/T51, ran checks/words.mjs strength: 15 findings, all and only the accepted unkeyed set (method.mjs published-version texts V1_LINES/V2_LEGS incl. chains judged per sentence; index.mjs '## Session Log' marker), no other file. Nothing new to fix. Strength tests 161 pass. Unkeyed for the design list: as in J4/J5.
+
+## J7 · COMPLETE
+
+FR-50 (K4205, B6) applied on job/T51/strength (commit ccce37c487, pushed); tranche/T51 merged first.
+
+Entries applied:
+- reads.test.mjs, "R6, R22 …": the arithmetic sentence's head is asserted by key (`strength.arithmetic.no_stronger_than_the_weakest`, read through `word()`), not a copied sentence. Control seen failing: grade expectation changed to D, test fails.
+- vocabulary.test.mjs, "R28 … every named member's why": the two sub-inquiry patterns are built from word-table keys (`strength.why.unrated_load_bearing`, `strength.why.undetermined`) through a small `literal()` helper. Control seen failing: wrong sub-inquiry id/axis, test fails.
+
+B5 (words check, merged tranche/T51): `node checks/words.mjs /home/user/bio strength` reports 0 failures; the 15 unkeyed lines are the accepted set (method.mjs V1_LINES/V2_LEGS, index.mjs "## Session Log").
+
+Deferred: nothing.
+
+Found outside this module: nothing new. The stale generated artifacts reported in J1 and J4 (bio-plane/src/case-checker/program.mjs, bio-plane/dist/bio-plane.bundled.mjs) are unchanged and still need BOB's regeneration.
+
+Tests and checks:
+- node --test bio-plane/test/m/strength/: 163 pass, 0 fail.
+- checks/format.mjs: 0 failures. checks/architecture.mjs strength: 0 failures. checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength: 0 failures.
+- checks/words.mjs /home/user/bio strength: 0 failures.
+- checks/run.mjs /home/user/bio: format 0, architecture 0, channels 0, words 0. Coverage fails only in other modules (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring); none in strength.
+
+Size (session_01JVgH2AekHaSanQHFLLsZ4A): test runs 6, module lines 2941.
