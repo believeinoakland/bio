@@ -1,4 +1,5 @@
 Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-37 · link-sweep** when the round opens): the fix round of T51 (K4165, K4168, K4189; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+**Drawn (K4192):** UX-DESIGN's DEC-382 (U414; merged into tranche/T51 @ 127427ce56) draws C50 on `imported` and `question` and C56's named requests and sweeps on `watching`; every entry below marked "when drawn" or "when B406 is drawn" is to be built now, from that drawing, with no further CHANGE.
 Your requirements: `build/requirements/link-sweep.md` (read whole). Every requirement line below is already written by BOB (K4189), in the file's style and marked *(not yet met: T51)*; the ids are the ones in the file. Test names carry the id.
 Why this job: C56 (UC-034, UC-035): the two doors that define and ratify a sweep (K4189). In the fix-round plan `link-sweep` was a declaration-only haiku job; it is now sonnet and merges after `monitoring`.
 Merge order: module index 138, layer 10. After `monitoring` (136 < 138, which provides the writer you call); before `screens-intake` (138 < 162).
