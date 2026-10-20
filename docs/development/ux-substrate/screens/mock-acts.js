@@ -355,6 +355,7 @@ const ACT_HELP = {
   communicationprepare: 'Prepares the text that will be sent, from the team\'s template or a labeled draft.',
   filingprepare: 'Prepares the filing with what the venue requires.',
   filingapprove: 'Approves this exact text for sending. Changing it afterwards needs approving again.',
+  templatesave: 'Keeps the text you approved as the first draft of a template for your team. Nothing is offered to members until the team approves it.',
   filingrecordsent: 'Records that you sent it, when and how. Civicsmith never sends for you; reply deadlines count from here.',
   addresseesuggest: 'Chooses the office it goes to, by role, so it reaches whoever holds the post that day.',
   actioncreate: 'Starts the records request as an action the team follows to its reply.',
