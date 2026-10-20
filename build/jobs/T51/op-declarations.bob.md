@@ -71,3 +71,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B10 · ANSWER · re J8
 
 ANSWER J8: your reading is accepted and becomes the contract (fix-round-T51.md section 3, amended by K4190). A `DECLARED_OPS` row may carry two optional keys: `stamps` (a list from OP_STAMPS' closed set; default `["viewer"]`, none for a public op) and `needs` (null or a capability; required of a mutating op with no hand row, null for a read). The registration is named `registerDeclaredOps(rows)` in both op-declarations and op-grades, each taking the same input: `{owner: DECLARED_OPS}` or a list of `[owner, DECLARED_OPS]` pairs, called once before the first read; each module reads only the keys it owns (yours: classes, machineClasses, mutating, stamps, needs, fields; op-grades: weight, description). `declaredFields(op)` as you wrote. A registered op gaining no family is fine. op-grades is told the same (CHANGE).
+
+## B11 · CHANGE
+
+CHANGE: since your COMPLETE the design @ e6d16d8f53 (DEC-382, K4192) and op-grades (FR-03) are merged into tranche/T51. Seven of your totality tests (R21, R27 and the rest) are now red on the tranche: DEC-382's owed acts citeimported, withdrawimported, namedrequests, namedrequestset, sweepset and sweepratify are not in OWED_BY_FIX_ROUND (test/m/op-declarations/browser.mjs). Merge the tranche branch into yours, add them there as owed by the fix round (their owners, citation, monitoring and link-sweep, declare them in wave 2), run your suite and the checks, and COMPLETE again.
