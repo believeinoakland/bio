@@ -3,6 +3,7 @@
    a declaration of another module; what a requirement of this module states, in backticks or as plain words, is the
    contract, and the tables are the data under test. */
 import { readFileSync } from "node:fs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* ---- this module's own requirements ------------------------------------------------------------------------------- */
 const REQ_LINES = readFileSync(new URL("../../../../build/requirements/op-grades.md", import.meta.url), "utf8").split("\n");
@@ -63,3 +64,8 @@ export const asksNotTheAccount = (code) => /^(NO_(TARGET|IDS?|KIND|CITATION|BODY
 /* ---- this module's own tables ------------------------------------------------------------------------------------- */
 /** The ops of a NON_ACTS table whose reason is a read's ("read: …"), in table order. */
 export const readRows = (table) => Object.keys(table).filter((op) => table[op].startsWith("read: "));
+
+/** The sentence an owner declared for `op` as `localize("<module>.declared.<op>", ...)`, read from the word table
+ *  (`setup-words`, which this module uses) by its id, never copied here (P7, K3810). The id is composed, not typed: the
+ *  words check judges a literal key against the design's list, and these ids are code-held until the design takes them. */
+export const declaredSentence = (module, op) => word(`${module}.declared.${op}`);

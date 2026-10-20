@@ -666,6 +666,27 @@
       "line": 316
     },
     {
+      "id": "action-clocks.declared.clockadopt",
+      "en": "a member adopts a standing clock proposal, as proposed or amended, as a clock entry with its basis and trace (action-clocks R13)",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1532
+    },
+    {
+      "id": "action-clocks.declared.reminderanswer",
+      "en": "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1530
+    },
+    {
+      "id": "action-clocks.declared.reminderset",
+      "en": "a member asks to be reminded of a dated clock entry on a day, or changes or removes their own reminder (action-clocks R4)",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1528
+    },
+    {
       "id": "action-clocks.ics.calendar_name",
       "en": "Deadlines",
       "module": "action-clocks",
@@ -1548,6 +1569,13 @@
       "line": 32
     },
     {
+      "id": "action-holds.declared.holdnoticesent",
+      "en": "a member records that she sent the hold notice for a hold in place, held as the bytes sent or her account; it records no recipient and no one's compliance (action-holds R11)",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 1079
+    },
+    {
       "id": "action-holds.index.a_field_is_at_most",
       "en": "{name} is at most {max} characters and cannot contain a quote, a backslash, or a newline",
       "module": "action-holds",
@@ -1763,6 +1791,76 @@
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
       "line": 183
+    },
+    {
+      "id": "action-plans.declared.checkpointrecord",
+      "en": "scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2450
+    },
+    {
+      "id": "action-plans.declared.optionadd",
+      "en": "plan-directed: a member adds an option to a plan, keyed by plan; writes an option row",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2444
+    },
+    {
+      "id": "action-plans.declared.optiondispose",
+      "en": "option-directed: a member disposes of one or more options (open, chosen, declined, done, blocked), keyed by (plan, options); every change kept in the option's history",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2446
+    },
+    {
+      "id": "action-plans.declared.optionstart",
+      "en": "option-directed: a member starts a chosen option as an action, keyed by (plan, option); composes and promotes the action",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2452
+    },
+    {
+      "id": "action-plans.declared.optionstartpreview",
+      "en": "read: what starting a chosen option would do at this instant, keyed by (plan, option) — the action it would compose, the reminders it would set, and whether it would start or the refusal it would answer; allocates no id, sets no reminder and writes nothing",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2454
+    },
+    {
+      "id": "action-plans.declared.planask",
+      "en": "plan-directed: keyed by a plan; a member asks the assistant for options on it, opening one planning run whose proposals reach the member's tray; writes no option and moves no bundle",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2456
+    },
+    {
+      "id": "action-plans.declared.planclose",
+      "en": "plan-directed: a member closes a plan with a reason, keyed by plan id; the plan stays readable",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2442
+    },
+    {
+      "id": "action-plans.declared.planopen",
+      "en": "project-directed: a member opens a plan for one project over named subjects, keyed by project; writes a PLN- record object",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2438
+    },
+    {
+      "id": "action-plans.declared.plansubjectadd",
+      "en": "plan-directed: a member adds a subject to a plan with a reason, keyed by (plan, subject); kept in the plan's history",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2440
+    },
+    {
+      "id": "action-plans.declared.scenarioset",
+      "en": "plan-directed: a member sets one of a plan's scenarios whole, keyed by (plan, scenario); the earlier version kept in history",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 2448
     },
     {
       "id": "action-plans.index.a_plan_is_about_at",
@@ -2024,6 +2122,27 @@
       "line": 57
     },
     {
+      "id": "action-records.declared.actioninquiry",
+      "en": "action-directed: a question opened with an action as its reference, keyed by action; reached from the action, and writes this module's rows, never a bundle's state",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 902
+    },
+    {
+      "id": "action-records.declared.actionlawspropose",
+      "en": "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labeled machine work and never the action's own list",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 896
+    },
+    {
+      "id": "action-records.declared.actionstake",
+      "en": "action-directed: an action's declared stake, every value kept, keyed by action; moves no bundle",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 900
+    },
+    {
       "id": "action-records.index.a_question_is_opened_from",
       "en": "a question is opened from an action by a member; a machine credential may not open one. Nothing was written.",
       "module": "action-records",
@@ -2260,6 +2379,20 @@
       "module": "action-replies",
       "file": "bio-plane/src/action-replies/index.mjs",
       "line": 188
+    },
+    {
+      "id": "actions.declared.actioncreate",
+      "en": "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 3349
+    },
+    {
+      "id": "actions.declared.addresseesuggest",
+      "en": "read: the offices the record holds as responsible for an action's subject on its date, as a suggestion; writes nothing",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 3351
     },
     {
       "id": "actions.index.a_machine_write_may_move",
@@ -5391,6 +5524,13 @@
       "line": 1729
     },
     {
+      "id": "ai-accounts.declared.aikeepaway",
+      "en": "setting: whether the group keeps its material away from every assistant, an administrator's act with a reason; moves no bundle",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1745
+    },
+    {
       "id": "ai-accounts.declared.groupkeynoticeseen",
       "en": "personal state, keyed by member: the notice of the group's key seen by them",
       "module": "ai-accounts",
@@ -5417,6 +5557,48 @@
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
       "line": 1725
+    },
+    {
+      "id": "ai-accounts.declared.projectaccountremove",
+      "en": "credential governance: an owner removes the project's account; the subject is who pays for the assistant, not a bundle",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1737
+    },
+    {
+      "id": "ai-accounts.declared.projectaccountswitch",
+      "en": "the account's configuration: whether the project's account is on; an owner's; moves no document, claim or grade",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1739
+    },
+    {
+      "id": "ai-accounts.declared.projectaikeepaway",
+      "en": "setting: whether a project keeps its material away from the assistant, an owner's act with a reason; moves no bundle",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1741
+    },
+    {
+      "id": "ai-accounts.declared.projectkeynoticeseen",
+      "en": "personal state, keyed (member, project): the notice of the project's account seen by them",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1743
+    },
+    {
+      "id": "ai-accounts.declared.projectkeyset",
+      "en": "credential governance: an owner holds the project's API key, never answered; the subject is who pays for the assistant, not a bundle",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1733
+    },
+    {
+      "id": "ai-accounts.declared.projectsigninset",
+      "en": "credential governance: the sole participant's own sign-in made the project's account; the subject is who pays for the assistant, not a bundle",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1735
     },
     {
       "id": "ai-accounts.declared.subscriptiondisconnect",
@@ -5690,6 +5872,20 @@
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
       "line": 360
+    },
+    {
+      "id": "ai-runs.declared.airunclose",
+      "en": "investigative run lifecycle, keyed by run id: ends a run and names the bound that stopped it (§14b.6); what the run PROPOSED is a separate act with its own author",
+      "module": "ai-runs",
+      "file": "bio-plane/src/ai-runs/index.mjs",
+      "line": 3649
+    },
+    {
+      "id": "ai-runs.declared.airunopen",
+      "en": "investigative run lifecycle, keyed by run id: starts a background session in the context of an inquiry or a project and changes NOTHING about that object (§14a)",
+      "module": "ai-runs",
+      "file": "bio-plane/src/ai-runs/index.mjs",
+      "line": 3647
     },
     {
       "id": "ai-runs.index.a_batch_names_the_steps",
@@ -6049,6 +6245,20 @@
       "line": 3340
     },
     {
+      "id": "ai-use.declared.ailimitset",
+      "en": "the account's configuration: a limit on one account's assistant use, set by its owner; moves no document, claim or grade",
+      "module": "ai-use",
+      "file": "bio-plane/src/ai-use/index.mjs",
+      "line": 996
+    },
+    {
+      "id": "ai-use.declared.exploreapprove",
+      "en": "the account's configuration: an owner's approval of one day's exploring on that account; moves no document, claim or grade",
+      "module": "ai-use",
+      "file": "bio-plane/src/ai-use/index.mjs",
+      "line": 998
+    },
+    {
       "id": "ai-use.index.a_limit_in_unit_is",
       "en": "a limit in {unit} is a whole number of one or more, or null to remove it.",
       "module": "ai-use",
@@ -6322,6 +6532,27 @@
       "line": 14
     },
     {
+      "id": "answers.declared.ruleanswer",
+      "en": "read: one rule service's value with its basis, grade and label, or not held; writes nothing",
+      "module": "answers",
+      "file": "bio-plane/src/answers/ops.mjs",
+      "line": 43
+    },
+    {
+      "id": "answers.declared.standingquestionend",
+      "en": "personal state, keyed (member, STQ- id): a member ends their own standing question",
+      "module": "answers",
+      "file": "bio-plane/src/answers/ops.mjs",
+      "line": 47
+    },
+    {
+      "id": "answers.declared.standingquestionset",
+      "en": "personal state, keyed (member, STQ- id): a member's own standing question, seen only by them",
+      "module": "answers",
+      "file": "bio-plane/src/answers/ops.mjs",
+      "line": 45
+    },
+    {
       "id": "answers.index.the_rule_services_are_switched",
       "en": "the rule services are switched off in your team's Civicsmith",
       "module": "answers",
@@ -6334,6 +6565,13 @@
       "module": "answers",
       "file": "bio-plane/src/answers/rules.mjs",
       "line": 61
+    },
+    {
+      "id": "attestation.declared.attest",
+      "en": "capture-directed: co-attestation of a capture's existence in time (metadata published in capture_acts)",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/ops.mjs",
+      "line": 46
     },
     {
       "id": "attestation.index.attest_takes_sha",
@@ -6957,6 +7195,13 @@
       "module": "basis-versions",
       "file": "bio-plane/src/basis-versions/conclude.mjs",
       "line": 91
+    },
+    {
+      "id": "basis-versions.declared.narrow",
+      "en": "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
+      "module": "basis-versions",
+      "file": "bio-plane/src/basis-versions/index.mjs",
+      "line": 1658
     },
     {
       "id": "basis-versions.grammar.add_a_basis_version_grounds",
@@ -7841,6 +8086,13 @@
       "line": 364
     },
     {
+      "id": "bias.declared.biasadopt",
+      "en": "governance: the authored, attributed adoption that puts a declared-bias set in force for a scope (DEC-54 c/d), keyed by (scope, bias bundle) and not by any object's state — the disclose half of the pair `strengthbar` is the gate half of",
+      "module": "bias",
+      "file": "bio-plane/src/bias/index.mjs",
+      "line": 1257
+    },
+    {
       "id": "bias.declared.biasdebt",
       "en": "read: one run's bias debt and what settled it, keyed by run id — the record behind the queue item, never an act on an object",
       "module": "bias",
@@ -8329,6 +8581,41 @@
       "module": "calculations",
       "file": "bio-plane/src/calculations/application.mjs",
       "line": 56
+    },
+    {
+      "id": "calculations.declared.calculationaccept",
+      "en": "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 2251
+    },
+    {
+      "id": "calculations.declared.calculationcreate",
+      "en": "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 2249
+    },
+    {
+      "id": "calculations.declared.calculationdraw",
+      "en": "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 2253
+    },
+    {
+      "id": "calculations.declared.spotcheckvisit",
+      "en": "draw-directed: keyed by a draw and one drawn item, reached from the spot-check; ties the visitor's own testimony to the item; moves no bundle",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 2255
+    },
+    {
+      "id": "calculations.declared.tabledeclare",
+      "en": "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 2247
     },
     {
       "id": "calculations.index.a_binding_is_adopted_by",
@@ -10506,6 +10793,20 @@
       "module": "case-carriage",
       "file": "bio-plane/src/case-carriage/checks.mjs",
       "line": 81
+    },
+    {
+      "id": "case-carriage.declared.obscuremark",
+      "en": "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to obscure in the published copy; withdrawn only by a reasoned act, never erased (R28); moves no bundle",
+      "module": "case-carriage",
+      "file": "bio-plane/src/case-carriage/index.mjs",
+      "line": 1401
+    },
+    {
+      "id": "case-carriage.declared.obscuremarkwithdraw",
+      "en": "photo-directed: keyed by a photo's capture and one mark, reached from the Photos step; a member's reasoned withdrawal of a mark, recorded beside it, never erased; moves no bundle",
+      "module": "case-carriage",
+      "file": "bio-plane/src/case-carriage/index.mjs",
+      "line": 1403
     },
     {
       "id": "case-carriage.index.a_mark_holds_at_most",
@@ -13826,6 +14127,13 @@
       "line": 651
     },
     {
+      "id": "case-tensions.declared.attribute",
+      "en": "author-directed: an observation's author chooses its attribution level for one prepared case edition, keyed by (case, edition, observation); writes an `observation_attributions` row and re-authors the unsigned case document",
+      "module": "case-tensions",
+      "file": "bio-plane/src/case-tensions/index.mjs",
+      "line": 759
+    },
+    {
       "id": "case-tensions.index.a_revision_flag_is_set",
       "en": "a revision flag is SET AND NEVER CLEARED: it is DISCHARGED by the owning project publishing a new edition of that case, which is recorded beside it rather than replacing it. A case with several owning projects is not discharged by one of them acting (DEC-72, D-266's scoping, D-79's ageing).",
       "module": "case-tensions",
@@ -14946,6 +15254,13 @@
       "line": 190
     },
     {
+      "id": "conformance.declared.determine",
+      "en": "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
+      "module": "conformance",
+      "file": "bio-plane/src/conformance/index.mjs",
+      "line": 2250
+    },
+    {
       "id": "conformance.index.a_determination_measures_the_act",
       "en": "a determination measures the act against at least one standard the record holds (R14). Nothing was written.",
       "module": "conformance",
@@ -16003,6 +16318,34 @@
       "line": 100
     },
     {
+      "id": "consequences.declared.addressedrecord",
+      "en": "consequence-directed: a member records a part addressed or not addressed, with a reason, keyed by part id; writes a `consequence_addressed` row",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1727
+    },
+    {
+      "id": "consequences.declared.consequencerecord",
+      "en": "determination-directed: a member records one consequence part against one standard's noncompliant outcome, keyed by (determination, standard); writes a CONS- bundle",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1723
+    },
+    {
+      "id": "consequences.declared.consequencerevise",
+      "en": "consequence-directed: a member revises a consequence part with its reason, keyed by part id; writes a successor CONS- bundle, the earlier one kept",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1725
+    },
+    {
+      "id": "consequences.declared.successrecord",
+      "en": "success-directed: keyed by a new SUC- id in a project; a member's statement of what changed and when, on evidence; never a consequence part; moves no bundle",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1729
+    },
+    {
       "id": "consequences.index.a_carry_names_one",
       "en": "a carry names one of {success}, {addressed} or {cure}",
       "module": "consequences",
@@ -16449,6 +16792,20 @@
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
       "line": 278
+    },
+    {
+      "id": "content.declared.transcribe",
+      "en": "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge",
+      "module": "content",
+      "file": "bio-plane/src/content/ops.mjs",
+      "line": 64
+    },
+    {
+      "id": "content.declared.transcriptionattest",
+      "en": "content-directed: a second member attests another member's typing, keyed by content id, with the attestor's note saying what they compared, now required (content R25, C-52.10; DEC-88: `reasoned`); the typist's own attestation is refused",
+      "module": "content",
+      "file": "bio-plane/src/content/ops.mjs",
+      "line": 66
     },
     {
       "id": "content.extent-core.a_slide_shape_extent_names",
@@ -17478,6 +17835,41 @@
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/checks.mjs",
       "line": 244
+    },
+    {
+      "id": "contradiction.declared.contradictionclarify",
+      "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
+      "module": "contradiction",
+      "file": "bio-plane/src/contradiction/index.mjs",
+      "line": 3009
+    },
+    {
+      "id": "contradiction.declared.contradictiondismiss",
+      "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
+      "module": "contradiction",
+      "file": "bio-plane/src/contradiction/index.mjs",
+      "line": 3007
+    },
+    {
+      "id": "contradiction.declared.contradictionoptin",
+      "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn",
+      "module": "contradiction",
+      "file": "bio-plane/src/contradiction/index.mjs",
+      "line": 3013
+    },
+    {
+      "id": "contradiction.declared.contradictionrespond",
+      "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other",
+      "module": "contradiction",
+      "file": "bio-plane/src/contradiction/index.mjs",
+      "line": 3015
+    },
+    {
+      "id": "contradiction.declared.contradictiontakeup",
+      "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
+      "module": "contradiction",
+      "file": "bio-plane/src/contradiction/index.mjs",
+      "line": 3011
     },
     {
       "id": "contradiction.index.acceptance_not_standing_detail",
@@ -19398,6 +19790,20 @@
       "line": 144
     },
     {
+      "id": "docket.declared.docketfile",
+      "en": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+      "module": "docket",
+      "file": "bio-plane/src/docket/index.mjs",
+      "line": 1328
+    },
+    {
+      "id": "docket.declared.docketpost",
+      "en": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+      "module": "docket",
+      "file": "bio-plane/src/docket/index.mjs",
+      "line": 1330
+    },
+    {
       "id": "docket.index.docket_kind_edition_edition",
       "en": "docket: {kind}, edition {edition}",
       "module": "docket",
@@ -20756,6 +21162,13 @@
       "line": 53
     },
     {
+      "id": "duties.declared.declare",
+      "en": "duty-directed: keyed by a new DUT- id; writes duties' rows and moves no bundle",
+      "module": "duties",
+      "file": "bio-plane/src/duties/index.mjs",
+      "line": 1864
+    },
+    {
       "id": "duties.index.a_commitments_or_windows_date",
       "en": "a commitment's or window's date is a calendar day or a date-time.",
       "module": "duties",
@@ -21377,6 +21790,13 @@
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
       "line": 2084
+    },
+    {
+      "id": "entities.declared.resolutiondefect",
+      "en": "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 2090
     },
     {
       "id": "entities.declared.resolve",
@@ -22016,6 +22436,55 @@
       "line": 135
     },
     {
+      "id": "escalation.declared.declinetoescalate",
+      "en": "determination-directed: a member declines, with a reason, to escalate a live noncompliant determination, keyed by determination id; prose only, corrected forward, and a later opening supersedes it",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/ops.mjs",
+      "line": 44
+    },
+    {
+      "id": "escalation.declared.escalationadvance",
+      "en": "escalation-directed: a member advances an escalation along an edge with a reason, keyed by escalation id; appends to its log",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/ops.mjs",
+      "line": 52
+    },
+    {
+      "id": "escalation.declared.escalationdecline",
+      "en": "escalation-directed: a member declines a proposed stage for now with a reason, keyed by escalation id; appends to its log",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/ops.mjs",
+      "line": 54
+    },
+    {
+      "id": "escalation.declared.escalationend",
+      "en": "escalation-directed: a member ends an escalation, keyed by escalation id; appends to its log, never reopened",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/ops.mjs",
+      "line": 56
+    },
+    {
+      "id": "escalation.declared.escalationevaluate",
+      "en": "escalation-directed: a member reads a counterparty's response with a reason, keyed by escalation id; appends to its log",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/ops.mjs",
+      "line": 50
+    },
+    {
+      "id": "escalation.declared.escalationresume",
+      "en": "escalation-directed: a member resumes a suspended escalation at its stage, keyed by escalation id; appends to its log",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/ops.mjs",
+      "line": 60
+    },
+    {
+      "id": "escalation.declared.escalationsuspend",
+      "en": "escalation-directed: a member suspends an escalation with a reason, keyed by escalation id; appends to its log",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/ops.mjs",
+      "line": 58
+    },
+    {
       "id": "escalation.index.basis_undetermined",
       "en": "the record does not state (undetermined)",
       "module": "escalation",
@@ -22091,6 +22560,34 @@
       "module": "escalation",
       "file": "bio-plane/src/escalation/index.mjs",
       "line": 1262
+    },
+    {
+      "id": "events.declared.addparticipant",
+      "en": "event-directed: keyed by (event, entity, role); writes events' rows and moves no bundle",
+      "module": "events",
+      "file": "bio-plane/src/events/index.mjs",
+      "line": 1499
+    },
+    {
+      "id": "events.declared.createevent",
+      "en": "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle",
+      "module": "events",
+      "file": "bio-plane/src/events/index.mjs",
+      "line": 1497
+    },
+    {
+      "id": "events.declared.recorddatedfact",
+      "en": "dated-fact-directed: keyed by (capture, extent); holds a document's own stated date and moves no bundle",
+      "module": "events",
+      "file": "bio-plane/src/events/index.mjs",
+      "line": 1495
+    },
+    {
+      "id": "events.declared.relate",
+      "en": "event-directed: keyed by the two events; writes a cited relation and moves no bundle",
+      "module": "events",
+      "file": "bio-plane/src/events/index.mjs",
+      "line": 1501
     },
     {
       "id": "events.follow.a_register_import_reads_one",
@@ -23010,6 +23507,20 @@
       "line": 25
     },
     {
+      "id": "explore.declared.explore",
+      "en": "read: the paths from a node over the registered kinds as of a date, each hop cited and graded, within the bounds; writes nothing",
+      "module": "explore",
+      "file": "bio-plane/src/explore/ops.mjs",
+      "line": 32
+    },
+    {
+      "id": "explore.declared.explorepreset",
+      "en": "read: one preset walk — chain, flows, relations, a path between two nodes, overlaps — or the presets; writes nothing",
+      "module": "explore",
+      "file": "bio-plane/src/explore/ops.mjs",
+      "line": 34
+    },
+    {
       "id": "explore.graph.rings_is_one_or_two",
       "en": "rings is 1 or 2: the graph shows the records one or two steps from the centre",
       "module": "explore",
@@ -23127,6 +23638,13 @@
       "module": "explore",
       "file": "bio-plane/src/explore/walk.mjs",
       "line": 47
+    },
+    {
+      "id": "extraction.declared.pagetranscribe",
+      "en": "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 1889
     },
     {
       "id": "extraction.drift.this_text_was_graded_under",
@@ -25628,6 +26146,27 @@
       "line": 1710
     },
     {
+      "id": "following.declared.secondlook",
+      "en": "item-directed: a member asks a second look at one followed item, seen by every member with the date and note; moves no bundle",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1714
+    },
+    {
+      "id": "following.declared.secondlookclear",
+      "en": "item-directed: a member clears a second look at one followed item, with who and when; moves no bundle",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1716
+    },
+    {
+      "id": "following.declared.watchitem",
+      "en": "item-directed: a member's own watch on one followed item, read back only to its setter; moves no bundle",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1712
+    },
+    {
       "id": "following.index.a_follow_is_read_daily",
       "en": "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}",
       "module": "following",
@@ -26074,6 +26613,34 @@
       "module": "hypotheses",
       "file": "bio-plane/src/hypotheses/index.mjs",
       "line": 918
+    },
+    {
+      "id": "hypotheses.declared.notedelete",
+      "en": "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+      "module": "hypotheses",
+      "file": "bio-plane/src/hypotheses/index.mjs",
+      "line": 926
+    },
+    {
+      "id": "hypotheses.declared.noterevise",
+      "en": "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+      "module": "hypotheses",
+      "file": "bio-plane/src/hypotheses/index.mjs",
+      "line": 922
+    },
+    {
+      "id": "hypotheses.declared.noteturn",
+      "en": "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+      "module": "hypotheses",
+      "file": "bio-plane/src/hypotheses/index.mjs",
+      "line": 924
+    },
+    {
+      "id": "hypotheses.declared.notewrite",
+      "en": "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+      "module": "hypotheses",
+      "file": "bio-plane/src/hypotheses/index.mjs",
+      "line": 920
     },
     {
       "id": "hypotheses.index.the_calculation_calcid_names_hyp",
@@ -30451,6 +31018,13 @@
       "line": 1726
     },
     {
+      "id": "intent.declared.triage",
+      "en": "proposal-directed: a member adopts, opens a question from, defers or dismisses one proposal, keyed by proposal key",
+      "module": "intent",
+      "file": "bio-plane/src/intent/index.mjs",
+      "line": 1742
+    },
+    {
       "id": "intent.index.a_departure_from_the_teams",
       "en": "a departure from the team's aspiration records why. Nothing was written.",
       "module": "intent",
@@ -32313,6 +32887,13 @@
       "line": 458
     },
     {
+      "id": "lines.declared.recordline",
+      "en": "line-directed: keyed by a new LIN- id between two entities; writes lines' rows and moves no bundle",
+      "module": "lines",
+      "file": "bio-plane/src/lines/index.mjs",
+      "line": 843
+    },
+    {
       "id": "lines.why.cache_stale",
       "en": "the line's dates are not trusted: its bound cache differs from its rebuild",
       "module": "lines",
@@ -32880,6 +33461,34 @@
       "line": 182
     },
     {
+      "id": "local-facts.declared.factconfirm",
+      "en": "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 673
+    },
+    {
+      "id": "local-facts.declared.ruleconfirm",
+      "en": "rule-directed: keyed by group rule; a member other than its drafter confirms it, and it applies from then; the group's own rule beside the profiles, never a profile's; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 669
+    },
+    {
+      "id": "local-facts.declared.ruledraft",
+      "en": "rule-directed: keyed by a profile section and an entry; a member drafts a rule from its primary source, with a reason; the group's own rule beside the profiles, never a profile's; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 667
+    },
+    {
+      "id": "local-facts.declared.rulewithdraw",
+      "en": "rule-directed: keyed by group rule; a member withdraws it with a reason, kept and never deleted; the group's own rule beside the profiles, never a profile's; moves no bundle",
+      "module": "local-facts",
+      "file": "bio-plane/src/local-facts/index.mjs",
+      "line": 671
+    },
+    {
       "id": "machinery-producers.index.a_status_is_a_fact",
       "en": "a status is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it.",
       "module": "machinery-producers",
@@ -33412,6 +34021,34 @@
       "line": 59
     },
     {
+      "id": "membership.declared.projectinvite",
+      "en": "roster act on a project, position-enforced by the store",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 1384
+    },
+    {
+      "id": "membership.declared.projectjoin",
+      "en": "roster act on a project",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 1386
+    },
+    {
+      "id": "membership.declared.projectleave",
+      "en": "roster act on a project",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 1388
+    },
+    {
+      "id": "membership.declared.projectremove",
+      "en": "roster act on a project",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 1390
+    },
+    {
       "id": "membership.index.a_door_makes_at_most",
       "en": "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written.",
       "module": "member-roster",
@@ -33823,6 +34460,55 @@
       "module": "money-checks",
       "file": "bio-plane/src/money-checks/index.mjs",
       "line": 680
+    },
+    {
+      "id": "money.declared.authoritychain",
+      "en": "read: the chain of authorising events toward the event a fact concerns, bounded; writes nothing",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 1297
+    },
+    {
+      "id": "money.declared.committedagainstpaid",
+      "en": "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 1295
+    },
+    {
+      "id": "money.declared.createset",
+      "en": "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 1287
+    },
+    {
+      "id": "money.declared.exclude",
+      "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 1291
+    },
+    {
+      "id": "money.declared.include",
+      "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 1289
+    },
+    {
+      "id": "money.declared.reconcile",
+      "en": "read: whether two money facts are consistent, or each dimension that differs; writes nothing",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 1293
+    },
+    {
+      "id": "money.declared.recordfact",
+      "en": "money-directed: keyed by a new MNY- id; holds one source's reading of one amount and moves no bundle",
+      "module": "money",
+      "file": "bio-plane/src/money/index.mjs",
+      "line": 1285
     },
     {
       "id": "money.index.a_balance_class_is_read",
@@ -34740,6 +35426,20 @@
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
       "line": 3091
+    },
+    {
+      "id": "network-notices.declared.noticepost",
+      "en": "project-directed: keyed by a project, reached from the project; an owner's signed notice",
+      "module": "network-notices",
+      "file": "bio-plane/src/network-notices/index.mjs",
+      "line": 978
+    },
+    {
+      "id": "network-notices.declared.noticeprepare",
+      "en": "read: a working-on notice's next revision composed for its owner to sign, keyed by project, with its statement and digest; stores nothing and writes nothing",
+      "module": "network-notices",
+      "file": "bio-plane/src/network-notices/index.mjs",
+      "line": 976
     },
     {
       "id": "network-notices.index.no_group_slug_detail",
@@ -36254,6 +36954,55 @@
       "line": 70
     },
     {
+      "id": "people.declared.declaretie",
+      "en": "member-directed: keyed by a new MTI- id; the member's own declared tie, seen by them and administrators only",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1840
+    },
+    {
+      "id": "people.declared.identityclaim",
+      "en": "person-directed: keyed by a new IDC- id between two persons; a claim that links and never merges",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1832
+    },
+    {
+      "id": "people.declared.personexpunge",
+      "en": "person-directed: keyed by a person fact, claim, tie or source link; an administrator removes its value on a listed ground and leaves a tombstone",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1838
+    },
+    {
+      "id": "people.declared.recordpersonfact",
+      "en": "person-directed: keyed by a new PFA- id on a person; holds one cited fact and moves no bundle",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1836
+    },
+    {
+      "id": "people.declared.sourcepersonlink",
+      "en": "source-directed: keyed by (source, person); a protected link seen only by its listed members",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1844
+    },
+    {
+      "id": "people.declared.withdrawidentityclaim",
+      "en": "person-directed: keyed by claim; keeps it, shown withdrawn, and links nothing",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1834
+    },
+    {
+      "id": "people.declared.withdrawtie",
+      "en": "member-directed: keyed by tie; keeps it, shown withdrawn",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1842
+    },
+    {
       "id": "people.index.directory_follows",
       "en": "the people and organisations the record follows, never the team's own members; each row counts the documents, questions and projects naming it among those you may see, and when the newest was added",
       "module": "people",
@@ -36280,6 +37029,13 @@
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
       "line": 478
+    },
+    {
+      "id": "plan-work.declared.itemtakeup",
+      "en": "a member routes a clock entry's, a checkpoint's, a proposed stage's or a hold's to-dos to herself from then; nobody assigns anybody (plan-work R11)",
+      "module": "plan-work",
+      "file": "bio-plane/src/plan-work/index.mjs",
+      "line": 1252
     },
     {
       "id": "plan-work.index.a_comment_is_on_one",
@@ -36378,6 +37134,27 @@
       "module": "progressions",
       "file": "bio-plane/src/progressions/checks.mjs",
       "line": 160
+    },
+    {
+      "id": "progressions.declared.discharge",
+      "en": "exception document, keyed by (progression, entity, stage)",
+      "module": "progressions",
+      "file": "bio-plane/src/progressions/index.mjs",
+      "line": 1624
+    },
+    {
+      "id": "progressions.declared.progressiondefine",
+      "en": "progression definition, keyed by progression key",
+      "module": "progressions",
+      "file": "bio-plane/src/progressions/index.mjs",
+      "line": 1620
+    },
+    {
+      "id": "progressions.declared.thread",
+      "en": "progression instance write, keyed by (progression, entity)",
+      "module": "progressions",
+      "file": "bio-plane/src/progressions/index.mjs",
+      "line": 1622
     },
     {
       "id": "progressions.index.a_set_of_at_most",
@@ -37848,6 +38625,13 @@
       "module": "publication",
       "file": "bio-plane/src/publication/index.mjs",
       "line": 735
+    },
+    {
+      "id": "publish-schedule.declared.publishatcancel",
+      "en": "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
+      "module": "publish-schedule",
+      "file": "bio-plane/src/publish-schedule/index.mjs",
+      "line": 176
     },
     {
       "id": "publish-schedule.index.the_scheduled_publisher_is_already",
@@ -41406,6 +42190,27 @@
       "line": 142
     },
     {
+      "id": "reevaluation.declared.adoptversion",
+      "en": "notice-directed: adopts the newer capture a version notice names, keyed by notice, with the member's reason for adopting it, now required (reevaluation R15; DEC-88: `reasoned`); travels with the notice (reevaluation R14)",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2986
+    },
+    {
+      "id": "reevaluation.declared.keepversion",
+      "en": "notice-directed: keeps a reference on the earlier capture, keyed by notice; travels with the notice (reevaluation R14)",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2988
+    },
+    {
+      "id": "reevaluation.declared.reevaluationrecord",
+      "en": "cause-directed: a member records a re-evaluation of a dependent against one standing cause, keyed by (dependent, cause), with its note",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2990
+    },
+    {
       "id": "reevaluation.declared.versionnotice",
       "en": "read: whether the document a citation rests on has a newer version at its address, and whether a passage at the same extent is in it — a candidate or UNDETERMINED — and whether the update AFFECTS the cited part, graded A/B (unaffected), C/NOT_FOUND (affected) or UNDETERMINED with its reason; moves nothing and writes nothing (D-394, REC-221)",
       "module": "reevaluation",
@@ -41922,6 +42727,27 @@
       "module": "retrieval-browse",
       "file": "bio-plane/src/retrieval-browse/findin.mjs",
       "line": 460
+    },
+    {
+      "id": "retrieval.declared.findin",
+      "en": "read: what a scope holds of the kinds asked, each match with its words and extent, found by search; it records nothing; writes nothing",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1771
+    },
+    {
+      "id": "retrieval.declared.select",
+      "en": "selection lifecycle, owned by the credential that made it",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1773
+    },
+    {
+      "id": "retrieval.declared.selectionrelease",
+      "en": "selection lifecycle, owned by the credential that made it",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1775
     },
     {
       "id": "retrieval.frontier.acquire_not_here",
@@ -44724,6 +45550,55 @@
       "line": 34
     },
     {
+      "id": "sources.declared.sourceconsentwithdraw",
+      "en": "source-directed: a member records the withdrawal of a source's consent for one disclosure and one audience, keyed by (source, entry); binds only later publications, and what is published stays published",
+      "module": "sources",
+      "file": "bio-plane/src/sources/index.mjs",
+      "line": 835
+    },
+    {
+      "id": "sources.declared.sourcedisclose",
+      "en": "source-directed: a member appends one disclosure to a source's history — what was revealed, how, to whom it is known, with its evidence — keyed by source id; never edited, a later entry superseding it on read",
+      "module": "sources",
+      "file": "bio-plane/src/sources/index.mjs",
+      "line": 829
+    },
+    {
+      "id": "sources.declared.sourcelink",
+      "en": "source-directed: a member claims that two sources are one person, with evidence, keyed by the source pair; recorded as a disclosure and merging nothing",
+      "module": "sources",
+      "file": "bio-plane/src/sources/index.mjs",
+      "line": 831
+    },
+    {
+      "id": "standards.declared.courtlink",
+      "en": "standard-directed: keyed by a court standard and a portion; writes standards' rows and moves no bundle",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 2836
+    },
+    {
+      "id": "standards.declared.lawrelate",
+      "en": "standard-directed: keyed by a new relation between two standards or portions; writes standards' rows and moves no bundle",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 2834
+    },
+    {
+      "id": "standards.declared.standardadopt",
+      "en": "proposal-directed: a member adopts a standard proposal, keyed by proposal id, with the adopter's own reason, now required (standards R10, through R1; DEC-88: `reasoned`) — the proposal's why is the proposer's; writes an STD- bundle naming it",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 2832
+    },
+    {
+      "id": "standards.declared.standarddeclare",
+      "en": "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one, with the declarer's reason for holding the government to it, now required (standards R1; DEC-88: `reasoned`); writes an STD- bundle",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 2830
+    },
+    {
       "id": "standards.declared.standardinforce",
       "en": "read: whether one standard was in force on a date, with why; writes nothing",
       "module": "standards",
@@ -45998,6 +46873,20 @@
       "line": 177
     },
     {
+      "id": "strength.declared.projectbarset",
+      "en": "project-directed: keyed by a project; the project's own required strength, set with the member's reason; never the group's bar, and it gates nothing (`strength` R21)",
+      "module": "strength",
+      "file": "bio-plane/src/strength/index.mjs",
+      "line": 1697
+    },
+    {
+      "id": "strength.declared.strengthbarset",
+      "en": "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader",
+      "module": "strength",
+      "file": "bio-plane/src/strength/index.mjs",
+      "line": 1695
+    },
+    {
       "id": "strength.index.a_standard_of_evidence_is_a_property_of_a_project",
       "en": "a standard of evidence is a property of a PROJECT, not of a finding or a claim (DEC-72). No bar attaches to this finding, and none ever did on its own behalf: what governed it was whichever project published it, at the moment it published. Ask the project — op=strengthbarof&project=<project id> — or op=strengthbarof&group= for the default a new project starts from.",
       "module": "strength",
@@ -46796,6 +47685,34 @@
       "line": 675
     },
     {
+      "id": "translations.declared.translationadopt",
+      "en": "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 809
+    },
+    {
+      "id": "translations.declared.translationconfirm",
+      "en": "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 811
+    },
+    {
+      "id": "translations.declared.translationgrant",
+      "en": "setting: a named member's grant for one language, an administrator's act; moves no bundle",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 807
+    },
+    {
+      "id": "translations.declared.translationrevert",
+      "en": "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 813
+    },
+    {
       "id": "translations.index.a_draft_carries_no_project",
       "en": "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.",
       "module": "translations",
@@ -47039,6 +47956,27 @@
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
       "line": 588
+    },
+    {
+      "id": "workbooks.declared.addworkbook",
+      "en": "workbook-directed: keyed by (capture, project); writes workbooks' rows and moves no bundle",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/ops.mjs",
+      "line": 47
+    },
+    {
+      "id": "workbooks.declared.bind",
+      "en": "workbook-directed: keyed by (capture, project) and a range; writes a binding and moves no bundle",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/ops.mjs",
+      "line": 49
+    },
+    {
+      "id": "workbooks.declared.recordcheck",
+      "en": "workbook-directed: keyed by (capture, project); a second member's check, disclosed and never a gate",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/ops.mjs",
+      "line": 51
     },
     {
       "id": "workbooks.index.k1447_grade_rule",

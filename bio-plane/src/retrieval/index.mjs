@@ -1764,3 +1764,18 @@ export function retrievalRoutes(r, url, body) {
     },
   };
 }
+
+/* R91 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  findin: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("retrieval.declared.findin", "read: what a scope holds of the kinds asked, each match with its words and extent, found by search; it records nothing; writes nothing"),
+    fields: { accepts: ["scope","kinds","term","limit","cursor"], requires: ["scope","kinds"] } },
+  select: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("retrieval.declared.select", "selection lifecycle, owned by the credential that made it"),
+    fields: { accepts: ["q","sort","dir","kind","ids"], requires: [] } },
+  selectionrelease: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("retrieval.declared.selectionrelease", "selection lifecycle, owned by the credential that made it"),
+    fields: { accepts: ["handle"], requires: [] } },
+  frontier: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.frontier.label.finder",
+    fields: { accepts: ["level","limit"], requires: [] } },
+  search: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.search.label.finder",
+    fields: { accepts: ["q","sort","dir","limit","offset","mode","facets","facetmode","widen","snippet","scope"], requires: [] } },
+});

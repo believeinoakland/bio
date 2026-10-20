@@ -1,4 +1,4 @@
-/* corpus-export R11 (T51; K4168): each op this module declares in DECLARED_OPS is held true against the op as the door runs it
+/* corpus-export R12 (T51; K4168): each op this module declares in DECLARED_OPS is held true against the op as the door runs it
    (test-support R15): only its requires raise no refusal naming a declared field, a call without each required one is refused
    naming it, and a field outside accepts is dropped or refused naming it. */
 import { test } from "node:test";
@@ -26,5 +26,10 @@ const mk = (op, stamps = {}, setup = null, invoke = null, adapt = null) => async
 
 test("R11 corpus-export declares export: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "export", declaration: DECLARED_OPS["export"], call: mk("export", {"viewer":"admin"}),
+    refusedNaming: named({}) });
+});
+
+test("R12 corpus-export declares exportlog: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "exportlog", declaration: DECLARED_OPS["exportlog"], call: mk("exportlog", {"viewer":"admin"}),
     refusedNaming: named({}) });
 });

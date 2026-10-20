@@ -1825,3 +1825,22 @@ export function peopleOps(p, url, body) {
     interestcheckgate: () => p.recordCheckGate(b()),
   };
 }
+
+/* R42 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  identityclaim: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("people.declared.identityclaim", "person-directed: keyed by a new IDC- id between two persons; a claim that links and never merges"),
+    fields: { accepts: ["a","b","kind","basis","evidence","project","note"], requires: ["a","b","kind","basis","note"] } },
+  withdrawidentityclaim: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("people.declared.withdrawidentityclaim", "person-directed: keyed by claim; keeps it, shown withdrawn, and links nothing"),
+    fields: { accepts: ["claimId","reason"], requires: ["claimId","reason"] } },
+  recordpersonfact: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("people.declared.recordpersonfact", "person-directed: keyed by a new PFA- id on a person; holds one cited fact and moves no bundle"),
+    fields: { accepts: ["person","kind","value","valid","citation","question"], requires: ["person","kind","value","valid","citation"] } },
+  personexpunge: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("people.declared.personexpunge", "person-directed: keyed by a person fact, claim, tie or source link; an administrator removes its value on a listed ground and leaves a tombstone"),
+    fields: { accepts: ["id","ground","demandKind","order","reason"], requires: ["id","ground","reason"] } },
+  declaretie: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("people.declared.declaretie", "member-directed: keyed by a new MTI- id; the member's own declared tie, seen by them and administrators only"),
+    fields: { accepts: ["entity","kind","note","attribution"], requires: ["entity","kind","note","attribution"] } },
+  withdrawtie: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("people.declared.withdrawtie", "member-directed: keyed by tie; keeps it, shown withdrawn"),
+    fields: { accepts: ["tieId","reason"], requires: ["tieId","reason"] } },
+  sourcepersonlink: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("people.declared.sourcepersonlink", "source-directed: keyed by (source, person); a protected link seen only by its listed members"),
+    fields: { accepts: ["source","person","evidence","sight"], requires: ["source","person","evidence","sight"] } },
+});

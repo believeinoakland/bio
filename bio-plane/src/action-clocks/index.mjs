@@ -1521,3 +1521,14 @@ export function actionClocksOps(m, url, body) {
     clocksrunning: () => m.clocksRunning({ viewer: q("viewer") }),
   };
 }
+
+/* R25 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  reminderset: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("action-clocks.declared.reminderset", "a member asks to be reminded of a dated clock entry on a day, or changes or removes their own reminder (action-clocks R4)"),
+    fields: { accepts: ["target","entry","on","from"], requires: ["target","entry",["on","from"]] } },
+  reminderanswer: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("action-clocks.declared.reminderanswer", "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none"),
+    fields: { accepts: ["target","entry","on"], requires: ["target","entry"] } },
+  clockadopt: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("action-clocks.declared.clockadopt", "a member adopts a standing clock proposal, as proposed or amended, as a clock entry with its basis and trace (action-clocks R13)"),
+    fields: { accepts: ["target","proposal","why","date","text","description","standard","owed_by"], requires: ["target","proposal"] } },
+});

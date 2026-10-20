@@ -454,6 +454,8 @@ export function corpusExportOps(ce, q) {
 export const DECLARED_OPS = Object.freeze({
   export: { classes: ["admin"], mutating: true, weight: "substrate", description: localize("corpus-export.declared.export", "writes an export manifest of what is already there"),
     fields: { accepts: ["note"], requires: [] } },
+  exportlog: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.exportlog.label.group",
+    fields: { accepts: ["limit"], requires: [] } },
 });
 
 const instances = new WeakMap();

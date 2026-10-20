@@ -2,6 +2,8 @@
  * The stamps (`viewer`, `by`, and the grant an ask reads under) are the control plane's, read from `url`'s query, never
  * from the body; an act's arguments are read from the body. Which credential reaches each op is `op-declarations`'. */
 
+import { localize } from "../setup-words/index.mjs";
+
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const q = (url, k) => (url && url.searchParams ? url.searchParams.get(k) : null);
 
@@ -34,3 +36,14 @@ export function answersOps(a, url, body) {
     standingaiswitch: () => a.standingAiSwitch({ on: b.on === true, by: viewer }),
   };
 }
+
+/* R36 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  ruleanswer: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("answers.declared.ruleanswer", "read: one rule service's value with its basis, grade and label, or not held; writes nothing"),
+    fields: { accepts: ["service","args","at"], requires: ["service"] } },
+  standingquestionset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("answers.declared.standingquestionset", "personal state, keyed (member, STQ- id): a member's own standing question, seen only by them"),
+    fields: { accepts: ["owner","question","query","find","cadence","ends"], requires: [["query","find"],"cadence","ends"] } },
+  standingquestionend: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("answers.declared.standingquestionend", "personal state, keyed (member, STQ- id): a member ends their own standing question"),
+    fields: { accepts: ["id"], requires: ["id"] } },
+});

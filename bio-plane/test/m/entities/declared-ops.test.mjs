@@ -63,3 +63,8 @@ test("R62 entities declares resolvetestify: its requires alone raise no refusal 
   await declaredOpHolds({ op: "resolvetestify", declaration: DECLARED_OPS["resolvetestify"], call: mk("resolvetestify", {}, null, null, (fields, env) => (seeded(fields, env))),
     refusedNaming: named({"captureSha":["NO_SHA"],"ref":["NO_REF"],"entityId":["NO_ENTITY"],"basis":["NO_BASIS"]}, true), values: { captureSha: sha("c"), ref: "person:x", basis: "I saw it" }, same: sameCode });
 });
+
+test("R62 entities declares resolutiondefect: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "resolutiondefect", declaration: DECLARED_OPS["resolutiondefect"], call: mk("resolutiondefect", {}),
+    refusedNaming: named({"captureSha":["NO_SHA"],"ref":["NO_REF"],"entityId":["NO_ENTITY"],"reason":["NO_REASON"]}, true), same: sameCode });
+});

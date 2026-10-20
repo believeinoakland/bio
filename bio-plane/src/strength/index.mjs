@@ -1689,6 +1689,15 @@ export function strengthOps(s, url, body) {
   };
 }
 
+/* R41 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
+    fields: { accepts: ["group","capture","connection","reason"], requires: [["capture","connection"],"reason"] } },
+  projectbarset: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("strength.declared.projectbarset", "project-directed: keyed by a project; the project's own required strength, set with the member's reason; never the group's bar, and it gates nothing (`strength` R21)"),
+    fields: { accepts: ["project","capture","connection","reason"], requires: ["project","reason"] } },
+});
+
 const instances = new WeakMap();
 
 /** R39 (plan T33, Rules (6); record-core R21, R77): this module's tables, each with its classes. The cache is

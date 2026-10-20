@@ -2827,6 +2827,14 @@ export function standardsOps(s, url, body) {
 export const DECLARED_OPS = Object.freeze({
   standardinforce: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("standards.declared.standardinforce", "read: whether one standard was in force on a date, with why; writes nothing"),
     fields: { accepts: ["id","date"], requires: ["id","date"] } },
+  standarddeclare: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("standards.declared.standarddeclare", "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one, with the declarer's reason for holding the government to it, now required (standards R1; DEC-88: `reasoned`); writes an STD- bundle"),
+    fields: { accepts: ["cite","kind","issuer","reason","text","period","supersedes","instrument","portion","requires","copy","current_through","period_basis","held","cited_by","search","family","copy_claimed","version_basis","overrides","force_source","designation","edition","access","target","question"], requires: ["cite","kind","issuer","reason"] } },
+  standardadopt: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("standards.declared.standardadopt", "proposal-directed: a member adopts a standard proposal, keyed by proposal id, with the adopter's own reason, now required (standards R10, through R1; DEC-88: `reasoned`) — the proposal's why is the proposer's; writes an STD- bundle naming it"),
+    fields: { accepts: ["cite","kind","issuer","reason","text","period","supersedes","instrument","portion","requires","copy","current_through","period_basis","held","cited_by","search","family","copy_claimed","version_basis","overrides","force_source","designation","edition","access","target","question","proposal"], requires: ["proposal"] } },
+  lawrelate: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("standards.declared.lawrelate", "standard-directed: keyed by a new relation between two standards or portions; writes standards' rows and moves no bundle"),
+    fields: { accepts: ["type","from","to","citation","effective","edition","reason","proposal"], requires: [["type","proposal"],["from","proposal"],["to","proposal"],["citation","proposal"],["reason","proposal"]] } },
+  courtlink: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("standards.declared.courtlink", "standard-directed: keyed by a court standard and a portion; writes standards' rows and moves no bundle"),
+    fields: { accepts: ["type","from","to","citation","reason","proposal"], requires: [["type","proposal"],["from","proposal"],["to","proposal"],["citation","proposal"],["reason","proposal"]] } },
 });
 
 const instances = new WeakMap();

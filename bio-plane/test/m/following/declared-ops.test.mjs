@@ -8,6 +8,10 @@ import { DECLARED_OPS, followingOps } from "../../../src/following/index.mjs";
 import { world } from "./fixture.mjs";
 const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (y.code ?? y.reason);
 
+/* a world holding one document outside every project, which every member sees, and alice (MEMBER) among the members */
+const OPEN = "INFO-2026-0003-a";
+const mkItem = async () => { const w = world(); w.bundle(OPEN); return w; };
+
 /* a refusal names a field by its code (the table) or, as the default does, by the field as a whole word of its code or detail */
 const words = (v) => (v == null ? "" : typeof v === "string" ? v : JSON.stringify(v));
 const named = (codes, strict = false) => (answer, field) => {
@@ -27,4 +31,19 @@ const mk = (op, stamps = {}, setup = null, invoke = null, adapt = null) => async
 test("R36 following declares followregister: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "followregister", declaration: DECLARED_OPS["followregister"], call: mk("followregister", {"by":"member:alice","viewer":"member:alice"}),
     refusedNaming: named({"address":["NO_LOCATOR"]}, true), values: {"address":"https://registry.ellery.example/permits"}, same: sameCode });
+});
+
+test("R36 following declares watchitem: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "watchitem", declaration: DECLARED_OPS["watchitem"], call: mk("watchitem", {"by":"member:alice","viewer":"member:alice"}, async () => (mkItem()), null),
+    refusedNaming: named({"item":["MARK_NO_ITEM"]}, true), values: {"item":"INFO-2026-0003-a"}, same: sameCode });
+});
+
+test("R36 following declares secondlook: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "secondlook", declaration: DECLARED_OPS["secondlook"], call: mk("secondlook", {"by":"member:alice","viewer":"member:alice"}, async () => (mkItem()), null),
+    refusedNaming: named({"item":["MARK_NO_ITEM"],"note":["SECOND_LOOK_NO_NOTE"]}, true), values: {"item":"INFO-2026-0003-a","note":"look again"}, same: sameCode });
+});
+
+test("R36 following declares secondlookclear: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "secondlookclear", declaration: DECLARED_OPS["secondlookclear"], call: mk("secondlookclear", {"by":"member:alice","viewer":"member:alice"}, async () => (mkItem()), null),
+    refusedNaming: named({"item":["MARK_NO_ITEM"],"flag":["MARK_NO_ITEM"]}, true), values: {"item":"INFO-2026-0003-a"}, same: sameCode });
 });

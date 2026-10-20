@@ -1377,3 +1377,18 @@ export function membershipOps(m, url, body, env) {
       label: url.searchParams.get("label") }),
   };
 }
+
+/* R155 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  projectinvite: { classes: ["admin","member","probe"], mutating: true, weight: "credential", description: localize("membership.declared.projectinvite", "roster act on a project, position-enforced by the store"),
+    fields: { accepts: ["projectId","handle"], requires: ["projectId","handle"] } },
+  projectjoin: { classes: ["admin","member","probe"], mutating: true, weight: "credential", description: localize("membership.declared.projectjoin", "roster act on a project"),
+    fields: { accepts: ["projectId"], requires: ["projectId"] } },
+  projectleave: { classes: ["admin","member","probe"], mutating: true, weight: "credential", description: localize("membership.declared.projectleave", "roster act on a project"),
+    fields: { accepts: ["projectId","comment"], requires: ["projectId"] } },
+  projectremove: { classes: ["admin","member","probe"], mutating: true, weight: "credential", description: localize("membership.declared.projectremove", "roster act on a project"),
+    fields: { accepts: ["projectId","handle","comment"], requires: ["projectId","handle"] } },
+  projectvisibilityset: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: "act.projectvisibilityset.does",
+    fields: { accepts: ["projectId","setting","reason"], requires: ["projectId","setting"] } },
+});

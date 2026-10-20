@@ -1739,6 +1739,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["aspiration","note"], requires: ["aspiration","note"] } },
   aspirationretire: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.aspirationretire", "aspiration-directed: a member retires an aspiration with what pursuing it taught, keyed by aspiration id"),
     fields: { accepts: ["aspiration","taught"], requires: ["aspiration","taught"] } },
+  triage: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.triage", "proposal-directed: a member adopts, opens a question from, defers or dismisses one proposal, keyed by proposal key"),
+    fields: { accepts: ["proposal","act","project","reason","run","personWarningSeen"], requires: ["proposal","act"] } },
 });
 
 const instances = new WeakMap();

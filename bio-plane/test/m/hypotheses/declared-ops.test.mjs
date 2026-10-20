@@ -50,3 +50,23 @@ test("R24 hypotheses declares hypothesiswithdraw: its requires alone raise no re
   await declaredOpHolds({ op: "hypothesiswithdraw", declaration: DECLARED_OPS["hypothesiswithdraw"], call: mk("hypothesiswithdraw", {}, null, null, (fields, env) => (seeded(fields, env))),
     refusedNaming: named({"hypothesisId":["NO_SUCH_HYPOTHESIS"],"reason":["HYPOTHESIS_NO_REASON"]}, true), values: {"reason":"no longer held"}, same: sameCode });
 });
+
+test("R24 hypotheses declares notewrite: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "notewrite", declaration: DECLARED_OPS["notewrite"], call: mk("notewrite", {}),
+    refusedNaming: named({"text":["NOTE_NO_TEXT","NOTE_TOO_LONG"]}, true), values: {"text":"a note to write"}, same: sameCode });
+});
+
+test("R24 hypotheses declares noterevise: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "noterevise", declaration: DECLARED_OPS["noterevise"], call: mk("noterevise", {}, null, null, (fields, env) => (seeded(fields, env))),
+    refusedNaming: named({"note":["NO_SUCH_NOTE"],"text":["NOTE_NO_TEXT","NOTE_TOO_LONG"]}, true), values: {"text":"the note, said better"}, same: sameCode });
+});
+
+test("R24 hypotheses declares noteturn: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "noteturn", declaration: DECLARED_OPS["noteturn"], call: mk("noteturn", {}, null, null, (fields, env) => (seeded(fields, env))),
+    refusedNaming: named({"note":["NO_SUCH_NOTE"],"into":["NOTE_TURN_UNKNOWN"],"made":["NOTE_TURN_NOT_MADE"],"hunch":["NOTE_TURN_NOT_MADE"]}, true), values: {"into":"question","made":"INQ-2026-0002-q"}, same: sameCode });
+});
+
+test("R24 hypotheses declares notedelete: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "notedelete", declaration: DECLARED_OPS["notedelete"], call: mk("notedelete", {}, null, null, (fields, env) => (seeded(fields, env))),
+    refusedNaming: named({"note":["NO_SUCH_NOTE"]}, true), same: sameCode });
+});

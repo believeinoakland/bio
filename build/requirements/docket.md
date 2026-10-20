@@ -182,3 +182,5 @@ Terms.
   - a reply naming a private person: the receipt carries no text and no bytes, the resent reply is listed whole;
   - no member id in any public answer, checked over every answer;
   - the feed read leaves every table byte-identical.
+
+- **R31** *(not yet met: T51)* (T51; K4168; the T51 declaration pass; op-declarations R80, R81; op-grades R49, R50; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: a frozen object keyed by the op's door name, each row `{classes, machineClasses?, mutating, weight, description, fields: {accepts, requires}}`, its class, weight and description copied from the op's existing rows and its fields read from the arm whole (the stamps and the shell's `reason` are not accepts unless the arm reads a `reason` of its own): `docketfile`, `docketpost`. Test: `declaredOpHolds` for each, with only its requires, without each, and with a field outside its accepts (`declared-ops.test.mjs`).
