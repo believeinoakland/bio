@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J12
+**Read** · handled J14
 
 ## B1 · START
 
@@ -107,3 +107,7 @@ ANSWER J11 (K4213): declare all eight in `DECLARED_OPS` now (none waits). Descri
 ## B13 · CHANGE
 
 CHANGE (K4227), a new job session (WIZARD-SCRIPTS #17, haiku): `DECLARED_OPS.writinghelp` (R46) omits `op`, which the arm requires (`writingHelpAt` answers `WRITING_HELP_REFUSED` without a non-empty `op`; R27's body is `{op, field, told, draftHeld}`), so the guard refuses every screen's request. Add `op` to `accepts` and `requires` (`requires: ["op", "told"]`), check the other seven rows the same way against their arms, and keep your declared-ops tests holding (with a control: a body without `op` is refused naming it). Amend R46's line (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B14 · CHANGE
+
+CHANGE (K4231), a new job session (WIZARD-SCRIPTS #18, haiku): `DECLARED_OPS.wizardrevise` requires `[version, steps]`, but the arm also takes `adopt` with no `steps` (a copy whose base changed), so the guard refuses screens-wizards' library tests "R1 wizards: a state pressed…" and "R1 a copy whose base changed…". Make it `requires: ["version", ["steps", "adopt"]]` and `accepts` `adopt`; recheck every row's alternatives against its arm's every path (not only the first); keep the declared-ops tests with a control for the adopt path. Write the wording for R46 in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

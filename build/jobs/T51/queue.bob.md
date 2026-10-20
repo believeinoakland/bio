@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -60,3 +60,7 @@ CHANGE (K4213; tasks J2): a task put aside by `taskresolve` now carries `resolve
 ## B6 · CHANGE
 
 CHANGE (K4222): tasks is merged: a task of kind `authority-undetermined` now carries `door: ["taskdecide","taskforward","taskresolve"]` (tasks R24) in `taskList`, `recentTasks` and `resolvedTasks`. Build the item's options from that `door` (never a hand list, K3268). Merge `tranche/T51` first.
+
+## B7 · CHANGE
+
+CHANGE (K4233), a new job session (QUEUE #29, haiku): queue-producers is merged (R46–R51): (1) carry `read` and `code` from `facts.failed[]` into the answer's `feeds[]` entry for that feed, so the live copy can say which read refused (L12); (2) the `members` feed's items (`endorsement-owed`, `expertise-confirmation-owed`) carry `door` (`adminendorse`, `projectowneradd`/`projectownerremove`, `expertiseconfirm`) and `summary_key`/`detail_key`: check your item-building reads them as for tasks' `door` (R12), never a hand list; (3) `facts.ms` includes `members`. Tests with controls; requirement lines (K4210) in your record if ownership refuses the file. Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

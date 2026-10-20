@@ -142,18 +142,25 @@ export async function archiveLookupOp(req, url, store, { json, storeSilent, stor
  * state; the daemon and the member are writers like every writer." So this
  * returns a provenance document and the caller promotes it.
  * (Moved from `legacy-index` beside the op's call, N247.) */
+/** R99 (T51; K4234; plane R55): the door's `trace`, handed in process, reaches the store's acquire as the header
+ *  `x-civicsmith-trace`, so the object holds this acquire's timings under it (plane #44). Only a printable string of at
+ *  most 200 characters is sent (the shape `signin-door` R3 mints); never in the query or the body. None handed, no header. */
+const TRACE_HEADER = "x-civicsmith-trace";
+const TRACE_VALUE = /^[\x21-\x7e]{1,200}$/;
+
 /** R73 (`acquisition` R1–R23), K72 (11): op=acquire, forwarded to the service with the control plane's stamps. Answers `{response}`
  *  (a refusal, a silence) or `{answer}`, the filed capture's answer, which `extraction` reads from the stored primary
  *  itself (`acquisition` R8, K49; N103: no second read of the primary here). */
 export async function acquireOp(req, env, store, { json, storeSilent, storeRefusal, storageAbsent, doAnswer, cls, member, sessMember,
-                                                    storeName }) {
+                                                    storeName, trace = null }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
     return { response: storageAbsent("acquire", say("capture.response.group_civicsmith_evidence")) };
   const body = await req.json().catch(() => null);
   const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
-  const r = await doAnswer(store.fetch(`http://x/acquire?${q}`, { method: "POST", headers: { "content-type": "application/json" },
-                                                                   body: JSON.stringify(body || {}) }));
+  const headers = { "content-type": "application/json" };
+  if (typeof trace === "string" && TRACE_VALUE.test(trace)) headers[TRACE_HEADER] = trace;
+  const r = await doAnswer(store.fetch(`http://x/acquire?${q}`, { method: "POST", headers, body: JSON.stringify(body || {}) }));
   const unanswered = relayUnanswered(r, "acquire", { json, storeSilent, storeRefusal });
   if (unanswered) return { response: unanswered };
   const { status, body: answer } = r.result;
@@ -189,7 +196,8 @@ export async function captureOp(op, req, url, env, store, h) {
   if (op === "acquire") {
     const at = store();
     const acquired = await acquireOp(req, env, at, { json, storeSilent, storeRefusal, storageAbsent: h.storageAbsent, doAnswer,
-                                                     cls: h.cls, member: h.member, sessMember: h.sessMember, storeName: h.storeName });
+                                                     cls: h.cls, member: h.member, sessMember: h.sessMember, storeName: h.storeName,
+                                                     trace: h.trace });
     if (acquired.response) return acquired.response;
     const read = await h.readAcquired(acquired.answer, at);
     if (read.response) return read.response;

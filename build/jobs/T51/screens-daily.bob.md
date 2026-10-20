@@ -118,3 +118,12 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B14 · CHANGE
 
 CHANGE (K4221): interface-shell's guard (merged) finds the `queue` screen's `promote` sending `project`, which promotion R61 does not accept (it requires `files`, `meta`, `snapKey`): send only the declared fields, read through the declaration, never a hand list (K3268). Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4233), for SCREENS-DAILY #11: queue-producers is merged; queue's follow-up is QUEUE #29 (merges before you). The Queue now carries three new kinds of item (C62's endorsement, owner vote and expertise confirmation, queue-producers R46–R48), each with its `door` and `summary_key`/`detail_key`; draw them by key (UX-DESIGN HANDOFF B422 holds the rows; until they land, tests that need those rows are accepted red by name). The add door's label is `act.projectowneradd.label.queue`, the removal's `act.projectownerremove.label.queue`.
+
+## B16 · CHANGE
+
+CHANGE (K4236). Merge tranche/T51 into your branch first (capture, link-sweep, wizard-scripts, queue, control-plane, contradiction and screens-action are merged).
+Home's front doors send fields `startfrom` does not take: `home.mjs` ~199 and ~202 pass `data: {door}` and `{script, version}` to `cs.act("startfrom", …)`, and wizard-scripts declares `startfrom` accepting only `message` and `parts` (its arm reads nothing else, R23, R37). The guard refuses it (FieldMismatch), so control-plane's t47-e2e R81 walk is red on the tranche. The door, script and version are the screen's own state: keep them on the screen (view state) and send `startfrom` with only declared fields (none, or `message` where the member typed one). Test at your interface: the door press sends no undeclared field and still opens the door's offer in place; then run `node --test --test-force-exit bio-plane/test/m/control-plane/t47-e2e.test.mjs` (its R81 wizard walk must pass) beside your suite.

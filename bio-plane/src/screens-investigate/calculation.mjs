@@ -11,7 +11,7 @@ import { FORM_SHARED } from "./graphwords.mjs";
 function reads(view) {
   const id = String(view.subject || "");
   return { calc: { op: "calculation", query: { id }, subject: true, empty: (v) => !v || v.found === false },
-    docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
 }
 
 /** R8's project step: the calculation's project, by its id (the project's title is read where it is drawn). */

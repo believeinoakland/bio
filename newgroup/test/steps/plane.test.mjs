@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, ensureSubdomain, planeLimits, memberLimits, reportsBuilds, LIMITS_NOT_STATED,
   selfBinding, BROWSER_BINDING, instanceAiBinding, instanceAiOk, sealBinding, profilesBinding, ownHostsBinding, memberBindings, membersPresent, heldBindings,
   hostOf, BINDING_OF, SEAL_BINDING, INSTANCE_AI_BINDING, PROFILES_BINDING, OWN_HOSTS_BINDING, uploadInstall, uploadUpdate, scriptHash, releaseSha, readBack,
-  planeInSync, putSecret, rotateSecrets, namesFor, hex, multipartPart, ascii, find, rand } from "../../src/steps/index.mjs";
+  planeInSync, putSecret, rotateSecrets, namesFor, hex, ascii, find, rand, Sha256, hashStream, hashPart } from "../../src/steps/index.mjs";
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 import { ApproveAgain } from "../../src/steps/index.mjs";
@@ -313,7 +313,7 @@ test("R14: a changed byte is named with the first 16 digits of both hashes, a fa
   assert.equal(await scriptHash(session(), "A1", "grp"), null);
   assert.equal(hex(new Uint8Array([1, 171]).buffer), "01ab");
   assert.equal(find(ascii("abcabc"), ascii("ca")), 2);
-  assert.equal(multipartPart(ascii("junk"), "bnd"), null);
+  assert.equal(await hashPart(new Response("junk").body, "bnd"), null);
 });
 
 async function heldPlane(over = {}) {
@@ -413,4 +413,86 @@ test("R14 (R1): the read-back waits out a 429 and a 503 as every call does, and 
   assert.equal(one.length, 1, "a refusal that waiting cannot mend is not repeated");
   sequence([cferr("trouble", 503)]);
   assert.equal(await scriptHash(session(), "A1", "grp"), null, "a failure that never mended reads as nothing readable");
+});
+
+/* R38: a 29 MB module is uploaded and read back holding its bytes once, streamed. */
+const MB29 = (() => {
+  const b = new Uint8Array(29 * 2 ** 20);
+  for (let i = 0; i < b.length; i++) b[i] = (i * 2654435761 >>> 24) & 255;
+  b.set(Array.from({ length: 32 }, (_, i) => 0x80 + i), 1000);
+  return b;
+})();
+/* A response that cannot be read whole: any call that holds the body as one buffer, string or blob is counted and refused. */
+const streamed = (chunks, headers, seen) => {
+  let i = 0;
+  const body = new ReadableStream({ pull(c) { if (i < chunks.length) { seen.chunks++; seen.largest = Math.max(seen.largest, chunks[i].length); c.enqueue(chunks[i++]); } else c.close(); } });
+  const r = new Response(body, { headers });
+  for (const m of ["arrayBuffer", "text", "blob", "bytes", "json", "formData"]) r[m] = async () => { seen.whole.push(m); throw new Error("the body was held whole by " + m); };
+  return r;
+};
+const slices = (bytes, n = 65536) => Array.from({ length: Math.ceil(bytes.length / n) }, (_, i) => bytes.subarray(i * n, (i + 1) * n));
+const asMultipart = (bytes) => [ascii('--bnd\r\ncontent-disposition: form-data; name="metadata"\r\n\r\n{}\r\n--bnd\r\ncontent-disposition: form-data; name="index.mjs"; filename="index.mjs"\r\n\r\n'),
+  ...slices(bytes), ascii("\r\n--bnd--\r\n")];
+
+test("R38: the read-back of a 29 MB module, raw or as a multipart part, is hashed from the stream as downloaded, never held whole, and equals the whole-buffer hash; a different byte is still named", async () => {
+  const want = await sha(MB29);
+  assert.equal(await hashStream(new Blob([MB29]).stream()), want, "the incremental hash is the whole-buffer hash");
+  assert.equal(await releaseSha({ blob: new Blob([MB29]) }), want);
+  const rel = { version: VERSION, blob: new Blob([MB29]), sha: want };
+  for (const [kind, chunks, headers] of [["raw", slices(MB29), { "content-type": "application/javascript+module" }],
+    ["multipart", asMultipart(MB29), { "content-type": 'multipart/form-data; boundary="bnd"' }]]) {
+    const seen = { chunks: 0, largest: 0, whole: [] };
+    sequence([() => streamed(chunks, headers, seen)]);
+    assert.equal(await scriptHash(session(), "A1", "grp"), want, kind);
+    assert.deepEqual(seen.whole, [], kind + ": the body was never held whole");
+    assert.ok(seen.chunks > 100 && seen.largest <= 65536, kind + ": read as a stream of small chunks");
+    const again = { chunks: 0, largest: 0, whole: [] };
+    sequence([() => streamed(chunks, headers, again)]);
+    assert.equal(await readBack(session(), "A1", "grp", rel), null, kind);
+  }
+  const other = MB29.slice(); other[2 ** 24] ^= 1;
+  const seen = { chunks: 0, largest: 0, whole: [] };
+  sequence([() => streamed(asMultipart(other), { "content-type": "multipart/form-data; boundary=bnd" }, seen)]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), await sha(other), "control: a different byte is a different hash");
+  sequence([() => streamed(slices(other), {}, { chunks: 0, largest: 0, whole: [] })]);
+  const lag = await readBack(session(), "A1", "grp", rel);
+  assert.ok(lag.includes((await sha(other)).slice(0, 16)) && lag.includes(want.slice(0, 16)), "control: a different byte is named");
+});
+
+test("R38: the multipart part is found whatever the chunking, across preambles, other parts and delimiters split anywhere; the stream may end inside the part", async () => {
+  const body = Buffer.from(multipart(BYTES));
+  const want = await sha(BYTES);
+  for (const n of [1, 2, 3, 5, 7, 16, 64, body.length]) {
+    const chunks = Array.from({ length: Math.ceil(body.length / n) }, (_, i) => new Uint8Array(body.subarray(i * n, (i + 1) * n)));
+    assert.equal(await hashPart(new Response(new ReadableStream({ start(c) { chunks.forEach((x) => c.enqueue(x)); c.close(); } })).body, "bnd"), want, "chunks of " + n);
+  }
+  assert.equal(await hashPart(new Response(multipart(BYTES, "other")).body, "bnd"), null, "another boundary finds nothing");
+  assert.equal(await hashPart(new Response("--bnd\r\ncontent-disposition: form-data; name=\"metadata\"\r\n\r\n{}\r\n--bnd--\r\n").body, "bnd"), null, "no index.mjs part");
+  const cut = Buffer.from(multipart(BYTES)).subarray(0, -11);
+  assert.equal(await hashPart(new Response(cut).body, "bnd"), want, "a part the stream ends inside is hashed as far as it goes");
+});
+
+test("R38: the upload carries the release's Blob as it is, never turned into a string or a buffer, whose bytes reach the account once", async () => {
+  const calls = sequence([cfok({})]);
+  const seen = [];
+  const blob = new Blob([MB29]);
+  for (const m of ["text", "arrayBuffer", "bytes"]) blob[m] = async () => { seen.push(m); throw new Error("held whole by " + m); };
+  const rel = { version: VERSION, blob, limits: LIMITS, sha: await sha(MB29) };
+  await uploadInstall(session(), "A1", "grp", SECRETS, rel, { names: NAMES, members: [] });
+  const part = calls.find((c) => c.init?.body instanceof FormData).init.body.get("index.mjs");
+  assert.deepEqual(seen, [], "no whole-body copy was asked of the release's Blob");
+  assert.equal(part.size, MB29.length, "the part is the module's bytes, once");
+  seen.length = 0;
+  sequence([cfok({})]);
+  await uploadUpdate(session(), "A1", "grp", true, rel, { secrets: SECRETS, names: NAMES });
+  assert.deepEqual(seen, [], "the update's upload likewise");
+});
+
+test("R38: the incremental SHA-256 equals the whole-buffer hash for every length around a block and for uneven chunking", async () => {
+  const src = Uint8Array.from({ length: 300 }, (_, i) => (i * 37 + 11) & 255);
+  for (let n = 0; n <= 200; n++) {
+    const bytes = src.subarray(0, n), h = new Sha256();
+    for (let i = 0, k = 1; i < n; i += k, k = (k * 3) % 29 + 1) h.update(bytes.subarray(i, i + k));
+    assert.equal(h.hex(), await sha(bytes), "length " + n);
+  }
 });

@@ -133,3 +133,7 @@ Write your requirement lines yourself (K4210).
 ## B21 · CHANGE
 
 CHANGE (K4219; project-roster J4): `design.test.mjs` (R107) sends `projectowneradd` with `who` and without `projectId`/`handle`; project-roster R40 declares it: bring the stand-in to the declared request (`declaredFit`), as entry 1 of B20.
+
+## B22 · CHANGE
+
+CHANGE (K4228), a new job session (INTERFACE-SHELL #10, sonnet): screens-publish R68 (DEC-384 H2, the crumb before joining) needs the path's project step to read `crumb.project.unjoined` when the viewer has not joined the project. `place(view)` cannot say so today (it gets no word function). Extend R110's `place` answer: `{project, last, projectKey?}` where `projectKey` is a word key the shell renders (with `{name}` = the project's title, escaped) in place of the title; absent, today's behaviour. Test and control; R110's line amended (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
