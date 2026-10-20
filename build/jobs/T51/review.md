@@ -109,3 +109,7 @@ COMPLETE for FR-19 · review (BOB's B3, with B4–B7). Branch job/T51/review. `t
 - `node checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`: 1 failure, `build/requirements/review.md` listed as outside paths, tests and record: the file B5/B6 accept at the merge.
 
 Size (session_01Wc89tQnWkGtjX4yq27KxLR): test runs 16, module lines 1482
+
+## J5 · COMPLETE
+
+FR-19 review complete on job/T51/review. R37 (edit keeps unsent fields; REVIEW_DRAFT_FIELDS derived), R38 (choices, account, whatChanged), R39 (draft begins from a published case's findings, roles, scope; nothing of the case written), R40 (title), R41 (statement, no front matter), R42 (DECLARED_OPS for casedraft, reviewgrant, reviewrevoke, reviewcomment), and K4205's five reds by key. Requirement lines R37-R42 are written by me in build/requirements/review.md (marked not yet met: T51); ownership lists that one file, as B5/B6 accept. Tests: review 73 pass (was 61); the 7 new R37-R41 tests fail against the tranche's code. Checks: format 0, architecture 0, coverage none in review, words none in review (8 op-grades testcopies are op-grades', B7). For you: reviewcomment's declaration includes 'secret' (the link, relayed by the control plane); screens-publish suite has the same 11 reds with and without my change; casedrafts rows have no title; review.body.nocase is not answered by review. Stale generated: rows.mjs, words-unreviewed.json, the two bundles. Details in my record's Completion record (FR-19).
