@@ -9,6 +9,15 @@
    composer, the plan's list, the silence asked about, the guide, the templates, the pressure, the hold and its notice, counsel,
    the dashboard, each action kind worded twice). */
 
+import * as FIX_MATTER from "./words-fix-matter.mjs";
+import * as FIX_PLAN from "./words-fix-plan.mjs";
+import * as FIX_SEND from "./words-fix-send.mjs";
+import * as FIX_ACTION from "./words-fix-action.mjs";
+import * as FIX_REQUEST from "./words-fix-request.mjs";
+
+/** The fix round's word files (T51 FR-31), one per group of entries. */
+export const FIX = Object.freeze([FIX_MATTER, FIX_PLAN, FIX_SEND, FIX_ACTION, FIX_REQUEST]);
+
 export const SCREEN_WORDS = Object.freeze([
   "act.filingrecordsent.does",
   "act.optionadd.label.plan",
@@ -639,4 +648,5 @@ export const SCREEN_WORDS = Object.freeze([
   "shell.readonly.noun.request",
   "shell.readonly.noun.start-send",
   "shell.unread",
+  ...FIX.flatMap((f) => f.WORDS),
 ]);
