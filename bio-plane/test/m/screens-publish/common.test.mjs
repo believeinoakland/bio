@@ -2,6 +2,7 @@
  * served page: each screen with each of its reads pending, refused and unanswered draws that read in its own state and
  * no key the page holds no word for; after an act the screen reads again what it changed; no secret is kept; the
  * module's screens are the registry's, each drawing exactly its registry acts; it holds no English, only keys (R24). */
+import "./register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -9,7 +10,7 @@ import { interfacePage, SHELL_OPS } from "../../../src/interface-shell/index.mjs
 import { OPS, BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
-import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
+import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, COPY, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["screens-publish"];
@@ -66,7 +67,7 @@ test("R10 an empty read is drawn empty, never failed: no drafts, no comments, no
     assert.ok(main(p).querySelector('[data-state="empty"]'), path);
     assert.equal(main(p).querySelector('[data-state="failed"]'), null, path);
   }
-  const q = await open(`/app/review-copy/${P}`, { plane: { reviewcomments: ok({ comments: [] }) } });
+  const q = await open(`/app/review-copy/${P}`, { plane: { reviewcopy: ok(COPY({ comments: [], statement_acknowledgements: null })) } });
   assert.ok(!drew(q, "screen.review-copy.comments"), "R20: a section that holds nothing is not drawn");
   assert.equal(q.root().querySelector('[data-state="failed"]'), null);
 });
@@ -111,13 +112,17 @@ test("R10 (interface-shell R21) the nine registry screens, each drawing exactly 
     assert.ok(reg, `${s.id} is a registry screen`);
     /* op-declarations R76: the registry keeps an act done in the browser alone as `owed:<act> DEC-330`; the table names it for the screen */
     const browser = (op) => Object.hasOwn(BROWSER_ACTS, op) && BROWSER_ACTS[op].screen === s.id;
-    const named = reg.acts.map((a) => (Object.entries(BROWSER_ACTS).find(([, b]) => b.screen === s.id && b.registry === a.op) || [a.op])[0]);
+    /* an act the registry holds as `owed:<op> <ref>` is the op itself once its owner declares it (FR-30: `casedetails`, `casedetailsset`) */
+    const owed = (op) => { const m = /^owed:(\S+)/.exec(op); return m && Object.hasOwn(OPS, m[1]) ? m[1] : op; };
+    const named = reg.acts.map((a) => (Object.entries(BROWSER_ACTS).find(([, b]) => b.screen === s.id && b.registry === a.op) || [owed(a.op)])[0]);
     assert.deepEqual(s.acts.map((a) => a.op).sort(), named.sort(), s.id);
     for (const a of s.acts) {
       assert.ok(browser(a.op) ? !Object.hasOwn(OPS, a.op) : Object.hasOwn(OPS, a.op), `${a.op} is a browser act or in OPS`);
-      assert.equal(a.label, browser(a.op) ? `act.owed_${a.op}.label.${s.id}` : `act.${a.op}.label.${s.id}`);
+      /* the design keys an act the registry holds as `owed:<op> <ref>` under that owed name, whether the op is declared yet or not */
+      const owedRow = reg.acts.some((x) => String(x.op).startsWith(`owed:${a.op} `));
+      assert.equal(a.label, browser(a.op) || owedRow ? `act.owed_${a.op}.label.${s.id}` : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
-      if (browser(a.op)) assert.ok(s.words.includes(`act.owed_${a.op}.does`), `${a.op}: its explanation listed`);
+      if (browser(a.op) || owedRow) assert.ok(s.words.includes(`act.owed_${a.op}.does`), `${a.op}: its explanation listed`);
     }
     assert.ok(Object.isFrozen(s) && typeof s.render === "function" && typeof s.reads === "function");
   }
@@ -201,7 +206,7 @@ test("R24 no word is drawn with a placeholder left unfilled on any screen, in th
   await press(ready, "publish", { reason: "r" });
   seen.push(["ceremony prepared and signing", ready]);
   const shared = await open(`/app/review-copy/${P}`, { plane: { reviewgrant: ok({ grantId: "GRT-2", draftId: DR, recipient: "Ana", secret: GRANT_SECRET }), publishpreflight: ok({ steps: [{ publish_at: { zone: "America/Los_Angeles" } }] }) } });
-  await press(shared, "reviewgrant", { values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
+  await press(shared, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
   seen.push(["review-copy with the reader's link", shared]);
   const first = await open(`/app/case-editor/${P}`, { plane: { casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: DR, case: { case_id: C, edition: 1, identity: "The Coliseum lease" }, created_by: "dev" }] }) } });
   seen.push(["case-editor, a first edition", first]);
