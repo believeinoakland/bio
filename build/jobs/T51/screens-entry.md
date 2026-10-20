@@ -88,3 +88,7 @@ Re-opened after restart: BOB's B7 answered J4. Merged `tranche/T51` (instance-se
 **Tests and checks.** `node --test bio-plane/test/m/screens-entry/`: tests 92, pass 91, fail 1 (R10, the design word). `checks/format.mjs`: 0. `architecture.mjs screens-entry`: 0. `coverage.mjs screens-entry`: 27 of 27 ids named, 0. `words.mjs screens-entry`: 0. `ownership.mjs screens-entry tranche/T51 job/T51/screens-entry`: 6 files, 0 failures. `checks/run.mjs`: no line names screens-entry (26 words failures are other modules').
 
 Size (session_011edZAMwB3Jh7b7Kg9KXTCE): test runs 2, module lines 1127
+
+## J5 · COMPLETE
+
+FR-24 complete. R26 and R30 written by me in build/requirements/screens-entry.md (K4210); tranche/T51 merged, instance-setup R100's shape matches domainFile(), nothing to conform. Module tests 91/92: the one red is R10 on the design word screen.domainfile.refused.malformed, accepted by name per B7 until UX-DESIGN rewords it. format, architecture, coverage (27 of 27), words, ownership: 0 failures; checks/run.mjs: no line names screens-entry. Details in build/jobs/T51/screens-entry.md.
