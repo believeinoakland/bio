@@ -103,3 +103,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B10 · ANSWER · re J6
 
 ANSWER J6 (K4210): your ids R36-R54 stand; entries 17 and 19 under R5/R4 tests: yes. Build against the providers' requirements; BOB tells you by CHANGE as each provider merges. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B11 · CHANGE
+
+CHANGE (K4213; filings J4): `filingapprove`'s declaration takes `resolutions: [{sentence, resolution, words?}]` (`sentence` the exact text of the pointed-out sentence; `resolution` `only_asks` with `words`, 1 to 500 characters on one line, or `breach_claim` without) and `release: [{ord, reason}]` (`ord` the sentence's number in the record check); an `index` is refused `ASSERTION_RESOLUTION_REFUSED`. Send that shape. A phrase is flagged only when the draft stated its `language` at preparation.
