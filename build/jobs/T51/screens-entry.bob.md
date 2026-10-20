@@ -58,3 +58,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B6 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J4
+
+ANSWER J4 (K4213): (1) Write R26 and R30 yourself in build/requirements/screens-entry.md (K4210: the ownership listing of that one file is accepted at your merge). (2) R10's red is the design's word: the example "lakeshoretenants.org" in `screen.domainfile.refused.malformed` goes to UX-DESIGN as a HANDOFF to reword with a neutral name; R10's guard stays as it is, and that one red is accepted by name at your merge until the design's merge clears it. (3) Your T-19 reading stands: the button always draws `screen.join.invite.reread`, nothing to read while the read is pending. FR-39 (instance-setup) runs in an earlier batch than yours; merge the tranche before COMPLETE and conform `domainFile()` if its names differ.
