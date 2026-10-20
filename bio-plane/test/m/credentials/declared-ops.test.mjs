@@ -93,6 +93,13 @@ test(TITLE("recoverycodesissue"), async () => {
   await holds("recoverycodesissue", mk("recoverycodesissue", { stamps: { by: "ann" } }));
 });
 
+test(TITLE("securitymap"), async () => {
+  /* a missing or unreadable bound is refused SECURITY_PERIOD_INVALID, whose `what` names it (R45, R49) */
+  const to = new Date(Math.floor(Date.now() / 3600e3) * 3600e3).toISOString(), from = new Date(Date.parse(to) - 6 * 3600e3).toISOString();
+  await holds("securitymap", mk("securitymap", { stamps: { by: "admin" } }),
+    { refusedNaming: named({ from: ["SECURITY_PERIOD_INVALID"], to: ["SECURITY_PERIOD_INVALID"] }), values: { from, to } });
+});
+
 test(TITLE("setpassword"), async () => {
   await holds("setpassword", mk("setpassword", { setup: signedIn, stamps: (env) => ({ by: "member:ann", session: env.token }) }),
     { refusedNaming: named({ current: ["CURRENT_PASSWORD_WRONG"], password: ["PASSWORD_TOO_SHORT"] }),

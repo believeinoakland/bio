@@ -2144,8 +2144,8 @@ export function credentialsOps(c, url, body, env) {
    routes as `signerregister` and `signerrevoke` (op-declarations R21); they call `signerRegisterOwn` and `signerRevokeOwn`
    here. `login`, `recover` and `reauth` refuse a missing field with the one refusal they give for every arm (R4, R47, R65),
    which names no field; their `requires` are the fields without which no call can succeed. `subscriptionsignin` is the
-   control plane's route to the member's own runner (`agent-worker` R66), not an arm of this module. `securitymap` is not
-   declared: its hand row in `op-grades` grounds a read as `caller-owned`, which no declaration can agree with (QUESTION J5). */
+   control plane's route to the member's own runner (`agent-worker` R66), not an arm of this module. `securitymap` is a read the
+   administrator's screen sends with `from` and `to` (K4210: `op-grades` drops its hand row that grounded a read). */
 export const DECLARED_OPS = Object.freeze({
   bootstrap: { classes: null, mutating: false, weight: "read", description: "act.bootstrap.does",
     fields: { accepts: [], requires: [] } },
@@ -2163,6 +2163,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["handle","code","password"], requires: ["handle","code","password"] } },
   recoverycodesissue: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.recoverycodesissue", "credential: an administrator's own recovery codes, shown once; moves no bundle"),
     fields: { accepts: [], requires: [] } },
+  securitymap: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: "act.securitymap.does",
+    fields: { accepts: ["from","to"], requires: ["from","to"] } },
   setpassword: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("credentials.declared.setpassword", "session-directed: the caller's own password, the role from their session; ends their other sessions; moves no bundle"),
     fields: { accepts: ["current","password"], requires: ["current","password"] } },
   signeradd: { classes: ["admin","member","probe"], machineClasses: ["admin","probe"], mutating: true, weight: "credential", description: localize("credentials.declared.signeradd", "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)"),

@@ -120,3 +120,21 @@ Three points from reading B5, with my best reading for each. I carry on with eve
 3. **`securitymap` cannot be declared as the rows stand.** It is a read (`op-declarations`: `mutating: false`), but `op-grades` holds a hand row `RUNG_ABSENT.securitymap = {ground: "caller-owned"}` (t48.mjs). A declaration with `weight: "caller-owned"` is refused as a ground on a read (`DECLARED_OP_BAD_WEIGHT`, ground-on-read); `weight: "read"` is refused as disagreeing with the hand row (`DECLARED_OP_DISAGREES`, hand=caller-owned). Best reading: `op-grades` drops that hand row (its `NON_ACTS` row already states the read) and I then declare `securitymap` as `weight: "read"`, `fields: {accepts: ["from","to"], requires: ["from","to"]}`; or you give it its own job. Until then it stays undeclared.
 
 Also decided, to be recorded (no answer needed unless you disagree): `fp` (the bootstrap secret's fingerprint the control plane puts in `claim` and `bootstrap`) is a door stamp like `source` and `country`, so it is not in `accepts`; `login`, `recover` and `reauth` answer a missing field with their one fixed refusal (R4, R47), so their `requires` are the fields without which no call can succeed and the tests count that refusal as naming them. Requirement lines (R81 for C80; R82 for `DECLARED_OPS`, one line for entries 2 and 3) I put in my record for you, because my paths do not include `build/requirements/`.
+
+## J6 · REPORT
+
+Applied B5 and B6 (FR-09) as far as the tranche allows, on `job/T51/credentials`.
+
+- **Entries 2 and 3 (K4168, K4202): done.** `DECLARED_OPS` declares 17 ops (the 16 earlier ones and `securitymap`, now declared `weight: "read"`, `accepts` and `requires` `from`, `to`, per B6 (3)); `subscriptionsignin` is control-plane's and is not declared here. `declared-ops.test.mjs` (18 tests, all pass) holds each declaration true through test-support's `declaredOpHolds`. The `op-grades` `RUNG_ABSENT.securitymap` hand row must go for the registration to agree (BOB's CHANGE to OP-GRADES #16). Hand rows in `op-declarations` and `op-grades` that can now go once the registration agrees: the rows for the 17 ops above.
+- **Requirement lines, written in `build/requirements/credentials.md` (B6: either place is fine):** R81 (C80, *not yet met: T51*) and R82 (`DECLARED_OPS`, met: the tests name it).
+- **Entry 1 (C80, R81): waiting on `member-roster` R76.** `tranche/T51` still carries no R76 line and `memberFacts("admin")` still answers null. The R81 test (`t51.test.mjs`:39, with its control at :59) is written and fails for that reason alone (`NO_SUCH_MEMBER` for the founder after the claim); the pin at `own-keys.test.mjs`:55 is changed to the unclaimed case only. This module changes no code for R81 unless it still refuses once R76 has merged. I finish it when BOB's CHANGE says R76 is merged.
+
+Wording point: R81's refusal before the claim stays `noSuchMember("admin")`, the founder not yet being a member.
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 183, pass 182, fail 1 (R81, as above).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 0 failures (before this commit's requirements file, which B6 accepts).
