@@ -4,8 +4,9 @@
    by its key (R19); every request is compared with its owner's declaration by the harness (R104). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS, open, main, text, ops, press, last, ok, refusedIn, button, beside, fill, W, hasWord, DATA_PLANE, PLAN_ID, ACTION, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, ROUTES } from "./page.mjs";
+import { SCREENS, open, main, text, ops, press, last, ok, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PLAN_ID, ACTION, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, ROUTES } from "./page.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
+import { DECLARED_FIELDS } from "./declared.mjs";
 
 const STEP1 = `/app/start-send/${PLAN_ID}~opt-1`;
 const STEP2 = `/app/start-send/${ACTION_ID}`;
@@ -110,6 +111,58 @@ test("R42: a refusal ASSERTION_RESOLUTION_REFUSED is drawn by its words and keep
 
 /* ---------- R47 (C74; DEC-377) ---------- */
 
+/* ---------- R42 (B16 a): a sentence the record contradicts is released with the approval ---------- */
+
+const held = (sentences) => refusedWith("CONTRADICTED_HELD", { filing: FILING, sentences: sentences.map((text) => ({ index: [S0, S1].indexOf(text), text, contradicted_by: null })) });
+
+test("R42 (B16 a, DEC-387): a refusal CONTRADICTED_HELD draws 'A sentence the record contradicts' for each sentence, with a reason and a tick, and no act of its own; the resend carries `release: [{ord, reason}]` for the ticked ones, the shape `filings` declares", async () => {
+  for (const k of ["screen.start-send.release.head", "screen.start-send.release.why", "screen.start-send.release.why.help", "screen.start-send.release.done", "act.release.label.start-send", "pointer.record.contradicted", "refusal.CONTRADICTED_HELD"]) assert.ok(hasWord(k), k);
+  const sent = [];
+  const p = await open(STEP2, APPROVE_PLANE((req) => { sent.push(req.body); return req.body.release ? ok({ filing: FILING, released: req.body.release }) : held([S0, S1]); }));
+  assert.ok(!ops(p).includes("release"), "release is not an act of this screen");
+  const b = await approve(p);
+  assert.deepEqual(sent[0], { filing: FILING }, "first, only the filing");
+  assert.ok(beside(p, b).includes(W("refusal.CONTRADICTED_HELD")));
+  assert.ok(text(p).includes(S0) && text(p).includes(S1), "each sentence, as the record answers it");
+  said(p, "screen.start-send.release.head");
+  said(p, "pointer.record.contradicted");
+  said(p, "screen.start-send.release.why");
+  said(p, "screen.start-send.release.why.help");
+  assert.ok(!ops(p).includes("release"), "still no separate act");
+  assert.equal([0, 1].filter((i) => p.doc.getElementById("release-why-" + i)).length, 2, "a reason for each sentence");
+  // a tick with no reason is refused in place and sends nothing
+  fill(p, { "release-pick-1-0": true });
+  const refused = await approve(p);
+  assert.equal(sent.length, 1, "nothing sent while the reason is empty");
+  assert.ok(beside(p, refused).includes(W("shell.reason.needed")));
+  // the ticked sentence goes with the approval, by its index and its reason; the unticked one stays held
+  fill(p, { "release-pick-1-0": true, "release-why-1": "  The log lists the dates; the logs show them.  " });
+  await approve(p);
+  const body = sent[1];
+  assert.deepEqual(Object.keys(body).sort(), ["filing", "release"]);
+  assert.deepEqual(body.release, [{ ord: 1, reason: "The log lists the dates; the logs show them." }]);
+  assert.deepEqual(DECLARED_FIELDS("filingapprove").includes("release"), true, "the owner declares `release`");
+});
+
+test("R42 (B16 a): after the approval lands the release is said once, by key, with who and when; control: an approval that is not refused sends no `release`, and draws none", async () => {
+  const sent = [];
+  const p = await open(STEP2, APPROVE_PLANE((req) => { sent.push(req.body); return ok({ filing: FILING }); }));
+  await approve(p);
+  assert.ok(!("release" in sent[0]) && !("resolutions" in sent[0]), "control: only the filing");
+  assert.ok(!text(p).includes(W("screen.start-send.release.head")));
+  // a released sentence is said once the approval lands, by `screen.start-send.release.done` (who: the member who pressed it)
+  let landed = false;
+  const q = await open(STEP2, { ...DATA_PLANE, filingread: ok(READ({ text: `${S0} ${S1}` })), filingsfor: () => ok(FILINGS([draft(landed ? { approval: APPROVED } : {})])),
+    filingapprove: (req) => { if (req.body.release) { landed = true; return ok({ filing: FILING, released: req.body.release }); } return held([S1]); } });
+  await approve(q);
+  fill(q, { "release-pick-1-0": true, "release-why-1": "Rewritten in the next draft." });
+  await approve(q);
+  assert.equal(last(q, "filingapprove").body.release[0].reason, "Rewritten in the next draft.");
+  const handle = q.me && q.me.handle ? q.me.handle : null;
+  if (handle) assert.ok(text(q).includes(W("screen.start-send.release.done", { who: handle, date: D(new Date().toISOString().slice(0, 10)), reason: "Rewritten in the next draft." })));
+  assert.ok(text(q).includes("Rewritten in the next draft."), "the reason is kept beside the approval");
+});
+
 const MEMBERS = { ok: true, members: [
   { member_id: "admin", handle: null, role: "admin", status: "active", founder: true },
   { member_id: "dev", handle: "dev", role: "member", status: "active" }, { member_id: "mai", handle: "mai", role: "member", status: "active" },
@@ -126,6 +179,7 @@ test("R47: the start step offers the team's contact, optional, 'No one yet' firs
   const options = pick.querySelectorAll("option");
   assert.deepEqual(options.map((o) => o.getAttribute("value")), ["", "dev", "mai"], "no one first; active members with a handle only");
   assert.deepEqual(options.slice(1).map((o) => o.textContent.trim()), ["dev", "mai"]);
+  assert.equal(options[0].textContent.trim(), W("screen.start-send.contact.none"), "'No one yet' by its key (DEC-387)");
   fill(p, { "start-contact": "dev" });
   await press(p, "optionstart", { reason: "go" });
   assert.equal(last(p, "optionstart").body.contact, "dev");
@@ -183,6 +237,9 @@ test("R48: 'Keep this filing as your team's template' is offered once the filing
   for (const k of ["heading", "note1", "note2", "note3", "name.help1", "name.help2", "use.label", "notes.label", "notes.help"]) said(p, "screen.start-send.template." + k);
   assert.ok(button(p, "templatesave").textContent.includes(W("act.templatesave.label.start-send")));
   assert.deepEqual(useOptions(p), ["file", "brief"], "a filing of a tier that needs no counsel: both");
+  // DEC-387 (B424): the template's name label and the options of its use, each by its own key
+  assert.equal(p.doc.getElementById("template-name").parentNode.querySelector("label").textContent.trim(), W("screen.start-send.template.name.label"));
+  assert.deepEqual(p.doc.getElementById("template-use").querySelectorAll("option").map((o) => o.textContent.trim()), [W("screen.start-send.template.use.filing"), W("screen.start-send.template.use.brief")]);
   await press(p, "templatesave", { values: { "template-name": "Records request to a city clerk", "template-use": "brief", "template-notes": "Use for the clerk." }, reason: "keep" });
   assert.deepEqual({ ...last(p, "templatesave").body, reason: undefined }, { filing: FILING, name: "Records request to a city clerk", use: "brief", notes: "Use for the clerk.", reason: undefined });
   await press(p, "templatesave", { values: { "template-name": "Another", "template-use": "file", "template-notes": "" }, reason: "keep" });
@@ -259,6 +316,9 @@ test("R49: each exhibit's grade and what the venue accepts is drawn from the pre
   assert.ok(row(1).includes("Photo of Elm Street pothole") && row(1).includes(X("contestable1")) && row(1).includes(X("contestable2")));
   assert.ok(row(2).includes("Screenshot of the repair portal") && row(2).includes(X("below1")) && row(2).includes(X("below2")));
   assert.ok(row(3).includes("Council video") && row(3).includes(X("undetermined")));
+  // DEC-387 (B424): the capture's day by `captured`, and an exhibit with no grade says so by `nograde`
+  assert.ok(row(0).includes(W("screen.start-send.exhibits.captured", { date: D("2026-10-03") })), "captured {date}");
+  assert.ok(row(3).includes(X("nograde")) && !row(0).includes(X("nograde")), "grade not determined only where none is");
   assert.deepEqual(rows.slice(0, 3).map((r) => r.querySelector(".cs-grade").textContent.replace(/\s+/g, " ").trim().slice(-1)), ["B", "C", "D"], "the grade of each capture");
   for (const [i, k] of [[0, "contestable1"], [0, "below1"], [0, "undetermined"], [1, "accepted"], [3, "accepted"]]) assert.ok(!row(i).includes(X(k)), `row ${i} is not ${k}`);
   // control: flagged exhibits stop nothing

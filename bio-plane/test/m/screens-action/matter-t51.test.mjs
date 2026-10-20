@@ -395,3 +395,69 @@ test("R45, R50, R51 (R19): each form draws its sentences by their keys, and ever
   for (const k of ["screen.matter.no_stage_is_proposed_while_it_is", "screen.matter.nothing_already_recorded_is_lost", "screen.matter.why_you_are_resuming_it_optional"]) assert.ok(text(r).includes(PAGE(k)), k);
   assert.ok(button(r, "escalationresume").textContent.includes(PAGE("act.escalationresume.label.matter")));
 });
+
+/* ---------- R45, R50, R51 (DEC-387, B424): the matter's own rows ---------- */
+
+const optText = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent.trim());
+const labelOf = (p, id) => p.doc.getElementById(id).parentNode.querySelector("label, legend").textContent.trim();
+
+test("R45 (DEC-387): the matter with no determination yet says so and draws the escalation's acts as 'Not available yet'; recording reads 'Record this determination' and the form's own labels", async () => {
+  const p = await open(`/app/matter/${PROJECT}`, { ...NONE, determine: ok({ ok: true, id: DET }) });
+  for (const k of ["screen.matter.nodet", "screen.matter.unavailable"]) assert.ok(text(p).includes(W(k)), k);
+  // a project's matter with nothing recorded opens the one form there is
+  assert.ok(button(p, "determine").textContent.includes(W("screen.matter.record.this")));
+  for (const k of ["screen.matter.act", "screen.matter.f.determination"]) assert.ok(text(p).includes(W(k)), k);
+  assert.equal(labelOf(p, "mt-d-role"), W("screen.matter.f.role"));
+  assert.equal(labelOf(p, "mt-d-body"), W("screen.matter.f.body"));
+  assert.equal(labelOf(p, "mt-d-did"), W("screen.matter.f.did"));
+  assert.equal(labelOf(p, "mt-d-cause"), W("screen.matter.f.cause"));
+  assert.deepEqual(optText(p, "mt-d-rd"), [W("screen.matter.f.compare.matches"), W("screen.matter.f.compare.differs"), W("screen.matter.f.compare.open")]);
+  // control: the first determination names nothing it replaces
+  assert.ok(!text(p).includes(W("screen.matter.replaces")));
+});
+
+test("R45 (DEC-387): revising reads 'Revise the determination' and 'What it replaces'; the rule's choice is 'Rule'", async () => {
+  const p = await open(AT, { ...DATA_PLANE, standards: STANDARDS, ...PUBLISHED });
+  await choose(p, "mt-mode", "determine");
+  for (const k of ["screen.matter.revise", "screen.matter.replaces", "screen.matter.a_new_determination_that_replaces_the_earlier"]) assert.ok(text(p).includes(W(k)), k);
+  assert.equal(labelOf(p, "mt-d-std"), W("screen.matter.f.rule"));
+});
+
+test("R50 (DEC-387): consequences read the matter's kinds and units, 'Describe them', 'Not known yet' and the reason behind a fold 'If you assess it yourself'; addressing reads 'The part', 'This part was' and 'Can't be undone'; a success reads 'When it changed'", async () => {
+  const p = await open(AT, { ...STAGE(4), standards: STANDARDS, projectquestions: QUESTIONS, consequencerecord: ok({ ok: true }) });
+  await choose(p, "mt-mode", "consequencerecord");
+  assert.deepEqual(optText(p, "mt-c-kind"), ["class", "fund", "program", "service", "office", "other"].map((k) => W("screen.matter.kind." + k)));
+  assert.deepEqual(optText(p, "mt-c-unit"), ["money", "benefits", "services", "time", "count"].map((k) => W("screen.matter.unit." + k)));
+  assert.equal(labelOf(p, "mt-c-desc"), W("screen.matter.f.describe"));
+  assert.ok(text(p).includes(W("screen.matter.unknown")));
+  const fold = p.doc.getElementById("mt-c-rat").closest("details");
+  assert.ok(fold && fold.querySelector("summary").textContent.trim() === W("screen.matter.if_you_assess_it_yourself"), "the reason sits behind the fold");
+  assert.equal(labelOf(p, "mt-c-rat"), W("shell.reason"));
+  await choose(p, "mt-mode", "addressedrecord");
+  for (const k of ["screen.matter.f.part", "screen.matter.f.partwas", "screen.matter.f.addressed", "screen.matter.f.notaddressed", "screen.matter.way.cannot"]) assert.ok(text(p).includes(W(k)), k);
+  await choose(p, "mt-mode", "successrecord");
+  assert.equal(labelOf(p, "mt-s-on"), W("screen.matter.f.when"));
+  assert.equal(p.doc.getElementById("mt-s-cause").closest("details").querySelector("summary").textContent.trim(), W("screen.matter.if_you_say_why_it_happened"));
+  assert.equal(labelOf(p, "mt-s-cause"), W("screen.matter.f.cause"));
+});
+
+test("R51 (DEC-387): attaching at the political accountability stage reads 'Its purpose' and its five options by key; the response reads the three readings by key and 'No response' for the reply; pausing reads 'Pause it'", async () => {
+  const q = await open(AT, { ...STAGE(7), actions: ok(ACTIONS), escalationattach: ok({ ok: true }) });
+  await choose(q, "mt-mode", "escalationattach");
+  assert.equal(labelOf(q, "mt-t-purpose"), W("screen.matter.f.purpose"));
+  assert.deepEqual(optText(q, "mt-t-purpose"), ["official", "oversight", "audit", "testimony", "legislation"].map((k) => W("screen.matter.f.purpose." + k)));
+  const r = await open(AT, { ...STAGE(4, { actions: [{ action: ACTION_ID, stage: 2 }] }), escalationevaluate: ok({ ok: true }) });
+  await choose(r, "mt-mode", "escalationevaluate");
+  assert.deepEqual(optText(r, "mt-e-read"), [W("screen.matter.reading.complied"), W("screen.matter.reading.partial"), W("screen.matter.reading.denied"), W("screen.matter.no_response_by_the_deadline")]);
+  assert.equal(optText(r, "mt-e-resp")[0], W("screen.matter.reading.none"));
+  await choose(r, "mt-mode", "escalationsuspend");
+  assert.ok(text(r).includes(W("screen.matter.pause")));
+});
+
+test("R6 (DEC-387): the stages are named without a number: 'Move on to the next stage' carries the stage's name, and a stage listed on an action is 'at' its name", async () => {
+  const p = await open(AT, STAGE(2));
+  const advance = button(p, "escalationadvance");
+  assert.ok(advance.textContent.includes(W("screen.matter.advance", { stage: W("screen.matter.stage.3") })));
+  assert.ok(!/\d/.test(W("screen.matter.stage.3")), "the stage's name holds no digit");
+  for (let n = 1; n <= 7; n++) assert.ok(!/\d/.test(W("screen.matter.stage." + n)), `stage ${n}`);
+});
