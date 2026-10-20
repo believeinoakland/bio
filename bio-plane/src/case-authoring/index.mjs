@@ -171,6 +171,14 @@ export const AUTHORED_FIELDS = Object.freeze(["statement", "subjectJustification
 export const ACT_FIELDS = Object.freeze(["target", "targets", "project", "roles", "caseId", "newCase", "draft",
   "subjectPosition", "tensionsDisclosed", "selfAttested", "flagsDisclosed", "calculationsDisclosed", "peopleBases",
   "tieAttested", "accountDraft", "reviewComments", "viewer", "author"]);
+/** R78 (T51; C1; K4165): the fields a draft keeps, which `review` reads for its draft act (its R4): the authored and the act's
+ *  fields without the stamps (`viewer`, `author`), the `project` (the draft's own column), `draft` (a draft does not name a
+ *  draft) and `tieAttested` (the signer's confirmation is made in the act, R76). */
+export const DRAFT_FIELDS = Object.freeze([...new Set([...AUTHORED_FIELDS, ...ACT_FIELDS])]
+  .filter((f) => !["viewer", "author", "project", "draft", "tieAttested"].includes(f)));
+/** R78: the pairs of `DRAFT_FIELDS` that state one thing between them (the roster; the case's identity), so a call that
+ *  sends either keeps the draft's other out, rather than a call and a draft each naming a half. */
+const DRAFT_PAIRS = Object.freeze([["targets", "target"], ["caseId", "newCase"]]);
 const str = (v) => String(v ?? "").trim();
 /** R56: what a `calculations:` row's `disclosed` states when the publisher listed a calculation that needed disclosure
  *  and gave no words of their own (case-grammar R18: null would read as "none was needed"). */
@@ -335,7 +343,33 @@ export class CaseAuthoring {
    * back (R18: the review copy's dry run).
    * ========================================================================================================== */
   publishCase(args = {}, calculationFacts = null) {
-    return this.record.transact(() => this.#publishCase(args, { calculationFacts }));
+    return this.record.transact(() => this.#publishCase(this.#withDraft(args), { calculationFacts }));
+  }
+
+  /* R78 (T51; C1; K4165; amends R9): THE DRAFT A CALL NAMES SUPPLIES WHAT THE CALL DID NOT SEND. The screens send the draft,
+     the project and the signer's confirmation; the authored fields are the draft's (`review` R4). When `draft` names a
+     draft the viewer may read (the review provider's door) and that belongs to `project`, each of `DRAFT_FIELDS` its
+     `params` hold that the call does not itself send (absent or null; a pair of `DRAFT_PAIRS` counts as one) is taken
+     from it, the call's own winning. A draft not held, or of another project, leaves the call as sent: R9 refuses it. It
+     writes nothing, and `args` is not changed. */
+  #withDraft(args) {
+    const a = args && typeof args === "object" ? args : {};
+    const named = str(a.draft), proj = str(a.project);
+    if (!named || !proj) return a;
+    const stamp = a.viewer && typeof a.viewer === "object" ? a.viewer.stamp ?? null : a.viewer ?? null;
+    let d = null, params = null;
+    try {
+      d = this.#review().draftForMember(named, stamp);
+      params = d && d.project_id === proj ? JSON.parse(d.params) : null;
+    } catch { params = null; }
+    if (!params || typeof params !== "object" || Array.isArray(params)) return a;
+    const sent = (k) => a[k] !== undefined && a[k] !== null;
+    const taken = {};
+    for (const k of DRAFT_FIELDS) {
+      const pair = DRAFT_PAIRS.find((g) => g.includes(k));
+      if (params[k] !== undefined && params[k] !== null && !(pair ? pair.some(sent) : sent(k))) taken[k] = params[k];
+    }
+    return { ...a, ...taken };
   }
 
   /* ==========================================================================================================
@@ -350,7 +384,7 @@ export class CaseAuthoring {
    *  inputs, or both empty when R1, R2 or R4 would refuse first (the act then answers that refusal). Never throws for a
    *  calculation or workbook it cannot read: what it could not read is carried as it answered, and judged so. */
   async calculationsAtPublication(args = {}) {
-    const a = args && typeof args === "object" ? args : {};
+    const a = this.#withDraft(args);
     const empty = { calculations: [], workbooks: [] };
     const who = str(a.author);
     if (!who || isMachineIdentity(who)) return empty;
@@ -594,7 +628,7 @@ export class CaseAuthoring {
               : target ? [target] : [];
     const members = set.map((s) => str(s)).filter(Boolean);
     if (!members.length)
-      return { ok: false, reason: "NO_TARGET",
+      return { ok: false, reason: "PUBLISH_NO_FINDING", code: "PUBLISH_NO_FINDING",
                detail: localize("case-authoring.index.a_published_case_is_a_container", "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal and is the degenerate case (DEC-44); what is not legal is publishing nothing.") };
     {
       const seen = new Set();
@@ -1439,8 +1473,9 @@ export class CaseAuthoring {
   /** R32: the candidates `op=publish` would require this act to disclose (R55), read by `case-disclosures`' `tensionsRead`
    *  exactly as `publishCase` reads them (its R1). R2's refusals, then R4's per member, then C-120.3, its
    *  `tensionsUndetermined` when this read itself throws. Writes nothing and never throws. */
-  tensionsToDisclose({ project = null, targets = null, target = null, viewer = null, author = null } = {}) {
+  tensionsToDisclose(args = {}) {
     try {
+      const { project = null, targets = null, target = null, viewer = null, author = null } = this.#withDraft(args);
       const who = str(author);
       const auth = this.#authority(project, viewer, who);
       if (auth.ok === false) return auth;
@@ -1491,7 +1526,7 @@ export class CaseAuthoring {
   publishPreflight(args = {}, calculationFacts = null) {
     const given = args && typeof args === "object" ? args : {};
     const carried = given.viewer && typeof given.viewer === "object" ? given.viewer : null;
-    const a = carried ? { ...given, viewer: carried.stamp ?? null } : given;
+    const a = this.#withDraft(carried ? { ...given, viewer: carried.stamp ?? null } : given);
     const seen = {};
     let answer = null, text = null;
     try {
@@ -2008,6 +2043,35 @@ async function gathered(c, args, act) {
   return act(args, await c.calculationsAtPublication(args));
 }
 
+/* R7, R78: `newCase` from the query or the body, its string forms spelled out so `newCase=false` means false; absent
+   stays absent (undefined), so a draft's own `newCase` is not overruled by a default the call never sent. */
+function newCaseOf(q, b) {
+  const v = q("newCase") != null ? q("newCase") : b.newCase;
+  return v == null ? undefined : v === true || v === "true" || v === "1" || v === "yes";
+}
+
+/** R81 (T51; K4168, K4202; `op-declarations` R80, `op-grades` R49): the ops this module serves that the screens send,
+ *  declared beside the ops map. Class, mutating, weight and description are the op's existing rows' (`op-declarations`,
+ *  `op-grades`: the hand row's class and `mutating`; `publish`'s rung and `act.publish.does`; the two reads' `NON_ACTS`
+ *  reasons, copied). `accepts` is `AUTHORED_FIELDS` and `ACT_FIELDS` less the stamps, so it cannot drift from what R65
+ *  refuses; `requires` is the project and, of each field the act refuses without, that field or the draft that holds it
+ *  (R78), and, for `publish`, the signer's confirmation (R76). `publishtensions` requires the project alone: for no finding
+ *  it answers an empty list (R32). The stamps `viewer`, `author` and the door's `aiCred` are no fields. */
+const ACCEPTED = Object.freeze([...new Set([...AUTHORED_FIELDS, ...ACT_FIELDS])].filter((f) => f !== "viewer" && f !== "author"));
+const WORDS_OR_DRAFT = Object.freeze([["targets", "target", "draft"], ["roles", "draft"], ["statement", "draft"],
+  ["subjectPosition", "draft"], ["subjectJustification", "draft"], ["excluded", "draft"], ["scope", "draft"],
+  ["biasAcknowledgement", "draft"]]);
+export const DECLARED_OPS = Object.freeze({
+  publish: { classes: ["admin", "member", "probe"], mutating: true, weight: "terminal", description: "act.publish.does",
+    fields: { accepts: ACCEPTED, requires: ["project", ...WORDS_OR_DRAFT, "tieAttested"] } },
+  publishpreflight: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("case-authoring.declared.publishpreflight", "read: the publication ceremony's dry run — op=publish's first refusal, every other refusal reachable, and whether the case is ready, over the same arguments, rolled back; writes nothing"),
+    fields: { accepts: ACCEPTED, requires: ["project", ...WORDS_OR_DRAFT] } },
+  publishtensions: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("case-authoring.declared.publishtensions", "read: the contradictions a case must disclose before it is published, each side the publisher cannot see highlighted and withheld; writes nothing"),
+    fields: { accepts: ACCEPTED, requires: ["project"] } },
+});
+
 /** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer` and `author` are the control plane's stamps,
  *  read from the query and spread AFTER the body, so a caller's own copy is overwritten, never honoured. */
 export function caseAuthoringOps(c, url, body) {
@@ -2021,10 +2085,7 @@ export function caseAuthoringOps(c, url, body) {
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
-      newCase: (() => {
-        const v = q("newCase") != null ? q("newCase") : b.newCase;
-        return v === true || v === "true" || v === "1" || v === "yes";
-      })(),
+      newCase: newCaseOf(q, b),
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
       viewer: q("viewer"),
@@ -2043,10 +2104,7 @@ export function caseAuthoringOps(c, url, body) {
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
-      newCase: (() => {
-        const v = q("newCase") != null ? q("newCase") : b.newCase;
-        return v === true || v === "true" || v === "1" || v === "yes";
-      })(),
+      newCase: newCaseOf(q, b),
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
       viewer: q("aiCred") ? { stamp: q("viewer"), aiCred: (() => {

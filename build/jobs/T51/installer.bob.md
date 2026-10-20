@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -112,3 +112,11 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio installer tranche/T51 job/T51/installer`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B15 · ANSWER · re J14
+
+ANSWER J14 (K4210): (1) the compressed embed (gzip, base64, expanded once by DecompressionStream into the one Blob, hash checked against the manifest) is approved. newgroup-bundle-fresh.test.mjs is in your own tests (modules.json): edit it as yours. R33's text amended to 29 MB: write it in build/requirements/installer.md. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B16 · CHANGE
+
+CHANGE (K4234), for INSTALLER #22: installer-steps is merged (R38: the read-back streams; `hashStream` exported). Its R33 real-size measurement: peak 143 MB (budget 112) is set in your module: `src/index.mjs`:97 `fetchRepoAsset` holds `bytes` and then the `Blob` at once; stream it (hash as it arrives into the Blob, using steps' `hashStream`, never `bytes` beside the Blob), and the real-size child's fake account serialises the upload body whole (a test double: make it stream or count without holding). Also `requirements.test.mjs`:363 "R11 fleet" is red with and without installer-steps (the result says all 6 helpers installed where the test expects pdf-worker's left-out paragraph): R11 is your entry. `newgroup/dist/newgroup.bundled.mjs` is stale; BOB regenerates it at the round's end.

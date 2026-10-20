@@ -1,6 +1,6 @@
 # run-productions (T51)
 
-**Status** · session_01W8n89yfSFWhfBxwhhKKJLr · depth 2 · COMPLETE · handled B2
+**Status** · session_017HzxWiogmpDtrEeVS4YKyV · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -53,3 +53,31 @@ Tests and checks, from civicos-process against /home/user/bio:
 - setup-words build.mjs --check: rows.mjs stale, the expected note (BOB regenerates at layer close).
 
 Size (session_01W8n89yfSFWhfBxwhhKKJLr): test runs 6, module lines 2237
+
+## J4 · COMPLETE
+
+CHANGE B3 (K4206) done, and the requirement lines B4 asks for are written. Commit cd74e2ac40 on job/T51/run-productions, pushed. I did not merge tranche/T51 in this round; the ownership check ran against it as listed above.
+
+Entries applied:
+- (K4206) `DECLARED_OPS` for `suggest`, beside `runProductionsOps` in `bio-plane/src/run-productions/index.mjs`: `classes` admin, member, probe; `mutating` true; `weight` `reversible`; `description` `localize("run-productions.declared.suggest", <op-grades' non-act sentence for suggest>)`, the same sentence the hand row holds, so registration finds no DECLARED_OP_DISAGREES. `fields.accepts` are the twelve fields the arm reads (target, kind, run, name, description, claim, relationship, derived_from, level, observed_at, grounds, legs). `fields.requires` are target, kind, run, description. `stamps` and `machineClasses` are not declared: the hand rows derive them from the family tables, and restating them risks disagreement.
+- Requirement R27 (new, your B4 line): written in `build/requirements/run-productions.md`, marked *(not yet met: T51)* and in the Status line. The mark is for you to clear when you merge, as with J1 and J2.
+- Test: `bio-plane/test/m/run-productions/declared-ops.test.mjs`, three tests, each naming R27. It calls `declaredOpHolds` (test-support) over the ops map as the door calls it (`runProductionsOps`, a URL and a body), with a fresh store per call. A control covers the kind refusal.
+
+Choices and why:
+- `name` is not in `requires`. With the real basis-versions, an absent name is refused `BASIS_VERSION_REFUSED` with an empty detail (checked by a scratch run against the real module). R3 relays that refusal unchanged, so it names no field and the declaration cannot claim it. The fixture's stand-in `appendVersion` throws a TypeError on an empty name, because it reads back a version the empty name never creates. That is a fixture artifact, not a module flaw; the test supplies a name.
+- P8 fix in my arm: the `SUGGEST_UNKNOWN_KIND` detail now begins `pass kind=<one of §9's kinds>:`, so the refusal names the field. Its code, check and translation are unchanged. No existing test pins the detail text.
+
+Deferred: nothing.
+
+Found outside run-productions (not changed here):
+- `checks/run.mjs /home/user/bio` reports 16 failures, none in run-productions. Coverage (5 modules): agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; link-sweep R13, R14, R15. Words: op-grades' testcopy findings (15, in owners.test.mjs, t36, t41, t46, t47, t48, t49) and one inline finding in strength/method.mjs:349. For BOB to route to the owning modules.
+
+Tests and checks (from civicos-process against /home/user/bio):
+- `node --test bio-plane/test/m/run-productions/`: 65 pass, 0 fail (the 62 from before plus 3 new). Before the change the new file failed on the missing `DECLARED_OPS` export.
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio run-productions`: 0 failures.
+- `checks/coverage.mjs /home/user/bio run-productions`: 27 of 27 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio run-productions tranche/T51 job/T51/run-productions`: 4 files changed, 1 failure: `build/requirements/run-productions.md` is outside run-productions' paths, tests and job record. Your B4 accepts that listing at merge.
+- `checks/run.mjs /home/user/bio`: no finding for run-productions (the repo-wide list above is other modules').
+
+Size (session_017HzxWiogmpDtrEeVS4YKyV): test runs 5, module lines 2239

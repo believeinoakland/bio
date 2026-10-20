@@ -1,6 +1,6 @@
 # agent-runner (T51)
 
-**Status** · session_01Bh46WBF1Rm2oJzb3B9kHTS · depth 2 · COMPLETE · handled B3
+**Status** · session_01MdnNBzBAyEqGyj1L1rTrT7 · depth 2 · COMPLETE · handled B4
 
 ## J1 · BLOCKED
 
@@ -40,3 +40,16 @@ REPORT (T51-149, words): the words I judged no member reads, and what I found el
 ## J4 · COMPLETE
 
 T51-149 done and pushed (5c919018ea): R41 met. agent-runner 70 tests, 59 pass, 0 fail, 11 suspended by R35; checks 0 failures for format, architecture, ownership; coverage names only R36 R37 R38 R40 (T50). Remaining words findings are the diagnostics in my REPORT. See my record.
+
+## Completion (FR-14, B4)
+
+- **Applied.** K4176 (2) as R42 (new requirement line written first, marked not yet met: T51). `src/worker.mjs` exports `RemoteSession` (a `DurableObject`, no container): every request, `GET /remote/version` and a WebSocket upgrade included, answers 503 `{"ok":false,"code":"REMOTE_UNAVAILABLE"}`; no body read, no storage, no container, no credential. `wrangler.jsonc`: migration `v2` `new_sqlite_classes: ["RemoteSession"]` beside `v1`; `durable_objects.bindings` unchanged. Nothing disabled; R36/R37/R38/R40 stay conditional. `agent-worker` untouched. Tests: `test/remote-session.test.mjs` (5 tests, seen failing first). `worker.test.mjs` R12's export list now names `RemoteSession` (R42 amends it). Bundle rebuilt with `npm run build` (sha256 17f73fb1…).
+- **Flaw fixed in my module.** `container.test.mjs` R33's control pinned the old image digest (954ac088…) and failed since the 0.86.0 release recorded 78b09547…; it now reads `imageReference(readManifest())`, the manifest being the one source R13 requires `wrangler.jsonc` to match.
+- **Deferred.** None. **Stale artifact I made:** none (agent-runner's own bundle is rebuilt and fresh).
+- **Found in other modules.** `fleetbundles.test.mjs` still fails here (132 pass, 15 fail) for reasons outside my module: agent-worker's bundle is stale against plane sources (`bundles.mjs` regenerates, BOB's at close), and R39's remaining findings are `FILE_SCANNER` (a binding naming file-scanner, not a member here) and file-scanner's fresh build failing in this checkout. R39's `RemoteSession` finding is gone, and the agent-runner arms are green.
+- **Tests and checks.** `agent-runner` `node --test test/`: 75 tests, 64 pass, 0 fail, 11 suspended by R35. `checks/run.mjs`: format 0, architecture 0, words 0 findings; coverage names no test for R36 R37 R38 R40 only (T50). `checks/ownership.mjs`: 0 failures.
+- Size (session_01MdnNBzBAyEqGyj1L1rTrT7): test runs 6, module lines 34
+
+## J5 · COMPLETE
+
+FR-14 done and pushed: R42 met. Worker exports RemoteSession (DurableObject, no container; every request 503 REMOTE_UNAVAILABLE, /remote/version included); migration v2 beside v1; agent-worker untouched. agent-runner 75 tests, 64 pass, 0 fail, 11 suspended by R35. Also fixed R33's control (pinned the pre-0.86.0 digest). checks: format/architecture/words/ownership 0 failures; coverage names only R36 R37 R38 R40 (T50). fleetbundles: agent-runner arms green, R39's RemoteSession finding gone; remaining reds are agent-worker's stale bundle and FILE_SCANNER/file-scanner build (not mine). Details in my record.

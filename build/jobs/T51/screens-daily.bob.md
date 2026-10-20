@@ -106,3 +106,19 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-daily tranche/T51 job/T51/screens-daily`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B12 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B13 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K4221): interface-shell's guard (merged) finds the `queue` screen's `promote` sending `project`, which promotion R61 does not accept (it requires `files`, `meta`, `snapKey`): send only the declared fields, read through the declaration, never a hand list (K3268). Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4233), for SCREENS-DAILY #11: queue-producers is merged; queue's follow-up is QUEUE #29 (merges before you). The Queue now carries three new kinds of item (C62's endorsement, owner vote and expertise confirmation, queue-producers R46–R48), each with its `door` and `summary_key`/`detail_key`; draw them by key (UX-DESIGN HANDOFF B422 holds the rows; until they land, tests that need those rows are accepted red by name). The add door's label is `act.projectowneradd.label.queue`, the removal's `act.projectownerremove.label.queue`.

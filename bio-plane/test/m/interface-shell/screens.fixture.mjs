@@ -1,6 +1,7 @@
 /* Test screens for the shell's own tests: real registry ids, each act the registry's for its screen, drawn with every
    part of the kit (reads in their four states, acts of each weight, references, marks, dates, rows with picks and the
    hold strip, fields, the dock). Every function refers only to its parameters, as R21's contract asks. */
+import { fitSend as fit, declaredFit } from "./harness.mjs";
 export const FIXTURE_WORDS = Object.freeze([
   ["screen.home.t.queue", "fx t queue", false],
   ["screen.home.t.queue.holds", "fx t queue holds", false],
@@ -37,7 +38,8 @@ export const HOME = {
       + cs.field("home-title", "screen.home.t.title", { rec: true })
       + cs.act("promote", { label: "act.promote.label.home", tone: "primary" });
   },
-  acts: [{ op: "promote", send(view, el, cs) { const t = cs.value("home-title"); return t ? { body: { title: t } } : { refuse: "shell.reason.needed" }; },
+  /* the body is what the owner declares (read through the collector, K3268), the typed title carried as `meta` */
+  acts: [{ op: "promote", send: new Function("view", "el", "cs", `const t = cs.value("home-title"); return t ? { body: Object.assign(${JSON.stringify(declaredFit("promote"))}, { meta: { title: t } }) } : { refuse: "shell.reason.needed" };`),
     done(view, answer, cs) { if (answer && answer.project) cs.go("project", answer.project); } }],
 };
 
@@ -56,9 +58,9 @@ export const HELD = {
     }));
   },
   acts: [
-    { op: "release", send(view, el) { return { body: { ids: el.dataset.ids.split(",") } }; } },
-    { op: "heldsetaside", send(view, el) { return { body: { ids: el.dataset.ids.split(",") } }; } },
-    { op: "heldrestore", send(view, el) { return { body: { id: el.dataset.id } }; } },
+    { op: "release", send: fit("release", "{}") },
+    { op: "heldsetaside", send: fit("heldsetaside", "{ ids: el.dataset.ids.split(\",\") }") },
+    { op: "heldrestore", send: fit("heldrestore", "{ ids: [el.dataset.id] }") },
   ],
 };
 
@@ -75,9 +77,9 @@ export const DOCUMENT = {
   },
   acts: [
     { op: "cite", send(view, el) { return { body: { passage: Number(el.dataset.passage), capture: view.subject } }; }, refusals: { CITE_GONE: "screen.document.t.passages" } },
-    { op: "retire", send(view) { return { body: { id: view.subject } }; } },
-    { op: "attest", send(view, el, cs, extra) { return { body: { id: view.subject, note: extra.fields.note } }; }, dialog: [{ name: "note", label: "screen.document.t.passages" }] },
-    { op: "release", send(view) { return { body: { ids: [view.subject] } }; } },
+    { op: "retire", send: fit("retire", "{}") },
+    { op: "attest", send: fit("attest", "{ locator: extra.fields.locator }"), dialog: [{ name: "locator", label: "screen.document.t.passages" }] },
+    { op: "release", send: fit("release", "{}") },
   ],
 };
 
@@ -94,7 +96,7 @@ export const ASSISTANT = {
   words: own("screen.assistant."),
   reads(view) { return {}; },
   render(cs, view) { return cs.sec("screen.assistant.t.panel", cs.mark("origin", "machine") + cs.act("airunopen", { data: { screen: view.serves.screen } })); },
-  acts: [{ op: "airunopen", send(view) { return { body: { context: view.serves } }; } }],
+  acts: [{ op: "airunopen", send: fit("airunopen", "{ contextType: view.serves.screen, contextId: view.serves.subject }") }],
 };
 
 /* T47: the public frame's `front` (screens-entry R2's sign-in, as the shell's R46 hands it over) and `doorbell`, the
@@ -119,7 +121,7 @@ export const DOORBELL = {
   words: own("screen.doorbell."),
   reads() { return { group: { op: "groupidentity" } }; },
   render(cs) { return cs.title() + cs.field("d-what", "screen.doorbell.t.what", { area: true }) + cs.act("knock"); },
-  acts: [{ op: "knock", send(view, el, cs) { return { body: { text: cs.value("d-what") } }; } }],
+  acts: [{ op: "knock", send(view, el, cs) { return { body: { content: cs.value("d-what") } }; } }],
 };
 export const PUBLISHED = {
   id: "published",

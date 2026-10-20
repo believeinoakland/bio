@@ -240,14 +240,22 @@ function checkAuthorityPublishable(ctx, findings) {
        the deliberate change. What blocks it is undetermined and SILENT: a
        reader of the published record must be able to see that the question was
        asked and not answered, and when. */
-    if (d.authority_state === 'undetermined') {
-      const basis = d.authority_basis;
+    /* R66 (K4169, C62): a member's decision on this capture's content authority, where the record holds one, is the
+       standing value: its state, issuer and basis are read here in place of the document's own, so a stale
+       `undetermined` is never read after a decision. Without a resolver, or a decision, the document's own stands. */
+    const decided = ctx.resolve && typeof ctx.resolve.authority === 'function' && d.capture && typeof d.capture === 'object'
+      ? ctx.resolve.authority(d.capture.sha256) : null;
+    const aState = decided ? decided.authority_state : d.authority_state;
+    const aName = decided ? decided.authority : d.authority;
+    const aBasis = decided ? decided.basis : d.authority_basis;
+    if (aState === 'undetermined') {
+      const basis = aBasis;
       if (typeof basis !== 'string' || basis.trim() === '') {
         findings.push(f('C-18.9', 'error', `provenance documents[${i}] is content-authority undetermined and this record is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
           ['record a dated authority_basis saying what was tried and what it established',
            'or determine the authority through the task list and record the determination']));
       }
-    } else if (d.authority_state === 'determined' && (typeof d.authority !== 'string' || d.authority.trim() === '')) {
+    } else if (aState === 'determined' && (typeof aName !== 'string' || aName.trim() === '')) {
       findings.push(f('C-18.9', 'error', `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this record is at or past verified`,
         ['name the issuing party', "or correct authority_state to 'undetermined' with a dated basis"]));
     }

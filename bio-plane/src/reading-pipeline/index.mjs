@@ -848,21 +848,64 @@ const decodeReferences = (s) => s.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6}
 const BLOCK_TAG = "address|article|aside|blockquote|body|caption|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form"
   + "|h[1-6]|header|hr|html|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul";
 
+/* R32 (T51; K4194): a captured page's furniture is no passage. An element `nav`, or any element whose `role` is
+   `navigation`, goes with its contents, counted by its own name so a nested one of the same name does not end it early;
+   an element with no end tag is not guessed at (its tag goes, its words stay). A skip link (an `a` whose `href` begins
+   `#` and whose text begins "Skip to") goes. An unresolved template token goes. Everything else visible is kept, and a
+   page with no landmark keeps all its text. */
+const TAG_ATTRS = "(?:\"[^\"]*\"|'[^']*'|[^'\">])*";
+const VOID_TAG = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
+const attrOf = (attrs, name) => {
+  const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(attrs);
+  return m ? (m[1] ?? m[2] ?? m[3]) : null;
+};
+const isLandmark = (name, attrs) => name.toLowerCase() === "nav"
+  || (attrOf(attrs, "role") ?? "").trim().split(/\s+/)[0].toLowerCase() === "navigation";
+function dropNavigation(markup) {
+  const open = new RegExp(`<([A-Za-z][A-Za-z0-9:-]*)(${TAG_ATTRS})>`, "g");
+  let out = "", from = 0;
+  for (let m = open.exec(markup); m; m = open.exec(markup)) {
+    if (!isLandmark(m[1], m[2])) continue;
+    const name = m[1].toLowerCase(), after = m.index + m[0].length;
+    let end = after;   /* a void or self-closing tag, or one never closed, is only itself */
+    if (!VOID_TAG.has(name) && !m[2].endsWith("/")) {
+      const same = new RegExp(`<(/?)${name}(?=[\\s>/])(${TAG_ATTRS})>`, "gi");
+      same.lastIndex = after;
+      for (let depth = 1, t = same.exec(markup); t; t = same.exec(markup)) {
+        if (t[1]) depth--;
+        else if (!t[2].endsWith("/")) depth++;
+        if (depth === 0) { end = same.lastIndex; break; }
+      }
+    }
+    out += markup.slice(from, m.index) + " ";
+    from = open.lastIndex = end;
+  }
+  return out + markup.slice(from);
+}
+const SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
+const dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
+  const href = attrOf(attrs, "href");
+  const said = decodeReferences(inner.replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "")).replace(/\s+/g, " ").trim();
+  return href !== null && href.trim().startsWith("#") && /^skip to/i.test(said) ? " " : whole;
+});
+const TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/g;
+
 /* The page's visible text: comments, `head`, `script`, `style` and `template` contents are dropped (an unclosed one
-   drops to the end), every tag is removed (a block tag ends its paragraph, `br` its line), and character references
-   are decoded last, so a decoded `&lt;` is text, never a tag. */
+   drops to the end), then the furniture above, every tag is removed (a block tag ends its paragraph, `br` its line),
+   and character references are decoded, so a decoded `&lt;` is text, never a tag. Template tokens go last, so one
+   written as references goes too. */
 export function visibleTextOfHtml(html) {
-  const dropped = html
+  const dropped = dropSkipLinks(dropNavigation(html
     .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
     .replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
     .replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ")
-    .replace(/<![^>]*>|<\?[^>]*>/g, " ")
+    .replace(/<![^>]*>|<\?[^>]*>/g, " ")))
     .replace(/\s+/g, " ");   /* the source's own line breaks and blank lines are no paragraph break in a page */
   const bare = dropped
     .replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n")
     .replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n")
     .replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
-  return decodeReferences(bare);
+  return decodeReferences(bare).replace(TEMPLATE_TOKEN, " ");
 }
 
 /* R32: the units of text read as text. `html` is true for a capture whose detected format is `html`.

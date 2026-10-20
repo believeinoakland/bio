@@ -9,7 +9,9 @@
  *     step's sentences for them (R10, R17);
  *   - the one source of a case's minutes comparisons at signing, which `filings` fills, and the sign step's lines for
  *     them (R19);
- *   - the outcomes a member carries into a case's next edition, the service `consequences` calls (R9).
+ *   - the outcomes a member carries into a case's next edition, the service `consequences` calls (R9);
+ *   - a case's standard details, beside the case and never in its signed document (`op=casedetailsset`,
+ *     `op=casedetails`, the public read `casedetailspublic`, R20–R26, T51).
  *
  * Copied from `case-authoring` for size (N908; K617, K624; the map `build/extraction/case-authoring-split-2.md`), meaning
  * unchanged, each requirement naming its source id; `case-authoring` deletes its copies once this module is merged
@@ -25,6 +27,9 @@
  *                        `reauthorSection` (its R21; R2).
  *   publishSchedule      `waitingEditionOf` (publish-schedule R7; R4).
  *   account              `case-account`'s `accountShaped` (its R5; R9's cites).
+ *   entities, promotion  `has` (its R7; R21's `area.entity`), `fact("producingGroup")` (its R40; R24's `group`).
+ *   publicRead           `registerPublicReads` (its R18): `casedetailspublic`, registered by `registerCaseInputsPublicReads` (R24),
+ *                        which the plane calls at start; creating the instance registers nothing.
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R6's sight, its R37);
@@ -45,9 +50,16 @@ import { STATEMENT_ACK_CHECKS, CARRIED_OUTCOME_CHECKS, fillWords } from "./check
 import { CASE_INPUTS_TABLES, migrateCaseInputs } from "./schema.mjs";
 import { statementSha, ackFrontmatterLines, ackBodyLines, withheldWriterStated } from "./document.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+/* R21, R24 (T51): the entities a team holds; the group's slug; the public reads and C-98.8's row. */
+import { entitiesOf } from "../entities/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { publicReadOf } from "../public-read/index.mjs";
+import { rowOf } from "../public-read/checks.mjs";
+import { CASE_DETAILS_FIELDS, CASE_DETAILS_HISTORY_MAX, CASE_DETAILS_WORDS, fillDetails, detailsShapeProblem } from "./details.mjs";
 
 export { STATEMENT_ACK_CHECKS, CARRIED_OUTCOME_CHECKS, CASE_INPUTS_WORDS, fillWords } from "./checks.mjs";
 export { CASE_INPUTS_SCHEMA, CASE_INPUTS_TABLES, migrateCaseInputs } from "./schema.mjs";
+export { CASE_DETAILS_FIELDS, CASE_DETAILS_HISTORY_MAX, CASE_DETAILS_WORDS, DETAILS_LIMITS, RELATIONS, fillDetails } from "./details.mjs";
 export { statementSha, ackFrontmatterLines, ackBodyLines, withheldWriterStated, ACK_PROSE_HEAD } from "./document.mjs";
 
 /** R2: the most acknowledgements one list names; a list that reaches it says so (`truncated`). */
@@ -195,12 +207,12 @@ export class CaseInputs {
   #minutes = null;
 
   constructor({ storage, record, membership, host = null, publication = null, publishSchedule = null, account = null,
-                now = null } = {}) {
+                entities = null, promotion = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, publication, publishSchedule, account };
+    this.#deps = { host, publication, publishSchedule, account, entities, promotion };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -210,6 +222,10 @@ export class CaseInputs {
   get publishSchedule() { return this.#deps.publishSchedule ||= publishScheduleOf(this.#deps.host); }
   /* R9: `case-account`, the one instance on this host, for an outcome's cites (its R5). */
   get account() { return this.#deps.account ||= caseAccountOf(this.#deps.host); }
+  /* R21: `entities`, the one instance on this host, for the bodies a team holds. */
+  get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
+  /* R24: `promotion`, the one instance on this host, for the producing group's slug. */
+  get promotion() { return this.#deps.promotion ||= promotionOf(this.#deps.host); }
 
   migrate() { migrateCaseInputs(this.sql); }
 
@@ -513,6 +529,113 @@ export class CaseInputs {
       const d = this.#one(`SELECT draft_id, text FROM what_changed_drafts WHERE draft_id=? AND case_id=?`, named, id);
       return d ? { draft_id: d.draft_id, text: d.text } : null;
     } catch { return null; }
+  }
+
+  /* ==========================================================================================================
+   * R20–R26 (T51; K4169, K4171, K4185; UC-101; Design Requirements 6, 10; DEC-111 item 9): A CASE'S STANDARD DETAILS.
+   *
+   * Four fields (area of government, point of contact, related work, relationship disclosure) sit BESIDE the case and
+   * never enter its signed document (K4164 goal 1; R25): they change after signing, as a contact moves, which a signed
+   * edition cannot do honestly. One row per set, append-only; a field's standing value is its latest. Not stated is
+   * shown "not stated", never refused at publication and never filled in (Declared Bias, DEC-20: disclosed, never blocking).
+   * ========================================================================================================== */
+  /* R20, R23, R24: the case `caseId` names and its project: published when its first edition was ratified (publication
+     R40's `cases`), else an unsigned preparation (the project its latest `case_documents` row prints), else null. */
+  #detailsCase(caseId) {
+    const id = str(caseId);
+    if (!id) return null;
+    const pub = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
+    if (pub) return { caseId: id, project: pub.project_id, published: true };
+    const doc = this.#one(`SELECT text FROM case_documents WHERE case_id=? ORDER BY edition DESC LIMIT 1`, id);
+    const project = doc ? str((parseFrontmatter(doc.text).data || {}).case_project) : "";
+    return project ? { caseId: id, project, published: false } : null;
+  }
+
+  /* R20, R23: whether `viewer` sees the project in full (membership R43's rule, through its one `sight`). */
+  #detailsFull(project, viewer) {
+    return typeof viewer === "string" && !!viewer && this.membership.sight(project, viewer) === "full";
+  }
+
+  /* R20, R23: one answer for a case that has neither a preparation nor an edition and one the viewer cannot see (R14). */
+  #detailsNoSuchCase() {
+    return { ok: false, reason: "NO_SUCH_CASE", detail: fillDetails("noSuchCase"), translation: fillDetails("noSuchCase") };
+  }
+
+  /* R22: each field's standing value, `{stated, value, set_by, set_at}` (null where not stated). */
+  #detailsStanding(caseId, handles = true) {
+    const out = {};
+    for (const field of CASE_DETAILS_FIELDS) {
+      const r = this.#one(`SELECT value, set_by, at FROM case_details WHERE case_id=? AND field=? ORDER BY seq DESC LIMIT 1`,
+                          caseId, field);
+      const value = r && r.value !== "null" ? JSON.parse(r.value) : null;
+      out[field] = value === null ? { stated: false, value: null, set_by: null, set_at: null }
+        : { stated: true, value, set_by: handles ? this.membership.memberFacts(r.set_by)?.handle ?? null : null, set_at: r.at };
+    }
+    return out;
+  }
+
+  /** R20: record one field of a case's details, or clear it (`value: null`). Refusals, in order, each writing nothing:
+   *  `MACHINE_CANNOT_SET_DETAILS`; the existence refusal (C-70.1) or `NO_SUCH_CASE`; `NOT_THE_PROJECT_OWNER`;
+   *  `DETAILS_FIELD_UNKNOWN`; `DETAILS_MALFORMED` naming the part. Answers `{ok: true, case, field, value, at}`. */
+  caseDetailsSet({ case: caseId = null, field = null, value = undefined, by = null, viewer = null } = {}) {
+    const who = str(by);
+    if (!who || isMachineIdentity(who))
+      return { ok: false, reason: "MACHINE_CANNOT_SET_DETAILS", detail: fillDetails("machine") };
+    const found = this.#detailsCase(caseId);
+    if (!found) return this.#detailsNoSuchCase();
+    const existence = this.membership.existenceAct(found.project, viewer);
+    if (existence) return existence;
+    if (!this.#detailsFull(found.project, viewer)) return this.#detailsNoSuchCase();
+    if (!this.membership.isProjectOwner(found.project, who))
+      return { ok: false, reason: "NOT_THE_PROJECT_OWNER", project: found.project, author: who, detail: fillDetails("notOwner") };
+    if (typeof field !== "string" || !CASE_DETAILS_FIELDS.includes(field))
+      return { ok: false, reason: "DETAILS_FIELD_UNKNOWN", field: typeof field === "string" ? field.slice(0, 80) : null,
+               fields: [...CASE_DETAILS_FIELDS],
+               detail: fillDetails("fieldUnknown", { field: typeof field === "string" ? field.slice(0, 80) : String(field), fields: CASE_DETAILS_FIELDS.join(", ") }) };
+    const bad = value === undefined ? "value" : value === null ? null : detailsShapeProblem(field, value, (e) => this.entities.has(e));
+    if (bad)
+      return { ok: false, reason: "DETAILS_MALFORMED", field, part: bad, detail: fillDetails("malformed", { field, part: bad }) };
+    const json = JSON.stringify(value);
+    return this.record.transact(() => {
+      const at = this.#when("millisecond");
+      this.sql.exec(`INSERT INTO case_details (case_id, field, value, set_by, at) VALUES (?,?,?,?,?)`,
+                    found.caseId, field, json, who, at);
+      return { ok: true, case: found.caseId, field, value: JSON.parse(json), at };
+    });
+  }
+
+  /** R22, R23: the four standing values and the history, to a member who sees the case's project in full; every other
+   *  caller receives the answer for a case that does not exist (R14). Writes nothing and never throws. */
+  caseDetails({ case: caseId = null, viewer = null } = {}) {
+    try {
+      const found = this.#detailsCase(caseId);
+      if (!found || !this.#detailsFull(found.project, viewer)) return this.#detailsNoSuchCase();
+      const rows = this.#rows(`SELECT field, value, set_by, at FROM case_details WHERE case_id=? ORDER BY seq DESC LIMIT ?`,
+                              found.caseId, CASE_DETAILS_HISTORY_MAX + 1);
+      return { ok: true, case: found.caseId, published: found.published, details: this.#detailsStanding(found.caseId),
+               truncated: rows.length > CASE_DETAILS_HISTORY_MAX,
+               history: rows.slice(0, CASE_DETAILS_HISTORY_MAX).reverse().map((r) => ({
+                 field: r.field, value: r.value === "null" ? null : JSON.parse(r.value),
+                 by: this.membership.memberFacts(r.set_by)?.handle ?? null, at: r.at })) };
+    } catch { return this.#detailsNoSuchCase(); }
+  }
+
+  /** R24: the credential-free public read of a published case's details: the four standing values (never who set them),
+   *  the team's slug and the sentence that they are its current statement, not part of the signed edition. A case with
+   *  no published edition, an unsigned preparation included, is `NOT_PUBLISHED` (C-98.8) and nothing of it. */
+  caseDetailsPublic({ case: caseId = null } = {}) {
+    const id = str(caseId);
+    if (!id || !this.#one(`SELECT 1 AS x FROM cases WHERE case_id=?`, id))
+      return { ok: false, reason: "NOT_PUBLISHED", ...rowOf("NOT_PUBLISHED"), detail: fillDetails("notPublished") };
+    let group = null;
+    try { const f = this.promotion.fact("producingGroup"); group = f && f.ok && str(f.value) ? str(f.value) : null; } catch { group = null; }
+    const standing = this.#detailsStanding(id, false);
+    const details = {};
+    for (const field of CASE_DETAILS_FIELDS) {
+      const { stated, value, set_at } = standing[field];
+      details[field] = { stated, value, set_at, ...(stated ? {} : { says: fillDetails("notStated") }) };
+    }
+    return { ok: true, case: id, group, details, sentence: fillDetails("publicCurrent") };
   }
 
   /* R4 (was case-authoring R59; N681, N823): whether `publish-schedule` holds this case edition waiting (its R1, read
@@ -968,5 +1091,60 @@ export function caseInputsOps(c, url, body) {
       bySecret: q("bySecret") === "1",
       /* R1 (DEC-88): the acknowledger's words, from the query as the subject is; absent stays absent. */
       reason: q("reason") ?? undefined }),
+    /* R20 (T51): one field of a case's details. `case` from the query, else the body; `field` and `value` from the body,
+       else the query (a value in the query is a JSON text; one that is not JSON is passed as the text it is, and is
+       malformed); `by` and `viewer` the stamps. */
+    casedetailsset: () => c.caseDetailsSet({ case: q("case") || b.case || null, field: b.field !== undefined ? b.field : q("field"),
+      value: b.value !== undefined ? b.value : url.searchParams.has("value") ? jsonText(q("value")) : undefined,
+      by: q("by") ?? q("author"), viewer: q("viewer") }),
+    /* R23: the details and their history, to a member who sees the case's project. */
+    casedetails: () => c.caseDetails({ case: q("case") || b.case || null, viewer: q("viewer") }),
   };
 }
+
+/* R20: a value that came in the query, a JSON text; text that is not JSON is passed as it is, for R21 to refuse. */
+function jsonText(t) {
+  try { return JSON.parse(t); } catch { return t; }
+}
+
+const registered = new WeakMap();
+
+/** R24 (public-read R18, as `case-checker`'s `registerCaseCheckerPublicReads`): at start, register `casedetailspublic` once
+ *  per host with `public-read`; the registration's answer is kept and returned, so a refused one is seen. Creating the
+ *  instance (R16) does not register, so it reaches no other module's instance on the host; the plane calls this where it
+ *  registers the other modules' public reads. */
+export function registerCaseInputsPublicReads(host, deps = {}) {
+  if (registered.has(host)) return registered.get(host);
+  const publicRead = deps.publicRead || publicReadOf(host);
+  const answer = publicRead.registerPublicReads("case-inputs", caseDetailsPublicReads(caseInputsOf(host, deps)));
+  registered.set(host, answer);
+  return answer;
+}
+
+/** R24 (public-read R18): the one credential-free read this module registers at start, `casedetailspublic`, taking the
+ *  query parameter `case`. */
+export function caseDetailsPublicReads(c) {
+  return { casedetailspublic: { read: (a) => c.caseDetailsPublic({ case: a.case ?? null }), params: ["case"] } };
+}
+
+/* R27, R29 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops of this module that a screen sends or that this
+   tranche adds, declared by their owner beside the ops map. `casedetailsset`, `casedetails` and `casedetailspublic` are
+   new; `statementack` and `whatchangedpropose` take their classes, weight and description from their hand rows
+   (op-declarations, op-grades, op-capabilities), which these rows agree with. `casedetailspublic` is served by
+   public-read's door (R24), so no arm of `caseInputsOps` carries it. `fields.accepts` is every field the arm reads from
+   the address and the body, the stamps excepted; `requires` the ones it refuses without. `statementack` is the one
+   judgment: a recipient arrives with `secret`, which the control plane hashes and strips, handing the arm its digest as
+   the body's `secretSha` and the mark `bySecret=1` (R5), so those two are door-set stamps and the field a caller sends,
+   which the screens send, is `secret`. */
+export const DECLARED_OPS = Object.freeze({
+  casedetailsset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", stamps: ["by","viewer"], needs: "contribute", description: localize("case-inputs.declared.casedetailsset", "case-directed: keyed by a case, reached from the case editor; an owner sets or clears one of its standard details, kept beside the case and never in its signed document"),
+    fields: { accepts: ["case","field","value"], requires: ["case","field","value"] } },
+  casedetails: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("case-inputs.declared.casedetails", "read: a case's standard details and their history, to a member who sees its project; writes nothing"),
+    fields: { accepts: ["case"], requires: ["case"] } },
+  casedetailspublic: { classes: null, mutating: false, weight: "read", description: localize("case-inputs.declared.casedetailspublic", "read: a published case's standard details as its team currently states them, public, no credential; writes nothing"),
+    fields: { accepts: ["case"], requires: ["case"] } },
+  statementack: { classes: null, mutating: true, weight: "reasoned", description: localize("case-inputs.declared.statementack", "case-directed: keyed by a case edition; a member acknowledges what the case does not cover"),
+    fields: { accepts: ["draft","case","edition","secret","reason"], requires: [["draft","case","secret"],"reason"] } },
+  whatchangedpropose: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("case-inputs.declared.whatchangedpropose", "case-directed: keyed by a published case, reached from its next edition; a draft, never a statement until a member adopts it"),
+    fields: { accepts: ["case","text"], requires: ["case","text"] } },
+});

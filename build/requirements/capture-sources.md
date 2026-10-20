@@ -1,6 +1,6 @@
 # capture-sources — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67); the members' credentials (R55–R63) as ruled (K157 (3), K158 (1)). Last changed T35 (T35-20: R55 amended; R64, R65 new; K1881); every requirement met (K1952).
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67); the members' credentials (R55–R63) as ruled (K157 (3), K158 (1)). Last changed T35 (T35-20: R55 amended; R64, R65 new; K1881); every requirement met (K1952). Last changed T51 (fix round FR-11: R66, R67 new; C20, K4168); met (K4214).
 
 ## Public
 
@@ -147,6 +147,12 @@ Terms. A **credential** is what a member supplies so that a source's refusal (ca
 **credentialList({viewer, scope, project}) → [entry]**
 - **R58** Lists the credentials the viewer may see, filtered by `scope` and `project` when given: a member sees their own `member` credentials; a `project` credential is seen by a viewer at `FULL` sight of its project (membership's `sight`); a `group` credential by every member; an administrator (`isAdministrator`) sees every `member` and `group` entry, so as to withdraw under R63, and a `project` entry only when at `FULL` sight of its project; an absent or unrecognised viewer sees none. Each entry is `{credential, kind, host, scope, project, supplied_by, supplied_at, withdrawn_at, withdrawn_by}`. It never contains the secret, any part of it, its length or its digest. Never throws. (N189, K288) It takes `{viewer, scope, project, limit}` and answers `{entries, limit, truncated}`: `limit` 200, the caller's to lower and never raise, one row read past it, `truncated` measured (`project-roster` R9's shape), the first `limit` entries the viewer may see in supply order.
 
+#### The credential ops (`ops.mjs`; C20, K4168)
+
+**captureSourcesOps(credentials, url, body) → `{capturecredentialsupply, capturecredentiallist, capturecredentialwithdraw}`; `DECLARED_OPS`**
+- **R66** (amends R55 to R63) The three credential ops are served as this module's own ops map, `captureSourcesOps`, which the composition root spreads, to a signed-in member (the administrator's session included) and never to a machine credential: `capturecredentialsupply` answers R55 for the body's `kind`, `host`, `secret`, `scope` and `project`, `capturecredentiallist` answers R58 for the stamped `viewer` with the query's (or body's) `scope`, `project` and `limit`, and `capturecredentialwithdraw` answers R57 for the body's `credential`. The supplier, and the withdrawer, is the stamp `by` and never a body field (a `by` in the body is not read); the secret is read from the body alone, never from the address, so the request's log line cannot carry it. No answer, refusal or log line carries the secret, its length or a digest of it (R60), whichever field a secret is put in; a `by` that names no active member, a machine credential's included, is refused `CAPTURE_CREDENTIAL_NOT_A_MEMBER`, and R55's, R57's and R63's other refusals stand as written.
+- **R67** (K4168) The module declares the ops it serves: it exports `DECLARED_OPS`, the whole declaration of each of the three (class, mutating, weight, description read by key, and `fields: {accepts, requires}`), `capturecredentialsupply` and `capturecredentialwithdraw` for the classes `admin` and `member`, mutating, stamped `viewer` and `by`, needing `contribute`, `capturecredentialsupply` accepting `kind`, `host`, `secret`, `scope`, `project` and requiring `kind`, `host`, `secret`, `scope`, and `capturecredentialwithdraw` accepting and requiring `credential`; `capturecredentiallist` a read for the same classes, accepting `scope`, `project`, `limit` and requiring none. All three have `machineClasses: []`. A test holds each declaration true by calling the op as the door does.
+
 #### The group's own hosts (F16)
 
 **isOwnHost(host, ownHosts) → boolean**
@@ -199,7 +205,7 @@ Terms. A **credential** is what a member supplies so that a source's refusal (ca
   - `capture` sends R56's credential only to its host: a redirect to another host is followed without it.
   - `capture` (or `provenance`) records R56's facts on the capture, marks it not reproducible by the public, and never writes the secret into the capture's record or receipt.
   - **A supplied user-agent** (K158): capture-requests judges a `user-agent` credential at the drain as its R14 judges the member-browser form (DEC-47's access-parity amendment), not as the legible Civicsmith agent; the capture's provenance names it.
-- **Ops**, which are the control plane's to route: `capturecredentialsupply` and `capturecredentialwithdraw` (admin and member with `contribute`, mutating), and `capturecredentials` (admin and member, carrying the viewer stamp). R56 has no op.
+- **Ops**: R66 serves `capturecredentialsupply`, `capturecredentiallist` and `capturecredentialwithdraw`; R56 has no op. The retry (`capturerequestretry`) is `capture-requests`'.
 - The render locale: `capture` passes R54 its view (`jurisdictions.combine` of the active profiles) and asks the renderer with the answer; timezone stays UTC.
 - `cdpConnection` and `collectBodies` are exported for tests; they are internals of R19–R25, not services.
 - `rendererFor`'s service renderer rejects when the service's own `fetch` throws; wrapping it to answer `{ok: false, error}` would match R19.

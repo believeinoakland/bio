@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE, ADMIN, REASON } from "./fixture.mjs";
 import { analystHits, ATOMS, CONNECTIVES, NOUNS, RESIDUE, residueAnchored, DEC32_ENTRY } from "./vocabulary.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { STRENGTH_AXES, VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS,
          STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
 import { legCapped } from "../../../src/leg-earning/index.mjs";
@@ -29,6 +30,8 @@ function clean(corpus) {
   const hits = corpus.flatMap(([where, s]) => analystHits(s).map((h) => `${where}: "${h.token}" (${h.why}) in: ${s}`));
   assert.deepEqual(hits, [], "an analyst's word reaches a member");
 }
+/* A word-table sentence as a pattern that matches it exactly, for a whys listing. */
+const literal = (s) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 /* A world whose capture bound is leg-earning's own `legCapped` (its R2), so its sentences are the ones a member reads. */
 function real(opts) {
   const w = world(opts);
@@ -141,8 +144,9 @@ test("R28: every named member's why the walk answers (R1, R2, R3, R5), on every 
     ["testimony read at its one letter", /is read at D here/],
     ["a hunch", /marked as a hunch/],
     ["a grade with no referent", /has no referent/],
-    ["a sub-inquiry unrated", /INQ-2026-0007-a is UNRATED on/],
-    ["a sub-inquiry undetermined, its detail embedded", /INQ-2026-0008-a is undetermined on connection: this connection axis/],
+    ["a sub-inquiry unrated", literal(word("strength.why.unrated_load_bearing", { from: "INQ-2026-0007-a", axis: "capture" }))],
+    ["a sub-inquiry undetermined, its detail embedded", literal(word("strength.why.undetermined",
+      { from: "INQ-2026-0008-a", axis: "connection", unknown: "" }))],
     /* The walk's own "reached its depth bound of 6 here" is written only below the top level, where the level's
        `detail` (embedded above) is all that travels up; it never reaches an answer. */
     ["an ungraded leg", /the leg carries no grade/],

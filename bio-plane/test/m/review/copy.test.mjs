@@ -21,17 +21,17 @@ test("R11: the answer's parts", () => {
   const d = w.r.act({ act: "draft", author: "ann", project: "PROJ-2026-0003-b", caseId: "CASE-2026-0001", ...AUTHORED,
                       targets: [], roles: {} });
   const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
-  assert.deepEqual(Object.keys(c).sort(), ["authored", "case", "comments", "comments_truncated", "draft", "evaluated",
+  assert.deepEqual(Object.keys(c).sort(), ["authored", "case", "choices", "comments", "comments_truncated", "draft", "evaluated",
     "findings", "gates", "grants", "grants_truncated", "kind", "last_change", "list_limit", "marking", "missing",
     "observations", "ok", "project", "published", "reader", "required_strength", "signature", "statement_acknowledgements",
-    "statement_by", "statement_by_stated", "updated_at", "updated_by", "zone"].sort());
+    "statement_by", "statement_by_stated", "title", "updated_at", "updated_by", "zone"].sort());
   assert.deepEqual([c.ok, c.kind, c.marking, c.published, c.signature.signed, c.draft, c.project, c.reader],
     [true, "review-copy", REVIEW_MARKING, false, false, d.draftId, "PROJ-2026-0003-b", "member"]);
   assert.match(REVIEW_MARKING, /NOT A PUBLICATION/);
   assert.match(c.signature.detail, /never signed/);
   assert.deepEqual(c.case, { case_id: "CASE-2026-0001", edition: 2, identity: caseIdentitySentence("CASE-2026-0001", 2, false),
                              newCase: false });
-  assert.deepEqual(c.authored, AUTHORED, "the six authored fields");
+  assert.deepEqual(c.authored, { ...AUTHORED, account: null, whatChanged: null }, "the eight authored fields (R38)");
   assert.deepEqual([c.updated_by, c.updated_at, c.statement_by], ["ann", NOW, "ann"]);
   assert.equal(c.statement_by_stated, "ann wrote the exclusion statement as it now stands");
   /* the grant part: the member door's roster; the recipient's own grant */
@@ -62,8 +62,8 @@ test("R12: each finding is read as the draft's last editor may see it, for both 
   grant(w, d, 1);
   const want = [
     { target: "INQ-2026-0001-a", present: true, object_type: "inquiry", state: "concluded", role: "load_bearing",
-      text: "---\ntitle: a\n---\nA's text" },
-    { target: "INQ-2026-0002-b", present: true, object_type: "inquiry", state: "open", role: null, text: null },
+      text: "A's text", statement: "A's text" },
+    { target: "INQ-2026-0002-b", present: true, object_type: "inquiry", state: "open", role: null, text: null, statement: null },
     { target: "PROJ-2026-0009-z", present: false, role: "supporting",
       detail: NO_FINDING },
     { target: "INQ-2026-0404-none", present: false, role: "supporting",
@@ -95,7 +95,7 @@ test("R12: each finding is read as the draft's last editor may see it, for both 
 
 test("R13: missing is the publish gates' own answer, run as the member who would publish, inside a transaction always rolled back", () => {
   const w = standard();
-  const d = w.r.act({ act: "draft", author: "ed", project: P, ...AUTHORED, targets: ["INQ-1"], caseId: "",
+  const d = w.r.act({ act: "draft", author: "ed", project: P, ...AUTHORED, targets: ["INQ-1"],
                       roles: { "INQ-1": "load_bearing" } });
   const before = w.snapshot();
   /* passed */
@@ -103,7 +103,7 @@ test("R13: missing is the publish gates' own answer, run as the member who would
   assert.deepEqual([c.gates, c.missing], ["passed", []]);
   assert.match(c.evaluated, /none refused\. Nothing was published/);
   const call = w.calls.publish.at(-1);
-  assert.deepEqual(call, { ...AUTHORED, targets: ["INQ-1"], roles: { "INQ-1": "load_bearing" }, caseId: "", project: P,
+  assert.deepEqual(call, { ...AUTHORED, targets: ["INQ-1"], roles: { "INQ-1": "load_bearing" }, project: P,
                            viewer: V("ann"), author: "ann" },
     "the draft's arguments, as the lowest-id owner when the last editor is not an owner");
   assert.deepEqual(w.snapshot(), before, "nothing persists: the act's write was rolled back");
@@ -162,7 +162,7 @@ test("R14: comments and the grant roster are read under a cap; the recipient see
   /* the roster: each marked live against the draft's identity now; a no-case grant states its edition only while live */
   assert.deepEqual(c.grants.map((g) => [g.grant_id, g.live, g.edition]),
     [[gs[0].grantId, true, null], [gs[1].grantId, false, null], [gs[2].grantId, true, null]]);
-  w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S", newCase: true });
+  w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S", newCase: true, caseId: null });
   c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
   assert.deepEqual(c.grants.map((g) => [g.live, g.edition]), [[true, 1], [false, null], [true, 1]]);
   w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S", caseId: "CASE-2026-0001" });
@@ -174,7 +174,7 @@ test("R14: comments and the grant roster are read under a cap; the recipient see
   c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
   assert.deepEqual(c.grants[3].live === false && c.grants[3].edition, 2, "a named case's edition is stated, live or not");
   /* the recipient sees only its own grant */
-  w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S" });
+  w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S", caseId: null, newCase: null });
   const rc = w.r.copy({ secretSha: SECRET(3), bySecret: true });
   assert.deepEqual(rc.grant, { grant_id: gs[2].grantId, recipient: "R3", issued_by: "ann", issued_at: "2026-09-28T03:30:00.000Z",
                           until: null, zone: null });

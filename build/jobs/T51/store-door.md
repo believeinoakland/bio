@@ -1,6 +1,6 @@
 # store-door (T51)
 
-**Status** · session_01JifjKBEkxVwREXfmY1gSL5 · depth 2 · COMPLETE · handled B2
+**Status** · session_01VKHhG6NACRGhAiYZCkJSez · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
@@ -43,3 +43,37 @@ Checks (store-door):
 - ownership store-door tranche/T51 job/T51/store-door: 1 file changed; 0 failures
 
 Size (session_01JifjKBEkxVwREXfmY1gSL5): test runs 3, module lines 650
+
+## J5 · REPORT
+
+Found in another module (instance-setup, its R65 `groupDescriptionDraft`, setup.mjs:2369). Not changed here; for Bob to decide.
+
+The door's own admin check (store-door dispatch.mjs, `adminRefusal`) strips a `member:` prefix from `by` and admits the administrator. The handler then tests `isAdministrator(by)` with the value as given, so `by=member:ann` is refused NOT_AN_ADMIN, while `by=ann` drafts. I reproduced both on the real record fixture. My arm passes `by` unchanged, as it did before.
+
+The question: which form does the Worker stamp into `by` for `groupdescriptiondraft`? I did not verify it. My declaration and test use the bare id, as the Worker's stamp form is what the declaration describes. If the Worker stamps `member:<id>`, every administrator's group draft is refused today. The fix belongs to instance-setup (or to the stamp), not to the door; say which.
+
+## J6 · COMPLETE
+
+CR-FR-61 · store-door applied (FR-61 entry 1, K4206). Commit 3f5a976576 on job/T51/store-door, pushed.
+
+Change: `DECLARED_OPS` in bio-plane/src/store-door/dispatch.mjs, beside controlPlaneRoutes. One row, `groupdescriptiondraft`: classes admin and member, machineClasses [], mutating false, stamps viewer and by (the arm reads both from the query), weight "reasoned", description `localize("store-door.declared.groupdescriptiondraft", <op-grades' sentence>)`, fields accepts and requires both `["answers"]`. Why `answers` is required and nothing else: the handler refuses an absent `answers` naming it (GROUP_DRAFT_ANSWERS_MALFORMED, its detail says "The answers are a list..."). `assistant` is resolved by the door and never read from the body, so it is declared nowhere. No refusal and no arm changed.
+
+Requirement: NEW R17 in build/requirements/store-door.md (B5). Written by me, not marked "not yet met", since the tests name it. test-support is already in store-door's uses. Ownership flags that one file as outside store-door's paths; B5 says that listing is accepted at merge.
+
+Tests: bio-plane/test/m/store-door/declared-ops.test.mjs, 3 tests: R17 holds the declaration through declaredOpHolds (requires alone raise no refusal naming a field; no `answers` is refused naming it; body `assistant` and `viewer` are dropped); a control on the row's shape; a control that the holds check refuses a false declaration. Run against HEAD (no DECLARED_OPS) they fail. Store-door suite: 51 of 51 pass (48 prior, 3 new).
+
+Checks (store-door, node checks/* against /home/user/bio):
+- format: 175 modules, 0 failures
+- architecture store-door: 11 product files, 120 relative imports, 0 failures
+- coverage store-door: 17 of 17 live ids named, 0 failures
+- words store-door: 0 failures
+- ownership tranche/T51 → job/T51/store-door: 0 failures (build/requirements/store-door.md accepted, B5)
+- checks/run.mjs /home/user/bio: no store-door finding. Other modules' findings are below.
+
+Deferred: none.
+
+Found in another module (REPORT posted separately): instance-setup's group draft refuses `by` in the `member:<id>` form, which the door admits (its own check strips the prefix). Question for Bob.
+
+Whole-product run, not store-door's: coverage reds in agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; link-sweep R13, R14, R15. Words: 18 testcopy findings, all in op-grades tests (copies of op-grades' own sentences, one of them the sentence this declaration also carries), and one inline in strength/method.mjs:349. Not touched by this round.
+
+Size (session_01VKHhG6NACRGhAiYZCkJSez): test runs 6, module lines 661

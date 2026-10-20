@@ -33,4 +33,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["from","to","kinds","at","depth","sortBy","scope"], requires: ["from","at"] } },
   explorepreset: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("explore.declared.explorepreset", "read: one preset walk — chain, flows, relations, a path between two nodes, overlaps — or the presets; writes nothing"),
     fields: { accepts: ["preset","from","to","event","at","period","depth","a","b","kinds"], requires: ["preset"] } },
+  /* R28 (T51; K4206): a chain, or one derivation's ends. A derivation missing its kind, date, method or id is answered `matches: false`
+     with the reason (R12), uniformly, so those four are not required: the reason names the field. */
+  exploreverify: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("explore.declared.exploreverify", "read: whether a derived connection re-derives to its id, and which hops it rests on; writes nothing"),
+    fields: { accepts: ["chain","from","to","kind","as_of","method","id","scope"], requires: [["from","chain"],["to","chain"]] } },
 });

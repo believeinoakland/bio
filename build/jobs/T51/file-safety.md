@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_01CjpPbnVFWqVsrNKA5TJg3t · depth 2 · COMPLETE · handled B6
+**Status** · session_01T8Ec2n7sMP4hLAcphL7HNL · depth 2 · COMPLETE · handled B9
 
 ## Completion (T51-183, words)
 
@@ -162,3 +162,61 @@ Test-only; nothing outside `bio-plane/test/m/file-safety/` changed. Ready to fin
 - `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: "3 files changed by file-safety … 0 failures".
 
 **Size (session_01CjpPbnVFWqVsrNKA5TJg3t):** test runs 3, module lines 2342
+
+## J7 · QUESTION
+
+QUESTION (replaces none). Entry 3, `securitytooladd`'s `fields.requires`.
+
+The arm refuses without `providerId` (PROVIDER_UNKNOWN) and without `handlingDigest` (HANDLING_NOT_SHOWN) for every service. It refuses without `credentials` (CREDENTIALS_MISSING) and without `config` fields (CONFIG_MISSING) only for the services whose catalogue entry names them: `icap` and `syslog-tls` name no credentials, `joe-sandbox` and `metadefender-cloud` name no config, and a `host` or `region` comes from `config` or the template. A declaration cannot state a condition that depends on the chosen service.
+
+My best reading, which I am building on: `accepts` = providerId, template, config, credentials, handlingDigest, confirmRetention, use, monthlyLimit; `requires` = providerId, handlingDigest only (what is refused for every service). The test for the requires supplies `credentials` through its call adapter for a service that names them, so the success path is reached. The guard then counts a screen that sends `credentials` or `config` as declared, and never flags one that omits them for a service that does not name them.
+
+If you want `credentials` and `config` in `requires` (the screens always send them), say so; it is a one-line change. Everything else in entry 3 is copied from the op rows with no judgment.
+
+Also, for your note: the requirement lines for R46 to R48 go in my job record for you, not in `build/requirements/file-safety.md` (JOB.md: I write only my paths, tests and record; the ownership check enforces it). Tests carry the ids R46, R47 and R48 in their titles.
+
+## Completion (FR-12: B8, T51)
+
+**Entries applied.**
+
+1. **FR-SCAN (R46).** `scanStatus` (`index.mjs`, `#noSignatures`): when the scanner answers `/version` and holds no signatures (no published set), the answer carries `no_signatures: {since, reason, key, words, reason_key, reason_words}`. `since` is the instant of this module's first `not_scanned` note for want of signatures (`SIGNATURES_ABSENT`), else the scanner's last attempt, else null; `reason` is the scanner's own `last_error` (for example `REFUSED:main.cvd:403`), else `SIGNATURES_ABSENT`; the sentences are `localize` ids `file-safety.index.no_signatures_since` (`no_signatures` when no date is known), and `signatures_refused` (with the status), `signatures_failed` or `signatures_not_fetched`, each answered with its key. With signatures obtained, a scanner that did not answer, or no scanner bound, the answer has no `no_signatures` key, so R5's keys are unchanged in those cases. Test: `signatures.test.mjs`.
+2. **L25 (R47).** `#writeNote` (`#sameNotScanned`): a `not_scanned` verdict of kind `scan`, `sandbox` or `copy` is not written again when the newest note of that file, kind, tool and engine is the same `not_scanned` for the same reason; the earlier note's id answers (a safe copy keeps pointing at it). Another reason, or a real verdict between, writes a new note. The files stay due (`#due` is unchanged) and every answer (`scanBatch`'s `not_scanned` count, an opening's `NOT_SCANNED` with its reason) is as before. Rows already written stay (R3). Test: `signatures.test.mjs`.
+3. **K4202 (R48).** `DECLARED_OPS` exported beside the ops map, the eight ops: `deepercheck`, `openoriginal`, `openwithwarning`, `releasescanhold`, `safeview`, `securitytooladd`, `securitytoolremove`, `securitytooltest`. Classes, machine classes, mutating, weight and description copied from `op-declarations` and `op-grades`; `registerDeclaredOps` of `op-grades` answers all eight as `agreed` with the hand rows. Fields read from the arms: `capture` or `captureSha` (alternatives) for the file ops, `override` / `warned` / `reason` where the arm reads its own, `providerId`, `template`, `config`, `credentials`, `handlingDigest`, `confirmRetention`, `use`, `monthlyLimit` for the add (requires `providerId`, `handlingDigest` only: the QUESTION J7), `toolId` or `tool` for the test and the removal. Test: `declared-ops.test.mjs`.
+
+**Requirement lines for BOB** (not written in `build/requirements/file-safety.md`: JOB.md allows a job only its paths, tests and record; ids as the START gave them).
+
+- **R46** *(not yet met: T51)* (T51; K4182; FR-12; amends R5) **The safety state says what is true of a scanner with no signatures.** When `file-scanner` answers its state and holds no signatures (no set published), `scanStatus` carries `no_signatures: {since, reason, key, words, reason_key, reason_words}`: `since` the instant of this module's first `not_scanned` note for want of signatures (`SIGNATURES_ABSENT`), else the scanner's last attempt, else null; `reason` the scanner's own last error (`REFUSED:main.cvd:403`), else `SIGNATURES_ABSENT`; `words` and `reason_words` members' words read by `key` and `reason_key` (never "waiting"). Where signatures are obtained, the scanner did not answer or none is bound, the answer carries no `no_signatures`. Test: a stub reporting no signatures, a refusal and a date: both are carried by key; control: with signatures obtained, an unreachable and an unbound scanner, neither is carried.
+- **R47** *(not yet met: T51)* (T51; L25, K4194; amends R46 and R3) **A `not_scanned` verdict is recorded once for a file and reason.** A `scan`, `sandbox` or `copy` verdict `not_scanned` writes no note when the newest note of that file, kind, tool and engine is a `not_scanned` for the same reason (`scanBatch`, the scan before first opening, a deeper check and a safe copy alike); another reason, or a real verdict, writes a note. The file stays due (R4) and every answer is as before. Test: a stub answering `not_scanned` for one reason on three passes and two openings leaves one note per file, one for a safe copy asked again; control: a changed reason, or a real verdict, writes a new note.
+- **R48** *(not yet met: T51)* (T51; K4168, K4202; op-declarations R80, op-grades R49; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: `deepercheck`, `openoriginal`, `openwithwarning`, `releasescanhold`, `safeview`, `securitytooladd`, `securitytoolremove`, `securitytooltest`, each row's class, weight and description copied from the op's existing rows and its fields read from the arm. Test: `declaredOpHolds` for each (`declared-ops.test.mjs`).
+
+**Deferred.** None.
+
+**Found in another module (REPORT to BOB).**
+- `screens-settings` (`security.mjs`, the `scan` read): the Security screen draws only `queued` and `held` from `scanstatus`; to say "no signatures since <date>" and the reason it must draw `scan.no_signatures` (`words` and `reason_words`, or its own words by `key` and `reason_key`). Its entry would be added.
+- `screens-intake` (Opening a file): draws the raw word `not_scanned` (UX-DESIGN's, as the START says); this job leaves the answer's `not_scanned` field as it was.
+- Inherited reds, not caused here (the same three fail on the tranche before this job's changes): `op-grades` R42, R46 and `op-declarations` R73/R21 (MARKS and the registry-act gap).
+- `file-scanner` (FR-06, not merged when this job ran): `/version`'s `signatures` has no "no signatures since" instant of its own, only `last_attempt` and `last_error`; R46 takes the date from this module's notes first. If FR-06 adds one, `#noSignatures` reads it with a one-line change.
+- Whole-product `checks/run.mjs`: architecture, coverage and words reds are other modules' (words testcopy 6; coverage 7 ids); none names file-safety.
+
+**Tests and checks run (summary lines).**
+- `node --test test/m/file-safety/*.test.mjs` (bio-plane): "tests 75, pass 75, fail 0" (before the new tests: 64; new: `signatures.test.mjs` 3 — seen failing first — and `declared-ops.test.mjs` 8, a mutated declaration seen refused).
+- `node checks/format.mjs /home/user/bio`: "175 modules, 175 requirements files; 0 failures".
+- `node checks/architecture.mjs /home/user/bio file-safety`: "20 product files, 88 relative imports …; 0 failures".
+- `node checks/coverage.mjs /home/user/bio file-safety`: "45 of 45 live requirement ids named by a test; 0 failures".
+- `node checks/words.mjs /home/user/bio file-safety`: "inline 0, plain 0, testcopy 0, missingkey 0, handlist 0 … 0 failures".
+- `node bio-plane/src/setup-words/build.mjs --check`: rows.mjs stale, naming the new ids (`file-safety.index.no_signatures_since` and the other `file-safety.index.*` and `file-safety.declared.*` ids); expected until BOB regenerates; no refusal naming this module.
+- `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: see the closing line of this job's COMPLETE.
+
+**Size (session_01T8Ec2n7sMP4hLAcphL7HNL):** test runs 9, module lines 2405
+
+## J8 · COMPLETE
+
+FR-12 (B8) done; your B9 answer applied (requires providerId, handlingDigest only). Details and Size line: build/jobs/T51/file-safety.md, "Completion (FR-12: B8, T51)". The requirement lines R46, R47, R48 are in my record, not in build/requirements/file-safety.md (either is fine, B9); each is marked not yet met: T51 and named by tests.
+
+- R46: `scanStatus` carries `no_signatures: {since, reason, key, words, reason_key, reason_words}` when the scanner holds none, by key, never "waiting"; absent (control) with signatures, an unreachable scanner or none bound.
+- R47: a `not_scanned` verdict (scan, sandbox, copy) is recorded once per file, tool, engine and reason until the reason changes; the files stay due, every answer is as before.
+- R48: `DECLARED_OPS` for the eight ops; `op-grades` registerDeclaredOps answers all eight agreed.
+
+REPORT for you: `screens-settings`' `security` screen must change to draw it. It reads `scanstatus` for `queued` and `held` only; it must draw `scan.no_signatures` (its entry would be added). The three reds in op-grades (R42, R46) and op-declarations (R73/R21) fail on the tranche without my changes too. `rows.mjs` is stale for the new ids (expected; yours to regenerate).
+
+Merged tranche/T51 (437339a938). Module tests 75/75 (new: signatures 3, declared-ops 8); words, architecture, coverage (45 of 45) and ownership 0 failures for file-safety; format 0.

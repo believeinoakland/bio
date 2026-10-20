@@ -315,15 +315,18 @@ test("R49 at the door: op=affordances with no target answers act_help as ACT_HEL
 });
 
 test("R57 R61: ACT_HELP holds the design in DEC-221's American spelling, no held text containing \"labelled\"; peopledirectory held, "
-   + "selftest (no text) not; a table with the old spelling is seen", () => {
+   + "selftest not (the word list holds its text for the updates screen, DEC-376, but this module's reads list does not give it, R62); "
+   + "a table with the old spelling is seen", () => {
   for (const [k, t] of Object.entries(ACT_HELP)) assert.doesNotMatch(t, /labelled/i, k);
   assert.equal(ACT_HELP.peopledirectory, word("act.peopledirectory.does"));
-  assert.equal(hasWord("act.selftest.does"), false);
+  /* selftest: its word is in the list, but not among the keys this module reads, and no act this module draws is selftest (instance-setup's probe) */
+  assert.equal(READS.reads.includes("act.selftest.does"), false);
   assert.equal(Object.hasOwn(ACT_HELP, "selftest"), false);
-  /* controls (K874): the old spelling, an update text dropped, and a stale entry are each seen by the check */
+  /* controls (K874): the old spelling, an update text dropped, a stale entry, and the word held under its own name are each seen by the check */
   assert.equal(meetsR48({ ...ACT_HELP, testify: ACT_HELP.testify.replace("labeled", "labelled") }), false);
   assert.equal(meetsR48(Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== "updateskip"))), false);
   assert.equal(meetsR48({ ...ACT_HELP, selftest: ACT_HELP.queuemute }), false);
+  assert.equal(meetsR48({ ...ACT_HELP, selftest: word("act.selftest.does") }), false);
 });
 
 test("R69: the seven browser acts (revisioncompare, hashcopy, linkopen, pubfloorset, pubfloorclear, pubprint, reviewexport) are held in ACT_HELP "

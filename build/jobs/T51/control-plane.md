@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01MjHoyG8YgVa17VY9VtDzG2 · depth 2 · COMPLETE · handled B5
+**Status** · session_01RasjDSWd3ESDe1rnPqU6Zf · depth 2 · COMPLETE · handled B11
 
 ## J1 · QUESTION
 
@@ -46,3 +46,94 @@ Size (session_01MjHoyG8YgVa17VY9VtDzG2): test runs 24, module lines 3,905
 ## J3 · COMPLETE · re B5
 
 control-plane re-completed (B5): heldat's arm now expects the ai refusal, daemon control kept; control-plane suite 309 of 309 pass; words 0, coverage 79/79, ownership 0. Record updated.
+
+## J4 · BLOCKED
+
+Cause: needs Bob (items 1 and 3) and tests (item 2).
+
+The fix round's control-plane entries are applied and pushed on `job/T51/control-plane` (f442ae0d72): K4206 and K4210 (R112), K4213 (R113). Three items wait on Bob or on another module; the rest is done.
+
+**Done**
+- **R112 (K4206, K4210):** `DECLARED_OPS` in `bio-plane/src/control-plane/owner-ops.mjs` declares `captureupload`, `accountdrafts`, `accountpropose`, `clockpropose` and `subscriptionsignin`. Classes, machine classes, mutating flag, stamps and needs are copied from the hand rows. Weight and description come from the grade; each description is `control-plane.declared.<op>`. Accepts are the fields each arm reads. Requires are only the fields a refusal names when absent: `statement` (`UPLOAD_NO_STATEMENT`), `case` (`NO_SUCH_CASE`), `framing` (`BAD_ACCOUNT_FRAMING`), `text` (`BAD_ACCOUNT_DRAFT`, field `text`), `run` (`NO_SUCH_RUN`), `target` (`NO_TARGET`), `rule` (`NO_SUCH_RULE`), `step` (`BAD_STEP`). No arm changed.
+- **R113 (K4213):** `index.mjs` gives `taskdecide` the body `actor` stamp that `taskforward`, `taskresolve`, `taskdrain` and `biasdebtresolve` take.
+- **Tests:** `declared-ops.test.mjs` (6, `declaredOpHolds` per op through real owners), `declared-registration.test.mjs` and `declared-disagree.test.mjs` (the registrations take the rows; a disagreeing row is refused naming the op), `t51-taskdecide.test.mjs` (2). The module's suite: 317 of 319 pass.
+
+**Waiting**
+1. **Needs Bob, architecture (1 failure):** `declared-ops.test.mjs` imports the `action-clocks` test fixture, because `clockpropose` is run through its real owner. `action-clocks` is not in control-plane's `uses`. Please add it as a test-only use, or tell me to test `clockpropose` another way.
+2. **Tests, R113 (2 red):** `taskdecide` has no spec on `tranche/T51` yet. It is `tasks` R20 (FR-21), so the door answers `UNKNOWN_OP`. `tasks` (index 143) merges before control-plane (168), so I expect this to clear when FR-21 lands. I will merge `tranche/T51` and re-run once it does.
+3. **Needs Bob, ownership:** `build/requirements/control-plane.md` is outside my paths. K4210 accepts that at merge. R112 and R113 are written there, R113 marked not yet met.
+
+**Reports (not my files)**
+- **Words, `op-grades`:** `bio-plane/test/m/op-grades/t37.test.mjs:26` holds the sentence I declare as `control-plane.declared.subscriptionsignin`, so the words check now reports a testcopy. That test should read the key, not the sentence. The other seven testcopy findings are other modules' and predate this job.
+- **Generated, setup-words:** `bio-plane/src/setup-words/rows.mjs` is stale for the new `control-plane.declared.*` keys and for keys other jobs added. Regenerate it at the merge or in the pass.
+- **To confirm:** `subscriptionsignin`'s `step` requirement is checked against a stand-in for agent-worker R66's `BAD_STEP`, since agent-worker is another module. The door relays that refusal as given. The hand rows stay in `op-declarations` and `op-grades` until the removal pass (K4168).
+
+**Checks**
+- `checks/format`: 0 failures.
+- `checks/architecture`: 1 failure (item 1).
+- `checks/coverage`: 81 of 81 live ids named.
+- `checks/ownership`: item 3 only.
+- `checks/words`: the t37 testcopy above.
+
+## J5 · BLOCKED
+
+Cause: tests (item 2) and needs Bob (item 1).
+
+Pushed on `job/T51/control-plane` (3bde8a49d2). ANSWER J4 (K4219) read: `action-clocks` is in `uses` and the ownership listing is accepted. Architecture now passes.
+
+**Done**
+- **CHANGE (a), K4219, R114:** `CASE_IMPORT_ACTIONS` gains `rerunstart` and `rerunpair` (acts, `by` from the session). `CASE_IMPORT_READS` gains `importregrade` and `rerunread` (viewer only). The routing test (`r49-routes.test.mjs`, R49/R114/R2/R26) reads case-import's op list from its own export `CASE_IMPORT_OPS`, and splits acts from reads by the op table's `mutating`. It registers case-import's `DECLARED_OPS` first (`register-case-import.mjs`), because a registration must be a process's first read. Six of six pass.
+- **Checks:** coverage 82 of 82; architecture 0 failures; format 0; words 0 failures for my module.
+- **Suite:** 317 of 319 pass.
+
+**Waiting**
+1. **Tests, R113 (2 red):** `taskdecide` still has no spec on `tranche/T51`. `tasks` FR-21 has not landed, so the door answers `UNKNOWN_OP`. I will re-run once `tasks` merges.
+2. **Needs Bob, CHANGE (b), acquisition R95:** I have not built it. Acquisition's requirements have no R95 and nothing exports `stageTimes` or takes `timings`, so the door would call a service that does not exist. I need acquisition's job to land R95 and `stageTimes` first. Then I will hand `opts.timings` to `acquire`, add `stageTimes(timings)` to the `ACQUIRE_TIMED_OUT` body, and test it with a control. Is that job on this tranche?
+
+**Reports (other modules)**
+- **case-import declarations:** its `DECLARED_OPS` covers 9 of its 14 exported ops. `importedcase`, `importedcases`, `caseimportdocument`, `importflagclear` and `importunwatch` have hand rows in the op table only. Its owner should declare them.
+- **Registration:** the four rerun ops have no hand row, so they reach the door only through the plane's registration of case-import's `DECLARED_OPS`. The plane must register it at start-up, as R80 says.
+
+## J6 · BLOCKED
+
+Cause: needs Bob (one hand-off in two modules).
+
+Pushed on `job/T51/control-plane` (8c98643289). ANSWER J5 (K4222) read: `tasks` and `acquisition` are merged, and both neither item was Bob's.
+
+**Done**
+- **R113 (K4213), green.** I merged `tranche/T51`. The `taskdecide` test now registers `tasks`' declared ops first (`register-tasks.mjs`), the same way as case-import. Both tests pass.
+- **R22 (envelope.test.mjs):** it hard-coded 17 `C-138` rows. `tasks` has added two more, so the count now comes from the table.
+- **CHANGE (b), R115 (K4222), the door's half:** the door creates the timings object for `acquire` and passes it in the `gatedOp` context. A timed-out `acquire` answers `stageTimes(timings)` in its body, with the stages that ran and the one running. Two new tests pass: the timed-out answer carries the stages the hook filled, and a control shows that an answer in time carries no door timings and other ops are handed none.
+- **Suite:** 321 of 321 pass. Coverage 83 of 83. Architecture and words: 0 failures for my module.
+- **Ownership:** only `build/requirements/control-plane.md` is outside my paths, which K4210 accepts.
+
+**Needs Bob: the timings hop**
+Acquisition's `acquire` takes `opts.timings`, but nothing between the door and it forwards the object:
+1. `plane/door.mjs` `gatedOp` destructures a fixed set of ctx keys and drops `timings`. It must pass `ctx.timings` to `captureOp` as a handler argument (`h.timings`).
+2. `capture/index.mjs` `captureOp` and its `acquire` arm (around line 2836) call `c.acquire(body, {...})` without `timings`. They must pass `h.timings` as `opts.timings`.
+
+Without both, a production timeout answers `stages: {}`. Please decide whether plane and capture take these two forwards, or name the job. Once they are on the tranche, I will re-run R115 end-to-end, drop its not-yet-met marker, and COMPLETE.
+
+## J7 · COMPLETE
+
+The fix round's control-plane entries are complete, on `job/T51/control-plane` (last commit 8c98643289, plus the requirement mark below). Per ANSWER B11 (K4226), R115 is recorded as met at the door; its end-to-end proof is plane's (PLANE #44) and capture's (CAPTURE #39).
+
+**Entries applied**
+- **K4206, K4210 (R112):** `DECLARED_OPS` in `owner-ops.mjs` declares `captureupload`, `accountdrafts`, `accountpropose`, `clockpropose`, `subscriptionsignin`. Hand-row fields are copied. Requires are only fields a refusal names (`statement`, `case`, `framing`, `text`, `run`, `target`, `rule`, `step`). No arm changed. Tests: `declared-ops.test.mjs`, `declared-registration.test.mjs`, `declared-disagree.test.mjs`.
+- **K4213 (R113):** `taskdecide` takes the body `actor` stamp. Test `t51-taskdecide.test.mjs` registers `tasks`' declared ops first (`register-tasks.mjs`). Green since `tasks` merged.
+- **K4219 (R114, CHANGE a):** `rerunstart` and `rerunpair` join the act list (`by`), `importregrade` and `rerunread` the read list (`viewer`). The R49 routing test reads case-import's op list from `CASE_IMPORT_OPS`, and registers its declared ops first (`register-case-import.mjs`). Also `envelope.test.mjs` counts `C-138` rows from `tasks`' table, not a typed 17.
+- **K4222 (R115, CHANGE b):** the door creates the timings object for `acquire`, passes it in the `gatedOp` context, and the timed-out answer carries `stageTimes(timings)`. Tests `t51-acquire-timings.test.mjs` (timed-out answer, and a control).
+
+**Deferred:** none.
+
+**Found in other modules (reported, not changed)**
+- `op-grades` tests copy sentences that are now word keys (testcopy findings: `t35`, `t36`, `t37`, `t41`, `t46`, `t47`, `owners`). Those tests should read the keys.
+- `case-import` declares 9 of its 14 ops; five stay on hand rows (K4208).
+
+**Tests and checks**
+- Suite `node --test test/m/control-plane/`: 321 of 321 pass.
+- `checks/coverage` for control-plane: 83 of 83 live ids named. `checks/words` for control-plane: 0 failures. `checks/architecture`: 0 failures. `checks/format`: 0 failures.
+- `checks/ownership`: only `build/requirements/control-plane.md` is outside control-plane's paths, which K4210 accepts at merge.
+- Whole-tree `checks/run.mjs`: failures remain in other modules (op-grades testcopies above, agent-harness, agent-runner, installer-steps, journey-check, strength). None is in control-plane.
+
+Size (session_01RasjDSWd3ESDe1rnPqU6Zf): test runs 30, module lines 3938

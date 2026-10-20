@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01WMjLF8CWtt2TqjEkixFjxh · depth 2 · COMPLETE · handled B9
+**Status** · session_01AYSJWKsStw1JQe2TLgDQwt · depth 2 · COMPLETE · handled B13
 
 ## J1 · BLOCKED
 
@@ -162,3 +162,100 @@ COMPLETE · B9 (K4198) applied; supersedes J8's commit. Registry, library and fr
 - Others: interface-shell 191/1 (R64 test 32 'Reasoned' vs 'Asks for a reason', words change from the design merge, not mine); screens-wizards 59/0. Wave-2 reds from J7 unchanged (op-declarations 210, plane 72, screens-intake 64, affordances 235).
 
 Size (session_01WMjLF8CWtt2TqjEkixFjxh): test runs 28, module lines 2840
+
+## J10 · REPORT
+
+**B10 entry 1 (K4204; R45 amended by FR-49): done, tested, pushed** (commit `13fd41af12` on `job/T51/wizard-scripts`).
+
+- The registry is re-taken at `aa8bdcd0b4`, the newest design merge on `tranche/T51` (`60ff18e4b2`, "merge design … @ aa8bdcd0b4 (U419, DEC-386; K4204)"). `SOURCES.registry.commit` and the header in `build-data.mjs` name it; `source/registry.json` is the file at that commit.
+- The library and the front doors are unchanged: `library.json` at `aa8bdcd0b4` is byte-identical to the one at `1cc4a957f0`, so `civicsmith-library.mjs` and `front-doors.mjs` are not rewritten. `build-data.mjs` changes `screen-registry.mjs` only, by two lines (`SCREEN_REGISTRY_SOURCE`).
+- What the design changed in the registry: on `members`, the duplicate `expertiseconfirm` (the one the file listed twice, which B9 said to carry once) is gone, and `expertisewithdraw` (DEC-386) is an owed act there. Counts at `aa8bdcd0b4`: 83 screens, 554 acts (425 declared, 83 function, 46 owed); the owed ops are 42.
+- `expertisewithdraw` is owed on `members` and is not served as an op until `op-declarations` declares it (R13); a test pins that.
+- Tests: the suite `node --test bio-plane/test/m/wizard-scripts/*.test.mjs` is **108 pass, 0 fail**. The pins that named the current registry commit or its counts (library, t47, t48, t50, t51) now name `aa8bdcd0b4`, the counts above, and the owed-op count 42. The R45 control in t51 now flips `aa8bdcd0b4` (not `1cc4a957f0`). A new test in t51 names R45 amended (FR-49): the pin, `expertisewithdraw` owed on `members`, and the old pin no longer carried. The duplicate-act control in t51 now asserts the file lists `expertiseconfirm` once.
+- Checks: `format` 0 failures; `architecture` 0; `coverage` 45 of 45 live ids for wizard-scripts; `ownership` 0 failures (9 files); `words` 0 failures across the product (`checks/run.mjs`).
+- Not yet done: the census in entry 2 (K4202). See the QUESTION that follows.
+
+## J11 · QUESTION
+
+**B10 entry 2 (K4202, the census): BOB's ruling needed before I can finish it.** The rest of the job is done; this is the one part that waits.
+
+What is stuck, op by op (from `build/plan/pass-T51/RECORD-C.md` and the words check):
+
+1. **`writinghelp`**: already held in `op-declarations`' wizard-scripts family (`op-declarations/index.mjs` lines 481–483, `writinghelp: "ownread"`) and in `op-grades` (`index.mjs` line 1548; `marks.mjs` line 220). The door routes it (`store-door/dispatch.mjs` line 475, `wizardScriptsOf(ctx).writingHelp`) with the fields `op`, `field`, `told`, `draftHeld`. My reading: nothing new to declare in `DECLARED_OPS`; the door's route is the declaration. Recommend: confirm that, and I record it as declared by its owner rather than adding a second declaration. If you want a `DECLARED_OPS` entry in this module anyway, say so and I will write it with `accepts: [field, told, draftHeld]`, `requires: [field, told]`.
+2. **`wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`**: the words check's **testcopy** arm fails. `op-grades`' own test (`owners.test.mjs:118`) copies the start of the hand description these five share, so a repeated description in my declaration fails it. That test is op-grades', so I cannot change it here.
+3. **`wizards`, `startfrom`**: no registry label key exists for them, and `wizard-scripts` is a drawn-screen module, so a `localize` call fails the **marker** arm and a raw sentence fails the inline arm.
+
+Options, with my recommendation:
+- (A, recommended) The design stream adds one description row per op (`wizard-scripts.declared.<op>`, seven rows), and the five drafting ops take their own rows, so the testcopy arm sees distinct text. I write the seven declarations against those keys, with the `declared-ops.test.mjs` the census asks for.
+- (B) A ruling that the testcopy arm does not apply to the drafting ops in `op-grades`' test, so I may repeat the hand text. That is a change to another module's test, so it would go to that module's job.
+- (C) Leave all eight undeclared for this round and carry them to the next tranche. Recommended only if (A) cannot land before T51 closes.
+
+I have not written any declaration for these eight yet, so nothing is half-done in the module. Please answer which of A, B or C, and confirm item 1.
+
+## J12 · COMPLETE
+
+COMPLETE · FR-49 wizard-scripts (K4202, the census; B11 and B12). Head: c6dcda9ec2 (tranche/T51 merged in), pushed on job/T51/wizard-scripts. Code commit b6303a196f.
+
+APPLIED
+- B12 / K4202: `DECLARED_OPS` beside the ops map (src/wizard-scripts/index.mjs) for the eight ops: wizards, startfrom, writinghelp, wizarddraft, wizardrevise, wizardsubmit, wizardapprove, wizardretire. Class, machine classes and mutating flag are op-declarations' hand rows; weight is the op's grade; description is each op's `act.<op>.does` word (word(), no localize, no new row).
+- B11 (K4210): NEW R46 written by me in build/requirements/wizard-scripts.md, no "not yet met" marker, since its tests now name it.
+- Test: test/m/wizard-scripts/declared-ops.test.mjs, 18 tests: each row held true against the op as the door runs it (declaredOpHolds over the real fixture), each description equal to its act word, and a control that a required field the arm never reads is named.
+
+DEVIATIONS FROM B12 (decided here, for BOB to confirm)
+1. writinghelp requires `told` only, not `field` and `told`. The arm never refuses a missing field: writingHelp answers ASSISTANT_DRAFT_UNAVAILABLE with or without it, so a `field` requirement would be a claim the arm does not hold. `field` and `draftHeld` are accepted. If you want `field` required, the arm has to refuse a missing field first: a behaviour change, not made here.
+2. wizarddraft requires a project, or `from`, or `copy`, not `name`: a blank start is refused WIZARD_SCOPE_REFUSED without a project; the arm's other paths do not need one.
+3. wizardretire requires a version or a script, and a reason. wizardrevise, wizardsubmit and wizardapprove require their version (and wizardrevise its steps). A missing id answers NO_SUCH_WIZARD, one answer for version and script; the test reads that answer as naming the field it stands for.
+4. Ruling entries for 1–3 belong in build/rulings.md; that file is outside this job's write set, so I have not written them. Please record them there.
+
+REGISTRATION (the agreement checks, one op per process, `op-declarations` and `op-grades`)
+- op-declarations: all eight agree (classes, machine classes, mutating). No op is declared by two owners, and none of the eight is in the product-wide duplicates list.
+- op-grades: the weight agrees for all eight. DECLARED_OP_DISAGREES on the DESCRIPTION for ALL EIGHT: wizards, startfrom, writinghelp, wizarddraft, wizardrevise, wizardsubmit, wizardapprove, wizardretire. op-grades' hand sentences (index.mjs around 1523–1548 and 825–828; its `wizards` and `startfrom` in t34.mjs:73) differ from the act words. Those are op-grades' to fix (B12 item 2); please route it to its job as a CHANGE. I have not messaged op-grades' job.
+- B12's testcopy point (owners.test.mjs:118): the current whole-product words run lists op-grades' testcopy findings at owners.test.mjs:84 and in its t36, t41, t46, t47, t48 and t49 tests; none is at :118 now, and none is in wizard-scripts.
+
+DEFERRED: none.
+
+FOUND IN OTHER MODULES (not changed, P7)
+- op-grades: the description disagreements above; testcopy at owners.test.mjs:84, t36, t41, t46–t49.
+- strength (bio-plane/src/strength/method.mjs:349): inline sentence.
+- coverage, whole product: agent-harness R17; agent-runner R37 R38 R40; installer-steps R26 R31; journey-check R19; link-sweep R13 R14 R15 are named by no test.
+- op-declarations' whole-product registration stops at `citeimported`: NEEDS_MISSING (R80), an op declared by another module, not mine.
+
+CHECKS
+- node --test bio-plane/test/m/wizard-scripts/: 126 pass, 0 fail (declared-ops 18 pass).
+- format: 175 modules, 175 requirements files; 0 failures.
+- architecture (wizard-scripts): 0 failures.
+- coverage (wizard-scripts): 46 of 46 live ids named by a test (R46 included).
+- ownership (wizard-scripts): 1 failure, build/requirements/wizard-scripts.md, outside the module's paths. B11 accepts that listing at your merge.
+- checks/run.mjs (whole product): words 0 findings for wizard-scripts' files; the other findings are listed above and are not this module's.
+
+Size (session_01AYSJWKsStw1JQe2TLgDQwt): test runs 5, module lines 2701
+
+## J13 · COMPLETE
+
+Re B13 (CHANGE, K4227). Done and pushed on job/T51/wizard-scripts (commits d943943a89, 0467eb7804). `tranche/T51` merged first (fast-forward of its K4227 commits, ed9d7a119b).
+
+**Applied**
+- `DECLARED_OPS.writinghelp` (R46): `fields` is now `accepts: ["op", "field", "told", "draftHeld"]`, `requires: ["op", "told"]`. The arm (`writingHelp`) reads the body's `op`; without it, `writingHelpAt` answers `WRITING_HELP_REFUSED`.
+- Checked the other seven rows against their arms through the door (`declaredOpHolds`): `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`, `startfrom`, `wizards` all hold, none needed a change.
+- `declared-ops.test.mjs`: the writinghelp call now passes the body's `op` (it had hard-coded `casenote`, so the missing op was never seen). A refusal naming `op` is recognised by the answer's echo of the missing `op` as `null` (the arm's `asked`). New control `R46 control: a writinghelp body without op is refused naming it`.
+
+**Not applied: R46's requirement wording.** The requirements file is outside this job's paths (`checks/ownership.mjs` refused it), so I reverted my edit in 0467eb7804 rather than widen the job. BOB, please amend R46's line (K4210) to read, in place of "`writinghelp` requires `told` (its arm never refuses a missing `field`)":
+> `writinghelp` accepts `op` and requires `op` and `told` (its arm refuses a body without `op`, naming it, and never refuses a missing `field`; K4227, K4210)
+
+and add to its control sentence: "; a `writinghelp` body without `op` is refused naming it."
+
+**Observation for BOB (not changed):** the `wizards` row declares `state` as an accepted field, but its arm reads `state` from the query string (`q("state")`), not the body. The declared-ops test passes, since it only checks requires and refusals. Whether the door also carries body fields to it is for the door's owner to say; I did not change the row.
+
+**Checks** (from `civicos-process`, product `/home/user/bio`)
+- `node checks/format.mjs`: 175 modules, 175 requirements files; 0 failures
+- `node checks/architecture.mjs wizard-scripts`: 48 product files, 93 relative imports; 0 failures
+- `node checks/coverage.mjs wizard-scripts`: 46 of 46 live ids named by a test; 0 failures
+- `node checks/ownership.mjs wizard-scripts tranche/T51`: 2 files changed by wizard-scripts; 0 failures
+
+**Tests**
+- `node --test bio-plane/test/m/wizard-scripts/declared-ops.test.mjs`: 19 pass, 0 fail
+- `node --test --test-reporter=tap bio-plane/test/m/wizard-scripts/`: 127 pass, 0 fail, 0 skipped
+
+**Deferred:** none.
+
+Size (session_013WdFBpJB3QxNd3fyYaBmQF): test runs 2, module lines 14

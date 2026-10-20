@@ -231,6 +231,9 @@ export class AiAccounts {
   /* R14: every switch an account holds, for `accountUsesSet` (T41: R4's and R9's own acts retired into it). */
   static #switchName(name, names = USE_SWITCHES) {
     /* DEC-49 REGION is-account-switch */
+    /* (T51; K4206) a request that names no switch is refused naming it, as an unknown name is */
+    if (name === null || name === undefined)
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_SWITCH", localize("ai-accounts.index.the_request_names_no_switch", "the request names no switch; the switches are {names}. Nothing was written.", { names: String(names.join(", ")) }), { switch: null });
     if (typeof name !== "string" || !names.includes(name))
       return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_SWITCH", localize("ai-accounts.index.the_switches_are_names_nothing", "the switches are {names}. Nothing was written.", { names: String(names.join(", ")) }), { switch: typeof name === "string" ? name.slice(0, 40) : null });
     return null;
@@ -263,6 +266,11 @@ export class AiAccounts {
 
   /* R14: `explore` one of EXPLORE_VALUES; any other switch a boolean. */
   static #switchValueFault(name, on) {
+    /* (T51; K4206) a request that gives no `on` is refused naming it, the values the switch takes given as for any other */
+    if (on === undefined) {
+      const values = name === "explore" ? EXPLORE_VALUES : [true, false];
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SWITCH_VALUE_INVALID", localize("ai-accounts.index.the_request_gives_no_on", "the request gives no on to set; {what} takes {map}. Nothing was changed.", { what: name === "explore" ? "the explore switch" : `the ${name} switch`, map: String(values.map(String).join(", ")) }), { values: [...values], switch: name });
+    }
     if (name === "explore") return EXPLORE_VALUES.includes(on) ? null
       : AiAccounts.#valueInvalid("the explore switch", EXPLORE_VALUES, { switch: name });
     return typeof on === "boolean" ? null : AiAccounts.#valueInvalid(`the ${name} switch`, [true, false], { switch: name });
@@ -330,8 +338,12 @@ export class AiAccounts {
         return { table: "subscription_connections", where: "member_id=?", args: [id], act: act("signin") };
       return { none: this.#noAccount(id, "member") };
     }
-    /* no owner this module knows: refused as R1 refuses any principal but the actor */
-    return { refusal: this.#accountBar(null, by) };
+    /* no owner this module knows: refused as R1 refuses any principal but the actor; an owner the request does not give
+       is refused naming it (T51; K4206), its machine refusal unchanged */
+    const bar = this.#accountBar(null, by);
+    if (owner === null && bar.code === "NOT_YOUR_ACCOUNT")
+      return { refusal: AiAccounts.#notYours(localize("ai-accounts.index.the_request_names_no_owner", "the request names no owner: the account is group, project:<id> or member:<id>. Nothing was written.")) };
+    return { refusal: bar };
   }
 
   /* R2, `credentials` R29, R6: THE SEAL. AES-256-GCM under a key derived (HKDF-SHA-256) from the Worker's seal secret, the owner as
@@ -1730,6 +1742,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["kind","secret"], requires: ["kind","secret"] } },
   accountreferenceremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.accountreferenceremove", "credential governance: a member removes their own account reference; the subject is a credential, not a bundle"),
     fields: { accepts: [], requires: [] } },
+  accountusesset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("ai-accounts.declared.accountusesset", "the account's configuration: an owner sets one of its uses' switches (explore no, ask or yes); it moves no document, claim or grade"),
+    fields: { accepts: ["owner","switch","on"], requires: ["owner","switch","on"] } },
   projectkeyset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectkeyset", "credential governance: an owner holds the project's API key, never answered; the subject is who pays for the assistant, not a bundle"),
     fields: { accepts: ["project","key"], requires: ["project","key"] } },
   projectsigninset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectsigninset", "credential governance: the sole participant's own sign-in made the project's account; the subject is who pays for the assistant, not a bundle"),

@@ -1739,3 +1739,27 @@ export function wizardScriptsOps(m, url, body) {
     wizardcandidates: () => m.wizardCandidates({ ...stamps }),
   };
 }
+
+/* R46 (T51 fix round; K4202, K4213; op-declarations R80, op-grades R49): the ops this module serves that no owner had
+   declared, declared by their owner beside the ops map. A row's class, machine classes and mutating flag are the hand
+   row's (op-declarations); its weight is the op's grade (op-grades); its description is the op's `act.<op>.does` word,
+   never a sentence of this module's own; its fields are what the arm reads. `writinghelp` is routed by the door, not
+   by `wizardScriptsOps`, and is declared all the same. */
+export const DECLARED_OPS = Object.freeze({
+  wizards: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",
+    description: word("act.wizards.does"), fields: { accepts: ["state"], requires: [] } },
+  startfrom: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: word("act.startfrom.does"), fields: { accepts: ["message", "parts"], requires: [] } },
+  writinghelp: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",
+    description: word("act.writinghelp.does"), fields: { accepts: ["op", "field", "told", "draftHeld"], requires: ["op", "told"] } },
+  wizarddraft: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reversible",
+    description: word("act.wizarddraft.does"), fields: { accepts: ["project", "name", "recorded", "from", "copy"], requires: [["project", "from", "copy"]] } },
+  wizardrevise: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    description: word("act.wizardrevise.does"), fields: { accepts: ["version", "steps", "adopt"], requires: ["version", "steps"] } },
+  wizardsubmit: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    description: word("act.wizardsubmit.does"), fields: { accepts: ["version"], requires: ["version"] } },
+  wizardapprove: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    description: word("act.wizardapprove.does"), fields: { accepts: ["version", "widen"], requires: ["version"] } },
+  wizardretire: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reasoned",
+    description: word("act.wizardretire.does"), fields: { accepts: ["script", "version", "reason"], requires: [["version", "script"], "reason"] } },
+});

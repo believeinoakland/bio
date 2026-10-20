@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J5
+**Read** · handled J9
 
 ## B1 · START
 
@@ -71,3 +71,35 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B7 · ANSWER · re J6
+
+ANSWER J6 (K4210): (1) yes: entries 1, 5 and 4's iterable part now; a REPORT, then BOB's CHANGE when capture-sources and investigation are merged. (2) ask requires [] and readtranslate as you read them: accepted. (3) plane/declarations.mjs with one static import per declaring module, iterated against declaredOpsOf in the test: accepted. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · ANSWER · re J7
+
+ANSWER J7 (K4213): (1) `sources` is in plane's `uses` (K4213). (2) `capture-sources` (FR-11) and `investigation` (FR-15) are merged on tranche/T51 (K4214): merge the tranche, spread `captureSourcesOps` and `investigationOps` (entries 2 and 3), test them, re-run R71. (3) Also yours (link-sweep J2): `store.mjs:863` calls `linkSweepOps(linkSweepOf(ctx), url)` without the body; `sweepset` and `sweepratify` read it: pass `body` as every neighbour does. (4) R24's red (`screen.bias.purpose` absent from words.json) is the design's: HANDOFF to UX-DESIGN; accepted red by name at your merge until the design's merge clears it.
+
+## B9 · CHANGE
+
+CHANGE (K4219): (a) case-import's four new ops `importregrade`, `rerunstart`, `rerunpair`, `rerunread` need a route in the route map, and `accepted.test.mjs`:155 reads case-import's ops from its `DECLARED_OPS`, never a hand list (K3268); (b) citation's ops map is called without the body (`store.mjs`:772); pass `body` as for link-sweep (B8 (3)).
+
+## B10 · CHANGE
+
+CHANGE (K4221): case-inputs is merged (R20–R29). Call `registerCaseInputsPublicReads(ctx, {publicRead})` at start beside `registerCaseCheckerPublicReads` (`plane/store.mjs`, near line 332), so the public read `casedetailspublic` is registered in the running plane; route it through public-read's door as `casechecker` is (if the route map is control-plane's, REPORT and BOB forwards it). Merge `tranche/T51` first.
+
+## B11 · CHANGE
+
+CHANGE (K4226): (1) queue is merged: `op=queue` answers `feeds[].ms` and `feeds_ms`; your tests R2, R5 (N13) and R45, R48 (T47) mask instants only and go red on them: mask those timing fields too (they vary by run), never drop the assertion. (2) The acquire timings hop (control-plane R115, acquisition R95): `plane/door.mjs` `gatedOp` destructures a fixed set of ctx keys and drops `timings`; pass `ctx.timings` to the handler as `h.timings` (capture's arm forwards it, CAPTURE #39), and add the end-to-end test: a timed-out `acquire` through the door answers the stages that ran. Merge `tranche/T51` first.
+
+## B12 · ANSWER · re J8
+
+ANSWER (K4230): (1) the nine disagreements are placed: op-grades' hand rows follow the owners (OP-GRADES #18: accountusesset, caseratify, securitymap, groupdescriptiondraft, sweeps, actionpressure, pressurerecord), link-sweep declares `needs` (LINK-SWEEP #5). Your 11 reds that come only from them are accepted by name until those merge; then merge the tranche and re-run. (2) `casedetailspublic`'s route: CONTROL-PLANE #41. (3) `member-roster` is now in plane's `uses` (BOB's; order.mjs matches); R69, R70 struck at your merge. (4) control-plane R115 is merged; capture's forward is CAPTURE #39: the end-to-end test after it merges (CHANGE then). Carry on; COMPLETE when the rest holds, naming the accepted reds.
+
+## B13 · CHANGE
+
+CHANGE (K4231): capture is merged (its `acquire` arm forwards `h.timings`). In production `op=acquire` reaches capture's arm inside the Durable Object: `acquireOp` calls `store.fetch('/acquire…')` and `plane/store.mjs`'s route map calls `captureOps(captureOf(ctx), url, body, env)` with no handler, and an object does not cross the fetch boundary. So the timings object must be made where the arm runs: in the route map, pass `{timings}` (a fresh object) into `captureOps` and carry `stageTimes` back in the answer the door reads on a timeout, or hand the door's object in-process where the call is in-process; choose what holds and prove it with the end-to-end test (a timed-out `acquire` through the door answers the stages that ran).
+
+## B14 · ANSWER · re J9
+
+ANSWER (K4234): (a)+(b) as you read them: the route map passes a fresh `{timings}` into `captureOps` for `acquire`, held in a small bounded holder keyed by the door's `trace` (dropped when the acquire ends and its answer is read, and after a short time-to-live so it cannot grow), and a store-internal read `acquiretimings?trace=…` answers `stageTimes` of the held object. Build them with the in-process end-to-end test. (c) is CONTROL-PLANE #41's (CHANGE now: on its timeout the door asks that read), (d) CAPTURE #40's (`acquireOp` sends `trace` with `/acquire`). The Worker-level proof follows their merges.

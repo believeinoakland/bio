@@ -27,12 +27,15 @@ import { Miniflare } from "miniflare";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
 import { deflateSync } from "node:zlib";
 import { ocrWorkerDef, WASM, MODEL } from "./memberworker.mjs";
 import { makeMember, NAMESPACES } from "../src/member.mjs";
 import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PICTURE_MAX_EDGE, PLANE_OPS, REFUSALS } from "../src/contract.mjs";
 import { PNG_REFUSALS } from "../src/pngsamples.mjs";
 import { renderPageToPixels } from "../../pdf-worker/src/pagepixels.mjs";
+import { renderPictureToPixels as realRenderPicture } from "../../pdf-worker/src/picturepixels.mjs";
 import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
 import { checkAnchor, checkConfidence } from "../../bio-plane/src/textchain.mjs";
 import { BASIS_GRADES } from "../../bio-plane/src/record-grammar/index.mjs";
@@ -604,8 +607,8 @@ console.log("\n--- A10 · R23: a JPEG or PNG capture is a one-page document, tak
     const r = await w.ask({ capture_sha: w.sha, store: "scratch", pages: [0] });
     t(`R23 a ${label} capture, page 0: 200 ok:true, answered by the picture renderer and not the page renderer`,
       [r.status, r.body.ok, w.renderPicture.calls.length, w.render.calls.length], [200, true, 1, 0]);
-    t(`R23 the picture renderer is asked for page 0, a bounded long edge (${PICTURE_MAX_EDGE}) and grey pixels`,
-      w.renderPicture.calls[0], { page: 0, opts: { maxEdge: PICTURE_MAX_EDGE, grey: true }, bytes: doc.length });
+    t(`R23 R24 the picture renderer is asked for page 0, a bounded long edge (${PICTURE_MAX_EDGE}), grey pixels, prepared`,
+      w.renderPicture.calls[0], { page: 0, opts: { maxEdge: PICTURE_MAX_EDGE, grey: true, prepare: true }, bytes: doc.length });
     t(`R23 ${label}: the same fields R8 names, the frame's route stated, the text anchored to p0`,
       [keys(r.body), r.body.image.route, r.body.image.dpi, r.body.pages[0].page, r.body.pages[0].regions[0].text,
        r.body.pages[0].regions[0].source.ref, r.body.pages[0].regions[0].source.kind, r.body.cap],
@@ -660,6 +663,100 @@ console.log("\n--- A10 · R23: a JPEG or PNG capture is a one-page document, tak
       [q.body.reason, w.render.calls.length, w.renderPicture.calls.length], ["PAGE_NOT_RENDERABLE", 1, 0]);
   }
   t("R23 NO_SUCH_PAGE is a declared refusal of this member", typeof REFUSALS.NO_SUCH_PAGE, "string");
+}
+
+console.log("\n--- A11 · R24: a photographed page is prepared before the engine reads it ---");
+{
+  const JPG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  const asked = async (renderPicture, engine = stubEngine({ regions: [{ text: "a printed line", rect: [1, 1, 3, 2], confidence: 0.7 }] })) => {
+    const w = world({ doc: JPG, renderPicture, engine });
+    return { w, r: await w.ask({ capture_sha: w.sha, store: "scratch", pages: [0] }) };
+  };
+  const found = (text_found) => stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture", prepared: { text_found, tilt_deg: 0, scale: 1, line_px: 40 } }));
+
+  /* no text: not handed to the engine as text */
+  const none = await asked(found(false));
+  t("R24 a picture whose prepared answer says text_found false is answered NOTHING_TRANSCRIBED, and the engine never runs",
+    [none.r.status, none.r.body.ok, none.r.body.reason, none.w.engine.calls.length], [200, false, "NOTHING_TRANSCRIBED", 0]);
+  t("R24 the no-text answer counts nothing boxed, nothing blank and nothing unanchored",
+    [none.r.body.refusal.boxes, none.r.body.refusal.blank, none.r.body.refusal.unanchored], [0, 0, 0]);
+  t("R24 ocr-worker.member.the_picture_has_no_lines_of_text: the no-text answer says why, in a sentence",
+    [none.r.body.notes.length, typeof none.r.body.notes[0], none.r.body.notes[0].trim().length > 0], [1, "string", true]);
+  const some = await asked(found(true));
+  t("R24 control: the same picture with text_found true is read by the engine",
+    [some.r.body.ok, some.w.engine.calls.length], [true, 1]);
+  const bare = await asked(stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture" })));
+  t("R24 control: an answer with no prepared field (the old answer) is read by the engine",
+    [bare.r.body.ok, bare.w.engine.calls.length], [true, 1]);
+
+  /* the bound is judged on the prepared frame the renderer answers */
+  const grown = await asked(stubRender(pngPage(new Uint8Array([1, 2, 3]), 5000, 3066, { route: "decoded-picture", prepared: { text_found: true, tilt_deg: 0, scale: 2.5, line_px: 40 } })));
+  t("R24 R7.4 a prepared frame over the measured bound is refused by its true reason, on the prepared size",
+    [grown.r.body.reason, grown.r.body.refusal.width, grown.r.body.refusal.height, grown.r.body.refusal.frame_bytes, grown.w.engine.calls.length],
+    ["FRAME_OVER_MEASURED_BOUND", 5000, 3066, 5000 * 3066 * 4, 0]);
+  const grownBlank = await asked(stubRender(pngPage(new Uint8Array([1, 2, 3]), 5000, 3066, { route: "decoded-picture", prepared: { text_found: false, tilt_deg: 0, scale: 1, line_px: 0 } })));
+  t("R24 R7 the bound is checked before the no-text answer: a too-large frame is refused by its size",
+    grownBlank.r.body.reason, "FRAME_OVER_MEASURED_BOUND");
+
+  /* a PDF page is as before */
+  const pdfW = world();
+  const pr = await pdfW.ask(good());
+  t("R24 control: a PDF page is rendered without prepare", [pr.body.ok, pdfW.render.calls[0].opts], [true, { decodeDct: true }]);
+
+  /* THE REAL PATH: the real picture renderer, the real engine (the vendor package this module pins, in node) */
+  const pkg = createRequire(fileURLToPath(new URL("../package.json", import.meta.url)));
+  const { createOCREngine } = await import(pathToFileURL(pkg.resolve("tesseract-wasm")).href);
+  const wasmBinary = readFileSync(pkg.resolve("tesseract-wasm").replace(/lib\.js$/, "tesseract-core.wasm"));
+  const model = new Uint8Array(readFileSync(MODEL));
+  const realEngine = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng", reads: 0, check: () => null,
+    async transcribeFrame(rgba, width, height) {
+      realEngine.reads++;
+      const e = await createOCREngine({ wasmBinary });
+      try {
+        e.loadModel(model);
+        e.loadImage({ data: rgba, width, height });
+        const boxes = e.getTextBoxes("line") || [];
+        return { ok: true, grain: "line", boxCount: boxes.length,
+                 regions: boxes.map((b) => ({ text: b.text, rect: [b.rect.left, b.rect.top, b.rect.right, b.rect.bottom], confidence: b.confidence })) };
+      } finally { e.destroy(); }
+    } };
+  /* the words each photograph holds: the page's own text, as drawn (`fixtures/page-words.json`) */
+  const TRUTH = JSON.parse(Buffer.from(F("./fixtures/page-words.json")).toString("utf8"));
+  const words = (x) => x.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
+  const shareRead = (truth, got) => {
+    const left = new Map();
+    for (const w of words(got)) left.set(w, (left.get(w) || 0) + 1);
+    const want = words(truth);
+    let hit = 0;
+    for (const w of want) if (left.get(w) > 0) { hit++; left.set(w, left.get(w) - 1); }
+    return want.length ? hit / want.length : 0;
+  };
+  const unprepared = (bytes, page, opts) => realRenderPicture(bytes, page, { ...opts, prepare: false });
+  const realWorld = (doc, renderPicture) => {
+    const sha = hex(doc);
+    const bucket = recordingBucket(new Map([[`scratch/captures/${sha}`, doc]]));
+    const member = makeMember(realEngine, { renderPicture });
+    return post(member, { CAPTURES: bucket.proxy, VERSION: "stub-build" }, { capture_sha: sha, store: "scratch", pages: [0] });
+  };
+  for (const name of ["page-noise-shade", "page-combined-a", "page-110dpi"]) {
+    const doc = F(`./fixtures/${name}.jpg`);
+    const prep = await realWorld(doc, realRenderPicture);
+    const old = await realWorld(doc, unprepared);
+    const got = (a) => (a.body.ok ? a.body.pages[0].regions.map((r) => r.text).join(" ") : "");
+    const gain = shareRead(TRUTH[name], got(prep)), was = shareRead(TRUTH[name], got(old));
+    console.log(`        ${name}: prepared ${(gain * 100).toFixed(0)} %, unprepared ${(was * 100).toFixed(0)} %`);
+    t(`R24 ${name}: the member reads at least 90 percent of the page's words from the prepared picture`, gain >= 0.9, true);
+    /* the 110 dpi page is read whole either way by this engine (the renderer's floor is on the other fixtures); the
+       control is on the two pages the old answer fails */
+    if (name !== "page-110dpi")
+      t(`R24 control: ${name} asked without prepare (the old answer) reads fewer of its words, under 90 percent`, [was < 0.9, was < gain], [true, true]);
+    t(`R24 ${name}: the answer's image is the prepared frame (its own digest, not the unprepared one's)`,
+      prep.body.image.pixels_sha256 !== (old.body.image && old.body.image.pixels_sha256) && prep.body.image.frame_bytes === prep.body.image.width * prep.body.image.height * 4, true);
+  }
+  const before = realEngine.reads;
+  const blank = await realWorld(F("./fixtures/page-blank.jpg"), realRenderPicture);
+  t("R24 the blank picture reads no words: NOTHING_TRANSCRIBED, and the real engine never ran",
+    [blank.body.ok, blank.body.reason, realEngine.reads - before], [false, "NOTHING_TRANSCRIBED", 0]);
 }
 
 /* ============================================================================================================ *

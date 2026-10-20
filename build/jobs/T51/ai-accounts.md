@@ -1,6 +1,6 @@
 # ai-accounts (T51)
 
-**Status** · session_011YKG2GaVfSwqT6prQmCaJM · depth 2 · COMPLETE · handled B4
+**Status** · session_01VSp5XBxGxE7tGFz3UQ7JAM · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -70,3 +70,36 @@ Tests and checks:
 - `bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only, naming word 16079 (ai-accounts.index.no_claude_account_serves_this), expected until BOB regenerates rows.mjs at the layer close; no refusal naming ai-accounts.
 
 Size (session_011YKG2GaVfSwqT6prQmCaJM): test runs 3, module lines 2141
+
+## J5 · COMPLETE
+
+Completion of the fix round's job FR-54 (K4206, B5). Commit ce28481a75 on job/T51/ai-accounts.
+
+**Entries applied**
+1. **K4206**: `accountusesset` is declared in `DECLARED_OPS` (`bio-plane/src/ai-accounts/index.mjs`), beside the ops map. Class, machine classes, mutating and weight are the family's own (`classes` admin and member, `machineClasses` [], `mutating` true, `weight` `substrate`, the grade `op-grades` t41 gives the op, as `projectaccountswitch`'s). Description: `localize("ai-accounts.declared.accountusesset", ...)`, a sentence from that grade's `is`. `accepts` and `requires` are `owner`, `switch`, `on`, read from the arm (`accountUsesSet`; `by` is the stamp).
+   - The arm refused each absent field without naming it, so the declaration could not hold (P8). Fixed in the arm, as the entry asks: an absent owner is refused NOT_YOUR_ACCOUNT with a detail naming `owner`; an absent switch is refused UNKNOWN_SWITCH with a detail naming `switch`; an absent `on` is refused SWITCH_VALUE_INVALID with a detail naming `on`. A request with a machine `by` and no owner keeps MACHINE_CANNOT_HOLD_ACCOUNT. Every other refusal is unchanged; an unknown switch name, a bad value and NO_ACCOUNT keep their sentences.
+   - Requirement: NEW **R37** for BOB to add (text below). The requirements file is not written by this job.
+   - Test: `declared-ops.test.mjs` holds `declaredOpHolds` for `accountusesset` (values owner `member:ann`, switch `ask`, on `true`). `accountusesset-fields.test.mjs` names the three refusals, each writing nothing, and the controls (an unknown owner, a machine with no owner, an unknown switch, a bad value, a named member with no account) keep their answers.
+   - Fail first: the refusal test fails on the arm as it stood at the job's start (1 of 2 fails) and passes on the change; the controls pass on both.
+   - `test-support` is in the module's `uses` already; nothing for BOB to add.
+
+**Deferred:** none.
+
+**Reports about other modules:** none. Observed on the repository-wide `checks/run.mjs`: coverage fails in agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep and monitoring (their own ids R17, R36–R38, R16–R18, R26, R31, R19, R13–R15, R75–R77), none in ai-accounts. Words 0 failures.
+
+**Generated artifacts this change makes stale (for BOB at the layer close; not regenerated here):**
+- `bio-plane/src/setup-words/rows.mjs` (and `words-unreviewed.json`): four new word ids to add by its build: `ai-accounts.declared.accountusesset`, `ai-accounts.index.the_request_names_no_switch`, `ai-accounts.index.the_request_names_no_owner`, `ai-accounts.index.the_request_gives_no_on`. Until then each falls back to its English, as `localize` does for a missing row.
+- `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundle, `npm run build` in `bio-plane/`): it carries this module's source.
+
+**Requirement for BOB (R37, next free id):**
+- **R37** (T51; K4206; op-declarations R80, op-grades R49, test-support R15) The module declares `accountusesset` in `DECLARED_OPS`: class admin and member, `machineClasses` [], mutating, weight `substrate`, its arm's fields `owner`, `switch`, `on` as both accepts and requires. A request naming no owner is refused NOT_YOUR_ACCOUNT naming `owner` (a machine caller with none keeps MACHINE_CANNOT_HOLD_ACCOUNT); naming no switch, UNKNOWN_SWITCH naming `switch`; giving no `on`, SWITCH_VALUE_INVALID naming `on`. Every other refusal of `accountUsesSet` is unchanged. Test: `declared-ops.test.mjs` (`declaredOpHolds`) and `accountusesset-fields.test.mjs`, with the controls.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/ai-accounts/`: tests 131, pass 131, fail 0, skipped 0.
+- `node checks/format.mjs`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio ai-accounts`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio ai-accounts`: 36 of 36 live ids named (R37 is not yet in the requirements file).
+- `node checks/ownership.mjs /home/user/bio ai-accounts tranche/T51 job/T51/ai-accounts`: 4 files, 0 failures.
+- `node checks/run.mjs /home/user/bio`: architecture and words 0 failures; coverage 7 failures, none in ai-accounts (above). Words for this module: 0 findings.
+
+Size (session_01VSp5XBxGxE7tGFz3UQ7JAM): test runs 4, module lines 2188

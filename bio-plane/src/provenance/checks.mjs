@@ -36,7 +36,7 @@
  * wire code and the CANNED TRANSLATION are ONE ROW, read from one place rather
  * than copied.
  * ========================================================================= */
-import { word } from '../setup-words/index.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 export const VERSION_CHAIN_CHECKS = {
   /* No address at all. There is no default document and there must not be one:
@@ -125,7 +125,34 @@ export const PROVENANCE_ACT_CHECKS = {
     check: 'C-103.7',
     where: 'src/attestation/index.mjs signReceipt',
     translation: word('refusal.RECEIPT_NO_KEY'),
+  },  /* R65 (T51; K4169, C62): a member's decision on a captured document's content authority. `declareAuthority` also answers
+     NO_SUCH_BUNDLE, which carries no row (REC-64), so its rows name three regions that exclude it. */
+  AUTHORITY_NOT_A_MEMBER: {
+    check: 'C-103.8',
+    where: 'src/provenance/index.mjs declareAuthority > is-authority-act',
+    translation: localize('provenance.checks.deciding_who_issued_a', 'Deciding who issued a document is a named member\'s judgment, so nothing was recorded. A machine, an assistant or a call that carries nobody may suggest an issuer and never decides one. Sign in as a member.'),
   },
+  AUTHORITY_NOT_A_DOCUMENT: {
+    check: 'C-103.9',
+    where: 'src/provenance/index.mjs declareAuthority > is-authority-document',
+    translation: localize('provenance.checks.nothing_was_recorded_the_capture', 'Nothing was recorded: the capture named is not a document held in that record. Name a document the record\'s register holds.'),
+  },
+  AUTHORITY_NO_BASIS: {
+    check: 'C-103.10',
+    where: 'src/provenance/index.mjs declareAuthority > is-authority-statement',
+    translation: localize('provenance.checks.nothing_was_recorded_say_how', 'Nothing was recorded: say how you know, or what you tried, in at most 2,000 characters. Not knowing is a fine answer, and it still needs its reason.'),
+  },
+  AUTHORITY_NO_ISSUER: {
+    check: 'C-103.11',
+    where: 'src/provenance/index.mjs declareAuthority > is-authority-statement',
+    translation: localize('provenance.checks.nothing_was_recorded_name_the', 'Nothing was recorded: name the party that issued this document, in at most 500 characters. If you could not tell, choose that instead and say what you tried; no issuer is invented for you.'),
+  },
+  AUTHORITY_OUTCOME_UNKNOWN: {
+    check: 'C-103.12',
+    where: 'src/provenance/index.mjs declareAuthority > is-authority-statement',
+    translation: localize('provenance.checks.nothing_was_recorded_a_decision', 'Nothing was recorded: a decision is either that the issuer is determined, or that after review it is still undetermined.'),
+  },
+
 };
 
 /* =====================================================================

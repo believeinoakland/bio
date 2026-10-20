@@ -159,7 +159,8 @@ test("R59 the founder's member id stays admin everywhere: R23, R29 and R31 are u
   assert.deepEqual(w.m.activeAdmins(), adminsBefore, "R29 unchanged: the founder first, as `admin`");
   assert.equal(w.m.activeAdmins()[0], "admin");
   assert.equal(w.m.isAdministrator("admin"), true, "R23");
-  assert.equal(w.m.memberFacts("admin"), null, "R24: she is no members row");
+  assert.deepEqual(w.m.memberFacts("admin"), { cover: null, handle: "steward", role: "admin", status: "active" },
+    "R24, R76: she is no members row, and memberFacts answers her as the member her roster row says she is");
   assert.equal(w.m.memberByHandle("steward"), null, "R48: a handle in `members` only");
   /* R62: the roster lists the founder, first, as `admin` in member_id only; her handle is the one she holds */
   const listed = w.m.memberList({ administer: true }).members;
