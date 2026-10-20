@@ -342,3 +342,13 @@ test("R57 the ceremony lists the four details stated or not stated and no Publis
   assert.ok(drew(pub, "screen.published.details.pub.current1"));
   assert.equal(pub.doc.querySelectorAll("[data-detail]").length, 2, "a field not stated draws nothing");
 });
+
+test("R68 a project whose title the viewer cannot read is named by the unjoined crumb and no PROJ- text is drawn; NO_REVIEW_COPY is drawn by its key; a readable project draws its title (control)", async () => {
+  const p = await open(CER, { plane: { image: refusedIn("NOT_FOUND", ""), reviewcopy: refusedIn("NO_REVIEW_COPY", "") } });
+  const crumb = p.root().textContent;
+  assert.ok(crumb.includes(word("crumb.project.unjoined")), "the unjoined crumb");
+  assert.ok(!crumb.includes("PROJ-"), "no project id is drawn");
+  assert.ok(drew(p, "refusal.NO_REVIEW_COPY"));
+  const q = await open(CER);
+  assert.ok(q.root().textContent.includes("The Coliseum lease"), "control: a readable project draws its title");
+});

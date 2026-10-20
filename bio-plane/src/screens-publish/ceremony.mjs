@@ -29,7 +29,9 @@ export const CEREMONY = Object.freeze({
   place: function (view) {
     const id = String(view.subject || "").split("/")[0];
     const p = view.data.project;
-    return { project: { id: id, title: view.parts.titleOf(p && p.state === "ok" ? p.value : null, id) } };
+    // R68 (H2; DEC-384): a project whose title the viewer cannot read is named `crumb.project.unjoined`, never by its id
+    const title = view.parts.titleOf(p && p.state === "ok" ? p.value : null, "");
+    return title ? { project: { id: id, title: title } } : { project: { id: id, title: id }, projectKey: "crumb.project.unjoined" };
   },
 
   render: function (cs, view) {

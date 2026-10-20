@@ -100,7 +100,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.ceremony.timeline.frozen", "screen.ceremony.when", "screen.ceremony.when.at", "screen.ceremony.when.date",
     "screen.ceremony.when.help", "screen.ceremony.when.needed", "screen.ceremony.when.now",
     "screen.ceremony.when.time", "screen.ceremony.withdraw.reason", "photo.refused.format", "signing.ceremony.who",
-    "screen.ceremony.nothing", "review.body.nocase", "case.links.editor", "shell.card.case-editor", "ceremony.gate.heading", "ceremony.gate.notargets",
+    "screen.ceremony.nothing", "crumb.project.unjoined", "refusal.NO_REVIEW_COPY", "review.body.nocase", "case.links.editor", "shell.card.case-editor", "ceremony.gate.heading", "ceremony.gate.notargets",
     "ceremony.gate.other", "screen.ceremony.gate.addfinding", "refusal.PUBLISH_NO_FINDING", "act.publish.here.ceremony", "signing.ceremony.declined", "signing.ceremony.signedat", "signing.ceremony.signednow", "signing.ceremony.nokey",
     "signing.ceremony.keepkey", "signing.ceremony.notowner", "signing.ceremony.phone", "time.clock", "time.am", "time.pm", "shell.unavailable.home",
     "screen.ceremony.openrequests.heading", "screen.ceremony.openrequests.says", "screen.ceremony.minutes.heading",
