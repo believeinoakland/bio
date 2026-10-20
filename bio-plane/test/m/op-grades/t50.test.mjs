@@ -75,9 +75,13 @@ test("R45 R3: the `undetermined` tally rises by one for actioninquiry, and R47's
 
 test("R46: MARKS_KIT_COMMIT is the design commit the tree holds, and MARKS holds the kit's weight for every rungless "
    + "registered act at that commit; the five R45 grades and actioninquiry hold no mark", () => {
-  assert.equal(MARKS_KIT_COMMIT, "e6d16d8f53");
+  assert.equal(MARKS_KIT_COMMIT, "aa8bdcd0b4");
   for (const op of [...REVERSIBLE, "actioninquiry", "planopen", "wizarddraft", "membertie", "declaretie"])
     assert.ok(!Object.hasOwn(MARKS, op), `${op} is graded, so it takes no mark`);
+  /* K4206: DEC-386's owed act, a rungless act of the registry at this commit, the kit's weight 2 (Reasoned); its row is the one
+     the previous table lacked, so without it the totality below names it */
+  assert.equal(MARKS.expertisewithdraw, "Reasoned", "expertisewithdraw: the kit's 2, DEC-386");
+  assert.equal(MARK_SOURCES.expertisewithdraw, `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`, "its source is the kit, not a ruling");
   /* controls: a graded op left in MARKS is seen; an op the kit does not name is Reasoned, not absent */
   assert.notDeepEqual(Object.keys({ ...MARKS, watchitem: "Reasoned" }).sort(), Object.keys(MARKS).sort());
   assert.equal(MARKS.claim, "Signed");
@@ -112,6 +116,9 @@ test("R46: every rungless registered act has an entry, and the registry's watchi
   const rungless = ops.filter((op) => !Object.hasOwn(RUNGS, op) && !(Object.hasOwn(RUNG_ABSENT, op)
     && RUNG_ABSENT[op].ground === "undetermined"));
   for (const op of rungless) assert.ok(Object.hasOwn(MARKS, op), `${op} is rungless and has no mark`);
+  /* K4206 control: the table without expertisewithdraw (the previous re-take's) leaves exactly that act unmarked, so the check names it */
+  const { expertisewithdraw: _owed, ...PREVIOUS } = MARKS;
+  assert.deepEqual(rungless.filter((op) => !Object.hasOwn(PREVIOUS, op)), ["expertisewithdraw"]);
   /* the writes T50 grades hold no mark: the five reversible ones have a rung, actioninquiry is undetermined */
   for (const op of WRITES) assert.ok(!Object.hasOwn(MARKS, op), op);
 });

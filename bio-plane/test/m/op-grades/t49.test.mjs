@@ -59,17 +59,17 @@ test("R43: projectownervotes is a read: its NON_ACTS sentence is R43's, and it h
 });
 
 test("R43 R3 (START measure): the `undetermined` tally is 109 after T50 (R45 adds actioninquiry, R47 takes planopen and "
-   + "wizarddraft out) and T49 left it unchanged; the `caller-owned` set is 37, "
+   + "wizarddraft out) and T49 left it unchanged; the `caller-owned` set is 36 (37 less securitymap, a read since K4210), "
    + "founderhandleset its newest; T49's tables hold exactly these two ops", () => {
   assert.equal(ground("undetermined").length, 109);
   assert.ok(!ground("undetermined").includes("founderhandleset"));
   const caller = ground("caller-owned");
-  assert.equal(caller.length, 37);
+  assert.equal(caller.length, 36);
   assert.ok(caller.includes("founderhandleset") && caller.includes("handlechange") && caller.includes("setpassword"));
   assert.deepEqual(Object.keys(T49.T49_RUNG_ABSENT), ["founderhandleset"]);
   assert.deepEqual(Object.keys(T49.T49_NON_ACTS).sort(), ["founderhandleset", "projectownervotes"]);
-  /* control: the set without it is 36, the count the module held before T49 */
-  assert.equal(caller.filter((op) => op !== "founderhandleset").length, 36);
+  /* control: the set without it is 35, the count the module held before T49 less securitymap (a read since K4210) */
+  assert.equal(caller.filter((op) => op !== "founderhandleset").length, 35);
 });
 
 test("R43 R42: founderhandleset, a rungless act the registry lists as owed, is marked Reasoned by the kit's owed_ weight; "

@@ -9,20 +9,26 @@ const PROJECTS = ok({ projects: [{ id: "PROJ-1", name: "The Coliseum lease" }, {
 const MEMBERS = ok({ members: [{ member_id: "mai", handle: "Mai-h" }] });
 const WORDS = "The city inspected the Coliseum garage in 2019.";
 const LEAD = (more = {}) => ({ ok: true, lead_id: "LEAD-2026-1008-aaaaaaaaaaaa", author: "member:mai", words: WORDS, locator: null, at: "2026-10-08T10:00:00Z", evidence: false, shared_to: [], looks: [], state: "NEVER_LOOKED", ...more });
-const open = (o = {}, path = "/app/leads") => openPage(path, { reachable: true, plane: { projectlist: PROJECTS, memberlist: MEMBERS, ...(o.plane || {}) } });
+/* `leadlist` (observation-log R20) answers the leads the viewer may read: the plane's record, kept here by `held`; a written lead enters it
+   only as the plane would put it there */
+const listed = (held) => (req) => ({ status: 200, json: { ok: true, result: { ok: true, limit: 50, truncated: false, leads: held.map((l) => ({ lead_id: l.lead_id, author: l.author, words: l.words, locator: l.locator, at: l.at, state: l.state, looked_at: null, looks: 0, evidence: false })), empty: held.length ? null : { cause: "no_leads_visible" } } } });
+const open = (o = {}, path = "/app/leads") => openPage(path, { reachable: true, plane: { projectlist: PROJECTS, memberlist: MEMBERS, leadlist: listed(o.held || []), ...(o.plane || {}) } });
 const written = async (more = {}, plane = {}) => {
-  const p = await open({ plane: { lead: ok({ ok: true, lead_id: LEAD().lead_id, state: "NEVER_LOOKED", looks: 0, evidence: false }), leadread: ok(LEAD(more)), ...plane } });
+  const held = [];
+  const lead = (req) => { held.push(LEAD({ words: req.body.words, locator: req.body.locator || null, ...more })); return ok({ ok: true, lead_id: LEAD().lead_id, state: "NEVER_LOOKED", looks: 0, evidence: false }); };
+  const p = await open({ held, plane: { lead, leadread: ok(LEAD(more)), ...plane } });
   fill(p, { "ld-words": WORDS, "ld-where": "Oakland Public Works, inspection records, 2019" });
   await press(p, "lead", { reason: WORDS });
   return p;
 };
 
-test("R44 writing a lead sends its words and where it might be found; it is then listed, unlooked-at, as the member's own", async () => {
+test("R44 R52 writing a lead sends its words and where it might be found; it is then listed, unlooked-at, as the member's own", async () => {
   const p = await written();
   assert.deepEqual(p.byOp("lead").map((r) => ({ words: r.body.words, locator: r.body.locator })), [{ words: WORDS, locator: "Oakland Public Works, inspection records, 2019" }]);
   assert.ok(says(p, "screen.leads.mine.head"));
   assert.ok(text(p).includes(WORDS));
   assert.ok(says(p, "screen.leads.state.never"));
+  assert.ok(p.byOp("leadlist").length >= 2, "R52 a lead written in the visit appears by the list being read again");
   assert.ok(says(p, "screen.leads.write.note1") && says(p, "screen.leads.write.note2"), "only you can read it until you share it");
   assert.deepEqual(rawKeys(p), []);
   /* control: where is optional */
@@ -101,4 +107,31 @@ test("R44 a lead's address opens it: leadread is asked for it; one that cannot b
   assert.ok(says(p, "screen.leads.one.head"));
   const q = await open({ plane: { leadread: refused("LEAD_NOT_FOUND", "x", 404) } }, `/app/leads/${LEAD().lead_id}`);
   assert.ok(says(q, "shell.unavailable.nothing.says"));
+});
+
+test("R52 'Your leads' is what leadlist answers, newest first, one row for each; an empty answer draws no list; the screen keeps no list of its own", async () => {
+  const L1 = LEAD({ lead_id: "LEAD-2026-1009-bbbbbbbbbbbb", words: "The owner paid the city a fee in 2021.", state: "LOOKED_INDETERMINATE" });
+  const L2 = LEAD();
+  const p = await open({ held: [L1, L2] });
+  assert.ok(says(p, "screen.leads.mine.head"));
+  const t = text(p);
+  assert.ok(t.includes(L1.words) && t.includes(L2.words) && t.indexOf(L1.words) < t.indexOf(L2.words), "in the order the plane answers");
+  assert.deepEqual(main(p).querySelectorAll('button[data-act="leadread"]').map((b) => b.getAttribute("data-id")), [L1.lead_id, L2.lead_id]);
+  assert.ok(says(p, "screen.leads.state.unclear") && says(p, "screen.leads.state.never"));
+  assert.ok(p.byOp("leadlist").length >= 1);
+  assert.deepEqual(rawKeys(p), []);
+  /* the empty answer: the design draws no list */
+  const q = await open({});
+  assert.ok(!says(q, "screen.leads.mine.head"));
+});
+
+test("R52 control: a lead the viewer may not read is not drawn, even one the member has just written; a list that failed draws no list", async () => {
+  const hidden = LEAD({ words: "Someone else's note, not shared with this member." });
+  const p = await open({ held: [], plane: { lead: ok({ ok: true, lead_id: hidden.lead_id, state: "NEVER_LOOKED", looks: 0, evidence: false }) } });
+  fill(p, { "ld-words": hidden.words });
+  await press(p, "lead", { reason: hidden.words });
+  assert.ok(!says(p, "screen.leads.mine.head"), "the list is what the record shows this viewer");
+  const f = await open({ plane: { leadlist: refused("LEAD_LIST_X", "x", 500) } });
+  assert.ok(!says(f, "screen.leads.mine.head") && says(f, "screen.leads.write.heading") && f.byOp("leadlist").length >= 1, "the writing form stays; no list is drawn from a list that failed");
+  assert.deepEqual(rawKeys(f), []);
 });

@@ -5977,3 +5977,33 @@ decided: 2026-10-20 · the design session (P17)
 the design: "Withdraw an expertise" is its own act, `owed:expertisewithdraw` (member-roster's withdrawal, C79, FR-07; today `expertiseConfirm({withdraw: true})`), weight 2, its explanation "Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it."; "Confirm declared expertise" stays `expertiseconfirm`.
 reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`.
 owed: BOB: member-roster serves the withdrawal as its own op (`expertisewithdraw`) and declares it.
+
+### DEC-387 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (BOB's HANDOFFs B416 to B428: K4206, K4214, K4218, K4227, K4228, K4231, K4233, K4234, K4236, K4237, K4238, K4239, K4240; the T51 fix round's screen jobs)
+for: design
+question: The rows, labels and small drawings the fix round's jobs found missing, and the drawing questions they raised.
+why it is Bob's: it is not (P17, K3930, K3944): words and drawing detail beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: every row is added under the key the job reads, or a key named in U420; the drawing answers: a wizard step that lands on an action, matter or due-date screen with no subject explains in place and offers "Open a plan" (as DEC-384 for questions); "Make one for me" is a tick beside the doorbell's secret phrase; the docket's file form picks the edition it answers and the captured document it rests on, with "Capture it first"; the action's reply form shows how the reply came, what it follows and the reply's document; `determine` asks a reason only when it replaces an earlier determination, `consequencerecord` only when the member assesses it, `consequencerevise` always; the plan form keeps "Add another" for repeated rows; releasing a sentence the record contradicts is drawn on the send steps; "Defer" and "Bring back" and a snoozed section on the queue; one "We will remind you on {date}." (`screen.reminder.on`) for due-date and action; counts as "label: count"; the 15 declared ops' descriptions say "team"; the domain file's example is "example-tenants.org"; the bias screen's labels, headings and templates, with team-only and project-only adoption lines; the Updates health names each part in words; `linewithdraw` on the person page; "Withdraw an expertise" (DEC-386) unchanged; `imported` keeps "Help me write this" for its citing note. Strength's rule 11 of `bio-grading/4` stays code (the reads lists' unkeyed entries, beside V1_LINES and V2_LEGS). The reads lists are regenerated from the tranche @ the fix round's head (B417's notice: `affordances` now holds the 64 declared ops' `act.<op>.does`).
+reasoning recorded in: this entry; `screens/*` (rows noted "DEC-387"); U420 (the keys by HANDOFF).
+owed: BOB: name the ops for "Bring back" (no unsnooze act) and for releasing a contradicted sentence if it is not `release`; check the reply's medium tokens against the vocabulary; give the unit codes `runtime` answers, for their words.
+
+### DEC-388 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (the standing consistency read after DEC-387)
+for: design
+question: Do DEC-387's rows agree with the words already established?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: "Acknowledgments" (American spelling, `screen.case-editor.acknowledgements_from_whoever_wrote_it_are`); "Can't be undone" for the matter's way, as the established option says (`screen.matter.way.cannot`); "Checked {title} just now, but could not tell whether the page changed: {note}"; the snoozed section's help says "snoozed", so Defer (put aside with a reason) and Snooze do not compete. Kept: the queue rows' {have} and {agreed}, the placeholders the producers answer (B422).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: none.

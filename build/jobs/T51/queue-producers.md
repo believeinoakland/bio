@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_01RGDHZRqyU8MUPCnVS1KQxu · depth 2 · COMPLETE · handled B6
+**Status** · session_01PLhNRyfycvsdh5hgzEqhcL · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -124,3 +124,34 @@ COMPLETE (FR-22 · B3 START and B4 CHANGE; K4222 answers J4). Branch job/T51/que
 - `node checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`: 7 files changed by queue-producers; 1 failure, `build/requirements/queue-producers.md` (accepted at the merge, B4). `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only (the `localize` ids I added are not in `rows.mjs`); no refusal naming my module.
 
 Size (session_01RGDHZRqyU8MUPCnVS1KQxu): test runs 26, module lines 3562
+
+## J7 · COMPLETE
+
+T51-102 queue-producers, B7 (K4245) applied. Branch job/T51/queue-producers @ 1a99ef27a0 (on tranche/T51's tip; pushed).
+
+**Entries applied**
+- R46, R47, R48: each OBLIGATION item carries `fills.who`, the member's handle: R46 and R48 as member-roster answers it (`handle` on `endorsementsOwed` and `expertiseAwaitingConfirmation`); R47 as project-roster names the target (`projectOwnerVotes`, by handle). `fills` is always present; `fills.who` is absent when the member holds no handle (a founder's held handle counts). The subject id is unchanged in every case, and the sentences keep their existing name fallback to the id.
+- R47 uses `membership.memberByHandle` and `founderHandle` to tell a handle from an id, since the roster falls back to the id for a member with no handle.
+
+**Tests**
+- New, each named by its id and each with a control (no handle, no `who`, id stays): `R46 (B7)`, `R47 (B7)`, `R48 (B7)` in `bio-plane/test/m/queue-producers/members.test.mjs`. Seen failing before the change, passing after.
+- `node --test test/m/queue-producers/`: 138 tests, 138 pass, 0 fail.
+
+**Checks** (from /home/user/civicos-process, against /home/user/bio)
+- format: 175 modules, 175 requirements files; 0 failures.
+- architecture queue-producers: 26 product files, 105 relative imports; 0 failures.
+- coverage queue-producers: 39 of 39 live requirement ids named by a test; 0 failures.
+- words queue-producers: 0 failures.
+- ownership queue-producers tranche/T51 job/T51/queue-producers: 3 files changed by queue-producers; 0 failures.
+- Not run: `checks/run.mjs` (the full sweep); this job's B7 entry does not ask for it, and the earlier sweep's failures were all outside this module.
+
+**Deferred:** none.
+
+**Found in other modules:** none in this change.
+
+**Requirement lines for BOB** (not written into `build/requirements/queue-producers.md`; BOB places them). Each is an amendment of the line named, marked *(not yet met: T51)* until BOB accepts:
+- R46 (amends the line): "... It also carries `fills.who`, her handle as member-roster answers it (its R77), absent when she holds none; `subject` still names her id."
+- R47 (amends the line): "... It also carries `fills.who`, the target's handle as project-roster names her (its R30), absent when she holds none; `subject.target` still names her id."
+- R48 (amends the line): "... It also carries `fills.who`, the declarer's handle as member-roster answers it (its R78), absent when she holds none; `subject` still names her id."
+
+Size (session_01PLhNRyfycvsdh5hgzEqhcL): test runs 7, module lines 3577

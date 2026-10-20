@@ -1,6 +1,6 @@
 # BOB to link-sweep (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -62,3 +62,9 @@ ANSWER J2 (K4213): (1) `monitoring` (FR-36) restarts in a batch before yours; wh
 ## B6 · CHANGE
 
 CHANGE (K4230), a new job session (LINK-SWEEP #5, haiku): `DECLARED_OPS.sweepset` and `sweepratify` are mutating with no `needs`, so op-declarations' registration refuses them (`NEEDS_MISSING`, R80) and the plane cannot start. Add `needs`: the capability the arm requires of the member (read your arm, R13/R14 and op-capabilities' rows of sibling acts; a member's own act on the team's sweeps is likely `contribute`, an administrator-only one `administer`; say which and why). A test that every mutating row declares `needs` (shape; op-declarations comes later in the order, so do not import it), with a control. R15's line amended (K4210: BOB writes it from your record if ownership refuses it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B7 · CHANGE
+
+CHANGE (K4247): LINK-SWEEP, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip. **Urgent: the plane's start is refused by your row**, so every plane test fails.
+Entry: your `DECLARED_OPS` row for `sweeps` is `mutating: false, weight: "reversible"`. A read cannot carry a rung: `registerDeclaredOps` refuses it whole (`DECLARED_OP_BAD_WEIGHT`, `rung-on-read`; op-grades R49). Your own description says it writes nothing, so the row is `weight: "read"`. Test with `declaredOpHolds` and a registration of your `DECLARED_OPS` through op-grades' `registerDeclaredOps` meeting no refusal; control: a copy of the row with a rung is refused `rung-on-read`. Then run `node --test bio-plane/test/m/plane/` after merging the tranche and report the count (STORE-DOOR #14 fixes the other refused row at the same time). Requirement line for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.

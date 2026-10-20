@@ -159,7 +159,15 @@ export const CEREMONY = Object.freeze({
     // R51 (C6; DEC-377): "Documents without a second confirmation", from the pre-flight: ask for the confirmation again (`reattest`),
     // list the document as self-attested only with a required reason (`selfAttested`, sent with the pre-flight and `publish`), or the
     // capturing member's own signed account (`captureaccount`).
-    const unconfirmed = pre.state === "ok" ? ((stepWith("not_co_attested") || {}).not_co_attested || []).filter(function (x) { return typeof x === "string" && x; }) : [];
+    // Each entry is `{capture, by, findings}` (case-authoring R82): the capture, the member who captured it (null when none), the findings resting on it.
+    const unconfRows = (pre.state === "ok" ? ((stepWith("not_co_attested") || {}).not_co_attested || []) : []).map(function (x) {
+      return typeof x === "string" ? { capture: x, by: null, findings: [] } : x && typeof x === "object" ? x : null;
+    }).filter(function (x) { return x && typeof x.capture === "string" && x.capture; });
+    const unconfirmed = unconfRows.map(function (x) { return x.capture; });
+    const unconfBy = function (x) {
+      const me = view.me || {};
+      return typeof x.by === "string" && x.by ? (me.member && me.handle && String(x.by) === String(me.member) ? me.handle : x.by) : "";
+    };
     const already = pre.state === "ok" ? ((stepWith("not_co_attested") || {}).self_attested || []) : [];
     ui.confIds = unconfirmed;
     if (unconfirmed.length) {
@@ -167,8 +175,14 @@ export const CEREMONY = Object.freeze({
       already.forEach(function (a) { if (a && a.capture) was[a.capture] = a.reason || ""; });
       const sa = ui.attested ? mine.sa : Object.keys(was);
       out.push(cs.sec("screen.ceremony.conf.heading", '<p class="mk-note">' + cs.w("screen.ceremony.conf.intro1") + "</p>"
-        + cs.sheet(unconfirmed.map(function (sha) {
-          return cs.row("", '<span class="id" data-unconfirmed="' + cs.esc(sha) + '">' + cs.esc(String(sha).slice(0, 12)) + '</span><span class="meta">' + cs.w("screen.ceremony.conf.row.meta") + "</span>",
+        + cs.sheet(unconfRows.map(function (x) {
+          const sha = x.capture, by = unconfBy(x);
+          return cs.row("", '<span class="id" data-unconfirmed="' + cs.esc(sha) + '">' + cs.esc(String(sha).slice(0, 12)) + "</span>"
+            + (by ? ' <span class="meta" data-capturer="' + cs.esc(sha) + '">' + cs.esc(by) + "</span>" : "")
+            + '<span class="meta">' + cs.w("screen.ceremony.conf.row.meta") + "</span>"
+            + (Array.isArray(x.findings) ? x.findings.filter(function (f) { return typeof f === "string" && f; }).map(function (f) {
+              return '<p class="mk-small" data-rests="' + cs.esc(sha) + '">' + cs.w("screen.ceremony.conf.intro2", { finding: f }) + "</p>";
+            }).join("") : ""),
             cs.act("reattest", { data: { capture: sha } }));
         }).join("")) + '<p class="mk-note">' + cs.w("screen.ceremony.conf.retry.note") + "</p>"
         + cs.checks("ce-sa", "screen.ceremony.conf.self.legend", unconfirmed.map(function (sha) { return { value: sha, text: String(sha).slice(0, 12), on: sa.includes(sha) }; }))

@@ -138,3 +138,12 @@ Before tests: every tracked lockfile directory has its node_modules (K4113). Rea
 ## B18 · CHANGE
 
 CHANGE (K4242): QUEUE #30 is merged: proposedispose takes items as the identity alternative (R92); merge tranche/T51 and turn queue-states R58's set arm green. Also: queue-states identity() puts definition_version (snake case) in a set's key-identified item; the arm reads definitionVersion (camel) only, so the version is dropped. Send definitionVersion, with a test.
+
+## B19 · CHANGE
+
+CHANGE (K4248): SCREENS-DAILY, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours: (B422) `queue.endorsement-owed.*`, `.owner.summary.{add, remove}`, `.owner.detail`, `queue.expertise-confirmation-owed.*`, `act.projectownerremove.label.queue`, `queue.owed.nobody`; their {who} is `fills.who` (queue-producers R46–R48, merged: the member's handle, absent when none; draw the id only when absent); (B426) `screen.queue.routed.*` confirmed (clears "R75 (words)"), `screen.queue.defer`, `screen.queue.bringback`, the snoozed section `screen.queue.snoozed.*`, `screen.home.waiting.counts`. Bring back's op: BOB names it by CHANGE (build the rest first). Re-point your `register-tasks.mjs` to test-support's `registerDeclared` (R17) since this entry touches your tests (K3268); BOB then drops the `tasks` edge.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B20 · CHANGE
+
+CHANGE (K4249), with B19: Bring back's op exists: `queuesnooze` with `{case, clear: "1"}` (queue R21; accepts case, until, clear, at; requires case and one of until/clear) clears `snoozed_until`; your snoozed section already draws it for the muted list (R69, `queue.muted.unmute`): use `screen.queue.bringback` there now. A past or empty `until` does not clear (`UNTIL_IN_PAST`, `NO_UNTIL`).

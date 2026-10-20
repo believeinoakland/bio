@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_0135JUZBcFJA8xpZHnkjPVFw · depth 2 · COMPLETE · handled B11
+**Status** · session_01BrnZiLD3xe4Eof2hHkGjyT · depth 2 · COMPLETE · handled B14
 
 ## Record
 
@@ -32,6 +32,8 @@
 6. A29 stays open as the entry says (BOB's, the design's to say whether `document` lists what a captured page lacks).
 
 **Size (session_01XiUV1oniArn1H66oUHgn4p):** test runs 12, module lines 1384
+
+**B12 CHANGE (K4243, SCREENS-INTAKE #11): "Your leads" is `leadlist`.** `leads.mjs` reads `leadlist` (observation-log R20) as its `list` read and draws one row per lead the plane answers (`lead_id`, `words`, `state`), in the plane's order, each with "Open it" (`leadread` by `lead_id`). The page-memory list (`ui.mine`, `ui.pending`) and the stale "The plane lists no leads" comment are gone: writing a lead, a look or a share is followed by the shell reading every read again (the default; no `rereads`), so a lead written in the visit appears because the record lists it. An empty or failed list draws no list (the design draws none; it has no row for an empty "Your leads"). The requirement line is **R52** (new, amends R44; R44's sentence about page memory amended), in `build/requirements/screens-intake.md`, marked not yet met: T51. Tests (`t51-leads.test.mjs`): R52 ×2 (the rows are the plane's, in its order, one per lead; a lead written but not listed is not drawn, control; empty and failed draw no list), and R44's helpers now script `leadlist`. Size and checks in J9.
 
 ## J1 · BLOCKED
 
@@ -122,3 +124,29 @@ With the rows and those four reads present (both overlays) the module is 175 pas
 **Not done, by the START or by an owner:** I-34 (progress while a timestamp is made; the act is unidentified). The `interface-shell` and other reds in REPORT (J7). Entry 7's `writinghelp` is under the request's description only.
 
 Size (session_0135JUZBcFJA8xpZHnkjPVFw): test runs 48, module lines 2155
+
+## J9 · COMPLETE
+
+COMPLETE (B12, K4243, SCREENS-INTAKE #11). "Your leads" is drawn from `leadlist`: `leads.mjs` reads it as `list`, draws one row per lead the plane answers (in its order, "Open it" by `lead_id`), and keeps no list of its own. The page-memory list and the "plane lists no leads" comment are removed; a lead written in the visit appears because the shell reads every read again after the act. An empty or failed list draws no list (the design has no empty-state row for it; reported, nothing invented).
+
+**Requirement id for BOB: R52** (new, amends R44), in `build/requirements/screens-intake.md`, marked not yet met: T51. Tests: R52 ×2 in `t51-leads.test.mjs` (rows as the plane answers; control: a lead the viewer may not read, not listed by the plane, is not drawn, even when just written). Checks: format 0 failures; architecture 0; coverage 51 of 51; ownership 0 failures; words: only the 6 missingkey lines already in J8 (not mine to add).
+
+Module suite: 179 tests, 156 pass, 23 fail. All 23 are the reds J8 named: the design's missing word rows (HANDOFF B419, B423; accepted by B10, B11), now including `screen.leads.mine.head` and `screen.leads.one.head`, which the leads tests read; and other modules' (writinghelp `op`, SESSION_OPS reads, link-sweep needs). With a local, uncommitted overlay of those two rows plus `screen.leads.state.unclear`, all 9 leads tests pass.
+
+Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 8, module lines 2145
+
+## J10 · COMPLETE
+
+COMPLETE (B13, K4246, SCREENS-INTAKE #11). The R8 test "every act names one op OPS holds and a member's session reaches" now asks reach by interface-shell R12's rule: a mutating op by `SESSION_OPS.member`, a read by `OPS[op].classes` including member (both read from op-declarations' exports; no hand list). It passes.
+
+Suite: 179 tests, 157 pass, 22 fail. Every remaining red is a missing design row (UNKNOWN_WORD, or the raw key drawn/asserted for a row that does not exist): `screen.capture.address.checked.{modified,removed,unchanged,unknown}` (R14, R16, R26 capture, R42 x2); `screen.about-knocker.*` (R43 x3); `screen.leads.{mine.head,one.head,...}` (R44 x4, R52 x2); `screen.watching.{running.head,running,pause,resume,sweep.pages,...}` (R46 x5, R48 x2); R26 "each screen's words" (all the above). Checked: no red has any other cause. R52 stays as written (still in the requirements file; BOB's "struck" may mean otherwise: say if it should move).
+
+Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 12, module lines 2145
+
+## J11 · COMPLETE
+
+COMPLETE (B14, K4248, SCREENS-INTAKE #11). `tranche/T51` merged (the design's rows regenerated). Module suite: 179 tests, 179 pass, 0 fail: every red I named as a missing row is green. Checks: format 0 failures; architecture 0; coverage 51 of 51; words 0 failures (missingkey 0); ownership 0 failures (2 files: the requirements file and tests); `setup-words build --check` clean. `checks/run.mjs` over the whole tree shows failures only in other modules (agent-harness, agent-runner, installer-steps, journey-check coverage; op-grades testcopy), none naming screens-intake.
+
+Also drawn now, from the design's new rows: `screen.capture.cred.askedby` (the turned-away row: member, day, tries) and `.givenby` (the stored login's row); `screen.watching.sweep.pages.one` for a budget of one page. Not drawn: `screen.capture.cred.given.summary` ("Once a login has been given"): the drawing wraps a just-given login's row in a details after the supply; this screen draws the stored login in its own row (list and withdraw) and keeps no separate just-given row. Say if it should be added. R52 stays as written in the requirements file.
+
+Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 17, module lines 2150

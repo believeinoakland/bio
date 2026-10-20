@@ -56,7 +56,7 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
 
 /* The admitted ops whose handler is a module's door; undefined for control-plane's generic forward. */
 export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights,
-                                sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null }) {
+                                sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null, timings = null }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
      as its viewer and identity, and `class:ai/<tokenId>` as its author (control-plane R17, as its generic forward stamps
@@ -91,6 +91,7 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   {
     const c = await captureOp(op, req, url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
       requiredArgument, cls, member: viaSession, sessMember, storeName, key: (s) => captureKey(storeName, s), viewer,
+      timings, trace,   /* control-plane R115: `acquire`'s stage timings; capture R99: the door's `trace`, sent to the object as a header so it holds them under it (plane R73) */
       readAcquired: (answer, st) => acquireReadingOp(answer, st, { json, storeSilent, storeRefusal, doAnswer, storeName }) });
     if (c) return c;
   }

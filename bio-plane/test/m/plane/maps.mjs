@@ -27,6 +27,7 @@ import { runProductionsOf, runProductionsOps } from "../../../src/run-production
 import { captureRequestsOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 import { recordOf, recordCoreOps } from "../../../src/record-core/index.mjs";
 import { governorOf, governorRoutes } from "../../../src/host-governor/index.mjs";
+import { acquireTimingsOps } from "../../../src/plane/acquire-timings.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
 import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
@@ -89,6 +90,9 @@ import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
 import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { investigationOf } from "../../../src/investigation/index.mjs";
+import { investigationOps } from "../../../src/investigation/ops.mjs";
+import { captureSourcesOps } from "../../../src/capture-sources/ops.mjs";
+import { credentialsOf as captureCredentialsOf } from "../../../src/capture-sources/credentials.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const MODULE_MAPS = [
@@ -103,7 +107,8 @@ export const MODULE_MAPS = [
      its own (its ops are reached through capture's and control-plane's doors), so the pair is named here as the module's
      whose methods answer them: the plane adds no behaviour, only the entry (plane R9). */
   ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
-                                  coarchivestate: () => acquisitionOf(c).coArchiveState() })],
+                                  coarchivestate: () => acquisitionOf(c).coArchiveState(),
+                                  ...acquireTimingsOps(c, u) })],   /* R73 (K4231): acquisition's stage times of a running call */
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
   ["doorbell", (c, u, b) => doorbellOps(doorbellOf(c), u, b)],   /* R37: directly after capture's */
   ["file-safety", (c, u, b, e) => fileSafetyOps(fileSafetyOf(c), u, b, e)],   /* R26: directly after doorbell's */
@@ -114,7 +119,7 @@ export const MODULE_MAPS = [
   ["inquiry", (c, u, b) => inquiryOps(inquiryOf(c), u, b)],
   ["leg-earning", (c, u) => legEarningOps(legEarningOf(c), u)],
   ["hypotheses", (c, u, b) => hypothesesOps(hypothesesOf(c), u, b)],
-  ["citation", (c, u) => citationOps(citationOf(c), u)],
+  ["citation", (c, u, b) => citationOps(citationOf(c), u, b)],
   ["observation-log", (c, u, b) => observationLogOps(observationLogOf(c), u, b)],
   ["run-productions", (c, u, b) => runProductionsOps(runProductionsOf(c), u, b)],
   ["entities", (c, u, b) => entitiesOps(entitiesOf(c), u, b)],
@@ -157,6 +162,9 @@ export const MODULE_MAPS = [
   ["provenance-routes", (c, u, b) => provenanceRouteOps(provenanceRoutesOf(c), u, b)],
   ["content", (c, u, b) => contentOps(contentOf(c), u, b)],
   ["capture-requests", (c, u, b) => captureRequestsOps(captureRequestsOf(c), u, b)],
+  /* R69, R70 (K4213): capture-sources' and investigation's maps, directly after capture-requests' */
+  ["capture-sources", (c, u, b) => captureSourcesOps(captureCredentialsOf(c), u, b)],
+  ["investigation", (c, u, b) => investigationOps(investigationOf(c), u, b)],
   ["reading-guides", (c, u, b) => readingGuidesOps(readingGuidesOf(c), u, b)],   /* plane R35 */
   ["host-governor", (c, u, b) => governorRoutes(governorOf(c), u, b)],
   ["ai-use", (c, u, b) => aiUseOps(aiUseOf(c), u, b)],   /* plane R31 (K2488) */
@@ -180,7 +188,7 @@ export const MODULE_MAPS = [
   ["plan-work", (c, u, b) => planWorkOps(planWorkOf(c), u, b)],   /* plane R39: directly after action-plans' */
   ["escalation", (c, u, b) => escalationOps(escalationOf(c), u, b)],
   ["monitoring", (c, u, b) => monitoringOps(monitoringOf(c), u, b)],
-  ["link-sweep", (c, u) => linkSweepOps(linkSweepOf(c), u)],
+  ["link-sweep", (c, u, b) => linkSweepOps(linkSweepOf(c), u, b)],
   ["following", (c, u, b) => followingOps(followingOf(c), u, b)],
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
   ["case-check", (c, u, b) => caseCheckOps(caseCheckOf(c), u, b)],   /* plane R39 (K2839): after review's */
@@ -214,7 +222,7 @@ export const opsServedBy = (ctx, url, env, owners) =>
  *  answers called directly, on a twin store (instants masked). Answers the ops served, and each op that did not. */
 export async function servedThroughDoor(x, twin, owners, { skip = NOT_COMPARED } = {}) {
   const u = new URL("http://do/");
-  const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+  const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
   const keys = Object.keys(x.s.routes(u, null));
   const served = opsServedBy(x.ctx, u, x.env, owners), failed = [];
   for (const [op, owner] of served) {
