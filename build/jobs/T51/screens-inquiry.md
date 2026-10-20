@@ -144,3 +144,9 @@ COMPLETE for FR-28 (screens-inquiry #15), with three open items for BOB (below).
 **Checks (from civicos-process, against /home/user/bio):** format 175 modules, 0 failures; words: no finding for screens-inquiry; coverage 120 of 122 live ids (R110, R119 unnamed); architecture 8 failures, all the `uses` above; ownership: only `build/requirements/screens-inquiry.md` outside paths (accepted by B16/B17, K4210). Not run: the `setup-words build --check` finding for my module (none seen) and journey-check.
 
 Size (session_01KSJQk5BpCQJRWiVABxqnfZ): test runs 16, module lines 5565
+
+## J12 · COMPLETE
+
+COMPLETE, re B21 (K4248). Merged tranche/T51 (design @ 18f78e4422, rows.mjs regenerated) and read U420, U421 and U422 whole. Nothing of U420 names a key of my module apart from `screen.capture.address.checked.*`, which the document draws through screens-intake's `checkOutcome` (held in words.json now); no code change this round. Module suite: 372 pass, 0 fail. The words check shows no finding for screens-inquiry.
+
+Still waiting on rows (not answered by U420 or U422): the 23 keys of `PENDING_WORDS` (objective.mjs) and the 31 of `GAP_WORDS` (contradiction.mjs), none held yet; the document, question and project gaps listed in J11. Also open as in J11: R110 (your CHANGE), R119 (reassign to screens-intake) and the `uses` edges of modules.json (architecture, 8 failures).
