@@ -79,3 +79,15 @@ Tests and checks:
 - checks/ownership.mjs affordances tranche/T51: 3 files changed by affordances; 0 failures
 
 Size (session_01VxbGzLyFxoWVwut9wPwFpo): test runs 7, module lines 2702
+
+## J9 · REPORT · re B9
+
+REPORT (re B9, K4247). For BOB; none blocks this job.
+
+1. t48.test.mjs:181 (R12 R39) is fixed in my module (commit 8e65393d3f). Cause: the test hand-listed `groupdescriptiondraft` and `securitymap` as caller-owned absences. `securitymap` is a read now (op-grades R39 as amended, K4210), so `RUNG_ABSENT.securitymap` is undefined and the test threw. The test now reads every `caller-owned` absence from op-grades' `RUNG_ABSENT` (K3268). `groupdescriptiondraft` is read the same way and leaves the set when OP-GRADES #20 merges, with no edit here. The test's controls are unchanged. t48 is 6 of 6 green.
+
+2. Other affordances reds on the tranche tip: 32 tests, none in my code. Every one fails at Workers runtime start (`MiniflareCoreError ERR_RUNTIME_FAILURE`, `plane.test.mjs:176` and the other suites that start the plane runtime). The cause, from the runtime's stderr: `DECLARED_OP_BAD_WEIGHT: sweeps rung-on-read`, raised at `bio-plane/src/op-grades/declared.mjs:45` while `bio-plane/src/plane/declarations.mjs:182` registers the owners' declared ops. The two owners disagree on `sweeps`. op-declarations (`src/op-declarations/index.mjs:1375`) declares it a read (`mutating: false`), while op-grades `src/op-grades/marks.mjs:214` gives it the rung `Reversible`. The registry refuses a rung on a read, so the plane runtime cannot start. Owners: op-grades (marks.mjs) and op-declarations. Affordances' own code is not involved. Until that is fixed, these 32 stay red; the 249 non-runtime affordances tests pass.
+
+3. Whole-tree checks, read-only: coverage has 4 failures in agent-harness, agent-runner, installer-steps and journey-check, none in affordances. Words has 31 failures in strength, screens-intake and op-grades, none in affordances (no line names affordances). setup-words `--check` reports rows.mjs stale at word 20774 (entities), the expected stale-rows note, not a refusal of mine.
+
+Checks for affordances: format 0 failures (whole tree 175 modules); architecture 0 failures (34 product files, 383 relative imports); coverage 54 of 54 live ids named; ownership 1 file changed by affordances, 0 failures.
