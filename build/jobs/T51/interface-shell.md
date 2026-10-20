@@ -188,3 +188,7 @@ COMPLETE (B23) for `interface-shell` in T51, merged `tranche/T51` first.
 **Checks.** Module suite 239 of 239; format, architecture, coverage, ownership below.
 
 Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 4, module lines 2880
+
+## J14 · COMPLETE
+
+COMPLETE (B23) — see J13. R12: a read in no SESSION_OPS set is drawn when the session's class is among OPS[op].classes (a public read too); the eight acts' reads (selftest, runtime, bootstrap, exportlog, biasmanifest, biasinhale, biasdebt) now draw; export (mutating) stays outside, as you said. Test and controls; module suite 239/239; format, architecture, coverage 107/107, ownership 0 failures.
