@@ -1,7 +1,7 @@
 /* control-plane R113 (T51; K4213; tasks R20): `taskdecide` takes the body stamp of `actor` that `taskforward`, `taskresolve`, `taskdrain`
    and `biasdebtresolve` take (index.mjs), the server's word from the session, and reaches `tasks` through the store's route of its own
    name (`tasksOps`, spread by store-door). Driven through the door with a member's session and a forged body `actor`. */
-import "./register-tasks.mjs";
+import "./register-declared.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, call, FORGED } from "./harness.mjs";
