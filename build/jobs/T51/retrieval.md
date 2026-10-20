@@ -115,3 +115,23 @@ B6 applied (K4002). Localized: the refusal details at index.mjs 1248, 1252, 1257
 Tests: retrieval 167 of 167 pass; citation recorded.test 12 of 12. Checks: words for retrieval shows only the five registration sentences; architecture 0 failures; format 0; coverage 79 of 79; setup-words --check names no retrieval refusal; ownership 0 failures. Pushed to job/T51/retrieval, record Completion (B6, K4002).
 
 Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 9, module lines 2924
+
+## J7 · COMPLETE
+
+**Entries applied.** B7 (K4243): `list` declared in `DECLARED_OPS` (`bio-plane/src/retrieval/index.mjs`), under R91. Row: `classes` admin, member, probe; `mutating` false; `weight` "read" (as `findin` and `search`); `description` through `localize("retrieval.declared.list", …)`, English: "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing" (`localize` falls back to that English until BOB's rows are regenerated). `fields`: `accepts` `type`, `state`, `after`, `limit` (read from the arm whole); `requires` none; `viewer` is the control plane's stamp, not an accept. No behaviour change. Test: `declared-ops.test.mjs`, "R91 retrieval declares list …", through `declaredOpHolds` (only requires, without each required, a field outside accepts). No other module declares a `list` op.
+
+**Deferred.** None.
+
+**Found in other modules.** None.
+
+**Tests and checks** (from `/home/user/bio`):
+- `node --test bio-plane/test/m/retrieval/declared-ops.test.mjs`: 6 of 6 pass.
+- `node --test bio-plane/test/m/retrieval/`: 173 of 173 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio retrieval`: 0 failures.
+- `checks/coverage.mjs /home/user/bio retrieval`: 80 of 80 live ids named, 0 failures.
+- `checks/ownership.mjs /home/user/bio retrieval tranche/T51`: 0 failures.
+
+**For BOB (requirements, not edited here).** R91's list of declared ops (`findin`, `select`, `selectionrelease`, `frontier`, `search`) should now read `list` too. Commit `53847cb8f1` on `job/T51/retrieval`.
+
+Size (session_0184iZt7rYVPmAExGqQUio3H): test runs 3, module lines 2941
