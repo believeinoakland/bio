@@ -130,3 +130,28 @@ Tests and checks:
 - `bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only; no refusal naming strength.
 
 Size (session_0117HE2QceqtD8WwzcpPzSAr): test runs 3, module lines 2969
+
+## J10 · COMPLETE
+
+Applied B11 (CHANGE, K4258) on job/T51/strength, commit b4a46d33d5 (fast-forwarded to tranche/T51 first; B11 read as the newest ask, nothing else pending).
+
+Entries applied:
+1. Ops map serves `strengthbarset` with the arm `strengthbar` has (`strengthBarSet` with `author` from the query). `strengthbar` stays served. Test (test/m/strength/strengthbarset.test.mjs, names R41): `strengthbarset` through `strengthOps` sets the bar, and `strengthbarof` reads it back. Control: the stamped author governs and a non-administrator is refused exactly as `strengthbar` refuses; an unserved op (`strengthbarnosuch`) is not routed.
+2. `DECLARED_OPS.strengthbarset` gains `needs: "publish"`. `declared-ops.test.mjs` (R41, `declaredOpHolds`) stays green.
+
+Requirements: R41 is met by the new tests for `strengthbarset`; no requirement line changed. (The op-declarations family already gives `strengthbarset` the `publishgate` spec, which carries the same `publish` need.)
+
+Deferred: nothing.
+
+Found outside this module: nothing new. Standing reports unchanged: J1/J4 generated artifacts (`bio-plane/src/case-checker/program.mjs`, `bio-plane/dist/bio-plane.bundled.mjs`) still need BOB's regeneration; J8 REPORT 1 (rule 11 unkeyed) still open, the words check shows strength at 0 failures on this run with its 16 accepted unkeyed lines.
+
+Checks (from the process repository):
+- `node --test test/m/strength/*.test.mjs` (bio-plane): 171 pass, 0 fail (168 before, +3 new).
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio strength`: 0 failures.
+- `checks/coverage.mjs /home/user/bio strength`: 42 of 42 live ids named by a test.
+- `checks/words.mjs /home/user/bio strength`: 0 failures (16 accepted unkeyed lines; no new string added).
+- `checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`: 0 failures.
+- `checks/run.mjs /home/user/bio`: strength 0 findings. Reds are other modules': coverage in agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, screens-inquiry R110 R119, screens-intake R53; words testcopy op-grades t37.test.mjs:32. Channels, architecture, format: 0 failures.
+
+Size (session_01WkkQhSa7yYkmopteVFH7CB): test runs 5, module lines 2971
