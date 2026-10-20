@@ -78,3 +78,13 @@ FR-24 is built and pushed (job record: "Completion (FR-24)"); three things need 
 3. **T-19 reading (replaces nothing; first question).** On `join` the "Read the invitation" button is drawn only inside the form, that is, after the read has answered, so "before the read it draws its old key" has no state. My reading: the button always draws `screen.join.invite.reread`; the test checks that, that nothing to read is drawn while the read is pending, and that the old label is not drawn. Say if you meant something else.
 
 Also: FR-39 (instance-setup) had not merged when I built; I used the answer's shape from its START (`domain_claim.well_known` on the credentialed `groupidentity`, `well_known` on `groupdomainset`). If it lands under other names, only `domainFile()` in `setup.mjs` changes.
+
+## Completion (FR-24, restart #7)
+
+Re-opened after restart: BOB's B7 answered J4. Merged `tranche/T51` (instance-setup R100's `domain_claim.well_known {path, body}` / `well_known` match `domainFile()`; nothing to conform). R26 and R30 are now written by me in `build/requirements/screens-entry.md` (K4210), marked *(not yet met: T51)*; the tests name them. T-19 stands as B7 ruled.
+
+**Deferred / other modules.** R10 stays red on the design word `screen.domainfile.refused.malformed` ("lakeshoretenants.org"), accepted by name at merge until the design lane rewords it (B7 (2)); BOB hands it to UX-DESIGN.
+
+**Tests and checks.** `node --test bio-plane/test/m/screens-entry/`: tests 92, pass 91, fail 1 (R10, the design word). `checks/format.mjs`: 0. `architecture.mjs screens-entry`: 0. `coverage.mjs screens-entry`: 27 of 27 ids named, 0. `words.mjs screens-entry`: 0. `ownership.mjs screens-entry tranche/T51 job/T51/screens-entry`: 6 files, 0 failures. `checks/run.mjs`: no line names screens-entry (26 words failures are other modules').
+
+Size (session_011edZAMwB3Jh7b7Kg9KXTCE): test runs 2, module lines 1127
