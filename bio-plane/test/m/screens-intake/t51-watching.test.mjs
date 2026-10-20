@@ -9,7 +9,7 @@ const MEMBERS = ok({ members: [{ member_id: "rosa", handle: "Rosa-h" }, { member
 const ITEMS = [
   { state: "due", bundle: "INFO-1", address: "oaklandca.gov/resources/street-maintenance-report-2026", frequency: "weekly", last_checked: "2026-10-07T10:00:00Z", due_at: "2026-10-14T10:00:00Z" },
   { state: "scheduled", bundle: "INFO-2", address: "oaklandca.gov/government/city-council-agendas", frequency: "per_meeting", last_checked: "2026-10-08T10:00:00Z", next_at: "2026-10-15T10:00:00Z" },
-  { state: "unscheduled", bundle: "INFO-3", address: "alamedacounty.org/assessor/parcel-roll", frequency: null, reason: "no frequency declared" },
+  { state: "unscheduled", bundle: "INFO-3", address: "alamedacounty.org/assessor/parcel-roll", frequency: null, reason: "a reason of the plane" },
   { state: "ended", bundle: "INFO-4", address: "oaklandca.gov/old-garage-rules", frequency: "monthly", until: "2026-10-01", until_set: { by: "member:dev", at: "2026-09-20T10:00:00Z" } }];
 const LIST = (paused = { paused: false }, items = ITEMS) => ok({ ok: true, as_of: "2026-10-14T00:00:00Z", configured: true, paused, items,
   counts: { due: 1, scheduled: 1, unscheduled: 1, ended: 1 }, limit: 200, truncated: false });
