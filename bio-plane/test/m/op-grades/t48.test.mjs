@@ -242,18 +242,18 @@ test("R42: MARKS is frozen and total over the registry's rungless acts — a rea
 
 test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` key for an owed act), an op the kit does not "
    + "name Reasoned, the kit's default; the kit and the registry are read at the commit the marks name", () => {
-  assert.equal(MARKS_KIT_COMMIT, "206ed4755b");
+  assert.equal(MARKS_KIT_COMMIT, "e6d16d8f53");
   for (const op of Object.keys(MARKS)) {
     /* notewrite is the one entry a ruling, not the kit, sets (R46, DEC-300 (5)); t50.test.mjs names it */
     if (op === "notewrite") continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
-    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at 206ed4755b$/ : /^kit default at 206ed4755b/, op);
+    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at e6d16d8f53$/ : /^kit default at e6d16d8f53/, op);
   }
   /* the kit now names acquire Reversible (K3284), so it is read from the kit like any other and no override remains */
   assert.equal(KIT_WEIGHT.acquire, 1);
   assert.equal(MARKS.acquire, "Reversible");
-  assert.match(MARK_SOURCES.acquire, /^mock-kit\.js WEIGHT at 206ed4755b$/);
+  assert.match(MARK_SOURCES.acquire, /^mock-kit\.js WEIGHT at e6d16d8f53$/);
   assert.ok(Object.values(MARK_SOURCES).every((s) => !s.startsWith("K3284")), "no entry still names the retired override");
   /* the examples R42 names: login is reversible, promote reasoned; and the interface-shell R64 examples */
   assert.equal(MARKS.login, "Reversible");

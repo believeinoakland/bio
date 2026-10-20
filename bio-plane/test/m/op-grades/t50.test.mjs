@@ -75,7 +75,7 @@ test("R45 R3: the `undetermined` tally rises by one for actioninquiry, and R47's
 
 test("R46: MARKS_KIT_COMMIT is the design commit the tree holds, and MARKS holds the kit's weight for every rungless "
    + "registered act at that commit; the five R45 grades and actioninquiry hold no mark", () => {
-  assert.equal(MARKS_KIT_COMMIT, "206ed4755b");
+  assert.equal(MARKS_KIT_COMMIT, "e6d16d8f53");
   for (const op of [...REVERSIBLE, "actioninquiry", "planopen", "wizarddraft", "membertie", "declaretie"])
     assert.ok(!Object.hasOwn(MARKS, op), `${op} is graded, so it takes no mark`);
   /* controls: a graded op left in MARKS is seen; an op the kit does not name is Reasoned, not absent */

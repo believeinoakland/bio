@@ -19,16 +19,16 @@
  * `undetermined`), and `planopen`, `wizarddraft` and `membertie`, which R47 grades `reversible`. `notewrite` is the one entry
  * no kit names: DEC-300 (5) weighs it Reversible, so its source is that ruling and not the kit's default.
  *
- * (R46; T51 fix round) Re-taken at `MARKS_KIT_COMMIT` `206ed4755b`, the design as `tranche/T51` holds it (DEC-381): the registry lists 33
+ * (R46; T51 fix round) Re-taken at `MARKS_KIT_COMMIT` `e6d16d8f53`, the design as `tranche/T51` holds it (DEC-382): the registry lists 39
  * more rungless acts than at `7be06eb4cb` (the new screens' reads and the bias, case-details, rerun, task, source-login, origin and close acts), each added
  * with the kit's weight or the default; no earlier entry changed weight and none is dropped. An op that its owner later
  * declares a rung (`registerDeclaredOps`, R49) has a rung, and the shell draws that: the entry is then unread. */
 
-/* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`206ed4755b`, R46, re-taken in the
+/* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`e6d16d8f53`, R46, re-taken in the
    fix round, T51 FR-03), which moved both files on from `7be06eb4cb` (the design's last merge into `tranche/T50`, K3750) */
 import { localize } from "../setup-words/index.mjs";
 
-export const MARKS_KIT_COMMIT = "206ed4755b";
+export const MARKS_KIT_COMMIT = "e6d16d8f53";
 
 const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
@@ -62,6 +62,7 @@ const ROWS = [
   ["casedetails", "Reversible", "kit"],
   ["casedetailspublic", "Reversible", "kit"],
   ["casedetailsset", "Reversible", "kit"],
+  ["citeimported", "Reversible", "kit"],
   ["claim", "Signed", "kit"],
   ["committedagainstpaid", "Reversible", "kit"],
   ["connect", "Reversible", "kit"],
@@ -121,6 +122,8 @@ const ROWS = [
   ["monitoring", "Reversible", "kit"],
   ["monitorpause", "Reversible", "kit"],
   ["monitorslate", "Reversible", "kit"],
+  ["namedrequests", "Reasoned", "default"],
+  ["namedrequestset", "Reversible", "kit"],
   ["notedelete", "Reasoned", "default"],
   ["noterevise", "Reasoned", "default"],
   ["noteturn", "Reasoned", "default"],
@@ -201,7 +204,9 @@ const ROWS = [
   ["startfrom", "Reversible", "kit"],
   ["subscriptiondisconnect", "Terminal", "kit"],
   ["subscriptionsignin", "Reasoned", "default"],
+  ["sweepratify", "Reversible", "kit"],
   ["sweeps", "Reversible", "kit"],
+  ["sweepset", "Reversible", "kit"],
   ["taskdecide", "Reasoned", "kit"],
   ["themeread", "Reversible", "kit"],
   ["translationdraft", "Reversible", "kit"],
@@ -210,6 +215,7 @@ const ROWS = [
   ["verify", "Reversible", "kit"],
   ["versionnotice", "Reasoned", "default"],
   ["websitekeycreate", "Reasoned", "default"],
+  ["withdrawimported", "Reasoned", "kit"],
   ["wizards", "Reversible", "kit"],
   ["writinghelp", "Reasoned", "default"],
 ];
