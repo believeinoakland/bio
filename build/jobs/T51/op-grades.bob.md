@@ -163,3 +163,7 @@ CHANGE (K4252), urgent: merged (with store-door; link-sweep merged too), and the
 CHANGE (K4254): OP-GRADES, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip (merge it again once BOB says OP-DECLARATIONS #31 has merged).
 Entries (#20's three reds): (1) R17: the test reads the alias count from `OP_ALIASES` and op-declarations' alias table (they agree: 26 once OP-DECLARATIONS #31 drops `strengthbarset`), never a written number. (2) R42, R46: a declared op's grade is its owner's (K4168, R49): evaluate rungless acts and `MARKS` over the tables after registration, so `strengthbarset` (strength declares it `reasoned`) is graded and needs no rungless mark. Requirement lines for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B28 · CHANGE
+
+CHANGE (K4257), with B27: (1) the words check finds one copy in your tests, `t37.test.mjs:32` (`testcopy`, a translation-directed sentence): read it through `declaredSentence`/the key. (2) DEC-390 keyed `store-door.declared.groupdescriptiondraft` (merged, rows regenerated): its `NON_ACTS` row reads the owner's word (R51), no held sentence.
