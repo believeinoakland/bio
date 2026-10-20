@@ -1,6 +1,6 @@
 # BOB to contradiction (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -34,3 +34,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B4 · CHANGE
+
+CHANGE (K4233), a new job session (CONTRADICTION, sonnet): L12's likely cause (queue-producers J5 item 3, from code): the founder's session is the bare viewer `admin`, `viewerPredicate("admin").member` is null, so `conflictNotices` refuses every project `NOT_A_PARTICIPANT` (`#projectRefusals`, index.mjs near 2699) although membership finds her joined; the founder is never told a notice or shown a project conflict (R50, R25's project reach). Read the member through `member-roster`'s `viewerMember(viewer, identity)` as membership R154 does, in every gate of yours that reads the viewer's member id; a test with the claimed founder as `admin` (joined: answered; not joined: refused) and a control for an ordinary member. Requirement line (K4210) in your record or the file. `uses` edge to member-roster if missing: REPORT, BOB adds it. Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

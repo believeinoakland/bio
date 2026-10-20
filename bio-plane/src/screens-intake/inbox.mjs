@@ -83,12 +83,23 @@ function renderInbox(cs, view) {
     /* R32 (3): a delivery's id (and its source's) appears only on a folded "Reference" line, for support */
     const reference = `<details class="mk-details" data-reference="knock"><summary>${cs.w("reference.label")}</summary><p class="mk-small"><span class="id">${cs.esc(k.knock_id || id)}</span>`
       + `${src ? ` · <span class="id">${cs.esc(src)}</span>` : ""}</p></details>`;
+    /* R43 (C17; DEC-375): the other material from the same knocker (`knocksof`, by the pseudonym), listed only where the inbox
+       already holds another knock of it; and, for a knock in the record, the door to what is known of its source */
+    const alike = L.knocker && L.knocker.pseudonym === k.pseudonym && Array.isArray(L.knocker.knocks) ? L.knocker.knocks.filter((x) => x && x.knock_id !== k.knock_id) : null;
+    const knocker = !k.pseudonym || (!same(k) && !(alike && alike.length)) ? ""
+      : cs.sec("screen.inbox.knocker.heading", (alike && alike.length
+          ? cs.sheet(alike.map((x) => `<div class="cs-row" role="listitem"><span>${cs.ref("knock", x.knock_id, plain(handed(x)), card(x))}</span></div>`).join(""))
+            + `<p class="mk-small muted">${cs.w("screen.inbox.knocker.same1")} ${cs.w("screen.inbox.knocker.same2")}</p>` : "")
+          + `<div class="mk-acts">${cs.act("knocksof", { data: { pseudonym: k.pseudonym } })}</div>`,
+        { help: ["screen.inbox.knocker.help1", "screen.inbox.knocker.help2"] });
+    const door = typeof k.capture_sha === "string" && k.capture_sha && src
+      ? cs.row(cs.icon("person"), cs.w("screen.inbox.source.line"), cs.ref("source", k.capture_sha, plain(cs.w("screen.about-knocker.name")), [cs.w("screen.inbox.source.line")])) : "";
     return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${ladder(at)}`
       + (k.status === "new" ? `<div class="mk-acts">${cs.act("inboxpull", { tone: "primary" })}</div>`
         /* R32 (1): discarding asks why first (`inbox.discard.why`), the words sent as `reason` */
         + cs.field("cx-why", "inbox.discard.why", { area: true, rec: true, value: L.why || "" })
         + `<div class="mk-acts">${cs.act("inboxresolve")}</div>` : "")
-      + link + reference + "</section>";
+      + link + (door ? cs.sheet(door) : "") + knocker + reference + "</section>";
   });
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.inbox.sub")}</p></div>`
     + one
@@ -137,6 +148,18 @@ function doneDiscard(view, answer, cs) {
   cs.set("pulled", false);
 }
 
+/* R43 (C17; doorbell R15): "See this knocker's other material": `knocksof` by the knock's pseudonym; the answer's knocks are kept in
+ * page memory and drawn beside the knock, this one left out. */
+function sendKnocksOf(view, el, cs) {
+  const pseudonym = el && el.dataset ? String(el.dataset.pseudonym || "") : "";
+  return pseudonym ? { body: { pseudonym } } : null;
+}
+function doneKnocksOf(view, answer, cs) {
+  const a = answer || {};
+  const sent = view.ui && view.ui.knocksFor;
+  cs.set("knocker", { pseudonym: typeof a.pseudonym === "string" ? a.pseudonym : sent || "", knocks: Array.isArray(a.knocks) ? a.knocks : [] });
+}
+
 /* R7, R12: "Record what is known of the source" (`sourcelink`, sources R6): this knock's source as `sourceof` read it,
  * the source chosen as the same person, and what shows it. No source id is typed. */
 function sendSourceLink(view, el, cs) {
@@ -163,5 +186,6 @@ export const INBOX_SCREEN = Object.freeze({
     Object.freeze({ op: "inboxresolve", label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard, reasonField: "reason",
                     refusals: Object.freeze({ RESOLVE_NO_REASON: "refusal.RESOLVE_NO_REASON" }) }),
     Object.freeze({ op: "sourcelink", label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink, reasonField: "evidence" }),
+    Object.freeze({ op: "knocksof", label: "act.knocksof.label.inbox", send: sendKnocksOf, done: doneKnocksOf }),
   ]),
 });

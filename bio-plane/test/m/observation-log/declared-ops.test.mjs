@@ -54,3 +54,19 @@ test("R39 observation-log declares leadread: its requires alone raise no refusal
   await declaredOpHolds({ op: "leadread", declaration: DECLARED_OPS["leadread"], call: mk("leadread", {"viewer":"member:alice"}, null, null, (fields, env) => (withLead(fields, env))),
     refusedNaming: named({"id":["LEAD_NOT_FOUND"]}, true), same: sameCode });
 });
+
+test("R39 observation-log declares leadlist: it requires nothing, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "leadlist", declaration: DECLARED_OPS["leadlist"], call: mk("leadlist", {"viewer":"member:alice"}, null, null, null),
+    values: { limit: "5" }, same: sameCode });
+});
+
+test("R39 R20 leadlist as declared lists the leads its viewer may read and none other", async () => {
+  const w = await mkGroup();
+  const other = w.obs.lead({ words: "bob's private lead", author: "bob" });
+  assert.equal(other.ok, true, JSON.stringify(other));
+  const ask = (viewer) => observationLogOps(w.obs, new URL("http://x/?" + new URLSearchParams({ op: "leadlist", viewer })), null).leadlist();
+  const mine = ask("member:alice");
+  assert.deepEqual(mine.leads.map((l) => l.lead_id), [w.leadId]);
+  assert.equal(mine.truncated, false);
+  assert.equal(mine.leads.some((l) => l.lead_id === other.lead_id), false);
+});

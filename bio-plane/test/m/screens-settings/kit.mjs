@@ -5,6 +5,7 @@
 
    `html(s)` reads an HTML string into a small tree (elements, attributes, text), so the tests can find what a screen
    drew: its text nodes, its acts (`[data-act]`), its fields and its links. `w`/`said` give a word's expected text. */
+import "./register.mjs";
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, pending, silent } from "../interface-shell/harness.mjs";
 import { decode } from "../interface-shell/dom.mjs";
@@ -86,6 +87,8 @@ export const day = (iso) => { const [y, m, d] = String(iso).slice(0, 10).split("
 
 // ---- the served page, over the shell's harness ----
 
+const SHELL_REASON = "Because the team agreed to it.";
+
 /** An answer as the fake plane gives it (`fixtures.mjs`), turned into the harness's response. */
 function toResponse(a) {
   if (a === "pending") return pending;
@@ -131,6 +134,16 @@ export async function open(id, { me, table, subject = null, reachable = false, w
     await b.settle(40);
     out.redraw();
   };
+  /** Ticks (or unticks) a box or picks a radio the screen drew, as a member would, and settles with the screen drawn again (a `redraw` choice). */
+  out.tick = async (fid, on = true) => {
+    const el = b.doc.getElementById(fid);
+    if (!el) throw new Error(`${id}: no box ${fid} drawn`);
+    if (el.type === "radio" && on) for (const r of b.doc.querySelectorAll('input[type="radio"]')) if (r.getAttribute("name") === el.getAttribute("name")) r.checked = false;
+    el.checked = on;
+    b.fire(el, "change");
+    await b.settle(40);
+    out.redraw();
+  };
   out.press = async (op, { data = {}, values = {}, reason, wait = false, choose = {} } = {}) => {
     const doc = b.doc;
     for (const [cid, v] of Object.entries(choose)) await out.choose(cid, v);
@@ -153,13 +166,18 @@ export async function open(id, { me, table, subject = null, reachable = false, w
     // an act whose send awaits the browser's own work (the signer's key, WebCrypto) is waited for until it is sent
     for (let i = 0; i < 200 && wait && !b.requests.slice(before).some((r) => r.op === op); i++) await new Promise((res) => setTimeout(res, 5)).then(() => b.settle(10));
     const ta = doc.getElementById("cs-reason-" + String(ai).replace(":", "-"));
-    if (ta && reason !== undefined) { ta.value = reason; b.fire(doc.querySelector(`[data-shell="reason-send"][data-for="${ai}"]`), "click"); await b.settle(80); }
-    const sent = b.requests.slice(before).map((r) => { const q = { ...r.query }; delete q.op; return { op: r.op, query: q, body: r.body, headers: r.headers, method: r.method }; });
+    // a member gives the reason an act asks (interface-shell R107); a test that means to leave it unanswered passes `reason: null`
+    const give = reason === undefined ? SHELL_REASON : reason;
+    if (ta && give !== null) { ta.value = give; b.fire(doc.querySelector(`[data-shell="reason-send"][data-for="${ai}"]`), "click"); await b.settle(80); }
+    // the reason the harness gave in the shell's box is the shell's mark, not a declared field (B18): it is left out of `sent` unless the test gave its own
+    const sent = b.requests.slice(before).map((r) => { const q = { ...r.query }; delete q.op; let body = r.body;
+      if (reason === undefined && ta && body && body.reason === SHELL_REASON) { body = { ...body }; delete body.reason; }
+      return { op: r.op, query: q, body, headers: r.headers, method: r.method }; });
     const slot = main().querySelector(`[data-slot="${ai}"]`);
     const said2 = slot ? squash(decode(slot.textContent)) : "";
     out.refused = said2 ? { text: said2, key: keyOf(said2) } : null;
     out.redraw();
-    return { sent, refused: !!said2 && !ta, asked: !!ta };
+    return { sent, refused: !!said2 && (!ta || give !== null), asked: !!ta };
   };
   return out;
 }

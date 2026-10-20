@@ -32,6 +32,7 @@ const VALUES = {
   captureaccounts: { ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-01T00:00:00Z" }], accounts: [] },
   projectlist: { projects: [{ id: "PROJ-1", name: "P" }] },
   memberlist: { members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }] },
+  capturerequests: { ok: true, requests: [{ request: "CR-1", host: "records.example.gov", state: "refused", source_reason: "login", requested_at: "2026-10-01T00:00:00Z", principal_plane: "member:mai" }] },
 };
 const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] }, opencaptures: { ok: true, captures: [] },
                 archivelist: { ok: true, archive: {}, summary: {}, entries: [] } };
@@ -39,8 +40,8 @@ const READS = Object.keys(VALUES);
 /* the ops a screen declares: its reads' and its acts' */
 const declared = (id) => { const s = SCREENS.find((x) => x.id === id); return [s, Object.values(s.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} })).map((r) => r.op), s.acts.map((a) => a.op)]; };
 
-test("R8 R15 SCREENS meets interface-shell R21: five registry screens, archive among them, served by interfacePage without a throw", () => {
-  assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox"]);
+test("R8 R15 SCREENS meets interface-shell R21: eight registry screens, archive and the three of the T51 fix round among them, served by interfacePage without a throw", () => {
+  assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox", "about-knocker", "leads", "watching"]);
   assert.ok(Object.isFrozen(SCREENS));
   assert.equal(checkScreens(SCREENS), true);
   assert.match(interfacePage(SCREENS), /<script nonce=/);

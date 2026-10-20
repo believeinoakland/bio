@@ -236,7 +236,7 @@ test("R60: every feed is a row (tasks, the producers' feeds, notice-producers); 
   const f = setup().feed("alice");
   assert.deepEqual(f.feeds.map((x) => x.feed), ["tasks", "bias-debts", "proposals", "shared-inquiries", "leads", "exports", "references",
     "objectives", "sources", "machinery", "contradictions", "signing-keys", "action", "attribution", "docket", "cited-cases", "wizards",
-    "schedule", "places", "projects", "notice-producers"]);
+    "schedule", "places", "projects", "members", "notice-producers"]);
   for (const x of f.feeds) assert.deepEqual(Object.keys(x), ["feed", "classes", "answered", "failed", "ms"]);
   assert.deepEqual(f.classes, ["OBLIGATION", "FINDING", "CONDITION"]);
   assert.deepEqual(f.classes_deferred, {});

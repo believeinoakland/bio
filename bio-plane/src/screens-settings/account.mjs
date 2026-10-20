@@ -10,7 +10,9 @@
    with the member's ticks and optional passphrase, deferring the file), and once made says so, with "Save the key file" and "Copy the
    public line" as acts of their own; a key an administrator registered for the member is drawn "registered for you by <who>" (the
    roster, `memberlist`, names who); and a reference to the glossary beside connect, ties and notes. The key file and the passphrase live in
-   page memory for the sitting and are never drawn again, stored or sent (R10). */
+   page memory for the sitting and are never drawn again, stored or sent (R10).
+   T51 FR-25 (R67; C81; DEC-376): "Your cover name": the cover the team knows the member by and the handle her work shows, and the choice
+   whether the two are published together (`memberpairingset`), read from `memberpairings` and read again after the act. */
 
 export const account = {
   id: "account",
@@ -26,6 +28,8 @@ export const account = {
       signers: { op: "signerlist" },
       // who registered a key for the member, named by handle (R57; a member's read, `op-declarations`)
       roster: { op: "memberlist" },
+      // the pairings the viewer may see: hers, and the published (member-roster R19); R67 reads the stored choice from hers
+      pairings: { op: "memberpairings" },
     };
   },
 
@@ -73,6 +77,16 @@ export const account = {
     const dec = cs.act("expertisedeclare");
     if (dec) ex += `${cs.field("ma-exp", S + "expertise.field", { help: S + "expertise.help" })}${dec}`;
     out.push(cs.sec(S + "expertise.heading", ex));
+
+    // R67: the cover the team knows her by and the handle her work shows, and whether the two are published together; the stored choice is
+    // the one chosen, none else. A member the pairings do not hold (the founder holds no cover) or a read that failed is drawn no choice
+    const mineP = data.pairings && data.pairings.state === "ok" && data.pairings.value && Array.isArray(data.pairings.value.pairings)
+      ? data.pairings.value.pairings.find((x) => x && x.handle !== null && x.handle === me.handle) || null : null;
+    const pairSet = mineP ? cs.act("memberpairingset", { label: S + "pairing.save" }) : "";
+    if (pairSet) {
+      const pub = mineP.published === true;
+      out.push(cs.sec(S + "pairing.head", `<p>${W(S + "pairing.says", { cover: mineP.cover, handle: me.handle })}</p><p>${W(S + "pairing.choose")}</p>${cs.checks("ma-pair", S + "pairing.legend", [["private", S + "pairing.private", !pub], ["public", S + "pairing.public", pub]], { radio: true })}<p class="mk-note">${W(S + "pairing.change")}</p>${pairSet}<p class="mk-note">${W(S + "pairing.undone")}</p>`));
+    }
 
     // the password, typed twice alike (setup-page R3's rule); no field is drawn with what was typed (R10)
     const pw = cs.act("setpassword");
@@ -162,6 +176,9 @@ export const account = {
     { op: "signerrevokeown", rereads: ["signers"],
       send(view, el) { return { body: { keyB64: el.dataset.key } }; } },
     // then the shell draws `front`'s signed-out state, as the masthead's "Sign out" does (interface-shell R4, R32)
+    // whether the cover and the handle are published together: the stored choice is the one drawn chosen, and the answer is read back (R67)
+    { op: "memberpairingset", rereads: ["pairings"],
+      send(view, el, cs) { return { body: { memberId: String((view.me && view.me.member) || ""), published: cs.value("ma-pair-1") === true } }; } },
     { op: "signout", rereads: [],
       send() { return { body: {} }; },
       done(view, answer, cs) { cs.signedOut(); return { stay: true }; } },

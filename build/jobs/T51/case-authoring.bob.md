@@ -81,3 +81,9 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B9 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B10 · CHANGE
+
+CHANGE (K4240): CASE-AUTHORING, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry: `publishpreflight`'s `not_co_attested` lists capture ids only, so the ceremony cannot say who captured each nor which finding rests on it (`screen.ceremony.conf.intro2` {finding} is undrawable; SCREENS-PUBLISH #9 J9 (3)). Each entry becomes `{capture, by, findings: [finding ids resting on it]}` (`by` the capturing member as the record holds it); an older reader of the list keeps working only if you keep the id under `capture`. Test at the interface; control: a capture no finding rests on is not listed. Requirement line for BOB in your COMPLETE; tell BOB if a user other than screens-publish reads the list.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.

@@ -125,13 +125,11 @@ test("R2 every registry act is drawn for an administrator where it applies, each
 test("R2 memberadd: the short id, the cover and the capabilities ticked; the invitation answered shown once, with the sentence that no email is sent", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   has(a, "screen.members.invite.noemail");
-  const r = await a.press("memberadd", { values: { "mi-id": "mai-k2", "mi-cover": "Mai's cousin", "mi-cap-contribute": true, "mi-cap-publish": true } });
+  const r = await a.press("memberadd", { values: { "mi-id": "mai-k2", "mi-cover": "Mai's cousin", "mi-caps-0": true, "mi-caps-1": true } });
   assert.deepEqual([r.sent[0].op, r.sent[0].query, r.sent[0].body, r.sent[0].method], ["memberadd", {}, { memberId: "mai-k2", cover: "Mai's cousin", capabilities: ["contribute", "publish"] }, "POST"]);
   assert.equal(r.sent[0].headers.Authorization, "Bearer tok-1", "the session in the header only");
   const shown = all(a.tree, (e) => e.attrs["data-shown"] === "invite")[0];
   assert.ok(textOf(shown).includes("https://group.example/#invite=0123456789abcdef0123456789abcdef"));
-  const admin = await a.press("memberadd", { values: { "mi-id": "lee", "mi-cover": "Lee", "mi-cap-contribute": true, "mi-cap-administer": true } });
-  assert.equal(admin.sent[0].body.role, "admin");
   const held = await a.press("memberadd", { values: { "mi-id": "", "mi-cover": "x" } });
   assert.deepEqual(held.sent, []);
   assert.equal(a.refused.key, "screen.members.invite.incomplete");
@@ -290,7 +288,7 @@ test("R55 a registered_by or status_by of `not recorded`, or a null status_at, i
 test("R55 Register a key for this member (signeradd): the pasted line is split into keyB64 and comment, with memberId; a line not of that shape, a private key or an empty line sends nothing", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   const opts = all(all(a.tree, (e) => e.attrs.id === "ms-who")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]);
-  assert.deepEqual(opts, [["rosa", "rosa"], ["dev", "dev"], ["ana", "ana"], ["lu", "lu"]], "the active members who have a handle");
+  assert.deepEqual(opts, [["rosa", "rosa"], ["dev", "dev"], ["ana", "ana"], ["lu", "lu"]], "the active members who have a handle; the founder, holding none in this roster, is not among them (R64)");
   has(a, "screen.members.keys.whose"); has(a, "screen.members.keys.public"); has(a, "screen.members.keys.public.help");
   has(a, "screen.members.the.one.line.the.member"); has(a, "screen.members.the.record.shows.that.you"); has(a, "screen.members.they.see.it.under.your");
   const line = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAnaKey0000000000000000000000000000000000 ana@laptop";
@@ -460,4 +458,115 @@ test("R56 a removal under way is drawn from adminremovalsopen alone: who it wait
   // a member who does not administer reads none of it
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   assert.ok(!m.p.requests.some((r) => r.op === "adminremovalsopen"));
+});
+
+/* ---- T51 FR-25: C79 and DEC-386 (R63), C80 (R64), L30 (R71), T-05 (R72) ---- */
+
+const CPA_CONFIRMED = { label: "CPA", state: "confirmed", confirmed: true, by: "rosa", at: "2026-10-05T10:00:00Z", history: [] };
+const withExpertise = (member, expertise) => ROSTER.map((m) => (m.member_id === member ? { ...m, expertise } : m));
+
+test("R63 a confirmed expertise offers Withdraw an expertise, its own act: expertisewithdraw sends memberId, label and the reason; an unconfirmed one still offers Confirm and no withdrawal (control)", async () => {
+  const table = membersTable({
+    memberlist: env({ members: [FOUNDER_ROW, ...withExpertise("ana", [CPA_CONFIRMED, { label: "Zoning", state: "declared", confirmed: false, by: null, at: "2026-10-06T10:00:00Z", history: [] }])] }),
+    expertiselist: (q) => env({ ok: true, memberId: q.memberId, expertise: [CPA_CONFIRMED, { label: "Zoning", state: "declared", confirmed: false, by: null, at: "2026-10-06T10:00:00Z", history: [] }], gates: "nothing" }),
+    expertisewithdraw: (q, b) => env({ ok: true, memberId: b.memberId, label: b.label, state: "withdrawn", confirmed: false, by: "rosa", reason: b.reason }),
+  });
+  const a = await open("members", { me: ADMIN, table, subject: "ana" });
+  const panel = panelOf(a.tree, "ana");
+  const withdraw = btn(panel, "expertisewithdraw");
+  assert.equal(withdraw.length, 1, "one withdrawal, for the confirmed label");
+  assert.equal(withdraw[0].attrs["data-label"], "CPA");
+  assert.ok(textOf(withdraw[0]).includes(said("act.owed_expertisewithdraw.label.members")));
+  assert.deepEqual(btn(panel, "expertiseconfirm").map((b) => b.attrs["data-label"]), ["Zoning"], "control: the declared one is confirmed, not withdrawn");
+  const r = await a.press("expertisewithdraw", { data: { member: "ana", label: "CPA" }, reason: "She no longer practises." });
+  assert.equal(r.asked, true, "an administrator's act asks its reason (interface-shell R107)");
+  assert.deepEqual([r.sent[0].op, r.sent[0].body], ["expertisewithdraw", { memberId: "ana", label: "CPA", reason: "She no longer practises." }]);
+  assert.ok(r.sent.some((x) => x.op === "memberlist") && r.sent.some((x) => x.op === "expertiselist"), "the roster and the expertise are read again");
+  // nothing is sent until a reason is given
+  const none = await a.press("expertisewithdraw", { data: { member: "ana", label: "CPA" }, reason: null });
+  assert.deepEqual(none.sent, []);
+  // confirming still sends expertiseconfirm
+  const c = await a.press("expertiseconfirm", { data: { member: "ana", label: "Zoning" } });
+  assert.deepEqual([c.sent[0].op, c.sent[0].body], ["expertiseconfirm", { memberId: "ana", label: "Zoning" }]);
+});
+
+test("R63 control: no withdrawal for an expertise already withdrawn, nor to a member who does not administer", async () => {
+  const gone = { ...CPA_CONFIRMED, state: "withdrawn", confirmed: false };
+  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [FOUNDER_ROW, ...withExpertise("ana", [gone])] }), expertiselist: (q) => env({ ok: true, memberId: q.memberId, expertise: [gone], gates: "nothing" }) }), subject: "ana" });
+  assert.deepEqual(btn(a.tree, "expertisewithdraw"), []);
+  const m = await open("members", { me: MEMBER, table: membersTableMember({ memberlist: env({ members: [FOUNDER_ROW, ...withExpertise("ana", [CPA_CONFIRMED]).map(({ cover, invitation, ...r }) => r)] }) }) });
+  assert.deepEqual(acts(m.tree), []);
+});
+
+test("R64 the signing-key chooser lists the founder, first, once the instance is claimed and she holds a handle; a roster without her row, or her with none, is unchanged (control)", async () => {
+  const named = { ...FOUNDER_ROW, handle: "sparky" };
+  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [named, ...ROSTER] }) }) });
+  const opts = all(all(a.tree, (e) => e.attrs.id === "ms-who")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]);
+  assert.deepEqual(opts, [["admin", "sparky"], ["rosa", "rosa"], ["dev", "dev"], ["ana", "ana"], ["lu", "lu"]]);
+  // a key registered for her is registered for the id the roster holds her under
+  const key = "AAAAC3NzaC1lZDI1NTE5AAAAIFounderKey000000000000000000000000000001";
+  const r = await a.press("signeradd", { choose: { "ms-who": "admin" }, values: { "ms-line": "ssh-ed25519 " + key } });
+  assert.deepEqual(r.sent[0].body, { memberId: "admin", keyB64: key });
+  // control: before the claim the roster holds no row for her; claimed with no handle held she is not offered
+  const unclaimed = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: ROSTER }) }) });
+  assert.deepEqual(all(all(unclaimed.tree, (e) => e.attrs.id === "ms-who")[0], (e) => e.tag === "option").map((o) => o.attrs.value), ["rosa", "dev", "ana", "lu"]);
+  const nameless = await open("members", { me: ADMIN, table: membersTable() });
+  assert.ok(!all(all(nameless.tree, (e) => e.attrs.id === "ms-who")[0], (e) => e.tag === "option").some((o) => o.attrs.value === "admin"));
+});
+
+test("R71 a member's name is a reference to their handle, not to the id they were invited under; opening that address opens that member's row", async () => {
+  const joined = { member_id: "journeys-newcomer", handle: "jrn-newcomer", role: "member", status: "active", capabilities: ["contribute"], cover: "Journeys newcomer", expertise: [CPA_CONFIRMED], invitation: "spent" };
+  const table = membersTable({ memberlist: env({ members: [FOUNDER_ROW, ...ROSTER, joined] }), expertiselist: (q) => (q.memberId === "journeys-newcomer" ? env({ ok: true, memberId: q.memberId, expertise: [CPA_CONFIRMED], gates: "nothing" }) : refuse("NO_SUCH_MEMBER")) });
+  const a = await open("members", { me: ADMIN, table, subject: "jrn-newcomer" });
+  const row = rowOf(a.tree, "journeys-newcomer", "jrn-newcomer");
+  const refs = all(row, (e) => e.tag === "a" && /^\/app\/members\//.test(e.attrs.href || ""));
+  assert.deepEqual(refs.map((e) => e.attrs.href), ["/app/members/jrn-newcomer"], "the address carries the handle");
+  assert.ok(!all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/members/journeys-newcomer").length, "never the id");
+  // the row for that address is open, with its own expertise and acts
+  assert.ok(btn(panelOf(a.tree, "journeys-newcomer"), "expertisewithdraw").length, "its panel is open");
+  // control: an address that is the id still opens the row (a link kept from before)
+  const old = await open("members", { me: ADMIN, table, subject: "journeys-newcomer" });
+  assert.ok(btn(panelOf(old.tree, "journeys-newcomer"), "expertisewithdraw").length);
+  // control: a member whose handle equals their id is unchanged
+  assert.ok(all(rowOf(a.tree, "ana", "ana"), (e) => e.tag === "a" && e.attrs.href === "/app/members/ana").length);
+});
+
+test("R72 choosing the grant that includes administering draws the confirmation and sends nothing; Go back sends nothing and unticks it; Make them an administrator sends the declared fields; a grant without administering sends at once (control)", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const fill = { "mi-id": "lee", "mi-cover": "Lee from 62nd" };
+  const caps = (vocab) => [...vocab, "administer"];
+  const idx = caps(ADMIN.vocabulary).indexOf("administer");
+  // nothing drawn before the choice; the invitation button is there
+  lacks(a, "screen.members.cap.administer.confirm.head", { who: "Lee from 62nd" });
+  // type who, then choose the grant
+  for (const [id, v] of Object.entries(fill)) { const el = a.b.doc.getElementById(id); el.value = v; }
+  const before = a.p.requests.length;
+  await a.tick("mi-caps-" + idx, true);
+  has(a, "screen.members.cap.administer.confirm.head", { who: "Lee from 62nd" });
+  has(a, "screen.members.cap.administer.confirm", { who: "Lee from 62nd" });
+  has(a, "screen.members.cap.administer.confirm.yes", { who: "Lee from 62nd" });
+  has(a, "screen.members.cap.administer.confirm.no");
+  assert.equal(a.p.requests.length, before, "choosing sends nothing");
+  assert.deepEqual(btn(a.tree, "memberadd"), [], "the invitation waits for the answer");
+  // Go back: nothing sent, the grant is unticked and the invitation button is back
+  await a.tick("mi-ok-1", true);
+  assert.equal(a.p.requests.length, before, "Go back sends nothing");
+  lacks(a, "screen.members.cap.administer.confirm.head", { who: "Lee from 62nd" });
+  assert.equal(a.b.doc.getElementById("mi-caps-" + idx).checked, false);
+  assert.equal(btn(a.tree, "memberadd").length, 1);
+  // choose it again and confirm: the declared fields are sent
+  await a.tick("mi-caps-" + idx, true);
+  await a.tick("mi-ok-0", true);
+  const r = await a.press("memberadd", {});
+  assert.deepEqual(r.sent[0].body, { memberId: "lee", cover: "Lee from 62nd", capabilities: ["contribute"], role: "admin" });
+  // control: without administering the invitation is sent at once
+  const b2 = await open("members", { me: ADMIN, table: membersTable() });
+  const plain = await b2.press("memberadd", { values: { "mi-id": "kay", "mi-cover": "Kay", "mi-caps-0": true } });
+  assert.deepEqual(plain.sent[0].body, { memberId: "kay", cover: "Kay", capabilities: ["contribute"] });
+  assert.equal(plain.sent[0].body.role, undefined);
+  // pressing the invitation with the grant ticked and no answer given sends nothing and draws the confirmation
+  const c = await open("members", { me: ADMIN, table: membersTable() });
+  const stuck = await c.press("memberadd", { values: { "mi-id": "lee", "mi-cover": "Lee", ["mi-caps-" + idx]: true } });
+  assert.deepEqual(stuck.sent, []);
+  has(c, "screen.members.cap.administer.confirm.head", { who: "Lee" });
 });

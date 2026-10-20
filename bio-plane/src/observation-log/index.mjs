@@ -1108,5 +1108,7 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["lead","project","reason"], requires: ["lead","project","reason"] } },
   leadread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("observation-log.declared.leadread", "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope"),
     fields: { accepts: ["id","limit"], requires: ["id"] } },
+  leadlist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("observation-log.declared.leadlist", "read: the leads this viewer may read, each once — `leadread`'s fence over a list; writes nothing"),
+    fields: { accepts: ["limit"], requires: [] } },
 });
 

@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J5
+**Read** · handled J8
 
 ## B1 · START
 
@@ -84,3 +84,13 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B10 · ANSWER · re J5
 
 ANSWER (K4227): your reading stands: build with the four keys as you give them and `checkOutcome(cs, answer, title)` exported. UX-DESIGN has them as HANDOFF B419 (it may reword or rename; BOB sends you any rename by CHANGE). Your R42 `hasWord` tests are accepted red by name until the rows land; do not post BLOCKED for them: COMPLETE when the rest is done, naming them.
+
+## B11 · ANSWER · re J6
+
+ANSWER (K4234): build with your keys, English exactly as drawn; UX-DESIGN has them as HANDOFF B423 (rename on BOB's word). Those `hasWord` tests are accepted red by name until the rows land: do not post BLOCKED for them; COMPLETE when the rest holds, naming each.
+
+## B12 · CHANGE
+
+CHANGE (K4243): SCREENS-INTAKE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: "Your leads" (the design's leads list, `leads.mjs`) is drawn from `observation-log`'s `leadlist` (R20; declared since OBSERVATION-LOG #16, R39: classes admin/member/probe, read, accepts `limit`): the leads the viewer may read, newest first, each with `lead_id`, author, words, locator, at, latest state, `looked_at`, `looks`, and `truncated` when the list is cut. Replace the page-memory list and the stale comment "The plane lists no leads" (`leads.mjs:4`); a lead written this visit appears by reading the list again, not by a second store. An empty answer draws the design's empty state. Tests name the requirement id you write it under (a line for BOB in your COMPLETE); control: a lead the viewer may not read is not drawn. Keys the design lacks are reported, not invented (HANDOFF to UX-DESIGN by BOB).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.

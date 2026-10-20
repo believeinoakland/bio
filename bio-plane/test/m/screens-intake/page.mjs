@@ -1,11 +1,22 @@
 /* screens-intake's tests over the real served page (K3007): `interfacePage(SCREENS)` booted through interface-shell's
  * harness and DOM stand-in (`../interface-shell/harness.mjs`, `dom.mjs`), the plane scripted per op. A few helpers to
  * open a screen, fill its fields and press its acts as a member would. */
-import { boot, ok, refused, refusedIn, bytes, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
+import { boot, ok, refused, refusedIn, bytes, MEMBER, ADMIN, collectOwnerRows } from "../interface-shell/harness.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 export { ok, refused, refusedIn, bytes, MEMBER, ADMIN, word, hasWord };
+
+/* The owners' declarations of the ops this module's screens send that no hand row holds (C20's credential ops, C56's named requests and
+   sweeps), registered as the plane registers them at start-up (op-declarations R80, R81), once per process before any table is read. They
+   are read through the harness's one collector (test-support `declaredOpsOf`), never named or copied here (K3268). `link-sweep`'s two
+   mutating rows declare no `needs` (op-declarations R80 refuses a mutating op without one), a defect of that owner's declaration reported
+   to BOB (screens-intake record): here they carry the capability the same kind of act names, so the screens' requests are held to the
+   fields link-sweep declares. */
+const NEW_OPS = ["capturecredentialsupply", "capturecredentiallist", "capturecredentialwithdraw", "namedrequestset", "namedrequests", "sweepset", "sweepratify"];
+const rows = collectOwnerRows();
+registerDeclaredOps({ "screens-intake fixture": Object.fromEntries(NEW_OPS.filter((op) => rows[op]).map((op) => [op, rows[op].mutating && rows[op].needs === undefined ? { ...rows[op], needs: "contribute", stamps: ["author", "viewer"] } : rows[op]])) });
 
 /* The assistant reachable for this member (interface-shell R20): on, with the group's key held and on. */
 const REACH = { assistantstate: ok({ on: true }), groupkeystate: ok({ on: true, held: true }) };

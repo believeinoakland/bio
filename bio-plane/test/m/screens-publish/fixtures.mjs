@@ -28,11 +28,13 @@ export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft:
   case: { case_id: C, edition: 2, identity: "The Coliseum lease", newCase: false },
   authored: { scope: "Rent adjustments under the Coliseum lease, 2024 to 2026.", statement: "The rents rose without the vote the lease requires.",
     excluded: [{ target: "INFO-9", description: "Whether the rents are fair", reason: "outside the lease's terms" }] },
-  findings: [{ target: "FND-2026-0031", present: true, text: "The 2024 adjustments had no council vote." }],
+  findings: [{ target: "FND-2026-0031", present: true, text: "The 2024 adjustments had no council vote.", role: "load_bearing" }],
+  choices: { subject_positions: ["sought_and_answered", "sought_no_answer", "not_sought"], roles: ["load_bearing", "supporting"] },
   gates: "passed",
   statement_acknowledgements: { acknowledgements: [{ by: "mai", reason: "The fairness question is another project's.", at: "2026-10-05T10:00:00Z" }] },
   observations: [{ observation: "OBS-2026-0001", chosen: { level: "name" }, stated: "signed the March 2024 adjustment" },
     { observation: "OBS-2026-0002", chosen: null, stated: null }],
+  comments: [{ comment_id: "RVC-1", author_kind: "recipient", author: "Prof. N. Iyer", grant_id: "GRT-1", recipient: "Prof. N. Iyer", text: "Finding 1 should say which schedule the council approved.", at: "2026-10-07T09:00:00Z" }],
   grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone: "America/Los_Angeles" }],
   ...o });
 
@@ -49,6 +51,17 @@ export const DOCUMENT = (o = {}) => ({ case_id: C, edition: 2, doc_sha: SHA, tex
   citations: [{ target: "INFO-2026-0004", version: E1, capture: "x" }, { target: "FND-2026-0031", version: B1 }, { target: "INFO-2026-0005", version: "undetermined" }],
   ...o });
 
+/** `casedetails`' standing values (case-inputs R23): each `{stated, value, set_by, set_at}`; every one not stated unless `o` sets it. */
+export const DETAILS = (o = {}) => {
+  const none = { stated: false, value: null, set_by: null, set_at: null };
+  return { area: none, contact: none, related: none, relationships: none, ...o };
+};
+/** `casedetailspublic`' standing values (case-inputs R24): each `{stated, value, set_at}`, never who set it. */
+export const DETAILS_PUBLIC = (o = {}) => {
+  const none = { stated: false, value: null, set_at: null, says: "Not stated." };
+  return { area: none, contact: none, related: none, relationships: none, ...o };
+};
+
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
   return {
@@ -62,7 +75,7 @@ export function plane(o = {}) {
     whatchangeddrafts: ok({ case: C, truncated: false, drafts: [{ id: "WCD-2026-0001", text: "Adds the 2025 rent schedules.", label: { machine: true }, at: "2026-10-06T09:00:00Z" }] }),
     reviewcomments: ok({ kind: "review-comments", comments: [{ comment_id: "RVC-1", draft_id: DR, reviewer: "Prof. N. Iyer", reviewer_kind: "recipient", text: "Finding 1 should say which schedule the council approved.", at: "2026-10-07T09:00:00Z" }] }),
     publishpreflight: ok(PREFLIGHT()),
-    publishtensions: ok({ wrote: false, project: P, count: 2, candidates: [{ says: "Two documents date the rent notice differently." }], says: "" }),
+    publishtensions: ok({ wrote: false, project: P, count: 2, candidates: [{ candidate: "CAND-1", finding: "FND-2026-0031", says: "Two documents date the rent notice differently." }], says: "" }),
     photomarks: ok({ capture: PHOTO, photo: true, state: "unchecked", copy: null, refused: false, marks: [] }),
     publishschedule: ok({ editions: [], limit: 500, cursor: null }),
     publish: ok({ caseId: C, edition: 2, minted: false, caseDocument: { case_id: C, edition: 2, doc_sha: SHA, bytes: 10 }, findings: [{ target: "FND-2026-0031", bundleSha: B1 }] }),
@@ -99,6 +112,11 @@ export function plane(o = {}) {
     accountdrafts: ok({ case: C, drafts: [], truncated: false }),
     docketprepare: ok({ entry: "{}", digest: DIGEST, statement: `bio-docket ${C} 3 ${DIGEST}\n`, warning: "Posting is public and permanent.", expires: "2999-01-01T00:00:00Z" }),
     docketpost: ok({ case: C, seq: 3, entry: 2, published_at: "2026-11-21T09:00:00Z" }),
+    casedetails: ok({ ok: true, case: C, published: false, truncated: false, history: [], details: DETAILS() }),
+    casedetailspublic: ok({ ok: true, case: C, group: "river-town", details: DETAILS_PUBLIC() }),
+    projectlist: ok({ projects: [{ id: P, title: "The Coliseum lease" }, { id: "PROJ-2026-0013", title: "Potholes" }] }),
+    list: ok({ bundles: [{ bundle_id: "INQ-2026-0001", title: "Is the city repairing reported potholes?" }] }),
+    entitieskind: ok({ ok: true, kind: "body", entities: [{ entity_id: "ENT-1", kind: "body", label: "Oakland Rent Board" }], count: 1, truncated: false, next: null }),
     knock: ok({ ok: true, knockId: "KNOCK-1", sha256: SHA, bytes: 3, received: true, pseudonym: null }),
     ...o,
   };

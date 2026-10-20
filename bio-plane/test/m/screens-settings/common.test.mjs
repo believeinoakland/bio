@@ -4,19 +4,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, SIGNER_KEYS, membersTable, teamaiTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, grouprulesTable, env } from "./fixtures.mjs";
+import { ADMIN, MEMBER, FOUNDER_ROW, ROSTER, SIGNER_KEYS, membersTable, teamaiTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, grouprulesTable, env } from "./fixtures.mjs";
 
 const SECRET = "SENTINEL-SECRET-0123456789";
 
 /* Every act of every screen, pressed so that it is sent: [screen, op, {data, values, reason}, table, me, reachable]. */
 const PRESSES = [
-  ["members", "memberadd", { values: { "mi-id": "x1", "mi-cover": "X", "mi-cap-contribute": true } }],
+  ["members", "memberadd", { values: { "mi-id": "x1", "mi-cover": "X", "mi-caps-0": true } }],
   ["members", "membercaps", { data: { member: "dev" }, values: { "mc-dev-contribute": true } }],
   ["members", "memberset", { data: { member: "dev", status: "revoked" } }],
   ["members", "adminendorse", { data: { member: "kim" } }],
   ["members", "adminremove", { data: { member: "lu" }, values: { "mr-lu": "away" } }],
   ["members", "expertiseconfirm", { data: { member: "ana", label: "CPA" } }],
   ["members", "invitewithdraw", { data: { member: "mai-k" } }],
+  ["members", "expertisewithdraw", { data: { member: "ana", label: "CPA" } }, null, { memberlist: env({ members: [FOUNDER_ROW, ...ROSTER.map((m) => (m.member_id === "ana" ? { ...m, expertise: [{ label: "CPA", state: "confirmed", confirmed: true, by: "rosa", at: "2026-10-05T10:00:00Z", history: [] }] } : m))] }), expertiselist: (q) => env({ ok: true, memberId: q.memberId, expertise: [{ label: "CPA", state: "confirmed", confirmed: true, by: "rosa", at: "2026-10-05T10:00:00Z", history: [] }], gates: "nothing" }) }],
   ["members", "websitekeycreate", { values: { "mw-cap": "4" } }],
   ["members", "joinlinkenable", { values: { "mw-cap": "4" } }],
   ["teamai", "groupkeyset", { values: { "mk-key0": SECRET } }],
@@ -29,6 +30,7 @@ const PRESSES = [
   ["account", "infolevelset", { values: { "ma-level": "pause" } }],
   ["account", "signout", {}],
   ["account", "signouteverywhere", {}],
+  ["account", "memberpairingset", { values: { "ma-pair-1": true } }],
   ["account", "expertisedeclare", { values: { "ma-exp": "Law" } }],
   ["account", "setpassword", { values: { "ma-cur0": SECRET + "-old", "ma-new0": SECRET, "ma-again0": SECRET } }],
   ["account", "signerregisterown", { values: { "ma-keep": true }, wait: true }],
@@ -87,7 +89,7 @@ const subjectOf = (screen) => (screen === "members" ? "ana" : screen === "transl
 /* The reads an act changes (R8), named by what each owner's act writes. */
 const CHANGES = {
   memberadd: ["roster"], membercaps: ["roster"], memberset: ["roster"], adminendorse: ["roster"], adminremove: ["roster"], expertiseconfirm: ["roster", "expertise"],
-  invitewithdraw: ["roster"], websitekeycreate: [], joinlinkenable: [], groupkeyset: ["groupkey"], groupkeyswitch: ["groupkey"], groupkeyremove: ["groupkey", "uses"],
+  expertisewithdraw: ["roster", "expertise"], memberpairingset: ["pairings"], invitewithdraw: ["roster"], websitekeycreate: [], joinlinkenable: [], groupkeyset: ["groupkey"], groupkeyswitch: ["groupkey"], groupkeyremove: ["groupkey", "uses"],
   accountusesset: ["uses", "history"], ailimitset: ["limits"], aikeepaway: ["keepaway"], memberlanguageset: ["language"], infolevelset: [], expertisedeclare: ["expertise"],
   setpassword: [], signout: [], signouteverywhere: [], signerregisterown: ["signers"], signerrevokeown: ["signers"], groupkeynoticeseen: ["notice"], disclosureshown: ["disclosure"],
   subscriptionsignin: ["signin", "reference"], accountreferenceset: ["reference", "uses"], accountreferenceremove: ["reference", "uses"], subscriptiondisconnect: ["signin", "reference"],

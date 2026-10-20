@@ -996,13 +996,14 @@ export class Queue {
     ["signing-keys", ["OBLIGATION"]], ["action", ["OBLIGATION", "FINDING", "CONDITION"]], ["attribution", ["OBLIGATION"]],
     ["docket", ["OBLIGATION", "FINDING"]], ["cited-cases", ["FINDING", "CONDITION"]], ["wizards", ["OBLIGATION", "FINDING"]],
     ["schedule", ["FINDING"]], ["places", ["CONDITION"]], ["projects", ["OBLIGATION"]],
-    ["notice-producers", ["OBLIGATION", "FINDING"]]]);
+    ["members", ["OBLIGATION"]], ["notice-producers", ["OBLIGATION", "FINDING"]]]);
 
   /** R60: one row `{feed, classes, answered, failed}` for each feed in QUEUE_FEEDS, then one for any other feed id the
    *  producers name. `facts` is `queue-producers`' (its R45: `failed` `[{feed, reason}]` and `absent` the feed ids no provider
    *  is composed for), `noticed` is R51's read. `answered` is true only when the feed's read returned and named no failure, and
    *  never when it is absent; `failed` is what the feed named: the reason codes of R45's entries, or `notice-producers`' failed
-   *  producers. A read that said nothing of failure names none. */
+   *  producers. A read that said nothing of failure names none. A failure that names the read that refused (`read`) or its
+   *  `code` (queue-producers R50) carries them onto its row; a row with no such failure has neither key. */
   #feedRows(facts, noticed, own = {}) {
     /* R91 (T51; L13): `ms`, the milliseconds the feed's read took: this module's own measure for `tasks` and `notice-producers`,
        `facts.ms[feed]` (queue-producers R45) for a producer's feed, and null where none is stated, never a made-up number. */
@@ -1013,10 +1014,19 @@ export class Queue {
     };
     const codes = new Map();
     const absent = new Set();
+    const named = new Map();
     const note = (feed, code) => { if (typeof feed === "string" && feed) codes.set(feed, [...(codes.get(feed) || []), code]); };
     for (const e of Array.isArray(facts.failed) ? facts.failed : [])
       if (typeof e === "string") note(e, "failed");
-      else if (e && typeof e === "object") note(e.feed, typeof e.reason === "string" && e.reason ? e.reason : "failed");
+      else if (e && typeof e === "object") {
+        note(e.feed, typeof e.reason === "string" && e.reason ? e.reason : "failed");
+        /* R60 (T51 fix round, B7): the read that refused and its code, as the producers name them (queue-producers R50), carried
+           onto the feed's row; the first failure that names either one. */
+        const why = {};
+        if (typeof e.read === "string" && e.read) why.read = e.read;
+        if (typeof e.code === "string" && e.code) why.code = e.code;
+        if (typeof e.feed === "string" && e.feed && Object.keys(why).length > 0 && !named.has(e.feed)) named.set(e.feed, why);
+      }
     for (const e of Array.isArray(facts.absent) ? facts.absent : []) {
       const feed = typeof e === "string" ? e : e && typeof e === "object" ? e.feed : null;
       if (typeof feed === "string" && feed) absent.add(feed);
@@ -1029,7 +1039,8 @@ export class Queue {
         return { feed, classes: [...classes], answered: noticed.failed.length === 0 && noticed.absent !== true,
                  failed: [...noticed.failed], ms: msOf(feed) };
       const failed = codes.get(feed) || [];
-      return { feed, classes: [...classes], answered: failed.length === 0 && !absent.has(feed), failed: [...failed], ms: msOf(feed) };
+      return { feed, classes: [...classes], answered: failed.length === 0 && !absent.has(feed), failed: [...failed], ms: msOf(feed),
+               ...(named.get(feed) || {}) };
     });
     return rows;
   }
@@ -2550,11 +2561,13 @@ export function queueAnswer(r, { gate } = {}) {
    beside the ops map: each row's classes, mutating, weight and description are the op's existing rows' (`op-declarations`,
    `op-grades`), its fields are what the arm reads. `decidedBy` (the control plane's stamp on `proposedispose`), `viewer`,
    `member` and `identity` are stamps, not fields. `queuemute` and `queuesnooze` also read an `at` (an instant), which only
-   in-plane callers and tests send. */
+   in-plane callers and tests send. A SET (`items`, queue-states' set arm) names each item's identity in its own item, so `items`
+   satisfies the two identity groups; the disposition and the reason stay top-level, because the set shares them onto every item
+   (`#perItem`). */
 export const DECLARED_OPS = Object.freeze({
   proposedispose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("queue.declared.proposedispose", "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle"),
     fields: { accepts: ["items","key","progressionKey","stageKey","project","finding","kind","to","state","reason","definitionVersion"],
-              requires: [["project","key","progressionKey"],["finding","key","progressionKey"],["to","state"],"reason"] } },
+              requires: [["project","key","progressionKey","items"],["finding","key","progressionKey","items"],["to","state"],"reason"] } },
   queuemute: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuemute", "personal state, keyed (member, case) over the kinds named or (member, item) by the item's own id: a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)"),
     fields: { accepts: ["case","kinds","item","unmute","at"], requires: [["item","case"]] } },
   queuesnooze: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuesnooze", "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)"),

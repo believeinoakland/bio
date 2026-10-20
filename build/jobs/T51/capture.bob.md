@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -62,3 +62,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B5 · CHANGE
 
 CHANGE (K4226), a new job session (CAPTURE #39, haiku): acquisition R95 takes `opts.timings` and control-plane R115 builds the timings object at the door, but `captureOp`'s `acquire` arm (index.mjs, near line 2836) calls `c.acquire(body, {...})` without it. Forward the handler's `h.timings` as `opts.timings` (only when given; nothing else changes), with a test that a given timings object reaches `acquire` and a control that none is passed when none is given. Requirement line: amend the `acquire` arm's line in `build/requirements/capture.md` (K4210). The plane's `gatedOp` forwarding `ctx.timings` is PLANE #44's. Your suite and checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B6 · CHANGE
+
+CHANGE (K4234), a new job session (CAPTURE #40, haiku): `acquireOp` (capture/ops.mjs) calls `store.fetch('http://x/acquire?…')` without the door's `trace`; send it (query or body, as plane R55 carries it) so the object can hold that acquire's timings under it (PLANE #44). Test that the request carries the trace given and a control without one. Requirement line in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

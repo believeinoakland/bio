@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01694DjkFk3Xc4UJ3gbq7ezF · depth 2 · COMPLETE · handled B8
+**Status** · session_01V64zP5L8ynT5RnQ7fmq8S3 · depth 2 · COMPLETE · handled B14
 
 ## J1 · REPORT
 
@@ -50,3 +50,39 @@ Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 75, module lines 3260
 ## J5 · COMPLETE
 
 COMPLETE (T51-122), re B8. The checkpoint half is built: `dash-action` reads `checkpointsdue`, maps each due plan to its started options' actions through the `plan` read, and draws 'our move' for them; the test has the controls (a judged checkpoint, i.e. none due, is not our move; a plan with no action counts nowhere) and shows approvedunsent's items are the drafts at step send, the same rows. Suite 134 of 134; format, architecture, ownership, words 0; coverage 35 of 35. Deferrals (2)-(4) stand. Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 78, module lines 3290
+
+## J6 · QUESTION
+
+QUESTION (restart #6, FR-31): (1) Your START says to write NEW R36–R54 first in build/requirements/screens-action.md, but my ownership (modules.json paths+tests+record) excludes build/requirements, so the ownership check would fail on that edit and coverage cannot name ids that are not in the file. My best reading: BOB writes R36–R54 (as for interface-shell R104–R109) and CHANGEs me; I build and test now naming the ids R36–R54 as numbered in the START (R36 C45, R37 C63, R38 C66, R39 C67, R40 C69, R41 C70, R42 C71, R43 C72, R44 C73, R45 C41, R46 C68, R47 C74, R48 C75, R49 C76, R50 C42, R51 C43, R52 L21, R53 E1, R54 E3). Entries 17 (registry) and 19 (findings) get no new id; I will name them under R5/R4 tests unless you give them one. (2) filings, screens-investigate and interface-shell are still WORKING (wave 2); I build against their requirements and run suites against the real providers once you CHANGE me. (3) Over the reading budget: three sonnet workers are writing task digests of the used services (step 3); I proceed from them.
+
+## Completion record (FR-31, session_01EbJCh72Rrpjqj4Cdt46ya6)
+
+**Entries applied.** All 21: C45/R36, C63/R37, C66/R38, C67/R39, C69/R40, C70/R41, C71/R42, C72/R43, C73/R44, C41/R45, C68/R46, C74/R47, C75/R48, C76/R49, C42/R50, C43/R51, L21/R52, E1/R53, E3/R54 (the law list is on `action`, where R16 is, not `plan`), registry `writinghelp` on plan, start-send and matter, and L20's findings detail (`optionstart`, `actioncreate` on `actionnew`). Requirement lines R36–R54 are written in `build/requirements/screens-action.md` (B10); marks removed, coverage 54 of 54. Matter, plan and send steps were built by three sonnet workers under my brief and reviewed by their tests; I built action, request, actionnew.
+**Tests/checks.** Module directory 194 of 194 pass; format 0, architecture 0, coverage 54/54, words 0 findings for my files (`checks/run.mjs`: 28 failures elsewhere, none mine); ownership: only the requirements file, accepted per B10. Existing tests changed: R16 (one law list), R4/R20 (R39 asks the name first), four start-send tests (R48 adds `templatesave`), contract test (writinghelp on start-send; function refusals; the keeper-subject words are not a plan's subject).
+**Gaps for BOB (design keys missing; I drew no invented English):**
+1. Reply form (R38): "What came back", "A reply came", "How it came", "It follows", "The amount quoted", currency and the stage/outcome option words; fee amount/currency are drawn only once keys exist (`screen.action.the.amount.quoted`, `screen.action.currency`); medium, `follows`, and the reply's document (no project-documents read) are not drawn. Silence: the plane requires an account, so the keyed sentence "No reply came by the date" is sent as it.
+2. R52: no "we will remind you on {date}" key; drawn as `screen.action.remindon` + the date.
+3. R39: no key for asking which name the records concern; used `screen.person.keeper.subject.*`. R46's pointer links to the picked name's `person` page.
+4. Matter: ~25 keys missing (Not available yet, No determination yet, Parts recorded, Revise the determination, Role that acted, Office or body, Published findings, Rule, What was done, Cause, Your determination, Addressed, Describe them, When it changed, unit/kind/purpose words, "Partly complied"); the nearest keys are used and protocol tokens drawn as data. No project events read (event is a plain field), no per-project documents read (evidence ids typed); `publishedlist` is not project-scoped; "worked out from figures" has no operands drawn. `determine` and `consequencerecord` are Reasoned: the shell's reason dialog asks a reason they do not all accept. Existing keys `screen.matter.stage.*`, `proposed`, `advance` still carry digits.
+5. Plan: ~12 labels missing (The press, Which phase, When it starts, Seeking enforcement, Mark done/blocked, After another phase, ...); stand-in keys used. The kit has no "add another"; redraw selects used.
+6. Send steps: stand-ins for "No one yet", the template name label and "A filing" option, exhibit "captured {date}" and "Grade not determined"; no release UI for a contradicted sentence (`release`). `filingread` returns no `exhibits`/`venue_standard`, so exhibits vanish after a reload; the screen never sends `language`.
+7. `writinghelp`: the owner's declaration lacks `op`, wizard-scripts R27 says the call takes it; `WRITE_HELP` now sends `field` and `told` only. Needs a ruling.
+8. The harness does not flag the shell's added `reason` on `consequencerecord`/`successrecord` bodies.
+**Deferred.** The missing-key items above, until the design writes the rows.
+Size (session_01EbJCh72Rrpjqj4Cdt46ya6): test runs 14, module lines 4291
+
+## J7 · COMPLETE
+
+COMPLETE (FR-31): all 21 entries applied, R36-R54 written in the requirements file (B10; marks removed), 194 of 194 module tests pass, format, architecture, coverage (54/54) and words 0 for my files, ownership lists only the requirements file. Gaps (missing design keys, writinghelp's declaration lacking op, filingread without exhibits) are in my record's completion section for your ruling.
+
+## J8 · REPORT
+
+REPORT (#8, re B13): item 1 done and pushed: `WRITE_HELP` sends `op` (from `data-forop`), `field` and `told`; a help button naming no act sends nothing. Tests: R45's writinghelp test asserts `op`; a control strips `data-forop` and no request goes. Module suite 195 of 195; format, architecture, coverage (54/54), words, ownership 0. Item 2 (stored exhibits and `venue_standard` from `filingread` after reload) waits on FILINGS #25: CHANGE me when it merges.
+Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 1, module lines 3290
+
+## J9 · COMPLETE
+
+COMPLETE (#8, re B13, B14). Item 1: `WRITE_HELP` sends `op` from `data-forop`, `field`, `told`; none without `data-forop` (tests + control). Item 2: tranche/T51 merged (FILINGS #25). The send steps already drew the exhibits and the venue's standard from `filingread`'s answer (`draftOf` reads `exhibits` and `venue_standard`), so no code change was needed; I added the test that proves it after a reload (stored exhibits drawn, the four grades, Approve enabled; control: a row stored before they existed, `exhibits: []` and no standard, draws no section). No more than the answer's two fields was needed.
+Checks: module suite 196 of 196; coverage 54 of 54; words 0; ownership 0 (3 files: send-steps.mjs and two test files, plus my record); format 0 and architecture 0 over the tree. Over the whole tree coverage shows 4 failures and words 33, none in my module.
+Deferred: none. Found in other modules: none. The missing design keys of #7 J6 (1)-(6) stay with UX-DESIGN's HANDOFF B424; not drawn.
+Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 3, module lines 3290

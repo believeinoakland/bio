@@ -11,7 +11,9 @@
    Anthropic ("connect again"); a failed state read is said, never drawn as not connected.
    T50 (R49, R50, R54): the page the design draws, in every state: one card saying what serves the member, then parts that open
    and close; a sign-in that has expired is said and offered again; a code being exchanged is not sent twice. R41 and R53 (the
-   connection check) wait for the remote proof (agent-runner R38) and are not drawn. */
+   connection check) wait for the remote proof (agent-runner R38) and are not drawn.
+   T51 FR-25 (R76; K4203): `accountreferenceset` and `accountreferenceremove` send only the fields `ai-accounts` declares (its R35): the door
+   stamps whose reference it is from the session, so the body names no member. */
 
 export const connect = {
   id: "connect",
@@ -263,7 +265,7 @@ export const connect = {
     { op: "reauth", rereads: [],
       send(view, el, cs) { const password = String(cs.value("mc-reauth") || ""); return password ? { body: { password } } : { refuse: "session.reauth.head" }; } },
     { op: "accountreferenceset", rereads: ["reference", "uses", "limits", "usage", "history"], outward: true,
-      send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { member: "member:" + (view.me || {}).member, kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
+      send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
       done(view, answer, cs) { cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); } },
     // R49: the uses as checkboxes in one style, saved by one act: the first changed use is this act's request, the others follow it
     { op: "accountusesset", rereads: ["uses", "history"],
@@ -286,7 +288,7 @@ export const connect = {
       send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "member:" + (view.me || {}).member, el, cs); },
       refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }), LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
     { op: "accountreferenceremove", rereads: ["reference", "uses", "limits", "usage", "history"],
-      send(view) { return { body: { member: "member:" + (view.me || {}).member } }; } },
+      send() { return { body: {} }; } },
     { op: "subscriptiondisconnect", rereads: ["signin", "reference", "uses", "limits", "usage", "history"],
       send() { return { body: {} }; } },
   ],

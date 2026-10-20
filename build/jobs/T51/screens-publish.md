@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_016iKmE55Vo6kaM1uCr7HpH5 · depth 2 · COMPLETE · handled B6
+**Status** · session_01QD1BUeBCA9NYY1zJLxnCYq · depth 2 · COMPLETE · handled B14
 
 ## J1 · QUESTION
 
@@ -69,3 +69,79 @@ Size (session_016iKmE55Vo6kaM1uCr7HpH5): test runs 2, module lines 1
 ## J5 · COMPLETE
 
 CR-28 applied; see J4 in my record. One of the 19 keys is added (`refusal.uncatalogued`, on every screen). The other 18 are "not drawn here" with reasons in J4: nine doorbell refusals and REVIEW_BAD_UNTIL map to own keys; NO_ATTESTING_KEY, NO_SIGNERS and CASE_SIGNER_NOT_AN_OWNER have own functions; NO_TARGET, NOT_PUBLISHED and IMPORT_NO_SUCH_EDITION are handled before any refusal is drawn; `screen.action.pressure.kind` is a generator artifact of a dynamic key; `screen.ceremony.signs.lines` is not drawn (design may mean it to replace `.count`: your call). R24 in common.test.mjs therefore stays red until the design drops those 18; the other 133 tests pass. Checks: format 0, architecture 0, words 0, ownership 0, coverage 43/43.
+
+## J6 · QUESTION
+
+QUESTION (SCREENS-PUBLISH #7, session_01Xcyjq97CXFUqwP1cEcNmhq). I read B7 and B8. B7 (CR-28) was already applied and posted in J4/J5; nothing more to do for it. B8 (FR-30, 27 entries) I will build.
+
+1. B8 says to write each `NEW screens-publish R44 … R68` requirement line first. `build/requirements/screens-publish.md` is not in my paths, so `checks/ownership.mjs` fails a diff that touches it (JOB.md "Write only"). The file on tranche/T51 at 26b2565729 ends at R43. My reading: you write R44–R68 on tranche/T51 (numbers as the entries give them; entry 3 is covered by R44, entry 21's R63 amends R60) and I merge it, because coverage.mjs needs the ids in the file before it can count my tests. Until then I build the code and the tests to the ids in the entries. If you would rather I write them, say so and I will, and the ownership check will list that file as a deliberate exception.
+2. Reading set is over budget (601 KB of 600 KB). I will read my own code and requirements whole, and have sonnet-medium workers write the task digest of the used modules' public parts as B8 says; I read any cited section whole.
+3. Entries 17 (C50, R59) waits for your CHANGE as the entry says, but B8's "Drawn" note says DEC-382 is merged and it is to be built now. I read the note as the later word and will build R59 now.
+
+## J7 · BLOCKED
+
+BLOCKED (cause: context). SCREENS-PUBLISH #8, FR-30 part one. The reading set alone (requirements, 184 KB of code, digests) took much of my window; I stop at a clean point, pushed on job/T51/screens-publish (module tests: 147 pass, 2 fail; format 0, architecture 0, words 0 findings).
+
+BUILT, each with a test naming it (bio-plane/test/m/screens-publish/fr30.test.mjs, plus updated old tests): entry 27 (reviewgrant tests give the reason through the harness); R45 (signing key offered at once); R47 in part (the editor draws the gates' first refusal as what is missing); R48; R50 (the ceremony sends the draft and project plus only what it attested); R52; R55; R56; R60/R63 (three headings by the title review answers, body.nocase); R61; R62; R64; R65; R66 (PUBLISH_NO_FINDING with the "Add a finding" door); R67 (reference drawn when the answer holds one). R44 to R68 are written in the requirements file (J6/B9).
+
+NOT BUILT (next session, in this order): R44 (case editor fields and the Bias step: position, reasoning, left-out rows, roles, biasAcknowledgement); R46 (tensionsDisclosed ticks); R51 (reattest, captureaccount, selfAttested); R53 (sever, reinstate: needs a read that lists severed citations, since case_citations lists only live ones); R57 (details sheet: casedetails/casedetailsset/casedetailspublic); R47 for `published` (completeness, bias, tensions, grades); R54 (file chooser); R58 (importregrade, rerunstart); R59 (citeimported); R49; R68.
+Inherited reds still open: common.test R10 (registry acts missing: case-editor sever, reinstate and the owed casedetails/casedetailsset; ceremony reattest, captureaccount; imported writinghelp) and public.test R8 (see 3).
+
+FOR BOB (other modules / design):
+1. R49: the design has no keys for the receipt's fingerprint, size, pseudonym, the made secret and "make one for me"; I drew none and invented none. R49 waits on UX-DESIGN.
+2. R67: the knock answer carries no `reference` (doorbell R11, door.mjs:142); the page draws it only when the answer holds it. Also `knock`'s declaration lists `content` while the Worker reads `contentB64`/`contentText` (doorbell/index.mjs:795).
+3. R8's red is a true finding of the docket's form: `docketfile` declares `edition` and `capture` as required (docket R1: the edition the entry answers, and the captured document); the screen has no fields for either and the design draws none. Needs a drawing.
+4. R68: `place` gets no word function, so the crumb cannot say `crumb.project.unjoined`; interface-shell would need to accept a title key from `place`.
+5. Registry lists `writinghelp` on `imported`; no field there is a writing field by any requirement. Needs your ruling.
+6. `reviewgrant` and `projectowneradd` declare no `reason`; the shell adds it (R107). Harmless to the guard today.
+
+## J8 · REPORT
+
+REPORT (SCREENS-PUBLISH #9). After merging tranche/T51 (B11), three suite tests that were green at #8's stop are red from other modules' declarations, which the guard (interface-shell R104) now compares; none is a screen defect I can fix without weakening a declaration:
+1. `writinghelp` (wizard-scripts, `fields.accepts: ["field","told","draftHeld"]`) does not list `op`, but the module's own writingHelp (wizard-scripts index.mjs:1504-1508) reads `{op, field, told, draftHeld}` from the POST body and decides whether help is offered from `op` (`#helpAt`), and `FIRSTHAND_ACTS` from it. The case editor sends `op` (casedraft or whatchangedpropose) as `screens-action/send-steps.mjs:317` does. Needs: wizard-scripts accepts `op`. Red: t50/case-editor R1 "Draft what changed" (common.test R1 test). Other screen modules that send `op` will see the same.
+2. `accountpropose` (control-plane owner-ops.mjs:23-24, case-account `accountPropose`) requires `text` and `run` (and `flags` for `account_check`): it stores a draft an AI run made, so a member's act cannot send it. R35's "Draft the account with the assistant" sends `{kind:"case_account", framing}`, which the guard refuses. Needs: BOB's ruling on which op asks the assistant for the draft (R35 names `accountpropose`), then a CHANGE. Red: t50 R35 (two tests).
+3. `docketfile` still red as J7 said (accepted red by name, B12).
+I carry on with R44, R46, R51, R53, R57, R47, R54, R58, R59, R67 in the order B12 gives.
+
+## J9 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9, session_01QD1BUeBCA9NYY1zJLxnCYq), FR-30 part two: B12's list applied in its order, except R49 and R68, which wait on others as B12 says. Pushed on job/T51/screens-publish; `tranche/T51` @ 0ebdb2fcf2 merged.
+
+**Applied, each with tests that were seen failing against the code before (R50 excepted: #8 built it) and a control.** R44 (case editor: each finding's role as a radio group from `choices.roles`, the team's position from `choices.subject_positions` and its reasoning, left-out rows with their reason and the "nothing material left out" claim sending `excluded: []`, silence sending none; a Save sends only the fields it changed and no targets; the ceremony's Bias step holds the declared bias and the pre-flight and publish send `biasAcknowledgement`); R46 (a tick and optional words per candidate; `tensionsDisclosed` with the pre-flight and publish; ticks kept after a refusal); R50 (all three requests checked by the guard); R51 (`reattest`; self-attested only with a required reason, refused in place without one; `captureaccount` signed through the signer over `bio-capture-account <sha>\n<text>`, offered only to a member `captureaccounts` lists as the capturing actor); R53 (`sever`/`reinstate` from the project document's `references`, the shell asks the reason); R57 (editor: the four details after the first save, before it the note; `casedetailsset` area/contact/related/relationships, read back by `casedetails`; ceremony lists stated or not stated and blocks nothing; published draws `casedetailspublic` and nothing for a field not stated; no classification row); R47 (published: what the case leaves out with who else read it, the disclosed contradictions with a highlighted one by its fixed sentence, the declared bias, each evidence row's grade; each only when the answer holds it); R54 (file chooser, SHA-256 worked out in the page, only the hash sent); R58 (`importregrade` with three lenses, none preselected, moved findings, the statement that moved each, the limit sentence; `rerunstart` with `RERUN_ALREADY` and the owner refusal by their words); R59 (`citeimported` on accepted findings only; `IMPORTED_NOT_ACCEPTED` by its words); R67 as B12 (2): the reference is the `knockId`.
+
+**Not built.** R49: waits on UX-DESIGN HANDOFF B420 (B12 (1)); R68: waits on INTERFACE-SHELL #10 and your CHANGE (B12 (4)); both marked *(not yet met: T51)* in the requirements file. `coverage.mjs` lists R68 (its "R49" is named in a test title that cites interface-shell's R49, not this module's: no test covers it).
+
+**Reds left, none mine to fix without weakening a declaration (J8):** t50/case-editor R1 and common.test R10 (`writinghelp` sends `op`, which wizard-scripts' declaration does not accept; and `imported`'s registry `writinghelp`, B12 (5)); t50 R35 ×2 (`accountpropose` requires `text` and `run`, a stored draft, not a request for one); public.test R8 (`docketfile`, B12 (3)). 163 pass, 5 fail of 168.
+
+**Found elsewhere (P9).**
+1. **`OPS` does not hold `casedetails`, `casedetailsset`, `casedetailspublic`, `importregrade`, `rerunstart` or `citeimported`** until the plane (or a test) calls `registerDeclaredOps` with their owners' `DECLARED_OPS`; no product code does today. My tests register those six through the harness's `collectOwnerRows` (`test/m/screens-publish/register.mjs`; registering every owner is refused by link-sweep's `sweepset`, which has no `needs`, R80). Every test that composes the real `SCREENS` without registering now throws "screen case-editor's act names casedetailsset, which OPS does not hold": interface-shell `t50.test.mjs` and `declared.test.mjs`, control-plane `t46-app.test.mjs`, interface-shell `page.test.mjs`. Fix: op-declarations hand rows for the six, or those tests/plane register them.
+2. **Words the design owes** (nothing invented; closest existing key used): the four detail names "Area of government", "Point of contact", "Related work", "Relationships" and "Stated" (drawn under `details.area.bodyhint`, `contact.legend`, `rel.link`, `ties.legend`; a stated row shows its date); "Builds on", "Responds to", "Disagrees with" (drawn by their code, the other two relations have keys); "Relied on"/"Supporting" (`case-grammar.load_bearing`, `screen.watching.nr.f.supporting`); "Finding {n}: its role in the case" (the design's key holds "1" and "2" literally; `screen.published.finding` used); the tick's own sentence for "Publish X as self-attested only" (the tick names the document); "Take out" (`screen.panel.limit.remove`); and `case-inputs.details.not_stated` is no word in the table (`hasWord` false), so `screen.person.fact.notstated` is used.
+3. `publishpreflight`'s `not_co_attested` lists capture ids only: no capturing member, no finding that rests on each. The row says the capture's short id; `screen.ceremony.conf.intro2` ({finding}) is not drawn; I read `captureaccounts` for the actors. case-authoring could state both.
+4. `mk-det` (the design's details block) is no served class (R20): a plain block with `data-detail` is drawn.
+
+**Tests and checks.** `node --test test/m/screens-publish/`: 168 tests, 163 pass, 5 fail (the five above). Process checks: `format` 0; `architecture screens-publish` 0 failures; `words`: no finding in this module's files (testcopy cleared); `coverage`: 67 of 68 ids, R68 named by no test; `ownership`: 1 failure, `build/requirements/screens-publish.md` outside paths, accepted at the merge (B9). The R10 registry test now reads a label as `act.owed_<op>.label.<screen>` when the registry row is `owed:<op>`, since the design keys those acts under the owed name.
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 22, module lines 3090
+
+## J10 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9), B13 applied. J9's entries stand; `tranche/T51` @ 530cffbe90 merged.
+
+1. `writinghelp`: green after the merge (wizard-scripts accepts `op`).
+2. `accountpropose` (R35): the screen sends nothing to it; "Draft the account with the assistant" is still drawn only when the assistant may run, and its press is held (K3717). The two R35 press tests are `test.todo` naming K3717; "Order it", the drawing of a draft and its flags read from `accountdrafts`, the earlier drafts, the BAD_ACCOUNT fold and `NO_SUCH_ACCOUNT_DRAFT` stay tested.
+3. `docketfile` stays red by name (B420). Also red by name: common.test R10 for `imported`'s registry `writinghelp`.
+4. R54's test now waits for the browser's own hash (it failed once in four full runs under load).
+
+`node --test test/m/screens-publish/`: 170 tests, 166 pass, 2 fail (R10 `imported` `writinghelp`; public R8 `docketfile`), 2 todo (K3717), stable over three runs. Process checks: format 0, architecture 0, words 0 findings in this module; coverage: R68 named by no test; ownership: the requirements file only (accepted, B9). J9's finding 1 (`OPS` holds none of the six declared ops until something registers them, so interface-shell's t50 and declared tests, page.test and control-plane's t46-app throw when they compose the real `SCREENS`) still stands for op-declarations.
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 27, module lines 3074
+
+## J11 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9), B14 applied; `tranche/T51` merged.
+
+R68 built: the ceremony's `place` answers `projectKey: "crumb.project.unjoined"` when the project's title cannot be read, so the crumb never draws the id; `crumb.project.unjoined` and `refusal.NO_REVIEW_COPY` are in the ceremony's words. Test names R68; control: a readable project draws its title. `register.mjs` stays until test-support's shared helper exists.
+
+`node --test test/m/screens-publish/`: 169 tests, 167 pass, 2 fail, 2 todo. Reds named: common.test R10 (`imported`'s registry `writinghelp`) and public.test R8 (`docketfile`), both UX-DESIGN B420; todo: R35's two press tests (K3717). R49 stays unbuilt (B420). Checks: format 0, architecture 0, words 0 findings here, coverage 0 failures, ownership: the requirements file only (B9).
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 31, module lines 3080

@@ -153,7 +153,7 @@ test("R39 R69 a refusal carrying trace is drawn with Reference: <first 8 charact
 const GUIDE = {
   words: [["screen.guide.step", "Step {i} of {n}", false]],
   ops: ["wizardsat"],
-  acts: [{ op: "wizarddraft", send: (view) => ({ body: { recorded: view.ui.heard || [] } }) }],
+  acts: [{ op: "wizarddraft", send: fitSend("wizarddraft", "{ recorded: view.ui.heard || [] }") }],
   render(cs, view) { return view.ui.running ? "<p id=g>" + cs.w("screen.guide.step", { i: String(view.ui.step || 1), n: "2" }) + "</p>" + cs.act("wizarddraft", { label: "screen.guide.step", fills: { i: "1", n: "2" } }) : ""; },
   marks(cs, view) { return '<p id=marks data-ui="' + cs.esc(JSON.stringify(view.ui)) + '">' + cs.esc(String(view.screen)) + "</p>"; },
   start(cs, view, o) { view.ui.running = o.script; view.ui.version = o.version; view.ui.o = o; },

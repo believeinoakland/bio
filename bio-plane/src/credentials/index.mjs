@@ -2147,8 +2147,10 @@ export function credentialsOps(c, url, body, env) {
    control plane's route to the member's own runner (`agent-worker` R66), not an arm of this module. `securitymap` is a read the
    administrator's screen sends with `from` and `to` (K4210: `op-grades` drops its hand row that grounded a read). */
 export const DECLARED_OPS = Object.freeze({
+  /* `members` (not required) is the screens' ask for each member's own build, answered at the public door by instance-setup's
+     `bootstrapOp` (setup.mjs), not by the arm above (K4237, SCREENS-SETTINGS #10); declared here so the screen's field is accepted. */
   bootstrap: { classes: null, mutating: false, weight: "read", description: "act.bootstrap.does",
-    fields: { accepts: [], requires: [] } },
+    fields: { accepts: ["members"], requires: [] } },
   claim: { classes: null, mutating: true, weight: "credential", description: localize("credentials.declared.claim", "claims an instance at bootstrap"),
     fields: { accepts: ["password","handle"], requires: ["password"] } },
   login: { classes: null, mutating: false, weight: "read", description: "act.login.does",
