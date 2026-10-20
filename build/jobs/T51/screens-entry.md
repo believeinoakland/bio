@@ -47,7 +47,7 @@ B3 applied: setup's scanner legends, held tools and test result draw the catalog
 **Entries applied.**
 - Entry 1, C11 (R26): `setup`, under the website the founder enters, draws the fold `screen.domainfile.summary` once the team holds a claim (`groupidentity`'s `domain_claim`): the file from `domain_claim.well_known` (`{path, body}`; named by the last segment of `path`, text the `body`, never built here), a save (`cs.save`, `screen.domainfile.download`) and a copy (`cs.copy`, `shell.copy`), the numbered steps (`{folder}` the first segment of the path, `{address}` the claimed website with the path), the daily line and the refusals fold (all five by key). The claim's latest check `absent`/`mismatched`/`undetermined` draws its sentence beside the act; `groupdomainset` refused `GROUP_DOMAIN_MALFORMED` or `NOT_AN_ADMIN` draws `.malformed` / `.notadmin`. A null `well_known` draws no file, save or copy, and drops steps 2 and 4 (they need the path); no claim draws no fold.
 - Entry 2, T-19 and T-18 (R30): the form's invitation-read button is labelled `screen.join.invite.reread`; setup's hosting line reads `screen.group.hosting.now.setup` / `.system` when `recorded_by` is the setup or the system (same rule as `screens-settings`' `originOf`), `screen.setup.hosting.now` for a member or an unstated recorder.
-- Requirements: R26 and R30 written first (marked not yet met: T51). `words.mjs`: `DOMAINFILE` keys, `shell.copy`, the two `screen.group.hosting.now.*` keys, `screen.join.invite.reread`.
+- Requirements: ownership forbids my writing `build/requirements/screens-entry.md`, so R26 and R30 are proposed in my REPORT for BOB to write; the tests name them. `words.mjs`: `DOMAINFILE` keys, `shell.copy`, the two `screen.group.hosting.now.*` keys, `screen.join.invite.reread`.
 
 **Reading of the instance-setup answer (FR-39 not merged when I wrote this).** The answer's shape is the one the START and instance-setup's own START give: `groupdomainset` and the credentialed `groupidentity` (`domain_claim.well_known`) answer `{path, body}` or null. My tests use that shape from a fake plane. If FR-39 names the field differently, only `domainFile()` in `setup.mjs` changes.
 
@@ -60,6 +60,6 @@ B3 applied: setup's scanner legends, held tools and test result draw the catalog
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/screens-entry/`: tests 92, pass 91, fail 1 (R10, the design word above). New tests fail without the source change (6 fail) and pass with it.
-- `checks/format.mjs bio`: 0 failures. `architecture.mjs bio screens-entry`: 0. `coverage.mjs bio screens-entry`: 27 of 27 ids named, 0. `words.mjs bio screens-entry`: 0. `ownership.mjs bio screens-entry tranche/T51 job/T51/screens-entry`: see the push below. `checks/run.mjs bio`: no line names screens-entry.
+- `checks/format.mjs bio`: 0 failures. `architecture.mjs bio screens-entry`: 0. `coverage.mjs bio screens-entry`: 25 of 25 live ids named (R26 and R30 are for BOB to write, see REPORT), 0. `words.mjs bio screens-entry`: 0. `ownership.mjs bio screens-entry tranche/T51 job/T51/screens-entry`: see the push below. `checks/run.mjs bio`: no line names screens-entry.
 
-Size (session_017xaHGAS9HLwMSL3PYNVsLE): test runs 6, module lines 1240
+Size (session_017xaHGAS9HLwMSL3PYNVsLE): test runs 6, module lines 1127
