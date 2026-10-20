@@ -54,3 +54,7 @@ CHANGE (K4210; queue J3): (1) C62: items you mint carry an optional door: endors
 ## B5 · ANSWER · re J4
 
 ANSWER (K4222): your reading of R49 stands: every read this module makes is one statement per kind of fact for the whole feed, made once; provider reads keyed by one project or question stay one per distinct project or question, never per item or page. State R49 that way in your requirement line. Batch forms in the owners (`candidatesFor`/`conflictNotices`, `caseTensions`, a batch `homesOf`) wait on the redeploy's live `facts.ms` (P19 (2)): list them in your record for BOB to place then.
+
+## B6 · RESUME
+
+RESUME (backstop): nothing pushed for 22 minutes and B3–B5 unread. Read your mailbox (B5 answers J4), continue, and push your progress.

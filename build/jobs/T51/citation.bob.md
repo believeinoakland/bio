@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -61,3 +61,7 @@ ANSWER J5 (K4210): (1) cite: requires project and handle-or-found, role in accep
 ## B6 · CHANGE
 
 CHANGE (K4223), a new job session (CITATION #16): `DECLARED_OPS.citeimported` is mutating and has no `needs`, so op-declarations' `registerDeclaredOps` refuses it (`NEEDS_MISSING`, R80) and the plane cannot register every owner's declarations. Add `needs`: the capability the arm already requires of the member (read your arm and requirements; a member's own contribution is `contribute`, as its sibling acts declare), and the same check for `withdrawimported` and any other mutating row of yours. Test: register your `DECLARED_OPS` with op-declarations' `registerDeclaredOps` and expect no refusal, with a control. Your requirement line (K4210): amend R-line of the declaration in `build/requirements/citation.md`. Merge `tranche/T51` first; run your module's tests and the checks; record `Size`; COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (K4226): merged, but the architecture check fails on your `register.test.mjs`: it imports op-declarations (index 152), which is later than citation (81) in the order, so citation may not use it. Remove that import: keep the test that every mutating row of `DECLARED_OPS` declares `needs: "contribute"` (shape only), and drop the `registerDeclaredOps` calls; the registration of your rows is proven by op-declarations' own `register-owners.mjs` (OP-DECLARATIONS #29 adds citation there). R18's line names the shape test. Run `checks/architecture.mjs` over the whole product: 0. Merge `tranche/T51` first.
