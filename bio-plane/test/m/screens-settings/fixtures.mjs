@@ -7,11 +7,11 @@ export const env = (result) => ({ ok: true, result, store: "bio", tokenClass: "m
 export const refuse = (code, extra = {}) => env({ ok: false, reason: code, code, translation: `translated ${code}`, ...extra });
 
 export const VOCAB = ["contribute", "publish", "create_projects"];
-export const ADMIN = Object.freeze({ member: "rosa", handle: "rosa", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "session" });
-export const MEMBER = Object.freeze({ member: "dev", handle: "dev", administer: false, capabilities: ["contribute"], vocabulary: VOCAB, tokenClass: "session" });
+export const ADMIN = Object.freeze({ member: "rosa", handle: "rosa", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "member" });
+export const MEMBER = Object.freeze({ member: "dev", handle: "dev", administer: false, capabilities: ["contribute"], vocabulary: VOCAB, tokenClass: "member" });
 /** The founder's session (the shell's `tokenClass: "admin"`, interface-shell R12): hers alone reaches `export` (corpus-export). */
 export const FOUNDER = Object.freeze({ member: "admin", handle: "sparky", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "admin" });
-export const READER = Object.freeze({ member: "teo", handle: "teo", administer: false, capabilities: [], vocabulary: VOCAB, tokenClass: "session" });
+export const READER = Object.freeze({ member: "teo", handle: "teo", administer: false, capabilities: [], vocabulary: VOCAB, tokenClass: "member" });
 
 const exp = (label, confirmed) => ({ label, state: confirmed ? "confirmed" : "declared", confirmed, by: confirmed ? "rosa" : null, at: "2026-10-05T10:00:00Z", history: [] });
 
