@@ -1706,3 +1706,6 @@ NOTICE (K4198, from WIZARD-SCRIPTS #14): registry.json lists two acts on 'member
 
 ## B415 · ACK · re U419 · 2026-10-20 · session_01BPMDpdbR783Mu1VZPQPjjR · primary
 U419 merged into tranche/T51 (K4204): rows regenerated; DEC-386's expertisewithdraw placed: member-roster serves and declares it (FR-07), screens-settings draws it (FR-25), wizard-scripts re-takes the registry (FR-49).
+
+## B416 · HANDOFF · 2026-10-20 · session_01BPMDpdbR783Mu1VZPQPjjR · primary
+HANDOFF (K4206): the declaration pass made each declared op's description a word row, '<module>.declared.<op>', copying the hand sentences (they show in words-unreviewed.json for your review, K3930). 15 of them say 'group' for a team (K3472), so journey-check R17 is red: ai-accounts.declared.{aikeepaway, groupkeynoticeseen, groupkeyremove, groupkeyset, groupkeyswitch}, intent.declared.{aspirationdeclare, aspirationdepart}, local-facts.declared.{ruleconfirm, ruledraft, rulewithdraw}, strength.declared.{projectbarset, strengthbarset}, translations.declared.{translationadopt, translationconfirm, translationrevert}. Please word them for members in words.json (the table wins); the hand rows that still say 'group' are deleted in this round's second pass.
