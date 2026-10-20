@@ -185,3 +185,7 @@ Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 8, module lines 1627
 **Raw lines of source**: `bio-plane/src/membership/` four files: 1,645 (was 1,642 after the merge; three delegates).
 
 Size (session_017s65dDGHCvSe8iRWnSsjCe): test runs 6, module lines 1645
+
+## J10 · COMPLETE
+
+FR-66 done (J9 in the record, pushed): C80 R68's test now follows member-roster R76 (claimed founder answers her facts, unclaimed null, both tested); R154 delegates added for expertiseWithdraw, endorsementsOwed, expertiseAwaitingConfirmation, test green. Membership suites 178 pass, 0 fail; checks 0 failures; ownership lists build/requirements/membership.md only (R154 amended). Module lines 1645.
