@@ -77,3 +77,10 @@ Checks after the fix:
 - node bio-plane/src/setup-words/build.mjs --check: no refusal naming citation.
 
 Size (session_018wkgQYFa889na4frSPWfKx): test runs 7, module lines 1412
+
+## J5 · QUESTION
+
+Two small judgments in entry 4 (the census declaration), my best readings first; I carry on with them.
+1. `cite`'s `role` is required on a question's arm (NO_ROLE) but refused on a case's (ROLE_NOT_APPLICABLE). One op row cannot say both. Best reading: `requires: ["project", ["handle","found"]]`, `role` only in `accepts`; the question screens always send a role. If you want `role` required, the case-arm sends of `cite` (if any screen has one) would fail interface-shell's guard.
+2. `cite`, `sever` and `reinstate` read `owner` from the address, but the door overwrites it server-side (control-plane/index.mjs:1944, selection ownership). Best reading: it is a stamp like `viewer`, so left out of `accepts`.
+Also: build/modules.json gives `citation` no `uses` edge to `test-support`; the declared-ops tests import its helper (the pass added that edge to ten other modules). Please add it; until then the architecture check will name it.
