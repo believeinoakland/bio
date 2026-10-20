@@ -77,3 +77,20 @@ QUESTION (SCREENS-PUBLISH #7, session_01Xcyjq97CXFUqwP1cEcNmhq). I read B7 and B
 1. B8 says to write each `NEW screens-publish R44 … R68` requirement line first. `build/requirements/screens-publish.md` is not in my paths, so `checks/ownership.mjs` fails a diff that touches it (JOB.md "Write only"). The file on tranche/T51 at 26b2565729 ends at R43. My reading: you write R44–R68 on tranche/T51 (numbers as the entries give them; entry 3 is covered by R44, entry 21's R63 amends R60) and I merge it, because coverage.mjs needs the ids in the file before it can count my tests. Until then I build the code and the tests to the ids in the entries. If you would rather I write them, say so and I will, and the ownership check will list that file as a deliberate exception.
 2. Reading set is over budget (601 KB of 600 KB). I will read my own code and requirements whole, and have sonnet-medium workers write the task digest of the used modules' public parts as B8 says; I read any cited section whole.
 3. Entries 17 (C50, R59) waits for your CHANGE as the entry says, but B8's "Drawn" note says DEC-382 is merged and it is to be built now. I read the note as the later word and will build R59 now.
+
+## J7 · BLOCKED
+
+BLOCKED (cause: context). SCREENS-PUBLISH #8, FR-30 part one. The reading set alone (requirements, 184 KB of code, digests) took much of my window; I stop at a clean point, pushed on job/T51/screens-publish (module tests: 147 pass, 2 fail; format 0, architecture 0, words 0 findings).
+
+BUILT, each with a test naming it (bio-plane/test/m/screens-publish/fr30.test.mjs, plus updated old tests): entry 27 (reviewgrant tests give the reason through the harness); R45 (signing key offered at once); R47 in part (the editor draws the gates' first refusal as what is missing); R48; R50 (the ceremony sends the draft and project plus only what it attested); R52; R55; R56; R60/R63 (three headings by the title review answers, body.nocase); R61; R62; R64; R65; R66 (PUBLISH_NO_FINDING with the "Add a finding" door); R67 (reference drawn when the answer holds one). R44 to R68 are written in the requirements file (J6/B9).
+
+NOT BUILT (next session, in this order): R44 (case editor fields and the Bias step: position, reasoning, left-out rows, roles, biasAcknowledgement); R46 (tensionsDisclosed ticks); R51 (reattest, captureaccount, selfAttested); R53 (sever, reinstate: needs a read that lists severed citations, since case_citations lists only live ones); R57 (details sheet: casedetails/casedetailsset/casedetailspublic); R47 for `published` (completeness, bias, tensions, grades); R54 (file chooser); R58 (importregrade, rerunstart); R59 (citeimported); R49; R68.
+Inherited reds still open: common.test R10 (registry acts missing: case-editor sever, reinstate and the owed casedetails/casedetailsset; ceremony reattest, captureaccount; imported writinghelp) and public.test R8 (see 3).
+
+FOR BOB (other modules / design):
+1. R49: the design has no keys for the receipt's fingerprint, size, pseudonym, the made secret and "make one for me"; I drew none and invented none. R49 waits on UX-DESIGN.
+2. R67: the knock answer carries no `reference` (doorbell R11, door.mjs:142); the page draws it only when the answer holds it. Also `knock`'s declaration lists `content` while the Worker reads `contentB64`/`contentText` (doorbell/index.mjs:795).
+3. R8's red is a true finding of the docket's form: `docketfile` declares `edition` and `capture` as required (docket R1: the edition the entry answers, and the captured document); the screen has no fields for either and the design draws none. Needs a drawing.
+4. R68: `place` gets no word function, so the crumb cannot say `crumb.project.unjoined`; interface-shell would need to accept a title key from `place`.
+5. Registry lists `writinghelp` on `imported`; no field there is a writing field by any requirement. Needs your ruling.
+6. `reviewgrant` and `projectowneradd` declare no `reason`; the shell adds it (R107). Harmless to the guard today.
