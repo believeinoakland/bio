@@ -49,3 +49,13 @@ Completion again after CHANGE B2 (K3962, K3965), commit 0761388f1e on job/T51/te
 **Deferred.** None. **Found in other modules.** None.
 
 Size (session_01RQyitqBGKNtCPSNEoaoewp): test runs 3, module lines 1983
+
+## J3 · QUESTION
+
+FR-41 / entry L6 names the wrong module. `visibleTextOfHtml` is not in text-chain's `paths` (`bio-plane/src/textchain.mjs`, which holds no HTML code: line 854 there is the tiersEvidenced comment). It is `export function visibleTextOfHtml` at `bio-plane/src/reading-pipeline/index.mjs:854-866`, owned by `reading-pipeline` (called from `textUnitsOfText`, line 876; its requirement is `reading-pipeline` R32). text-chain's requirements (R1-R104) say nothing about HTML or page text, and it is a pure chain/extent grammar, so there is nothing of mine to change, and I may not edit reading-pipeline's file (ownership check would fail).
+
+Best reading / recommendation: move L6 to `reading-pipeline` (it merges after text-chain anyway). The requirement line then belongs in `reading-pipeline.md` as an amendment to R32, not as text-chain R105, and I write no R105. The change itself is small and local: in `visibleTextOfHtml`, drop `nav` elements and any element with `role="navigation"` (with their contents, nesting-aware), skip links (an `a` whose href starts with `#` and whose text is "Skip to ..."), and unresolved template tokens (`{1}`, `{name}`-style numeric/identifier braces and `##LOC[...]##`); a page with no landmarks keeps all text. Tests are the four BOB listed (nav block, role=navigation block, skip link, tokens -> article only; no-landmark control; nav inside the article body dropped; two reads identical).
+
+Alternative if you want it here: I add a pure `pageContentText` helper to text-chain and reading-pipeline calls it; that needs a reading-pipeline change anyway and gives text-chain HTML knowledge it does not have, so I do not recommend it.
+
+I have made no change. Waiting for your ruling: re-place L6 to reading-pipeline (then FR-41 has no entries and text-chain can be archived), or tell me otherwise.
