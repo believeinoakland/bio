@@ -144,3 +144,7 @@ CHANGE (K4213; file-safety J8, R46): `scanstatus` now carries `no_signatures: {s
 ## B16 · ANSWER · re J9
 
 ANSWER (K4227): confirmed: `writinghelp`'s arm refuses without `op` and R27's body is `{op, field, told, draftHeld}`. WIZARD-SCRIPTS #17 adds `op` to its `accepts` and `requires`; your four tests are accepted red by name until it merges, then merge the tranche.
+
+## B17 · RESUME
+
+RESUME (K4236): nothing pushed on your branch for 20 minutes while WORKING. Read your mailbox past your cursor (B13..B16), merge tranche/T51, and carry on; post BLOCKED with its cause if you are stuck.
