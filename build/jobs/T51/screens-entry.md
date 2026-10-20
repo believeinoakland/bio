@@ -92,3 +92,26 @@ Size (session_011edZAMwB3Jh7b7Kg9KXTCE): test runs 2, module lines 1127
 ## J5 · COMPLETE
 
 FR-24 complete. R26 and R30 written by me in build/requirements/screens-entry.md (K4210); tranche/T51 merged, instance-setup R100's shape matches domainFile(), nothing to conform. Module tests 91/92: the one red is R10 on the design word screen.domainfile.refused.malformed, accepted by name per B7 until UX-DESIGN rewords it. format, architecture, coverage (27 of 27), words, ownership: 0 failures; checks/run.mjs: no line names screens-entry. Details in build/jobs/T51/screens-entry.md.
+
+## Completion (B8, restart #8)
+
+Re-opened by B8 (CHANGE, K4248): the design's U420 (DEC-387) and U422 (DEC-388) are merged into `tranche/T51`. This branch takes that tip (`62d21aa378`, the merge of `origin/tranche/T51`). No local stand-in of a provider to drop, and no code change in this round.
+
+**Entries applied.** B8 (yours, B417 1): `screen.domainfile.refused.malformed` now draws the malformed website-file refusal from the word row as reworded by DEC-387 ("such as example-tenants.org"). R10's guard stands as it was; its red is green. No requirement line changed: R26 and R30 (K4210) stand, both named by tests that pass.
+
+**Deferred.** Nothing.
+
+**Found in other modules.** None. The words check over every L11 module together (`checks/run.mjs`) names no line of this module; its 24 failures are op-grades' test copies (`t47`–`t49`).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/screens-entry/`: tests 92, pass 92, fail 0.
+- Dependencies (K4113): `npm ci --ignore-scripts` in each tracked `package-lock.json` directory that had no `node_modules`.
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio screens-entry`: 16 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio screens-entry`: 27 of 27 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio screens-entry tranche/T51 job/T51/screens-entry`: 0 failures.
+- `bio-plane/src/setup-words/build.mjs --check`: `rows.mjs` and `words-unreviewed.json` match `words.json` and the source.
+
+**Requirement lines for BOB.** None this round.
+
+Size (session_01C8fgWb9DkH29Qwidmkqkxo): test runs 1, module lines 1127
