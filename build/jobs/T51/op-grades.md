@@ -113,3 +113,7 @@ Size (session_01Wn3Nkryhpm6zQHj9uJJzg4): test runs 45, module lines 3427
 **Tests and checks.** `node --test bio-plane/test/m/op-grades/`: 138 tests, 138 pass, 0 fail (126 before; the register tests R49 and R50 were written first and seen failing, 11 + 1 added; R19's test now names the one writer). format 1 failure (b, not mine), architecture 0 failures, coverage 48 of 48 ids named by a test, words 0 failures for op-grades (29 unkeyed), ownership 8 files, 0 failures.
 
 Size (session_01EDK63b7XiZcZsCWWCnFvsT): test runs 18, module lines 3600
+
+## J12 · COMPLETE
+
+**COMPLETE again (B11, B12).** Pushed `3191e269a4`, tranche merged. B11 read: the contract stands as built; both input shapes (object, pair list) are taken. B12: MARKS re-taken at `e6d16d8f53` (DEC-382): 39 rungless acts added since `7be06eb4cb` (six more than at 206ed4755b), none changed or dropped; MARKS_KIT_COMMIT and the test pins updated. op-grades 138 tests, 0 fail; words 0 failures; ownership 0 failures. R49/R50/R19 lines unchanged from J11 except R46 now reads: "`e6d16d8f53`, the design as `tranche/T51` holds it (DEC-382), where the registry lists 39 rungless acts more than at `7be06eb4cb`". Size (session_01EDK63b7XiZcZsCWWCnFvsT): test runs 21, module lines 3600
