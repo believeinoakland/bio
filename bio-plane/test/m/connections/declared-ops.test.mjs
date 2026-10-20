@@ -12,8 +12,7 @@ const E = "ENT-2026-0001", F = "ENT-2026-0002";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 const PAGE = { kind: "pdf-page", page: 3 };
 const TEXT_A = "the commission is part of the department", TEXT_B = "beta";
-const OPS = ["connect", "connectionassert", "connectionchoose", "stepsource", "stepsourcewithdraw", "themedeclare", "themeplace",
-             "themepropose", "themeread", "themewithdraw"];
+const held = new Set();
 
 /* two answers are the same when they differ only by a generated theme id or a clock reading */
 const norm = (x) => JSON.stringify(x).replace(/THEME-\d{4}-\d{4}-[0-9a-f]+/g, "THEME").replace(/\d{4}-\d\d-\d\dT[\d:.]+Z?/g, "T");
@@ -53,14 +52,15 @@ const mk = (op, stamps, setup = base, adapt = null) => async (given) => {
     ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)])) });
   return await connectionsOps(env.w.k, new URL("http://x/?" + q), fields, {})[op]();
 };
-const holds = (op, stamps, codes, values, setup, adapt) =>
-  declaredOpHolds({ op, declaration: DECLARED_OPS[op], call: mk(op, stamps, setup, adapt), refusedNaming: named(codes), values, same });
+const holds = (op, stamps, codes, values, setup, adapt) => (held.add(op),
+  declaredOpHolds({ op, declaration: DECLARED_OPS[op], call: mk(op, stamps, setup, adapt), refusedNaming: named(codes), values, same }));
 const MEMBER = { author: "alice", viewer: V("alice") };
 
-test("R71 connections declares exactly the ops its screens send, each with the shape the declaration pass fixes", () => {
-  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), [...OPS].sort());
-  for (const op of OPS) {
-    const d = DECLARED_OPS[op];
+test("R71 connections declares only ops its own ops map serves, each with the shape the declaration pass fixes", async () => {
+  const { w } = await base();
+  const served = connectionsOps(w.k, new URL("http://x/?op=x"), null, {});
+  for (const [op, d] of Object.entries(DECLARED_OPS)) {
+    assert.equal(typeof served[op], "function", `${op} is served by this module`);
     assert.equal(typeof d.mutating, "boolean", op);
     assert.ok(Array.isArray(d.classes) && d.classes.length, op);
     assert.ok(typeof d.weight === "string" && d.weight, op);
@@ -70,7 +70,7 @@ test("R71 connections declares exactly the ops its screens send, each with the s
   }
   assert.equal(DECLARED_OPS.themeread.mutating, false);
   assert.deepEqual(DECLARED_OPS.stepsource.machineClasses, []);
-  assert.equal("assertedBy" in Object.fromEntries(DECLARED_OPS.connect.fields.accepts.map((f) => [f, 1])), false, "the door's stamp is not a field");
+  assert.equal(DECLARED_OPS.connect.fields.accepts.includes("assertedBy"), false, "the door's stamp is not a field");
 });
 
 test("R71 connections declares connect: an entity by id or entityId is required, and a field outside accepts is dropped", async () => {
@@ -133,4 +133,8 @@ test("R71 connections declares themewithdraw: the theme, the target and the reas
     { theme: ["THEME_NOT_FOUND"], target: ["THEME_TARGET_NOT_FOUND"], reason: ["THEME_WITHDRAW_NO_REASON"] },
     { target: A, reason: "it does not pass the test" }, placed,
     (f, env) => ("theme" in f ? { ...f, theme: env.theme } : f));
+});
+
+test("R71 connections holds every declaration it makes true against its op", () => {
+  assert.deepEqual([...held].sort(), Object.keys(DECLARED_OPS).sort());
 });
