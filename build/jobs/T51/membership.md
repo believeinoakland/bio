@@ -1,6 +1,6 @@
 # membership (T51)
 
-**Status** · session_018mYefzYbzbFYsZ9Kx9F2np · depth 2 · COMPLETE · handled B7
+**Status** · session_017s65dDGHCvSe8iRWnSsjCe · depth 2 · WORKING · handled B7
 
 ## J1 · COMPLETE
 
