@@ -83,13 +83,13 @@ test("R56 with no answer chosen nothing is sent; a refusal is drawn by its words
 });
 
 test("R67 the receipt draws the knock's reference under the heading, by key; an answer without one draws the receipt as before (control)", async () => {
-  const withRef = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true, knockId: "KNOCK-1", reference: "REF-77" } } } } });
+  const withRef = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true, knockId: "KNOCK-77" } } } } });
   choose(withRef, "db-file", new Uint8Array([104, 105]));
   await press(withRef, "knock");
   assert.ok(withRef.doc.querySelector("[data-received]"));
   assert.ok(drew(withRef, "screen.doorbell.after.head"));
-  assert.ok(drew(withRef, "screen.doorbell.reference", { reference: "REF-77" }));
-  const without = await open("/app/doorbell", { boot: PUBLIC });
+  assert.ok(drew(withRef, "screen.doorbell.reference", { reference: "KNOCK-77" }), "the reference is the knockId the doorbell answers");
+  const without = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true } } } } });
   choose(without, "db-file", new Uint8Array([104, 105]));
   await press(without, "knock");
   assert.ok(without.doc.querySelector("[data-received]"));

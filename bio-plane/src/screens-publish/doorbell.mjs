@@ -20,7 +20,7 @@ export const DOORBELL = Object.freeze({
     out.push('<ul class="mk-list" data-what-happens>' + ["only", "reads", "phrase", "court"].map(function (k) { return "<li>" + cs.w("screen.doorbell.happens." + k) + "</li>"; }).join("") + "</ul>");
     if (view.ui.received) {
       out.push('<p class="mk-note" role="status" data-received>' + cs.w("screen.doorbell.received", { at: { html: cs.date(view.ui.received.at) } }) + "</p>");
-      // R67 (I-20; DEC-384): the knock's reference, so the knocker has something to keep; an answer without one draws the receipt as before
+      // R67 (I-20; DEC-384): the knock's reference, the `knockId` the doorbell answers (doorbell R11), so the knocker has something to keep; an answer without one draws the receipt as before
       if (view.ui.received.reference) out.push("<h2>" + cs.w("screen.doorbell.after.head") + "</h2><p data-reference>" + cs.w("screen.doorbell.reference", { reference: view.ui.received.reference }) + "</p>");
     }
     out.push(cs.field("db-file", "screen.doorbell.file.label", { type: "file", help: "screen.doorbell.file.help" })
@@ -64,7 +64,7 @@ export const DOORBELL = Object.freeze({
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "knock", answer)) return { stay: true }; // D29: nothing is received on a refusal
         const r = view.parts.value(answer) || {};
-        view.ui.received = { at: new Date(cs.now()).toISOString(), reference: typeof r.reference === "string" && r.reference ? r.reference : "" };
+        view.ui.received = { at: new Date(cs.now()).toISOString(), reference: typeof r.knockId === "string" && r.knockId ? r.knockId : "" };
         cs.fill("db-note", "");
         return { stay: true };
       },
