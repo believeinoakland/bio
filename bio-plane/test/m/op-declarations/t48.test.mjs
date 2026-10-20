@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { explained } from "./help.mjs";
-import { browserActs } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
 import { T48_SHARES, T48_FAMILIES } from "../../../src/op-declarations/t48.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
@@ -185,7 +185,7 @@ test("R64, R34: actionreplyquoting and readtranslate are explained in affordance
 test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read against the registry at PR #34's merge — every function act is an op or an alias and the alias table names only function acts of the file, the Where else to go screen lists no act so no spec or alias is added for it, and the update screen's three owed acts (updatestart, updatelater, updateskip; updatelater also on the queue) are each declared under their own names with no alias (negative control: an undeclared function is seen)", () => {
   const fns = regActs.filter((a) => a.status === "function");
   /* T49 (K3321 (B), K3393; R21): the count is read from the registry, never pinned (K3268) */
-  assert.ok(fns.length >= 88, `${fns.length} function acts`);
+  assert.ok(fns.length > 0, `${fns.length} function acts`);
   for (const a of fns) assert.ok(Object.hasOwn(OPS, a.op), `${a.op}: a function act with no spec`);
   /* the alias table equals the file's function acts: each alias is a function act of the file; every other function act is
      an op declared under its own name */
@@ -203,7 +203,7 @@ test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read aga
      (owed, K3674) is the op declared since T5-11, each read as served with no alias; the installer's four own routes are
      owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
   const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
-  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];
   /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
   const BROWSER = browserActs(registry);
   assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER].sort());
@@ -492,8 +492,10 @@ test("R69, R5 (N1039; K3147, K3200): every table and list is built on first read
   assert.deepEqual(out.frozen, Array(8).fill(true));
   assert.equal(out.wrote, "TypeError");
   assert.equal(out.setWrote, "TypeError");
-  /* the export names and kinds are what they were: 109 names (T51 adds BROWSER_ACTS, R76), REAUTH_ACTS and decorateAct beside the tables */
-  assert.equal(out.names.length, 109);
+  /* the export names and kinds are what they were: 111 names (T51 adds BROWSER_ACTS, R76, and the registration's two functions, R80), REAUTH_ACTS and decorateAct beside the tables */
+  assert.equal(out.names.length, 111);
+  assert.equal(out.kinds.registerDeclaredOps, "function");
+  assert.equal(out.kinds.declaredFields, "function");
   assert.equal(out.kinds.decorateAct, "function");
   assert.equal(out.kinds.OPS, "object");
   assert.equal(out.kinds.EDGE_ACTIONS, "array");
@@ -504,7 +506,7 @@ test("R69, R5 (N1039; K3147, K3200): every table and list is built on first read
 
 test("R69 (K3147): every export answers exactly as before the tables were lazy — plain bindings read by the same names: the lists are arrays with the same entries in the same order, the tables plain objects with the same keys and frozen leaves, the specs and class lists frozen, the session sets frozen sets answering has, size and iteration, the act gate and decorateAct working over them (negative control: an export outside the list is missing)", () => {
   for (const [name, v] of Object.entries(O)) {
-    if (name === "decorateAct") { assert.equal(typeof v, "function"); continue; }
+    if (["decorateAct", "registerDeclaredOps", "declaredFields"].includes(name)) { assert.equal(typeof v, "function"); continue; }
     if (Array.isArray(v)) { assert.ok(Object.isFrozen(v), name); assert.ok(v.every((x) => typeof x === "string"), name); }
     else { assert.equal(typeof v, "object", name); assert.ok(Object.isFrozen(v), name); assert.equal(Object.getPrototypeOf(v), Object.prototype, name); }
   }

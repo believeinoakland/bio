@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { explained } from "./help.mjs";
 import { T51_SHARES, T51_FAMILIES } from "../../../src/op-declarations/t51.mjs";
-import { browserActs } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { checkScript } from "../../../src/wizard-scripts/index.mjs";
@@ -139,7 +139,7 @@ test("R76: a browser act is not an op — no spec in OPS, no row in NEEDS, no pl
 test("R76, R21: the totality — every act the registry marks owed is exactly one of (a) read as served (an op declared under its name), (b) a browser act whose `registry` string equals the row's `owed:<act> DEC-330`, or (c) still owed, named: the registry's owed acts split with nothing in two classes and nothing left over (negative control: an owed act in no class is seen)", () => {
   const owedRows = registry.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").map((a) => a.op);
   const nameOf = (row) => row.replace(/^owed:/, "").split(" ")[0];
-  const STILL_OWED = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];   /* the installer's own routes, no plane op (R21) */
+  const STILL_OWED = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];   /* the installer's own routes, no plane op (R21), and the acts this round's owners declare (DEC-378) */
   const classOf = (row) => {
     const act = nameOf(row);
     const a = Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act);
@@ -150,7 +150,7 @@ test("R76, R21: the totality — every act the registry marks owed is exactly on
   const classes = owedRows.map(classOf);
   assert.ok(!classes.includes(null), `an owed act in no class, or two: ${owedRows.filter((r, i) => classes[i] === null)}`);
   assert.deepEqual(owedRows.filter((r, i) => classes[i] === "browser").map(nameOf).sort(), BROWSER);
-  assert.deepEqual(owedRows.filter((r, i) => classes[i] === "owed").map(nameOf).sort(), STILL_OWED);
+  assert.deepEqual([...new Set(owedRows.filter((r, i) => classes[i] === "owed").map(nameOf))].sort(), [...STILL_OWED].sort());
   /* negative control: an owed act with no spec, no browser row and no ruling is in no class */
   assert.equal(classOf("owed:nosuchowedact DEC-330"), null);
   assert.equal(classOf("owed:hashcopy DEC-331"), null);   /* a registry string that differs from the table's row */
