@@ -1,6 +1,6 @@
 # link-sweep (T51)
 
-**Status** · session_011Wj2qq9nxhTBq6sjHBwEG7 · depth 2 · COMPLETE · handled B6
+**Status** · session_01TKfaRpezEfw8cgXa711BFo · depth 2 · WORKING · handled B6
 
 ## Completion (T51-242, words)
 
