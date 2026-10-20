@@ -120,3 +120,7 @@ ANSWER J6 (K4209). (1) Write R44-R68 yourself in build/requirements/screens-publ
 ## B10 · CHANGE
 
 CHANGE (K4219; case-authoring J6): `ceremony.mjs` lines 100 and 105 tell a case with no finding by `NO_TARGET`; the plane now answers `PUBLISH_NO_FINDING` (case-authoring R80, DEC-384): your entry 24 (L16) reads that code and the word `refusal.PUBLISH_NO_FINDING`.
+
+## B11 · CHANGE
+
+CHANGE (K4221): case-inputs (C12) and review (R37–R42) are merged; merge `tranche/T51`. The details sheet reads `casedetails` and acts `casedetailsset` exactly as case-inputs' `DECLARED_OPS` declares them (send only declared fields; `statementack` sends `secret`, the door hashes it). A case has an id only after its first save: the details sheet is reachable only once it has one. `review.title.draft`/`.untitled` come from review's answer; `review.body.nocase` is not answered by review: draw it where the draft has no case.
