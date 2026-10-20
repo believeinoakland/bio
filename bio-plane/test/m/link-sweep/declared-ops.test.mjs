@@ -43,3 +43,16 @@ test("R15 link-sweep declares sweepratify: its requires alone raise no refusal n
   await declaredOpHolds({ op: "sweepratify", declaration: DECLARED_OPS.sweepratify, refusedNaming: named, same: sameKind,
     call: mk("sweepratify"), values: { sweep: `${LIST}#minutes`, ratified: true } });
 });
+
+/* K4230: op-declarations refuses a mutating row with no `needs` (NEEDS_MISSING, its R80); this module's own check, not imported
+   from op-declarations (it comes later in the order). A member's act on the team's sweeps needs `contribute`, as
+   `monitoring`'s `namedrequestset` does: the owner's ratify is refused by the arm, not by a capability. */
+const missingNeeds = (rows) => Object.entries(rows).filter(([, r]) => r.mutating && !Object.hasOwn(r, "needs")).map(([op]) => op);
+
+test("R15 link-sweep declares a need on every mutating op it serves (sweepset and sweepratify: contribute), and the check refuses a mutating row without one", () => {
+  assert.deepEqual(missingNeeds(DECLARED_OPS), []);
+  assert.equal(DECLARED_OPS.sweepset.needs, "contribute");
+  assert.equal(DECLARED_OPS.sweepratify.needs, "contribute");
+  /* control: the same check names a mutating row that declares no need, and passes a read */
+  assert.deepEqual(missingNeeds({ bare: { mutating: true, classes: ["member"] }, read: { mutating: false, classes: ["member"] } }), ["bare"]);
+});
