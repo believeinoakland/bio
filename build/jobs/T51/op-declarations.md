@@ -97,3 +97,30 @@ Effect today: the plane cannot register every owner's declarations at start-up, 
 Proposed fix for citation's job (the act is a member's own contribution; its sibling member acts declare `needs: "contribute"`): add `needs` to `citeimported` (likely `"contribute"`, to be confirmed against citation R-lines and NEEDS), keeping `classes`, `machineClasses`, `mutating` and `stamps` as declared. BOB to route it to citation.
 
 Other owners' rows were not checked beyond the first refusal; registration stops at the first.
+
+## J13 · COMPLETE
+
+FR-68 (op-declarations, T51 fix round): entries applied.
+
+**Entry 1 (K3268): done.** Hand lists of case-import's ops in my tests now read the owner's `DECLARED_OPS` (registered by `test/m/op-declarations/register-owners.mjs`, R80), not a hand list:
+- `t28.test.mjs` "R14, R6": the served set is the hand R14 ops, the watch ops and case-import's declared ops; a declared op no act list names is stamped by its declaration (`OP_STAMPS`); the act lists name the rest. Control added: an op in no table and no declaration (`importnosuchop`) is no spec, no session set, gate `machine`.
+- `t31.test.mjs` "R16, R6": same reading for the act and BY lists (declared-only ops excluded, their stamps read from the declaration).
+Both failed before (`importregrade: no spec`, the list diffs); they pass with the four new ops (importregrade, rerunstart, rerunpair, rerunread).
+
+**Entry 2 (R73, R21): done.** `registryActGaps` in t50 "R73, R21": `expertisewithdraw` is declared by member-roster (R79, merged), so it is no gap. t50 now reads the owed acts its registered owners declare (`OWED_NOW`) instead of the registry's owed list. Same cause in t33 "R19, R6" and t46 "R51, R6" (`membership: expertisewithdraw has no spec`), which now register member-roster's rows; t33 "R19, R4, R5, R30" and t46 "R52" read the declared ops as declared (their hand expectations are unchanged).
+
+**Requirement line** (K4210): `build/requirements/op-declarations.md` Status line amended (no requirement's meaning changed). Ownership reports that file as outside my paths; B13 accepts that at my merge.
+
+**Deferred / found elsewhere**
+- citation: `citeimported`'s declared row has no `needs` and R80 refuses it, so the plane cannot register every owner's declarations. Reported in a separate REPORT; not worked here. My tests register only case-import's and member-roster's rows until it is fixed, and the owner-wide collector (test-support `declaredOpsOf`) is not used in my tests for that reason.
+- Process-check findings in other modules (not mine): coverage (agent-harness R17, agent-runner R37/R38/R40, installer-steps R26/R31, journey-check R19, link-sweep R13–R15); words (op-grades testcopy, strength inline). None in op-declarations.
+
+**Tests and checks run**
+- `node --test test/m/op-declarations/*.test.mjs` (bio-plane): 242 tests, 242 pass (before the fix: 5 failing).
+- `node checks/format.mjs` (via checks/run.mjs): 175 modules, 0 failures.
+- `node checks/run.mjs /home/user/bio`: architecture 0 failures; words: 16 failures, none in op-declarations (op-grades, strength); coverage: 6235 of 6245 ids named, 5 failures, none in op-declarations.
+- `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 8 files changed; 1 failure, the requirements file (accepted at merge per B13).
+
+Commit `9747460e05` pushed to `job/T51/op-declarations`.
+
+Size (session_017CpAHUqZY2t5XBCS52jgiU): test runs 7, module lines 3452
