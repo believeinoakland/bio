@@ -2689,6 +2689,16 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "owed:rerunread K4169",
+     "label": "Compare with the original",
+     "status": "owed"
+    },
+    {
+     "op": "owed:rerunpair K4169",
+     "label": "This answers the same claim",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4743,6 +4753,16 @@
       "citation",
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:casedetailsset K4169",
+     "label": "Save this detail",
+     "status": "owed"
+    },
+    {
+     "op": "owed:casedetails K4169",
+     "label": "Details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4919,6 +4939,11 @@
       "publish-schedule",
       "queue-producers"
      ]
+    },
+    {
+     "op": "owed:casedetails K4169",
+     "label": "See the details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4996,6 +5021,11 @@
      "op": "owed:pubprint DEC-330",
      "label": "Print the case",
      "status": "owed"
+    },
+    {
+     "op": "owed:casedetailspublic K4169",
+     "label": "Details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -5052,6 +5082,16 @@
       "case-import",
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:importregrade K4169",
+     "label": "View under another lens",
+     "status": "owed"
+    },
+    {
+     "op": "owed:rerunstart K4169",
+     "label": "Re-run this work in your own project",
+     "status": "owed"
     }
    ],
    "journeys": [

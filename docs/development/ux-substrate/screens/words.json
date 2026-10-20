@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6167,
+  "screen": 6257,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1033,
+  "act": 1048,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -229,8 +229,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17151,
-  "protected": 1024
+  "total": 17256,
+  "protected": 1032
  },
  "words": [
   {
@@ -69124,6 +69124,636 @@
    "note": "DEC-377: B398 C6 (attestation captureaccount): refusal; followed by \"Ask Mai.\" in the drawing"
   },
   {
+   "key": "screen.case-editor.details.first",
+   "en": "The details of this work open once you have saved the case: what kind of work it is, the area of government, a point of contact, related work and relationships.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor, first case: the section shown before the first save"
+  },
+  {
+   "key": "screen.case-editor.details.intro1",
+   "en": "These five details travel beside the case.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: opening note of the section; followed by intro2"
+  },
+  {
+   "key": "screen.case-editor.details.intro2",
+   "en": "Each says Not stated until you set it, and none of them stops you from publishing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: opening note, second sentence"
+  },
+  {
+   "key": "screen.case-editor.details.outward1",
+   "en": "Once the case is published, a change here shows to every reader at once.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: outward-act note; followed by outward2"
+  },
+  {
+   "key": "screen.case-editor.details.outward2",
+   "en": "The signature on an edition does not cover these details.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: outward-act note, second sentence"
+  },
+  {
+   "key": "screen.case-editor.details.class.title",
+   "en": "What kind of work this is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): row title of the classification detail; also on the ceremony checklist and the published page"
+  },
+  {
+   "key": "screen.case-editor.details.area.bodyhint",
+   "en": "A public body the team follows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): meta under a chosen public body in the area list"
+  },
+  {
+   "key": "screen.case-editor.details.area.addbody",
+   "en": "Add a public body the team follows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): label of a list of public bodies"
+  },
+  {
+   "key": "screen.case-editor.details.area.words",
+   "en": "Or type the words that name the area",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label"
+  },
+  {
+   "key": "screen.case-editor.details.list.add",
+   "en": "Add to the list",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): button: adds the entry being typed to a list"
+  },
+  {
+   "key": "screen.case-editor.details.contact.legend",
+   "en": "Who readers write to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): legend of the point-of-contact choices"
+  },
+  {
+   "key": "screen.case-editor.details.contact.doorbell",
+   "en": "Use the team's doorbell",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice; the doorbell is the team public message path, not a person"
+  },
+  {
+   "key": "screen.case-editor.details.contact.words",
+   "en": "Use one line of my own words",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice"
+  },
+  {
+   "key": "screen.case-editor.details.contact.help",
+   "en": "An address or a web form, on one line, up to 254 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): help under the contact words field"
+  },
+  {
+   "key": "screen.case-editor.details.contact.nomember1",
+   "en": "No member is named here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note under point of contact; followed by nomember2"
+  },
+  {
+   "key": "screen.case-editor.details.contact.nomember2",
+   "en": "The doorbell passes a message to the team without naming anyone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note, second sentence"
+  },
+  {
+   "key": "screen.case-editor.details.rel.link",
+   "en": "Link to a published case, or a web address",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label for related work"
+  },
+  {
+   "key": "screen.case-editor.details.rel.linkhelp",
+   "en": "A case on any team's public page, or an address that starts with https.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): help under the related-work link field"
+  },
+  {
+   "key": "screen.case-editor.details.rel.choose",
+   "en": "Choose how it relates",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): first, unselected option of the relation list"
+  },
+  {
+   "key": "screen.case-editor.details.rel.same",
+   "en": "Is about the same matter as",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): relation word: the related work covers the same matter"
+  },
+  {
+   "key": "screen.case-editor.details.rel.other",
+   "en": "Relates in another way",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): relation word: any other relation"
+  },
+  {
+   "key": "screen.case-editor.details.rel.words",
+   "en": "Your words about it (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label"
+  },
+  {
+   "key": "screen.case-editor.details.ties.intro",
+   "en": "The team's ties to the bodies and people this work examines.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note above the relationships choices; followed by ties.public"
+  },
+  {
+   "key": "screen.case-editor.details.ties.public",
+   "en": "The signature on an edition does not cover it, and anyone who reads the case can see it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note, second sentence; say plainly that the relationships are public"
+  },
+  {
+   "key": "screen.case-editor.details.ties.legend",
+   "en": "What the team states",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): legend of the three relationship states"
+  },
+  {
+   "key": "screen.case-editor.details.ties.none",
+   "en": "None: the team has no ties to state",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice, and the published page word for the none state"
+  },
+  {
+   "key": "screen.case-editor.details.ties.some",
+   "en": "The team is tied to the following",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice for a list of ties"
+  },
+  {
+   "key": "screen.case-editor.details.ties.with",
+   "en": "A body, an official or another party.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): help under the who-or-what field"
+  },
+  {
+   "key": "screen.case-editor.details.ties.how",
+   "en": "How the team is tied to them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label"
+  },
+  {
+   "key": "screen.case-editor.details.ties.stake",
+   "en": "The team's own stake in what it examines is stated separately, and readers see it beside this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note: the stake is not this field"
+  },
+  {
+   "key": "screen.case-editor.details.refused.summary",
+   "en": "When the details cannot be saved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): disclosure summary"
+  },
+  {
+   "key": "screen.case-editor.details.refused.owner1",
+   "en": "Only the project's owner sets these details.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by Nothing was saved. and Ask and the owner"
+  },
+  {
+   "key": "screen.case-editor.details.refused.body",
+   "en": "A public body you chose is not one the team follows.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by choose-another"
+  },
+  {
+   "key": "screen.case-editor.details.refused.body2",
+   "en": "Choose another, or type its name in words.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal, what to do next"
+  },
+  {
+   "key": "screen.case-editor.details.refused.malformed1",
+   "en": "An entry is empty, runs past its limit, or has a line break.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by shorten"
+  },
+  {
+   "key": "screen.case-editor.details.refused.malformed2",
+   "en": "Shorten it and save again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal, what to do next"
+  },
+  {
+   "key": "screen.case-editor.details.refused.nocase1",
+   "en": "This case has not been saved yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by save-first"
+  },
+  {
+   "key": "screen.case-editor.details.refused.nocase2",
+   "en": "Save the case first, then set its details.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal, what to do next"
+  },
+  {
+   "key": "screen.ceremony.details.ceremony.notstated1",
+   "en": "A detail left not stated is shown to readers as Not stated.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): ceremony checklist note; followed by never blocks"
+  },
+  {
+   "key": "screen.ceremony.details.ceremony.notstated2",
+   "en": "None of them stops you from publishing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): ceremony checklist note, second sentence"
+  },
+  {
+   "key": "screen.published.details.pub.current1",
+   "en": "These details are the team's current statement.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): published page note; followed by pub.current2"
+  },
+  {
+   "key": "screen.published.details.pub.current2",
+   "en": "They are not part of the signed edition, and the team can change them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): published page note, second sentence"
+  },
+  {
+   "key": "screen.imported.lens_what",
+   "en": "Your team's declared way of reading evidence (its lens).",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the lens section, before the explanation; one sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_does",
+   "en": "This re-weighs the findings above under the lens you choose; nothing is saved and nothing is sent to the source team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the lens section; one sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_as_published",
+   "en": "As the source published it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Radio choice, none preselected. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_removed",
+   "en": "With the source's bias removed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Radio choice, none preselected. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_own",
+   "en": "Under your team's lens",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Radio choice, none preselected. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_shown",
+   "en": "Shown here: with the source's bias removed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Caption above the table; the lens named changes with the choice (one of the three radio choices, lower-cased start). Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_moved",
+   "en": "Moved: {published} as published, {regraded} without the source's bias.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row of a finding that moved; both placeholders hold a pair of grades; the lens named follows the choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_bar_ours",
+   "en": "It meets your team's bar: {answer}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row; the placeholder is yes or no. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_bar_theirs",
+   "en": "It met the source's bar: {answer}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row; the placeholder is yes or no. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_because",
+   "en": "Moved by the statement {statement}, which touches the inference {part}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row; the statement is a lens statement as the case prints it; the touched part is a leg, an inference or a conclusion. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_unmoved",
+   "en": "Nothing in this lens touches it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row of a finding that did not move. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_none_summary",
+   "en": "When your team has no lens in force",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Disclosure summary. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_none",
+   "en": "Your team has no lens in force, so reading under your lens gives the same answer as removing the source's bias.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note inside the disclosure. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_unreadable_summary",
+   "en": "When your team's lens can't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Disclosure summary. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_unreadable",
+   "en": "Your team's lens can't be read, so no finding is shown as moved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Gap inside the disclosure; nothing is assumed false. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_what",
+   "en": "Redo this team's work under your own lens, in a project of your team's, and set the two side by side.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the rerun section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_pairing_human",
+   "en": "Civicsmith cannot know that two findings answer the same claim, so you say which do.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the rerun section; second sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_project_label",
+   "en": "Which of your team's projects redoes this work",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Field label of the project choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_project_none",
+   "en": "Choose one of your team's projects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: First option of the project choice, not a project. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_start_one",
+   "en": "Or start one and come back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: The word start links to the ordinary new-question flow. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_declares",
+   "en": "This only declares the project a rerun of Edition 2.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button; Edition 2 is the edition shown. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_nothing",
+   "en": "The imported case stays as it is, this is not an acceptance or an endorsement, and nothing is sent to {team}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button; the placeholder is the source team's name. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_compare_there",
+   "en": "You can compare the two on the project's page.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_owner",
+   "en": "Only an owner of that project can declare it a rerun.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_owner_next",
+   "en": "Ask one of its owners.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_already",
+   "en": "That project already reruns this edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_already_next",
+   "en": "Open it to compare, or choose another project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_head",
+   "en": "A rerun of Port lease revenue (Edition 2) from West Oakland Neighbors.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Subtitle of the project page for a rerun; the case title, edition and team are sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_unchanged",
+   "en": "The imported case is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Subtitle, second sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_names",
+   "en": "Civicsmith names the difference between the two lenses and the pairings you make.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Intro to the comparison. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_not_cause",
+   "en": "It does not say why the two readings differ.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Intro to the comparison, second sentence: not a cause. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_lens_diff",
+   "en": "How the two lenses differ",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_only_theirs",
+   "en": "Only in their lens",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Column heading; the source team's lens statements not in this project's lens. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_both",
+   "en": "{count} statements are in both lenses.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Line under the two lists. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_findings",
+   "en": "Their findings and ours",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_paired",
+   "en": "Answers the same claim as our finding {finding}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Row of a paired finding; the placeholder is the project's finding. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_differ",
+   "en": "The two readings differ.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Row of a pairing whose two pairs of grades are not equal. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_unpaired",
+   "en": "Not paired with a finding of this project yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Row of an original finding with no pairing. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_label",
+   "en": "Which finding of this project answers the same claim",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Field label of the pairing choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_none",
+   "en": "Choose one of this project's findings",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: First option of the choice, not a finding. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_is",
+   "en": "A pairing is your statement, not a check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Note under the pairing button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_strength",
+   "en": "It never changes either finding's strength, and one finding may be paired with several.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Note under the pairing button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_withdraw",
+   "en": "You can withdraw it; the history keeps both.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Note under the pairing button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_refused",
+   "en": "When pairing is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Disclosure summary. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_member",
+   "en": "Only this project's owners and joined members can pair findings.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_member_next",
+   "en": "Join the project first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_own",
+   "en": "That finding isn't one of this project's.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_own_next",
+   "en": "Choose one from the list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -109749,6 +110379,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_rerunread.label.project",
+   "en": "Compare with the original",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_rerunpair.label.project",
+   "en": "This answers the same claim",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.objectivecondition.label.objective",
    "en": "Save this measure of success",
    "protected": true,
@@ -110985,6 +111627,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_casedetailsset.label.case-editor",
+   "en": "Save this detail",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_casedetails.label.case-editor",
+   "en": "Details of this work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.reviewgrant.label.review-copy",
    "en": "Share for review",
    "protected": true,
@@ -111087,6 +111741,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_casedetails.label.ceremony",
+   "en": "See the details of this work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.reviewcomment.label.review-outside",
    "en": "Send your comment",
    "protected": true,
@@ -111129,6 +111789,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_casedetailspublic.label.published",
+   "en": "Details of this work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.caseimport.label.imported",
    "en": "Import a case",
    "protected": true,
@@ -111155,6 +111821,18 @@
   {
    "key": "act.importacceptwithdraw.label.imported",
    "en": "Withdraw an acceptance, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_importregrade.label.imported",
+   "en": "View under another lens",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_rerunstart.label.imported",
+   "en": "Re-run this work in your own project",
    "protected": true,
    "source": "registry.json"
   },
@@ -111295,6 +111973,48 @@
    "en": "See the sweeps",
    "protected": true,
    "source": "registry.json"
+  },
+  {
+   "key": "act.owed_casedetailsset.does",
+   "en": "Records one of the case's five details: what kind of work it is, the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_casedetails.does",
+   "en": "Shows the five details of this case as they stand now, and who set each and when. None of them stops a case from being published.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_casedetailspublic.does",
+   "en": "Shows any reader the five details of this case as the team currently states them, with those it has not stated marked Not stated.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_importregrade.does",
+   "en": "Re-weighs this case's findings under the lens you choose and shows which moved and which statement moved each. It saves nothing, changes nothing in the imported case and sends nothing to the source team.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_rerunstart.does",
+   "en": "Declares one of your team's projects a rerun of this edition, so you can compare your work with the original. It records only that; the imported case is not changed, nothing is accepted and nothing is sent to the source team.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_rerunpair.does",
+   "en": "States that one finding of this project answers the same claim as one of the original's, or withdraws that statement. It is your statement, kept in the history, and never changes either finding's strength.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_rerunread.does",
+   "en": "Shows this rerun beside the original: the two lenses' differences and the findings you paired. It changes nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.contradictionclarify.does",
