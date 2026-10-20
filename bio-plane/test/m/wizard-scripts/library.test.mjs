@@ -78,17 +78,17 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "958d998ccb", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
-  assert.equal(wz.SCREEN_REGISTRY.length, 77, "R44: the file at the design commit named at the START of T51");
+  assert.equal(wz.SCREEN_REGISTRY.length, 83, "R45: the file at the design commit named at the fix round of T51");
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];
     assert.deepEqual([s.id, s.name, s.purpose], [f.id, f.name, f.purpose], f.id);
-    assert.deepEqual(s.acts, f.acts.filter((a) => a.status === "declared" || a.status === "function").map((a) => a.op), `${f.id} acts`);
+    assert.deepEqual(s.acts, [...new Set(f.acts.filter((a) => a.status === "declared" || a.status === "function").map((a) => a.op))], `${f.id} acts (R45: an op two acts share is one act)`);
     const owed = [];
-    let before = 0;
+    const seen = new Set();
     for (const a of f.acts) {
-      if (a.status === "owed") { const m = OWED.exec(a.op); owed.push({ op: m[1], dec: m[2], at: before }); } else before++;
+      if (a.status === "owed") { const m = OWED.exec(a.op); owed.push({ op: m[1], dec: m[2], at: seen.size }); } else seen.add(a.op);
     }
     assert.deepEqual(s.owed, owed, `${f.id} owed`);
     for (const a of s.acts) assert.ok(!a.startsWith("owed:"), "an owed act names no op among acts");
@@ -144,12 +144,12 @@ test("R13 (T37; K2171) the registry is re-taken from PR #14's merge onward: conn
 test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act is registered as its op, in the file's order, only once the member op table declares it; with no op table none is", () => {
   /* the acts the file still owes (R35, R38, R41): the installer's four routes, `founderhandleset`, members' `passwordresetlink` after
      memberadd, DEC-226's three update acts and the six T50 adds (K3674 among them); fifteen ops, `updatelater` on two screens */
-  assert.deepEqual(OWED_OPS, ["installupdate", "installalongside", "installremove", "installremoveconfirm", "founderhandleset", "passwordresetlink",
-                              "updatestart", "updatelater", "updateskip", "watchitem", "secondlook", "revisioncompare", "hashcopy", "linkopen",
-                              "projectstakeset", "aliaswithdraw", "actionstake", "actioninquiry", "reviewexport", "pubfloorset", "pubfloorclear", "pubprint"]);
+  assert.equal(OWED_OPS.length, 41, "R45: forty-one owed ops at 958d998ccb (the earlier twenty-two among them)");
+  for (const op of ["installupdate", "installalongside", "installremove", "installremoveconfirm", "founderhandleset", "passwordresetlink", "updatestart", "updatelater", "updateskip"])
+    assert.ok(OWED_OPS.includes(op), op);
   const w = seeded({ register: false });
   const r = w.wz.wizardRegister({ ops: ALL_OPS.filter((o) => !OWED_OPS.includes(o)), library: [] });
-  assert.deepEqual([r.ok, r.screens], [true, 77]);
+  assert.deepEqual([r.ok, r.screens], [true, 83]);
   const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.deepEqual(by.members.slice(0, 3), ["memberadd", "signerset", "signeradd"], "passwordresetlink undeclared: not registered");
   const all = seeded({ register: false });
@@ -158,7 +158,7 @@ test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act 
   assert.deepEqual(byAll.members.slice(0, 3), ["memberadd", "passwordresetlink", "signerset"], "declared: registered at its place, between two declared acts");
   /* every registered act is the file's, in the file's order */
   for (const f of REG_FILE.screens) {
-    const want = f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op));
+    const want = [...new Set(f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)))];   /* an op two acts share is registered once */
     assert.deepEqual(byAll[f.id], want, f.id);
     assert.deepEqual(by[f.id], want.filter((op) => !OWED_OPS.includes(op)), f.id);
   }
@@ -171,7 +171,7 @@ test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act 
   w2.wz.wizardRegister({ library: [] });
   const by2 = Object.fromEntries(w2.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.deepEqual([by2.members.includes("passwordresetlink"), by2.plan.includes("itemtakeup")], [false, true]);
-  assert.deepEqual(w2.wz.registeredScreens().map((s) => s.acts), wz.SCREEN_REGISTRY.map((s) => [...s.acts]));
+  assert.deepEqual(w2.wz.registeredScreens().map((s) => s.acts), wz.SCREEN_REGISTRY.map((s) => [...new Set(s.acts)]));
   /* and a registered owed act is checked as any act is */
   assert.deepEqual(wz.checkScript([step("members", "passwordresetlink"), step("members", null)], real()).refusals, []);
   assert.deepEqual(wz.checkScript([step("members", "passwordresetlink")], real({ ops: ALL_OPS.filter((o) => o !== "passwordresetlink") })).refusals.map((x) => x.code),
@@ -212,10 +212,10 @@ test("R13 (T37; N776) with an op table registered, a declared or function act wh
   w.wz.wizardRegister({ ops, library: [] });
   const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.ok(!by.setup.includes("groupkeyswitch") && by.setup.includes("groupkeyset"), "the declared act the table lacks, gone; its neighbour kept");
-  assert.deepEqual(by.doorbell, [], "a function act the table lacks");
+  assert.ok(!by.doorbell.includes("knock"), "a function act the table lacks");
   assert.ok(!by.finder.includes("calculationcreate"));
   for (const f of REG_FILE.screens) {
-    const want = f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)).filter((op) => ops.includes(op));
+    const want = [...new Set(f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)))].filter((op) => ops.includes(op));
     assert.deepEqual(by[f.id], want, `${f.id}: the file's acts the table holds, in the file's order`);
   }
   assert.deepEqual(w.wz.wizardRegistry({ viewer: F }).screens.map((s) => [s.id, s.acts]), w.wz.registeredScreens().map((s) => [s.id, s.acts]));

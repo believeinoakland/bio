@@ -89,7 +89,8 @@ export function screensFromFile(file) {
   for (const s of (file && Array.isArray(file.screens) ? file.screens : [])) {
     const acts = [], owed = [];
     for (const a of Array.isArray(s.acts) ? s.acts : []) {
-      if (a.status === "declared" || a.status === "function") acts.push(a.op);
+      /* R45: an op the file lists for two acts of one screen (members: confirm and withdraw an expertise) is one act here */
+      if (a.status === "declared" || a.status === "function") { if (!acts.includes(a.op)) acts.push(a.op); }
       else if (a.status === "owed") {
         const m = OWED_ACT.exec(String(a.op ?? "").trim());
         if (m) owed.push({ op: m[1], dec: m[2] ?? null, at: acts.length });

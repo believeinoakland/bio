@@ -26,7 +26,8 @@
      "modules": [
       "installer",
       "instance-setup",
-      "membership"
+      "membership",
+      "op-declarations"
      ]
     },
     {
@@ -68,7 +69,8 @@
      "modules": [
       "installer",
       "instance-setup",
-      "membership"
+      "membership",
+      "op-declarations"
      ]
     }
    ],
@@ -85,9 +87,9 @@
     {
      "op": "login",
      "label": "Sign in",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "credentials"
+      "op-declarations"
      ]
     },
     {
@@ -161,9 +163,9 @@
     {
      "op": "claim",
      "label": "Claim with the one-time password",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "credentials"
+      "op-declarations"
      ]
     },
     {
@@ -176,7 +178,8 @@
      "label": "Name the team",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "instance-setup",
+      "op-declarations"
      ]
     },
     {
@@ -184,15 +187,16 @@
      "label": "Verify the web address",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "instance-setup",
+      "op-declarations"
      ]
     },
     {
      "op": "profilesset",
      "label": "Choose places and languages",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "instance-setup"
+      "op-declarations"
      ]
     },
     {
@@ -208,7 +212,8 @@
      "label": "Add an office yourself",
      "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "op-declarations"
      ]
     },
     {
@@ -262,9 +267,9 @@
     {
      "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
@@ -278,9 +283,9 @@
     {
      "op": "memberadd",
      "label": "Invite a member or a second administrator",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
@@ -335,7 +340,8 @@
      "label": "Read the invitation",
      "status": "declared",
      "modules": [
-      "admission"
+      "admission",
+      "op-declarations"
      ]
     },
     {
@@ -360,7 +366,8 @@
      "label": "Join with a handle and password",
      "status": "declared",
      "modules": [
-      "admission"
+      "admission",
+      "op-declarations"
      ]
     },
     {
@@ -389,6 +396,7 @@
      "status": "declared",
      "modules": [
       "capture",
+      "op-declarations",
       "ratification"
      ]
     },
@@ -411,9 +419,9 @@
     {
      "op": "filingapprove",
      "label": "Approve the text",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "filings"
+      "op-declarations"
      ]
     },
     {
@@ -421,6 +429,7 @@
      "label": "Open the item",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "tasks"
      ]
     },
@@ -432,6 +441,7 @@
       "action-producers",
       "basis-versions",
       "control-plane",
+      "op-declarations",
       "promotion"
      ]
     },
@@ -446,33 +456,71 @@
     {
      "op": "projectjoin",
      "label": "Join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequest",
      "label": "Ask to join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequestwithdraw",
      "label": "Withdraw your request",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequestanswer",
      "label": "Grant or decline a request to join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:taskdecide K4169",
+     "label": "Say who issued it, or that you could not tell",
+     "status": "owed"
+    },
+    {
+     "op": "taskforward",
+     "label": "Pass it to someone else",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "tasks"
+     ]
+    },
+    {
+     "op": "adminendorse",
+     "label": "Endorse an administrator",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Add an owner",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "expertiseconfirm",
+     "label": "Confirm expertise",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
      ]
     }
    ],
@@ -490,9 +538,9 @@
     {
      "op": "memberadd",
      "label": "Invite a member",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
@@ -503,57 +551,65 @@
     {
      "op": "signerset",
      "label": "Withdraw a member's signing key",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "credentials"
+      "op-declarations"
      ]
     },
     {
      "op": "signeradd",
      "label": "Register a key for this member",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "credentials"
+      "op-declarations"
      ]
     },
     {
      "op": "membercaps",
      "label": "Change what a member may do",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "memberset",
      "label": "Change a member's status",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "adminendorse",
      "label": "Endorse an administrator",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "adminremove",
      "label": "Remove an administrator",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "expertiseconfirm",
      "label": "Confirm declared expertise",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "expertiseconfirm",
+     "label": "Withdraw an expertise",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
      ]
     },
     {
@@ -638,9 +694,9 @@
     {
      "op": "expertisedeclare",
      "label": "Declare your expertise",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
@@ -698,6 +754,14 @@
      "modules": [
       "instance-setup",
       "interface-shell"
+     ]
+    },
+    {
+     "op": "memberpairingset",
+     "label": "Choose whether your cover and handle are published together",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
      ]
     }
    ],
@@ -849,6 +913,82 @@
    "journeys": []
   },
   {
+   "id": "bias",
+   "name": "Declared bias",
+   "frame": "working",
+   "purpose": "The lens the team reads evidence through, stated so a reader can discount it: read what is in force for the team or a project, write a set, draft one from an outside policy, adopt it, and settle work made under an earlier lens (DEC-374; bias R11 to R21, R35, R36). It never blocks work.",
+   "acts": [
+    {
+     "op": "biasmanifest",
+     "label": "Show the lens in force",
+     "status": "declared",
+     "modules": [
+      "bias",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "promote",
+     "label": "Save the set and offer it for adoption",
+     "status": "declared",
+     "modules": [
+      "action-producers",
+      "basis-versions",
+      "control-plane",
+      "op-declarations",
+      "promotion"
+     ]
+    },
+    {
+     "op": "biasadopt",
+     "label": "Adopt this set",
+     "status": "declared",
+     "modules": [
+      "bias",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "biasinhale",
+     "label": "Propose statements from it",
+     "status": "declared",
+     "modules": [
+      "bias",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "biasdebt",
+     "label": "Show its record",
+     "status": "declared",
+     "modules": [
+      "bias",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "biasdebtresolve",
+     "label": "Settle it, with your reason",
+     "status": "declared",
+     "modules": [
+      "bias",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": [
+    2
+   ]
+  },
+  {
    "id": "places",
    "name": "Places and offices",
    "frame": "working",
@@ -857,9 +997,9 @@
     {
      "op": "profilesset",
      "label": "Choose the places whose rules apply",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "instance-setup"
+      "op-declarations"
      ]
     },
     {
@@ -883,7 +1023,8 @@
      "label": "Add an office yourself",
      "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "op-declarations"
      ]
     }
    ],
@@ -921,7 +1062,8 @@
      "label": "Save the name",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "instance-setup",
+      "op-declarations"
      ]
     },
     {
@@ -929,7 +1071,8 @@
      "label": "Verify the website",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "instance-setup",
+      "op-declarations"
      ]
     },
     {
@@ -959,9 +1102,9 @@
     {
      "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
@@ -985,7 +1128,28 @@
      "label": "Correct the time zone",
      "status": "declared",
      "modules": [
-      "local-facts"
+      "local-facts",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "export",
+     "label": "Take a copy of the record",
+     "status": "declared",
+     "modules": [
+      "corpus-export",
+      "op-declarations",
+      "publication"
+     ]
+    },
+    {
+     "op": "exportlog",
+     "label": "Show the list of copies",
+     "status": "declared",
+     "modules": [
+      "corpus-export",
+      "op-declarations",
+      "publication"
      ]
     },
     {
@@ -1042,6 +1206,36 @@
      "op": "owed:updateskip K3158",
      "label": "Skip this version, with a reason",
      "status": "owed"
+    },
+    {
+     "op": "selftest",
+     "label": "Check your copy now",
+     "status": "declared",
+     "modules": [
+      "installer",
+      "instance-setup",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "bootstrap",
+     "label": "Show what each part runs",
+     "status": "declared",
+     "modules": [
+      "installer",
+      "instance-setup",
+      "membership",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "runtime",
+     "label": "Show what running costs",
+     "status": "declared",
+     "modules": [
+      "instance-setup",
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -1188,6 +1382,7 @@
      "label": "See the library",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "wizard-scripts"
      ]
     },
@@ -1196,6 +1391,7 @@
      "label": "Record a new wizard",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "wizard-scripts"
      ]
     },
@@ -1204,6 +1400,7 @@
      "label": "Revise a draft",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "wizard-scripts"
      ]
     },
@@ -1212,6 +1409,7 @@
      "label": "Submit for approval",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "wizard-scripts"
      ]
     },
@@ -1220,6 +1418,7 @@
      "label": "Approve",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "wizard-scripts"
      ]
     },
@@ -1228,6 +1427,7 @@
      "label": "Retire",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "wizard-scripts"
      ]
     }
@@ -1248,6 +1448,7 @@
       "action-producers",
       "basis-versions",
       "control-plane",
+      "op-declarations",
       "promotion"
      ]
     },
@@ -1256,31 +1457,32 @@
      "label": "Read the themes",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
      "op": "projectjoin",
      "label": "Join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequest",
      "label": "Ask to join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequestwithdraw",
      "label": "Withdraw your request",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     }
    ],
@@ -1299,7 +1501,8 @@
      "label": "Read the themes",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -1307,7 +1510,8 @@
      "label": "Declare a theme",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -1315,7 +1519,8 @@
      "label": "Place it in the theme",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -1323,7 +1528,8 @@
      "label": "Take out or reject, with a reason",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     }
    ],
@@ -1340,9 +1546,9 @@
     {
      "op": "filingapprove",
      "label": "Approve the text",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "filings"
+      "op-declarations"
      ]
     },
     {
@@ -1350,7 +1556,8 @@
      "label": "Answer a reminder",
      "status": "declared",
      "modules": [
-      "action-clocks"
+      "action-clocks",
+      "op-declarations"
      ]
     },
     {
@@ -1358,6 +1565,7 @@
      "label": "Start the next step",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "tasks"
      ]
     },
@@ -1366,7 +1574,8 @@
      "label": "Start an action",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     }
    ],
@@ -1386,6 +1595,7 @@
      "status": "declared",
      "modules": [
       "capture",
+      "op-declarations",
       "ratification"
      ]
     },
@@ -1441,6 +1651,7 @@
      "label": "Open the item",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "tasks"
      ]
     },
@@ -1449,6 +1660,7 @@
      "label": "Forward to a member",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "tasks"
      ]
     },
@@ -1463,6 +1675,7 @@
      "status": "declared",
      "modules": [
       "inquiry",
+      "op-declarations",
       "progressions",
       "queue"
      ]
@@ -1472,6 +1685,7 @@
      "label": "Snooze to a date",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "queue"
      ]
     },
@@ -1480,6 +1694,7 @@
      "label": "Mute a kind",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "queue"
      ]
     },
@@ -1504,7 +1719,8 @@
      "label": "Answer a reminder",
      "status": "declared",
      "modules": [
-      "action-clocks"
+      "action-clocks",
+      "op-declarations"
      ]
     },
     {
@@ -1515,6 +1731,7 @@
       "action-producers",
       "basis-versions",
       "control-plane",
+      "op-declarations",
       "promotion"
      ]
     },
@@ -1539,23 +1756,53 @@
      "label": "Drop an unsent request, with a reason",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
      "op": "projectjoin",
      "label": "Join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequestanswer",
      "label": "Grant or decline",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:taskdecide K4169",
+     "label": "Say who issued it, or that you could not tell",
+     "status": "owed"
+    },
+    {
+     "op": "adminendorse",
+     "label": "Endorse an administrator",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Add an owner",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "expertiseconfirm",
+     "label": "Confirm expertise",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
      ]
     },
     {
@@ -1564,15 +1811,16 @@
      "status": "declared",
      "modules": [
       "capture",
+      "op-declarations",
       "ratification"
      ]
     },
     {
      "op": "filingapprove",
      "label": "Approve a letter",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "filings"
+      "op-declarations"
      ]
     }
    ],
@@ -1593,6 +1841,7 @@
      "status": "declared",
      "modules": [
       "agent-worker",
+      "op-declarations",
       "retrieval",
       "screens-daily"
      ]
@@ -1602,6 +1851,7 @@
      "label": "Hold these together",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "retrieval"
      ]
     },
@@ -1619,7 +1869,8 @@
      "status": "declared",
      "modules": [
       "capture",
-      "citation"
+      "citation",
+      "op-declarations"
      ]
     },
     {
@@ -1636,6 +1887,7 @@
      "status": "declared",
      "modules": [
       "observation-log",
+      "op-declarations",
       "retrieval"
      ]
     },
@@ -1670,7 +1922,8 @@
      "label": "Filter by theme",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     }
    ],
@@ -1695,7 +1948,8 @@
       "capture-requests",
       "control-plane",
       "docket",
-      "extraction"
+      "extraction",
+      "op-declarations"
      ]
     },
     {
@@ -1710,10 +1964,9 @@
     {
      "op": "testify",
      "label": "Record what you saw or heard",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "entities",
-      "provenance"
+      "op-declarations"
      ]
     },
     {
@@ -1722,7 +1975,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "capture-requests"
+      "capture-requests",
+      "op-declarations"
      ]
     },
     {
@@ -1730,7 +1984,8 @@
      "label": "Watch this address",
      "status": "declared",
      "modules": [
-      "monitoring"
+      "monitoring",
+      "op-declarations"
      ]
     },
     {
@@ -1739,7 +1994,8 @@
      "status": "declared",
      "modules": [
       "capture-sources",
-      "monitoring"
+      "monitoring",
+      "op-declarations"
      ]
     },
     {
@@ -1749,6 +2005,30 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "owed:capturecredentialsupply DEC-381",
+     "label": "Give a login for this source and try again",
+     "status": "owed"
+    },
+    {
+     "op": "capturerequestretry",
+     "label": "Try a refused request again",
+     "status": "declared",
+     "modules": [
+      "capture-requests",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:capturecredentiallist DEC-381",
+     "label": "Show the stored logins",
+     "status": "owed"
+    },
+    {
+     "op": "owed:capturecredentialwithdraw DEC-381",
+     "label": "Withdraw this login",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -1769,7 +2049,8 @@
      "label": "See held captures",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -1778,6 +2059,7 @@
      "status": "declared",
      "modules": [
       "capture",
+      "op-declarations",
       "ratification"
      ]
     },
@@ -1786,7 +2068,8 @@
      "label": "Set aside with a reason",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -1794,7 +2077,8 @@
      "label": "Restore",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     }
    ],
@@ -1813,7 +2097,8 @@
      "label": "Read the grade note",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -1829,7 +2114,8 @@
      "label": "Set aside with a reason",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -1838,6 +2124,7 @@
      "status": "declared",
      "modules": [
       "capture",
+      "op-declarations",
       "ratification"
      ]
     }
@@ -1911,7 +2198,8 @@
      "label": "Read the grade note",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -1920,6 +2208,7 @@
      "status": "declared",
      "modules": [
       "capture",
+      "op-declarations",
       "ratification"
      ]
     },
@@ -1929,7 +2218,8 @@
      "status": "declared",
      "modules": [
       "capture",
-      "citation"
+      "citation",
+      "op-declarations"
      ]
     },
     {
@@ -1937,6 +2227,7 @@
      "label": "Retire",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "ratification"
      ]
     },
@@ -1945,7 +2236,8 @@
      "label": "Attest",
      "status": "declared",
      "modules": [
-      "attestation"
+      "attestation",
+      "op-declarations"
      ]
     },
     {
@@ -1961,7 +2253,8 @@
      "label": "Watch for changes",
      "status": "declared",
      "modules": [
-      "monitoring"
+      "monitoring",
+      "op-declarations"
      ]
     },
     {
@@ -1970,7 +2263,8 @@
      "status": "declared",
      "modules": [
       "capture-sources",
-      "monitoring"
+      "monitoring",
+      "op-declarations"
      ]
     },
     {
@@ -1995,7 +2289,8 @@
      "label": "Type a page's words yourself",
      "status": "declared",
      "modules": [
-      "content"
+      "content",
+      "op-declarations"
      ]
     },
     {
@@ -2020,6 +2315,7 @@
      "status": "declared",
      "modules": [
       "content",
+      "op-declarations",
       "reevaluation"
      ]
     },
@@ -2043,7 +2339,8 @@
      "label": "Choose the mention that counts",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -2055,11 +2352,61 @@
      ]
     },
     {
+     "op": "pdfstructure",
+     "label": "Read this document again with OCR",
+     "status": "declared",
+     "modules": [
+      "extraction",
+      "op-declarations",
+      "pdf-reader"
+     ]
+    },
+    {
+     "op": "transcriptionattest",
+     "label": "Confirm that this typing matches the page",
+     "status": "declared",
+     "modules": [
+      "content",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "provenanceroute",
+     "label": "Check whether its route can be shown",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "connectionassert",
+     "label": "Assert this connection",
+     "status": "declared",
+     "modules": [
+      "connections",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "resolutiondefect",
+     "label": "Report this match as wrong",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "owed:declareorigin DEC-381",
+     "label": "Say where this document came from",
+     "status": "owed"
+    },
+    {
      "op": "themeplace",
      "label": "Place it in a theme",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -2067,7 +2414,8 @@
      "label": "Propose it for a theme",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -2075,7 +2423,8 @@
      "label": "Reject a hunch, with a reason",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -2091,6 +2440,7 @@
      "label": "Thread it to a step",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "progressions"
      ]
     }
@@ -2099,6 +2449,79 @@
     7,
     15,
     23
+   ]
+  },
+  {
+   "id": "contradiction",
+   "name": "Two documents in tension",
+   "frame": "working",
+   "purpose": "One contradiction between two sources: both passages as written, side by side, what the record states of them, and what a member can do: say how they differ or that one is wrong, take it up as a question, dismiss a lead, conclude the question it became, and, for a conflict with a record the member cannot see, ask to resolve it and respond. Candidates come from the assistant, which is held, so the state with none proposed is drawn (contradiction R30-R36, R50-R54).",
+   "acts": [
+    {
+     "op": "contradictionclarify",
+     "label": "Say how they differ, or mark one as wrong",
+     "status": "declared",
+     "modules": [
+      "contradiction",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "contradictiontakeup",
+     "label": "Take it up as a question",
+     "status": "declared",
+     "modules": [
+      "contradiction",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "contradictiondismiss",
+     "label": "Dismiss a lead, with a reason",
+     "status": "declared",
+     "modules": [
+      "contradiction",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "contradictionresolve",
+     "label": "Conclude the question",
+     "status": "declared",
+     "modules": [
+      "contradiction",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "contradictionoptin",
+     "label": "Ask to resolve a conflict with a record you cannot see",
+     "status": "declared",
+     "modules": [
+      "contradiction",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "contradictionrespond",
+     "label": "Respond to the other projects",
+     "status": "declared",
+     "modules": [
+      "contradiction",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": [
+    7
    ]
   },
   {
@@ -2142,9 +2565,9 @@
     {
      "op": "standarddeclare",
      "label": "Hold this as a standard",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "standards"
+      "op-declarations"
      ]
     },
     {
@@ -2169,7 +2592,8 @@
      "status": "declared",
      "modules": [
       "capture",
-      "citation"
+      "citation",
+      "op-declarations"
      ]
     },
     {
@@ -2178,6 +2602,7 @@
      "status": "declared",
      "modules": [
       "agent-worker",
+      "op-declarations",
       "retrieval",
       "screens-daily"
      ]
@@ -2202,6 +2627,7 @@
       "action-producers",
       "basis-versions",
       "control-plane",
+      "op-declarations",
       "promotion"
      ]
     },
@@ -2210,7 +2636,8 @@
      "label": "Draw on a question from elsewhere",
      "status": "declared",
      "modules": [
-      "citation"
+      "citation",
+      "op-declarations"
      ]
     },
     {
@@ -2226,71 +2653,72 @@
      "label": "Set this project's bar",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "strength"
      ]
     },
     {
      "op": "projectinvite",
      "label": "Invite a member to the project",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "projectvisibilityset",
      "label": "Change who can find it",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "projectownerremove",
      "label": "Stand down as owner",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
      "op": "projectowneradd",
      "label": "Make an owner, or agree to it",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
      "op": "projectremove",
      "label": "Remove a member",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "projectleave",
      "label": "Ask to leave this project",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequest",
      "label": "Ask to join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
      "op": "projectrequestwithdraw",
      "label": "Withdraw your request",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
@@ -2298,15 +2726,16 @@
      "label": "Start a project from this one",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "promotion"
      ]
     },
     {
      "op": "projectownerrescue",
      "label": "Become the owner of an ownerless project",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "project-roster"
+      "op-declarations"
      ]
     },
     {
@@ -2314,7 +2743,8 @@
      "label": "Preview the notice",
      "status": "declared",
      "modules": [
-      "network-notices"
+      "network-notices",
+      "op-declarations"
      ]
     },
     {
@@ -2322,15 +2752,16 @@
      "label": "Sign and publish the notice",
      "status": "declared",
      "modules": [
-      "network-notices"
+      "network-notices",
+      "op-declarations"
      ]
     },
     {
      "op": "projectjoin",
      "label": "Join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     },
     {
@@ -2338,7 +2769,8 @@
      "label": "Plan what to do",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -2353,6 +2785,21 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "owed:rerunread K4169",
+     "label": "Compare with the original",
+     "status": "owed"
+    },
+    {
+     "op": "owed:rerunpair K4169",
+     "label": "This answers the same claim",
+     "status": "owed"
+    },
+    {
+     "op": "owed:projectclose DEC-381",
+     "label": "Close this project with a reason",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2360,6 +2807,95 @@
     9,
     15
    ]
+  },
+  {
+   "id": "objective",
+   "name": "Objective",
+   "frame": "working",
+   "purpose": "A project's objective on its own page (DEC-374, intent R2 to R18): what success means and how it is measured; how it is going; what is still short; the proposals to decide; the aspirations a team, project or member holds, with departures and dead ends; the goals the objective serves.",
+   "acts": [
+    {
+     "op": "objectivecondition",
+     "label": "Save this measure of success",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "triage",
+     "label": "Decide this proposal",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "aspirationdeclare",
+     "label": "Declare this aspiration",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "aspirationdepart",
+     "label": "Record this departure",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "aspirationdeadend",
+     "label": "Record this dead end",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "aspirationretire",
+     "label": "Retire this aspiration",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "goaldeclare",
+     "label": "Open this goal",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "goallink",
+     "label": "Link this objective to the goal",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "goalclose",
+     "label": "Close this goal",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
   },
   {
    "id": "projectai",
@@ -2432,9 +2968,9 @@
     {
      "op": "projectjoin",
      "label": "Join",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "op-declarations"
      ]
     }
    ],
@@ -2452,15 +2988,35 @@
      "status": "declared",
      "modules": [
       "capture",
-      "citation"
+      "citation",
+      "op-declarations"
      ]
+    },
+    {
+     "op": "owed:citeimported DEC-382",
+     "label": "Cite another team's finding",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    },
+    {
+     "op": "owed:withdrawimported DEC-382",
+     "label": "Take another team's finding back",
+     "status": "owed"
     },
     {
      "op": "sever",
      "label": "Remove a citation",
      "status": "declared",
      "modules": [
-      "citation"
+      "citation",
+      "op-declarations"
      ]
     },
     {
@@ -2468,7 +3024,8 @@
      "label": "Reinstate",
      "status": "declared",
      "modules": [
-      "citation"
+      "citation",
+      "op-declarations"
      ]
     },
     {
@@ -2476,7 +3033,8 @@
      "label": "Narrow the question",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
      ]
     },
     {
@@ -2485,7 +3043,8 @@
      "status": "declared",
      "modules": [
       "basis-versions",
-      "contradiction"
+      "contradiction",
+      "op-declarations"
      ]
     },
     {
@@ -2493,6 +3052,7 @@
      "label": "Prepare a case from this",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "review"
      ]
     },
@@ -2501,7 +3061,16 @@
      "label": "Withdraw the conclusion",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "reopen",
+     "label": "Reopen this finding, with a reason",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
      ]
     },
     {
@@ -2513,11 +3082,54 @@
      ]
     },
     {
+     "op": "hypothesisrevise",
+     "label": "Revise a hunch",
+     "status": "declared",
+     "modules": [
+      "hypotheses"
+     ]
+    },
+    {
+     "op": "hypothesiswithdraw",
+     "label": "Take a hunch back",
+     "status": "declared",
+     "modules": [
+      "hypotheses"
+     ]
+    },
+    {
+     "op": "inquirydivide",
+     "label": "Divide the question",
+     "status": "declared",
+     "modules": [
+      "inquiry",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "reevaluationrecord",
+     "label": "Record that you looked again",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "reevaluations",
+     "label": "See what needs a second look",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "reevaluation"
+     ]
+    },
+    {
      "op": "planopen",
      "label": "Plan what to do",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -2533,7 +3145,8 @@
      "label": "Restore a set-aside document, with a reason",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -2542,6 +3155,7 @@
      "status": "declared",
      "modules": [
       "agent-worker",
+      "op-declarations",
       "retrieval",
       "screens-daily"
      ]
@@ -2551,7 +3165,8 @@
      "label": "Say what each passage carries",
      "status": "declared",
      "modules": [
-      "inquiry"
+      "inquiry",
+      "op-declarations"
      ]
     },
     {
@@ -2559,7 +3174,8 @@
      "label": "Accept this reading",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
      ]
     },
     {
@@ -2567,7 +3183,8 @@
      "label": "Hide a reading",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
      ]
     },
     {
@@ -2575,7 +3192,8 @@
      "label": "Weigh a reading",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
      ]
     },
     {
@@ -2583,7 +3201,8 @@
      "label": "Reject a reading",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
      ]
     },
     {
@@ -2591,7 +3210,8 @@
      "label": "Undo the decision on a reading",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
      ]
     },
     {
@@ -2599,7 +3219,8 @@
      "label": "Stand on a reading for a project",
      "status": "declared",
      "modules": [
-      "basis-versions"
+      "basis-versions",
+      "op-declarations"
      ]
     },
     {
@@ -2608,6 +3229,7 @@
      "status": "declared",
      "modules": [
       "inquiry",
+      "op-declarations",
       "progressions",
       "queue"
      ]
@@ -2625,7 +3247,8 @@
      "label": "Place a passage in a theme",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -2634,6 +3257,7 @@
      "status": "declared",
      "modules": [
       "ai-runs",
+      "op-declarations",
       "run-rules"
      ]
     },
@@ -2643,7 +3267,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "ai-runs"
+      "ai-runs",
+      "op-declarations"
      ]
     }
    ],
@@ -2684,6 +3309,7 @@
      "status": "declared",
      "modules": [
       "agent-worker",
+      "op-declarations",
       "retrieval",
       "screens-daily"
      ]
@@ -2722,6 +3348,7 @@
      "status": "declared",
      "modules": [
       "ai-runs",
+      "op-declarations",
       "run-rules"
      ]
     },
@@ -2743,6 +3370,7 @@
       "agent-worker",
       "ai-runs",
       "basis-versions",
+      "op-declarations",
       "run-productions"
      ]
     },
@@ -2752,7 +3380,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "ai-runs"
+      "ai-runs",
+      "op-declarations"
      ]
     }
    ],
@@ -2772,6 +3401,7 @@
      "status": "declared",
      "modules": [
       "agent-worker",
+      "op-declarations",
       "retrieval",
       "screens-daily"
      ]
@@ -2789,7 +3419,8 @@
      "label": "Add someone the record follows",
      "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "op-declarations"
      ]
     }
    ],
@@ -2818,6 +3449,14 @@
      "status": "function",
      "modules": [
       "people"
+     ]
+    },
+    {
+     "op": "recordline",
+     "label": "Record that an office keeps records",
+     "status": "function",
+     "modules": [
+      "lines"
      ]
     },
     {
@@ -2857,7 +3496,8 @@
      "label": "Add another name",
      "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "op-declarations"
      ]
     },
     {
@@ -2879,6 +3519,7 @@
      "status": "declared",
      "modules": [
       "entities",
+      "op-declarations",
       "queue",
       "record-core"
      ]
@@ -2888,7 +3529,8 @@
      "label": "Say from what you know that a document names them",
      "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "op-declarations"
      ]
     },
     {
@@ -2896,7 +3538,8 @@
      "label": "Connect the documents that name them",
      "status": "declared",
      "modules": [
-      "connections"
+      "connections",
+      "op-declarations"
      ]
     },
     {
@@ -2971,6 +3614,7 @@
      "label": "Read a matter's steps",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "progressions"
      ]
     },
@@ -2979,6 +3623,7 @@
      "label": "Thread a document to a step",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "progressions"
      ]
     },
@@ -2987,6 +3632,7 @@
      "label": "Record a lawful skip, with reason and citation",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "progressions"
      ]
     },
@@ -2996,6 +3642,7 @@
      "status": "declared",
      "modules": [
       "inquiry",
+      "op-declarations",
       "progressions",
       "queue"
      ]
@@ -3005,6 +3652,7 @@
      "label": "Read a progression",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "progressions"
      ]
     },
@@ -3096,7 +3744,8 @@
      "label": "Ask the city for the record",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
@@ -3112,7 +3761,8 @@
      "label": "Why B, and what would raise it",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -3125,7 +3775,8 @@
       "capture-requests",
       "control-plane",
       "docket",
-      "extraction"
+      "extraction",
+      "op-declarations"
      ]
     },
     {
@@ -3214,10 +3865,9 @@
     {
      "op": "testify",
      "label": "Record what you saw at a report",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "entities",
-      "provenance"
+      "op-declarations"
      ]
     },
     {
@@ -3299,6 +3949,7 @@
       "action-producers",
       "basis-versions",
       "control-plane",
+      "op-declarations",
       "promotion"
      ]
     }
@@ -3318,7 +3969,8 @@
      "label": "Register the proceeding",
      "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "op-declarations"
      ]
     },
     {
@@ -3385,7 +4037,8 @@
      "label": "Remind me",
      "status": "declared",
      "modules": [
-      "action-clocks"
+      "action-clocks",
+      "op-declarations"
      ]
     }
    ],
@@ -3401,11 +4054,19 @@
    "purpose": "A requirement the city set itself, held and searchable.",
    "acts": [
     {
+     "op": "standardinforce",
+     "label": "Check a date",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
      "op": "standarddeclare",
      "label": "Hold this as a standard",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "standards"
+      "op-declarations"
      ]
     },
     {
@@ -3413,6 +4074,7 @@
      "label": "Adopt a proposed standard",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "standards"
      ]
     },
@@ -3442,7 +4104,8 @@
      "label": "Add a matter",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3450,7 +4113,8 @@
      "label": "Add an option",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3466,15 +4130,17 @@
      "label": "Adopt a suggestion",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
      "op": "optiondispose",
-     "label": "Choose or decline",
+     "label": "Choose, decline, mark done or blocked, or return to undecided",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3482,7 +4148,8 @@
      "label": "Lay out a scenario",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3490,7 +4157,8 @@
      "label": "Judge a checkpoint",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3498,7 +4166,8 @@
      "label": "Start…",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3506,7 +4175,8 @@
      "label": "Close the plan",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3515,6 +4185,14 @@
      "status": "declared",
      "modules": [
       "plan-work"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -3533,7 +4211,8 @@
      "label": "See what starting does",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3541,7 +4220,8 @@
      "label": "Start the action",
      "status": "declared",
      "modules": [
-      "action-plans"
+      "action-plans",
+      "op-declarations"
      ]
     },
     {
@@ -3549,23 +4229,24 @@
      "label": "Prepare what is sent",
      "status": "declared",
      "modules": [
-      "filings"
+      "filings",
+      "op-declarations"
      ]
     },
     {
      "op": "filingprepare",
      "label": "Prepare the filing",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "filings"
+      "op-declarations"
      ]
     },
     {
      "op": "filingapprove",
      "label": "Approve this text",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "filings"
+      "op-declarations"
      ]
     },
     {
@@ -3582,6 +4263,15 @@
      "status": "declared",
      "modules": [
       "filings"
+     ]
+    },
+    {
+     "op": "templatesave",
+     "label": "Keep as a template",
+     "status": "declared",
+     "modules": [
+      "filings",
+      "op-declarations"
      ]
     },
     {
@@ -3622,7 +4312,8 @@
      "label": "Start the action",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
@@ -3663,7 +4354,8 @@
      "label": "Start the request",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
@@ -3671,7 +4363,8 @@
      "label": "Choose the law it goes under",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
@@ -3679,15 +4372,16 @@
      "label": "Prepare the text",
      "status": "declared",
      "modules": [
-      "filings"
+      "filings",
+      "op-declarations"
      ]
     },
     {
      "op": "filingapprove",
      "label": "Approve this text",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "filings"
+      "op-declarations"
      ]
     },
     {
@@ -3714,7 +4408,8 @@
      "label": "Move the action",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
@@ -3730,7 +4425,8 @@
      "label": "Mark a reply as pressure",
      "status": "declared",
      "modules": [
-      "action-holds"
+      "action-holds",
+      "op-declarations"
      ]
     },
     {
@@ -3738,7 +4434,8 @@
      "label": "Remind me",
      "status": "declared",
      "modules": [
-      "action-clocks"
+      "action-clocks",
+      "op-declarations"
      ]
     },
     {
@@ -3763,7 +4460,8 @@
      "label": "Revise the risk tier, with a reason",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
@@ -3771,7 +4469,8 @@
      "label": "Change the law it goes under",
      "status": "declared",
      "modules": [
-      "actions"
+      "actions",
+      "op-declarations"
      ]
     },
     {
@@ -3812,7 +4511,8 @@
      "label": "Place the hold, with a reason",
      "status": "declared",
      "modules": [
-      "action-holds"
+      "action-holds",
+      "op-declarations"
      ]
     },
     {
@@ -3821,6 +4521,7 @@
      "status": "declared",
      "modules": [
       "action-holds",
+      "op-declarations",
       "store-door"
      ]
     },
@@ -3885,9 +4586,9 @@
     {
      "op": "counselpacket",
      "label": "Assemble the packet, with a reason",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "filings"
+      "op-declarations"
      ]
     }
    ],
@@ -3943,17 +4644,17 @@
     {
      "op": "escalationopen",
      "label": "Open an escalation",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "escalation"
+      "op-declarations"
      ]
     },
     {
      "op": "escalationadvance",
      "label": "Advance",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "escalation"
+      "op-declarations"
      ]
     },
     {
@@ -3961,15 +4662,16 @@
      "label": "Decline to escalate, with a reason",
      "status": "declared",
      "modules": [
-      "escalation"
+      "escalation",
+      "op-declarations"
      ]
     },
     {
      "op": "escalationend",
      "label": "End",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "escalation"
+      "op-declarations"
      ]
     },
     {
@@ -3977,7 +4679,8 @@
      "label": "Stop pursuing, with a reason",
      "status": "declared",
      "modules": [
-      "escalation"
+      "escalation",
+      "op-declarations"
      ]
     },
     {
@@ -3985,7 +4688,96 @@
      "label": "Reopen where it stopped",
      "status": "declared",
      "modules": [
-      "escalation"
+      "escalation",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "determine",
+     "label": "Record a determination",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "consequencerecord",
+     "label": "Record what the breach did",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "consequencerevise",
+     "label": "Revise a consequence, with a reason",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "addressedrecord",
+     "label": "Say whether a consequence was addressed",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "successrecord",
+     "label": "Record a success",
+     "status": "declared",
+     "modules": [
+      "consequences"
+     ]
+    },
+    {
+     "op": "escalationattach",
+     "label": "Attach an action to this stage",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "escalationdecline",
+     "label": "Hold at this stage, with a reason",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "escalationsuspend",
+     "label": "Pause, with a reason",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "escalationresume",
+     "label": "Resume",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "escalationevaluate",
+     "label": "Record the government's response",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -4004,6 +4796,7 @@
      "label": "Prepare the draft",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "review"
      ]
     },
@@ -4012,7 +4805,8 @@
      "label": "Draft \"what changed\"",
      "status": "declared",
      "modules": [
-      "case-inputs"
+      "case-inputs",
+      "op-declarations"
      ]
     },
     {
@@ -4022,6 +4816,7 @@
      "modules": [
       "case-authoring",
       "case-inputs",
+      "op-declarations",
       "review"
      ]
     },
@@ -4031,6 +4826,7 @@
      "status": "declared",
      "modules": [
       "case-tensions",
+      "op-declarations",
       "publication",
       "queue-producers"
      ]
@@ -4058,6 +4854,34 @@
      "modules": [
       "case-account"
      ]
+    },
+    {
+     "op": "sever",
+     "label": "Remove a citation",
+     "status": "declared",
+     "modules": [
+      "citation",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "reinstate",
+     "label": "Reinstate",
+     "status": "declared",
+     "modules": [
+      "citation",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:casedetailsset K4169",
+     "label": "Save this detail",
+     "status": "owed"
+    },
+    {
+     "op": "owed:casedetails K4169",
+     "label": "Details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4076,6 +4900,7 @@
      "label": "Share for review",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "review"
      ]
     },
@@ -4084,6 +4909,7 @@
      "label": "Stop sharing",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "review"
      ]
     },
@@ -4092,6 +4918,7 @@
      "label": "Comment",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "review"
      ]
     },
@@ -4117,6 +4944,7 @@
      "status": "declared",
      "modules": [
       "case-authoring",
+      "op-declarations",
       "op-grades"
      ]
     },
@@ -4125,7 +4953,26 @@
      "label": "See what must be disclosed",
      "status": "declared",
      "modules": [
-      "case-authoring"
+      "case-authoring",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "reattest",
+     "label": "Ask for the confirmation again",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "captureaccount",
+     "label": "Add your signed account",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "op-declarations"
      ]
     },
     {
@@ -4133,6 +4980,7 @@
      "label": "Sign and publish now",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "publication",
       "ratification"
      ]
@@ -4145,6 +4993,7 @@
       "case-authoring",
       "case-check",
       "case-inputs",
+      "op-declarations",
       "review"
      ]
     },
@@ -4154,6 +5003,7 @@
      "status": "declared",
      "modules": [
       "case-authoring",
+      "op-declarations",
       "publication",
       "publish-schedule",
       "ratification"
@@ -4208,6 +5058,11 @@
       "publish-schedule",
       "queue-producers"
      ]
+    },
+    {
+     "op": "owed:casedetails K4169",
+     "label": "See the details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4226,6 +5081,7 @@
      "label": "Send your comment",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "review"
      ]
     },
@@ -4236,6 +5092,7 @@
      "modules": [
       "case-authoring",
       "case-inputs",
+      "op-declarations",
       "review"
      ]
     }
@@ -4255,6 +5112,7 @@
      "label": "Check the signature",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "public-read"
      ]
     },
@@ -4263,6 +5121,7 @@
      "label": "Read the case",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "public-read",
       "publication"
      ]
@@ -4281,6 +5140,11 @@
      "op": "owed:pubprint DEC-330",
      "label": "Print the case",
      "status": "owed"
+    },
+    {
+     "op": "owed:casedetailspublic K4169",
+     "label": "Details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4298,7 +5162,8 @@
      "label": "Import a case",
      "status": "declared",
      "modules": [
-      "case-import"
+      "case-import",
+      "op-declarations"
      ]
     },
     {
@@ -4306,7 +5171,8 @@
      "label": "Accept what recreated",
      "status": "declared",
      "modules": [
-      "case-import"
+      "case-import",
+      "op-declarations"
      ]
     },
     {
@@ -4314,7 +5180,8 @@
      "label": "Flag an issue",
      "status": "declared",
      "modules": [
-      "case-import"
+      "case-import",
+      "op-declarations"
      ]
     },
     {
@@ -4322,7 +5189,40 @@
      "label": "Watch the publisher's docket",
      "status": "declared",
      "modules": [
-      "case-import"
+      "case-import",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "importacceptwithdraw",
+     "label": "Withdraw an acceptance, with a reason",
+     "status": "declared",
+     "modules": [
+      "case-import",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:importregrade K4169",
+     "label": "View under another lens",
+     "status": "owed"
+    },
+    {
+     "op": "owed:rerunstart K4169",
+     "label": "Re-run this work in your own project",
+     "status": "owed"
+    },
+    {
+     "op": "owed:citeimported DEC-382",
+     "label": "Rest one of our questions on this",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -4341,7 +5241,8 @@
      "label": "File a docket entry",
      "status": "declared",
      "modules": [
-      "docket"
+      "docket",
+      "op-declarations"
      ]
     },
     {
@@ -4349,7 +5250,17 @@
      "label": "Post it",
      "status": "declared",
      "modules": [
-      "docket"
+      "docket",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "casedraft",
+     "label": "Start the next edition",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "review"
      ]
     }
    ],
@@ -4381,6 +5292,7 @@
      "modules": [
       "control-plane",
       "doorbell",
+      "op-declarations",
       "store-door"
      ]
     },
@@ -4390,6 +5302,7 @@
      "status": "declared",
      "modules": [
       "control-plane",
+      "op-declarations",
       "store-door"
      ]
     },
@@ -4398,7 +5311,16 @@
      "label": "Record what is known of the source",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "sources"
+     ]
+    },
+    {
+     "op": "knocksof",
+     "label": "See this knocker's other material",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
      ]
     }
    ],
@@ -4417,13 +5339,200 @@
      "label": "Hand it over",
      "status": "declared",
      "modules": [
+      "op-declarations",
       "plane"
+     ]
+    },
+    {
+     "op": "knockerconsent",
+     "label": "Send my answer",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
      ]
     }
    ],
    "journeys": [
     20
    ]
+  },
+  {
+   "id": "about-knocker",
+   "name": "A source",
+   "frame": "working",
+   "purpose": "What became known about someone who handed material in, who may read it, what they agreed to publish, and the person they are.",
+   "acts": [
+    {
+     "op": "sourcedisclose",
+     "label": "Record what became known",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
+     ]
+    },
+    {
+     "op": "sourceconsent",
+     "label": "Record their agreement",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
+     ]
+    },
+    {
+     "op": "sourceconsentwithdraw",
+     "label": "Record that they took it back",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
+     ]
+    },
+    {
+     "op": "sourcepersonlink",
+     "label": "Say this source is that person",
+     "status": "declared",
+     "modules": [
+      "people"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": [
+    20
+   ]
+  },
+  {
+   "id": "leads",
+   "name": "Leads",
+   "frame": "working",
+   "purpose": "Write down something you were told, record who looked and what they found, and share it with a project.",
+   "acts": [
+    {
+     "op": "lead",
+     "label": "Write down the lead",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "leadread",
+     "label": "Open a lead",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "leadlook",
+     "label": "Record the look",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "leadshare",
+     "label": "Share it with the project",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
+  },
+  {
+   "id": "watching",
+   "name": "Watched addresses",
+   "frame": "working",
+   "purpose": "Every address the team watches, pausing the watching, what is due and the sweeps.",
+   "acts": [
+    {
+     "op": "monitoring",
+     "label": "List every watched address",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "monitorpause",
+     "label": "Pause or resume the watching",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "monitorslate",
+     "label": "Read what is due",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "sweeps",
+     "label": "See the sweeps",
+     "status": "declared",
+     "modules": [
+      "link-sweep",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:namedrequests DEC-382",
+     "label": "List every named request",
+     "status": "owed"
+    },
+    {
+     "op": "owed:namedrequestset DEC-382",
+     "label": "Ask for this to be gathered on a schedule",
+     "status": "owed"
+    },
+    {
+     "op": "owed:sweepset DEC-382",
+     "label": "Define a sweep",
+     "status": "owed"
+    },
+    {
+     "op": "owed:sweepratify DEC-382",
+     "label": "Ratify or stop a sweep",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
   }
  ]
 }
