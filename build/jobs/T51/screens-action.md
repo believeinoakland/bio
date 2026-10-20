@@ -79,3 +79,10 @@ COMPLETE (FR-31): all 21 entries applied, R36-R54 written in the requirements fi
 
 REPORT (#8, re B13): item 1 done and pushed: `WRITE_HELP` sends `op` (from `data-forop`), `field` and `told`; a help button naming no act sends nothing. Tests: R45's writinghelp test asserts `op`; a control strips `data-forop` and no request goes. Module suite 195 of 195; format, architecture, coverage (54/54), words, ownership 0. Item 2 (stored exhibits and `venue_standard` from `filingread` after reload) waits on FILINGS #25: CHANGE me when it merges.
 Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 1, module lines 3290
+
+## J9 · COMPLETE
+
+COMPLETE (#8, re B13, B14). Item 1: `WRITE_HELP` sends `op` from `data-forop`, `field`, `told`; none without `data-forop` (tests + control). Item 2: tranche/T51 merged (FILINGS #25). The send steps already drew the exhibits and the venue's standard from `filingread`'s answer (`draftOf` reads `exhibits` and `venue_standard`), so no code change was needed; I added the test that proves it after a reload (stored exhibits drawn, the four grades, Approve enabled; control: a row stored before they existed, `exhibits: []` and no standard, draws no section). No more than the answer's two fields was needed.
+Checks: module suite 196 of 196; coverage 54 of 54; words 0; ownership 0 (3 files: send-steps.mjs and two test files, plus my record); format 0 and architecture 0 over the tree. Over the whole tree coverage shows 4 failures and words 33, none in my module.
+Deferred: none. Found in other modules: none. The missing design keys of #7 J6 (1)-(6) stay with UX-DESIGN's HANDOFF B424; not drawn.
+Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 3, module lines 3290
