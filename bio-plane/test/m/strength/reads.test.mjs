@@ -70,7 +70,8 @@ test("R6, R22: a member the viewer may not see is withheld whole, fields and pro
   assert.equal(c.weakest.target_id, "INQ-2026-0002-a");
   assert.ok(!("through" in c.weakest));
   assert.equal(machine.connection.weakest.through, PROJ);
-  assert.match(c.detail, /^connection C — /);
+  assert.ok(c.detail.startsWith(word("strength.arithmetic.no_stronger_than_the_weakest",
+    { axis: "connection", grade: "C", leg: "INQ-2026-0002-a", via: "" })), "the sentence says what it derived, by key");
   assert.ok(c.detail.endsWith(word("strength.out_of_view_words")));
   for (const m of membersOf(c)) for (const f of ID_FIELDS) assert.notEqual(m?.[f], null, `no null ${f}`);
   const alice = w.s.inquiryStrength({ id: INQ, viewer: "member:alice" });

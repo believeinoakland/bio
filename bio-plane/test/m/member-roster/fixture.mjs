@@ -65,3 +65,14 @@ export const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_ma
 const MARK = "\u0001act\u0001";
 const [, TAIL] = notAnAdmin(null, MARK).detail.split(MARK);
 export const actOf = (detail) => detail.slice(0, detail.length - TAIL.length);
+
+/* The founder plus a second and a third administrator (the third proposed, endorsed by the second, then enrolled), and the
+   members named: a group of three administrators, in which one more is a proposal needing every endorsement (R3, R11). */
+export async function threeAdmins(...members) {
+  const w = await world().group();
+  await w.m.memberAdd({ memberId: "third", cover: "cover of third", role: "admin", by: "admin" });
+  const done = await w.m.adminEndorse({ memberId: "third", by: "second" });
+  await w.m.enroll({ invite: done.invite, handle: "third", password: "third-passphrase-x" });
+  for (const id of members) await w.enrol(id);
+  return w;
+}

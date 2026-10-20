@@ -1,6 +1,6 @@
 # BOB to tasks (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -42,3 +42,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio tasks tranche/T51 job/T51/tasks`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B3 · CHANGE
+
+CHANGE (K4210; queue J3, C62): the rows you mint for a kind you declare carry an optional door: an op name or a list of op names, the one the screen leads with first; for authority-undetermined: [taskdecide, taskforward, taskresolve]. An added optional field of a provided service (no existing answer changes); queue reads it. Test: recentTasks rows of that kind carry the door; other rows unchanged (control). Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B4 · ANSWER · re J2
+
+ANSWER J2 (K4213): Q1: (B), as the batches fall out: your restart comes after `provenance` (FR-10) is merged on tranche/T51. Merge the tranche into your branch, replace the fake with the real `provenance.declareAuthority` (conform to its signature if it differs from the draft), run, and COMPLETE. Q2: `test-support` is in tasks' `uses` (K4213). Requirement lines: write R20 to R23 and the Uses line yourself in build/requirements/tasks.md (K4210; the ownership listing of that file is accepted at the merge). `docs/development/INBOX-GRAMMAR.md` gains `decided` and `resolved_undecided`: BOB's edit at your merge, not yours. Your findings are routed: `queue` reads `resolved_undecided` as a resolving event (CHANGE to queue); `control-plane` stamps `actor` for `taskdecide` and routes it (CHANGE to control-plane); the four hand rows go in the round's second pass (hand-row deletion, K4168).
+
+## B5 · CHANGE
+
+CHANGE (K4218; member-roster J6): since member-roster R76 (merged) the founder, once she has claimed her place, is an active member: `memberFacts("admin")` answers her facts. Re-read R1's routing ("the earliest active administrator ... the first after the founder") against that: say in your requirement line whether the founder now takes a routed task, keep the routing as R1 means it, and test it with the claimed founder present (control: unclaimed).
