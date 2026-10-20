@@ -301,7 +301,7 @@ test("R34 \"its docket\" on the page opens docket-public; a member's docket in t
   assert.equal(p.location.pathname, `/app/docket-public/${C}`);
   assert.equal(last(p, "docketpublic").headers.Authorization, undefined);
   const member = await open(`/app/docket/${P}/${C}`);
-  assert.deepEqual(ops(member).sort(), ["docketfile", "docketpost"]);
+  assert.deepEqual(ops(member).sort(), ["casedraft", "docketfile", "docketpost"]);
   const absent = await open(`/app/docket-public/${C}`, { boot: PUBLIC, plane: { docketpublic: refused("NOT_PUBLISHED", "Nothing published.", 404) } });
   assert.ok(main(absent).querySelector("[data-state]"), "the refusal is drawn, not an empty page");
 });

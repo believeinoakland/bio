@@ -62,6 +62,11 @@ export const IMPORTED = Object.freeze({
       out.push(cs.sec("screen.imported.accept", cs.field("im-checked", "screen.imported.checked.label", { area: true })
         + cs.field("im-reason", "screen.imported.reason.label", { area: true })
         + '<div class="mk-acts">' + cs.act("importaccept", { tone: "primary" }) + "</div>" + P.said(view, "importaccept")));
+      // R55 (C51; DEC-374): an import some of whose findings the team accepted can have the acceptance withdrawn, with a reason; an
+      // import with none accepted offers nothing. Rejecting an import and public acceptance with dependencies are not drawn.
+      const accepted = findings.filter(function (f) { return f.origin && f.origin.acceptance; });
+      if (accepted.length) out.push(cs.sec("screen.imported.accepted.heading", cs.field("im-withdraw", "screen.imported.withdraw.label", { area: true, help: "screen.imported.withdraw.help" })
+        + '<div class="mk-acts">' + cs.act("importacceptwithdraw", { label: "screen.imported.withdraw.button" }) + "</div>" + P.said(view, "importacceptwithdraw")));
       out.push(cs.sec("screen.imported.flag", cs.field("im-issue", "screen.imported.issue.label", { area: true }) + '<div class="mk-acts">' + cs.act("importflag") + "</div>" + P.said(view, "importflag")));
       out.push(cs.sec("screen.imported.watch", cs.field("im-publisher", "screen.imported.publisher.label", { type: "url", help: "screen.imported.publisher.help" })
         + '<div class="mk-acts">' + cs.act("importwatch") + "</div>" + P.said(view, "importwatch")));
@@ -121,6 +126,19 @@ export const IMPORTED = Object.freeze({
         return { body: { import: c.import, edition: ed.edition, findings: findings, checked: checked, reason: String(cs.value("im-reason") || "").trim() } };
       },
       done: function (view, answer, cs) { view.parts.refused(cs, view, "importaccept", answer); }, // D29
+    },
+    {
+      // R55: "Withdraw this acceptance, with a reason": nothing is sent without one.
+      op: "importacceptwithdraw", label: "act.importacceptwithdraw.label.imported", reasonField: "reason",
+      refusals: { IMPORT_ACCEPT_NO_REASON: "screen.imported.withdraw.label", IMPORT_NOTHING_ACCEPTED: "screen.imported.withdraw.none.summary" },
+      send: function (view, el, cs) {
+        const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
+        if (!c) return null;
+        const reason = String(cs.value("im-withdraw") || "").trim();
+        if (!reason) return { refuse: "screen.imported.withdraw.label" };
+        return { body: { import: c.import, edition: (c.edition || {}).edition, reason: reason } };
+      },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "importacceptwithdraw", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R7: "Flag an issue", kept within the group.

@@ -57,6 +57,21 @@ export const DOCKET = Object.freeze({
       + '<div class="mk-acts">' + cs.act("docketfile") + "</div>" + P.said(view, "docketfile")));
     out.push('<p class="muted">' + cs.w("screen.docket.order") + "</p>" + P.said(view, "docketpost"));
 
+    // R52 (C9; DEC-374): "Start the next edition": a published case is never changed; the next edition is a new draft that begins
+    // from the findings chosen and says what it covers. The findings are those the case's published edition states.
+    const pub = P.later(cs, view, "published", "publishedcase", { query: { id: caseId, caseId: caseId } });
+    const held = pub.state === "ok" && Array.isArray(pub.value.findings) ? pub.value.findings.filter(function (f) { return f && (f.bundle_id || f.id); }) : [];
+    if (held.length) {
+      view.ui.nextFindings = held.map(function (f) { return String(f.bundle_id || f.id); });
+      out.push(P.secTips(cs, "screen.docket.next.heading", '<p class="mk-note">' + cs.w("screen.docket.next.what") + "</p>"
+        + cs.checks("dk-next-findings", "screen.docket.next.findings", held.map(function (f) {
+          const b = f.body || {};
+          return { value: String(f.bundle_id || f.id), on: false, text: String(b.conclusion || b.question || f.title || f.bundle_id || f.id) };
+        }))
+        + cs.field("dk-next-scope", "screen.docket.next.scope", { area: true, rec: true, help: "screen.docket.next.scope.help" })
+        + '<div class="mk-acts">' + cs.act("casedraft", { tone: "primary" }) + "</div>" + P.said(view, "casedraft"), []));
+    }
+
     // R43 (N858 D10; DEC-340; docket R30; action-holds R19): "Pressure marked on this case", after the record: each entry that
     // carries a mark with its date, who made it, the note, and "No hold is placed for it yet" when `holdsdue` lists it; the
     // counsel sentence and the way to the hold. A viewer not seeing the project in full is answered no entries with marks, so none is drawn.
@@ -80,6 +95,29 @@ export const DOCKET = Object.freeze({
   },
 
   acts: [
+    {
+      // R52 (C9; DEC-374; `review` R39): "Start the next edition": `casedraft` with the published case's `caseId`, the findings chosen and
+      // the scope; the case editor then opens on the new draft. With no finding chosen, or no scope, nothing is sent and it says so.
+      op: "casedraft", label: "act.casedraft.label.docket",
+      refusals: { REVIEW_NO_SUCH_CASE: "screen.docket.next.refused.nocase" },
+      send: function (view, el, cs) {
+        const P = view.parts;
+        const caseId = String(view.subject || "").split("/")[1] || "";
+        const ticked = cs.value("dk-next-findings");
+        const targets = (Array.isArray(ticked) ? ticked : []).filter(function (id) { return (view.ui.nextFindings || []).includes(id); });
+        const scope = String(cs.value("dk-next-scope") || "").trim();
+        const refuse = function (key) { P.say(cs, view, "casedraft", P.fold(cs, "screen.docket.next.refused.summary", "<p>" + cs.w(key) + "</p>"), false); return null; };
+        if (!targets.length) return refuse("screen.docket.next.refused.nofinding");
+        if (!scope) return refuse("screen.docket.next.refused.noscope");
+        return { body: { project: String(view.subject || "").split("/")[0], caseId: caseId, targets: targets, scope: scope } };
+      },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "casedraft", answer)) return;
+        const r = view.parts.value(answer) || {};
+        view.parts.forget(view);
+        cs.go("case-editor", String(view.subject || "").split("/")[0] + (r.draftId ? "/" + r.draftId : ""));
+      },
+    },
     {
       // R8: "File a docket entry", with the member's reason for the record or public choice.
       op: "docketfile", label: "act.docketfile.label.docket", reasonField: "reason",
