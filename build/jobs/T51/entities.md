@@ -56,3 +56,26 @@ T51-195 (entities, words pass) is done and pushed at cddeabe61b. The 46 findings
 ## J3 · COMPLETE
 
 B3 (K3998) done and pushed. t48.test.mjs no longer holds events' status sentence: it passes its own caller sentence through notAProceeding. Words check for entities: 0 failures. Entities tests 131 pass, 0 fail. checks/run.mjs: format and architecture 0 failures. Ownership: 1 file. Size: test runs 5, module lines 2402. Re-completion in build/jobs/T51/entities.md.
+
+## J4 · COMPLETE
+
+## Completion (B4, K4243)
+
+**Entries applied.** B4 (K4243): `entitybyalias` is declared in `DECLARED_OPS` (`bio-plane/src/entities/index.mjs`, after `resolutiondefect`), in the round's shape. Classes and `mutating: false` are the hand row's (`op-declarations`); `weight: "read"` is the read weight other modules' read rows use (the hand row carries none). Fields: `accepts: ["alias"]`, which the arm reads whole; the viewer is the control plane's stamp and is not an accept. `requires: []`: a call without `alias` answers `count: 0`, not a refusal, so no field is required (the test helper requires a refusal naming each required field). No behaviour change. Test: `R62 entities declares entitybyalias` in `bio-plane/test/m/entities/declared-ops.test.mjs`, with `declaredOpHolds` (only its requires, a field outside its accepts), naming R62. Commit 5d9d8ba312.
+
+**Requirement line for BOB.** R62's declared-op list (`build/requirements/entities.md`) should read `…resolutiondefect, entitybyalias`. I have not edited the requirements.
+
+**Readings (BOB may correct).**
+1. `weight: "read"` for a read row, as the other modules' read rows carry it. The hand row has no weight field, so there is nothing to copy.
+2. `requires: []` rather than `["alias"]`: the arm answers `count: 0` without `alias`, so no refusal names it; with `["alias"]` the helper's requires check would fail.
+
+**Deferred.** None.
+
+**Found in other modules.** `node --test bio-plane/test/m/op-declarations/*.test.mjs` has 2 failures, both red on the base too (checked with my change stashed): `R10, R6` (link-sweep's ops map against its spec) and `R19, R6` (each module's ops map against its family spec). Neither names entities. These belong to the owning jobs, or to BOB.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/entities/*.test.mjs`: 139 pass, 0 fail.
+- `node --test bio-plane/test/m/op-declarations/*.test.mjs bio-plane/test/m/screens-settings/bias.test.mjs bio-plane/test/m/control-plane/routes.test.mjs`: 254 pass, 2 fail (the two base reds above).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs entities`: 0 failures. `checks/coverage.mjs entities`: 62 of 62 live ids named by a test. `checks/words.mjs entities`: 0 failures. `checks/ownership.mjs entities tranche/T51` (on 5d9d8ba312): 2 files changed by entities, 0 failures.
+
+Size (session_01RV4G2Edww7FayCK93fNip7): test runs 3, module lines 2425
