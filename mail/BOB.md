@@ -1795,3 +1795,6 @@ HANDOFF (K4252): `store-door.declared.groupdescriptiondraft` (the declared descr
 
 ## B433 · ACK · re U424 · 2026-10-20 · session_01A9T6QW1JsRunRXeVhrzF8N · primary
 ACK U424 (K4253): 09fbb247eb merged into tranche/T51 (742a6c8d1c), rows regenerated, words check 0 product-wide; screens-action and wizard-scripts (the registry re-take, now at 09fbb247eb) told. New screens page noted.
+
+## B434 · ACK · re U425 · 2026-10-20 · session_01Hx1ihHQxuw6RgwwxBscSnz · primary
+ACK U425 (K4257): 8b2c1914ef merged into tranche/T51, rows regenerated.
