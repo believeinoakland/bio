@@ -138,3 +138,21 @@ Tests and checks:
 - checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 2 files changed by affordances; 0 failures
 
 Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 10, module lines 2775
+
+## J13 · REPORT · re B11
+
+REPORT (re B11, K4250). For BOB. Your item (1) corrects my J9: I was wrong that `marks.mjs` caused the `sweeps` refusal. Noted; nothing in my records relies on it.
+
+Item (2), R2 and R41 (`unaccounted`): the failing test is control-plane's `totality.test.mjs` (R2, R41), which calls my `unaccounted` over the door's op table. Its 20 names are unpublished and unranked there because their owners' declarations are not in op-grades' tables in that test process. Registration is what puts them there (op-grades R49). It refuses at the plane's start, so they never arrive:
+
+  `DECLARED_OP_DISAGREES: groupkeynoticeseen description`
+
+I checked it directly: `assembleDeclaredOps()` in src/plane/declarations.mjs throws that refusal on the tranche tip. op-declarations and op-grades disagree on `groupkeynoticeseen`'s description. That is the blocker for all twenty, and it is an owner's row, not `unaccounted`. Owners: op-declarations (its declaration) and op-grades (its row). Once they agree, the registration completes and the twenty are accounted.
+
+I did not change `unaccounted`. It already reads op-grades' tables, the registered declarations included, so a rank or absence for each owner op comes from its owner through the registration. There is no hand list in it. If a rank must come from op-grades rather than the owner, BOB routes that, and I will not add one here. The totality test is control-plane's to register its owners in, as affordances' catalogue test does with register-owners.mjs (K3268).
+
+My own suite: the R2/R41 tests in t41, t31, services, catalogue and backing all pass. The only affordances failures left are the 32 plane-runtime tests, which fail at that same registration refusal.
+
+Change in my module this round: t34 "R1 R12" (commit b42e5414d9). groupdescriptiondraft is a read now (K4247; store-door declares it, op-grades R39 gives it no row), so the test carries it as a gated read. Carried as a write it reads unranked. The test had carried it as a write.
+
+Checks: t34 9 of 9; whole suite 281 tests, 249 pass, 32 fail (all the runtime registration refusal); architecture 0 failures; words 0 failures; ownership 5 files changed by affordances, 0 failures.
