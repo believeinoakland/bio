@@ -150,6 +150,9 @@ export function accountTable(me, over = {}) {
     // who registered a key for the member, by handle (R57)
     memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     infolevel: env({ ok: true, level: "pause", set_at: "2026-10-05T00:00:00Z", asked_at: null }),
+    // member-roster R19: what the viewer may see of the pairings (her own, and the published); the stored choice is hers
+    memberpairings: env({ ok: true, pairings: [{ handle: "ana", cover: "Ana the CPA", published: true }, { handle: me.handle, cover: "Mai K.", published: false }], limit: 200, truncated: false }),
+    memberpairingset: (q, b) => env({ ok: true, memberId: b.memberId, published: b.published === true, by: me.member }),
     memberlanguageset: (q, b) => env({ ok: true, member: me.member, language: b.language, set_at: "2026-10-12T00:00:00Z" }),
     infolevelset: (q, b) => env({ ok: true, level: b.level }),
     expertisedeclare: (q, b) => env({ ok: true, memberId: me.member, label: b.label, state: "declared", confirmed: false }),

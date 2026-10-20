@@ -48,7 +48,7 @@ const WORDS = {
     ...LABELS("teamai", ["groupkeyset", "groupkeyswitch", "accountusesset", "ailimitset", "groupkeyremove", "aikeepaway"])],
   account: [...STATES, "screen.account.name", ...own("screen.account."), "handle.fixed", "level.prompt.name", "level.pause.name", "signing.ceremony.keepkey",
     "screen.connect.name", "screen.notes.name", "screen.ties.name", "screen.glossary.name", "screen.glossary.purpose", "member.founder.unnamed", "screen.members.signer.held.nodate",
-    ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "infolevelset", "signout", "signouteverywhere"])],
+    ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "infolevelset", "signout", "signouteverywhere", "memberpairingset"])],
   connect: [...STATES, "screen.connect.name", ...own("screen.connect."), "member.founder.unnamed", ...PANEL, "ai.whopays", "mark.outward.means", "screen.setup.state.needed", "shell.working",
     ...["ask", "draft", "run", "enquire", "read", "transcribe", "account", "suggestions", "standing"].flatMap((u) => [`ai.use.${u}.name`, `ai.use.${u}.means`]),
     "connect.ifnot", "connect.notnow", "refusal.reference", "session.reauth", "shell.password", "session.reauth.head", "screen.panel.amount", "ai.usage.today",
