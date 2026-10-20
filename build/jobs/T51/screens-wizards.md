@@ -1,6 +1,6 @@
 # screens-wizards (T51)
 
-**Status** · session_01E5NuDNnu6Tf6sHWb5YMV1j · depth 2 · COMPLETE · handled B5
+**Status** · session_01THUDz9b6Jp6TtsS2uCUgJj · depth 2 · COMPLETE · handled B6
 
 ## Completion (T51-115)
 
@@ -74,3 +74,17 @@ THREE THINGS FOR BOB:
 (1) The 2 red tests are not mine and were red on the tranche before my change: wizard-scripts' row for wizardrevise says requires [version, steps], but the op takes adopt with no steps; the shell's field guard fails library.test.mjs "R1 wizards: a state pressed..." and "R1 a copy whose base changed...". The fix is that row (requires version, with steps or adopt). Both go green with it.
 (2) The same fault stays for screens outside R17's kinds: action, matter and due-date read with subject: true unconditionally, so library steps on them (Take an escalation, Refer it to an oversight body, Get a record #9, Demand a correction #8, Pick up a plan #4, Start and send #7) land on "Nothing is here" with no subject. The rule and words for those kinds are yours and the design's; the walk then covers them unchanged. List in my record, finding 3.
 (3) wizard.subject.question and .document are no longer read (no choice asked); the generic none words for a question or document step stay with the design (B5).
+
+## Completion (B6 CHANGE, K4248: the no-subject cards, B421)
+
+`guide.mjs`: an action, a matter or a due-date step with no subject held for the run (neither the last held on that screen, nor chosen, nor the one the member is on) stays on the wizard's card and navigates nowhere, drawing the step's `wizard.<WIZ-id>.step<n>.none.{what, why, door}`; the door "Open a plan" asks which project (`projectlist`, `cs.choice`), then opens `plan` on the chosen one (rings and presses nothing); with no project the fold `wizard.subject.none.project` as for the welcome's door. The card gives way when the member reaches the step's own screen on a subject. The question door (`project`, "Open a question") is unchanged. Escalation (WIZ-33cece8a68e76f58) lands on matter (1, 3, 4), action (2) and due-date (5). The library's 11 listed steps are tested by their keys (`hasWord`, never a sentence).
+Tests: `b421.test.mjs` (6, naming R22); `walk.test.mjs`'s fixture moved from `due-date` (now a guide kind) to `hold`. Module: 75 pass, 0 fail.
+Checks: words (module) 0 failures, whole-repo run shows no line naming this module; format 0; architecture 0; coverage 21 of 21; ownership 0; `setup-words/build.mjs --check` matches.
+Requirement lines for BOB: **R22** (T51; B6, K4248; DEC-387 B421, U420; amends R20) A step on an action, a matter or a due date never navigates without its subject: with none held for the run it stays on the card with its own `none.what`/`.why` and the button `.none.door` ("Open a plan"), whose press asks which project, then opens `plan` on it, ringing nothing and pressing nothing; with no project, `wizard.subject.none.project` in its fold. Tests: each of the 11 listed steps draws its keys and navigates nowhere; the door; no project; control: a held subject opens its screen with no card. Also amend R20's "R17's kinds" and R21's stand-ins to include these three kinds.
+Reported, not mine: U420 owes the design the plane op for a contradicted-sentence release and "Bring back"; the generic none words for a question or document step remain the design's.
+
+Size (session_01THUDz9b6Jp6TtsS2uCUgJj): test runs 4, module lines 948
+
+## J5 · COMPLETE
+
+B6 done: the no-subject cards for action, matter and due-date steps (guide.mjs; b421.test.mjs). Module 75 pass, 0 fail; words, format, architecture, coverage 21/21, ownership, setup-words --check green. Requirement line R22 (amends R20, R21) is in my record, 'Completion (B6 ...)'. Not mine: the ops owed to the design (Bring back, release) and the generic none words for question/document steps.
