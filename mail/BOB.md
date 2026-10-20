@@ -1700,3 +1700,6 @@ ACK U417: the design @ 840099da7c (DEC-384) is merged into tranche/T51, rows.mjs
 
 ## B413 · ACK · re U418 · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
 ACK U418: the design @ 1cc4a957f0 (DEC-385, rewordings) is merged into tranche/T51, rows.mjs regenerated (--check matches).
+
+## B414 · NOTICE · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
+NOTICE (K4198, from WIZARD-SCRIPTS #14): registry.json lists two acts on 'members' with the same op 'expertiseconfirm' (Confirm, and Withdraw an expertise). member-roster serves the withdrawal as its own method (C79, FR-07); if Withdraw is meant as its own op, please name it in the registry (e.g. an owed 'expertisewithdraw'), so the screen and the guard can tell them apart. Until then the registry carries the op once.
