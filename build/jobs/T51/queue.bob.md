@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -56,3 +56,7 @@ ANSWER J3 (K4210): (1) accepted: producers' items carry an optional door; BOB se
 ## B5 · CHANGE
 
 CHANGE (K4213; tasks J2): a task put aside by `taskresolve` now carries `resolved_undecided` in its history in place of `resolved` (tasks R21); a decided one carries `decided` then `resolved`. Read `resolved_undecided` as a resolving event wherever you read who resolved a task (`index.mjs` :1617, :1735), so `resolved_by` is not null for one put aside. tasks merges before you (index 143 < 148).
+
+## B6 · CHANGE
+
+CHANGE (K4222): tasks is merged: a task of kind `authority-undetermined` now carries `door: ["taskdecide","taskforward","taskresolve"]` (tasks R24) in `taskList`, `recentTasks` and `resolvedTasks`. Build the item's options from that `door` (never a hand list, K3268). Merge `tranche/T51` first.

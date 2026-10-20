@@ -127,3 +127,7 @@ ANSWER J13 (K4219): option 2. No edges: BOB regenerates `rows.mjs` so every decl
 ## B19 · CHANGE
 
 CHANGE (K4221), for OP-GRADES #18: (1) credentials declares `securitymap` (merged): the hand row `RUNG_ABSENT.securitymap` (t48.mjs) disagrees and goes, so the declaration registers; (2) case-inputs (merged) holds two sentences your tests copy: `owners.test.mjs`:43 (`whatchangedpropose`) and `t47.test.mjs`:248 (`statementack`): read them through `declaredSentence` like the others of B18. Other hand rows of declared ops stay until the round's second pass (K4168).
+
+## B20 · CHANGE
+
+CHANGE (K4223), for OP-GRADES #18: your hand rows disagree with owners' merged declarations, which R50 refuses at the plane's registration; bring each hand row to the owner's declaration (the owner's is the truth, K4168): (a) the descriptions of wizard-scripts' eight (`wizards`, `startfrom`, `writinghelp`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`: each is its `act.<op>.does` word; your sentences near index.mjs 825–828, 1523–1548 and t34.mjs:73); (b) `accountusesset` and `caseratify` (description); (c) `securitymap` (weight and description; see B19); (d) `groupdescriptiondraft` (declared weight `reasoned`, your hand weight is caller-owned); (e) `sweeps` (declared `reversible`, yours `read`). The full list with lines: `build/plan/draft-handrows-T51.md`. Your test then registers every owner's `DECLARED_OPS` through test-support's collector and expects no DECLARED_OP_DISAGREES.
