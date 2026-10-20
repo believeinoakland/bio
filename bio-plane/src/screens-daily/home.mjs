@@ -398,8 +398,9 @@ export const home = Object.freeze({
           return null;
         }
         if (!el.dataset.door) return null;
+        // R81: `startfrom` takes only `message` and `parts`; which door is open is the page's memory, and the press asks the doors again.
         cs.set("door", el.dataset.door);
-        return { query: { door: el.dataset.door } };
+        return { query: {} };
       },
     },
     // R42: ask to join a findable project, and withdraw the request; the ways in are read again.
@@ -419,8 +420,8 @@ export const home = Object.freeze({
       label: "act.promote.label.home",
       rereads: ["projects"],
       send: function (view, el, cs) {
-        const body = view.parts.startProject().body(cs, view, "home", "file.trigger.home");
-        return body ? { body: body } : { refuse: "screen.home.title.needed" };
+        const made = view.parts.startProject().body(cs, view, "home", "file.trigger.home");
+        return made.body ? { body: made.body } : { refuse: made.refuse || "screen.home.title.needed" };
       },
       // R1: opening `project` on success.
       done: function (view, answer, cs) {

@@ -112,8 +112,8 @@ export const projects = Object.freeze({
       op: "promote",
       label: "act.promote.label.projects",
       send: function (view, el, cs) {
-        const body = view.parts.startProject().body(cs, view, "projects", "file.trigger.projects");
-        return body ? { body: body } : { refuse: "screen.projects.title.needed" };
+        const made = view.parts.startProject().body(cs, view, "projects", "file.trigger.projects");
+        return made.body ? { body: made.body } : { refuse: made.refuse || "screen.projects.title.needed" };
       },
       done: function (view, answer, cs) {
         const id = answer && (answer.bundleId || (answer.result && answer.result.bundleId));

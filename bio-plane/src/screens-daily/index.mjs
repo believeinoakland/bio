@@ -46,7 +46,7 @@ const PROJECT_ROWS = (w) => [`${w}.questions.one`, `${w}.questions.many`, `${w}.
   "member.founder.unnamed", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "project.rescue.title.nodate"];
 // R25, R30: "Start a project".
 const START = ["project.start.title", "project.start.title.help", "project.start.go", "project.visibility.title", "project.visibility.start.hidden",
-  "project.visibility.start.discoverable", "project.visibility.start.later"];
+  "project.visibility.start.discoverable", "project.visibility.start.later", "project.visibility.start.required"];
 
 // R47, R48: the lists the recording forms are chosen from (`find-in-forms.mjs`), each worded by key.
 const SEVEN_ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
