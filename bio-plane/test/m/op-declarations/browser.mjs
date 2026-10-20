@@ -20,6 +20,8 @@ export const browserActs = (registry) => {
    build and declare in this round (`case-inputs` C12, `case-import` C49, `tasks` C62), each in its owner's `DECLARED_OPS`
    and none a hand row here, so each has no spec in `OPS` (R6) until the plane registers the owners' declarations
    (`registerDeclaredOps`, R80); the totality tests read them as still owed, class (c) of R21, with the ruling that owes
-   them. */
-export const OWED_BY_FIX_ROUND = ["casedetails", "casedetailspublic", "casedetailsset", "importregrade", "rerunpair", "rerunread",
-  "rerunstart", "taskdecide"];
+   them. Beside them the three NO-OP ops whose controls DEC-381 draws (`provenance` C23, `capture-sources` C20,
+   `investigation` C65), declared by their owners in the same round. */
+export const OWED_BY_FIX_ROUND = ["capturecredentiallist", "capturecredentialsupply", "capturecredentialwithdraw", "casedetails",
+  "casedetailspublic", "casedetailsset", "declareorigin", "importregrade", "projectclose", "rerunpair", "rerunread", "rerunstart",
+  "taskdecide"];
