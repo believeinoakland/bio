@@ -83,3 +83,7 @@ FR-23 applied: C62 (doors read from the producers' declared `door`, hand list th
 ## Completion of B6 (QUEUE #28)
 
 `tasks` R24 merged: authority-undetermined rows carry `door` in `recentTasks`; queue already carried a row's `door` onto the item and led `disposition.instead` with it (R12), no hand list. Tests: doors.test.mjs now uses the real `tasks` door (control: a check-requested task keeps taskresolve); feed.test.mjs R12 expected the old `taskresolve` for an authority task and now expects the declared door. Queue suite 197 pass, 0 fail.
+
+## J5 · COMPLETE
+
+B6 applied: queue already carried a task row's door onto the item; merged tasks R24, tests now use the real door (feed.test R12 updated from taskresolve to the declared door). Queue suite 197 pass, 0 fail.
