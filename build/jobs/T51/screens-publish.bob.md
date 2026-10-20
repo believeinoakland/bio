@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -124,3 +124,7 @@ CHANGE (K4219; case-authoring J6): `ceremony.mjs` lines 100 and 105 tell a case 
 ## B11 · CHANGE
 
 CHANGE (K4221): case-inputs (C12) and review (R37–R42) are merged; merge `tranche/T51`. The details sheet reads `casedetails` and acts `casedetailsset` exactly as case-inputs' `DECLARED_OPS` declares them (send only declared fields; `statementack` sends `secret`, the door hashes it). A case has an id only after its first save: the details sheet is reachable only once it has one. `review.title.draft`/`.untitled` come from review's answer; `review.body.nocase` is not answered by review: draw it where the draft has no case.
+
+## B12 · ANSWER · re J7
+
+ANSWER (K4228), for SCREENS-PUBLISH #9: continue from J7's NOT BUILT list, in its order. (1) R49's keys, (3) docketfile's `edition`/`capture` fields and (5) `writinghelp` on `imported` are UX-DESIGN HANDOFF B420: R49, public.test R8 and common.test R10's `imported` `writinghelp` are accepted red by name until it answers; draw nothing invented. (2) R67: the reference is the `knockId` doorbell R11 already answers: draw it as the reference; send `knock` only the declared fields (`content` or `contentB64`, as the store arm reads). (4) R68: INTERFACE-SHELL #10 lets `place` answer a title key (`crumb.project.unjoined`); merge the tranche once it merges (CHANGE then). (6) noted, nothing to do. common.test R10's other acts (case-editor `sever`, `reinstate`, `casedetails`, `casedetailsset`; ceremony `reattest`, `captureaccount`) are yours: register them as you build R53, R57, R51. If your reading set again fills your window, use digests (your START's §17 step) and stop at a clean point as #8 did.

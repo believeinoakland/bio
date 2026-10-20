@@ -102,3 +102,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B14 · CHANGE
 
 CHANGE (K4226), a new job session (OP-DECLARATIONS #29, haiku): citation's `DECLARED_OPS` now declares `needs` on every mutating row (merged), so `register-owners.mjs`'s header is no longer true: add citation to `REGISTERED` and register its rows; `member-roster` and `citation` are now in your `uses` (BOB's edit, the architecture check's finding). Better still: register every owner through test-support's collector `declaredOpsOf` if it now passes (add `test-support` to your uses is BOB's: REPORT if needed); if any owner still refuses, register the rest and name the refuser in a REPORT. Your suite, the whole-product architecture check (0 for you), `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4227), also for OP-DECLARATIONS #29: `standardinforce` (standards' read) is not in `SESSION_OPS.member` nor admin, so the shell's act gate draws no button for it (screens-investigate R51). Add it to both session sets, read from the owner's declared `classes` if standards declares it, else as a hand row beside its siblings; a test with a control.

@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_014hQZyBTbmm6Zp4ZEjLodrd · depth 2 · COMPLETE · handled B3
+**Status** · session_01LedUpF3AAa5y9xN9UujA4d · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -121,3 +121,33 @@ Size (session_01Hpc4xpSYy9jXRfRGxtGfm6): test runs 3, module lines 3756
 - `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; words 0 failures (words check: `missingkey 0`); coverage 7 failures, all in other modules (above).
 
 Size (session_014hQZyBTbmm6Zp4ZEjLodrd): test runs 7, module lines 3788
+
+## J5 · COMPLETE
+
+COMPLETE for B4 (K4206) and B5 (CHANGE K4226). Session session_01LedUpF3AAa5y9xN9UujA4d.
+
+**Entries applied**
+1. **B4 · K4206**: `DECLARED_OPS` in `index.mjs` declares `acquire` (accepts `address, at, authority, coArchive, continue, file, for, locator, render, request, subresources, via`; requires one of `locator | continue | address`, its alternatives named as the arm's refusals name them) and `captureaccount` (accepts `captureSha, signature, text`; requires `captureSha, signature`). Class, weight and description are the ops' existing rows'. `matchedSweep` is not declared: the arm never reads it (acquisition R31). A missing `captureSha` is refused as `REQUIRED_ARGUMENT_MISSING` naming it (R98); a malformed or unrecorded digest stays `NOT_THE_CAPTURING_ACTOR` (R69). Through the op the account's instant is this instance's clock; a body's `at` is not read.
+   This was committed as `3932c68a83` by the earlier session of this job (`session_014hQZ…`), which stopped before posting COMPLETE. I checked that commit against R97 and R98 and its tests (`declared-ops.test.mjs`, `acquire` and `captureaccount` declaration tests, and the R98 test with its controls) and kept it. No change to it.
+   R97 and R98 are already in `build/requirements/capture.md`, so no new R id is needed.
+2. **B5 · CHANGE K4226**: `captureOps(c, url, body, env, h = {})` takes the handler's in-process parts; the `acquire` arm passes `h.timings` to `c.acquire` as `opts.timings`, only when given (`...(h.timings ? { timings: h.timings } : {})`). The other options (`cls`, `member`, `sessMember`, `storeName`) are unchanged. New test `bio-plane/test/m/capture/timings.test.mjs`, two tests naming R73: a given object reaches `acquire` as the same object; with none given no `timings` key is passed and the options are as before (control).
+
+**Requirement wording not placed (ownership)**: B5 asks for the `acquire` arm's line to be amended in `build/requirements/capture.md`. The ownership check refuses that file for capture (outside its paths), so I reverted my edit (commit on this branch) and leave it to you, Bob, as requirements are yours. The wording to place, as an amendment to R73 (T51; K4226; amends R73):
+> The `acquire` arm of the ops map hands the handler's `timings`, when one is given, to `acquire` as `opts.timings` (`acquisition` R95), the same object, so a caller that stops waiting reads the stages that ran; with none given no `timings` key is passed, and the arm's other options are unchanged. Test: `timings.test.mjs` (a given object reaches `acquire`; with none, the options are as before).
+
+**Deferred**: none in my module.
+
+**A question for BOB (not my module)**: in production `op=acquire` reaches capture's arm inside the Durable Object (`acquireOp` in `ops.mjs` calls `store.fetch('/acquire…')`, and the route map is `plane/store.mjs`'s `captureOps(captureOf(ctx), url, body, env)`), and that call passes no handler. An object cannot cross the fetch boundary, so `h.timings` can reach the arm only when the plane's route map passes the in-process handler, which is PLANE #44's gatedOp forwarding. I have not changed `plane/store.mjs`. Please confirm PLANE #44 passes `h` into `captureOps` in-process, or tell me where else the timings object should come from.
+
+**Found in other modules**: nothing new from my work. `checks/run.mjs` shows the usual reds in other modules (citation's import order, agent-harness R17, agent-runner R37/R38/R40, installer-steps R26/R31, journey-check R19, and the op-grades and strength testcopy/inline findings). None is in capture's files.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/capture/ bio-plane/test/cap13-reuse-pages.test.mjs bio-plane/test/d57selflink.test.mjs`: 211 tests, 211 pass, 0 fail, 0 skipped (includes the two new timings tests and the K4206 declaration tests). Before the change, the timings test failed on the missing key, as intended.
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio capture`: 0 failures.
+- `checks/coverage.mjs /home/user/bio capture`: 51 of 51 live ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 3 files changed by capture, 0 failures (after the requirements revert).
+- `checks/run.mjs /home/user/bio`: capture's files show 0 findings for architecture and words; the 26 words failures and the coverage and architecture reds all sit in other modules.
+- I installed the missing `node_modules` for the lockfile directories (`agent-runner`, `bio-plane/src/journey-check`, `file-scanner`, `sheet-worker`, `site`) before the test run.
+
+Size (session_01LedUpF3AAa5y9xN9UujA4d): test runs 3, module lines 3789
