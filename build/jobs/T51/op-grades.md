@@ -194,3 +194,26 @@ Also: the registration test still sets aside `sweeps` and `groupdescriptiondraft
 - words, `missingkey` (`screens-intake`): `screen.about-knocker.known.head`, `screen.about-knocker.attribute.occupation`, `screen.about-knocker.evidence.label` (`t51-about-knocker.test.mjs` 25, 32, 57); `screen.watching.sweep.pages` (`t51-watching-named.test.mjs` 92); `screen.watching.pause`, `screen.watching.resume` (`t51-watching.test.mjs` 46, 51).
 - words, `inline` (`strength`): `bio-plane/src/strength/method.mjs:349`.
 - Still open from J15, on their branches: `link-sweep` `sweeps` (weight `reversible` on a read) and `store-door` `groupdescriptiondraft` (weight `reasoned` on a read); both go when their branches merge (B24).
+
+## J19 · COMPLETE
+
+**COMPLETE (B24, OP-GRADES #20).**
+
+**Entries applied.**
+1. **R39 (amended K4247):** `groupdescriptiondraft` has no `RUNG_ABSENT` row now (`src/op-grades/t48.mjs`); it is a read, in `NON_ACTS` alone, with store-door's declared sentence (QUESTION, decision 2). Tests: `owners.test` R16 (no grade); `t48.test` R39 (control: no row in `RUNGS` or `RUNG_ABSENT`) and R38–R41 (the table is `WRITES`); `pins` R39 comment; `t49.test` R43 tally 36 → 35 (control 34).
+2. **R51 (new):** `register.test.mjs`: every declared op's `NON_ACTS` reason equals its owner's declared description; control: a read whose reason differs from its owner's is refused naming the op (`DECLARED_OP_DISAGREES`), and the owner's word is accepted. The `RUNG_ABSENT` half is open (QUESTION, decision 1).
+3. **Words, product-wide (not in the module check):** 26 test copies of other modules' `localize` sentences in 11 test files (`owners`, `t35`, `t36`, `t37`, `t41`, `t46`, `t47`, `t48`, `t49`) now read through `declaredSentence(owner, op)`; each assertion kept.
+
+**Deferred.** The `RUNG_ABSENT` `is` rows (113; QUESTION 1); `groupdescriptiondraft`'s design key (QUESTION 2); the owed filter for `sweeps` and `groupdescriptiondraft` until link-sweep #6 and store-door #14 merge; tranche not merged.
+
+**Found in other modules:** REPORT posted (coverage, words, inline).
+
+**Tests and checks** (run from civicos-process, product `/home/user/bio`):
+- `node --test bio-plane/test/m/op-grades/`: 141 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs op-grades`: 0 failures. `checks/coverage.mjs op-grades`: 51 of 51 named, 0 failures.
+- `checks/words.mjs op-grades`: 0 failures; product-wide, no finding in op-grades.
+- `checks/ownership.mjs op-grades tranche/T51 job/T51/op-grades`: 0 failures.
+- `setup-words/build.mjs --check`: stale-rows note only (expected).
+- `checks/run.mjs`: format 0, architecture 0; coverage and words failures only in other modules (REPORT).
+
+Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 9, module lines 3623
