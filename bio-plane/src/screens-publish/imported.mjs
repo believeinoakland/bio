@@ -105,7 +105,8 @@ export const IMPORTED = Object.freeze({
             + cs.choice("im-ci-q-" + i, "screen.imported.citeimp.q", [{ value: "", text: "" }].concat(qs.map(function (q) { return { value: String(q.bundle_id), text: String(q.title || q.bundle_id) }; })))
             + cs.checks("im-ci-role-" + i, { key: "screen.imported.citeimp.role" }, [["supports", "screen.imported.citeimp.role.supports", false], ["cuts_against", "screen.imported.citeimp.role.cuts", false]], { radio: true })
             + cs.field("im-ci-note-" + i, "screen.imported.citeimp.note")
-            + '<div class="mk-acts">' + cs.act("citeimported", { data: { finding: f.finding, index: String(i) } }) + "</div></div>";
+            + '<div class="mk-acts">' + cs.act("citeimported", { data: { finding: f.finding, index: String(i) } })
+            + (view.reachable ? cs.act("writinghelp", { data: { field: "note", id: "im-ci-note-" + i, forop: "citeimported" } }) : "") + "</div></div>";
         }).join("") + '<p class="mk-small">' + cs.w("screen.imported.citeimp.inherit1") + " " + cs.w("screen.imported.citeimp.inherit2") + "</p>" + P.said(view, "citeimported")));
       }
 
@@ -138,6 +139,22 @@ export const IMPORTED = Object.freeze({
   },
 
   acts: [
+    {
+      // B420 2/3 (interface-shell R20; DEC-387, DEC-382): the assistant's help with one own-words field, drawn only while it is reachable;
+      // nothing is kept until the member saves, and the draft fills the field labelled machine work. The owner's declaration
+      // (`writinghelp`, wizard-scripts R46) requires `op`, the act the words are for.
+      op: "writinghelp", label: "act.writinghelp.label.imported", rereads: [], reasonField: "told",
+      send: function (view, el, cs) {
+        view.ui.helpId = el.dataset.id;
+        const forop = el.dataset.forop;
+        if (!forop) return null;
+        return { body: { op: forop, field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
+      },
+      done: function (view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        if (a && typeof a.text === "string" && view.ui.helpId) cs.fill(view.ui.helpId, a.text, { label: "screen.start-send.draft.machine" });
+      },
+    },
     {
       // R7: "Import a case": the case file the member chose, its bytes sent as one part.
       op: "caseimport", label: "act.caseimport.label.imported",

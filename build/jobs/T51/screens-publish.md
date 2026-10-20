@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01XKvVPwnBsk4EaAeXx6RRS9 · depth 2 · COMPLETE · handled B15
+**Status** · session_014kx187U1UAhfvtZdMDfMJG · depth 2 · COMPLETE · handled B16
 
 ## J1 · QUESTION
 
@@ -160,3 +160,29 @@ Accepted reds unchanged: common.test R10 (`imported` `writinghelp`) and public.t
 Tests: `node --test bio-plane/test/m/screens-publish/`: 172 tests, 168 pass, 2 fail (the two above), 2 todo. Checks: format 0 failures; architecture 14 (the `uses` line above); coverage 69 of 69 ids; words (screens-publish) 0 findings; ownership: 1 file, `build/requirements/screens-publish.md` (accepted).
 
 Size (session_01XKvVPwnBsk4EaAeXx6RRS9): test runs 6, module lines 3090
+
+## J13 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #11, session_014kx187U1UAhfvtZdMDfMJG), B16 applied; `tranche/T51` merged (at its tip, 58987e71c1). One red held, named below.
+
+**Applied**
+1. **Doorbell (B420 1; R49 built).** "Make one for me" is a tick beside the secret field (`screen.doorbell.secret.make`, `.make.help`); ticked, `knock` sends `generateSecret: true` and no `knockerSecret` (a typed phrase is ignored, the field is emptied after the answer). The receipt draws, each only when the answer carries it: `screen.doorbell.receipt.fingerprint` (the `sha256` shortened in the middle) with `.help`, `.size` (`bytes` written 2.1 MB), `.pseudonym` with `.help`, and `.secret` with `.secret.note` (the made phrase, in page memory only: no storage, address or later request). R67's reference is unchanged.
+2. **Docket file form (B420 2).** `docketfile` now sends `edition` (one `screen.docket.edition.option` per ratified edition of `publishedcase`'s `edition_index`, the latest first and chosen) and `capture` (the sha of a capture of `heldcaptures` for the project, `screen.docket.capture.option`), beside kind, from, summary, where it goes and the reason; `screen.docket.capture.add` ("Capture it first") is a reference to `capture`. With no edition or no document chosen it sends nothing and says `screen.docket.file.needed`. public.test R8 is green (the guard's two missing fields were these).
+3. **`imported` keeps `writinghelp` (B420 3).** The citing note of "Rest one of your team's questions on this" carries the assistant's help while it is reachable (`op: citeimported`, `field: note`); the draft fills the note labeled machine work. common.test R10 is green for `imported`.
+4. **B428.** The case editor, the ceremony and the published page name the four details by `screen.case-editor.details.name.*`; "Not stated" is `case-inputs.details.not_stated`; the ceremony marks a stated detail `screen.case-editor.details.stated`; related work's relations all have words (`.rel.builds_on`, `.responds_to`, `.disagrees_with`, with `.same`, `.other`); "Take out" is `screen.case-editor.details.takeout`; a finding's role choice is labeled `screen.case-editor.finding.role` ({n}) with `screen.case-editor.role.relied|supporting`; each unconfirmed document's tick is `screen.ceremony.conf.self.tick` ({document}, the short fingerprint: the pre-flight row states no title).
+5. **Words (R24).** Every key above is listed by the screen that draws it. The regenerated reads list also names nine keys no screen listed (refusals the plane may answer): listed where a screen may draw them: `refusal.IMPORT_ACCEPT_NO_REASON`, `refusal.IMPORT_NOTHING_ACCEPTED` (imported), `refusal.NOT_THE_PROJECT_OWNER`, `refusal.PROJECT_ACT_NOT_THE_OWNER` (case-editor, ceremony), `refusal.NO_SUCH_CASE` (published, docket, docket-public), `refusal.REVIEW_NO_SUCH_CASE`, `screen.action.pressure.note` (docket), `refusal.SECRET_NOT_RECOGNISED` (doorbell), `refusal.reference` (case-editor). None is "not drawn here".
+
+**Held red (one), cause in another module.** common.test R10, docket: the docs registry (`registry.json`) gives `docket` the act `writinghelp` (B420 2: the summary), but the registry `interface-shell` checks against, wizard-scripts' `SCREEN_REGISTRY` (`bio-plane/src/wizard-scripts/screen-registry.mjs`, `docket` acts `docketfile, docketpost, casedraft`), does not, and `checkScreens` throws on an act it does not hold. So the act and the help button are not built; wizard-scripts must re-take the registry (as `imported` already has it) and then docket gets the act (the same one `imported` now has, 12 lines) and `screen.docket.summary` help. Nothing else is red.
+
+**Found in another module.** (a) wizard-scripts: the registry above. (b) Generated artifacts made stale by this change: the plane bundle (`node bio-plane/scripts/bundles.mjs`) carries screens-publish's code. (c) For the design: `screen.start-send.draft.machine` is reused as the label of the assistant's draft on `imported` (its own key family has none); the receipt's size units (B, kB, MB) are symbols in code, as the design said ("2.1 MB").
+
+**Requirement lines for BOB** (build/requirements/screens-publish.md; not edited by me):
+- R49 now met (drop "not yet met"): "The doorbell's tick `screen.doorbell.secret.make` (with `.make.help`) sends `generateSecret: true` and no `knockerSecret`; the receipt draws `receipt.fingerprint` (+ `.help`), `.size`, `.pseudonym` (+ `.help`) and `.secret` (+ `.secret.note`) each only when the answer holds it, and keeps the made phrase nowhere."
+- R8 amends: "`docketfile` sends `edition` (a ratified edition of the case, the latest first) and `capture` (a document the project's captures hold) beside the rest; either missing, nothing is sent. `heldcaptures` (the project) and `publishedcase`'s `edition_index` are read for the choices; `screen.docket.capture.add` is a reference to `capture`. `writinghelp` on the summary waits on wizard-scripts' registry."
+- R7/R59 amends: "the citing note of `citeimported` carries `writinghelp` while the assistant is reachable."
+- R57 amends: "The details are named `screen.case-editor.details.name.<field>`; a detail not stated reads `case-inputs.details.not_stated`; the ceremony marks a stated one `screen.case-editor.details.stated`."
+- R44 amends: "a finding's role choice is labeled `screen.case-editor.finding.role`, its choices `screen.case-editor.role.relied` and `.supporting`." R51 amends: "each document's tick is `screen.ceremony.conf.self.tick`."
+
+**Tests and checks** (from `bio-plane`, node_modules present): `node --test test/m/screens-publish/`: 179 tests, 176 pass, 1 fail (R10, docket, above), 2 todo (R35's two press tests, K3717). New tests: R49 ×3 (fr30), R59, R57, R44, R51 (fr30b), R8 extended (public). Process checks: format 0 failures; architecture 0 failures; coverage 69 of 69 ids, 0 failures; ownership 0 failures (my paths only).
+
+Size (session_014kx187U1UAhfvtZdMDfMJG): test runs 9, module lines 3163
