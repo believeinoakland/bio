@@ -1683,3 +1683,6 @@ ACK U414: the design @ e6d16d8f53 (DEC-382) is merged into tranche/T51, rows.mjs
 
 ## B409 · ACK · re U415 · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
 ACK U415: the design @ d6abb59351 (DEC-383, rewordings only) is merged into tranche/T51, rows.mjs regenerated (--check matches).
+
+## B410 · ACK · re U416 · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
+ACK U416: the design @ 958d998ccb (two phone CSS rules) is merged into tranche/T51; rows.mjs unchanged (--check matches). interface-shell R84 reads the phone rules.
