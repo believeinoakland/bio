@@ -136,3 +136,23 @@ COMPLETE (SCREENS-SETTINGS #10, FR-25: B12 and its CHANGEs B13–B21). Requireme
 **Tests and checks** (process repository, after merging `tranche/T51` at B21, `8af5af4b4b`): module suite 208 tests, 206 pass, 2 fail: the two R66 tests that draw `export` to the founder (`export` is in no session set until OP-DECLARATIONS #30; they go green by themselves once it merges, a merge of `tranche/T51` and a re-run). `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 0 failures (42 product files); `checks/coverage.mjs screens-settings` 76 of 76 live ids named by a test; `checks/words.mjs screens-settings` 0 failures (inline 0, testcopy 0, handlist 0); `checks/ownership.mjs screens-settings tranche/T51 job/T51/screens-settings`: 25 files, 1 failure: `build/requirements/screens-settings.md`, the one file K4210 accepts at your merge.
 
 Size (session_01YYLjzokpdPYtFU7x1UhDVH): test runs 70, module lines 4949
+
+## J13 · COMPLETE
+
+COMPLETE (SCREENS-SETTINGS #11, FR-25: B22).
+
+**Entries applied.**
+1. B19 (2) R65: the `bias` screen lists the team's earlier offered sets through `retrieval`'s `list` (`type: "bias"`, `state: "proposed"`, `limit: 50`), following `cursor` as `after` page after page, each page read once and kept in the page's memory, at most five pages. The set just saved comes first; a row that is not a bias set or not `proposed` is not listed; each set is drawn by its title and when it was last written (data), the first chosen unless another is; "Adopt it" sends `biasadopt` for the set chosen (`bundleId` from the choice), so a set offered earlier is adoptable without writing it again. An empty answer draws no list and no adoption; a list that cannot be read is drawn failed (`shell.unread`), never as no sets. Test: `bias.test.mjs` "R65 the team's earlier offered sets are listed and adoptable…" (two pages by cursor; an adopted set and a bundle of another type left out; the first, a later and the just-saved set adopted; empty answer; failed read) and R65's first test (the lens read and the sets read are the only reads at open).
+2. `entitybyalias`: the bias form's lookup sends only `{alias}` (test: "R65 writing a set…" asserts the request's query is `{alias}` alone, and the guard accepts it).
+3. The two R66 `export` tests are green after merging `tranche/T51` (op-declarations R83).
+4. `register.mjs` now registers through test-support's `registerDeclared(root, registerDeclaredOps)` (R17), no hand collection of rows.
+
+**For BOB: requirement lines.** R65 item "adopting the set just saved … " should read: "adopting a set the team offered — the one just saved, or any listed by `retrieval`'s `list` with `type: "bias"` and `state: "proposed"`, page after page by its cursor, at most five pages — for the whole team (an administrator's) or for a project (its owner's) …"; and "Test:" gains "a set offered earlier is listed and adoptable; one of another type or already adopted is not listed; an empty answer draws no list". The module's `uses` in `build/modules.json` needs `test-support` (screens-settings' tests import `bio-plane/test/declared-ops.mjs`): until then `checks/architecture.mjs screens-settings` reports the one failure below.
+
+**Deferred.** As in J12: one statement per set; subject names in the lens. The mixed-state choice (a set offered earlier, adopted before, is listed no more because it is no longer `proposed`) is by design: a set adopted for one project and offered for another is not offered again from this list.
+
+**Tests and checks** (after merging `tranche/T51` at `225cfd3f38`): module suite 209 tests, 209 pass, 0 fail. `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 1 failure: `bio-plane/test/m/screens-settings/register.mjs` imports test-support's `declared-ops.mjs`, which `build/modules.json` does not list in screens-settings' `uses` (BOB's file; see above); `checks/coverage.mjs screens-settings` 76 of 76 live ids named; `checks/words.mjs screens-settings` 0 failures; `checks/ownership.mjs screens-settings tranche/T51 job/T51/screens-settings` 5 files, 0 failures.
+
+Size (session_01JCbyiaVBiZ277MQAdnsSaX): test runs 5, module lines 4984
+
+`checks/run.mjs` (whole product): words 33 failures, all in other modules (op-grades test copies and others, not screens-settings; `words.mjs screens-settings` is 0). The `setup-words build --check` was not reached in the run.
