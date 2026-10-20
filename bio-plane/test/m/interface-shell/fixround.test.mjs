@@ -5,7 +5,8 @@ import assert from "node:assert/strict";
 import { PATHS, REF_SCREENS, SETTINGS_SCREENS, PROJECT_PART, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot } from "./harness.mjs";
+import { boot, ok, ADMIN } from "./harness.mjs";
+import { OPS, SESSION_OPS } from "../../../src/op-declarations/index.mjs";
 
 /* ---------- R105 ---------- */
 
@@ -159,9 +160,9 @@ const textOf = (s) => String(s).replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").t
 /* ---------- R110 ---------- */
 
 /* a stand-in for `standard` (a real registry id) whose `place` answers what the test sets (built from source: a screen's function is self-contained) */
-const standardWith = (placed) => ({ id: "standard", words: [], reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: new Function("view", `return ${JSON.stringify(placed)};`) });
-const stepsOf = async (placed) => {
-  const p = await boot({ screens: [standardWith(placed)], path: "/app/standard/S-1" });
+const standardWith = (placed, words = []) => ({ id: "standard", words, reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: new Function("view", `return ${JSON.stringify(placed)};`) });
+const stepsOf = async (placed, words) => {
+  const p = await boot({ screens: [standardWith(placed, words)], path: "/app/standard/S-1" });
   return p.root().querySelector(".cs-crumbs").textContent.split("›").map((t) => t.trim());
 };
 
@@ -185,4 +186,46 @@ test("R110 control: a place answering a string, {project} alone or an empty last
   assert.equal((await stepsOf("a string")).pop(), textOf(word("screen.standard.name")));
   const q = await boot({ screens: [{ id: "calculation", words: [], reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: () => ({ project: { id: "P", title: "T" }, last: "ignored" }) }], path: "/app/calculation/C-1" });
   assert.equal(q.root().querySelector(".cs-crumbs").textContent.split("›").pop().trim(), textOf(word("screen.calculation.name")));
+});
+
+/* ---------- R110: projectKey (B22; screens-publish R68) ---------- */
+
+test("R110 place answering projectKey draws that word in place of the project's title, {name} the title escaped, the last step unchanged", async () => {
+  const project = { id: "PROJ-1", title: "Lease <b>&" };
+  const steps = await stepsOf({ project, last: "AB 32", projectKey: "crumb.project.unjoined" }, ["crumb.project.unjoined"]);
+  assert.equal(steps.length, 3);
+  assert.equal(steps[1], textOf(word("crumb.project.unjoined")));
+  assert.equal(steps[2], word("screen.standard.crumb", { name: "AB 32" }));
+  /* a key whose word holds {name} gets the title, as data */
+  const named = await boot({ screens: [standardWith({ project, projectKey: "screen.standard.crumb" }, ["screen.standard.crumb"])], path: "/app/standard/S-1" });
+  assert.ok(named.root().querySelector(".cs-crumbs").textContent.split("›")[1].trim().endsWith("Lease <b>&"), "the title, as typed, fills {name}");
+  assert.ok(named.root().querySelector(".cs-crumbs").innerHTML.includes("Lease &lt;b&gt;&amp;"), "the title is data, never markup");
+});
+
+test("R110 control: a place answering no projectKey, an unknown key or a non-string draws the project's title as before", async () => {
+  const project = { id: "PROJ-1", title: "Coliseum lease" };
+  for (const projectKey of [undefined, "no.such.word.key", 7, ""]) assert.equal((await stepsOf({ project, last: "AB 32", projectKey }))[1], "Coliseum lease");
+});
+
+/* ---------- R12: a read is gated by its classes (B23, K4237) ---------- */
+
+const gateScreen = (id, ops) => ({ id, words: [], reads() { return {}; }, acts: ops.map((op) => ({ op })), render: new Function("cs", `return ${JSON.stringify(ops)}.map(function (o) { return cs.act(o); }).join("");`) });
+const drawnOps = async (id, ops, who, path) => {
+  const p = await boot({ screens: [gateScreen(id, ops)], path, plane: { whoami: ok(who) } });
+  return ops.filter((op) => p.root().querySelector(`button[data-act="${op}"]`));
+};
+
+test("R12 a read in no session set whose classes hold the session's class is drawn (selftest, runtime, exportlog, biasmanifest, biasinhale, biasdebt); a public read (bootstrap) too", async () => {
+  const reads = { updates: ["selftest", "runtime", "bootstrap"], group: ["exportlog"], bias: ["biasmanifest", "biasinhale", "biasdebt"] };
+  const who = { ...ADMIN, capabilities: ["contribute", "administer", "create_projects", "publish"] };
+  for (const [id, ops] of Object.entries(reads)) for (const op of ops) assert.equal(SESSION_OPS.member.has(op) || SESSION_OPS.admin.has(op), false, op + " is in no set");
+  for (const tokenClass of ["admin", "member"]) for (const [id, ops] of Object.entries(reads)) assert.deepEqual(await drawnOps(id, ops, { ...who, tokenClass }, "/app/" + id), ops, id + " as " + tokenClass);
+});
+
+test("R12 control: a mutating op outside the set is not drawn, and a read whose classes exclude the session's class is not drawn", async () => {
+  const who = { ...ADMIN, capabilities: ["contribute", "administer", "create_projects", "publish"] };
+  assert.equal(OPS.export.mutating, true);
+  assert.deepEqual(await drawnOps("group", ["export"], who, "/app/group"), [], "export mutates and no set holds it");
+  assert.equal(OPS.selftest.classes.includes("agent"), false);
+  assert.deepEqual(await drawnOps("updates", ["selftest"], { ...who, tokenClass: "agent" }, "/app/updates"), [], "a class the read does not list");
 });

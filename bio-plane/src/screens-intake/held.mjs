@@ -25,7 +25,9 @@ function renderHeld(cs, view) {
     if (r.eligible !== false) return `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.eligibility.undetermined")}`;
     const why = String(r.class || "").toUpperCase();
     const reason = why.startsWith("CRUCIAL") ? "screen.held.ineligible.crucial" : why.startsWith("CONTESTED") ? "screen.held.ineligible.contested" : null;
-    return `${cs.mark("gap", "refused")} ${reason ? cs.w("screen.held.ineligible", { reason: { html: cs.w(reason) } }) + " " : ""}${cs.w("screen.held.ineligible.alone")}`;
+    /* R51 (DEC-384): the sentence is not left without a door: "Open it" is a reference to the row's document */
+    const door = cs.ref("document", r.bundle_id, cs.w("screen.capture.openit").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [cs.w("screen.capture.openit.help").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")]);
+    return `${cs.mark("gap", "refused")} ${reason ? cs.w("screen.held.ineligible", { reason: { html: cs.w(reason) } }) + " " : ""}${cs.w("screen.held.ineligible.alone")} ${door}`;
   };
   const asked = (r) => {
     const f = r.captured_for;

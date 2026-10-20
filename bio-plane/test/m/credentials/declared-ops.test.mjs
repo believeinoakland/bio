@@ -43,6 +43,13 @@ test(TITLE("bootstrap"), async () => {
   await holds("bootstrap", mk("bootstrap", { stamps: { fp: "fp-1" }, setup: async () => world() }));
 });
 
+test("R82 credentials declares bootstrap's members: the screens' field is accepted (not required), and an undeclared field is still dropped (control)", async () => {
+  assert.equal(DECLARED_OPS.bootstrap.fields.accepts.includes("members"), true);
+  assert.deepEqual(DECLARED_OPS.bootstrap.fields.requires, []);
+  await holds("bootstrap", mk("bootstrap", { stamps: { fp: "fp-1" }, setup: async () => world() }),
+    { outside: ["undeclared_field_bootstrap"] });
+});
+
 test(TITLE("claim"), async () => {
   await holds("claim", mk("claim", { stamps: { fp: "fp-1" }, setup: async () => world() }),
     { refusedNaming: named({ password: ["PASSWORD_TOO_SHORT"] }), values: { password: "a-long-enough-password" } });

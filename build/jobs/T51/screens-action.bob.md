@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -119,3 +119,7 @@ CHANGE (K4236): SCREENS-ACTION #8, depth 2 (BOB #234 is depth 1). Your branch is
 2. After FILINGS #25 merges (BOB sends a CHANGE): `filingread` answers the stored `exhibits` and `venue_standard`; the send steps draw the exhibits from it after a reload (your R-line for the send steps; #7 J6 (6)). Until then do 1, and post a QUESTION only if 2 needs more than the answer's two fields.
 The missing design keys of #7 J6 (1)–(6) went to UX-DESIGN as HANDOFF B424; do not draw them until it answers.
 Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, the code it touches and the tests naming the ids it changes, whole. Words (K3930). Model sonnet, medium effort; workers sonnet medium, haiku low.
+
+## B14 · CHANGE
+
+CHANGE (K4240): FILINGS #25 is merged: filingread answers the stored exhibits and venue_standard (R59, R25). Merge tranche/T51 and do B13's item 2.

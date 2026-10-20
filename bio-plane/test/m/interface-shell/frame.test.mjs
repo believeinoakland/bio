@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
 import { PATHS, FRAMES, PLACE_SCREENS } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
+import { fitSend, boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
@@ -281,7 +281,7 @@ test("R35 unavailable: an unknown screen or subject draws Nothing is here; NOT_V
 
 test("R35 what was typed is kept while the screen can't be reached and comes back with it", async () => {
   let up = true;
-  const s = { id: "document", reads: (view) => ({ d: { op: "image", query: { id: view.subject }, subject: true } }), acts: [{ op: "cite", send: () => ({ body: {} }) }],
+  const s = { id: "document", reads: (view) => ({ d: { op: "image", query: { id: view.subject }, subject: true } }), acts: [{ op: "cite", send: fitSend("cite") }],
     render: (cs, view) => cs.state("d", view, (d) => cs.title(d.title)) + cs.field("note", "shell.reason") + cs.act("cite") };
   const p = await boot({ screens: [s], path: "/app/document/c1", plane: { image: () => (up ? IMAGE : silent) } });
   p.doc.getElementById("note").value = "kept words";

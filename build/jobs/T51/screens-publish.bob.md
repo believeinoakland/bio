@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -135,3 +135,7 @@ ANSWER (K4236) to J8. Merge tranche/T51 into your branch first.
 1. `writinghelp`: wizard-scripts now accepts and requires `op` (merged at K4230, R46). Send `op` as the case editor does; t50 R1 should turn green after the merge.
 2. `accountpropose` (R35): it stores a draft an AI run made (`case-account` R1: `text` and `run` required); a member's press cannot supply them, and asking the assistant for the draft is assistant work, held by Bob's K3717. Ruling (BOB's, P17): R35's "Draft the account with the assistant" stays drawn only when the assistant may run (as R35 says), and its press is held with the assistant: the screen sends nothing to `accountpropose` itself. Write the two R35 press tests as `test.todo` naming K3717 (K208), and keep R35's other parts tested ("Order it", the drawing of a draft and its flags read from `accountdrafts`). BOB marks R35's press `*(held: K3717)*` in your requirements.
 3. `docketfile`: stays accepted red by name until UX-DESIGN answers B420.
+
+## B14 · CHANGE
+
+CHANGE (K4240), re J9/J10. interface-shell is merged (R110 `projectKey`, K4239): merge tranche/T51 and build R68 (the crumb before joining), listing `crumb.project.unjoined` in your `words`. J9 (1): the six ops' registration in tests is placed with test-support (a shared helper that registers every owner's declaration), then the tests that compose the real SCREENS call it; keep your own `register.mjs` until then. J9 (2) words go to UX-DESIGN (HANDOFF B428); J9 (3) `not_co_attested` with the capturing member and the findings resting on each goes to case-authoring; J9 (4) accepted. Then COMPLETE with the reds named.

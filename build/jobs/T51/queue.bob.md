@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -64,3 +64,9 @@ CHANGE (K4222): tasks is merged: a task of kind `authority-undetermined` now car
 ## B7 · CHANGE
 
 CHANGE (K4233), a new job session (QUEUE #29, haiku): queue-producers is merged (R46–R51): (1) carry `read` and `code` from `facts.failed[]` into the answer's `feeds[]` entry for that feed, so the live copy can say which read refused (L12); (2) the `members` feed's items (`endorsement-owed`, `expertise-confirmation-owed`) carry `door` (`adminendorse`, `projectowneradd`/`projectownerremove`, `expertiseconfirm`) and `summary_key`/`detail_key`: check your item-building reads them as for tasks' `door` (R12), never a hand list; (3) `facts.ms` includes `members`. Tests with controls; requirement lines (K4210) in your record if ownership refuses the file. Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B8 · CHANGE
+
+CHANGE (K4238): QUEUE #30, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry: `DECLARED_OPS.proposedispose` requires `[project|key|progressionKey]`, `[finding|key|progressionKey]`, `[to|state]` and `reason` at the top level, but its set arm (`items`) carries those per item, so the guard refuses a set (SCREENS-DAILY #11 J8: queue-states R58's set arm). Read the arm: each group a set request satisfies through `items` gains `items` as an alternative; a field the set arm still needs at the top level (e.g. `reason`, if it does) stays required. Test with test-support's `declaredOpHolds` over a set and a single request; control: a request with neither the fields nor `items` is refused naming them. Requirement line for BOB in your COMPLETE.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, the arm and the tests naming the ids it changes, whole. Model haiku, medium effort; workers haiku low.
