@@ -48420,13 +48420,6 @@
       "line": 42
     },
     {
-      "id": "store-door.declared.groupdescriptiondraft",
-      "en": "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
-      "module": "store-door",
-      "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 398
-    },
-    {
       "id": "store-door.dispatch.a_litigation_hold_is_in",
       "en": "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.",
       "module": "store-door",

@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (17899 design words, 1061 protected; SHA-256
-   779987a958ab3c2cf43c62ce12476a442d4d0e353c431aaf6e5adbd5bcc0969e) followed by 7090 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (17900 design words, 1061 protected; SHA-256
+   def8c84825661d5db2931f2a64148029b72f17d0992fce6062db62029c21cd49) followed by 7089 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "779987a958";
+export const WORDS_COMMIT = "def8c84825";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10640,6 +10640,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.action.sent.stage.court_filing","Court filing","DEC-389: B430 (3): a sent entry's stage (token court_filing)",null,false,"design"],
   ["screen.updates.health.runtime.unit.ms","milliseconds","DEC-389: B430 (4): runtime unit ms (instance-setup R34), filling {unit}",null,false,"design"],
   ["screen.updates.health.runtime.unit.bytes","bytes","DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit",null,false,"design"],
+  ["store-door.declared.groupdescriptiondraft","Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.","DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -24824,7 +24825,6 @@ export const WORD_ROWS = Object.freeze([
   ["stewards.ui.state_dismissed","Dismissed",null,null,false,"code"],
   ["stewards.ui.state_undecided","Undecided",null,null,false,"code"],
   ["stewards.ui.state_withdrawn","Withdrawn",null,null,false,"code"],
-  ["store-door.declared.groupdescriptiondraft","draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",null,null,false,"code"],
   ["store-door.dispatch.a_litigation_hold_is_in","a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.",null,null,false,"code"],
   ["store-door.dispatch.asking_the_assistant_to_draft","asking the assistant to draft the team's description",null,null,false,"code"],
   ["store-door.dispatch.the_account_that_would_serve","the account that would serve this draft could not be read; nothing was used",null,null,false,"code"],
