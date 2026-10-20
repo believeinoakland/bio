@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { REF_SCREENS, ADMIN_ACTS, interfacePage, checkGuide } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, ADMIN, STORE_KEY, nestedTips } from "./harness.mjs";
+import { fitSend, boot, ok, refused, ADMIN, STORE_KEY, nestedTips } from "./harness.mjs";
 import { ALL, HELD, FRONT, PERSON, DOORBELL, JOIN } from "./screens.fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -14,7 +14,7 @@ const btn = (p, op) => p.root().querySelector(`button[data-act="${op}"]`);
 
 test("R27 cs.rows takes name(item), the HTML of the row's name (a reference), and draws the panel's control beside it, never around it: the name opens the reference's screen, the control the panel (R19); no explanation inside another (R15)", async () => {
   const doc = { id: "document", reads: () => ({}), acts: [], render: (cs) => cs.title() };
-  const s = { id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldrestore", send: (view, el) => ({ body: { id: el.dataset.id } }) }],
+  const s = { id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldrestore", send: fitSend("heldrestore", "{ ids: [el.dataset.id] }") }],
     render: (cs) => cs.state("h", (v) => cs.rows({ id: "t", cols: ["screen.held.name", "screen.held.name"], items: v.items, key: (i) => i.id,
       name: (i) => cs.ref("document", i.id, i.title, [i.at]), cells: (i) => [cs.date(i.at)], acts: (i) => cs.act("heldrestore", { data: { id: i.id } }) })) };
   const p = await boot({ screens: [s, doc], path: "/app/held", plane: { heldcaptures: ROWS } });
@@ -213,7 +213,7 @@ test("R31 R59 (K3143) the guide's marks are drawn in the title row of every work
 const GUIDE_UI = (p) => JSON.parse(p.doc.getElementById("marks").getAttribute("data-ui"));
 
 test("R31 cs.ring(op) finds the control the screen drew for op, opens the row panel holding it, draws the ring and its label (\"Press here when you're ready\" on a button), scrolls it into view and focuses it; an act the screen does not draw answers false; Alt+Shift+W asks the guide to ring again; the shell never presses it", async () => {
-  const q = await boot({ screens: [{ id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldrestore" }, { op: "heldsetaside", send: (view, el, cs) => { cs.wizard("W", 1); return null; } }],
+  const q = await boot({ screens: [{ id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldrestore", send: fitSend("heldrestore") }, { op: "heldsetaside", send: (view, el, cs) => { cs.wizard("W", 1); return null; } }],
     render: (cs) => cs.act("heldsetaside") + cs.state("h", (v) => cs.rows({ id: "t", cols: ["screen.held.name"], items: v.items, key: (i) => i.id, name: (i) => i.title, cells: (i) => [cs.esc(i.title)], acts: () => cs.act("heldrestore") })) }],
     path: "/app/held", plane: { heldcaptures: HELDROWS }, guide: { ...GUIDE, render: () => "", start(cs, view) { view.ui.r = [cs.ring("heldrestore"), cs.ring("retire")]; } } });
   await q.click(btn(q, "heldsetaside"));
@@ -353,7 +353,7 @@ test("R49 cs.image(op, params, {alt}) fetches the image with the session's Autho
 
 test("R49 cs.areas draws rectangles over the image by pointer and by keyboard (added, moved, resized, removed), cs.value(id) answering [{left, top, width, height}] in the image's pixels", async () => {
   const { bytes } = await import("./harness.mjs");
-  const s = { id: "ceremony", reads: () => ({}), acts: [{ op: "obscuremark", send: (view, el, cs) => ({ body: { areas: cs.value("ph") } }) }],
+  const s = { id: "ceremony", reads: () => ({}), acts: [{ op: "obscuremark", send: fitSend("obscuremark", "{ areas: cs.value('ph') }") }],
     render: (cs) => cs.areas(cs.image("openoriginal", { capture: "p1" }, { alt: { text: "Photo" } }), { id: "ph", areas: [{ left: 10, top: 20, width: 30, height: 40 }], label: { text: "Areas on the photo" } }) + cs.act("obscuremark") };
   const p = await boot({ screens: [s], path: "/app/ceremony/c1", plane: { openoriginal: bytes("PNG", "image/png") } });
   const box = () => p.root().querySelector('[data-shell="areas-box"]');

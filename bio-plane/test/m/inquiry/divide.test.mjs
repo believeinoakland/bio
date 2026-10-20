@@ -156,25 +156,27 @@ test("R24 each child carries its legs verbatim: a leg naming a passage names the
   assert.deepEqual(legOf(C1, A), legOf(P, A)); assert.deepEqual(legOf(C2, B), legOf(P, B));
 });
 
-test("R24 R34 R8 a grouped question divides: a child given each of its groups whole carries them verbatim; a child given part of a group carries no partition", () => {
-  const w = world(); w.doc(A); w.doc(B); const Cx = "INFO-2026-0003-c"; w.doc(Cx);
-  w.inquiry(P, { legs: [{ target: A }, { target: B, role: "cuts_against" }, { target: Cx }] });
-  const g = w.k.ground({ target: P, grounds: [{ ground: "g1", legs: [0, 1] }, { ground: "g2", legs: [2] }], viewer: "admin", author: V("alice") });
+test("R24 R34 R8 R85 a grouped question divides: a child given each of its groups whole carries them verbatim; a child given part of a group carries no partition", () => {
+  const w = world(); w.doc(A); w.doc(B); const Cx = "INFO-2026-0003-c", Dx = "INFO-2026-0004-d"; w.doc(Cx); w.doc(Dx);
+  w.inquiry(P, { legs: [{ target: A }, { target: B, role: "cuts_against" }, { target: Cx }, { target: Dx }] });
+  /* R85: the leg that cuts against is in no ground */
+  const g = w.k.ground({ target: P, grounds: [{ ground: "g1", legs: [0, 3] }, { ground: "g2", legs: [2] }], viewer: "admin", author: V("alice") });
   assert.equal(g.ok, true, JSON.stringify(g).slice(0, 300));
   w.clock.now = "2026-09-29T00:00:00Z";
   const r = w.k.divide({ target: P, reason: "two questions", viewer: "admin", author: V("bob"),
-    children: [{ id: C1, question: "First half?", legs: [0, 1] }, { id: C2, question: "Second half?", legs: [0, 2] }] });
+    children: [{ id: C1, question: "First half?", legs: [0, 1, 3] }, { id: C2, question: "Second half?", legs: [0, 2] }] });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 600));
   const pf = w.fm(P), f1 = w.fm(C1), f2 = w.fm(C2);
   /* C1 holds all of g1: the group, its legs' labels and its row (who asserted it, when) travel unchanged */
-  assert.deepEqual(f1.basis, [pf.basis[0], pf.basis[1]]);
+  assert.deepEqual(f1.basis, [pf.basis[0], pf.basis[1], pf.basis[3]]);
   assert.deepEqual(f1.grounds, [pf.grounds[0]]);
   assert.deepEqual(f1.grounds.map((x) => [x.ground, x.asserted_by, x.at]), [["g1", V("alice"), "2026-09-28T01:00:00Z"]]);
-  assert.equal(f1.basis[1].role, "cuts_against", "the leg that cuts against travels with its group (R34)");
+  assert.equal(f1.basis[1].role, "cuts_against", "the leg that cuts against travels with the part it was apportioned to (R34)");
+  assert.equal(f1.basis[1].ground, undefined, "and names no ground (R85)");
   /* C2 holds part of g1: no assertion about the part is made for anyone, so the child is ungrouped (its weakest leg) */
   assert.equal(f2.grounds, undefined);
   assert.ok(f2.basis.every((l) => l.ground === undefined));
   assert.deepEqual(f2.basis.map((l) => l.target), [A, Cx]);
-  assert.deepEqual(w.rows(`SELECT ground FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, C1).map((x) => x.ground), ["g1", "g1"]);
+  assert.deepEqual(w.rows(`SELECT ground FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, C1).map((x) => x.ground), ["g1", null, "g1"]);
   assert.deepEqual(w.rows(`SELECT ground FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, C2).map((x) => x.ground), [null, null]);
 });
