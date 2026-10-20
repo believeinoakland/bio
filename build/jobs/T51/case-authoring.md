@@ -162,3 +162,9 @@ COMPLETE (FR-18, B7 with B8 and B9). C1: a draft named by `draft` supplies every
 - `node checks/run.mjs /home/user/bio`: no finding in case-authoring (the failures listed above are other modules').
 
 **Size (session_01SzRDd1oqEEzNixuCz5nhog): test runs 4, module lines 2876** (`bio-plane/src/case-authoring/*.mjs`, all lines).
+
+## J8 · COMPLETE
+
+COMPLETE (B10, K4240). `publishpreflight`'s step three now lists `not_co_attested` as `{capture, by, findings}`: `by` is the member the capture module records as capturing it (null when none), `findings` the findings the case rests on through that capture. Tests: `co-attested-list.test.mjs` (3, seen red then green); case-authoring 208/208. format, architecture, coverage 53/53, words, ownership: 0 failures for case-authoring; `run.mjs` shows failures only in other modules.
+Requirement line for BOB: proposed R82 (amends R34), in the record's B10 section. Decision for you (P17, recorded): `by` is the first member capturer by time; if two members captured one capture, the second is not listed.
+Readers: no reader of the key outside this module in the repository; screens-publish's J9 should confirm it reads the new shape.
