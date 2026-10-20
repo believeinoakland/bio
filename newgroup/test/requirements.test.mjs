@@ -380,7 +380,9 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
     restoreSigners();                                 /* the built-in is signed by the shipped keys */
     const own = seen(await run({ slug: "fleet-unreachable", rel: null, builtInFleet: true }));
     assert.ok(own.acct.has("pdf-worker-fleet-unreachable") && own.acct.has("agent-worker-fleet-unreachable"));
-    assert.match(own.page.label("fleet"), like("installer.fleet.partial.some", { names: /.*pdf-worker.*/ }));
+    /* The embedded release's statement names all the fleet, and its tag serves every member: none is left out (R17). */
+    for (const member of MEMBERS) assert.ok(own.acct.has(`${member}-fleet-unreachable`), `built-in: ${member} installed`);
+    assert.ok(own.page.label("fleet").startsWith(headOf("installer.fleet.done.other", { n: MEMBERS.length })), "built-in: all installed, none left out");
     const bare = seen(await run({ slug: "fleet-tagless", rel: null }));
     for (const member of MEMBERS) assert.ok(!bare.acct.has(`${member}-fleet-tagless`), member);
     assert.match(bare.page.label("fleet"), like("installer.fleet.partial.none", { list: new RegExp("[\\s\\S]*" + like("installer.fleet.left.item", { member: "pdf-worker", why: like("installer.fleet.why.http", { status: 404 }) }).source + "[\\s\\S]*") }));

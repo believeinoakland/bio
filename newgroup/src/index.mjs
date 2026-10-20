@@ -117,20 +117,26 @@ async function fetchRepoAsset(man) {
     limits: planeLimits(bytes), capable: reportsBuilds(bytes) };
 }
 
-/* R33 (K3441, K3442) — THE BUILT-IN RELEASE, HELD ONCE. `release.mjs` carries the signed plane as a binary string (one character
-   per byte, so the engine holds it one byte each: 21 MB, where the same release as text is two bytes each, 43 MB, because
-   a few characters are above 255). What an act uploads is one Blob made from it, in the one pass that turns each character
-   back into its byte, and kept for every upload of the act and the isolate's life; its limits and build fields are read from
-   the string as text (they are ASCII); its hash is taken from the Blob's bytes when the read-back first needs it. The bytes
-   uploaded and hashed are exactly the signed release's. */
+/* R33 (K3441, K3442; N1240) — THE BUILT-IN RELEASE, HELD ONCE. `release.mjs` carries the signed plane as a binary string (one
+   character per byte, so the engine holds it one byte each: 29 MB at 0.86.0, where the same release as text is two bytes each
+   because a few characters are above 255). What an act uploads is one Blob made from it, built a few MB at a time (never a
+   whole second copy of the bytes beside the string and the Blob), kept for every upload of the act and the isolate's life. Its
+   limits and build fields are read from the string as text (they are ASCII). Its hash is the signed manifest's: the embed
+   step refuses unless the embedded bytes hash to it (R26), so a pass over the Blob's 29 MB to learn it again would only hold
+   a third copy; the read-back compares the account's bytes with it. The bytes uploaded are exactly the signed release's. */
+const BUILT_IN_TYPE = "application/javascript+module", BUILT_IN_STEP = 1 << 22;
 let builtInBlob = null;
 function builtInRelease() {
   if (!builtInBlob) {
-    const bytes = new Uint8Array(RELEASE_BINARY.length);
-    for (let i = 0; i < bytes.length; i++) bytes[i] = RELEASE_BINARY.charCodeAt(i);
-    builtInBlob = new Blob([bytes], { type: "application/javascript+module" });
+    let blob = new Blob([], { type: BUILT_IN_TYPE });
+    for (let at = 0; at < RELEASE_BINARY.length; at += BUILT_IN_STEP) {
+      const part = new Uint8Array(Math.min(BUILT_IN_STEP, RELEASE_BINARY.length - at));
+      for (let i = 0; i < part.length; i++) part[i] = RELEASE_BINARY.charCodeAt(at + i);
+      blob = new Blob([blob, part], { type: BUILT_IN_TYPE });
+    }
+    builtInBlob = blob;
   }
-  return { blob: builtInBlob, capable: reportsBuilds(RELEASE_BINARY) };
+  return { blob: builtInBlob, sha: RELEASE_MANIFEST ? RELEASE_MANIFEST.sha256 : undefined, capable: reportsBuilds(RELEASE_BINARY) };
 }
 
 /* R61: the built-in release is installed with ITS OWN signed manifest (embedded with it, `RELEASE_MANIFEST`), and its members are
