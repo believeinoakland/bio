@@ -27,7 +27,7 @@ test("R27 an administrator who holds the hosting account: what runs now, the rel
   assert.deepEqual(all(dl, (e) => e.tag === "dd").map(textOf), Object.values(UPDATE.ready.notes));
   assert.ok(textOf(ready).includes(said("updates.notes.plain")));
   // the acts: Update (primary and outward), Not now, Skip this version under a disclosure
-  assert.deepEqual(ops(a), ["updatelater", "updateskip", "updatestart"]);
+  assert.deepEqual(ops(a), ["bootstrap", "runtime", "selftest", "updatelater", "updateskip", "updatestart"], "the choice, and (R68) the copy's three reports");
   const up = acts(a.tree).find((b) => b.attrs["data-act"] === "updatestart");
   assert.equal(up.attrs["data-tone"], "primary");
   assert.equal(a.s.acts.find((x) => x.op === "updatestart").outward, true);
@@ -43,7 +43,8 @@ test("R27 an administrator who holds the hosting account: what runs now, the rel
   const t = textOf(earlier);
   assert.ok(t.includes(said("updates.earlier.skipped", { version: "0.83.1", date: day("2026-10-02T10:00:00Z"), who: "rosa", reason: "Changes nothing for us; we wait for 0.84." })));
   assert.ok(t.includes(said("updates.earlier.installed", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: "rosa" })));
-  // R33, R37: an install with no member behind it is drawn by the words that name no one, never "allowed by set at setup"
+  // R33, R37, R73: an install with no member behind it is drawn by the words that name no one, never "allowed by set at setup"; the setup
+  // release (installed the day the copy was set up) says so
   assert.ok(t.includes(said("updates.earlier.installed_setup", { version: "0.82.0", date: day("2026-09-02T10:00:00Z") })), "recorded at setup");
   assert.ok(!t.includes(said("settings.set.setup")), "no \"set at setup\" in a fill");
   assert.ok(!/\badmin\b/.test(t));
@@ -59,7 +60,7 @@ test("R27 a release without a security fix carries no mark; the notes' last part
 test("R27 nothing ready: updates.none, no Update, Not now or Skip; the running release and the earlier ones still drawn", async () => {
   const a = await open("updates", { me: ADMIN, table: updatesTable({ ready: null }) });
   has(a, "updates.none");
-  assert.deepEqual(ops(a), []);
+  assert.deepEqual(ops(a), ["bootstrap", "runtime", "selftest"], "only the copy's three reports (R68)");
   has(a, "updates.running.head");
   has(a, "updates.earlier.head");
   lacks(a, "updates.ready.signed");
@@ -141,8 +142,9 @@ test("R37 who allowed or skipped a release is a handle when a member did it; an 
   // setup, a token, a machine class, a seed and a founder without a handle in another's session: no one to name
   for (const by of [null, "admin", "member:admin", "token:abc", "class:daemon", "seed", "bootstrap"]) {
     const o = await open("updates", { me: ADMIN, table: rows(by, "member:rosa") });
-    has(o, "updates.running.release_setup", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
-    has(o, "updates.earlier.installed_setup", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+    // (R73: this release was installed on a later day than the setup, so it says no more than its own date)
+    has(o, "updates.running.release_noactor", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+    has(o, "updates.earlier.installed_noactor", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
     assert.ok(!o.text.includes(said("settings.set.setup")) && !placeholder(o), String(by));
     assert.ok(!/\badmin\b/.test(o.text), `${by}: never the id admin`);
   }
@@ -158,4 +160,108 @@ test("R37 who allowed or skipped a release is a handle when a member did it; an 
   // a member who does not administer is told the screen is administrators' by its key
   const n = await open("updates", { me: MEMBER, table: updatesTable() });
   has(n, "screen.updates.admins", { admins: `${said("member.founder.unnamed")}, rosa, lu` });
+});
+
+/* ---- T51 FR-25: C82 (R68), T-08 (R73) ---- */
+
+const part = (o, key) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))[0];
+
+test("R73 a release with no member behind it that was not the setup is drawn by the noactor words, running and earlier, and the one set-up date is said once; the setup release says so; one with a member is unchanged (control)", async () => {
+  const notice = (by) => ({ running: { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: by }, earlier: [
+    { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: by },
+    { version: "0.82.0", installed_at: "2026-09-02T10:00:00Z", allowed_by: null }] });
+  const n = await open("updates", { me: ADMIN, table: updatesTable(notice(null)) });
+  has(n, "updates.running.release_noactor", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+  has(n, "updates.earlier.installed_noactor", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+  has(n, "updates.running.setup_on", { date: day("2026-09-02T10:00:00Z") });
+  assert.equal(n.text.split(said("updates.running.setup_on", { date: day("2026-09-02T10:00:00Z") })).length, 2, "said once");
+  lacks(n, "updates.running.release_setup", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+  has(n, "updates.earlier.installed_setup", { version: "0.82.0", date: day("2026-09-02T10:00:00Z") });
+  // the running release is the setup release: it says it, and the set-up date is not said twice
+  const s = await open("updates", { me: ADMIN, table: updatesTable({ running: { version: "0.82.0", installed_at: "2026-09-02T10:00:00Z", allowed_by: null } }) });
+  has(s, "updates.running.release_setup", { version: "0.82.0", date: day("2026-09-02T10:00:00Z") });
+  assert.ok(!s.text.includes(said("updates.running.setup_on", { date: day("2026-09-02T10:00:00Z") })));
+  // control: a release with a member keeps today's words
+  const m = await open("updates", { me: ADMIN, table: updatesTable(notice("member:rosa")) });
+  has(m, "updates.running.release", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: "rosa" });
+  has(m, "updates.earlier.installed", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: "rosa" });
+  // control: with no set-up date held nothing is claimed about setup
+  const none = await open("updates", { me: ADMIN, table: updatesTable(notice(null), { bootstrap: { ok: true, service: "bio-plane", version: "0.83.0" } }) });
+  has(none, "updates.running.release_noactor", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+  has(none, "updates.earlier.installed_noactor", { version: "0.82.0", date: day("2026-09-02T10:00:00Z") });
+  lacks(none, "updates.running.setup_on", { date: day("2026-09-02T10:00:00Z") });
+});
+
+test("R68 How your copy is doing: the check (selftest) draws what it found from its answer; a problem is drawn in its fold; the optional part is said not set up", async () => {
+  const a = await open("updates", { me: ADMIN, table: updatesTable() });
+  const sec = part(a, "screen.updates.health.head");
+  assert.ok(sec, "the section");
+  has(a, "screen.updates.health.check.note"); has(a, "screen.updates.health.check.next");
+  lacks(a, "screen.updates.health.store");
+  const check = acts(sec).filter((b) => b.attrs["data-act"] === "selftest");
+  assert.equal(check.length, 1);
+  assert.ok(textOf(check[0]).includes(said("screen.updates.health.check")));
+  const r = await a.press("selftest", {});
+  assert.deepEqual(r.sent.map((x) => x.op), ["selftest"], "a read: nothing else changes");
+  assert.deepEqual([r.sent[0].method, r.sent[0].body], ["GET", undefined]);
+  has(a, "screen.updates.health.store");
+  has(a, "screen.updates.health.captures.off");
+  lacks(a, "screen.updates.health.refused.head");
+  // the captures bucket set up and read back: nothing said of it, no "not set up"
+  const on = await open("updates", { me: ADMIN, table: updatesTable({}, { selftest: { ok: true, version: "0.83.0", bindings: { STORE: true }, captures: "read-write ok", bindingsAllPresent: true } }) });
+  await on.press("selftest", {});
+  has(on, "screen.updates.health.store");
+  lacks(on, "screen.updates.health.captures.off");
+  // the check finds a problem: the answer refused, drawn in its fold beside the act, the store not said to answer
+  const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { selftest: { ok: false, status: 500, store: "ERR the store did not answer /stats", bindingsAllPresent: false } }) });
+  await bad.press("selftest", {});
+  has(bad, "screen.updates.health.refused.head"); has(bad, "screen.updates.health.refused.store"); has(bad, "screen.updates.health.refused.next");
+  lacks(bad, "screen.updates.health.store");
+  assert.ok(all(bad.tree, (e) => e.tag === "details" && e.attrs.open !== undefined).length, "the fold is open when drawn");
+  // an answer that never comes is drawn failed, never as a healthy copy
+  const silent = await open("updates", { me: ADMIN, table: updatesTable({}, { selftest: "none" }) });
+  await silent.press("selftest", {});
+  lacks(silent, "screen.updates.health.store");
+});
+
+test("R68 What each part runs (bootstrap with members): each part named as the answer names it with its release; a silent part is said silent; the others show their state; a failed answer is drawn failed", async () => {
+  const a = await open("updates", { me: ADMIN, table: updatesTable() });
+  const r = await a.press("bootstrap", {});
+  assert.deepEqual([r.sent[0].op, r.sent[0].query], ["bootstrap", { members: "1" }]);
+  const sheet = part(a, "screen.updates.health.head");
+  const rows = all(sheet, (e) => /cs-row/.test(e.attrs.class || ""));
+  const rowOf2 = (name) => rows.find((x) => textOf(x).includes(name));
+  assert.ok(textOf(rowOf2("pdf-worker")).includes("0.83.0"), "a serving part shows its release");
+  assert.ok(textOf(rowOf2("file-scanner")).includes("0.82.0"), "a part on another release shows that one");
+  assert.ok(textOf(rowOf2("ocr-worker")).includes(said("screen.updates.health.part.silent")), "a silent part is said silent");
+  assert.ok(!textOf(rowOf2("ocr-worker")).includes("timed out"), "no reason the owner gave beyond the word");
+  assert.ok(textOf(rowOf2("agent-runner")).includes("UNBOUND") && textOf(rowOf2("sheet-worker")).includes("MISNAMED"), "the other states as the answer gives them");
+  has(a, "screen.updates.health.parts.note"); has(a, "screen.updates.health.parts.next");
+  // a failed answer is drawn failed, no part listed
+  const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { bootstrap: (q) => (q.members === "1" ? refuse("STORE_DID_NOT_ANSWER") : { ok: true, installed_at: "2026-09-02T10:00:00Z" }) }) });
+  await bad.press("bootstrap", {});
+  lacks(bad, "screen.updates.health.parts.note");
+  assert.ok(bad.refused && bad.refused.text.length > 0, "the refusal is drawn beside the act");
+});
+
+test("R68 What running costs (runtime): the measured work as the answer gives it, the two limits explained, and the note; a failed answer is drawn failed", async () => {
+  const a = await open("updates", { me: ADMIN, table: updatesTable() });
+  lacks(a, "screen.updates.health.runtime.note");
+  const r = await a.press("runtime", {});
+  assert.deepEqual(r.sent.map((x) => x.op), ["runtime"]);
+  has(a, "screen.updates.health.runtime.limits"); has(a, "screen.updates.health.runtime.cpu"); has(a, "screen.updates.health.runtime.note");
+  const t = textOf(part(a, "screen.updates.health.head"));
+  assert.ok(t.includes("request_work") && t.includes("1840 ms") && t.includes("310 ms"), "a measurement in ms is drawn in ms");
+  assert.ok(t.includes("capture_work_bytes") && t.includes("800000 bytes") && !t.includes("800000 ms"), "a count of work is never drawn as a time");
+  const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: refuse("STORE_DID_NOT_ANSWER") }) });
+  await bad.press("runtime", {});
+  lacks(bad, "screen.updates.health.runtime.note");
+  assert.ok(bad.refused && bad.refused.text.length > 0);
+});
+
+test("R68 control: the section is an administrator's only; a member reads that the screen is administrators' and none of the three reads is sent", async () => {
+  const m = await open("updates", { me: MEMBER, table: updatesTable() });
+  lacks(m, "screen.updates.health.head");
+  assert.deepEqual(acts(m.tree), []);
+  for (const op of ["selftest", "bootstrap", "runtime", "updatenotice"]) assert.ok(!m.p.requests.some((r) => r.op === op), op);
 });

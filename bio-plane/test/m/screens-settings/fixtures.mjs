@@ -366,9 +366,27 @@ export function updatesTable(notice = {}, over = {}) {
     updatestart: (q, b) => env({ ok: true, version: b.version, address: "https://civicsmith.org/update?release=" + b.version }),
     updatelater: (q, b) => env({ ok: true, version: b.version, kind: "later" }),
     updateskip: (q, b) => env({ ok: true, version: b.version, kind: "skip" }),
+    // an administrator's bootstrap carries the copy's facts (instance-setup R95: `installed_at` is when it was set up); with `members=1` each part's own build (R17)
+    bootstrap: (q) => ({ ok: true, service: "bio-plane", version: "0.83.0", part_signin: true, part_scanner: false, part_safe_view: false, installed_at: "2026-09-02T10:00:00Z",
+      ...(q.members === "1" ? { memberVersions: MEMBER_VERSIONS } : {}) }),
+    // instance-setup R18: the deployment's own check
+    selftest: { ok: true, service: "bio-plane", version: "0.83.0", time: "2026-10-14T06:10:00Z", tokenClass: "admin", bindings: { STORE: true, CAPTURES: "not configured", PUBLISHED: "not configured", ADMIN_TOKEN: true, PROBE_TOKEN: true, DAEMON_TOKEN: "not configured" }, r2Configured: false, store: { bundles: 4 }, captures: "not configured", bindingsAllPresent: true },
+    // instance-setup R37: what the instance was measured to cost
+    runtime: env({ ok: true, measured: { metrics: [{ metric: "capture_work_bytes", unit: "bytes", peak: 800000, peak_at: "2026-10-12T00:00:00Z", peak_detail: null, last: 1200, last_at: "2026-10-13T00:00:00Z", samples: 40, total: 2000000, mean: 50000 },
+      { metric: "request_work", unit: "ms", peak: 1840, peak_at: "2026-10-12T00:00:00Z", peak_detail: null, last: 90, last_at: "2026-10-13T00:00:00Z", samples: 5200, total: 1612000, mean: 310, peak_ms: 1840, last_ms: 90, total_ms: 1612000, mean_ms: 310 }], note: "units" },
+      cpu_probe: { steps: 0, highest_completed: 0, elapsed_at_highest_ms: 0, rows: [], note: "nothing is known about the ceiling by measurement" }, subrequests: { runtime: "subrequests", observed: 50, probeDue: false, probeEvery: 20 }, asymmetry: "the subrequest ceiling is known by having been refused" }),
     ...over,
   };
 }
+/** `bootstrap`'s `memberVersions` (instance-setup R17): each part's own build, as it answered. */
+export const MEMBER_VERSIONS = Object.freeze({
+  "agent-worker": { binding: "AGENT_WORKER", state: "SERVING", version: "0.83.0" },
+  "pdf-worker": { binding: "PDF_WORKER", state: "SERVING", version: "0.83.0" },
+  "ocr-worker": { binding: "OCR_WORKER", state: "SILENT", why: "timed out" },
+  "sheet-worker": { binding: "SHEET_WORKER", state: "MISNAMED", name: "other-worker", version: "0.83.0" },
+  "agent-runner": { binding: "AGENT_WORKER", via: "agent-worker", state: "UNBOUND" },
+  "file-scanner": { binding: "FILE_SCANNER", state: "SERVING", version: "0.82.0" },
+});
 
 /** grouprules, read by a member (local-facts R12, R19): rules drafted and waiting (tiers 1, 2 and none; one the viewer drafted), one in force, one withdrawn. */
 const SHA = (c) => c.repeat(64);
