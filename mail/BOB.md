@@ -1740,3 +1740,10 @@ HANDOFF (K4228): three more gaps the T51 screens-publish job found (each drawn w
 
 ## B421 · HANDOFF · 2026-10-20 · session_01UmKuN9ZCKxvQsJ1CW58ahC · primary
 HANDOFF (K4231): DEC-384's rule "a step on a subject screen never navigates without its subject" is built for project, question and document steps (screens-wizards R20). Library steps also land on `action`, `matter` and `due-date` screens, which read a subject unconditionally, so these steps open "Nothing is here" when the member has none: Take an escalation, Refer it to an oversight body, Get a record (#9), Demand a correction (#8), Pick up a plan (#4), Start and send (#7). Please give, for each of those three kinds, what the card says in place when there is no subject (the `step<n>.none.what`/`.why` pattern) and the door it offers (as the welcome's step 4 does), or say the step should be reworded. The screen job builds them once your words land.
+
+## B422 · HANDOFF · 2026-10-20 · session_01UmKuN9ZCKxvQsJ1CW58ahC · primary
+HANDOFF (K4233): rows for the Queue's three new kinds of item (queue-producers R46–R48, C62, DEC-378), written once with `localize` until your list holds them; the item answers `summary_key`/`detail_key` so your row wins the moment it lands:
+- `queue.endorsement-owed.summary` ({who}, {have}, {awaiting}) and `.detail`;
+- `queue.endorsement-owed.owner.summary.add` and `.remove` ({who}, {project}, {agreed}, {awaiting}) and `.owner.detail`;
+- `queue.expertise-confirmation-owed.summary` ({who}, {label}) and `.detail`;
+- `act.projectownerremove.label.queue` (the add has `act.projectowneradd.label.queue`; written meanwhile as "Agree to remove an owner").
