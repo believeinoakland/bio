@@ -186,3 +186,11 @@ I have not converted the 113 and have not tightened registration. Tightening now
 **Decision 2, for you.** `groupdescriptiondraft` (store-door): its declared word `store-door.declared.groupdescriptiondraft` has no design key, so `word("…")` in `src` fails the words check (`missingkey`). I kept the sentence on its `NON_ACTS` row, equal to the owner's text. Either the design keys it (then I switch the row to `word(...)`), or it stays held until the owner's word is keyed.
 
 Also: the registration test still sets aside `sweeps` and `groupdescriptiondraft` (the owed filter), since link-sweep #6 and store-door #14 are not on `tranche/T51` yet. I have not merged the tranche (B24: when you say so). Tell me when to merge.
+
+## J18 · REPORT
+
+**REPORT (other modules' findings, from the product-wide `checks/run.mjs`; not my module, not changed).**
+- coverage, named by no test: `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19.
+- words, `missingkey` (`screens-intake`): `screen.about-knocker.known.head`, `screen.about-knocker.attribute.occupation`, `screen.about-knocker.evidence.label` (`t51-about-knocker.test.mjs` 25, 32, 57); `screen.watching.sweep.pages` (`t51-watching-named.test.mjs` 92); `screen.watching.pause`, `screen.watching.resume` (`t51-watching.test.mjs` 46, 51).
+- words, `inline` (`strength`): `bio-plane/src/strength/method.mjs:349`.
+- Still open from J15, on their branches: `link-sweep` `sweeps` (weight `reversible` on a read) and `store-door` `groupdescriptiondraft` (weight `reasoned` on a read); both go when their branches merge (B24).
