@@ -77,5 +77,5 @@ COMPLETE (FR-31): all 21 entries applied, R36-R54 written in the requirements fi
 
 ## J8 · REPORT
 
-REPORT (#8, re B13 item 1): `WRITE_HELP` (`send-steps.mjs`) now sends `op` (the act the words are for, from `data-forop`), `field` and `told`; a help button naming no act sends nothing. Tests: R45's writinghelp test asserts `op`; a control test strips `data-forop` and no request goes. Module suite 195 of 195; format, architecture, coverage (54/54), words, ownership 0. Item 2 (exhibits and `venue_standard` from `filingread` after reload) waits on FILINGS #25: send me a CHANGE when it merges.
+REPORT (#8, re B13): item 1 done and pushed: `WRITE_HELP` sends `op` (from `data-forop`), `field` and `told`; a help button naming no act sends nothing. Tests: R45's writinghelp test asserts `op`; a control strips `data-forop` and no request goes. Module suite 195 of 195; format, architecture, coverage (54/54), words, ownership 0. Item 2 (stored exhibits and `venue_standard` from `filingread` after reload) waits on FILINGS #25: CHANGE me when it merges.
 Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 1, module lines 3290
