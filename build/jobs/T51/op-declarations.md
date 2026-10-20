@@ -124,3 +124,32 @@ Both failed before (`importregrade: no spec`, the list diffs); they pass with th
 Commit `9747460e05` pushed to `job/T51/op-declarations`.
 
 Size (session_017CpAHUqZY2t5XBCS52jgiU): test runs 7, module lines 3452
+
+## J14 · BLOCKED
+
+Cause: context (reading). Stopping before any change; nothing is edited or committed beyond the start.
+
+**Done so far (this session, depth 2)**
+- Attached civicos-process; read roles/JOB.md whole. Merged `origin/tranche/T51` into `job/T51/op-declarations` (the prior job head `e158183a040` is kept in its history); `mail start` recorded (`fdefb24683`).
+- Installed `node_modules` for every tracked lockfile directory that lacked one (K4113).
+- Baseline, `node --test test/m/op-declarations/*.test.mjs`: two reds, both caused by owners that now declare ops my tests do not register:
+  - `t23.test.mjs` "R10, R6 (N506, K1207)": link-sweep's map serves `sweepset` and `sweepratify`, which link-sweep now declares (`link-sweep/index.mjs` ~98–102) but which have no spec here.
+  - `t33.test.mjs` "R19, R6": `tasks: taskdecide has no spec`. tasks declares `taskdecide` (`tasks/index.mjs` ~1275), not registered in my tests.
+
+**Findings for B14 (register every owner)**
+- `declaredOpsOf` (test-support, `bio-plane/test/declared-ops.mjs`) collects 378 ops across all owners, no duplicates.
+- Registering all of them is refused by one owner: `link-sweep`, `sweepset: NEEDS_MISSING (R80)`. A probe that registers each owner alone found no other refusal. This is link-sweep's defect (a mutating op with no `needs`); it goes to BOB as a REPORT, not worked here.
+- Plan for the next session: `register-owners.mjs` registers every owner except link-sweep (via `declaredOpsOf`, root `../../../..` from the test directory); `t23`'s R10 test reads link-sweep's served list from its map and treats an op with no spec as owed (`OWED_BY_FIX_ROUND` from `browser.mjs`) rather than hand-listing `["sweeps"]`. Check whether the architecture check accepts the test importing test-support (B14: REPORT to add `test-support` to uses if not).
+
+**Finding for B15 (standardinforce)**
+- `standardinforce` has a hand row at `src/op-declarations/index.mjs:1211` (classes admin, member, probe; not mutating). `standards` also declares it (`standards/index.mjs` ~2827). Neither `SESSION_OPS.member` nor `SESSION_OPS.admin` holds it. Registration does not merge a hand-held op (R80), so the fix is a hand entry in both session lists beside its siblings, with a control test. The `STANDARDS_READS` list is at `index.mjs:1968`, and the session composition starts around `index.mjs:2182`.
+
+**Reading disclosure (the reason for this BLOCKED)**
+- `build/requirements/op-declarations.md`: read lines 1–176 of 375 only (the Read tool truncated the page). Lines 177–375 are unread.
+- `src/op-declarations/index.mjs` (2,919 lines): read by excerpt only (grep and targeted ranges). Not read whole.
+- `t23.test.mjs`: read in part. `t33.test.mjs`: read in part.
+- Under JOB.md I may not act on partial reads, so the next session reads these whole before editing.
+
+**Next step:** a fresh job session reads requirements, `index.mjs` and the two tests whole, then applies B14 (register owners, link-sweep excluded and reported) and B15 (both session sets, with control), reruns the suite, checks, and posts COMPLETE.
+
+Size: not yet measured; no module code changed.
