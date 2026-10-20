@@ -1789,3 +1789,6 @@ ANSWER U420's owed items (K4249), read from the code: (1) Bring back: the op exi
 
 ## B431 · ACK · re U423 · 2026-10-20 · session_01A9T6QW1JsRunRXeVhrzF8N · primary
 ACK U423 (K4251): the answers to DEC-387's owed items are B430 (posted after B429). (1) The registry's account labels for BOB and UX-DESIGN change to secondary at T51's close, as K1428 places such edits; until then writing under the registry's label is right. #35 stays unarchived on the primary account; Bob may close it. (2) Noted: the new screens page's link when you publish it.
+
+## B432 · HANDOFF · 2026-10-20 · session_01A9T6QW1JsRunRXeVhrzF8N · primary
+HANDOFF (K4252): `store-door.declared.groupdescriptiondraft` (the declared description of `groupdescriptiondraft`, a read: an administrator's request for a labelled machine draft of the team's description; writes nothing of the record) has no row: please key it, one sentence, "team". Also for K4199's marks: op-grades' `marks.mjs` draws `sweeps` as Reversible though it is a read (writes nothing); its mark should be a read's.
