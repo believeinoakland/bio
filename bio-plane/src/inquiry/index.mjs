@@ -2223,9 +2223,12 @@ export class Inquiry {
          part, so it carries no partition at all: the ungrouped reading, no stronger than its weakest leg, which the
          child's own members may restructure (op=inquiryground). */
       const grouped = ordGround.some((g) => g !== null);
-      const keepGroups = grouped && !!rawGrounds && mine.every((ord) => ordGround[ord] !== null
-        && groupOrds.get(ordGround[ord]).every((o) => mine.includes(o))
-        && rawGrounds.some((r) => r.label === ordGround[ord]));
+      /* R85: a leg that cuts against names no ground, so it never stops a child carrying the groups its supporting legs
+         belong to whole; a labelled one (a document written before R85) is held to the same whole-group rule. */
+      const keepGroups = grouped && !!rawGrounds && mine.some((ord) => ordGround[ord] !== null)
+        && mine.every((ord) => (ordGround[ord] === null ? legs[ord].role === "cuts_against"
+          : groupOrds.get(ordGround[ord]).every((o) => mine.includes(o))
+            && rawGrounds.some((r) => r.label === ordGround[ord])));
       const legLines = (ord) => {
         const seg = rawLegs ? rawLegs[ord] : null;
         const lines = seg || legRebuilt(legs[ord]);
@@ -2625,6 +2628,15 @@ export class Inquiry {
         if (!Number.isInteger(raw) || raw < 0 || raw >= legs.length)
           return { ok: false, reason: "BAD_PARTITION", target, at: i, ord: raw ?? null, legs: legs.length,
                    detail: localize("inquiry.index.grounds_i_legs_names_ord", "grounds[{i}].legs names ord {v1}, and this question has legs 0..{v2}. An ordinal that addresses no leg groups nothing.", { i: String(i), v1: String(JSON.stringify(raw) ?? "null"), v2: String(legs.length - 1) }) };
+        /* R85 (K4194): a leg that cuts against is not a reason for the answer, so no ground holds one; it is left
+           unlabelled. Refused here, naming the leg, so the member is told which leg and why: the finding is the
+           refusal's, never the bare code. */
+        if (legs[raw].role === "cuts_against")
+          return { ok: false, reason: "BASIS_REFUSED", target, ord: raw,
+                   findings: [{ check: "C-2.8", ord: raw, target: typeof legs[raw].target === "string" ? legs[raw].target : null,
+                     detail: localize("inquiry.index.grounds_i_legs_names_ord_which_cuts", "grounds[{i}].legs names ord {raw}, which cuts against this answer. A ground says its legs carry the answer on their own, and a leg that cuts against is not a reason for it: leave it out of every ground, and it stays in the basis as it is.", { i: String(i), raw: String(raw) }),
+                     repairs: [localize("inquiry.index.take_ord_raw_out_of", "take ord {raw} out of grounds[{i}].legs", { raw: String(raw), i: String(i) })] }],
+                   detail: localize("inquiry.index.this_partition_names_a_leg", "this partition names a leg that cuts against the answer, and a ground holds only legs that carry it. Nothing was written.") };
         if (claimed.has(raw))
           return { ok: false, reason: "BAD_PARTITION", target, ord: raw,
                    claimed_by: [claimed.get(raw), label],
@@ -2696,7 +2708,7 @@ export class Inquiry {
     const errs = bf.filter((x) => x.severity === "error");
     if (errs.length)
       return { ok: false, reason: "BASIS_REFUSED", target,
-               findings: errs.map((x) => ({ check: x.check, detail: x.message, repairs: x.repairs ?? [] })),
+               findings: errs.map((x) => ({ check: x.check, ...(x.code ? { code: x.code } : {}), detail: x.message, repairs: x.repairs ?? [] })),
                detail: localize("inquiry.index.the_structure_this_would_author", "the structure this would author is refused by the SAME catalog function op=promote runs at the write, so nothing was written. Every group is a claim that its legs are enough on their own, and that claim carries a name and a date.") };
 
     /* ---------------------------------------------------- and now the bytes */
@@ -2903,6 +2915,15 @@ export function inquiryOwns(t) {
   const name = typeof t === "string" ? t : t && t.name;
   return INQUIRY_TABLES.includes(name);
 }
+
+/* R86 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their
+   owner beside the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  inquirydivide: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.inquirydivide.does",
+    fields: { accepts: ["target","reason","children"], requires: ["target","reason","children"] } },
+  inquiryground: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.inquiryground.does",
+    fields: { accepts: ["target","grounds","reason"], requires: ["target","grounds"] } },
+});
 
 /* The Durable Object routes this module answers (K3), as entries of plane's op map. `url` carries the control
    plane's stamps (`viewer`, `owner`, `author`); `body` the authored material. The stamps are spread AFTER the body, so a
