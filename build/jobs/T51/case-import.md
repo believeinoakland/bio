@@ -57,3 +57,14 @@ T51-228 (words, the conversion's findings in `build/plan/words-pass/case-import.
 **Choice I made.** The commit has no `Co-Authored-By` model line, because the system rule on model identifiers in commits outranks the attribution note; the session line is kept.
 
 Size (session_01SzkgwmAtqAM8o4CD1HsrkB): test runs 1, module lines 2238.
+
+## J4 · QUESTION
+
+Started on B3 (FR-16), merged tranche/T51, read requirements, draft §2 whole, the pass record and my code whole. Two things need BOB's hand; I carry on in the meantime on my best reading.
+
+1. `uses` edges (modules.json is BOB's). The architecture check fails my files without them:
+   - `test-support`: START entries 3 and 4 have my tests call `declaredOpHolds` (bio-plane/test/declared-ops.mjs, owner test-support); the other modules that declare ops list it.
+   - `basis-versions`: R30's `NO_SUCH_OWN_FINDING` ("not a finding of this project") and R31 need the project's questions: `basisVersions.projectQuestions({project})` (its R41), the one reader of which inquiries a project draws on. The tests also use its world fixture's `project` and `inquiry` builders.
+   Please add both to case-import's `uses`. If a test fixture needs more (project-roster, inquiry) I will say which and why.
+
+2. Reading, no answer needed unless BOB disagrees: the draft's `NO_SUCH_IMPORT` (R29) is answered as this module's existing absent answer `IMPORT_NO_SUCH_EDITION` (R4's "same bytes as no import"), so one condition has one code; the new refusal rows (MACHINE_CANNOT_RERUN, RERUN_ALREADY, NOT_A_RERUN, NO_SUCH_SOURCE_FINDING, NO_SUCH_OWN_FINDING, REGRADE_LENS_UNKNOWN) go in checks.mjs as C-130.17 onward, awaiting promotion's stamp, with their sentences written once by localize; project refusals (NO_SUCH_PROJECT, NOT_THE_PROJECT_OWNER, PROJECT_ACT_NOT_A_PARTICIPANT) are membership's, relayed.
