@@ -123,7 +123,7 @@ test("R2: the three-kinds note is shown once per member on the device", async ()
 test("R3: an item's acts are its options and disposition's doors among the registered acts; any other option is \"Open\", a link to its subject's screen", async () => {
   const p = await open("/app/queue", PLANE, { screens: withScreens("document") });
   assert.deepEqual(opsOf(itemOf(p, "TSK-1")), ["taskresolve"]);
-  assert.deepEqual(opsOf(itemOf(p, "FINDING::tension::PROJ-2::x")), ["proposedispose", "queuemute"]);
+  assert.deepEqual(opsOf(itemOf(p, "FINDING::tension::PROJ-2::x")), ["proposedispose", "proposedispose", "queuemute"], "R68: Dismiss, then Defer");
   assert.deepEqual(opsOf(itemOf(p, "FINDING::newer::1")), ["adoptversion", "keepversion", "queuemute"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::action-reminder::ACT-1::0::d")), ["reminderanswer"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::explore-ask::x")), ["exploreapprove"]);
@@ -153,8 +153,8 @@ test("R3: each act sends its op's body for the item it was drawn on; an act aski
   const snooze = button(p, "queuesnooze");
   const f = snooze.dataset.f;
   assert.equal(snooze.closest("details").querySelector("summary").textContent, word("act.queuesnooze.label.queue"));
-  await press(p, "queuesnooze", { values: { [f + "-until"]: "2026-10-20" } });
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: "2026-10-20" });
+  await press(p, "queuesnooze", { values: { [f + "-until"]: day(3) } });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: day(3) });
   const keep = await press(p, "keepversion");
   assert.deepEqual(last(p, "keepversion").body, { notice: "VN-5" });
   const adopt = button(p, "adoptversion");
@@ -188,7 +188,10 @@ test("R3: forwarding, a project key and a question from a hint, each with its ow
   assert.equal(last(p, "projectkeyset").url.includes("sk-ant"), false, "the key travels in the body only");
   await press(p, "promote", { values: { [button(p, "promote").dataset.f + "-question"]: "Did the council vote?" } });
   const r = last(p, "promote");
-  assert.equal(r.query.project, "PROJ-1");
+  // R81: the guard (the owner's declaration) takes the package fields only; the project is the file's own line.
+  assert.equal(r.query.project, undefined);
+  assert.deepEqual(Object.keys(r.body).sort(), ["base", "files", "meta", "register", "snapKey"]);
+  assert.match(r.body.files[0].text, /\nproject: PROJ-1\n/);
   assert.equal(r.body.meta.object_type, "inquiry");
   assert.equal(r.body.meta.title, "Did the council vote?");
   assert.match(r.body.files[0].text, /question: "Did the council vote\?"/);
@@ -255,8 +258,8 @@ test("R13: \"Drop the request\" sends actionmove to abandoned with the member's 
   const b = await press(p, "queuesnooze");
   assert.equal(p.byOp("queuesnooze").length, 0, "control: no day, nothing sent");
   assert.equal(beside(p, b), word("screen.queue.fieldfirst"));
-  await press(p, "queuesnooze", { values: { [snooze.dataset.f + "-until"]: "2026-10-30" } });
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: "2026-10-30" });
+  await press(p, "queuesnooze", { values: { [snooze.dataset.f + "-until"]: day(10) } });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: day(10) });
   await press(p, "actionmove", { reason: "We found the logs online" });
   assert.deepEqual(last(p, "actionmove").body, { target: "ACT-9", to: "abandoned", reason: "We found the logs online" });
   assert.equal(itemOf(p, "CONDITION::request-unsent::FIL-3"), undefined, "re-read after the act: the dropped request leaves the list");
@@ -329,8 +332,8 @@ test("R22: five source-modified items draw one item reading \"5 documents change
   const list = rows[0].querySelector('details[data-sources="source-modified"]');
   assert.ok(list);
   assert.deepEqual(list.querySelectorAll("li").map((li) => li.querySelector(".cs-card, a.cs-ref").textContent.trim()), ["Doc 1", "Doc 2", "Doc 3", "Doc 4", UNTITLED]);
-  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]').length, 5, "each document with its own options");
-  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]')[4].dataset.finding, "FINDING::source-modified::B-5");
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"][data-to="dismissed"]').length, 5, "each document with its own options (R68: and its Defer)");
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"][data-to="dismissed"]')[4].dataset.finding, "FINDING::source-modified::B-5");
 });
 
 test("R22: control: a single item draws .one; source-removed is its own item; on Home the same items are one item too", async () => {
@@ -371,4 +374,30 @@ test("R34: every key the queue reads is a word of the list; the retired overdue 
   for (const k of screen("queue").words) assert.ok(hasWord(k), k);
   assert.ok(!screen("queue").words.includes("screen.queue.due.overdue"), "DEC-256's retired row");
   for (const k of ["queue.update.section", "action.noreply.title", "file.trigger.queue"]) assert.ok(screen("queue").words.includes(k), k);
+});
+
+// R71, R73, R74: where an item opens. A subject with a screen opens it; a settling kind opens the screen that settles it; the rest draw no Open.
+const opensOf = async (item, o = {}) => {
+  const p = await open("/app/queue", { queue: ok({ items: [{ id: "X-1", class: "OBLIGATION", case: { ungrouped: true, ancestors: [] }, options: [{ id: "somethingelse" }], disposition: { available: false, instead: "taskresolve" }, summary: "A sentence of its own", ...item }], item_count: 1 }) }, { screens: withScreens("matter", "account", "bias", "contradiction", "document"), ...o });
+  const row = main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes("A sentence of its own"));
+  return row.querySelectorAll("a[data-nav]").filter((a) => a.textContent === word("screen.queue.open")).map((a) => a.getAttribute("href"));
+};
+
+test("R71: an item whose subject kind has a screen opens it (escalation its matter, key the account); one whose subject opens nothing draws no Open", async () => {
+  assert.deepEqual(await opensOf({ kind: "escalation-stage-proposed", subject: { kind: "escalation", id: "ESC-1" } }), ["/app/matter/ESC-1"]);
+  assert.deepEqual(await opensOf({ kind: "signer-self-registered", subject: { kind: "key", id: "mai" } }), ["/app/account/mai"]);
+  assert.deepEqual(await opensOf({ kind: "request-awaiting", subject: { kind: "capture_request", id: "CR-1" } }), [], "a subject that opens nothing draws no Open");
+  // Control: a document subject still opens `document`.
+  assert.deepEqual(await opensOf({ kind: "check", subject: { kind: "bundle", id: "INF-7" } }), ["/app/document/INF-7"]);
+});
+
+test("R73: a bias-debt item's Open opens `bias` at that debt; an item of another kind is unchanged", async () => {
+  assert.deepEqual(await opensOf({ kind: "bias-debt", subject: { kind: "run", id: "RUN-4", context: { type: "project", id: "PROJ-1" } } }), ["/app/bias/RUN-4"]);
+  assert.deepEqual(await opensOf({ kind: "check", subject: { kind: "bundle", id: "INF-7" } }), ["/app/document/INF-7"]);
+});
+
+test("R74: a tension row opens `contradiction` at its pair; other kinds are unchanged", async () => {
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "tension", subject: { kind: "bundle", id: "INF-8", candidate: "CAND-2" } }), ["/app/contradiction/CAND-2"]);
+  assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty", subject: { kind: "contradiction_candidate", id: "CAND-3" } }), ["/app/contradiction/CAND-3"]);
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "newer-capture-affects-reference", subject: { kind: "capture", id: "abc123" } }), ["/app/document/abc123"]);
 });

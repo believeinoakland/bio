@@ -115,7 +115,9 @@ test("R48: the money form asks the flow step only for an actual payment: who pai
   assert.equal(beside(p, none), word("findin.fieldneeded", { field: word("screen.find-in.field.payee.short") }));
   await press(p, "recordfact", { values: { [m + "-payee"]: "Acme Paving" } });
   const b = last(p, "recordfact").body;
-  assert.deepEqual([b.from, b.to, b.date, b.phase, b.stage], [{ as_written: "City of Oakland" }, { as_written: "Acme Paving" }, "2024-03-01", "actual", "paid"]);
+  // R81: `recordfact` accepts no `date` (the guard); the day of the payment is the period the fact holds over.
+  assert.deepEqual([b.from, b.to, b.date, b.phase, b.stage], [{ as_written: "City of Oakland" }, { as_written: "Acme Paving" }, undefined, "actual", "paid"]);
+  assert.deepEqual(b.period, { from: "2024-03-01", to: "2024-03-01", precision: "day" });
 });
 
 test("R48: after a record the acknowledgement is drawn with a link to the screen, and the passage keeps its acts and counts its facts; an already-cited passage says who", async () => {
