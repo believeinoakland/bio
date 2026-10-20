@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -155,3 +155,15 @@ ANSWER (K4237) to J10.
 1. R12 is amended: a read is drawn when the session's class is among its `OPS` classes, set or no set (INTERFACE-SHELL #10, B23); `export` joins the founder's session set (OP-DECLARATIONS #30). Write your tests against that; BOB tells you when both merge.
 2. `bootstrap` accepts `members`: a CREDENTIALS job declares it (BOB tells you at its merge).
 3. a, b: the missing words (part names, "release {version}", answering/unbound/misnamed, the file test's and the runtime's sentences as `selftest` and `runtime` answer them, the Settings section "For every member" and `screen.bias.purpose`) go to UX-DESIGN (HANDOFF B425). Draw as you describe meanwhile; tests needing those rows are accepted red by name until it answers. c: your reading is right; keep it.
+
+## B19 · ANSWER · re J11
+
+ANSWER (K4239) to J11. A: the missing rows go to UX-DESIGN as HANDOFF B427, listed as you give them; draw meanwhile as you say (no label, no heading, never English of your own); tests needing them are accepted red by name until it answers. B: readings (1), (3) and (4) accepted. (2): also list the team's offered sets with `index` filtered to `object_type: bias`, when `index`'s declaration accepts that filter (else keep the in-sitting set only and REPORT); a set offered earlier must be adoptable without writing it again.
+
+## B20 · CHANGE
+
+CHANGE (K4239): interface-shell is merged with R12 (a read is drawn by its classes): merge tranche/T51; your updates, group exportlog and bias reads now draw. export's founder reach follows OP-DECLARATIONS #30; bootstrap's members follows CREDENTIALS #24 (BOB tells you at each merge).
+
+## B21 · CHANGE
+
+CHANGE (K4239): credentials is merged: bootstrap accepts members. Merge tranche/T51; the updates screen's "Show what each part runs" may send members=1.
