@@ -29,6 +29,12 @@ export const SWEEP_CHECKS = Object.freeze({
     where: at('sweepFence', 'is-sweep-owner', 'sweep'),
     translation: word('refusal.SWEEP_RATIFY_NOT_AN_OWNER'),
   }),
+  /* R13, R14 (T51; K4189): the member's doors to define and ratify a sweep are a named member's; awaiting the stamp. */
+  MACHINE_CANNOT_SET_SWEEP: Object.freeze({
+    check: 'C-18.24',
+    where: at('sweepSet', 'is-sweep-set-member', 'sweep'),
+    translation: localize('link-sweep.checks.machine_cannot_set_sweep', 'Only a named member defines or ratifies a sweep, and this came from an automated credential. Nothing was changed.'),
+  }),
 });
 
 /** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail. */

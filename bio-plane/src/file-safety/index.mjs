@@ -1,6 +1,6 @@
 /* file-safety — keeps every captured file safe to open without touching its bytes, digest or grade (layer 3, directly
  * after `capture`; Bob's K1913, K1928, K1929, K1939, K1949 with DEC-168, DEC-169 and DEC-173, packaged by BOB, K2008,
- * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R44).
+ * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R48).
  *
  * WHAT IT HOLDS. Verdict notes beside each capture naming tool, engine and version (R2, R3); the scan and render queue
  * (R1, R4, R12); scan holds and their release by two members or a second, different engine (R15–R19); deeper checks
@@ -383,6 +383,8 @@ export class FileSafety {
   /* R3: append-only. A `found` verdict places or widens a hold (R16, R19); a copy's note is about the copy, which is
      withheld instead (R33). Returns the note's id. */
   #writeNote(sha, v) {
+    const same = this.#sameNotScanned(sha, v);
+    if (same) return same;
     const noteId = `FSN-${[...crypto.getRandomValues(new Uint8Array(8))].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
     const findings = Array.isArray(v.findings) ? v.findings.map(String) : [];
     this.sql.exec(`INSERT INTO fs_notes (note_id, capture_sha, bundle_id, kind, tool, engine, engine_version, signatures, scanned_at,
@@ -398,6 +400,16 @@ export class FileSafety {
     }
     if (v.result === "found" && v.kind !== "copy") this.#placeHold(sha, noteId, findings, v);
     return noteId;
+  }
+  /* R47: a `not_scanned` verdict is recorded once for a file and reason, by tool and engine, until the reason changes: the
+     newest note of that kind, tool and engine is the same `not_scanned` for the same reason, so no row is written and its
+     id answers. A real verdict, or another reason, writes (R3); the files stay due, as `#due` ignores these notes (R4). */
+  #sameNotScanned(sha, v) {
+    if (String(v.result) !== "not_scanned" || !["scan", "sandbox", "copy"].includes(v.kind)) return null;
+    const last = this.#one(`SELECT note_id, result, reason FROM fs_notes WHERE capture_sha = ? AND kind = ? AND tool = ?
+                            AND COALESCE(engine, '') = ? ORDER BY seq DESC LIMIT 1`,
+                           sha, v.kind, String(v.tool ?? "unknown"), v.engine == null ? "" : String(v.engine));
+    return last && last.result === "not_scanned" && (last.reason ?? null) === (v.reason == null ? null : String(v.reason)) ? last.note_id : null;
   }
   static #note(r) {
     return { note_id: r.note_id, kind: r.kind, tool: r.tool, engine: r.engine, engine_version: r.engine_version,
@@ -980,6 +992,7 @@ export class FileSafety {
       const lists = ver && Array.isArray(ver.reputation_lists) ? ver.reputation_lists.map((l) => Date.parse(l.fetched_at)).filter(Number.isFinite) : [];
       const due = this.#due(now);
       return { ok: true,
+        ...(ver && !Number.isFinite(published) ? { no_signatures: this.#noSignatures(ver.signatures) } : {}),
         scanner: ver ? { bound: true, version: ver.version, clamav_version: ver.clamav_version, signatures: ver.signatures }
           : { bound: !!this.#scannerBinding(), version: null, ...(this.#scannerBinding() ? { unreachable: true } : {}) },
         renderer: ver ? { bound: true, version: ver.renderer_version } : { bound: !!this.#scannerBinding(), version: null },
@@ -990,6 +1003,33 @@ export class FileSafety {
           used_this_month: this.#used(t.tool_id), monthly_limit: t.monthly_limit })),
         reputation_list_age_ms: lists.length ? Math.max(0, now - Math.max(...lists)) : null };
     } catch { return refusal("SCANNER_UNREACHABLE", "The scanner's state could not be read."); }
+  }
+
+  /* R46: what is true when the scanner holds no signatures: the date it has had none since (the first file it could not scan
+     for want of them, else the last time it tried, else none), its reason as it states it, and both in members' words by
+     key, never "waiting". Read from the scanner's own state and this module's notes; writes nothing. */
+  #noSignatures(state) {
+    const sigs = state && typeof state === "object" ? state : {};
+    const first = this.#one(`SELECT scanned_at FROM fs_notes WHERE kind = 'scan' AND tool = 'clamav' AND result = 'not_scanned'
+                             AND reason = 'SIGNATURES_ABSENT' ORDER BY seq LIMIT 1`);
+    const at = [first && first.scanned_at, sigs.last_attempt].map(msOf).find(Number.isFinite);
+    const since = Number.isFinite(at) ? iso(at) : null;
+    const tried = typeof sigs.last_error === "string" && sigs.last_error ? sigs.last_error : null;
+    const status = tried && /^REFUSED:[^:]*:(\d{3})$/.exec(tried);
+    const date = since && since.slice(0, 10);
+    return {
+      since, reason: tried || "SIGNATURES_ABSENT",
+      ...(since ? { key: "file-safety.index.no_signatures_since",
+                    words: localize("file-safety.index.no_signatures_since", "The file scanner has had no signatures since {date}.", { date }) }
+                : { key: "file-safety.index.no_signatures",
+                    words: localize("file-safety.index.no_signatures", "The file scanner has no signatures.") }),
+      ...(status ? { reason_key: "file-safety.index.signatures_refused",
+                     reason_words: localize("file-safety.index.signatures_refused", "The signature service refused the download (status {status}).", { status: status[1] }) }
+        : tried ? { reason_key: "file-safety.index.signatures_failed",
+                    reason_words: localize("file-safety.index.signatures_failed", "The last download of signatures did not finish.") }
+        : { reason_key: "file-safety.index.signatures_not_fetched",
+            reason_words: localize("file-safety.index.signatures_not_fetched", "No download of signatures has finished yet.") }),
+    };
   }
 
   /* ===== the group's security tools (R27–R32) ===== */
@@ -1760,3 +1800,26 @@ export function fileSafetyOps(fs, url, body, env) {
     securityforward: () => fs.forwardSecurityCounts({ from: b.from ?? q("from"), to: b.to ?? q("to") }),
   };
 }
+
+/* R48 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their
+   owner beside the ops map: each row's classes, weight and description are the op's existing rows' (op-declarations, op-grades),
+   its fields are what the arm reads from `url` and `body` (the stamps `viewer` and `by` are the control plane's). `capture` is the
+   address's name for the digest and `captureSha` the body's (the arm reads either). */
+export const DECLARED_OPS = Object.freeze({
+  deepercheck: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "observational", description: localize("file-safety.declared.deepercheck", "file-directed: keyed by a capture's digest; asks the group's outside tools about this file; records no one"),
+    fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
+  openoriginal: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "observational", description: localize("file-safety.declared.openoriginal", "file-directed: keyed by a capture's digest, reached from the safe view's one click; answers the original's bytes to a member who may see it, a high-risk file only after a fresh clean deeper check (`override`); records no one"),
+    fields: { accepts: ["capture","captureSha","override"], requires: [["capture","captureSha"]] } },
+  openwithwarning: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "observational", description: localize("file-safety.declared.openwithwarning", "file-directed: keyed by a capture's digest, reached from the warning before opening; answers a high-risk original after the member's two confirmations, never under a scan hold; records no one and keeps no confirmation"),
+    fields: { accepts: ["capture","captureSha","warned"], requires: [["capture","captureSha"]] } },
+  releasescanhold: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("file-safety.declared.releasescanhold", "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one member's reasoned act of two, never a machine's; moves no bundle"),
+    fields: { accepts: ["capture","captureSha","reason"], requires: [["capture","captureSha"],"reason"] } },
+  safeview: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("file-safety.declared.safeview", "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
+  securitytooladd: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("file-safety.declared.securitytooladd", "setting: the group's security tools, an administrator's act; moves no bundle"),
+    fields: { accepts: ["providerId","template","config","credentials","handlingDigest","confirmRetention","use","monthlyLimit"], requires: ["providerId","handlingDigest"] } },
+  securitytoolremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("file-safety.declared.securitytoolremove", "setting: the group's security tools, an administrator's act; moves no bundle"),
+    fields: { accepts: ["toolId","tool"], requires: [["toolId","tool"]] } },
+  securitytooltest: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("file-safety.declared.securitytooltest", "setting: the group's security tools, an administrator's act; moves no bundle"),
+    fields: { accepts: ["toolId","tool"], requires: [["toolId","tool"]] } },
+});

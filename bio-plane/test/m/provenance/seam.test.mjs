@@ -9,12 +9,13 @@ import { word } from "../../../src/setup-words/index.mjs";
 
 const { PROVENANCE_ACT_CHECKS, DOORBELL_ORIGIN } = P;
 
-test("R58: PROVENANCE_ACT_CHECKS is exported whole (C-103.1–C-103.7), each row {check, where, translation}, and DOORBELL_ORIGIN beside it", () => {
+test("R58: PROVENANCE_ACT_CHECKS is exported whole (C-103.1–C-103.12), each row {check, where, translation}, and DOORBELL_ORIGIN beside it", () => {
   assert.equal(P.PROVENANCE_ACT_CHECKS, CHECKS.PROVENANCE_ACT_CHECKS, "one table, read from the module or its checks file");
   assert.deepEqual(Object.entries(PROVENANCE_ACT_CHECKS).map(([code, r]) => [code, r.check]), [
     ["PROVENANCE_REGISTER_REFUSED", "C-103.1"], ["ORIGIN_NOT_A_MEMBER", "C-103.2"], ["NO_BUNDLE", "C-103.3"],
     ["ORIGIN_NOT_A_DOCUMENT", "C-103.4"], ["ORIGIN_NO_SYSTEM", "C-103.5"], ["RECEIPT_MALFORMED", "C-103.6"],
-    ["RECEIPT_NO_KEY", "C-103.7"]]);
+    ["RECEIPT_NO_KEY", "C-103.7"], ["AUTHORITY_NOT_A_MEMBER", "C-103.8"], ["AUTHORITY_NOT_A_DOCUMENT", "C-103.9"],
+    ["AUTHORITY_NO_BASIS", "C-103.10"], ["AUTHORITY_NO_ISSUER", "C-103.11"], ["AUTHORITY_OUTCOME_UNKNOWN", "C-103.12"]]);
   for (const [code, r] of Object.entries(PROVENANCE_ACT_CHECKS)) {
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], code);
     assert.ok(typeof r.translation === "string" && r.translation.split(/\s+/).length >= 8, code);
@@ -39,6 +40,11 @@ test("R58: each row's `where` names the site that raises it: the signed receipt'
   assert.equal(where("NO_BUNDLE"), "src/provenance/index.mjs declareOrigin > is-origin-act; "
     + "src/provenance-routes/index.mjs provenanceChainRebuild");
   for (const code of ["ORIGIN_NOT_A_DOCUMENT", "ORIGIN_NO_SYSTEM"]) assert.equal(where(code), "src/provenance/index.mjs declareOrigin > is-origin-statement");
+  /* R65 (T51): a member's decision on a document's authority raises its own five, from three regions of declareAuthority. */
+  assert.equal(where("AUTHORITY_NOT_A_MEMBER"), "src/provenance/index.mjs declareAuthority > is-authority-act");
+  assert.equal(where("AUTHORITY_NOT_A_DOCUMENT"), "src/provenance/index.mjs declareAuthority > is-authority-document");
+  for (const code of ["AUTHORITY_NO_BASIS", "AUTHORITY_NO_ISSUER", "AUTHORITY_OUTCOME_UNKNOWN"])
+    assert.equal(where(code), "src/provenance/index.mjs declareAuthority > is-authority-statement");
   /* This module raises the rows it names as its own, each carrying its row; it signs nothing, so it raises neither
      receipt row (no service of it signs: the instance key is attestation's). */
   const w = world();
@@ -70,5 +76,5 @@ test("R41, N516: the copies held through T25 are gone: no route marker, statemen
   for (const m of ["provenanceChainRebuild", "provenanceRouteAssess", "provenanceRoutesMarked", "routeOf", "routeTally"])
     assert.equal(typeof w.prov[m], "undefined", `${m} is provenance-routes'`);
   /* Nor are the moved tables this module's (R41). */
-  assert.deepEqual(P.PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations"]);
+  assert.deepEqual(P.PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations", "authority_decisions"]);
 });

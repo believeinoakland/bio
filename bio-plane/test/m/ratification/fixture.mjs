@@ -139,9 +139,15 @@ export function world({ steer = {}, worker = null, carriage = null, schedule = n
   /* provenance R5's `registerHolds`, as the test sets it by hash: what the register's receipts and the bundle's record
      name for a whole hash the evidence store does not hold (nothing, by default) */
   const holds = new Map();
+  /* provenance R66's standing decision on a capture's authority, as the test sets it by capture hash (nothing, by default) */
+  const standing = new Map();
   const provenance = { registeredFor: (id) => registers.get(id) ?? [],
                        registerHolds: ({ sha }) => holds.get(sha) ?? { ok: true, sha, asked: true, parts: null,
-                                                                       registered: false, acquired: false } };
+                                                                       registered: false, acquired: false },
+                       containerResolver: () => ({ holds: (a) => { const h = holds.get(a); return !!h && (h.registered === true || h.acquired === true); },
+                                                   gradeVia: () => null, archiveOrigin: () => ({ found: false }),
+                                                   authority: (a) => standing.get(a) ?? null }),
+                       standing };
   const inquiry = { subjectEntityOf: (id) => `ENT-of-${id}`,
                     earned: (subject, targets) => ({ subject, earned: { capture: Object.fromEntries(targets.map((t) => [t, null])) } }) };
 
@@ -234,7 +240,7 @@ export function world({ steer = {}, worker = null, carriage = null, schedule = n
                                      publication, now: () => NOW }) });
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, r, schedule: r.publishSchedule, bv, key, registers, holds, evidence, pub, publication,
+    st, host, record, membership, credentials, promotion, provenance, r, schedule: r.publishSchedule, bv, key, registers, holds, evidence, pub, publication,
     caseTensions, calls, readers, corroboration, corroborationAsked, levelMoves, sealCalls, realPub, ties, moneyFacts, tiesAsked,
     openSeals: async (a) => ({ ok: true, case: a.case, edition: a.edition, project: null, opened: [], attestation: null }),
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */

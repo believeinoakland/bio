@@ -11,13 +11,13 @@ import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
+import { fitSend, boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
 import { ALL, HOME, HELD, DOORBELL, PUBLISHED } from "./screens.fixture.mjs";
 
 const h = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const btn = (p, op) => p.root().querySelector(`button[data-act="${op}"]`);
 const gate = () => { let go; const p = new Promise((r) => { go = r; }); return { p, go }; };
-const stand = (id, ops, render, extra = {}) => ({ id, reads: () => ({}), acts: ops.map((op) => ({ op })), render, ...extra });
+const stand = (id, ops, render, extra = {}) => ({ id, reads: () => ({}), acts: ops.map((op) => ({ op, send: fitSend(op) })), render, ...extra });
 const audio = (p) => {
   const made = [];
   p.win.AudioContext = class { constructor() { this.destination = {}; this.currentTime = 0; }
@@ -94,7 +94,7 @@ test("R74 an act button answers the press: busy while the request is out, a seco
 
 test("R74 a Terminal, Signed, Irreversible or outward act is disabled after success and stays so until the screen is redrawn from a read", async () => {
   let hold = null;
-  const doc = { id: "document", reads: () => ({ x: { op: "image" } }), acts: [{ op: "retire" }, { op: "release", outward: true }], render: (cs) => cs.act("retire") + cs.act("release") };
+  const doc = { id: "document", reads: () => ({ x: { op: "image" } }), acts: [{ op: "retire", send: fitSend("retire") }, { op: "release", outward: true, send: fitSend("release") }], render: (cs) => cs.act("retire") + cs.act("release") };
   const p = await boot({ screens: [doc], path: "/app/document/x", plane: { image: async () => { if (hold) await hold.p; return ok({ title: "t" }); }, retire: ok({}), release: ok({}) } });
   hold = gate();
   await p.click(btn(p, "retire"));

@@ -41,6 +41,8 @@ export const CLAIM_KINDS = Object.freeze(["same_as", "not_same_as", "unsure"]);
 export const CLAIM_BASES = Object.freeze(["identifier", "corroborated_name", "name", "testimony"]);
 /* R2 (K1488): each basis earns exactly one grade. */
 export const BASIS_GRADE = Object.freeze({ identifier: "A", corroborated_name: "B", name: "C", testimony: "D" });
+/* R1, R7 (I-32, DEC-384): the entity kinds an identity claim can join: persons and the organisation kinds, two of one kind. */
+export const CLAIM_ENTITY_KINDS = Object.freeze(["person", ...ORGANISATION_KINDS]);
 export const FACT_KINDS = Object.freeze(["name", "birth", "death", "locality", "address", "contact"]);
 export const CONTACT_KINDS = Object.freeze(["address", "contact"]);
 export const TIE_KINDS = Object.freeze(["employer", "relative", "business", "other"]);
@@ -295,19 +297,29 @@ export class People {
       return refuse("NOT_A_PERSON", `${id} is registered as ${e ? `a ${e.kind}` : "something"}, not a person`, { entity_id: id, ...extra });
     return null;
   }
+  /* R1, R7 (I-32): the refusals for an end of a claim or a candidates read: NO_SUCH_ENTITY, then NOT_A_PERSON for a kind no
+     claim joins (the code is kept); the entity's kind answers `kind` on success. */
+  #claimableRefusal(id, end = null) {
+    const extra = end ? { end } : {};
+    if (!filled(id) || !this.#entities.has(id)) return noSuchEntity(id ?? null, extra);
+    const e = this.#entity(id);
+    if (!e || !CLAIM_ENTITY_KINDS.includes(e.kind))
+      return refuse("NOT_A_PERSON", localize("people.index.registered_no_claim_joins", "{id} is registered as {what}, which no identity claim joins (a person or an organisation)", { id: String(id), what: String(e ? `a ${e.kind}` : "something") }), { entity_id: id, ...extra });
+    return null;
+  }
   /* The live names of a person, as their aliases stand in the registry. */
   #names(id) {
     const e = this.#entity(id);
     return e && Array.isArray(e.aliases) ? e.aliases.filter((a) => !a.withdrawn).map((a) => a.alias) : [];
   }
-  /* The other persons holding a fold of one of `id`'s names (entities R6), with the name each shares. */
-  #sharingName(id) {
+  /* The other entities of the same kind holding a fold of one of `id`'s names (entities R6), with the name each shares. */
+  #sharingName(id, kind = "person") {
     const out = new Map();
     for (const name of this.#names(id)) {
       let r;
       try { r = this.#entities.entitiesByAlias({ alias: name }); } catch { r = null; }
       for (const e of r && Array.isArray(r.entities) ? r.entities : []) {
-        if (e.entity_id !== id && e.kind === "person" && !out.has(e.entity_id)) out.set(e.entity_id, name);
+        if (e.entity_id !== id && e.kind === kind && !out.has(e.entity_id)) out.set(e.entity_id, name);
       }
     }
     return out;
@@ -423,7 +435,11 @@ export class People {
   claimIdentity({ a, b, kind, basis, evidence = null, project = null, note, by = null } = {}) {
     if (!filled(a) || !filled(b)) return refuse("NO_ENDS", "a claim names two person records by id: a and b");
     if (a === b) return refuse("SELF_CLAIM", "a claim is between two distinct person records");
-    for (const [id, end] of [[a, "a"], [b, "b"]]) { const r = this.#personRefusal(id, end); if (r) return r; }
+    for (const [id, end] of [[a, "a"], [b, "b"]]) { const r = this.#claimableRefusal(id, end); if (r) return r; }
+    /* I-32: a claim joins two entities of one kind; a person and an organisation, or two kinds of organisation, are not one thing */
+    const kindA = this.#entity(a).kind, kindB = this.#entity(b).kind;
+    if (kindA !== kindB)
+      return refuse("KIND_MISMATCH", localize("people.index.claim_joins_one_kind", "a claim joins two entities of one kind; {a} is a {kind_a} and {b} is a {kind_b}. Nothing was written", { a: String(a), kind_a: String(kindA), b: String(b), kind_b: String(kindB) }), { kinds: { a: kindA, b: kindB } });
     if (!CLAIM_KINDS.includes(kind))
       return refuse("UNKNOWN_CLAIM_KIND", `a claim's kind is one of ${CLAIM_KINDS.join(", ")}`, { kinds: [...CLAIM_KINDS] });
     if (!CLAIM_BASES.includes(basis))
@@ -481,7 +497,7 @@ export class People {
   /* R2: the grade's condition, met (`because`) or failed (`failed`, naming the condition). */
   #earn(basis, a, b, ev) {
     if (basis === "testimony") return { because: word("people.member_testified_words") };
-    const shared = this.#sharingName(a).get(b);
+    const shared = this.#sharingName(a, this.#entity(a).kind).get(b);
     if (basis === "name") {
       if (!shared) return { failed: word("people.two_records_share") };
       return { because: word("people.records_carry_name", { shared: String(shared) }) };
@@ -654,10 +670,11 @@ export class People {
   samePersonCandidates({ entityId, limit = CANDIDATES_DEFAULT, viewer = null } = {}) {
     if (!filled(entityId)) return noEntity("candidates are read for one person, by its entity id");
     if (this.#denied(viewer)) return People.#noViewer();
-    const bad = this.#personRefusal(entityId);
+    const bad = this.#claimableRefusal(entityId);
     if (bad) return bad;
+    const kind = this.#entity(entityId).kind;
     const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || CANDIDATES_DEFAULT, CANDIDATES_MAX));
-    const found = new Set(this.#sharingName(entityId).keys());
+    const found = new Set(this.#sharingName(entityId, kind).keys());
     for (const idf of this.#identifiers(entityId)) {
       let r;
       try { r = typeof this.#entities.entityByIdentifier === "function" ? this.#entities.entityByIdentifier({ scheme: idf.scheme, id: idf.id }) : null; }
@@ -666,7 +683,7 @@ export class People {
       const others = isObj(r) && Array.isArray(r.candidates) ? r.candidates
         : [isObj(r) ? r.entity_id ?? (isObj(r.entity) ? r.entity.entity_id : null) : typeof r === "string" ? r : null];
       for (const other of others)
-        if (filled(other) && other !== entityId) { const e = this.#entity(other); if (e && e.kind === "person") found.add(other); }
+        if (filled(other) && other !== entityId) { const e = this.#entity(other); if (e && e.kind === kind) found.add(other); }
     }
     const ids = [...found].sort();
     const mine = this.#profile(entityId, viewer);

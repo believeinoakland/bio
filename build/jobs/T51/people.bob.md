@@ -1,6 +1,6 @@
 # BOB to people (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -60,3 +60,21 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio people tranche/T51 job/T51/people`. Your Size line counts only your module's own code (K2513).
+
+## B7 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-64 · people**): the fix round of T51 (K4214; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/people.md` (read whole). Write each NEW or amended requirement line yourself in that file (K4210), an outcome with its id first, marked *(not yet met: T51)* until a test names it; the ownership check's listing of that one file is accepted at your merge.
+Why this job: DEC-384 (Bob's UX ruling, I-32, the live walk) draws an organization's page with "Same organization?": its claims (`screen.person.same.claimed.org`, `.same.because.org`), the candidates (`screen.person.candidates.org`) and the claim form's kinds (`screen.person.claim.*.org`). Today `people` refuses `identityclaim`, `person`'s claims and `samepersoncandidates` for any kind but `person` (`NOT_A_PERSON`), so the page cannot fill. `screens-investigate` (FR-29) reads them for every entity kind and draws `NOT_A_PERSON` as nothing; this job makes them answer (K4213, replacing K4194's "people unchanged" for these reads only).
+Merge order: module index 67, layer 5; before `screens-investigate` (165), independent of the other wave-2 jobs.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **I-32 (DEC-384; K4214)** · Identity claims and same-entity candidates serve organizations as they serve persons: `claimIdentity` (R1) accepts two distinct registered entities of the same kind among `person`, `institution`, `body`, `movement` (a claim across kinds, e.g. a person and an organization, is refused with its own code, a control); `identityOf` and the claims `person` returns are read for an organization; `samePersonCandidates` proposes candidates of the entity's own kind. Persons' behaviour is unchanged (every existing test stays green). Person facts (`recordPersonFact`, R9) stay persons' only: the organization page's fact form is the screen's (three kinds), out of this entry. Amend R1 and the candidates' requirement (the line under `samePersonCandidates`); declare any op whose fields change (your R42's `DECLARED_OPS`). Test: an organization pair is claimed `same_as`, read back through `identity` and listed by `samepersoncandidates`; controls: a cross-kind claim is refused writing nothing; a person pair answers as before.
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure: your requirements, these entries and the tests they name: well under the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio people tranche/T51 job/T51/people`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

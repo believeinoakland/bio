@@ -315,7 +315,7 @@ test("R38: an authored observation stays one: its flag is never cleared and its 
 
 test("R41: the module owns its tables, declared to purge once; another declaration of one is refused; the route marks and the instance key's tables are not its", () => {
   const w = world();
-  assert.deepEqual(PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations"]);
+  assert.deepEqual(PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations", "authority_decisions"]);
   /* N512: provenance_route_marks is provenance-routes' (its R12), receipt_keys and signed_receipts attestation's (its
      R10): this module neither creates nor declares them, so each owner declares its own. */
   const tables = w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name);
