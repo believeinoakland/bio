@@ -3457,6 +3457,12 @@
      ]
     },
     {
+     "op": "linewithdraw",
+     "label": "Withdraw this statement, with a reason",
+     "status": "declared",
+     "servedBy": "lines R8 (op linewithdraw, served by the lines module and listed open in op-declarations; its module row has no classes object the check reads)"
+    },
+    {
      "op": "identityclaim",
      "label": "Say another record is this person",
      "status": "declared",
@@ -5258,6 +5264,14 @@
      "modules": [
       "op-declarations",
       "review"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],

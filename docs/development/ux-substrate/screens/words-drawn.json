@@ -25994,7 +25994,7 @@
   },
   {
    "key": "screen.domainfile.refused.malformed",
-   "en": "That is not a website name. Type only the name, such as example-tenants.org: no https://, no page, no port and no numbers-only address. Nothing was recorded.",
+   "en": "That is not a website name. Type only the name, such as lakeshoretenants.org: no https://, no page, no port and no numbers-only address. Nothing was recorded.",
    "protected": false,
    "note": "DEC-374: B398 C11 (instance-setup groupdomainset): refusal for an address that is not a bare host name"
   },
@@ -26042,7 +26042,7 @@
   },
   {
    "key": "screen.bias.by_admin_for_the_team",
-   "en": "By {admin} for the team on {admin_date}, and by {owner} for this project on {owner_date}, each with a reason.",
+   "en": "By {admin} for the team, and by {owner} for this project, on {date}, each with a reason.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone. Placeholders hold a member name, a date or the title of the work."
   },
@@ -26390,7 +26390,7 @@
   },
   {
    "key": "screen.bias.it_read_sentences_of",
-   "en": "It read {read} of {of} sentences.",
+   "en": "It read 4 sentences of 4.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
@@ -29737,12 +29737,6 @@
    "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
   },
   {
-   "key": "screen.case-editor.finding_1_its_role_in_the",
-   "en": "Finding 1: its role in the case",
-   "protected": false,
-   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
-  },
-  {
    "key": "screen.case-editor.relied_on_the_case_rests_on",
    "en": "Relied on: the case rests on it, so it must meet your project's standard of evidence.",
    "protected": false,
@@ -29757,12 +29751,6 @@
   {
    "key": "screen.case-editor.required_for_every_finding_at_least",
    "en": "Required for every finding; at least one must be relied on.",
-   "protected": false,
-   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
-  },
-  {
-   "key": "screen.case-editor.finding_2_its_role_in_the",
-   "en": "Finding 2: its role in the case",
    "protected": false,
    "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
   },
@@ -30590,7 +30578,7 @@
   },
   {
    "key": "screen.updates.health.file.test",
-   "en": "A test file was written and read back",
+   "en": "A test file was written and read back in {seconds} s",
    "protected": false,
    "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result; {seconds} is a measured time; translate in the same plain tone"
   },
@@ -30662,13 +30650,13 @@
   },
   {
    "key": "screen.updates.health.runtime.heaviest",
-   "en": "Heaviest so far: {peak} {unit}",
+   "en": "Heaviest single request so far: {ms} ms of work, {calls} outside calls",
    "protected": false,
    "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; {ms} and {calls} are measured numbers; translate in the same plain tone"
   },
   {
    "key": "screen.updates.health.runtime.limits",
-   "en": "Cloudflare refuses a request that makes more than {ceiling} outside calls.",
+   "en": "Cloudflare refuses a request that makes too many outside calls, so that limit is known by having been reached.",
    "protected": false,
    "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; translate in the same plain tone"
   },
@@ -34315,352 +34303,568 @@
    "note": "DEC-384: B411 H2: the path's name for a project whose title this member cannot read; never its identifier"
   },
   {
-   "key": "ai-accounts.declared.aikeepaway",
-   "en": "Sets whether your team keeps its material away from every assistant, with a reason. Only an administrator can.",
+   "key": "screen.capture.address.checked.summary",
+   "en": "What checking it now tells you",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 1: capture, under Check it now: the summary of the four outcomes"
   },
   {
-   "key": "ai-accounts.declared.groupkeynoticeseen",
-   "en": "Records that you have seen the notice about your team's assistant key.",
+   "key": "screen.capture.address.checked.modified",
+   "en": "Checked {title} just now: the page reads differently from the copy your team holds. Nothing was captured; capture it again to keep the new copy.",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 1: capture, Check it now, answer status modified; {title} the document's title; a Capture the new copy door beside it"
   },
   {
-   "key": "ai-accounts.declared.groupkeyremove",
-   "en": "Removes your team's assistant key. Only an administrator can.",
+   "key": "screen.capture.address.checked.removed",
+   "en": "Checked {title} just now: the site no longer gives this page. The copy your team holds is kept.",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 1: capture, Check it now, status removed"
   },
   {
-   "key": "ai-accounts.declared.groupkeyset",
-   "en": "Saves your team's assistant key, which is never shown again. Only an administrator can.",
+   "key": "screen.capture.address.checked.unchanged",
+   "en": "Checked {title} just now: the site still gives the same document your team holds.",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 1: capture, Check it now, status unchanged"
   },
   {
-   "key": "ai-accounts.declared.groupkeyswitch",
-   "en": "Turns your team's assistant key on or off. Only an administrator can.",
+   "key": "screen.capture.address.checked.unknown",
+   "en": "Checked {title} just now, but it could not be told whether the page changed: {note}",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 1: capture, Check it now, status unknown; {note} the answer's own note"
   },
   {
-   "key": "intent.declared.aspirationdeclare",
-   "en": "Declares an aspiration for your team, a project or yourself.",
+   "key": "screen.standard.inforce.day.label",
+   "en": "The day",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 2: standard, Was it in force on a date?: the day field's label (in place of act.standardinforce.label.standard)"
   },
   {
-   "key": "intent.declared.aspirationdepart",
-   "en": "Records that a project departs from one of your team's aspirations, with a reason.",
+   "key": "screen.standard.inforce.result.line",
+   "en": "On {date} it was: {state}",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 2: standard: the answer's line; {state} is one of the four state words below, bold; {date} the day asked"
   },
   {
-   "key": "local-facts.declared.ruleconfirm",
-   "en": "Confirms a rule another member drafted, so it applies to your team from then on.",
+   "key": "screen.standard.inforce.state.in_force",
+   "en": "In force",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 2: standard: answer state in_force"
   },
   {
-   "key": "local-facts.declared.ruledraft",
-   "en": "Drafts a rule for your team from its primary source, with a reason. Another member confirms it before it applies.",
+   "key": "screen.standard.inforce.state.not_in_force",
+   "en": "Not in force",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 2: standard: answer state not_in_force"
   },
   {
-   "key": "local-facts.declared.rulewithdraw",
-   "en": "Withdraws one of your team's rules, with a reason. The rule stays on the record and is never deleted.",
+   "key": "screen.standard.inforce.state.overridden",
+   "en": "Overridden",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 2: standard: answer state overridden"
   },
   {
-   "key": "strength.declared.projectbarset",
-   "en": "Sets how strong support must be for this project's findings, with a reason. It blocks no work.",
+   "key": "screen.standard.inforce.state.undetermined",
+   "en": "Undetermined",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 2: standard: answer state undetermined"
   },
   {
-   "key": "strength.declared.strengthbarset",
-   "en": "Sets how strong support must be, by default, for your team's findings. Only an administrator can.",
+   "key": "screen.standard.inforce.others.summary",
+   "en": "The other answers it can give",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 2: standard: summary of the details showing the other three states"
   },
   {
-   "key": "translations.declared.translationadopt",
-   "en": "Keeps your team's own wording of one of Civicsmith's words, so members reading that language see it.",
+   "key": "screen.due-date.remind.set",
+   "en": "We will remind you on {date}.",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B419 3: due-date: the line drawn once Remind me is pressed, in place of screen.due-date.on and the bare date"
   },
   {
-   "key": "translations.declared.translationconfirm",
-   "en": "Confirms your team's wording of a protected word, so members reading that language then see it.",
+   "key": "screen.doorbell.secret.make",
+   "en": "Make one for me",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B420 1: doorbell: the choice beside the secret phrase (generateSecret true); when ticked the phrase field is left empty"
   },
   {
-   "key": "translations.declared.translationrevert",
-   "en": "Undoes the latest change to your team's wording of one of Civicsmith's words. Only an administrator can.",
+   "key": "screen.doorbell.secret.make.help",
+   "en": "A long random phrase is made for you and shown once, on the receipt. Write it down: nobody can show it to you again.",
    "protected": false,
-   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+   "note": "DEC-387: B420 1: doorbell: under Make one for me"
   },
   {
-   "key": "screen.updates.health.part.agent-worker",
-   "en": "The assistant's worker",
+   "key": "screen.doorbell.receipt.fingerprint",
+   "en": "Fingerprint of what you sent: {fingerprint}",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as agent-worker; the code shows it, never the module id"
+   "note": "DEC-387: B420 1: doorbell receipt: the answer's sha256, shortened in the middle"
   },
   {
-   "key": "screen.updates.health.part.pdf-worker",
-   "en": "Reading PDFs",
+   "key": "screen.doorbell.receipt.fingerprint.help",
+   "en": "The same file always has the same fingerprint, so anyone can later check a copy against this one.",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as pdf-worker; the code shows it, never the module id"
+   "note": "DEC-387: B420 1: doorbell receipt: under the fingerprint"
   },
   {
-   "key": "screen.updates.health.part.ocr-worker",
-   "en": "Reading text in images",
+   "key": "screen.doorbell.receipt.size",
+   "en": "Size: {size}",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as ocr-worker; the code shows it, never the module id"
+   "note": "DEC-387: B420 1: doorbell receipt: the answer's bytes, written as a size such as 2.1 MB"
   },
   {
-   "key": "screen.updates.health.part.sheet-worker",
-   "en": "Reading spreadsheets",
+   "key": "screen.doorbell.receipt.pseudonym",
+   "en": "Your pseudonym: {pseudonym}",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as sheet-worker; the code shows it, never the module id"
+   "note": "DEC-387: B420 1: doorbell receipt: the answer's pseudonym, only when a secret phrase was used or made"
   },
   {
-   "key": "screen.updates.health.part.file-scanner",
-   "en": "The file scanner",
+   "key": "screen.doorbell.receipt.pseudonym.help",
+   "en": "Material sent later with the same secret phrase shows under the same pseudonym. It says nothing about who you are.",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as file-scanner; the code shows it, never the module id"
+   "note": "DEC-387: B420 1: doorbell receipt: under the pseudonym"
   },
   {
-   "key": "screen.updates.health.part.agent-runner",
-   "en": "The assistant's runner",
+   "key": "screen.doorbell.receipt.secret",
+   "en": "Your secret phrase: {secret}",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as agent-runner; the code shows it, never the module id"
+   "note": "DEC-387: B420 1: doorbell receipt: the made secret, only when Make one for me was chosen; shown in this answer only"
   },
   {
-   "key": "screen.updates.health.part.release",
-   "en": "release {version}",
+   "key": "screen.doorbell.receipt.secret.note",
+   "en": "Write it down now. This page shows it once and nobody can show it to you again; without it you cannot answer a request to publish something about you.",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the release one part runs"
+   "note": "DEC-387: B420 1: doorbell receipt: under the made secret"
   },
   {
-   "key": "screen.updates.health.part.state.answering",
-   "en": "answering",
+   "key": "screen.docket.edition.label",
+   "en": "The edition it answers",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state of a part"
+   "note": "DEC-387: B420 2: docket, file form: the choice of edition (docketfile edition)"
   },
   {
-   "key": "screen.updates.health.part.state.silent",
-   "en": "silent",
+   "key": "screen.docket.edition.help",
+   "en": "The published edition of this case the entry is about.",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state of a part that did not answer (beside part.silent)"
+   "note": "DEC-387: B420 2: docket, file form: help under the edition choice"
   },
   {
-   "key": "screen.updates.health.part.state.unbound",
-   "en": "not connected to your copy",
+   "key": "screen.docket.edition.option",
+   "en": "Edition {n} · published {date}",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state unbound: the part is not wired to this copy"
+   "note": "DEC-387: B420 2: docket, file form: one option of the edition choice, one per ratified edition, the latest first and chosen"
   },
   {
-   "key": "screen.updates.health.part.state.misnamed",
-   "en": "answers under another name",
+   "key": "screen.docket.capture.label",
+   "en": "The document it rests on",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state misnamed: the part answered, but as another part"
+   "note": "DEC-387: B420 2: docket, file form: the choice of captured document (docketfile capture)"
   },
   {
-   "key": "screen.updates.health.part.other",
-   "en": "Other things a part can show",
+   "key": "screen.docket.capture.help",
+   "en": "A document your team has captured: the response, statement or order itself.",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the summary of the fold listing the two rarer states"
+   "note": "DEC-387: B420 2: docket, file form: help under the capture choice"
   },
   {
-   "key": "screen.updates.health.runtime.average",
-   "en": "average {mean} {unit}",
+   "key": "screen.docket.capture.option",
+   "en": "{title} · captured {date}",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; one metric of the running reading, its mean in the unit the runtime answers"
+   "note": "DEC-387: B420 2: docket, file form: one option of the capture choice; {title} the document's title"
   },
   {
-   "key": "screen.updates.health.runtime.samples",
-   "en": "measured over {samples} requests",
+   "key": "screen.docket.capture.add",
+   "en": "Capture it first",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; how many requests the metric rests on"
+   "note": "DEC-387: B420 2: docket, file form: the door to Add to the record beneath the capture choice"
   },
   {
-   "key": "screen.settings.everyone",
-   "en": "For every member",
+   "key": "screen.about-knocker.known.head",
+   "en": "What became known",
    "protected": false,
-   "note": "DEC-384: B411 B425 K4237: settings, the third section heading (Declared bias)"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.lens.label",
-   "en": "Whose lens",
+   "key": "screen.about-knocker.attribute.label",
+   "en": "Which attribute",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label of the choice"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.lens.team",
-   "en": "The whole team",
+   "key": "screen.about-knocker.attribute.occupation",
+   "en": "Occupation",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): its option; the other option is a project, named by its title"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.kind.label",
-   "en": "Kind of statement",
+   "key": "screen.about-knocker.attribute.employer",
+   "en": "Employer",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.kind.scrutiny",
-   "en": "Scrutiny",
+   "key": "screen.about-knocker.attribute.role",
+   "en": "Role",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): short name of the kind in a statement's row"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.kind.inference",
-   "en": "Inference",
+   "key": "screen.about-knocker.kind.name",
+   "en": "A name",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): short name of the kind"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.kind.pattern",
-   "en": "Pattern",
+   "key": "screen.about-knocker.value.label",
+   "en": "What it is",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): short name of the kind"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.statement.label",
-   "en": "The statement",
+   "key": "screen.about-knocker.value.help",
+   "en": "At most 400 characters.",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.cites.label",
-   "en": "What it cites",
+   "key": "screen.about-knocker.knownto.label",
+   "en": "Who knows it",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.adoptfor.label",
-   "en": "Adopt it for",
+   "key": "screen.about-knocker.audience.member",
+   "en": "One member",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label of the choice"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.head.team",
-   "en": "In force for the whole team",
+   "key": "screen.about-knocker.audience.group",
+   "en": "The team",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): section heading when the lens is the whole team (a project's is screen.bias.in_force_for_the_coliseum)"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.head.write",
-   "en": "Write a set",
+   "key": "screen.about-knocker.audience.public",
+   "en": "The public",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.head.adopt",
-   "en": "Adopt it",
+   "key": "screen.about-knocker.evidence.label",
+   "en": "Your evidence",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.head.proposed",
-   "en": "Proposed statements",
+   "key": "screen.about-knocker.confirms.none",
+   "en": "No claim",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.head.left_out",
-   "en": "Left out",
+   "key": "screen.about-knocker.consent.detail",
+   "en": "Which detail",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.head.settled",
-   "en": "Settled",
+   "key": "screen.about-knocker.person.which",
+   "en": "Which person",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.row.about",
-   "en": "about {subject}",
+   "key": "screen.about-knocker.notrecorded",
+   "en": "not recorded",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row: who or what it is about"
+   "note": "DEC-387: B423 1: about-knocker, as drawn (R43)"
   },
   {
-   "key": "screen.bias.row.why",
-   "en": "Why: {reason}",
+   "key": "screen.leads.mine.head",
+   "en": "Your leads",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.row.team_locked",
-   "en": "the team's, locked",
+   "key": "screen.leads.one.head",
+   "en": "One lead",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row: the team's statement, which a project cannot replace"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.row.project",
-   "en": "this project's",
+   "key": "screen.leads.written",
+   "en": "Written by you on {date}",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row: the project's own statement"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.dt.lens",
-   "en": "Lens",
+   "key": "screen.leads.look.head",
+   "en": "Record a look",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): definition term"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.dt.bar",
-   "en": "A bar",
+   "key": "screen.leads.look.opt.unclear",
+   "en": "Could not tell",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): definition term of a sentence left out"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.dt.verdict",
-   "en": "A verdict",
+   "key": "screen.leads.look.opt.found",
+   "en": "It is there",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): definition term of a sentence left out"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.link.write",
-   "en": "Write a set · statements about how your team reads sources, written by you.",
+   "key": "screen.leads.look.which",
+   "en": "Which one",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the link row"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.link.draft",
-   "en": "Draft one from an outside policy · Civicsmith reads another organization's policy and proposes statements.",
+   "key": "screen.leads.share.head",
+   "en": "Share it with a project",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the link row"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.earlier.made",
-   "en": "Made under lens {then} on {made_on}. In force now: {now}, adopted {adopted_on}. The change: {change}.",
+   "key": "screen.leads.share.project",
+   "en": "Which project",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): work made under an earlier lens"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.earlier.settled",
-   "en": "Settled by {who} on {date}: “{reason}”",
+   "key": "screen.leads.state.unclear",
+   "en": "We looked and could not tell",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): work settled with a reason"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.by_admin_for_the_team.team",
-   "en": "By {admin} for the team, on {date}, with a reason.",
+   "key": "screen.leads.state.absent",
+   "en": "We looked and it is not there",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the Adopted line when only the team has adopted a set"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
   },
   {
-   "key": "screen.bias.by_admin_for_the_team.project",
-   "en": "By {owner} for this project, on {date}, with a reason.",
+   "key": "screen.leads.state.part",
+   "en": "We looked and found part of it",
    "protected": false,
-   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the Adopted line when only the project has adopted a set"
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
+  },
+  {
+   "key": "screen.leads.state.found",
+   "en": "We looked and it is there",
+   "protected": false,
+   "note": "DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list"
+  },
+  {
+   "key": "screen.watching.running.head",
+   "en": "The watching",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.running",
+   "en": "Watching is running.",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.paused",
+   "en": "Watching is paused.",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.pause",
+   "en": "Pause the watching",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.resume",
+   "en": "Resume the watching",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.list.head",
+   "en": "Every watched address",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.counts",
+   "en": "Due now: {due} · Scheduled: {scheduled} · Not scheduled: {unscheduled} · Ended: {ended}",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.slate.head",
+   "en": "What is due",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.sweeps.head",
+   "en": "Sweeps",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.sweep.pages",
+   "en": "{count} pages",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.watching.sweep.pages.one",
+   "en": "1 page",
+   "protected": false,
+   "note": "DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1"
+  },
+  {
+   "key": "screen.capture.cred.askedby",
+   "en": "Asked for by {name}, {date} · Tries: {count}",
+   "protected": false,
+   "note": "DEC-387: B423 4: capture, login section (R47); a label: count form, safe for any number"
+  },
+  {
+   "key": "screen.capture.cred.givenby",
+   "en": "Given by {name}, {date}",
+   "protected": false,
+   "note": "DEC-387: B423 4: capture, login section (R47)"
+  },
+  {
+   "key": "screen.capture.cred.given.summary",
+   "en": "Once a login has been given",
+   "protected": false,
+   "note": "DEC-387: B423 4: capture: summary of the details showing a login already given"
+  },
+  {
+   "key": "screen.person.keeper.office.label",
+   "en": "The office",
+   "protected": false,
+   "note": "DEC-387: B423 5: person, Records its offices keep: label of the office choice (in place of screen.people.today.kind.office)"
+  },
+  {
+   "key": "screen.person.keeper.source.label",
+   "en": "What says so",
+   "protected": false,
+   "note": "DEC-387: B423 5: person: label of the source choice (in place of screen.person.source)"
+  },
+  {
+   "key": "screen.person.keeper.from.label",
+   "en": "Since (optional)",
+   "protected": false,
+   "note": "DEC-387: B423 5: person: label of the first date (in place of screen.person.fact.from)"
+  },
+  {
+   "key": "screen.person.keeper.to.label",
+   "en": "Until (optional)",
+   "protected": false,
+   "note": "DEC-387: B423 5: person: label of the second date (in place of screen.person.fact.to)"
+  },
+  {
+   "key": "screen.person.keeper.line.responsible",
+   "en": "is responsible for {subject}",
+   "protected": false,
+   "note": "DEC-387: B423 5: person: a responsible_for line after the office name (in place of label.linekinds.responsible_for); beside screen.person.keeper.line"
+  },
+  {
+   "key": "screen.watching.project",
+   "en": "Which project",
+   "protected": false,
+   "note": "DEC-387: B428 1: watching: choice on both Ask for this to be gathered and Define a sweep; the projects the member has joined"
+  },
+  {
+   "key": "screen.watching.project.help",
+   "en": "Only projects you have joined. What is gathered is kept in that project's gathering file.",
+   "protected": false,
+   "note": "DEC-387: B428 1: watching: help under the project choice"
+  },
+  {
+   "key": "screen.case-editor.details.name.area",
+   "en": "Area of government",
+   "protected": false,
+   "note": "DEC-387: B428 2: the detail's name, on the case editor, the ceremony and the published page; the detail field is \"area\""
+  },
+  {
+   "key": "screen.case-editor.details.name.contact",
+   "en": "Point of contact",
+   "protected": false,
+   "note": "DEC-387: B428 2: the detail's name, on the case editor, the ceremony and the published page; the detail field is \"contact\""
+  },
+  {
+   "key": "screen.case-editor.details.name.related",
+   "en": "Related work",
+   "protected": false,
+   "note": "DEC-387: B428 2: the detail's name, on the case editor, the ceremony and the published page; the detail field is \"related\""
+  },
+  {
+   "key": "screen.case-editor.details.name.relationships",
+   "en": "Relationships",
+   "protected": false,
+   "note": "DEC-387: B428 2: the detail's name, on the case editor, the ceremony and the published page; the detail field is \"relationships\""
+  },
+  {
+   "key": "screen.case-editor.details.stated",
+   "en": "Stated",
+   "protected": false,
+   "note": "DEC-387: B428 2: the ceremony's mark on a detail the team has stated"
+  },
+  {
+   "key": "screen.case-editor.details.rel.builds_on",
+   "en": "Builds on",
+   "protected": false,
+   "note": "DEC-387: B428 2: related work, relation builds_on (same_matter and other are screen.case-editor.details.rel.same and .other)"
+  },
+  {
+   "key": "screen.case-editor.details.rel.responds_to",
+   "en": "Responds to",
+   "protected": false,
+   "note": "DEC-387: B428 2: related work, relation responds_to"
+  },
+  {
+   "key": "screen.case-editor.details.rel.disagrees_with",
+   "en": "Disagrees with",
+   "protected": false,
+   "note": "DEC-387: B428 2: related work, relation disagrees_with"
+  },
+  {
+   "key": "screen.case-editor.details.takeout",
+   "en": "Take out",
+   "protected": false,
+   "note": "DEC-387: B428 2: the button taking one entry out of a detail's list"
+  },
+  {
+   "key": "screen.case-editor.role.relied",
+   "en": "Relied on",
+   "protected": false,
+   "note": "DEC-387: B428 2: case editor: a finding's role, relied on (case-grammar load_bearing)"
+  },
+  {
+   "key": "screen.case-editor.role.supporting",
+   "en": "Supporting",
+   "protected": false,
+   "note": "DEC-387: B428 2: case editor: a finding's role, supporting"
+  },
+  {
+   "key": "screen.case-editor.finding.role",
+   "en": "Finding {n}: its role in the case",
+   "protected": false,
+   "note": "DEC-387: B428 2: case editor: label of a finding's role choice; {n} the finding's number (replaces the two literal rows finding_1_ and finding_2_)"
+  },
+  {
+   "key": "screen.ceremony.conf.self.tick",
+   "en": "Publish {document} as self-attested only",
+   "protected": false,
+   "note": "DEC-387: B428 2: ceremony: the tick for one unconfirmed document; {document} its title"
+  },
+  {
+   "key": "case-inputs.details.not_stated",
+   "en": "Not stated",
+   "protected": false,
+   "note": "DEC-387: B428 2: a detail not yet stated, on the editor, the ceremony and the published page (the code asks for \"Not stated.\")"
   }
  ],
  "rewrite": {
