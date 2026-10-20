@@ -75,3 +75,11 @@ Size (session_016qbXZJnFcwk8TErZNueoKY): test runs 4, module lines 3758
 ## J6 · COMPLETE
 
 FR-20 complete: R66, R67, R68 written in build/requirements/filings.md; 154/154 tests; checks clean for filings. See record J5.
+
+## J7 · COMPLETE · re B9
+
+CHANGE B9 (K4236) applied. `filingRead` (R59) now answers the draft's stored `exhibits` and `venue_standard` (R25), as stored: the parsed columns, `exhibits: []` and `venue_standard: null` for a row stored before they existed and for a communication (which has no such columns). Code: bio-plane/src/filings/index.mjs (filingRead and its comment). Test: t51.test.mjs, "R59 R25 filingRead answers the exhibits and the venue standard...": prepare then filingread (module and op) answer the same exhibits and standard; control: a row with both columns NULL, and a communication.
+Requirement line for BOB: R59's answer list gains `exhibits` and `venue_standard` (R25), as stored (K4236). The requirements file is BOB's to edit; I did not.
+Deferred: none. Found in other modules: none new.
+Tests and checks: `node --test bio-plane/test/m/filings/`: tests 155, pass 155, fail 0. format 0 failures; architecture filings 0; coverage filings 67 of 67; ownership 3 files, 0 failures. node_modules installed for the five lockfile directories that lacked them (K4113).
+Size (session_011P9WhQpNaxxpwvt6fZhKcn): test runs 2, module lines 3759
