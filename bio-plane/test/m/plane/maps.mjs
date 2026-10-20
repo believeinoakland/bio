@@ -89,6 +89,9 @@ import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
 import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { investigationOf } from "../../../src/investigation/index.mjs";
+import { investigationOps } from "../../../src/investigation/ops.mjs";
+import { captureSourcesOps } from "../../../src/capture-sources/ops.mjs";
+import { credentialsOf as captureCredentialsOf } from "../../../src/capture-sources/credentials.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const MODULE_MAPS = [
@@ -114,7 +117,7 @@ export const MODULE_MAPS = [
   ["inquiry", (c, u, b) => inquiryOps(inquiryOf(c), u, b)],
   ["leg-earning", (c, u) => legEarningOps(legEarningOf(c), u)],
   ["hypotheses", (c, u, b) => hypothesesOps(hypothesesOf(c), u, b)],
-  ["citation", (c, u) => citationOps(citationOf(c), u)],
+  ["citation", (c, u, b) => citationOps(citationOf(c), u, b)],
   ["observation-log", (c, u, b) => observationLogOps(observationLogOf(c), u, b)],
   ["run-productions", (c, u, b) => runProductionsOps(runProductionsOf(c), u, b)],
   ["entities", (c, u, b) => entitiesOps(entitiesOf(c), u, b)],
@@ -157,6 +160,9 @@ export const MODULE_MAPS = [
   ["provenance-routes", (c, u, b) => provenanceRouteOps(provenanceRoutesOf(c), u, b)],
   ["content", (c, u, b) => contentOps(contentOf(c), u, b)],
   ["capture-requests", (c, u, b) => captureRequestsOps(captureRequestsOf(c), u, b)],
+  /* R69, R70 (K4213): capture-sources' and investigation's maps, directly after capture-requests' */
+  ["capture-sources", (c, u, b) => captureSourcesOps(captureCredentialsOf(c), u, b)],
+  ["investigation", (c, u, b) => investigationOps(investigationOf(c), u, b)],
   ["reading-guides", (c, u, b) => readingGuidesOps(readingGuidesOf(c), u, b)],   /* plane R35 */
   ["host-governor", (c, u, b) => governorRoutes(governorOf(c), u, b)],
   ["ai-use", (c, u, b) => aiUseOps(aiUseOf(c), u, b)],   /* plane R31 (K2488) */
@@ -180,7 +186,7 @@ export const MODULE_MAPS = [
   ["plan-work", (c, u, b) => planWorkOps(planWorkOf(c), u, b)],   /* plane R39: directly after action-plans' */
   ["escalation", (c, u, b) => escalationOps(escalationOf(c), u, b)],
   ["monitoring", (c, u, b) => monitoringOps(monitoringOf(c), u, b)],
-  ["link-sweep", (c, u) => linkSweepOps(linkSweepOf(c), u)],
+  ["link-sweep", (c, u, b) => linkSweepOps(linkSweepOf(c), u, b)],
   ["following", (c, u, b) => followingOps(followingOf(c), u, b)],
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
   ["case-check", (c, u, b) => caseCheckOps(caseCheckOf(c), u, b)],   /* plane R39 (K2839): after review's */

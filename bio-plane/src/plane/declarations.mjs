@@ -63,16 +63,44 @@ import { DECLARED_OPS as actionPlans } from "../action-plans/index.mjs";
 import { DECLARED_OPS as planWork } from "../plan-work/index.mjs";
 import { DECLARED_OPS as following } from "../following/index.mjs";
 import { DECLARED_OPS as translations } from "../translations/index.mjs";
+import { DECLARED_OPS as memberRoster } from "../member-roster/index.mjs";
+import { DECLARED_OPS as projectRoster } from "../project-roster/index.mjs";
+import { DECLARED_OPS as credentials } from "../credentials/index.mjs";
+import { DECLARED_OPS as provenance } from "../provenance/ops.mjs";
+import { DECLARED_OPS as captureSources } from "../capture-sources/ops.mjs";
+import { DECLARED_OPS as fileSafety } from "../file-safety/index.mjs";
+import { DECLARED_OPS as connections } from "../connections/index.mjs";
+import { DECLARED_OPS as inquiry } from "../inquiry/index.mjs";
+import { DECLARED_OPS as citation } from "../citation/index.mjs";
+import { DECLARED_OPS as runProductions } from "../run-productions/index.mjs";
+import { DECLARED_OPS as captureRequests } from "../capture-requests/index.mjs";
+import { DECLARED_OPS as investigation } from "../investigation/ops.mjs";
+import { DECLARED_OPS as caseImport } from "../case-import/index.mjs";
+import { DECLARED_OPS as caseInputs } from "../case-inputs/index.mjs";
+import { DECLARED_OPS as caseAuthoring } from "../case-authoring/index.mjs";
+import { DECLARED_OPS as review } from "../review/index.mjs";
+import { DECLARED_OPS as filings } from "../filings/index.mjs";
+import { DECLARED_OPS as monitoring } from "../monitoring/index.mjs";
+import { DECLARED_OPS as linkSweep } from "../link-sweep/index.mjs";
+import { DECLARED_OPS as tasks } from "../tasks/index.mjs";
+import { DECLARED_OPS as instanceSetup } from "../setup.mjs";
+import { DECLARED_OPS as storeDoor } from "../store-door/dispatch.mjs";
 
 /* module id → that module's `DECLARED_OPS`, in `build/modules.json`'s order */
 export const OWNERS = Object.freeze({
+  "member-roster": memberRoster,
   membership: membership,
+  "project-roster": projectRoster,
   "ai-accounts": aiAccounts,
+  credentials: credentials,
   promotion: promotion,
+  provenance: provenance,
   attestation: attestation,
   "provenance-routes": provenanceRoutes,
+  "capture-sources": captureSources,
   capture: capture,
   doorbell: doorbell,
+  "file-safety": fileSafety,
   sources: sources,
   extraction: extraction,
   content: content,
@@ -80,6 +108,7 @@ export const OWNERS = Object.freeze({
   events: events,
   lines: lines,
   "local-facts": localFacts,
+  connections: connections,
   "observation-log": observationLog,
   standards: standards,
   progressions: progressions,
@@ -91,15 +120,20 @@ export const OWNERS = Object.freeze({
   retrieval: retrieval,
   calculations: calculations,
   workbooks: workbooks,
+  inquiry: inquiry,
   hypotheses: hypotheses,
+  citation: citation,
   "basis-versions": basisVersions,
   strength: strength,
   contradiction: contradiction,
   "ai-use": aiUse,
   "ai-runs": aiRuns,
+  "run-productions": runProductions,
+  "capture-requests": captureRequests,
   "reading-guides": readingGuides,
   answers: answers,
   intent: intent,
+  investigation: investigation,
   reevaluation: reevaluation,
   "corpus-export": corpusExport,
   "case-carriage": caseCarriage,
@@ -109,17 +143,27 @@ export const OWNERS = Object.freeze({
   "public-read": publicRead,
   "network-notices": networkNotices,
   ratification: ratification,
+  "case-import": caseImport,
+  "case-inputs": caseInputs,
+  "case-authoring": caseAuthoring,
+  review: review,
   conformance: conformance,
   consequences: consequences,
   "action-records": actionRecords,
   actions: actions,
   "action-holds": actionHolds,
   "action-clocks": actionClocks,
+  filings: filings,
   escalation: escalation,
   "action-plans": actionPlans,
   "plan-work": planWork,
+  monitoring: monitoring,
   following: following,
+  "link-sweep": linkSweep,
+  tasks: tasks,
   translations: translations,
+  "instance-setup": instanceSetup,
+  "store-door": storeDoor,
   plane,
 });
 

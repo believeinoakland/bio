@@ -13,7 +13,7 @@ import { actionRepliesOf, actionRepliesOps } from "../action-replies/index.mjs";
 import { planWorkOf, planWorkOps } from "../plan-work/index.mjs";
 import { caseCheckOf, caseCheckOps } from "../case-check/index.mjs";
 import { localFactsOf, localFactsOps } from "../local-facts/index.mjs";
-import { caseInputsOf, caseInputsOps } from "../case-inputs/index.mjs";
+import { caseInputsOf, caseInputsOps, registerCaseInputsPublicReads } from "../case-inputs/index.mjs";
 import { signinDoorOps } from "../signin-door/ops.mjs";
 import { actionRecordsOf, actionRecordsOps } from "../action-records/index.mjs";
 import { filingTemplatesOf, filingTemplatesOps } from "../filing-templates/index.mjs";
@@ -79,6 +79,7 @@ import { stepsOf } from "../steps/index.mjs";
 import { readingGuidesOf, readingGuidesOps } from "../reading-guides/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
+import { investigationOps } from "../investigation/ops.mjs";
 import { publishScheduleOps } from "../publish-schedule/index.mjs";
 import { controlPlaneOwnerOps } from "../control-plane/owner-ops.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
@@ -116,6 +117,7 @@ import { archiveUnpackConsumer } from "./unpack.mjs";
 import { transcriberOf } from "./transcribe.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
+import { captureSourcesOps } from "../capture-sources/ops.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
          ratificationWorker, frontDoorFinder, frontDoorPointer, projectReachReaders } from "./wiring.mjs";
 
@@ -331,6 +333,7 @@ export class Store extends DurableObject {
        (whole store only, its R13) and starts, filling accepted-work's registration (its R16), `moves` among it (R20;
        accepted-work R8), before the first request. */
     registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
+    registerCaseInputsPublicReads(ctx, { publicRead: publicReadOf(ctx) });   /* case-inputs R24: `casedetailspublic` */
     caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
     /* R18 (N529; K1333): case-disclosures, at its place after case-import and before case-authoring in the modules'
        order, built here with the attestation instance above, so case-authoring's lazy getter finds that one instance per
@@ -770,7 +773,7 @@ export class Store extends DurableObject {
       /* K1619: `basis`, `restson`, `earnedbasis` are leg-earning's, after inquiry's delegating entries so its own win. */
       ...legEarningOps(legEarningOf(ctx), url),
       ...hypothesesOps(hypothesesOf(ctx), url, body),   /* K1607 */
-      ...citationOps(citationOf(ctx), url),
+      ...citationOps(citationOf(ctx), url, body),
       ...observationLogOps(observationLogOf(ctx), url, body),
       ...runProductionsOps(runProductionsOf(ctx), url, body),
       ...entitiesOps(entitiesOf(ctx), url, body),
@@ -828,6 +831,9 @@ export class Store extends DurableObject {
       ...provenanceRouteOps(provenanceRoutesOf(ctx), url, body),
       ...contentOps(contentOf(ctx), url, body),
       ...captureRequestsOps(captureRequestsOf(ctx), url, body),
+      /* R69, R70 (T51; K4213): capture-sources' credential ops (over the instance start builds with the seal key and the own hosts) and investigation's `projectclose`, after capture-requests' map. */
+      ...captureSourcesOps(captureCredentialsOf(ctx), url, body),
+      ...investigationOps(investigationOf(ctx), url, body),
       /* R35 (K2567): reading-guides' ops, after capture-requests' map, its place in the modules' order. steps',
          investigation's and question-explorer's ops are control-plane R71's own map (K2560), not routed here. */
       ...readingGuidesOps(readingGuidesOf(ctx), url, body),
@@ -861,7 +867,7 @@ export class Store extends DurableObject {
       ...planWorkOps(planWorkOf(ctx), url, body),   /* R39 (T45): plan-work's ops, directly after action-plans' */
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),
-      ...linkSweepOps(linkSweepOf(ctx), url),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
+      ...linkSweepOps(linkSweepOf(ctx), url, body),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
       ...followingOps(followingOf(ctx), url, body),   /* R21 (T33-79) */
       ...reviewOps(reviewOf(ctx), url, body),
       /* R39 (T45; K2839): case-check's `publishcheck` (graded as publish) and `casecheck`, after review's map. */
