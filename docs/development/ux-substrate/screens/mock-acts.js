@@ -301,7 +301,7 @@ const ACT_HELP = {
   explorepreset: 'Uses a ready-made search, such as "money from a vendor to an official".',
   exploreverify: 'Checks each step of a chain against its sources and grades it.',
   connectionassert: 'Attaches a source to a step someone declared, so the step rests on evidence.',
-  recordline: 'Adds a party to the proceeding by its role, citing where it appears.',
+  recordline: 'Records a line between two entries, citing where it appears: a party to a proceeding by its role, or an office that keeps or answers for the records on a subject.',
   declare: 'Holds an order\'s requirements as obligations, so the team can check whether they are met and by when.',
   courtlink: 'Links a decision to the law or order it interprets, citing the passage.',
   clockadopt: 'Confirms the due date, so reminders and the queue use it.',
