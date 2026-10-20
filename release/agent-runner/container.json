@@ -1,8 +1,9 @@
 {
   "class_name": "AgentRunner",
-  "image": "ghcr.io/believeinoakland/agent-runner@sha256:03dcdf70efee6f011a425294b80710ef8acdcf0d030541908772fad183f46d1b",
+  "image": "docker.io/civicsmith/agent-runner@sha256:78b09547d8a2e9962f7d1ee373e5f9d80c0e730a8fc97613b3599a92c81bbb63",
   "scheduling_policy": "default",
   "max_instances": 10,
+  "instance_type": "standard-1",
   "bind": [
     {
       "member": "agent-worker",

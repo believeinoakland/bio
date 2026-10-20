@@ -11,7 +11,7 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // The release's version site (resolve-version ARM 7c), as every member's: a stamp, not a credential or address.
-  "vars": { "VERSION": "0.85.0" },
+  "vars": { "VERSION": "0.86.0" },
 
   // Reachable only through the Durable Object binding of its caller (agent-worker's RUNNER, script `agent-runner`):
   // no public address of its own.
@@ -26,7 +26,7 @@
   "containers": [
     {
       "class_name": "AgentRunner",
-      "image": "docker.io/civicsmith/agent-runner@sha256:954ac088c8e758d7ec18c4a9ef4e78bf3fc2cac327ac9536a4162893010014ec",
+      "image": "docker.io/civicsmith/agent-runner@sha256:78b09547d8a2e9962f7d1ee373e5f9d80c0e730a8fc97613b3599a92c81bbb63",
       // R33: 1/2 vCPU, 4 GiB. At the default size (1/16 vCPU, 256 MiB) one conversation's start-up took 27 s (study-assistant-link T1-T2).
       "instance_type": "standard-1",
       "max_instances": 10

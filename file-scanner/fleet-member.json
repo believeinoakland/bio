@@ -24,7 +24,8 @@
       "class_name": "FileScanner",
       "image": {
         "repository": "docker.io/civicsmith/file-scanner-scanner",
-        "digest": "sha256:38d314ed955e0af0c3f5379ecb609c718b562911af80e34cd787d0c3bc0a76fd",
+        "digest": "sha256:293e2fce0a0de51e2753323d270c3de209c295ecd6f1dde0a37fd977dad487d5",
+        "source_sha256": "99df90a8475a85f688d8f066028f04aaf59fcb60915d5ac9f17951c7a58f0c85",
         "platform": "linux/amd64",
         "port": 8080,
         "schedulingPolicy": "default",
@@ -53,7 +54,8 @@
       "class_name": "SafeViewRenderer",
       "image": {
         "repository": "docker.io/civicsmith/file-scanner-renderer",
-        "digest": "sha256:27941d2aab6f9fd11e308ff4d3715674d38f268be7a6dcf3d7be8e398fa5ae9c",
+        "digest": "sha256:8817aefd13a90bbf25c59914cd70d701536ec8b245a9cdb39939a0508cb05bf9",
+        "source_sha256": "d40851be1a9e49a54e888694fc7f5cff4aa88cd3a90b11eee7f1ab0a9a2500fd",
         "platform": "linux/amd64",
         "port": 8080,
         "schedulingPolicy": "default",

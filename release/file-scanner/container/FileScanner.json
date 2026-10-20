@@ -1,8 +1,9 @@
 {
   "class_name": "FileScanner",
-  "image": "ghcr.io/believeinoakland/file-scanner-scanner@sha256:2af812a3bde157731a05a827c035f49e8faf83ad29e6cbbf4ff440844b6e5db8",
+  "image": "docker.io/civicsmith/file-scanner-scanner@sha256:293e2fce0a0de51e2753323d270c3de209c295ecd6f1dde0a37fd977dad487d5",
   "scheduling_policy": "default",
   "max_instances": 3,
+  "instance_type": "standard-1",
   "bind": [
     {
       "member": "file-scanner",
