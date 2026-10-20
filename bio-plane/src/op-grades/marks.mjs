@@ -22,13 +22,18 @@
  * (R46; T51 fix round) Re-taken at `MARKS_KIT_COMMIT` `e6d16d8f53`, the design as `tranche/T51` holds it (DEC-382): the registry lists 39
  * more rungless acts than at `7be06eb4cb` (the new screens' reads and the bias, case-details, rerun, task, source-login, origin and close acts), each added
  * with the kit's weight or the default; no earlier entry changed weight and none is dropped. An op that its owner later
- * declares a rung (`registerDeclaredOps`, R49) has a rung, and the shell draws that: the entry is then unread. */
+ * declares a rung (`registerDeclaredOps`, R49) has a rung, and the shell draws that: the entry is then unread.
+ *
+ * (R46; T51 fix round, K4206) Re-taken at `MARKS_KIT_COMMIT` `aa8bdcd0b4`, the design as `tranche/T51` holds it after DEC-386 (U419,
+ * K4204): the registry lists one more rungless act than at `e6d16d8f53`, `expertisewithdraw` (the kit's weight 2, Reasoned); no
+ * earlier entry changed weight and none is dropped. */
 
-/* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`e6d16d8f53`, R46, re-taken in the
-   fix round, T51 FR-03), which moved both files on from `7be06eb4cb` (the design's last merge into `tranche/T50`, K3750) */
+/* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`aa8bdcd0b4`, R46, re-taken in the
+   fix round, K4206), which moved both files on from `e6d16d8f53` (the fix round's first re-take, K4193) and `7be06eb4cb` (the design's
+   last merge into `tranche/T50`, K3750) */
 import { localize } from "../setup-words/index.mjs";
 
-export const MARKS_KIT_COMMIT = "e6d16d8f53";
+export const MARKS_KIT_COMMIT = "aa8bdcd0b4";
 
 const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
@@ -73,6 +78,7 @@ const ROWS = [
   ["enroll", "Reasoned", "kit"],
   ["expertiseconfirm", "Reasoned", "kit"],
   ["expertisedeclare", "Reversible", "kit"],
+  ["expertisewithdraw", "Reasoned", "kit"],
   ["explore", "Reversible", "kit"],
   ["exploreapprove", "Reasoned", "kit"],
   ["explorepreset", "Reversible", "kit"],

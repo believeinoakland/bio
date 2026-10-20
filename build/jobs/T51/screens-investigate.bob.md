@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -96,3 +96,8 @@ CHANGE (K4232): action-clocks is merged: `NO_SUCH_RULE` now answers `deadlines: 
 CHANGE (K4245): SCREENS-INVESTIGATE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
 Entry: R51. `standardinforce` is declared and drawn (op-declarations R82, merged), but `test/m/screens-investigate/standard.test.mjs:89` ("a date sends standardinforce with the declared fields") fails on a field `op: 'standardinforce'` among the sent fields. Find whether your drawing sends `op` as a field (fix the drawing: the op is the request's, never a body field) or your test reads it from the wrong place (fix the test); the declaration (standards' `DECLARED_OPS`) is the truth. Then run your suite whole. Requirement lines, if any change, for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B13 · CHANGE
+
+CHANGE (K4248): SCREENS-INVESTIGATE, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours: (B419 2) the standard's in-force read: `screen.standard.inforce.state.*`, `screen.standard.inforce.result.line`, `screen.standard.inforce.day.label` in place of `act.standardinforce.label.standard`; (B423) the person screen's keeper rows `screen.person.keeper.*` and `linewithdraw` among person's acts ("Withdraw this statement, with a reason"; lines R8).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model haiku, medium effort; workers haiku low for mechanical edits.

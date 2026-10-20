@@ -74,7 +74,7 @@ test("R11, R3: a store written before the two modules opens with their tables, a
 });
 
 /* Instants and minted ids differ between two objects; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 test("R11, R5: every op of local-facts' and filing-templates' maps is in the route map and answers through control-plane's door what its own map answers called directly", async () => {
   const u = new URL("http://do/");

@@ -6,6 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { hasWord, word, WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { collectDeclaredOps } from "./declared.mjs";
 
 let n = 0;
 const load = () => import(`../../../src/op-grades/index.mjs?instance=${n++}`);
@@ -228,4 +229,25 @@ test("R50: a refused registration leaves the module open, so the corrected rows 
   assert.throws(() => m.registerDeclaredOps({ fixture: { fxbad: row("heavy", KEY_A) } }), refused("DECLARED_OP_BAD_WEIGHT", "fxbad"));
   assert.doesNotThrow(() => m.registerDeclaredOps({ fixture: { fxbad: row("reversible", KEY_A) } }));
   assert.equal(m.RUNGS.fxbad, "reversible");
+});
+
+test("R50 (B21): registering every owner's DECLARED_OPS meets no DECLARED_OP_DISAGREES and no DECLARED_OP_DUPLICATE; a hand row follows its owner's declaration (K4168)", async () => {
+  const { ops, owners, duplicates } = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
+  assert.deepEqual(duplicates, []);
+  const byOwner = {};
+  for (const [op, d] of Object.entries(ops)) (byOwner[owners[op]] ??= {})[op] = d;
+  /* An owner's own row the module cannot grade (a write-less op weighed as an act, `rung-on-read`) is that owner's to correct
+     and is reported to BOB; the op is set aside so the rest are still checked against their hand rows. */
+  const owed = [];
+  for (let i = 0; i < Object.keys(ops).length; i++) {
+    const m = await load();
+    try { m.registerDeclaredOps(byOwner); break; } catch (e) {
+      assert.notEqual(e.code, "DECLARED_OP_DISAGREES", e.message);
+      assert.equal(e.code, "DECLARED_OP_BAD_WEIGHT", e.message);
+      assert.ok(e.message.includes("rung-on-read"), e.message);
+      owed.push(e.op);
+      delete byOwner[owners[e.op]][e.op];
+    }
+  }
+  assert.deepEqual(owed.filter((op) => !["sweeps", "groupdescriptiondraft"].includes(op)), [], "no other owner row is set aside");
 });
