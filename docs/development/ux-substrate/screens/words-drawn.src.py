@@ -4729,6 +4729,13 @@ W.append(dict(key='document.kind.zip', en='ZIP archive', protected=False, note='
 W.append(dict(key='document.kind.text', en='plain-text file', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; a text/plain capture, which the registry leaves undetermined'))
 W.append(dict(key='document.kind.undetermined', en='file', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the fallback for a format the registry does not name ("the file exactly as captured")'))
 
+# DEC-374 imported: B398 C51
+W.append(dict(key='screen.imported.accepted.heading', en='Accepted by your team', protected=False, note='DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; the section listing what the team accepted'))
+W.append(dict(key='screen.imported.accepted.meta', en='accepted by {name}, {date}', protected=False, note='DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; under an accepted finding; {name} the member, {date} like October 3'))
+W.append(dict(key='screen.imported.withdraw.label', en='Why your team withdraws its acceptance', protected=False, note='DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; field: reason'))
+W.append(dict(key='screen.imported.withdraw.help', en='From now on the finding no longer counts for your team. The acceptance stays in the history, beside your reason, and work that relied on it is marked for a fresh look.', protected=False, note='DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; the reason field, its help'))
+W.append(dict(key='screen.imported.withdraw.button', en='Withdraw this acceptance, with a reason', protected=False, note='DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; the act'))
+W.append(dict(key='screen.imported.withdraw.none.summary', en='When nothing of it is accepted', protected=False, note='DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; summary over refusal.IMPORT_NOTHING_ACCEPTED'))
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

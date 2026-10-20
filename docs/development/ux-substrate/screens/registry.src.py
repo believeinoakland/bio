@@ -169,7 +169,7 @@ screen('review-outside', 'A review copy, from outside', 'published', 'What an ou
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the team.',
   [('verify','Check the signature'),('publishedcase','Read the case'),('owed:pubfloorset DEC-330','Show only findings this strong'),('owed:pubfloorclear DEC-330','Back to the whole case'),('owed:pubprint DEC-330','Print the case')], [26])
 screen('imported', 'Another team\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',
-  [('caseimport','Import a case'),('importaccept','Accept what recreated'),('importflag','Flag an issue'),('importwatch','Watch the publisher\'s docket')], [25])
+  [('caseimport','Import a case'),('importaccept','Accept what recreated'),('importflag','Flag an issue'),('importwatch','Watch the publisher\'s docket'),('importacceptwithdraw','Withdraw an acceptance, with a reason')], [25])
 screen('docket', 'Docket', 'working', 'The case\'s public docket: corrections, withdrawals, court orders.',
   [('docketfile','File a docket entry'),('docketpost','Post it')], [23,24])
 screen('docket-public', 'A case\'s docket, from outside', 'published', 'A published case\'s docket, read without an account (DEC-313; public-read R21).',

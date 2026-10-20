@@ -359,6 +359,7 @@ const ACT_HELP = {
   publishedcase: 'Reads the published case.',
   caseimport: 'Imports another team\'s published case and recreates it here, finding by finding.',
   importaccept: 'Accepts what recreated, with a reason, so your team can rely on it.',
+  importacceptwithdraw: 'Withdraws your team\'s acceptance, with a reason; it stays in the history, and work that relied on it gets a fresh look.',
   importflag: 'Flags an issue in the imported case, kept within your team.',
   importwatch: 'Watches the other team\'s docket for corrections to the case.',
   docketfile: 'Files a docket entry: a correction, withdrawal or court order about a published case.',

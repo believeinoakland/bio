@@ -2133,6 +2133,9 @@ SCR.imported = c => { const st = ({ list: 'b', none: 'c' })[c.v] || 'a'; const s
     row(I('finding'), '<span class="rec">The shortfall was not reported to council</span>', `<span class="cs-recreate" data-r="part">${I('elsewhere')}Recreated in part</span>`) +
     row(I('finding'), '<span class="rec">The 2025 calculation of arrears</span>', `<span class="cs-recreate" data-r="no">${I('refused')}Did not recreate</span>`))}
   ${acts(btn('caseimport', 'Import a case'), btn('importaccept', 'Accept what recreated, with a reason', { tone: 'primary' }), btn('importflag', 'Flag an issue'), btn('importwatch', 'Watch the publisher\'s docket'))}
+  ${sec('Accepted by your team', `${sheet(row(I('accepted'), '<span class="rec">Port lease revenue fell short of the adopted budget in three years</span><span class="meta">accepted by <span class="mk-data">Mai</span>, <span class="mk-data">October 3</span> · <span class="rec">"We recreated it from the Port\'s own budget books."</span></span>', ''))}
+   ${field('mk-impwd', 'Why your team withdraws its acceptance', '', { act: 'importacceptwithdraw', help: 'From now on the finding no longer counts for your team. The acceptance stays in the history, beside your reason, and work that relied on it is marked for a fresh look.' })}${acts(btn('importacceptwithdraw', 'Withdraw this acceptance, with a reason'))}
+   <details class="mk-details"><summary>When nothing of it is accepted</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>No acceptance of this imported edition is in force, so there is nothing to withdraw. Nothing was written.</span></div></details>`)}
   </div>` }; };
 
 SCR['docket-public'] = c => ({ frame: 'published', title: 'The Coliseum lease · Docket', main: `
