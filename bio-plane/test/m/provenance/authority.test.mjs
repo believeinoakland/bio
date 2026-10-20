@@ -72,7 +72,7 @@ test("R65: each refusal carries its catalogue row and writes nothing, and the sa
   rowOf(decide(w, a, { basis: "", authority: "" }), "AUTHORITY_NO_BASIS");
   /* Control: the same calls by a member, well formed, are accepted. */
   assert.equal(decide(w, a).ok, true);
-  assert.equal(decide(w, a, { outcome: "undetermined_after_review", authority: undefined, basis: "looked and could not tell" }).ok, true);
+  assert.equal(decide(w, a, { outcome: "undetermined_after_review", authority: undefined, basis: "reviewed the file and found nothing naming an issuer" }).ok, true);
   assert.equal(w.count("authority_decisions"), 2);
 });
 

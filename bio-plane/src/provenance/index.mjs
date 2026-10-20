@@ -1196,9 +1196,10 @@ class Provenance {
        The door (C-103.8): a named member decides. */
     if (!who || isMachineIdentity(who))
       return actRefusal("AUTHORITY_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. Who issued a document is a named member's attributed `
-              + "decision, never a machine's: a machine may propose an issuer and a member decides"
-            : "deciding who issued a document is a named member's act, and this call carries nobody");
+        who ? localize("provenance.index.who_is_a_machine_credential",
+                       "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides", { who: String(who.slice(0, 60)) })
+            : localize("provenance.index.deciding_who_issued_a_document",
+                       "deciding who issued a document is a named member's act, and this call carries nobody"));
     /* END DEC-49 REGION is-authority-act */
     const bundleId = typeof bundle === "string" ? bundle.trim() : "";
     const info = bundleId ? this.#record.bundleInfo(bundleId) : null;
@@ -1210,16 +1211,17 @@ class Provenance {
        The document (C-103.9): a capture the register holds in this bundle. */
     if (!sha || !this.#one(`SELECT capture_sha FROM register WHERE capture_sha = ? AND bundle_id = ?`, sha, bundleId))
       return actRefusal("AUTHORITY_NOT_A_DOCUMENT",
-        `${sha ? `capture ${sha.slice(0, 16)}…` : "no capture"} is not a document this record's register holds in ${bundleId}`, { bundleId });
+        localize("provenance.index.capture_is_not_a_document", "capture {capture} is not a document this record's register holds in {bundle}",
+                 { capture: String(sha ? `${sha.slice(0, 16)}…` : "(none)"), bundle: String(bundleId) }), { bundleId });
     /* END DEC-49 REGION is-authority-document */
     const oneLine = (v) => String(v ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
     const why = oneLine(basis), issuer = oneLine(authority);
     /* DEC-49 REGION is-authority-statement
        The statement (C-103.10–C-103.12): how the member knows, the issuer when there is one, and which of the two outcomes. */
     if (!why || why.length > 2000)
-      return actRefusal("AUTHORITY_NO_BASIS", "say how you know, or what you tried, in at most 2000 characters");
+      return actRefusal("AUTHORITY_NO_BASIS", localize("provenance.index.say_how_you_know_or", "say how you know, or what you tried, in at most 2000 characters"));
     if (outcome === "determined" && (!issuer || issuer.length > 500))
-      return actRefusal("AUTHORITY_NO_ISSUER", "name the party that issued the document, in at most 500 characters");
+      return actRefusal("AUTHORITY_NO_ISSUER", localize("provenance.index.name_the_party_that_issued", "name the party that issued the document, in at most 500 characters"));
     if (outcome !== "determined" && outcome !== "undetermined_after_review")
       return actRefusal("AUTHORITY_OUTCOME_UNKNOWN", "the outcome is 'determined' or 'undetermined_after_review'");
     /* END DEC-49 REGION is-authority-statement */
