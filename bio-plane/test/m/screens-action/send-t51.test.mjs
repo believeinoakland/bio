@@ -283,6 +283,19 @@ test("R49: where the venue's standard is not stated its fold is drawn and the gr
   assert.ok(ops(empty).includes("filingapprove"));
 });
 
+test("R49 (filings R59, R25): after a reload the exhibits and the venue's standard are drawn from the stored draft `filingread` answers; control: a row stored before they existed (exhibits [] and no standard) draws no section", async () => {
+  const reloaded = await open(STEP2, { ...DATA_PLANE, filingsfor: ok(FILINGS([draft()])), filingread: ok(READ({ exhibits: EXHIBITS, venue_standard: PREPARED().venue_standard })) });
+  assert.equal(reloaded.byOp("filingread").length, 1, "the draft is read, not prepared again");
+  said(reloaded, "screen.start-send.exhibits.heading");
+  const rows = main(reloaded).querySelectorAll("section.cs-section").find((s) => s.querySelector("h2").textContent.trim() === W("screen.start-send.exhibits.heading")).querySelectorAll(".cs-row");
+  assert.equal(rows.length, 4);
+  assert.ok(rows[1].textContent.includes(W("screen.start-send.exhibits.contestable1")));
+  assert.ok(rows[2].textContent.includes(W("screen.start-send.exhibits.below1")));
+  assert.equal(button(reloaded, "filingapprove").disabled, false, "Approve stays enabled");
+  const old = await open(STEP2, { ...DATA_PLANE, filingsfor: ok(FILINGS([draft()])), filingread: ok(READ({ exhibits: [], venue_standard: null })) });
+  unsaid(old, "screen.start-send.exhibits.heading");
+});
+
 /* ---------- registry: writinghelp on the own-words fields ---------- */
 
 test("R3, R41: start-send's acts are exactly its registry acts; writing help is drawn beside the own-words fields only while the assistant is reachable and sends the declared names", async () => {
