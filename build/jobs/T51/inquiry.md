@@ -100,3 +100,22 @@ B4 (FR-45) applied, one part waiting on FR-44. Commits a349296263 and its follow
 - I did not run `checks/run.mjs` whole nor `setup-words build --check` yet: they come with COMPLETE.
 
 Size (session_01HHv6yiUNNMusUY87v5exzx): test runs 9, module lines 3835
+
+## J5 · COMPLETE
+
+FR-45 complete after restart (INQUIRY #23, session_01CYcxZgZhrDnqWKu6J5KF4X). `inquiry-grammar` R68 is on tranche/T51 and merged in (tranche head e67a3a1c3c).
+
+Entries applied
+- Entry 1 (L9, K4194): a partition labels supporting legs only; a partition naming a cutting leg is refused `BASIS_REFUSED` with the named finding; `divide` carries a group whole to a child holding every supporting leg. Tests: `cutting-legs.test.mjs`, `divide.test.mjs`.
+- Entry 2 (K4202): `DECLARED_OPS` with `inquirydivide` and `inquiryground`. Test: `declared-ops.test.mjs`.
+- Requirement lines written in `build/requirements/inquiry.md` (K4210): R85 and R86 new (met), R34 amended (cutting legs travel apportionment and projection, not grounds), Status line updated. The ids are R85 and R86 as the START gave; the file's own next free id was R66.
+
+Deferred: none. Flaws found in the module: none.
+Found in another module: `strength` arithmetic must leave `cuts_against` legs out of the population (already confirmed and routed by B7).
+
+Tests and checks
+- `node --test bio-plane/test/m/inquiry/`: tests 226, pass 225, fail 0, todo 1.
+- format: 175 modules, 175 requirements files; 0 failures. architecture inquiry: 41 product files, 142 relative imports; 0 failures. coverage inquiry: 58 of 58 live requirement ids named by a test; 0 failures. ownership inquiry tranche/T51 job/T51/inquiry: 5 files changed; 0 failures.
+- `checks/run.mjs` whole: format and architecture 0 failures; words inline 0, plain 0, missingkey 0 (nothing for inquiry); the 7 coverage failures (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring) and 7 testcopy failures (op-grades) are other modules', none in my files.
+
+Size (session_01CYcxZgZhrDnqWKu6J5KF4X): test runs 4, module lines 3835
