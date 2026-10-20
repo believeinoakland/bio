@@ -100,7 +100,7 @@ screen('objective', 'Objective', 'working', 'A project\'s objective on its own p
 screen('projectai', 'AI for this project', 'working', 'Who pays for the assistant\'s work in a project: its own API key, or its sole member\'s sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project\'s material away from AI; every change, seen by every owner (DEC-188).',
   [('projectkeyset','Hold the project\'s API key'),('projectsigninset','Use your own sign-in for the project'),('projectaccountswitch','Switch the project\'s account on or off'),('projectaccountremove','Remove the project\'s account'),('projectkeynoticeseen','Read what the project\'s key means'),('accountusesset','Set what the project\'s account pays for'),('ailimitset','Set a limit on the project\'s account'),('projectaikeepaway','Keep the project\'s material away from AI, with a reason'),('projectjoin','Join')], [])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; what each cited passage carries; strength against the bar; its readings and the one a project stands on; what relies on it; concluding.',
-  [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('casedraft','Prepare a case from this'),('withdrawconclusion','Withdraw the conclusion'),
+  [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('casedraft','Prepare a case from this'),('withdrawconclusion','Withdraw the conclusion'),('reopen','Reopen this finding, with a reason'),
    ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
    ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source'),
    ('inquiryground','Say what each passage carries'),('versionaccept','Accept this reading'),('versionhide','Hide a reading'),('versionconsider','Weigh a reading'),
@@ -173,7 +173,7 @@ screen('published', 'Published case', 'published', 'The public page: findings, s
 screen('imported', 'Another team\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',
   [('caseimport','Import a case'),('importaccept','Accept what recreated'),('importflag','Flag an issue'),('importwatch','Watch the publisher\'s docket'),('importacceptwithdraw','Withdraw an acceptance, with a reason')], [25])
 screen('docket', 'Docket', 'working', 'The case\'s public docket: corrections, withdrawals, court orders.',
-  [('docketfile','File a docket entry'),('docketpost','Post it')], [23,24])
+  [('docketfile','File a docket entry'),('docketpost','Post it'),('casedraft','Start the next edition')], [23,24])
 screen('docket-public', 'A case\'s docket, from outside', 'published', 'A published case\'s docket, read without an account (DEC-313; public-read R21).',
   [], [26])
 

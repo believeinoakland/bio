@@ -258,6 +258,7 @@ const ACT_HELP = {
   reinstate: 'Puts a removed citation back on the question.',
   narrow: 'Narrows the question to what the record can answer, with the reason. The wider question is kept.',
   conclude: 'Records the team\'s answer to the question, from what it rests on. It can be withdrawn later, with a reason.',
+  reopen: 'Takes a finding back from concluded, with a reason, so the team can work on it again and publish a correction as the next edition.',
   withdrawconclusion: 'Withdraws the question\'s answer, with a reason, for example after new evidence.',
   hypothesishold: 'Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.',
   instance: 'Shows one matter followed through a progression: each step in order with the documents threaded to it, how sure the chain is, and any finding.',
