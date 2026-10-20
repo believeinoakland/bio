@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01EEx7L4P9qQ1VGojBhH5rv5 · depth 2 · WORKING · handled B4
+**Status** · session_01EEx7L4P9qQ1VGojBhH5rv5 · depth 2 · WAITING ON BOB (J5) · handled B4
 
 ## J1 · COMPLETE
 
