@@ -181,3 +181,32 @@ Three things in other modules, found while doing B14, B15 and B17 (op-declaratio
 - From the process repository: `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `checks/coverage.mjs /home/user/bio op-declarations`: 82 of 82 live requirement ids named, 0 failures. `checks/words.mjs /home/user/bio op-declarations`: 0 failures (the product-wide run shows 27 words failures, all in op-grades, strength). `checks/architecture.mjs /home/user/bio op-declarations`: 1 failure, the missing `test-support` edge (REPORT 1). `checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 14 files changed, 1 failure, the requirements file (accepted at the merge, B13).
 
 Size (session_01FT9GgSLGmUqkGFtMCTxFqA): test runs 24, module lines 3458
+
+## J17 · BLOCKED
+
+BLOCKED. Cause: context (reading). Stopping before any change; nothing is edited.
+
+**Done this session (depth 2, session_01EXU2JECeQbjRAzyd8tuBGX)**
+- Attached civicos-process; read roles/JOB.md whole; read the job record and the inbox. The remote record was ahead of my local copy (J16, handled B17); B18 was the only unread entry.
+- Checked out `job/T51/op-declarations` at its remote head and merged `tranche/T51` into it (a fast-forward to `1f82676f5d`). Recorded the start with `mail start` (`0248aae58a`).
+- Located the code for B18, by grep only (not yet read whole):
+  - `ACT_HELP_ABSENT`: `src/op-declarations/index.mjs:2643`; `strengthbarset` is named at `:2649`, and the 69 design ops are named in the same groups.
+  - `OP_ALIASES`: `src/op-declarations/index.mjs:94`; `strengthbarset: "strengthbar"` at `:99`.
+  - The R34 partition test: `test/m/op-declarations/t36.test.mjs:299`. It already reads `explained()` from `test/m/op-declarations/help.mjs`, which reads affordances' `ACT_HELP`; the hand list is the `ACT_HELP_ABSENT` groups.
+  - Affordances' `T51_DESIGN_OPS` is at `bio-plane/src/affordances/act-help.mjs:42`, and `ACT_HELP` at `:230`.
+- Read whole: `build/requirements/op-declarations.md` lines 1–175 of 380.
+
+**Not yet read whole (the reason for this BLOCKED)**
+- `build/requirements/op-declarations.md` lines 176–380 (includes R21's alias list and R34's text).
+- `src/op-declarations/index.mjs` (about 2,900 lines; I have only grepped it).
+- `src/affordances/act-help.mjs` (231 lines), `test/m/op-declarations/t34.test.mjs` (R21 alias tests), `test/m/op-declarations/t36.test.mjs` (R34 partition test).
+My context is past the half-window line; reading these now would not fit, so I stop here (JOB.md, step 1).
+
+**Next step for a fresh session**
+1. Read whole: requirements 176–380; `index.mjs`; `act-help.mjs`; `t34.test.mjs`; `t36.test.mjs`.
+2. Install `node_modules` where a tracked lockfile lacks one (K4113).
+3. Entry 1 (B18 (1)): drop from `ACT_HELP_ABSENT`'s grounds the 69 ops affordances now holds in `ACT_HELP` (its `T51_DESIGN_OPS`, plus `accountdrafts` and `accountpropose`). Make the partition test read affordances' `ACT_HELP` (the `explained()` path), never a hand list. Write the test first and see it fail.
+4. Entry 2 (B18 (2)): remove `strengthbarset` from `OP_ALIASES` and from R21's list (26 aliases). A test with a control.
+5. Run the suite, `checks/run.mjs`, the ownership check; post COMPLETE with the requirement lines for BOB (R21 and R34 amended).
+
+No requirement line has been written yet. The record's cursor is B17; B18 is not yet handled.
