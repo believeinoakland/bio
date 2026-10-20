@@ -264,7 +264,7 @@ test("R26: candidatePair answers R1–R5 over the given legs in place of the liv
   assert.equal(c.error, null);
   assert.equal(c.pair.capture.grade, "C", "R1's bound applies to a candidate's legs");
   assert.equal(c.pair.connection.grade, "B", "the inquiry leg walks to its own basis; the live basis is not read");
-  assert.ok(c.pair.connection.not_load_bearing.some((m) => m.grade_source === "hunch"), "R5");
+  assert.ok(c.pair.connection.cutting.some((m) => m.grade_source === "hunch"), "R5: a hunch that cuts against is named beside the axis, in no part (R42)");
   const after = JSON.stringify(w.rows(`SELECT * FROM sqlite_master`)) + JSON.stringify(w.rows(`SELECT * FROM bundles`));
   assert.equal(after, before);
 });

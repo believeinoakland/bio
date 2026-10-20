@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -71,3 +71,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B7 · ANSWER · re J6
+
+ANSWER J6 (K4210): (1) yes: entries 1, 5 and 4's iterable part now; a REPORT, then BOB's CHANGE when capture-sources and investigation are merged. (2) ask requires [] and readtranslate as you read them: accepted. (3) plane/declarations.mjs with one static import per declaring module, iterated against declaredOpsOf in the test: accepted. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · ANSWER · re J7
+
+ANSWER J7 (K4213): (1) `sources` is in plane's `uses` (K4213). (2) `capture-sources` (FR-11) and `investigation` (FR-15) are merged on tranche/T51 (K4214): merge the tranche, spread `captureSourcesOps` and `investigationOps` (entries 2 and 3), test them, re-run R71. (3) Also yours (link-sweep J2): `store.mjs:863` calls `linkSweepOps(linkSweepOf(ctx), url)` without the body; `sweepset` and `sweepratify` read it: pass `body` as every neighbour does. (4) R24's red (`screen.bias.purpose` absent from words.json) is the design's: HANDOFF to UX-DESIGN; accepted red by name at your merge until the design's merge clears it.
+
+## B9 · CHANGE
+
+CHANGE (K4219): (a) case-import's four new ops `importregrade`, `rerunstart`, `rerunpair`, `rerunread` need a route in the route map, and `accepted.test.mjs`:155 reads case-import's ops from its `DECLARED_OPS`, never a hand list (K3268); (b) citation's ops map is called without the body (`store.mjs`:772); pass `body` as for link-sweep (B8 (3)).
