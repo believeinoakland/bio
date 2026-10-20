@@ -188,7 +188,10 @@ test("R3: forwarding, a project key and a question from a hint, each with its ow
   assert.equal(last(p, "projectkeyset").url.includes("sk-ant"), false, "the key travels in the body only");
   await press(p, "promote", { values: { [button(p, "promote").dataset.f + "-question"]: "Did the council vote?" } });
   const r = last(p, "promote");
-  assert.equal(r.query.project, "PROJ-1");
+  // R81: the guard (the owner's declaration) takes the package fields only; the project is the file's own line.
+  assert.equal(r.query.project, undefined);
+  assert.deepEqual(Object.keys(r.body).sort(), ["base", "files", "meta", "register", "snapKey"]);
+  assert.match(r.body.files[0].text, /\nproject: PROJ-1\n/);
   assert.equal(r.body.meta.object_type, "inquiry");
   assert.equal(r.body.meta.title, "Did the council vote?");
   assert.match(r.body.files[0].text, /question: "Did the council vote\?"/);

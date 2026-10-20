@@ -401,11 +401,11 @@ export const queue = Object.freeze({
         const plain = function (t) { return String(t).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
         const iso = new Date(cs.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
         const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
-        const text = "---\nobject_type: inquiry\nquestion: " + JSON.stringify(q) + "\ncurrent_state: open\ncreated: \"" + iso
+        // R81: `promote` takes the package fields only; the question's project is the file's own `project` line, as `project` writes one.
+        const text = "---\nobject_type: inquiry\nquestion: " + JSON.stringify(q) + (el.dataset.project ? "\nproject: " + el.dataset.project : "") + "\ncurrent_state: open\ncreated: \"" + iso
           + "\"\nlast_updated: \"" + iso + "\"\n---\n\n## Session Log\n\n### Session " + iso
           + " | Formation | interactive\nTrigger: " + plain(cs.w("file.trigger.queue", { item: String(el.dataset.item).replace(/[\n\r]/g, " ") })) + "\nChanges: created.\n";
         return {
-          query: el.dataset.project ? { project: el.dataset.project } : {},
           body: {
             base: null, snapKey: iso.replace(/[-:]/g, "") + "_" + nonce,
             meta: { object_type: "inquiry", title: q, current_state: "open", created: iso, last_updated: iso },
