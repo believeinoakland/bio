@@ -2,6 +2,7 @@
  * capture was held for, the document's own project's questions first, and none when it was held for none; a cite with none
  * chosen sends nothing and says so in place. On interface-shell's served page over a scripted plane; every expectation is a
  * word read by key (R44). */
+import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
@@ -10,7 +11,7 @@ import { open, main, press, says, P, Q, Q2, D, SHA } from "./fixtures.mjs";
 const at = "/app/document/" + D;
 const OTHER = "INQ-2026-0099-other";
 /* the held row (capture R77): this copy, with what it was captured for (`captured_for.questions`, the ones she may see) */
-const heldFor = (questions) => ok({ ok: true, rows: [{ document: D, capture: { sha256: SHA, grade: { grade: "B", route: "fetched", determined: true } },
+const heldFor = (questions) => ok({ ok: true, held: [{ bundle_id: D, capture: { sha256: SHA, grade: { grade: "B", route: "fetched", determined: true } },
   captured_for: { questions, withheld: null } }] });
 /* the questions she may cite into, another project's first: the default a first-choice select would preselect */
 const OTHER_FIRST = ok({ bundles: [{ bundle_id: OTHER, title: "Another project's" }, { bundle_id: Q, title: "Seven days?" }, { bundle_id: Q2, title: "Does closed mean repaired?" }] });
@@ -21,7 +22,7 @@ const cite = (p) => main(p).querySelectorAll("blockquote")[0].nextElementSibling
 test("R49 R61 a document captured for question Q in project P draws Q preselected and P's questions first", async () => {
   const p = await open(at, { plane: { list: OTHER_FIRST, heldcaptures: heldFor([{ question: Q, title: "Seven days?", asker: "mai" }]) } });
   assert.equal(p.byOp("projectquestions")[0].query.project, P, "the document's own project's questions are read");
-  assert.deepEqual(values(p), ["", Q, Q2, OTHER], "P's questions first, then the others she may cite into");
+  assert.deepEqual(values(p), [Q, Q2, OTHER], "P's questions first, then the others she may cite into; with one preselected no choose option is drawn (R118)");
   assert.equal(choice(p).value, Q, "Q preselected");
   await press(p, "cite", { within: cite(p) });
   assert.equal(p.byOp("cite")[0].query.project, Q, "the passage is cited into the question the capture was held for");

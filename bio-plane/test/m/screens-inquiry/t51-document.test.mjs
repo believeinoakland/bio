@@ -4,6 +4,7 @@
  * Every expectation is a word read by key (`word`, `hasWord`); dates and the clock go through `cs.date` and `time.at` (`day`, `stamp`),
  * never copied. The browser acts (`revisioncompare`, `hashcopy`, `linkopen`; interface-shell R100) are tests that need the kit's R100 merged: they are
  * marked BROWSER ACT below. */
+import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";

@@ -1,16 +1,12 @@
 /* screens-inquiry R14, R37, R39: the project's AI account screen (`projectai`), on interface-shell's served page over a scripted
  * plane playing `credentials`' project account ops and `ai-use`'s, with screens-settings R9's panel drawn over the
  * project's account. */
-import { fileURLToPath } from "node:url";
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, MEMBER } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, day, SCREENS, P } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245): the served screens name ops their owners declare */
-await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
 
 
 const at = "/app/projectai/" + P;

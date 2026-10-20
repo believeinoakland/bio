@@ -1,9 +1,6 @@
 /* screens-inquiry R75 (T51-119): `project`, an owner stands down by a vote that shows what it takes and what to check first
  * (state e), and R70 as it binds `project`; on interface-shell's served page over a scripted plane. Every expectation is a word
  * read by key (R44). Dates and counts the page draws are read through the same words and the answer's own numbers. */
-import { fileURLToPath } from "node:url";
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
@@ -11,7 +8,6 @@ import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, fill, press, says, word, rawKeys, SCREENS, P } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
-await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
 
 
 const at = "/app/project/" + P;

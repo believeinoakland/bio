@@ -5,6 +5,12 @@
 import { word } from "../../../src/setup-words/index.mjs";
 import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
 import { boot, ok, textNodes } from "../interface-shell/harness.mjs";
+import { fileURLToPath } from "node:url";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+
+/* K4245: every owner's declarations are registered before the first read, once for the module's tests */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
 
 export { SCREENS, word };
 export const P = "PROJ-2026-0007";

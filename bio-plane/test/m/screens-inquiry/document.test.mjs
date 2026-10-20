@@ -1,5 +1,6 @@
 /* screens-inquiry R3, R8, R15, R22, R32, R39: the document screen, on interface-shell's served page over a scripted plane.
  * Every expectation is a word read by key (R44). */
+import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
@@ -24,6 +25,10 @@ const TESTIMONY_MD = ["---", `id: ${D}`, "object_type: information", "title: \"T
   "---", "", "## Summary", "", "## Provenance Notes", "", "Authored through op=testify. Observed 2026-10-04.", ""].join("\n");
 /* the assistant reachable for this member (interface-shell R20) */
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+/* R111: `heldcaptures` as the plane answers it, `{held: rows}` (capture R77): this copy, the viewer's own, not yet vouched for */
+const HELD = ok({ ok: true, held: [{ bundle_id: D, capture: { sha256: SHA } }] });
+/* a document that is watched (R118): its `monitoring.enabled` */
+const WATCHED_MD = DOCUMENT_MD.replace("\nsource:", "\nmonitoring:\n  enabled: true\n  frequency: weekly\nsource:");
 
 test("R3 reads: the capture and what cites it at once; its reading, grade note, held row and versions once its digest and address are read", async () => {
   const p = await open(at);
@@ -116,7 +121,8 @@ test("R32 R67 R68 the links this page carries, held ones a reference; the names 
   const links = ok({ ok: true, links: [{ address: "https://example.org/311", partition: "deferred", resolution: "offsite", verdict: null },
     { address: "https://example.org/report.pdf", partition: "deferred", resolution: "linked", verdict: "contemporaneous", target_bundle: "INFO-2026-0011", target_retrieved: "2026-10-02T09:00:00Z" }] });
   const conns = ok({ ok: true, connections: [{ a_capture_sha: SHA, b_capture_sha: "8".repeat(64), entity_id: "ENT-17", entity_name: "L. Chen",
-    on_point: { a: { ref: "c1", occurrence: { page: 1 }, chosen_by: "record" }, b: null }, occurrences: 4 }] });
+    on_point: { a: { ref: "c1", occurrence: { page: 1 }, chosen_by: "record" }, b: null }, occurrences: 4,
+    mentions: [{ ref: "c1", occurrence: "o1", grade: "A", position: null }, { ref: "c2", occurrence: "o2", grade: "B", position: null }] }] });
   const p = await open(at, { plane: { links, connections: conns, resolutions: NAMES, connectionchoose: ok({ ok: true }) } });
   const l = section(p, "document.links.title");
   assert.ok(says(l, "screen.document.links.group.outside", { n: "1" }) && says(l, "screen.document.links.group.held", { n: "1" }));
@@ -124,8 +130,9 @@ test("R32 R67 R68 the links this page carries, held ones a reference; the names 
   assert.equal(l.querySelector('a[href="https://example.org/311"]'), null, "R67: an outside address is not a bare anchor");
   const n = section(p, "document.names.title");
   assert.ok(says(n, "document.names.row", { n: "4", page: String(one(1)), chosen: word("document.names.chosen.record") }));
+  fill(p, { "document-mention-ENT-17": "1" });
   await press(p, "connectionchoose");
-  assert.deepEqual(p.byOp("connectionchoose")[0].body, { capture: SHA, other: "8".repeat(64), entity: "ENT-17", ref: "c1" });
+  assert.deepEqual(p.byOp("connectionchoose")[0].body, { capture: SHA, other: "8".repeat(64), entity: "ENT-17", ref: "c2", occurrence: "o2" }, "R85: the mention chosen, not the one on point");
   await press(p, "explore");
   assert.equal(p.location.pathname, "/app/explore/" + D);
   /* control: no links and no names, no section */
@@ -153,7 +160,7 @@ test("R3 an unchanged version chain marks nothing changed; the grade note answer
 });
 
 test("R3 acts send what their owners take", async () => {
-  const p = await open(at, { boot: { plane: { ...plane({ plane: {
+  const p = await open(at, { images: { [D]: { "bundle.md": WATCHED_MD, "data/provenance.json": provenanceOf(SHA) } }, boot: { plane: { ...plane({ images: { [D]: { "bundle.md": WATCHED_MD, "data/provenance.json": provenanceOf(SHA) } }, plane: {
     attest: ok({ ok: true }), monitor: ok({ ok: true }), transcribe: ok({ ok: true }), cite: ok({ ok: true }), identityclaim: ok({ ok: true }),
     pagetranscribe: { status: 200, json: { ok: true, transcription: { performed: true, pages: [7, 8], untested: { kind: "untested" } } } }, resolutions: NAMES } }), ...REACH } } });
   await nextPage(p);
@@ -182,7 +189,7 @@ test("R3 acts send what their owners take", async () => {
 });
 
 test("R3 release and retire act on a selection of this document, made first, and draw a refusal beside the act", async () => {
-  const p = await open(at, { plane: { select: (r) => ok({ ok: true, handle: "SEL-9", items: r.body.ids }), release: ok({ ok: true, released: [D] }),
+  const p = await open(at, { plane: { heldcaptures: HELD, select: (r) => ok({ ok: true, handle: "SEL-9", items: r.body.ids }), release: ok({ ok: true, released: [D] }),
     retire: refusedIn("CITED", "This copy is cited by a question, so it can't be retired yet.") } });
   fill(p, { "document-release-ack": "Checked against the site", "document-release-mitigation": "None needed" });
   await press(p, "release");
@@ -195,11 +202,11 @@ test("R3 release and retire act on a selection of this document, made first, and
   await p.click(dlg.querySelector('[data-shell="confirm"]'));
   await p.settle();
   assert.deepEqual([p.byOp("retire")[0].query.handle, p.byOp("retire")[0].query.reason], ["SEL-9", "superseded"]);
-  assert.ok(main(p).querySelector('[data-outcome="retire"]').textContent.includes("This copy is cited by a question"));
+  assert.ok(p.root().textContent.includes("This copy is cited by a question"), "the shell draws the plane's refusal beside the act");
 });
 
 test("R3 controls: a release, a transcription and a claim with nothing written are refused by their words; no question to cite in, no cite", async () => {
-  const p = await open(at, { plane: { resolutions: NAMES } });
+  const p = await open(at, { plane: { resolutions: NAMES, heldcaptures: HELD } });
   assert.ok(says(await press(p, "release"), "screen.document.release.empty"));
   assert.ok(says(await press(p, "transcribe"), "screen.document.unread.empty"));
   assert.ok(says(await press(p, "identityclaim"), "screen.document.claim.empty"));
@@ -209,23 +216,26 @@ test("R3 controls: a release, a transcription and a claim with nothing written a
   assert.ok(says(main(noq), "screen.document.cite.noquestion"));
 });
 
-test("R15 Watch for changes sends monitorset and Check for a new version now sends monitor: two acts, each alone", async () => {
-  const p = await open(at, { plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }), monitor: ok({ ok: true }) } });
-  const b = (op) => main(p).querySelector(`button[data-act="${op}"]`);
-  assert.ok(says(b("monitorset"), "act.monitorset.label.document") && says(b("monitor"), "act.monitor.label.document"));
-  await press(p, "monitorset", { reason: "the policy changes yearly" });
-  assert.deepEqual(p.byOp("monitorset").map((r) => [r.body.bundleId, r.body.enabled]), [[D, true]]);
-  assert.equal(p.byOp("monitor").length, 0, "watching checks nothing now");
-  assert.ok(says(main(p).querySelector('[data-outcome="monitorset"]'), "screen.document.monitorset.done"));
+test("R15 R92 R118 Watch for changes sends monitorset with its frequency and Check for a new version now sends monitor: two acts, each alone, the check only for a watched address", async () => {
+  const un = await open(at, { plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }) } });
+  assert.ok(says(un.root().querySelector('button[data-act="monitorset"]'), "act.monitorset.label.document") && !actsIn(main(un)).includes("monitor"), "unwatched: no check");
+  fill(un, { "document-watch-freq": "daily" });
+  await press(un, "monitorset", { reason: "the policy changes yearly" });
+  assert.deepEqual(un.byOp("monitorset").map((r) => [r.body.bundleId, r.body.enabled, r.body.frequency]), [[D, true, "daily"]]);
+  assert.equal(un.byOp("monitor").length, 0, "watching checks nothing now");
+  assert.ok(says(main(un).querySelector('[data-outcome="monitorset"]'), "screen.document.monitorset.done"));
+  const p = await open(at, { images: { [D]: { "bundle.md": WATCHED_MD, "data/provenance.json": provenanceOf(SHA) } }, plane: { monitor: ok({ ok: true, status: "unchanged" }) } });
+  assert.ok(says(p.root().querySelector('button[data-act="monitor"]'), "act.monitor.label.document"));
   await press(p, "monitor");
   assert.deepEqual(p.byOp("monitor").map((r) => r.body), [{ bundleId: D }]);
-  assert.equal(p.byOp("monitorset").length, 1, "checking now asks no watching");
+  assert.equal(p.byOp("monitorset").length, 0, "checking now asks no watching");
 });
 
 test("R8 the question a passage is cited in, and an unread page, are choices among record data", async () => {
   const p = await open(at, { plane: { list: ok({ bundles: [{ bundle_id: Q, title: "screen.document.copy" }] }) } });
   const opts = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
-  assert.deepEqual(opts("document-cite-question"), [["", ""], [Q, "screen.document.copy"]], "R49: none preselected, a title is drawn as data, never read as a key");
+  assert.deepEqual(opts("document-cite-question"), [["", word("screen.document.cite.choose")], [Q, word("screen.document.cite.option", { question: "screen.document.copy", project: "Pothole repairs" })]],
+    "R49 R118: none preselected, the choose option first; a title is drawn as data, never read as a key, with its project");
   assert.deepEqual(opts("document-unread-page"), [7, 8, 9].map((r) => [String(one(r)), String(one(r))]), "R78: the picker draws each unread page from one");
 });
 

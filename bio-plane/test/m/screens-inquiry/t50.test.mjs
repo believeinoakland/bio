@@ -2,6 +2,7 @@
  * concluded question's case, how a run ends and what it cost, its progress as it is made, the affirmation of a reading of
  * several parts, and the stopped run's decline; the document page's held copy and themes. On interface-shell's served page
  * over a scripted plane. Every expectation is a word read by key (R44). */
+import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
@@ -119,7 +120,7 @@ test("R59 R64 accepting a reading of several parts asks each part; Decline sends
 });
 
 test("R55 R56 the document: a held copy is vouched for and replaced by the vouched line; a placement in a theme is drawn apart from evidence", async () => {
-  const p = await open("/app/document/" + D, { plane: { release: ok({ ok: true }), select: ok({ handle: "H1" }),
+  const p = await open("/app/document/" + D, { plane: { heldcaptures: ok({ ok: true, held: [{ bundle_id: D, capture: { sha256: SHA } }] }), release: ok({ ok: true }), select: ok({ handle: "H1" }),
     themeread: (r) => ok(r.query.id ? { ok: true, theme_id: "TH-1", members: [{ target: D, document: D, page: 2, placer_handle: "mai", placed_at: "2026-10-04T09:00:00Z", note: "ref" }], hunches: [] }
       : { ok: true, themes: [{ theme_id: "TH-1", name: "Deferred maintenance" }] }) } });
   assert.ok(says(main(p), "document.held.says"));
@@ -129,6 +130,6 @@ test("R55 R56 the document: a held copy is vouched for and replaced by the vouch
   assert.ok(!says(main(p), "document.held.says") && main(p).querySelector("[data-vouched]"), "replaced at once by the vouched line");
   assert.ok(actsIn(main(p)).includes("attest") && main(p).querySelector('details[data-fold="retire"]'), "attest and a folded retire at the foot");
   /* control: a document the viewer did not capture draws no held banner */
-  const o = await open("/app/document/" + D, { plane: { heldcaptures: (r) => ok({ ok: true, rows: r.query.member ? [] : [{ document: D, capture: { sha256: SHA } }] }) } });
+  const o = await open("/app/document/" + D, { plane: { heldcaptures: (r) => ok({ ok: true, held: r.query.member ? [] : [{ bundle_id: D, capture: { sha256: SHA } }] }) } });
   assert.equal(main(o).querySelector("[data-held]"), null);
 });

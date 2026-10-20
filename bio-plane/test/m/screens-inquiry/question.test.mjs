@@ -2,15 +2,12 @@
  * a scripted plane. Every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fileURLToPath } from "node:url";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
-import { registerDeclared } from "../../declared-ops.mjs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word, day, POLICY,
   SCREENS, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
-await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerOps);
 
 const at = "/app/question/" + Q;
 /* the inquiry with its partition held (state a): the policy a part of its own */

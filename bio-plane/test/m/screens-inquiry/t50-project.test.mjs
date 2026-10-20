@@ -1,9 +1,6 @@
 /* screens-inquiry R52, R53, R63 (T50-32): the project page's work, its bar and settings, what the team has at stake here, and
  * its published cases and docket; on interface-shell's served page over a scripted plane. Every expectation is a word read
  * by key (R44). */
-import { fileURLToPath } from "node:url";
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
@@ -11,7 +8,6 @@ import { REF_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { open, main, actsIn, fill, press, says, section, word, P } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
-await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
 
 
 const at = "/app/project/" + P;

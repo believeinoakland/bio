@@ -2,6 +2,7 @@
  * revision a question cites, promotion R59's `capture_sha`) and R82 (the original-file card, its kind from the format the reading names
  * and its size from `bytes`, extraction R77), over a fake plane on interface-shell's served page. Every expectation is a word read by
  * key (`word`, `says`); sizes and kinds are the words the kit draws, never copied. The browser act `revisioncompare` sends nothing. */
+import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";

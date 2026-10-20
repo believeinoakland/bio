@@ -3,9 +3,6 @@
  * (writing help, and R10: the screen draws exactly its registry acts). On interface-shell's served page over a scripted plane;
  * every request is compared with its owner's declaration by the harness's guard (R104), so a FieldMismatch fails the test that
  * pressed the act. Every expectation is a word read by key (R44). */
-import { fileURLToPath } from "node:url";
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { registerDeclaredOps as registerGrades } from "../../../src/op-grades/index.mjs";
 import { DECLARED_OPS as CASE_IMPORT } from "../../../src/case-import/index.mjs";
 import { DECLARED_OPS as INVESTIGATION } from "../../../src/investigation/ops.mjs";
@@ -18,7 +15,6 @@ import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, button, fill, press, says, section, word, projectWith, SCREENS, P, Q } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245) */
-await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
 /* the weights of the two owners whose acts these tests press (registering every owner's weights is refused today by `accountusesset`'s row, an owner's defect reported to BOB) */
 registerGrades({ "case-import": CASE_IMPORT, investigation: INVESTIGATION });
 
