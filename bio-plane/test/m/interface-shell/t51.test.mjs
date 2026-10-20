@@ -484,13 +484,13 @@ test("R97 a passphrase of the empty string with keep false makes the unprotected
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 const GOT = {
   id: "finder", reads: () => ({}),
-  acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { id: "c1" }, name: "x.bin", verify: view.ui.verify || undefined }))); return null; } }],
+  acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: view.ui.verify || undefined }))); return null; } }],
   render: (cs, view) => cs.act("search") + '<pre id="dl">' + cs.esc(view.ui.dl || "") + "</pre>",
 };
 test("R98 cs.download with verify hashes the bytes in the browser before any file is made: matching bytes download; altered bytes save nothing and answer DIGEST_MISMATCH with expected and got; control: without verify a download saves as before", async () => {
   const body = new Uint8Array([1, 2, 3, 4, 5, 250]);
   const page = async (verify) => {
-    const screen = { ...GOT, acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { id: "c1" }, name: "x.bin", verify: VERIFY }))); return null; } }] };
+    const screen = { ...GOT, acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: VERIFY }))); return null; } }] };
     const src = interfacePage([screen]).replace("VERIFY", JSON.stringify(verify));
     return boot({ screens: [screen], path: "/app/finder", html: src.split("__CSP_NONCE__").join("n0nce"), plane: { openoriginal: bytes(body, "application/octet-stream") } });
   };
