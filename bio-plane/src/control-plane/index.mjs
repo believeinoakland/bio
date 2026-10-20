@@ -8,7 +8,7 @@
    prefixes) is record-grammar's. */
 import { parseFrontmatter, createSha256, normalizeType, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 /* C-68.1 (K794, K796, K850): the capability complaint is acquisition's, minted at its one region (`evidenceStorageAbsent`). */
-import { evidenceStorageAbsent, ARCHIVE_CHECKS, FOR_MAX, stageTimes } from "../acquisition/index.mjs";
+import { evidenceStorageAbsent, ARCHIVE_CHECKS, FOR_MAX } from "../acquisition/index.mjs";
 /* K617, K624 (2): who may call an op is `admission`'s — the namespace gates, the credential's resolution, the admission
    in its order, the bearer fences, the reader of a public op's caller and the mint's secrets — called here in R28's
    order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
@@ -2264,22 +2264,33 @@ export function makeFetch(hooks = {}) {
     /* R105 (T50; T51: N1234, DEC-329 (5); K3770): THE DOOR ANSWERS `acquire` WITHIN A BOUND, 25 seconds: past it the answer
        is the refusal `ACQUIRE_TIMED_OUT`, its `detail` read by `word("refusal.ACQUIRE_TIMED_OUT")` as R99 reads
        `AGENT_WORKER_UNBOUND`'s (no sentence of this module's), never a silent stop. The handler is not cancelled: a capture it goes on to file stands, and the member's next look finds it. */
-    /* R115 (T51; K4222; acquisition R95): the object `acquire` keeps current as its stages run, handed to it through the plane's
-       hook; a call the door stops waiting for is answered with the times read from it at that moment, through `stageTimes`. */
+    /* R115 (T51; K4222; acquisition R95; K4234 (B13)): the object `acquire` keeps current as its stages run, handed to it through the
+       plane's hook. The object is not the door's, so the stages are kept by the object under the request's trace: a session's
+       `acquire` is minted one here and handed to the hook as `trace`. A call the door stops waiting for is answered with the stage
+       times the object answers for that trace on its store-internal read `acquiretimings`, `{}` when the request has none or the
+       object answers none. */
     const timings = op === "acquire" ? {} : null;
+    const acquireTrace = op === "acquire" && viaSession ? mintTrace() : undefined;
+    const acquireStages = async () => {
+      if (!acquireTrace) return {};
+      const asked = await doAnswer(stub.fetch(new Request(`http://do/acquiretimings?trace=${encodeURIComponent(acquireTrace)}`)));
+      const times = asked.answered ? asked.result?.stageTimes : null;
+      return times && typeof times === "object" && !Array.isArray(times) ? times : {};
+    };
     const bounded = (work) => {
       if (op !== "acquire") return work;
       let timer;
       const late = new Promise((resolve) => { timer = setTimeout(() => resolve("late"), hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS); });
-      return Promise.race([work, late]).then((got) => {
+      return Promise.race([work, late]).then(async (got) => {
         clearTimeout(timer);
         return got === "late" ? json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op,
                                        store: storeName, tokenClass: cls, detail: word("refusal.ACQUIRE_TIMED_OUT"),
-                                       timings: stageTimes(timings) }, 504) : got;
+                                       timings: await acquireStages() }, 504) : got;
       }, (e) => { clearTimeout(timer); throw e; });
     };
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
-      sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, trace, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
+      sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
+      trace: trace ?? acquireTrace,   /* K4234: `acquire`'s trace, the key its stages are kept under */
       grantMember: aiCred?.grant ? aiCred.principal : undefined, timings })) : undefined;   /* R53 (K1684): an ask's grant's member; R115: `acquire`'s timings */
     if (armed && op === "acquire") {
       const res = await promoteAcquired(armed);
