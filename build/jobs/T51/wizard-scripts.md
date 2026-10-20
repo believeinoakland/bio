@@ -191,3 +191,41 @@ Options, with my recommendation:
 - (C) Leave all eight undeclared for this round and carry them to the next tranche. Recommended only if (A) cannot land before T51 closes.
 
 I have not written any declaration for these eight yet, so nothing is half-done in the module. Please answer which of A, B or C, and confirm item 1.
+
+## J12 · COMPLETE
+
+COMPLETE · FR-49 wizard-scripts (K4202, the census; B11 and B12). Head: c6dcda9ec2 (tranche/T51 merged in), pushed on job/T51/wizard-scripts. Code commit b6303a196f.
+
+APPLIED
+- B12 / K4202: `DECLARED_OPS` beside the ops map (src/wizard-scripts/index.mjs) for the eight ops: wizards, startfrom, writinghelp, wizarddraft, wizardrevise, wizardsubmit, wizardapprove, wizardretire. Class, machine classes and mutating flag are op-declarations' hand rows; weight is the op's grade; description is each op's `act.<op>.does` word (word(), no localize, no new row).
+- B11 (K4210): NEW R46 written by me in build/requirements/wizard-scripts.md, no "not yet met" marker, since its tests now name it.
+- Test: test/m/wizard-scripts/declared-ops.test.mjs, 18 tests: each row held true against the op as the door runs it (declaredOpHolds over the real fixture), each description equal to its act word, and a control that a required field the arm never reads is named.
+
+DEVIATIONS FROM B12 (decided here, for BOB to confirm)
+1. writinghelp requires `told` only, not `field` and `told`. The arm never refuses a missing field: writingHelp answers ASSISTANT_DRAFT_UNAVAILABLE with or without it, so a `field` requirement would be a claim the arm does not hold. `field` and `draftHeld` are accepted. If you want `field` required, the arm has to refuse a missing field first: a behaviour change, not made here.
+2. wizarddraft requires a project, or `from`, or `copy`, not `name`: a blank start is refused WIZARD_SCOPE_REFUSED without a project; the arm's other paths do not need one.
+3. wizardretire requires a version or a script, and a reason. wizardrevise, wizardsubmit and wizardapprove require their version (and wizardrevise its steps). A missing id answers NO_SUCH_WIZARD, one answer for version and script; the test reads that answer as naming the field it stands for.
+4. Ruling entries for 1–3 belong in build/rulings.md; that file is outside this job's write set, so I have not written them. Please record them there.
+
+REGISTRATION (the agreement checks, one op per process, `op-declarations` and `op-grades`)
+- op-declarations: all eight agree (classes, machine classes, mutating). No op is declared by two owners, and none of the eight is in the product-wide duplicates list.
+- op-grades: the weight agrees for all eight. DECLARED_OP_DISAGREES on the DESCRIPTION for ALL EIGHT: wizards, startfrom, writinghelp, wizarddraft, wizardrevise, wizardsubmit, wizardapprove, wizardretire. op-grades' hand sentences (index.mjs around 1523–1548 and 825–828; its `wizards` and `startfrom` in t34.mjs:73) differ from the act words. Those are op-grades' to fix (B12 item 2); please route it to its job as a CHANGE. I have not messaged op-grades' job.
+- B12's testcopy point (owners.test.mjs:118): the current whole-product words run lists op-grades' testcopy findings at owners.test.mjs:84 and in its t36, t41, t46, t47, t48 and t49 tests; none is at :118 now, and none is in wizard-scripts.
+
+DEFERRED: none.
+
+FOUND IN OTHER MODULES (not changed, P7)
+- op-grades: the description disagreements above; testcopy at owners.test.mjs:84, t36, t41, t46–t49.
+- strength (bio-plane/src/strength/method.mjs:349): inline sentence.
+- coverage, whole product: agent-harness R17; agent-runner R37 R38 R40; installer-steps R26 R31; journey-check R19; link-sweep R13 R14 R15 are named by no test.
+- op-declarations' whole-product registration stops at `citeimported`: NEEDS_MISSING (R80), an op declared by another module, not mine.
+
+CHECKS
+- node --test bio-plane/test/m/wizard-scripts/: 126 pass, 0 fail (declared-ops 18 pass).
+- format: 175 modules, 175 requirements files; 0 failures.
+- architecture (wizard-scripts): 0 failures.
+- coverage (wizard-scripts): 46 of 46 live ids named by a test (R46 included).
+- ownership (wizard-scripts): 1 failure, build/requirements/wizard-scripts.md, outside the module's paths. B11 accepts that listing at your merge.
+- checks/run.mjs (whole product): words 0 findings for wizard-scripts' files; the other findings are listed above and are not this module's.
+
+Size (session_01AYSJWKsStw1JQe2TLgDQwt): test runs 5, module lines 2701
