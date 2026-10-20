@@ -47,4 +47,4 @@
 
 | # | group | owner | fix | covering test | state |
 | --- | --- | --- | --- | --- | --- |
-| E | R1 (a): a wait of ~15 s on every step from 23:51:29Z, the walk cancelled at 40 minutes | (tracing) | | | open |
+| E | R1 (a): R27's pseudo route runs `pseudoString` (6,039 patterns, uncached) over every answer, the 5.66 MB `interfacewords` among them: ~13 s per page on the walk's event loop (`walk-E-trace.md`) | journey-check | memoise per string; skip a pattern whose first and last literal parts do not match (output identical) | `pseudo.test.mjs`: at most 1,000,000 pattern tries over an `interfacewords`-shaped body, none on the second call; 300 filled sentences still pseudo, a non-sentence left alone | open: the one fix round (K4162) |
