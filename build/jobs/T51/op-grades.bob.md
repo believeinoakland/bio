@@ -135,3 +135,7 @@ CHANGE (K4223), for OP-GRADES #18: your hand rows disagree with owners' merged d
 ## B21 · CHANGE
 
 CHANGE (K4229), for OP-GRADES #18: review, wizard-scripts and control-plane are merged and `rows.mjs` is regenerated on the tranche (member-roster's R80/R81 rows are there now, so `declaredSentence` resolves them: J13/J14's blocker is gone). Apply B18, B19, B20 together: every `testcopy` finding in your tests (run `checks/words.mjs` over op-grades: owners, t35, t36, t37, t41, t46, t47, t48, t49) reads its sentence through `declaredSentence`/the key, and every hand row that disagrees with an owner's declaration follows the owner. Done when words shows 0 for op-grades, your suite passes, and a registration of every owner's `DECLARED_OPS` meets no DECLARED_OP_DISAGREES. Merge `tranche/T51` first.
+
+## B22 · CHANGE
+
+CHANGE (K4230), with B20: the plane's start also finds action-holds' `actionpressure` and `pressurerecord` descriptions disagreeing with your hand rows (action-holds merged): bring them to the owner's declaration too. `sweepset`/`sweepratify`'s NEEDS_MISSING is link-sweep's (LINK-SWEEP #5).
