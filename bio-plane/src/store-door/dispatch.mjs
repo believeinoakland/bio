@@ -394,7 +394,7 @@ export async function dispatch(req, store) {
    the body, so it is declared nowhere. An absent or malformed `answers` is refused by name (GROUP_DRAFT_ANSWERS_MALFORMED,
    instance-setup R65), so `answers` is both accepted and required. */
 export const DECLARED_OPS = Object.freeze({
-  groupdescriptiondraft: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer", "by"], weight: "reasoned",
+  groupdescriptiondraft: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer", "by"], weight: "read",
     description: localize("store-door.declared.groupdescriptiondraft", "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it"),
     fields: { accepts: ["answers"], requires: ["answers"] } },
 });

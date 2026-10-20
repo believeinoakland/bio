@@ -21,10 +21,8 @@ const R27_READS = ["photomarks", "translations", "interfacewords"];
 const WORD = declaredSentence("translations", "translationadopt");
 const R27_REASONS = {
   obscuremark: declaredSentence("case-carriage", "obscuremark"),
-  setpassword: "session-directed: the caller's own password, the role from their session; ends their other sessions; "
-    + "moves no bundle",
-  subscriptionsignin: "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login "
-    + "held here; moves no bundle",
+  setpassword: declaredSentence("credentials", "setpassword"),
+  subscriptionsignin: declaredSentence("control-plane", "subscriptionsignin"),
   translationgrant: declaredSentence("translations", "translationgrant"),
   translationdraft: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a "
     + "granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that "
