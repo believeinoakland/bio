@@ -97,7 +97,7 @@ test("R51 a date sends standardinforce with the declared fields and draws the ow
   assert.equal(p.byOp("standardinforce").length, 0, "no day, nothing sent");
   fill(p, { "st-inforce-day": "2026-10-08" });
   await press(p, "standardinforce");
-  assert.deepEqual(p.byOp("standardinforce")[0].query, { id: STD, date: "2026-10-08" });
+  assert.deepEqual(p.byOp("standardinforce")[0].query, { op: "standardinforce", id: STD, date: "2026-10-08" }, "the op is the request's; the declared fields are id and date");
   let shown = main(p).querySelector('[data-inforce="in_force"]');
   assert.ok(shown && shown.textContent.includes("that day lies within the period"));
   drew(shown.parentElement, "screen.standard.inforce.result.meta", { from: dayOf("2023-01-01") });
