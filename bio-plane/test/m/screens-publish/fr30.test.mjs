@@ -2,7 +2,7 @@
  * asserted by its key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, drew, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR } from "./fixtures.mjs";
+import { open, main, drew, drewIn, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR } from "./fixtures.mjs";
 
 const tick = (p, id, v) => { p.doc.getElementById(id).querySelectorAll("input").forEach((b) => { if (b.value === v) b.checked = true; }); };
 const DOCKET = `/app/docket/${P}/${C}`;
@@ -169,4 +169,31 @@ test("R64 no draft draws the sentence and the door that makes one; with a draft 
   assert.equal(p.doc.querySelector("[data-nodraft-go]").getAttribute("href"), `/app/case-editor/${P}`);
   const q = await open(REVIEW);
   assert.ok(!q.doc.querySelector("[data-nodraft-go]"));
+});
+
+const EDITOR = `/app/case-editor/${P}/${DR}`;
+const rung = (p, r) => p.doc.querySelector(`[data-rung="${r}"]`);
+
+test("R48 R64 R47 the external rung is not yet evaluated when the gates refused; the gates' first refusal is drawn as what is missing; the ladder is an ordered list; no not-met row where no check refused", async () => {
+  const p = await open(EDITOR, { plane: { reviewcopy: ok(COPY({ gates: "refused", missing: [{ ok: false, code: "TENSION_NOT_DISCLOSED", reason: "TENSION_NOT_DISCLOSED" }] })) } });
+  assert.ok(p.doc.querySelector("ol[data-ladder]") && rung(p, "external").tagName === "LI");
+  assert.ok(drewIn(rung(p, "external"), "case.ladder.notyet") && !drewIn(rung(p, "external"), "screen.case-editor.rung.notmet"));
+  assert.ok(p.doc.querySelector("[data-missing]") && drewIn(p.doc.querySelector("[data-missing]"), "refusal.TENSION_NOT_DISCLOSED", {}));
+  assert.ok(rung(p, "internal").className.includes("on"), "check held: the internal rung is on");
+  const none = await open(EDITOR, { plane: { reviewcopy: ok(COPY({ gates: "passed", missing: [] })) } });
+  assert.ok(!none.doc.querySelector("[data-missing]"));
+  const void_ = await open(EDITOR, { plane: { casecheck: ok({ state: "void", case: C, edition: 2 }) } });
+  assert.ok(drewIn(rung(void_, "internal"), "screen.case-editor.rung.notmet"), "a refused check draws the not-met row");
+  const nocase = await open(EDITOR, { plane: { reviewcopy: ok(COPY({ case: { case_id: null, edition: null, identity: "x", newCase: true }, gates: "refused", missing: [] })), casecheck: ok({ state: "held" }) } });
+  assert.ok(!drew(nocase, "screen.case-editor.rung.notmet"), "a draft with no case and no refused check draws no not-met row");
+});
+
+test("R63 R65 a draft naming no case says so in the fold by review's sentence; the case screen links to the owner's comments with their number, or says there are none", async () => {
+  const p = await open(EDITOR, { plane: { reviewcopy: ok(NOCASE()) } });
+  assert.ok(p.doc.querySelector('[data-fold="screen.case-editor.nocase.summary"]') && drew(p, "review.body.nocase"));
+  assert.ok(drew(p, "screen.case-editor.comments.go", { n: "1" }));
+  assert.equal(p.doc.querySelector("[data-comments] a").getAttribute("href"), `/app/review-copy/${encodeURIComponent(P + "/" + DR)}`);
+  const none = await open(EDITOR, { plane: { reviewcopy: ok(COPY({ comments: [] })) } });
+  assert.ok(drew(none, "screen.case-editor.comments.none") && !none.doc.querySelector("[data-comments] a"));
+  assert.ok(!none.doc.querySelector('[data-fold="screen.case-editor.nocase.summary"]'), "a draft naming a case draws no such fold");
 });

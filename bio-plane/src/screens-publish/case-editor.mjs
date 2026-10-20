@@ -46,6 +46,7 @@ export const CASE_EDITOR = Object.freeze({
     const edition = caseOf && caseOf.edition !== undefined && caseOf.edition !== null ? String(caseOf.edition) : "";
     out.push(cs.title(named ? caseOf.identity + (edition ? " · " + edition : "")
       : chosen ? P.plain(cs.w("case.draft.untitled", { project: projectTitle })) : null, { thing: "case" }));
+    out.push('<span id="what-goes-in"></span>');
     if (!settled) return out.concat([cs.sec("screen.case-editor.drafts", cs.state("drafts", function () { return ""; }))]).join("");
 
     // R28: who prepared it is the member's handle, never the sign-in name when the handle is known.
@@ -99,14 +100,25 @@ export const CASE_EDITOR = Object.freeze({
     const rungs = [
       ["draft", true],
       ["internal", held === "held" || held === "published" ? true : held === "void" ? false : null],
-      ["external", gates === "passed" ? true : gates === "refused" ? false : null],
+      // R48 (C8): the external rung is "not yet evaluated" until an evaluation of compliance is read; the publish gates' verdict is
+      // drawn as what is missing (R47), never as that rung. R64: "something is missing" only where a check refused (the internal one).
+      ["external", gates === "passed" ? true : null],
       ["distributed", distributed ? true : null],
     ];
+    // R63 (L14): a draft that names no case says so in a fold, by the sentence `review` states; R47 (C7): the publish gates' first
+    // refusal, from the copy, as what is missing
+    if (copy.state === "ok" && !(copy.value.case && copy.value.case.case_id)) out.push(P.fold(cs, "screen.case-editor.nocase.summary", "<p>" + cs.w("review.body.nocase") + "</p>"));
+    const miss = copy.state === "ok" && copy.value.gates === "refused" && Array.isArray(copy.value.missing) ? copy.value.missing[0] : null;
+    const missing = miss ? '<ul class="mk-list" data-missing><li role="alert">' + (P.refusalText(cs, miss) || cs.esc(String(miss.reason || ""))) + "</li></ul>" : "";
+    // R65 (C4): the owner's way to the reader's comments, or that there are none
+    const said = copy.state === "ok" && Array.isArray(copy.value.comments) ? copy.value.comments.length : 0;
+    const talk = copy.state === "ok" ? '<p data-comments>' + (said ? '<a href="/app/review-copy/' + encodeURIComponent(project + "/" + chosen.draft_id) + '" data-nav>' + cs.w("screen.case-editor.comments.go", { n: String(said) }) + "</a>"
+      : cs.w("screen.case-editor.comments.none")) + "</p>" : "";
     out.push(cs.sec("screen.case-editor.ladder", '<ol class="cs-ladder" data-ladder="ready">' + rungs.map(function (r) {
       const said = r[1] === true ? "" : r[1] === false ? cs.w("screen.case-editor.rung.notmet") : cs.w("case.ladder.notyet");
       return '<li data-rung="' + r[0] + '" class="' + (r[1] === true ? "on" : "") + '">' + cs.w("screen.case-editor.rung." + r[0])
         + (said ? ' <span class="meta">' + said + "</span>" : "") + "</li>";
-    }).join("") + '</ol><p class="muted" data-ladder-note>' + cs.w("screen.case-editor.tip.distributed") + "</p>" + (check ? cs.state(check, function () { return ""; }) : "")));
+    }).join("") + '</ol><p class="muted" data-ladder-note>' + cs.w("screen.case-editor.tip.distributed") + "</p>" + missing + talk + (check ? cs.state(check, function () { return ""; }) : "")));
 
     // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1); not drawn when
     // it names nothing it leaves out and nobody has acknowledged (R20).

@@ -24,7 +24,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.case-editor.rung.external", "screen.case-editor.rung.internal", "screen.case-editor.rung.notmet",
     "screen.case-editor.rung.notyet", "screen.case-editor.scope", "screen.case-editor.scope.help",
     "screen.case-editor.scope.label", "screen.case-editor.scope.needed", "screen.case-editor.statement.label",
-    "case.draft.untitled", "case.ladder.notyet", "screen.case-editor.tip.distributed", "screen.case-editor.whatgoesin",
+    "case.draft.untitled", "screen.case-editor.nocase.summary", "review.body.nocase", "screen.case-editor.comments.go", "screen.case-editor.comments.none", "case.ladder.notyet", "screen.case-editor.tip.distributed", "screen.case-editor.whatgoesin",
     "screen.case-editor.whatgoesin.note", "screen.case-editor.noconcluded", "screen.case-editor.noconcluded.summary", "capture.fieldneeded",
     "screen.case-editor.account", "screen.case-editor.account.help", "screen.case-editor.account.order", "screen.case-editor.account.flagged",
     "screen.case-editor.account.use", "screen.case-editor.account.notasis", "screen.case-editor.account.refused.summary",
