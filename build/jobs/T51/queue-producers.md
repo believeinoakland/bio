@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_01LGxvuQMoQnNwSkNodRjiu5 · depth 2 · COMPLETE · handled B2
+**Status** · session_01RGDHZRqyU8MUPCnVS1KQxu · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -72,3 +72,55 @@ B2 CHANGE applied. tranche/T51 merged (design @ 2a64c5ae77, DEC-359); branch @ 5
 Tests: queue-producers 117 pass, 0 fail (new assertions in words.test.mjs; cited and shared tests moved to the real check codes and states). Checks: format 0, architecture 0, coverage 33 of 33, words 0 failures, ownership 0 failures.
 
 Size (session_01LGxvuQMoQnNwSkNodRjiu5): test runs 49, module lines 3180
+
+## J4 · QUESTION
+
+QUESTION (R49, entry 2 · L13), best reading below; I carry on with it.
+
+R49 as drafted says a feed's reads are "bounded by the number of kinds it reads, not by projects x items". Most of the reads that grow are not mine to batch: contradiction.candidatesFor and conflictNotices take one `{project}`, case-tensions.caseTensions one project, project-roster.projectOwnerVotes and projectRequests one project, basis-versions.projectsDrawingOn one question, and queue's `homesOf(subjectIds)` one subject set. None has a batch form, so no change inside this module can make those constant in the number of projects.
+
+My reading, which I am building: every read THIS module makes itself is one statement per kind of fact for the whole feed and is made once per read (the member's joined and owned projects by one join over membership's contract tables (R120); bundle rows, titles, owners, case projects, capture days by one `json_each` statement; the shared-question candidates and their per-question reads computed once for all three shared-inquiry finders, not three times; `homesOf` and `optionsOf` asked once for each distinct subject set). Provider reads keyed by one project or one question stay one for each distinct project or question (at most 50 and 64), never again per item or per page repeat. The test counts this module's statements and the homes/options calls at two sizes, and the provider reads against the project count.
+
+If the live `facts.ms` still shows contradictions dear after this, the remedy is a batch form in the owners (`candidatesFor`/`conflictNotices` taking `projects: [...]`, `caseTensions` the same, and a batch `homesOf` in queue): I will list them in my REPORT for you to place. Tell me if you want R49 read otherwise.
+
+## J5 · REPORT
+
+REPORT (FR-22): what I found beside my module, and what the word list lacks. For BOB to place.
+
+1. Words the list lacks for R46-R48 (design stream). The items are raised and read; each sentence is written once with `localize` under `queue-producers.index.*` ids, and the item answers `summary_key`/`detail_key` for the design row the moment the list holds it (the list wins). Rows wanted: `queue.endorsement-owed.summary` ({who}, {have}, {awaiting}) and `.detail`; `queue.endorsement-owed.owner.summary.add` and `.remove` ({who}, {project}, {agreed}, {awaiting}) and `.owner.detail`; `queue.expertise-confirmation-owed.summary` ({who}, {label}) and `.detail`; `act.projectownerremove.label.queue` (the add has `act.projectowneradd.label.queue`; the removal's label is written here: "Agree to remove an owner").
+
+2. Batch forms in the owners (K4222: list for BOB to place after the redeploy's live `facts.ms`). What still grows with projects or items and is not this module's to batch: `contradiction.candidatesFor({on:{project}})` and `conflictNotices({project})` (one project each, up to 50 projects x pages), `case-tensions.caseTensions({project})`, `project-roster.projectOwnerVotes` and `projectRequests` (one project each), `intent.gaps({project})`, `basis-versions.projectsDrawingOn(question)` and `conclusionOf`/`conclusionRecordOf` (one project and question each), `provenance.homeOf(sha)` per lead, and queue's `homesOf(subjectIds)` (one walk for each distinct subject set; this module now asks each set once). A batch form would be `projects: [...]` on the first three and a `homesOf` that takes many sets.
+
+3. L12, the likely cause (read from code, not yet confirmed live): the founder's session is the bare viewer `admin`; `viewerPredicate("admin").member` is null (`member-roster` `viewerMember`), so `contradiction.conflictNotices` refuses every project with NOT_A_PARTICIPANT (its `#projectRefusals`, `contradiction/index.mjs:2699`) although the founder is a joined participant (`membership.participation` finds her row under the member id `admin`). `#answered` read that refusal as the feed's failure: `failed:["refused"]`, and "which of the four" could not be told. Now: the refusal codes NOT_A_PARTICIPANT, NO_SUCH_PROJECT and PROJECT_SEEN_NOT_A_PARTICIPANT are "told nothing" (R7) and the feed answers; any other refusal names `read` and `code`. The finding for `contradiction` (and `membership`): the founder is never told a notice or shown a project conflict (R50, R25's project reach) because its gate does not know her member id; it should read the member through `viewerMember(viewer, identity)` as `membership` R154 does. `queue` should carry `read` and `code` from `facts.failed[]` into `feeds[]` so the live copy can say which, if a refusal remains.
+
+4. `queue` (FR-23) reads the new optional fields: `door` on `endorsement-owed` and `expertise-confirmation-owed` items (`adminendorse`; `projowneradd`/`projectownerremove` for an owner vote, `expertiseconfirm`), `facts.ms` ({feed id: ms}, the `members` feed included), and `facts.failed[].read`/`.code`. Added fields only; no existing answer changed.
+
+5. Inherited, not mine: `plane` `test/m/plane` has the same 4 reds on the tranche tip with and without my change (case-import route map, the R24 surface words, `op=sweeps`, T46's route map). `setup-words` `rows.mjs` is stale for the `localize` ids I added (expected; BOB regenerates at the layer close).
+
+6. Low-level choices I made in my module: a member is named in R47 by the handle `projectOwnerVotes` gives, matched against her id, handle and (founder) held handle; R46-R48 items have no project home (as R41, R42); R47's `<change>` in the key is `add:<target>` or `remove:<target>`; the pages of `side-corrected` are followed first and the items made after, each carrying the `read` and `cut` flags it had when its page was read (as before).
+
+## J6 · COMPLETE
+
+COMPLETE (FR-22 · B3 START and B4 CHANGE; K4222 answers J4). Branch job/T51/queue-producers; tranche/T51 merged at the start (nothing newer since).
+
+**Requirement lines:** written by me in `build/requirements/queue-producers.md` (not in this record), each marked *(not yet met: T51)*: R46, R47, R48 (the `members` feed, each with its door), R49 (as K4222 states it), R50 (L12), R51 (`facts.ms`); R8's list, R45's feed list (`members`) and Uses amended; the ownership check lists that one file, accepted at the merge (B4). My correction to J5 item 4: the owner-vote doors are `projectowneradd` and `projectownerremove`.
+
+**Entries applied**
+- Entry 1 (C62, K4169, UC-046) R46-R48: the `members` feed (the 20th) reads `member-roster.endorsementsOwed` and `expertiseAwaitingConfirmation` and `project-roster.projectOwnerVotes`. An endorsement owed is one OBLIGATION `endorsement-owed` for each administrator who has not endorsed (key `...::admin::<proposed>::<member>`); an owner vote owed one for the owner whose vote is awaited (`...::owner::<project>::add:<target>::<member>`, `door` `projectowneradd`/`projectownerremove` as the change is); an expertise awaiting confirmation one `expertise-confirmation-owed` for each administrator, the same id for all, so one confirmation clears them (B4: every item carries its optional `door`: `adminendorse`, `projectowneradd` or `projectownerremove`, `expertiseconfirm`). A throw or refusal in them names `members` and loses no other feed.
+- Entry 2 (L13, K4194) R49, R51: every read the module itself makes is now one statement per kind of fact for the whole feed, made once: the member's joined and owned projects each by one statement over membership's R120 contract (not a read per project), bundle rows, titles, sight, owners, case projects, authors, capture days, the proposals' instance bundles and the leads' register and leg counts each read for all items at once, the three shared-inquiry kinds sharing one candidate list and one read per question, `homesOf` and `optionsOf` asked once for each distinct subject set (the machinery and action feeds are handed the same memoised ones). `facts.ms` is `{feed: ms}` for every feed read, the one that threw included, a feed in `absent` not. Provider reads keyed by one project or question stay one per distinct project or question (K4222); they are listed in J5 for you to place.
+- Entry 3 (L12, K4195) R50: `facts.failed[]` entries carry `read` (`<module>.<read>`) and `code` where a provider refused or answered undetermined, and `read` alone for a throw inside a named read (the contradictions feed's four reads name themselves); `NOT_A_PARTICIPANT`, `NO_SUCH_PROJECT` and `PROJECT_SEEN_NOT_A_PARTICIPANT` from `conflictNotices` are "told nothing" for that project, not a failure. The likely live cause (the founder's bare `admin` viewer has no member id in contradiction's gate) is in J5.
+
+**Deferred:** the provider batch forms and queue's batch `homesOf` (K4222, J5 item 2); the design rows for R46-R48's sentences (J5 item 1; the sentences are written once with `localize` until the list holds them).
+
+**Found in other modules:** J5 (words the list lacks; batch forms; the founder's gate in contradiction; plane's 4 inherited reds; rows.mjs stale for my `localize` ids).
+
+**Tests and checks** (from /home/user/civicos-process unless stated)
+- `node --test bio-plane/test/m/queue-producers/` (bio): 135 tests, 135 pass, 0 fail. New: `members.test.mjs` (R46-R48, 8 tests) and `reads.test.mjs` (R49 ×5, R50 ×3, R51 ×2); each written before the code and seen failing on the unchanged source (14 of the 18 fail there; the four that pass on it are controls: R46, R47 no-item controls, R50 "no candidate index", R49's small-size answer, which is the answer before the change). Amended, not weakened: `feeds.test.mjs` (R45's `failed` entries now `{feed, reason, read, code}` where R50 gives them; `members` joins the feed list) and `words.test.mjs` (R51's `ms` joins the facts keys, the key list still pinned exactly).
+- Users: `bio-plane/test/m/queue/` 180 pass, 0 fail; `instance-setup` 216 pass, 0 fail; `plane` 262 pass, 4 fail (the same 4 on the tranche tip without my change).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio queue-producers`: 26 product files, 105 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio queue-producers`: 39 of 39 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio queue-producers`: 0 failures. `node checks/run.mjs /home/user/bio`: format 0, architecture 0, words 16 failures (strength, op-grades), coverage 5 failures (agent-harness, agent-runner, installer-steps, journey-check, link-sweep): none in my module.
+- `node checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`: 7 files changed by queue-producers; 1 failure, `build/requirements/queue-producers.md` (accepted at the merge, B4). `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only (the `localize` ids I added are not in `rows.mjs`); no refusal naming my module.
+
+Size (session_01RGDHZRqyU8MUPCnVS1KQxu): test runs 26, module lines 3562

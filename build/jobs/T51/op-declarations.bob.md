@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J11
+**Read** · handled J14
 
 ## B1 · START
 
@@ -98,3 +98,18 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B14 · CHANGE
+
+CHANGE (K4226), a new job session (OP-DECLARATIONS #29, haiku): citation's `DECLARED_OPS` now declares `needs` on every mutating row (merged), so `register-owners.mjs`'s header is no longer true: add citation to `REGISTERED` and register its rows; `member-roster` and `citation` are now in your `uses` (BOB's edit, the architecture check's finding). Better still: register every owner through test-support's collector `declaredOpsOf` if it now passes (add `test-support` to your uses is BOB's: REPORT if needed); if any owner still refuses, register the rest and name the refuser in a REPORT. Your suite, the whole-product architecture check (0 for you), `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4227), also for OP-DECLARATIONS #29: `standardinforce` (standards' read) is not in `SESSION_OPS.member` nor admin, so the shell's act gate draws no button for it (screens-investigate R51). Add it to both session sets, read from the owner's declared `classes` if standards declares it, else as a hand row beside its siblings; a test with a control.
+
+## B16 · CHANGE
+
+CHANGE (K4236): OP-DECLARATIONS #30 continues B14 and B15 from J14's plan. #29 stopped (BLOCKED, context: reading) before any change; its J14 holds the findings.
+Your branch now carries the tranche (merged at this CHANGE). Since J14: link-sweep is merged with `needs: "contribute"` on `sweepset` and `sweepratify` (K4230), so register every owner, link-sweep included; nothing is excluded. tasks declares `taskdecide`; your t23 and t33 reds come from owners your tests do not register.
+Reading (K3678, roles/JOB.md): read your requirements, `src/op-declarations/index.mjs`, `t23.test.mjs` and `t33.test.mjs` whole. The Read tool returns a long file in pages: read it in consecutive ranges (offset/limit) to the last line; that is reading it whole, not a scan. If you cannot finish a file, stop as JOB.md says.
+Then: B14 (`register-owners.mjs` registers every owner from test-support's `declaredOpsOf`; t23's R10 reads link-sweep's served list from its map, never a hand list; if the architecture check refuses the test's import of test-support, REPORT and BOB adds the edge), B15 (`standardinforce` into the member and admin session sets beside its siblings, with a control), the suite, the checks, COMPLETE with the requirement lines for BOB. Model: sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.

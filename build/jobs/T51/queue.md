@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_01DggByiBck91qKoo2zJ1P66 · depth 2 · COMPLETE · handled B2
+**Status** · session_01EHph3RAJgMWjTJAKvQgcMD · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -39,3 +39,81 @@ Size (session_01DggByiBck91qKoo2zJ1P66): test runs 12, module lines 3264
 ## J2 · COMPLETE
 
 T51-104 applied: R58-R61, words (0 findings in queue), K4065 world. Queue suite 180 pass; format, architecture, coverage, ownership, words all 0 failures. Details, readings taken and REPORT items (feed ids with no word key, queue-producers R45 not yet published) are in the record.
+
+## J3 · QUESTION
+
+Two questions; I carry on with my best reading of each and rework only if you say otherwise.
+
+**1 · Entry 1 (C62, doors read from the producers).** Queue cannot read a door a producer has not stated, and tasks and queue-producers are running at the same time as I am. Best reading, the smallest form that changes no service's existing answer: whatever the producer mints carries an optional `door` (an op name, or a list of op names, first the one the screen leads with). `tasks`' `recentTasks` rows carry `door` for the kinds `tasks` declares (`authority-undetermined`: `["taskdecide","taskforward","taskresolve"]`); `queue-producers`' items carry it for `endorsement-owed` (`adminendorse`, or the change's own `projectowneradd` / `projectownerremove` for an owner vote) and `expertise-confirmation-owed` (`expertiseconfirm`). Queue's disposition `instead` is the item's own `door` when it is a non-empty name or list of names, else its hand list (`OBLIGATION_DOORS`, unchanged) and `taskresolve`; `Queue.doorOf(kind, declared)` takes the declared door first. R28's bridge, which holds only a key, reads the door off the caller's live item with that id, else the hand list. This needs `tasks` and `queue-producers` to add the field (FR-21, FR-22); until they do, nothing carries it and every door is the hand list's, so my tests stub a producer that carries it. If you prefer another shape (a per-kind map each producer exports), tell me and I take it.
+
+**2 · Entry 3 (L13, milliseconds per feed).** Queue can time `tasks` and `notice-producers` itself, but the producers' 19 feeds run inside one `queue-producers.feedItems` call, in its own `feed()` helper, so queue sees only the total. Best reading: `queue-producers` publishes `facts.ms`, `{<feed id>: milliseconds}` for each feed it reads, a feed that threw included; each `feeds[]` row of mine carries `ms` (my own measure for `tasks` and `notice-producers`; `facts.ms[feed]` for the others; `null` when a producer states none, never a made-up number), and the answer carries `feeds_ms` (the whole `feedItems` call). Please add `facts.ms` to FR-22 (a one-line CHANGE to its job); without it only three numbers are real. Separately, and mine: the home-set walk and the options are asked per item with no memory, so I memoize both per `op=queue` ask (the cost grows with distinct subjects, not items x ancestors).
+
+## Completion (QUEUE #28, FR-23)
+
+Requirement lines are written in `build/requirements/queue.md` (B4 option one), each marked *(not yet met: T51)*: **R12** and **R28** amended (C62, one sub-bullet under R12's tests), **R39** amended (K4213), **R91** (the feeds' time, L13) and **R92** (`DECLARED_OPS`) new. R91 is the next free id as BOB numbered it; the file's last was R61.
+
+**Entries applied**
+1. **C62** · `Queue.declaredDoor(door)` (an op name, or a non-empty list of names; anything else declares nothing) and `Queue.doorOf(kind, declared)` (the declared door first, then the hand list, then `taskresolve`). A task row's `door` (`tasks`' `recentTasks`) and a producer item's `door` are carried onto the minted item; an OBLIGATION's `disposition.instead` is that door. R28's bridge reads the `door` of the caller's own live item with that id and kind (`#bridgeDoor`: the caller's feed once, and once for a whole `items` set), else the hand list. The hand list is unchanged for every kind whose producer declares none (control test over every entry of `OBLIGATION_DOORS`). Until `tasks` and `queue-producers` mint `door` (BOB's CHANGEs, B4), nothing carries it and every door is the hand list's; the tests stub a producer that carries it.
+2. **C59, C60; 4. K4202** · `DECLARED_OPS` beside the ops map: `proposedispose`, `queuemute`, `queuesnooze`. Classes, mutating, weight and description copied from the hand rows (`op-declarations` `OPS`; `op-grades` `RUNGS` for `proposedispose`, `RUNG_ABSENT` ground `caller-owned` for the two personal ops, descriptions their `NON_ACTS` sentences), read by key `queue.declared.<op>`. Both registrations accept them as agreeing (`registerDeclaredOps` of `op-declarations` and `op-grades` over a fresh instance: `agreed` all three, none refused). `proposedispose` accepts `definitionVersion` (camel), never `definition_version`. Fields: `proposedispose` requires `[project|key|progressionKey]`, `[finding|key|progressionKey]`, `[to|state]`, `reason`; `queuemute` `[item|case]`; `queuesnooze` `case` and `[until|clear]`. `decidedBy` (the control plane's stamp on `proposedispose`) is a stamp, not a field.
+3. **L13** · each `feeds[]` row carries `ms` (my own `performance.now()` measure for `tasks` and `notice-producers`, a notice read that threw included; `facts.ms[feed]` for the producers' feeds when finite and at least 0, else `null`), and the answer `feeds_ms` (the whole `feedItems` call). Reads: one ask-scoped memo holds each node's edges, each ancestor's row, each subject-set's homes (copied out per item) and each subject's derived acts; the reads of one ask grow with distinct subjects and homes, not items x homes (test at two sizes: 10 and 40 tasks over the same subjects cost the same statements; 9 more homes cost at most 4 reads each).
+4. **B5 (K4213)** · `Queue.resolvingEntry(history)`: `resolved` or `resolved_undecided` is the resolving event in R39's `resolved` block and R59's `resolved` rows, so a task put aside by `taskresolve` names the member who did it.
+
+**Tests changed that already existed** (all four compared two asks of `op=queue`, which now differ in the two timing fields and nothing else, R91): `clock.test.mjs` (R53), `converts.test.mjs` (queue-conditions), `t51.test.mjs` (R60: the row's key list gains `ms`, row comparisons ignore it); `world.mjs` gains `untimed`. No assertion was weakened; each compares the same thing minus the timings.
+
+**Deferred**: none.
+
+**Found in other modules**
+- `plane` (tests): `R2, R5 (N13)` and `R45, R48 (T47)` (`servedThroughDoor`) compare `op=queue` answered through the door with the same ask answered directly; the two now differ in `feeds[].ms` and `feeds_ms` (a measure of that ask, R91). Their `mask` (maps.mjs:217) masks instants only; masking the two timing fields (as door.test.mjs's `mask` already masks `ms`) is `plane`'s tests'. Red in the plane suite because of my change: those two. The other four plane reds (`R17, R5` case-import's map, `R24` DEC-149, `R5 (N506)` link-sweep, `R5 (T46)`) are identical with my changes stashed.
+- Hand rows that can now go (each owner's row agrees with the hand row, R81 / op-grades R50): `proposedispose`, `queuemute`, `queuesnooze` in `op-declarations` (`OPS`, the `QUEUE_ACTIONS` list stays an act list) and in `op-grades` (`RUNGS`, `RUNG_ABSENT`, `NON_ACTS`).
+- `tasks` and `queue-producers` have not yet minted `door` (FR-21, FR-22) nor `facts.ms` (FR-22): until they do, three rows carry a real `ms` and the other nineteen `null`, as R91 says.
+- Generated artifact stale: `setup-words/rows.mjs` (`build.mjs --check` is stale; my new ids `queue.declared.proposedispose|queuemute|queuesnooze` are among the rows to regenerate; other modules' ids too).
+- `queuemute` and `queuesnooze` read an `at` from the body (a caller may stamp the instant a mute or snooze is recorded at). I declared it in `accepts` because the arm reads it and the route map spreads the body; it is not a field a screen sends. Not changed: it is the in-plane callers' and the tests' clock. BOB may rule that the route should not pass it.
+
+**Tests and checks** (from `/home/user/bio` and the process repository at its tip):
+- `node --test bio-plane/test/m/queue/`: 196 pass, 0 fail (180 at the start; `doors.test.mjs` 6, `measure.test.mjs` 6, `declared-ops.test.mjs` 5 new, 1 of them R39's). Each new test seen failing against the unchanged module (7 of 7 doors/declared, 4 of 6 measure; the other two measure tests are controls that hold before and after).
+- `node --test bio-plane/test/m/answer-envelope/ bio-plane/test/m/store-door/`: 89 pass, 0 fail. `bio-plane/test/m/plane/`: 262 pass, 6 fail (the two above, four unrelated).
+- `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs … queue`: 0 failures. `node checks/coverage.mjs … queue`: 53 of 53, 0 failures. `node checks/ownership.mjs … queue tranche/T51 job/T51/queue`: see COMPLETE. `node checks/words.mjs … queue`: 0 failures. `node checks/run.mjs` over the whole product: architecture 0 findings; words: 16 failures, none in a file of mine (op-grades' test copies, strength:349); coverage: 5 failures in other modules (agent-harness, agent-runner, installer-steps, journey-check, link-sweep).
+
+Size (session_01LFGQNNUSg4rqKWLPjYWTBr): test runs 16, module lines 3373
+
+## J4 · COMPLETE
+
+FR-23 applied: C62 (doors read from the producers' declared `door`, hand list the fallback, R28's bridge reads the caller's live item), DECLARED_OPS for proposedispose, queuemute, queuesnooze (agreed with both hand rows), L13 (feeds[].ms, feeds_ms, ask-scoped reads), B5 (resolved_undecided). Requirement lines R12/R28/R39 amended and R91, R92 new are written in build/requirements/queue.md (B4 option one), so the ownership check lists that one file, as B4 accepts. Queue suite 196 pass, 0 fail; format, architecture, coverage (53 of 53), words: 0 failures. For you: plane's tests R2,R5 (N13) and R45,R48 (T47) go red on op=queue's two new timing fields (their mask covers instants only); hand rows for the three ops can go; tasks/queue-producers have yet to mint door and facts.ms; setup-words rows are stale. Details in the record's Completion (QUEUE #28).
+
+## Completion of B6 (QUEUE #28)
+
+`tasks` R24 merged: authority-undetermined rows carry `door` in `recentTasks`; queue already carried a row's `door` onto the item and led `disposition.instead` with it (R12), no hand list. Tests: doors.test.mjs now uses the real `tasks` door (control: a check-requested task keeps taskresolve); feed.test.mjs R12 expected the old `taskresolve` for an authority task and now expects the declared door. Queue suite 197 pass, 0 fail.
+
+## J5 · COMPLETE
+
+B6 applied: queue already carried a task row's door onto the item; merged tasks R24, tests now use the real door (feed.test R12 updated from taskresolve to the declared door). Queue suite 197 pass, 0 fail.
+
+## J6 · COMPLETE
+
+Wave-2 change B7 (K4233) applied: queue-producers R46–R51 are merged, and queue now takes what they publish.
+
+**Entries applied**
+- **R60 (B7 1)** a failed feed's row carries `read` and `code` as its failure names them (queue-producers R50): the first failure that names either one; a row with no such failure keeps its keys unchanged (control).
+- **R12 (B7 2)** a members-feed item (`endorsement-owed`, `expertise-confirmation-owed`) keeps the `door` its producer declared (a name, or the owner-vote list led by its first name) and its `summary_key` / `detail_key`. The door is read from the item by `Queue.doorOf`, never a hand list; an item that declares no door takes the kind's rule (control).
+- **R60 / R91 (B7 3)** `members` is a row of `feeds` (classed `OBLIGATION`, added to `QUEUE_FEEDS`), so `facts.ms.members` reaches the answer as that row's `ms`.
+
+**Readings taken**
+- `members` is added to `QUEUE_FEEDS` (queue-producers R45 names it; without the row its time and its failure could not show when it answered). The row list is now 22 rows: tasks, the 20 producer feeds, notice-producers.
+- `read` and `code` are added only where a failure names them, so every other row keeps the key list R91 and R60 state.
+- Requirement line amended: `build/requirements/queue.md` R60 (the fix-round sentence, test named `feeds-cause.test.mjs`). R12 needed no wording: its door sentence already covers producer items.
+
+**Found, not changed**
+- The R12 door test passes on the unchanged module too: `queue` already carried a producer's `door` onto its items and into `disposition.instead`. The fix needed was the R60 row and the `members` row; the door tests are kept as guards (control: an undeclared door takes the kind's rule).
+- Generated artifact stale: `setup-words/rows.mjs` (`build.mjs --check` reports it stale, as at every layer; the new `queue.*` ids are not added this round since none was added).
+- Other modules' reds at the tip, none in queue: `op-grades` words testcopies (26), `strength` inline (1), coverage in `agent-harness`, `agent-runner`, `installer-steps`, `journey-check`; `checks/run.mjs` shows them, `queue` shows none.
+
+**Deferred**: none.
+
+**Tests and checks** (from `/home/user/bio`, process repository at its tip, deps installed per K4113):
+- `node --test bio-plane/test/m/queue/`: 203 pass, 0 fail (197 at the start; `feeds-cause.test.mjs` 6 new). Seen failing against the unchanged module: 4 of 6 (the R60 and R91 tests); the 2 R12 tests pass on it (see above).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs … queue`: 0 failures. `checks/coverage.mjs … queue`: 53 of 53. `checks/words.mjs … queue`: 0 failures. `checks/ownership.mjs … queue tranche/T51 job/T51/queue`: 0 failures (1 file, the requirement file's R60 line plus the code and tests named in the commit).
+- `checks/run.mjs /home/user/bio`: architecture 0 failures; coverage, words and others as listed above, none in queue.
+
+Commit `6ee59179e6` on `job/T51/queue`.
+
+Size (session_01EHph3RAJgMWjTJAKvQgcMD): test runs 4, module lines 3384

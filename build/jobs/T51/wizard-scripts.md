@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01AYSJWKsStw1JQe2TLgDQwt · depth 2 · COMPLETE · handled B12
+**Status** · session_014e6RbaKdqhKwbmmyknKp2v · depth 2 · COMPLETE · handled B14
 
 ## J1 · BLOCKED
 
@@ -229,3 +229,65 @@ CHECKS
 - checks/run.mjs (whole product): words 0 findings for wizard-scripts' files; the other findings are listed above and are not this module's.
 
 Size (session_01AYSJWKsStw1JQe2TLgDQwt): test runs 5, module lines 2701
+
+## J13 · COMPLETE
+
+Re B13 (CHANGE, K4227). Done and pushed on job/T51/wizard-scripts (commits d943943a89, 0467eb7804). `tranche/T51` merged first (fast-forward of its K4227 commits, ed9d7a119b).
+
+**Applied**
+- `DECLARED_OPS.writinghelp` (R46): `fields` is now `accepts: ["op", "field", "told", "draftHeld"]`, `requires: ["op", "told"]`. The arm (`writingHelp`) reads the body's `op`; without it, `writingHelpAt` answers `WRITING_HELP_REFUSED`.
+- Checked the other seven rows against their arms through the door (`declaredOpHolds`): `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`, `startfrom`, `wizards` all hold, none needed a change.
+- `declared-ops.test.mjs`: the writinghelp call now passes the body's `op` (it had hard-coded `casenote`, so the missing op was never seen). A refusal naming `op` is recognised by the answer's echo of the missing `op` as `null` (the arm's `asked`). New control `R46 control: a writinghelp body without op is refused naming it`.
+
+**Not applied: R46's requirement wording.** The requirements file is outside this job's paths (`checks/ownership.mjs` refused it), so I reverted my edit in 0467eb7804 rather than widen the job. BOB, please amend R46's line (K4210) to read, in place of "`writinghelp` requires `told` (its arm never refuses a missing `field`)":
+> `writinghelp` accepts `op` and requires `op` and `told` (its arm refuses a body without `op`, naming it, and never refuses a missing `field`; K4227, K4210)
+
+and add to its control sentence: "; a `writinghelp` body without `op` is refused naming it."
+
+**Observation for BOB (not changed):** the `wizards` row declares `state` as an accepted field, but its arm reads `state` from the query string (`q("state")`), not the body. The declared-ops test passes, since it only checks requires and refusals. Whether the door also carries body fields to it is for the door's owner to say; I did not change the row.
+
+**Checks** (from `civicos-process`, product `/home/user/bio`)
+- `node checks/format.mjs`: 175 modules, 175 requirements files; 0 failures
+- `node checks/architecture.mjs wizard-scripts`: 48 product files, 93 relative imports; 0 failures
+- `node checks/coverage.mjs wizard-scripts`: 46 of 46 live ids named by a test; 0 failures
+- `node checks/ownership.mjs wizard-scripts tranche/T51`: 2 files changed by wizard-scripts; 0 failures
+
+**Tests**
+- `node --test bio-plane/test/m/wizard-scripts/declared-ops.test.mjs`: 19 pass, 0 fail
+- `node --test --test-reporter=tap bio-plane/test/m/wizard-scripts/`: 127 pass, 0 fail, 0 skipped
+
+**Deferred:** none.
+
+Size (session_013WdFBpJB3QxNd3fyYaBmQF): test runs 2, module lines 14
+
+## J14 · COMPLETE
+
+B14 (CHANGE, K4231) applied in commit 67a1f9d926 on job/T51/wizard-scripts (tranche/T51 merged first, at cbbe26555f).
+
+DONE
+- DECLARED_OPS.wizardrevise: requires ["version", ["steps", "adopt"]]. accepts already holds adopt, so it is unchanged.
+- Every row rechecked against its arm's every path:
+  - wizards: no required field; the arm reads only state. Holds.
+  - startfrom: no required field; message and parts are both optional. Holds.
+  - writinghelp: requires op and told (B13). Holds.
+  - wizarddraft: [project | from | copy]. Every valid path carries project or from (a blank, recorded or copy start needs project; a from needs from). Holds. Loose by one case: a copy with no project passes the guard, and the arm refuses it naming the project (a scope refusal). No valid call is refused, so I left it; tightening to [["project", "from"]] is a one-line option if Bob wants it.
+  - wizardrevise: version always; steps or adopt (steps alone, adopt alone as a proposal id or as {base}, or both). Fixed as above.
+  - wizardsubmit, wizardapprove: version always (the arm resolves only a version). Holds.
+  - wizardretire: reason always (both the script and the version paths refuse without it); script or version (either names the script). Holds.
+- Control: declared-ops.test.mjs gains "R46 control: wizardrevise with adopt and no steps is not refused: the proposal's steps are the revision". It adopts a machine proposal through the door with no steps and asserts ok, the adopted id, and no refusal naming steps. The harness's base case only ever sends steps, so this is the only check of the adopt path.
+
+R46 WORDING (for Bob to place): in R46's sentence on the declarations, after the `wizarddraft` clause, add: "`wizardrevise` requires a version and either steps or `adopt` (its arm takes a proposal's, or a copy base's, steps whole when no steps are sent; K4231)."
+
+TESTS AND CHECKS
+- node --test test/m/wizard-scripts/declared-ops.test.mjs: 20 pass, 0 fail.
+- node --test "test/m/wizard-scripts/*.test.mjs": 128 pass, 0 fail.
+- node --test test/m/screens-wizards/library.test.mjs (the file B14 names): 12 pass, 0 fail.
+- checks/format.mjs /home/user/bio: 175 modules, 175 requirements files, 0 failures.
+- checks/architecture.mjs /home/user/bio wizard-scripts: 48 product files, 0 failures.
+- checks/coverage.mjs /home/user/bio wizard-scripts: 46 of 46 live requirement ids named by a test, 0 failures.
+- checks/ownership.mjs /home/user/bio wizard-scripts tranche/T51: 1 file changed by wizard-scripts, 0 failures.
+
+DEFERRED: none.
+FOUND IN ANOTHER MODULE: none new.
+
+Size (session_014e6RbaKdqhKwbmmyknKp2v): test runs 3, module lines 2701 (own code, build-data.mjs included, the three generated files excluded: civicsmith-library.mjs, front-doors.mjs, screen-registry.mjs). The four checks ran in addition to the three test runs.

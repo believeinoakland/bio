@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_01VEWBEJY1ZxJS6YBjqLUfxF · depth 2 · COMPLETE · handled B9
+**Status** · session_01TxbyRGeKMTnkx1teB7ykax · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -173,3 +173,30 @@ CHANGE B9 applied (K4132); pushed on `job/T51/installer-steps` at 2b0d3e3e2b, `t
 - Coverage: 35 of 37 live ids named by a test; R26 and R31 uncovered by design.
 
 Size (session_01VEWBEJY1ZxJS6YBjqLUfxF): test runs 2, module lines 1944
+
+## J12 · COMPLETE
+
+FR-38 (R38, K4176 (1) steps half) applied; pushed on `job/T51/installer-steps`, `tranche/T51` merged in first. I wrote the requirement line myself in `build/requirements/installer-steps.md` (B11): **R38**, met, with R14's wording amended to point at it.
+
+**Entries applied.**
+- `steps/bytes.mjs`: an incremental `Sha256` (64-byte block, equals the whole-buffer hash for every length 0–200 and uneven chunking), `hashStream(stream)` and `hashPart(stream, boundary)` (finds the `index.mjs` part as chunks arrive, delimiters split anywhere, a part cut by the stream's end hashed as far as it goes, as before). `multipartPart` is removed.
+- `steps/readback.mjs`: `scriptHash` hashes `r.body` as a stream (raw or multipart part); `releaseSha` hashes `release.blob.stream()`. No `arrayBuffer()` is left in the read-back.
+- The upload already carried `release.blob` as it is (`uploadForm`); R38's test shows it for the install and the update (a 29 MB Blob whose text/arrayBuffer/bytes are refused sends all its bytes). `members.mjs` builds its Blobs from the member's own (small, one-at-a-time, R18) bytes: unchanged.
+- One finding of mine fixed on the way: `hashPart` does not await `reader.cancel()` (it never settles on one branch of a teed/cloned response).
+
+**Tests** (`newgroup/test/steps/plane.test.mjs`, four R38 tests, plus R14's multipartPart line now `hashPart`): 29 MB read-back raw and multipart through a response that refuses every whole-body method, chunks at most 64 KB, equals the whole-buffer hash; control, one different byte gives another hash and is named with both; chunking 1…whole; no-index part, other boundary, cut stream; the upload; the SHA-256 lengths. Seen failing before the change (the exports did not exist, and the read-back called arrayBuffer).
+
+**Memory (`R33_REPORT=1`, installer's real-size child, `newgroup/test/realsize.test.mjs`).** Peak live before: 143 MB (baseline 75); after: 143 MB. The read-back's own copy is gone from the trace (the second `arrayBuffer 29` + `digest` are no longer there), but the peak is set elsewhere, all installer's: `src/index.mjs`:97 `fetchRepoAsset` holds `bytes` and then the `Blob` at once (`Blob 29` at 134–135 MB) and the child's fake account serialises the upload body whole (`arrayBuffer 29` at 143, the test double). So the 112 MB budget needs `installer` to stream `fetchRepoAsset` (hash the response as it arrives into a Blob, never `bytes` beside the Blob; `steps` now exports `hashStream` for it) and the child's serialisation to stop holding the body. `newgroup/dist/newgroup.bundled.mjs` is stale (it still holds `multipartPart` and the old read-back): BOB regenerates it.
+
+**Deferred.** R26 and R31 (unbuilt by design, K3718 (2)). Nothing else.
+
+**Found in another module.** installer's `newgroup/test/requirements.test.mjs`:363 "R11 `fleet`" fails with and without my change (the result says "All 6 helper programs installed and verified" where the test expects the left-out paragraph for pdf-worker); not mine, not edited.
+
+**Tests and checks.**
+- Steps suite: `node --test test/steps/`: all pass (92 before the SHA test, 93 with it).
+- Installer's `newgroup/test`: 204 run, 195 pass, 4 fail: the three R33 real-size tests (installer's, FR-33) and R11 `fleet` above.
+- Format: 175 modules, 175 requirements files; 0 failures. Architecture: 24 product files, 91 relative imports; 0 failures. Words: 0 failures (inline 0, plain 0, missingkey 0).
+- Ownership (`tranche/T51` to `job/T51/installer-steps`): 5 files changed; 1 failure, `build/requirements/installer-steps.md`, the one file B11 accepts at the merge.
+- Coverage: 36 of 38 live ids named by a test; R26 and R31 uncovered by design.
+
+Size (session_01TxbyRGeKMTnkx1teB7ykax): test runs 14, module lines 2017

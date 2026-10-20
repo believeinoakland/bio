@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -58,3 +58,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B7 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · CHANGE
+
+CHANGE (K4225), a new job session (AFFORDANCES #38): on the merged tranche two of your tests are red (278/2): "R1 R12 R19 R24: case-inputs' ops" and "R1 R4 R12 R19 R24: case-import's ops". Each hand-lists another module's ops (case-inputs now has `casedetailsset`, `casedetails`, `casedetailspublic`; case-import `importregrade`, `rerunstart`, `rerunpair`, `rerunread`), which K3268 forbids. Read each owner's op set from its own `DECLARED_OPS` and its ops map (never a hand list); keep what each test asserts (the checks' families, a rung or stated absence for every write, nothing unaccounted, the control). Where a new op has no rung or stated absence in `affordances`' own reading, take it from the owner's declared `weight` as op-grades R49 registers it; if that needs a change outside your module, REPORT. Merge `tranche/T51` first; run your suite and the checks; requirement line only if a requirement's meaning changes (K4210); `Size`; COMPLETE.

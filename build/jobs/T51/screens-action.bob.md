@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -107,3 +107,15 @@ ANSWER J6 (K4210): your ids R36-R54 stand; entries 17 and 19 under R5/R4 tests: 
 ## B11 · CHANGE
 
 CHANGE (K4213; filings J4): `filingapprove`'s declaration takes `resolutions: [{sentence, resolution, words?}]` (`sentence` the exact text of the pointed-out sentence; `resolution` `only_asks` with `words`, 1 to 500 characters on one line, or `breach_claim` without) and `release: [{ord, reason}]` (`ord` the sentence's number in the record check); an `index` is refused `ASSERTION_RESOLUTION_REFUSED`. Send that shape. A phrase is flagged only when the draft stated its `language` at preparation.
+
+## B12 · CHANGE
+
+CHANGE (K4224): action-holds and wizard-scripts are merged. Your test "R1–R6 (interface-shell R21, R38)" finds `writinghelp` missing from the plan screen's acts list: the registry (wizard-scripts, at the design commit) lists it, so the plan screen registers it as an act (the plan's fields offer writing help); register it, never drop it from the test. Merge `tranche/T51` first.
+
+## B13 · CHANGE
+
+CHANGE (K4236): SCREENS-ACTION #8, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip (#7 merged at K4236).
+1. `writinghelp` now accepts and requires `op` (wizard-scripts R27, R46; merged K4230). `WRITE_HELP` (`send-steps.mjs` ~397) sends only `field` and `told`, so the guard and the door refuse it on every screen of this module. Send `op`: the act the words are for (its `data-forop`), as screens-publish's case editor does. Test at the interface: the help request carries `op`, `field` and `told`; control: an act with no `data-forop` sends no help request.
+2. After FILINGS #25 merges (BOB sends a CHANGE): `filingread` answers the stored `exhibits` and `venue_standard`; the send steps draw the exhibits from it after a reload (your R-line for the send steps; #7 J6 (6)). Until then do 1, and post a QUESTION only if 2 needs more than the answer's two fields.
+The missing design keys of #7 J6 (1)–(6) went to UX-DESIGN as HANDOFF B424; do not draw them until it answers.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, the code it touches and the tests naming the ids it changes, whole. Words (K3930). Model sonnet, medium effort; workers sonnet medium, haiku low.

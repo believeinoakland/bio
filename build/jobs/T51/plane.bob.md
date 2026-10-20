@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -87,3 +87,24 @@ CHANGE (K4219): (a) case-import's four new ops `importregrade`, `rerunstart`, `r
 ## B10 · CHANGE
 
 CHANGE (K4221): case-inputs is merged (R20–R29). Call `registerCaseInputsPublicReads(ctx, {publicRead})` at start beside `registerCaseCheckerPublicReads` (`plane/store.mjs`, near line 332), so the public read `casedetailspublic` is registered in the running plane; route it through public-read's door as `casechecker` is (if the route map is control-plane's, REPORT and BOB forwards it). Merge `tranche/T51` first.
+
+## B11 · CHANGE
+
+CHANGE (K4226): (1) queue is merged: `op=queue` answers `feeds[].ms` and `feeds_ms`; your tests R2, R5 (N13) and R45, R48 (T47) mask instants only and go red on them: mask those timing fields too (they vary by run), never drop the assertion. (2) The acquire timings hop (control-plane R115, acquisition R95): `plane/door.mjs` `gatedOp` destructures a fixed set of ctx keys and drops `timings`; pass `ctx.timings` to the handler as `h.timings` (capture's arm forwards it, CAPTURE #39), and add the end-to-end test: a timed-out `acquire` through the door answers the stages that ran. Merge `tranche/T51` first.
+
+## B12 · ANSWER · re J8
+
+ANSWER (K4230): (1) the nine disagreements are placed: op-grades' hand rows follow the owners (OP-GRADES #18: accountusesset, caseratify, securitymap, groupdescriptiondraft, sweeps, actionpressure, pressurerecord), link-sweep declares `needs` (LINK-SWEEP #5). Your 11 reds that come only from them are accepted by name until those merge; then merge the tranche and re-run. (2) `casedetailspublic`'s route: CONTROL-PLANE #41. (3) `member-roster` is now in plane's `uses` (BOB's; order.mjs matches); R69, R70 struck at your merge. (4) control-plane R115 is merged; capture's forward is CAPTURE #39: the end-to-end test after it merges (CHANGE then). Carry on; COMPLETE when the rest holds, naming the accepted reds.
+
+## B13 · CHANGE
+
+CHANGE (K4231): capture is merged (its `acquire` arm forwards `h.timings`). In production `op=acquire` reaches capture's arm inside the Durable Object: `acquireOp` calls `store.fetch('/acquire…')` and `plane/store.mjs`'s route map calls `captureOps(captureOf(ctx), url, body, env)` with no handler, and an object does not cross the fetch boundary. So the timings object must be made where the arm runs: in the route map, pass `{timings}` (a fresh object) into `captureOps` and carry `stageTimes` back in the answer the door reads on a timeout, or hand the door's object in-process where the call is in-process; choose what holds and prove it with the end-to-end test (a timed-out `acquire` through the door answers the stages that ran).
+
+## B14 · ANSWER · re J9
+
+ANSWER (K4234): (a)+(b) as you read them: the route map passes a fresh `{timings}` into `captureOps` for `acquire`, held in a small bounded holder keyed by the door's `trace` (dropped when the acquire ends and its answer is read, and after a short time-to-live so it cannot grow), and a store-internal read `acquiretimings?trace=…` answers `stageTimes` of the held object. Build them with the in-process end-to-end test. (c) is CONTROL-PLANE #41's (CHANGE now: on its timeout the door asks that read), (d) CAPTURE #40's (`acquireOp` sends `trace` with `/acquire`). The Worker-level proof follows their merges.
+
+## B15 · CHANGE
+
+CHANGE (K4236). Merge tranche/T51 into your branch first (capture and control-plane are merged).
+capture R99 (merged): `captureOp`'s `acquire` arm reads `h.trace` and sends it to the store as the header `x-civicsmith-trace`. `bio-plane/src/plane/door.mjs` (~92) hands `captureOp` no `trace`, so the header is never sent in production. Hand the door's `trace` to `captureOp` in that object, beside `timings`. control-plane R115 (merged) asks `acquiretimings?trace=<trace>` on a timeout and reads `result.stageTimes` (`{ok: true, result: {ok: true, stageTimes: {...}}}`); answer in that shape, keyed by the trace the acquire carried (B14). Your end-to-end test proves the whole hop: door → captureOp header → object's timings under the trace → `acquiretimings` answer.

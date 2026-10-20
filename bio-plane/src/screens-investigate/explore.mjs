@@ -203,7 +203,7 @@ const acts = [
     done(view, answer, cs) {
     const w = view.ui.lastWalk;
     if (!w) return undefined;
-    return cs.call(w.op, w.body).then((a) => {
+    return cs.call(w.op, { body: w.body }).then((a) => {
       const r = a && a.result !== undefined ? a.result : a;
       if (a && a.ok !== false && r && typeof r.refused !== "string") { view.ui.verified = {}; cs.set("answer", r); }
     });
@@ -214,7 +214,7 @@ const acts = [
     done(view, answer, cs) {
     const w = view.ui.lastWalk;
     if (!w) return undefined;
-    return cs.call(w.op, w.body).then((a) => {
+    return cs.call(w.op, { body: w.body }).then((a) => {
       const r = a && a.result !== undefined ? a.result : a;
       if (a && a.ok !== false && r && typeof r.refused !== "string") { view.ui.verified = {}; cs.set("answer", r); }
     });

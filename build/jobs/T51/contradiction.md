@@ -1,6 +1,6 @@
 # contradiction (T51)
 
-**Status** · session_01Sh7KmqBakPppJ1owzmtxQf · depth 2 · COMPLETE · handled B3
+**Status** · session_01T62aFG5soSvnzwrENfMxyz · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -59,3 +59,22 @@ Size (session_01Sh7KmqBakPppJ1owzmtxQf): test runs 6 (+8 dependents'), module li
 ## J3 · COMPLETE
 
 CHANGE B3 handled. Pulled civicos-process d424c32, merged tranche/T51 (no conflict), ran node checks/words.mjs /home/user/bio contradiction: 7 findings, the same seven as J2, none new from the chained-literal rule; no member-read sentence among them. For the design's unkeyed list: contradiction.mjs:31 JUDGEMENT_PROMPT, :99 RECOMMEND_PROMPT, :84 pair line (model input pinned by digest, R2/R41/R57); index.mjs:2001 derived-id method string (hashed identifier); index.mjs:361 and :364 registerRunGate details (module wiring); text.mjs:43 the '## Session Log' heading splice. Other open item unchanged: modules.json contradiction uses needs setup-words (9 architecture failures until added). Tests: node --test bio-plane/test/m/contradiction/: 120 pass, 0 fail, 8 todo. Size (session_01Sh7KmqBakPppJ1owzmtxQf): test runs 7, module lines 3641.
+
+## J4 · REPORT
+
+NEEDS BOB, one line in build/modules.json: contradiction's uses does not list member-roster. index.mjs now imports viewerMember, baseViewer and ROOT_ADMIN from member-roster, as BOB's B4 prescribes; until member-roster is added to contradiction's uses, checks/architecture.mjs shows 1 failure on that import (0 otherwise).
+
+## J5 · COMPLETE
+
+CHANGE B4 (K4233) applied. Commit 285b150c20 on job/T51/contradiction (tranche/T51 merged first).
+
+Cause confirmed: the founder's session is the bare viewer admin; viewerPredicate(admin).member is null, so the three gates that read the viewer's member id (#projectRefusals behind R50 and R51 to R55, R25's project reach in #present, and the unseen_conflict marks of R27) all took her for no member.
+Change: one private #memberOf(viewer) in contradiction/index.mjs reads the member as membership R154 does, through member-roster viewerMember(viewer, identity), passing member:admin as the identity when the viewer's base spelling is the founder's admin; the three gates use it. A machine credential and any unadmitted spelling still read null.
+Requirement line (K4210), for the file: R50 and R25 read the viewer's member through member-roster R73, so the founder's bare admin is the member admin: joined to a project it is answered that project's notices and marks; invited only it is refused NOT_A_PARTICIPANT; an ordinary member and a machine credential are answered as before.
+Test: projects.test.mjs, 'R50, R25 (K4233)': founder as admin joined (notices answered, member:admin spelling the same, unseen_conflict mark told), founder invited only (NOT_A_PARTICIPANT), controls for an ordinary member (joined answered, invited refused) and a machine credential (refused). Fails without the change (1 fail), passes with it.
+
+Reported (REPORT just posted): contradiction's uses lacks member-roster.
+Tests: node --test bio-plane/test/m/contradiction/: 127 pass, 0 fail, 8 todo. Users: case-tensions 24, ratification 251, reevaluation 150, ai-runs 134, all pass, 0 fail.
+Checks (process repo pulled): format 0 failures; architecture 1 failure, the member-roster import above (0 once uses has it); coverage: contradiction all ids named, the 4 failures are other modules'; words: contradiction 0 failures; ownership: 0 failures.
+
+Size (session_01T62aFG5soSvnzwrENfMxyz): test runs 7, module lines 3649 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/, all files).

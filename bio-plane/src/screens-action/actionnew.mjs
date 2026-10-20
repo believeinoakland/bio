@@ -165,8 +165,14 @@ export const actionNew = Object.freeze({
         return { body: { document: lines.join("\n") } };
       },
       done: function (view, answer, cs) { if (answer && answer.id) cs.go("action", answer.id); return { stay: true }; },
-      refusals: { ACTION_KIND_UNKNOWN: "refusal.ACTION_KIND_UNKNOWN", ACTION_BASIS_REFUSED: "refusal.ACTION_BASIS_REFUSED", COUNTERPARTY_REFUSED: "refusal.COUNTERPARTY_REFUSED",
-        CLOCK_REFUSED: "refusal.CLOCK_REFUSED" },
+      // L20 (K4195): a refusal that carries `findings[]` draws each finding's own `detail` after the code's sentence ("an action cannot
+      // rest on another action" was drawn for a target that was not a canonical id); one with none draws the code's sentence alone.
+      refusals: { ACTION_KIND_UNKNOWN: "refusal.ACTION_KIND_UNKNOWN", COUNTERPARTY_REFUSED: "refusal.COUNTERPARTY_REFUSED", CLOCK_REFUSED: "refusal.CLOCK_REFUSED",
+        ACTION_BASIS_REFUSED: function (refusal, cs) {
+          const found = refusal && Array.isArray(refusal.findings) ? refusal.findings : [];
+          const lines = found.map(function (f) { return f && typeof f.detail === "string" && f.detail.trim() ? "<li>" + cs.esc(f.detail.trim()) + "</li>" : ""; }).join("");
+          return cs.w("refusal.ACTION_BASIS_REFUSED") + (lines ? '<ul class="mk-list" data-findings="refusal">' + lines + "</ul>" : "");
+        } },
     },
     WRITE_HELP,
   ],

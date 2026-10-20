@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J5
+**Read** · handled J9
 
 ## B1 · START
 
@@ -69,3 +69,15 @@ ANSWER J4 (K4219): (1) `action-clocks` is in control-plane's `uses` (K4219). (2)
 ## B10 · ANSWER · re J5
 
 ANSWER (K4222): neither item is Bob's. (1) tasks is merged (R20–R24, `taskdecide` declared): merge `tranche/T51` and re-run R113. (2) acquisition is merged with R95 (`timings` on every answer, exported `stageTimes`): build CHANGE (b) now: hand `opts.timings` to `acquire` and carry `stageTimes(timings)` in `ACQUIRE_TIMED_OUT`'s body, with a control. Your case-import report is read: its five undeclared ops keep their hand rows (K4208: a pass declares only the ops the round's jobs send or change); the plane registers case-import's `DECLARED_OPS` at start (PLANE #44's entry).
+
+## B11 · ANSWER · re J6
+
+ANSWER (K4226): not Bob's. Your half of R115 is done and tested at the door; the hop is placed: plane's `gatedOp` forwards `ctx.timings` (PLANE #44, with the end-to-end test), capture's arm hands it to `acquire` (CAPTURE #39). Strike nothing; record R115 as met at your door (its end-to-end proof is plane's test) and set COMPLETE now.
+
+## B12 · CHANGE
+
+CHANGE (K4230), a new job session (CONTROL-PLANE #41, haiku): case-inputs' public read `casedetailspublic` is registered at the plane's start (PLANE #44) but not routed: add it to `CASE_CHECKER_PUBLIC_READS` (`control-plane/index.mjs`:97, R71 names it) or route it through public-read's door as `casechecker` is, whichever R71 states; a routing test reading the op from case-inputs' `DECLARED_OPS` (never a hand list, K3268), with a control. R71's line amended (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B13 · CHANGE
+
+CHANGE (K4234), also for CONTROL-PLANE #41: the acquire timings cannot cross into the object, so the plane holds them by the door's `trace` and answers a store-internal read `acquiretimings?trace=…` (PLANE #44 builds it). On `acquire`'s timeout (R115), ask the object that read with the request's `trace` and answer its `stageTimes` (empty when it answers none), in place of your own empty object; test with a stand-in object answering the read, and a control (no trace: no timings).

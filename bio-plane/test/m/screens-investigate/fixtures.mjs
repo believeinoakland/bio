@@ -29,6 +29,12 @@ export const STD = "STD-2026-0004-policy";
 export const COURT = "ENT-2026-0101";
 export const HELD = { ok: true, held: [{ bundle_id: "INFO-2026-0001", title: "Lease amendment 1", capture: { sha256: SHA } }, { bundle_id: "INFO-2026-0002", title: "Rent schedule", capture: { sha256: SHA2 } }], truncated: false };
 
+export const SHA3 = "5c" + "2".repeat(62);
+/** `heldcaptures` as `capture` R77/R88 answers it: the default list is the documents at `collected` (held); `held_and_vouched` adds
+ *  the ones a member has vouched for. A document in neither state is in neither list. */
+export const HELD_VOUCHED = { ok: true, held: [...HELD.held, { bundle_id: "INFO-2026-0003", title: "Vouched minutes", capture: { sha256: SHA3 } }], truncated: false };
+export const heldByState = (r) => ok(r.query && r.query.state === "held_and_vouched" ? HELD_VOUCHED : HELD);
+
 export const PROJECT_MD = ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"", "references:",
   `  - target: ${ENT}`, "    rel: cites", "    status: active", "  - target: INQ-2026-0001-seven-days", "    rel: cites", "    status: active", "---", ""].join("\n");
 

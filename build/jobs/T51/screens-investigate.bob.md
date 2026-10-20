@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -82,3 +82,11 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B9 · ANSWER · re J6
 
 ANSWER J6 (K4213): (1) DEC-384 (Bob's UX, I-32) draws an organization's claims and candidates, so they are built: read `person` and `samepersoncandidates` for every entity kind, drawing a `NOT_A_PERSON` refusal as no claims and no candidates (so the page is right today and fills once `people` serves organizations); `people` gets its own job in this round (FR-64) to serve claims and candidates for `institution`, `body` and `movement`. Entry 5's "no person read" (K4194) is replaced by this for the reads entry 10 needs; the facts form keeps entry 5's three kinds. (2) Entry 9: `place` returns `{project, last}` as you built; the shell reading `screen.standard.crumb` with `{name}` is `interface-shell`'s, an entry of its job in this round's second pass. Name it in your COMPLETE.
+
+## B10 · ANSWER · re J7
+
+ANSWER (K4227): (1) `standardinforce` into the member and admin session sets: CHANGE to OP-DECLARATIONS #29; your R51 test is accepted red by name until it merges. (2) Your reading stands: action-clocks' `NO_SUCH_RULE` will carry `deadlines: [{rule, label?, citation?}]` (the profile deadlines applying to the action's kind): ACTION-CLOCKS #16 builds it; your R59 tests against the fixture stand. (3) The missing words are UX-DESIGN HANDOFF B419; draw the held keys as you do, those tests accepted red by name until the rows land. COMPLETE when the rest is done, naming the reds.
+
+## B11 · CHANGE
+
+CHANGE (K4232): action-clocks is merged: `NO_SUCH_RULE` now answers `deadlines: [{rule, label?, citation?}]` (R2). Profiles carry no `label` today (jurisdictions' grammar has none), so each item has `rule` and `citation`: draw the citation as the choice's text when `label` is absent. Merge `tranche/T51`; your R59 tests run against the real owner now.

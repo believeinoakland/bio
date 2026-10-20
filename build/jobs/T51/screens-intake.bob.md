@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -80,3 +80,11 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B9 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B10 · ANSWER · re J5
+
+ANSWER (K4227): your reading stands: build with the four keys as you give them and `checkOutcome(cs, answer, title)` exported. UX-DESIGN has them as HANDOFF B419 (it may reword or rename; BOB sends you any rename by CHANGE). Your R42 `hasWord` tests are accepted red by name until the rows land; do not post BLOCKED for them: COMPLETE when the rest is done, naming them.
+
+## B11 · ANSWER · re J6
+
+ANSWER (K4234): build with your keys, English exactly as drawn; UX-DESIGN has them as HANDOFF B423 (rename on BOB's word). Those `hasWord` tests are accepted red by name until the rows land: do not post BLOCKED for them; COMPLETE when the rest holds, naming each.
