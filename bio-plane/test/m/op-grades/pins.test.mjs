@@ -272,7 +272,7 @@ test("R2 R5 (N891): every read row of NON_ACTS writes nothing and takes no grade
    + "library's, publishschedule, notes, and every T33 read; the public reads take no grade", () => {
   const rows = readRows(NON_ACTS);
   assert.ok(rows.length > 250);
-  /* R39 grades `securitymap` caller-owned (an administrator's own read); no other read has a grade */
+  /* R39 grades groupdescriptiondraft and translationdraft caller-owned; no read has a grade, securitymap included (K4210) */
   const GRADED = tickedAll(reqText(39));
   for (const op of rows) if (!GRADED.includes(op)) assert.ok(ungraded(op), op);
   /* the reads whose sentence ends on its closing words: they write nothing */

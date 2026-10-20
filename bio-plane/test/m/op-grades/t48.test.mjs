@@ -11,7 +11,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
-import { reqText, ticked, readRows, asksNotTheAccount } from "./declared.mjs";
+import { reqText, ticked, readRows, asksNotTheAccount, declaredSentence, doesSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -22,7 +22,7 @@ const countOf = (code) => JUSTIFICATION_REFUSALS.filter((c) => c === code).lengt
 const WRITES = { actionreplyquoting: "reversible", updateskip: "reasoned", updatelater: "reversible",
   updatestart: "reversible", planask: "reversible", stepsource: "reasoned", stepsourcewithdraw: "reasoned",
   lookedsince: "caller-owned" };
-const R39_ROWS = { translationdraft: "caller-owned", groupdescriptiondraft: "caller-owned", securitymap: "caller-owned" };
+const R39_ROWS = { translationdraft: "caller-owned", groupdescriptiondraft: "caller-owned" };
 const READS = readRows(T48.T48_NON_ACTS);
 const R41_READS = READS.filter((op) => op !== "proceedingdates" && op !== "updatenotice");
 /* the ops R41 names that T48's tables hold */
@@ -76,9 +76,9 @@ test("R38: proceedingdates is a read, `read: …`, ungraded; readtranslate takes
 });
 
 /* ---- R39 ----------------------------------------------------------------------------------------------------------- */
-test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescriptiondraft and securitymap are each given a "
-   + "`caller-owned` row with their NON_ACTS sentences unchanged; each a phone act and no machine refusal; control: "
-   + "translationmark stays `undetermined`", () => {
+test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescriptiondraft is given a `caller-owned` row "
+   + "with its NON_ACTS sentence unchanged; each a phone act and no machine refusal; control: translationmark stays "
+   + "`undetermined`", () => {
   for (const [op, g] of Object.entries(R39_ROWS)) {
     assert.equal(RUNG_ABSENT[op].ground, g, op);
     assert.ok(!Object.hasOwn(RUNGS, op), op);
@@ -88,9 +88,8 @@ test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescr
   }
   assert.equal(RUNG_ABSENT.translationdraft.ground, "caller-owned");
   assert.match(NON_ACTS.translationdraft, /^translation-directed: keyed by a language and interface words; drafts labeled machine work/);
-  assert.equal(NON_ACTS.groupdescriptiondraft, "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; "
-    + "the member's words only by the member's own act of keeping it");
-  assert.match(NON_ACTS.securitymap, /^read: the group's count-only security tally by kind and period/);
+  assert.equal(NON_ACTS.groupdescriptiondraft, declaredSentence("store-door", "groupdescriptiondraft"));
+  assert.equal(NON_ACTS.securitymap, doesSentence("securitymap"));
   /* the ground is as memberlanguageset's */
   assert.equal(gradeOf("translationdraft"), gradeOf("memberlanguageset"));
   /* controls */
@@ -100,6 +99,18 @@ test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescr
   const undetermined = Object.keys(RUNG_ABSENT).filter((op) => RUNG_ABSENT[op].ground === "undetermined");
   for (const op of Object.keys(R39_ROWS)) assert.ok(!undetermined.includes(op), op);
   assert.ok(undetermined.includes("translationmark"));
+});
+
+test("R39 (K4210): securitymap is graded `read` once: its NON_ACTS sentence stands and no absence, rung or machine refusal "
+   + "holds it; control: a fresh instance refuses a ground on it, as its owner's declaration would (ground-on-read)", async () => {
+  assert.equal(NON_ACTS.securitymap, doesSentence("securitymap"));
+  const TABLES = { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS };
+  assert.deepEqual(Object.keys(TABLES).filter((t) => Object.hasOwn(TABLES[t], "securitymap")), ["NON_ACTS"]);
+  /* control: the declaration a ground would make, on an instance not yet read, is refused naming the op */
+  const fresh = await import("../../../src/op-grades/index.mjs?instance=t48-k4210");
+  assert.throws(() => fresh.registerDeclaredOps({ credentials: { securitymap: { classes: ["admin"], machineClasses: [],
+    mutating: false, weight: "caller-owned", description: "securitymap", fields: { accepts: [], requires: [] } } } }),
+  (e) => e.code === "DECLARED_OP_BAD_WEIGHT" && e.message.includes("securitymap") && e.message.includes("ground-on-read"));
 });
 
 /* ---- R40 ----------------------------------------------------------------------------------------------------------- */
@@ -190,7 +201,7 @@ test("R38 R39 R40 R41: T48's tables hold exactly these ops, none both graded and
    + "requirement words it", () => {
   const T48W = { ...Object.fromEntries(Object.keys(T48.T48_RUNGS).map((o) => [o, T48.T48_RUNGS[o]])),
     ...Object.fromEntries(Object.keys(T48.T48_RUNG_ABSENT).map((o) => [o, T48.T48_RUNG_ABSENT[o].ground])) };
-  assert.deepEqual(T48W, { ...WRITES, groupdescriptiondraft: "caller-owned", securitymap: "caller-owned" });
+  assert.deepEqual(T48W, { ...WRITES, groupdescriptiondraft: "caller-owned" });
   for (const [op, g] of Object.entries({ ...WRITES, ...R39_ROWS })) assert.equal(gradeOf(op), g, op);
   for (const op of Object.keys(T48.T48_RUNGS)) assert.ok(!Object.hasOwn(T48.T48_RUNG_ABSENT, op), op);
   for (const [op, e] of Object.entries(T48.T48_RUNG_ABSENT)) assert.ok(e.is.length > 40, op);
@@ -242,18 +253,18 @@ test("R42: MARKS is frozen and total over the registry's rungless acts — a rea
 
 test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` key for an owed act), an op the kit does not "
    + "name Reasoned, the kit's default; the kit and the registry are read at the commit the marks name", () => {
-  assert.equal(MARKS_KIT_COMMIT, "e6d16d8f53");
+  assert.equal(MARKS_KIT_COMMIT, "aa8bdcd0b4");
   for (const op of Object.keys(MARKS)) {
     /* notewrite is the one entry a ruling, not the kit, sets (R46, DEC-300 (5)); t50.test.mjs names it */
     if (op === "notewrite") continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
-    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at e6d16d8f53$/ : /^kit default at e6d16d8f53/, op);
+    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at aa8bdcd0b4$/ : /^kit default at aa8bdcd0b4/, op);
   }
   /* the kit now names acquire Reversible (K3284), so it is read from the kit like any other and no override remains */
   assert.equal(KIT_WEIGHT.acquire, 1);
   assert.equal(MARKS.acquire, "Reversible");
-  assert.match(MARK_SOURCES.acquire, /^mock-kit\.js WEIGHT at e6d16d8f53$/);
+  assert.match(MARK_SOURCES.acquire, /^mock-kit\.js WEIGHT at aa8bdcd0b4$/);
   assert.ok(Object.values(MARK_SOURCES).every((s) => !s.startsWith("K3284")), "no entry still names the retired override");
   /* the examples R42 names: login is reversible, promote reasoned; and the interface-shell R64 examples */
   assert.equal(MARKS.login, "Reversible");
