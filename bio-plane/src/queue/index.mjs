@@ -2561,11 +2561,13 @@ export function queueAnswer(r, { gate } = {}) {
    beside the ops map: each row's classes, mutating, weight and description are the op's existing rows' (`op-declarations`,
    `op-grades`), its fields are what the arm reads. `decidedBy` (the control plane's stamp on `proposedispose`), `viewer`,
    `member` and `identity` are stamps, not fields. `queuemute` and `queuesnooze` also read an `at` (an instant), which only
-   in-plane callers and tests send. */
+   in-plane callers and tests send. A SET (`items`, queue-states' set arm) names each item's identity in its own item, so `items`
+   satisfies the two identity groups; the disposition and the reason stay top-level, because the set shares them onto every item
+   (`#perItem`). */
 export const DECLARED_OPS = Object.freeze({
   proposedispose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("queue.declared.proposedispose", "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle"),
     fields: { accepts: ["items","key","progressionKey","stageKey","project","finding","kind","to","state","reason","definitionVersion"],
-              requires: [["project","key","progressionKey"],["finding","key","progressionKey"],["to","state"],"reason"] } },
+              requires: [["project","key","progressionKey","items"],["finding","key","progressionKey","items"],["to","state"],"reason"] } },
   queuemute: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuemute", "personal state, keyed (member, case) over the kinds named or (member, item) by the item's own id: a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)"),
     fields: { accepts: ["case","kinds","item","unmute","at"], requires: [["item","case"]] } },
   queuesnooze: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuesnooze", "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)"),
