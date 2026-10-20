@@ -135,3 +135,13 @@ COMPLETE (SCREENS-PUBLISH #9), B13 applied. J9's entries stand; `tranche/T51` @ 
 `node --test test/m/screens-publish/`: 170 tests, 166 pass, 2 fail (R10 `imported` `writinghelp`; public R8 `docketfile`), 2 todo (K3717), stable over three runs. Process checks: format 0, architecture 0, words 0 findings in this module; coverage: R68 named by no test; ownership: the requirements file only (accepted, B9). J9's finding 1 (`OPS` holds none of the six declared ops until something registers them, so interface-shell's t50 and declared tests, page.test and control-plane's t46-app throw when they compose the real `SCREENS`) still stands for op-declarations.
 
 Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 27, module lines 3074
+
+## J11 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9), B14 applied; `tranche/T51` merged.
+
+R68 built: the ceremony's `place` answers `projectKey: "crumb.project.unjoined"` when the project's title cannot be read, so the crumb never draws the id; `crumb.project.unjoined` and `refusal.NO_REVIEW_COPY` are in the ceremony's words. Test names R68; control: a readable project draws its title. `register.mjs` stays until test-support's shared helper exists.
+
+`node --test test/m/screens-publish/`: 169 tests, 167 pass, 2 fail, 2 todo. Reds named: common.test R10 (`imported`'s registry `writinghelp`) and public.test R8 (`docketfile`), both UX-DESIGN B420; todo: R35's two press tests (K3717). R49 stays unbuilt (B420). Checks: format 0, architecture 0, words 0 findings here, coverage 0 failures, ownership: the requirements file only (B9).
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 31, module lines 3080
