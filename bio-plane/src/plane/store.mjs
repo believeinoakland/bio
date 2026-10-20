@@ -333,7 +333,6 @@ export class Store extends DurableObject {
        (whole store only, its R13) and starts, filling accepted-work's registration (its R16), `moves` among it (R20;
        accepted-work R8), before the first request. */
     registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
-    registerCaseInputsPublicReads(ctx, { publicRead: publicReadOf(ctx) });   /* case-inputs R24: `casedetailspublic` */
     caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
     /* R18 (N529; K1333): case-disclosures, at its place after case-import and before case-authoring in the modules'
        order, built here with the attestation instance above, so case-authoring's lazy getter finds that one instance per
@@ -366,6 +365,10 @@ export class Store extends DurableObject {
        running run's principal reaches `planPropose` and `claimFindStep`'s run arm. */
     investigationOf(ctx, { promotion }).registerRunHolder("ai-runs", (by, run) => aiRunsOf(ctx, env).runHolder(by, run));
     caseAuthoringOf(ctx, { publishSchedule });   /* R18: its disclosures, with their attestation, are case-disclosures' (built above) */
+    /* R17 (K4221; case-inputs R24): case-inputs' public read `casedetailspublic`, registered once at start with public-read, over the
+       instance case-authoring's creation made (with its record, membership and clock: a factory reads its deps on its first call
+       only), so case-inputs keeps its place after case-import and case-checker's registration keeps its own. */
+    registerCaseInputsPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     /* R39 (T45; K2839): case-check, last in layer 8 (after review), the one instance per host, over case-authoring,
        publication and case-carriage on this host; at creation it makes and declares its table (its R4). */
     const caseCheck = caseCheckOf(ctx);
