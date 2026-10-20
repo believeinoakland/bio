@@ -90,12 +90,14 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
        DECODED to pixels, upright, so `pixels_sha256` is one an independent decoder reproduces. */
     /* R23: a capture that is a JPEG or PNG picture is a ONE-PAGE document, rendered by the picture renderer
        (pdf-pixels R42) and taken through every step below exactly as a PDF page is. Any page but 0 does not exist,
-       and is named so before a pixel is made. Bytes that are neither are the page renderer's to refuse, as before. */
+       and is named so before a pixel is made. Bytes that are neither are the page renderer's to refuse, as before.
+       R24 (L26): a photograph is PREPARED (levelled, deskewed, enlarged) before the engine reads it, so the frame
+       below, its size and its digest are the prepared picture's. */
     const picture = isPicture(bytes);
     if (picture && page !== 0)
       return { ok: false, reason: "NO_SUCH_PAGE", detail: REFUSALS.NO_SUCH_PAGE, page, page_count: 1 };
     const rendered = picture
-      ? await renderPicture(bytes, page, { maxEdge: PICTURE_MAX_EDGE, grey: true })
+      ? await renderPicture(bytes, page, { maxEdge: PICTURE_MAX_EDGE, grey: true, prepare: true })
       : await render(bytes, page, { decodeDct: true });
     if (!rendered || !rendered.ok)
       return { ok: false, reason: "PAGE_NOT_RENDERABLE", detail: REFUSALS.PAGE_NOT_RENDERABLE,
@@ -117,6 +119,13 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
                page, width: rendered.width, height: rendered.height, frame_bytes: frame,
                bound_bytes: MAX_FRAME_BYTES,
                why: localize("ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling — the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", { width: String(rendered.width), height: String(rendered.height), frame: String(frame), MAX_FRAME_BYTES: String(MAX_FRAME_BYTES) }) };
+
+    /* R24: a picture the preparation found no text lines in (a blank wall, noise) is not handed to the engine, which
+       would read marks out of it: it is answered by the no-text path, nothing boxed. */
+    if (rendered.prepared && rendered.prepared.text_found === false)
+      return { ok: false, reason: "NOTHING_TRANSCRIBED", detail: REFUSALS.NOTHING_TRANSCRIBED, page,
+               boxes: 0, blank: 0, unanchored: 0,
+               why: localize("ocr-worker.member.the_picture_has_no_lines_of_text", "no line of text was found in this picture, so it was not given to the engine to read; there is nothing here this record could anchor.") };
 
     const samples = await pngToSamples(rendered.bytes);
     if (!samples.ok)
