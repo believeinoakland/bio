@@ -1064,13 +1064,13 @@
   },
   {
    "key": "screen.plan.subject.from",
-   "en": "from the inquiry \"{title}\" ({status}, {date})",
+   "en": "from the question \"{title}\" ({status}, {date})",
    "protected": false,
    "note": "DEC-259: where a plan's subject comes from; {status} such as suspected"
   },
   {
    "key": "screen.plan.phase.checkpoint",
-   "en": "{item} → checkpoint: \"{checkpoint}\" (judged by a member)",
+   "en": "{item} → checkpoint: \"{checkpoint}\" (judged by a member, once it is due)",
    "protected": false,
    "note": "DEC-259: a scenario's phase"
   },
@@ -5906,9 +5906,9 @@
   },
   {
    "key": "case.ladder.notyet",
-   "en": "not yet checked",
+   "en": "Not checked yet",
    "protected": false,
-   "note": "DEC-299: replaces \"not yet evaluated\" on the ladder"
+   "note": "DEC-299: a step of the readiness ladder that nothing has judged; never \"not met\" (B411 B2/C8)"
   },
   {
    "key": "ceremony.gate.heading",
@@ -5918,9 +5918,9 @@
   },
   {
    "key": "ceremony.gate.notargets",
-   "en": "This draft names no finding to publish. Add at least one finding to the case, then check again.",
+   "en": "This draft has no finding to publish. Add a finding to the case, then check again.",
    "protected": false,
-   "note": "DEC-299: the publication with no targets; replaces the developer text"
+   "note": "DEC-299: the publication with no targets; replaces the developer text; B411 D1: a door \"Add a finding\" beside it"
   },
   {
    "key": "ceremony.gate.other",
@@ -8330,7 +8330,7 @@
   },
   {
    "key": "screen.document.cite.question.help",
-   "en": "Set to the question this document was captured for; this project's questions come first.",
+   "en": "Set to the question this document was captured for; this project's questions come first. Questions with the same title are told apart by their project.",
    "protected": false,
    "note": "DEC-320: screens-inquiry R61"
   },
@@ -9164,7 +9164,7 @@
   },
   {
    "key": "refusal.ACQUIRE_TIMED_OUT",
-   "en": "Fetching the page took longer than 25 seconds, so your team's Civicsmith stopped and kept nothing. Try again; if the page is very large, save it yourself and add it as a file.",
+   "en": "The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.",
    "protected": false,
    "note": "DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED"
   },
@@ -12944,7 +12944,7 @@
   },
   {
    "key": "screen.capture.a64.if_the_address_is_already_held_or_the_si",
-   "en": "If the address is already held, or the site has changed since",
+   "en": "If the address is already held, or the page reads differently now",
    "protected": false,
    "note": "DEC-330: B306 A64: capture drawn word"
   },
@@ -12962,13 +12962,13 @@
   },
   {
    "key": "screen.capture.a64.the_site_has_changed_since",
-   "en": "The site has changed since",
+   "en": "The page reads differently now",
    "protected": false,
    "note": "DEC-330: B306 A64: capture drawn word"
   },
   {
    "key": "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
-   "en": "your team holds a capture from {date}, and the site now gives a different document",
+   "en": "your team holds a capture from {date}, and the page the site gives now reads differently. A page with a clock, a counter or a live feed reads differently every time it is loaded, so for a capture made minutes ago this may mean nothing.",
    "protected": false,
    "note": "DEC-330: B306 A64: capture drawn word"
   },
@@ -12992,7 +12992,7 @@
   },
   {
    "key": "screen.document.a34.your_citations_leg_by_leg",
-   "en": "Your citations, leg by leg",
+   "en": "Your citations",
    "protected": false,
    "note": "DEC-330: B306 A34: document drawn word"
   },
@@ -13004,7 +13004,7 @@
   },
   {
    "key": "screen.document.a34.each_reasoning_that_rests_on_this_docume",
-   "en": "Each reasoning that rests on this document is asked about on its own.",
+   "en": "Each question that rests on this document is asked about on its own.",
    "protected": false,
    "note": "DEC-330: B306 A34: document drawn word"
   },
@@ -14276,13 +14276,13 @@
   },
   {
    "key": "screen.finder.covered.levels",
-   "en": "The record answers at four levels, and they are different facts. Finding nothing at one of them is not evidence of nothing at the next.",
+   "en": "Search looks in four places, and each answers a different question. Finding nothing in one is not a sign that nothing is held in the next.",
    "protected": false,
    "note": "DEC-330: B306 A15: the honesty panel"
   },
   {
    "key": "screen.finder.covered.rests",
-   "en": "What anything rests on",
+   "en": "Findings and connections",
    "protected": false,
    "note": "DEC-330: B306 A15: level 1 of 4"
   },
@@ -14294,7 +14294,7 @@
   },
   {
    "key": "screen.finder.covered.read",
-   "en": "What has been read out of the documents",
+   "en": "Passages read from the documents",
    "protected": false,
    "note": "DEC-330: B306 A15: level 2 of 4"
   },
@@ -14324,13 +14324,13 @@
   },
   {
    "key": "screen.finder.covered.looked",
-   "en": "Whether anybody looked",
+   "en": "Where nobody has looked yet",
    "protected": false,
    "note": "DEC-330: B306 A15: level 4 of 4"
   },
   {
    "key": "screen.finder.covered.docs",
-   "en": "The documents themselves",
+   "en": "Documents searched",
    "protected": false,
    "note": "DEC-330: B306 A15: level 3 of 4"
   },
@@ -18632,9 +18632,9 @@
   },
   {
    "key": "refusal.BASIS_REFUSED",
-   "en": "A piece of evidence cannot be used: it rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hypothesis. Nothing was written.",
+   "en": "These documents cannot be used here: one of them rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hunch. Take that one out, or choose a document that does, then try again. Nothing was written.",
    "protected": false,
-   "note": "DEC-342: evidence leg refused by basis rules"
+   "note": "DEC-342: evidence leg refused by basis rules; B411 I-22: plain words and a way forward"
   },
   {
    "key": "refusal.BASIS_VERSION_REFUSED",
@@ -20480,9 +20480,9 @@
   },
   {
    "key": "refusal.NO_SUCH_RULE",
-   "en": "No active rule in your places' rules states that deadline for this kind of action, so none was set. Name a deadline those rules list. Nothing was written.",
+   "en": "No rule in your places' rules states a deadline for this kind of action, so none was set. Pick one of the deadlines your rules do list, in the box below, or see your places' rules. Nothing was written.",
    "protected": false,
-   "note": "DEC-342: deadline rule missing or unknown for the action's kind"
+   "note": "DEC-342: deadline rule missing or unknown for the action's kind; B411 E6: a box to name the deadline and a door"
   },
   {
    "key": "refusal.NO_SUCH_SET",
@@ -33751,6 +33751,372 @@
    "note": "DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders."
   },
   {
+   "key": "screen.capture.address.working.head",
+   "en": "While it is being fetched",
+   "protected": false,
+   "note": "DEC-384: B411 A1: progress while capturing"
+  },
+  {
+   "key": "screen.capture.address.working",
+   "en": "Fetching the page. This can take up to 25 seconds, longer if you chose to keep it as a visitor saw it. Keep this page open; the result appears here.",
+   "protected": false,
+   "note": "DEC-384: B411 A1: progress while capturing; the code shows it from Capture until the result, beside the button"
+  },
+  {
+   "key": "screen.capture.address.untitled",
+   "en": "A {kind} from {site}",
+   "protected": false,
+   "note": "DEC-384: B411 I-03: a capture is named by its title, or failing that by its site and kind; never the file part of its address"
+  },
+  {
+   "key": "screen.capture.address.existed.open",
+   "en": "Open it",
+   "protected": false,
+   "note": "DEC-384: B411 I-04: the door to the document already held"
+  },
+  {
+   "key": "screen.doorbell.reference",
+   "en": "Your reference: {reference}",
+   "protected": false,
+   "note": "DEC-384: B411 I-20: the receipt gives something to keep"
+  },
+  {
+   "key": "screen.doorbell.after.head",
+   "en": "After you hand it over",
+   "protected": false,
+   "note": "DEC-384: B411 I-20"
+  },
+  {
+   "key": "screen.document.cite.option",
+   "en": "{question} ({project})",
+   "protected": false,
+   "note": "DEC-384: B411 I-11, A6: a question in the list is told apart by its project"
+  },
+  {
+   "key": "screen.document.cite.choose",
+   "en": "Choose a question",
+   "protected": false,
+   "note": "DEC-384: B411 I-11, A6: the list never starts blank"
+  },
+  {
+   "key": "screen.document.unwatched.head",
+   "en": "If this address isn't being watched",
+   "protected": false,
+   "note": "DEC-384: B411 I-35"
+  },
+  {
+   "key": "screen.document.unwatched",
+   "en": "This address isn't being watched, so there is nothing to check yet. Watch it, and each new version found is kept beside this one.",
+   "protected": false,
+   "note": "DEC-384: B411 I-35: shown instead of Check for a new version now while the address is not watched"
+  },
+  {
+   "key": "screen.finder.noresult.partial",
+   "en": "No document holds all of the words “{q}” together.",
+   "protected": false,
+   "note": "DEC-384: B411 I-14: shown instead of Nothing your team holds matches when some documents hold some of the words"
+  },
+  {
+   "key": "screen.finder.partial.head",
+   "en": "When some documents hold only some of the words",
+   "protected": false,
+   "note": "DEC-384: B411 I-14"
+  },
+  {
+   "key": "screen.open-file.tool.clamav",
+   "en": "Built-in scanner",
+   "protected": false,
+   "note": "DEC-384: B411 I-18: the scanner is named for what it is, never clamav"
+  },
+  {
+   "key": "screen.open-file.result.not_scanned",
+   "en": "Not scanned yet",
+   "protected": false,
+   "note": "DEC-384: B411 I-18: the scanner state in plain words"
+  },
+  {
+   "key": "screen.open-file.result.clean",
+   "en": "Clean: nothing found",
+   "protected": false,
+   "note": "DEC-384: B411 I-18"
+  },
+  {
+   "key": "screen.open-file.result.found",
+   "en": "Something was found",
+   "protected": false,
+   "note": "DEC-384: B411 I-18"
+  },
+  {
+   "key": "screen.open-file.result.failed",
+   "en": "Could not be scanned just now",
+   "protected": false,
+   "note": "DEC-384: B411 I-18"
+  },
+  {
+   "key": "strength.arithmetic.unrated_no_leg_on_any_set",
+   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: strength sentence in plain words; the code draws each document by its title, once"
+  },
+  {
+   "key": "strength.arithmetic.unrated_no_leg_on_this_axis",
+   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: strength sentence in plain words"
+  },
+  {
+   "key": "strength.arithmetic.unrated_this_inquiry_rests_on_nothing",
+   "en": "Not graded yet on {axis}: this question rests on nothing here.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: strength sentence in plain words"
+  },
+  {
+   "key": "strength.arithmetic.present_and_not_yet_load_bearing",
+   "en": "Listed, but not counted yet: {legs}.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.no_computed_strength_a_leg",
+   "en": "There is no strength for {axis} yet: a document that every set of reasons needs is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.no_computed_strength_every_set",
+   "en": "There is no strength for {axis} yet: every set of reasons this rests on is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.no_computed_strength_stopped",
+   "en": "There is no strength for {axis} yet: {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.no_stronger_than_the_weakest",
+   "en": "{axis} {grade}: no stronger than the weakest {axis} grade it rests on, which is {leg}{via}.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.strongest_of_the_sets_of_reasons",
+   "en": "{axis} {grade}: the strongest of the {count} sets of reasons that each carry this conclusion on their own is {set}, and it is no stronger than its weakest {axis} grade, which is {leg}{via}.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.that_leg_is_needed_by_every",
+   "en": "That document is needed by every one of those sets, so no set can be stronger than it.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.further_sets_are_undetermined",
+   "en": "{count} further sets are undetermined and could only be stronger, never weaker: {sets}.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "strength.arithmetic.one_further_set_is_undetermined",
+   "en": "{count} further set is undetermined and could only be stronger, never weaker: {sets}.",
+   "protected": false,
+   "note": "DEC-384: B411 I-23/A8: plain words"
+  },
+  {
+   "key": "screen.standard.crumb",
+   "en": "Standard: {name}",
+   "protected": false,
+   "note": "DEC-384: B411 I-30: the last crumb of a standard says which one the member is on; the project crumb is the project's title"
+  },
+  {
+   "key": "screen.person.same.org",
+   "en": "Same organization?",
+   "protected": false,
+   "note": "DEC-384: B411 I-32: heading for an organization"
+  },
+  {
+   "key": "screen.person.same.holds.org",
+   "en": "Records claimed to be this organization stay linked, never merged; each claim is graded and anyone can see its reason or withdraw it with theirs.",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.same.claimed.org",
+   "en": "claimed the same organization; the records stay linked, never merged",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.same.because.org",
+   "en": "claimed the same organization, grade {grade}, because {basis}",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.candidates.org",
+   "en": "Records that might be the same organization. These are not claims: a member decides.",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.claim.same_as.org",
+   "en": "It is the same organization",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.claim.not_same_as.org",
+   "en": "It is not the same organization",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.claim.kind.same_as.org",
+   "en": "claimed the same organization",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.claim.kind.not_same_as.org",
+   "en": "claimed not the same organization",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.claim.kind.unsure.org",
+   "en": "unsure whether the same organization",
+   "protected": false,
+   "note": "DEC-384: B411 I-32"
+  },
+  {
+   "key": "screen.person.kind.help.org",
+   "en": "For an organization a fact can be its name, address or contact. Born, died and where someone lives or works apply to people only.",
+   "protected": false,
+   "note": "DEC-384: B411 I-32: under \"What kind of fact\" for an organization, which offers only name, address and contact"
+  },
+  {
+   "key": "review.title.draft",
+   "en": "Draft: {title}",
+   "protected": false,
+   "note": "DEC-384: B411 L14/I-37/C3/D1/I-39/I-29: the heading of a draft that names no case; the title is its scope or subject"
+  },
+  {
+   "key": "review.title.untitled",
+   "en": "A draft with no case named yet",
+   "protected": false,
+   "note": "DEC-384: B411 L14: the heading when the draft has no scope or subject either"
+  },
+  {
+   "key": "review.body.nocase",
+   "en": "This draft does not name a case yet. Which case it becomes is settled when it is published.",
+   "protected": false,
+   "note": "DEC-384: B411 L14: the body text under that heading, in plain words"
+  },
+  {
+   "key": "review.index.derived_case_identity",
+   "en": "a draft that does not name a case yet; which case it becomes is settled when it is published",
+   "protected": false,
+   "note": "DEC-384: B411 L14: the code's own id for the identity fragment; the heading is review.title.draft, the sentence review.body.nocase"
+  },
+  {
+   "key": "screen.review-copy.nodraft.go",
+   "en": "Make a draft",
+   "protected": false,
+   "note": "DEC-384: B411 I-29/C1: the door beside \"There is no draft to share yet\", to the case editor"
+  },
+  {
+   "key": "screen.case-editor.comments.go",
+   "en": "Read what outside readers said ({n})",
+   "protected": false,
+   "note": "DEC-384: B411 C4: on the case screen, a link to the comments and acknowledgements on its review copy"
+  },
+  {
+   "key": "screen.case-editor.comments.none",
+   "en": "No outside reader has commented yet.",
+   "protected": false,
+   "note": "DEC-384: B411 C4: the case screen when its review copy has no comment or acknowledgement"
+  },
+  {
+   "key": "screen.review-copy.acked",
+   "en": "{who}, an outside reader, read the draft and acknowledged it, {date}",
+   "protected": false,
+   "note": "DEC-384: B411 C4: an acknowledgement in the comments of a review copy"
+  },
+  {
+   "key": "refusal.PUBLISH_NO_FINDING",
+   "en": "This draft has no finding to publish. Add a finding to the case, then publish again.",
+   "protected": false,
+   "note": "DEC-384: B411 D1/L16: publishing a draft with no finding; case-authoring's own code, proposed as PUBLISH_NO_FINDING (the walk fixes none); a door \"Add a finding\" beside it"
+  },
+  {
+   "key": "screen.ceremony.gate.addfinding",
+   "en": "Add a finding",
+   "protected": false,
+   "note": "DEC-384: B411 D1/L16: the door beside both refusals about a draft with no finding, to where findings are added in the case editor"
+  },
+  {
+   "key": "screen.plan.option.unnamed",
+   "en": "Option {n}",
+   "protected": false,
+   "note": "DEC-384: B411 E1: an option with no summary is named by its place in the list, never by its id"
+  },
+  {
+   "key": "screen.plan.phase.unnamed",
+   "en": "Phase {n}",
+   "protected": false,
+   "note": "DEC-384: B411 E1: a phase with no name is named by its place in the list, never by its id"
+  },
+  {
+   "key": "screen.plan.judge.notdue",
+   "en": "You can judge this checkpoint from {date}.",
+   "protected": false,
+   "note": "DEC-384: B411 E1: drawn in place of the Judge control until the checkpoint is due"
+  },
+  {
+   "key": "law.pick",
+   "en": "Choose a law",
+   "protected": false,
+   "note": "DEC-384: B411 E3: the one list of laws, shared by \"Change the law\" and \"Propose another law\""
+  },
+  {
+   "key": "screen.due-date.rule.pick",
+   "en": "A deadline your rules list",
+   "protected": false,
+   "note": "DEC-384: B411 E6: the box beside the refusal \"No rule in your places' rules states a deadline\", to pick a listed deadline"
+  },
+  {
+   "key": "screen.due-date.rule.help",
+   "en": "Pick one of the deadlines your places' rules state, then work out the due date again.",
+   "protected": false,
+   "note": "DEC-384: B411 E6"
+  },
+  {
+   "key": "screen.due-date.rule.go",
+   "en": "See your places' rules",
+   "protected": false,
+   "note": "DEC-384: B411 E6: the door to the rules, in Settings"
+  },
+  {
+   "key": "screen.case-editor.nocase.summary",
+   "en": "A draft that names no case yet",
+   "protected": false,
+   "note": "DEC-384: B411 L14: the mock's label for the heading of a draft with no case"
+  },
+  {
+   "key": "screen.due-date.rule.summary",
+   "en": "When your rules state no deadline for this kind of action",
+   "protected": false,
+   "note": "DEC-384: B411 E6: the label of the refusal and its box"
+  },
+  {
+   "key": "screen.review-copy.nodraft.summary",
+   "en": "When there is no draft yet",
+   "protected": false,
+   "note": "DEC-384: B411 I-29: the label of the refusal and its door"
+  },
+  {
    "key": "wizard.WIZ-7db08189cc0e58c3.step4.none.what",
    "en": "Your team has no question yet. A question is what a project sets out to answer from documents anyone can check; its strength against the project's bar says how well they back the answer, and “Undetermined” means they can't settle it.",
    "protected": false,
@@ -33971,7 +34337,7 @@
   "screen.group-identity.purpose.field": "Why the team exists, in your own words",
   "screen.group-identity.visibility.choice.public": "Also our public page and the network directory",
   "screen.held.archive.filed": "{count} files held beside it",
-  "screen.held.ineligible": "Not eligible for a batch: {reason}",
+  "screen.held.ineligible": "Not included when you vouch for several at once: {reason}",
   "screen.held.waiting": "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
   "screen.help-records.must.1": "Answer within {days} days whether it holds records it can release, why or why not, and when they will be ready ({cite}).",
   "screen.help-records.must.2": "Take longer only by written notice, saying why and when, for reasons the law lists ({reasons}); never more than {extra} extra days ({cite}).",
@@ -34005,7 +34371,7 @@
   "screen.recovery.shown": "Save these now: they are shown only this once. Keep them somewhere only you can reach, apart from your password. Civicsmith keeps only a fingerprint of each, so it can never show them again.",
   "screen.reset.keeps": "Your handle and everything you did stay as they are, and every other sign-in of yours ends. {name} can't see the password you choose. Your recovery codes still work; if you have lost them too, get ten new ones in Settings › Recovery codes once you are in.",
   "screen.reset.dead.what": "It was used already, it expired, or an administrator withdrew it. Ask an administrator for a new one, in person or however your team talks. Nothing was changed.",
-  "screen.review-copy.heading": "Share Edition {edition} for review",
+  "screen.review-copy.heading": "Share this edition for review",
   "screen.review-copy.reads.until": "can read until {until}",
   "screen.review-outside.heading": "A review copy from {group}",
   "screen.review-outside.draft": "The case: {case}, Edition {edition} (draft)",
@@ -34103,6 +34469,22 @@
   "screen.find-in.question": "For which question",
   "screen.find-in.term.help": "Only passages with this name or term are shown, when you fill it in.",
   "find.query.placeholder": "Words to find",
+  "screen.held.ineligible.alone": "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
+  "screen.inbox.ladder.basis": "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
+  "screen.doorbell.received": "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
+  "screen.capture.address.existed": "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
+  "screen.document.cite.question": "Cite in which question",
+  "screen.finder.widen": "Documents holding at least one of the words: {n}.",
+  "screen.open-file.safe.ready": "The safe view is open below: each page as a picture, so nothing in it can run.",
+  "screen.open-file.note.line": "{tool}: {result}",
+  "screen.standard.text": "The document that states it",
+  "screen.standard.text.help": "Pick the document that states the requirement, as captured. The passage is the whole document until you select its words.",
+  "screen.review-copy.nodraft": "There is no draft to share yet. Make a draft of the case first, then share it.",
+  "screen.case-editor.rung.notmet": "Checked: something is missing",
+  "screen.plan.support.hypothetical": "Assumed: not shown yet",
+  "screen.plan.col.ends": "Legal deadline",
+  "screen.plan.noend": "No legal deadline",
+  "screen.start-send.noclock": "No legal deadline for this kind of action (your team's profile names none)",
   "shell.card.open": "Press or tap to open it.",
   "screen.home.move.anyone": "any member can take the next step"
  }

@@ -6,7 +6,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const I = (n, cls='i') => `<svg class="${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const WNAME = ['', 'Reversible', 'Reasoned', 'Terminal', 'Signed', 'Irreversible'];
 /* B411 T-07: what the mark says under a button (WNAME stays the key's name: weight.<name>.name) */
-const WSHOW = { Reasoned: 'Asks for a reason', Terminal: 'Ends something', Signed: 'Signed by you' };
+const WSHOW = { Reasoned: 'Asks for a reason', Terminal: 'Ends something', Signed: 'You sign this' };
 const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
