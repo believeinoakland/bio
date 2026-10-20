@@ -68,3 +68,8 @@ test("R62 entities declares resolutiondefect: its requires alone raise no refusa
   await declaredOpHolds({ op: "resolutiondefect", declaration: DECLARED_OPS["resolutiondefect"], call: mk("resolutiondefect", {}),
     refusedNaming: named({"captureSha":["NO_SHA"],"ref":["NO_REF"],"entityId":["NO_ENTITY"],"reason":["NO_REASON"]}, true), same: sameCode });
 });
+
+test("R62 entities declares entitybyalias: a read with no required field, its accepts is alias, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "entitybyalias", declaration: DECLARED_OPS["entitybyalias"], call: mk("entitybyalias", {}),
+    values: { alias: "ho:1" }, same: sameCode });
+});
