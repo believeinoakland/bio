@@ -32897,6 +32897,264 @@
    "en": "This item leaves once any administrator confirms.",
    "protected": false,
    "note": "DEC-378: C62 K4169 (member-roster expertiseconfirm): end of the row detail; on Home and in Your queue"
+  },
+  {
+   "key": "screen.capture.cred.head",
+   "en": "A source that asked for a login",
+   "protected": false,
+   "note": "DEC-381: B405 C20 (capturecredentialsupply): capture: heading of the section for a source that turned a request away for a login. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.turned",
+   "en": "Turned away: {source} asked for a login",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: row for the refused request; the source is sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.why1",
+   "en": "The source turned this request away, not your team.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: explains who refused. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.why2",
+   "en": "Give a login for it and the request goes back in the queue to be tried again.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: what giving a login does. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.user",
+   "en": "Username for this source",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: label of the username field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.secret",
+   "en": "Password or secret for this source",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: label of the secret field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.sealed1",
+   "en": "It is kept sealed.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: help of the secret field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.sealed2",
+   "en": "It is never shown again, to you or to anyone on your team.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: help of the secret field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.retry",
+   "en": "Try the request again",
+   "protected": false,
+   "note": "DEC-381: B405 C20 (capturerequestretry): capture: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.only1",
+   "en": "Only a request the source itself turned away can be tried again.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.only2",
+   "en": "Giving a login does not capture anything by itself.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.machine1",
+   "en": "A machine cannot give a login.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.machine2",
+   "en": "Only a member can, so nothing was stored.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.own1",
+   "en": "This source is your own team's Civicsmith.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: refusal, the own host. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.own2",
+   "en": "It never needs a login to be captured, so nothing was stored.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: refusal, the own host. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.notretry",
+   "en": "This request was not turned away by its source, so it cannot be tried again.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: refusal of the retry. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.stored",
+   "en": "A login is stored for {source}",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: row showing a stored login; the source is sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.notshown",
+   "en": "The secret is not shown.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: meta of the stored-login row. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.list",
+   "en": "Show the logins your team has stored",
+   "protected": false,
+   "note": "DEC-381: B405 C20 (capturecredentiallist): capture: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.listnote1",
+   "en": "The list names each source and who gave its login.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: note under the list. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.listnote2",
+   "en": "It never shows a secret.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: note under the list. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.tip1",
+   "en": "Some sites ask for a login before they give a document.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.tip2",
+   "en": "A login you give is used only to capture from that site.",
+   "protected": false,
+   "note": "DEC-381: B405 C20: capture: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.head",
+   "en": "Where this document came from",
+   "protected": false,
+   "note": "DEC-381: B405 C23 (declareorigin): document: section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.field",
+   "en": "The system it came from",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: field label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.eg",
+   "en": "For example, the city's records portal.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: help of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.second1",
+   "en": "A second declaration is added beside the first.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: note. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.second2",
+   "en": "It never replaces it.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: note. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.machine1",
+   "en": "A machine cannot say where a document came from.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.machine2",
+   "en": "Only a member can, so nothing was recorded.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.empty",
+   "en": "Name the system it came from.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: refusal, an empty system. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.notdoc",
+   "en": "This record is not a document, so it has no origin to declare.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: refusal, the record is no document. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.tip",
+   "en": "Records, in your name and with the date, where this document came from.",
+   "protected": false,
+   "note": "DEC-381: B405 C23: document: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.head",
+   "en": "Close this project now",
+   "protected": false,
+   "note": "DEC-381: B405 C65 (projectclose): project: section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.open",
+   "en": "Still open if you close it now: Matured is not reached, and the project has concluded {count} of the {total} questions it holds.",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: what is still open; counts are placeholders. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.why",
+   "en": "Why you are closing it",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: label of the reason choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.superseded",
+   "en": "Superseded by other work",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: one reason. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.do",
+   "en": "Close this project with this reason",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.note1",
+   "en": "This closes the project now, whether or not its work has gone quiet.",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: note under the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.note2",
+   "en": "What was still open at the close is kept beside your reason.",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: note under the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.ref.owner",
+   "en": "Only an owner can close this project.",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: refusal, not an owner; the owners follow as sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.ref.reason",
+   "en": "Choose one of the three reasons: resolved, superseded by other work or abandoned.",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: refusal, a reason outside the three. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.tip",
+   "en": "Ends the project at an owner's choice, with the reason you give.",
+   "protected": false,
+   "note": "DEC-381: B405 C65: project: explanation of the section. Sample names and counts are placeholders."
   }
  ],
  "rewrite": {
