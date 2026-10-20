@@ -162,3 +162,15 @@ COMPLETE · B9 (K4198) applied; supersedes J8's commit. Registry, library and fr
 - Others: interface-shell 191/1 (R64 test 32 'Reasoned' vs 'Asks for a reason', words change from the design merge, not mine); screens-wizards 59/0. Wave-2 reds from J7 unchanged (op-declarations 210, plane 72, screens-intake 64, affordances 235).
 
 Size (session_01WMjLF8CWtt2TqjEkixFjxh): test runs 28, module lines 2840
+
+## J10 · REPORT
+
+**B10 entry 1 (K4204; R45 amended by FR-49): done, tested, pushed** (commit `13fd41af12` on `job/T51/wizard-scripts`).
+
+- The registry is re-taken at `aa8bdcd0b4`, the newest design merge on `tranche/T51` (`60ff18e4b2`, "merge design … @ aa8bdcd0b4 (U419, DEC-386; K4204)"). `SOURCES.registry.commit` and the header in `build-data.mjs` name it; `source/registry.json` is the file at that commit.
+- The library and the front doors are unchanged: `library.json` at `aa8bdcd0b4` is byte-identical to the one at `1cc4a957f0`, so `civicsmith-library.mjs` and `front-doors.mjs` are not rewritten. `build-data.mjs` changes `screen-registry.mjs` only, by two lines (`SCREEN_REGISTRY_SOURCE`).
+- What the design changed in the registry: on `members`, the duplicate `expertiseconfirm` (the one the file listed twice, which B9 said to carry once) is gone, and `expertisewithdraw` (DEC-386) is an owed act there. Counts at `aa8bdcd0b4`: 83 screens, 554 acts (425 declared, 83 function, 46 owed); the owed ops are 42.
+- `expertisewithdraw` is owed on `members` and is not served as an op until `op-declarations` declares it (R13); a test pins that.
+- Tests: the suite `node --test bio-plane/test/m/wizard-scripts/*.test.mjs` is **108 pass, 0 fail**. The pins that named the current registry commit or its counts (library, t47, t48, t50, t51) now name `aa8bdcd0b4`, the counts above, and the owed-op count 42. The R45 control in t51 now flips `aa8bdcd0b4` (not `1cc4a957f0`). A new test in t51 names R45 amended (FR-49): the pin, `expertisewithdraw` owed on `members`, and the old pin no longer carried. The duplicate-act control in t51 now asserts the file lists `expertiseconfirm` once.
+- Checks: `format` 0 failures; `architecture` 0; `coverage` 45 of 45 live ids for wizard-scripts; `ownership` 0 failures (9 files); `words` 0 failures across the product (`checks/run.mjs`).
+- Not yet done: the census in entry 2 (K4202). See the QUESTION that follows.
