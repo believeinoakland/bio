@@ -2847,6 +2847,20 @@ export class Filings {
       return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: str(template),
                             detail: localize("filings.index.no_module_answers_the_templates_drafted", "no module answers the team's templates here, so no template can be drafted") });
     const named = template != null && template !== "";
+    /* R67 (T51; DEC-377; R17): a filing that needs counsel first (the action's governing tier, now, is 3) is kept as a
+       template only as a brief. `filing-templates` judges the kind's tier in the profiles (its R1); this judges the
+       action's, which the draft's own tier (1 or 2 when it was prepared) no longer says once the action's was raised.
+       The refusal is that module's own row for it (`TEMPLATE_TIER3_FILE`, its R1), answered as it gives it. A new
+       template keeps the `use` it is asked for (`file` by default); a new version keeps its template's. */
+    const act = this.#action(d.action_id, viewer);
+    if (act && this.governingTier(act).tier === 3) {
+      const read = named ? this.#call(() => t.templateRead({ template, viewer })) : null;
+      const kept = named ? (read && read.ok !== false && read.template ? read.template.use : null) : use ?? "file";
+      if (kept === "file")
+        return templatesRow({ ok: false, reason: "TEMPLATE_TIER3_FILE", filing: d.filing_id, kind: d.kind || act.kind || null,
+                              detail: localize("filings.index.a_filing_that_needs_counsel_first_is_kept_only_as_a_brief",
+                                "this filing needs counsel first (the governing tier is 3): it is kept as a template only as a brief (use: brief)") });
+    }
     const defaults = {};
     if (!named) {
       const v = this.#view();
@@ -3029,3 +3043,35 @@ export function filingsOps(f, url, body) {
     availableactions: () => f.availableActions({ determination: q("determination"), viewer: q("viewer") }),
   };
 }
+
+/* R68 (T51; K4168, K4202; op-declarations R80, R81; op-grades R49; test-support R15): the ops this module serves that the screens
+   send, declared by their owner beside the ops map: each row's class, weight and description are the op's existing rows', its
+   fields are what the arm reads. `filingrecordsent` is the name the screens send; the door resolves it to the arm `filingsent`
+   (`OP_ALIASES`). What an arm refuses only in some cases (the words of a communication when its purpose names none to
+   assemble; counsel at a governing tier of 3; the project of a template whose draft rested on no determination) is not
+   a field it refuses without, so it is accepted and not required. */
+const MEMBER_ACTS = ["admin", "member", "probe"];
+const MARKS = ["voice", "audience", "language", "own_doing", "names_pending", "textcheck"];
+export const DECLARED_OPS = Object.freeze({
+  filingprepare: { classes: MEMBER_ACTS, mutating: true, weight: "reversible", description: "act.filingprepare.does",
+    fields: { accepts: ["action", "template", "text", "fills", ...MARKS], requires: ["action"] } },
+  communicationprepare: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.communicationprepare", "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labeled as its preparer's; never sent until a member approves it (filings R23)"),
+    fields: { accepts: ["action", "text", "purpose", "from", "fills", ...MARKS], requires: ["action", "purpose"] } },
+  filingapprove: { classes: MEMBER_ACTS, mutating: true, weight: "terminal", description: "act.filingapprove.does",
+    fields: { accepts: ["filing", "text", "release", "resolutions", "textcheck"], requires: ["filing"] } },
+  filingrecordsent: { classes: MEMBER_ACTS, mutating: true, weight: "reasoned", description: "act.filingrecordsent.does",
+    fields: { accepts: ["filing", "at", "medium", "artifact_sha", "artifactSha", "account", "reference"],
+              requires: ["filing", "at", ["account", "artifact_sha", "artifactSha"]] } },
+  filingsecondapprove: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "terminal",
+    description: localize("filings.declared.filingsecondapprove", "filing-directed: keyed by filing id; a member other than the approver records the second approval a project's setting asks, at most once; moves no bundle"),
+    fields: { accepts: ["filing"], requires: ["filing"] } },
+  counselpacket: { classes: MEMBER_ACTS, mutating: true, weight: "reasoned", description: "act.counselpacket.does",
+    fields: { accepts: ["action", "counsel", "template", "reason", "purpose", "challenged"], requires: ["action", "reason"] } },
+  holdnoticeprepare: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.holdnoticeprepare", "a member prepares a plain notice telling members what to keep outside Civicsmith for a hold in place, assembled from the record and labeled as a draft; a member sends it by her own hand (filings R47)"),
+    fields: { accepts: ["place"], requires: ["place"] } },
+  templatesave: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.templatesave", "draft-directed: a member starts a template draft from an approved filing draft, keyed by the draft; writes the template library's rows and moves no bundle"),
+    fields: { accepts: ["filing", "template", "project", "name", "kind", "use", "profiles", "notes"], requires: ["filing", ["name", "template"]] } },
+});
