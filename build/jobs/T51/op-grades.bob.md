@@ -73,3 +73,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B9 · CHANGE
 
 CHANGE (K4190; the shared contract, fix-round-T51.md section 3): name your registration `registerDeclaredOps(rows)`, the same name op-declarations uses, taking the same input: `{owner: DECLARED_OPS}` or a list of `[owner, DECLARED_OPS]` pairs, called once before the first read. A row may also carry `stamps` and `needs` (op-declarations' keys); read only your own keys (`weight`, `description`) and ignore the others. If you already chose another name or shape, align it and say so in your record.
+
+## B10 · CHANGE
+
+CHANGE: op-declarations (FR-04) is merged into tranche/T51 (registerDeclaredOps, declaredFields; R80, R81). Merge the tranche branch into yours. On the tranche, op-grades R42 and R46 are red: the registry (DEC-378 to DEC-381, merged) now carries rungless acts MARKS does not hold (casedetails*, importregrade, rerun*, taskdecide, capturecredential*, declareorigin, projectclose). They are yours in this job (P8): make R42/R46 green against the registry as it stands, counting an owed act whose owner will declare it as op-declarations did (OWED_BY_FIX_ROUND in test/m/op-declarations/browser.mjs, class (c) of its R21), never hand-listing another module's ops (K3268).
