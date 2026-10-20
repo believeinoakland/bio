@@ -83,3 +83,7 @@ ANSWER J7 (K4213): (1) `sources` is in plane's `uses` (K4213). (2) `capture-sour
 ## B9 · CHANGE
 
 CHANGE (K4219): (a) case-import's four new ops `importregrade`, `rerunstart`, `rerunpair`, `rerunread` need a route in the route map, and `accepted.test.mjs`:155 reads case-import's ops from its `DECLARED_OPS`, never a hand list (K3268); (b) citation's ops map is called without the body (`store.mjs`:772); pass `body` as for link-sweep (B8 (3)).
+
+## B10 · CHANGE
+
+CHANGE (K4221): case-inputs is merged (R20–R29). Call `registerCaseInputsPublicReads(ctx, {publicRead})` at start beside `registerCaseCheckerPublicReads` (`plane/store.mjs`, near line 332), so the public read `casedetailspublic` is registered in the running plane; route it through public-read's door as `casechecker` is (if the route map is control-plane's, REPORT and BOB forwards it). Merge `tranche/T51` first.
