@@ -91,7 +91,7 @@ const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${lis
 
 // DEC-160, widened on Bob's direction (October 6): the references on each screen, each with what it is and why it matters
 // on that screen. Hover or focus shows the card; a click opens it (null: a card only). Attached as the screen draws.
-const tipOf = (what, why, go) => `${what}${why ? `<span class=why><b>Here:</b> ${why}</span>` : ''}${go ? '<span class=more>Click to open it.</span>' : ''}`;
+const tipOf = (what, why, go) => `${what}${why ? `<span class=why><b>Here:</b> ${why}</span>` : ''}${go ? '<span class=more>Press or tap to open it.</span>' : ''}`;
 const AQ = 'Is the city repairing reported potholes within seven days?';
 const REFS = {
   home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published September 18', '2 items in it wait on you this week.'],
@@ -185,7 +185,7 @@ const railW = () => window.CS_RAILW || 184;
 // DEC-163: every element type, decided once (the table on the layouts page): explanations and links added to the whole frame
 // (masthead, path, rail and tabs, wizard marks, step lists, row icons, the published page's head and foot), not only the
 // screen's main area. Level 1 (marks and names) always; level 2 (guidance) when the member has guidance on (DEC-162).
-const GROUP_CARD = '<b>Lakeshore Tenants</b> · your team · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · 6 members<span class=more>Click to see who your team is.</span>';
+const GROUP_CARD = '<b>Lakeshore Tenants</b> · your team · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · 6 members<span class=more>Press or tap to see who your team is.</span>';
 const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · <span class=mk-data>a tenants\' team near the Oakland Coliseum</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · its published cases are signed by its project owners';
 const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organization your team\'s record follows', group: 'An office, a member or a team', question: 'A question', finding: 'A finding', case: 'A case', plan: 'An action plan', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
 const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'people', Settings: 'account' };
@@ -197,7 +197,7 @@ function decorate(html, id, c) {
   set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
   set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your team holds, documents, questions, people and more.', 2);
   set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your team holds, on the account that serves you, and never concludes, signs or sends.', 2);
-  set(R.querySelector('.cs-mast .cs-kind'), '<b>13 items wait on you</b> in your queue: 5 to do, 5 noticed, 3 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
+  set(R.querySelector('.cs-mast .cs-kind'), '<b>13 items wait on you</b> in your queue: 5 to do, 5 noticed, 3 status.<span class=more>Press or tap to open your queue.</span>', 1, 'queue');
   set(R.querySelector('.mk-avatar'), '<b>You: Mai</b> · member of Lakeshore Tenants · works on Pothole repairs<span class=more>Click for your account and settings.</span>', 1, 'account');
   R.querySelectorAll('.mk-crumbs a').forEach(a => { const x = a.textContent.trim(); const g = (typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).find(r => r[0] === x);
     if (g) set(a, tipOf(g[2], null, g[1]), 1, g[1]); else set(a, `Back to <b>${x}</b>.`, 2, CRUMB_GO[x]); });

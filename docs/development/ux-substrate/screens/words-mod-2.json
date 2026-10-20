@@ -1694,7 +1694,7 @@
   },
   {
    "key": "refusal.NOT_SCANNED",
-   "en": "This file could not be scanned before it opens, so the original was not opened. Its reason is stated beside it. Read the safe view meanwhile, or ask again once the scanner can read it.",
+   "en": "This file could not be scanned before it opens, so the original was not opened. Its reason is stated beside it. Show the safe view meanwhile, or ask again once the scanner can read it.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -2642,7 +2642,7 @@
   },
   {
    "key": "refusal.SCAN_STALE",
-   "en": "This high-risk file was last found clean more than a week ago, and the scanner cannot check it again now, so the original was not opened. Read the safe view, or ask for a deeper check.",
+   "en": "This high-risk file was last found clean more than a week ago, and the scanner cannot check it again now, so the original was not opened. Show the safe view, or ask for a deeper check.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },

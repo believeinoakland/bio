@@ -42,7 +42,7 @@ wiz('Welcome a new member', 'join', True, [
  ('join', 'memberlanguageset', 'Choose your language.', 'Everything that follows should be in words you read easily. It starts from your device\'s setting.'),
  ('join', 'enroll', 'Choose a handle and a password.', 'The record shows your handle on your work. It needn\'t be your legal name: a known name lends credibility, a pen name shields you, and administrators still know who you are.'),
  ('home', None, 'This is your team\'s home: what it is working on, and what is waiting on you.', 'Come back here whenever you lose your place.'),
- ('question', None, 'Two things to know first: a question\'s strength against its project\'s bar, and "Undetermined".', 'You will see these everywhere. Every other mark is explained where you meet it, one tap away.'),
+ ('question', None, 'Here is your team\'s most recent question. Two things to know first: its strength against its project\'s bar, and "Undetermined".', 'You will see these everywhere. Every other mark is explained where you meet it, one tap away.'),
  ('connect', None, 'Optional: connect your own Claude account, or skip.', 'The assistant serves only you, and every journey works without it.', {'via': 'Connect your Claude account'}),
  ('ties', None, 'Optional: tell the team about your own ties.', 'Only you and the administrators see them, and they let a case disclose a tie honestly.', {'via': 'Your ties'}),
  ('home', 'startfrom', 'Take a first step: join a project, capture a document, or record what you saw.', 'One small act is enough to begin. Nothing here has to be done in order.'),

@@ -23206,13 +23206,6 @@
       "line": 258
     },
     {
-      "id": "file-scanner.catalogue.any_icap_server_rfc_3507",
-      "en": "any ICAP server (RFC 3507)",
-      "module": "file-scanner",
-      "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 104
-    },
-    {
       "id": "file-scanner.catalogue.any_syslog_collector_rfc_5424",
       "en": "any syslog collector (RFC 5424 over TLS)",
       "module": "file-scanner",
@@ -23535,13 +23528,6 @@
       "line": 264
     },
     {
-      "id": "file-scanner.catalogue.icap_server_address_host_or_host",
-      "en": "ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)",
-      "module": "file-scanner",
-      "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 106
-    },
-    {
       "id": "file-scanner.catalogue.icap_service_name_default_avscan",
       "en": "ICAP service name (default avscan)",
       "module": "file-scanner",
@@ -23736,13 +23722,6 @@
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
       "line": 112
-    },
-    {
-      "id": "file-scanner.catalogue.microsoft_entra_tenant_id",
-      "en": "Microsoft Entra tenant ID",
-      "module": "file-scanner",
-      "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 41
     },
     {
       "id": "file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api",
@@ -35761,7 +35740,7 @@
       "en": "DEC-300 (5), over the kit at {MARKS_KIT_COMMIT}: the act weighs Reversible, so no mark is drawn for it",
       "module": "op-grades",
       "file": "bio-plane/src/op-grades/marks.mjs",
-      "line": 31
+      "line": 36
     },
     {
       "id": "op-grades.t48.what_the_record_joins_a",
@@ -41847,13 +41826,6 @@
       "line": 227
     },
     {
-      "id": "review.index.derived_case_identity",
-      "en": "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment — a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them",
-      "module": "review",
-      "file": "bio-plane/src/review/index.mjs",
-      "line": 172
-    },
-    {
       "id": "review.index.handing_the_teams_draft_to",
       "en": "handing the team's draft to someone outside it is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
       "module": "review",
@@ -45690,95 +45662,11 @@
       "line": 118
     },
     {
-      "id": "strength.arithmetic.further_sets_are_undetermined",
-      "en": "{count} further sets are UNDETERMINED and could only be stronger, never weaker: {sets}.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 189
-    },
-    {
-      "id": "strength.arithmetic.no_computed_strength_a_leg",
-      "en": "this {axis} axis has NO computed strength: a leg every one of those sets needs is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 142
-    },
-    {
-      "id": "strength.arithmetic.no_computed_strength_every_set",
-      "en": "this {axis} axis has NO computed strength: EVERY one of the {count} sets of reasons it rests on is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 139
-    },
-    {
-      "id": "strength.arithmetic.no_computed_strength_stopped",
-      "en": "this {axis} axis has NO computed strength: {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 144
-    },
-    {
-      "id": "strength.arithmetic.no_stronger_than_the_weakest",
-      "en": "{axis} {grade} — no stronger than the weakest {axis} it rests on, which is {leg}{via}.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 182
-    },
-    {
-      "id": "strength.arithmetic.one_further_set_is_undetermined",
-      "en": "{count} further set is UNDETERMINED and could only be stronger, never weaker: {sets}.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 186
-    },
-    {
-      "id": "strength.arithmetic.present_and_not_yet_load_bearing",
-      "en": "Present and not yet load-bearing: {legs}.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 197
-    },
-    {
-      "id": "strength.arithmetic.strongest_of_the_sets_of_reasons",
-      "en": "{axis} {grade} — the STRONGEST of the {count} sets of reasons that each carry this conclusion on their own, which is {set}, and no stronger than the weakest {axis} WITHIN that set, which is {leg}{via}.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 179
-    },
-    {
-      "id": "strength.arithmetic.that_leg_is_needed_by_every",
-      "en": "That leg is needed by every one of those sets, so no set can be stronger than it.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 194
-    },
-    {
       "id": "strength.arithmetic.through",
       "en": "(through {through})",
       "module": "strength",
       "file": "bio-plane/src/strength/arithmetic.mjs",
       "line": 177
-    },
-    {
-      "id": "strength.arithmetic.unrated_no_leg_on_any_set",
-      "en": "UNRATED on {axis}: no leg on this axis carries an established grade on any of the {count} sets of reasons, so this conclusion rests on nothing established here. Not load-bearing: {legs}.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 165
-    },
-    {
-      "id": "strength.arithmetic.unrated_no_leg_on_this_axis",
-      "en": "UNRATED on {axis}: no leg on this axis carries an established grade, so this conclusion rests on nothing established here. Not load-bearing: {legs}.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 168
-    },
-    {
-      "id": "strength.arithmetic.unrated_this_inquiry_rests_on_nothing",
-      "en": "UNRATED on {axis}: this inquiry rests on nothing on this axis.",
-      "module": "strength",
-      "file": "bio-plane/src/strength/arithmetic.mjs",
-      "line": 162
     },
     {
       "id": "strength.index.a_standard_of_evidence_is_a_property_of_a_project",
