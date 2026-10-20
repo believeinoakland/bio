@@ -63,6 +63,12 @@ export const PATHS = Object.freeze({
   /* R101 (T51): `glossary` and `actionnew` from the rail place and the screen's title (the drawings' `crumbs`), `teamai` from `PATH` */
   glossary: ["settings", "screen.glossary.name"], teamai: ["settings", "screen.teamai.name"],
   actionnew: ["projects", "@project", "screen.actionnew.name"],
+  /* R106 (T51 fix round; DEC-374 to DEC-377): the six screens the design adds, from the drawings' `crumbs` (`mock-screens.js`
+     `SCR.<id>`): `bias` under Settings, `contradiction` and `objective` under the project, `about-knocker` under the Inbox, `leads`
+     and `watching` under Add */
+  bias: ["settings", "screen.bias.name"], contradiction: ["projects", "@project", "screen.contradiction.name"],
+  objective: ["projects", "@project", "screen.objective.name"], "about-knocker": ["queue", "screen.inbox.name", "screen.about-knocker.name"],
+  leads: ["add", "screen.leads.name"], watching: ["add", "screen.watching.name"],
   /* K4078: the two dashboards Home opens, as `PATH` draws them: the action dashboard by its name, the project's by the project's title */
   "dash-action": ["screen.dash-action.name"], "dash-project": ["projects", "@project"],
   group: ["settings", "screen.group.name"], places: ["settings", "screen.places.name"], recovery: ["settings", "screen.recovery.name"],
@@ -79,9 +85,9 @@ export const PLACE_SCREENS = Object.freeze({
 });
 
 /* R37's fallback: the settings screens the shell lists while `settings` is not registered (R28's list; R54: `updates`
-   after Security, drawn only while `whoami`'s `administer` is true, `ADMIN_SCREENS`). */
+   after Security, drawn only while `whoami`'s `administer` is true, `ADMIN_SCREENS`; R106: `bias` last, the drawing's "For every member"). */
 export const SETTINGS_SCREENS = Object.freeze(["members", "account", "connect", "notes", "ties", "group-identity", "security",
-  "updates", "translations", "wizards", "group", "places", "recovery"]);
+  "updates", "translations", "wizards", "group", "places", "recovery", "bias"]);
 export const ADMIN_SCREENS = Object.freeze(["updates"]);
 
 /* R16: the screen an item of each kind opens (R27: a knock opens `inbox` at that knock; R47: a person or organisation
@@ -94,7 +100,11 @@ export const REF_SCREENS = Object.freeze({ document: "document", passage: "docum
   "review-copy": "review-copy", ceremony: "ceremony", docket: "docket",
   /* R81 (N1180; DEC-299 (1); DEC-310 (4), (5)): more doors; `published` opens in the public frame (R30), `archive` at a held
      ZIP's capture digest; `dash-action` is not added: nothing links it in T50 */
-  request: "request", matter: "matter", action: "action", "dash-project": "dash-project", theme: "theme", published: "published", archive: "archive" });
+  request: "request", matter: "matter", action: "action", "dash-project": "dash-project", theme: "theme", published: "published", archive: "archive",
+  /* R106 (DEC-374 to DEC-377): a contradiction item opens `contradiction`, a bias-debt item and the lens `bias`, a source
+     `about-knocker`; the objective, the leads and the watched addresses their own screens. A kind with no `shell.card.<kind>` word
+     is drawn with the item's own facts alone, as `theme` is. */
+  contradiction: "contradiction", "bias-debt": "bias", bias: "bias", source: "about-knocker", objective: "objective", leads: "leads", watching: "watching" });
 /* R81, R88: the kinds whose card is the kind's word alone (`shell.card.published`, `shell.card.archive`), not the item's facts */
 export const CARD_WORD_ONLY = Object.freeze(["published", "archive"]);
 
@@ -111,6 +121,10 @@ const sessionless = (id) => FRAMES[id] === "public" || FRAMES[id] === "published
 
 /* R9 (K3137): addresses whose first part is not the screen's id: `/app/review` is `review-outside` (`screens-publish` R17). */
 export const ADDRESSES = Object.freeze({ review: "review-outside" });
+/* R105 (T51 fix round; C52): the screens whose address takes the project as a second part, `/app/<screen>/<id>/<project>`: the screen
+   is handed `view.subject` the first part and `view.project` the second (`null` for the bare address); for every other screen the
+   subject is the whole of what follows the screen's id. */
+export const PROJECT_PART = Object.freeze(["question"]);
 /* R79 (N1174; DEC-299 (11); DEC-301 (3)): the two addresses outside `/app` that draw a screen in its public frame, at that
    address: `/doorbell` and `/tour`. Every other path outside `/` and `/app` draws `unavailable` in the public frame. */
 export const PUBLIC_ADDRESSES = Object.freeze({ doorbell: "doorbell", tour: "tour" });
@@ -156,6 +170,11 @@ export const ADMIN_ACTS = Object.freeze(new Set([
      team (`instance-setup` R4) */
   "signeradd", "instancegroupseed",
 ]));
+
+/* R107 (T51 fix round; K4197 T-07): the acts that carry the Reasoned mark and no weight (`op-grades` `MARKS`, R64) and that the
+   walk found asking no reason: the administrator's acts on a member or the team (`ADMIN_ACTS`), a project's owner added, and a
+   review granted. The shell asks their reason before they run, as it does for a Reasoned weight (R11). */
+export const MARK_ASKS_EXTRA = Object.freeze(["projectowneradd", "reviewgrant"]);
 
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
 export const SHELL_OPS = Object.freeze(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "infolevelset",
@@ -278,6 +297,7 @@ function dataOf(screens, guide) {
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
+    markAsks: [...ops].filter((op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op)),
     rungs: pick(rungOf),
     /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only */
     marks: pick((op) => (rungOf(op) === "none" && Object.hasOwn(MARKS, op) ? String(MARKS[op]).toLowerCase() : undefined)),
@@ -290,7 +310,7 @@ function dataOf(screens, guide) {
     browserActs: Object.fromEntries(all.flatMap((s) => s.acts.map((a) => a.op).filter((op) => typeof op === "string" && isBrowserAct(op, s.id)).map((op) => [op, s.id]))),
     /* R102: the pages that carry no weight mark and are titled by `page.title.public` */
     publicPages: PUBLIC_PAGES,
-    paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, cardWordOnly: CARD_WORD_ONLY, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES, publicAddresses: PUBLIC_ADDRESSES,
+    paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, cardWordOnly: CARD_WORD_ONLY, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES, publicAddresses: PUBLIC_ADDRESSES, projectPart: PROJECT_PART,
     places: [...Object.keys(PLACE_SCREENS), "more"],
     idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS, absence: ABSENCE.source, adminScreens: ADMIN_SCREENS,
   };
@@ -309,7 +329,14 @@ const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:f
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
 .cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button{min-height:44px;min-width:44px}
-.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px}}
+.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px}
+.cs-main,.cs-main>*,.cs-section,.cs-section>*,.cs-sheet,.cs-row>*,.mk-card,.cs-field,.mk-acts>*{min-width:0;max-width:100%}
+.cs-main :is(p,li,dt,dd,td,th,h1,h2,h3,.rec,.mk-data,.meta,a.cs-ref,code){overflow-wrap:anywhere}
+.mk-cards{grid-template-columns:minmax(0,1fr)}.cs-row .meta,.mk-acts{flex-wrap:wrap}.tw{max-width:100%;overflow-x:auto}
+.cs-field :is(input,select,textarea){box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+.cs-btn{max-width:100%;white-space:normal;text-align:left}
+.cs-path a,.cs-mast a,.cs-mast button,.cs-part>summary{display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px}
+.cs-dock:not(:has(.body>*)),.cs-band:empty{display:none}.cs-tip{max-width:min(300px,calc(100vw - 32px));pointer-events:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`;
 
 /* R56: the script-hook classes, each with what reads it; a class here needs no style. */

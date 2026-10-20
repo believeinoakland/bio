@@ -654,7 +654,7 @@ test("R102 every screen of the registry has its tab title (page.title with scree
 
 /* ---------- R103 ---------- */
 
-test("R103 an explanation opens below what it explains, else to its right, else to its left, else above: the first that covers no other control and stays inside the page; closes on Escape; control: with room below it opens below", async () => {
+test("R103 an explanation opens below what it explains, else above: the first that covers no other control and stays inside the page, never beside it; closes on Escape, on the next tap elsewhere and on a scroll; control: with room below it opens below", async () => {
   const p = await boot({ screens: ALL });
   const el = p.root().querySelector('.cs-mast [data-kind="todo"]');
   const rect = (l, t, r, b) => () => ({ left: l, top: t, right: r, bottom: b, width: r - l, height: b - t });
@@ -667,13 +667,19 @@ test("R103 an explanation opens below what it explains, else to its right, else 
   const open = () => { el.blur(); el.focus(); return { left: tip.style.left, top: tip.style.top }; };
   assert.deepEqual(open(), { left: "300px", top: "176px" }, "with room below, below");
   rail[0].getBoundingClientRect = rect(300, 200, 400, 230);
-  assert.deepEqual(open(), { left: "366px", top: "150px" }, "below holds a control: to the right");
-  rail[1].getBoundingClientRect = rect(370, 150, 470, 190);
-  assert.deepEqual(open(), { left: "194px", top: "150px" }, "right holds one too: to the left");
-  rail[2].getBoundingClientRect = rect(190, 150, 295, 190);
-  assert.deepEqual(open(), { left: "300px", top: "104px" }, "every side holds one: above");
-  p.win.innerHeight = 800; p.win.innerWidth = 330;
-  rail[0].getBoundingClientRect = rect(0, 0, 0, 0);
+  assert.deepEqual(open(), { left: "300px", top: "104px" }, "below holds a control: above, not beside");
+  rail[1].getBoundingClientRect = rect(290, 90, 420, 140);
+  assert.deepEqual(open(), { left: "300px", top: "176px" }, "above holds one too: the first inside the page, below");
+  rail[0].getBoundingClientRect = rect(0, 0, 0, 0); rail[1].getBoundingClientRect = rect(0, 0, 0, 0);
+  assert.deepEqual(open(), { left: "300px", top: "176px" }, "control: with room below it opens below");
+  p.fire(p.doc.body, "pointerdown");
+  assert.ok(tip.hidden, "closes on the next tap elsewhere");
+  open(); assert.ok(!tip.hidden);
+  p.doc.dispatchEvent(new Event("scroll", { bubbles: false }));
+  assert.ok(tip.hidden, "closes on a scroll");
+  open();
+  p.fire(tip, "pointerdown");
+  assert.ok(!tip.hidden, "a tap on the explanation itself keeps it");
   el.blur();
   p.doc.dispatchEvent(new Event("keydown", { key: "Escape", bubbles: true }));
   assert.ok(tip.hidden, "closes on Escape");

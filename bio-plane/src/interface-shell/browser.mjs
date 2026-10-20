@@ -282,13 +282,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (S && LOCKED) return { state: "locked", handle: S.w || null };
     return { state: "none", handle: null };
   }
-  function instance(spec, subject, key, serves) {
+  function instance(spec, subject, key, serves, project) {
     const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null, images: {}, areas: {}, words: {}, fresh: {}, refreshT: {}, ro: false, sig: {}, typing: {}, typingT: {} };
     inst.view = key === "g"
       /* K3143: the guide's one view for the page's life: `{ui, me, reachable, screen, subject}` */
       ? { ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, get screen() { return ROUTE ? ROUTE.screen : null; },
-        get subject() { return ROUTE ? ROUTE.subject : null; }, parts: spec.parts || {}, origin: win.location.origin }
-      : { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves,
+        get subject() { return ROUTE ? ROUTE.subject : null; }, get project() { return ROUTE && ROUTE.project ? ROUTE.project : null; }, parts: spec.parts || {}, origin: win.location.origin }
+      : { subject, project: typeof project === "string" && project ? project : null, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves,
         get session() { return sessionView(); }, get fragment() { return Object.assign({}, FRAGMENT); },
         parts: spec.parts || {}, origin: win.location.origin };
     /* R30, R45: a screen of the public or published frame is drawn without a session, whatever the record holds */
@@ -527,7 +527,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         if (phone() && (weight === "signed" || weight === "irreversible" || D.larger.includes(op)))
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
         const key = inst.key + "|" + op + "|" + JSON.stringify(o.data || {});
-        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser }) - 1;
+        /* R107: an act drawn with no weight but carrying the Reasoned mark, and listed in `D.markAsks`, asks its reason before it runs */
+        const asks = weight === "none" && D.marks[op] === "reasoned" && D.markAsks.includes(op) && !inst.pub && !browser;
+        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser, asks }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
         /* R64 (`op-grades` R42): an act drawn with no weight carries the design kit's mark, as a mark and its explanation
            only; its friction stays R11's (it runs on press). R77 (U2c; DEC-295): only an act above Reversible draws dots and a
@@ -557,7 +559,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`) is the item's
            own facts alone */
         const lead = kw("shell.card." + kind);
-        const card = (kind === "theme" && !lead ? "" : "<b>" + lead + "</b>") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
+        const someFact = (facts || []).some((f) => f !== null && f !== undefined && f !== "");
+        const card = (lead || (kind !== "theme" && !someFact) ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
           .map((f) => '<span class="why">' + soft(f) + "</span>").join("")) + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
           ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"
@@ -924,7 +927,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (screen === "home") return "/app";
     const at = Object.keys(D.addresses).find((k) => D.addresses[k] === screen);
     if (at) screen = at;
-    return "/app/" + encodeURIComponent(screen) + (subject !== undefined && subject !== null && subject !== "" ? "/" + encodeURIComponent(subject) : "");
+    /* R105: a screen that takes the project as a second part has a subject written `<id>/<project>` drawn as two parts of the address */
+    const enc = (x) => (D.projectPart.includes(screen) ? String(x).split("/").map(encodeURIComponent).join("/") : encodeURIComponent(x));
+    return "/app/" + encodeURIComponent(screen) + (subject !== undefined && subject !== null && subject !== "" ? "/" + enc(subject) : "");
   }
   function parse(pathname) {
     const p = String(pathname || "");
@@ -942,7 +947,19 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     let subject = sub.length ? sub.join("/") : null;
     try { subject = subject === null ? null : decodeURIComponent(subject); } catch { /* kept as written */ }
     const screen = s ? (Object.hasOwn(D.addresses, s) ? D.addresses[s] : s) : "home";
-    return { screen, subject, root: false };
+    /* R105: the question's address may carry the project it is opened from as a second part; the project part is not an id
+       space of the shell's, so a part that is empty, holds a space, control character, backslash, `?` or `#`, or a third part,
+       is malformed and draws `unavailable` */
+    let project = null, malformed = false;
+    if (D.projectPart.includes(screen) && subject !== null) {
+      const bits = subject.split("/");
+      if (bits.length > 1) {
+        const fit = (x) => x.length > 0 && x.length <= 200 && !/[\s\\?#\u0000-\u001f]/.test(x);
+        if (bits.length > 2 || !bits.every(fit)) malformed = true;
+        else { subject = bits[0]; project = bits[1]; }
+      }
+    }
+    return { screen, subject, project, malformed, root: false };
   }
   const placeOf = (id) => (D.paths[id] && D.places.includes(D.paths[id][0]) ? D.paths[id][0] : ["settings", "people", "more", "projects"].includes(id) ? id : null);
   /* R7, R37: a place opens the first of its screens registered, else the shell's own page for it */
@@ -1236,7 +1253,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       el.removeAttribute("data-level");
     }
   }
-  let MENU = false;
+  let MENU = false, DRAWN = {};
   const focusKey = (el) => (!el || !el.getAttribute ? null : el.id ? "#" + el.id
     : ["data-shell", "data-ai", "data-table", "data-id", "data-col", "data-theme-to", "data-areas", "data-i"].map((a) => (el.getAttribute(a) !== null ? "[" + a + '="' + el.getAttribute(a) + '"]' : "")).join("") || null);
   function draw() {
@@ -1247,6 +1264,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     for (const el of root.querySelectorAll("input, textarea, select")) if (el.id && el.type !== "file") values[el.id] = el.type === "checkbox" || el.type === "radio" ? { checked: el.checked } : { value: el.value };
     /* R35: what was typed is kept while the screen cannot be reached, and comes back with it */
     if (MAIN && MAIN.unavail === "unreachable" && Object.keys(values).length) MAIN.stash = Object.assign({}, MAIN.stash || {}, values);
+    /* K4194 (B15): a file input cannot be given its file again, so the node itself is carried into the new tree */
+    const chosen = {};
+    for (const el of root.querySelectorAll("input")) if (el.id && el.type === "file" && el.files && el.files.length) chosen[el.id] = el;
     const fk = focusKey(doc.activeElement);
     /* R93: a redraw in place leaves the main column where it was scrolled to */
     const before = doc.getElementById("cs-main"), top = before ? before.scrollTop : 0;
@@ -1256,12 +1276,28 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R59: the guide's marks in the title row of a working screen that is drawn */
     if (!UNREACHED && !ENTRY_PAGE && (MAIN ? !MAIN.unavail && frameOf(MAIN.spec.id) === "working" : D.places.includes(ROUTE.screen))) placeMarks(root, marksHtml());
     absorb(root);
+    for (const [id, old] of Object.entries(chosen)) {
+      const fresh = doc.getElementById(id);
+      if (fresh && fresh !== old && fresh.type === "file" && fresh.parentNode) { fresh.parentNode.insertBefore(old, fresh); fresh.parentNode.removeChild(fresh); }
+    }
+    /* K4195 (B16): what the member typed is put back only into a field the new draw left empty, or drew as the previous draw did;
+       a value the screen drew since (from a read that arrived) is never written over. `DRAWN` is what each field held as drawn. */
     const restore = (id, v) => {
       const el = doc.getElementById(id);
       if (!el || el.getAttribute("data-shell") === "pick") return;
-      if ("checked" in v) el.checked = v.checked; else el.value = v.value;
+      if ("checked" in v) { if (el.checked === !!DRAWN[id]) el.checked = v.checked; }
+      else { const d = drawnValue(el); if (d === "" || d === (DRAWN[id] === undefined ? "" : DRAWN[id])) el.value = v.value; }
     };
+    /* a select's value is drawn only when the screen marked an option `selected`; the browser's default first option is no choice */
+    function drawnValue(el) {
+      if (el.localName !== "select") return el.value;
+      const o = Array.from(el.querySelectorAll("option")).find((x) => x.hasAttribute("selected"));
+      return o ? o.getAttribute("value") || "" : "";
+    }
+    const asDrawn = {};
+    for (const el of root.querySelectorAll("input, textarea, select")) if (el.id && el.type !== "file") asDrawn[el.id] = el.type === "checkbox" || el.type === "radio" ? !!el.checked : drawnValue(el);
     for (const [id, v] of Object.entries(values)) restore(id, v);
+    DRAWN = asDrawn;
     for (const inst of [MAIN, DOCKI, GUIDEI]) {
       if (!inst) continue;
       if (inst.pending) { for (const [id, v] of Object.entries(inst.pending)) restore(id, v); inst.pending = null; }
@@ -1286,7 +1322,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      ({page}, {team}); the screen by its `screen.<id>.name`, the team by R60's name */
   function titleOf() {
     const team = GROUP ? GROUP : textOf(w("shell.group.unnamed"));
-    const id = OUTSIDE ? "unavailable" : MAIN && !MAIN.unavail ? MAIN.spec.id : ROUTE.screen;
+    const id = OUTSIDE || ROUTE.malformed ? "unavailable" : MAIN && !MAIN.unavail ? MAIN.spec.id : ROUTE.screen;
     const name = has("screen." + id + ".name") ? textOf(w("screen." + id + ".name"))
       : D.places.includes(ROUTE.screen) ? textOf(w(ROUTE.screen === "more" ? "shell.more" : "rail." + ROUTE.screen + ".name")) : textOf(w("screen.unavailable.name"));
     const plain = OUTSIDE || ENTRY_PAGE || (MAIN && D.publicPages.includes(MAIN.spec.id));
@@ -1364,8 +1400,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     show(id);
   }
   function show(id, subject) {
-    const spec = screenOf(id);
-    MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m") : null;
+    const spec = ROUTE.malformed ? null : screenOf(id);
+    MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m", null, subject !== undefined ? null : ROUTE.project) : null;
     if (ME && S && frameOf(id) === "working") startVersion();
     DOCKI = !MAIN || frameOf(MAIN.spec.id) === "working" ? (REACHABLE && screenOf("assistant") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null) : null;
     draw();
@@ -1812,7 +1848,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (RING && RING.op === d.op) RING = null;
     /* R31, K3143: the guide hears each act pressed on the screen, by its op and screen only, never a value */
     if (inst === MAIN) guideCall("pressed", { op: d.op, screen: MAIN.spec.id });
-    const weight = d.weight;
+    const weight = d.asks ? "reasoned" : d.weight;
     if (weight === "reversible" || weight === "none") return run(inst, d, btn, ai, {});
     /* R11 (DEC-88): an act whose own field carries the member's authored words sends them as its reason, asking none */
     if (weight === "reasoned" && d.spec.reasonField) return run(inst, d, btn, ai, { own: true });
@@ -1933,14 +1969,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     TIP = el;
     el.setAttribute("aria-describedby", "cs-tip");
     if (el.getBoundingClientRect && t.style) {
-      /* R103 (R84): below what it explains, else to its right, else its left, else above: the first that covers no other control
-         and stays inside the page; failing that, the first inside the page, else below */
+      /* R103 (R84; T-10): below what it explains, else above it: the first that covers no other control and stays inside the page;
+         failing that, the first inside the page, else below. Never beside it. */
       const r = el.getBoundingClientRect();
       const tw = Number(t.offsetWidth) || 0, th = Number(t.offsetHeight) || 0, vw = Number(win.innerWidth) || 0, vh = Number(win.innerHeight) || 0, gap = 6;
       const at = [
         { left: Math.max(8, Math.round(r.left)), top: Math.round(r.bottom + gap) },
-        { left: Math.round(r.right + gap), top: Math.round(r.top) },
-        { left: Math.round(r.left - gap - tw), top: Math.round(r.top) },
         { left: Math.max(8, Math.round(r.left)), top: Math.round(r.top - gap - th) },
       ];
       const inside = (c) => c.left >= 0 && c.top >= 0 && (!vw || c.left + tw <= vw) && (!vh || c.top + th <= vh);
@@ -2145,6 +2179,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (e.altKey && e.shiftKey && (e.key === "W" || e.key === "w" || e.code === "KeyW") && GUIDEI) { e.preventDefault(); guideCall("ring"); }
     });
     win.addEventListener("pointerup", () => { WORDDRAG = null; });
+    /* R103 (T-10): an explanation closes on the next tap anywhere but on it, and on any scroll */
+    doc.addEventListener("pointerdown", (e) => { if (TIP && !onTipOrEl(e.target)) closeTip(); }, true);
+    doc.addEventListener("scroll", () => { if (TIP) closeTip(); }, true);
     win.addEventListener("popstate", () => route());
     win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); closing(GUIDEI); SITTING = null; stopVersion(); });
     /* R32: every tab sees a sign-in, a lock, a sign-out or an end through the storage event */
