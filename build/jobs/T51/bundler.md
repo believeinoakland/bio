@@ -1,6 +1,34 @@
 # bundler (T51)
 
-**Status** · session_01Gz6er9hUWEo63Fj3mY19bH · depth 2 · COMPLETE · handled B6
+**Status** · session_01FoYQKjGSDzypze3SYjMYUT · depth 2 · COMPLETE · handled B8
+
+## Record (BUNDLER #24, B8: FR-02)
+
+**Entries applied (FR-02 · bundler; K4176 (2), K4180 as amended by K4186)**
+- **Requirements written first:** R39 and R40 in `build/requirements/bundler.md`, marked *(not yet met: T51)* (the numbers were free), and the Status line.
+- **R39, the release-coherence check (K4176).** `fleet-bundle.mjs` gains `bundleExports(member, built)` (the names the built bundle exports, read from esbuild's metafile output for the member's artifact, so the bundle that would ship and never the source), `bindingFindings(units)` (pure: `units` are `{name, config, exports}` for the plane and every member) and `releaseBindingFindings(members)` (builds each without writing, names a member it cannot build in `unchecked`). Rules: each `services[].service` is the plane or a member of the release; each `durable_objects.bindings[]` with a `script_name` names a member of the release whose bundle exports its `class_name`, one without (or naming its own member) its own bundle's; each `containers[].class_name` and each class a migration creates (`new_classes`, `new_sqlite_classes`, `renamed_classes[].to`, `transferred_classes[].to`; a `deleted_classes` needs none) is its own bundle's. `release-assemble.mjs` runs it right after the freshness loop (so on the fresh builds `verifyFresh` already made) and before the version checks and every write, refusing `[BINDING_NOT_EXPORTED]` with one line per finding, member, binding and class (or service) named. `fleetbundles.test.mjs` runs the same over the checked-in fleet as its section 9.
+- **R40, the test deploy (K4180, K4186).** `deploy.mjs` and `deploy-fleet.mjs` take `--test-instance`. With it, before any request: `[NOT_A_TEST_INSTANCE]` unless the environment variable `CIVICSMITH_TEST_INSTANCE` equals the copy (`deploy.mjs <slug>`; `deploy-fleet.mjs --instance`), then `[WRONG_ACCOUNT]` unless the account is `20b533579290b9b93168345edd3b7f72` (`deploy.mjs`: `CF_ACCT`; `deploy-fleet.mjs`: the member's pinned `account_id`); each names the copy or the account asked for. Each step then logs `test deploy: <what> ... sha256 <hash of the built file> (a branch's built artifact: no release/ signature is read)` and a `rollback :` line naming the SHA-256 prefix of the bytes now deployed under that name, or saying nothing is. `deploy.mjs` gains `--dry-run` (every check and read, no upload, exit 0); `deploy-fleet.mjs` already had it. Without the flag nothing of R17 to R20 changes (control in the test; no signed-release code path read a signature before either).
+- **Fixtures (`repo.mjs`):** members and the plane export the classes their configuration binds (`addMember({exports})`; the plane exports `Store`; container fixtures export their classes), so the existing assembly tests stay coherent.
+
+**What the workflow `.github/workflows/deploy-test.yml` must carry (BOB's file; I changed no workflow).** Job in the `deploy-test` environment, inputs `branch` and `copy`; checkout `branch`; `npm ci` in `bio-plane/` and in each directory `node bio-plane/scripts/bundles.mjs --install-dirs` lists; build the branch's artifacts (`node bio-plane/scripts/bundles.mjs`, from the repository root); then, with `CF_TOKEN`/`CLOUDFLARE_API_TOKEN` and `CF_ACCT=20b533579290b9b93168345edd3b7f72` from the environment's secrets and `CIVICSMITH_TEST_INSTANCE: ${{ inputs.copy }}`:
+1. for each member in the order `discoverMembers` lists (code-point order of name): `node bio-plane/scripts/deploy-fleet.mjs <member> --instance ${{ inputs.copy }} --test-instance` (add `--dry-run` to run the step locally);
+2. then the plane: `cd bio-plane && node scripts/deploy.mjs ${{ inputs.copy }} <the version bio-plane/package.json declares> dist/bio-plane.bundled.mjs --test-instance` (`--dry-run` likewise).
+Each step's log carries its `test deploy:` and `rollback :` lines; a member image is the marker's digest as ever (R26), so a container member needs its image pushed first (`container-images.yml`).
+
+**Deferred / not done:** nothing deferred. Not done, as instructed: no `dist/` bundle or manifest rebuilt or committed; no workflow file edited.
+
+**For BOB (not mine)**
+1. **R39's real-fleet arms are red by name**, as the plan says: `bundler.test.mjs` "R39: over the real fleet..." and `fleetbundles.test.mjs` section 9 print exactly one finding, `agent-worker: Durable Object binding REMOTE names class RemoteSession, which the bundle of agent-runner does not export`. They go green when agent-runner exports `RemoteSession` and its bundle is regenerated (the check reads the fresh build, so the committed bundle's age does not matter).
+2. **A fresh copy cannot pass both preflights.** `deploy-fleet.mjs` refuses `[BINDING_TARGET_MISSING]` unless the plane named by `--instance` already exists in the account; `deploy.mjs` refuses unless every member its services name exists. On a copy that has never been deployed neither can go first. I left both preflights as the requirements state them (R17, R19). If the trial copy is to be created by this workflow, one of them needs a rule for a test instance (for example the plane's first deploy skipping targets that are members of the same run); say which and I will change it in a CHANGE.
+3. **`fleetbundles` is red beyond R39** only for the stale committed bundles (13 findings: every bundle against `setup-words/rows.mjs`, plus agent-worker's bytes), the case R1's close regenerates; none is a new finding of this job.
+4. The member's own Worker name under a test deploy is `wrangler.jsonc`'s `name` (the member's name), not suffixed with the copy: a test deploy of a member replaces that member's script in the test account. The rollback line is the means back.
+
+**Tests and checks** (from `/home/user/bio/bio-plane` and the process repository; dependencies for each lockfile directory installed with `npm ci --ignore-scripts`)
+- `node --test test/m/bundler/bundler.test.mjs test/m/bundler/release.test.mjs test/m/bundler/thirdparty.test.mjs test/system/bundle.test.mjs test/system/deploybindings.test.mjs test/system/resolveversion.test.mjs`: 137 pass, 1 fail (R39's real-fleet arm, item 1). New: 3 R39 tests in `bundler.test.mjs`, 2 R39 and 2 R40 in `release.test.mjs`.
+- `node test/system/fleetbundles.test.mjs`: 139 pass, 14 fail (13 stale bundles, item 3, and R39's section 9, item 1).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs bundler`: 0 failures. `checks/coverage.mjs bundler`: 40 of 40 live ids named. `checks/ownership.mjs bundler tranche/T51 job/T51/bundler`: 0 failures. `checks/run.mjs`: words 0 findings; coverage lists other modules' ids only (agent-harness R17; agent-runner R36, R37, R38, R40; installer-steps R26, R31; journey-check R19).
+
+Size (session_01FoYQKjGSDzypze3SYjMYUT): test runs 9, module lines 4228
 
 ## Record (BUNDLER #22, B4/B6: R38)
 
@@ -160,3 +188,11 @@ Applied: (K4011) the R38 real-fleet arm skips a member whose build records no wo
 Tests: bundler, release, and the four bundler system files, 0 failures. format 0; architecture 0; coverage 38 of 38; ownership 0. checks/run.mjs shows only other modules' findings (in the REPORT).
 
 Record: build/jobs/T51/bundler.md. Size (session_01Gz6er9hUWEo63Fj3mY19bH): test runs 5, module lines 4024.
+
+## J9 · COMPLETE
+
+FR-02 · bundler is done; pushed to job/T51/bundler (9c76d0cd7f). Applied: R39 (release-coherence check: [BINDING_NOT_EXPORTED] naming member, binding and class, run by release-assemble before any write and by fleetbundles section 9, reading the fresh build's exports) and R40 (--test-instance on deploy.mjs and deploy-fleet.mjs: [NOT_A_TEST_INSTANCE], [WRONG_ACCOUNT], test-deploy and rollback log lines, deploy.mjs --dry-run). Requirements R39, R40 written first. Red by name as planned: R39's real-fleet arms (agent-worker REMOTE -> RemoteSession) until agent-runner merges. Bundler tests 137 pass, 1 fail (that arm); format 0, architecture 0, coverage 40/40, ownership 0. Record build/jobs/T51/bundler.md has the exact workflow steps for deploy-test.yml and 2 notes for BOB (a fresh copy cannot pass both preflights; test deploys replace the member's own script). Size (session_01FoYQKjGSDzypze3SYjMYUT): test runs 9, module lines 4228.
+
+## J10 · REPORT
+
+Ownership check: 1 failure, build/requirements/bundler.md is outside bundler's paths, tests and job record. B8 told me to write the NEW R39 and R40 lines first, so I did (that file's diff is only those two lines and the Status line). If BOB keeps the requirements file as its own, take the two lines from my commit 9c76d0cd7f and drop the file from my branch; nothing else in the ownership check fails.

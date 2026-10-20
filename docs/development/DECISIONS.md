@@ -5887,3 +5887,18 @@ decided: 2026-10-20 · Bob (K4185), folded by the design session
 the design: the case editor's "What kind of work this is" detail (its choices Facts, Analysis, Judgment, A combination), its row on the ceremony checklist and on the published page are taken out; `screen.case-editor.details.class.title` is dropped; "These four details travel beside the case." and the note before the first save lists the area of government, a point of contact, related work and relationships. C12's other four details stand as DEC-378 drew them.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 owed: BOB: `rows.mjs` regenerated on merge drops the row.
+
+### DEC-381 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (BOB's HANDOFF B405, K4189: census causes C20, C23, C65, the T51 fix round)
+for: design
+question: Draw the controls for three ops the fix round serves and declares: a source's login and the retry of a refused capture (C20), a document's declared origin (C23), closing a project with a reason (C65).
+why it is Bob's: it is not (P17): drawing beneath capture-sources R66, provenance R64 and investigation R24 as BOB drafted them.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: (C20) `capture` gains "A source that asked for a login": the refused request's row ("Turned away: {source} asked for a login"), a username and a secret field ("It is kept sealed. It is never shown again, to you or to anyone on your team."), "Give a login for this source and try again" (`capturecredentialsupply`), "Try the request again" (`capturerequestretry`), the stored login's row ("A login is stored for {source}", "The secret is not shown.", "Withdraw this login", `capturecredentialwithdraw`) and "Show the logins your team has stored" (`capturecredentiallist`, sources and who gave each, never a secret); refusals: a machine, the team's own Civicsmith, a request its source did not turn away. (C23) `document` gains "Where this document came from" after "This copy": "The system it came from" (`declareorigin`), the dated declarations by member, "A second declaration is added beside the first. It never replaces it."; refusals: a machine, an empty system, a record that is no document. (C65) `project` gains "Close this project now" after "What each stage needs": what is still open ({stage}, {count} of {total} questions), "Why you are closing it" (Resolved, Superseded by other work, Abandoned), an optional note, "Close this project with this reason" (`projectclose`), "This closes the project now, whether or not its work has gone quiet. What was still open at the close is kept beside your reason."; refusals: not an owner, a reason outside the three. 43 keys `screen.capture.cred.*`, `screen.document.origin.*`, `screen.project.closenow.*`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`, `screens/registry.src.py`, `screens/mock-acts.js`, `screens/mock-kit.js`.
+owed: BOB, T51 fix round: `screens-intake` builds C20, `screens-inquiry` C23 and C65 (B405).

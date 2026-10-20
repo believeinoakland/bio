@@ -138,7 +138,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
   REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerParts,
-  workerPart, WORKER_PART_PATH, containerImageFindings,
+  workerPart, WORKER_PART_PATH, containerImageFindings, bundleExports, bindingFindings,
 } from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
@@ -289,6 +289,7 @@ for (const m of all) console.log(`   ${m.name.padEnd(14)} ${m.bundle.outfile}`);
 /* ---- REFUSAL 1: every asset proved fresh, by the landed guard -------------- */
 
 const entries = [];
+const bindingUnits = [];   /* R39: each member's configuration and the names its fresh bundle exports */
 for (const m of all) {
   const committed = committedArtifact(m);
   const manifestPath = join(m.abs, m.bundle.manifest);
@@ -331,6 +332,7 @@ for (const m of all) {
     ? parseJsonc(readFileSync(wrangler, "utf8"), `${m.name}/wrangler.jsonc`)
     : null;
   const services = (wcfg?.services || []).map((s) => ({ binding: s.binding, service: s.service }));
+  bindingUnits.push({ name: m.name, config: wcfg, exports: bundleExports(m, built) });
   /* IC-82, under FLEET's copy-never-default condition: the member's UPLOAD
      FACTS are COPIED from its own config at cut time, and a member whose
      config does not state them REFUSES assembly — a default supplied here is
@@ -420,6 +422,20 @@ for (const m of all) {
                  bytes: committed.length, from: join(m.abs, m.bundle.outfile), services, parts,
                  ...(compat ? { compat } : {}) });
   console.log(`guard: ${m.name} fresh — ${built.bytes.length} B, sha256 ${sha256(committed).slice(0, 16)}…`);
+}
+
+/* ---- REFUSAL 1b: THE RELEASE IS COHERENT (R39; K4176) --------------------------------------------------------
+   agent-worker 0.86.0 bound REMOTE to agent-runner's class RemoteSession, which agent-runner did not export, and
+   Cloudflare refused it at deploy (10061): a release that cannot deploy whole. Every service and Durable Object
+   binding, every container class and every migration class is held here to the names the FRESH bundles export (the
+   bytes that would ship), before anything is written. */
+{
+  const incoherent = bindingFindings(bindingUnits);
+  if (incoherent.length)
+    die("BINDING_NOT_EXPORTED", `${incoherent.length} binding(s) of this release name a class or service the release does not export.`,
+      incoherent.map((f) => `  - ${f.text}`).join("\n") + "\n"
+      + "Cloudflare refuses such a member at deploy (code 10061 for a class, 10143 for a service). Export the class from the\n"
+      + "bundle that hosts it, or correct the binding in the member's wrangler.jsonc, rebuild, and assemble again.");
 }
 
 /* ---- the version, and that the WHOLE FLEET agrees on it ------------------

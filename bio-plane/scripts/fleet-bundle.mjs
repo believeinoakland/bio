@@ -698,6 +698,80 @@ export function workerPart(cfg) {
   return { part: { descriptor, bytes: Buffer.from(JSON.stringify(descriptor, null, 2) + "\n") } };
 }
 
+/* ---- THE RELEASE IS COHERENT: EVERY BINDING NAMES WHAT THE RELEASE EXPORTS (bundler R39; K4176) ---------------------
+ *
+ * agent-worker 0.86.0 bound `REMOTE` to agent-runner's class `RemoteSession`, which agent-runner's bundle did not
+ * export, and Cloudflare refused agent-worker (code 10061) at deploy: nothing on the build machine could see it. The
+ * names a member's configuration binds are checked here against the names the bundles that would ship export, read from
+ * the build's own metafile (never from the source, where a class can exist and not be exported). */
+
+/** The names a built bundle exports (`default` included), from the build's metafile: the output that is the member's
+ *  artifact, else the build's only output. */
+export function bundleExports(member, built) {
+  const outputs = (built && built.metafile && built.metafile.outputs) || {};
+  const out = outputs[member.bundle.outfile] || Object.values(outputs)[0];
+  return new Set(out && Array.isArray(out.exports) ? out.exports : []);
+}
+
+/** R39: the bindings of a release that name something the release does not export. `units` is the plane and every member
+ *  the release carries, each `{name, config, exports}`: its parsed `wrangler.jsonc` (null: none) and the names its
+ *  bundle exports. Returns one finding per binding, `{member, binding, name, text}`: `name` is the class or service,
+ *  `text` says it for a person. A service names the plane or a member; a Durable Object binding with a `script_name`
+ *  names a member exporting its class, one without names its own bundle's; a container class and each class a migration
+ *  creates, renames to or transfers are its own bundle's. Never throws. */
+export function bindingFindings(units) {
+  const list = Array.isArray(units) ? units : [];
+  const byName = new Map(list.map((u) => [u.name, u]));
+  const names = (x) => (Array.isArray(x) ? x : []);
+  const out = [];
+  for (const u of list) {
+    const c = isBlock(u.config) ? u.config : {};
+    const mine = new Set(u.exports);
+    const found = (binding, name, text) => out.push({ member: u.name, binding, name, text: `${u.name}: ${text}` });
+    for (const s of names(c.services)) {
+      if (!isBlock(s) || byName.has(s.service)) continue;
+      found(s.binding, s.service, `service binding ${s.binding} names ${s.service}, which is neither the plane nor a member of this release`);
+    }
+    const dob = isBlock(c.durable_objects) ? c.durable_objects : {};
+    for (const b of names(dob.bindings)) {
+      if (!isBlock(b)) continue;
+      const host = b.script_name === undefined || b.script_name === u.name ? u : byName.get(b.script_name);
+      if (!host) found(b.name, b.class_name, `Durable Object binding ${b.name} names class ${b.class_name} of the script ${b.script_name}, which is not a member of this release`);
+      else if (!new Set(host.exports).has(b.class_name))
+        found(b.name, b.class_name, `Durable Object binding ${b.name} names class ${b.class_name}, which the bundle of ${host.name} does not export`);
+    }
+    for (const k of names(c.containers)) {
+      if (isBlock(k) && !mine.has(k.class_name))
+        found(k.class_name, k.class_name, `container class ${k.class_name} is not exported by its bundle`);
+    }
+    for (const m of names(c.migrations)) {
+      if (!isBlock(m)) continue;
+      const created = [...names(m.new_classes), ...names(m.new_sqlite_classes),
+        ...names(m.renamed_classes).map((r) => (isBlock(r) ? r.to : undefined)),
+        ...names(m.transferred_classes).map((r) => (isBlock(r) ? r.to : undefined))];
+      for (const cls of created)
+        if (typeof cls === "string" && !mine.has(cls)) found(`migration ${m.tag}`, cls, `migration ${m.tag} creates class ${cls}, which its bundle does not export`);
+    }
+  }
+  return out;
+}
+
+/** R39 over a set of members (the plane's descriptor included): builds each without writing, reads its configuration
+ *  and returns `{findings, unchecked}`; a member that cannot be built here is named in `unchecked` with why, never
+ *  left out silently. */
+export async function releaseBindingFindings(members) {
+  const units = [], unchecked = [];
+  for (const m of members) {
+    let built, config = null;
+    try { built = await buildMember(m, { write: false }); }
+    catch (e) { unchecked.push({ name: m.name, reason: `a fresh build failed here: ${String(e.message).split("\n")[0]}` }); continue; }
+    try { config = parseJsonc(readFileSync(join(m.abs, "wrangler.jsonc"), "utf8"), `${m.name}/wrangler.jsonc`); }
+    catch (e) { if (e.code !== "ENOENT") { unchecked.push({ name: m.name, reason: String(e.message).split("\n")[0] }); continue; } }
+    units.push({ name: m.name, config, exports: bundleExports(m, built) });
+  }
+  return { findings: bindingFindings(units), unchecked };
+}
+
 /** The three repository-relative paths a guarded member stands on. */
 export function memberPaths(member, repoRoot = REPO_ROOT) {
   const rel = (p) => repoPath(repoRoot, join(member.abs, p));
