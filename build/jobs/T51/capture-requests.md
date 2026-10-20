@@ -109,3 +109,29 @@ Requirement lines for the record (next free ids): R57 (capturerequestretry, C20)
 ## J5 · REPORT
 
 **Other modules, found by `checks/run.mjs` (not my module; not touched).** The coverage check reports live requirement ids that no test names, in: `agent-harness` (R17), `agent-runner` (R36, R37, R38, R40), `citation` (R16, R17, R18), `installer-steps` (R26, R31), `journey-check` (R19), `link-sweep` (R13, R14, R15) and `monitoring` (R75, R76, R77). They are not caused by this change; I did not check whether they predate it. The architecture, format, words, channels and ownership checks report 0 failures.
+
+## J6 · COMPLETE
+
+**COMPLETE: capture-requests, fix round T51 (K4189 C20, K4202 census).** Branch `job/T51/capture-requests`, commit `97bf92ac32`.
+
+**Entries applied**
+- C20 (K4189): `capturerequestretry` declared in `DECLARED_OPS` beside the ops map (`bio-plane/src/capture-requests/index.mjs`). `classes` admin and member, `mutating` true, `weight` `substrate` (its RUNG_ABSENT ground), `description` its NON_ACTS reason, `accepts` and `requires` `["request"]` (the arm reads `request` from body or query and refuses without it, `request: null`). Test: `declared-ops.test.mjs`, R57.
+- K4202 census: `capturerequest` declared the same way (`classes` admin, member, probe; `mutating` true; `weight` `substrate`; `description` its NON_ACTS reason). `accepts` is the 19 fields `captureRequest` reads from the body (run, address, target, lead_inquiry, lead, purpose, ua_mode, render, step, co_archive, site_kind, sweep and the seven CAPTURE_FIELDS), `requires` `["address"]` (see the QUESTION). `capturerequestretry` counts once, under R57. Test: R58.
+
+**Requirements (new, not yet met, named in tests)**
+- **R57** (T51; K4189, C20) `DECLARED_OPS` declares `capturerequestretry`: its classes, mutating, weight and description copied from its hand rows; `fields` accepts `request` and requires `request`. Test `declared-ops.test.mjs` R57: its requires alone raise no refusal naming a field; without `request` the refusal carries it as null; a field outside accepts is dropped.
+- **R58** (T51; K4202) `DECLARED_OPS` declares `capturerequest`, by the same rules; `fields` accepts the 19 body and query fields `captureRequest` reads and requires `address`. Test `declared-ops.test.mjs` R58, same three checks.
+
+**Deferred:** the run and question that a run's request needs (conditional, see the QUESTION).
+
+**Other findings:** recorded in the REPORT (J5), coverage failures outside this module.
+
+**Checks and tests (run from this checkout)**
+- `node --test bio-plane/test/m/capture-requests/*.test.mjs`: 129 pass, 0 fail.
+- `node --test bio-plane/test/m/op-declarations/declared.test.mjs bio-plane/test/m/op-declarations/t48.test.mjs bio-plane/test/m/op-grades/ladder.test.mjs bio-plane/test/m/op-grades/register.test.mjs`: 56 pass, 0 fail.
+- Owner rows against hand rows: `op-grades` `registerDeclaredOps` answers `agreed: [capturerequest, capturerequestretry]`, nothing registered, no refusal. `op-declarations` `registerDeclaredOps` accepts both, and `declaredFields` reads back the declared fields.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words 0 failures (607626 literals, inline 0, unkeyed count is the checker's count, not a failure). Coverage: 7 failures, all in other modules (listed in REPORT J5); capture-requests not among them.
+- `node checks/ownership.mjs /home/user/bio capture-requests tranche/T51 job/T51/capture-requests`: 1 file changed by capture-requests, 0 failures.
+- `npm ci --ignore-scripts` run in the five directories that had a tracked lock file but no node_modules (K4113).
+
+Size (session_019iGGVzKW9ch92DaSZZghQc): test runs 4, module lines 2585 (src/capture-requests, the three files).
