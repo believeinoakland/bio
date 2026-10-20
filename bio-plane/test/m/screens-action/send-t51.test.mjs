@@ -56,12 +56,12 @@ test("R42: a refusal ASSERTION_UNRESOLVED draws one choice per pointed-out sente
   assert.deepEqual(sent[0], { filing: FILING }, "first, only the filing");
   const there = main(p);
   assert.ok(beside(p, b).includes(W("refusal.ASSERTION_UNRESOLVED")));
-  assert.ok(beside(p, b).includes(S0) && beside(p, b).includes(S1), "each sentence, as the record answers it");
+  assert.ok(text(p).includes(S0) && text(p).includes(S1), "each sentence, as the record answers it");
   for (const i of [0, 1]) {
     assert.ok(there.querySelector(`#assert-words-${i}`), "words for 'it only asks'");
     assert.equal(there.querySelectorAll(`#assert-pick-${i} input`).length, 2, "rewrite and breach claim");
   }
-  for (const k of ["phrasing.assertion.pointed", "assertion.resolve.rewrite", "assertion.resolve.only_asks", "assertion.resolve.breach_claim"]) assert.ok(beside(p, b).includes(W(k)), k);
+  for (const k of ["phrasing.assertion.pointed", "assertion.resolve.rewrite", "assertion.resolve.only_asks", "assertion.resolve.breach_claim"]) said(p, k);
   fill(p, { "assert-words-0": "  We only ask for the logs.  ", "assert-pick-1-1": true });
   await approve(p);
   const body = sent[1];
@@ -78,7 +78,7 @@ test("R42: a sentence answered on one refusal stays answered on the next, so the
   fill(p, { "assert-pick-0-1": true });
   const b = await approve(p);
   assert.deepEqual(sent[1].resolutions, [{ sentence: S0, resolution: "breach_claim" }], "one answered, the other left open");
-  assert.ok(beside(p, b).includes(S1) && !beside(p, b).includes(S0), "the refusal names only the open one");
+  assert.ok(beside(p, b).includes(W("refusal.ASSERTION_UNRESOLVED")) && text(p).includes(S1) && !text(p).includes(S0), "the refusal names only the open one");
   fill(p, { "assert-words-0": "It only asks." });
   await approve(p);
   assert.deepEqual(sent[2].resolutions, [{ sentence: S0, resolution: "breach_claim" }, { sentence: S1, resolution: "only_asks", words: "It only asks." }]);

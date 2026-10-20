@@ -65,7 +65,7 @@ export const startSend = Object.freeze({
       return cs.sec("screen.start-send.template.heading", '<p class="mk-note">' + cs.w("screen.start-send.template.note1") + " " + cs.w("screen.start-send.template.note2") + " "
         + cs.w("screen.start-send.template.note3") + "</p>"
         + cs.field("template-name", "screen.start-send.template.heading", { max: 200, help: ["screen.start-send.template.name.help1", "screen.start-send.template.name.help2"] })
-        + cs.choice("template-use", "screen.start-send.template.use.label", uses)
+        + cs.choice("template-use", "screen.start-send.template.use.label", uses, { value: counsel ? "brief" : "file" })
         + '<p class="mk-small">' + cs.w("screen.start-send.template.use.help2") + "</p>"
         + cs.field("template-notes", "screen.start-send.template.notes.label", { area: true, rec: true, help: "screen.start-send.template.notes.help" })
         + '<div class="mk-acts">' + save + help + "</div>");
