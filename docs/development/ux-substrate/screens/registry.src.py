@@ -141,8 +141,8 @@ screen('standard', 'Standard', 'working', 'A requirement the city set itself, he
 
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',
-  [('plansubjectadd','Add a matter'),('optionadd','Add an option'),('planask','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
-   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('itemtakeup','Take an item up yourself')], [22])
+  [('plansubjectadd','Add a matter'),('optionadd','Add an option'),('planask','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose, decline, mark done or blocked, or return to undecided'),
+   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('itemtakeup','Take an item up yourself'),('writinghelp','Help me write this')], [22])
 screen('start-send', 'Start and send', 'working', 'The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).',
   [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it'),('filingsecondapprove','Give the second approval'),('owed:actionstake K3230','Save this action\'s stake'),('writinghelp','Help me write this')], [7,22])
 screen('glossary', 'Glossary', 'working', 'What the terms and marks in the record mean: money terms, how the record is kept honest, what each state of an item means and allows; a term in text explains itself where it appears (DEC-330, B306 census A11).',
