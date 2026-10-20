@@ -138,3 +138,7 @@ Tests and checks:
 - `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
 - `node checks/words.mjs /home/user/bio credentials`: 0 failures.
 - `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 0 failures (before this commit's requirements file, which B6 accepts).
+
+## J7 · REPORT
+
+J6: DECLARED_OPS done (17 ops incl. securitymap as read; op-grades must drop RUNG_ABSENT.securitymap), R82 met, R81/R82 lines written. C80/R81 waits on member-roster R76 (not on tranche/T51): its test is written and fails only for that reason. Send CHANGE when R76 is merged. Details in my record J6.
