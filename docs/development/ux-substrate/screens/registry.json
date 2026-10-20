@@ -2005,6 +2005,30 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "owed:capturecredentialsupply DEC-381",
+     "label": "Give a login for this source and try again",
+     "status": "owed"
+    },
+    {
+     "op": "capturerequestretry",
+     "label": "Try a refused request again",
+     "status": "declared",
+     "modules": [
+      "capture-requests",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:capturecredentiallist DEC-381",
+     "label": "Show the stored logins",
+     "status": "owed"
+    },
+    {
+     "op": "owed:capturecredentialwithdraw DEC-381",
+     "label": "Withdraw this login",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2370,6 +2394,11 @@
      "modules": [
       "entities"
      ]
+    },
+    {
+     "op": "owed:declareorigin DEC-381",
+     "label": "Say where this document came from",
+     "status": "owed"
     },
     {
      "op": "themeplace",
@@ -2765,6 +2794,11 @@
     {
      "op": "owed:rerunpair K4169",
      "label": "This answers the same claim",
+     "status": "owed"
+    },
+    {
+     "op": "owed:projectclose DEC-381",
+     "label": "Close this project with a reason",
      "status": "owed"
     }
    ],

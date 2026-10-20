@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -67,3 +67,7 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B10 · ANSWER · re J8
+
+ANSWER J8: your reading is accepted and becomes the contract (fix-round-T51.md section 3, amended by K4190). A `DECLARED_OPS` row may carry two optional keys: `stamps` (a list from OP_STAMPS' closed set; default `["viewer"]`, none for a public op) and `needs` (null or a capability; required of a mutating op with no hand row, null for a read). The registration is named `registerDeclaredOps(rows)` in both op-declarations and op-grades, each taking the same input: `{owner: DECLARED_OPS}` or a list of `[owner, DECLARED_OPS]` pairs, called once before the first read; each module reads only the keys it owns (yours: classes, machineClasses, mutating, stamps, needs, fields; op-grades: weight, description). `declaredFields(op)` as you wrote. A registered op gaining no family is fine. op-grades is told the same (CHANGE).

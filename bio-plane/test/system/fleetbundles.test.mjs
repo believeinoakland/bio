@@ -78,7 +78,7 @@ import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
   planeMember, assetsOf, optionsFor, isContainer, isGuarded,
-  BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport,
+  BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport, releaseBindingFindings,
 } from "../../scripts/fleet-bundle.mjs";
 
 let pass = 0, fail = 0;
@@ -748,6 +748,17 @@ console.log("\n--- 9a · R31's NEGATIVE CONTROL: synthetic artifacts that a budg
     rmSync(root, { recursive: true, force: true });
     delete globalThis.__r31Probe; delete globalThis.__r31Seen;
   }
+}
+
+console.log("\n--- 9 · the release is coherent: every binding names a class or service the release exports (R39; K4176) ---");
+{
+  /* A member bound to a class another member's bundle does not export is refused by Cloudflare at deploy (10061), so the
+     release is checked here, against the bundles that would ship (built, not read from source). Red by name until
+     agent-runner exports `RemoteSession` (agent-worker's REMOTE). */
+  const { findings, unchecked } = await releaseBindingFindings([planeMember(), ...members.filter((m) => m.bundle)]);
+  show(findings.map((f) => f.text));
+  t("R39: every service and Durable Object binding, container class and migration class of the plane and each member is exported by the release's bundles", findings.map((f) => f.text), []);
+  t("R39: every bundle was built here to read its exports", unchecked.map((u) => `${u.name}: ${u.reason}`), []);
 }
 
 console.log(`\nfleetbundles: ${pass} pass, ${fail} fail`);
