@@ -21,7 +21,9 @@ const GEN_DIR = fileURLToPath(new URL("../../../src/wizard-scripts/", import.met
 const src = (f) => readFileSync(join(SOURCE_DIR, f), "utf8");
 const REG_FILE = JSON.parse(src("registry.json")), LIB_T50 = JSON.parse(src("library-7be06eb4cb.json"));
 const COMMIT = "2a64c5ae77";
-const REG_COMMIT = "958d998ccb";   /* the registry's pin, moved by R44 and again by R45 */
+const FIX = "840099da7c";   /* R45: the fix round re-takes the doors and the library again */
+const LIB_R45 = JSON.parse(src("library-840099da7c.json"));
+const REG_COMMIT = "840099da7c";   /* the registry's pin, moved by R44 and again by R45 */
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 const status = (s) => REG_FILE.screens.flatMap((f) => f.acts.filter((a) => a.status === s).map((a) => [f.id, a.op]));
 const OWED_OPS = [...new Set(status("owed").map(([, op]) => OWED.exec(op)[1]))];
@@ -101,8 +103,8 @@ test("R41 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) build-data.mjs --check 
   /* each generated file names the source it comes from: the commit, the path and the file's SHA-256 */
   const sha = (f) => createHash("sha256").update(src(f), "utf8").digest("hex");
   assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: REG_COMMIT, path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
-  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: COMMIT, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") });
-  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-1), { commit: COMMIT, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") });
+  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-840099da7c.json") });
+  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-1), { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-840099da7c.json") });
   assert.ok(!existsSync(join(GEN_DIR, "front-doors.mjs.orig")));
 });
 
@@ -189,7 +191,7 @@ test("R41 (T50; N1130; R13) each of the owed acts the file names is registered a
 });
 
 test("R41 (T50; N1130; R37) the front doors are regenerated from the file's doors, which now end with the sixth: FRONT_DOORS are its five, in its order, and ELSEWHERE_DOOR is the file's sixth, {door: \"elsewhere\", scripts: [], opens: \"elsewhere\"}, read from the file and still answered to every viewer; control: with the sixth door gone from the file the frozen data answers the same", () => {
-  assert.equal(wz.FRONT_DOORS_SOURCE.commit, COMMIT);
+  assert.equal(wz.FRONT_DOORS_SOURCE.commit, FIX);
   const sixth = LIB_T50.doors.find((d) => d.door === "elsewhere");
   assert.deepEqual(sixth, { door: "elsewhere", scripts: [], opens: "elsewhere" }, "the file holds the sixth door");
   assert.deepEqual(LIB_T50.doors.map((d) => d.door), ["problem", "person", "money", "read", "tip", "elsewhere"]);
@@ -223,12 +225,13 @@ test("R42 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) the library is re-taken
     return { screen: t.screen, act: m ? m[1] : t.act, what: t.what, why: t.why, ...(t.draft ? { draft: t.draft } : {}), ...(t.via ? { via: idOf[t.via] } : {}) };
   });
   assert.deepEqual(LIB_T50.scripts.map((k) => k.versions.length), LIB_T50.scripts.map(() => 1), "one version in the file each");
-  LIB_T50.scripts.forEach((k, i) => {
+  LIB_R45.scripts.forEach((k, i) => {
     const e = wz.CIVICSMITH_LIBRARY[i];
     assert.deepEqual([e.id, e.name, e.start, e.steps], [k.id, k.name, k.start, fileSteps(k)], `${k.name}: the latest version is the file's, step by step`);
   });
-  const gained = wz.CIVICSMITH_LIBRARY.filter((e) => e.source === COMMIT), same = wz.CIVICSMITH_LIBRARY.filter((e) => e.source !== COMMIT);
-  assert.equal(gained.length, 16);
+  const gained = wz.CIVICSMITH_LIBRARY.filter((e) => e.source === COMMIT), same = wz.CIVICSMITH_LIBRARY.filter((e) => e.source !== COMMIT && e.source !== FIX);
+  assert.equal(gained.length, 15, "sixteen at T50; the welcome wizard gained a later version in the fix round (R45)");
+  assert.deepEqual(wz.CIVICSMITH_LIBRARY.filter((e) => e.source === FIX).map((e) => e.id), ["WIZ-7db08189cc0e58c3"]);
   assert.deepEqual(same.map((e) => e.name).sort(), ["Build a timeline", "Check a claim", "Follow a proceeding", "Follow the money", "Keep asking this", "Pick up a plan", "Your first question"]);
   for (const e of gained) {
     assert.deepEqual([e.author, e.approved, e.origin, e.scope], ["civicsmith", { by: "BOB", at: "2026-10-17", ruling: "K2241" }, "civicsmith", "group"], e.name);
@@ -259,7 +262,7 @@ test("R42 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) the library is re-taken
   assert.ok(!JSON.stringify(wz.CIVICSMITH_LIBRARY).includes("owed:"));
   /* a script's name and steps are read from the file: this module holds no sentence of its own */
   for (const e of wz.CIVICSMITH_LIBRARY) for (const t of e.steps) {
-    const k = LIB_T50.scripts.find((x) => x.id === e.id);
+    const k = LIB_R45.scripts.find((x) => x.id === e.id);
     assert.ok(k.versions[0].steps.some((u) => u.what === t.what && u.why === t.why), `${e.name}: ${t.what.slice(0, 40)}`);
   }
 });

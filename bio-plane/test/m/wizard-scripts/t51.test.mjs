@@ -1,4 +1,4 @@
-/* wizard-scripts at T51 (N1184, N858, N1046; DEC-340, U366; K3935): the registry re-taken at `8c5e692e19` (R44) and again at `958d998ccb` in the fix round (R45). Every test
+/* wizard-scripts at T51 (N1184, N858, N1046; DEC-340, U366; K3935): the registry re-taken at `8c5e692e19` (R44) and again at `840099da7c` in the fix round (R45; `958d998ccb` before it). Every test
    drives the module at its interface, over the carried data and the vendored design file it is held equal to; the
    generator is run as a command. */
 import { test } from "node:test";
@@ -33,9 +33,9 @@ test("R44 (T51; N1184, N858, N1046; DEC-340, U366; K3935; amends R41) the regist
   assert.equal(at("registry.json").screens.length, 83, "control: the carried file is the later one (R45)");
 });
 
-test("R45 (T51 fix round; K4196; DEC-374 to DEC-383; K2241; amends R44) the registry is re-taken at 958d998ccb: SCREEN_REGISTRY_SOURCE names it, with 83 screens and 554 acts (426 declared, 83 function, 45 owed); bias, contradiction, objective, about-knocker, leads and watching are in SCREEN_REGISTRY with their names and acts, each owed act registered by R13 and never as a served op; the library and the front doors are unchanged (library.json did not change, R42's rule); build-data.mjs --check passes on the committed files and a one-byte change fails it", () => {
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "958d998ccb", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
-  assert.equal(SOURCES.registry.commit, "958d998ccb");
+test("R45 (T51 fix round; K4196, K4197; DEC-374 to DEC-384; K2241; amends R44) the registry is re-taken at 840099da7c: SCREEN_REGISTRY_SOURCE names it, with 83 screens and 554 acts (426 declared, 83 function, 45 owed); bias, contradiction, objective, about-knocker, leads and watching are in SCREEN_REGISTRY with their names and acts, each owed act registered by R13 and never as a served op; the library is re-taken by R42's rule (only the welcome wizard changed: its next version, DEC-384's step 4) and the front doors with it; build-data.mjs --check passes on the committed files and a one-byte change fails it", () => {
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "840099da7c", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
+  assert.equal(SOURCES.registry.commit, "840099da7c");
   const file = JSON.parse(readFileSync(join(SOURCE_DIR, "registry.json"), "utf8"));
   const acts = file.screens.flatMap((s) => s.acts);
   const count = (status) => acts.filter((a) => a.status === status).length;
@@ -54,9 +54,20 @@ test("R45 (T51 fix round; K4196; DEC-374 to DEC-383; K2241; amends R44) the regi
     assert.ok(!file.screens.find((s) => s.id === id).acts.some((a) => a.status === "owed" && !/^owed:[a-z]/.test(a.op)), `${id}: an owed act names its op`);
   }
   assert.deepEqual(JSON.parse(readFileSync(join(SOURCE_DIR, "registry-2a64c5ae77.json"), "utf8")).screens.map((s) => s.id).filter((id) => !wz.SCREEN_REGISTRY.some((s) => s.id === id)), [], "control: the earlier registry's screens are all still carried");
-  assert.equal(wz.FRONT_DOORS_SOURCE.commit, "2a64c5ae77", "the front doors are unchanged: library.json did not change (R42's rule)");
+  const lib = JSON.parse(readFileSync(join(SOURCE_DIR, "library-840099da7c.json"), "utf8"));
+  const before = JSON.parse(readFileSync(join(SOURCE_DIR, "library-2a64c5ae77.json"), "utf8"));
+  assert.equal(wz.FRONT_DOORS_SOURCE.commit, "840099da7c", "the front doors are taken from the fix round's file");
+  assert.deepEqual(wz.FRONT_DOORS, lib.doors.filter((d) => d.door !== "elsewhere").map((d) => ({ door: d.door, scripts: d.scripts })));
+  assert.deepEqual(lib.doors, before.doors, "control: the doors themselves did not change");
   assert.equal(wz.CIVICSMITH_LIBRARY_SOURCE.commit, "d129238bf3", "the library's version 1 is unchanged (R22)");
   assert.equal(wz.CIVICSMITH_LIBRARY.length, 23);
+  const changed = lib.scripts.filter((k) => JSON.stringify(k.versions) !== JSON.stringify(before.scripts.find((x) => x.id === k.id).versions) || k.name !== before.scripts.find((x) => x.id === k.id).name).map((k) => k.id);
+  assert.deepEqual(changed, ["WIZ-7db08189cc0e58c3"], "only the welcome wizard changed (DEC-384)");
+  const welcome = wz.CIVICSMITH_LIBRARY.find((e) => e.id === "WIZ-7db08189cc0e58c3");
+  assert.deepEqual([welcome.version, welcome.source, welcome.approved], [3, "840099da7c", { by: "BOB", at: "2026-10-20", ruling: "K2241" }]);
+  assert.deepEqual(welcome.earlier.map((v) => v.version), [1, 2], "its earlier versions kept whole");
+  assert.notDeepEqual(welcome.earlier.at(-1).steps, welcome.steps, "control: version 3 differs from version 2");
+  for (const e of wz.CIVICSMITH_LIBRARY.filter((x) => x.id !== welcome.id)) assert.notEqual(e.source, "840099da7c", `${e.id}: not re-taken`);
 
   const ok = run("--check");
   assert.equal(ok.status, 0, ok.stderr);
@@ -65,7 +76,7 @@ test("R45 (T51 fix round; K4196; DEC-374 to DEC-383; K2241; amends R44) the regi
   const scratch = mkdtempSync(join(tmpdir(), "wz-r45-"));
   try {
     for (const name of GENERATED) copyFileSync(join(GEN_DIR, name), join(scratch, name));
-    const flipped = readFileSync(join(GEN_DIR, "screen-registry.mjs"), "utf8").replace("958d998ccb", "958d998ccc");
+    const flipped = readFileSync(join(GEN_DIR, "screen-registry.mjs"), "utf8").replace("840099da7c", "840099da7d");
     writeFileSync(join(scratch, "screen-registry.mjs"), flipped);
     const control = run("--check", "--out", scratch);
     assert.equal(control.status, 1, "control: a changed generated file fails --check");

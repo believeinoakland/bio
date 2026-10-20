@@ -61,7 +61,7 @@ test("R31 (T47; N992; DEC-198 (1), DEC-199 (6)) the registry carries DEC-198's a
 
 test("R35 (K3062, K3127, K3137; DEC-200–DEC-217; amended by R38, R41) the registry as PR #33's head held it, re-taken at the design commit named at T50's START (7be06eb4cb), named as the source: 71 screens, the two remaining dash-* treatments registered (dash-home is gone, R38); the owed acts passwordreset, passwordresetlink, grouplanguagesset, grouplogoset and signrequest registered as those ops once declared, projectaikeepaway as today; wizardsAt(\"group\") and op=wizardcheck admit grouplogoset; control: hostingaccess on setup is refused", () => {
   /* R44 moved the pin on to 8c5e692e19 and its 77 screens; this test's own claim is the registry the file then held, now the carried one */
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "958d998ccb", path: "docs/development/ux-substrate/screens/registry.json",
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "840099da7c", path: "docs/development/ux-substrate/screens/registry.json",
                                                 sha256: createHash("sha256").update(src("registry.json"), "utf8").digest("hex") });
   assert.equal(wz.SCREEN_REGISTRY.length, 83);
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id));
@@ -118,8 +118,8 @@ test("R32 (T47; N992; DEC-198 (2); K2241) Connect your Claude account's version 
 });
 
 test("R33 (T47; N992; DEC-198 (4); R41) FRONT_DOORS are library.json's doors at the design commit named at T50's START (7be06eb4cb; the same five as at a0fab7abf0), frozen: five, problem, person, money, read and tip, each {door, scripts} naming the file's script ids in its order; with every named script offered startFrom answers the five in that order; with Follow the money withdrawn, money names only Get a record; with Get a record withheld too (no @records-request template offered), money is left out", () => {
-  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/library.json",
-                                            sha256: createHash("sha256").update(src("library-7be06eb4cb.json"), "utf8").digest("hex") });
+  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: "840099da7c", path: "docs/development/ux-substrate/screens/library.json",
+                                            sha256: createHash("sha256").update(src("library-840099da7c.json"), "utf8").digest("hex") });
   assert.deepEqual(wz.FRONT_DOORS, LIB_T50.doors.filter((d) => d.door !== "elsewhere").map((d) => ({ door: d.door, scripts: d.scripts })));
   assert.deepEqual(wz.FRONT_DOORS, LIB_T47A.doors.map((d) => ({ door: d.door, scripts: d.scripts })), "the five are those of a0fab7abf0");
   assert.deepEqual(LIB_T47.doors, LIB_T47A.doors, "the same at PR #33's head");
