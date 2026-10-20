@@ -12,49 +12,57 @@ const OFFICES = { subject: PROJECT, offices: [
   { addressee: { state: "named", kind: "office", role: "City Clerk", body: "Office of the City Clerk", entity_id: "ENT-1" } },
   { addressee: { state: "named", kind: "office", role: "Director of Public Works", body: "Public Works", entity_id: "ENT-2" } }], suggestion: true };
 
-test("R4: says to look first (a public record is captured instead), then the office by its role; 'Choose the office' brings 'Start the request', which creates the action and opens it", async () => {
-  const p = await open(NEW, { ...DATA_PLANE, addresseesuggest: ok(OFFICES), actioncreate: ok({ id: ACTION_ID }) });
+const NAMES = { rows: [{ entity: "ENT-2026-1111111111111111", kind: "organisation", name: "Public Works" }, { entity: "ENT-2026-2222222222222222", kind: "office", name: "Pothole repair program" }], truncated: false };
+const SUBJECT = "ENT-2026-2222222222222222";
+
+test("R4, R39: says to look first (a public record is captured instead), asks which name the records concern, then 'Choose the office' brings the offices and 'Start the request', which creates the action and opens it", async () => {
+  const p = await open(NEW, { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok(OFFICES), actioncreate: ok({ id: ACTION_ID }) });
   said(p, "screen.request.lookfirst");
   assert.ok(main(p).querySelector('a[href="/app/capture"]'));
-  assert.equal(p.byOp("addresseesuggest")[0].query.subject, PROJECT, "the offices the record holds are read on load");
+  assert.equal(p.byOp("addresseesuggest").length, 0, "R39: the plane does not resolve the project's id, so no office is asked on load");
   assert.deepEqual(ops(p), ["addresseesuggest"], "R20: 'Start the request' is not drawn before an office is chosen");
   assert.equal(p.doc.getElementById("req-what"), null);
+  assert.deepEqual(p.doc.getElementById("req-subject").querySelectorAll("option").map((o) => o.value), ["", "ENT-2026-1111111111111111", SUBJECT], "the names the record follows");
+  await press(p, "addresseesuggest", { values: { "req-subject": SUBJECT } });
+  assert.deepEqual(last(p, "addresseesuggest").query, { op: "addresseesuggest", subject: SUBJECT }, "the name she picked, never the project");
   assert.match(text(p), /Director of Public Works, Public Works/);
-  await press(p, "addresseesuggest", { values: { "req-office": "1" } });
-  assert.deepEqual(last(p, "addresseesuggest").query, { op: "addresseesuggest", subject: PROJECT });
-  assert.deepEqual(ops(p), ["addresseesuggest", "actioncreate"], "an office chosen: what is wanted is asked");
-  assert.equal(p.doc.getElementById("req-office").value, "1", "the office chosen stays chosen");
+  assert.deepEqual(ops(p), ["addresseesuggest", "actioncreate"], "offices answered: what is wanted is asked");
+  assert.equal(p.doc.getElementById("req-subject").value, SUBJECT, "the name picked stays picked");
+  await press(p, "actioncreate", { values: { "req-office": "1" }, reason: "x" });
   const none = await press(p, "actioncreate", { reason: "x" });
   assert.ok(beside(p, none).includes(W("screen.request.what.needed")));
-  await press(p, "actioncreate", { values: { "req-what": "Inspection logs for pothole reports closed in 2025" }, reason: "x" });
+  await press(p, "actioncreate", { values: { "req-what": "Inspection logs for pothole reports closed in 2025", "req-office": "1" }, reason: "x" });
   const doc = last(p, "actioncreate").body.document;
   for (const line of ["object_type: action", 'title: "Inspection logs for pothole reports closed in 2025"', `project: ${PROJECT}`, 'action_kind: "records_request"',
     'role: "Director of Public Works"', 'body: "Public Works"', 'entity_id: "ENT-2"', "current_state: planned"]) assert.ok(doc.includes(line), line);
   assert.equal(p.location.pathname, `/app/request/${ACTION_ID}`);
 });
 
-test("R20: with no office known the request says so and points an administrator to Places and offices, and draws nothing after it; control: a member sees no reference, a team with offices draws R4's flow", async () => {
-  const plane = { ...DATA_PLANE, addresseesuggest: ok({ subject: PROJECT, offices: [], suggestion: true }) };
+test("R20, R39: with no office known the request says so and points an administrator to Places and offices, and draws no later step; control: a member sees no reference, a team with offices draws R4's flow", async () => {
+  const plane = { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok({ subject: SUBJECT, offices: [], suggestion: true }) };
   const admin = await open(NEW, { ...plane, whoami: ok(ADMIN) });
+  assert.ok(!text(admin).includes(W("screen.request.nooffice")), "R39: none is known before a name is asked about");
+  await press(admin, "addresseesuggest", { values: { "req-subject": SUBJECT } });
   said(admin, "screen.request.nooffice");
   said(admin, "screen.request.nooffice.admin");
   const places = main(admin).querySelector('a[href="/app/places"]');
   assert.ok(places && places.textContent.includes(W("screen.places.name")), "the reference to where an office is added");
   said(admin, "screen.places.purpose");
-  assert.deepEqual(ops(admin), [], "no choose-office, no start and no later step");
+  assert.deepEqual(ops(admin), ["addresseesuggest"], "the name can be changed and asked again; no start and no later step");
   for (const id of ["req-office", "req-what"]) assert.equal(admin.doc.getElementById(id), null, id);
   assert.equal(admin.byOp("actioncreate").length + admin.byOp("filingprepare").length, 0);
   // a session for which the shell draws no Places screen is shown the sentences and no reference
   const member = await open(NEW, plane);
+  await press(member, "addresseesuggest", { values: { "req-subject": SUBJECT } });
   said(member, "screen.request.nooffice");
   said(member, "screen.request.nooffice.admin");
   assert.equal(main(member).querySelector('a[href="/app/places"]'), null);
-  assert.deepEqual(ops(member), []);
   // control: with offices known, the sentences and the reference are not drawn and the flow is
-  const known = await open(NEW, { ...DATA_PLANE, addresseesuggest: ok(OFFICES), whoami: ok(ADMIN) });
+  const known = await open(NEW, { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok(OFFICES), whoami: ok(ADMIN) });
+  await press(known, "addresseesuggest", { values: { "req-subject": SUBJECT } });
   assert.ok(!text(known).includes(W("screen.request.nooffice")));
   assert.equal(main(known).querySelector('a[href="/app/places"]'), null);
-  assert.deepEqual(ops(known), ["addresseesuggest"]);
+  assert.deepEqual(ops(known), ["addresseesuggest", "actioncreate"]);
   // B7: opened with no subject, the screen asks nothing (addresseesuggest refuses NO_SUBJECT) and draws its no-office state
   const bare = await open("/app/request", { ...DATA_PLANE, whoami: ok(ADMIN), addresseesuggest: refused("NO_SUBJECT", "no subject", 400) });
   assert.equal(bare.byOp("addresseesuggest").length, 0, "no call without a subject");
@@ -62,12 +70,17 @@ test("R20: with no office known the request says so and points an administrator 
   assert.ok(main(bare).querySelector('a[href="/app/places"]'));
   assert.deepEqual(ops(bare), []);
   assert.ok(!main(bare).querySelector('[data-state="failed"]'));
-  // control: with a subject the offices are asked
-  assert.equal(known.byOp("addresseesuggest").length, 1);
+  // a project whose record follows no name has none to ask about: it says no office is known and draws no act
+  const nameless = await open(NEW, { ...DATA_PLANE, peopledirectory: ok({ rows: [], truncated: false }), whoami: ok(ADMIN) });
+  said(nameless, "screen.request.nooffice");
+  assert.deepEqual(ops(nameless), []);
   // control: a read that failed is not "no office known"
-  const failed = await open(NEW, { ...DATA_PLANE, addresseesuggest: refused("STORE_DID_NOT_ANSWER", null, 502) });
+  const failed = await open(NEW, { ...DATA_PLANE, peopledirectory: refused("STORE_DID_NOT_ANSWER", null, 502) });
   assert.ok(main(failed).querySelector('[data-state="failed"]'));
   assert.ok(!text(failed).includes(W("screen.request.nooffice")));
+  const refusedAsk = await open(NEW, { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: refused("STORE_DID_NOT_ANSWER", null, 502) });
+  await press(refusedAsk, "addresseesuggest", { values: { "req-subject": SUBJECT } });
+  assert.ok(!text(refusedAsk).includes(W("screen.request.nooffice")), "an ask that was refused is not 'no office known'");
 });
 
 test("R4: the law it goes under is chosen among the laws the profile names for a records request, each with its window", async () => {

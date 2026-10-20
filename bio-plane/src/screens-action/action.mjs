@@ -59,6 +59,21 @@ export const action = Object.freeze({
       });
     },
     who: function (by) { return String(by || "").replace(/^member:/, ""); },
+    // R38: a word the design holds (`cs.w` answers the escaped key for one it does not); a field or option with none is not drawn
+    // and is reported to BOB as a missing key (K3366), never worded here.
+    has: function (cs, key) { return cs.w(key) !== cs.esc(key); },
+    // R38: the vocabulary's reply stages (received ones) and outcomes, each as a choice option: the design's words where a key
+    // holds them, else the vocabulary's own token as record data.
+    replyChoices: function (cs, view, which) {
+      const v = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies : {};
+      const WORDS = { fee_waiver_decision: "screen.action.decision.on.a.fee.waiver", extension_notice: "screen.action.notice.of.an.extension",
+        appeal_decision: "screen.action.decision.on.an.appeal", none_exists: "screen.action.no.such.records.exist" };
+      const list = which === "stage" ? (v.correspondence_stages && Array.isArray(v.correspondence_stages.received) ? v.correspondence_stages.received : [])
+        : (Array.isArray(v.correspondence_outcomes) ? v.correspondence_outcomes : []);
+      return [{ value: "", text: "" }].concat(list.filter(function (t) { return typeof t === "string" && t; }).map(function (t) {
+        return WORDS[t] && cs.w(WORDS[t]) !== cs.esc(WORDS[t]) ? { value: t, key: WORDS[t] } : { value: t, text: t };
+      }));
+    },
     // The states an action may move to from where it stands (actions' state edges).
     moves: function (from) {
       return { planned: ["active", "abandoned"], active: ["awaiting_response", "resolved", "abandoned"],
@@ -102,6 +117,11 @@ export const action = Object.freeze({
       return '<section class="cs-section"><h2 tabindex="0" data-level="2" data-tip="' + tip + '">' + cs.w(titleKey) + "</h2>" + inner + "</section>";
     };
     const aLink = function (screen, id, key) { return '<a class="cs-ref" href="/app/' + screen + "/" + encodeURIComponent(id) + '" data-nav>' + cs.w(key) + "</a>"; };
+    // a reference to another screen as its card: its name and its purpose (R37, R40, R43)
+    const door = function (screen, id) {
+      return '<div class="mk-links" data-list="' + screen + '"><a class="cs-ref" href="/app/' + screen + "/" + encodeURIComponent(id) + '" data-nav data-screen="' + screen + '">'
+        + cs.w("screen." + screen + ".name") + '</a><span class="mk-small" data-purpose="' + screen + '">' + cs.w("screen." + screen + ".purpose") + "</span></div>";
+    };
     return cs.state("action", function (a) {
       const office = a.addressee ? [a.addressee.role, a.addressee.body].filter(Boolean).join(", ") : "";
       const holder = a.addressee && a.addressee.holder_on_date && a.addressee.holder_on_date.holder ? a.addressee.holder_on_date.holder : "";
@@ -127,6 +147,10 @@ export const action = Object.freeze({
 
       // R5: "Waiting on <office>'s reply" while one is owed; each due date with `mark.due`, a passed one as canon's
       // question, never "overdue" until a member determines it.
+      // R43: an action not yet sent (no sent entry, no sending recorded) draws the door to the send steps, where its text is
+      // prepared; a sent one does not
+      const unsent = !sent.length && step !== "sent";
+      const toSend = unsent ? door("start-send", view.subject) : "";
       const owed = a.reply_owed && a.reply_owed.owed;
       const wait = owed ? '<p class="cs-wait" role="status">' + cs.w("screen.action.waiting", { office: office || cs.w("screen.action.theoffice") }) + "</p>" : "";
       const today = P.today(cs);
@@ -138,8 +162,13 @@ export const action = Object.freeze({
         const due = c.date ? '<a href="/app/due-date/' + encodeURIComponent(view.subject + "~" + i) + '" data-nav>' + cs.due(String(c.date), st === "met" ? "met" : passed ? "passed" : "") + "</a>" : "";
         const remind = c.date && st === "pending" && cs.can("actioncorrespond")
           ? cs.field("remind-" + i, "screen.action.remindon", { type: "date" }) + cs.act("reminderset", { data: { entry: String(i) } }) : "";
-        return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + "</span>", "", remind);
+        // R52: the reminder this page set, beside its entry: its day, by key (the answer never reads "nothing happened")
+        const set = view.ui.reminded && view.ui.reminded[i] ? ' · <span data-reminder="' + i + '">' + cs.w("screen.action.remindon") + " " + cs.date(view.ui.reminded[i]) + "</span>" : "";
+        return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + set + "</span>", "", remind);
       }).join("")));
+      // R37: a sent action with no clock entry has no due date to open: the door to the deadline page is drawn for it, which holds
+      // the proposal and "Confirm this due date"
+      const dueDoor = first && !clock.length ? door("due-date", view.subject) : "";
 
       // R23, R26: "Open a question from this" (`actioninquiry`): the member writes the question, one line; the action is where it
       // comes from, not evidence in it. In the drawing's state b (a reply's date passed with none recorded) the act sits in the
@@ -168,6 +197,26 @@ export const action = Object.freeze({
       const entries = Array.isArray(a.entries) ? a.entries : [];
       const received = corr.filter(function (c) { return c.direction !== "sent"; });
       const helpReply = view.reachable ? cs.act("writinghelp", { data: { field: "account", id: "reply-account", forop: "actioncorrespond" } }) : "";
+      // R38: the full reply form (DEC-376, C66): a reply or none, the day, who it came from, what it is recorded from, the kind of
+      // reply, what the office decided and the exemptions it cites, the date it says it will answer by and the law that comes
+      // from, and a quoted fee. Each field and option reads the design's key; one the design holds no key for is not drawn (R19).
+      const laws = a.governing_laws && Array.isArray(a.governing_laws.laws) ? a.governing_laws.laws : [];
+      const KEYS = { dir: "screen.action.replies", dayHelp: "screen.action.a.real.calendar.day" };
+      const maybe = function (fn, key) { return P.has(cs, key) ? fn(key) : ""; };
+      const stageOpts = P.replyChoices(cs, view, "stage"), outcomeOpts = P.replyChoices(cs, view, "outcome");
+      const replyForm = cs.choice("reply-dir", KEYS.dir, [["received", "screen.action.received"], ["no_response", "screen.action.no.reply.came.by.the.date"]], { value: "received" })
+        + cs.field("reply-at", "screen.action.the.day.it.came.or.the", { type: "date", help: KEYS.dayHelp })
+        + cs.field("reply-party", "screen.action.who.it.came.from", { help: "screen.action.the.office.or.person.who.answered" })
+        + cs.field("reply-account", "screen.action.your.account.of.the.reply", { area: true, help: "screen.action.in.your.own.words.up.to" })
+        + (stageOpts.length > 1 ? cs.choice("reply-stage", "screen.action.what.kind.of.reply", stageOpts, { help: "screen.action.a.silence.has.no.kind" }) : "")
+        + (outcomeOpts.length > 1 ? cs.choice("reply-outcome", "screen.action.what.the.office.decided", outcomeOpts, { help: "screen.action.only.on.a.reply" }) : "")
+        + cs.field("reply-exemptions", "screen.action.the.exemptions.the.office.cites", { rec: true, help: "screen.action.the.exemptions.or.reasons.for.withholding" })
+        + cs.field("reply-dueby", "screen.action.the.office.says.it.will.answer", { type: "date", help: "screen.action.a.date.the.office.itself.stated" })
+        + (laws.length ? cs.choice("reply-duecite", "screen.action.the.law.that.date.comes.from", [{ value: "", text: "" }].concat(laws.map(function (l) { return { value: String(l.citation || ""), text: String(l.citation || "") }; })),
+          { help: "screen.action.only.a.law.this.action.goes" }) : "")
+        + cs.field("reply-fee-basis", "screen.action.what.the.fee.is.for", { help: "screen.action.optional.in.the.office.s.words" })
+        + maybe(function (k) { return cs.field("reply-fee", k, { help: "screen.action.put.a.waiver.in.as.a" }); }, "screen.action.the.amount.quoted")
+        + maybe(function (k) { return cs.field("reply-fee-cur", k); }, "screen.action.currency");
       const replies = cs.sec("screen.action.replies", (received.length ? cs.sheet(received.map(function (c) {
         const e = entries.find(function (x) { return x.ord === c.ord; }) || {};
         const pr = e.pressure ? cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(e.pressure.kind) ? e.pressure.kind : "other")) : "";
@@ -177,9 +226,7 @@ export const action = Object.freeze({
         return cs.row(cs.date(c.at), cs.w(c.direction === "no_response" ? "screen.action.noresponse" : "screen.action.received")
           + (c.party ? " · " + cs.esc(c.party) : "") + (c.medium ? " · " + cs.esc(c.medium) : "") + (pr ? '<span class="meta">' + pr + "</span>" : ""), "", mark);
       }).join("")) : "")
-        + cs.field("reply-at", "screen.action.reply.at", { type: "date" })
-        + cs.field("reply-account", "screen.action.reply.account", { area: true, help: "screen.action.reply.account.help" })
-        + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>");
+        + replyForm + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>");
 
       // R12, R31 (3): the pressure marks and records on this action, each with where it arrived, who made it and whether a hold
       // is placed (a legal one as `screen.action.legalmark`), paged by `after`; none drawn at zero; the profile's fact on a legal
@@ -280,12 +327,12 @@ export const action = Object.freeze({
           return cs.row("", (Array.isArray(x.laws) ? x.laws : []).map(lawLine).join("<br>"),
             '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("law.proposal.not", { who: P.who(x.by), date: { html: cs.date(x.at) } }) + "</span>", "");
         }).join("")) : "";
-      const lawChange = offered.length
-        ? cs.choice("law-pick", "screen.request.law", optionsOf(offered)) + levels("law-level") + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + "</div>" : "";
-      const others = offered.filter(function (d) { return !stated.some(function (l) { return l.citation === d.citation; }); });
-      const lawPropose = others.length
-        ? cs.choice("lawp-pick", "screen.request.law", optionsOf(others)) + levels("lawp-level") + '<div class="mk-acts">' + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>" : "";
-      const lawSec = cs.sec("law.title", lawsStated + lawProposed + lawChange + lawPropose, { help: "law.help" });
+      // R54: "Change the law…" and "Propose another law…" share one list of laws, drawn once with both acts under it; with no laws
+      // offered neither act is drawn (E3, DEC-384)
+      const lawChoose = offered.length
+        ? cs.choice("law-pick", "law.pick", optionsOf(offered)) + levels("law-level")
+          + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>" : "";
+      const lawSec = cs.sec("law.title", lawsStated + lawProposed + lawChoose, { help: "law.help" });
 
       // R17: its risk: the tier in its own words, the latest revision, a revision with a reason, and the proposals apart.
       const tier = [1, 2, 3].includes(Number(a.risk_tier)) ? Number(a.risk_tier) : "undetermined";
@@ -315,20 +362,37 @@ export const action = Object.freeze({
       const scope = '<p class="mk-note">' + cs.w(a.confidential ? "screen.action.scope.confidential" : "screen.action.scope.open") + "</p>"
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
       const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + scope);
-      return head + pickup + wait + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + riskSec + manage;
+      // R40: the counsel packet's screen is opened from the action
+      return head + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + riskSec + door("counsel", view.subject) + manage;
     });
   },
 
   acts: [
     {
-      // R5: "Record a reply": the day it came and the member's account of it.
+      // R5, R38: "Record a reply": a reply or none; the day, who it came from, the member's account, the kind of reply, what the
+      // office decided, the exemptions, the date it says it will answer by and the law, and a quoted fee, as `actions` declares
+      // them (`actioncorrespond`). A silence takes its day alone.
       op: "actioncorrespond",
       send: function (view, el, cs) {
-        const at = String(cs.value("reply-at") || "").trim();
-        const account = String(cs.value("reply-account") || "").trim();
+        const val = function (id) { return String(cs.value(id) || "").trim(); };
+        const at = val("reply-at");
         if (!/^\d{4}-\d{2}-\d{2}$/.test(at)) return { refuse: "screen.action.reply.at.needed" };
+        const dir = val("reply-dir") === "no_response" ? "no_response" : "received";
+        const q = { target: view.subject, direction: dir, at: at };
+        // a silence takes its day alone from the member; `actions` records it as a named account (DEC-13: it requires an account
+        // or a capture, and a silence has no bytes), so the account is the design's own sentence for it, read by key
+        if (dir === "no_response") { q.account = String(cs.w("screen.action.no.reply.came.by.the.date")); return { query: q, raw: "" }; }
+        const account = val("reply-account");
         if (!account) return { refuse: "screen.action.reply.account.needed" };
-        return { query: { target: view.subject, direction: "received", at: at, account: account }, raw: "" };
+        q.account = account;
+        const put = function (name, id) { const v = val(id); if (v) q[name] = v; };
+        put("party", "reply-party"); put("stage", "reply-stage"); put("outcome", "reply-outcome"); put("exemptions", "reply-exemptions");
+        put("due_cite", "reply-duecite");
+        const dueBy = val("reply-dueby");
+        if (dueBy) { if (!/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) return { refuse: "screen.action.reply.at.needed" }; q.due_by = dueBy; }
+        const fee = val("reply-fee");
+        if (fee) { q.quote_amount = fee; put("quote_currency", "reply-fee-cur"); put("quote_basis", "reply-fee-basis"); }
+        return { query: q, raw: "" };
       },
     },
     {
@@ -358,10 +422,17 @@ export const action = Object.freeze({
       send: function (view, el, cs) {
         const on = String(cs.value("remind-" + el.dataset.entry) || "").trim();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(on)) return { refuse: "screen.action.remindon.needed" };
+        view.ui.remindSent = { entry: Number(el.dataset.entry), on: on };
         return { body: { target: view.subject, entry: Number(el.dataset.entry), on: on } };
       },
       rereads: [],
-      done: function (view, answer, cs) { cs.set("reminded", true); },
+      // R52: the day the member set, kept beside its entry (this page's memory, never the record's)
+      done: function (view, answer, cs) {
+        const r = view.ui.remindSent || {};
+        const set = Object.assign({}, view.ui.reminded || {});
+        if (r.on) set[r.entry] = r.on;
+        cs.set("reminded", set);
+      },
     },
     {
       // R16: "Change the law…": the law chosen among those the group's places name replaces the action's list (the act logs
@@ -385,9 +456,9 @@ export const action = Object.freeze({
         const pf = view.data.profiles;
         const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
         const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null, a.kind);
-        const c = offered.find(function (d) { return d.citation === cs.value("lawp-pick"); });
+        const c = offered.find(function (d) { return d.citation === cs.value("law-pick"); });
         if (!c) return null;
-        return { body: { target: view.subject, laws: [{ level: cs.value("lawp-level") || "state", citation: c.citation }] } };
+        return { body: { target: view.subject, laws: [{ level: cs.value("law-level") || "state", citation: c.citation }] } };
       },
       rereads: ["action"],
     },

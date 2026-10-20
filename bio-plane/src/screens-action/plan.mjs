@@ -8,7 +8,7 @@
    (R19): each sentence is a key read through the kit's `cs.w`, and the plan names its project and its questions by their
    titles, each a reference (R18). */
 
-import { readOnly } from "./send-steps.mjs";
+import { readOnly, WRITE_HELP } from "./send-steps.mjs";
 
 export const plan = Object.freeze({
   id: "plan",
@@ -150,6 +150,35 @@ export const plan = Object.freeze({
       }
       return L[key];
     },
+    // R53: an option with no summary is named by its place in the list, a phase with no name by its place in its scenario;
+    // never by an id.
+    optName: function (cs, o, i) {
+      return o && typeof o.summary === "string" && o.summary ? cs.esc(o.summary) : cs.w("screen.plan.option.unnamed", { n: String(i + 1) });
+    },
+    phName: function (cs, ph, i) {
+      return ph && typeof ph.name === "string" && ph.name ? cs.esc(ph.name) : cs.w("screen.plan.phase.unnamed", { n: String(i + 1) });
+    },
+    // R44: the second and later phases of a scenario's form carry their own ids, the first keeps the plain ones.
+    sfx: function (k) { return k ? "-p" + (k + 1) : ""; },
+    // R44: one phase of the scenario form: its name, options, start, check-back days, test and where each judgement goes.
+    phaseForm: function (cs, view, k, count, items) {
+      const sf = view.parts.sfx(k);
+      const others = [];
+      for (let j = 0; j < count; j++) if (j !== k) others.push({ value: "p" + (j + 1), key: "screen.plan.phase.unnamed", fills: { n: String(j + 1) } });
+      const leads = [{ value: "", text: "" }].concat(others);
+      const after = [["", "screen.plan.none.this.one.starts.first"]].concat(others);
+      return (count > 1 ? "<h3>" + cs.w("screen.plan.phase.unnamed", { n: String(k + 1) }) + "</h3>" : "")
+        + cs.field("plan-scen-pname" + sf, "screen.plan.name.of.the.phase")
+        + cs.checks("plan-scen-options" + sf, "screen.plan.scenario.options", items)
+        + cs.choice("plan-scen-start" + sf, "screen.plan.each.phase.starts.after.something.else", [["plan_start", "screen.plan.at.the.start.of.the.plan"],
+          ["after", "screen.plan.each.phase.starts.after.something.else"], ["met", "screen.plan.when.another.phase.s.checkpoint.is"],
+          ["not_met", "screen.plan.when.another.phase.s.checkpoint.is.2"]], { value: "plan_start" })
+        + cs.choice("plan-scen-after" + sf, "screen.plan.no.phase.can.start.after.itself", after, { value: "" })
+        + cs.field("plan-scen-days" + sf, "screen.plan.check.back.after.days", { type: "number", help: "screen.plan.the.checkpoint.then.waits.for.a" })
+        + cs.field("plan-scen-cond" + sf, "screen.plan.what.the.checkpoint.tests", { help: "screen.plan.in.words.up.to.500.characters" })
+        + cs.choice("plan-scen-met" + sf, "screen.plan.if.the.checkpoint.is.met.go", leads, { value: "" })
+        + cs.choice("plan-scen-not" + sf, "screen.plan.if.it.is.not.met.go", leads, { value: "" });
+    },
     subjectKeys: function (o) {
       return (Array.isArray(o.subjects) ? o.subjects : []).map(function (x) {
         return typeof x === "string" ? x : x && x.kind === "outcome" ? "outcome:" + x.determination + "#" + x.standard : x && x.inquiry ? "inquiry:" + x.inquiry : "";
@@ -172,6 +201,8 @@ export const plan = Object.freeze({
       const projects = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.bundles)
         ? view.data.projects.value.bundles : [];
       const projectHit = projects.find(function (b) { return b.bundle_id === p.project; });
+      // R53: an option is named by its summary, else by its place in the list; never by its id
+      const byName = new Map(options.map(function (o, i) { return [o.id, P.optName(cs, o, i)]; }));
       const projectRef = projectHit && projectHit.title ? cs.ref("project", p.project, projectHit.title, [projectHit.title]) : "";
       // the plan's opening: when and by whom
       const opened = p.opened_at && p.opened_by
@@ -186,7 +217,19 @@ export const plan = Object.freeze({
       const strip = checks.length
         ? '<div class="mk-checks2" role="region" aria-label="' + cs.w("screen.plan.checks", { n: String(checks.length) }) + '"><b>'
           + cs.w("screen.plan.checks", { n: String(checks.length) }) + "</b>"
-          + checks.map(function (c) { return "<p>" + cs.esc(c.says || c.check || "") + "</p>"; }).join("") + "</div>"
+          + checks.map(function (c) {
+            // R53: a phase whose judgement leads nowhere says which judgement in words ("met", "not met"), never the raw value
+            if (c.check === "unbranched" && Array.isArray(c.outcomes) && c.outcomes.length) {
+              const sc = (Array.isArray(p.scenarios) ? p.scenarios : []).find(function (x) { return String(x.scenario) === String(c.scenario); });
+              const phs = sc && Array.isArray(sc.phases) ? sc.phases : [];
+              const at = phs.findIndex(function (x) { return x.id === c.phase; });
+              const nm = at >= 0 ? P.phName(cs, phs[at], at) : cs.w("screen.plan.phase.unnamed", { n: String(Number(String(c.phase).replace(/\D/g, "")) || 1) });
+              return c.outcomes.map(function (m) {
+                return "<p>" + cs.w("action-plans.says.phase_checkpoint_leads", { id: { html: nm }, miss: cs.w("screen.plan.judged." + (m === "met" ? "met" : "not_met")) }) + "</p>";
+              }).join("");
+            }
+            return "<p>" + cs.esc(c.says || c.check || "") + "</p>";
+          }).join("") + "</div>"
         : "";
 
       // R18: a reference is picked from the lists the record answers (the project's questions, the project's determinations
@@ -232,7 +275,7 @@ export const plan = Object.freeze({
         id: "options", pick: open, items: options,
         cols: ["screen.plan.col.option", "screen.plan.col.category", "screen.plan.col.ends", "screen.plan.col.matter", "screen.plan.col.disposition"],
         key: function (o) { return o.id; },
-        name: function (o) { return cs.esc(o.summary || o.id); },
+        name: function (o) { return byName.get(o.id); },
         sortKey: function (o, col) {
           return col === 1 ? String(CATS.indexOf(o.category)) : col === 2 ? (P.endOf(o) || "9999") : col === 3 ? P.subjectKeys(o).map(titles.ofKey).join(" ")
             : col === 4 ? String(o.disposition || "") : String(o.summary || "");
@@ -241,7 +284,7 @@ export const plan = Object.freeze({
           const end = P.endOf(o);
           const disp = ["open", "chosen", "declined", "done", "blocked"].includes(o.disposition) ? o.disposition : "open";
           const last = Array.isArray(o.dispositions) && o.dispositions.length ? o.dispositions[o.dispositions.length - 1] : null;
-          return [cs.esc(o.summary || o.id),
+          return [byName.get(o.id),
             cs.w("screen.plan.category." + (CATS.includes(o.category) ? o.category : "other")),
             end ? cs.date(end) : cs.w("screen.plan.noend"),
             cs.esc(P.subjectKeys(o).map(titles.ofKey).filter(Boolean).join(", ")),
@@ -254,11 +297,18 @@ export const plan = Object.freeze({
           return (started ? '<a class="cs-ref" href="/app/action/' + encodeURIComponent(o.action.id) + '" data-nav>' + cs.w("screen.plan.openaction") + "</a>" : "")
             + (!started && o.disposition !== "chosen" ? cs.act("optiondispose", { label: "screen.plan.choose", data: { option: o.id, disposition: "chosen" } }) : "")
             + (!started && o.disposition !== "declined" ? cs.act("optiondispose", { label: "screen.plan.decline", data: { option: o.id, disposition: "declined" } }) : "")
+            // R44 (c): done, blocked, or back to undecided
+            + (!started && o.disposition !== "done" ? cs.act("optiondispose", { label: "screen.plan.disposition.done", data: { option: o.id, disposition: "done" } }) : "")
+            + (!started && o.disposition !== "blocked" ? cs.act("optiondispose", { label: "screen.plan.disposition.blocked", data: { option: o.id, disposition: "blocked" } }) : "")
+            + (!started && o.disposition && o.disposition !== "open" ? cs.act("optiondispose", { label: "screen.plan.return.them.to.undecided", data: { option: o.id, disposition: "open" } }) : "")
             + (!started && o.disposition === "chosen" ? cs.act("optionstartpreview", { label: "act.optionstartpreview.label.plan", tone: "primary", data: { option: o.id } }) : "");
         },
         hold: function () {
           return cs.act("optiondispose", { label: "screen.plan.choose", data: { disposition: "chosen" } })
-            + cs.act("optiondispose", { label: "screen.plan.decline", data: { disposition: "declined" } });
+            + cs.act("optiondispose", { label: "screen.plan.decline", data: { disposition: "declined" } })
+            + cs.act("optiondispose", { label: "screen.plan.disposition.done", data: { disposition: "done" } })
+            + cs.act("optiondispose", { label: "screen.plan.disposition.blocked", data: { disposition: "blocked" } })
+            + cs.act("optiondispose", { label: "screen.plan.return.them.to.undecided", data: { disposition: "open" } });
         },
       });
       const subjectChoice = function (id) {
@@ -270,9 +320,31 @@ export const plan = Object.freeze({
       const catChoice = function (id) {
         return cs.choice(id, "screen.plan.option.category", CATS.map(function (c) { return [c, "screen.plan.category." + c]; }));
       };
-      const addOption = open ? cs.field("plan-opt-summary", "screen.plan.option.summary")
+      // R44 (a): who it is directed to, the dates that bind it, the tier, the seeking-enforcement mark with the requirement it seeks
+      const nDates = Math.max(1, Math.min(20, Number(view.ui.optdates) || 1));
+      const dateLines = [];
+      for (let i = 0; i < nDates; i++) dateLines.push(cs.field("plan-opt-date-" + i, "screen.plan.col.ends", { type: "date" })
+        + cs.field("plan-opt-basis-" + i, "screen.plan.because.the.law.order.or.commitment", { help: "screen.plan.one.line.up.to.500.characters" }));
+      const enfChoices = [{ value: "", text: "" }].concat(subjects.filter(function (s) { return s.subject && s.subject.kind === "outcome"; }).map(function (s, i) {
+        const t = titles.ofKey(s.key);
+        return t ? { value: s.key, text: t } : { value: s.key, key: "screen.plan.matter.n", fills: { n: String(subjects.indexOf(s) + 1) } };
+      })).concat(lists ? lists.determinations.items.flatMap(function (d) { return (Array.isArray(d.outcomes) ? d.outcomes : []).map(function (o) { return o.standard; }); })
+        .filter(function (x, i, all) { return x && all.indexOf(x) === i; }).map(function (x) { return { value: x, text: x }; }) : []);
+      const addOption = open ? cs.field("plan-opt-summary", "screen.plan.option.summary", { rec: true, max: 200 })
+        + (view.reachable ? '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "summary", id: "plan-opt-summary", forop: "optionadd" } }) + "</div>" : "")
         + catChoice("plan-opt-category") + subjectChoice("plan-opt-matter")
-        + cs.field("plan-opt-detail", "screen.plan.option.detail", { area: true })
+        + cs.field("plan-opt-detail", "screen.plan.option.detail", { area: true, rec: true })
+        + (view.reachable ? '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "detail", id: "plan-opt-detail", forop: "optionadd" } }) + "</div>" : "")
+        + cs.choice("plan-opt-adk", "screen.plan.who.it.is.directed.to", [["none", "screen.plan.no.one.in.particular"], ["office", "screen.actionnew.to.named"],
+          ["press", "screen.plan.category.journalistic"], ["organisation", "screen.people.add.kind.organization"], ["audience", "screen.plan.an.audience.described.in.words"]], { value: "none" })
+        + cs.field("plan-opt-arole", "screen.members.col.role") + cs.field("plan-opt-abody", "screen.plan.the.body.or.organization")
+        + cs.field("plan-opt-adesc", "screen.plan.an.audience.described.in.words", { area: true })
+        + cs.sec("screen.plan.dates.that.bind.it", dateLines.join("")
+          + cs.choice("plan-opt-datecount", "screen.plan.add.another.date", Array.from({ length: 20 }, function (_, i) { return { value: String(i + 1), text: String(i + 1) }; }), { redraw: "optdates", value: "1" }),
+          { help: ["screen.plan.a.date.set.by.law.an", "screen.plan.every.date.says.where.it.comes", "screen.plan.help.adds.a.line.for.one.more"] })
+        + cs.choice("plan-opt-tier", "screen.plan.how.careful.to.be.legal.options", [["", "risk.tier.undetermined"], ["1", "risk.tier.1"], ["2", "risk.tier.2"], ["3", "risk.tier.3"]], { value: "" })
+        + cs.checks("plan-opt-lobbying", "screen.plan.this.option.asks.someone.to.enforce", [["lobbying", "screen.plan.this.option.asks.someone.to.enforce"]])
+        + cs.choice("plan-opt-enforces", "screen.plan.the.requirement.it.seeks", enfChoices, { value: "" })
         + '<div class="mk-acts">' + cs.act("optionadd", { label: "act.optionadd.label.plan" }) + "</div>" : "";
 
       // R1 (v0.2 rule 19; DEC-194): the standing offers, then the assistant's suggestions, each labelled and adopted
@@ -326,42 +398,59 @@ export const plan = Object.freeze({
       const tray = view.reachable && pr && trayIn ? '<div class="mk-tray" role="region" aria-label="' + cs.w("screen.plan.suggested") + '"><p class="eyebrow">'
         + cs.w("screen.plan.suggested") + "</p>" + trayIn + "</div>" : "";
 
-      const optionsIn = (options.length ? optionRows : "") + addOption + (offers.length ? cs.sheet(offers.join("")) : "") + tray;
+      // R44 (c): the reminder asked when choosing an option that has dates: which of its dates, and on what day
+      const dated = [];
+      options.forEach(function (o, i) { (Array.isArray(o.dates) ? o.dates : []).forEach(function (d) { if (d && d.date) dated.push({ value: o.id + "|" + d.date, text: (o.summary ? o.summary : cs.w("screen.plan.option.unnamed", { n: String(i + 1) })) + " · " + cs.date(d.date) }); }); });
+      const remind = open && dated.length ? cs.sec("screen.plan.remind.me.as.a.date.comes",
+        cs.choice("plan-rem-date", "screen.plan.col.ends", [{ value: "", text: "" }].concat(dated), { value: "" })
+        + cs.field("plan-rem-on", "screen.action.remindon", { type: "date", help: "screen.plan.a.day.before.the.date.in" }),
+        { help: ["screen.plan.only.when.you.choose.an.option", "screen.plan.pick.one.of.its.dates.and"] }) : "";
+      const optionsIn = (options.length ? optionRows + remind : "") + addOption + (offers.length ? cs.sheet(offers.join("")) : "") + tray;
       const optionsSec = optionsIn ? cs.sec("screen.plan.options", optionsIn) : "";
 
       // R1: scenarios and their phases; a checkpoint judged by a member; take-up, never assignment (v0.2 rule 18).
       const scenarios = Array.isArray(p.scenarios) ? p.scenarios : [];
-      const chosen = options.filter(function (o) { return o.disposition === "chosen"; });
+      const today = new Date(cs.now()).toISOString().slice(0, 10);
+      const nPhases = Math.max(1, Math.min(10, Number(view.ui.scenphases) || 1));
+      const chosenItems = options.map(function (o, i) { return { o: o, i: i }; }).filter(function (x) { return x.o.disposition === "chosen"; }).map(function (x) {
+        return x.o.summary ? { value: x.o.id, text: x.o.summary } : { value: x.o.id, key: "screen.plan.option.unnamed", fills: { n: String(x.i + 1) } };
+      });
       const scenIn = scenarios.map(function (s) {
         return "<h3>" + cs.esc(s.name || "") + (s.set_aside ? " · " + cs.w("screen.plan.setaside") : "") + "</h3>"
-          + cs.sheet((s.phases || []).map(function (ph) {
+          + cs.sheet((s.phases || []).map(function (ph, pi) {
             const judged = ph.judgement ? cs.w("screen.plan.judged." + (ph.judgement.judged === "met" ? "met" : "not_met")) + (ph.judgement.note ? " · " + cs.esc(ph.judgement.note) : "") : "";
             const due = ph.checkpoint_due ? cs.due(String(ph.checkpoint_due), "") : "";
             const tookIt = (view.ui.took || {})["checkpoint:" + s.scenario + ":" + ph.id];
+            // R53: the Judge control is drawn only once the checkpoint is due (by the page's clock); before, the day it can be judged
+            const isDue = !!ph.checkpoint_due && String(ph.checkpoint_due).slice(0, 10) <= today;
+            const notDue = ph.checkpoint && !ph.judgement && open && ph.checkpoint_due && !isDue
+              ? '<span class="mk-small">' + cs.w("screen.plan.judge.notdue", { date: { html: cs.date(ph.checkpoint_due) } }) + "</span>" : "";
+            const takeUp = tookIt ? cs.w("screen.plan.tookup") : cs.act("itemtakeup", { label: "screen.plan.takeup", data: { kind: "checkpoint", scenario: String(s.scenario), phase: ph.id } });
             const form = ph.checkpoint && !ph.judgement && open
-              ? cs.choice("plan-judge-" + s.scenario + "-" + ph.id, "screen.plan.judge.outcome", [["met", "screen.plan.judged.met"], ["not_met", "screen.plan.judged.not_met"]])
+              ? (isDue ? cs.choice("plan-judge-" + s.scenario + "-" + ph.id, "screen.plan.judge.outcome", [["met", "screen.plan.judged.met"], ["not_met", "screen.plan.judged.not_met"]])
                 + cs.field("plan-judgenote-" + s.scenario + "-" + ph.id, "screen.plan.judge.note")
-                + cs.act("checkpointrecord", { label: "screen.plan.judge", data: { scenario: String(s.scenario), phase: ph.id } })
-                + (tookIt ? cs.w("screen.plan.tookup") : cs.act("itemtakeup", { label: "screen.plan.takeup", data: { kind: "checkpoint", scenario: String(s.scenario), phase: ph.id } }))
+                + cs.act("checkpointrecord", { label: "screen.plan.judge", data: { scenario: String(s.scenario), phase: ph.id } }) : notDue)
+                + takeUp
               : "";
-            return cs.row("<b>" + cs.esc(ph.name || ph.id) + "</b>", cs.esc((ph.options || []).join(", ")) + (judged ? '<span class="meta">' + judged + "</span>" : ""), due, form);
+            const names = (ph.options || []).map(function (id) { return byName.get(id); }).filter(Boolean).join(", ");
+            return cs.row("<b>" + P.phName(cs, ph, pi) + "</b>", names + (judged ? '<span class="meta">' + judged + "</span>" : ""), due, form);
           }).join(""));
       }).join("") + (open ? cs.field("plan-scen-name", "screen.plan.scenario.name")
-        + '<fieldset class="cs-field" id="plan-scen-options"><legend>' + cs.w("screen.plan.scenario.options") + "</legend>"
-        + chosen.map(function (o, i) { return '<label><input type="checkbox" id="plan-scen-options-' + i + '" value="' + cs.esc(o.id) + '"> ' + cs.esc(o.summary || o.id) + "</label>"; }).join("")
-        + "</fieldset>" + cs.field("plan-scen-days", "screen.plan.scenario.days", { type: "number" })
+        + Array.from({ length: nPhases }, function (_, k) { return P.phaseForm(cs, view, k, nPhases, chosenItems); }).join("")
+        + cs.choice("plan-scen-phasecount", "screen.plan.add.another.phase", Array.from({ length: 10 }, function (_, i) { return { value: String(i + 1), text: String(i + 1) }; }), { redraw: "scenphases", value: "1" })
         + '<div class="mk-acts">' + cs.act("scenarioset", { label: "act.scenarioset.label.plan", data: { next: String(scenarios.length + 1) } }) + "</div>" : "");
       const scen = scenIn ? cs.sec("screen.plan.scenarios", scenIn) : "";
 
       // R1: what each started option became.
       const started = options.filter(function (o) { return o.action && o.action.id; });
       const startedSec = !started.length ? "" : cs.sec("screen.plan.startedsec", cs.sheet(started.map(function (o) {
-        return cs.row("", '<a class="cs-ref" href="/app/action/' + encodeURIComponent(o.action.id) + '" data-nav>' + cs.esc(o.summary || o.action.id) + "</a>",
+        return cs.row("", '<a class="cs-ref" href="/app/action/' + encodeURIComponent(o.action.id) + '" data-nav>' + byName.get(o.id) + "</a>",
           '<span class="meta">' + cs.w("screen.plan.actionstate." + (["planned", "active", "awaiting_response", "resolved", "abandoned"].includes(o.action.state) ? o.action.state : "planned")) + "</span>", "");
       }).join("")));
 
-      const close = open ? cs.field("plan-close-note", "plan.close.lessons", { area: true })
-        + '<div class="mk-acts">' + cs.act("planclose", { label: "screen.plan.close" }) + "</div>" : "";
+      const close = open ? cs.field("plan-close-note", "plan.close.lessons", { area: true, rec: true })
+        + '<div class="mk-acts">' + cs.act("planclose", { label: "screen.plan.close" })
+        + (view.reachable ? cs.act("writinghelp", { data: { field: "note", id: "plan-close-note", forop: "planclose" } }) : "") + "</div>" : "";
       // R14: a plan with nothing in it to show draws its one empty state.
       const body = strip + matters + optionsSec + scen + startedSec + close;
       return head + (body || '<p class="cs-state" data-state="empty">' + cs.w("screen.plan.empty") + "</p>");
@@ -381,13 +470,42 @@ export const plan = Object.freeze({
       },
     },
     {
+      // R1, R44 (a): "Add an option": the line, its kind, its matter and, as the member gives them, who it is directed to, the
+      // dates that bind it (each with its basis), the tier, the seeking-enforcement mark with the requirement it seeks.
       op: "optionadd",
+      refusals: {
+        OPTION_NO_SUMMARY: function (r, cs) { return cs.w("screen.plan.an.option.needs.a.line.saying") + " " + cs.w("screen.plan.write.one.and.add.it.again"); },
+        OPTION_NO_SUBJECT: function (r, cs) { return cs.w("screen.plan.choose.at.least.one.matter.the") + " " + cs.w("screen.plan.an.option.cannot.serve.a.matter"); },
+        TIER_REFUSED: function (r, cs) { return cs.w("screen.plan.a.tier.belongs.only.on.a") + " " + cs.w("screen.plan.change.the.kind.or.clear.the"); },
+        LOBBYING_NO_REQUIREMENT: function (r, cs) { return cs.w("screen.plan.an.option.marked.as.lobbying.must") + " " + cs.w("screen.plan.choose.it.or.clear.the.mark"); },
+        DATE_REFUSED: function (r, cs) { return cs.w("screen.plan.a.date.needs.the.law.order") + " " + cs.w("screen.plan.fix.the.date.and.add.again"); },
+        ADDRESSEE_REFUSED: function (r, cs) { return cs.w("screen.plan.an.option.can.be.directed.to") + " " + cs.w("screen.plan.change.who.it.is.for"); },
+      },
       send: function (view, el, cs) {
         const summary = String(cs.value("plan-opt-summary") || "").trim();
         if (!summary) return { refuse: "screen.plan.option.needed" };
         const detail = String(cs.value("plan-opt-detail") || "").trim();
         const body = { plan: view.subject, summary: summary, category: cs.value("plan-opt-category"), subjects: [cs.value("plan-opt-matter")].filter(Boolean) };
         if (detail) body.detail = detail;
+        const text = function (id) { return String(cs.value(id) || "").trim(); };
+        const kind = String(cs.value("plan-opt-adk") || "none");
+        if (kind === "office") body.addressee = { state: "named", kind: "office", role: text("plan-opt-arole"), body: text("plan-opt-abody") };
+        else if (kind === "press" || kind === "organisation") body.addressee = { state: "named", kind: kind, role: text("plan-opt-arole"), organisation: text("plan-opt-abody") };
+        else if (kind === "audience") body.addressee = { state: "audience", description: text("plan-opt-adesc") };
+        const dates = [];
+        for (let i = 0; i < 20; i++) {
+          const d = cs.value("plan-opt-date-" + i);
+          if (d === null || d === undefined) break;
+          const day = String(d).trim(), basis = text("plan-opt-basis-" + i);
+          if (day || basis) dates.push({ date: day, basis: basis });
+        }
+        if (dates.length) body.dates = dates;
+        const tier = String(cs.value("plan-opt-tier") || "");
+        if (tier) body.tier = Number(tier);
+        const lobbying = (cs.value("plan-opt-lobbying") || []).length > 0;
+        if (lobbying) body.lobbying = true;
+        const enforces = String(cs.value("plan-opt-enforces") || "");
+        if (enforces) body.enforces = enforces;
         return { body: body };
       },
     },
@@ -416,23 +534,63 @@ export const plan = Object.freeze({
     {
       // R1: "Choose" or "Decline" (the shell asks the reason, required where declining), one option or the picked ones.
       op: "optiondispose",
+      refusals: {
+        PLAN_NO_REASON: function (r, cs) { return cs.w("screen.plan.declining.an.option.or.marking.it"); },
+        REMINDER_REFUSED: function (r, cs) {
+          return r && r.disposition ? cs.w("screen.plan.reminders.are.set.only.when.you") + " " + cs.w("screen.plan.choose.it.or.leave.the.reminder")
+            : cs.w("screen.plan.a.reminder.names.a.date.the") + " " + cs.w("screen.plan.pick.one.of.its.dates.or");
+        },
+        NO_SUCH_OPTION: function (r, cs) { return cs.w("screen.plan.pick.at.least.one.option") + " " + cs.w("screen.plan.an.option.that.is.not.in"); },
+        PLAN_CLOSED: function (r, cs) { return cs.w("screen.plan.this.plan.is.closed.so.its") + " " + cs.w("screen.plan.ask.an.owner.to.reopen.it"); },
+      },
       send: function (view, el, cs, extra) {
         const options = extra && extra.picked && extra.picked.length ? extra.picked : [el.dataset.option].filter(Boolean);
-        if (!options.length) return null;
-        return { body: { plan: view.subject, options: options, disposition: el.dataset.disposition } };
+        if (!options.length) return { refuse: "screen.plan.pick.at.least.one.option" };
+        const body = { plan: view.subject, options: options, disposition: el.dataset.disposition };
+        // R44 (c): a reminder, when one is asked: which date of an option, and on what day
+        const at = String(cs.value("plan-rem-date") || ""), on = String(cs.value("plan-rem-on") || "").trim();
+        if (at || on) {
+          const cut = at.lastIndexOf("|");
+          body.reminders = [at ? { option: at.slice(0, cut), date: at.slice(cut + 1), on: on } : { date: "", on: on }];
+        }
+        return { body: body };
       },
     },
     {
       // R1: "Lay out a scenario": its name and one phase of the chosen options, from the plan's start, with a checkpoint.
       op: "scenarioset",
+      refusals: {
+        PHASE_OPTION_NOT_CHOSEN: function (r, cs) { return cs.w("screen.plan.a.phase.can.hold.only.options") + " " + cs.w("screen.plan.choose.the.option.first.or.take"); },
+        PHASE_CYCLE: function (r, cs) { return cs.w("screen.plan.following.when.each.phase.starts.leads") + " " + cs.w("screen.plan.no.phase.can.start.after.itself.2"); },
+        BRANCH_UNKNOWN: function (r, cs) { return cs.w("screen.plan.a.phase.points.to.a.phase") + " " + cs.w("screen.plan.choose.one.that.is.in.it"); },
+        PHASE_MALFORMED: function (r, cs) { return cs.w("screen.plan.a.phase.needs.a.name.the") + " " + cs.w("screen.plan.fill.in.the.one.that.is"); },
+      },
+      // R44 (b): the scenario's phases, each with its name, chosen options, when it starts (the plan's start, after another
+      // phase, when another's checkpoint is met or not met) and which, check-back days, what the checkpoint tests, and where
+      // each judgement goes.
       send: function (view, el, cs) {
         const name = String(cs.value("plan-scen-name") || "").trim();
-        const options = cs.value("plan-scen-options") || [];
-        if (!name || !options.length) return { refuse: "screen.plan.scenario.needed" };
-        const days = Number(cs.value("plan-scen-days"));
-        const phase = { id: "p1", name: name, options: options, starts: "plan_start" };
-        if (Number.isInteger(days) && days > 0) phase.checkpoint = { after_days: days };
-        return { body: { plan: view.subject, scenario: Number(el.dataset.next) || 1, name: name, phases: [phase] } };
+        if (!name) return { refuse: "screen.plan.scenario.needed" };
+        const n = Math.max(1, Math.min(10, Number(view.ui.scenphases) || 1));
+        const phases = [];
+        for (let k = 0; k < n; k++) {
+          const sf = k ? "-p" + (k + 1) : "";
+          const text = function (id) { return String(cs.value(id + sf) || "").trim(); };
+          const options = cs.value("plan-scen-options" + sf) || [];
+          const pname = text("plan-scen-pname") || (k === 0 ? name : "");
+          if (!pname || !options.length) return { refuse: "screen.plan.scenario.needed" };
+          const kind = text("plan-scen-start") || "plan_start", which = text("plan-scen-after");
+          const phase = { id: "p" + (k + 1), name: pname, options: options,
+            starts: kind === "after" ? { after: which } : kind === "met" || kind === "not_met" ? { branch_of: which, when: kind } : "plan_start" };
+          const days = Number(text("plan-scen-days"));
+          if (Number.isInteger(days) && days > 0) phase.checkpoint = { after_days: days };
+          const cond = text("plan-scen-cond");
+          if (cond) phase.condition = cond;
+          const met = text("plan-scen-met"), not = text("plan-scen-not");
+          if (met || not) phase.branches = Object.assign({}, met ? { met: met } : {}, not ? { not_met: not } : {});
+          phases.push(phase);
+        }
+        return { body: { plan: view.subject, scenario: Number(el.dataset.next) || 1, name: name, phases: phases } };
       },
     },
     {
@@ -476,5 +634,7 @@ export const plan = Object.freeze({
         return { body: note ? { plan: view.subject, note: note } : { plan: view.subject } };
       },
     },
+    // the assistant's help with one own-words field (drawn only while it is reachable)
+    WRITE_HELP,
   ],
 });
