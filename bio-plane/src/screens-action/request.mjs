@@ -35,9 +35,9 @@ export const request = Object.freeze({
       r.stake = { op: "stakeatpreparation", query: { action: s }, empty: function () { return false; } };
       r.identity = { op: "groupidentity", empty: function () { return false; } };
     } else if (s) {
-      // R20: the offices the record holds for such records, read on load, so that none known is said before any act is drawn;
-      // asked only with a subject (an entity or a record the request rests on): with none the op refuses NO_SUBJECT
-      r.offices = { op: "addresseesuggest", query: { subject: s }, empty: function () { return false; } };
+      // R39: `addresseesuggest` resolves an entity or an action's records, never a project: the member says which name the records
+      // concern first, from the names the record follows, and the offices are asked after she picks (the act below)
+      r.names = { op: "peopledirectory", query: { show: "everything", limit: "200" }, empty: function () { return false; } };
     }
     return r;
   },
@@ -45,13 +45,19 @@ export const request = Object.freeze({
   parts: {
     draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines, readOnly: readOnly,
     isRequest: function () { return true; },
-    // R20: the offices known: those the member's last "Choose the office" answered, else those the load read answered;
-    // null while the read has not answered (or failed).
+    // R20, R39: the offices known: those the member's last "Choose the office" answered, for the name she picked; none are known
+    // before she asks (null), and a request opened with no subject at all knows none.
     officesOf: function (view) {
       if (Array.isArray(view.ui.offices)) return view.ui.offices;
       if (!String(view.subject || "")) return [];
-      const r = view.data.offices;
-      return r && r.state === "ok" && r.value && Array.isArray(r.value.offices) ? r.value.offices : null;
+      return null;
+    },
+    // R39: the names the record follows, as `peopledirectory` answers them (`{entity, kind, name}`), each a choice option
+    namesOf: function (view) {
+      const r = view.data.names;
+      const rows = r && r.state === "ok" && r.value && Array.isArray(r.value.rows) ? r.value.rows : [];
+      return rows.filter(function (x) { return x && typeof x.entity === "string" && typeof x.name === "string" && x.name; })
+        .map(function (x) { return { value: x.entity, text: x.name }; });
     },
     // R4: the laws the profile names for a records request, each with its window (`profiles`' `view.deadlines`).
     laws: function (profiles) {
@@ -71,19 +77,35 @@ export const request = Object.freeze({
       + ' <a class="cs-ref" href="/app/capture" data-nav>' + cs.w("screen.request.capture") + "</a></p>" + other;
     const help = '<a class="cs-ref" href="/app/help-records" data-nav>' + cs.w("screen.help-records.name") + "</a>";
     if (!/^ACTN-/.test(s)) {
-      // A new request: the office, then what is wanted; starting it opens the request's own address (its step).
+      // A new request: which name the records concern (R39), then the office, then what is wanted; starting it opens the request's
+      // own address (its step).
       const offices = P.officesOf(view);
-      if (!offices) return head + cs.state("offices");
-      // R20: with no office known, the state says so and points an administrator to where one is added; nothing follows it,
-      // so no act answers "choose the office first" to a request that could not have been made.
-      if (!offices.length) {
+      const names = P.namesOf(view);
+      const asked = Array.isArray(view.ui.offices);
+      const noOffice = function (pointer) {
+        // R20: with no office known, the state says so and points an administrator to where one is added; nothing follows it.
         const I = '<svg class="i" aria-hidden="true"><use href="/app/assets/icons.svg#i-group"/></svg>';
         const places = view.me && view.me.administer === true
           ? '<div class="mk-links" data-list="places"><a class="cs-ref" href="/app/places" data-nav data-screen="places">' + I + cs.w("screen.places.name")
             + '</a><span class="mk-small" data-purpose="places">' + cs.w("screen.places.purpose") + "</span></div>" : "";
-        return head + '<p class="mk-note" role="status">' + cs.w("screen.request.nooffice") + "</p>"
-          + '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>" + places;
-      }
+        // R46: a request that knows no office points to the page where an organization's records lines are kept (`screens-investigate`
+        // C68): the name the member picked, where she picked one
+        const keeper = pointer ? '<p class="mk-note">' + cs.w("screen.request.nooffice.pointer.a") + " " + cs.w("screen.request.nooffice.pointer.b") + "</p>"
+          + '<div class="mk-links" data-list="person"><a class="cs-ref" href="/app/person/' + encodeURIComponent(pointer) + '" data-nav data-screen="person">'
+          + cs.w("screen.person.name") + '</a><span class="mk-small" data-purpose="person">' + cs.w("screen.person.purpose") + "</span></div>" : "";
+        return '<p class="mk-note" role="status">' + cs.w("screen.request.nooffice") + "</p>"
+          + '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>" + keeper + places;
+      };
+      // a request opened with no subject at all, or a record that follows no name, cannot ask: it says no office is known
+      if (offices !== null && !offices.length && !asked) return head + noOffice("");
+      if (view.data.names && view.data.names.state !== "ok" && view.data.names.state !== "empty") return head + cs.state("names");
+      if (!names.length && !asked) return head + noOffice("");
+      const subjectPick = cs.choice("req-subject", "screen.person.keeper.subject.label", [{ value: "", text: "" }].concat(names), { value: String(view.ui.subject || "") })
+        + '<p class="mk-note">' + cs.w("screen.person.keeper.subject.help.a") + " " + cs.w("screen.person.keeper.subject.help.b") + "</p>"
+        + '<div class="mk-acts">' + cs.act("addresseesuggest", {}) + "</div>";
+      const askStep = cs.sec("screen.request.step.office", subjectPick);
+      if (offices === null) return head + askStep;
+      if (!offices.length) return head + askStep + noOffice(String(view.ui.subject || ""));
       const pick = cs.choice("req-office", "screen.request.office", offices.map(function (o, i) {
         const a = o.addressee || {};
         return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
@@ -91,8 +113,7 @@ export const request = Object.freeze({
       // "Start the request" is drawn once an office is chosen
       const what = view.ui.chosen === true ? cs.sec("screen.request.step.what", cs.field("req-what", "screen.request.what", { help: "screen.request.what.help" })
         + '<div class="mk-acts">' + cs.act("actioncreate", { tone: "primary" }) + "</div>") : "";
-      return head + cs.sec("screen.request.step.office", pick + '<div class="mk-acts">' + cs.act("addresseesuggest", {}) + "</div>") + what
-        + '<p class="mk-note">' + help + "</p>";
+      return head + askStep + cs.sec("screen.request.step.office", pick) + what + '<p class="mk-note">' + help + "</p>";
     }
     return head + cs.state("action", function (a) {
       const office = a.addressee ? cs.esc([a.addressee.role, a.addressee.body].filter(Boolean).join(", "))
@@ -122,13 +143,21 @@ export const request = Object.freeze({
     {
       // R4: the offices that hold such records, each by its role; a suggestion, chosen by the member.
       op: "addresseesuggest",
-      send: function (view, el, cs) { view.ui.pick = Number(cs.value("req-office")) || 0; return { query: { subject: view.subject } }; },
+      // R39: the subject is the name the member picked, never the project (the plane resolves an entity or an action's records)
+      send: function (view, el, cs) {
+        const subject = String(cs.value("req-subject") || "");
+        if (!subject) return null;
+        view.ui.subject = subject;
+        view.ui.pick = Number(cs.value("req-office")) || 0;
+        return { query: { subject: subject } };
+      },
       rereads: [],
-      // "Choose the office": the member's pick among the offices the record holds; what is wanted is asked once one is chosen.
+      // "Choose the office": the offices the record holds for that name, each by its role and who holds it today; what is wanted is
+      // asked once there are offices to choose among.
       done: function (view, answer, cs) {
         const offices = answer && Array.isArray(answer.offices) ? answer.offices : [];
         cs.set("offices", offices);
-        cs.set("office", Math.min(Math.max(Number(view.ui.pick) || 0, 0), Math.max(offices.length - 1, 0)));
+        cs.set("office", 0);
         cs.set("chosen", offices.length > 0);
       },
     },

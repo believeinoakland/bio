@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
-import { seeded, draft, STEPS, V } from "./fixture.mjs";
+import { seeded, draft, MACHINE, STEPS, V } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -70,4 +70,14 @@ test("R46 control: a writinghelp body without op is refused naming it", async ()
 test("R46 control: a declaration whose required field the arm never reads is caught by name", async () => {
   const bad = { ...wz.DECLARED_OPS.wizards, fields: { accepts: ["state"], requires: ["nothere"] } };
   await assert.rejects(declaredOpHolds({ op: "wizards", declaration: bad, call: call("wizards"), refusedNaming }), /nothere/);
+});
+
+test("R46 control: wizardrevise with adopt and no steps is not refused: the proposal's steps are the revision", () => {
+  const w = seeded();
+  const d = draft(w, {});
+  const p = w.wz.wizardPropose({ script: d.script, steps: STEPS, why: "w", proposer: MACHINE, viewer: MACHINE });
+  const url = new URL(`https://x/?op=wizardrevise&author=${encodeURIComponent(F)}&viewer=${encodeURIComponent(F)}`);
+  const answer = wz.wizardScriptsOps(w.wz, url, { version: d.version, adopt: p.proposal.id })["wizardrevise"]();
+  assert.deepEqual([answer.ok, answer.adopted], [true, p.proposal.id]);
+  assert.equal(refusedNaming(answer, "steps"), false);
 });

@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01AYSJWKsStw1JQe2TLgDQwt · depth 2 · COMPLETE · handled B13
+**Status** · session_014e6RbaKdqhKwbmmyknKp2v · depth 2 · COMPLETE · handled B14
 
 ## J1 · BLOCKED
 
@@ -259,3 +259,35 @@ and add to its control sentence: "; a `writinghelp` body without `op` is refused
 **Deferred:** none.
 
 Size (session_013WdFBpJB3QxNd3fyYaBmQF): test runs 2, module lines 14
+
+## J14 · COMPLETE
+
+B14 (CHANGE, K4231) applied in commit 67a1f9d926 on job/T51/wizard-scripts (tranche/T51 merged first, at cbbe26555f).
+
+DONE
+- DECLARED_OPS.wizardrevise: requires ["version", ["steps", "adopt"]]. accepts already holds adopt, so it is unchanged.
+- Every row rechecked against its arm's every path:
+  - wizards: no required field; the arm reads only state. Holds.
+  - startfrom: no required field; message and parts are both optional. Holds.
+  - writinghelp: requires op and told (B13). Holds.
+  - wizarddraft: [project | from | copy]. Every valid path carries project or from (a blank, recorded or copy start needs project; a from needs from). Holds. Loose by one case: a copy with no project passes the guard, and the arm refuses it naming the project (a scope refusal). No valid call is refused, so I left it; tightening to [["project", "from"]] is a one-line option if Bob wants it.
+  - wizardrevise: version always; steps or adopt (steps alone, adopt alone as a proposal id or as {base}, or both). Fixed as above.
+  - wizardsubmit, wizardapprove: version always (the arm resolves only a version). Holds.
+  - wizardretire: reason always (both the script and the version paths refuse without it); script or version (either names the script). Holds.
+- Control: declared-ops.test.mjs gains "R46 control: wizardrevise with adopt and no steps is not refused: the proposal's steps are the revision". It adopts a machine proposal through the door with no steps and asserts ok, the adopted id, and no refusal naming steps. The harness's base case only ever sends steps, so this is the only check of the adopt path.
+
+R46 WORDING (for Bob to place): in R46's sentence on the declarations, after the `wizarddraft` clause, add: "`wizardrevise` requires a version and either steps or `adopt` (its arm takes a proposal's, or a copy base's, steps whole when no steps are sent; K4231)."
+
+TESTS AND CHECKS
+- node --test test/m/wizard-scripts/declared-ops.test.mjs: 20 pass, 0 fail.
+- node --test "test/m/wizard-scripts/*.test.mjs": 128 pass, 0 fail.
+- node --test test/m/screens-wizards/library.test.mjs (the file B14 names): 12 pass, 0 fail.
+- checks/format.mjs /home/user/bio: 175 modules, 175 requirements files, 0 failures.
+- checks/architecture.mjs /home/user/bio wizard-scripts: 48 product files, 0 failures.
+- checks/coverage.mjs /home/user/bio wizard-scripts: 46 of 46 live requirement ids named by a test, 0 failures.
+- checks/ownership.mjs /home/user/bio wizard-scripts tranche/T51: 1 file changed by wizard-scripts, 0 failures.
+
+DEFERRED: none.
+FOUND IN ANOTHER MODULE: none new.
+
+Size (session_014e6RbaKdqhKwbmmyknKp2v): test runs 3, module lines 2701 (own code, build-data.mjs included, the three generated files excluded: civicsmith-library.mjs, front-doors.mjs, screen-registry.mjs). The four checks ran in addition to the three test runs.
