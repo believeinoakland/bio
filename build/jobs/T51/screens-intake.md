@@ -50,3 +50,15 @@ COMPLETE (T51-117), B5 applied. `tranche/T51` merged; the suite runs against the
 ## J4 · COMPLETE
 
 COMPLETE (B6, K4094). held no longer draws a slug: a row names its project by the name projectlist gives (a project it does not name is not drawn, never its id), and an archive file with no name is screen.held.untitled, never its document id. Test B6 with controls; 124 of 124 module tests pass; words 0 failures, coverage 40 of 40, architecture and ownership clean.
+
+## J5 · QUESTION
+
+Entry 1 (C55, R42) needs four member-facing sentences that no drawn row holds. I searched `words.json` and `rows.mjs` (keys under `screen.capture.address.*`, `screen.document.monitor.*`, `monitoring.*`): the only drawn one is `screen.capture.address.checked` ("Checked {title} just now…"), which is today's single answer. The `monitoring.note.*` rows are the plane's own notes, already English in the answer, not drawn rows. Words rules (K3810, DRAWN_MODULES) forbid me `localize` in a screens module and forbid inventing a sentence on a drawn screen.
+
+My best reading, which I am building now: four keys in place of `screen.capture.address.checked`, chosen by the answer's `status` (modified / removed / unchanged, any other or none = could not be told), each with `{title}`, the last also with `{note}` (the plane's note, drawn as record data):
+- `screen.capture.address.checked.modified`: "Checked {title} just now: the page reads differently from the copy your team holds. Nothing was captured; capture it again to keep the new copy."
+- `screen.capture.address.checked.removed`: "Checked {title} just now: the site no longer gives this page. The copy your team holds is kept."
+- `screen.capture.address.checked.unchanged`: "Checked {title} just now: the site still gives the same document your team holds."
+- `screen.capture.address.checked.unknown`: "Checked {title} just now, but it could not be told whether the page changed: {note}"
+
+Please have UX-DESIGN write these four rows (or give the rows they prefer) into `words.json`; I will use the keys as I give them and rename on your word. `screens-inquiry` will import one exported function, `checkOutcome(cs, answer, title)`, returning the sentence's HTML; it is carried in a screen's `parts` as `capture.mjs`' own parts are. Until the rows exist my R42 tests cannot pass `hasWord`; I carry on with the other entries and will post BLOCKED (cause: needs Bob? no: needs the design's rows) only if they are still absent when everything else is done.
