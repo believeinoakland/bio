@@ -152,7 +152,7 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "calculations", "capture", "capture-requests", "case-account", "case-carriage", "connections", "corpus-export", "credentials", "duties",
     "entities", "events", "explore", "extraction", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
     "leg-earning", "lines", "membership", "money", "money-checks", "people", "public-read", "publish-schedule",
-    "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "tasks",
+    "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "strength", "tasks",
     "wizard-scripts", "workbooks",
     /* T45 (R49): the owners T45 gives a family */
     "action-holds", "action-plans", "action-replies", "agent-worker", "case-check", "conformance", "consequences", "filings", "local-facts",

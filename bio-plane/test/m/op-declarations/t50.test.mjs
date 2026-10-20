@@ -379,8 +379,8 @@ test("R75 (T50; affordances R64, R66; DEC-264, DEC-309 (5)): reauth leaves ACT_H
     assert.equal(explained(op), true, `${op}: not held by ACT_HELP (affordances R64, R66)`);
   }
   /* negative control: an op the design has not yet explained stays named, under its ground, and is not explained */
-  assert.deepEqual(ground("transcriptionattest"), ["unexplained"]);
-  assert.equal(explained("transcriptionattest"), false);
+  assert.deepEqual(ground("stepcreate"), ["unexplained"]);
+  assert.equal(explained("stepcreate"), false);
   assert.deepEqual(ground("projectownervotes"), ["read"]);
   /* no op is both (R34) */
   const named = Object.values(ACT_HELP_ABSENT).flatMap((g) => [...g.ops]);
