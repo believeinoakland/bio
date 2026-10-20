@@ -1,6 +1,6 @@
 # promotion (T51)
 
-**Status** · session_01FxMw8iuonFjynFMH9nWcSM · depth 2 · WORKING · handled B4
+**Status** · session_01FxMw8iuonFjynFMH9nWcSM · depth 2 · WORKING · handled B6
 
 ## J1 · QUESTION
 
