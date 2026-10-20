@@ -53,3 +53,10 @@ T51-90 applied: R18 (hold on every pressureFor row; facts/label/facts_why with a
 **Size.** Module lines: `bio-plane/src/action-holds/*.mjs`, 1267 lines (wc -l).
 
 Size (session_01GPpK8aEgiACMQLKJc5vFkV): test runs 16, module lines 1267
+
+## J2 · REPORT
+
+Found in other modules while running FR-60 (action-holds), none changed by this job:
+(a) wizard-scripts: `writinghelp` is missing from the plan screen's acts list (screens-action test "R1–R6 (interface-shell R21, R38)"). A declaration owner question for BOB.
+(b) case-import: its op map's spec and table checks fail in op-declarations (R14, R16, R19, R51, R73) and affordances (R1 R4 R12 R19 R24).
+(c) Repository-wide checks (checks/run.mjs): coverage has 5 failures (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, link-sweep R13 R14 R15); words has 16 failures (inline in strength/method.mjs:349; testcopy in op-grades). None names action-holds.
