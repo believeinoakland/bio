@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_017xaHGAS9HLwMSL3PYNVsLE · depth 2 · WORKING · handled B3
+**Status** · session_017xaHGAS9HLwMSL3PYNVsLE · depth 2 · WAITING ON BOB (J4) · handled B3
 
 ## Completion (T51-114)
 
