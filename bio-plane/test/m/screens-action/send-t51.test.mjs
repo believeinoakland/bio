@@ -44,7 +44,7 @@ test("R41: filingprepare answered FILING_TIER_UNDETERMINED draws its refusal wor
 /* ---------- R42 (C71; B11; amends R3) ---------- */
 
 const S0 = "We say the office broke the law.", S1 = "The city violated the ordinance.";
-const unresolved = (sentences) => refusedWith("ASSERTION_UNRESOLVED", { filing: FILING, sentences: sentences.map((text, i) => ({ index: i, text })) });
+const unresolved = (sentences) => refusedWith("ASSERTION_UNRESOLVED", { filing: FILING, sentences: sentences.map((text) => ({ index: [S0, S1].indexOf(text), text })) });
 const APPROVE_PLANE = (answer) => ({ ...DATA_PLANE, filingread: ok(READ({ text: `${S0} ${S1}` })), filingsfor: () => ok(FILINGS([draft()])), filingapprove: answer });
 const approve = (p) => press(p, "filingapprove", { confirm: true });
 
@@ -78,8 +78,8 @@ test("R42: a sentence answered on one refusal stays answered on the next, so the
   fill(p, { "assert-pick-0-1": true });
   const b = await approve(p);
   assert.deepEqual(sent[1].resolutions, [{ sentence: S0, resolution: "breach_claim" }], "one answered, the other left open");
-  assert.ok(beside(p, b).includes(W("refusal.ASSERTION_UNRESOLVED")) && text(p).includes(S1) && !text(p).includes(S0), "the refusal names only the open one");
-  fill(p, { "assert-words-0": "It only asks." });
+  assert.ok(beside(p, b).includes(W("refusal.ASSERTION_UNRESOLVED")) && p.doc.getElementById("assert-words-1") && !p.doc.getElementById("assert-words-0"), "the refusal names only the open one");
+  fill(p, { "assert-words-1": "It only asks." });
   await approve(p);
   assert.deepEqual(sent[2].resolutions, [{ sentence: S0, resolution: "breach_claim" }, { sentence: S1, resolution: "only_asks", words: "It only asks." }]);
   // control: she rewrote the first sentence; its old answer binds text that is no longer there and is not sent

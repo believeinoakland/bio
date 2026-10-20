@@ -124,7 +124,7 @@ export const matter = Object.freeze({
         : cs.field("mt-d-std", "screen.matter.the_rule_it_is_measured_against");
       const found = P.findings(cs, view, k);
       const why = rev ? cs.sec("screen.matter.record_the_revised_determination", P.note(cs, "screen.matter.the_earlier_determination_stays_readable_with_a") + P.note(cs, "screen.matter.it_is_not_edited")
-        + cs.field("mt-d-why", "screen.matter.why_this_replaces_it", { rec: true }) + P.help(cs, view, "mt-d-why", "determine", "reason")) : "";
+      ) : "";
       const acts = cs.sec("act.determine.label.matter", P.note(cs, "screen.matter.whether_the_act_met_the_rule_with")
         + cs.field("mt-d-event", "screen.matter.the_event_it_was_part_of", { value: act.event || "" })
         + cs.field("mt-d-role", "screen.members.col.role", { value: actor.role || "" }) + cs.field("mt-d-body", "screen.matter.an_office_or_body", { value: actor.body || "" })
@@ -437,13 +437,11 @@ export const matter = Object.freeze({
         const cause = line(cs.value("mt-d-cause"));
         if (cause) body.cause = { statement: cause, evidence: evidence };
         if (!P.isProject(view) && k.d) {
+          // what replaces it is said in the reason the shell asks (a reasoned act), added to the body as `reason`
           body.supersedes = k.det;
-          const why = line(cs.value("mt-d-why"));
-          if (why) body.reason = why;
         }
         return { body: body };
       },
-      refusals: {},
     },
     {
       // R50: what the breach did, with how it is known; exactly the fields `consequencerecord` declares
