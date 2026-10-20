@@ -1,6 +1,6 @@
 # BOB to capture-requests (T51)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
