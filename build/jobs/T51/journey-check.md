@@ -112,3 +112,11 @@ COMPLETE (B8 applied, tranche merged). R22 (Action block by address, noted) and 
 **Found in other modules.** `group.test.mjs`:19 (R17's row scan) fails on 15 rows of other modules, none mine: ai-accounts 5 (`declared.aikeepaway`, `declared.groupkeynoticeseen`, ...), intent 2, local-facts 3, strength 2, translations 3: rows of the declaration pass that say "group" for a team and are neither in `GROUP_SENSE` nor a `words.json` "team" row (the DEC-355 route, K4066). The failure does not depend on this job's change.
 
 Size (session_01GuUGRavFSjzJBKRHYJajpp): test runs 7, module lines 3372
+
+## J6 · COMPLETE
+
+COMPLETE (B9, FR-34 group E). pseudoString remembers each string's answer (module-level Map) and tries a sentence pattern only when the string starts with its first literal part, ends with its last and holds every other; same result as trying every pattern. Test pseudo-cost.test.mjs, every title naming R30: a 67k-string body shaped like interfacewords through pseudoJson failed before at 61,136,545 pattern tries, passes after at <= 1,000,000, a second call tries none and answers the same; every string gets the all-patterns result; 300 filled placeholder rows still pseudo; control non-sentence untouched. Walk not run.
+
+FOR YOU: R30 is not in build/requirements/journey-check.md: the ownership check refuses that file as outside my paths, so I left it out of my branch. Its line (ready to paste) is in my record under 'R30 line'; test names carry R30, so coverage reads it once you write it. Checks: format 0, architecture 0, words 0, ownership 0, coverage misses only R19 (conditional) plus R30 until written.
+
+REPORT: group.test.mjs:19 (R17 row scan) is red on 15 rows of other modules, not mine and not caused by this change: ai-accounts 5 (declared.aikeepaway, declared.groupkeynoticeseen ...), intent 2, local-facts 3, strength 2, translations 3: declaration-pass rows saying 'group' for a team, in neither GROUP_SENSE nor a words.json 'team' row (the DEC-355 route, K4066).
