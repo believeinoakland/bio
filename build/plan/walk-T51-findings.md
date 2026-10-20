@@ -1,6 +1,6 @@
 # T51 local walk: findings traced to fixes (K4111)
 
-**Status** · Run at K4145 (BOB #228): 120 failures, groups A–C below, open; the walk runs again only once each is closed by a fix whose test exercises the live page's path. Written by BOB #227 before the walk's next run (journey-check R1 (a), after the completion round's last merge). The last run (K4105, on the L11 close tree): 201 steps, 125 failures; its whole output was not kept (BOB #226's container), so the groups below are K4105's. A group is closed only by a merged change and a test that covers it; the walk runs again only when every row is closed (Bob, K4111).
+**Status** · Run at K4145: groups A–D, closed (K4148); run at K4161: group E below, open; the walk runs again only once each is closed by a fix whose test exercises the live page's path. Written by BOB #227 before the walk's next run (journey-check R1 (a), after the completion round's last merge). The last run (K4105, on the L11 close tree): 201 steps, 125 failures; its whole output was not kept (BOB #226's container), so the groups below are K4105's. A group is closed only by a merged change and a test that covers it; the walk runs again only when every row is closed (Bob, K4111).
 
 | # | group (last run) | owner | fix | covering test | state |
 | --- | --- | --- | --- | --- | --- |
@@ -40,3 +40,11 @@
 | B | R27 on `setup`: catalogue labels, hints, legends, vendor names escape (the pseudo route rewrites only the document's word pairs) | journey-check | CR-25 (R29 (a), (b), (c)) | `pseudo.test.mjs` R29 (a): real `setup`, `security` (fold open) | **closed** (K4148) |
 | C | R27 on `places`, `elsewhere`: profile values outside `DATA`'s `li` selectors | journey-check | CR-25 (R29 (b)) | `pseudo.test.mjs`: real `places` (chooser), `elsewhere` | **closed** (K4148) |
 | D | R27's `RUN` on comma-joined lists and fills (Home with three languages and places; not reached by this run) | journey-check | CR-25 (R29 (b)) | `pseudo.test.mjs` R29 (b): real Home | **closed** (K4148) |
+
+## The run at K4161 (`walk-T51-run.txt` @ 95766c6224): open
+
+22 of 23 tests pass, none fails (R9, R10, R11, R13, R15–R18, R20 and its controls, R22, R23, R25, R26, R27, R1 (b)); R1 (a) is cancelled at its 2,400 s limit (the run before: 928 s). From about 23:51:29Z each step takes ~15 s instead of ~2.5 s.
+
+| # | group | owner | fix | covering test | state |
+| --- | --- | --- | --- | --- | --- |
+| E | R1 (a): a wait of ~15 s on every step from 23:51:29Z, the walk cancelled at 40 minutes | (tracing) | | | open |
