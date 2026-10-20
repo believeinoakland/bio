@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6281,
+  "screen": 6280,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17290,
+  "total": 17289,
   "protected": 1041
  },
  "words": [
@@ -69125,14 +69125,14 @@
   },
   {
    "key": "screen.case-editor.details.first",
-   "en": "The details of this work open once you have saved the case: what kind of work it is, the area of government, a point of contact, related work and relationships.",
+   "en": "The details of this work open once you have saved the case: the area of government, a point of contact, related work and relationships.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor, first case: the section shown before the first save"
   },
   {
    "key": "screen.case-editor.details.intro1",
-   "en": "These five details travel beside the case.",
+   "en": "These four details travel beside the case.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: opening note of the section; followed by intro2"
@@ -69157,13 +69157,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: outward-act note, second sentence"
-  },
-  {
-   "key": "screen.case-editor.details.class.title",
-   "en": "What kind of work this is",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): row title of the classification detail; also on the ceremony checklist and the published page"
   },
   {
    "key": "screen.case-editor.details.area.bodyhint",
