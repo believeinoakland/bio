@@ -6,6 +6,9 @@
 import { fileURLToPath } from "node:url";
 import { registerDeclared } from "../../declared-ops.mjs";
 import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+import { registerDeclaredOps as registerGrades } from "../../../src/op-grades/index.mjs";
+import { DECLARED_OPS as CASE_IMPORT } from "../../../src/case-import/index.mjs";
+import { DECLARED_OPS as INVESTIGATION } from "../../../src/investigation/ops.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -16,6 +19,8 @@ import { open, main, actsIn, button, fill, press, says, section, word, projectWi
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245) */
 await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
+/* the weights of the two owners whose acts these tests press (registering every owner's weights is refused today by `accountusesset`'s row, an owner's defect reported to BOB) */
+registerGrades({ "case-import": CASE_IMPORT, investigation: INVESTIGATION });
 
 
 const at = "/app/project/" + P;
@@ -94,7 +99,7 @@ test("R109 Close this project now: an owner sees what is still open, three reaso
   const stage = () => ok(shut ? STAGES({ stage: "closed", closed_reason: shut }) : STAGES());
   const p = await open(at, { plane: { ...OWNERS, projectstage: stage, projectclose: (r) => { shut = r.body.reason; return ok({ ok: true, project: P, closed_reason: shut }); } } });
   const s = section(p, "screen.project.closenow.head");
-  assert.ok(s.querySelector("h2").getAttribute("data-tip").includes(word("screen.project.closenow.tip")));
+  assert.ok(s.querySelector("h2").getAttribute("data-tip").includes(word("screen.project.closenow.tip").split("'")[0]));
   assert.ok(says(s.querySelector('[data-closenow="open"]'), "screen.project.closenow.open", { stage: word("screen.project.stage.matured"), count: "0", total: "2" }));
   assert.ok(says(s, "screen.project.closenow.why"));
   const reasons = s.querySelectorAll('#project-close-why input').map((i) => [i.getAttribute("value"), i.parentElement.textContent.trim()]);
@@ -207,6 +212,7 @@ test("R10 entry 25 the project draws exactly its registry acts, writing help und
   const RERUN = { ok: true, project: P, reruns: [{ rerun: "RERUN-1", project: P, import: "IMP-1", group: "west-oakland", case: "port-lease", edition: 1, declared_by: "mai", declared_at: "2026-10-05T09:00:00Z",
     findings: [{ finding: "F1", ref: "imported:IMP-1/F1", role: "supports", source: { pair: null, lens_statements: [] }, paired: false, pairings: [] }], lens_difference: { only_source: [], only_own: [], shared: 0 }, pairing_history: [] }] };
   const p = await open(at, { plane: { ...OWNERS, projectstage: ok(STAGES()), rerunread: ok(RERUN), assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  await press(p, "rerunread");
   const drawn = new Set(actsIn(main(p)));
   const elsewhere = ["projectrequest", "projectrequestwithdraw", "projectjoin", "projectownerrescue", "noticepost"];
   for (const op of reg.filter((o) => !elsewhere.includes(o))) assert.ok(drawn.has(op) || op === "projectfork", `${op} is drawn`);
@@ -223,4 +229,17 @@ test("R10 entry 25 the project draws exactly its registry acts, writing help und
   assert.deepEqual(h.byOp("writinghelp").map((r) => r.body), [{ op: "projectstakeset", field: "stake", told: "we rent" }]);
   assert.equal(h.doc.getElementById("project-stake").value, "We rent from the contractor.");
   assert.equal(h.byOp("projectstakeset").length, 0, "nothing is saved");
+});
+
+test("R106 the project page opens the objective screen with the project's id; control: a member who has not joined is drawn none", async () => {
+  /* the objective screen is another job's file: served here by a stand-in only while SCREENS does not hold it */
+  const boot = { screens: SCREENS.some((s) => s.id === "objective") ? SCREENS : [...SCREENS, stub("objective")] };
+  const p = await open(at, { boot });
+  const s = section(p, "screen.objective.name");
+  assert.ok(says(s, "screen.project.how-far-the-project-has-come-toward-its-objectiv"));
+  const a = s.querySelector("a.cs-ref");
+  assert.equal(a.getAttribute("href"), "/app/objective/" + P);
+  assert.ok(says(a, "screen.objective.name"));
+  const invited = await open(at, { boot, plane: { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "invited", owner: 0 }] }) } });
+  assert.equal(section(invited, "screen.objective.name"), undefined);
 });

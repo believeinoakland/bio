@@ -319,15 +319,19 @@ test("R118 control: with a question preselected the choose option is not drawn a
   assert.ok(!options(p).some((x) => text(x) === word("screen.document.cite.choose")));
 });
 
-test("R118 the controls of Ask whether a newer copy exists, Check now and Watch for changes carry no weight mark of this screen's", async () => {
+test("R118 the screen puts no weight mark of its own on Ask whether a newer copy exists, Check now or Watch for changes (the shell draws marks by key, B17)", async () => {
   const q2 = { backlinks: ok({ ok: true, target: D, backlinks: [{ from: Q, from_type: "inquiry", from_title: "Seven days?", rel: "cites" }] }), versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) };
   const p = await openWith(at, withMd(WATCHED, { plane: q2 }));
-  for (const op of ["versionnotice", "monitor", "monitorset"]) {
+  for (const op of ["monitor", "monitorset"]) {
     const b = main(p).querySelector(`button[data-act="${op}"]`);
     assert.ok(b, op);
     assert.equal(b.querySelector(".w"), null, `${op} draws no weight mark`);
-    assert.equal(b.getAttribute("data-weighed"), null);
   }
+  assert.ok(main(p).querySelector('button[data-act="versionnotice"]'));
+  const screen = SCREENS.find((s) => s.id === "document");
+  for (const a of screen.acts) assert.ok(!("mark" in a) && !("weight" in a), `${a.op}: the screen states no mark or weight`);
+  const src = readFileSync(new URL("../../../src/screens-inquiry/document.mjs", import.meta.url), "utf8");
+  assert.ok(!/cs\.act\([^)]*\b(mark|weight):/.test(src), "and passes none to the kit");
 });
 
 test("R118 an unwatched address draws the unwatched key and Watch for changes and no Check now; a watched one the reverse", async () => {
