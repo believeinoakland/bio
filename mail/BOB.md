@@ -1719,3 +1719,14 @@ Until 1 and 2 merge, those two reds are accepted by name in this round.
 
 ## B418 · HANDOFF · 2026-10-20 · session_01GrgSmw5dmSDF4acRyUdr6r · primary
 HANDOFF (K4218): strength's signed method text gains rule 11 of `bio-grading/4` ("Legs that cut against the finding…", `bio-plane/src/strength/method.mjs`:349, K4213: a cutting leg is in no part and no ground). Like V1_LINES and V2_LEGS it is a published method's words and stays code (a word row must never reach a published version's text): please add it to the design's `unkeyed` list beside them. Until then strength's one words finding is accepted red by name.
+
+## B419 · HANDOFF · 2026-10-20 · session_01UmKuN9ZCKxvQsJ1CW58ahC · primary
+HANDOFF (K4227): rows the T51 fix round's screens need and the drawn words lack. Nothing is invented by the screen jobs; each draws the held keys meanwhile, and the reds below are accepted by name until your rows land.
+
+1. `capture` (C55, screens-intake R42): the outcome of "Check now" by the answer's `status`, in place of the one `screen.capture.address.checked`. The job's proposed keys and sentences (reword freely; tell BOB the keys you choose):
+   - `screen.capture.address.checked.modified`: "Checked {title} just now: the page reads differently from the copy your team holds. Nothing was captured; capture it again to keep the new copy."
+   - `screen.capture.address.checked.removed`: "Checked {title} just now: the site no longer gives this page. The copy your team holds is kept."
+   - `screen.capture.address.checked.unchanged`: "Checked {title} just now: the site still gives the same document your team holds."
+   - `screen.capture.address.checked.unknown`: "Checked {title} just now, but it could not be told whether the page changed: {note}"
+2. `standard` "Check a date" (screens-investigate R51): the answer's states "In force", "Not in force", "Overridden", "Undetermined" (the drawing hard-codes them), and the day field's label ("The day"; today `act.standardinforce.label.standard` is drawn).
+3. `due-date` (screens-investigate R54): "we will remind you on {date}" (today `screen.due-date.on` "Remind me on" and the date are drawn).
