@@ -134,3 +134,8 @@ member-roster, CHANGE B3 complete. Record: build/jobs/T51/member-roster.md, sect
 (b) Two op-naming details are in a REPORT (J3), not keyed.
 
 Tests 164 pass. words.mjs member-roster 0 failures (testcopy 0). ownership 0. format 0. Merged tranche/T51 (no tranche commit touched this module).
+
+## J5 · QUESTION
+
+FR-07 (B4): eight readings of mine where the rows or the arm leave a choice; I have adopted each and finished the job on it. Say CHANGE if you read any other way. Full text: build/jobs/T51/member-roster.md, "Completion (MEMBER-ROSTER #4)", "Readings I took".
+(a) expertisedeclare accepts and requires `label` only: the plane stamps `memberId` into the body. (b) handlecheck requires `invite` (the join page is its only sender; a member's own check rides her viewer stamp). (c) memberadd does not accept `expertise` (the arm only refuses it). (d) invitelook has no op-grades row: weight `read` by K4204, description mine. (e) memberpairingset requires `memberId` only. (f) memberFacts("admin") answers `cover: null`. (g) expertiseHolders lists the founder once claimed, so membership's checkAddressees will apply its sight rule to `admin`. (h) the shape of C62's reads: a plain list with a non-enumerable `truncated`, `[]` for a non-administrator.
