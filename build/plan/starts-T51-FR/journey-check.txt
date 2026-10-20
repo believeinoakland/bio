@@ -1,4 +1,4 @@
-Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-64 · journey-check** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-65 · journey-check** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
 Your requirements: `build/requirements/journey-check.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
 Why this job: Group E: the walk's stall, one cause in one place, with the equivalence proved offline.
 Merge order: module index 174, layer 11. Index 174, last overall.

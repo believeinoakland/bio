@@ -1,4 +1,4 @@
-Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-63 · installer** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-64 · installer** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
 Your requirements: `build/requirements/installer.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
 Why this job: R33 and R11, the reds of K4176 that stop any team from installing 0.86.0; and FR-SIGN's page.
 Merge order: module index 171, layer 11. After `installer-steps` (171, last of the installer pair).
