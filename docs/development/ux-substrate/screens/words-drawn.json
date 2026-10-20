@@ -10184,7 +10184,7 @@
   },
   {
    "key": "queue.contradiction-plurality.detail",
-   "en": "Two projects concluded one question on claims whose text differs. Naming the respect in which they differ clears it; neither project is made to adopt the other's answer.",
+   "en": "Two projects concluded one question on claims whose text differs. Saying how they differ clears it; neither project is made to adopt the other's answer.",
    "protected": false,
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1517"
   },
@@ -24808,7 +24808,7 @@
    "key": "screen.imported.accepted.meta",
    "en": "accepted by {name}, {date}",
    "protected": false,
-   "note": "DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; under an accepted finding; {name} the member, {date} like October 3"
+   "note": "DEC-374: B398 C51 (case-import importacceptwithdraw, R7): imported, one imported case, under the acts; under an accepted finding; {name} the member, {date} like October 3, 2026"
   },
   {
    "key": "screen.imported.withdraw.label",
@@ -24860,7 +24860,7 @@
   },
   {
    "key": "screen.person.keeper.office.help",
-   "en": "An office of this organization, named by its role, so the line stays true when someone new takes the post.",
+   "en": "An office of this organization, named by its role, so the statement stays true when someone new takes the post.",
    "protected": false,
    "note": "DEC-374: B398 C68 (lines recordline): Help on the Office choice. Translator: office, records, subject as in the rest of the screen."
   },
@@ -24908,13 +24908,13 @@
   },
   {
    "key": "screen.person.keeper.source.help.a",
-   "en": "A line without a source is refused.",
+   "en": "A statement without a source is refused.",
    "protected": false,
    "note": "DEC-374: B398 C68 (lines recordline): Help on the source choice. Translator: office, records, subject as in the rest of the screen."
   },
   {
    "key": "screen.person.keeper.source.help.b",
-   "en": "A document shows its grade; your own word is shown as yours and graded D.",
+   "en": "A document shows its grade; your own word is shown as yours and graded D, the lowest grade.",
    "protected": false,
    "note": "DEC-374: B398 C68 (lines recordline): Help on the source choice. Translator: office, records, subject as in the rest of the screen."
   },
@@ -24932,7 +24932,7 @@
   },
   {
    "key": "screen.person.keeper.dates.note.b",
-   "en": "A line with no dates is shown as not yet dated, and the suggestion lists it apart.",
+   "en": "A statement with no dates is shown as not yet dated, and the suggestion lists it apart.",
    "protected": false,
    "note": "DEC-374: B398 C68 (lines recordline): Note under the two date fields. Translator: office, records, subject as in the rest of the screen."
   },
@@ -24986,7 +24986,7 @@
   },
   {
    "key": "screen.person.keeper.withdraw.a",
-   "en": "A line recorded by mistake is not deleted.",
+   "en": "A statement recorded by mistake is not deleted.",
    "protected": false,
    "note": "DEC-374: B398 C68 (lines recordline): Note at the end of the section. Translator: office, records, subject as in the rest of the screen."
   },
@@ -25274,7 +25274,7 @@
   },
   {
    "key": "screen.objective.each-shortfall-is-also-offered-to-you-as-a-propo",
-   "en": "Each shortfall is also offered to you as a proposal below, to adopt, turn into a question, put off or dismiss.",
+   "en": "Each shortfall is also offered to you as a proposal below, to adopt, turn into a question, defer or dismiss.",
    "protected": false,
    "note": "DEC-374: B398 C46 (intent objective, aspirations, goals): the objective screen; translator: American English, \"team\" never \"group\""
   },
@@ -25304,7 +25304,7 @@
   },
   {
    "key": "screen.objective.shown-by-the-machine",
-   "en": "shown by the machine",
+   "en": "worked out by Civicsmith",
    "protected": false,
    "note": "DEC-374: B398 C46 (intent objective, aspirations, goals): the objective screen; translator: American English, \"team\" never \"group\""
   },
@@ -25364,7 +25364,7 @@
   },
   {
    "key": "screen.objective.why-required-to-put-it-off-or-dismiss-it",
-   "en": "Why (required to put it off or dismiss it)",
+   "en": "Why (required to defer or dismiss it)",
    "protected": false,
    "note": "DEC-374: B398 C46 (intent objective, aspirations, goals): the objective screen; translator: American English, \"team\" never \"group\""
   },
@@ -25556,7 +25556,7 @@
   },
   {
    "key": "screen.objective.there-is-nothing-to-depart-from",
-   "en": "There is nothing to depart from.",
+   "en": "There is nothing to depart from. Declare the aspiration again if you still want to depart from it.",
    "protected": false,
    "note": "DEC-374: B398 C46 (intent objective, aspirations, goals): the objective screen; translator: American English, \"team\" never \"group\""
   },
@@ -25604,7 +25604,7 @@
   },
   {
    "key": "screen.objective.only-whoever-may-change-the-aspiration-can-add-t",
-   "en": "Only whoever may change the aspiration can add to it.",
+   "en": "Only whoever may change the aspiration can add to it. Ask them to add it.",
    "protected": false,
    "note": "DEC-374: B398 C46 (intent objective, aspirations, goals): the objective screen; translator: American English, \"team\" never \"group\""
   },
@@ -25652,7 +25652,7 @@
   },
   {
    "key": "screen.objective.an-aspiration-already-retired-cannot-be-retired",
-   "en": "An aspiration already retired cannot be retired twice.",
+   "en": "An aspiration already retired cannot be retired twice. Nothing more is needed.",
    "protected": false,
    "note": "DEC-374: B398 C46 (intent objective, aspirations, goals): the objective screen; translator: American English, \"team\" never \"group\""
   },
@@ -26024,7 +26024,7 @@
   },
   {
    "key": "screen.bias.the_lens_your_team_reads",
-   "en": "The lens your team reads evidence through, stated so a reader can discount it.",
+   "en": "Your team's declared way of reading evidence (its lens), stated so a reader can discount it.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
@@ -26054,7 +26054,7 @@
   },
   {
    "key": "screen.bias.the_same_lens_gives_the",
-   "en": "the same lens gives the same number, so a reader can check it.",
+   "en": "an identifying number, so anyone can check they are reading the same set of statements.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
@@ -26078,13 +26078,13 @@
   },
   {
    "key": "screen.bias.when_an_adopted_set_is",
-   "en": "When an adopted set is only proposed",
+   "en": "When an adopted set is only offered",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.a_set_that_was_adopted",
-   "en": "A set that was adopted while still proposed replaces the lens, but it is not in force until the team adopts that revision.",
+   "en": "A set that was adopted while only offered replaces the lens, but it is not in force until the team adopts that version.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
@@ -26270,19 +26270,19 @@
   },
   {
    "key": "screen.bias.adopting_names_the_revision_in",
-   "en": "Adopting names the revision in front of you.",
+   "en": "Adopting names the version in front of you.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.later_changes_to_the_set",
-   "en": "Later changes to the set do not reach this scope until it is adopted again.",
+   "en": "Later changes to the set do not reach the team or project until it is adopted again.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.adopting_a_different_set_for",
-   "en": "Adopting a different set for the same scope replaces this one, and you can adopt again at any time.",
+   "en": "Adopting a different set for the same team or project replaces this one, and you can adopt again at any time.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
@@ -26558,7 +26558,7 @@
   },
   {
    "key": "screen.bias.the_statements_in_force_for",
-   "en": "The statements in force for this scope: the team's, then the project's.",
+   "en": "The statements in force for this team or project: the team's, then the project's.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
@@ -26606,7 +26606,7 @@
   },
   {
    "key": "screen.ceremony.this_is_the_lens_in",
-   "en": "This is the lens in force for The Coliseum lease today.",
+   "en": "This is your team's declared way of reading evidence (its lens), in force for The Coliseum lease today.",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasmanifest): the publication ceremony's Bias step; the sentence stands alone."
   },
@@ -26642,7 +26642,7 @@
   },
   {
    "key": "screen.queue.your_teams_lens_changed_after",
-   "en": "Your team's lens changed after {work} was made",
+   "en": "Your team's declared way of reading evidence (its lens) changed after {work} was made",
    "protected": false,
    "note": "DEC-374: B398 C47 (bias biasdebtresolve): the queue's bias-debt row; the sentence stands alone. Placeholders hold a member name, a date or the title of the work."
   },
@@ -26672,7 +26672,7 @@
   },
   {
    "key": "screen.contradiction.the.assistant.s.judgement.not.a",
-   "en": "The assistant's judgement, not a finding: a conflict in the world",
+   "en": "The assistant's judgment, not a finding: a conflict in the world",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -26756,13 +26756,13 @@
   },
   {
    "key": "screen.contradiction.with.something.that.shows.it.the",
-   "en": "With something that shows it, the tension is resolved and each passage carries your note as shown.",
+   "en": "With something that shows it, the contradiction is resolved and each passage carries your note as shown.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
   {
    "key": "screen.contradiction.with.only.your.words.the.tension",
-   "en": "With only your words, the tension is softened and stays open, and your notes are marked as unproven.",
+   "en": "With only your words, the contradiction is softened and stays open, and your notes are marked as unproven.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -26816,7 +26816,7 @@
   },
   {
    "key": "screen.contradiction.someone.already.closed.this.and.it",
-   "en": "Someone already closed this, and it stays as they left it.",
+   "en": "Someone already resolved or dismissed this, and it stays as they left it.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -26828,7 +26828,7 @@
   },
   {
    "key": "screen.contradiction.you.named.a.respect.but.gave",
-   "en": "You named a respect but gave no words of your own.",
+   "en": "You said they differ but gave no words of your own.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -26912,7 +26912,7 @@
   },
   {
    "key": "screen.contradiction.dismissing.closes.this.lead.and.it",
-   "en": "Dismissing closes this lead, and it stays closed.",
+   "en": "Dismissing ends this lead, and it stays dismissed.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -26936,7 +26936,7 @@
   },
   {
    "key": "screen.contradiction.this.is.a.conflict.the.record.2",
-   "en": "This is a conflict the record holds, and it closes only by a resolution.",
+   "en": "This is a conflict the record holds, and it ends only when someone resolves it.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -27170,7 +27170,7 @@
   },
   {
    "key": "screen.contradiction.part.of.your.answer.is.missing",
-   "en": "Part of your answer is missing: the respects they differ in, which passage is wrong and why, or how the rules are reconciled.",
+   "en": "Part of your answer is missing: the ways they differ, which passage is wrong and why, or how the rules are reconciled.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -27278,13 +27278,13 @@
   },
   {
    "key": "screen.contradiction.this.is.a.lead.not.a",
-   "en": "This is a lead, not a conflict between projects, so there is nothing to ask for.",
+   "en": "This is a lead, not a conflict between projects, so there is nothing to ask for. Take it up as a question instead.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
   {
    "key": "screen.contradiction.someone.already.closed.it.and.it",
-   "en": "Someone already closed it, and it stays as they left it.",
+   "en": "Someone already resolved or dismissed it, and it stays as they left it.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -27392,7 +27392,7 @@
   },
   {
    "key": "screen.contradiction.until.it.is.available.no.document",
-   "en": "Until it is available, no document is marked as in tension, and no item about one reaches your queue.",
+   "en": "Until it is available, no document is marked as contradicted, and no item about one reaches your queue.",
    "protected": false,
    "note": "DEC-374: B398 C48 (contradiction contradictionclarify, contradictiontakeup, contradictiondismiss, contradictionresolve, contradictionoptin, contradictionrespond): a sentence on the screen Two documents in tension; wording of a refusal says what to do next; translate in the same plain register"
   },
@@ -27530,7 +27530,7 @@
   },
   {
    "key": "screen.matter.attaching_an_action_holding_at_a_stage",
-   "en": "Attaching an action, holding at a stage, suspending or recording a response",
+   "en": "Attaching an action, holding at a stage, pausing or recording a response",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -27656,7 +27656,7 @@
   },
   {
    "key": "screen.matter.otherwise_leave_it_empty_and_the_determination",
-   "en": "Otherwise leave it empty, and the determination will read: cause not established.",
+   "en": "Otherwise leave it empty, and the determination will say that no cause has been shown.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -27704,7 +27704,7 @@
   },
   {
    "key": "screen.matter.if_this_rule_does_not_bind_it",
-   "en": "If this rule does not bind it, record the comparison as a benchmark instead: below, slower than, or above.",
+   "en": "If this rule does not bind it, record how the act compares with it instead, without calling it a breach: below, slower than, or above.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -27854,7 +27854,7 @@
   },
   {
    "key": "screen.matter.what_the_breach_did",
-   "en": "What the breach did",
+   "en": "Consequences: what the breach did",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28148,7 +28148,7 @@
   },
   {
    "key": "screen.matter.at_stage_7_political_accountability",
-   "en": "At stage 7, political accountability",
+   "en": "At the political accountability stage",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28160,7 +28160,7 @@
   },
   {
    "key": "screen.matter.only_a_breach_action_that_rests_on",
-   "en": "Only a breach action that rests on this determination can be attached, once, at stages 2, 5 and 7.",
+   "en": "Only a breach action that rests on this determination can be attached, once, at the notification, legal tools and political accountability stages.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28172,7 +28172,7 @@
   },
   {
    "key": "screen.matter.only_an_action_that_states_a_breach",
-   "en": "Only an action that states a breach and rests on this determination is attached, and only at stage 2, 5 or 7.",
+   "en": "Only an action that states a breach and rests on this determination is attached, and only at the notification, legal tools or political accountability stage.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28214,9 +28214,21 @@
   },
   {
    "key": "screen.matter.the_notice_was_sent_so_clock_starts",
-   "en": "The notice was sent, so Clock starts is proposed.",
+   "en": "The notice was sent, so the next step is to start the response clock.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
+  },
+  {
+   "key": "screen.matter.advance_to_clock_starts",
+   "en": "Start the response clock",
+   "protected": false,
+   "note": "DEC-376: words consistency (matter escalation, advance): the button that moves the escalation to its next proposed stage; Clock starts is the name of the stage; the stage is named in words, never by number."
+  },
+  {
+   "key": "screen.matter.starting_the_response_clock_is_proposed",
+   "en": "Starting the response clock is proposed",
+   "protected": false,
+   "note": "DEC-376: words consistency (matter escalation, advance): the heading of the section that offers the next stage; the stage is named in words, never by number."
   },
   {
    "key": "screen.matter.you_can_move_to_it_or_hold",
@@ -28250,25 +28262,25 @@
   },
   {
    "key": "screen.matter.stage_3_is_not_proposed_yet_missing",
-   "en": "Stage 3 is not proposed yet: {missing}.",
+   "en": "Starting the response clock is not proposed yet: {missing}.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal to hold at a stage; {missing} is what the next stage still needs"
   },
   {
    "key": "screen.matter.there_is_nothing_to_hold_at",
-   "en": "There is nothing to hold at.",
+   "en": "There is nothing to hold at. Come back when a stage is proposed.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.why_you_are_suspending_it",
-   "en": "Why you are suspending it",
+   "en": "Why you are pausing it",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.a_suspended_escalation_proposes_no_stage",
-   "en": "A suspended escalation proposes no stage.",
+   "en": "A paused escalation proposes no stage.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28280,19 +28292,19 @@
   },
   {
    "key": "screen.matter.when_it_is_already_suspended",
-   "en": "When it is already suspended",
+   "en": "When it is already paused",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.this_escalation_has_been_suspended_since_october",
-   "en": "This escalation has been suspended since October 14, 2026.",
+   "en": "This escalation has been paused since October 14, 2026.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.resume_it_before_suspending_it_again",
-   "en": "Resume it before suspending it again.",
+   "en": "Resume it before pausing it again.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28340,25 +28352,25 @@
   },
   {
    "key": "screen.matter.when_it_is_not_at_stage_4",
-   "en": "When it is not at stage 4",
+   "en": "When it is not at the response evaluation stage",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.a_response_is_read_at_stage_4",
-   "en": "A response is read at stage 4, response evaluation.",
+   "en": "A response is read at the response evaluation stage.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.this_escalation_stands_at_stage_2",
-   "en": "This escalation stands at stage 2.",
+   "en": "This escalation stands at the notification stage.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.no_stage_is_proposed_while_it_is",
-   "en": "No stage is proposed while it is suspended.",
+   "en": "No stage is proposed while it is paused.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28376,13 +28388,13 @@
   },
   {
    "key": "screen.matter.when_it_is_not_suspended",
-   "en": "When it is not suspended",
+   "en": "When it is not paused",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.this_escalation_is_open_not_suspended_so",
-   "en": "This escalation is open, not suspended, so there is nothing to resume.",
+   "en": "This escalation is open, not paused, so there is nothing to resume.",
    "protected": false,
    "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
@@ -28700,7 +28712,7 @@
   },
   {
    "key": "screen.document.ocr.refused.member",
-   "en": "This team's Civicsmith has no OCR reader installed, so nothing was read or changed. Ask the administrator who installed it.",
+   "en": "This team's Civicsmith has no text-reading (OCR) tool installed, so nothing was read or changed. Ask the administrator who installed it.",
    "protected": false,
    "note": "DEC-375: B398 C21 (extraction pdfstructure): refusal under the OCR button"
   },
@@ -28784,7 +28796,7 @@
   },
   {
    "key": "screen.document.connect.says",
-   "en": "Say that this document and another one your team holds are connected, when the record has not drawn the link itself. It is your assertion, graded D and not treated as established, and your name goes on it.",
+   "en": "Say that this document and another one your team holds are connected, when the record has not drawn the link itself. It is your assertion, graded D, the lowest grade, and not treated as established, and your name goes on it.",
    "protected": false,
    "note": "DEC-375: B398 C29 (connections connectionassert): first sentence under the heading; D is a grade letter"
   },
@@ -28934,7 +28946,7 @@
   },
   {
    "key": "screen.document.route.shown",
-   "en": "Its route can be shown: the evidence it carries shows each hop from its source to your team.",
+   "en": "Its route can be shown: the evidence it carries shows each step from its source to your team.",
    "protected": false,
    "note": "DEC-375: B398 C24 (provenance-routes provenanceroute): one result"
   },
@@ -30194,7 +30206,7 @@
   },
   {
    "key": "screen.published.the_lens_this_team_read",
-   "en": "The lens this team read through",
+   "en": "How this team reads evidence",
    "protected": false,
    "note": "DEC-376: B398 C7 (public-read publishedcase): The heading of the public page's section on the team's declared bias. It must agree with the Declared bias screen. Translator: this page is public, read by anyone."
   },
@@ -30338,9 +30350,9 @@
   },
   {
    "key": "screen.published.the_lens_this_team_read2",
-   "en": "The lens this team read evidence through, stated so a reader can discount it.",
+   "en": "The team's declared way of reading evidence (its lens), stated so a reader can discount it.",
    "protected": false,
-   "note": "DEC-376: B398 C7 (public-read publishedcase): Explanation of the section 'The lens this team read through'. Agrees with the Declared bias screen. Translator: this page is public, read by anyone."
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Explanation of the section 'How this team reads evidence'. Agrees with the Declared bias screen. Translator: this page is public, read by anyone."
   },
   {
    "key": "screen.published.it_never_blocked_the_teams",

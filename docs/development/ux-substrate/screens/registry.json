@@ -4612,7 +4612,7 @@
     },
     {
      "op": "escalationsuspend",
-     "label": "Suspend, with a reason",
+     "label": "Pause, with a reason",
      "status": "declared",
      "modules": [
       "op-declarations"
