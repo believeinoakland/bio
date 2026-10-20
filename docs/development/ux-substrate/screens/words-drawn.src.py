@@ -6458,7 +6458,6 @@ W.append(dict(key='screen.standard.inforce.state.not_in_force', en='Not in force
 W.append(dict(key='screen.standard.inforce.state.overridden', en='Overridden', protected=False, note='DEC-387: B419 2: standard: answer state overridden'))
 W.append(dict(key='screen.standard.inforce.state.undetermined', en='Undetermined', protected=False, note='DEC-387: B419 2: standard: answer state undetermined'))
 W.append(dict(key='screen.standard.inforce.others.summary', en='The other answers it can give', protected=False, note='DEC-387: B419 2: standard: summary of the details showing the other three states'))
-W.append(dict(key='screen.due-date.remind.set', en='We will remind you on {date}.', protected=False, note='DEC-387: B419 3: due-date: the line drawn once Remind me is pressed, in place of screen.due-date.on and the bare date'))
 W.append(dict(key='screen.doorbell.secret.make', en='Make one for me', protected=False, note='DEC-387: B420 1: doorbell: the choice beside the secret phrase (generateSecret true); when ticked the phrase field is left empty'))
 W.append(dict(key='screen.doorbell.secret.make.help', en='A long random phrase is made for you and shown once, on the receipt. Write it down: nobody can show it to you again.', protected=False, note='DEC-387: B420 1: doorbell: under Make one for me'))
 W.append(dict(key='screen.doorbell.receipt.fingerprint', en='Fingerprint of what you sent: {fingerprint}', protected=False, note="DEC-387: B420 1: doorbell receipt: the answer's sha256, shortened in the middle"))
@@ -6553,7 +6552,7 @@ REWRITE.update({
   'screen.matter.stage.5': 'Legal tools',
   'screen.matter.stage.6': 'Sustained attention',
   'screen.matter.stage.7': 'Political accountability',
-  'screen.matter.proposed': 'Proposed next: {stage}. The system proposes; a member decides.',
+  'screen.matter.proposed': 'Proposed next: {stage}. Civicsmith proposes; a member decides.',
   'screen.matter.advance': 'Move on to the next stage: {stage}',
   'screen.matter.atstage': 'at {stage}',
   'screen.plan.escalation': 'escalation: {stage}',
