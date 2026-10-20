@@ -212,6 +212,8 @@ test("R68 How your copy is doing: the check (selftest) draws what it found from 
   await on.press("selftest", {});
   has(on, "screen.updates.health.store");
   lacks(on, "screen.updates.health.captures.off");
+  has(on, "screen.updates.health.file.test");
+  lacks(a, "screen.updates.health.file.test");
   // the check finds a problem: the answer refused, drawn in its fold beside the act, the store not said to answer
   const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { selftest: { ok: false, status: 500, store: "ERR the store did not answer /stats", bindingsAllPresent: false } }) });
   await bad.press("selftest", {});
@@ -231,11 +233,17 @@ test("R68 What each part runs (bootstrap with members): each part named as the a
   const sheet = part(a, "screen.updates.health.head");
   const rows = all(sheet, (e) => /cs-row/.test(e.attrs.class || ""));
   const rowOf2 = (name) => rows.find((x) => textOf(x).includes(name));
-  assert.ok(textOf(rowOf2("pdf-worker")).includes("0.83.0"), "a serving part shows its release");
-  assert.ok(textOf(rowOf2("file-scanner")).includes("0.82.0"), "a part on another release shows that one");
-  assert.ok(textOf(rowOf2("ocr-worker")).includes(said("screen.updates.health.part.silent")), "a silent part is said silent");
-  assert.ok(!textOf(rowOf2("ocr-worker")).includes("timed out"), "no reason the owner gave beyond the word");
-  assert.ok(textOf(rowOf2("agent-runner")).includes("UNBOUND") && textOf(rowOf2("sheet-worker")).includes("MISNAMED"), "the other states as the answer gives them");
+  const P = "screen.updates.health.part.";
+  const pdf = textOf(rowOf2(said(P + "pdf-worker")));
+  assert.ok(pdf.includes(said(P + "state.answering")) && pdf.includes(said(P + "release", { version: "0.83.0" })), "a serving part is named by the design's words and shows its release");
+  assert.ok(textOf(rowOf2(said(P + "file-scanner"))).includes(said(P + "release", { version: "0.82.0" })), "a part on another release shows that one");
+  const ocr = textOf(rowOf2(said(P + "ocr-worker")));
+  assert.ok(ocr.includes(said(P + "silent")), "a silent part is said silent");
+  assert.ok(!ocr.includes("timed out"), "no reason the owner gave beyond the word");
+  assert.ok(textOf(rowOf2(said(P + "agent-runner"))).includes(said(P + "state.unbound")), "an unbound part");
+  const sheetW = textOf(rowOf2(said(P + "sheet-worker")));
+  assert.ok(sheetW.includes(said(P + "state.misnamed")) && sheetW.includes("other-worker"), "a part answering under another name, as the answer names it");
+  assert.ok(!rows.some((x) => /agent-worker|pdf-worker|ocr-worker/.test(textOf(x))), "never the module id");
   has(a, "screen.updates.health.parts.note"); has(a, "screen.updates.health.parts.next");
   // a failed answer is drawn failed, no part listed
   const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { bootstrap: (q) => (q.members === "1" ? refuse("STORE_DID_NOT_ANSWER") : { ok: true, installed_at: "2026-09-02T10:00:00Z" }) }) });
@@ -249,10 +257,15 @@ test("R68 What running costs (runtime): the measured work as the answer gives it
   lacks(a, "screen.updates.health.runtime.note");
   const r = await a.press("runtime", {});
   assert.deepEqual(r.sent.map((x) => x.op), ["runtime"]);
-  has(a, "screen.updates.health.runtime.limits"); has(a, "screen.updates.health.runtime.cpu"); has(a, "screen.updates.health.runtime.note");
+  has(a, "screen.updates.health.runtime.limits", { ceiling: "50" }); has(a, "screen.updates.health.runtime.cpu"); has(a, "screen.updates.health.runtime.note");
   const t = textOf(part(a, "screen.updates.health.head"));
-  assert.ok(t.includes("request_work") && t.includes("1840 ms") && t.includes("310 ms"), "a measurement in ms is drawn in ms");
-  assert.ok(t.includes("capture_work_bytes") && t.includes("800000 bytes") && !t.includes("800000 ms"), "a count of work is never drawn as a time");
+  const R = "screen.updates.health.runtime.";
+  assert.ok(t.includes("request_work") && t.includes(said(R + "heaviest", { peak: "1840", unit: "ms" })) && t.includes(said(R + "average", { mean: "310", unit: "ms" })) && t.includes(said(R + "samples", { samples: "5200" })), "a measurement in ms is drawn in ms");
+  assert.ok(t.includes("capture_work_bytes") && t.includes(said(R + "heaviest", { peak: "800000", unit: "bytes" })) && !t.includes("800000 ms"), "a count of work is never drawn as a time");
+  // control: a ceiling no refusal has taught yet is not drawn
+  const none = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: env({ ok: true, measured: { metrics: [] }, subrequests: { runtime: "subrequests", observed: null, probeDue: true, probeEvery: 20 } }) }) });
+  await none.press("runtime", {});
+  assert.ok(!none.text.includes(said("screen.updates.health.runtime.limits", { ceiling: "@" }).split("@")[0]), "no ceiling sentence"); has(none, "screen.updates.health.runtime.cpu");
   const bad = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: refuse("STORE_DID_NOT_ANSWER") }) });
   await bad.press("runtime", {});
   lacks(bad, "screen.updates.health.runtime.note");
