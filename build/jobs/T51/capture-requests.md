@@ -105,3 +105,7 @@ CHANGE (B3, K4015) applied at 17f8ba30c9: the words check folds pure-literal + c
 Stamps: `principal` is read from the query by the ops map. I excluded it from `accepts` as the rule excludes `by`, which the records arms read from the same stamp. Best reading taken; say so if you want it listed.
 
 Requirement lines for the record (next free ids): R57 (capturerequestretry, C20), R58 (capturerequest and capturerequestretry, K4202; capturerequestretry counted once under R57). Both are in `build/jobs/T51/capture-requests.md`, marked not yet met (T51).
+
+## J5 · REPORT
+
+**Other modules, found by `checks/run.mjs` (not my module; not touched).** The coverage check reports live requirement ids that no test names, in: `agent-harness` (R17), `agent-runner` (R36, R37, R38, R40), `citation` (R16, R17, R18), `installer-steps` (R26, R31), `journey-check` (R19), `link-sweep` (R13, R14, R15) and `monitoring` (R75, R76, R77). They are not caused by this change; I did not check whether they predate it. The architecture, format, words, channels and ownership checks report 0 failures.
