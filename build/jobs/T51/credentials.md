@@ -169,3 +169,34 @@ Size (session_01PVXWdCkqAhUVeYE1E8cxT4): test runs 5, module lines 2750
 ## J9 · COMPLETE
 
 J8 COMPLETE: R81 met after R76 (two founder pins updated), R82 met, DECLARED_OPS incl. securitymap. Details in my record J8.
+
+## J10 · COMPLETE
+
+Applied B8 (CHANGE, K4237): `DECLARED_OPS.bootstrap` now accepts `members` (not required). Commit a1b0f4344e on `job/T51/credentials`.
+
+- `bio-plane/src/credentials/index.mjs` (`DECLARED_OPS.bootstrap`): `fields: {accepts: ["members"], requires: []}`, with a comment saying where the field is answered.
+- `bio-plane/test/m/credentials/declared-ops.test.mjs`: a new R82 test for `bootstrap`: `members` is declared and not required, and `declaredOpHolds` holds the declaration with the undeclared-field control (`undeclared_field_bootstrap` is dropped or refused naming it).
+- `build/requirements/credentials.md`, R82: one sentence added recording `bootstrap` accepts `members` (K4237). R82 stays met.
+
+Finding for BOB, not changed here: this module's `bootstrap` arm (`index.mjs` ~2079) reads only the `fp` stamp, not `members`. The `members=1` answer is given at the public door by instance-setup's `bootstrapOp` (`bio-plane/src/setup.mjs`:3344), which reads `url.searchParams.get("members")`. So the `members` declaration is true of the op as the door serves it, but the declared field is read in instance-setup's code, not in this module's arm. Instance-setup declares no `bootstrap` row of its own, so the screen guard checks this declaration. If you want the declaration to name only what this module's arm reads, the two options are: `accepts` stays `[]` and the guard finds `members` answered by instance-setup, or instance-setup takes over the `bootstrap` declaration. I have not chosen; the CHANGE you sent says to add it, and I did.
+
+Requirement line for BOB (also in `build/requirements/credentials.md`, R82, amended):
+> **R82** … `bootstrap` accepts `members` (not required; K4237): the screens' ask for each member's own build, answered at the public door by instance-setup's `bootstrapOp`, not by this module's arm. …
+
+Deferred: nothing.
+
+Found in other modules: none new. The whole-repo `checks/run.mjs` run shows coverage failures (4) and words failures (27) in other modules; none names credentials.
+
+Hand rows that can go once the registration agrees: none new (B6 already named the 17 ops; `op-grades` `RUNG_ABSENT.securitymap` is still pending its CHANGE to OP-GRADES #16).
+
+Tests and checks:
+- `node --test test/m/credentials/*.test.mjs` (bio-plane): tests 184, pass 184, fail 0.
+- `node --test test/m/credentials/declared-ops.test.mjs`: tests 19, pass 19, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage and words failures only in other modules.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (outside the paths). B6 accepts this listing of that one file at merge.
+
+Size (session_019uitbe7o6WXsqjVUksVxFY): test runs 3, module lines 2699
