@@ -339,6 +339,68 @@ test("R34 R21 (control): a failed reading carries no title, absent and never nul
   for (const r of failedOnes) { assert.equal(r.found, false); assert.equal("title" in r, false, r.basis); }
 });
 
+/* ---------------------------------------------------------------- R32 (T51; K4194; L6): a page's content, not its furniture */
+
+const FURNITURE_PAGE = `<!DOCTYPE html><html><head><title>Site</title></head><body>
+<a class="skip" href="#main">Skip to main content</a>
+<nav id="top"><ul><li><a href="/signin">Sign In</a></li><li>{1}</li><li><nav><a href="/x">Nested menu</a></nav></li></ul></nav>
+<div role="navigation" aria-label="Section"><div class="inner"><a href="/a">Section link</a></div><div>More section links</div></div>
+<p>##LOC[OK]##</p><p>{name}</p>
+<main id="main"><h1>Notice 2026-118</h1><p>The council adopted the shelter repair standard on 3 March 2025.</p>
+<p>Repairs follow within 30 days.</p></main>
+<div>Footer-ish words stay.</div></body></html>`;
+const ARTICLE = [["doc-para", 0, null, 0, "Notice 2026-118"],
+  ["doc-para", 1, null, 1, "The council adopted the shelter repair standard on 3 March 2025."],
+  ["doc-para", 2, null, 2, "Repairs follow within 30 days."],
+  ["doc-para", 3, null, 3, "Footer-ish words stay."]];
+
+test("R32 (T51; K4194; L6): a captured page's text units are its content only: an element nav or role=navigation with its contents (nesting-aware), a skip link and unresolved template tokens ({1}, {name}, ##LOC[...]##) are no passage; the reader still gets the whole decoded text, so counts and provenance are as before", async () => {
+  const out = await html(FURNITURE_PAGE);
+  assert.deepEqual(shape(out), ARTICLE);
+  const said = out.text_units.map((u) => u.text).join("\n");
+  for (const gone of [/Skip to/, /Sign In/, /Nested menu/, /Section link/, /More section links/, /\{1\}|\{name\}/, /##LOC/])
+    assert.doesNotMatch(said, gone, String(gone));
+  assert.equal(out.reading.text_chars, FURNITURE_PAGE.length);
+  assert.equal(out.reading.provenance.text_sha256, sha(FURNITURE_PAGE));
+  /* each landmark alone, so no one rule carries the others */
+  assert.deepEqual(shape(await html("<nav><a>Menu</a></nav><p>Body words.</p>")), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.deepEqual(shape(await html('<div role="navigation"><p>Menu</p></div><p>Body words.</p>')), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.deepEqual(shape(await html('<a href="#main">Skip to content</a><p>Body words.</p>')), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.deepEqual(shape(await html("<p>{1}</p><p>##LOC[OK]##</p><p>{name}</p><p>Body words.</p>")), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.equal("text_units" in await html("<nav>Only a menu</nav><p>{1}</p>"), false, "a page of furniture alone has no unit");
+});
+
+test("R32 (T51; K4194; L6) (control): a nav inside the article body is dropped with all of its contents and the article words around it are kept; nesting is by the element's own name, so a sibling after a nested role=navigation div is kept", async () => {
+  assert.deepEqual(shape(await html("<article><p>Before.</p><nav><p>Menu one</p><nav>Inner</nav><p>Menu two</p></nav><p>After.</p></article>")),
+    [["doc-para", 0, null, 0, "Before."], ["doc-para", 1, null, 1, "After."]]);
+  assert.deepEqual(shape(await html('<div><div role="navigation"><div>A</div><div>B</div></div><div>Sibling words.</div></div>')),
+    [["doc-para", 0, null, 0, "Sibling words."]]);
+  assert.deepEqual(shape(await html("<NAV class=x>Menu</NAV><P>Body words.</P><DIV ROLE='Navigation'>Menu</DIV>")),
+    [["doc-para", 0, null, 0, "Body words."]], "names and role value are case-insensitive");
+  assert.deepEqual(shape(await html("<p>Before.</p><nav>Menu never closed<p>After.</p>")).map((u) => u[4]), ["Before.", "Menu never closed", "After."],
+    "an element with no end tag is not guessed at: its words are kept");
+});
+
+test("R32 (T51; K4194; L6) (control): a page with no landmarks keeps all its text, and what the rule does not name is kept: another role, a # link that does not begin Skip to, a Skip to link that is not a # link, and braces that are not a token", async () => {
+  const plainPage = "<html><body><h1>Title words</h1><p>First.</p><div>Second.</div></body></html>";
+  assert.deepEqual(shape(await html(plainPage)).map((u) => u[4]), ["Title words", "First.", "Second."]);
+  assert.deepEqual(shape(await html('<div role="main">Main words.</div><div role="banner">Banner words.</div>')).map((u) => u[4]), ["Main words.", "Banner words."]);
+  assert.deepEqual(shape(await html('<p><a href="#top">Back to top</a></p><p><a href="/page">Skip to content</a></p><p>See #1 and {1, 2} and {two words} and [OK].</p>')).map((u) => u[4]),
+    ["Back to top", "Skip to content", "See #1 and {1, 2} and {two words} and [OK]."]);
+  /* text read as text that is not HTML is never touched */
+  assert.deepEqual(shape(await plain("{1}\n\n<nav>Menu</nav>")).map((u) => u[4]), ["{1}", "<nav>Menu</nav>"]);
+  assert.deepEqual(shape(await html(PAGE)).length, 5, "R32's first page reads as before");
+});
+
+test("R32 (T51; K4194; L6) (control): two readings of the same fixture are identical, units and reading both", async () => {
+  const a = await html(FURNITURE_PAGE);
+  const b = await html(FURNITURE_PAGE);
+  assert.deepEqual(a.text_units, b.text_units);
+  assert.deepEqual(a.reading, b.reading);
+  assert.deepEqual(rp.textUnitsOfText(FURNITURE_PAGE, { html: true }), rp.textUnitsOfText(FURNITURE_PAGE, { html: true }));
+  assert.equal(rp.visibleTextOfHtml(FURNITURE_PAGE), rp.visibleTextOfHtml(FURNITURE_PAGE));
+});
+
 /* ---------------------------------------------------------------- R22 (N1065) */
 
 /* The words this module says outward, from every branch it has: its readings (the failures, the tiers' notes, the

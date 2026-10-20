@@ -19,6 +19,11 @@ test("R154 every public name of member-roster's Members is a delegate of the sam
   for (const name of MOVED) assert.equal(typeof Membership.prototype[name], "function", name);
   /* control: the delegates are Membership's own functions, not the module's, and a name that was never moved is not one */
   assert.notEqual(Membership.prototype.isAdministrator, roster.Members.prototype.isAdministrator);
+  /* the three names member-roster R77–R79 added at T51 (K4169, K4204) are delegates too, not borrowed */
+  for (const name of ["endorsementsOwed", "expertiseAwaitingConfirmation", "expertiseWithdraw"]) {
+    assert.ok(MOVED.includes(name), `${name} is a public name of Members`);
+    assert.notEqual(Membership.prototype[name], roster.Members.prototype[name], name);
+  }
   assert.equal(MOVED.includes("viewerGate"), false);
   assert.equal(typeof Membership.prototype.viewerGate, "function");
 });
@@ -35,6 +40,8 @@ test("R154 over one store a delegate answers what member-roster answers: reads e
     ["hostingAccess", [{}]], ["memberPairings", [{ viewer: V("ann") }]], ["expertiseList", [{ memberId: "ann" }]],
     ["courtNotice", []], ["founderHandle", []], ["lookedAt", [{ by: "ann" }]], ["groupDescription", [{ viewer: V("ann") }]],
     ["joinDoors", [{ by: "admin" }]], ["joinDoors", [{ by: "ann" }]], ["handleChange", [{ handle: "x" }]],
+    ["endorsementsOwed", [{ by: "admin" }]], ["endorsementsOwed", [{ by: "ann" }]],
+    ["expertiseAwaitingConfirmation", [{ by: "admin" }]], ["expertiseAwaitingConfirmation", [{ by: "ann" }]],
   ];
   for (const [name, args] of reads) assert.deepEqual(m[name](...args), r[name](...args), `${name} ${JSON.stringify(args)}`);
   /* writes through the delegate land in the module's tables */
@@ -42,6 +49,13 @@ test("R154 over one store a delegate answers what member-roster answers: reads e
   assert.equal(r.hostingAccess({}).current.holders, "ann");
   assert.equal((await m.expertiseDeclare({ memberId: "ann", label: "CPA" })).ok, true);
   assert.equal(r.expertiseList({ memberId: "ann" }).expertise[0].state, "declared");
+  assert.deepEqual(m.expertiseAwaitingConfirmation({ by: "admin" }).map((x) => [x.memberId, x.label]), [["ann", "CPA"]]);
+  /* R79: withdrawing a confirmed label through the delegate lands in the module's tables, and its refusal is the module's */
+  assert.equal(m.expertiseWithdraw({ memberId: "ann", label: "CPA", reason: "x", by: "admin" }).reason, "NOT_CONFIRMED");
+  assert.equal((await m.expertiseConfirm({ memberId: "ann", label: "CPA", by: "admin" })).ok, true);
+  assert.equal(m.expertiseWithdraw({ memberId: "ann", label: "CPA", reason: "lapsed", by: "admin" }).state, "withdrawn");
+  assert.equal(r.expertiseList({ memberId: "ann" }).expertise[0].state, "withdrawn");
+  assert.deepEqual(m.expertiseAwaitingConfirmation({ by: "admin" }), []);
   assert.deepEqual(await m.handleCheck({ viewer: V("ann"), handle: "bob" }), await r.handleCheck({ viewer: V("ann"), handle: "bob" }));
   /* registrations are the module's: a second claim source is refused by the module's own slot */
   assert.equal(m.registerClaimed("x", () => true).code, "LISTENER_DECLARED");

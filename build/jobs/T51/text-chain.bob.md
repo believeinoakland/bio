@@ -1,6 +1,6 @@
 # BOB to text-chain (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,27 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3962, K3965): merge tranche/T51 and pull civicos-process (ea6cd83) first. The words check's testcopy arm now also counts a test string that copies the en of a product localize call (tag code). Your module's tests hold some: section 'Test copies of code sentences (K3962)' of build/plan/words-pass/text-chain.md (read it whole). Make each test compare with localize(id, en) / word(id) or assert the key, never the sentence's text (K3810); convert also any such copy written as a regular expression, which the check cannot read. Also (K3965, your J1 REPORT): the word table wins: R92 is amended on the tranche; read the six extent phrases through word('textchain.text.cell_spreadsheet') and its five siblings (the design's wording), and bring R92's tests in line. Run your tests, the checks and 'node bio-plane/src/setup-words/build.mjs --check' (read-only); record COMPLETE again.
+
+## B3 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-41 · text-chain** when the round opens): the fix round of T51 (K4165, K4168, K4194; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/text-chain.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: L6 of the live walk (K4194): the reading of a captured web page holds the page's furniture and template text as passages.
+Merge order: module index 18, layer 1. Before `reading-pipeline` and every module that reads a capture; independent of the other wave-2 jobs.
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **L6 (K4194; live walk; I-10)** · The reading of a captured page holds the page's furniture and template text as passages: "{1}", "##LOC[OK]##", "Skip to main content", "Sign In". `visibleTextOfHtml` (`bio-plane/src/textchain.mjs:854-866`) drops `script`, `style`, `template` and `head` and keeps every other visible word, so navigation and unresolved template tokens become passages that can be cited as evidence. BOB's ruling (K4194): the reading of a captured web page is its content. Elements of `nav` and of `role="navigation"`, skip links, and unresolved template tokens such as `{1}` and `##LOC[...]##` are not passages; everything else visible is kept; a page with no landmarks keeps all its text. Requirement: the line amends R32. The page's-visible-text requirement is `reading-pipeline` R32 (the line "For an HTML page, the text is the page's visible text", `build/requirements/reading-pipeline.md`), which `visibleTextOfHtml` implements; BOB writes requirement files, so you do not edit `reading-pipeline.md`: write the amending line (an outcome, id first, marked *(not yet met: T51)*) in your completion record for BOB, and write your own requirement line in `text-chain.md` as NEW `text-chain` R105 (amends R32's page text), stating the three exclusions above. Test: a captured HTML fixture with a `nav` block, a `role="navigation"` block, a skip link and a `{1}` and a `##LOC[OK]##` token yields passages for the article only; control: a page with no landmarks keeps all its text; a `nav` inside the article body with the words of the article is not read as the article's text (it is dropped with the rest of the `nav`); a reading of the same fixture twice is identical.
+
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 311 KB, an upper bound that counts every used module's whole public part and all tests): your firm set is your requirements, your code and this START; read the public parts of the services your entries touch and no more. If that set would pass the 600 KB budget, stop and post `BLOCKED` with cause `reading` before you read on (mechanics §17).
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio text-chain tranche/T51 job/T51/text-chain`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · ANSWER · re J3
+
+ANSWER J3 (K4210): you are right: L6 is reading-pipeline's (R32, visibleTextOfHtml). BOB re-places it in a reading-pipeline job; text-chain has no entries left. Set COMPLETE with nothing applied and your Size line; BOB merges nothing and archives you.

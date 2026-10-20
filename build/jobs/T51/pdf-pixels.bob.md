@@ -1,6 +1,6 @@
 # BOB to pdf-pixels (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -24,3 +24,35 @@ CHANGE (K3971; P9). After image-codecs' merge (BOB tells you; wait for that CHAN
 ## B3 · CHANGE
 
 CHANGE (K3972): image-codecs is merged. `jpxdecode.mjs` and `pngdecode.mjs` export `MEMORY_FEATURE` = `"image-past-memory-bound"` (an id, not a sentence). Merge `tranche/T51` now (never rebase) and do B2: `pagepixels.mjs`:119 and `picturepixels.mjs`:60 key `IMAGE_TOO_LARGE` by the imported constant; `jpx.test.mjs`:183, :188 and `pagepixels.test.mjs`:657 compare with it (both files are red on the tranche until you merge, accepted by name in K3972). Then tests, checks, COMPLETE.
+
+## B4 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-42 · pdf-pixels** when the round opens): the fix round of T51 (K4165, K4168, K4194; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/pdf-pixels.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: L26 of the live walk (K4194): photographed pages are read at 55% and 21% of their words (43% overall).
+Merge order: module index 27, layer 1. Before `ocr-worker` (index 31), whose engine changes only if your floor is still not met after the redeploy.
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **L26 (K4194; live walk; I-17)** · Photographed pages are read at 55% and 21% of their words (43% overall, 288 of 666; 84% of the words read are right). This is the N853c shortfall, which `build/plan/current.md:406` says becomes a fix-round entry. A picture reaches the engine upright, grey and reduced to at most 4 096 px, with no deskew, no contrast or binarisation and no scale-up for low resolution (`pdf-worker/src/picturepixels.mjs` header; `ocr-worker/src/member.mjs:96-98`, `PICTURE_MAX_EDGE`); the engine is `tesseract-wasm@0.11.0` with `tessdata_fast` (`ocr-worker/src/contract.mjs:42`). BOB's ruling (K4194): the picture's preparation first. Add deskew, contrast/binarisation and scale-up of low-resolution pictures before the engine. The engine (`ocr-worker`'s model) changes only if the stated floor is still not met after the redeploy's measurement; BOB decides that and sends it as its own job; you do not touch `ocr-worker`. Requirement: NEW `pdf-pixels` R44 (next free id; amends the picture preparation) *(not yet met: T51)*: states the floor, the share of the words of a photographed page the engine reads after your preparation, as a number. The walk's measurement is 43% overall now; propose the floor from your fixtures (the picture variants in `pdf-worker/test/fixtures/picture-variants.json`, made by `make-picture-fixtures.py`) and write the proposed floor and how you measured it in your record for BOB, who confirms it. The screen's part (say the share read, offer a re-read) is C21 (FR-28), already placed. Test: at your interface, with fixture photographs (a 2.4 degree tilt, 110 dpi, noise) the prepared picture is deskewed to within half a degree, carries the contrast and the scale-up the requirement states, and the share of words read through the real engine is at least the stated floor; control: an unprepared fixture falls below the floor (the preparation is the cause), and a fixture the engine cannot read says so rather than returning a short text.
+
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 271 KB, an upper bound that counts every used module's whole public part and all tests): your firm set is your requirements, your code and this START; read the public parts of the services your entries touch and no more. If that set would pass the 600 KB budget, stop and post `BLOCKED` with cause `reading` before you read on (mechanics §17).
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio pdf-pixels tranche/T51 job/T51/pdf-pixels`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B5 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B6 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J4
+
+ANSWER J4 (K4218): the floor stands at 90 percent of a page's words on your fixtures, as a fixture floor; the real photographs' floor is set from the redeploy's measurement (K4194), not promised now. `ocr-worker` passing `prepare: true` is a new job (FR-67 ocr-worker). Merged (K4218).

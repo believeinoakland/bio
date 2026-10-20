@@ -1,6 +1,6 @@
 # BOB to file-scanner (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -68,3 +68,31 @@ CHANGE (K4120), re-opening CR-17 for one addition before your merge: your REPORT
 ## B8 · CHANGE
 
 CHANGE (K4125; FILE-SAFETY #12 J5). file-safety's tests now read your sentences from your exports (CR-21) instead of copying them; one is missing: the positive probe's detail, `localize("file-scanner.routes.the_eicar_test_file_answered", …)` ("the EICAR test file answered found"). Export it beside `EICAR_NOT_FOUND` in `file-scanner/src/providers/routes.mjs` as `EICAR_FOUND`, the same way (a test naming it; behaviour unchanged). Then post COMPLETE again.
+
+## B9 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-06 · file-scanner** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/file-scanner.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: FR-SCAN (K4182): the scanner has never had signatures. After the redeploy BOB confirms the 27 files scan.
+Merge order: module index 33, layer 1. Before `file-safety` (index 33 < 49).
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **FR-SCAN (K4182)** · `database.clamav.net` refuses the scanner's own downloader (403), so the scanner has never had signatures and every scan is `not_scanned`. Fetch them with ClamAV's official updater under its own identity: (a) `freshclam` in the FileScanner container, or (b) a scheduled `cvdupdate` run filling `clamav/`; never another tool's User-Agent (K3658). Read ClamAV's mirroring guidance and rate limits live, choose, and record the choice and why. If (a) is chosen the container image changes; its digest is then `bundler`'s concern at the cut (R36), which you report. Requirement: NEW `file-scanner` R34 (next free id; the file ends at R33): the scanner obtains its signatures by ClamAV's official path under its own identity, and a refused mirror is reported with its reason, never as a scan result. Test: At the module's interface: a mirror that refuses is reported with its reason and the scanner says it has no signatures; a signature set obtained by the official path is loaded and used (a fixture file the fixture signature matches is infected, a clean one is clean; control: with no set, `not_scanned`).
+
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 554 KB, an upper bound that counts every used module's whole public part and all tests): your firm set (requirements, code, this START) is about 204 KB and, with the public parts of the services your entries touch, about 240 KB against the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B10 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B11 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.

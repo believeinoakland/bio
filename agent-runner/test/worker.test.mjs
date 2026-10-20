@@ -27,8 +27,8 @@ async function hosted(script = async () => success()) {
 test('R12 the Worker exports the Container Durable Object class AgentRunner and adds no route of its own', async () => {
   const h = await hosted();
   try {
-    assert.deepEqual(Object.keys(h.mod).sort(), ['AgentRunner', 'ContainerProxy', 'default'],
-      'the class, the library\'s proxy (reachable only through ctx.exports) and R15\'s default handler, nothing else');
+    assert.deepEqual(Object.keys(h.mod).sort(), ['AgentRunner', 'ContainerProxy', 'RemoteSession', 'default'],
+      'the class, the library\'s proxy (reachable only through ctx.exports), R42\'s RemoteSession and R15\'s default handler, nothing else');
     assert.deepEqual(Object.keys(h.mod.default), ['fetch'], 'the default export adds no handler but R15\'s fetch');
     assert.equal(typeof h.mod.AgentRunner, 'function');
     assert.equal(h.mod.AgentRunner.name, 'AgentRunner');

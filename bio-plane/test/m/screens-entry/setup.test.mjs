@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { open, has, lacks, said, date, all, actOps, links, word, sentence, unescape, squash, SCREENS, FOUNDER, OLD_FOUNDER, JOINED, AN_ADMIN } from "./kit.mjs";
+import { open, has, lacks, said, date, all, texts, textOf, actOps, links, word, sentence, unescape, squash, SCREENS, FOUNDER, OLD_FOUNDER, JOINED, AN_ADMIN } from "./kit.mjs";
 
 const OTP = "otp-sentinel-5d1e";
 const PW = "founder long password";
@@ -587,4 +587,100 @@ test("R6 a security tool is drawn by its vendor and product from the catalogue r
   const r = await o.press("securitytooladd", { values: { "su-st-0-cfg-0": "eu", "su-st-0-cred-0": "tool-secret", "su-st-0-keep": true }, data: { tool: "0" } });
   has(o, "screen.setup.security.passed", { tool: "Scan · Co" });
   assert.ok(!o.drawn().includes("scan-co"));
+});
+
+// ---- R26: the team's website file, drawn from the answer ----
+// The file is whatever the fake plane answers as `well_known`; the tests read it back from the answer and never build one.
+const WK = { path: "/.well-known/civicsmith-group.json", body: { instance: "https://wk-sentinel-one.example", group: "wk-sentinel-slug" } };
+const WK2 = { path: "/.well-known/other-name.json", body: { instance: "https://wk-sentinel-two.example", group: "wk-other-slug" } };
+const claimOf = (over = {}) => ({ domain: "rivertown.example", set_at: "2026-10-01T00:00:00Z", latest: { verdict: "verified" }, well_known: WK, ...over });
+const withClaim = (over = {}) => ({ groupidentity: { ok: true, result: { ok: true, group: "river-town", display_name: "River Town", domain: "rivertown.example", domain_claim: claimOf(over) } } });
+const folds = (o) => all(o.tree, (e) => e.tag === "details" && "data-domainfile" in e.attrs);
+const gapsOf = (n) => all(n, (e) => /\bcs-gap\b/.test(e.attrs.class || "")).map((e) => squash(textOf(e)));
+const verifierWords = ["malformed", "absent", "mismatched", "undetermined", "notadmin"].map((k) => "screen.domainfile.refused." + k);
+
+test("R26 setup with a website entered draws the file from the answer's well_known, a save and a copy of it, and the steps to place it; control: the file follows the answer", async () => {
+  for (const wk of [WK, WK2]) {
+    const o = await claimed(withClaim({ well_known: wk }));
+    const [fold] = folds(o);
+    assert.equal(folds(o).length, 1);
+    assert.equal(all(fold, (e) => e.tag === "summary")[0].children.map((c) => c.text).join(""), said("screen.domainfile.summary"));
+    has(o, "screen.domainfile.what"); has(o, "screen.domainfile.steps"); has(o, "screen.domainfile.daily");
+    const file = wk.path.split("/").filter(Boolean).at(-1), folder = wk.path.split("/").filter(Boolean)[0];
+    const pre = all(fold, (e) => e.tag === "pre")[0];
+    assert.deepEqual(JSON.parse(textOf(pre)), wk.body, "the file's text is the answer's body");
+    assert.ok(texts(fold).includes(file), "the file is named by the last segment of the answer's path");
+    assert.equal(o.saves.at(-1).name, file);
+    assert.deepEqual(JSON.parse(o.saves.at(-1).text), wk.body);
+    assert.deepEqual(JSON.parse(o.copies.at(-1)), wk.body);
+    const shellActs = all(fold, (e) => e.tag === "button" && e.attrs["data-shell"]).map((e) => e.attrs["data-shell"]).sort();
+    assert.deepEqual(shellActs, ["copy", "save"]);
+    assert.ok(texts(fold).some((t) => t.includes(said("screen.domainfile.download"))));
+    const steps = all(fold, (e) => e.tag === "li").map((e) => squash(textOf(e)));
+    assert.deepEqual(steps, [
+      said("screen.domainfile.step1"), said("screen.domainfile.step2", { folder }), said("screen.domainfile.step3"),
+      said("screen.domainfile.step4", { address: "https://rivertown.example" + wk.path }), said("screen.domainfile.step5"),
+    ]);
+    for (const k of verifierWords) assert.ok(o.text.split(said(k)).length - 1 === 1, `${k} is drawn once, in the fold, for a verified claim`);
+  }
+  // the page sends nothing to draw it
+  const o = await claimed(withClaim());
+  assert.ok(!o.requests.some((r) => r.op === "groupdomainset"), "drawing the file asks nothing of the team");
+});
+
+test("R26 control: an answer with no file draws the steps without one; no claim draws no fold", async () => {
+  const o = await claimed(withClaim({ well_known: null }));
+  const [fold] = folds(o);
+  assert.equal(all(fold, (e) => e.tag === "pre").length, 0);
+  assert.equal(all(fold, (e) => e.tag === "button").length, 0, "no save, no copy");
+  assert.ok(o.saves.every((x) => x.name === "recovery-codes.txt") && o.copies.every((x) => x.startsWith(CODES[0])), "only the recovery codes are offered to save or copy");
+  assert.deepEqual(all(fold, (e) => e.tag === "li").map((e) => squash(textOf(e))), [said("screen.domainfile.step1"), said("screen.domainfile.step3"), said("screen.domainfile.step5")]);
+  has(o, "screen.domainfile.what"); has(o, "screen.domainfile.refused.summary");
+  const none = await claimed({ groupidentity: { ok: true, result: { ok: true, group: "river-town", display_name: "River Town", domain: null, domain_claim: null } } });
+  await choose(none, "su-site", 1);
+  assert.equal(folds(none).length, 0);
+  lacks(none, "screen.domainfile.summary");
+  const no = await claimed(withClaim());
+  await choose(no, "su-site", 0);
+  assert.equal(folds(no).length, 0, "the choice 'No' draws nothing more");
+});
+
+test("R26 the verifier's refusals are drawn by their words: the claim's latest check beside the act, and each refusal in its fold", async () => {
+  for (const verdict of ["absent", "mismatched", "undetermined"]) {
+    const o = await claimed(withClaim({ latest: { verdict } }));
+    const key = "screen.domainfile.refused." + verdict;
+    assert.equal(o.text.split(said(key)).length - 1, 2, `${verdict}: beside the act and in the fold`);
+    assert.ok(gapsOf(o.tree).includes(said(key)));
+    const fold = folds(o)[0];
+    const inner = all(fold, (e) => e.tag === "details" && e !== fold)[0];
+    assert.deepEqual(gapsOf(inner), verifierWords.map((k) => said(k)));
+  }
+  const ok = await claimed(withClaim());
+  assert.equal(gapsOf(folds(ok)[0]).length, 5);
+  assert.equal(ok.text.split(said("screen.domainfile.refused.absent")).length - 1, 1);
+});
+
+test("R26 groupdomainset refused GROUP_DOMAIN_MALFORMED or NOT_AN_ADMIN draws its words in the design's, and sends nothing more", async () => {
+  for (const [code, key] of [["GROUP_DOMAIN_MALFORMED", "screen.domainfile.refused.malformed"], ["NOT_AN_ADMIN", "screen.domainfile.refused.notadmin"]]) {
+    const o = await claimed({ ...withClaim(), groupdomainset: { ok: false, code } });
+    const r = await o.press("groupdomainset", { values: { "su-domain": "https://rivertown.example/page" } });
+    assert.deepEqual(r.sent.map((x) => x.op), ["groupdomainset"]);
+    assert.equal(o.refused.text, said(key));
+  }
+});
+
+// ---- R30: who recorded the hosting account ----
+test("R30 where setup shows who recorded hosting access, the setup and the system have their words; control: a member's is as before", async () => {
+  const at = "2026-10-01T00:00:00Z";
+  const holders = "The treasurer";
+  for (const [by, key] of [["setup", "screen.group.hosting.now.setup"], ["bootstrap", "screen.group.hosting.now.setup"], ["system:seed", "screen.group.hosting.now.system"], ["token:ops", "screen.group.hosting.now.system"]]) {
+    const o = await claimed({ hostingaccess: { ok: true, result: { current: { holders, recorded_by: by, at } } } });
+    has(o, key, { date: { html: date(at) } });
+    assert.ok(o.text.includes(holders));
+    lacks(o, "screen.setup.hosting.now", { holders });
+    for (const other of ["screen.group.hosting.now.setup", "screen.group.hosting.now.system"].filter((k) => k !== key)) lacks(o, other, { date: { html: date(at) } });
+  }
+  const member = await claimed({ hostingaccess: { ok: true, result: { current: { holders, recorded_by: "member:mai", at } } } });
+  has(member, "screen.setup.hosting.now", { holders });
+  lacks(member, "screen.group.hosting.now.setup", { date: { html: date(at) } }); lacks(member, "screen.group.hosting.now.system", { date: { html: date(at) } });
 });

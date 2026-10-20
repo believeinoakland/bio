@@ -155,3 +155,34 @@ for (const id of NEW) {
   });
 }
 const textOf = (s) => String(s).replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").trim();
+
+/* ---------- R110 ---------- */
+
+/* a stand-in for `standard` (a real registry id) whose `place` answers what the test sets (built from source: a screen's function is self-contained) */
+const standardWith = (placed) => ({ id: "standard", words: [], reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: new Function("view", `return ${JSON.stringify(placed)};`) });
+const stepsOf = async (placed) => {
+  const p = await boot({ screens: [standardWith(placed)], path: "/app/standard/S-1" });
+  return p.root().querySelector(".cs-crumbs").textContent.split("›").map((t) => t.trim());
+};
+
+test("R110 place answering {project, last} draws the standard's crumb filled with the name last, the project's title before it; a name that is also a word key is drawn as typed", async () => {
+  const project = { id: "PROJ-1", title: "Coliseum lease" };
+  const steps = await stepsOf({ project, last: "AB 32 & 5" });
+  assert.equal(steps.length, 3);
+  assert.equal(steps[1], "Coliseum lease");
+  assert.equal(steps[2], word("screen.standard.crumb", { name: "AB 32 & 5" }));
+  const typed = await stepsOf({ project, last: "screen.standard.name" });
+  assert.equal(typed[2], textOf(word("screen.standard.crumb", { name: "screen.standard.name" })), "data, never read as a key");
+});
+
+test("R110 control: a place answering a string, {project} alone or an empty last keeps today's crumb; another screen's path is unchanged", async () => {
+  const project = { id: "PROJ-1", title: "Coliseum lease" };
+  for (const placed of [{ project }, { project, last: "" }, { project, last: 7 }]) {
+    const steps = await stepsOf(placed);
+    assert.equal(steps[1], "Coliseum lease");
+    assert.equal(steps[2], textOf(word("screen.standard.name")));
+  }
+  assert.equal((await stepsOf("a string")).pop(), textOf(word("screen.standard.name")));
+  const q = await boot({ screens: [{ id: "calculation", words: [], reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: () => ({ project: { id: "P", title: "T" }, last: "ignored" }) }], path: "/app/calculation/C-1" });
+  assert.equal(q.root().querySelector(".cs-crumbs").textContent.split("›").pop().trim(), textOf(word("screen.calculation.name")));
+});

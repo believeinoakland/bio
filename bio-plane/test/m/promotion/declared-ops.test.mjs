@@ -40,3 +40,20 @@ test("R60 promotion declares projectfork: its requires alone raise no refusal na
   await declaredOpHolds({ op: "projectfork", declaration: DECLARED_OPS["projectfork"], call: mk("projectfork", {"viewer":"member:ann","by":"ann"}, async () => (mkOrigin()), null, (fields, env) => (("projectId" in fields ? { ...fields, projectId: env.origin } : fields))),
     refusedNaming: named({"projectId":["NO_SUCH_PROJECT"],"title":["NO_TITLE"]}), values: { projectId: "origin", title: "The fork" }, outside: ["newId"] });
 });
+
+/* promote's body is the whole package, so its declared fields are the ones its arm reads: files, meta and snapKey are
+   each refused by name when absent (R7, R11), and bundleId is not required of a project's creation, which mints it (R19). */
+const promotePackage = (over = {}) => ({ snapKey: "o", meta: {}, files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Promote", current_state: "forming", created: T0, last_updated: T0 }) }], ...over });
+
+/* a creation mints its project id afresh in each store (the random suffix), so "the op dropped the field" is judged on the answer
+   without its minted id and digest: the outcome, owner and visibility must still be the same */
+const sameExceptMinted = (x, y) => {
+  const strip = ({ bundleId, bundleSha, ...rest }) => rest;
+  return JSON.stringify(strip(x)) === JSON.stringify(strip(y));
+};
+
+test("R61 promotion declares promote: its requires alone raise no refusal naming a declared field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  const base = promotePackage();
+  await declaredOpHolds({ op: "promote", declaration: DECLARED_OPS["promote"], call: mk("promote", {"viewer":"member:ann"}),
+    values: { files: base.files, meta: base.meta, snapKey: base.snapKey }, outside: ["undeclared_field_promote"], same: sameExceptMinted });
+});

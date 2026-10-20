@@ -976,11 +976,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const steps = [];
     const p = D.paths[route.screen] || null;
     if (p) {
-      let proj = null;
-      try { proj = inst && inst.spec.place ? (inst.spec.place(inst.view) || {}).project : null; } catch { proj = null; }
+      let proj = null, last = null;
+      /* R110: `place` answers `{project, last}`; `last` (data: the one the member is on) is the final crumb's `{name}` where the path holds the design's `.crumb` word, else the screen's own name stays */
+      try { const pl = inst && inst.spec.place ? inst.spec.place(inst.view) || {} : {}; proj = pl.project; last = typeof pl.last === "string" && pl.last ? pl.last : null; } catch { proj = null; last = null; }
       p.forEach((step, i) => {
         if (step === "@project") { if (proj && proj.title) steps.push({ label: soft(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
         else if (i === 0 && D.places.includes(step)) steps.push({ label: w("rail." + step + ".name"), href: placeHref(step) });
+        else if (i === p.length - 1 && /\.crumb$/.test(step)) steps.push({ label: last ? w(step, { name: last }) : w(step.replace(/\.crumb$/, ".name")) });
         else steps.push({ label: w(step) });
       });
       if (route.screen === "project" && !(proj && proj.title)) steps.push({ label: w("screen.project.name") });

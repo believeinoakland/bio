@@ -104,10 +104,12 @@
     }
   ],
   "egress": {
-    "containers": [],
-    "worker": "database.clamav.net (R6), and per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
+    "containers": [
+      "FileScanner, the signature-updater instance alone: database.clamav.net, by freshclam (R6, R34)"
+    ],
+    "worker": "no host of its own for the mirror (R6, R34); per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
   },
-  "note": "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the team's bucket and hands them copies.",
+  "note": "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet except the one instance the daily mirror starts: `FileScanner` as the signature updater, where ClamAV's own `freshclam` reaches ClamAV's database host and nothing else (`egress.containers`); the Worker reads every byte from the team's bucket and hands the scanning instance copies.",
   "callers": [
     {
       "member": "bio-plane",

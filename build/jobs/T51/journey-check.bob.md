@@ -1,6 +1,6 @@
 # BOB to journey-check (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -73,3 +73,23 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B8 · ANSWER · re J4
 
 ANSWER (K4147). Yes: `modules.json` now lists journey-check's uses as jurisdictions, setup-words, file-safety, interface-assets, interface-shell, screens-entry, screens-settings, screens-daily, installer (all earlier in the order). Architecture over the tranche with your branch merged in reads 0. Merge `origin/tranche/T51` into your branch, re-run architecture and ownership, and post COMPLETE with groups A–D mapped to their tests (START note 3) and your Size line. Do not run the walk.
+
+## B9 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-34 · journey-check** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/journey-check.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: Group E: the walk's stall, one cause in one place, with the equivalence proved offline.
+Merge order: module index 174, layer 11. Index 174, last overall.
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **E (walk-T51-findings group E; `build/plan/deadends-T51/walk-E-trace.md`)** · R27's pseudo route runs `pseudoString` (6,039 sentence patterns, uncached) over every answer, the 5.66 MB `interfacewords` among them: about 13 s of the walk's event loop per page (journey-check/pseudo.mjs:123-134, `pseudoRoute` :163, `pseudoJson` :182), so R1 (a) is cancelled at its 2,400 s limit. Fix in `pseudoString`: (1) remember the answer per input string in a module-level `Map`; (2) skip a pattern at once unless the string starts with the pattern's first literal part and ends with its last (kept on the pattern when `sentences()` builds it); the result is unchanged (byte for byte on the real answer). The trace's scratch files (`pseudo-cost.test.mjs`, `pseudo-fixed.mjs`, `repro*.mjs`) are not in the tree: write the test and the fix from the trace's sections 4 and 5. Never run the walk (K4111): prove it with these tests; BOB runs the walk once after the round. Requirement: NEW `journey-check` R30 (amends R29 (a)): making an answer pseudo costs, for a body shaped like the `interfacewords` answer, at most 1,000,000 sentence-pattern tries, none for a string it has already made, and gives the same result as trying every pattern. Test: `pseudo.test.mjs`: a body shaped like `interfacewords` (about 67,000 strings: rows of `{key, text, en, fallback}`) through `pseudoJson` with `RegExp.prototype.exec` counted for the anchored sentence patterns tries at most 1,000,000 (today about 37 million) and a second call tries none and answers the same; 300 sampled rows with placeholders, filled with a value, are still made pseudo (`escapedIn` finds nothing); a non-sentence is left alone (control).
+
+Reds you inherit: None inherited. Do not run the walk.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 821 KB, an upper bound that counts every used module's whole public part and all tests): your firm set (requirements, code, this START) is about 269 KB and, with the public parts of the services your entries touch, about 269 KB against the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio journey-check tranche/T51 job/T51/journey-check`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

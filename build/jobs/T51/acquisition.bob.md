@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -16,3 +16,37 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`. Your Size line counts only your module's own code (K2513).
+
+## B2 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-43 · acquisition** when the round opens): the fix round of T51 (K4165, K4168, K4194; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/acquisition.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: L4 of the live walk (K4194): an address capture takes 15.9 s to over 27 s for pages and PDFs of 75 KB, and `ACQUIRE_TIMED_OUT` stops it and keeps nothing.
+Merge order: module index 46, layer 3. Before `capture` (47) and `screens-intake` (162), whose capture arm waits on your answer; independent of the other wave-2 jobs.
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **L4 part 1 (K4194; live walk; I-01, A1): measure** · An address capture takes 15.9 s to over 27 s for pages and PDFs of 75 KB on oakland.legistar.com and oaklandca.gov, and `ACQUIRE_TIMED_OUT` (control-plane `ACQUIRE_BOUND_MS` 25 000 ms, `control-plane/index.mjs:191,2264`, R105) stops the capture and keeps nothing; an address on another site takes 5.6-7 s with no progress shown. Reading shows the stages of `acquire` that can take the time and cannot say which does: `governedFetch` (`acquisition/index.mjs:816`, the host governor's pacing), the render (`:1042`, the safe-view container), `walkSubresources` (`:1123`), `profileOf` (`:1135`), `coAttest` (`:1157`), the reputation read (`REPUTATION_TIMEOUT_MS` 5 000, `:1260`). First add per-stage milliseconds to `acquire`'s answer: a measurement the walk can read, present on every outcome including refusals. Requirement: NEW `acquisition` R95 (next free id) *(not yet met: T51)*: `acquire`'s answer carries the milliseconds each of its stages took, by stage name. Test: `acquire` of a fixture 75 KB PDF from a source that answers in 1 s completes and the answer carries a time for every stage that ran, summing to no more than the whole; control: a source that answers in 30 s refuses `ACQUIRE_TIMED_OUT` as today, and the refusal carries the times of the stages that ran.
+2. **L4 part 2 (K4194; live walk): fix the stage the live timings name** · After your part 1 merges and the redeploy, BOB reads the stage times of slow captures on the live copy and sends them to you by CHANGE. Until that CHANGE arrives, report part 1 complete in a QUESTION to BOB asking for the timings, and do not guess the stage. Then fix the stage the timings name, so the capture completes within the budget your requirement states (state it in a NEW `acquisition` R96 *(not yet met: T51)*: a 75 KB page or PDF from a source that answers in a second completes within the stated budget, inside the 25 s bound). Test: as part 1's, with the fixture source's delay put at the named stage: the capture completes within the stated budget; control: the other stages unchanged, and a source that answers in 30 s still refuses `ACQUIRE_TIMED_OUT`.
+Note (K3658): sites that refuse or are slow from the Worker's addresses (the "site refused ... HTTP 502" answers, an empty page) are outside the product. Never work around a site's bot protection; if the timings show the time is spent waiting on a site, say so in your record and change nothing in your module for it.
+
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 1095 KB, an upper bound that counts every used module's whole public part and all tests): your firm set is your requirements, your code and this START; read the public parts of the services your entries touch and no more. If that set would pass the 600 KB budget, stop and post `BLOCKED` with cause `reading` before you read on (mechanics §17).
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B3 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B4 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · ANSWER · re J3
+
+ANSWER J3 (K4219): part 1 (R95) is complete: post COMPLETE now and BOB merges it. Part 2 waits on the redeploy's live timings (P19 (2), a measurement outside the tranche's code); it returns as its own entry after the redeploy, with the timings. control-plane carries the timings into `ACQUIRE_TIMED_OUT` before the redeploy (CHANGE to it). Keep R95, R96 as the START gave.

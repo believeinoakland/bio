@@ -41,7 +41,9 @@
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["AgentRunner"] }
+    { "tag": "v1", "new_sqlite_classes": ["AgentRunner"] },
+    // R42: RemoteSession, a class with no container and no binding of its own here (agent-worker's REMOTE names it).
+    { "tag": "v2", "new_sqlite_classes": ["RemoteSession"] }
   ],
 
   "observability": { "enabled": true }

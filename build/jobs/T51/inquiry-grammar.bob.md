@@ -1,6 +1,6 @@
 # BOB to inquiry-grammar (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,31 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T51 job/T51/inquiry-grammar`. Your Size line counts only your module's own code (K2513).
+
+## B2 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-44 · inquiry-grammar** when the round opens): the fix round of T51 (K4165, K4168, K4194; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/inquiry-grammar.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: L9 of the live walk (K4194): "Say what each passage carries" is refused whenever the question has a leg that cuts against; the two layers disagree on whether a cutting leg belongs in a ground.
+Merge order: module index 75, layer 6. Before `inquiry` (index 78, FR-45), `citation` (81) and `screens-inquiry` (164, FR-28).
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **L9 (K4194; live walk; I-22)** · "Say what each passage carries" is refused whenever the question has a leg that cuts against: "A piece of evidence cannot be used: it rests on something that is not evidence" (the word for `BASIS_REFUSED`, which hides the actual finding). The screen builds the partition from supporting legs only (`screens-inquiry/question.mjs:951`, `(l.role || "supports") === "supports"`), but the grammar says a partition is total or absent: if any leg names a ground every leg must (`inquiry-grammar/grammar.mjs:936-943`, `checkGrounds`), and `inquiry` leaves unnamed legs unlabelled (`inquiry/index.mjs:2605-2636`, FR-45), so the candidate fails C-2.8 and returns `BASIS_REFUSED`. BOB's ruling (K4194): a leg that cuts against is not a reason for, so it is never in a ground. The totality rule of C-2.8 counts supporting legs only: every supporting leg must name a ground when any leg does; a leg that cuts against need not, and naming one in a ground is refused. Requirement: NEW `inquiry-grammar` R68 (next free id; amends the totality rule of the grounds, R1 and the leg arm R4) *(not yet met: T51)*. Test: a candidate with one supporting and one cutting leg is accepted with a one-part partition of the supporting leg; a partition leaving a supporting leg out is still refused (control); a partition that names a cutting leg in a ground is refused with its own finding naming the leg; a question with no cutting leg is judged as today. Read the strength arithmetic's use of the grounds (the grammar's side only) and report in your record anything FR-45 must know.
+
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 636 KB, an upper bound that counts every used module's whole public part and all tests): your firm set is your requirements, your code and this START; read the public parts of the services your entries touch and no more. If that set would pass the 600 KB budget, stop and post `BLOCKED` with cause `reading` before you read on (mechanics §17).
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T51 job/T51/inquiry-grammar`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B3 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B4 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.

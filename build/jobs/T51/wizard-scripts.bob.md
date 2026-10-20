@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J9
+**Read** · handled J13
 
 ## B1 · START
 
@@ -76,3 +76,38 @@ CHANGE (K4197): the design @ 840099da7c (DEC-384) is merged into tranche/T51 aft
 ## B9 · CHANGE
 
 CHANGE (K4198; supersedes B8's commit): your J7 re-took at 958d998ccb, but the design moved since: registry.json and library.json both differ at 1cc4a957f0 (DEC-384's L27 step 4 and acts; DEC-385), merged into tranche/T51. Merge the tranche branch into yours and re-take registry, library and front doors at 1cc4a957f0 (R45 amended to it); a library script that changed gets its next version by R42's rule. The expertiseconfirm duplicate: carried once is right; reported to the design. Then COMPLETE again.
+
+## B10 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-49 · wizard-scripts**): the fix round of T51 (K4204; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-haiku-5-5 (a re-take of generated data; one model up if it blocks on tests).
+Your requirements: `build/requirements/wizard-scripts.md` (read whole).
+Why this job: the design merged DEC-386 (U419, K4204) after your wave-1 job re-took the registry at `1cc4a957f0` (R45): "Withdraw an expertise" is now its own act, owed `expertisewithdraw`, on `members`. New design versions are BOB's to adopt (K2241).
+Merge order: module index 140, layer 11; merged before every screen job (they read the registry you generate).
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **R45 (K4204)** · Re-take the screen registry, the library and the front doors at the design commit BOB names in your first CHANGE or, if none, at the newest design merge on `tranche/T51` when you start (`git log --first-parent tranche/T51 --grep "merge design" -1`): amend R45's commit in your record for BOB, regenerate with `node bio-plane/src/wizard-scripts/build-data.mjs`, `--check` green. Test: your suite green; `expertisewithdraw` is an owed act of `members` in `SCREEN_REGISTRY`; the source commit is the one named (control: the previous commit's data no longer matches `--check`).
+2. **K4202 (the census)** · `writinghelp`, `wizards`, `startfrom`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove` and `wizardretire` are yours (`build/plan/pass-T51/RECORD-C.md`: in your module a `localize` description fails the words check's marker arm, since yours is a drawn-screen module, and `wizards`/`startfrom` have no registry key: use a description key the word table already holds or one your module may add by its own rule, and ask BOB if neither exists). `writinghelp` is yours too, and the declaration pass could not declare it because the draft door routes it itself (a judgment, `build/plan/pass-T51/RECORD.md`). Declare it in a `DECLARED_OPS` beside your ops map if your arm reads a fixed set of fields (copy class, mutating, weight and description from `op-declarations` and `op-grades`; accepts and requires from the arm); if the door routes the body to several handlers with different fields, declare the union only if every handler refuses a field outside it, else post a QUESTION to BOB naming why. Requirement: NEW R (next free id) in your record. Test: `declared-ops.test.mjs` with test-support's `declaredOpHolds`.
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure: your requirements, these entries, `build-data.mjs` and your ops map: well under the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio wizard-scripts tranche/T51 job/T51/wizard-scripts`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B11 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B12 · ANSWER · re J11
+
+ANSWER J11 (K4213): declare all eight in `DECLARED_OPS` now (none waits). Descriptions are each op's `act.<op>.does` key: words.json holds all eight (`act.writinghelp.does`, `act.wizards.does`, `act.startfrom.does`, `act.wizarddraft.does`, `act.wizardrevise.does`, `act.wizardsubmit.does`, `act.wizardapprove.does`, `act.wizardretire.does`), so no `localize` and no new row. (1) `writinghelp` is declared by its owner like every op (K4168): accepts `field`, `told`, `draftHeld`, requires `field`, `told`; the door's route stays. (2) The testcopy in `op-grades` owners.test.mjs:118, and any hand description of op-grades that the agreement check finds disagreeing with your declared key, are op-grades' to fix: sent to its job as a CHANGE; your branch and op-grades' merge together, op-grades first, so the registration never disagrees on the tranche. Name in your COMPLETE every op for which op-grades' `registerDeclaredOps` answers `DECLARED_OP_DISAGREES` on your branch.
+
+## B13 · CHANGE
+
+CHANGE (K4227), a new job session (WIZARD-SCRIPTS #17, haiku): `DECLARED_OPS.writinghelp` (R46) omits `op`, which the arm requires (`writingHelpAt` answers `WRITING_HELP_REFUSED` without a non-empty `op`; R27's body is `{op, field, told, draftHeld}`), so the guard refuses every screen's request. Add `op` to `accepts` and `requires` (`requires: ["op", "told"]`), check the other seven rows the same way against their arms, and keep your declared-ops tests holding (with a control: a body without `op` is refused naming it). Amend R46's line (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B14 · CHANGE
+
+CHANGE (K4231), a new job session (WIZARD-SCRIPTS #18, haiku): `DECLARED_OPS.wizardrevise` requires `[version, steps]`, but the arm also takes `adopt` with no `steps` (a copy whose base changed), so the guard refuses screens-wizards' library tests "R1 wizards: a state pressed…" and "R1 a copy whose base changed…". Make it `requires: ["version", ["steps", "adopt"]]` and `accepts` `adopt`; recheck every row's alternatives against its arm's every path (not only the first); keep the declared-ops tests with a control for the adopt path. Write the wording for R46 in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

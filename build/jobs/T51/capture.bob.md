@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -40,3 +40,25 @@ ANSWER (K3982; not Bob's: settled by K3964 and K3974). setup-words R13 binds eve
 - Key by `localize('capture.<file stem>.<slug>', en)` the 14 refusal details: index.mjs:631, :652, :683, :693, :695, :716, :859, :897, :1079, :1644, :1725, :1765, :2565 and ops.mjs:86. Tests compare with `localize` by equality or assert the code.
 - The two builder diagnostics stay as they are and go on the design's `unkeyed` list by my HANDOFF at R3's close: index.mjs:699 (the 500 internal fault: the incremental and block hash differ) and :1832 (the render allowance `why` naming D-492). List them in your COMPLETE as "unkeyed, BOB's HANDOFF".
 Set your state WORKING, finish, and COMPLETE. Your words check will still show those two until the design's list carries them; that is accepted by name until R3's close.
+
+## B4 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-52 · capture**): the fix round of T51 (K4206; P7, P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-haiku-5-5 (one judged declaration; one model up if it blocks on tests).
+Your requirements: `build/requirements/capture.md` (read whole).
+Why this job: the declaration pass (`build/plan/fix-round-T51-pass.md` §3 step 5; records `build/plan/pass-T51/RECORD*.md`) could not declare `acquire`, `captureaccount` mechanically: `acquire` hands its whole body to acquisition's `acquire()` (about twenty fields); `captureaccount` refuses a missing `captureSha` as `NOT_THE_CAPTURING_ACTOR`, naming no field. A module where the declaration needs a judgment gets its own job (P7). Screens send these ops; the guard (`interface-shell` R104) checks each request against its owner's declaration.
+Merge order: module index 47, layer 3; independent of the other wave-2 jobs; before the screen that sends the op.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **K4206** · Declare `acquire`, `captureaccount` in your `DECLARED_OPS` (create it beside your ops map, `export const DECLARED_OPS = Object.freeze({...})` on its own line, if you have none) in the shape `op-declarations` R80 and `op-grades` R49 give (read both lines whole): `classes`, `machineClasses`, `mutating`, `weight` and `description` copied from the op's existing rows (a sentence description as `localize("capture.declared.<op>", <its sentence>)`; no hand description: its registry label key). For the fields, decide what the declaration can honestly state: `accepts` the fields the arm reads (for an open body, the fields its service reads, as named parameters); `requires` the fields it cannot run without. Where the arm refuses an absent field without naming it, the better fix is in your own arm: the refusal names the field (P8, a flaw in your module), unless your requirements say the answer is deliberately uniform (then `requires` lists only what a refusal names, and your record says why). Never weaken a refusal; never change a meaning your requirements state. Requirement: NEW R (next free id) in your record for BOB. Test: `declared-ops.test.mjs` calling test-support's `declaredOpHolds` (`bio-plane/test/declared-ops.mjs`) for each op; any refusal you changed gets its own test and control. If `test-support` is not in your `uses`, tell BOB in your COMPLETE (BOB adds it).
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure: your requirements, this entry, your ops map and the named arms, R80, R49 and the helper: well under the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B5 · CHANGE
+
+CHANGE (K4226), a new job session (CAPTURE #39, haiku): acquisition R95 takes `opts.timings` and control-plane R115 builds the timings object at the door, but `captureOp`'s `acquire` arm (index.mjs, near line 2836) calls `c.acquire(body, {...})` without it. Forward the handler's `h.timings` as `opts.timings` (only when given; nothing else changes), with a test that a given timings object reaches `acquire` and a control that none is passed when none is given. Requirement line: amend the `acquire` arm's line in `build/requirements/capture.md` (K4210). The plane's `gatedOp` forwarding `ctx.timings` is PLANE #44's. Your suite and checks, `Size`, COMPLETE. Merge `tranche/T51` first.

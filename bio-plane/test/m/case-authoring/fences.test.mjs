@@ -75,12 +75,12 @@ test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at e
   assert.equal(w.rows(`SELECT case_id FROM case_documents`).length, 1, "the owner's act, and only it, prepared a case");
 });
 
-test("R3: authored fields in order — NO_TARGET, DUPLICATE_MEMBER, NO_STATEMENT, NO_SUBJECT_POSITION (one of SUBJECT_POSITIONS), NO_SUBJECT_JUSTIFICATION, NO_EXCLUSION_FIELD (an empty list legal), NO_SCOPE, NO_BIAS_ACKNOWLEDGEMENT, BAD_EXCLUSION with ord, BAD_COMPLETENESS; nothing written", () => {
+test("R3, R80: authored fields in order — PUBLISH_NO_FINDING (was NO_TARGET), DUPLICATE_MEMBER, NO_STATEMENT, NO_SUBJECT_POSITION (one of SUBJECT_POSITIONS), NO_SUBJECT_JUSTIFICATION, NO_EXCLUSION_FIELD (an empty list legal), NO_SCOPE, NO_BIAS_ACKNOWLEDGEMENT, BAD_EXCLUSION with ord, BAD_COMPLETENESS; nothing written", () => {
   const { w, P } = setup();
   const before = w.snapshot();
   const act = (over, targets = [Q]) => w.publish(P, "alice", targets, over);
-  assert.deepEqual(reasons(act({}, [])), [false, "NO_TARGET"]);
-  assert.deepEqual(reasons(act({ targets: null, target: null }, [])), [false, "NO_TARGET"]);
+  assert.deepEqual(reasons(act({}, [])), [false, "PUBLISH_NO_FINDING"]);
+  assert.deepEqual(reasons(act({ targets: null, target: null }, [])), [false, "PUBLISH_NO_FINDING"]);
   const dup = act({}, [Q, Q]);
   assert.deepEqual([dup.reason, dup.target], ["DUPLICATE_MEMBER", Q]);
   /* NO_STATEMENT carries its row, C-33.14, with its code and translation */

@@ -1,6 +1,6 @@
 # BOB to strength (T51)
 
-**Read** · handled J6
+**Read** · handled J9
 
 ## B1 · START
 
@@ -43,3 +43,37 @@ Settled (K4014). (1) `setup-words` added to strength's `uses` in build/modules.j
 ## B5 · CHANGE
 
 CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B6 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-50 · strength**): the fix round of T51 (K4205; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-haiku-5-5 (test repairs; one model up if it blocks on tests).
+Your requirements: `build/requirements/strength.md` (read whole).
+Why this job: two of your tests are red on `tranche/T51` since the design re-worded your rows (DEC-383 to DEC-385, `rows.mjs` regenerated); diagnosis `build/plan/pass-T51/DIAGNOSIS-reds.md`. They copy sentences, which K3810 forbids.
+Merge order: module index 84, layer 6; independent of the other wave-2 jobs.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **K4205** · `bio-plane/test/m/strength/reads.test.mjs`:50 ("R6, R22: a member the viewer may not see is withheld whole") matches `/^connection C — /`, and `vocabulary.test.mjs`:118 ("R28 …") matches `/INQ-2026-0007-a is UNRATED on/` and a second sentence regex in the same list: the rows now read otherwise. Make each assert by key or read the expected text from the word table (`word(…)` with its vars), never a copied sentence, keeping every control. Test: both green; each control seen failing.
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure: your requirements, these entries and the tests they name: well under the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B7 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K4213; inquiry J4, K4194 L9): a question's strength is its supporting legs': `axisResult` (and every path that builds the population) leaves a leg whose `role` is `cuts_against` out of the members and out of the implicit AND part, so `[supports A in g1, cuts_against C unlabelled]` reads A. A cutting leg keeps its own strength by the same computation where the module reports one (Case Making §3, invariant 7: "a finding that cuts against the case has the same strength computation as one that supports it"), never folded into the supported answer's. Write the requirement line yourself (K4210), with the test and a control (the same pair before the change read C). `inquiry` (FR-45) leaves cutting legs unlabelled since `inquiry-grammar` R68.
+
+## B10 · ANSWER · re J8
+
+ANSWER J8 (K4218): your four choices stand (`bio-grading/4`; `/1`–`/3` recompute as published; the `cutting` list; `role` in `graded`). Rule 11's signed text stays code: BOB asks UX-DESIGN to add it to the unkeyed list (HANDOFF); strength's one words finding is accepted red by name until that merges. Merged (K4218).
