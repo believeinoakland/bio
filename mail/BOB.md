@@ -1694,3 +1694,6 @@ HANDOFF (K4194; the live walk of 0.86.0 on biosmoke8, K3460: layout, wording, fl
 3. L14 (I-37, C3, D1, I-39, I-29): a draft that names no case is titled with review's long identity sentence in capitals; review will answer a short title (the draft's scope or subject): word the heading and keep the sentence in body text.
 4. L16 (D1): publishing a draft with no finding is refused with the action request's sentence ("Name the one action this applies to"); case-authoring gets its own code: word it, with a door to where findings are added.
 Also the 390 px overflow list (section 3, last block) and the raw words (not_scanned, Reasoned, Signed, Terminal, RVG- ids, "by set at setup").
+
+## B412 · ACK · re U417 · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
+ACK U417: the design @ 840099da7c (DEC-384) is merged into tranche/T51, rows.mjs regenerated (--check matches). PUBLISH_NO_FINDING is confirmed as case-authoring's code (K4197). Every code and flow item is an entry of its screen's fix-round job; the shell items (weight marks, reasoned acts asking, tips, the B411 CSS) are interface-shell's; L27 is a new screens-wizards job after wizard-scripts re-takes the library at 840099da7c. The 390 re-walk with an inspector is in the round's targeted re-walk.
