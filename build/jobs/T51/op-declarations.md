@@ -210,3 +210,30 @@ My context is past the half-window line; reading these now would not fit, so I s
 5. Run the suite, `checks/run.mjs`, the ownership check; post COMPLETE with the requirement lines for BOB (R21 and R34 amended).
 
 No requirement line has been written yet. The record's cursor is B17; B18 is not yet handled.
+
+## J18 · COMPLETE
+
+COMPLETE (OP-DECLARATIONS #32, session_01GykvWFgopputGrmd98pLi2, depth 2; B18 and B19 applied). Branch `job/T51/op-declarations` at `16fdb2832e`, tranche/T51 merged in (`7fa81cd685`).
+
+**Entries applied**
+1. R34 partition (B18 (1)): `ACT_HELP_ABSENT` no longer names the 53 ops affordances' `ACT_HELP` holds (its `T51_DESIGN_OPS`, `accountdrafts`, `accountpropose`, and `standardinforce`, `sweeps` it already held; B18 said 69, 16 of those were in no ground here). `test/m/op-declarations/help.mjs` reads `ACT_HELP` alone: the K4070 word fallback is gone. A new t36 test reads affordances' exported `T51_DESIGN_OPS` and its `ACT_HELP` (no hand list, K3268) and fails if any op both explained and named; its control is `projectownervotes`, still named. The five R34 reds (t36, t41, t42, t50 R75, t51 R82) are cleared; t46 and t50's controls now use `stepcreate`, an op still unexplained (the old controls were ops affordances now explains).
+2. R21 (B18 (2)): `strengthbarset` is out of `OP_ALIASES` (26 aliases) and out of the alias ground. Nothing else changed in the table. A new t34 test pins the 26, the op served by strength's own declaration, its spec, `NEEDS` (`publish`), stamps (`author`, `viewer`; `identity` by the act list) and the grounds.
+
+**Why strengthbarset is a family op here (a judgement, B18 did not say it).** Without the alias, R80 refused strength's registration of `strengthbarset` (`NEEDS_MISSING`: a mutating op with no hand row must carry `needs`, and strength's `DECLARED_OPS` row gives none; `op-capabilities` holds a hand row for `strengthbar` only). To keep what the alias gave it (capability `publish`, the `author` stamp, `DECLARATION_ACTIONS`) I put it in a `strength` family with the existing kind `publishgate` and added it to `DECLARATION_ACTIONS`. When strength's row gives `needs: "publish"` this family entry can go (R81 will then compare the two).
+
+**Requirement lines for BOB**
+- R21: add "(T51 K4254) `strengthbarset` is no alias: strength declares it itself (`reasoned`); the alias table holds 26 aliases." Test: the alias count and the op's spec, `NEEDS` and stamps; control: the remaining aliases stay aliases.
+- R34: add "(T51 K4254) R34 is read against `ACT_HELP` as affordances' T51 job holds it: the 53 ops of its `T51_DESIGN_OPS`, `accountdrafts`, `accountpropose` (and `standardinforce`, `sweeps`) leave their grounds; the partition tests read `ACT_HELP`, not a list. `strengthbarset` is named under the last ground until `ACT_HELP` holds it."
+- R3 (counts only): the family part of `NEEDS` is 531 rows, aliases 26, hand 323, founder 1: still 881.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT)**
+1. `strength` (src/strength/index.mjs:1683): its ops map serves the arm `strengthbar`, not `strengthbarset`, while `DECLARED_OPS` names `strengthbarset` and `screens-settings` sends it. With the alias gone no arm of strength serves `strengthbarset`, so R6 (no spec without a handler) is not met until strength serves it (an arm calling `strengthBarSet` with `author: q("author")`). I cannot see the door's routing from my module; control-plane/plane should be told if it routed the alias to the `strengthbar` arm.
+2. `strength` DECLARED_OPS `strengthbarset` gives no `needs` (see above); it should say `"publish"`.
+3. `affordances` (src/affordances/act-help.mjs:196): the text is held under `strengthbar` keyed `act.strengthbarset.does`; `strengthbarset` itself has no `ACT_HELP` entry, so it sits under `ACT_HELP_ABSENT.unexplained` here. Holding it under `strengthbarset` (the word exists) lets it leave.
+4. The L11-wide run shows one words failure naming op-grades (`test/m/op-grades/t37.test.mjs:32` testcopy), none naming mine. Other coverage failures in the run belong to agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry.
+
+**Tests and checks** (from `bio-plane`): `node --test test/m/op-declarations/*.test.mjs`: tests 246, pass 246, fail 0 (before: 244 tests, 5 failing). Process repo: `format.mjs`: 175 modules, 0 failures; `architecture.mjs op-declarations`: 0 failures; `coverage.mjs op-declarations`: 82 of 82 live ids named; `words.mjs op-declarations`: 0 failures; `ownership.mjs ... tranche/T51 job/T51/op-declarations`: 9 files changed, 0 failures; `run.mjs` format and architecture 0 failures, no finding in my module; `setup-words/build.mjs --check`: "words-unreviewed.json is stale or absent" (expected; no refusal naming my module). My layer's tests (manifest) are not named beyond the module's suite.
+
+Size (session_01GykvWFgopputGrmd98pLi2): test runs 9, module lines 3464
