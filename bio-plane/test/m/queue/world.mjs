@@ -126,7 +126,11 @@ export function defaultFakes() {
     basisVersions: { projectsDrawingOn: () => Object.assign([], { bound: 32, truncated: false }), conclusionOf: () => null,
                      conclusionRecordOf: () => ({ stance: null }), basisVersions: () => ({ ok: true, versions: [], truncated: false }) },
     progressions: { proposalsFeed: () => ({ instances: [], proposals: [], dispositions: [] }),
-                    disposeProposal: (a) => ({ ok: true, scope: "instance", progression_arm: a }) },
+                    /* the instance arm names no progression: progressions refuses it as its generic NO_KEY (C-100.1), so the fake does too */
+                    disposeProposal: (a) => (a.progressionKey || (typeof a.key === "string" && a.key.includes("::"))
+                      ? { ok: true, scope: "instance", progression_arm: a }
+                      : { ok: false, reason: "NO_KEY", code: "NO_KEY",
+                          detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')" }) },
     aiRuns: { runFor: () => null },
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }),
             settled: ({ limit }) => ({ debts: [], limit, truncated: false }) },
