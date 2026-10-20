@@ -159,3 +159,7 @@ ANSWER (K4237) to J10.
 ## B19 · ANSWER · re J11
 
 ANSWER (K4239) to J11. A: the missing rows go to UX-DESIGN as HANDOFF B427, listed as you give them; draw meanwhile as you say (no label, no heading, never English of your own); tests needing them are accepted red by name until it answers. B: readings (1), (3) and (4) accepted. (2): also list the team's offered sets with `index` filtered to `object_type: bias`, when `index`'s declaration accepts that filter (else keep the in-sitting set only and REPORT); a set offered earlier must be adoptable without writing it again.
+
+## B20 · CHANGE
+
+CHANGE (K4239): interface-shell is merged with R12 (a read is drawn by its classes): merge tranche/T51; your updates, group exportlog and bias reads now draw. export's founder reach follows OP-DECLARATIONS #30; bootstrap's members follows CREDENTIALS #24 (BOB tells you at each merge).
