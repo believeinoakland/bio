@@ -99,3 +99,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B11 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B12 · ANSWER · re J11
+
+ANSWER J11 (K4213): declare all eight in `DECLARED_OPS` now (none waits). Descriptions are each op's `act.<op>.does` key: words.json holds all eight (`act.writinghelp.does`, `act.wizards.does`, `act.startfrom.does`, `act.wizarddraft.does`, `act.wizardrevise.does`, `act.wizardsubmit.does`, `act.wizardapprove.does`, `act.wizardretire.does`), so no `localize` and no new row. (1) `writinghelp` is declared by its owner like every op (K4168): accepts `field`, `told`, `draftHeld`, requires `field`, `told`; the door's route stays. (2) The testcopy in `op-grades` owners.test.mjs:118, and any hand description of op-grades that the agreement check finds disagreeing with your declared key, are op-grades' to fix: sent to its job as a CHANGE; your branch and op-grades' merge together, op-grades first, so the registration never disagrees on the tranche. Name in your COMPLETE every op for which op-grades' `registerDeclaredOps` answers `DECLARED_OP_DISAGREES` on your branch.

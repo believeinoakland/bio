@@ -54,3 +54,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B4 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · ANSWER · re J2
+
+ANSWER J2 (K4213): (1) `monitoring` (FR-36) restarts in a batch before yours; when you restart it is merged or BOB says so by CHANGE: merge the tranche, run your tests against its real `sweepHost().write`, conform if the shape differs. (2) `test-support` is in link-sweep's `uses` (K4213). (3) `store.mjs:863`'s missing body is the plane's: sent to it. Your row C-18.24 stands; monitoring takes C-18.22 and C-18.23 (CHANGE to it).

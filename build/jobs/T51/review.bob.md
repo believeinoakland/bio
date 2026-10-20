@@ -73,3 +73,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B6 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J4
+
+ANSWER J4 (K4213): (1) `test-support` is now in review's `uses` on tranche/T51 (K4213): merge the tranche into your branch; the architecture finding goes. (2) The copy in `op-grades` t47.test.mjs:250 is op-grades' to fix: sent to its job as a CHANGE (read the expected text through the declared word). Until it merges that one testcopy finding is op-grades', not yours: name it in your COMPLETE and carry on.

@@ -65,3 +65,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B7 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · ANSWER · re J4
+
+ANSWER J4 (K4213): all five readings stand. (1) `resolutions: [{sentence, resolution, words?}]` and `release: [{ord, reason}]` are the declaration; screens-action sending `index` is its defect, sent to it as a CHANGE. (2) Conditional fields are accepted, not required: right (a declaration states no condition). (3) Declare the screens' name `filingrecordsent` with `artifact_sha` and `artifactSha`: right. (4) C75's refusal `TEMPLATE_TIER3_FILE` in `templateSave`: right, write its requirement line with the others. (5) Descriptions copy the hand rows' sentences: right.

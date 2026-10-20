@@ -55,3 +55,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B4 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4213; link-sweep J2): link-sweep took the refusal row C-18.24 (`MACHINE_CANNOT_SET_SWEEP`); your two new rows take C-18.22 and C-18.23. link-sweep's arms call your R77 `sweepHost().write({bundle, mutate, author, viewer, log})` (mutate edits the parsed object in place and returns it; log is the Session Log sentence): state the shape in your requirement line exactly so; a different shape, say so in your COMPLETE.
