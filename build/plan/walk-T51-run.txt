@@ -34,3 +34,292 @@
 {"event":"signin.door","at":"2026-10-19T23:47:44.868Z","trace":"82513107-3b44-4fdd-9b8c-170aa8ddfd28","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
 {"event":"signin.door","at":"2026-10-19T23:47:47.254Z","trace":"467a7302-4264-4e42-887e-bd3936a52d40","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
 {"event":"signin.door","at":"2026-10-19T23:47:51.412Z","trace":"12d6288b-46fc-4b6b-92b0-480a4b095243","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-19T23:47:55.649Z","trace":"b3725cf1-56af-420e-958c-b85893e6d85d","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":12}
+{"event":"signin.door","at":"2026-10-19T23:47:59.612Z","trace":"946f393a-c0e7-4fe3-b7d5-9a4d391a47bd","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:48:07.044Z","trace":"6a9f7452-a94b-4594-9af8-f36e96ca7d3c","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
+{"event":"signin.door","at":"2026-10-19T23:48:09.817Z","trace":"b41adb89-505b-4b33-8f1d-f1da34dd58ba","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:48:14.213Z","trace":"9f327f77-b69e-49c2-ae1a-c8639c4c5df4","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":18}
+{"event":"signin.door","at":"2026-10-19T23:48:16.987Z","trace":"b07148e6-a107-4cb5-9044-b15b8605578d","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":203}
+{"event":"signin.door","at":"2026-10-19T23:48:21.022Z","trace":"126c19b2-c1af-40dc-9ae1-8d1d95525bd3","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":182}
+{"event":"signin.door","at":"2026-10-19T23:48:32.118Z","trace":"33c37eff-7602-45aa-828d-2f77761fdb3a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":16}
+{"event":"signin.door","at":"2026-10-19T23:48:35.429Z","trace":"2c3a35cd-2413-484a-9ee1-4db5265834ae","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:48:37.920Z","trace":"533b313b-56d2-4781-af09-f1bcbd2549b8","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:48:40.407Z","trace":"bf51344e-dc48-437e-9cd2-99097362bdb5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":20}
+{"event":"signin.door","at":"2026-10-19T23:48:42.825Z","trace":"6da570ec-c9d5-4c4a-9a77-965f3f294df9","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-19T23:48:45.521Z","trace":"934e5a67-a88c-4bf6-9717-bfc659dec782","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":36}
+{"event":"signin.door","at":"2026-10-19T23:48:49.588Z","trace":"52d042ed-69af-4d9f-b17c-9337e4f7ecb3","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:48:52.129Z","trace":"eaadca24-0de4-4c02-a468-d5d8e7305481","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-19T23:48:52.129Z","trace":"e9bf50c0-3594-470d-9ea3-67f9d54d6d63","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:48:54.583Z","trace":"7b93f67e-c3c7-44dc-88af-ed6afb050a47","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":22}
+{"event":"signin.door","at":"2026-10-19T23:48:57.541Z","trace":"2d4fecb8-2480-448a-8988-dc212a6aab08","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
+{"event":"signin.door","at":"2026-10-19T23:49:00.483Z","trace":"483bab2a-d629-4e0c-85ec-05447d33b977","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:49:03.268Z","trace":"5b02b20c-5613-4faf-b6dc-eec38ec5c950","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":12}
+{"event":"signin.door","at":"2026-10-19T23:49:06.181Z","trace":"7b0f0bfb-9636-4d22-8b5d-46df3de0ea1e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":1}
+{"event":"signin.door","at":"2026-10-19T23:49:08.472Z","trace":"94325272-ca76-4e99-a01c-058cc6faab16","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:49:11.083Z","trace":"bed0e929-8965-431d-a796-fddedc335e6c","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:49:13.886Z","trace":"2f9c0387-6be2-450a-9239-ca7605298882","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:49:16.758Z","trace":"61e77dc9-323a-4a74-ba73-1e01bc8c0f53","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-19T23:49:19.578Z","trace":"e105a156-802d-47d9-b5e1-38d8044f7c59","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:49:22.344Z","trace":"6aa584a0-323d-4b38-a65a-4b7d9279091a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":19}
+{"event":"signin.door","at":"2026-10-19T23:49:27.233Z","trace":"39ff4df2-a153-4a99-a9e3-85c6413d225c","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:49:30.064Z","trace":"bfcd2d3e-8dea-4db4-871e-5bf1bfb83187","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:49:32.699Z","trace":"fddb909c-2a01-4185-962f-4ad261004ad6","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":54}
+{"event":"signin.door","at":"2026-10-19T23:49:35.538Z","trace":"dc28a2b9-3181-4860-a363-88340301a708","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:49:37.885Z","trace":"0cc10a70-a847-48e3-a3b7-cb9d6745e18f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:49:40.463Z","trace":"0796d007-8d6b-4f2d-9413-ee0a658b349e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-19T23:49:43.507Z","trace":"f5ffcdec-d879-4af9-80d1-cba1593a8565","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":50}
+{"event":"signin.door","at":"2026-10-19T23:49:46.169Z","trace":"8823bfb0-eb6f-426e-b9e6-a5cb2acf3e8a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:49:49.152Z","trace":"36477089-2eb7-4908-b052-bfa1d05af0c4","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:49:51.850Z","trace":"22624275-07a4-4fa1-bd53-111c2845a415","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:49:54.237Z","trace":"1015ddb2-ce6c-4d72-80f2-e96177344f38","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-19T23:49:56.942Z","trace":"0fd1fc58-e0c1-4ce6-8f23-9db2a17f8ddf","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-19T23:49:59.231Z","trace":"f5ecbaaa-4e89-4a74-973c-60f40b037c6b","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:50:01.368Z","trace":"2a51e073-b049-4ef2-9291-44f884cc223a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:50:04.114Z","trace":"4384a689-4684-4603-a56d-d152efeefcb4","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-19T23:50:06.420Z","trace":"1775ff8d-ea85-4505-bb90-c4c985523d2f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:50:09.008Z","trace":"819cf744-710e-4638-8e5f-e68ea2aafea0","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:50:11.647Z","trace":"91503ed2-b0a6-49b8-9230-407576ccb0bc","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-19T23:50:13.907Z","trace":"03a58691-f981-4d81-8262-e6230e81b834","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-19T23:50:16.154Z","trace":"d5233764-ec4e-4ef8-97aa-e9a0936fdd38","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:50:18.487Z","trace":"e6e98f26-e7d1-40ec-b878-761ad433efc7","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:50:20.542Z","trace":"7104387e-afc5-4471-b020-6dfca7b612fd","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:50:22.582Z","trace":"7eaae62c-ea05-4956-a2ba-ad5e932a232b","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-19T23:50:24.643Z","trace":"3ee59d8e-e9a8-41d1-8cfc-b0f6943de1bd","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-19T23:50:27.024Z","trace":"cff1220a-5cb9-440f-b10a-56f463ebf43c","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:50:29.354Z","trace":"696064e2-305f-473a-a6bc-951842b716ab","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-19T23:50:31.348Z","trace":"a13b23a1-c220-4794-8c02-f736f4d0c3d6","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":97}
+{"event":"signin.door","at":"2026-10-19T23:50:33.910Z","trace":"637391d0-b1a4-48d9-aa90-d09fbf4d5fc9","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":90}
+{"event":"signin.door","at":"2026-10-19T23:50:36.164Z","trace":"78252744-8b4c-40b0-ba3b-f90ead625249","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:50:38.623Z","trace":"0313e26f-6229-4110-9b64-3732d6653676","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:50:40.971Z","trace":"d0764eb1-520f-4536-a72c-eb5b43a0e1f2","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-19T23:50:43.584Z","trace":"a95edbcb-1f41-4a16-a851-0a0e5a0f64fc","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:50:45.875Z","trace":"7da84077-485d-4c02-b1cf-2060488b6c45","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:50:48.450Z","trace":"8cb48f9b-0c9e-473e-af6f-9c2d1091ddbb","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:50:50.819Z","trace":"12dc9ce8-0b17-47b5-a63d-f9506dcd63ee","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:50:53.004Z","trace":"6c6522df-8de8-4e65-83f0-0fbd2790b4db","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-19T23:50:55.362Z","trace":"52ab7ebe-559f-4265-9f53-28c86986f0b5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-19T23:50:57.664Z","trace":"db9f20ac-ec74-4eef-8acb-65308c8a04db","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:50:59.887Z","trace":"6154258a-9051-4014-9e23-f5b704b52338","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-19T23:51:02.090Z","trace":"e6153e42-b13c-4fdd-9b37-dce5dbd48935","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
+{"event":"signin.door","at":"2026-10-19T23:51:04.320Z","trace":"8eab37ce-d570-4479-8f9b-9f7ce905f478","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:51:06.373Z","trace":"aeaaac47-3a3f-41d3-9aa7-c574bf31ec02","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-19T23:51:08.562Z","trace":"38909516-9251-44f9-a354-1c9f91bfae5f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:51:11.044Z","trace":"12d99e70-de9a-4443-ba14-c6946ec76bac","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-19T23:51:16.881Z","trace":"ff88a921-0825-4ade-ac44-c91cf13647e3","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:51:19.621Z","trace":"005d28ae-02a9-42b3-9ae2-afa2ab48ede5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-19T23:51:24.116Z","trace":"2b51108c-ce38-4695-9c73-80e93c981158","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-19T23:51:29.750Z","trace":"c3f7c225-db07-401f-8f5b-8dcb08a5bc00","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-19T23:51:43.703Z","trace":"895c6082-1468-4b69-a727-2608ba363b80","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":21}
+{"event":"signin.door","at":"2026-10-19T23:52:15.658Z","trace":"449ae818-43f9-427c-988c-acae0f15da70","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":125}
+{"event":"signin.door","at":"2026-10-19T23:52:30.816Z","trace":"88e0aa4b-e29e-4e02-8cfb-bc81ef0ed415","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":102}
+{"event":"signin.door","at":"2026-10-19T23:52:57.621Z","trace":"67fa339f-171d-4ee1-a7ef-3f1839681415","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:53:12.695Z","trace":"b8827ddb-69f8-4b01-b3ea-45d2a5f3c480","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:53:28.538Z","trace":"a38be880-486f-4a17-a0a5-75f3520b0b7a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-19T23:53:43.154Z","trace":"ee87738f-7bf1-4cc7-b4c9-3e2e205a3358","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":16}
+{"event":"signin.door","at":"2026-10-19T23:53:58.687Z","trace":"9ff1b281-972f-48b2-b4d7-834fff986802","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":16}
+{"event":"signin.door","at":"2026-10-19T23:54:14.593Z","trace":"6a3645f2-c7f6-4661-9916-fe3a12790ca7","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-19T23:54:31.980Z","trace":"db01a8d0-6066-44b8-82ff-50be56381c90","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-19T23:54:46.556Z","trace":"3b7168c9-41f7-4c33-b7b4-8bb1017314b3","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-19T23:55:04.438Z","trace":"c8b44a91-58c0-4b04-bd15-e94fc20670fd","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":29}
+{"event":"signin.door","at":"2026-10-19T23:55:19.177Z","trace":"e6673e34-8873-4340-a685-a8fbd52c4bd4","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":38}
+{"event":"signin.door","at":"2026-10-19T23:55:51.215Z","trace":"dd1037d6-c683-4393-b850-42de548e652d","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:56:05.476Z","trace":"51a863a6-ad54-4d68-84d6-29d0097d6e28","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":19}
+{"event":"signin.door","at":"2026-10-19T23:56:21.626Z","trace":"9bb1257b-b5b9-403d-b596-5fae83ea04e3","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":24}
+{"event":"signin.door","at":"2026-10-19T23:56:21.632Z","trace":"00d81a93-8552-42eb-80ae-f2cce62b2feb","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":17}
+{"event":"signin.door","at":"2026-10-19T23:56:36.053Z","trace":"9107d9d5-5bfe-4af6-aae6-07145d727374","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":16}
+{"event":"signin.door","at":"2026-10-19T23:56:36.053Z","trace":"f549eb18-cd32-4d02-9849-09d03660555c","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
+{"event":"signin.door","at":"2026-10-19T23:56:52.013Z","trace":"622fe4e6-6ac6-4600-b1f5-b034989d4715","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":24}
+{"event":"signin.door","at":"2026-10-19T23:57:06.526Z","trace":"36f246a6-ce40-444f-a9fd-3fe45211cb68","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":31}
+{"event":"signin.door","at":"2026-10-19T23:57:27.193Z","trace":"46130cbc-6e2f-4a62-b92e-d0fff5ed0f1f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":16}
+{"event":"signin.door","at":"2026-10-19T23:57:42.562Z","trace":"d79010ee-1c5e-47ba-848d-1e339705cce0","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":22}
+{"event":"signin.door","at":"2026-10-19T23:57:59.142Z","trace":"241b331b-10b0-40db-897a-391f40155e68","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:58:13.335Z","trace":"ac840328-a12a-4caa-907d-72cff39427a0","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:58:28.982Z","trace":"2965503d-4c81-4699-add4-8d2f8c8a60db","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":23}
+{"event":"signin.door","at":"2026-10-19T23:58:44.199Z","trace":"7def04e9-a874-4070-a2b4-48291c74b416","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":24}
+{"event":"signin.door","at":"2026-10-19T23:59:02.198Z","trace":"43e8e8c7-ab27-43e3-b13f-5aca2488c3c0","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-19T23:59:17.329Z","trace":"aa72e85e-46c6-4ecf-adf9-cc4c7fd40352","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-19T23:59:33.018Z","trace":"065e183b-3dc8-42f6-98d1-8bbf31fda4e1","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-19T23:59:47.589Z","trace":"d315bac1-0e49-4a7b-bc4d-f3682aed5f2d","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:00:03.876Z","trace":"087beaf3-a7cc-4d1b-912b-45d118263c34","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:00:18.730Z","trace":"169120cd-64a0-46c6-a0ab-74525de5e132","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:00:34.477Z","trace":"1ddd2ea9-99e8-443e-86f6-425b851c6912","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-20T00:00:49.787Z","trace":"ea2277c6-bb41-4e88-b868-45a73cd330e3","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:01:05.573Z","trace":"784ae8c8-869a-4eed-b845-002c3250ba60","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:01:20.580Z","trace":"2369e5b0-2117-4f38-ace6-7ec86605a5cb","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":12}
+{"event":"signin.door","at":"2026-10-20T00:01:36.137Z","trace":"6ce32b07-2518-4abd-9269-d6fd2295e148","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:01:50.925Z","trace":"f695d01b-b9f6-44be-9f5d-e0b77db07600","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:02:06.775Z","trace":"ac103a35-86d9-4854-adfc-67350d344437","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":18}
+{"event":"signin.door","at":"2026-10-20T00:02:22.018Z","trace":"5cc95b15-1b8f-4e01-a49a-3e3914ffc148","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:03:02.447Z","trace":"34e4f79e-07d3-4ba1-8669-bfb44022f77a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:03:17.365Z","trace":"6f7887b8-240b-4339-82e3-bea61e90f823","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:03:33.190Z","trace":"7b69cf12-1105-4f08-93cc-9a3eb3d71eb5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:03:47.806Z","trace":"0ec9ddf5-2fdf-48d7-b0dc-c9a3472763bb","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:04:03.487Z","trace":"e383de29-f14f-4221-9c4f-40779595ef0b","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":58}
+{"event":"signin.door","at":"2026-10-20T00:04:18.538Z","trace":"59a1c8fd-a6ed-4475-ae1f-78beeed3ac27","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":63}
+{"event":"signin.door","at":"2026-10-20T00:04:34.787Z","trace":"f98c55e9-17d1-4d08-90e5-5195f023779e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:04:49.780Z","trace":"e9fea5fa-b746-43e0-b113-6c4de8a8cb94","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:05:04.968Z","trace":"2e6e6894-c5ac-4986-9692-4439fff6f89c","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:05:19.356Z","trace":"410349a9-83ee-4ffc-b0ff-22dd80a62da5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:05:34.945Z","trace":"9137bb8d-67c3-402d-a124-939669597ee8","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":17}
+{"event":"signin.door","at":"2026-10-20T00:05:50.246Z","trace":"2db594fe-300c-4a41-b4a3-3c9263d77a6e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":24}
+{"event":"signin.door","at":"2026-10-20T00:06:10.794Z","trace":"971b4983-4689-4c3a-b93f-c106b9295a94","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":52}
+{"event":"signin.door","at":"2026-10-20T00:06:25.886Z","trace":"3e9615e5-fd1c-4e2e-9401-5e2b49a22cfa","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":52}
+{"event":"signin.door","at":"2026-10-20T00:06:41.890Z","trace":"1c0967c0-a498-47fb-9528-9eca34f32e7a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:06:57.365Z","trace":"6791b6ac-2b9d-4bb4-97b0-179a2ec67e86","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:07:14.472Z","trace":"256eccc9-bf51-4182-9a4c-2824d2dc5d05","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":20}
+{"event":"signin.door","at":"2026-10-20T00:07:30.201Z","trace":"7245e282-b887-4e53-9e31-38e215967a9e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":12}
+{"event":"signin.door","at":"2026-10-20T00:07:46.879Z","trace":"49033f04-7cde-42a2-b5da-848eca9c6a49","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":20}
+{"event":"signin.door","at":"2026-10-20T00:08:01.918Z","trace":"0983ad78-db7f-496b-a9c7-e09e3c2e2ed9","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-20T00:08:18.449Z","trace":"c8ad4f82-38e9-4b6c-870d-37550de6364d","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:08:33.845Z","trace":"e481247c-6f49-4d21-b138-0d3e287217c5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:08:49.819Z","trace":"374fff4f-d1d2-4ee4-bd1e-0a51635ce927","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:09:04.888Z","trace":"6cc55d15-525a-4e09-b72c-95b3d8b687b9","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:09:20.718Z","trace":"eaf49df5-f5f2-4fe8-b657-ce30d16db8dc","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:09:35.549Z","trace":"93ce598d-eacd-42a9-b6b2-62b36864d0f6","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:09:51.396Z","trace":"ca19616e-5259-42be-bc9a-b54140eb00ba","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-20T00:10:06.612Z","trace":"c4510ec3-6c8c-4d6e-9175-e3999f91258d","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":26}
+{"event":"signin.door","at":"2026-10-20T00:10:23.124Z","trace":"b5dfb5de-1d2c-4225-9c20-7bf19b6243f6","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":2}
+{"event":"signin.door","at":"2026-10-20T00:10:37.615Z","trace":"c991c390-00ab-4b49-a284-d0615398bc65","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-20T00:10:53.392Z","trace":"c2a9d3c8-ec70-4540-b864-7996baaea891","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:11:08.132Z","trace":"23e7b5f8-bfea-4572-8fc9-8750d291821d","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:11:24.040Z","trace":"cca98e25-2270-41fc-9e0f-f2bcb275b15a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:11:38.831Z","trace":"a6a1fba3-8161-4087-a023-a0799b42f76a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:11:54.421Z","trace":"36c98416-32fd-4931-986f-e09f8ad51537","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:12:09.626Z","trace":"d76b82b6-e115-44bf-b3a4-cfd5383024dd","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:12:25.467Z","trace":"0cc6b51b-2a5d-458f-bb35-a7d783b26b1b","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:12:40.215Z","trace":"d1f78d65-fb11-4532-b4ed-2cc9244ce5d2","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:12:55.847Z","trace":"4cbd22e5-6031-41ce-9a46-9ad883f5d596","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:13:10.566Z","trace":"5987b54d-fbd7-4345-8acb-ed7582b9de89","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-20T00:13:27.334Z","trace":"d4a40110-797f-4d5d-87d3-5674b15a86f8","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:13:42.279Z","trace":"6dc7d7e2-6e70-4454-8357-088b712012fd","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:13:58.304Z","trace":"e2f27ea2-2c60-4fc2-a21f-f745b27f2e51","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:14:13.336Z","trace":"be5e77db-93e7-473b-a1ba-f9cdf8aa98e5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:14:29.873Z","trace":"abc745e8-143d-4adc-960c-e3794d4778b6","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":1}
+{"event":"signin.door","at":"2026-10-20T00:14:45.239Z","trace":"ced53703-febb-48a9-a2ce-bc7b70492964","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:15:01.200Z","trace":"93cdc8e9-acd4-4631-a64a-5c283b203942","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:15:16.151Z","trace":"b213a2a6-c60c-43d7-aaf7-7550159cbbff","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:15:31.916Z","trace":"4464876c-d6a4-4f8f-bc1c-b28cfb4e67bb","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-20T00:15:47.913Z","trace":"30dbc178-08bb-435e-9fd5-9c5e76b519fd","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:16:04.276Z","trace":"dff05039-8451-4436-aea7-29621784225e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":1}
+{"event":"signin.door","at":"2026-10-20T00:16:19.290Z","trace":"b7b01b3e-a58f-40c7-af3f-5d432e717b23","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:16:35.475Z","trace":"758f9939-bd6b-4de1-808f-091aec2c8e86","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":96}
+{"event":"signin.door","at":"2026-10-20T00:16:50.792Z","trace":"c4e96f45-ff66-4cb0-a2e4-2df99bd56534","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":87}
+{"event":"signin.door","at":"2026-10-20T00:17:07.301Z","trace":"66eb6bd5-eb8f-4988-a6fe-caa35696c5da","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":100}
+{"event":"signin.door","at":"2026-10-20T00:17:22.901Z","trace":"53c09a9a-ad10-4050-a4bc-dcf9aa786e2b","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":93}
+{"event":"signin.door","at":"2026-10-20T00:17:38.668Z","trace":"496b5dcf-52be-4c7c-9a7d-ad09dbbc46c7","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:17:54.049Z","trace":"7a2578a9-20f2-46ff-8814-026502848606","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:18:10.426Z","trace":"d41c0790-c0a0-41fa-b44a-992ed3cd9bf4","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-20T00:18:25.640Z","trace":"7ed45fd3-d609-4f02-9b23-03908025ee3b","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:18:42.177Z","trace":"960fbf42-68f4-4dfc-8c32-b541a4f769fa","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":17}
+{"event":"signin.door","at":"2026-10-20T00:18:57.433Z","trace":"62cd4282-4b90-4522-a006-c46c1a75336f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:19:13.764Z","trace":"1e9c2ff5-fc93-44e9-9234-f1fda2cb11e0","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:19:28.492Z","trace":"1a172877-047a-45ee-a242-ba92f3fb5096","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:19:44.046Z","trace":"275f6295-5aee-478d-b96f-0a23e71c3e93","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-20T00:19:59.249Z","trace":"f75835fc-fa69-477e-a80a-4f860215794f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:20:18.743Z","trace":"c0b499d4-347b-4040-94cc-c49cb9331a7a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:20:33.552Z","trace":"04ba447b-48af-4906-981b-21db110b3467","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:20:49.963Z","trace":"6dc90c6e-e877-452b-a882-acef44cf10ff","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:21:05.345Z","trace":"412e00cb-dced-4ceb-9352-c506b7ab75e5","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-20T00:21:21.740Z","trace":"101094e6-55aa-4bca-b4bb-b9a24461b8a3","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:21:36.900Z","trace":"90db04b2-dea0-4100-bced-a8a744b51f45","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":1}
+{"event":"signin.door","at":"2026-10-20T00:21:53.330Z","trace":"ddaa63bf-199b-49bd-ae9c-61a543710a2a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:22:08.329Z","trace":"76045725-faca-47d4-b796-48111305806f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-20T00:22:24.702Z","trace":"2d7068ae-3986-454f-8be3-b0333b37eafb","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-20T00:22:40.006Z","trace":"0aa54c49-8ebe-4fce-8f9b-aa3c8128afe1","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:22:55.865Z","trace":"b9f72d42-f98e-4c25-89c1-2ac96a5d4002","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:23:11.362Z","trace":"52001f71-6c10-43cf-9693-48312cc368a9","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":1}
+{"event":"signin.door","at":"2026-10-20T00:23:27.536Z","trace":"c4412eb5-5794-4907-b68d-41e2fe48de91","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":27}
+{"event":"signin.door","at":"2026-10-20T00:23:42.287Z","trace":"5030a020-9005-4801-85fb-3a09f6ed5e09","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":18}
+{"event":"signin.door","at":"2026-10-20T00:23:59.160Z","trace":"52c95220-51e6-42cd-86dc-d182ec5ba4a1","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+✖ R1 (a): the local arm, with no account: the installer over its fake account, the hand-over into a plane under Miniflare, journey 28, journey 3, the journeys to a conclusion and every registry screen drawn; each step screenshotted (2409191.999569ms)
+{"event":"signin.door","at":"2026-10-20T00:24:13.979Z","trace":"542d996d-ec3e-4331-912d-d3b31f8d9580","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:24:29.151Z","trace":"d99a4ff8-5a44-4d7f-bc68-e6b750c5cf72","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:24:43.342Z","trace":"95ca7d83-fb6a-4648-9171-406dabd2962c","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:24:58.509Z","trace":"41c295c3-c1bf-44ce-b821-dd902889d48a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:25:13.261Z","trace":"3b93bcf7-03e8-4dc6-a2fb-831aa7ba4a60","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":6}
+{"event":"signin.door","at":"2026-10-20T00:25:29.061Z","trace":"5624a959-c4c0-4d48-afeb-e04fcbd7cc0f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:25:43.739Z","trace":"9a625eb6-7dfd-4d7d-8b49-be34d0ed56ad","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:26:06.390Z","trace":"7b3a8e25-1c3d-4b53-bca5-5efdc1f79453","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:26:21.590Z","trace":"06b97dd0-d4f7-4f24-be1f-6a0e7820aa42","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-20T00:26:38.001Z","trace":"ee2dcc59-527b-4594-8b35-b4b443f5e029","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:26:52.896Z","trace":"d48e12a3-30d1-41be-a892-b3236c7cd349","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:27:12.448Z","trace":"6a202398-d5a8-4d66-9627-91a2fbfd18fe","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:27:27.705Z","trace":"fe968c06-08f0-49ff-be7a-0d3bf71a021f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+✔ R9: the local arm walks the journey as administrator through the screens' own controls; while the assistant does not work, steps 4, 9, 10 and 11 are not walked and the rest, 1 to 3, 5 to 8 and 12, each hold (R20) (213360.877827ms)
+✔ R20: the local arm reports R9's steps 4, 9, 10 and 11, all of R10 and journey 29's five assistant steps as not walked, each screen's not-ready state asserted; 13 of journey 29's 18 pairs are made; control: a screen that draws an assistant control that cannot work fails by name (1.952836ms)
+✔ R10: while the assistant does not work, the member's connection, run, projectai, planask and Ask are reported as not walked, with her connect screen's not-ready state asserted (0.441933ms)
+✔ R11: the local arm binds agent-worker, the runner's stand-in with the fake model, a stub city site and the test-instance mark, and walks R9's capture by address against the stub city (0.245844ms)
+{"event":"signin.door","at":"2026-10-20T00:28:52.999Z","trace":"f4b47706-2638-4273-a6c4-53b46e00d230","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:29:11.356Z","trace":"8201ef76-89c1-4e19-9c0e-bd7dce59f63b","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
+{"event":"signin.door","at":"2026-10-20T00:29:23.145Z","trace":"b2c533aa-a835-4a82-b8af-61d9ef2c760f","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:29:30.455Z","trace":"73c29075-a337-41d3-8236-8bb15d369841","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:29:34.012Z","trace":"9c655b28-ced5-428b-9dbb-36f40acf4ccf","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":10}
+{"event":"signin.door","at":"2026-10-20T00:29:38.462Z","trace":"7934d8bf-f1ed-4125-b27b-76553600f1c9","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":73}
+{"event":"signin.door","at":"2026-10-20T00:29:41.851Z","trace":"ecd82c35-838f-409f-bbf7-e4139520d24b","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:29:45.849Z","trace":"8feeaf81-bf41-44c7-ae9a-90a00f26601c","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:29:49.070Z","trace":"01e5dca5-0c48-4cbd-8bf1-3ffe75415a2d","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:29:49.736Z","trace":"625e4b9b-eef3-446f-9a36-112e752a3e4f","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":25}
+{"event":"signin.door","at":"2026-10-20T00:29:52.820Z","trace":"4a237266-59b1-4457-a51c-dd728338697a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:30:00.915Z","trace":"90871276-a77f-4623-b5a1-6d0ecfeba034","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-20T00:30:00.916Z","trace":"3d76ea0a-ef64-4960-9bde-666bbd54f0b0","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.worker","trace":"dc3fb10e-8f3f-4af2-a2ee-74051df6d149","step":"start","member_ref":"admin","outcome":"refused","runner_status":404,"runner_content_type":"application/json","ms_runner":3,"runner_text_bytes":151,"code":"UNKNOWN"}
+{"event":"signin.door","at":"2026-10-20T00:30:03.478Z","trace":"dc3fb10e-8f3f-4af2-a2ee-74051df6d149","step":"start","member_ref":"admin","outcome":"relayed","code":"UNKNOWN","status":404,"ms_total":6,"ms_agent_worker":4}
+✔ R20 control: with the switch set (the assistant working) the walk tries step 4 of R9, and a fault in it fails by name; with the switch unset the same step is noted and fails nothing (136616.93934ms)
+{"event":"signin.door","at":"2026-10-20T00:31:08.422Z","trace":"5a08788a-f70b-4b20-9703-9bcd333b3691","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:31:26.360Z","trace":"6b2b8c92-f146-435b-aff2-3eb48fd8eb26","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":13}
+{"event":"signin.door","at":"2026-10-20T00:31:38.000Z","trace":"5aaed617-42fb-4056-b911-5364bf3c1400","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:31:45.490Z","trace":"f8b361c1-0670-470c-8f54-ce595a5ae674","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":5}
+{"event":"signin.door","at":"2026-10-20T00:31:49.145Z","trace":"9ca5cba3-d567-4bd5-93ae-ae4c7ac85401","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":16}
+{"event":"signin.door","at":"2026-10-20T00:31:53.648Z","trace":"55d00aa1-1a8d-4114-aacb-f1eee0958f4d","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":70}
+{"event":"signin.door","at":"2026-10-20T00:31:56.820Z","trace":"2e96b80c-043f-403b-96b5-954e9a7c4e4d","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:32:01.010Z","trace":"c8015ee1-59c6-4d99-96ea-d597ea20a072","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-20T00:32:04.123Z","trace":"302ed09f-942b-4d4c-a230-6ec41f6fafb7","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":3}
+{"event":"signin.door","at":"2026-10-20T00:32:04.888Z","trace":"bc13e554-a488-429e-b723-a1c69bed4092","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":24}
+{"event":"signin.door","at":"2026-10-20T00:32:07.905Z","trace":"0e9ba624-bc0d-4839-8ba7-5031f4e95d8e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":2}
+{"event":"signin.door","at":"2026-10-20T00:32:16.104Z","trace":"ab4a3ba7-010e-40c6-a736-dec8c73e7662","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":12}
+{"event":"signin.door","at":"2026-10-20T00:32:16.104Z","trace":"e277e804-3fa8-4327-83e3-0b12f03fefa0","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.worker","trace":"7a0afb27-cc43-4be7-801b-5f6e02b575a6","step":"start","member_ref":"admin","outcome":"refused","runner_status":404,"runner_content_type":"application/json","ms_runner":3,"runner_text_bytes":151,"code":"UNKNOWN"}
+{"event":"signin.door","at":"2026-10-20T00:32:18.579Z","trace":"7a0afb27-cc43-4be7-801b-5f6e02b575a6","step":"start","member_ref":"admin","outcome":"relayed","code":"UNKNOWN","status":404,"ms_total":6,"ms_agent_worker":4}
+✔ R11 control: with the switch set and no fake model bound, step 9 fails by name (or the walk says where it stopped before it) (135129.36083ms)
+✔ R7: the walk as stated: signed in as the founder, no screen draws admin as a person's name or handle (0.815643ms)
+✔ R13: the local arm pairs each step of design journey 29 the walk reaches with the mock's drawing of it (13 of 18 while the assistant does not work, R20) (0.165797ms)
+✔ R15: the local arm finds agent-worker's SEGMENTS binding present (0.119938ms)
+{"event":"signin.door","at":"2026-10-20T00:33:24.180Z","trace":"b870b061-b628-43d9-b9a6-9073c00c1f9e","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":7}
+{"event":"signin.door","at":"2026-10-20T00:33:42.588Z","trace":"a8ae17ba-c936-431a-96bf-94d5c67fe209","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:33:54.676Z","trace":"27bc4908-26df-48f5-8ff6-eb214712366a","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:34:02.419Z","trace":"2c8c60c2-5aab-4bf2-8620-edb4d54b374a","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":8}
+{"event":"signin.door","at":"2026-10-20T00:34:06.158Z","trace":"72bbcc87-efd4-49cf-a6d2-e1a18cedcfb5","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-20T00:34:11.076Z","trace":"c5f8dffa-d733-4dc4-9d31-1b0f556627e3","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":70}
+{"event":"signin.door","at":"2026-10-20T00:34:14.096Z","trace":"7a64aa76-514d-49b8-a47b-dca6bbaca2c2","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":9}
+{"event":"signin.door","at":"2026-10-20T00:34:18.215Z","trace":"f7138980-ab98-4065-a05c-ce2e9d4b5b08","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":14}
+{"event":"signin.door","at":"2026-10-20T00:34:21.454Z","trace":"0d4df72e-14e3-4038-9d20-764e66391787","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":4}
+{"event":"signin.door","at":"2026-10-20T00:34:22.206Z","trace":"eb8eb624-f270-4b75-bf15-055a73ed5244","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":24}
+{"event":"signin.door","at":"2026-10-20T00:34:25.088Z","trace":"0e940af0-4cf9-4388-b819-4853c9cadb67","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:34:33.291Z","trace":"681e4d0b-c2fa-47be-8b35-fb3ccb4c69dc","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.door","at":"2026-10-20T00:34:33.291Z","trace":"218e200c-1d9e-4f22-8a42-8a2822e17484","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":11}
+{"event":"signin.worker","trace":"9819580a-378d-4cc4-bd39-c5aedc5f0866","step":"start","member_ref":"admin","outcome":"refused","runner_status":404,"runner_content_type":"application/json","ms_runner":2,"runner_text_bytes":151,"code":"UNKNOWN"}
+{"event":"signin.door","at":"2026-10-20T00:34:35.820Z","trace":"9819580a-378d-4cc4-bd39-c5aedc5f0866","step":"start","member_ref":"admin","outcome":"relayed","code":"UNKNOWN","status":404,"ms_total":5,"ms_agent_worker":3}
+✔ R15 control: with the switch set and the binding removed, step 9 fails by name, not with a silent stop (or the walk says where it stopped before it) (137205.239659ms)
+✔ R16, R18: the local arm walks journey 29's search path with no assistant, to a conclusion on her own reading; R9's step 12 is made on the member's own reading too (1.421139ms)
+✔ R17: no page the walk serves says "group" for a team (0.131389ms)
+✔ R26: R17's scan over every page the walk serves (the installer's and the site's among them) finds none that says "group" for a team (0.155183ms)
+✔ R22: both arms open dash-project and dash-action from Home's doors as working screens, drawn and not "Nothing is here" (0.25386ms)
+✔ R23: the first page of the document the walk captured reads Page 1, and no screen draws a page numbered 0 (0.154289ms)
+✔ R25: the walk requests /sign once on the copy and gets 404 with the interface's nothing-is-here page, no signing page (0.155039ms)
+✔ R27: the pseudo-locale walk draws every screen at both widths with the pseudo rows and reports any sentence that escaped the list (0.155324ms)
+✔ R1 (b): the live arm reads the administrator's and a member's credentials from the environment and never prints them; control: without them it refuses before any request (59636.668436ms)
+✔ R1 (a): every way the local arm can stop closes its world, browser and servers; control: a world left open keeps its process alive past the deadline (68174.64639ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3164297.345619
+
+✖ failing tests:
+
+test at bio-plane/test/m/journey-check/journey.test.mjs:108:1
+✖ R1 (a): the local arm, with no account: the installer over its fake account, the hand-over into a plane under Miniflare, journey 28, journey 3, the journeys to a conclusion and every registry screen drawn; each step screenshotted (2409191.999569ms)
+  'test timed out after 2400000ms'
