@@ -26,6 +26,7 @@ import { translations } from "./translations.mjs";
 import { updates } from "./updates.mjs";
 import { glossary } from "./glossary.mjs";
 import { grouprules } from "./grouprules.mjs";
+import { bias } from "./bias.mjs";
 import { aiPanel, aiPanelSend, aiUsageBars, PANEL_KEYS } from "./panel.mjs";
 import { SCREEN_WORDS } from "./words.mjs";
 import { KEYS } from "./keys.mjs";
@@ -81,6 +82,8 @@ const WORDS = {
   translations: [...STATES, "screen.translations.name", ...own("screen.translations."),
     ...LABELS("translations", ["translationdraft", "translationadopt", "translationgrant", "translationconfirm", "translationrevert"])],
   glossary: [...STATES, "screen.glossary.name", ...own("screen.glossary.", "glossary.term.", "state.item.")],
+  bias: [...STATES, "screen.bias.name", ...own("screen.bias."), "screen.standard.state.adopted", "shell.reason", "act.writinghelp.does",
+    ...LABELS("bias", ["biasmanifest", "promote", "biasadopt", "biasinhale", "biasdebt", "biasdebtresolve", "writinghelp"])],
   grouprules: [...STATES, "screen.grouprules.name", ...own("screen.grouprules.", "screen.start-send.kind."), "member.founder.unnamed", "refusal.RULE_NEEDS_QUALIFICATION", "screen.group-identity.draft.label", "ai.label.untested",
     ...own("screen.action.kind."), ...LABELS("grouprules", ["ruleconfirm", "rulewithdraw", "ruledraft", "writinghelp"])],
 };
@@ -93,4 +96,4 @@ const freeze = (s) => Object.freeze({
   parts: PARTS,
 });
 
-export const SCREENS = Object.freeze([settings, members, teamai, account, connect, notes, group, identity, places, recovery, security, translations, updates, glossary, grouprules].map(freeze));
+export const SCREENS = Object.freeze([settings, members, teamai, account, connect, notes, group, identity, places, recovery, security, translations, updates, glossary, grouprules, bias].map(freeze));

@@ -430,3 +430,40 @@ export function grouprulesTable(over = {}) {
     ...over,
   };
 }
+
+/** bias (bias R11–R21, R35, R36; the owner's shapes): the lens in force for the team and for a project, a set offered and adopted, an outside
+ *  policy read into proposals, and a work product under an earlier lens. */
+export const PROJ_BIAS = { id: "PROJ-2026-0001-coliseum", title: "The Coliseum lease" };
+const ST = (id, over) => ({ statement_id: id, bundle_id: "BIAS-2026-0001-team", scope: "instance", kind: "scrutiny", subject: "ENT-2026-0007", text: "We read the Department's own reports closely, because it reports on its own conduct.", justification: "It writes the figures it is judged by.", locked: true, nullifies: null, ...over });
+export const LENS_TEAM = { ok: true, scope: "instance", scope_id: "", in_force: true,
+  bundles: [{ bundle_id: "BIAS-2026-0001-team", revision: "a".repeat(64), scope: "instance", adopted_by: "member:rosa", adopted_at: "2026-10-08T00:00:00Z", source_url: null, retrieved: null, source_sha256: null }],
+  statements_sha: "9f3a" + "0".repeat(56) + "c07e", statements: [ST("s1")], residue: [{ bundle_id: "BIAS-2026-0001-team", scope: "instance", text: "It sets no bar for how strong support must be, and it never rules that a source is false.", stated: true }],
+  lock_violations: [], interactions: [], count: 1, total: 1, limit: 200, offset: 0, truncated: false };
+export const LENS_PROJECT = { ...LENS_TEAM, scope: "project", scope_id: PROJ_BIAS.id,
+  bundles: [...LENS_TEAM.bundles, { bundle_id: "BIAS-2026-0002-proj", revision: "b".repeat(64), scope: "project", adopted_by: "member:dev", adopted_at: "2026-10-08T00:00:00Z" }],
+  statements: [ST("s1"), ST("p1", { bundle_id: "BIAS-2026-0002-proj", scope: "project", kind: "inference", subject: "ENT-2026-0009", text: "A late reply to a request is not read as a refusal.", justification: "Offices miss dates for many reasons.", locked: false })],
+  residue: [...LENS_TEAM.residue, { bundle_id: "BIAS-2026-0002-proj", scope: "project", text: "", stated: false }], total: 2, count: 2 };
+export const POLICY = { ok: true, installed: false, adopted: false, writes: 0, proposes: "p",
+  bars: [{ text: "A single source is not confirmation.", construct: "required_strength", detail: "d" }], bars_count: 1,
+  statements: [{ id: "prop-1", kind: "scrutiny", subject: null, text: "Staff verify every claim against two sources.", justification: null, citations: [], proposed: true, authored: false },
+    { id: "prop-2", kind: "inference", subject: null, text: "We do not treat silence as agreement.", justification: null, citations: [], proposed: true, authored: false }], statements_count: 2,
+  residue: [{ text: "All sources are unreliable.", why: "w", check: "C-26.5" }, { text: "Our editors meet on Mondays at nine.", why: "This states a property of the source." }], residue_count: 2,
+  coverage: { sentences_read: 4, sentences_total: 4, input_truncated: false }, pin: { source_url: "Bay Courier standards page", retrieved: "October 8, 2026" }, limit: 200, truncated: false };
+export const DEBT_OPEN = { ok: true, run: "RUN-2026-0042", found: true, open: true, context: { type: "project", id: PROJ_BIAS.id }, raised: "2026-10-09T00:00:00Z", observed: "2026-10-09T00:00:00Z",
+  moved_basis: "a statement about the City Housing Department was added", lens_then: "41be" + "0".repeat(56) + "a2d0", lens_now: "9f3a" + "0".repeat(56) + "c07e", settled: { settled: false }, settlements: [], limit: 50, truncated: false };
+export const DEBT_SETTLED = { ...DEBT_OPEN, open: false, settled: { settled: true, at: "2026-10-10T00:00:00Z", kind: "resolved", kind_state: "determined" },
+  settlements: [{ seq: 1, kind: "resolved", at: "2026-10-10T00:00:00Z", actor: "member:mai", reason: "The new statement is about the Department's reports; this finding cites none.", by_run: null, lens_then: null, lens_now: null }] };
+export function biasTable(over = {}) {
+  return {
+    biasmanifest: (q) => env(q.scope === "project" ? (q.scopeId === PROJ_BIAS.id ? LENS_PROJECT : { ok: true, scope: "project", scope_id: q.scopeId, in_force: false, note: "no manifest was in force" }) : LENS_TEAM),
+    projectlist: env({ ok: true, projects: [PROJ_BIAS] }),
+    biasdebt: (q) => env(q.run === "RUN-2026-0042" ? DEBT_OPEN : { ok: true, run: q.run, found: false, note: "none" }),
+    biasinhale: () => env(POLICY),
+    promote: (q, b) => env({ ok: true, bundleId: "BIAS-2026-0003-lakeshore", revision: "c".repeat(64), state: b.meta.current_state }),
+    biasadopt: (q, b) => env({ ok: true, bundle_id: b.bundleId, scope: b.scope || "instance", in_force: false, pins_proposed: true, adopted_by: "member:rosa" }),
+    biasdebtresolve: (q, b) => env({ ok: true, run: b.run, settled: { settled: true, kind: "resolved" } }),
+    entitybyalias: (q) => env({ ok: true, entities: q.alias === "City Housing Department" ? [{ entity_id: "ENT-2026-0007", label: "City Housing Department" }] : [] }),
+    writinghelp: () => env({ ok: true, text: "We read it closely.", label: { kind: "machine", asked_by: "member:rosa" }, withheld: [], note: "" }),
+    ...over,
+  };
+}
