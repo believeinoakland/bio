@@ -91,3 +91,6 @@ Recorded in `REQUIREMENTS.md` §10 (his words, provisional). New requirements: g
 
 ## A14 · 2026-10-21 · Groq read from its own docs
 `NOTES.md` §Q2c now includes Groq (Services Agreement 2026-06-22, AUP, DPA, model prices). No document needed from Bob. Notable: a third party holding a customer's key is NOT ADDRESSED, as at OpenAI and xAI; Groq's deprecations page and models page contradict each other on retired Llama models (a concrete drift example for AIR24); customer indemnity is uncapped. Still needed from Bob: the OpenAI and xAI documents listed in A13, plus the Anthropic gap list once the lane has checked the register.
+
+## A15 · 2026-10-21 · Second batch of documents read (OpenAI API pricing, xAI AUP)
+`NOTES.md` §Q2c addendum. Notable: a long-context price tier exists at OpenAI (input 2×, output 1.5× of short-context) which raises the cost of long-context probes; xAI's AUP bars "unauthorized automated … means, whether through a bot, script, or otherwise" and scraping or reselling Input or Output, so consumer-subscription use by an app is not supported by xAI's text; no political or election section. Documents Bob could not obtain stay OPEN. A worker is reading `build/terms/anthropic.md` to list Anthropic's gaps.
