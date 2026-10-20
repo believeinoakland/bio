@@ -2,6 +2,40 @@
 
 **Status** · session_01BwrG3czH5kQWZdjeM9GogB · depth 2 · WORKING · handled B10
 
+## Progress (SCREENS-DAILY #11, FR-27) — stopped at half the window; next step noted below
+
+Requirement lines R65–R81 are written in `build/requirements/screens-daily.md` (each marked *(not yet met: T51)*; the lines for entries not yet built stay so). Suite: 181 tests, 178 pass; red by name below.
+
+**Applied, with tests (pushed @ job/T51/screens-daily):**
+- R65 (entries 1–3, C13/C14/C15): `doors.mjs` part; Home and the queue draw the door to `held` (`act.release.label.<screen>` + `screen.held.name` and the number) and to `inbox` (`screen.inbox.name` + the number of `new` knocks); none at zero; a failed read drawn failed. `doors.test.mjs`.
+- R66 (4, C27): Themes section and `theme.every` door drawn with none declared. `join.test.mjs` (the R43 control that said "not drawn when none" became R66's test).
+- R67 + R77 (5, 15, C33/L8): `frontier` read at four levels (`frontier_document|content|meaning|internet`), one row each by `screen.answers.look`; "everywhere" (`screen.finder.nobody.none`) only when all four answered, built, none unlooked. `finder.test.mjs` (the old single-level frontier test replaced). Facet counts not drawn.
+- R70 (8, C60): `definitionVersion` (single and set arm); `queue-states.test.mjs` pin changed; control over the owner's declaration (`collectOwnerRows`, `fieldMismatches`).
+- R71, R73, R74 (9, 11, 12, C61/C47/C48): `item-words.mjs` `targetOf`: `escalation` → `matter`, `key` → `account`, `contradiction_candidate|notice` and the kinds `tension`, `contradiction-duty*`, `contradiction-plurality*` → `contradiction` (at `subject.candidate` else `subject.id`), `bias-debt` → `bias` (at the run); a subject that opens nothing draws no Open (`queue.test.mjs`).
+- R72 (10, C84): `project.rescue.title.nodate` mark on a row with `rescue_open` (the row already opens the project). `projects.test.mjs`.
+- R76 (14, L7): the covered row reads `levels.meaning.why`; with none the row is not drawn (no stub). `finder-states.test.mjs`.
+- R78 (16, I-13/I-14): a hit headed by its title (`queue.source.untitled` when none, never the id); `screen.finder.noresult.partial` + `.partial.head` when `widen.total` > 0. `finder.test.mjs`.
+- R80 (18, T-20): visibility is two radios, neither checked; none chosen sends nothing and draws `project.visibility.start.required`. `home.test.mjs`, `projects.test.mjs` (R30 tests renamed R30, R80).
+- R81 (B14 and the guard's other findings): queue `promote` sends the package fields only (the project is the file's `project:` line); a door press sends `startfrom` bare (page memory holds the door); a money fact's day is `period` (no `date`); `tabledeclare` sends `schema` (as `calculation` does).
+
+**Not yet done (the next job's first work, in this order):**
+1. R75 (13, C62): `routed.mjs` part for Home and the queue. Item shapes (from `queue-producers` R46–R48 and `queue`'s task rows): authority task `kind: "authority-undetermined"`, `id` the task id, `door` a list (`taskdecide` first), `subject` the bundle; endorsement `kind: "endorsement-owed"`, `subject {kind:"member", id}`, `door: "adminendorse"` (act data `memberId`); owner vote `subject {kind:"project", id, name, change, target}`, `door: "projectowneradd"|"projectownerremove"` (`projectId`, `handle`; remove needs a reason: the shell asks it); expertise `kind: "expertise-confirmation-owed"`, `subject {kind:"member", id, label}`, `door: "expertiseconfirm"` (`memberId`, `label`). `taskdecide` accepts `id, outcome, authority, basis` (outcome `determined` with `authority`, or `undetermined_after_review`; `basis` required in both). Radios as in `start-project.mjs`/the cite state (`cs.value(fieldsetId)` answers the checked values). Home's and the queue's `acts` gain `taskdecide`, `taskforward` (Home), `adminendorse`, `projectowneradd` (and `projectownerremove` as a named re-point if the registry does not list it), `expertiseconfirm`; `contract.test.mjs` R1–R13 stays red by name until they are: it expects on home `adminendorse`, `expertiseconfirm`, `projectowneradd`, `taskforward` (and `taskdecide`), on the queue `adminendorse`, `projectowneradd`, `expertiseconfirm` (and `taskdecide`). Words held: `screen.queue.routed.*`; the labels the form needs and no key holds are listed in the REPORT below (use the keys named there so the tests are red by name until UX-DESIGN lands them).
+2. R68 (6, C58): Defer beside Dismiss: one `proposedispose` act spec, the button's `data-to` read in `send` (`deferred`|`dismissed`), the shell asks the reason; label for Defer `screen.question.say004` until a queue row exists.
+3. R69 (7, C59): items with `snoozed {until, cases}` out of the main list; a snoozed section (`queue.answered.snoozed` per case, the day by `cs.date`) with "Bring back" (`queuesnooze {case, clear: true}`; `queue.muted.unmute` stands in for the label); the guard accepts `clear`.
+4. R79 (17, G1, G2, G4, T-15): `queue.act.dothis.help` on an item's own act, `queue.act.open.help` on Open (a `data-level="2" data-tip` wrapper or attribute); `queue.unkeyed.summary|detail` for a kind with no sentence (in `item-words.mjs` `words`, `{title}`); the snooze box `type: "date"` with `min` tomorrow (post-process the `cs.field` string) and `screen.queue.snooze.pick`, a date before tomorrow not sent; the answered rows by `queue.answered.done|dismissed|dismissed.noreason|muted|generic`; the signing-key item's `queue.signer-self-registered.members` link to `/app/members`.
+5. Then: the whole suite, `format`, `architecture`, `coverage` (R65–R81 each named by a test; R68, R69, R75, R79 not yet), `ownership`, `words` (and over every L11 module together), `checks/run.mjs`; the registry note (`filingapprove`: see the REPORT); COMPLETE.
+
+**Red by name now:**
+- `contract.test.mjs` R1–R13: waits on R75's acts (above).
+- `queue-states.test.mjs` R58 (Forward/Dismiss set acts): `proposedispose`'s declaration requires `project|key|progressionKey` and `finding|key|progressionKey` at the top level although it accepts `items`; the set arm sends `items`, `to`, `reason` only, so the guard reports it. A declaration finding for BOB (queue/progressions/op-declarations), not weakened here.
+
+**For BOB (REPORT):**
+- Words no key holds (nothing invented; stand-ins named): Defer's label (stand-in `screen.question.say004`); "Bring back" (stand-in `queue.muted.unmute`); the held and inbox doors' count sentence (the number is drawn beside `screen.held.name`; the inbox door is `screen.inbox.name` and the number); the frontier levels' sentence (`screen.answers.look` with `screen.answers.level.*` and `screen.answers.state.*`); a "what anything rests on" row with no reason (not drawn); R75's form labels (guessed keys, to be confirmed with UX-DESIGN B422): `screen.queue.routed.auth.cannot` ("I could not tell"), `.auth.issuer.label` ("The issuing party"), `.auth.tried.label` ("What you tried"), `.auth.record` ("Record my answer"); R75's "Agreed:/Awaited:" lines (the producers' own `summary` carries the counts).
+- `filingapprove` on Home and the queue: the registry lists it and `contract.test.mjs` leaves it to other screens (`ELSEWHERE_DRAWN`, R17: "Read and approve it" opens its own screen); no census cause names it and I draw no separate door for it. Say if the design means one.
+- The queue's `signer-self-registered` item: "Mark it done" is not drawn (the item is a producer's, not a task; its door is `signerset`); only the "Open Members" link (R79 (e)) is.
+- R81's `startfrom`: R40 said "sends `startfrom` for it"; the owner's declaration accepts `message` and `parts` only, so the press sends it bare.
+- Find in's money form: the day of an actual payment is the fact's `period` (the owner's declaration has no `date`); say if a payment's day should be a field of `recordfact`.
+
 ## Progress (SCREENS-DAILY #8, T51-118) — stopped at half the window; next step noted below
 
 **Applied, with tests (all passing on a tree whose generated `wizard-scripts/screen-registry.mjs` lists `cite` on `finder`, see Pending):**
