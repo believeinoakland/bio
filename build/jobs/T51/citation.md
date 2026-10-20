@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_018wkgQYFa889na4frSPWfKx · depth 2 · COMPLETE · handled B3
+**Status** · session_019cLfLSvZFS385AAVvr1YqH · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
@@ -77,3 +77,41 @@ Checks after the fix:
 - node bio-plane/src/setup-words/build.mjs --check: no refusal naming citation.
 
 Size (session_018wkgQYFa889na4frSPWfKx): test runs 7, module lines 1412
+
+## J5 · QUESTION
+
+Two small judgments in entry 4 (the census declaration), my best readings first; I carry on with them.
+1. `cite`'s `role` is required on a question's arm (NO_ROLE) but refused on a case's (ROLE_NOT_APPLICABLE). One op row cannot say both. Best reading: `requires: ["project", ["handle","found"]]`, `role` only in `accepts`; the question screens always send a role. If you want `role` required, the case-arm sends of `cite` (if any screen has one) would fail interface-shell's guard.
+2. `cite`, `sever` and `reinstate` read `owner` from the address, but the door overwrites it server-side (control-plane/index.mjs:1944, selection ownership). Best reading: it is a stamp like `viewer`, so left out of `accepts`.
+Also: build/modules.json gives `citation` no `uses` edge to `test-support`; the declared-ops tests import its helper (the pass added that edge to ten other modules). Please add it; until then the architecture check will name it.
+
+## J6 · COMPLETE
+
+FR-35 done (B4, B5): citeImported and withdrawImported (C50, UC-082), the declaration of the two ops, and the census declaration of cite, drawquestion, sever and reinstate. Pushed on job/T51/citation as "T51 citation (FR-35): citeImported, withdrawImported, DECLARED_OPS (R16 to R19)".
+
+Entries applied:
+1. citeImported (`op=citeimported`, R16): one leg `target` (importedFindingRef), `target_edition`, `role`, `note`, nothing else, not in references[]. Refusals in R16's order: MACHINE_CANNOT_CITE_IMPORTED (C-33.55; an unnamed, machine or bare-`admin` author), the citing object (membership.noSuchProject's answer; NOT_AN_INQUIRY), IMPORTED_REF_MALFORMED (C-33.56), IMPORTED_EDITION_MALFORMED (C-33.57), NO_ROLE, BAD_ROLE, BAD_NOTE, the document's readability, UNSPLICEABLE_BASIS, CITATION_TOO_LARGE; the write's refusals come back unchanged (IMPORTED_NOT_ACCEPTED and ACCEPTED_WORK_UNREADABLE inside BASIS_REFUSED, accepted-work R3, R4). A held leg on the ref answers ok, `alreadyCited: [ref]`, `edition` (the held one), nothing written. Receipt: `cited`, `legs`, `role`, `gradesFilled: 0`, `origin` (group, case, edition, finding, acceptance by/at/reason, openFlags, read from accepted-work after the write) and `inherits` (the by-key sentence).
+2. withdrawImported (`op=withdrawimported`, R17): removes every leg on the ref from the live basis[] (`splice.mjs` `removeBasisLegs`; an emptied block becomes `basis: []`) with a Session Log entry (author, ref, edition, reason). Refusals in R17's order; a ref that cannot be spelled is NOT_CITED. Sever cannot move the imported leg (tested), and still moves an ordinary one.
+3. DECLARED_OPS (R18): `citeimported` and `withdrawimported` as K4189's table (classes admin, member; machineClasses []; reversible / reasoned with refusal NO_REASON).
+4. Census (R19, K4202): `cite`, `drawquestion`, `sever`, `reinstate`. Class and weight copied from the op-declarations / op-grades rows (cite reversible; drawquestion reversible, its description is the op-grades NON_ACTS reason word for word; sever, reinstate reasoned). Per B5: cite requires project and handle-or-found, `role` accepted only; `owner` is a stamp. Two readings to confirm: (a) cite's accepts lists the part's fields from EXTENT_PARAMS (extent_* and content_id), since the arm collects any `extent_*` and refuses an unknown one by name (C-45.7); (b) sever and reinstate accept and require `reason` (the arm's own, NO_REASON).
+Requirement lines: R16, R17, R18 amended and R19 NEW, written in build/requirements/citation.md (not in this record), the *(not yet met: T51)* marks removed because tests name them. Status line updated. That file is the one ownership item to accept.
+Words: the new sentences are `localize` ids citation.index.imported_*, citation.index.session_*_imported, citation.checks.* and citation.declared.*; no row exists for them yet (rows regenerate at the layer close), the words check on citation is clean.
+
+Checks:
+- node --test bio-plane/test/m/citation/: 121 pass, 0 fail (was 102; new imported.test.mjs 12, declared-ops.test.mjs 7). invariants.test.mjs line 180 listed the ops map's four ops; it now lists six.
+- Used by citation: run-productions 62, affordances 280, answer-envelope 41, control-plane 309 pass; plane 265 of 266 (see below).
+- format 0 failures; architecture citation 0; coverage citation 19 of 19 live ids; words citation 0 (inline 0, testcopy 0, unkeyed 0); checks/run.mjs: no finding for citation (tree-wide failures are other modules').
+- ownership: 8 files, 1 failure, build/requirements/citation.md (accepted per B5).
+- setup-words build --check: stale-rows note (ai-accounts' word), none naming citation.
+
+Notes for BOB (not changed here):
+- Hand rows that can go once the owners declare: op-declarations `cite`, `sever`, `reinstate`, `drawquestion` (OPS) and op-grades `cite`, `sever`, `reinstate`, `drawquestion` (RUNGS, and drawquestion's NON_ACTS reason); also marks.mjs rows `citeimported` (Reversible) and `withdrawimported` (Reasoned) agree with my weights.
+- `strengthOf` is not importable from citation's tests (strength is index 84, after citation at 81). R16's "re-reads through basisFor and strengthOf" is tested through the real inquiry's `basisFor` (leg present, no grade, axis or source; the document holds `target_edition`). The published pair and the never-stronger rule are strength's to test (R33); a strength test of an imported leg written by citeImported would close it.
+- Verified: accepted-work.acceptedFinding answers the `edition` as the leg names it (a number); the `origin` reads it.
+- plane: `R24 ... screen.bias.purpose is held by the words list` fails in bio-plane/test/m/plane; not citation's (a screen word).
+- The ops map reads the address only (`citationOps(c, url)`, as before; plane/store.mjs:772 passes no body). Both new ops read the address too; if the door sends these fields in a body, plane's wiring must pass it.
+- citationOf now reaches `acceptedWorkOf(host)`, which registers accepted-work's promotion check; a host built without accepted-work gets it on first use.
+- I wrote the code before the tests in this job; the tests were then seen to catch the faults (each refusal has a control; the not-accepted refusal lands after the acceptance is switched on, the stand-in for `importaccept`).
+Deferred: none.
+
+Size (session_019cLfLSvZFS385AAVvr1YqH): test runs 14, module lines 1688
