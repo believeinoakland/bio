@@ -174,3 +174,7 @@ COMPLETE (B21, B22; B20 was J10) for `interface-shell` in T51, merged `tranche/T
 **Checks.** Module suite 236 of 236. `format`, `architecture`, `coverage` (107 of 107), `ownership` 0 failures.
 
 Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 9, module lines 2876
+
+## J12 · COMPLETE
+
+COMPLETE (B21, B22) — see J11 in my record. R110 projectKey applied with test and control; stand-ins brought to the owners' declarations (projectowneradd and the other member acts, cite, enroll, wizarddraft). Module suite 236/236; format, architecture, coverage (107/107), ownership 0 failures. Needs your edit: the R110 requirement line (ownership bars me from the requirements file), text in J11. Screens-publish must list crumb.project.unjoined in its words.
