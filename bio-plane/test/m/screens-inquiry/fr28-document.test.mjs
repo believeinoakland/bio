@@ -245,12 +245,12 @@ test("R113 Stop using this copy, confirmed with a reason, sends select then reti
   const p = await openWith(at, { plane: retirePlane(state) });
   assert.equal(main(p).querySelector("[data-retired]"), null, "not retired before");
   await press(p, "retire");
-  dialog(p).querySelector("textarea").value = "captured from the wrong page";
+  dialog(p).querySelector("textarea").value = "mistaken capture, wrong page";
   await p.click(dialog(p).querySelector('[data-shell="confirm"]'));
   assert.deepEqual(p.byOp("select")[0].body, { ids: [D] });
   assert.deepEqual([p.requests.findIndex((r) => r.op === "select") < p.requests.findIndex((r) => r.op === "retire")], [true], "select first");
   const r = p.byOp("retire")[0].query;
-  assert.deepEqual([r.handle, r.reason], ["SEL-9", "captured from the wrong page"]);
+  assert.deepEqual([r.handle, r.reason], ["SEL-9", "mistaken capture, wrong page"]);
   assert.ok(p.byOp("image").filter((q) => q.query.id === D).length >= 2, "the document is read again");
   const note = main(p).querySelector("[data-retired]");
   assert.ok(note && says(note, "state.item.retired.name") && says(note, "state.item.retired.means"), "the retired state, by key");

@@ -112,9 +112,9 @@ test("R107 controls: a project that is no rerun draws no tab and no comparison; 
     assert.ok(!actsIn(main(p)).includes("rerunread") && !actsIn(main(p)).includes("rerunpair"));
     assert.equal(main(p).querySelector('[data-rerun]'), null);
   }
-  const lens = await open(at, { plane: { rerunread: ok(RERUN({}, { lens_difference: null, lens_difference_stated: "a lens could not be read, so the difference between the two lenses is not stated" })) } });
+  const lens = await open(at, { plane: { rerunread: ok(RERUN({}, { lens_difference: null, lens_difference_stated: "the plane states this note itself" })) } });
   const c = await tab(lens);
-  assert.ok(c.textContent.includes("a lens could not be read, so the difference between the two lenses is not stated"));
+  assert.ok(c.textContent.includes("the plane states this note itself"));
   assert.equal(c.querySelector("[data-lens]"), null, "no empty difference is drawn");
   assert.ok(!says(c, "screen.project.cmp_both", { count: "0" }));
   const unknown = await open(at, { plane: { rerunread: ok(RERUN({}, { findings: [{ finding: F1, ref: ref(F1), role: "supports", source: { pair: PAIR("B", "B"), lens_statements: [] }, paired: true,

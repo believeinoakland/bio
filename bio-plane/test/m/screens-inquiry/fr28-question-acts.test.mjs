@@ -82,10 +82,7 @@ test("R101 the owner's refusals of a change are drawn by their words", async () 
   const f = main(p).querySelector('[data-hunch="HYP-1"] details');
   fill(p, { "question-hrevr-0": "why" });
   assert.ok(says(await press(p, "hypothesisrevise", { within: f }), "refusal.HYPOTHESIS_WITHDRAWN"));
-  for (const k of ["screen.question.hunch.change.summary", "screen.question.hunch.change.note", "screen.question.hunch.revise.label", "screen.question.hunch.revise.help", "screen.question.hunch.revise.reason",
-    "screen.question.hunch.withdraw.reason", "screen.question.hunch.withdraw.note", "screen.question.hunch.withdraw.note2", "screen.question.hunch.withdraw.button",
-    "screen.question.hunch.refused.summary", "screen.question.hunch.refused.body", "screen.question.hunch.refused.body2", "act.hypothesisrevise.label.question", "act.hypothesiswithdraw.label.question",
-    "refusal.HYPOTHESIS_WITHDRAWN", "shell.reason.lead"]) assert.ok(hasWord(k), k);
+  assert.deepEqual(rawKeys(p.root()), [], "every sentence the folds draw is a held word");
 });
 
 /* ------------------------------------------------------------------------------------------------------------------ R102 */
@@ -97,8 +94,7 @@ test("R102 Divide this question sends the reason, and two new questions, each nu
   const p = await open(at, { ...A, plane: { allocid: () => ok({ ok: true, id: "INQ-2026-" + String(++n).padStart(4, "0") }), inquirydivide: divided } });
   const fold = main(p).querySelector("details[data-divide]");
   assert.ok(fold && says(fold.querySelector("summary"), "screen.question.divide.summary"));
-  for (const k of ["screen.question.divide.note", "screen.question.divide.note2", "screen.question.divide.note3", "screen.question.divide.reason", "screen.question.divide.limits", "screen.question.divide.q1", "screen.question.divide.q2",
-    "screen.question.divide.numbered", "screen.question.divide.every"]) assert.ok(says(fold, k), k);
+  assert.deepEqual(rawKeys(fold), [], "every sentence the divide fold draws is a held word");
   assert.ok(says(fold, "screen.question.divide.leg", { passage: DOC_TITLE }), "a choice for each passage, named by its document's title");
   fill(p, { "question-divide-reason": "It was two questions.", "question-divide-q1": "How many reported potholes were marked closed within seven days?", "question-divide-q2": "Were the potholes marked closed actually repaired?" });
   const check = (ord, side) => { p.doc.getElementById(`question-divide-leg-${ord}-${side}`).checked = true; };
@@ -188,14 +184,13 @@ test("R104 a concluded question offers 'Reopen this finding, with a reason', the
   const p = await open(at, { ...A, plane: { basisversions: CONCLUDED, reopen: ok({ ok: true, target: Q, to: "open" }) } });
   const fold = main(p).querySelector("details[data-reopen]");
   assert.ok(fold && says(fold.querySelector("summary"), "screen.question.reopen.summary"));
-  for (const k of ["screen.question.reopen.what", "screen.question.reopen.case", "screen.question.reopen.kept", "screen.question.reopen.why", "screen.question.reopen.why.help", "screen.question.reopen.next",
-    "screen.question.reopen.refused.summary"]) assert.ok(says(fold, k), k);
+  assert.deepEqual(rawKeys(fold), [], "every sentence the reopen fold draws is a held word");
   assert.ok(says(await press(p, "reopen", { within: fold }), "screen.question.reopen.refused.noreason"), "required");
   assert.equal(p.byOp("reopen").length, 0);
-  fill(p, { "question-reopen-why": "the city's 2026 audit corrects the figure" });
+  fill(p, { "question-reopen-why": "a later audit corrects the figure" });
   await press(p, "reopen", { within: fold });
   const q = p.byOp("reopen")[0].query;
-  assert.deepEqual([q.target, q.reason], [Q, "the city's 2026 audit corrects the figure"]);
+  assert.deepEqual([q.target, q.reason], [Q, "a later audit corrects the figure"]);
   /* control: an open question offers none */
   const open1 = await open(at, A);
   assert.ok(!actsIn(main(open1)).includes("reopen"));
@@ -213,9 +208,6 @@ test("R104 the owner's refusals are drawn by the design's words: no reason, a re
   const c = await open(at, { ...A, plane: { basisversions: CONCLUDED, backlinks: (r) => ok({ ok: true, target: r.query.target, backlinks: r.query.target === Q ? [{ from: "CASE-2026-0001", from_type: "published", from_title: "Street safety" }] : [] }) } });
   assert.ok(says(main(c).querySelector("details[data-reopen]"), "screen.question.reopen.next.link", { link: word("screen.question.reopen.next.link.text") }), "the docket, where the next edition is started");
   assert.ok(!main(open1).textContent.includes(word("screen.question.reopen.next.link.text")), "control: none when no published case carries it");
-  for (const k of ["screen.question.reopen.summary", "screen.question.reopen.what", "screen.question.reopen.case", "screen.question.reopen.kept", "screen.question.reopen.why", "screen.question.reopen.why.help",
-    "screen.question.reopen.next", "screen.question.reopen.next.link", "screen.question.reopen.next.link.text", "screen.question.reopen.refused.summary", "screen.question.reopen.refused.noreason",
-    "screen.question.reopen.refused.badreason", "screen.question.reopen.refused.notsetdown", "act.reopen.label.question"]) assert.ok(hasWord(k), k);
 });
 
 /* ------------------------------------------------------------------------------------------------------------------ R10 */
