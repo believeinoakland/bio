@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_019cLfLSvZFS385AAVvr1YqH · depth 2 · COMPLETE · handled B5
+**Status** · session_0153H53S2RwjRhNVSVQfv5k8 · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -115,3 +115,30 @@ Notes for BOB (not changed here):
 Deferred: none.
 
 Size (session_019cLfLSvZFS385AAVvr1YqH): test runs 14, module lines 1688
+
+## J7 · COMPLETE
+
+Applied B6 (K4223), pushed as cec1c2cb28 on job/T51/citation (merged tranche/T51 first).
+
+- `needs: "contribute"` on all six DECLARED_OPS rows: citeimported and withdrawimported (the new ones), and cite, drawquestion, sever, reinstate (the older mutating rows, the same check). `contribute` is the capability the sibling acts hold (`op-capabilities`: cite, sever, reinstate, drawquestion). The arm checks no capability itself; its member gate is the machine and unstamped-author refusal (`#importedMemberRefusal`), so the door's `needs` is the capability gate, as the siblings have it.
+- Requirement R18 amended in `build/requirements/citation.md` (the `needs` clause and the register test named).
+- Test: `bio-plane/test/m/citation/register.test.mjs`, two tests named R18. It calls op-declarations' `registerDeclaredOps({citation: DECLARED_OPS})` and expects no refusal; the control is citeimported with its `needs` taken away, refused `NEEDS_MISSING` naming the op, with nothing registered (so the real call still goes through). A third check holds every mutating row to `contribute`.
+- Red: I did not run the control before the edit. The refusal it asserts is the R80 one that `op-declarations/test/m/op-declarations/register-owners.mjs` already records ("citation's `citeimported` row ... declares a mutating op with no `needs`"), and before the edit `DECLARED_OPS.citeimported` had no `needs` key.
+- The four older rows agree with their hand rows: registration checks each owner row against the hand row (`disagreement`), and the registration test passes, so classes, machine classes, mutating and needs match.
+
+Deferred: none.
+
+Found in another module (not edited, for BOB):
+- `bio-plane/test/m/op-declarations/register-owners.mjs` (op-declarations' test): its header says registering every owner is refused by citation's `citeimported` row. That is no longer true. Citation's declaration can now be added to its `REGISTERED` list; that file is not mine, so I left it.
+- Hand rows that a registered declaration can replace, once the owner's row is what the plane reads: `cite`, `drawquestion`, `sever`, `reinstate` in op-declarations' `OPS`, op-capabilities' rows, and op-grades' rows where present. I did not remove or test their removal.
+
+Tests and checks (from the process repo, against /home/user/bio):
+- `node --test bio-plane/test/m/citation/`: 123 pass, 0 fail (`register.test.mjs` run separately as well: 2 pass).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `node checks/architecture.mjs /home/user/bio citation`: 18 product files, 0 failures.
+- `node checks/coverage.mjs /home/user/bio citation`: 19 of 19 live ids named by a test, 0 failures.
+- `node checks/words.mjs /home/user/bio citation`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: citation has no finding. The tree-wide failures are other modules': architecture 1, coverage 4, and words 26 (testcopy in op-grades' tests, for example `owners.test.mjs`, `t35.test.mjs`, `t47.test.mjs`). I did not look at them.
+- `node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`: 1 file changed (the requirement file), 0 failures.
+
+Size (session_0153H53S2RwjRhNVSVQfv5k8): test runs 2, module lines 1688
