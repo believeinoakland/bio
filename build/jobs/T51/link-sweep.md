@@ -43,3 +43,22 @@ Entries 1-4 (R13 sweepSet, R14 sweepRatify, R15 DECLARED_OPS for sweeps, sweepse
 2. modules.json: `link-sweep` does not use `test-support`, so `node checks/architecture.mjs` fails on declared-ops.test.mjs ("imports bio-plane/test/declared-ops.mjs of test-support, which link-sweep does not declare in uses"). B2 says no edge to add; money and others have it. Please add `test-support` to link-sweep's uses.
 3. plane (not mine): `bio-plane/src/plane/store.mjs:863` calls `linkSweepOps(linkSweepOf(ctx), url)` without the body; `sweepset` and `sweepratify` read the POST body, so that line needs `, body` as every neighbour has. Until plane does so the two ops get an empty body.
 Also for the record: the new row MACHINE_CANNOT_SET_SWEEP took C-18.24 (monitoring's two new rows should take C-18.22 and C-18.23; renumber if they differ). Its translation is read by localize('link-sweep.checks.machine_cannot_set_sweep') since refusal.* rows do not exist in rows.mjs yet.
+
+## J3 · COMPLETE
+
+FR-37 (B2) complete on job/T51/link-sweep.
+
+Entries applied: 1 (R13 `sweepSet`, `op=sweepset`), 2 (R14 `sweepRatify`, `op=sweepratify`), 3 (R15 `DECLARED_OPS` extended with `sweepset`, `sweepratify`; the ratify screen's words by key), 4 (the `sweeps` declaration, already present, kept as is). Requirement lines R13–R15 are BOB's own (written K4189, still marked *(not yet met: T51)*; every id is now named by a test, so BOB may lift the mark). No new R line of mine was needed: R15 states all three declared ops.
+
+Against monitoring's real writer: after merging tranche/T51 (monitoring R77 is on it), `sweepHost().write({bundle, mutate, author, viewer, log})` has the shape J2 assumed; my 39 tests, which ran earlier against a stand-in, pass against it unchanged. Row `MACHINE_CANNOT_SET_SWEEP` stands at C-18.24 (B5).
+
+Deferred: none. Found in another module: the plane's `store.mjs:863` missing `body` (already sent to the plane by BOB, B5); otherwise none. Hand rows in `op-declarations`/`op-grades` for `sweepset`, `sweepratify`, `sweeps` can go now that this module declares them.
+
+Tests and checks (run after the last change, process repo pulled):
+- `node --test test/m/link-sweep/*.test.mjs` (bio-plane): tests 39, pass 39, fail 0.
+- format: 175 modules, 0 failures. architecture link-sweep: 0 failures. coverage link-sweep: 15 of 15 live ids named; 0 failures. ownership: 7 files changed by link-sweep; 0 failures.
+- words link-sweep: 0 failures; words monitoring following link-sweep scheduler: 0 failures (dev 3, unkeyed 52 are other modules').
+- setup-words `build.mjs --check`: stale-rows note only (names ai-accounts, not this module); no refusal.
+- `checks/run.mjs` full run not repeated this restart; the per-check runs above cover format, architecture, coverage, words and ownership for this module.
+
+Size (session_01Th8FDaUxr9PkjaKXvKcKvP): test runs 2, module lines 1230
