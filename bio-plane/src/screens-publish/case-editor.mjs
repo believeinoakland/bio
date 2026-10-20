@@ -482,24 +482,11 @@ export const CASE_EDITOR = Object.freeze({
       },
     },
     {
-      // R35: the assistant's draft of the account, in the framing the member chose, drawn as machine work; the member
-      // takes it into her own words, and the draft is never sent back as the account.
+      // R35: "Draft the account with the assistant", drawn only when the assistant may run. Its press is assistant work and is held with
+      // the assistant (K3717; B13): `accountpropose` stores a draft an AI run made, which a member's press cannot supply, so the screen
+      // sends nothing to it. The drafts the plane holds are read from `accountdrafts` and drawn as machine work.
       op: "accountpropose", label: "act.accountpropose.label.case-editor",
-      send: function (view, el, cs) {
-        const c = view.ui.draft && view.ui.draft.case;
-        if (!c || !c.case_id) return null;
-        return { query: { case: c.case_id }, body: { kind: "case_account", framing: String(cs.value("ce-framing") || "time_order") } };
-      },
-      done: function (view, answer, cs) {
-        if (view.parts.refused(cs, view, "accountpropose", answer)) return { stay: true }; // D29
-        const r = view.parts.value(answer) || {};
-        if (r.draft && typeof r.draft === "object") {
-          if (r.draft.kind === "account_check") view.ui.accountFlags = (view.ui.accountFlags || []).concat(r.draft.flags || []);
-          else view.ui.accountDraft = r.draft;
-        }
-        view.parts.forget(view);
-        return { stay: true };
-      },
+      send: function () { return null; },
     },
     {
       // R35: "See its earlier drafts": the case's drafts of its account, each labeled machine work.

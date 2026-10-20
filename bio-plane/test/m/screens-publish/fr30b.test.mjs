@@ -267,6 +267,7 @@ test("R54 a file chosen on the published page is fingerprinted in the page and c
   choose(p, "pb-file", bytes);
   const n = p.requests.length;
   await press(p, "verify", { nth: 1 });
+  await until(p, () => p.requests.slice(n).some((r) => r.op === "verify")); // the file is hashed by the browser's crypto, asynchronously
   const sent = p.requests.slice(n).filter((r) => r.op === "verify");
   assert.equal(sent.length, 1);
   assert.equal(sent[0].query.sha256, hex, "the SHA-256 worked out in the page");
