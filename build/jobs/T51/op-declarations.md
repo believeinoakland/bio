@@ -77,3 +77,7 @@ FR-04 applied (K4168), pushed; tranche/T51 merged in (it brought the registry wi
 **Tests and checks.** `node --test test/m/op-declarations/`: tests 242, pass 242, fail 0 (12 new, `declared.test.mjs`, naming R80 and R81, seen failing first). admission and op-capabilities suites: 0 fail. architecture (op-declarations): 36 product files, 255 relative imports; 0 failures. coverage (op-declarations): 78 of 78; 0 failures. ownership (tranche/T51 to job/T51/op-declarations): 0 failures. words (all modules): 0 failures. format: 1 failure, test-support's missing file above.
 
 Size (session_01Wn8nVUduH4GbFBXsW5fYy7): test runs 12, module lines 3452
+
+## J10 · COMPLETE
+
+B11 applied (pushed; tranche/T51 merged in): DEC-382's six owed acts (citeimported, withdrawimported, namedrequests, namedrequestset, sweepset, sweepratify) are in OWED_BY_FIX_ROUND. op-declarations tests 242, pass 242, fail 0; architecture, coverage (op-declarations ids all named), words, ownership: 0 failures. R80 and R81 lines are still BOB's to add (J9). Size (session_01Wn8nVUduH4GbFBXsW5fYy7): test runs 14, module lines 3452
