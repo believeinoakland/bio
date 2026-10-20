@@ -36,33 +36,38 @@
 | FR-04 | 1 | `op-declarations` (152, 11) | sonnet | 1 | K4168 | Fourth of wave 1 (index 152). `test-support`'s collector, once merged, may be used in your tests; until then use fixture rows. |
 | FR-05 | 1 | `interface-shell` (158, 11) | sonnet | 3 | K4164 (3); K4168; C52; DEC-374 to DEC-377 | Fifth of wave 1 (index 158). It merges before every screen job (they run in wave 2 and merge after it). |
 | FR-06 | 2 | `file-scanner` (33, 1) | sonnet | 1 | FR-SCAN (K4182) | Before `file-safety` (index 33 < 49). |
-| FR-07 | 2 | `member-roster` (34, 2) | sonnet | 3 | C80; C62 (K4169); C79; C81; K4168 | Before `credentials` (index 34 < 39), `screens-settings`, `queue-producers`. |
+| FR-07 | 2 | `member-roster` (34, 2) | sonnet | 4 | C80; C62 (K4169); C79; C81; K4168 | Before `credentials` (index 34 < 39), `screens-settings`, `queue-producers`. |
 | FR-08 | 2 | `project-roster` (37, 2) | sonnet | 2 | C84; K4168 | Before `screens-daily` (index 37 < 163). |
 | FR-09 | 2 | `credentials` (39, 2) | sonnet | 2 | C80; K4168 | After `member-roster` (index 34 < 39); before `screens-settings`, `screens-publish` (its ceremony makes the key). |
 | FR-10 | 2 | `provenance` (42, 3) | sonnet | 3 | C23; C62 (K4169, UC-046); K4168 | Before `tasks` (index 42 < 143), which asks you for the fact in `taskdecide`. |
-| FR-11 | 2 | `capture-sources` (45, 3) | sonnet | 2 | C20; K4168 | Before `plane` (index 45 < 169); `plane` spreads your new ops map and its assembly reads your declaration. |
+| FR-11 | 2 | `capture-sources` (45, 3) | sonnet | 2 | C20; K4168 | Before `plane` (index 45 < 169) and `screens-intake`; `plane` spreads your new ops map and its assembly reads your declaration. The controls are drawn (DEC-381) and built by `screens-intake`. |
 | FR-12 | 2 | `file-safety` (49, 3) | sonnet | 1 | FR-SCAN (K4182) | After `file-scanner`. |
 | FR-13 | 2 | `connections` (59, 5) | sonnet | 2 | C28; C29; K4168 | Before `screens-inquiry` (index 59 < 164). |
+| FR-35 | 2 | `citation` (81, 6) | sonnet | 3 | C50 (K4189); K4168 | After `inquiry-grammar` (75) and `accepted-work` (76); before `screens-inquiry` (81 < 164) and `screens-publish` (81 < 166), which draw the controls when UX-DESIGN's drawing (HANDOFF B406) merges. |
 | FR-14 | 2 | `agent-runner` (97, 6) | sonnet | 1 | K4176 (2) | After `bundler` (wave 1): your merge turns its real-fleet arm green. |
-| FR-15 | 2 | `investigation` (101, 7) | sonnet | 2 | C65; K4168 | Before `plane` (index 101 < 169); no screen draws it yet (see the plan's Left out). |
+| FR-15 | 2 | `investigation` (101, 7) | sonnet | 2 | C65; K4168 | Before `plane` (index 101 < 169); `screens-inquiry` draws the close control (DEC-381, C65). |
 | FR-16 | 2 | `case-import` (116, 8) | sonnet | 3 | C49 (K4169, UC-076); C51 (DEC-374); K4168 | Before `screens-publish` (116 < 166). |
 | FR-17 | 2 | `case-inputs` (119, 8) | sonnet | 2 | C12 (K4169, UC-101); K4168 | Before `screens-publish`; its ops map is already spread by `plane`. |
 | FR-18 | 2 | `case-authoring` (120, 8) | sonnet | 3 | C1; C5; C6; K4168 | Before `review` (index 120 < 121) and `screens-publish`. |
 | FR-19 | 2 | `review` (121, 8) | sonnet | 4 | C3; C2; C9 (DEC-374); K4168 | After `case-authoring`; before `screens-publish` (index 121 < 166). |
-| FR-20 | 2 | `filings` (132, 9) | haiku | 3 | C71; C75 (DEC-377); C71 / C75 / K4168 | Before `screens-action`. |
+| FR-20 | 2 | `filings` (132, 9) | sonnet | 3 | C71; C75 (DEC-377); C71 / C75 / K4168 | Before `screens-action`. |
+| FR-36 | 2 | `monitoring` (136, 10) | sonnet | 4 | C56 (R75 to R77); K4168 | After `case-import` (116); before `link-sweep` (136 < 138, which calls its R77) and `screens-intake` (136 < 162). |
+| FR-37 | 2 | `link-sweep` (138, 10) | sonnet | 3 | C56 (R13 to R15); K4168 | After `monitoring` (136 < 138); before `screens-intake` (138 < 162). |
 | FR-21 | 2 | `tasks` (143, 11) | sonnet | 2 | C62 (K4169, UC-046); K4168 | After `provenance` (42 < 143); before `queue`. |
 | FR-22 | 2 | `queue-producers` (146, 11) | sonnet | 1 | C62 (K4169, UC-046) | After `member-roster` (34 < 146) and `tasks`; before `queue`. |
 | FR-23 | 2 | `queue` (148, 11) | sonnet | 2 | C62 (K4171); C59; C60; K4168 | After `tasks` (143) and `queue-producers` (146), before `screens-daily` (148 < 163). |
-| FR-24 | 2 | `screens-entry` (159, 11) | sonnet | 1 | C11 (DEC-374) | After `interface-shell` (wave 1); index 159, the first of the screens. |
-| FR-25 | 2 | `screens-settings` (161, 11) | sonnet | 7 | C79; C80; C47; C30; C81; C82; C11 | After `member-roster`, `credentials`, `interface-shell` and `screens-entry`. The mechanical pass has declared the ops of `corpus-export`, `instance-se |
-| FR-26 | 2 | `screens-intake` (162, 11) | sonnet | 5 | C55; C17; C18; C19; C56 | After `interface-shell`. The mechanical pass has declared the ops of `monitoring`, `link-sweep`, `sources`, `people`, `doorbell`, `observation-log` an |
+| FR-39 | 2 | `instance-setup` (150, 11) | sonnet | 1 | C11 (K4164: the website file's one owner) | After `queue-producers` (146) and `queue` (148); before `screens-entry` (150 < 159) and `screens-settings` (150 < 161), which draw its answer. |
+| FR-24 | 2 | `screens-entry` (159, 11) | sonnet | 1 | C11 (DEC-374) | After `interface-shell` (wave 1) and `instance-setup` (index 150, FR-39: it answers the website file this screen draws); index 159, the first of the screens. |
+| FR-25 | 2 | `screens-settings` (161, 11) | sonnet | 7 | C79; C80; C47; C30; C81; C82; C11 | After `member-roster`, `credentials`, `instance-setup` (index 150, FR-39: it answers the website file), `interface-shell` and `screens-entry`. The mechanical pass has declared the ops of `corpus-export`, `instance-setup` (its other ops), `bias`, `promotion` and `wizard-scripts` (`writinghelp`) before you start, except any op the pass hands to its owner's own job, which BOB names to you by CHANGE before you send it. |
+| FR-26 | 2 | `screens-intake` (162, 11) | sonnet | 7 | C55 (owns and exports the outcome drawing); C17; C18; C19; C56; C20 (DEC-381); C56 named requests and sweeps (when B406 is drawn) | After `interface-shell`, `capture-sources` (45, FR-11: the credential ops), `monitoring` (136, FR-36) and `link-sweep` (138, FR-37), whose own jobs declare the ops the `watching` screen sends. The mechanical pass has declared the ops of `sources`, `people`, `doorbell`, `observation-log`, `capture` and `wizard-scripts` (`writinghelp`) before you start, except any op the pass hands to its owner's own job, which BOB names to you by CHANGE before you send it. `screens-inquiry` (164) merges after you and imports your C55 outcome drawing. |
 | FR-27 | 2 | `screens-daily` (163, 11) | sonnet | 13 | C13; C14; C15; C27; C33 (frontier only); C58; C59; C60; C61; C84; C47 (queue door); C48 (queue and Home door); C62 (DEC-378) | After `project-roster`, `member-roster`, `tasks`, `queue-producers`, `queue` and `interface-shell`. |
-| FR-28 | 2 | `screens-inquiry` (164, 11) | sonnet | 25 | C25; C28; C32; C34; C35; C37; C44; C52; C54; C55 (document half); C64; C85; C21; C22; C24; C29; C31; C36; C39; C57; C9; C48; C46; C49 (DEC-378); (registry) | After `connections`, `case-import` (the rerun ops) and `interface-shell`. The mechanical pass has declared the ops of `provenance-routes`, `progressio |
-| FR-29 | 2 | `screens-investigate` (165, 11) | sonnet | 3 | C26; C68; C40 | After `interface-shell`. The mechanical pass has declared the ops of `progressions`, `lines` and `standards` before you start. |
-| FR-30 | 2 | `screens-publish` (166, 11) | sonnet | 16 | C1 (user half); C2; C3 (user half); C4; C5; C6; C7; C8; C16; C17 (doorbell); C9 (docket); C53; C10; C51 (withdraw); C12 (DEC-378; K4185); C49 (DEC-378) | After `case-authoring`, `review`, `case-inputs`, `case-import`, `credentials`, `interface-shell`. The mechanical pass has declared the ops of `capture |
-| FR-31 | 2 | `screens-action` (167, 11) | sonnet | 17 | C45; C63; C66; C67; C69; C70; C71; C72; C73; C41; C42; C43; C68 (pointer); C74; C75; C76; (registry) | After `filings` and `interface-shell`. The mechanical pass has declared the ops of `conformance`, `consequences`, `escalation`, `actions` and `action- |
+| FR-28 | 2 | `screens-inquiry` (164, 11) | sonnet | 28 | C25; C28; C32; C34; C35; C37; C44; C52; C54; C55 (document half); C64; C85; C21; C22; C24; C29; C31; C36; C39; C57; C9; C48; C46; C49 (DEC-378); (registry); C23 (DEC-381); C65 (DEC-381); C50 (when B406 is drawn) | After `connections`, `case-import` (the rerun ops), `provenance` (42, FR-10: `declareorigin`), `investigation` (101, FR-15: `projectclose`), `citation` (81, FR-35: `citeimported`, `withdrawimported`), `interface-shell` and `screens-intake` (162: you import its C55 outcome drawing; `modules.json` gives you that `uses` edge). The mechanical pass has declared the ops of `provenance-routes`, `progressions`, `hypotheses`, `basis-versions`, `extraction`, `content`, `entities`, `inquiry`, `reevaluation`, `promotion`, `contradiction`, `intent` and `wizard-scripts` (`writinghelp`) before you start, except any op the pass hands to its owner's own job, which BOB names to you by CHANGE before you send it. (`monitoring` now has its own job, FR-36.) |
+| FR-29 | 2 | `screens-investigate` (165, 11) | sonnet | 3 | C26; C68; C40 | After `interface-shell`. The mechanical pass has declared the ops of `progressions`, `lines` and `standards` before you start, except any op the pass hands to its owner's own job, which BOB names to you by CHANGE before you send it. |
+| FR-30 | 2 | `screens-publish` (166, 11) | sonnet | 17 | C1 (user half); C2; C3 (user half); C4; C5; C6; C7; C8; C16; C17 (doorbell); C9 (docket); C53; C10; C51 (withdraw); C12 (DEC-378; K4185); C49 (DEC-378); C50 (when B406 is drawn) | After `case-authoring`, `review`, `case-inputs`, `case-import`, `credentials`, `citation` (81, FR-35: `citeimported`, `withdrawimported`), `interface-shell`. The mechanical pass has declared the ops of `capture`, `sources` and `doorbell`, and the older ops of `citation`, before you start, except any op the pass hands to its owner's own job, which BOB names to you by CHANGE before you send it. |
+| FR-31 | 2 | `screens-action` (167, 11) | sonnet | 17 | C45; C63; C66; C67; C69; C70; C71; C72; C73; C41; C42; C43; C68 (pointer); C74; C75; C76; (registry) | After `filings`, `screens-investigate` (165, entry 13 points to its C68 screen) and `interface-shell`. The mechanical pass has declared the ops of `conformance`, `consequences`, `escalation`, `actions`, `action-plans` and `wizard-scripts` (`writinghelp`) before you start, except any op the pass hands to its owner's own job, which BOB names to you by CHANGE before you send it. |
 | FR-32 | 2 | `plane` (169, 11) | sonnet | 4 | K4168; C20; C65; C20; C23; C62; C12; C49 | Index 169: after every owner above and after `op-declarations` and `op-grades` (wave 1); the installer pair and `journey-check` do not depend on it. |
-| FR-33 | 2 | `installer` (171, 11) | sonnet | 2 | K4176 (1) R33; K4176 (1) R11 | Index 171; independent of the other owners. |
+| FR-38 | 2 | `installer-steps` (170, 11) | sonnet | 1 | K4176 (1) R33 (the part in `newgroup/src/steps/`) | Before `installer` (170 < 171), which finishes R33 on top of it. |
+| FR-33 | 2 | `installer` (171, 11) | sonnet | 2 | K4176 (1) R33 (the part outside `newgroup/src/steps/`); K4176 (1) R11 | After `installer-steps` (170, FR-38); independent of the other owners. |
 | FR-34 | 2 | `journey-check` (174, 11) | sonnet | 1 | E (walk-T51-findings group E; `build/plan/deadends-T51/walk-E-trace.md`) | Index 174, last overall. |
 
 ### 4a. The mechanical pass between wave 1 and wave 2 (replaces the 32 declaration-only jobs)
@@ -83,7 +88,7 @@ One worker (sonnet, medium) in BOB's session, after wave 1 has merged and before
 | C8 | always 'not compliant' | FR-30 screens-publish |
 | C9 | reopen and next edition | FR-19 review; FR-28 screens-inquiry; FR-30 screens-publish |
 | C10 | check a file | FR-30 screens-publish |
-| C11 | website file | FR-24 screens-entry; FR-25 screens-settings |
+| C11 | website file | FR-39 instance-setup (answers the file); FR-24 screens-entry; FR-25 screens-settings (both only draw it) |
 | C12 | standard details | FR-17 case-inputs; FR-30 screens-publish; FR-32 plane |
 | C13 | nothing leads to Held captures | FR-27 screens-daily |
 | C14 | Vouch for photos | FR-27 screens-daily |
@@ -92,10 +97,10 @@ One worker (sonnet, medium) in BOB's session, after wave 1 has merged and before
 | C17 | a source | FR-26 screens-intake; FR-30 screens-publish |
 | C18 | leads | FR-26 screens-intake |
 | C19 | render and archive | FR-26 screens-intake |
-| C20 | source login | FR-11 capture-sources; FR-32 plane |
+| C20 | source login | FR-11 capture-sources; FR-26 screens-intake (DEC-381); FR-32 plane; `capture-requests` `capturerequestretry`: haiku declaration job (section 7) |
 | C21 | OCR and completeness | FR-28 screens-inquiry |
 | C22 | confirm a transcription | FR-28 screens-inquiry |
-| C23 | declare origin | FR-10 provenance; FR-32 plane |
+| C23 | declare origin | FR-10 provenance; FR-28 screens-inquiry (DEC-381); FR-32 plane |
 | C24 | route can be shown | FR-28 screens-inquiry |
 | C25 | Thread | FR-28 screens-inquiry |
 | C26 | first flow | FR-29 screens-investigate |
@@ -108,7 +113,7 @@ One worker (sonnet, medium) in BOB's session, after wave 1 has merged and before
 | C33 | Find (frontier) | FR-27 screens-daily |
 | C34 | Narrow | FR-28 screens-inquiry |
 | C35 | Keep a hunch | FR-28 screens-inquiry |
-| C36 | change a hunch | FR-28 screens-inquiry |
+| C36 | change a hunch (revise and withdraw; the hunch-graded leg is not built: K1467, hunches are never legs) | FR-28 screens-inquiry |
 | C37 | strength omits legs | FR-28 screens-inquiry |
 | C39 | divide a question | FR-28 screens-inquiry |
 | C40 | in force on a date | FR-29 screens-investigate |
@@ -121,12 +126,13 @@ One worker (sonnet, medium) in BOB's session, after wave 1 has merged and before
 | C47 | bias | FR-25 screens-settings; FR-27 screens-daily |
 | C48 | contradiction | FR-27 screens-daily; FR-28 screens-inquiry |
 | C49 | regrade and rerun | FR-16 case-import; FR-28 screens-inquiry; FR-30 screens-publish; FR-32 plane |
+| C50 | cite another team's finding; take it back (K4189) | FR-35 citation; FR-28 screens-inquiry (question) and FR-30 screens-publish (imported), both when B406 is drawn |
 | C51 | withdraw an acceptance | FR-16 case-import; FR-30 screens-publish |
 | C52 | acts bind home project | FR-05 interface-shell; FR-28 screens-inquiry |
 | C53 | sever citations | FR-30 screens-publish |
 | C54 | Watch for changes | FR-28 screens-inquiry |
-| C55 | Check now | FR-26 screens-intake; FR-28 screens-inquiry |
-| C56 | watching | FR-26 screens-intake |
+| C55 | Check now | FR-26 screens-intake (owns and exports the outcome drawing); FR-28 screens-inquiry (imports it) |
+| C56 | watching; named requests and sweeps (K4189) | FR-26 screens-intake; FR-36 monitoring; FR-37 link-sweep; the controls when B406 is drawn |
 | C57 | reminders to look again | FR-28 screens-inquiry |
 | C58 | Defer | FR-27 screens-daily |
 | C59 | snooze | FR-23 queue; FR-27 screens-daily |
@@ -135,7 +141,7 @@ One worker (sonnet, medium) in BOB's session, after wave 1 has merged and before
 | C62 | authority decision | FR-07 member-roster; FR-10 provenance; FR-21 tasks; FR-22 queue-producers; FR-23 queue; FR-27 screens-daily; FR-32 plane |
 | C63 | due-date door | FR-31 screens-action |
 | C64 | stage needs | FR-28 screens-inquiry |
-| C65 | close a project | FR-15 investigation; FR-32 plane |
+| C65 | close a project | FR-15 investigation; FR-28 screens-inquiry (DEC-381); FR-32 plane |
 | C66 | reply form | FR-31 screens-action |
 | C67 | records request offices | FR-31 screens-action |
 | C68 | office records lines | FR-29 screens-investigate; FR-31 screens-action |
@@ -154,11 +160,11 @@ One worker (sonnet, medium) in BOB's session, after wave 1 has merged and before
 | C84 | ownerless project door | FR-08 project-roster; FR-27 screens-daily |
 | C85 | names are links | FR-28 screens-inquiry |
 | E | the walk's stall | FR-34 journey-check |
-| K4176 (1) | installer R33, R11 | FR-33 installer |
+| K4176 (1) | installer R33, R11 | FR-38 installer-steps (R33's part in `newgroup/src/steps/`); FR-33 installer (the rest of R33, R11) |
 | K4176 (2) | release coherence | FR-02 bundler (the check), FR-14 agent-runner (the class) |
 | FR-DEPLOY (K4180, K4186) | unsigned test deploys from a named branch | FR-02 bundler (the scripts); the workflow file is BOB's |
 | FR-SCAN (K4182) | scanner signatures | FR-06 file-scanner, FR-12 file-safety |
-| K4168 | the declarations | wave 1 (FR-01, FR-03, FR-04, FR-05) and every declaring job; the collector call FR-32 plane |
+| K4168 | the declarations | wave 1 (FR-01, FR-03, FR-04, FR-05) and every declaring job; the plane's own assembly FR-32 plane |
 
 ## 6. Wave 1 and wave 2: what each job holds
 
