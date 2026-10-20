@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_014e6RbaKdqhKwbmmyknKp2v · depth 2 · COMPLETE · handled B14
+**Status** · session_01PZ9Gu5FRgJY1fJyGfYx9Tz · depth 2 · COMPLETE · handled B16
 
 ## J1 · BLOCKED
 
@@ -291,3 +291,40 @@ DEFERRED: none.
 FOUND IN ANOTHER MODULE: none new.
 
 Size (session_014e6RbaKdqhKwbmmyknKp2v): test runs 3, module lines 2701 (own code, build-data.mjs included, the three generated files excluded: civicsmith-library.mjs, front-doors.mjs, screen-registry.mjs). The four checks ran in addition to the three test runs.
+
+## J15 · COMPLETE
+
+COMPLETE for CHANGE B16 (replaces B15): the registry is re-taken at the design commit 09fbb247eb (R41). Pushed at 1f0c95222f on job/T51/wizard-scripts, after merging tranche/T51 (fa8d8a4e84).
+
+APPLIED
+- source/registry.json is the design file at 09fbb247eb (83 screens, 556 acts: 427 declared, 83 function, 46 owed). The previous file is kept as source/registry-aa8bdcd0b4.json.
+- build-data.mjs pins 09fbb247eb; screen-registry.mjs regenerated (the only generated file that changed). civicsmith-library.mjs and front-doors.mjs are unchanged; build-data.mjs --check passes.
+- Current-pin and current-count assertions in library, t47, t48, t50 and t51 moved to 09fbb247eb and 556 acts. Historical test titles keep their history.
+
+REGISTRY DIFFERENCES FROM THE PREVIOUS COMMIT
+- person: gains linewithdraw. screens-investigate does not draw it yet (the held act).
+- docket: gains writinghelp. screens-publish does not draw it yet.
+- start-send: loses release. screens-action draws no release on it, so nothing to change there.
+
+SCREENS WHOSE ACTS DIFFER FROM WHAT THEIR MODULE DRAWS (now, across the nine screen modules; every other screen agrees)
+- person (screens-investigate): linewithdraw declared, not drawn.
+- docket (screens-publish): writinghelp declared, not drawn.
+- home, queue (screens-daily): release and filingapprove declared, not drawn.
+- join (screens-entry): memberlanguageset declared, not drawn.
+- document (screens-inquiry): captureprogressions declared, not drawn.
+- assistant (screens-inquiry): ask declared, not drawn.
+- timeline (screens-investigate): instance and progression declared, not drawn.
+- explore (screens-investigate): draws stepsourcewithdraw, which the registry does not name.
+The first two are new from this re-take; the rest were already there at aa8bdcd0b4.
+Owed acts drawn by a module are not listed: checkScreens admits them.
+Registry screens no nine-module screen draws: site, install, update, more, unavailable (served elsewhere, not checked here).
+
+TESTS AND CHECKS
+- wizard-scripts suite: 128 pass, 0 fail (node --test test/m/wizard-scripts/*.test.mjs).
+- interface-shell suite: 243 pass, 0 fail (node --test test/m/interface-shell/*.test.mjs), including checkScreens over the composed screens.
+- format: 175 modules, 0 failures. architecture (wizard-scripts): 0 failures. coverage: 46 of 46 live ids named, 0 failures. ownership against tranche/T51: 10 files, 0 failures.
+
+DEFERRED: none.
+
+
+Size (session_01PZ9Gu5FRgJY1fJyGfYx9Tz): test runs 5, module lines 2865
