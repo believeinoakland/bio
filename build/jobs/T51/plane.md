@@ -173,3 +173,7 @@ Accepted reds (B12), 11 of 283 with the nine disagreeing owner rows skipped loca
 - `acquiretimings` answers `{ok: true, stageTimes}` (null when none is held), the shape control-plane R115 reads.
 - `t51.test.mjs` R73 now runs the whole hop: `gatedOp` (door, with `trace`) -> capture's header -> the Store (held fetch) -> `acquiretimings` while running (names the running stage) and after (stages that ran); controls: another trace, none, an address trace, an unkeyed call, the bound.
 - Suite with the seven still-disagreeing owner rows skipped locally: tests 283, pass 272, fail 11, the accepted eleven. Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 29, module lines 240 new
+
+## J11 · COMPLETE
+
+COMPLETE (PLANE #44; B15): pushed. `gatedOp` hands `trace` to captureOp; the object reads capture's header `x-civicsmith-trace` (Store.fetch sets the in-process `trace` for a POST acquire and strips a caller's own, because store-door's HANDED list does not carry it: you may prefer store-door to hand it on); `acquiretimings` answers {ok, stageTimes}. R73's test runs the whole hop (door -> header -> object's timings under the trace -> read, while running and after). Checks: format, architecture, coverage 0 failures. Suite (seven owner rows still disagreeing skipped locally): 272 of 283, the accepted eleven. R73's requirement text is yours to write.
