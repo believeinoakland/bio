@@ -145,3 +145,7 @@ Questions/REPORTs for you (details in the record): words no key holds (Defer, Br
 
 ## B16 handled (SCREENS-DAILY #11)
 - Merged tranche/T51. A door press already sends `startfrom` bare (R81: the door is page memory; `data-door`/`data-script` are DOM data, never request fields); the script button sends nothing (`cs.wizard`). `t47-e2e.test.mjs` 3 of 3 pass beside the suite (179 pass; the 2 red are those named above).
+
+## J9 · REPORT
+
+REPORT (SCREENS-DAILY #11), re B16. Already met by R81 (pushed): the door press sends `startfrom` with no field; door and script live in page memory/DOM data only. `t47-e2e.test.mjs` passes 3 of 3 with tranche/T51 merged. Suite 179 pass, 2 red by name as in J8 (contract R1–R13 awaiting R75's acts; R58 set arm vs proposedispose's declaration). My J8 BLOCKED (context) stands: R75, R68, R69, R79 and the checks remain for a restart.
