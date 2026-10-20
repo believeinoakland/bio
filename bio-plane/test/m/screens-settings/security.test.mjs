@@ -173,3 +173,38 @@ test("R15 a tool in use is named by its provider's display name (vendor and prod
   const u = await open("security", { me: ADMIN, table: securityTable({ securitytoolcatalogue: "none" }) });
   assert.ok(!u.text.includes("acme-scan"));
 });
+
+/* ---- T51 FR-25: T-14 (R74), K4213 (R77) ---- */
+
+test("R74 each credential field of a provider is labelled by its word (file-scanner.credential.<field>), never its raw name; the field sent stays the catalogue's; a field outside the four keeps its own name", async () => {
+  const FOUR = ["client_id", "client_secret", "api_key", "api_secret"];
+  const entry = { ...CATALOGUE_ENTRY, credentials: [...FOUR, "odd_token"], config: [] };
+  const a = await open("security", { me: ADMIN, table: securityTable({ securitytoolcatalogue: env({ ok: true, offered: [entry], refused: [], held: [] }) }) });
+  const label = (k) => textOf(all(a.tree, (e) => e.tag === "label" && e.attrs.for === `sa-acme-scan-k-${k}`)[0]);
+  for (const k of FOUR) {
+    assert.ok(label(k).includes(said("screen.security.field", { label: said("file-scanner.credential." + k) })), k);
+    assert.ok(!label(k).includes(k), `${k}: no raw name`);
+  }
+  assert.ok(label("odd_token").includes(said("screen.security.field", { label: "odd_token" })), "control: a field outside the four falls back to its own name");
+  // what is sent keeps the raw name the owner declares (the guard accepts it)
+  const values = { "sa-acme-scan-k-client_id": "ID-1", "sa-acme-scan-k-client_secret": "SECRET-1", "sa-acme-scan-k-api_key": "KEY-1", "sa-acme-scan-k-api_secret": "SECRET-2", "sa-acme-scan-k-odd_token": "T-1", "sa-acme-scan-keep": true };
+  const r = await a.press("securitytooladd", { data: { provider: "acme-scan" }, values });
+  assert.deepEqual(r.sent[0].body.credentials, { client_id: "ID-1", client_secret: "SECRET-1", api_key: "KEY-1", api_secret: "SECRET-2", odd_token: "T-1" });
+});
+
+test("R77 a scanner that holds no signatures is said so by the key and words scanstatus answers, with the reason; absent, nothing is drawn (control)", async () => {
+  const sc = (extra) => securityTable({ scanstatus: env({ ok: true, scanner: { bound: true, version: "1" }, renderer: { bound: true, version: "1" }, queued: 0, overdue: 0, held: 0, tools: [], ...extra }) });
+  const ns = { since: "2026-10-12T03:00:00Z", reason: "REFUSED:main.cvd:403", key: "file-safety.index.no_signatures_since", words: "The file scanner has had no signatures since 2026-10-12.", reason_key: "file-safety.index.signatures_refused", reason_words: "The signature service refused the download (status 403)." };
+  const a = await open("security", { me: ADMIN, table: sc({ no_signatures: ns }) });
+  const first = all(a.tree, (e) => e.attrs["data-state"] === "nosignatures")[0], second = all(a.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0];
+  assert.equal(textOf(first), ns.words, "the answer's words, the key being no word of the list yet");
+  assert.equal(textOf(second), ns.reason_words);
+  assert.ok(!/waiting/i.test(textOf(first) + textOf(second)));
+  // never signatures obtained, no date: the other keys, the answer's words
+  const b = await open("security", { me: ADMIN, table: sc({ no_signatures: { since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", words: "The file scanner has no signatures.", reason_key: "file-safety.index.signatures_not_fetched", reason_words: "No download of signatures has finished yet." } }) });
+  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), "The file scanner has no signatures.");
+  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), "No download of signatures has finished yet.");
+  // control: signatures held (no_signatures absent): nothing drawn
+  const none = await open("security", { me: ADMIN, table: sc({}) });
+  assert.equal(all(none.tree, (e) => /^nosignatures/.test(e.attrs["data-state"] || "")).length, 0);
+});

@@ -413,11 +413,14 @@ export const GROUP_RULES = [
 /** `rulefields` (local-facts R18) for deadlines: the kinds of action, claim first; `heldcaptures` rows and a `reading`'s text units for the draft form (DEC-357). */
 export const RULE_KINDS = ["claim", "request_for_comment", "public_comment", "party_participation"];
 export const DOC_SHA = "d".repeat(64);
+/** A document a member has vouched for (capture R88): listed only when `heldcaptures` is asked `state: "held_and_vouched"`. */
+export const VOUCHED_DOC = { title: "Planning Commission bylaws (vouched)", capture: { sha256: "f".repeat(64) } };
 export const UNITS_OF_DOC = [{ seq: 1, text: "Comments close five days\nbefore the meeting.", extent: { kind: "pdf-page", page: 2 } }, { seq: 2, text: "Speakers register by noon.", extent: { kind: "pdf-page", page: 3 } }];
 export function grouprulesTable(over = {}) {
   return {
     rulefields: env({ ok: true, section: "deadlines", count: 2, fields: [{ field: "rule", required: true, kind: "text" }, { field: "applies_to", required: true, kind: "choice", choices: RULE_KINDS }] }),
-    heldcaptures: env({ ok: true, held: [{ title: "Parks Commission rules of procedure", capture: { sha256: DOC_SHA } }, { title: "Untitled", capture: { sha256: "e".repeat(64) } }] }),
+    // capture R77, R88: the documents at `collected` by default; `state: "held_and_vouched"` adds those a member has vouched for
+    heldcaptures: (q) => env({ ok: true, held: [{ title: "Parks Commission rules of procedure", capture: { sha256: DOC_SHA } }, { title: "Untitled", capture: { sha256: "e".repeat(64) } }, ...(q.state === "held_and_vouched" ? [VOUCHED_DOC] : [])] }),
     reading: env({ ok: true, text_units: UNITS_OF_DOC }),
     ruledraft: (q, b) => env({ ok: true, rule: "GR-0009", state: "drafted" }),
     grouprules: env({ ok: true, rules: GROUP_RULES, count: GROUP_RULES.length }),

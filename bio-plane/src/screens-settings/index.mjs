@@ -69,6 +69,7 @@ const WORDS = {
     ...LABELS("group-identity", ["groupdescriptionset", "groupdescriptiondraft"])],
   security: [...STATES, "screen.security.name", ...own("screen.security."), "period.days", "member.founder.unnamed", "instance.part.scanner.present", "instance.part.scanner.absent",
     "instance.part.safeview.present", "instance.part.safeview.absent", "instance.part.unknown", "instance.scanner.absent.step",
+    ...own("file-scanner.credential."),
     ...LABELS("security", ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"])],
   updates: [...STATES, "screen.updates.name", ...own("screen.updates."), "refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "settings.set.system",
     "updates.running.release_setup", "updates.earlier.installed_setup", "updates.running.head", "updates.running.release", "updates.running.checked",
