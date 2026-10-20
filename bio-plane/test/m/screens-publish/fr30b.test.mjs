@@ -233,7 +233,7 @@ const SIGHT = { statement: "This case does not examine the 2019 lease amendment.
 const TENSION = { candidate: "CAND-1", finding: F1, state: "open", highlighted: false, unseen_other_side: false, depth: 1, acknowledged_by: "dev", acknowledged_at: "2026-09-15T09:00:00Z",
   owner_words: { text: "Being checked against the postmark.", by: "the team" }, kind: null, explanation: "The vote covered amendment 1.",
   sides: { a: { text: "the minutes record a vote" }, b: { text: "the adjustment cites no vote" } } };
-const HIGH = { candidate: "CAND-2", finding: F1, state: "open", highlighted: true, unseen_other_side: true, depth: 1, side: { text: "the ledger shows March" }, sentence: "This finding rests on a side in conflict with a record not shown here." };
+const HIGH = { candidate: "CAND-2", finding: F1, state: "open", highlighted: true, unseen_other_side: true, depth: 1, side: { text: "the ledger shows March" }, sentence: word("case-disclosures.finding_rests_side") };
 
 test("R47 the published page draws what the case leaves out and who else read that statement, the declared bias, each disclosed contradiction (a highlighted one by its fixed sentence) and each evidence row's grade, each only when the answer holds it", async () => {
   const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: publishedPlane([FINDING(F1)], { completeness: SIGHT, bias_acknowledgement: "We read the Department's own reports closely.", tensions: [TENSION, HIGH],

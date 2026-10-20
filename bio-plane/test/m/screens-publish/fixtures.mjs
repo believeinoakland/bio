@@ -113,7 +113,7 @@ export function plane(o = {}) {
     docketprepare: ok({ entry: "{}", digest: DIGEST, statement: `bio-docket ${C} 3 ${DIGEST}\n`, warning: "Posting is public and permanent.", expires: "2999-01-01T00:00:00Z" }),
     docketpost: ok({ case: C, seq: 3, entry: 2, published_at: "2026-11-21T09:00:00Z" }),
     casedetails: ok({ ok: true, case: C, published: false, truncated: false, history: [], details: DETAILS() }),
-    casedetailspublic: ok({ ok: true, case: C, group: "river-town", details: DETAILS_PUBLIC(), sentence: "These details are the team's current statement." }),
+    casedetailspublic: ok({ ok: true, case: C, group: "river-town", details: DETAILS_PUBLIC() }),
     projectlist: ok({ projects: [{ id: P, title: "The Coliseum lease" }, { id: "PROJ-2026-0013", title: "Potholes" }] }),
     list: ok({ bundles: [{ bundle_id: "INQ-2026-0001", title: "Is the city repairing reported potholes?" }] }),
     entitieskind: ok({ ok: true, kind: "body", entities: [{ entity_id: "ENT-1", kind: "body", label: "Oakland Rent Board" }], count: 1, truncated: false, next: null }),
