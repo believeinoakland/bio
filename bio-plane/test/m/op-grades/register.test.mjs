@@ -136,6 +136,18 @@ test("R49: MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS and IRREVERSIBLE_WEIGHT take
   assert.deepEqual([...m.LARGER_SCREEN_ACTS], [...ref.LARGER_SCREEN_ACTS]);
 });
 
+test("R49: the owners are an object from module id to rows or a list of [module id, rows] pairs, and the row's other keys "
+   + "(op-declarations' stamps, needs, classes, fields) are ignored", async () => {
+  const [m, byObject] = await twins();
+  const rows = { fxpair: row("reversible", KEY_A, { stamps: ["by"], needs: { a: 1 }, machineClasses: ["ai"] }) };
+  m.registerDeclaredOps([["fixture", rows]]);
+  byObject.registerDeclaredOps({ fixture: rows });
+  assert.equal(m.RUNGS.fxpair, "reversible");
+  assert.deepEqual(state(m), state(byObject), "the two input shapes register alike");
+  const [dup] = await twins();
+  assert.throws(() => dup.registerDeclaredOps([["fixture-a", rows], ["fixture-b", rows]]), refused("DECLARED_OP_DUPLICATE", "fxpair"));
+});
+
 test("R49: with no registration two instances hold the same tables, and an empty registration changes nothing", async () => {
   const [one, two] = await twins();
   assert.deepEqual(one.registerDeclaredOps({}), { registered: [], agreed: [] });
