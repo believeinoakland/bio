@@ -1053,7 +1053,12 @@ SCR.capture = c => { const st = CAPTURE_TAB[c.act || (c.wizard && c.wizard.act)]
   <div class="st st-a"><div style="display:grid;gap:16px">
    ${field('mk-url', 'Address', 'https://www.oaklandca.gov/resources/street-maintenance-report-2026', { act: 'acquire', help: 'A copy fetched from the office\'s own site holds up better than one found elsewhere.' })}
    ${choice('mk-fq', 'For which question', ['How many pothole reports did the city close late in 2025?', 'Is the city repairing reported potholes within seven days?'], 0, { data: true, act: 'acquire', help: 'Optional. After you vouch for the capture, it opens beside this question so you can cite the passage that answers it.' })}<details class="mk-details"><summary>A question that isn\'t the project\'s</summary>${gapm('refused', 'Say which question this capture is for: choose one of the project\'s questions. Nothing was captured.')}</details>
+   ${checks('What to keep', [['The page as the site sent it', true], ['The page as a visitor saw it', false]], { radio: true, act: 'acquire', group: 'mk-render' })}
+   <p class="mk-small muted" style="margin:-8px 0 0">Choose the page as a visitor saw it for a page that fills itself in after it loads, such as a list of agenda items. Your team's Civicsmith opens the page in a browser to keep it, which takes longer and uses part of a daily allowance for rendering pages.</p>
+   <details class="mk-details"><summary>If the page can't be kept as a visitor saw it</summary><div style="display:grid;gap:6px">${gapm('refused', 'Your team\'s Civicsmith has no working page renderer, so it cannot keep the page as a visitor saw it. Nothing was fetched. Ask an administrator, or keep the page as the site sent it.')}${gapm('refused', 'Today\'s allowance for rendering pages is fully committed — either already used, or held by renders your team\'s Civicsmith is running right now — so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC.')}${gapm('refused', 'Your team\'s Civicsmith is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute.')}${gapm('refused', 'Your team\'s Civicsmith is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message.')}${gapm('refused', 'The address served something that is not a web page a browser can render, such as a PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. Capture it the ordinary way.')}${gapm('refused', 'The page was fetched but the renderer did not produce the page as a visitor would see it, so nothing was filed: the page\'s empty frame is never filed as its content. The reason the renderer gave is beside this message.')} <span class="mk-data">The page did not finish loading.</span></div></details>
+   <details class="mk-details"><summary>Keeping a copy from a public web archive</summary><p class="mk-small">When a watched address stops answering, your team's Civicsmith may look for an archived copy of it by itself. A member cannot ask for that; if a site no longer answers, ask for this later, or add the page as a file.</p></details>
    ${acts(btn('acquire', 'Capture', { tone: 'primary' }), btn('capturerequest', 'Ask for this later'))}
+   ${row(I('clock'), 'Every address your team watches, and when it will next be checked.', ref('See watched addresses', 'watching', '<b>Watched addresses</b> · every address your team checks for a new version, with its frequency and when it is due.'))}
     <details class="mk-details"><summary>Once it is captured: where it is filed, and watching the address</summary><div class="cs-sheet" style="padding:10px 14px;display:grid;gap:8px">${row(I('accepted'), '<b>Captured: <span class="mk-data">Street maintenance report 2026</span></b><span class="meta">from the city\'s own site · capture A · just now</span>', '')}${row(I('question'), 'Filed under <b>Pothole repairs</b>, for the question “How many pothole reports did the city close late in 2025?”', ref('Cite a passage', 'find-in', 'Opens Find in this over the document, with your question chosen.'))}<div class="row" style="gap:12px;align-items:end;flex-wrap:wrap">${choice('mk-mfreq', 'How often to look', ['Every hour', 'Every day', 'Every week', 'Every month', 'At each meeting'], 'Every week', { act: 'monitorset', help: 'How often your team\'s Civicsmith fetches the address again to see whether it changed. At each meeting: after each meeting of the body that publishes it. A change is captured as a new version, and whoever cited the old one is told in their queue.' })}</div>${acts(btn('monitorset', 'Watch this address for changes'), btn('monitor', 'Check it now'))}${gapm('refused', 'This document has no address to watch: it came from a file, not from a page.')}</div></details>
    <div class="cs-sheet" style="padding:10px 14px;display:grid;gap:6px"><span class="cs-wait">${I('clock')}<b>Unfinished:</b> your capture of “Council agenda, October 14” waits for 3 of its attachments · started 40 minutes ago</span>${acts(btn('acquire', 'Finish it', { help: 'Fetches the attachments this capture still lacks, from the same page. The page itself is not fetched again. A capture left unfinished for an hour is closed with what it has.' }))}</div>
     <details class="mk-details"><summary>If the address is already held, or the site has changed since</summary><div style="display:grid;gap:8px">
@@ -1078,6 +1083,7 @@ SCR.capture = c => { const st = CAPTURE_TAB[c.act || (c.wizard && c.wizard.act)]
   </div></div>
   <div class="st st-c"><div style="display:grid;gap:16px">
    ${note('Only what you saw or heard yourself. What someone told you belongs in a note or a hunch, not here.')}
+   ${row(I('hint'), 'Something you were only told, and want to look into?', ref('Write down a lead', 'leads', '<b>Leads</b> · where you write down what you were told, record who looked, and share it with a project.'))}
    ${field('mk-obs', 'In your own words', 'On October 4 at 9:10 AM I visited 6012 Seminary Ave. The pothole reported on September 12 and marked closed on September 15 is still open, about 60 cm across.', { area: true, rec: true })}
     ${c.ai ? `<p class="mk-small">${origin('machine', 'Draft · the assistant\'s, asked by Mai')} After “Help me write this”, the assistant's wording fills the field, marked as its draft. It words only what you wrote that you saw, and adds nothing; it is kept only when you record it.</p>` : ''}
    ${field('mk-where', 'Where and when', '6012 Seminary Ave · October 4, 2026, 9:10 AM')}
@@ -2444,7 +2450,8 @@ SCR.inbox = c => ({ rail: 'queue', title: 'Inbox', crumbs: ['Inbox'], main: `
   ${ladder('ident', ['Unknown', 'Same knocker', 'Partly known', 'Known to the team', 'Public'], 2)}
   ${field('mk-disc', 'Why discard it? (asked before anything is discarded)', '', { reason: true, act: 'inboxresolve' })}
   ${acts(btn('inboxpull', 'Move into the record', { tone: 'primary' }), btn('inboxresolve', 'Discard with a reason'), btn('sourcelink', 'Record what is known of the source'))}
-  ${gapm('refused', 'Say why first: a knock is discarded only with a reason, and it stays as it was until you give one.')}` });
+  ${gapm('refused', 'Say why first: a knock is discarded only with a reason, and it stays as it was until you give one.')}
+  ${sec('Other material from this knocker', sheet(row(I('capture'), '<b>3 PDFs</b> · <span class="mk-data">"Photos of the boiler room."</span>', '', 'September 12, 2026') + row(I('capture'), '<b>1 photo</b>', '', 'September 20, 2026')) + note('Each knock listed here presented the same secret phrase. That says it is the same knocker; it says nothing about who they are.') + acts(btn('knocksof', 'See this knocker\'s other material')) + row(I('person'), 'What is known about this source, and what may be published about them.', ref('Open the source', 'about-knocker', '<b>A source</b> · what became known about them, who may read it, what they agreed to publish, and the person they are.')), { help: 'Every knock that presented this knocker\'s secret phrase, oldest first. It lists the knocks; it never names anyone.' })}` });
 
 SCR.doorbell = c => ({ frame: 'public', title: 'Hand material to Lakeshore Tenants', main: `
   <div class="mk-setuphead"><span class="grp mk-grp">Lakeshore Tenants</span></div>
@@ -2453,7 +2460,115 @@ SCR.doorbell = c => ({ frame: 'public', title: 'Hand material to Lakeshore Tenan
   <div class="mk-drop">${I('add')} Choose files</div>
   ${field('mk-kn', 'A note (optional)', 'These are the inspection sheets they don\'t publish.', { area: true })}
   ${field('mk-ks', 'A secret phrase (optional)', '')}
-  ${acts(btn('knock', 'Hand it over', { tone: 'primary' }))}` });
+  ${acts(btn('knock', 'Hand it over', { tone: 'primary' }))}
+  ${sec('If the team asked to publish something about you', `<p class="mk-small">Say yes, or take your yes back, with the secret phrase you used. Nothing here asks who you are.</p>
+   ${field('mk-ksp', 'Your secret phrase', '', { act: 'knockerconsent' })}
+   ${field('mk-kref', 'The detail you are answering about', 'SRCE-3f9a41c2', { act: 'knockerconsent', help: 'The reference the team gave you for it.' })}
+   ${choice('mk-kaud', 'Who may be told it', ['Only the members listed for it', 'The whole team', 'Anyone'], 'The whole team', { act: 'knockerconsent' })}
+   ${checks('Your answer', [['I agree to this being published', true], ['I take back my agreement', false]], { radio: true, act: 'knockerconsent', group: 'mk-kans' })}
+   ${acts(btn('knockerconsent', 'Send my answer', { tone: 'primary' }))}
+   ${note('Agreeing is permanent for anything published under it: what is published stays published, even if you later take your agreement back. Taking it back binds only what is published afterward.')}
+   <details class="mk-details"><summary>When your answer is not accepted</summary><div style="display:grid;gap:6px">${gapm('refused', 'That secret was not recognised, so nothing was recorded. Check it and try again.')}${gapm('refused', 'Too many tries have come from here lately. Wait a while, then try again.')}</div></details>`)}` });
+
+
+SCR['about-knocker'] = c => ({ rail: 'queue', title: 'A source', crumbs: ['Inbox', 'A source'], main: `
+  ${h1('A source', 'Someone who handed material to your team. Only members you list can read what is stored about them.')}
+  ${ladder('ident', ['Unknown', 'Same knocker', 'Partly known', 'Known to the team', 'Public'], 3)}
+  ${sec('What became known', sheet(
+    row(I('person'), '<b>Occupation: <span class="mk-data">school custodian</span></b>', '', 'Told by the source themselves · known to the team · agreed to publish to members only') +
+    row(I('person'), '<b>Employer</b> · known to the team, not recorded', '', 'Told by someone else · known to the team') +
+    row(I('flagged'), 'Named by <span class="mk-data">the landlord\'s lawyer</span> on <span class="mk-data">October 6, 2026</span>; not confirmed by the team', '', 'Claimed by someone hostile to the source')), { help: 'Each thing that became known, with how and to whom. An entry is never edited; a later one takes its place when read.' })}
+  ${sec('Record what became known', `<div style="display:grid;gap:14px">
+   ${choice('mk-sdk', 'What became known', ['A link to another source', 'An attribute: occupation, employer or role', 'A name'], 'An attribute: occupation, employer or role', { act: 'sourcedisclose' })}
+   ${choice('mk-sda', 'Which attribute', ['Occupation', 'Employer', 'Role'], 'Occupation', { act: 'sourcedisclose', help: 'Only for an attribute.' })}
+   ${field('mk-sdv', 'What it is', 'school custodian', { act: 'sourcedisclose', rec: true, help: 'At most 400 characters.' })}
+   ${choice('mk-sdh', 'How it became known', ['The source said it themselves', 'It is in a public filing', 'Someone else told us', 'Someone hostile to the source claimed it'], 'The source said it themselves', { act: 'sourcedisclose' })}
+   ${field('mk-sdb', 'Who made the claim', '', { act: 'sourcedisclose', help: 'Only when someone hostile to the source claimed it. It is kept as their claim, not as a fact.' })}
+   ${field('mk-sdd', 'When they made it', '', { act: 'sourcedisclose', help: 'Only for a claim. A date such as 2026-10-06.' })}
+   ${choice('mk-sdt', 'Who knows it', ['One member', 'The team', 'The public'], 'The team', { act: 'sourcedisclose' })}
+   ${checks('Whether to store it', [['Store what it is, for the members I list', true], ['Record only that the team knows it, without storing it', false]], { radio: true, act: 'sourcedisclose', group: 'mk-sdr' })}
+   ${checks('Members who may read it', [['Dev', true], ['Mai', true], ['Rosa', false]], { act: 'sourcedisclose' })}
+   ${field('mk-sde', 'Your evidence', 'She told Dev at the October 3 tenants meeting.', { act: 'sourcedisclose', rec: true, reason: true, help: 'How you know. It is kept with the entry.' })}
+   ${choice('mk-sdc', 'Confirms a claim made against this source', ['No claim', 'Named by the landlord\'s lawyer, October 6, 2026'], 'No claim', { act: 'sourcedisclose', data: 1, help: 'Confirming a hostile claim needs the source\'s consent before anything is published.' })}
+   ${acts(btn('sourcedisclose', 'Record what became known', { tone: 'primary' }))}
+   ${note('Every member you list can read this entry, and each time one reads it, the read is logged. The entry is never edited or removed.')}
+   <details class="mk-details"><summary>When it is refused</summary><div style="display:grid;gap:6px">${gapm('refused', 'A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written.')}${gapm('refused', 'What is recorded about a source is recorded with its evidence. Name the evidence. Nothing was written.')}${gapm('refused', 'A detail about a source that is stored can be read only by the members listed for it, and none is listed. List at least one member, or record that the detail is known without storing it. Nothing was written.')}${gapm('refused', 'No source you can see answers to that id. Nothing was written.')}</div></details></div>`)}
+  ${sec('What may be published', `<div style="display:grid;gap:14px">
+   <p class="mk-small muted" style="margin:0">Only what the source agreed to, or what is already public elsewhere, is ever shown. Your team is never the first to make a detail more public.</p>
+   ${choice('mk-scd', 'Which detail', ['Occupation: school custodian', 'Employer'], 'Occupation: school custodian', { act: 'sourceconsent', data: true })}
+   ${choice('mk-sca', 'Who may be told it', ['One member', 'The team', 'The public'], 'The team', { act: 'sourceconsent' })}
+   ${field('mk-sce', 'Evidence of their agreement', 'She wrote to the doorbell on October 8, 2026, using her secret phrase.', { act: 'sourceconsent', rec: true, reason: true })}
+   ${acts(btn('sourceconsent', 'Record their agreement', { tone: 'primary' }), btn('sourceconsentwithdraw', 'Record that they took it back'))}
+   ${note('This consent is permanent for anything published under it: what is published under it stays published, even if the consent is later withdrawn.')}
+   ${note('This withdrawal binds only later publications: what was published under the consent stays published.')}
+   <details class="mk-details"><summary>When it is refused</summary><div style="display:grid;gap:6px">${gapm('refused', 'That consent cannot be recorded: the detail it names is not in this source\'s history, or consent to a wider audience already stands. Nothing was written.')}</div></details></div>`)}
+  ${sec('Say who this is', `<div style="display:grid;gap:14px">
+   <p class="mk-small muted" style="margin:0">If you have evidence this source is a person your team follows, say so. It is a claim with its evidence; it does not merge the records.</p>
+   ${choice('mk-spp', 'Which person', ['Marcus Webb, building manager', 'Dana Ortiz, school custodian'], 'Dana Ortiz, school custodian', { act: 'sourcepersonlink', data: true })}
+   ${field('mk-spe', 'Your evidence', 'The photo she sent shows the school badge she wears in the council video.', { act: 'sourcepersonlink', rec: true, reason: true })}
+   ${checks('Members who may read it', [['Dev', true], ['Mai', false], ['Rosa', false]], { act: 'sourcepersonlink' })}
+   ${acts(btn('sourcepersonlink', 'Say this source is that person', { tone: 'primary' }))}
+   ${note('Saying it again for the same person replaces the earlier claim; the earlier one is kept, with who replaced it and when.')}
+   <details class="mk-details"><summary>When it is refused</summary><div style="display:grid;gap:6px">${gapm('refused', 'That is an organization, not a person. Choose a person your team follows.')}${gapm('refused', 'What is recorded about a source is recorded with its evidence. Name the evidence. Nothing was written.')}${gapm('refused', 'A detail about a source that is stored can be read only by the members listed for it, and none is listed. List at least one member, or record that the detail is known without storing it. Nothing was written.')}</div></details></div>`)}` });
+
+SCR.leads = c => ({ rail: 'add', title: 'Leads', crumbs: ['Add', 'Leads'], main: `
+  ${h1('Leads', 'Something you were told, or have reason to believe, and where it might be found. A lead is somewhere to look, never evidence.')}
+  ${sec('Write down a lead', `<div style="display:grid;gap:14px">
+   ${field('mk-ldw', 'What you were told or suspect', 'A tenant says the city inspected the Coliseum garage in 2019 and wrote a report.', { area: true, rec: true, act: 'lead' })}
+   ${field('mk-ldl', 'Where it might be found', 'Oakland Public Works, inspection records, 2019', { act: 'lead', help: 'Optional.' })}
+   ${acts(btn('lead', 'Write down the lead', { tone: 'primary' }))}
+   ${note('Only you can read a lead until you share it with a project. Writing one down looks nothing up.')}
+   <details class="mk-details"><summary>When it is refused</summary><div style="display:grid;gap:6px">${gapm('refused', 'The lead is empty. Write what you were told or suspect, and where it might be found; nothing is filled in for you.')}${gapm('refused', 'The lead, or the place to look you suggested, is longer than one passage this record stores. It is refused rather than cut, because a lead silently shortened would be words you did not write standing in your name. Write it more briefly or split it into two leads.')}</div></details></div>`)}
+  ${sec('Your leads', sheet(
+    row(I('hint'), '<span class="rec">“The city inspected the Coliseum garage in 2019.”</span>', btn('leadread', 'Open it'), 'Nobody has looked yet') +
+    row(I('hint'), '<span class="rec">“The owner paid the city a fee in 2021.”</span>', btn('leadread', 'Open it'), 'We looked and could not tell')), { help: 'Every lead you can read: your own, and those others shared with a project you have joined.' })}
+  ${sec('One lead', `<div style="display:grid;gap:14px">
+   ${sheet(row(I('hint'), '<span class="rec">“The city inspected the Coliseum garage in 2019.”</span>', '', 'Written by you on October 8, 2026') +
+     row(I('search'), '<span class="mk-data">Mai</span> looked on <span class="mk-data">October 9, 2026</span>: <span class="rec">“Searched the city\'s records portal for 2019; found nothing under that name.”</span>', '', 'We looked and could not tell') +
+     row(I('projects'), 'Shared with <span class="mk-data">The Coliseum lease</span> on <span class="mk-data">October 9, 2026</span>', '', 'Your reason: <span class="rec">“The project needs this report.”</span>'))}
+   <div class="cs-sheet" style="padding:10px 14px;display:grid;gap:14px">
+    <b>Record a look</b>
+    ${choice('mk-lks', 'What the look found', ['It is not there', 'Could not tell', 'Found part of it', 'It is there'], 'Could not tell', { act: 'leadlook' })}
+    ${choice('mk-lkk', 'What it found, if it found something', ['Nothing to point at', 'A document in the record', 'A passage of a document in the record'], 'Nothing to point at', { act: 'leadlook', help: 'Only a look that found something can point at anything.' })}
+    ${field('mk-lkr', 'Which one', '', { act: 'leadlook' })}
+    ${field('mk-lkd', 'Where you looked and what you found', '', { area: true, rec: true, reason: true, act: 'leadlook', help: 'It is kept with your name.' })}
+    ${acts(btn('leadlook', 'Record the look', { tone: 'primary' }))}
+    <details class="mk-details"><summary>When it is refused</summary><div style="display:grid;gap:6px">${gapm('refused', 'Say what the look found: that the thing is not there, that you could not tell, that you found part of it, or that it is there. "Nobody looked" is never recorded — it is what the record says when there is no look at all.')}${gapm('refused', 'What the look found has to be something this record holds and you can read — a captured document or a part of one — and only a look that found something can point at anything. Capture the document first, then record the look against it.')}${gapm('refused', 'Say in your own words where you looked and what you found. A look is recorded with the account of the member who made it, and a look with no account is a result nobody can check or follow up.')}${gapm('refused', 'That request does not name a lead this record holds and you can read. A lead is named by the id its own act returned, and a lead is readable by the member who wrote it.')}</div></details>
+   </div>
+   <div class="cs-sheet" style="padding:10px 14px;display:grid;gap:14px">
+    <b>Share it with a project</b>
+    ${choice('mk-lsp', 'Which project', ['The Coliseum lease', 'Pothole repairs'], 'The Coliseum lease', { act: 'leadshare', data: true, help: 'Only projects you have joined.' })}
+    ${field('mk-lsr', 'Why you are sharing it', 'The project needs this report.', { area: true, rec: true, reason: true, act: 'leadshare', help: 'At most 2,000 characters. It is kept with the share.' })}
+    ${acts(btn('leadshare', 'Share it with the project', { tone: 'primary' }))}
+    ${note('Sharing puts what you were told in front of the project\'s participants, with your reason, and it cannot be taken back. Only you, as its writer, can share it.')}
+    <details class="mk-details"><summary>When it is refused</summary><div style="display:grid;gap:6px">${gapm('refused', 'You can share a lead only to a project you have joined. Sharing it somewhere you are not working would put your words in front of people you are not working with.')}${gapm('refused', 'Only the member who wrote a lead can share it. A lead is what one person was told; passing someone else\'s on is theirs to decide.')}${gapm('refused', 'Say why you are sharing this lead with that project, in no more than 2,000 characters. Sharing puts what you were told in front of the project\'s participants, and the reason is kept with the share.')}${gapm('refused', 'This lead is already shared with that project, by <span class="mk-data">Mai</span>, on <span class="mk-data">October 9, 2026</span>. Nothing changed.')}</div></details>
+   </div></div>`)}` });
+
+SCR.watching = c => ({ rail: 'add', title: 'Watched addresses', crumbs: ['Add', 'Watched addresses'], main: `
+  ${h1('Watched addresses', 'Every address your team\'s Civicsmith checks for a new version, and when it will next look.')}
+  ${sec('The watching', `<div style="display:grid;gap:12px">
+   ${sheet(row(I('clock'), '<b>Watching is running.</b>', '', 'Administrators can pause it') + row(I('hold'), '<b>Watching is paused.</b> <span class="mk-data">Rosa</span> paused it on <span class="mk-data">October 8, 2026</span> at <span class="mk-data">2:05 PM</span>. No address is checked and nothing is gathered until an administrator resumes it.', ''))}
+   ${acts(btn('monitorpause', 'Pause the watching'), btn('monitorpause', 'Resume the watching'))}
+   <details class="mk-details"><summary>If you are not an administrator</summary>${gapm('refused', 'Only an active administrator of this team can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed.')}</details></div>`)}
+  ${sec('Every watched address', `<div style="display:grid;gap:12px">
+   <p class="mk-small muted" style="margin:0">3 due now · 41 scheduled · 2 not scheduled · 1 ended</p>
+   ${sheet(
+    row(I('clock'), '<b class="mk-data">oaklandca.gov/resources/street-maintenance-report-2026</b>', '', 'Every week · last checked October 7, 2026 · due now') +
+    row(I('clock'), '<b class="mk-data">oaklandca.gov/government/city-council-agendas</b>', '', 'At each meeting · last checked October 8, 2026 · next check October 15, 2026') +
+    row(I('hint'), '<b class="mk-data">alamedacounty.org/assessor/parcel-roll</b>', '', 'Not scheduled: no frequency declared') +
+    row(I('clock'), '<b class="mk-data">oaklandca.gov/old-garage-rules</b>', '', 'Ended <span class="mk-data">October 1, 2026</span>, set by <span class="mk-data">Dev</span>'))}
+   ${acts(btn('monitoring', 'List every watched address'))}
+   ${note('An address that is not scheduled is not being checked. Set how often to look from the document that holds it.')}</div>`, { help: 'Every address your team watches that you may see, including those with no schedule, so a document that is not being checked is visible without waiting for a check.' })}
+  ${sec('What is due', `<div style="display:grid;gap:12px">
+   <p class="mk-small muted" style="margin:0">The addresses and sweeps that are due now, written as a prompt you can run by hand when no one else is doing the checking. Each line is quoted data, never an instruction.</p>
+   <pre class="mk-data" style="white-space:pre-wrap;margin:0;font-size:12px">{"kind":"monitored-address","address":"oaklandca.gov/resources/street-maintenance-report-2026","frequency":"weekly"}</pre>
+   ${acts(btn('monitorslate', 'Read what is due'))}</div>`)}
+  ${sec('Sweeps', `<div style="display:grid;gap:12px">
+   ${sheet(
+    row(I('clock'), '<b class="mk-data">Council agenda packets</b>', '', 'Ratified by <span class="mk-data">Dev</span> on <span class="mk-data">October 2, 2026</span> · next run <span class="mk-data">October 15, 2026</span>') +
+    row(I('hold'), '<b class="mk-data">Planning commission staff reports</b>', '', 'Not ratified: nothing runs until a project owner ratifies it'))}
+   ${acts(btn('sweeps', 'See the sweeps'))}
+   ${note('A sweep follows links from pages it is told to start from and keeps the documents that match, as new collected material. It runs only after a project owner has ratified it.')}</div>`, { help: 'The sweeps of the projects you may see, with who ratified each and when it runs next.' })}` });
 
 /* DEC-374 contradictions: B398 C48 (contradiction contradictionclarify, contradictionresolve, contradictiontakeup, contradictiondismiss,
    contradictionoptin, contradictionrespond). One contradiction between two sources: both passages as written, then the acts. Every

@@ -183,9 +183,16 @@ screen('docket-public', 'A case\'s docket, from outside', 'published', 'A publis
 
 # --- outside the team
 screen('inbox', 'Inbox', 'working', 'Material handed in through the doorbell.',
-  [('inboxpull','Move into the record'),('inboxresolve','Discard with a reason'),('sourcelink','Record what is known of the source')], [20])
+  [('inboxpull','Move into the record'),('inboxresolve','Discard with a reason'),('sourcelink','Record what is known of the source'),('knocksof','See this knocker\'s other material')], [20])
 screen('doorbell', 'Hand material to the team', 'public', 'The doorbell page for someone outside, with no account.',
-  [('knock','Hand it over')], [20])
+  [('knock','Hand it over'),('knockerconsent','Send my answer')], [20])
+# DEC-375 intake: B398 C17 to C19, C56
+screen('about-knocker', 'A source', 'working', 'What became known about someone who handed material in, who may read it, what they agreed to publish, and the person they are.',
+  [('sourcedisclose','Record what became known'),('sourceconsent','Record their agreement'),('sourceconsentwithdraw','Record that they took it back'),('sourcepersonlink','Say this source is that person'),('writinghelp','Help me write this')], [20])
+screen('leads', 'Leads', 'working', 'Write down something you were told, record who looked and what they found, and share it with a project.',
+  [('lead','Write down the lead'),('leadread','Open a lead'),('leadlook','Record the look'),('leadshare','Share it with the project'),('writinghelp','Help me write this')], [])
+screen('watching', 'Watched addresses', 'working', 'Every address the team watches, pausing the watching, what is due and the sweeps.',
+  [('monitoring','List every watched address'),('monitorpause','Pause or resume the watching'),('monitorslate','Read what is due'),('sweeps','See the sweeps')], [])
 
 # DEC-242 (S4): themes on the document, the question and Find (connections R39 to R46).
 _THEME_ACTS = {'document': [('themeplace','Place it in a theme'),('themepropose','Propose it for a theme'),('themewithdraw','Reject a hunch, with a reason')],
