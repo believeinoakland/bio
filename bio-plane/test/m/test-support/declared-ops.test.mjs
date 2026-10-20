@@ -155,12 +155,12 @@ function tree(modules, files) {
 }
 const declares = (...ops) => `export const DECLARED_OPS = Object.freeze({${ops.map((o) => `${o}: {fields: {accepts: [], requires: []}}`).join(",")}});\n`;
 
-test("R16 two fake modules with one duplicate: the duplicate is listed and a file lacking the export is not imported", async () => {
+test("R16 two fake modules with one duplicate: the duplicate is listed and a file lacking the export, or only mentioning the phrase, is not imported", async () => {
   const root = tree(
     [
       { id: "alpha", paths: ["alpha/"] },
       { id: "beta", paths: ["beta/ops.mjs", "beta/readme.md"] },
-      { id: "gamma", paths: ["gamma/index.mjs"] },
+      { id: "gamma", paths: ["gamma/index.mjs", "gamma/mentions.mjs"] },
     ],
     {
       "alpha/ops.mjs": declares("foo", "bar"),
@@ -170,6 +170,7 @@ test("R16 two fake modules with one duplicate: the duplicate is listed and a fil
       "beta/ops.mjs": declares("bar", "baz"),
       "beta/readme.md": "export const DECLARED_OPS = nonsense",
       "gamma/index.mjs": 'throw new Error("gamma was imported");\n',
+      "gamma/mentions.mjs": '// export const DECLARED_OPS is what owners write\nexport const NOTE = "export const DECLARED_OPS";\nthrow new Error("mentions was imported");\n',
     },
   );
   const { ops, owners, duplicates } = await declaredOpsOf(root);

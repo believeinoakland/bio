@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE = /\.(mjs|js)$/;
-const EXPORT_TEXT = "export const DECLARED_OPS";
+const EXPORT_LINE = /^export const DECLARED_OPS\b/m;
 
 /** A `Response` read as `{status, ...body}`; any other answer as it is. */
 async function normalize(answer) {
@@ -32,7 +32,6 @@ const asList = (entry) => (Array.isArray(entry) ? entry : [entry]);
 /** Holds `declaration` (one `DECLARED_OPS[op]`) true against the op that `call(fields)` runs as the door runs it.
  *  Rejects with an Error naming the op and the field at the first breach. */
 export async function declaredOpHolds({ op, declaration, call, refusedNaming = defaultRefusedNaming, values = {}, outside, same }) {
-  const fail = (field, why) => { throw new Error(`declared op "${op}", field "${field}": ${why}`); };
   const accepts = declaration?.fields?.accepts;
   const requires = declaration?.fields?.requires;
   if (!Array.isArray(accepts) || !Array.isArray(requires)) {
@@ -50,7 +49,7 @@ export async function declaredOpHolds({ op, declaration, call, refusedNaming = d
   // (a) only the requires satisfied: no refusal names a declared field
   const baseAnswer = await run(base);
   for (const field of declared) {
-    if (await refuses(baseAnswer, field)) fail(field, "refused naming it although every required field was given");
+    if (await refuses(baseAnswer, field)) throw new Error(`declared op "${op}", field "${field}": refused naming it although every required field was given`);
   }
 
   // (b) without each required entry: a refusal names it
@@ -60,17 +59,17 @@ export async function declaredOpHolds({ op, declaration, call, refusedNaming = d
     const answer = await run(fields);
     let named = false;
     for (const alt of alts) named = named || await refuses(answer, alt);
-    if (!named) fail(alts.join(" | "), "required, but the op did not refuse a call without it naming it");
+    if (!named) throw new Error(`declared op "${op}", field "${alts.join(" | ")}": required, but the op did not refuse a call without it naming it`);
   }
 
   // (c) a field outside accepts: the op drops it (same answer) or refuses naming it
   const known = new Set(declared);
   const probes = outside ?? [`undeclared_field_${op}`];
   for (const field of probes) {
-    if (known.has(field)) fail(field, "probed as outside the declaration but the declaration names it");
+    if (known.has(field)) throw new Error(`declared op "${op}", field "${field}": probed as outside the declaration but the declaration names it`);
     const answer = await run({ ...base, [field]: sample(field) });
     if (equal(answer, baseAnswer) || await refuses(answer, field)) continue;
-    fail(field, "not declared, yet the op neither dropped it nor refused it naming it");
+    throw new Error(`declared op "${op}", field "${field}": not declared, yet the op neither dropped it nor refused it naming it`);
   }
 }
 
@@ -96,9 +95,9 @@ export async function declaredOpsOf(root) {
   for (const mod of modules) {
     for (const path of mod.paths ?? []) {
       for (const file of filesOf(root, path)) {
-        if (!readFileSync(file, "utf8").includes(EXPORT_TEXT)) continue;
+        if (!EXPORT_LINE.test(readFileSync(file, "utf8"))) continue;
         const { DECLARED_OPS } = await import(pathToFileURL(file).href);
-        if (!DECLARED_OPS || typeof DECLARED_OPS !== "object") throw new Error(`${file}: has "${EXPORT_TEXT}" but exports no object DECLARED_OPS`);
+        if (!DECLARED_OPS || typeof DECLARED_OPS !== "object") throw new Error(`${file}: has a DECLARED_OPS export line but exports no object DECLARED_OPS`);
         for (const [op, declaration] of Object.entries(DECLARED_OPS)) {
           (who[op] ??= []).push(mod.id);
           if (!(op in ops)) { ops[op] = declaration; owners[op] = mod.id; }
