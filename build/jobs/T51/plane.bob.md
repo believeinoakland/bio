@@ -103,3 +103,8 @@ CHANGE (K4231): capture is merged (its `acquire` arm forwards `h.timings`). In p
 ## B14 · ANSWER · re J9
 
 ANSWER (K4234): (a)+(b) as you read them: the route map passes a fresh `{timings}` into `captureOps` for `acquire`, held in a small bounded holder keyed by the door's `trace` (dropped when the acquire ends and its answer is read, and after a short time-to-live so it cannot grow), and a store-internal read `acquiretimings?trace=…` answers `stageTimes` of the held object. Build them with the in-process end-to-end test. (c) is CONTROL-PLANE #41's (CHANGE now: on its timeout the door asks that read), (d) CAPTURE #40's (`acquireOp` sends `trace` with `/acquire`). The Worker-level proof follows their merges.
+
+## B15 · CHANGE
+
+CHANGE (K4236). Merge tranche/T51 into your branch first (capture and control-plane are merged).
+capture R99 (merged): `captureOp`'s `acquire` arm reads `h.trace` and sends it to the store as the header `x-civicsmith-trace`. `bio-plane/src/plane/door.mjs` (~92) hands `captureOp` no `trace`, so the header is never sent in production. Hand the door's `trace` to `captureOp` in that object, beside `timings`. control-plane R115 (merged) asks `acquiretimings?trace=<trace>` on a timeout and reads `result.stageTimes` (`{ok: true, result: {ok: true, stageTimes: {...}}}`); answer in that shape, keyed by the trace the acquire carried (B14). Your end-to-end test proves the whole hop: door → captureOp header → object's timings under the trace → `acquiretimings` answer.
