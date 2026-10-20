@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { standard, P, V, SECRET } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_TABLES, REVIEW_LIST_MAX, noReviewCopy, caseIdentitySentence,
          statedEdition, reviewOwns } from "../../../src/review/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import * as recordCore from "../../../src/record-core/index.mjs";
 import * as membership from "../../../src/membership/index.mjs";
 import * as strength from "../../../src/strength/index.mjs";
@@ -178,7 +179,7 @@ test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported 
   statedEdition(ident, true);
   assert.deepEqual(ident, { caseId: "C", edition: 3 }, "pure: nothing it is given changes");
   assert.equal(caseIdentitySentence("C", 3, false), caseIdentitySentence("C", 3, false));
-  assert.equal(caseIdentitySentence("C", 3, false), "the next edition (3) of C");
+  assert.equal(caseIdentitySentence("C", 3, false), word("review.text.next_edition", { edition: "3", case_id: "C" }));
   /* the read contract: the columns, holding what this module's writes put there */
   const w = standard();
   w.clock.now = "2026-09-28T05:00:00.000Z";
@@ -186,8 +187,8 @@ test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported 
   const cols = w.rows(`PRAGMA table_info(case_drafts)`).map((c) => c.name);
   for (const c of ["draft_id", "case_id", "project_id", "params", "statement_by", "created_at"]) assert.ok(cols.includes(c), c);
   const r = w.row(`SELECT draft_id, case_id, project_id, params, statement_by, created_at FROM case_drafts`);
-  assert.deepEqual(r, { draft_id: d.draftId, case_id: null, project_id: P, params: JSON.stringify({ scope: "x", statement: "S" }),
-                        statement_by: "ed", created_at: "2026-09-28T05:00:00.000Z" });
+  assert.deepEqual({ ...r, params: JSON.parse(r.params) }, { draft_id: d.draftId, case_id: null, project_id: P,
+                        params: { scope: "x", statement: "S" }, statement_by: "ed", created_at: "2026-09-28T05:00:00.000Z" });
 });
 
 test("R26: case-inputs' own copy of the bound, DRAFTS_READ_MAX (its R3; case-authoring's before T47), equals REVIEW_LIST_MAX (K242)", () => {

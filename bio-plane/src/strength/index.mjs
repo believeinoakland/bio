@@ -808,9 +808,11 @@ export class Strength {
                                role: r.role, grade_axis: axis, grade_source: source, why }]);
         return { ...base, grade: null, why };
       };
+      /* R42: a cutting leg is listed with its own grade and its role, never as part of the supported answer. */
+      const cutting = r.role === "cuts_against" ? { role: r.role } : {};
       const carries = (grade, why) => {
         placed.push(["graded", { target_id: r.target_id, ord: r.ord, ground: r.ground,
-                                 grade_axis: axis, grade_source: source, grade, authored, why }]);
+                                 grade_axis: axis, grade_source: source, grade, authored, why, ...cutting }]);
         return { ...base, grade };
       };
       if (isHunch(source)) return inert(HUNCH_WHY, "hunches");
@@ -824,7 +826,7 @@ export class Strength {
         const d = this.#derive(r);
         if (d.stopped) { inert(d.stopped, "ungraded"); return { ...base, grade_axis: "capture", grade: null }; }
         placed.push(["graded", { target_id: r.target_id, ord: r.ord, ground: r.ground, grade_axis: "capture",
-                                 grade_source: source, grade: d.grade, authored: null, why: d.why }]);
+                                 grade_source: source, grade: d.grade, authored: null, why: d.why, ...cutting }]);
         return { ...base, grade_axis: "capture", grade: null };
       }
       if (!axis) return inert(word("strength.inert.leg_states_axis"), "ungraded");
