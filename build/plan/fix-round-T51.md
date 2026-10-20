@@ -246,10 +246,10 @@
 **FR-55 · `screens-settings`** (wave 2, sonnet, 7 entries): C79, C80, the new `bias` screen (C47), C30, C81, C82, C11 (the team's page).
 **FR-56 · `screens-intake`** (wave 2, sonnet, 5 entries): C55 (capture half) and the controls DEC-375 draws on intake: C17, C18, C19, C56.
 **FR-57 · `screens-daily`** (wave 2, sonnet, 12 entries): C13, C14, C15, C27, C33 (frontier), C58, C59, C60, C61, C84, and the two doors to the new screens.
-**FR-58 · `screens-inquiry`** (wave 2, sonnet, 24 entries): twelve of the draft (C25, C28, C32, C34, C35, C37, C44, C52, C54, C55, C64, C85) and the DEC-374/375 controls of the document, question and project pages (C21, C22, C24, C29, C31, C36, C39, C57, C9) and the two new screens (C48, C46). C83 is closed (DEC-376: the rescue for a hidden project is as meant).
+**FR-58 · `screens-inquiry`** (wave 2, sonnet, 24 entries): The draft's twelve (C25, C28, C32, C34, C35, C37, C44, C52, C54, C55, C64, C85), the DEC-374/375 controls of the document, question and project pages (C21, C22, C24, C29, C31, C36, C39, C57, C9) and the two new screens (C48, C46). C83 is closed (DEC-376: the rescue for a hidden project is as meant).
 **FR-59 · `screens-investigate`** (wave 2, sonnet, 3 entries): C26 and the controls DEC-374/375 draw on `person` and `standard`.
-**FR-60 · `screens-publish`** (wave 2, sonnet, 14 entries): the case-to-publication path (C1 to C8, C16) and the controls DEC-374 to DEC-377 draw on the ceremony, docket, case editor, published page, imported page and doorbell (C6, C9, C10, C17, C51, C53).
-**FR-61 · `screens-action`** (wave 2, sonnet, 17 entries): the draft's C45, C63, C66 to C73 and the DEC-374/376/377 controls (C41, C42, C43, C68 pointer, C74, C75, C76).
+**FR-60 · `screens-publish`** (wave 2, sonnet, 14 entries): The case-to-publication path (C1 to C8, C16) and the controls DEC-374 to DEC-377 draw on the ceremony, docket, case editor, published page, imported page and doorbell (C6, C9, C10, C17, C51, C53).
+**FR-61 · `screens-action`** (wave 2, sonnet, 17 entries): The draft's C45, C63, C66 to C73 and the DEC-374/376/377 controls (C41, C42, C43, C68 pointer, C74, C75, C76).
 **FR-62 · `plane`** (wave 2, sonnet, 4 entries): The second half of the op-declaration assembly (the collector), and the spreads of the three new ops maps.
 **FR-63 · `installer-steps`** (wave 2, sonnet, 1 entry): FR-SIGN's installer half (steps).
 **FR-64 · `installer`** (wave 2, sonnet, 3 entries): R33 and R11, the reds of K4176 that stop any team from installing 0.86.0; and FR-SIGN's page.
