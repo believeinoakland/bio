@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01RasjDSWd3ESDe1rnPqU6Zf · depth 2 · WAITING ON BOB (J6) · handled B11
+**Status** · session_01RasjDSWd3ESDe1rnPqU6Zf · depth 2 · COMPLETE · handled B11
 
 ## J1 · QUESTION
 
