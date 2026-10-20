@@ -103,3 +103,26 @@ COMPLETE (re B12, K4245): R51's test failed on the request's query. The harness'
 **Tests and checks** (from /home/user/bio/bio-plane): `node --test test/m/screens-investigate/`: 175 pass, 0 fail (was 174 pass, 1 fail). From the process repository: format 0 failures; architecture screens-investigate 0 failures; coverage screens-investigate 59 of 59 live ids named, 0 failures; ownership tranche/T51 1 file, 0 failures.
 
 Size (session_01W8ujgLnaNkquRgeBeghZRT): test runs 3, module lines 3018
+
+## J10 · REPORT
+
+Answers CHANGE B13 (K4248). Commit 4840b98cbb on job/T51/screens-investigate (tranche/T51 merged at fc771223d3).
+
+**Applied**
+- B419 (2): the standard's in-force answer draws `screen.standard.inforce.result.line` ("On {date} it was: {state}") with `screen.standard.inforce.state.{in_force, not_in_force, overridden, undetermined}`; the day field is `screen.standard.inforce.day.label`. Stand-ins removed.
+- B419 (3): the reminder beside its entry, on due-date, draws `screen.reminder.on` ("We will remind you on {date}."). `screen.due-date.on` stays only as the reminder day field's label.
+- B423, keeper rows: the office field `screen.person.keeper.office.label`, the source field `source.label`, the dates `from.label` and `to.label`, and a responsible-for statement `line.responsible` ("is responsible for {subject}"). The `screen.people.today.kind.office`, `screen.person.source`, `screen.person.fact.from`/`.to` and `label.linekinds.responsible_for` stand-ins are gone from the keeper section.
+- Tests: R51 asserts the day label and each state's result line; R54 asserts `screen.reminder.on`; new R50 test asserts the responsible-for key.
+
+**HELD: the withdraw act (B423 `linewithdraw` on person).** I added it. Every screen-module page then failed to build: interface-shell's `checkScreens` rejects an act that the screen registry does not carry for that screen ("is not the registry's for it"). The generated `bio-plane/src/wizard-scripts/screen-registry.mjs` (wizard-scripts' artifact, pinned at the design commit its R41 names) has no `linewithdraw` on `person`, though `docs/development/ux-substrate/screens/registry.json` on this tranche does (`screens[person].acts`). `build-data.mjs --check` passes against its pin, so the artifact is stale against the design, not broken.
+- The one act BOB needs to give: a CHANGE to wizard-scripts to re-take the registry at the design commit now on tranche/T51 (DEC-387/388 and B423's rows), regenerate its three files, and merge. Then I add the act back: a reasoned withdrawal per kept statement, with a reason field, as withdrawidentityclaim draws it, plus its test.
+- Until then, R10 ("each screen draws exactly its registry acts") stays red, cause: this stale pin. The act is not in the module, so no other test is affected.
+- Requirement lines for BOB: R50 gains the withdraw line once the act lands; R51's not-yet-met note is out of date (its test is green, as J9 said).
+
+**Found in other modules (BOB to route; none is in my diff)**
+- `members` screen: act `expertisewithdraw` is not in OPS (interface-shell). It fails every page build in plane t47 and t50 and control-plane t46-app (6 reds: R75, R81, R25). Also op-declarations: DECLARED_OP_DISAGREES on `groupkeynoticeseen` description.
+- `checks/run.mjs` (whole tree): coverage has 4 live ids named by no test: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19. Words: testcopy 24 in op-grades t36, t37, t41, t46, t47, t48, t49.
+- `run.mjs` names nothing of screens-investigate.
+
+**Checks** (module suite: 176 tests, 175 pass, 1 fail = R10, the held act above)
+- format 0 failures; architecture 0 failures; coverage screens-investigate 59 of 59 ids named, 0 failures; words screens-investigate 0 failures (7 unkeyed); ownership tranche/T51 vs job/T51/screens-investigate: 7 files, 0 failures; setup-words build --check: rows match words.json.
