@@ -214,7 +214,7 @@ test("R59: the door passes `answered` on to the store and answers the list as it
 /* ------------------------------------------------------------------------------------------------------------- R60 */
 
 const clear = (f) => f.all_clear;
-const feedRow = (f, id) => f.feeds.find((x) => x.feed === id);
+const feedRow = (f, id) => { const r = f.feeds.find((x) => x.feed === id); if (!r) return r; const { ms: _, ...rest } = r; return rest; };   /* the row without its timing (R91) */
 const ONE_FINDING = [{ id: "FINDING::source-modified::a", ...SRC, subject: { kind: "bundle", id: "DOC-1" }, subjects: [] }];
 
 test("R60: a sources feed that fails answers answered false for it, all_clear false for the class it can raise even with no item, and true for a class whose feeds all answered", () => {
@@ -237,7 +237,7 @@ test("R60: every feed is a row (tasks, the producers' feeds, notice-producers); 
   assert.deepEqual(f.feeds.map((x) => x.feed), ["tasks", "bias-debts", "proposals", "shared-inquiries", "leads", "exports", "references",
     "objectives", "sources", "machinery", "contradictions", "signing-keys", "action", "attribution", "docket", "cited-cases", "wizards",
     "schedule", "places", "projects", "notice-producers"]);
-  for (const x of f.feeds) assert.deepEqual(Object.keys(x), ["feed", "classes", "answered", "failed"]);
+  for (const x of f.feeds) assert.deepEqual(Object.keys(x), ["feed", "classes", "answered", "failed", "ms"]);
   assert.deepEqual(f.classes, ["OBLIGATION", "FINDING", "CONDITION"]);
   assert.deepEqual(f.classes_deferred, {});
   assert.deepEqual(Object.keys(f.notice_producers).sort(), ["detail", "failed"]);
