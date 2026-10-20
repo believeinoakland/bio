@@ -99,13 +99,13 @@ export const CASE_EDITOR = Object.freeze({
     const roleList = Array.isArray(choices.roles) ? choices.roles : [];
     const positionList = Array.isArray(choices.subject_positions) ? choices.subject_positions : [];
     const found = have && Array.isArray(have.findings) ? have.findings : [];
-    const ROLE = { load_bearing: "case-grammar.load_bearing", supporting: "screen.watching.nr.f.supporting" };
+    const ROLE = { load_bearing: "screen.case-editor.role.relied", supporting: "screen.case-editor.role.supporting" };
     const POSITION = { sought_and_answered: "screen.case-editor.we_asked_and_they_answered", sought_no_answer: "screen.case-editor.we_asked_and_had_no_answer",
       not_sought: "screen.case-editor.we_chose_not_to_give_notice" };
     const option = function (v, names, on) { return names[v] ? [v, names[v], on] : { value: v, text: v, on: on }; };
     if (found.length && roleList.length) out.push(cs.sec("screen.case-editor.findings_and_their_roles", found.map(function (f, i) {
       return cs.row("", cs.w("screen.published.finding", { n: String(i + 1) }) + ' · <span class="rec">' + cs.esc(f.statement || f.text || f.target || "") + "</span>", "")
-        + cs.checks("ce-role-" + i, { key: "screen.published.finding", fills: { n: String(i + 1) } }, roleList.map(function (r) { return option(r, ROLE, f.role === r); }), { radio: true });
+        + cs.checks("ce-role-" + i, { key: "screen.case-editor.finding.role", fills: { n: String(i + 1) } }, roleList.map(function (r) { return option(r, ROLE, f.role === r); }), { radio: true });
     }).join("") + '<p class="mk-small">' + cs.w("screen.case-editor.relied_on_the_case_rests_on") + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.supporting_it_travels_with_the_case")
       + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.required_for_every_finding_at_least") + "</p>" + P.said(view, "casedraft"),
     { help: ["screen.case-editor.a_case_is_made_of_findings", "screen.case-editor.you_say_for_each_whether_the"] }));
@@ -250,25 +250,26 @@ export const CASE_EDITOR = Object.freeze({
         const rels = val("relationships");
         const items = rels && Array.isArray(rels.items) ? rels.items : [];
         const contact = val("contact");
-        const NOTSTATED = '<span class="muted" data-notstated>' + cs.w("screen.person.fact.notstated") + "</span>";
-        const RELATION = { same_matter: "screen.case-editor.details.rel.same", other: "screen.case-editor.details.rel.other" };
-        const takeOut = function (field, i) { return cs.act("casedetailsset", { label: "screen.panel.limit.remove", data: { field: field, mode: "remove", index: String(i) } }); };
+        const NOTSTATED = '<span class="muted" data-notstated>' + cs.w("case-inputs.details.not_stated") + "</span>";
+        const RELATION = { builds_on: "screen.case-editor.details.rel.builds_on", responds_to: "screen.case-editor.details.rel.responds_to", same_matter: "screen.case-editor.details.rel.same",
+          disagrees_with: "screen.case-editor.details.rel.disagrees_with", other: "screen.case-editor.details.rel.other" };
+        const takeOut = function (field, i) { return cs.act("casedetailsset", { label: "screen.case-editor.details.takeout", data: { field: field, mode: "remove", index: String(i) } }); };
         const part = function (field, head, body) { return '<div data-detail="' + field + '"><p><b>' + head + "</b> · " + (d[field] && d[field].stated ? '<span class="muted">' + cs.date(d[field].set_at) + "</span>" : NOTSTATED) + "</p>" + body + "</div>"; };
         const bodyList = bodies.state === "ok" ? bodies.value.entities : [];
         return '<p class="mk-note">' + cs.w("screen.case-editor.details.intro1") + " " + cs.w("screen.case-editor.details.intro2") + "</p>"
           + '<p class="mk-note">' + cs.w("screen.case-editor.details.outward1") + " " + cs.w("screen.case-editor.details.outward2") + "</p>"
-          + part("area", cs.w("screen.case-editor.details.area.bodyhint"), (area.length ? cs.sheet(area.map(function (a, i) {
+          + part("area", cs.w("screen.case-editor.details.name.area"), (area.length ? cs.sheet(area.map(function (a, i) {
             return cs.row("", '<span class="mk-data">' + cs.esc(a.words) + "</span>", takeOut("area", i));
           }).join("")) : "")
             + (bodyList.length ? cs.choice("cd-body", "screen.case-editor.details.area.addbody", [{ value: "", text: "" }].concat(bodyList.map(function (b) { return { value: b.entity_id, text: b.label || b.entity_id }; }))) : "")
             + cs.field("cd-words", "screen.case-editor.details.area.words")
             + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "area", mode: "add" } }) + "</div>")
-          + part("contact", cs.w("screen.case-editor.details.contact.legend"), cs.checks("cd-contact", { key: "screen.case-editor.details.contact.legend" }, [
+          + part("contact", cs.w("screen.case-editor.details.name.contact"), cs.checks("cd-contact", { key: "screen.case-editor.details.contact.legend" }, [
             ["doorbell", "screen.case-editor.details.contact.doorbell", !!contact && contact.kind === "doorbell"], ["text", "screen.case-editor.details.contact.words", !!contact && contact.kind === "text"]], { radio: true })
             + cs.field("cd-contact-text", "screen.case-editor.details.contact.words", { value: contact && contact.kind === "text" ? contact.text : "", help: "screen.case-editor.details.contact.help" })
             + '<p class="mk-note">' + cs.w("screen.case-editor.details.contact.nomember1") + " " + cs.w("screen.case-editor.details.contact.nomember2") + "</p>"
             + '<div class="mk-acts">' + cs.act("casedetailsset", { data: { field: "contact", mode: "save" } }) + "</div>")
-          + part("related", cs.w("screen.case-editor.details.rel.link"), (related.length ? cs.sheet(related.map(function (r, i) {
+          + part("related", cs.w("screen.case-editor.details.name.related"), (related.length ? cs.sheet(related.map(function (r, i) {
             return cs.row("", '<span class="mk-data">' + cs.esc(r.url || (r.case_ref ? r.case_ref.case : "")) + '</span><span class="meta">' + (RELATION[r.relation] ? cs.w(RELATION[r.relation]) : cs.esc(r.relation)) + "</span>", takeOut("related", i));
           }).join("")) : "")
             + cs.field("cd-rel-link", "screen.case-editor.details.rel.link", { help: "screen.case-editor.details.rel.linkhelp" })
@@ -277,7 +278,7 @@ export const CASE_EDITOR = Object.freeze({
             }))
             + cs.field("cd-rel-words", "screen.case-editor.details.rel.words")
             + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "related", mode: "add" } }) + "</div>")
-          + part("relationships", cs.w("screen.case-editor.details.ties.legend"), '<p class="mk-small">' + cs.w("screen.case-editor.details.ties.intro") + " " + cs.w("screen.case-editor.details.ties.public") + "</p>"
+          + part("relationships", cs.w("screen.case-editor.details.name.relationships"), '<p class="mk-small">' + cs.w("screen.case-editor.details.ties.intro") + " " + cs.w("screen.case-editor.details.ties.public") + "</p>"
             + cs.checks("cd-rels", { key: "screen.case-editor.details.ties.legend" }, [
               ["none", "screen.case-editor.details.ties.none", !!rels && rels.none === true], ["some", "screen.case-editor.details.ties.some", items.length > 0]], { radio: true })
             + (items.length ? cs.sheet(items.map(function (t, i) {

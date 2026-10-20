@@ -122,11 +122,11 @@ export const CEREMONY = Object.freeze({
     if (c.case_id) {
       const dd = P.later(cs, view, "cdetails", "casedetails", { query: { case: c.case_id } });
       const d = dd.state === "ok" && dd.value && dd.value.details && typeof dd.value.details === "object" ? dd.value.details : null;
-      if (d) out.push(cs.sec("act.owed_casedetails.label.case-editor", cs.sheet([["area", "screen.case-editor.details.area.bodyhint"], ["contact", "screen.case-editor.details.contact.legend"],
-        ["related", "screen.case-editor.details.rel.link"], ["relationships", "screen.case-editor.details.ties.legend"]].map(function (f) {
+      if (d) out.push(cs.sec("act.owed_casedetails.label.case-editor", cs.sheet([["area", "screen.case-editor.details.name.area"], ["contact", "screen.case-editor.details.name.contact"],
+        ["related", "screen.case-editor.details.name.related"], ["relationships", "screen.case-editor.details.name.relationships"]].map(function (f) {
         const x = d[f[0]] || {};
-        return cs.row("", '<span data-detail="' + f[0] + '">' + cs.w(f[1]) + "</span>", x.stated ? '<span class="muted" data-stated>' + (x.set_at ? cs.date(x.set_at) : "") + "</span>"
-          : '<span class="muted" data-notstated>' + cs.w("screen.person.fact.notstated") + "</span>");
+        return cs.row("", '<span data-detail="' + f[0] + '">' + cs.w(f[1]) + "</span>", x.stated ? '<span class="muted" data-stated>' + cs.w("screen.case-editor.details.stated") + (x.set_at ? " · " + cs.date(x.set_at) : "") + "</span>"
+          : '<span class="muted" data-notstated>' + cs.w("case-inputs.details.not_stated") + "</span>");
       }).join("")) + '<p class="mk-note">' + cs.w("screen.ceremony.details.ceremony.notstated1") + " " + cs.w("screen.ceremony.details.ceremony.notstated2") + "</p>"
         + '<div class="mk-acts">' + cs.act("casedetails") + "</div>"));
     }
@@ -185,7 +185,7 @@ export const CEREMONY = Object.freeze({
             }).join("") : ""),
             cs.act("reattest", { data: { capture: sha } }));
         }).join("")) + '<p class="mk-note">' + cs.w("screen.ceremony.conf.retry.note") + "</p>"
-        + cs.checks("ce-sa", "screen.ceremony.conf.self.legend", unconfirmed.map(function (sha) { return { value: sha, text: String(sha).slice(0, 12), on: sa.includes(sha) }; }))
+        + cs.checks("ce-sa", "screen.ceremony.conf.self.legend", unconfirmed.map(function (sha) { return { value: sha, key: "screen.ceremony.conf.self.tick", fills: { document: String(sha).slice(0, 12) }, on: sa.includes(sha) }; }))
         + unconfirmed.map(function (sha, i) {
           return cs.field("ce-sar-" + i, "screen.ceremony.conf.reason.label", { rec: true, value: ui.attested ? mine.why[sha] || "" : was[sha] || "",
             help: ["screen.ceremony.conf.reason.help1", "screen.ceremony.conf.reason.help2"] });
