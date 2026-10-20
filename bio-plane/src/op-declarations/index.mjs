@@ -1,7 +1,7 @@
 /* op-declarations: WHAT EACH OP IS (R1–R79; T45's ops in `t45.mjs`, R49; T46's owners' shares in `t46.mjs`, R50, R51; T47's
    shares, families and `REAUTH_ACTS` in `t47.mjs`, R55, R57–R59, R61; T48's shares and families in `t48.mjs`, R64, R66–R68;
    T49's shares in `t49.mjs`, R71, R72; T50's shares and families in `t50.mjs`, R73; T51's shares and families in `t51.mjs`,
-   R77–R79, R82, and the browser acts of R76 (`BROWSER_ACTS`, below); the composition of `NEEDS` in `compose.mjs`, R3; the owners'
+   R77–R79, R82, R83, and the browser acts of R76 (`BROWSER_ACTS`, below); the composition of `NEEDS` in `compose.mjs`, R3; the owners'
    declarations, R80, R81, registered below and shaped in `declared.mjs`).
    Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table (composed here, R3, from `op-capabilities`' hand-written rows and the families'),
@@ -753,8 +753,8 @@ const OPS_HAND = aliasRows({
      machine actor by shape (MACHINE_CANNOT_FORWARD/RESOLVE). */
   taskforward:         { classes: ["admin", "member"],          mutating: true  },
   taskresolve:         { classes: ["admin", "member"],          mutating: true  },
-  /* Section 8.1: the ADMIN_TOKEN credential only, never a session (refused at the gate); mutating because it writes
-     the export log. */
+  /* Section 8.1: the ADMIN_TOKEN credential, and since T51's fix round (R83, K4237) the founder's session alone, never
+     a member's; mutating because it writes the export log. */
   export:              { classes: ["admin"],                    mutating: true  },
   /* Read by administrators who cannot export, so they see that one happened. */
   exportlog:           { classes: ["admin", "member", "probe"], mutating: false },
@@ -2458,6 +2458,10 @@ const SESSION_OPS = Object.freeze({
                    ...FAMILY_SESSION_OPS, ...DECLARED_SESSION_OPS,
                    /* T49 (R71): the founder's own acts, in this set alone. */
                    ...FAMILY_FOUNDER_OPS,
+                   /* T51 fix round (R83; K4237; screens-settings C30): the copy of the group's records, the founder's session
+                      alone (`SESSION_OPS.admin` is the founder's password session, D-136), so the founder takes one from the
+                      screen; a member's set stays without it. Its spec (classes `admin`) and `NEEDS` row are unchanged. */
+                   "export",
                    "casedraft", "reviewgrant", "reviewrevoke"])),
 });
 
@@ -2474,11 +2478,14 @@ const SESSION_OPS = Object.freeze({
    proposal (proposing is contributing, never publishing); NO WORKING CAPABILITY for an administrator's act (D-136), a
    member's act on their own account, attention or ties (`queuemute`'s reasoning) and an unattributed tally; and a
    present null for every read, which affordances names a NON_ACT (its R40, R12). */
+/* R83 (K4237): `export`, the founder's session act that is no family op, takes no working capability, as an administrator's
+   act does (D-136); a present null, since a session reaches it and the census reads a row for each mutating op it reaches. */
+const FOUNDER_SESSION_NEEDS = { export: null };
 const NEEDS = Object.freeze(DECLARED_NEW.reduce((t, op) => {
   const [has, value] = needsOf(declared.get(op));
   if (has && !Object.hasOwn(t, op)) t[op] = value;
   return t;
-}, aliasRows(composeNeeds(needsRows(), FAMILY_NEEDS))));
+}, aliasRows(composeNeeds(needsRows(), FAMILY_NEEDS, FOUNDER_SESSION_NEEDS))));
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
    op=affordances answer for the same subject are identical by construction and not by agreement. N177 (T8): the
