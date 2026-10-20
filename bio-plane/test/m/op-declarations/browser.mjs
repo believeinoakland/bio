@@ -15,3 +15,11 @@ export const browserActs = (registry) => {
   }
   return names;
 };
+
+/* The fix round of T51 (DEC-378; K4165, K4169, K4168): the acts the screen registry now marks `owed` whose ops their owners
+   build and declare in this round (`case-inputs` C12, `case-import` C49, `tasks` C62), each in its owner's `DECLARED_OPS`
+   and none a hand row here, so each has no spec in `OPS` (R6) until the plane registers the owners' declarations
+   (`registerDeclaredOps`, R80); the totality tests read them as still owed, class (c) of R21, with the ruling that owes
+   them. */
+export const OWED_BY_FIX_ROUND = ["casedetails", "casedetailspublic", "casedetailsset", "importregrade", "rerunpair", "rerunread",
+  "rerunstart", "taskdecide"];
