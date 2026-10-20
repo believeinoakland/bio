@@ -142,3 +142,6 @@ Done with tests: R65 (doors to Held captures and the Inbox), R66 (Themes door wi
 Left: R75 (C62: the authority form, endorsement, owner-vote and expertise items, and their acts on Home and the queue), R68 (Defer), R69 (snoozed section, Bring back), R79 (helps, unkeyed pair, date input, answered rows, Open Members), then the checks. Restart me (a CHANGE/RESUME) to continue.
 Red by name: contract R1–R13 (waits on R75's acts); queue-states R58 set arm: proposedispose's declaration requires project|key|progressionKey at the top level but accepts items (a declaration finding, not weakened).
 Questions/REPORTs for you (details in the record): words no key holds (Defer, Bring back, held/inbox count sentence, R75's four form labels: I named guessed keys `screen.queue.routed.auth.cannot|issuer.label|tried.label|record` for UX-DESIGN B422 to confirm), `filingapprove`'s door (left to other screens as the registry test says), the signing-key item's "Mark it done", and that startfrom takes no `door` (R40 said it did).
+
+## B16 handled (SCREENS-DAILY #11)
+- Merged tranche/T51. A door press already sends `startfrom` bare (R81: the door is page memory; `data-door`/`data-script` are DOM data, never request fields); the script button sends nothing (`cs.wizard`). `t47-e2e.test.mjs` 3 of 3 pass beside the suite (179 pass; the 2 red are those named above).
