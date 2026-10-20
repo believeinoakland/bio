@@ -38,7 +38,7 @@ CR-8 applied: R13 standardLegFindings exported; R19 golden/corpus regenerated fo
 
 ## Completion (FR-44, wave 2)
 
-**Entry applied**: L9 (K4194) as R68, written first in `build/requirements/inquiry-grammar.md` (marked not yet met: T51; met by this change, BOB lifts the marker). `checkGrounds` (`grammar.mjs`) leaves every `role: cuts_against` leg out of the partition: its absence of a ground is no gap in the totality, and a non-empty `ground` on one is one C-2.8 error (no code; two new `localize` ids `inquiry-grammar.grammar.basis_i_cuts_against_ground` and `...remove_the_ground_from_the_leg`) naming `basis[i]` and the label; the label then counts toward no ground. Every other basis is judged as before (golden unchanged).
+**Entry applied**: L9 (K4194) as R68, the requirement line is BOB's file (ownership refuses my writing it): its text is in my REPORT J3 for BOB to add, and the code and tests meet it. `checkGrounds` (`grammar.mjs`) leaves every `role: cuts_against` leg out of the partition: its absence of a ground is no gap in the totality, and a non-empty `ground` on one is one C-2.8 error (no code; two new `localize` ids `inquiry-grammar.grammar.basis_i_cuts_against_ground` and `...remove_the_ground_from_the_leg`) naming `basis[i]` and the label; the label then counts toward no ground. Every other basis is judged as before (golden unchanged).
 **Tests** (`t51.test.mjs`, 4 added, three seen failing before the change): supporting plus cutting leg clean; supporting leg left out still refused (control); cutting leg in a ground refused with its own finding; no-cutting-leg basis as before.
 **Deferred**: none.
 
