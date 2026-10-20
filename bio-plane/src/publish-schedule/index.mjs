@@ -169,3 +169,10 @@ export function publishScheduleOps(ps, url, body) {
                                                   limit: q("limit"), viewer: q("viewer") || "" }),
   };
 }
+
+/* R12 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  publishatcancel: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reversible", description: localize("publish-schedule.declared.publishatcancel", "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time"),
+    fields: { accepts: ["case","edition"], requires: ["case","edition"] } },
+});

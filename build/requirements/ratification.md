@@ -196,3 +196,5 @@ None: answered by Bob 2026-09-26 (K102).
 ## Old ids (publication's draft → this file)
 
 R41 → R1; R42 → R2; R43 → R3; R44 → R4; R45 → R5 (its commit primitives → `publication` R22); R46 → R6; R47 → R7; R49's "a retry never re-signs" → R10; R51 → R11 (copy); R53 → R12 (copy); R54's committed-null arm → R13; R60's share → R14 (and R8, R9, from Decided 2 and 3 of the parent); R61 → R15. Open for Bob 2 → 1.
+
+- **R53** *(not yet met: T51)* (T51; K4168; the T51 declaration pass; op-declarations R80, R81; op-grades R49, R50; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: a frozen object keyed by the op's door name, each row `{classes, machineClasses?, mutating, weight, description, fields: {accepts, requires}}`, its class, weight and description copied from the op's existing rows and its fields read from the arm whole (the stamps and the shell's `reason` are not accepts unless the arm reads a `reason` of its own): `release`, `retire`. Test: `declaredOpHolds` for each, with only its requires, without each, and with a field outside its accepts (`declared-ops.test.mjs`).

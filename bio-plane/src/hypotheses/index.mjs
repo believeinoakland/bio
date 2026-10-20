@@ -917,4 +917,12 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["hypothesisId","statement","about","reason"], requires: ["hypothesisId","reason"] } },
   hypothesiswithdraw: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("hypotheses.declared.hypothesiswithdraw", "hypothesis-directed: keyed by hypothesis; keeps it, shown withdrawn"),
     fields: { accepts: ["hypothesisId","reason"], requires: ["hypothesisId","reason"] } },
+  notewrite: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("hypotheses.declared.notewrite", "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle"),
+    fields: { accepts: ["text"], requires: ["text"] } },
+  noterevise: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("hypotheses.declared.noterevise", "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle"),
+    fields: { accepts: ["note","text"], requires: ["note","text"] } },
+  noteturn: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("hypotheses.declared.noteturn", "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle"),
+    fields: { accepts: ["note","into","hunch","made"], requires: ["note","into",["made","hunch"]] } },
+  notedelete: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("hypotheses.declared.notedelete", "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle"),
+    fields: { accepts: ["note"], requires: ["note"] } },
 });

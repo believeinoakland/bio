@@ -1614,6 +1614,23 @@ export function progressionOps(p, url, body) {
   };
 }
 
+/* R47 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  progressiondefine: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("progressions.declared.progressiondefine", "progression definition, keyed by progression key"),
+    fields: { accepts: ["progressionKey","label","note","stages","basis","citation"], requires: ["progressionKey","label","stages"] } },
+  thread: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("progressions.declared.thread", "progression instance write, keyed by (progression, entity)"),
+    fields: { accepts: ["progressionKey","entityId","placements"], requires: ["progressionKey","entityId","placements"] } },
+  discharge: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("progressions.declared.discharge", "exception document, keyed by (progression, entity, stage)"),
+    fields: { accepts: ["progressionKey","entityId","stageKey","stage","captureSha","capture_sha","reason","citation"], requires: ["progressionKey","entityId",["stageKey","stage"],["captureSha","capture_sha"],"reason","citation"] } },
+  progression: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.progression.label.timeline",
+    fields: { accepts: ["key","version"], requires: ["key"] } },
+  instance: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.instance.label.timeline",
+    fields: { accepts: ["key","id"], requires: ["key","id"] } },
+  captureprogressions: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.captureprogressions.label.document",
+    fields: { accepts: ["sha256"], requires: ["sha256"] } },
+});
+
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It declares its tables to purge (R29). */

@@ -1916,3 +1916,10 @@ export function publicReadOps(r, url) {
     withheld: () => r.withheldOf(q("sha256")),
   };
 }
+
+/* R40 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  verify: { classes: null, mutating: false, weight: "read", description: "act.verify.label.published",
+    fields: { accepts: ["sha256"], requires: [] } },
+});

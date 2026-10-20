@@ -8,7 +8,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          aliased, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
-import { readRows } from "./declared.mjs";
+import { readRows, declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ");
@@ -30,8 +30,7 @@ test("R6: filing-templates' and local-facts' ops — templateretire and factconf
   for (const op of Object.keys(W).filter((op) => op.startsWith("template"))) assert.ok(NON_ACTS[op].startsWith(T), op);
   for (const op of ["templatereview", "templatecomment", "templateread", "templatecomments"])
     assert.match(NON_ACTS[op], /reached also through a review grant's door$/, op);
-  assert.equal(NON_ACTS.factconfirm,
-    "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle");
+  assert.equal(NON_ACTS.factconfirm, declaredSentence("local-facts", "factconfirm"));
   for (const op of ["templates", "factstatus", "factsdue"]) assert.ok(isRead(op), op);
 });
 
@@ -43,7 +42,7 @@ test("R7: T23's ops — whatchangedpropose `undetermined`, noticepost `attested`
   assert.equal(RUNGS.noticepost, RUNGS.caseratify);
   assert.equal(NON_ACTS.whatchangedpropose, "case-directed: keyed by a published case, reached from its next edition; a "
     + "draft, never a statement until a member adopts it");
-  assert.equal(NON_ACTS.noticepost, "project-directed: keyed by a project, reached from the project; an owner's signed notice");
+  assert.equal(NON_ACTS.noticepost, declaredSentence("network-notices", "noticepost"));
   for (const op of ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices"])
     assert.ok(isRead(op), op);
   for (const op of ["activitymethod", "noticespublic", "groupkeyspublic"])
@@ -75,8 +74,7 @@ test("R9: the docket's ops — docketfile and docketdecline `reasoned` (DOCKET_N
   const W = { docketfile: "reasoned", docketdecline: "reasoned", docketpost: "attested", docketpressure: "undetermined" };
   assert.deepEqual(grades(W), W);
   assert.ok(JUSTIFICATION_REFUSALS.includes("DOCKET_NO_REASON"));
-  for (const op of Object.keys(W)) assert.equal(NON_ACTS[op],
-    "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle", op);
+  for (const op of Object.keys(W)) assert.equal(NON_ACTS[op], declaredSentence("docket", "docketfile"), op);
   for (const op of ["docket", "docketprepare", "docketinvitation"]) assert.ok(isRead(op), op);
   for (const op of ["docketpublic", "docketfeed"]) assert.equal(NON_ACTS[op], "read: public, no credential", op);
   notMachine(Object.keys(W));
@@ -227,8 +225,7 @@ test("R14 R37: publishat and publishatmove `irreversible` (publishing's own weig
   assert.notEqual(RUNGS.publishat, RUNGS.publish, "R37: publish prepares; the set time is weighed as publishing");
   assert.equal(NON_ACTS.publishat, "case-directed: keyed by a case edition (case, edition), reached from the publication "
     + "ceremony's last step; signs now and publishes at the set time only if every check passes again then");
-  for (const op of ["publishatmove", "publishatcancel"]) assert.equal(NON_ACTS[op], "case-directed: keyed by a case "
-    + "edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time", op);
+  for (const op of ["publishatmove", "publishatcancel"]) assert.equal(NON_ACTS[op], declaredSentence("publish-schedule", "publishatcancel"), op);
   assert.ok(isRead("publishschedule"));
   assert.deepEqual(["publishat", "publishatmove", "publishatcancel"].map(phoneOf), [false, false, true]);
   assert.deepEqual([RUNGS.caseratify], ["attested"], "the signing that takes a cancel back is graded");
@@ -238,8 +235,7 @@ test("R14 R37: publishat and publishatmove `irreversible` (publishing's own weig
 /* ---- R15 ----------------------------------------------------------------------------------------------------------- */
 test("R15: notewrite and noteturn `caller-owned` as reminderset, note-directed, notes a read, phone true, no machine "
    + "refusal; HYPOTHESIS_NO_REASON joins the family and NO_REASON stays", () => {
-  const ND = "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, "
-    + "never cited, published or counted; moves no bundle";
+  const ND = declaredSentence("hypotheses", "notewrite");
   for (const op of ["notewrite", "noteturn"]) {
     assert.equal(RUNG_ABSENT[op].ground, "caller-owned", op);
     assert.equal(RUNG_ABSENT[op].ground, RUNG_ABSENT.reminderset.ground, op);

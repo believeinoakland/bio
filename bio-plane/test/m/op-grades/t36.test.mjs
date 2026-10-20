@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t36.mjs";
-import { readRows } from "./declared.mjs";
+import { readRows, declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]) && NON_ACTS[op].length > 30;
@@ -27,8 +27,7 @@ test("R23: K2092's five ops — standardinforcethrough, standardinforcethroughwi
   for (const [op, code] of Object.entries(R23_CODES)) assert.ok(JUSTIFICATION_REFUSALS.includes(code), `${op}: ${code}`);
   assert.equal(NON_ACTS.standardinforcethrough, STANDARD_THROUGH);
   assert.equal(NON_ACTS.standardinforcethroughwithdraw, STANDARD_THROUGH);
-  assert.equal(NON_ACTS.spotcheckvisit, "draw-directed: keyed by a draw and one drawn item, reached from the spot-check; "
-    + "ties the visitor's own testimony to the item; moves no bundle");
+  assert.equal(NON_ACTS.spotcheckvisit, declaredSentence("calculations", "spotcheckvisit"));
   for (const op of R23_READS) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
   assert.deepEqual([...Object.keys(R23_WRITES), ...R23_READS].filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   assert.deepEqual(Object.keys(R23_WRITES).map(phoneOf), [true, true, true]);
@@ -110,8 +109,7 @@ test("R25: aikeepaway `reasoned` on AI_KEEP_AWAY_NO_REASON (T37: credentials R51
   assert.ok(JUSTIFICATION_REFUSALS.includes("AI_KEEP_AWAY_NO_REASON"));
   assert.ok(JUSTIFICATION_REFUSALS.includes("NO_REASON"), "NO_REASON stays for the ops that still answer it");
   assert.equal(JUSTIFICATION_REFUSALS.filter((c) => c === "AI_KEEP_AWAY_NO_REASON").length, 1);
-  assert.equal(NON_ACTS.aikeepaway, "setting: whether the group keeps its material away from every assistant, an "
-    + "administrator's act with a reason; moves no bundle");
+  assert.equal(NON_ACTS.aikeepaway, declaredSentence("ai-accounts", "aikeepaway"));
   assert.ok(isRead("aikeepawaystate"));
   assert.equal(gradeOf("aikeepawaystate"), null);
   assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "aikeepaway") && !Object.hasOwn(MACHINE_REFUSALS, "aikeepawaystate"));

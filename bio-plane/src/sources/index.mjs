@@ -42,6 +42,7 @@ import { SOURCES_CHECKS, noSuchSource, badDisclosure, noEvidence, noSightList, c
          SECRET_NOT_RECOGNISED_ANSWER, machineCannotMark, notYourCapture, noSuchCapture, noService } from "./checks.mjs";
 import { SOURCES_TABLE_CLASSES, migrateSources } from "./schema.mjs";
 import { word } from "../setup-words/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER } from "./checks.mjs";
 export { SOURCES_SCHEMA, SOURCES_TABLES, SOURCES_TABLE_CLASSES } from "./schema.mjs";
@@ -821,3 +822,16 @@ export function sourcesOps(s, url, body) {
     sourcepublishable: () => s.publishableAt({ source: q("source_id") ?? b.source, audience: q("audience") ?? b.audience }),
   };
 }
+
+/* R21 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  sourcedisclose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("sources.declared.sourcedisclose", "source-directed: a member appends one disclosure to a source's history — what was revealed, how, to whom it is known, with its evidence — keyed by source id; never edited, a later entry superseding it on read"),
+    fields: { accepts: ["source","revealed","how","knownTo","recorded","claimedBy","claimedAt","confirms","evidence","sight"], requires: ["source","revealed","how","knownTo","evidence"] } },
+  sourcelink: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("sources.declared.sourcelink", "source-directed: a member claims that two sources are one person, with evidence, keyed by the source pair; recorded as a disclosure and merging nothing"),
+    fields: { accepts: ["source","to","evidence","knockerSecret"], requires: ["source","to","evidence"] } },
+  sourceconsent: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.sourceconsent.label.about-knocker",
+    fields: { accepts: ["source","entry","audience","evidence"], requires: ["source","entry","audience","evidence"] } },
+  sourceconsentwithdraw: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("sources.declared.sourceconsentwithdraw", "source-directed: a member records the withdrawal of a source's consent for one disclosure and one audience, keyed by (source, entry); binds only later publications, and what is published stays published"),
+    fields: { accepts: ["source","entry","audience"], requires: ["source","entry","audience"] } },
+});

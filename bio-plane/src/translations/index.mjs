@@ -800,3 +800,16 @@ export function translationsOps(m, url, body) {
     interfacewords: () => m.interfaceWords({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
   };
 }
+
+/* R18 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  translationgrant: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("translations.declared.translationgrant", "setting: a named member's grant for one language, an administrator's act; moves no bundle"),
+    fields: { accepts: ["member","language","revoke"], requires: ["member","language"] } },
+  translationadopt: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationadopt", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),
+    fields: { accepts: ["language","key","text","draft"], requires: ["language","key","text"] } },
+  translationconfirm: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationconfirm", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),
+    fields: { accepts: ["language","key"], requires: ["language","key"] } },
+  translationrevert: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationrevert", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),
+    fields: { accepts: ["language","key"], requires: ["language","key"] } },
+});

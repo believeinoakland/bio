@@ -1245,3 +1245,10 @@ export function planWorkOps(m, url, body) {
     matterpromiseduties: () => m.matterPromiseDuties(read({ matter: b.matter ?? pick("matter") })),
   };
 }
+
+/* R19 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  itemtakeup: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("plan-work.declared.itemtakeup", "a member routes a clock entry's, a checkpoint's, a proposed stage's or a hold's to-dos to herself from then; nobody assigns anybody (plan-work R11)"),
+    fields: { accepts: ["item","for"], requires: ["item"] } },
+});

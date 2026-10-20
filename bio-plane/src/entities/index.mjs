@@ -2087,4 +2087,6 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["captureSha","ref","items"], requires: [["captureSha","items"]] } },
   resolvetestify: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolvetestify", "recogniser testimony, keyed by capture sha"),
     fields: { accepts: ["captureSha","ref","entityId","basis"], requires: ["captureSha","ref","entityId","basis"] } },
+  resolutiondefect: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution"),
+    fields: { accepts: ["captureSha","ref","entityId","reason","source"], requires: ["captureSha","ref","entityId","reason"] } },
 });

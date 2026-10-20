@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as G from "../../../src/op-grades/index.mjs";
-import { reqText, between, ticked, tickedCodes, worded, asksNotTheAccount } from "./declared.mjs";
+import { reqText, between, ticked, tickedCodes, worded, asksNotTheAccount, declaredSentence } from "./declared.mjs";
 
 const { RUNG_LADDER, RUNGS, RUNG_ABSENT, RUNG_ABSENCE_GROUNDS, JUSTIFICATION_REFUSALS, IRREVERSIBLE_CORRECTION_KEY,
         CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS, MACHINE_REFUSALS, NON_ACTS, OP_ALIASES, phoneOf } = G;
@@ -161,12 +161,14 @@ test("R5: MACHINE_REFUSALS maps each act refused a machine by name to its code; 
   for (const op of Object.keys(MACHINE_REFUSALS)) assert.ok(!Object.hasOwn(NON_ACTS, op), `${op} is an act, never a non-act too`);
   assert.deepEqual(Object.keys(NON_ACTS).filter((op) => NON_ACTS[op].startsWith("capture-directed:")).sort(),
     ["attest", "attesttext", "monitor"]);
+  /* the three share the head of the sentence before its first semicolon: the one `contradiction` declares for dismiss */
+  const CANDIDATE_HEAD = declaredSentence("contradiction", "contradictiondismiss").split(";")[0];
   for (const op of ["contradictiondismiss", "contradictionclarify", "contradictiontakeup"])
-    assert.ok(NON_ACTS[op].startsWith("candidate-directed: keyed by a candidate, reached where its sides are shown"), op);
+    assert.ok(NON_ACTS[op].startsWith(CANDIDATE_HEAD), op);
   assert.ok(NON_ACTS.contradictionrecommend.startsWith("run-directed:"));
-  assert.ok(NON_ACTS.resolutiondefect.startsWith("registry correction, keyed by a resolution"));
-  for (const op of ["contradictionoptin", "contradictionrespond"]) assert.ok(NON_ACTS[op].startsWith(
-    "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice"), op);
+  assert.ok(NON_ACTS.resolutiondefect.startsWith(declaredSentence("entities", "resolutiondefect").split(":")[0]));
+  const CONFLICT_HEAD = declaredSentence("contradiction", "contradictionoptin").split(";")[0];
+  for (const op of ["contradictionoptin", "contradictionrespond"]) assert.ok(NON_ACTS[op].startsWith(CONFLICT_HEAD), op);
   const R5_READS = ticked(reqText(5)).filter((op) => Object.hasOwn(NON_ACTS, op) && NON_ACTS[op].startsWith("read: "));
   assert.equal(R5_READS.length, 6);
   for (const op of R5_READS) assert.ok(NON_ACTS[op].startsWith("read: "), op);

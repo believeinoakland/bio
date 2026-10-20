@@ -5,7 +5,7 @@
  * byte for byte. The plane composes it (`plane/door.mjs`, since its T25 L11 job). */
 
 import { attest, attestStatus } from "./index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* Co-attestation over a capture hash.
  *
@@ -39,3 +39,10 @@ export async function attestOp(req, env, store, { json, doAnswer, storageAbsent,
   });
   return json({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
 }
+
+/* R11 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  attest: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: localize("attestation.declared.attest", "capture-directed: co-attestation of a capture's existence in time (metadata published in capture_acts)"),
+    fields: { accepts: ["sha256","archive","locator"], requires: ["sha256"] } },
+});

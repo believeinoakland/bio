@@ -1,4 +1,4 @@
-/* ai-accounts R35 (T51; K4168): each op this module declares in DECLARED_OPS is held true against the op as the door runs it
+/* ai-accounts R36 (T51; K4168): each op this module declares in DECLARED_OPS is held true against the op as the door runs it
    (test-support R15): only its requires raise no refusal naming a declared field, a call without each required one is refused
    naming it, and a field outside accepts is dropped or refused naming it. */
 import { test } from "node:test";
@@ -8,15 +8,18 @@ import { DECLARED_OPS, aiAccountsOps } from "../../../src/ai-accounts/index.mjs"
 import { world } from "./fixture.mjs";
 import { ACCOUNT_KINDS } from "../../../src/ai-accounts/index.mjs";
 /* a group of active members (ann, bob) with the founder as its administrator */
-const mkWorld = async () => world().group("ann", "bob");
+const mkWorld = async () => { const w = await world().group("ann", "bob"); w.project("PROJ", "ann"); return w; };
 const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (y.code ?? y.reason);
 const asMember = (url, fields, env, op) => aiAccountsOps(env.a, url, { ...fields, member: "ann" }, {})[op]();
 
-/* a refusal names a field by its code (the table) or, as the default does, by the field as a whole word of its code or detail */
+/* a refusal names a field by its code (the table; an entry {code, end} also needs the answer to carry that end, and {code, whyHas} its why to hold those words; a refusal may be answered as refused) or, as the default does, by the field as a whole word of its code or detail */
 const words = (v) => (v == null ? "" : typeof v === "string" ? v : JSON.stringify(v));
 const named = (codes, strict = false) => (answer, field) => {
   if (!answer || typeof answer !== "object") return false;
-  if ((codes[field] || []).some((c) => answer.code === c || answer.reason === c || answer.error === c)) return true;
+  const hit = (c) => (typeof c === "string" ? answer.code === c || answer.reason === c || answer.error === c || answer.refused === c
+    : (answer.code === c.code || answer.reason === c.code || answer.refused === c.code)
+      && Object.entries(c).every(([k, v]) => k === "code" || (k === "whyHas" ? [answer.why, answer.detail, answer.findings && JSON.stringify(answer.findings)].filter(Boolean).join(" ").includes(v) : answer[k] === v)));
+  if ((codes[field] || []).some(hit)) return true;
   return !strict && new RegExp(`(^|[^\\w])${field}($|[^\\w])`).test([answer.code, answer.detail].map(words).join(" "));
 };
 /* the call as the door runs it: the stamps and every field in the address, the fields as the body, the arm asked of a fresh owner */
@@ -61,4 +64,39 @@ test("R35 ai-accounts declares accountreferenceset: its requires alone raise no 
 test("R35 ai-accounts declares accountreferenceremove: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "accountreferenceremove", declaration: DECLARED_OPS["accountreferenceremove"], call: mk("accountreferenceremove", {"by":"ann","viewer":"member:ann"}, null, (url, fields, env, op) => (asMember(url, fields, env, op))),
     refusedNaming: named({}), same: sameCode });
+});
+
+test("R36 ai-accounts declares projectkeyset: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "projectkeyset", declaration: DECLARED_OPS["projectkeyset"], call: mk("projectkeyset", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({"project":["NO_SUCH_PROJECT"],"key":["NO_SECRET"]}, true), values: {"project":"PROJ"}, same: sameCode });
+});
+
+test("R36 ai-accounts declares projectsigninset: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "projectsigninset", declaration: DECLARED_OPS["projectsigninset"], call: mk("projectsigninset", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({"project":["NO_SUCH_PROJECT"]}, true), values: {"project":"PROJ"}, same: sameCode });
+});
+
+test("R36 ai-accounts declares projectaccountremove: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "projectaccountremove", declaration: DECLARED_OPS["projectaccountremove"], call: mk("projectaccountremove", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({"project":["NO_SUCH_PROJECT"]}, true), values: {"project":"PROJ"}, same: sameCode });
+});
+
+test("R36 ai-accounts declares projectaccountswitch: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "projectaccountswitch", declaration: DECLARED_OPS["projectaccountswitch"], call: mk("projectaccountswitch", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({"project":["NO_SUCH_PROJECT"]}, true), values: {"project":"PROJ"}, same: sameCode });
+});
+
+test("R36 ai-accounts declares projectaikeepaway: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "projectaikeepaway", declaration: DECLARED_OPS["projectaikeepaway"], call: mk("projectaikeepaway", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({"project":["NO_SUCH_PROJECT"]}, true), values: {"project":"PROJ"}, same: sameCode });
+});
+
+test("R36 ai-accounts declares projectkeynoticeseen: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "projectkeynoticeseen", declaration: DECLARED_OPS["projectkeynoticeseen"], call: mk("projectkeynoticeseen", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({"project":["NO_SUCH_PROJECT"]}, true), values: {"project":"PROJ"}, same: sameCode });
+});
+
+test("R36 ai-accounts declares aikeepaway: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "aikeepaway", declaration: DECLARED_OPS["aikeepaway"], call: mk("aikeepaway", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({}, true), same: sameCode });
 });

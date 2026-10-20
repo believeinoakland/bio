@@ -73,3 +73,15 @@ test("R34 intent declares aspirationretire: its requires alone raise no refusal 
   await declaredOpHolds({ op: "aspirationretire", declaration: DECLARED_OPS["aspirationretire"], call: mk("aspirationretire", {"viewer":"member:alice"}, null, null, (fields, env) => (seed(fields, env))),
     refusedNaming: named({"aspiration":["NO_SUCH_ASPIRATION"],"taught":["NO_LESSON"]}, true), values: {"taught":"it taught us the cost"}, same: sameCode });
 });
+
+/* a group with one open proposal from a registered source */
+const withProposal = async () => {
+  const w = await mkWorld();
+  w.i.registerSource("monitoring", () => [{ key: "c-1", kind: "capture-failed", grade: null, basis: { n: 1 }, instances: [] }]);
+  return w;
+};
+
+test("R35 intent declares triage: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "triage", declaration: DECLARED_OPS["triage"], call: mk("triage", {"viewer":"member:alice"}, async () => (withProposal()), (url, fields, env, op) => (asAlice(url, fields, env, op))),
+    refusedNaming: named({"proposal":["NO_SUCH_PROPOSAL"],"act":["TRIAGE_ACT_UNKNOWN"]}, true), values: {"proposal":"monitoring::c-1","act":"question"}, same: sameCode });
+});

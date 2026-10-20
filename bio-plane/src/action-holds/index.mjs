@@ -1068,3 +1068,14 @@ export function actionHoldsOps(h, url, body) {
       limit: q("limit") || null, viewer: q("viewer") }),
   };
 }
+
+/* R20 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  actionhold: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actionhold.does",
+    fields: { accepts: ["target","ord","project","case","from","hold","reason","projects"], requires: ["hold","reason",["target","project","case"]] } },
+  actionholdrelease: { classes: ["admin","member","probe"], mutating: true, weight: "terminal", description: "act.actionholdrelease.does",
+    fields: { accepts: ["target","ord","project","case","reason"], requires: ["reason",["target","project","case"]] } },
+  holdnoticesent: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("action-holds.declared.holdnoticesent", "a member records that she sent the hold notice for a hold in place, held as the bytes sent or her account; it records no recipient and no one's compliance (action-holds R11)"),
+    fields: { accepts: ["place","at","medium","artifact_sha","account"], requires: ["place","at",["account","artifact_sha"]] } },
+});

@@ -1,3 +1,4 @@
+import { localize } from "../setup-words/index.mjs";
 /* workbooks' ops map (requirements: `build/requirements/workbooks.md`, R15): one route arm per act and read, as entries of
  * the plane's one op map, which the control plane appends in one place and stamps. A read takes `viewer` from the URL
  * (the control plane's stamp, never the body's); an act takes its fields from the body, where the control plane stamps
@@ -39,3 +40,14 @@ export function workbooksOps(workbooks, url, body) {
     },
   };
 }
+
+/* R19 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  addworkbook: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("workbooks.declared.addworkbook", "workbook-directed: keyed by (capture, project); writes workbooks' rows and moves no bundle"),
+    fields: { accepts: ["captureSha","question","period","project"], requires: ["captureSha","question","period","project"] } },
+  bind: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("workbooks.declared.bind", "workbook-directed: keyed by (capture, project) and a range; writes a binding and moves no bundle"),
+    fields: { accepts: ["captureSha","project","range","input"], requires: ["captureSha","project","range","input"] } },
+  recordcheck: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("workbooks.declared.recordcheck", "workbook-directed: keyed by (capture, project); a second member's check, disclosed and never a gate"),
+    fields: { accepts: ["captureSha","project","outcome","note"], requires: ["captureSha","project","outcome"] } },
+});

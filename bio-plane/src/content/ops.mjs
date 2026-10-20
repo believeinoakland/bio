@@ -1,3 +1,4 @@
+import { localize } from "../setup-words/index.mjs";
 /* content's ops map (requirements: `build/requirements/content.md` R50; `build/extraction/legacy-store.md` §4.2 (6)).
  * Written at T19 from the legacy store's eight explicit arms (`store.mjs`' route table), each with today's behaviour, for
  * that store's one spread (K671); since that store was retired, `plane`'s store (`src/plane/store.mjs`) spreads it. The
@@ -56,3 +57,12 @@ export function contentOps(content, url, body) {
     transcription: () => content.transcriptionRead({ id: q("id"), viewer: q("viewer") }),
   };
 }
+
+/* R56 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  transcribe: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("content.declared.transcribe", "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge"),
+    fields: { accepts: ["bundleId","extent","text","at"], requires: ["bundleId","extent","text"] } },
+  transcriptionattest: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("content.declared.transcriptionattest", "content-directed: a second member attests another member's typing, keyed by content id, with the attestor's note saying what they compared, now required (content R25, C-52.10; DEC-88: `reasoned`); the typist's own attestation is refused"),
+    fields: { accepts: ["contentId","at","note"], requires: ["contentId","note"] } },
+});

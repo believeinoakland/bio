@@ -181,3 +181,5 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
   - an asynchronous one;
   - an overlapping alarm, taking nothing twice.
 - **For callers.** `publication`'s own R21 and R70 tests register a stand-in for R8, since a module's test may not import a later module.
+
+- **R12** *(not yet met: T51)* (T51; K4168; the T51 declaration pass; op-declarations R80, R81; op-grades R49, R50; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: a frozen object keyed by the op's door name, each row `{classes, machineClasses?, mutating, weight, description, fields: {accepts, requires}}`, its class, weight and description copied from the op's existing rows and its fields read from the arm whole (the stamps and the shell's `reason` are not accepts unless the arm reads a `reason` of its own): `publishatcancel`. Test: `declaredOpHolds` for each, with only its requires, without each, and with a field outside its accepts (`declared-ops.test.mjs`).
