@@ -167,7 +167,7 @@ test("R51, R21, R27, R34: the registry's and the library's owed act escalationst
   assert.ok(Object.hasOwn(OPS, "escalationstoppursuing") && !Object.hasOwn(OP_ALIASES, "escalationstoppursuing"));
   for (const op of ["escalationstoppursuing", "escalationreopen"]) assert.deepEqual(ground(op), [], op);
   /* negative control */
-  assert.deepEqual(ground("escalationsuspend"), ["unexplained"]);
+  assert.deepEqual(ground("stepcreate"), ["unexplained"]);
 });
 
 test("R51 (N919; ai-runs R18; K2952, K2976): airundispatch — a member's own act, reached by her session or her own ai credential (classes admin, member, no machineClasses, so an agent's scope reaches it; no probe, no daemon), mutating, a present null NEEDS row, by stamped and nothing carrying a credential, in ai-runs' family (kind memberrun), both session sets; no entry in aiRunsOps serves it — its handler is control-plane's route to AiRuns' dispatchMemberRun (negative control: a session-only act hands an agent nothing)", () => {

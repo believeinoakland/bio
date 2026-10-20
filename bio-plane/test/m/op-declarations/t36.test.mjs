@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { explained } from "./help.mjs";
 import * as AFF from "../../../src/affordances.mjs";
+import { T51_DESIGN_OPS } from "../../../src/affordances/act-help.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { fileSafetyOps } from "../../../src/file-safety/index.mjs";
@@ -320,6 +321,21 @@ test("R34 (affordances R48): every op in SESSION_OPS.member has an explanation i
   const dropped = [...absent][0];
   assert.ok(member.filter((op) => !explained(op) && !absent.has(op) && op !== dropped).length === 0
     && !explained(dropped) && member.includes(dropped));
+});
+
+test("R34 (K4254; affordances R48, T51_DESIGN_OPS): ACT_HELP_ABSENT names no op affordances' ACT_HELP holds — read from affordances' exported T51_DESIGN_OPS and its ACT_HELP, never a hand list (K3268) — among them accountdrafts and accountpropose, and every op of T51_DESIGN_OPS that a member session reaches is explained (negative control: an op the design has not explained, projectownervotes, stays under its ground)", () => {
+  const absent = new Set(Object.values(ACT_HELP_ABSENT).flatMap((g) => [...g.ops]));
+  const designed = [...T51_DESIGN_OPS, "accountdrafts", "accountpropose"];
+  assert.ok(designed.length >= 66);
+  for (const op of designed) {
+    assert.ok(Object.hasOwn(AFF.ACT_HELP, op), `${op}: affordances holds no text`);
+    assert.ok(!absent.has(op), `${op}: explained by affordances and named in ACT_HELP_ABSENT`);
+  }
+  for (const op of designed.filter((o) => SESSION_OPS.member.has(o))) assert.ok(explained(op), op);
+  /* every op ACT_HELP holds is named under no ground */
+  assert.deepEqual([...absent].filter((op) => Object.hasOwn(AFF.ACT_HELP, op)), []);
+  /* negative control */
+  assert.ok(absent.has("projectownervotes") && !Object.hasOwn(AFF.ACT_HELP, "projectownervotes"));
 });
 
 test("R5, R7: ACT_HELP_ABSENT is frozen to its leaves, the same on a second load, and names no place", async () => {
