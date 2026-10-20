@@ -63,3 +63,18 @@ B3 applied: setup's scanner legends, held tools and test result draw the catalog
 - `checks/format.mjs bio`: 0 failures. `architecture.mjs bio screens-entry`: 0. `coverage.mjs bio screens-entry`: 25 of 25 live ids named (R26 and R30 are for BOB to write, see REPORT), 0. `words.mjs bio screens-entry`: 0. `ownership.mjs bio screens-entry tranche/T51 job/T51/screens-entry`: see the push below. `checks/run.mjs bio`: no line names screens-entry.
 
 Size (session_017xaHGAS9HLwMSL3PYNVsLE): test runs 6, module lines 1127
+
+## J4 · QUESTION
+
+FR-24 is built and pushed (job record: "Completion (FR-24)"); three things need you before COMPLETE.
+
+1. **R26 and R30 are not in the requirements file.** The ownership check forbids my writing `build/requirements/screens-entry.md` (it fails on it), so please write both lines. The tests already name R26 and R30. Proposed text, in the file's style, is in the job branch's scratch copy of the file; in short:
+   - R26 (T51; C11, DEC-374; `instance-setup` R100; amends R6, R22): `setup`, under the website the founder enters, once the team holds a claim (`groupidentity`'s `domain_claim`), draws the fold `screen.domainfile.summary` from the answer only: the file `well_known {path, body}` (named by the last segment of `path`, text the `body`, never built here), a save (`screen.domainfile.download`) and a copy (`shell.copy`), the steps `screen.domainfile.step1`–`step5` (`{folder}` the path's first segment, `{address}` the website plus the path), `.daily`, and the refusals fold (`.malformed .absent .mismatched .undetermined .notadmin`). The latest check absent, mismatched or undetermined draws its sentence beside the act; `groupdomainset` refused `GROUP_DOMAIN_MALFORMED` or `NOT_AN_ADMIN` draws `.malformed` or `.notadmin`. A null `well_known` draws no file, save or copy and drops steps 2 and 4 (they need the path); no claim draws no fold.
+   - R30 (T51; T-19, T-18, DEC-384; amends R7, R6): on `join` the invitation-read button is `screen.join.invite.reread`; on `setup` the hosting line reads `screen.group.hosting.now.setup` / `.system` when `recorded_by` is the setup or the system, `screen.setup.hosting.now` for a member or an unstated recorder.
+   (`screens-entry` plus the same R-numbers I used; if you number them differently I rename the tests' ids.)
+
+2. **R10 is red on a design word, not on my code.** `screen.domainfile.refused.malformed` (words.json, DEC-374) gives "lakeshoretenants.org" as its example; R10's guard reads `Lakeshore` as a place, which is right (it is a real street). I did not weaken the guard. Needs the design lane to reword the example to a neutral name, or your ruling. Until then `node --test bio-plane/test/m/screens-entry/` is 91/92, the one failure being that.
+
+3. **T-19 reading (replaces nothing; first question).** On `join` the "Read the invitation" button is drawn only inside the form, that is, after the read has answered, so "before the read it draws its old key" has no state. My reading: the button always draws `screen.join.invite.reread`; the test checks that, that nothing to read is drawn while the read is pending, and that the old label is not drawn. Say if you meant something else.
+
+Also: FR-39 (instance-setup) had not merged when I built; I used the answer's shape from its START (`domain_claim.well_known` on the credentialed `groupidentity`, `well_known` on `groupdomainset`). If it lands under other names, only `domainFile()` in `setup.mjs` changes.
