@@ -417,8 +417,8 @@ test("R43 (R2): stance, new-version and concluded items leave their optional sen
 
 test("R43 (control): a source that states a fill no key holds is raised with that fill empty and the item is still raised, with no field added to facts for it", () => {
   const r = everyKind().read("alice");
-  assert.deepEqual(Object.keys(r.facts).sort(), ["absent", "action", "contradiction", "dispositions", "failed", "objective_gap", "unattributed"],
-    "R45's two keys are the only ones added; none for a fill");
+  assert.deepEqual(Object.keys(r.facts).sort(), ["absent", "action", "contradiction", "dispositions", "failed", "ms", "objective_gap", "unattributed"],
+    "R45's two keys and R51's `ms` are the only ones added; none for a fill");
   /* this world's administrator has no update read, which machinery-producers names in its own facts (R45: carried as `partial`) */
   assert.deepEqual(r.facts.failed, [{ feed: "machinery", reason: "partial" }]);
   const exp = byId(r)["FINDING::export-performed::1"];

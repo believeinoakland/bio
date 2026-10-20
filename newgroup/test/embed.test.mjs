@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { gunzipSync } from "node:zlib";
 import { resolveVersion, publishedTokens, checkSignedAsset } from "../scripts/embed-release.mjs";
 
 let pass = 0, fail = 0;
@@ -103,7 +104,7 @@ console.log("\n--- only the signed asset is embedded ---");
 
   const emb = await import("../src/release.mjs");
   t("the committed embed IS the signed release asset",
-    createHash("sha256").update(Buffer.from(emb.RELEASE_BINARY, "latin1")).digest("hex"), manifest.sha256);
+    createHash("sha256").update(gunzipSync(Buffer.from(emb.RELEASE_PACKED, "base64"))).digest("hex"), manifest.sha256);
   t("and its label is RELEASE.json's version", emb.RELEASE_VERSION, manifest.version);
 }
 

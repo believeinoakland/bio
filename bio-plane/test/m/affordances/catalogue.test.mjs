@@ -6,6 +6,7 @@
    answers over them: the totality (R12), the backing of a rung by its owner's refusal (R19), the machine set (R20) and
    the decorated shape (R24). What the acting modules answer when the acts are performed (R18–R20) is driven through the
    plane in `plane.test.mjs`. */
+import "./register-owners.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -711,32 +712,46 @@ test("R1 R12 R24: T23's ops — case-inputs' and escalation's op maps hold their
    case-authoring by copy (K3112) and its copies deleted there (K3116). Its three ops keep their names, grades and reasons
    (op-grades' rows are unchanged by the split); none is an act. The reasoned acknowledgement's backing is driven at
    case-inputs' interface in backing.test.mjs. */
-test("R1 R12 R19 R24: case-inputs' ops — its op map holds exactly whatchangedpropose, whatchangeddrafts and statementack, "
+test("R1 R12 R19 R24: case-inputs' ops — its op map holds every op it declares but the ones public-read serves, "
    + "case-authoring's none of them; STATEMENT_ACK_NO_REASON is a row of case-inputs' checks in the justification family; each "
-   + "write decorates with a rung or a stated absence, none is an act — and with the control plane's rows nothing is "
+   + "write decorates with the rung or ground it declares, none is an act — and with the control plane's rows nothing is "
    + "unaccounted; an op left out is seen", () => {
   const url = new URL("http://x/");
-  assert.deepEqual(Object.keys(caseInputsOps({}, url, {})).sort(), ["statementack", "whatchangeddrafts", "whatchangedpropose"]);
+  const declared = caseInputs.DECLARED_OPS;
+  const mapOps = Object.keys(caseInputsOps({}, url, {})).sort();
+  /* K4225: the op set is the owner's, read from its ops map and its DECLARED_OPS, never a list kept here. A declared op
+     the map lacks is a read the public-read door serves (case-inputs R24); a map op the owner does not declare is one
+     whose grade a hand row holds. */
+  const served = Object.keys(declared).filter((op) => !mapOps.includes(op));
+  for (const op of served) assert.deepEqual([declared[op].mutating, declared[op].weight], [false, "read"], `${op} is a read the door serves`);
+  const unlisted = mapOps.filter((op) => !Object.hasOwn(declared, op));
+  for (const op of unlisted) assert.ok([RUNGS, RUNG_ABSENT, NON_ACTS].some((t) => Object.hasOwn(t, op)), `${op}: a hand grade`);
   const left = Object.keys(caseAuthoringOps({}, url, {}));
-  for (const op of ["statementack", "whatchangeddrafts", "whatchangedpropose"]) assert.ok(!left.includes(op), op);
+  for (const op of mapOps) assert.ok(!left.includes(op), op);
   assert.equal(typeof caseInputs.caseInputsOf, "function", "the namespace answers its factory");
   assert.ok(Object.hasOwn(caseInputs.STATEMENT_ACK_CHECKS, "STATEMENT_ACK_NO_REASON"), "a row of case-inputs' checks");
   assert.ok(JUSTIFICATION_REFUSALS.includes("STATEMENT_ACK_NO_REASON"));
-  const WRITES = ["statementack", "whatchangedpropose"], READS = ["whatchangeddrafts"];
+  const mutates = (op) => (Object.hasOwn(declared, op) ? declared[op].mutating : Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op));
+  const WRITES = mapOps.filter(mutates), READS = mapOps.filter((op) => !mutates(op));
+  assert.ok(WRITES.length > 0 && READS.length > 0, "the owner has writes and reads");
   for (const op of WRITES) {
     const d = A.decorate({ id: op, label: "x" }, null);
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
+    /* the grade is the one the owner declares, as op-grades R49 registers it */
+    if (Object.hasOwn(declared, op)) assert.equal(d.rung ?? d.rung_absence, declared[op].weight, `${op}: the declared weight`);
   }
-  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => [...WRITES, ...READS].includes(a.id)));
-  /* the control plane's rows (op-declarations): both writes mutating, every op gated — `statementack` has a NEEDS row since
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => [...WRITES, ...READS, ...served].includes(a.id)));
+  /* the control plane's rows (op-declarations): every write mutating, every op gated — `statementack` has a NEEDS row since
      K3041, and op-grades names it in NON_ACTS (K3164) */
   const table = [...WRITES.map((op) => ({ op, mutating: true, gated: true })),
-    ...READS.map((op) => ({ op, mutating: false, gated: true }))];
+    ...[...READS, ...served].map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale.filter((op) => [...WRITES, ...READS].includes(op)), []);
-  /* negative control: carried ungated, statementack's NON_ACTS row reads stale */
-  assert.ok(A.unaccounted([{ op: "statementack", mutating: true, gated: false }]).stale.includes("statementack"));
+  assert.deepEqual(r.stale.filter((op) => [...WRITES, ...READS, ...served].includes(op)), []);
+  /* negative controls: an op carried ungated reads stale where a NON_ACTS row names it; carried by no row, each reads stale */
+  for (const op of [...WRITES, ...READS, ...served].filter((o) => Object.hasOwn(NON_ACTS, o)))
+    assert.ok(A.unaccounted([{ op, mutating: mutates(op), gated: false }]).stale.includes(op), op);
+  assert.deepEqual([...WRITES, ...READS, ...served].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
   const out = A.unaccounted([...table, { op: "inputsunnamed", mutating: true, gated: true }]);
   assert.deepEqual([out.unpublished, out.unranked], [["inputsunnamed"], ["inputsunnamed"]]);
 });
@@ -854,32 +869,42 @@ test("R1 R4 R12 R19 R24 R34: the docket's ops — docket's op map holds exactly 
    not in this module's uses, so they are named as op-grades R10 names them). op-declarations R14 carries their rows.
    Their grades are pinned in op-grades' tests. The four reasoned acts' backing is driven at case-import's interface in
    backing.test.mjs. */
-import { caseImportOps, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
-const IMPORT_WRITES = ["importaccept", "importacceptwithdraw", "importflag", "importflagclear", "caseimport",
-  "caseimportdocument"];
-const IMPORT_READS = ["importedcases", "importedcase"];
+import { caseImportOps, CASE_IMPORT_CHECKS, DECLARED_OPS } from "../../../src/case-import/index.mjs";
 const IMPORT_PUBLIC = ["casechecker", "casefilespec"];
-test("R1 R4 R12 R19 R24: case-import's ops — its op map holds exactly them, IMPORT_ACCEPT_NO_REASON and "
-   + "IMPORT_FLAG_NO_ISSUE are rows of its own checks and every other code of them stays out of the justification "
-   + "family, each write decorates with a rung or a stated absence, none is an act, no vocabulary is added — and with "
-   + "the control plane's rows nothing is unaccounted; an op left out is seen", () => {
-  /* op-grades R12's watch acts (T31) are held in t31.test.mjs */
-  const ops = Object.keys(caseImportOps({}, new URL("http://x/"), {})).filter((op) => !["importwatch", "importunwatch"].includes(op)).sort();
-  assert.deepEqual(ops, [...IMPORT_WRITES, ...IMPORT_READS].sort(), "case-import's op map holds exactly these, beside the two watch acts");
-  /* R19: both codes are rows of their owner's checks, in the family */
-  for (const c of ["IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE"]) {
+test("R1 R4 R12 R19 R24: case-import's ops — its op map holds every op it declares, the codes its declared refusals name "
+   + "are rows of its own checks in the justification family, each write decorates with the rung or ground it declares, "
+   + "none is an act, no vocabulary is added — and with the control plane's rows nothing is unaccounted; an op left out is "
+   + "seen", () => {
+  const declared = DECLARED_OPS;
+  const isAct = (op) => [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
+  /* K4225: the op set is the owner's, read from its ops map and its DECLARED_OPS, never a list kept here. op-grades R12's
+     watch acts (T31) are acts, held in t31.test.mjs; they are told by being published, not by name. */
+  const mapOps = Object.keys(caseImportOps({}, new URL("http://x/"), {})).filter((op) => !isAct(op)).sort();
+  for (const op of Object.keys(declared).filter((o) => !isAct(o))) assert.ok(mapOps.includes(op), `${op}: declared, so in the map`);
+  const unlisted = mapOps.filter((op) => !Object.hasOwn(declared, op));
+  for (const op of unlisted) assert.ok([RUNGS, RUNG_ABSENT, NON_ACTS].some((t) => Object.hasOwn(t, op)), `${op}: a hand grade`);
+  /* R19: each code a declared refusal names is a row of its owner's checks, in the family; no other code of them is */
+  const codes = [...new Set(Object.values(declared).map((r) => r.refusal).filter(Boolean))];
+  assert.ok(codes.length > 0);
+  for (const c of codes) {
     assert.ok(Object.hasOwn(CASE_IMPORT_CHECKS, c), `${c} is a row of its owner's checks`);
     assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
   }
+  for (const c of Object.keys(CASE_IMPORT_CHECKS).filter((k) => !codes.includes(k))) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), `${c} stays out`);
+  const mutates = (op) => (Object.hasOwn(declared, op) ? declared[op].mutating : Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op));
+  const IMPORT_WRITES = mapOps.filter(mutates), IMPORT_READS = mapOps.filter((op) => !mutates(op));
+  assert.ok(IMPORT_WRITES.length > 0 && IMPORT_READS.length > 0, "the owner has writes and reads");
   for (const op of IMPORT_WRITES) {
     const d = A.decorate({ id: op, label: "x" }, null);
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
+    /* the grade is the one the owner declares, as op-grades R49 registers it */
+    if (Object.hasOwn(declared, op)) assert.equal(d.rung ?? d.rung_absence, declared[op].weight, `${op}: the declared weight`);
   }
   const ALL = [...IMPORT_WRITES, ...IMPORT_READS, ...IMPORT_PUBLIC];
-  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ALL.includes(a.id)));
+  assert.ok(!ALL.some(isAct));
   /* R4: no vocabulary is added, and none names an import */
   assert.deepEqual(Object.keys(VOCABULARIES).filter((k) => /import|checker|case_file/.test(k)), []);
-  /* the control plane's rows (op-declarations R14): the six writes mutating, every op gated */
+  /* the control plane's rows (op-declarations R14): every write mutating, every op gated */
   const table = [...IMPORT_WRITES.map((op) => ({ op, mutating: true, gated: true })),
     ...[...IMPORT_READS, ...IMPORT_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
