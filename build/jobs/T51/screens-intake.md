@@ -142,3 +142,11 @@ COMPLETE (B13, K4246, SCREENS-INTAKE #11). The R8 test "every act names one op O
 Suite: 179 tests, 157 pass, 22 fail. Every remaining red is a missing design row (UNKNOWN_WORD, or the raw key drawn/asserted for a row that does not exist): `screen.capture.address.checked.{modified,removed,unchanged,unknown}` (R14, R16, R26 capture, R42 x2); `screen.about-knocker.*` (R43 x3); `screen.leads.{mine.head,one.head,...}` (R44 x4, R52 x2); `screen.watching.{running.head,running,pause,resume,sweep.pages,...}` (R46 x5, R48 x2); R26 "each screen's words" (all the above). Checked: no red has any other cause. R52 stays as written (still in the requirements file; BOB's "struck" may mean otherwise: say if it should move).
 
 Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 12, module lines 2145
+
+## J11 · COMPLETE
+
+COMPLETE (B14, K4248, SCREENS-INTAKE #11). `tranche/T51` merged (the design's rows regenerated). Module suite: 179 tests, 179 pass, 0 fail: every red I named as a missing row is green. Checks: format 0 failures; architecture 0; coverage 51 of 51; words 0 failures (missingkey 0); ownership 0 failures (2 files: the requirements file and tests); `setup-words build --check` clean. `checks/run.mjs` over the whole tree shows failures only in other modules (agent-harness, agent-runner, installer-steps, journey-check coverage; op-grades testcopy), none naming screens-intake.
+
+Also drawn now, from the design's new rows: `screen.capture.cred.askedby` (the turned-away row: member, day, tries) and `.givenby` (the stored login's row); `screen.watching.sweep.pages.one` for a budget of one page. Not drawn: `screen.capture.cred.given.summary` ("Once a login has been given"): the drawing wraps a just-given login's row in a details after the supply; this screen draws the stored login in its own row (list and withdraw) and keeps no separate just-given row. Say if it should be added. R52 stays as written in the requirements file.
+
+Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 17, module lines 2150
