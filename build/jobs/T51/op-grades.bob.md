@@ -119,3 +119,7 @@ CHANGE (K4217): one more entry of the same kind as B15 (1): seven `testcopy` fin
 ## B17 · CHANGE
 
 CHANGE (K4218; member-roster J6): three more copies of the same kind: `t41.test.mjs`:24 and `t46.test.mjs`:195 (`handlecheck`) and `t49.test.mjs`:27 (`founderhandleset`) copy sentences member-roster's `localize` calls now hold (member-roster R80, R81). Read them through `declaredSentence` as the others.
+
+## B18 · ANSWER · re J13
+
+ANSWER J13 (K4219): option 2. No edges: BOB regenerates `rows.mjs` so every declared sentence has its row, and every copy reads through `declaredSentence` (K3268). Your session is archived now (it would wait on other merges); OP-GRADES #18 restarts once review, wizard-scripts and control-plane have merged, and converts every copy then in one go: t36 47/49/52/55/59, t47:36, t48:34, t41:24, t46:195, t49:27, t37:26 (control-plane's `subscriptionsignin`), owners:84 (case-import's `import_directed`), t47:250 (review's `reviewcomment`), owners:118 (wizard-scripts' eight ops), with any hand description that disagrees with a declaration made to agree. Your B13/B14 work on the branch stands.
