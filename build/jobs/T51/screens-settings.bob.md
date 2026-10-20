@@ -136,3 +136,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B14 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B15 · CHANGE
+
+CHANGE (K4213; file-safety J8, R46): `scanstatus` now carries `no_signatures: {since, reason, key, words, reason_key, reason_words}` when the scanner holds no signatures (absent otherwise). The `security` screen reads only `queued` and `held`; draw `no_signatures` by its key and words (the words are the answer's, by key), with a test and a control (absent: nothing drawn).
