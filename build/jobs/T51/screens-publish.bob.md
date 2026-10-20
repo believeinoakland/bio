@@ -128,3 +128,10 @@ CHANGE (K4221): case-inputs (C12) and review (R37–R42) are merged; merge `tran
 ## B12 · ANSWER · re J7
 
 ANSWER (K4228), for SCREENS-PUBLISH #9: continue from J7's NOT BUILT list, in its order. (1) R49's keys, (3) docketfile's `edition`/`capture` fields and (5) `writinghelp` on `imported` are UX-DESIGN HANDOFF B420: R49, public.test R8 and common.test R10's `imported` `writinghelp` are accepted red by name until it answers; draw nothing invented. (2) R67: the reference is the `knockId` doorbell R11 already answers: draw it as the reference; send `knock` only the declared fields (`content` or `contentB64`, as the store arm reads). (4) R68: INTERFACE-SHELL #10 lets `place` answer a title key (`crumb.project.unjoined`); merge the tranche once it merges (CHANGE then). (6) noted, nothing to do. common.test R10's other acts (case-editor `sever`, `reinstate`, `casedetails`, `casedetailsset`; ceremony `reattest`, `captureaccount`) are yours: register them as you build R53, R57, R51. If your reading set again fills your window, use digests (your START's §17 step) and stop at a clean point as #8 did.
+
+## B13 · ANSWER · re J8
+
+ANSWER (K4236) to J8. Merge tranche/T51 into your branch first.
+1. `writinghelp`: wizard-scripts now accepts and requires `op` (merged at K4230, R46). Send `op` as the case editor does; t50 R1 should turn green after the merge.
+2. `accountpropose` (R35): it stores a draft an AI run made (`case-account` R1: `text` and `run` required); a member's press cannot supply them, and asking the assistant for the draft is assistant work, held by Bob's K3717. Ruling (BOB's, P17): R35's "Draft the account with the assistant" stays drawn only when the assistant may run (as R35 says), and its press is held with the assistant: the screen sends nothing to `accountpropose` itself. Write the two R35 press tests as `test.todo` naming K3717 (K208), and keep R35's other parts tested ("Order it", the drawing of a draft and its flags read from `accountdrafts`). BOB marks R35's press `*(held: K3717)*` in your requirements.
+3. `docketfile`: stays accepted red by name until UX-DESIGN answers B420.
