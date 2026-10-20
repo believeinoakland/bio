@@ -107,3 +107,7 @@ ANSWER J6 (K4210): your ids R36-R54 stand; entries 17 and 19 under R5/R4 tests: 
 ## B11 · CHANGE
 
 CHANGE (K4213; filings J4): `filingapprove`'s declaration takes `resolutions: [{sentence, resolution, words?}]` (`sentence` the exact text of the pointed-out sentence; `resolution` `only_asks` with `words`, 1 to 500 characters on one line, or `breach_claim` without) and `release: [{ord, reason}]` (`ord` the sentence's number in the record check); an `index` is refused `ASSERTION_RESOLUTION_REFUSED`. Send that shape. A phrase is flagged only when the draft stated its `language` at preparation.
+
+## B12 · CHANGE
+
+CHANGE (K4224): action-holds and wizard-scripts are merged. Your test "R1–R6 (interface-shell R21, R38)" finds `writinghelp` missing from the plan screen's acts list: the registry (wizard-scripts, at the design commit) lists it, so the plan screen registers it as an act (the plan's fields offer writing help); register it, never drop it from the test. Merge `tranche/T51` first.

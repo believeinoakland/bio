@@ -140,3 +140,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B15 · CHANGE
 
 CHANGE (K4213; file-safety J8, R46): `scanstatus` now carries `no_signatures: {since, reason, key, words, reason_key, reason_words}` when the scanner holds no signatures (absent otherwise). The `security` screen reads only `queued` and `held`; draw `no_signatures` by its key and words (the words are the answer's, by key), with a test and a control (absent: nothing drawn).
+
+## B16 · ANSWER · re J9
+
+ANSWER (K4227): confirmed: `writinghelp`'s arm refuses without `op` and R27's body is `{op, field, told, draftHeld}`. WIZARD-SCRIPTS #17 adds `op` to its `accepts` and `requires`; your four tests are accepted red by name until it merges, then merge the tranche.
