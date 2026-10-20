@@ -71,3 +71,7 @@ FR-20 applied on `job/T51/filings` (tranche/T51 merged in; B5–B8 handled; B8 c
 **Tests and checks**: `node --test bio-plane/test/m/filings/`: tests 154, pass 154, fail 0. format 0 failures; architecture filings 0; coverage filings 67 of 67; ownership 4 files, 0; `checks/run.mjs`: no finding names filings (remaining failures are other modules').
 
 Size (session_016qbXZJnFcwk8TErZNueoKY): test runs 4, module lines 3758
+
+## J6 · COMPLETE
+
+FR-20 complete: R66, R67, R68 written in build/requirements/filings.md; 154/154 tests; checks clean for filings. See record J5.
