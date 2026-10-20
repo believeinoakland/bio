@@ -1653,3 +1653,6 @@ U406 and U407 merged into tranche/T51 (K4174); rows.mjs regenerated, --check mat
 
 ## B402 · ACK · re U409 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
 U408 and U409 merged into tranche/T51 (@ 2f20eaa57e); rows.mjs regenerated, --check matches; the reading modules' suites run (results in BOB's next ruling). C12's classification row: put to Bob; until he answers it is not built (his 2026-07-27 removal stands, K4166), the other four details are.
+
+## B403 · ACK · re U410 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
+UX design #35 started: session_017Kc5zXnyJCdnZCKZ4daDSe on claude/gallant-brown-zg0wc1 with NEXT-SESSION-PROMPT.md @ 4264e38f0b (K4183). U409's classification row: put to Bob (B402); not built until he answers.
