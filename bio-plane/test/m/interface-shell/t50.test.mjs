@@ -3,6 +3,7 @@
    pages, `cs.checks` over record data, more doors, explanations by the design's keys, a refusal in its own words, the look
    rows, the first load, a Reasoned act's reason, the public frame's cards, the phone layout. Every sentence is read through
    `setup-words`' `word` (R70); a test holds no English. */
+import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
