@@ -156,3 +156,24 @@ COMPLETE (SCREENS-SETTINGS #11, FR-25: B22).
 Size (session_01JCbyiaVBiZ277MQAdnsSaX): test runs 5, module lines 4984
 
 `checks/run.mjs` (whole product): words 33 failures, all in other modules (op-grades test copies and others, not screens-settings; `words.mjs screens-settings` is 0). The `setup-words build --check` was not reached in the run.
+
+## J14 · COMPLETE
+
+COMPLETE (SCREENS-SETTINGS #11, FR-25: B23 and B24, after J13).
+
+**Entries applied** (merged `tranche/T51` at B23's tip first; U420 and U422 read):
+1. B425 R68: the health parts are named by bootstrap's own id (`screen.updates.health.part.<id>`), a serving part drawn with `.part.state.answering` and `.part.release`, a silent one by `.part.silent`, `.part.state.unbound`, `.part.state.misnamed` (with the name the answer gives), any other state by `.part.other` and the answer's own word; `.file.test` drawn when `selftest` answers `captures: "read-write ok"`; runtime's `.heaviest`, `.average`, `.samples` with the unit code beside the number (`ms` or `bytes`, B24: the code until the design words them), `.limits` with `{ceiling}` from `subrequests.observed` (a count, no unit; not drawn while no refusal has taught a ceiling, which `capture` R23 makes `null`).
+2. B425: `screen.settings.everyone` is the third section of `settings`, "For every member", holding the `bias` reference (name, purpose), drawn to every member.
+3. B427 R65: `bias` draws its labels (`lens.label`/`.team`, `kind.label`, `statement.label`, `cites.label`, `adoptfor.label`), headings (`head.team`, `head.write`, `head.adopt`, `head.proposed`, `head.left_out`, `head.settled`), rows (`row.about`, `row.why`, `row.team_locked` for a locked team statement, `row.project` for a project's, kinds by `kind.*`), `dt.lens`, `dt.bar`, `dt.verdict`, the two links (`link.write`, `link.draft`, anchors to the page's own sections), `it_read_sentences_of` from `coverage`, the adoption sentences (`by_admin_for_the_team`, its `.team` and `.project` variants picked by the adopter's scope: both with both bundles), `earlier.made` (then, `observed`, now, `raised`, `moved_basis`) and `earlier.settled`.
+4. B417 (2): `screen.bias.purpose` is read by `settings` through `screen.bias.purpose` (the reads list).
+5. `keys.mjs` (R39) regenerated from the design's `words-reads.json` (1,912 keys): the contract test is green.
+
+**Requirement lines for BOB.** R68's "A sentence the design holds only as a sample … is not drawn (REPORTED, J10)" is stale: the parts' names, `.file.test` and `.runtime.*` are words now. R65's "*Words:* … a control or section whose label or heading the design has not yet given is drawn without it" likewise. R17/R32: `settings` draws a third section, "For every member" (`screen.settings.everyone`), holding `bias`; R32's test counts three lists for an administrator and two for a member. Also (from J13) the `uses` of screens-settings needs `test-support`.
+
+**Judged readings** (none blocks): `row.team_locked` is drawn for a statement with `locked: true` and no project scope; `earlier.made`'s `{adopted_on}` is the debt's `raised` (when the lens changed) and `{made_on}` its `observed`: no field names the adoption day of the lens now.
+
+**Deferred.** As in J12/J13.
+
+**Tests and checks** (process repository): module suite 209 tests, 209 pass, 0 fail. `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 1 failure (the `test-support` `uses` entry, J13); `checks/coverage.mjs screens-settings` 76 of 76; `checks/words.mjs screens-settings` 0 failures, and no line of the whole-product words check names screens-settings; `checks/ownership.mjs screens-settings tranche/T51 job/T51/screens-settings` 0 failures.
+
+Size (session_01JCbyiaVBiZ277MQAdnsSaX): test runs 12, module lines 5101
