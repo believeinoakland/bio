@@ -134,3 +134,21 @@ CHECKS
 - checks: format 0 failures; architecture 0 failures; coverage 45 of 45 live ids named; words 0 failures (dev 8, unkeyed 7); ownership 0 failures (11 files). `setup-words build --check`: stale words-unreviewed.json note only (expected), no refusal naming my module.
 
 Size (session_01WMjLF8CWtt2TqjEkixFjxh): test runs 14, module lines 2838
+
+## J8 · COMPLETE
+
+COMPLETE · B8 (K4197) applied on top of J7: registry, library and front doors re-taken at 840099da7c (R45 as amended); commit 0b06a8f9b5 on job/T51/wizard-scripts, pushed. Tranche merged first.
+
+APPLIED
+- build-data.mjs registry pin and `newer` list at 840099da7c; DOORS_SOURCE 840099da7c; LIBRARY_RETAKEN gains {840099da7c, BOB, 2026-10-20, K2241}. Vendored: registry.json and library-840099da7c.json new; registry-958d998ccb.json kept. Counts unchanged (83 screens, 554 acts); the registry change is a label ("Open the item" to "Mark it done"), not carried.
+- Library: only WIZ-7db08189cc0e58c3 (Welcome a new member, step 4 wording, DEC-384) changed: it is now version 3 (source 840099da7c, approved BOB 2026-10-20 K2241), versions 1 and 2 kept whole. The doors are identical in content. `--check` green.
+- Tests re-pinned to 840099da7c (registry, doors, library sources, welcome at version 3, T50's 16 gained scripts now 15 + welcome); R45 test extended (only welcome changed, its earlier versions, doors source). Module suite: 107 pass, 0 fail.
+
+CHECKS: format 0; architecture 0; coverage 45 of 45; words 0 failures (dev 8, unkeyed 7); ownership 0 failures (15 files); `checks/run.mjs` whole-repo: format, architecture, words 0 failures; its 7 coverage failures are other modules' (not wizard-scripts).
+
+REPORT (others' suites; none mine)
+- interface-shell: 191 pass, 1 fail (new since the tranche merge, not from my change): test 32, R64, "promote: the weight's own name" expects 'Reasoned', gets 'Asks for a reason' (words.json changed in the design merge; rows.mjs stale until the layer close or the test reads the old word).
+- Still red from J7, awaiting wave 2: op-declarations 210 (owed ops undeclared), plane 72 (new screens' words), screens-intake 64 (capture draws capturerequestretry), affordances 235 (ACT_HELP).
+- screens-wizards 59/0, instance-setup 194/0, translations 32/0: green.
+
+Size (session_01WMjLF8CWtt2TqjEkixFjxh): test runs 24, module lines 2840
