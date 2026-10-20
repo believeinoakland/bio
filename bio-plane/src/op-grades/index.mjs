@@ -45,6 +45,8 @@ import { T49_RUNG_ABSENT, T49_NON_ACTS } from "./t49.mjs";
 import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
 /* R48 (T51; DEC-340): the three reads the design's new screens add, stated absent as reads. */
 import { T51_NON_ACTS } from "./t51.mjs";
+/* R49, R50 (T51 fix round; K4168): the owners' op declarations, taken into the tables above (`registerDeclaredOps`). */
+import { createDeclaredOps } from "./declared.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -325,7 +327,7 @@ export const LARGER_SCREEN_ACTS = Object.freeze([
  * it, and every backing is driven by `affordances`' R19 tests (`test/m/affordances/`,
  * each act called without its account at its own module's interface) — a rung with
  * no backing is a promise to a member that nothing keeps. */
-export const RUNGS = {
+const RUNGS_DATA = {
   /* ---- irreversible. (R14; DEC-147) The two that set when a signed case edition goes public: the set time is weighed
      as publishing itself, and moving it sets again. (R37, T47) `op=publish` no longer stands here: it prepares (below). */
   publishat:          "irreversible",   // ratification R40 · signs now; publishes at the set time if every check passes again
@@ -643,7 +645,7 @@ export const RUNGS = {
  * exists to make impossible.
  *
  * The one-liners say what this op is; the WHY is on the ground above. */
-export const RUNG_ABSENT = {
+const RUNG_ABSENT_DATA = {
   /* ---- substrate: how a chosen act lands, or how the store maintains itself. */
   promote:              { ground: "substrate", is: "the one write path every act rides" },
   allocid:              { ground: "substrate", is: "id allocation" },
@@ -857,7 +859,7 @@ export const RUNG_ABSENT = {
  * name, and so does an entry the store no longer answers. `withdrawconclusion` enters `conclude()` after its machine
  * fence and answers conclude's code. NOT here, because the store refuses no machine at them:
  * `retire`, `dispose`, `cite`, `sever`, `reinstate`. */
-export const MACHINE_REFUSALS = {
+const MACHINE_REFUSALS_DATA = {
   release:            "MACHINE_CANNOT_RELEASE",
   conclude:           "MACHINE_CANNOT_CONCLUDE",
   withdrawconclusion: "MACHINE_CANNOT_CONCLUDE",
@@ -925,7 +927,7 @@ export const MACHINE_REFUSALS = {
  * the totality check can tell "deliberately not an affordance" from "someone
  * added an op and forgot the publication", which is the drift this op exists
  * to close. Grouped by the reason, keyed by op. */
-export const NON_ACTS = {
+const NON_ACTS_DATA = {
   /* The write substrate. These are how any act lands, not acts on an object:
      a surface never renders a "promote" button beside a bundle. */
   promote: "substrate: the one write path every act rides",
@@ -1571,7 +1573,7 @@ export const NON_ACTS = {
  * an alias of one. It changes no rung and no decorated act's shape (`affordances` R11); `affordances` publishes it as
  * `VOCABULARIES.irreversible_weight`, the same frozen array (its R4), served as JSON, which is why it is not a `Set`. */
 export const IRREVERSIBLE_WEIGHT = Object.freeze([
-  ...Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible"),
+  ...Object.keys(RUNGS_DATA).filter((op) => RUNGS_DATA[op] === "irreversible"),
   "personexpunge",
   /* K2049 (DEC-143 applied): standards R37's release moves a policy to the group's sight and is never undone; its rung
      stays as R3 gives it (`reasoned`) */
@@ -1579,9 +1581,22 @@ export const IRREVERSIBLE_WEIGHT = Object.freeze([
 ]);
 
 /* R17 (op-declarations R21): each alias takes its op's very rung, absence and reason, so it never differs from its op. */
-Object.assign(RUNGS, aliased(RUNGS));
-Object.assign(RUNG_ABSENT, aliased(RUNG_ABSENT));
-Object.assign(NON_ACTS, aliased(NON_ACTS));
+Object.assign(RUNGS_DATA, aliased(RUNGS_DATA));
+Object.assign(RUNG_ABSENT_DATA, aliased(RUNG_ABSENT_DATA));
+Object.assign(NON_ACTS_DATA, aliased(NON_ACTS_DATA));
+
+/* R49, R50 (T51 fix round; K4168): THE GRADING TABLES, AS PUBLISHED. Each is the very table built above, behind a guard that
+ * closes registration at its first read; `registerDeclaredOps` (./declared.mjs) adds an owner's declared ops to them before
+ * that read. Nothing above or below this block reads them through the guard, so loading the module reads none. */
+const declared = createDeclaredOps({
+  ladder: RUNG_LADDER, grounds: RUNG_ABSENCE_GROUNDS, rungs: RUNGS_DATA, absent: RUNG_ABSENT_DATA, nonActs: NON_ACTS_DATA,
+  machine: MACHINE_REFUSALS_DATA, refusals: JUSTIFICATION_REFUSALS,
+});
+export const RUNGS = declared.guard(RUNGS_DATA);
+export const RUNG_ABSENT = declared.guard(RUNG_ABSENT_DATA);
+export const MACHINE_REFUSALS = declared.guard(MACHINE_REFUSALS_DATA);
+export const NON_ACTS = declared.guard(NON_ACTS_DATA);
+export const registerDeclaredOps = declared.register;
 
 /* R18 (DEC-122 (1); K1363 B5): the advisory phone flag — false at the rungs `terminal`, `attested` and `irreversible`,
  * for an absence on the `credential` ground, (T37; DEC-181) for every op in `IRREVERSIBLE_WEIGHT`, read from that set at
