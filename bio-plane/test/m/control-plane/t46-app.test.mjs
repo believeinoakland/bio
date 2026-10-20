@@ -4,20 +4,21 @@
    end-to-end suite over Miniflare and the real plane is `t46-e2e.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import "./register-declared.mjs";
 import { world, call, refused } from "./harness.mjs";
-import { appPage } from "../../../src/control-plane/app.mjs";
-import { interfacePage } from "../../../src/interface-shell/index.mjs";
-import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
-import { SCREENS as S1 } from "../../../src/screens-settings/index.mjs";
-import { SCREENS as S2 } from "../../../src/screens-intake/index.mjs";
-import { SCREENS as S3 } from "../../../src/screens-daily/index.mjs";
-import { SCREENS as S4 } from "../../../src/screens-inquiry/index.mjs";
+const { appPage } = await import("../../../src/control-plane/app.mjs");
+const { interfacePage } = await import("../../../src/interface-shell/index.mjs");
+const { ASSET_FILES } = await import("../../../src/interface-assets/index.mjs");
+const { SCREENS: S1 } = await import("../../../src/screens-settings/index.mjs");
+const { SCREENS: S2 } = await import("../../../src/screens-intake/index.mjs");
+const { SCREENS: S3 } = await import("../../../src/screens-daily/index.mjs");
+const { SCREENS: S4 } = await import("../../../src/screens-inquiry/index.mjs");
+const { SCREENS: E } = await import("../../../src/screens-entry/index.mjs");
+const { SCREENS: W, GUIDE } = await import("../../../src/screens-wizards/index.mjs");
+const { SCREENS: I } = await import("../../../src/screens-investigate/index.mjs");
+const { SCREENS: P } = await import("../../../src/screens-publish/index.mjs");
+const { SCREENS: A } = await import("../../../src/screens-action/index.mjs");
 /* R81 (T47; K3137, K3169): the five screen modules T47 adds, and screens-wizards' guide (interface-shell R31) */
-import { SCREENS as E } from "../../../src/screens-entry/index.mjs";
-import { SCREENS as W, GUIDE } from "../../../src/screens-wizards/index.mjs";
-import { SCREENS as I } from "../../../src/screens-investigate/index.mjs";
-import { SCREENS as P } from "../../../src/screens-publish/index.mjs";
-import { SCREENS as A } from "../../../src/screens-action/index.mjs";
 const NINE = [...E, ...S1, ...S2, ...S3, ...S4, ...W, ...I, ...P, ...A];
 
 const SCRIPT = /<script\b[^>]*>/gi;

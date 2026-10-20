@@ -1,6 +1,6 @@
 # link-sweep (T51)
 
-**Status** · session_011Wj2qq9nxhTBq6sjHBwEG7 · depth 2 · COMPLETE · handled B6
+**Status** · session_01TKfaRpezEfw8cgXa711BFo · depth 2 · COMPLETE · handled B7
 
 ## Completion (T51-242, words)
 
@@ -90,3 +90,32 @@ B6 (CHANGE, K4230) applied on job/T51/link-sweep at cf794caf96 (tranche/T51 merg
 - `node checks/ownership.mjs /home/user/bio link-sweep tranche/T51 job/T51/link-sweep`: 1 failure, `build/requirements/link-sweep.md` outside link-sweep's paths, tests and job record. Per B3 that listing of the one requirements file is accepted at merge.
 
 **Size (session_011Wj2qq9nxhTBq6sjHBwEG7):** test runs 3, module lines 1230.
+
+## J5 · COMPLETE
+
+B7 (CHANGE, K4247) applied on job/T51/link-sweep at b79e0bbc0a (tranche/T51 merged first, ec4eb7f40c).
+
+**Entries applied.** The `sweeps` row in `DECLARED_OPS` (bio-plane/src/link-sweep/index.mjs) is `weight: "read"`; it was `"reversible"`. The row writes nothing (`mutating: false`), so op-grades refuses a rung on it (`rung-on-read`, its R49). op-grades' hand row for `sweeps` is a read (NON_ACTS), so the two agree: `registerDeclaredOps` answers `agreed: ["sweeps"]` and registers `sweepset` and `sweepratify`, with no refusal.
+
+**Test.** declared-ops.test.mjs, "R15 link-sweep's sweeps row is a read: ...". It registers the module's whole `DECLARED_OPS` through a fresh op-grades instance: no refusal, `agreed` is `["sweeps"]`, `registered` is the two mutating ops, and `RUNGS` holds no `sweeps`. Control: a copy of the row with `weight: "reversible"` is refused `DECLARED_OP_BAD_WEIGHT`, naming `sweeps` and `rung-on-read`. The test was written after the weight change, so it was not seen failing against the old row; the control is that check. Its first run failed on my own assertion (the answer lists `sweeps` under `agreed`, not `registered`); the assertion was corrected to that shape, nothing else changed.
+
+**Plane.** `node --test bio-plane/test/m/plane/` (run from /home/user/bio after merging tranche/T51): tests 45, pass 6, fail 39. All 39 failures are `DECLARED_OP_BAD_WEIGHT: groupdescriptiondraft rung-on-read`, refused whole at the plane's start. None names `sweeps` or any link-sweep op. `groupdescriptiondraft` is not link-sweep's; B7 says STORE-DOOR #14 fixes that row. I did not run the plane before the weight change, so I cannot give the count from before it.
+
+**Requirement line for BOB (R15 amendment).** Add to R15, after "(`sweeps`)": "`sweeps` is a read (`weight: "read"`: it writes nothing, so a rung on it is refused, op-grades R49); op-grades' hand row agrees." Test: declared-ops.test.mjs, the registration test above. I did not edit build/requirements/link-sweep.md; BOB may write this line from this record.
+
+**For BOB, a question (not changed here).** bio-plane/src/op-grades/marks.mjs lists `sweeps` as "Reversible" (the design kit's drawn mark, source `kit`). Its header says the table grades nothing, so it does not cause this refusal. It still differs from the declared "read", so the design may want its mark for a read changed. This is UX design's to answer; this job did not touch op-grades.
+
+**Deferred.** None.
+
+**Found in another module.** `groupdescriptiondraft`: its declared row reads with a rung, and it is what refuses the plane's start now (see Plane). STORE-DOOR #14 owns it, per B7.
+
+**Tests and checks** (after the commit b79e0bbc0a):
+- `node --test test/m/link-sweep/*.test.mjs` (bio-plane): tests 41, pass 41, fail 0.
+- format (`checks/format.mjs /home/user/bio`): 175 modules, 175 requirements files; 0 failures.
+- architecture link-sweep: 0 failures. coverage link-sweep: 15 of 15 live requirement ids named by a test; 0 failures.
+- words link-sweep: 0 failures.
+- ownership (`checks/ownership.mjs /home/user/bio link-sweep tranche/T51 job/T51/link-sweep`): 3 files changed by link-sweep; 0 failures.
+- `checks/run.mjs /home/user/bio` (saved output): exit 1, from other modules' findings only (words 31 failures, of which testcopy 24, missingkey 6, inline 1; dev 266 and unkeyed 1977 are counted, not failures). Grep for `link-sweep`: none.
+- Before tests (K4113): `npm ci --ignore-scripts` in agent-runner, bio-plane/src/journey-check, file-scanner, sheet-worker, site, all missing node_modules.
+
+**Size (session_01TKfaRpezEfw8cgXa711BFo):** test runs 4, module lines 1230.

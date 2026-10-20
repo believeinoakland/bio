@@ -1187,6 +1187,30 @@
     "line": 326,
     "text": "the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 349,
+    "text": "11. Legs that cut against the finding. A leg that cuts against the finding is not one of the sets of reasons that carry it, and is never counted toward its strength. It is listed beside the strength, with the strength it has on its own, worked out the same way as any other leg's.",
+    "why": "a published, signed grading-method text pinned by its bytes: rule 11 of bio-grading/4, kept in code beside V1_LINES and V2_LEGS (B418, K4213, K4218)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 349,
+    "text": "11. Legs that cut against the finding. A leg that cuts against the finding is not one of the sets of",
+    "why": "a published, signed grading-method text pinned by its bytes: rule 11 of bio-grading/4, kept in code beside V1_LINES and V2_LEGS (B418, K4213, K4218)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 350,
+    "text": "reasons that carry it, and is never counted toward its strength. It is listed beside the strength, with the strength",
+    "why": "a published, signed grading-method text pinned by its bytes: rule 11 of bio-grading/4, kept in code beside V1_LINES and V2_LEGS (B418, K4213, K4218)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 351,
+    "text": "it has on its own, worked out the same way as any other leg's.",
+    "why": "a published, signed grading-method text pinned by its bytes: rule 11 of bio-grading/4, kept in code beside V1_LINES and V2_LEGS (B418, K4213, K4218)"
    }
   ],
   "contradiction": [

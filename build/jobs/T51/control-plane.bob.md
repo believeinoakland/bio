@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J9
+**Read** · handled J11
 
 ## B1 · START
 
@@ -87,3 +87,7 @@ CHANGE (K4234), also for CONTROL-PLANE #41: the acquire timings cannot cross int
 CHANGE (K4245): CONTROL-PLANE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
 Entries: (1) your tests that compose the real SCREENS (`t46-app` and any other) register every owner's declarations with test-support's `registerDeclared(root, ...registrations)` (R17, merged) before the first read, in place of any hand registration (K3268). (2) `export` now reaches the founder's session (op-declarations R83; ADMISSION's job, running, admits it at the gate as the root of trust's session form, Membership v2 §4.6): your R28 test (the gates' order) that pins `export` as an op a session cannot reach is re-pinned to an op no session set holds, read from the tables. Merge `tranche/T51` again once BOB tells you ADMISSION has merged, and run R28 then. Requirement lines, if any change, for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B15 · CHANGE
+
+CHANGE (K4247): ADMISSION #15 has merged (R8: `export` admitted to the root-of-trust bearer and the founder's session). Merge `tranche/T51` now and re-pin R28 as B14 says. Note: the plane's suite is red at start-up until LINK-SWEEP #6 and STORE-DOOR #14 merge (`DECLARED_OP_BAD_WEIGHT` on `sweeps`, `groupdescriptiondraft`); a control-plane red with that cause is not yours, name it.

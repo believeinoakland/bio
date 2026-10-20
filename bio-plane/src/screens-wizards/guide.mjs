@@ -1,4 +1,4 @@
-/* screens-wizards R2–R7, R9, R15–R20: the runner, the wizard guide docked beside any screen (interface-shell R31; DEC-120 (2),
+/* screens-wizards R2–R7, R9, R15–R22: the runner, the wizard guide docked beside any screen (interface-shell R31; DEC-120 (2),
    DEC-139 (4), DEC-140, DEC-148). It says each step's what and why, opens the step's screen, rings the control the step
    names and never presses it, sends no act on the member's behalf and fills a field only with a labelled draft (R4).
    It reports use only through `wizardprogress`'s unattributed tally (start, each step reached, finish; stopping sends
@@ -103,7 +103,14 @@ export const PARTS = {
       const held = step.screen !== "plan" && Object.hasOwn(subjects, step.screen) ? subjects[step.screen] : null;
       const chosen = kind && ui.chosen && Object.hasOwn(ui.chosen, kind) ? ui.chosen[kind] : null;
       const here = kind && view.screen !== "plan" && P.kinds()[view.screen] === kind && view.subject !== null && view.subject !== undefined ? view.subject : null;
-      if (kind && (held === null || held === undefined) && chosen === null && here === null) return kind === "project" ? P.ask(cs, view, kind, false) : P.recent(cs, view, kind);
+      if (kind && (held === null || held === undefined) && chosen === null && here === null) {
+        if (kind === "project") return P.ask(cs, view, kind, false);
+        if (kind === "question" || kind === "document") return P.recent(cs, view, kind);
+        // R22: an action, a matter or a due date is found through a plan, so with none held the step stays on its card
+        ui.none = { kind, i: run.i };
+        cs.set("run", run);
+        return;
+      }
       cs.go(step.screen, held !== null && held !== undefined ? held : chosen !== null ? chosen : here);
       return;
     }
@@ -111,19 +118,20 @@ export const PARTS = {
   },
 
   kinds() { return { project: "project", projectai: "project", timeline: "project", money: "project", plan: "project",
-    question: "question", document: "document" }; },
+    question: "question", document: "document", action: "action", matter: "matter", "due-date": "due-date" }; },
 
   /* R17: ask in the dock which project, as record data the member may see; none to choose says so in its fold and offers
-     Next. `door` (R20): the choice is the welcome's "Open a question" door, which opens `project` on the one chosen */
+     Next. `door` (R20): `true` is the welcome's "Open a question" door, which opens `project` on the one chosen; `"plan"`
+     (R22) is "Open a plan", which opens `plan` on the one chosen */
   async ask(cs, view, kind, door) {
     const ui = view.ui, run = ui.run, i = run.i;
-    ui.ask = { kind, i, options: null, door: door === true };
+    ui.ask = { kind, i, options: null, door: door || false };
     cs.set("run", run);
     const a = await cs.call("projectlist", {});
     if (ui.run !== run || run.i !== i) return;
     const r = a && a.ok !== false ? (a.result !== undefined ? a.result : a) : null;
     const rows = r && Array.isArray(r.projects) ? r.projects.map((p) => ({ value: p.id, text: p.name || p.id })) : [];
-    ui.ask = { kind, i, options: rows, door: door === true };
+    ui.ask = { kind, i, options: rows, door: door || false };
     cs.set("run", run);
   },
 
@@ -327,6 +335,8 @@ export const guide = {
     if (r.screen) ui.subjects[r.screen] = r.subject === undefined ? null : r.subject;
     P.marksFor(cs, view, r.screen);
     // R20: the door's "Open a question" is rung on the project it opened, once
+    // R22: the member reached the step's own screen on a subject, so its none card gives way to the step
+    if (ui.none && ui.run && ui.run.steps && ui.run.steps[ui.run.i] && ui.run.steps[ui.run.i].screen === r.screen && r.subject !== null && r.subject !== undefined) ui.none = null;
     if (ui.pendingRing && ui.pendingRing.screen === r.screen) { const p = ui.pendingRing; ui.pendingRing = null; if (typeof cs.ring === "function") cs.ring(p.act); }
     const run = ui.run;
     const step = run && run.steps && run.steps[run.i];
@@ -355,10 +365,15 @@ export const guide = {
     if (what === "chip") { ui.marksOpen = !ui.marksOpen; return cs.set("marksOpen", ui.marksOpen); }
     if (what === "where" && run && !run.loading) return P.ringStep(cs, view);
     if (what === "draftit") return P.machine(cs, view);
-    if (what === "door" && run && !run.loading && ui.none && ui.none.i === run.i) return P.ask(cs, view, "project", true);
+    if (what === "door" && run && !run.loading && ui.none && ui.none.i === run.i) return P.ask(cs, view, "project", ui.none.kind === "question" ? true : "plan");
     if (what === "subjectgo" && run && !run.loading && ui.ask && ui.ask.i === run.i) {
       const value = cs.value("wz-subject");
       if (value === null || value === undefined || value === "") return null;
+      if (ui.ask.door === "plan") {
+        ui.ask = null;
+        cs.set("run", run);
+        return cs.go("plan", value);
+      }
       if (ui.ask.door) {
         ui.ask = null;
         ui.pendingRing = { screen: "project", act: "promote" };
@@ -417,7 +432,7 @@ export const guide = {
       if (ask && ask.options.length) out.push(cs.choice("wz-subject", "wizard.subject.project", ask.options)
         + `<span class="nav">${btn("subjectgo", W(G + "next"))}</span>`);
       if (ask && !ask.options.length) out.push(`<details class="mk-details" open data-guide-nosubject><summary>${W("wizard.subject.none.summary")}</summary><p class="mk-note">${W("wizard.subject.none.project")}</p></details>`);
-      if (noneWords && noneWords.door && none.kind === "question" && !ask) out.push(`<span class="nav">${btn("door", noneWords.door, "primary")}</span>`);
+      if (noneWords && noneWords.door && !ask) out.push(`<span class="nav">${btn("door", noneWords.door, "primary")}</span>`);
       if (d && typeof d.machine === "string" && view.reachable && step.act && !(draft && draft.text !== undefined))
         out.push(`<span class="nav">${btn("draftit", W(G + "draftit"), "", "")}</span>`);
       if (draft && draft.asking) out.push(`<p class="cs-state" data-state="loading" role="status">${W(G + "draft.asking")}</p>`);

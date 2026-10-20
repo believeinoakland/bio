@@ -93,7 +93,7 @@ import { AI_GRANT_OPS } from "../credentials/index.mjs";
    them, stamped as they are (`by` and `viewer`), each for a member's session only by its row. */
 /* T51 (K4219): the re-run acts `rerunstart` and `rerunpair` are acts of a member's project, stamped `by` as the other acts are;
    `importregrade` and `rerunread` are reads, stamped with the viewer alone */
-const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
+export const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
                                            "importflag", "importflagclear", "importwatch", "importunwatch",
                                            "rerunstart", "rerunpair"]);
 const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase", "importregrade", "rerunread"]);
@@ -979,8 +979,13 @@ export function makeFetch(hooks = {}) {
          credential and none of the caller's stamps; the read is handed only the parameters it declared. Asked as
          `op=publicread&name=<name>`, the same read is the public hook's (plane's, through `publicReadDoorOp`). */
       /* R49 (case-checker R15): case-checker's two public reads, by the same door read; R49 (T51, K4230): case-inputs' one. */
-      if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op) || CASE_INPUTS_PUBLIC_READS.includes(op))
-        return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
+      if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op) || CASE_INPUTS_PUBLIC_READS.includes(op)) {
+        /* R17, R45: a public read carries no caller and so no stamp; the caller's copies of the op's declared stamps, of `session`
+           and of an ask's `grant` are deleted before the read is asked, as for every other op */
+        const clean = new URL(url);
+        for (const k of ["grant", "session", ...(OP_STAMPS[op] || [])]) clean.searchParams.delete(k);
+        return publicReadDoorRead(op, clean, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
+      }
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country });
     }

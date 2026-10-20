@@ -56,3 +56,20 @@ test("R15 link-sweep declares a need on every mutating op it serves (sweepset an
   /* control: the same check names a mutating row that declares no need, and passes a read */
   assert.deepEqual(missingNeeds({ bare: { mutating: true, classes: ["member"] }, read: { mutating: false, classes: ["member"] } }), ["bare"]);
 });
+
+/* K4247 (B7): a read cannot carry a rung. op-grades takes this module's whole declaration once at the plane's start (its R49), and
+   refuses a read row that states a rung (`rung-on-read`) whole; so the sweeps row is a read, and the registration meets no refusal. */
+let fresh = 0;
+const freshOpGrades = () => import(`../../../src/op-grades/index.mjs?instance=link-sweep-${fresh++}`);
+
+test("R15 link-sweep's sweeps row is a read: op-grades registers the module's whole declaration with no refusal, and a copy of the row with a rung is refused rung-on-read", async () => {
+  const m = await freshOpGrades();
+  const answer = m.registerDeclaredOps({ "link-sweep": DECLARED_OPS });
+  assert.deepEqual(answer.agreed, ["sweeps"], "sweeps' read agrees with op-grades' hand row, so it is no new registration");
+  assert.deepEqual(answer.registered.sort(), ["sweepratify", "sweepset"]);
+  assert.equal(Object.hasOwn(m.RUNGS, "sweeps"), false, "a read takes no rung");
+  /* control: the same row with a rung is refused, naming the op and the refusal */
+  const rung = await freshOpGrades();
+  assert.throws(() => rung.registerDeclaredOps({ "link-sweep": { sweeps: { ...DECLARED_OPS.sweeps, weight: "reversible" } } }),
+    (e) => e.code === "DECLARED_OP_BAD_WEIGHT" && e.message.includes("sweeps") && e.message.includes("rung-on-read"));
+});
