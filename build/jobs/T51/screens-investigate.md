@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_0146dGPcD3Eun2HP73CZiCwq · depth 2 · COMPLETE · handled B5
+**Status** · session_013U8Ciq9twS4zjfvFdM57Xa · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -50,3 +50,38 @@ COMPLETE (re B4, K4093): merged tranche/T51; no local stand-in of a provider was
 ## J5 · COMPLETE
 
 COMPLETE (re B5, K4096): merged tranche/T51. The three test copies are gone: the declared-step marker the providers answer is built in fixtures.mjs (DECLARED) and graph.test.mjs uses it. words for this module: 0 failures; suite 155 pass, 0 fail. Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 46, module lines 2,851
+
+## J6 · QUESTION
+
+QUESTION (entries 5 and 10, R53 against R58; entry 9, R57). Two points, best readings given; I carry on with everything else.
+
+1. Entries 5 (L10, K4194) and 10 (I-32, DEC-384) disagree. Entry 5: an organization's page makes no `person` read (`people` refuses any kind but `person`, `#personRefusal`). Entry 10: it draws "Same organization?" with a claim's row (`.same.because.org`, `.same.claimed.org`), the candidates (`.candidates.org`) and the kinds of claim (`.claim.kind.*.org`), which need `person`'s `claims` and `samepersoncandidates`, both refused for an organization today. My best reading: no `person` or `samepersoncandidates` read for `institution`, `body` or `movement` (R53, as entry 5 says); the page draws "Same organization?" (`.same.org`, `.same.holds.org`), the claim form's choices (`.claim.same_as.org`, `.claim.not_same_as.org`, `.claim.kind.*.org`) and the fact form with three kinds (Name, Address, Contact) and `screen.person.kind.help.org`; a refusal of `identityclaim` or `recordpersonfact` (`NOT_A_PERSON`) is drawn by its word. The rows of claims and candidates for an organization (`.same.claimed.org`, `.same.because.org`, `.candidates.org`) then appear only when `people` serves organizations (a layer-5 change, yours to order); I read them from `person` and `samepersoncandidates` only when `entity` says `person`. If you want those keys drawn now, `people` must answer for an organization; tell me, or tell me to read `person` for organizations and draw a NOT_A_PERSON refusal as "no claims".
+
+2. Entry 9: the path's last crumb (`screen.standard.crumb`, "Standard: {name}") is the shell's `PATH` entry (`interface-shell` R8, `mock-shell.js` `PATH.standard`), and `place(view)` has no kit to read a word: the screen cannot set either. What I do: `place` returns the project's title from the `image` read; an unreadable project is named `crumb.project.unjoined`, whose text the screen's render leaves in `view.ui` for `place` (the shell draws the body before the path). The last crumb stays `screen.standard.name` until `interface-shell` takes `place`'s `{project, last}` (or reads `screen.standard.crumb` with `{name}`); that is an `interface-shell` change, not mine.
+
+## J7 · QUESTION
+
+QUESTION (R51, R59, words) — three things need an owner or the design; best readings, and I carry on with everything else.
+
+1. op-declarations (R51, `standard` "Check a date"): `standardinforce` is not in `SESSION_OPS.member` (nor `standard`, `standards`), so the shell's act gate (`can`, interface-shell R12) draws no button for it to a member. My code and tests are built; the R51 test stays red until `op-declarations` adds `standardinforce` to the member (and admin) session set. CHANGE to op-declarations, please.
+
+2. action-clocks (R59, due date with no rule): `clockPropose` answers `NO_SUCH_RULE` with `{target, rule, detail}` and no list of the deadlines the member's rules do state, so the pick box has nothing to carry. Built on this reading: the refusal's answer carries `deadlines: [{rule, label?, citation?}]` (the profile deadlines that apply to the action's kind); the screen keeps them through the act's own refusal function (`refusals.NO_SUCH_RULE`, interface-shell R21) and draws `screen.due-date.rule.*`, a choice, "Work it out again" with the chosen `rule`, and a door to `/app/places`. Tested against a fixture that carries the list. If the owner answers the list elsewhere (a read), tell me which; otherwise `action-clocks` needs a CHANGE to add `deadlines` to that refusal.
+
+3. UX-DESIGN keys missing (nothing invented; I draw with the keys held and say here what is lacking): (a) R51: the answer's own words "In force" / "Not in force" / "Overridden" / "Undetermined" (the drawing hard-codes them; I draw the owner's `why` sentence and the gap mark for undetermined) and the label of the day field "The day" (I use `act.standardinforce.label.standard`); (b) R54: "we will remind you on {date}" (I draw the held `screen.due-date.on` "Remind me on" followed by the date, beside the entry).
+
+## J8 · COMPLETE
+
+COMPLETE (re B6, B7/B8, B10; fix round FR-29). The requirement lines are written in build/requirements/screens-investigate.md (R49–R59, none held back in this record; R51 carries its own not-yet-met note). Entries applied:
+1 C26 → R49: "Define a progression" on the project's own timeline always; an unknown progression key draws the empty state with the form; the known flow is unchanged (one form).
+2 C68 → R50: "Records its offices keep" on an organization's page (offices from `post_in` lines + `entitieskind`; standing `custodian_of`/`responsible_for` lines; the form sends `recordline` with kind, from, to, basis and `valid` only when a date is given; the design's three refusals by `refusals` functions). Registry act `recordline` on `person` drawn (R10 green).
+3 C40 → R51: "Was it in force on a date?" with `standardinforce` (a read act) and the owner's answer with its reason; `standard` registry act drawn (R10 green). RED by name, accepted (B10): the test cannot press the button until op-declarations #29 adds `standardinforce` to the member/admin session sets.
+4 L2 → R52: the six reads (and so every `docChoice`, the matter's folds included) ask `heldcaptures` with `state: "held_and_vouched"`; `pickers.test.mjs` runs each screen against an owner-shaped answer that honours `state`.
+5 L10 → R53 and 10 I-32 → R58: institution/body/movement pages: three fact kinds + `screen.person.kind.help.org`; `person` and `samepersoncandidates` read for every kind with `NOT_A_PERSON` drawn as no claims/candidates (B9); all ten `.org` keys drawn.
+6 L21 → R54: the day a reminder was set for is drawn beside its entry (held key `screen.due-date.on` + the date; the sentence "we will remind you on" is not keyed).
+7 L22 → R55: the head names the counterparty from role/body, name/label/office, or an audience's description; none for an undetermined one (`PARTS.counterparty`).
+8/9 L24, I-30 → R56, R57: `place` answers `{project: {id, title}, last}`; title from the project's record, `crumb.project.unjoined` when unreadable, `last` the standard's citation; `interface-shell` R110 (merged) draws `screen.standard.crumb`; B9 (2) thus needs nothing further.
+11 E6 → R59: `refusals.NO_SUCH_RULE` on `clockpropose` keeps the refusal's `deadlines` (B10 (2): ACTION-CLOCKS #16 builds them) and the page draws `screen.due-date.rule.*` with the pick, the help and the door to `/app/places`; choosing one sends `{target, rule}`.
+Also fixed (guard findings of my screens, not entries): explore's re-read after `stepsource`/`stepsourcewithdraw` sent its body as the request (missing `from`, `at`); `acquire` sent a `project` it does not accept; the proceeding's `entitycreate` sent no `label` when the member gave none (now the case number). BOB's nine inherited reds (B1) are green. Deferred: none.
+Found in other modules / for UX-DESIGN (HANDOFF B419 per B10): R51's answer words ("In force", "Not in force", "Overridden") and the day field's label; R54's "we will remind you on {date}"; R50's labels for the office choice and "What says so" and a keyed phrase for a `responsible_for` line (stand-ins in use: `screen.people.today.kind.office`, `screen.person.source`, `screen.person.fact.from`/`.to`, `label.linekinds.responsible_for`); the note `screen.person.keeper.withdraw.a/b` promises a withdrawal the registry gives the person page no act for (`linewithdraw`), drawn as the design has it. The test harness's `refusedIn` carries no extra fields, so R59's test builds its refusal itself.
+Tests and checks (screens-investigate, tranche/T51 merged at f5176d5078+): module suite 175 tests, 174 pass, 1 fail (R51, accepted red); format 0 failures; architecture 0 failures; coverage 59 of 59 ids named; words (module and all 175 modules together) no finding naming this module (the 26 are other modules'); ownership 18 files, 0 failures; setup-words build --check: stale-rows note only (op-declarations/action-plans rows), none naming this module; checks/run.mjs: every failure is in op-grades' tests, none mine.
+Size (session_013U8Ciq9twS4zjfvFdM57Xa): test runs 45, module lines 3,018

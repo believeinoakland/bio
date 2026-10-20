@@ -118,3 +118,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B14 · CHANGE
 
 CHANGE (K4221): interface-shell's guard (merged) finds the `queue` screen's `promote` sending `project`, which promotion R61 does not accept (it requires `files`, `meta`, `snapKey`): send only the declared fields, read through the declaration, never a hand list (K3268). Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4233), for SCREENS-DAILY #11: queue-producers is merged; queue's follow-up is QUEUE #29 (merges before you). The Queue now carries three new kinds of item (C62's endorsement, owner vote and expertise confirmation, queue-producers R46–R48), each with its `door` and `summary_key`/`detail_key`; draw them by key (UX-DESIGN HANDOFF B422 holds the rows; until they land, tests that need those rows are accepted red by name). The add door's label is `act.projectowneradd.label.queue`, the removal's `act.projectownerremove.label.queue`.
