@@ -1,4 +1,5 @@
-/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47, R71–R74, R78: the question screen (Projects › <project> ›
+/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47, R71–R74, R78, R87–R89, R91, R101–R104, R114, R116, R117, R120, R121:
+ * the question screen (Projects › <project> ›
  * Question; registry screen `question`).
  *
  * Self-contained functions (interface-shell R21 (1)): each refers only to its parameters, `cs` and the language's own
@@ -34,13 +35,15 @@ function place(view) {
   const d = view.data && view.data.inquiry;
   const text = d && d.state === "ok" && d.value && d.value["bundle.md"];
   const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text.split(/\n---\s*\n/)[0] || "") : null;
-  if (!m) return {};
-  const t = view.ui && view.ui.later && view.ui.later["project:" + m[1]];
+  const home = m ? m[1] : "";
+  const pid = view.project || home;
+  if (!pid) return {};
+  const t = view.ui && view.ui.later && view.ui.later["project:" + pid];
   const ft = t && t.state === "ok" && t.value && typeof t.value["bundle.md"] === "string"
     ? /^title:\s*(.*)$/m.exec(t.value["bundle.md"]) : null;
   let title = ft ? ft[1].trim() : "";
   try { if (title.startsWith("\"")) title = JSON.parse(title); } catch { /* raw */ }
-  return { project: { id: m[1], title } };
+  return { project: { id: pid, title } };
 }
 
 /** R2, R5, R23–R27, R31, R34–R36, R38, R41: the question in its state. */
@@ -54,7 +57,9 @@ function render(cs, view) {
   const T = (k, f) => P.plain(cs, k, f);
   const later = (key, op, query, token) => P.later(cs, ui, key, op, query, token);
   const doc = d.inquiry && d.inquiry.state === "ok" ? P.front(d.inquiry.value["bundle.md"]) : null;
-  const project = doc && /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
+  /* R91: a question opened from a project acts for that project (the address's second part); the bare address, for its home project */
+  const home = doc && /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
+  const project = view.project || home;
   const out = [];
   /* R39: the question's words, else its title; never its id */
   const heading = doc ? (doc.question || doc.title || "") : "";
