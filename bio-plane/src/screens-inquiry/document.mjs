@@ -34,6 +34,7 @@
  * `extent_capture` to `bundlehistory`'s `capture_sha`), by the browser act `revisioncompare`; the original-file card draws the
  * file's kind from the reading's format id and its size from `bytes`, and none without `bytes`. */
 
+import { checkOutcome } from "../screens-intake/index.mjs";
 
 /** R3: the reads that need only the document's id; the rest follow from its front matter. */
 function reads(view) {
@@ -152,7 +153,7 @@ function render(cs, view) {
   out.push(cs.title(titled || T("state.undetermined", { reason: "" }), { thing: "document" }));
   if (!doc) { out.push(cs.state("capture", view, () => "")); return out.join(""); }
   const project = /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
-  if (project) later("project:" + project, "image", { id: project });
+  const pimg = project ? later("project:" + project, "image", { id: project }) : null;
   /* R32: the address an outside link, unquoted; a testimony's source drawn as its words */
   out.push(`<p class="mk-sub">${cs.w("screen.document.captured", {
     date: { html: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : doc.created ? cs.date(String(doc.created), { year: true }) : "" },
@@ -162,29 +163,42 @@ function render(cs, view) {
   /* R54: this copy's grade is `capturegrade`'s own answer for its digest, not the project's list of held captures; the row of
      that list (R49, R61) still says what the capture was held for. R55: the viewer's own held captures say whether this copy
      is hers and not yet vouched for. */
+  /* R111 (L1): `heldcaptures` answers `{held: rows}` (capture R77), each row `{bundle_id, capture: {sha256}, captured_for, ...}` */
+  const heldRows = (a) => (a && a.state === "ok" && a.value && Array.isArray(a.value.held) ? a.value.held : []);
+  const isThis = (r) => !!r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id);
   const held = project && sha ? later("held", "heldcaptures", { project, limit: "500" }) : null;
-  const row = held && held.state === "ok" && Array.isArray(held.value.rows || held.value.items || held.value.captures)
-    ? (held.value.rows || held.value.items || held.value.captures).find((r) => r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id || r.document === id || r.id === id)) : null;
+  const row = heldRows(held).find(isThis) || null;
   const gr = sha ? later("grade", "capturegrade", { capture: sha }) : null;
   const gradeObj = gr && gr.state === "ok" && gr.value && gr.value.grade ? gr.value.grade : null;
   const letter = gradeObj && /^[A-D]$/.test(String(gradeObj.grade || "")) ? String(gradeObj.grade) : "";
   const mineHeld = project && sha && view.me && view.me.member ? later("minehelds", "heldcaptures", { project, member: String(view.me.member), limit: "500" }) : null;
-  const mineRows = mineHeld && mineHeld.state === "ok" && mineHeld.value ? (mineHeld.value.rows || mineHeld.value.items || mineHeld.value.captures || []) : [];
-  const isHeld = mineRows.some((r) => r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id || r.document === id || r.id === id));
+  const isHeld = heldRows(mineHeld).some(isThis);
   const vouched = ui.outcome && ui.outcome.release && ui.outcome.release.ok === true;
   if (isHeld && !vouched) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
     + cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
     + cs.field("document-release-mitigation", "screen.document.release.mitigation", { area: true, rec: true })
     + cs.act("release", { label: "act.release.label.document", data: { document: id }, tone: "primary" }) + own("release") + "</div>");
   else if (vouched) out.push(`<p class="mk-note" data-vouched="1">${cs.w("document.vouched", { member: view.parts.who(cs, view.me && (view.me.handle || view.me.member) || ""), date: { html: cs.date(new Date(cs.now()).toISOString(), { year: true }) } })}</p>`);
+  /* R113: a copy a member has stopped using says so, whatever page she meets it on; no second retirement is offered */
+  const retiredNow = String(doc.current_state || "") === "retired";
+  if (retiredNow) out.push(`<p class="mk-note" data-retired="1"><b>${cs.w("state.item.retired.name")}</b> ${cs.w("state.item.retired.means")}</p>`);
   /* R55: a held page with no title of its own is headed by its site and capture day, never the address */
   if (!titled && outside) { let site = ""; try { site = new URL(locator).hostname; } catch { site = ""; }
     out[0] = cs.title(site ? T("document.untitled.web", { site, date: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : "" }) : T("state.undetermined", { reason: "" }), { thing: "document" }); }
   const note = sha ? later("gradenote", "gradenote", { capture: sha }) : { state: "empty" };
+  /* R3, R96: the reading is read as soon as the digest is known: its passages, and how complete its text is (full, partial, none or
+     unread). A reading never made is unread; one made with no words in it holds none; one with pages it could not make out is partial. */
+  const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
+  const rv0 = reading.state === "ok" && reading.value && typeof reading.value === "object" ? reading.value : null;
+  const words0 = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.filter((p) => p && String(p.text || "").trim()) : [];
+  const blind0 = rv0 && Array.isArray(rv0.unread_pages) ? rv0.unread_pages.filter((n) => Number.isInteger(n) && n >= 0) : [];
+  const textState = !sha ? "" : reading.state === "empty" ? "unread" : rv0 ? (!words0.length ? "none" : blind0.length ? "partial" : "full") : "";
   /* R66: the head's fingerprint is the first one shortened, with its tip */
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha, letter }, tone: "quiet" }) + "</span></div>"
+    + (textState ? `<div><span class="v"><span data-text-state="${textState}"${textState === "full" || textState === "none" ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
+      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") : "") + "</span></span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
   if (ui.gradenote) {
@@ -198,16 +212,30 @@ function render(cs, view) {
     : cs.act("findin", { label: "act.findin.label.document", data: { capture: sha } }));
 
   /* passages: the reading's, each citable in a question the member chooses (citation R1's `found`) */
-  const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
   const qs = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles) ? d.questions.value.bundles : [];
   /* R49 (K3560): the question the capture was held for (its held row's `captured_for`, the questions she may see) is
      preselected, else none is; the document's own project's questions come first, then the others she may cite into */
   const pq = project ? later("projectq:" + project, "projectquestions", { project, limit: "100" }) : { state: "empty" };
   const ownQ = new Set(pq.state === "ok" && Array.isArray(pq.value.items) ? pq.value.items.filter((x) => x && x.inquiry).map((x) => String(x.inquiry)) : []);
   const heldFor = row && row.captured_for && Array.isArray(row.captured_for.questions) ? row.captured_for.questions.filter((x) => x && x.question) : [];
-  const askable = qs.map((q) => ({ value: String(q.bundle_id), text: String(q.title || q.bundle_id) }));
-  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), text: String(c.title || c.question) });
-  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value)));
+  /* R118 (A6, I-11): each question is named with its project, `screen.document.cite.option`. The projects she is in are `projectlist`'s
+     (project-roster R26) and each one's questions `projectquestions`'; a question no project of hers draws is named by its title alone. */
+  const plist = later("projects", "projectlist", { limit: "200" });
+  const projects = plist.state === "ok" && plist.value && Array.isArray(plist.value.projects) ? plist.value.projects.filter((x) => x && x.id) : [];
+  const ownTitle = (() => {
+    const t = pimg && pimg.state === "ok" && pimg.value && typeof pimg.value["bundle.md"] === "string" ? view.parts.front(pimg.value["bundle.md"]).title : "";
+    return t ? String(t) : "";
+  })();
+  const projectOf = new Map();
+  for (const pr of projects) {
+    const q = String(pr.id) === project ? pq : later("projectq:" + pr.id, "projectquestions", { project: String(pr.id), limit: "100" });
+    for (const x of q.state === "ok" && q.value && Array.isArray(q.value.items) ? q.value.items : []) if (x && x.inquiry && !projectOf.has(String(x.inquiry))) projectOf.set(String(x.inquiry), String(pr.name || ""));
+  }
+  if (project && ownTitle) for (const qid of ownQ) if (!projectOf.has(qid)) projectOf.set(qid, ownTitle);
+  const optionOf = (value, title) => (projectOf.get(value) ? { value, key: "screen.document.cite.option", fills: { question: title, project: projectOf.get(value) } } : { value, text: title });
+  const askable = qs.map((q) => ({ value: String(q.bundle_id), title: String(q.title || q.bundle_id) }));
+  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), title: String(c.title || c.question) });
+  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value))).map((o) => optionOf(o.value, o.title));
   const preset = heldFor.length ? String(heldFor[0].question) : "";
   /* the reading section is built once the revisions it compares are read (R81), in the slot it holds here */
   const readingAt = out.push("") - 1;
@@ -216,9 +244,10 @@ function render(cs, view) {
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
     const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
     if (!list.length) return originalCard + `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
-    /* a blank first choice, so that none is preselected unless the capture was held for one; a cite with it blank is refused */
+    /* nothing is preselected unless the capture was held for a question: then the first choice says to choose one, never a blank
+       (R118); a cite with it unchosen is refused in place */
     const pick = cites.length
-      ? cs.choice("document-cite-question", "screen.document.cite.question", [{ value: "", text: "" }].concat(cites), { value: preset })
+      ? cs.choice("document-cite-question", "screen.document.cite.question", (preset ? [] : [{ value: "", key: "screen.document.cite.choose" }]).concat(cites), { value: preset })
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
@@ -232,12 +261,20 @@ function render(cs, view) {
       return null; };
     const nums = list.map(numOf).filter((n) => n !== null);
     const unreadN = Array.isArray(r.unread_pages) ? r.unread_pages.filter((n) => Number.isInteger(n) && n >= 0).map((n) => n + 1) : [];
-    const total = nums.length ? Math.max(...nums, ...unreadN) : 0;
-    const paged = total > 1;
-    const first = paged ? Math.min(...nums) : 0;
+    const pdfTotal = nums.length ? Math.max(...nums, ...unreadN) : 0;
+    const pagedByNumber = pdfTotal > 1;
+    /* R112 (L5): a reading whose passages carry no page is drawn in blocks of a stated size (20 passages), with the same page bar, so a
+       captured web page of hundreds of passages is not drawn whole, each with its own Cite control */
+    const BLOCK = 20;
+    const blocks = pagedByNumber ? 0 : Math.ceil(list.length / BLOCK);
+    const blocked = blocks > 1;
+    const paged = pagedByNumber || blocked;
+    const total = pagedByNumber ? pdfTotal : blocked ? blocks : 0;
+    const first = pagedByNumber ? Math.min(...nums) : blocked ? 1 : 0;
     const asked = Number(ui.readpage);
     const cur = paged ? (Number.isInteger(asked) && asked >= 1 && asked <= total ? asked : first) : 0;
-    const shown = paged ? list.map((p, i) => [p, i]).filter(([p]) => { const n = numOf(p); return n === cur || (n === null && cur === first); }) : list.map((p, i) => [p, i]);
+    const shown = pagedByNumber ? list.map((p, i) => [p, i]).filter(([p]) => { const n = numOf(p); return n === cur || (n === null && cur === first); })
+      : blocked ? list.map((p, i) => [p, i]).slice((cur - 1) * BLOCK, cur * BLOCK) : list.map((p, i) => [p, i]);
     /* R81: the second tab, the comparison with the revision a question cites, is drawn only where that revision is found (citedRev);
        the compare tab shows the comparison in place of the passages and their pages */
     const compareOn = citedRev >= 0 && ui.readtab === "compare";
@@ -272,6 +309,29 @@ function render(cs, view) {
       + cs.act("transcribe", { label: "act.transcribe.label.document", data: { document: id } })));
   }
   out.push(own("transcribe") + own("pagetranscribe"));
+  /* R96 (C21; DEC-375): a copy whose text is not full can be read again with OCR (`pdfstructure`, `ocr=1`), which looks for the words in the
+     page images; a full one offers no such act. The pages with no text are named where the reading names them. */
+  if (textState && textState !== "full" && sha) {
+    const act = cs.act("pdfstructure", { label: "act.pdfstructure.label.document", data: { sha } });
+    out.push(textState === "partial" && blind0.length ? cs.sheet(cs.row("", W("screen.document.ocr.says", { pages: pagesText(blind0.map((n) => n + 1)) }), act)) : `<div class="mk-acts">${act}</div>`);
+  }
+  /* R97 (C22; DEC-375): a page another member typed is confirmed by a second member (`transcriptionattest`); the typist's own page
+     offers her no confirmation, since the plane refuses it (content R25). The typings are the document's `transcriptions`. */
+  if (textState && textState !== "full") {
+    const ty = later("typed", "transcriptions", { bundleId: id });
+    const typed = ty.state === "ok" && ty.value && Array.isArray(ty.value.transcriptions) ? ty.value.transcriptions.filter((t) => t && t.content_id) : [];
+    const meIds = [view.me && view.me.member, view.me && view.me.handle].filter(Boolean).map(String);
+    if (typed.length) out.push(`<details class="mk-details" open data-fold="typed"><summary>${W("screen.document.attest.summary")}</summary>` + typed.map((t) => {
+      const mine = meIds.includes(String(t.transcriber));
+      const ext = t.extent && typeof t.extent === "object" ? t.extent : null;
+      const page = ext && Number.isInteger(ext.page) ? pg(ext.page) : null;
+      const name = who(t.transcriber);
+      return `<div data-typed="${cs.esc(String(t.content_id))}">` + cs.sheet(cs.row("", `<span class="rec">${W("screen.document.attest.row", { page: page !== null ? String(page) : String(t.ref || ""), name, date: { html: dayOf(t.at) } })}</span>`
+          + `<br><span class="mk-sub">${W("screen.document.attest.status", { name })}</span>`))
+        + (mine ? "" : cs.field("document-attest-note-" + String(t.content_id), "screen.document.attest.note", { area: true, rec: true, help: "screen.document.attest.note.help" })
+          + `<p class="mk-note">${W("screen.document.attest.at")}</p>` + cs.act("transcriptionattest", { label: "act.transcriptionattest.label.document", data: { content: String(t.content_id) } })) + "</div>";
+    }).join("") + own("transcriptionattest") + "</details>");
+  }
   /* R55: a picture whose text the reading could not make out, and a table read flat, say so */
   if (reading.state === "ok" && reading.value && reading.value.reading) {
     const rd0 = reading.value.reading;
@@ -294,9 +354,14 @@ function render(cs, view) {
         if (list.length < 2) return "";
         const at0 = Number.isInteger(v.at_index) ? v.at_index : list.findIndex((x) => x && (x.capture_sha === sha || x.sha256 === sha));
         const newer = at0 >= 0 && at0 < list.length - 1;
+        /* R86 (C32): each other version is a reference opening that version's document; this copy is not, and a version the record holds
+           no document for is a date alone */
         return (newer ? `<p class="cs-due" data-changed="true">${cs.w("screen.document.versions.changed")}</p>` : "")
-          + cs.sheet(list.map((x, i) => cs.row("", x && x.first_retrieved ? cs.date(String(x.first_retrieved), { year: true }) : "",
-              i === at0 ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "")).join(""));
+          + cs.sheet(list.map((x, i) => {
+            const when = x && x.first_retrieved ? cs.date(String(x.first_retrieved), { year: true }) : "";
+            return cs.row("", i !== at0 && x && x.bundle_id && when ? cs.ref("document", String(x.bundle_id), when, []) : when,
+              i === at0 ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "");
+          }).join(""));
       })() : "";
     if (vbody) out.push(cs.sec("screen.document.versions.head", vbody));
   }
@@ -595,15 +660,19 @@ function render(cs, view) {
   }
 
   /* R32, R68: the names it holds, each with its grade as one mark and how it was matched (`resolutions`, entities R14, R58), the
-     mention that counts (`on_point`, connections R4) chosen by the record or by a member; a person she says the record follows */
+     mention that counts (`on_point`, connections R4) chosen by the record or by a member; a person she says the record follows.
+     R95: each name is a reference opening `person` with the entity id. R85: the mentions the connection row lists (connections R70)
+     are offered and the one chosen is sent, never the one already on point. R100: a match she meets can be reported as wrong. */
   if (sha) {
     const rs = later("resolutions", "resolutions", { sha256: sha, limit: "500" });
     const cn = later("connections", "connections", { sha256: sha, limit: "200" });
     const names = rs.state === "ok" && rs.value && Array.isArray(rs.value.names) ? rs.value.names.filter((n) => n && n.entity_id) : [];
     const conns = cn.state === "ok" && cn.value && Array.isArray(cn.value.connections) ? cn.value.connections : [];
+    const matches = rs.state === "ok" && rs.value && Array.isArray(rs.value.resolutions) ? rs.value.resolutions.filter((x) => x && x.ref && x.entity_id) : [];
     if (rs.state === "failed") out.push(cs.sec("document.names.title", cs.state(rs, () => ""), { help: "document.names.help" }));
     else if (names.length) {
       const people = names.some((n) => n.kind === "person");
+      const labelOf = new Map(names.map((n) => [String(n.entity_id), String(n.label || n.entity_id)]));
       out.push(cs.sec("document.names.title", cs.sheet(names.map((n) => {
         const c = conns.find((x) => x && String(x.entity_id) === String(n.entity_id));
         const mine = c ? (c.a_capture_sha === sha ? "a" : "b") : "";
@@ -618,19 +687,44 @@ function render(cs, view) {
         const said0 = page !== null && count !== null ? W("document.names.row", { n: String(count), page: String(page), chosen: { html: chosen } }) : chosen;
         const said = how + " · " + said0;
         const grade = /^[A-D]$/.test(String(n.grade || "")) ? cs.grade("subject", String(n.grade)) : cs.mark("gap", "undetermined");
-        return cs.row("", `<span class="rec">${cs.esc(String(n.label || n.entity_id))}</span>`,
-          (c ? cs.act("connectionchoose", { label: "act.connectionchoose.label.document", data: { capture: sha, other: String(other || ""), entity: String(n.entity_id), ref: String((op && op.ref) || "") } }) : "")
+        const ms = c && Array.isArray(c.mentions) ? c.mentions.filter((m) => m && m.ref) : [];
+        const pick = ms.length ? cs.choice("document-mention-" + String(n.entity_id), "act.connectionchoose.label.document", [{ value: "", text: "" }].concat(ms.map((m, i) => {
+          const at0 = m.position && Number.isInteger(m.position.page) ? pg(m.position.page) : null;
+          return { value: String(i), text: [String(m.ref), at0 !== null ? T("screen.document.passage.where", { page: at0 }) : ""].filter(Boolean).join(" · ") };
+        })), { value: "" }) : "";
+        return cs.row("", cs.ref("person", String(n.entity_id), String(n.label || n.entity_id), []),
+          (c ? pick + cs.act("connectionchoose", { label: "act.connectionchoose.label.document", data: { capture: sha, other: String(other || ""), entity: String(n.entity_id) } }) : "")
           + (n.kind === "person" ? cs.act("identityclaim", { label: "act.identityclaim.label.document", data: { entity: String(n.entity_id) } }) : ""),
           grade + " " + said);
       }).join(""))
         + `<p class="mk-note">${W("screen.document.a31.the_grade_on_each_name_says_how_the_matc")} ${W("screen.document.a31.it_says_nothing_about_how_far_to_trust_t")} ${W("screen.document.a31.a_connection_to_another_document_takes_t")}</p>`
         + (cn.state === "failed" ? cs.state(cn, () => "") : "")
+        + own("connectionchoose")
         + (people ? cs.field("document-claim-person", "screen.document.claim.label", {})
           + cs.choice("document-claim-basis", "screen.document.claim.basis",
               [["name", "screen.document.claim.basis.name"], ["corroborated_name", "screen.document.claim.basis.corroborated"], ["identifier", "screen.document.claim.basis.identifier"]], { value: "name" })
           + cs.field("document-claim-note", "screen.document.claim.note", { area: true, rec: true }) + own("identityclaim") : "")
+        + (matches.length ? `<details class="mk-details" data-fold="defect"><summary>${W("screen.document.defect.summary")}</summary><p class="mk-note">${W("screen.document.defect.says")}</p>`
+          + cs.choice("document-defect-which", "screen.document.defect.which", [{ value: "", text: "" }].concat(matches.map((x, i) => ({ value: String(i), text: `\u201c${x.ref}\u201d \u00b7 ${labelOf.get(String(x.entity_id)) || x.entity_id}` }))), { value: "" })
+          + `<p class="mk-small">${W("screen.document.defect.which.help")}</p>`
+          + cs.field("document-defect-why", "screen.document.defect.why", { area: true, rec: true, help: "screen.document.defect.why.help" })
+          + `<p class="mk-note">${W("screen.document.defect.at")}</p>` + cs.act("resolutiondefect", { label: "act.resolutiondefect.label.document", data: { sha } }) + own("resolutiondefect") + "</details>" : "")
         + cs.act("explore", { label: "act.explore.label.document", data: { from: id } }), { help: "document.names.help" }));
     }
+  }
+
+  /* R99 (C29; DEC-375): a member asserts a connection between this document and another one the team holds, by hand (`connectionassert`),
+     graded D and under her name; the other document is chosen among the documents she can see */
+  {
+    const il = later("docs", "list", { type: "information", limit: "500" });
+    const others = il.state === "ok" && il.value && Array.isArray(il.value.bundles)
+      ? il.value.bundles.filter((b) => b && b.bundle_id && String(b.bundle_id) !== id && String(b.object_type || "").toLowerCase() === "information") : [];
+    if (others.length) out.push(cs.sec("screen.document.connect.heading", `<p class="mk-note">${W("screen.document.connect.says")}</p>`
+      + cs.choice("document-assert-other", "screen.document.connect.other", [{ value: "", text: "" }].concat(others.map((b) => ({ value: String(b.bundle_id), text: String(b.title || b.bundle_id) }))), { value: "" })
+      + `<p class="mk-small">${W("screen.document.connect.other.help")}</p>`
+      + cs.field("document-assert-basis", "screen.document.connect.basis", { area: true, rec: true, help: "screen.document.connect.basis.help" })
+      + cs.act("connectionassert", { label: "act.connectionassert.label.document", data: { document: id } }) + own("connectionassert")
+      + `<p class="mk-note">${W("screen.document.connect.again")}</p>`, { help: "screen.document.connect.help" }));
   }
 
   /* R56: themes this document or its passages are placed in (never evidence), placements and hunches apart, and the steps it is
@@ -661,18 +755,66 @@ function render(cs, view) {
     const pgr = later("progs", "captureprogressions", { sha256: sha });
     const plist = pgr.state === "ok" && pgr.value ? (Array.isArray(pgr.value.instances) ? pgr.value.instances : Array.isArray(pgr.value.progressions) ? pgr.value.progressions : []) : [];
     if (pgr.state === "failed") out.push(cs.sec("progression.threadedto", cs.state(pgr, () => "")));
-    else if (plist.length) out.push(cs.sec("progression.threadedto", cs.sheet(plist.map((x) => cs.row("", `<span class="rec">${cs.esc(String(x.label || x.progression_key || ""))}</span>`, "",
-      W("progression.followed", { progression: String(x.label || x.progression_key || ""), n: String(x.definition_version || x.thread_version || "") }))).join("")) + cs.act("thread", { label: "progression.thread.here", data: { sha } })));
+    else if (plist.length) {
+      /* R84 (C25): a flow the document is threaded under is threaded to another of its steps by `thread` with the flow's key, the entity
+         and one placement for the step chosen among the flow's own (`progression`); each flow and entity once */
+      const flows = [];
+      for (const x of plist) if (x && x.progression_key && x.entity_id && !flows.some((f) => f.key === String(x.progression_key) && f.entity === String(x.entity_id)))
+        flows.push({ key: String(x.progression_key), entity: String(x.entity_id), label: String(x.progression_label || x.label || x.progression_key) });
+      const threadBox = flows.map((f, i) => {
+        const def = later("flow:" + f.key, "progression", { key: f.key });
+        const stages = def.state === "ok" && def.value && Array.isArray(def.value.stages) ? def.value.stages.filter((g) => g && g.stage_key) : [];
+        return stages.length ? cs.choice("document-thread-stage-" + i, "progression.steps", [{ value: "", text: "" }].concat(stages.map((g) => ({ value: String(g.stage_key), text: String(g.label || g.stage_key) }))), { value: "" })
+          + cs.act("thread", { label: "progression.thread.here", data: { progression: f.key, entity: f.entity, n: String(i), sha } }) : "";
+      }).join("");
+      out.push(cs.sec("progression.threadedto", cs.sheet(plist.map((x) => cs.row("", `<span class="rec">${cs.esc(String(x.progression_label || x.label || x.progression_key || ""))}</span>`, "",
+        W("progression.followed", { progression: String(x.progression_label || x.label || x.progression_key || ""), n: String(x.definition_version || x.thread_version || "") }))).join("")) + threadBox + own("thread")));
+    }
   }
 
-  /* R55: the copy's other acts sit at the foot: attest with when it is useful, watching and checking (R15), and retire folded apart */
+  /* R55: the copy's other acts sit at the foot: attest with when it is useful, whether its route can be shown (R98), watching and checking
+     (R15, R92, R118) and retire folded apart (R113). Watching names its frequency; "Check for a new version now" is drawn only for an address
+     that is watched (its `monitoring.enabled`), otherwise the page says it is not and offers "Watch for changes". */
+  const watched = !testimony && !!(doc.maps.monitoring && String(doc.maps.monitoring.enabled) === "true");
+  const routeNow = ui.route && typeof ui.route === "object" ? ui.route : null;
+  const finding = routeNow && routeNow.route && typeof routeNow.route === "object" ? String(routeNow.route.finding || "") : "";
   out.push(cs.sec("screen.document.copyacts.head",
     cs.act("attest", { label: "document.attest.label", data: { sha } }) + `<p class="mk-small">${cs.w("document.attest.when")}</p>` + own("attest")
-    + (testimony ? "" : cs.act("monitorset", { label: "act.monitorset.label.document", data: { document: id } }) + own("monitorset")
-      + cs.act("monitor", { label: "act.monitor.label.document", data: { document: id } }) + own("monitor"))
-    + `<details class="mk-details" data-fold="retire"><summary>${cs.w("document.retire.fold")}</summary><p class="mk-small">${cs.w("document.retire.when")}</p>`
-    + cs.act("retire", { label: "document.retire.label", data: { document: id } }) + own("retire") + "</details>"));
+    + cs.sheet(cs.row("", `<span class="rec" data-route="${cs.esc(finding || "unchecked")}">${W(finding === "PRESENT" ? "screen.document.route.shown" : finding === "LOOKED_INDETERMINATE" ? "screen.document.route.notshown" : "screen.document.route.standing")}</span>`
+      + `<br><span class="mk-sub">${W("screen.document.route.says")}</span>`, cs.act("provenanceroute", { label: "act.provenanceroute.label.document", data: { document: id } })))
+    + (routeNow && routeNow.appended === false ? `<p class="mk-note" data-route-same="1">${W("screen.document.route.same")}</p>` : "") + own("provenanceroute")
+    + (testimony ? "" : (watched ? "" : `<details class="mk-details" data-unwatched="1" open><summary>${W("screen.document.unwatched.head")}</summary><p class="mk-small">${W("screen.document.unwatched")}</p></details>`)
+      + cs.choice("document-watch-freq", "screen.capture.address.freq", [{ value: "", text: "" }].concat(["daily", "weekly", "monthly", "hourly", "per_meeting"].map((f) => [f, "screen.capture.address.freq." + f])), { value: "" })
+      + cs.act("monitorset", { label: "act.monitorset.label.document", data: { document: id } }) + own("monitorset")
+      + (watched ? cs.act("monitor", { label: "act.monitor.label.document", data: { document: id } }) + own("monitor") : ""))
+    + (retiredNow ? "" : `<details class="mk-details" data-fold="retire"><summary>${cs.w("document.retire.fold")}</summary><p class="mk-small">${cs.w("document.retire.when")}</p>`
+      + cs.act("retire", { label: "document.retire.label", data: { document: id } }) + own("retire") + "</details>")));
+
+  /* R108 (C23; DEC-381): "Where this document came from", after "This copy": the system it came from, declared by a member with her name
+     and the date (`declareorigin`, provenance R64). A second declaration is added beside the first and never replaces it: the
+     declarations made on this page stay listed in the order they were made. */
+  const origins = Array.isArray(ui.origins) ? ui.origins : [];
+  out.push(cs.sec("screen.document.origin.head", cs.field("document-origin-system", "screen.document.origin.field", { rec: true, help: "screen.document.origin.eg" })
+    + cs.act("declareorigin", { label: "act.owed_declareorigin.label.document", data: { document: id }, tone: "primary" }) + own("declareorigin")
+    + `<p class="mk-note">${W("screen.document.origin.second1")} ${W("screen.document.origin.second2")}</p>`
+    + (origins.length ? cs.sheet(origins.map((o) => `<div data-origin="${cs.esc(String(o.seq))}">` + cs.row("", `<span class="rec">${cs.esc(String(o.system))}</span>`, "",
+        [cs.esc(who(o.by)), o.at ? cs.date(String(o.at), { year: true }) : ""].filter(Boolean).join(" \u00b7 ")) + "</div>").join("")) : ""), { help: "screen.document.origin.tip" }));
   return out.join("");
+}
+
+/** R117 (L9, L20): a refusal whose answer carries `findings[]` is drawn by its first finding, not by the code's generic sentence: the
+ *  word held for the finding's code where there is one, else the finding's own words (`translation`, else `detail`) with its check.
+ *  A refusal with no finding is the word held for its code, else the plane's words. Self-contained (the page carries it by its text). */
+function findingsRefusal(refusal, cs) {
+  const r = refusal && typeof refusal === "object" ? refusal : {};
+  const f = (Array.isArray(r.findings) ? r.findings : []).find((x) => x && typeof x === "object" && (x.code || x.translation || x.detail));
+  if (f) {
+    const key = f.code ? "refusal." + f.code : "";
+    if (key && cs.w(key) !== key) return cs.w(key);
+    return (f.check ? '<span class="id">' + cs.esc(String(f.check)) + "</span> " : "") + cs.esc(String(f.translation || f.detail || ""));
+  }
+  const generic = "refusal." + String(r.code || r.reason || "");
+  return cs.w(generic) !== generic ? cs.w(generic) : r.translation ? cs.esc(String(r.translation)) : cs.w("shell.unread");
 }
 
 /** R3's, R15's, R32's, R56's and R61's acts. */
@@ -689,8 +831,13 @@ const acts = [
   { op: "themewithdraw", label: "act.themewithdraw.label.document", reasonField: "reason",
     send(view, el) { return { body: { theme: String(el.dataset.theme || ""), target: String(el.dataset.target || view.subject || "") } }; },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { themes: null })); } },
+  /* R84 (C25): the flow's key, the entity (from `captureprogressions`) and one placement for the step chosen among the flow's own */
   { op: "thread", label: "progression.thread.here",
-    send(view, el) { return { body: { sha256: String(el.dataset.sha || "") } }; },
+    send(view, el, cs) {
+      const stage = String(cs.value("document-thread-stage-" + String(el.dataset.n || "")) || "");
+      if (!stage) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("progression.steps") } } };
+      return { body: { progressionKey: String(el.dataset.progression || ""), entityId: String(el.dataset.entity || ""), placements: [{ stage, captureSha: String(el.dataset.sha || "") }] } };
+    },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { progs: null })); } },
   /* R32, R69: a newer version's notice decided here: adopt it with her reason, or keep the version cited; the rows re-read their
      notices, so a decided row is drawn as decided */
@@ -720,10 +867,19 @@ const acts = [
       cs.set("asked", next);
     } },
   /* R32: the mention that counts for a name, chosen by her (connections R14–R16) */
+  /* R85 (C28; B18): the mention she chose among those the connection row lists (connections R70), by its `ref`, and its `occurrence` where
+     the reading kept one; the mention already on point is never the default, and none chosen sends nothing */
   { op: "connectionchoose", label: "act.connectionchoose.label.document", rereads: [],
-    send(view, el) {
+    send(view, el, cs) {
       const ds = el.dataset;
-      return { body: { capture: ds.capture || "", other: ds.other || "", entity: ds.entity || "", ...(ds.ref ? { ref: ds.ref } : {}) } };
+      const L = view.ui.later || {};
+      const rows = L.connections && L.connections.state === "ok" && L.connections.value && Array.isArray(L.connections.value.connections) ? L.connections.value.connections : [];
+      const c = rows.find((x) => x && String(x.entity_id) === String(ds.entity || ""));
+      const ms = c && Array.isArray(c.mentions) ? c.mentions.filter((m) => m && m.ref) : [];
+      const at = String(cs.value("document-mention-" + String(ds.entity || "")) || "");
+      const m = at !== "" && /^\d+$/.test(at) ? ms[Number(at)] : null;
+      if (!m) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("act.connectionchoose.label.document") } } };
+      return { body: { capture: ds.capture || "", other: ds.other || "", entity: ds.entity || "", ref: String(m.ref), ...(m.occurrence !== null && m.occurrence !== undefined ? { occurrence: m.occurrence } : {}) } };
     },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { connections: null })); } },
   /* R32: the connection graph started from this document (`explore`'s screen, its own reads) */
@@ -736,7 +892,7 @@ const acts = [
   { op: "findin", label: "act.findin.label.document",
     /* `find-in`'s scope is the route's subject: for a document, its capture's digest (screens-daily) */
     send(view, el, cs) { if (el.dataset.capture) cs.go("find-in", el.dataset.capture); return null; } },
-  { op: "cite", label: "act.cite.label.document",
+  { op: "cite", label: "act.cite.label.document", refusals: { BASIS_REFUSED: findingsRefusal, ACTION_BASIS_REFUSED: findingsRefusal },
     send(view, el, cs) {
       const question = String(cs.value("document-cite-question") || "").trim();
       if (!question) { cs.set("citeNone", true); return null; }
@@ -753,7 +909,7 @@ const acts = [
         const r = a && a.result !== undefined ? a.result : a;
         const ok = !!(a && a.ok !== false && r && r.ok !== false);
         const o = Object.assign({}, view.ui.outcome);
-        o[key] = { ok, html: ok ? "" : (r && r.translation ? cs.esc(r.translation) : cs.w("state.failed", { reason: (r && (r.code || r.reason)) || "" })) };
+        o[key] = { ok, html: ok ? "" : (r && (r.findings || r.translation) ? view.parts.findingsRefusal(r, cs) : cs.w("state.failed", { reason: (r && (r.code || r.reason)) || "" })) };
         cs.set("outcome", o);
         return ok;
       };
@@ -768,30 +924,42 @@ const acts = [
   { op: "attest", label: "act.attest.label.document",
     send(view, el) { return { body: { sha256: el.dataset.sha || "" } }; },
     done(view, answer, cs) { cs.set("outcome", Object.assign({}, view.ui.outcome, { attest: { ok: true, html: cs.w("screen.document.attest.done") } })); } },
-  { op: "retire", label: "act.retire.label.document",
+  /* R113 (L11): Confirm, with her reason, selects this copy and then retires it with the handle; the shell draws the plane's refusal beside
+     the act and, on success, the page says the copy is retired by key and reads the document again. A reason is the member's: with none
+     nothing is sent. A select that fails draws its own refusal and sends no retire. */
+  { op: "retire", label: "act.retire.label.document", rereads: ["capture"],
     dialog: [{ name: "reason", label: "screen.document.retire.reason" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
-      const said = (a) => {
-        const r = a && a.result !== undefined ? a.result : a;
-        const ok = !!(a && a.ok !== false && r && r.ok !== false);
-        cs.set("outcome", Object.assign({}, view.ui.outcome, { retire: { ok, html: ok ? "" : (r && r.translation ? cs.esc(r.translation)
-          : cs.w("state.failed", { reason: (r && (r.code || r.reason)) || "" })) } }));
-      };
-      cs.call("select", { body: { ids: [String(view.subject || "")] } }).then((s) => {
-        const sr = s && s.result !== undefined ? s.result : s;
-        if (!sr || !sr.handle) return said(s);
-        return cs.call("retire", { query: { handle: sr.handle, reason: String(f.reason || "") } }).then(said);
-      }, () => said(null));
-      return null;
+    async send(view, el, cs, extra) {
+      const reason = String(((extra && extra.fields) || {}).reason || "").trim();
+      if (!reason) return { refuse: "shell.reason.needed" };
+      const s = await cs.call("select", { body: { ids: [String(view.subject || "")] } }).catch(() => null);
+      const sr = s && s.result !== undefined ? s.result : s;
+      if (!sr || !sr.handle) {
+        cs.set("outcome", Object.assign({}, view.ui.outcome, { retire: { ok: false, html: sr && (sr.findings || sr.translation) ? view.parts.findingsRefusal(sr, cs) : cs.w("shell.unread") } }));
+        return null;
+      }
+      return { query: { handle: sr.handle, reason } };
+    },
+    done(view, answer, cs) {
+      cs.set("outcome", Object.assign({}, view.ui.outcome, { retire: { ok: true, html: cs.w("state.item.retired.name") + " " + cs.w("state.item.retired.means") } }));
+      cs.set("later", Object.assign({}, view.ui.later, { history: null }));
     } },
-  /* R15: watching asked by the member (`monitoring` R74: `enabled`, the bundle's own frequency kept) */
-  { op: "monitorset", label: "act.monitorset.label.document",
-    send(view) { return { body: { bundleId: String(view.subject || ""), enabled: true } }; },
+  /* R15, R92 (C54): watching asked by the member (`monitoring` R74: `enabled` and the frequency she chose, one of its words); with none
+     chosen nothing is sent; the page says it is watched only once the plane has answered, and reads the document again */
+  { op: "monitorset", label: "act.monitorset.label.document", rereads: ["capture"],
+    send(view, el, cs) {
+      const frequency = ["daily", "weekly", "monthly", "hourly", "per_meeting"].find((f) => f === cs.value("document-watch-freq"));
+      if (!frequency) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.address.freq") } } };
+      return { body: { bundleId: String(view.subject || ""), enabled: true, frequency } };
+    },
     done(view, answer, cs) { cs.set("outcome", Object.assign({}, view.ui.outcome, { monitorset: { ok: true, html: cs.w("screen.document.monitorset.done") } })); } },
+  /* R15, R93 (C55): what the check found, drawn by the one drawing `screens-intake` owns (its R42) from the answer's `status` and note */
   { op: "monitor", label: "act.monitor.label.document",
     send(view) { return { body: { bundleId: String(view.subject || "") } }; },
-    done(view, answer, cs) { cs.set("outcome", Object.assign({}, view.ui.outcome, { monitor: { ok: true, html: cs.w("screen.document.monitor.done") } })); } },
+    done(view, answer, cs) {
+      const c = view.data.capture && view.data.capture.state === "ok" ? view.parts.front(String(view.data.capture.value["bundle.md"] || "")) : null;
+      cs.set("outcome", Object.assign({}, view.ui.outcome, { monitor: { ok: true, html: view.parts.checkOutcome(cs, answer && answer.result !== undefined ? answer.result : answer, c && c.title ? String(c.title) : "") } }));
+    } },
   { op: "identityclaim", label: "act.identityclaim.label.document", reasonField: "note",
     send(view, el, cs) {
       const b = String(cs.value("document-claim-person") || "").trim();
@@ -817,6 +985,69 @@ const acts = [
     done(view, answer, cs) {
       cs.set("outcome", Object.assign({}, view.ui.outcome, { transcribe: { ok: true, html: cs.w("screen.document.transcribe.done", { page: String(cs.value("document-unread-page") || "") }) } }));
       cs.set("later", Object.assign({}, view.ui.later, { reading: null }));
+    } },
+  /* R96 (C21; DEC-375): the copy read again with OCR, for the pages Civicsmith's own reading could not make out (extraction R31–R35). The
+     owner's refusals are drawn by the design's words. The reading is read again once it has answered. */
+  { op: "pdfstructure", label: "act.pdfstructure.label.document",
+    refusals: { REEXTRACT_NOT_CAPABLE: "screen.document.ocr.refused.capable", REEXTRACT_NO_OCR_MEMBER: "screen.document.ocr.refused.member", REEXTRACT_NOT_READ: "screen.document.ocr.refused.unread" },
+    send(view, el) { return { query: { sha256: String(el.dataset.sha || ""), ocr: "1" } }; },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { reading: null })); } },
+  /* R97 (C22; DEC-375): a second member confirms another member's typing of a page, with her note of what she compared (content R25); the
+     typist's own is refused by the plane and offered no confirmation on the page */
+  { op: "transcriptionattest", label: "act.transcriptionattest.label.document", reasonField: "note",
+    refusals: { TRANSCRIPTION_SELF_ATTEST: "screen.document.attest.refused.self", ATTEST_NO_NOTE: "screen.document.attest.refused.note" },
+    send(view, el, cs) {
+      const contentId = String(el.dataset.content || "");
+      const note = String(cs.value("document-attest-note-" + contentId) || "").trim();
+      if (!note) return { refuse: "screen.document.attest.refused.note" };
+      return { body: { contentId, note } };
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { typed: null })); } },
+  /* R98 (C24; DEC-375): whether the document's route to the team can be shown, checked and recorded under her name (provenance-routes); the
+     answer is read back: shown, not shown, or nothing new since the last check */
+  { op: "provenanceroute", label: "act.provenanceroute.label.document",
+    refusals: { ROUTE_MARK_NO_SUCH_BUNDLE: "screen.document.route.refused", ROUTE_MARK_NO_BUNDLE: "screen.document.route.refused" },
+    send(view) { return { body: { bundleId: String(view.subject || "") } }; },
+    done(view, answer, cs) { cs.set("route", answer && answer.result !== undefined ? answer.result : answer); } },
+  /* R99 (C29; DEC-375): a connection she asserts by hand between this document and another one (connections R53), with her reason; graded D */
+  { op: "connectionassert", label: "act.connectionassert.label.document", reasonField: "basis",
+    refusals: { CONNECTION_ASSERT_NO_BASIS: "screen.document.connect.refused.basis", CONNECTION_ASSERT_BASIS_TOO_LONG: "screen.document.connect.refused.basis", NO_SUCH_BUNDLE: "screen.document.connect.refused.other" },
+    send(view, el, cs) {
+      const b = String(cs.value("document-assert-other") || "");
+      const basis = String(cs.value("document-assert-basis") || "").trim();
+      if (!b) return { refuse: "screen.document.connect.refused.other" };
+      if (!basis) return { refuse: "screen.document.connect.refused.basis" };
+      return { body: { a: String(view.subject || ""), b, basis } };
+    } },
+  /* R100 (C31; DEC-375): a match the record made, reported as wrong with her reason (entities R38); the match itself does not change */
+  { op: "resolutiondefect", label: "act.resolutiondefect.label.document", reasonField: "reason",
+    refusals: { NO_REASON: "screen.document.defect.refused.why", NO_REF: "screen.document.defect.refused.gone", NO_ENTITY: "screen.document.defect.refused.gone" },
+    send(view, el, cs) {
+      const L = view.ui.later || {};
+      const rows = L.resolutions && L.resolutions.state === "ok" && L.resolutions.value && Array.isArray(L.resolutions.value.resolutions)
+        ? L.resolutions.value.resolutions.filter((x) => x && x.ref && x.entity_id) : [];
+      const at = String(cs.value("document-defect-which") || "");
+      const m = at !== "" && /^\d+$/.test(at) ? rows[Number(at)] : null;
+      if (!m) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.document.defect.which") } } };
+      const reason = String(cs.value("document-defect-why") || "").trim();
+      if (!reason) return { refuse: "screen.document.defect.refused.why" };
+      return { body: { captureSha: String(el.dataset.sha || ""), ref: String(m.ref), entityId: String(m.entity_id), reason } };
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { resolutions: null })); } },
+  /* R108 (C23; DEC-381): the system this document came from, declared with her name and the date (provenance R64); a second declaration is
+     added beside the first and never replaces it, so each answer is kept in the list the page draws */
+  { op: "declareorigin", label: "act.owed_declareorigin.label.document",
+    refusals: { ORIGIN_NOT_A_MEMBER: (r, cs) => cs.w("screen.document.origin.ref.machine1") + " " + cs.w("screen.document.origin.ref.machine2"),
+      ORIGIN_NO_SYSTEM: "screen.document.origin.ref.empty", ORIGIN_NOT_A_DOCUMENT: "screen.document.origin.ref.notdoc" },
+    send(view, el, cs) {
+      const system = String(cs.value("document-origin-system") || "").trim();
+      if (!system) return { refuse: "screen.document.origin.ref.empty" };
+      return { body: { bundleId: String(view.subject || ""), system } };
+    },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      if (!r || !r.system) return;
+      cs.set("origins", (Array.isArray(view.ui.origins) ? view.ui.origins : []).concat([{ system: String(r.system), by: String(r.by || ""), at: String(r.at || ""), seq: Number(r.seq) || (Array.isArray(view.ui.origins) ? view.ui.origins.length : 0) + 1 }]));
     } },
   { op: "pagetranscribe", label: "act.pagetranscribe.label.document",
     send(view, el) {
@@ -911,6 +1142,18 @@ const words = Object.freeze([
     "a34.a_newer_copy_exists_captured_2_october", "a34.page_same", "a34.page_differs", "a34.no_newer", "a34.moved", "a34.kept", "a34.not_checked_yet", "a34.it_does_not_guess",
     "a34.one_line_for_each_question_that_rests_on", "a64.captured_together_with_this_page_and_che",
     "a64.not_established_means_the_record_cannot_"].map((k) => "screen.document." + k),
+  /* FR-28 (R84–R118): the keys the new controls draw */
+  "capture.fieldneeded", "shell.reason.needed", "progression.steps", "screen.capture.address.freq", "state.item.retired.means",
+  ...["daily", "weekly", "monthly", "hourly", "per_meeting"].map((f) => "screen.capture.address.freq." + f),
+  "screen.document.cite.option", "screen.document.cite.choose", "screen.document.unwatched.head", "screen.document.unwatched",
+  "screen.document.text.tip", "screen.document.text.partial", "screen.document.ocr.says", "screen.document.ocr.refused.capable", "screen.document.ocr.refused.member",
+  "screen.document.ocr.refused.unread", "act.pdfstructure.label.document", "act.transcriptionattest.label.document", "act.provenanceroute.label.document",
+  "act.connectionassert.label.document", "act.resolutiondefect.label.document", "act.owed_declareorigin.label.document",
+  ...["summary", "row", "status", "note", "note.help", "at", "refused.self", "refused.note"].map((k) => "screen.document.attest." + k),
+  ...["summary", "says", "which", "which.help", "why", "why.help", "at", "refused.why", "refused.gone"].map((k) => "screen.document.defect." + k),
+  ...["heading", "help", "says", "other", "other.help", "basis", "basis.help", "again", "refused.basis", "refused.other"].map((k) => "screen.document.connect." + k),
+  ...["standing", "says", "shown", "notshown", "same", "refused"].map((k) => "screen.document.route." + k),
+  ...["head", "field", "eg", "second1", "second2", "tip", "ref.machine1", "ref.machine2", "ref.empty", "ref.notdoc"].map((k) => "screen.document.origin." + k),
   "document.read.title", "document.read.help", "document.read.tab.page", "document.read.page", "document.read.prev", "document.read.next", "document.read.select", "document.read.cite.help",
   /* T51 (R81, R82, CR-19): the compare tab, the original-file card, its size and kind */
   "document.read.tab.compare", "document.read.original.card", "size.small", "size.kb", "size.mb", "size.gb",
@@ -926,6 +1169,8 @@ const words = Object.freeze([
 
 /** The document screen (interface-shell R21). */
 export function documentScreen(parts) {
+  /* R93: the one drawing of what a check found is `screens-intake`'s (its R42), imported and carried as this screen's part; R117: a refusal's
+     first finding is drawn by `findingsRefusal` */
   return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs],
-    words: Object.freeze([...words, ...parts.kinds.map((k) => "document.kind." + k)]), parts });
+    words: Object.freeze([...words, ...parts.kinds.map((k) => "document.kind." + k)]), parts: Object.freeze({ ...parts, checkOutcome, findingsRefusal }) });
 }

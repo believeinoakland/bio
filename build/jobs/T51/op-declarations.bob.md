@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J16
+**Read** · handled J17
 
 ## B1 · START
 
@@ -123,3 +123,7 @@ CHANGE (K4237), with B16. `export` (mutating, classes `["admin"]`) is in neither
 CHANGE (K4254): OP-DECLARATIONS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
 Entries: (1) your R34 partition: `ACT_HELP_ABSENT` still names the 69 ops `affordances` now holds in `ACT_HELP` (its `T51_DESIGN_OPS`, exported, plus `accountdrafts`, `accountpropose`; AFFORDANCES #39, merged): drop them, and make your partition test read affordances' `ACT_HELP` (K3268), never a hand list. (2) R21: `strengthbarset` is no longer an alias of `strengthbar`: strength declares it itself (`reasoned`), and op-grades removed it from `OP_ALIASES`; take it out of your alias table and R21's list (26 aliases). Then OP-GRADES #21 reads the count from the table. Requirement lines for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B19 · RESUME
+
+RESUME (K4256): OP-DECLARATIONS #32 (sonnet), depth 2, replaces #31, which stopped at half its window while reading (J17; nothing edited). Its J17 lists what to read whole and the two entries of B18; follow it. Read `src/op-declarations/index.mjs` in parts by a reading worker (sonnet, medium) told the task (the `ACT_HELP_ABSENT` groups, `OP_ALIASES`, R21, R34) if it will not fit whole (mechanics §17 (3)); you then read every section the edit touches whole.

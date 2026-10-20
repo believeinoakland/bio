@@ -23,7 +23,7 @@ test("R50 Conclude takes a member's own reading: reading is sent in place of ver
   assert.equal(p.doc.getElementById("question-conclude-reading").value, "", "no reading stands: her own is the choice");
   assert.ok(says(p.doc.getElementById("question-conclude-reading"), "question.conclude.own.choice"));
   assert.ok(p.doc.getElementById("question-conclude-own"), "Your reading");
-  fill(p, { "question-conclude-falsifier": "records showing repair", "question-conclude-own": "", "question-conclude-commentary": "my note" });
+  fill(p, { "question-conclude-falsifier": "records showing repair", "question-conclude-own": "", "question-conclude-reason": "my reason", "question-conclude-commentary": "my note" });
   await press(p, "conclude");
   assert.equal(p.byOp("conclude").length, 0, "an empty reading sends nothing");
   fill(p, { "question-conclude-own": "Most reports are repaired within seven days." });
@@ -51,7 +51,7 @@ test("R51 the three steps: each state draws its step as current; the new questio
   assert.deepEqual(steps(stands), [["source", "done"], ["mark", "done"], ["conclude", "current"]]);
   const more = main(stands).querySelector('details[data-fold="more"]');
   assert.ok(says(more.querySelector("summary"), "question.more"));
-  assert.deepEqual(actsIn(more).sort(), ["checkrequest", "narrow", "planopen", "proposedispose", "search"], "R71: set aside for the project is among them");
+  assert.deepEqual(actsIn(more).sort(), ["checkrequest", "inquirydivide", "planopen", "proposedispose", "search"], "R71: set aside for the project is among them");
   const done = await open(at, { ...A, plane: { basisversions: ok(BASIS({ conclusion: { claim: { text: "x" }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" })) } });
   assert.deepEqual(steps(done), [["source", "done"], ["mark", "done"], ["conclude", "done"]]);
 });
@@ -119,7 +119,7 @@ test("R59 R64 accepting a reading of several parts asks each part; Decline sends
 });
 
 test("R55 R56 the document: a held copy is vouched for and replaced by the vouched line; a placement in a theme is drawn apart from evidence", async () => {
-  const p = await open("/app/document/" + D, { plane: { release: ok({ ok: true }), select: ok({ handle: "H1" }),
+  const p = await open("/app/document/" + D, { plane: { heldcaptures: ok({ ok: true, held: [{ bundle_id: D, capture: { sha256: SHA } }] }), release: ok({ ok: true }), select: ok({ handle: "H1" }),
     themeread: (r) => ok(r.query.id ? { ok: true, theme_id: "TH-1", members: [{ target: D, document: D, page: 2, placer_handle: "mai", placed_at: "2026-10-04T09:00:00Z", note: "ref" }], hunches: [] }
       : { ok: true, themes: [{ theme_id: "TH-1", name: "Deferred maintenance" }] }) } });
   assert.ok(says(main(p), "document.held.says"));
@@ -129,6 +129,6 @@ test("R55 R56 the document: a held copy is vouched for and replaced by the vouch
   assert.ok(!says(main(p), "document.held.says") && main(p).querySelector("[data-vouched]"), "replaced at once by the vouched line");
   assert.ok(actsIn(main(p)).includes("attest") && main(p).querySelector('details[data-fold="retire"]'), "attest and a folded retire at the foot");
   /* control: a document the viewer did not capture draws no held banner */
-  const o = await open("/app/document/" + D, { plane: { heldcaptures: (r) => ok({ ok: true, rows: r.query.member ? [] : [{ document: D, capture: { sha256: SHA } }] }) } });
+  const o = await open("/app/document/" + D, { plane: { heldcaptures: (r) => ok({ ok: true, held: r.query.member ? [] : [{ bundle_id: D, capture: { sha256: SHA } }] }) } });
   assert.equal(main(o).querySelector("[data-held]"), null);
 });
