@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 

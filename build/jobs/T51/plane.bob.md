@@ -87,3 +87,7 @@ CHANGE (K4219): (a) case-import's four new ops `importregrade`, `rerunstart`, `r
 ## B10 · CHANGE
 
 CHANGE (K4221): case-inputs is merged (R20–R29). Call `registerCaseInputsPublicReads(ctx, {publicRead})` at start beside `registerCaseCheckerPublicReads` (`plane/store.mjs`, near line 332), so the public read `casedetailspublic` is registered in the running plane; route it through public-read's door as `casechecker` is (if the route map is control-plane's, REPORT and BOB forwards it). Merge `tranche/T51` first.
+
+## B11 · CHANGE
+
+CHANGE (K4226): (1) queue is merged: `op=queue` answers `feeds[].ms` and `feeds_ms`; your tests R2, R5 (N13) and R45, R48 (T47) mask instants only and go red on them: mask those timing fields too (they vary by run), never drop the assertion. (2) The acquire timings hop (control-plane R115, acquisition R95): `plane/door.mjs` `gatedOp` destructures a fixed set of ctx keys and drops `timings`; pass `ctx.timings` to the handler as `h.timings` (capture's arm forwards it, CAPTURE #39), and add the end-to-end test: a timed-out `acquire` through the door answers the stages that ran. Merge `tranche/T51` first.
