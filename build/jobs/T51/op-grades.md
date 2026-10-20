@@ -238,3 +238,7 @@ Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 9, module lines 3623
 **Open for BOB.** R17's count (26), the `MARKS` entry for `strengthbarset` (or the amendment that says the mark follows registration), and the four plane failures above.
 
 Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 14, module lines 3640
+
+## J21 · REPORT
+
+Correction to J20 (Size line): module lines are 3627 (wc -l of bio-plane/src/op-grades/*.mjs), not 3640.
