@@ -9,6 +9,8 @@ export const refuse = (code, extra = {}) => env({ ok: false, reason: code, code,
 export const VOCAB = ["contribute", "publish", "create_projects"];
 export const ADMIN = Object.freeze({ member: "rosa", handle: "rosa", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "session" });
 export const MEMBER = Object.freeze({ member: "dev", handle: "dev", administer: false, capabilities: ["contribute"], vocabulary: VOCAB, tokenClass: "session" });
+/** The founder's session (the shell's `tokenClass: "admin"`, interface-shell R12): hers alone reaches `export` (corpus-export). */
+export const FOUNDER = Object.freeze({ member: "admin", handle: "sparky", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "admin" });
 export const READER = Object.freeze({ member: "teo", handle: "teo", administer: false, capabilities: [], vocabulary: VOCAB, tokenClass: "session" });
 
 const exp = (label, confirmed) => ({ label, state: confirmed ? "confirmed" : "declared", confirmed, by: confirmed ? "rosa" : null, at: "2026-10-05T10:00:00Z", history: [] });
@@ -224,6 +226,11 @@ export function notesTable(me, over = {}) {
 /** One `time_zone` fact as `factstatus` lists it (local-facts R2): the path is the fact's own, `governs` the value in force. */
 export const tzFact = (profile, zone, origin = "profile") => ({ path: `${profile}/time_zone`, fact: { fact: "time_zone", profile }, status: origin === "corrected" ? "corrected" : "unconfirmed",
   profile: { value: zone, status: "verified", basis: "x" }, governs: origin === "corrected" ? { value: zone, origin, source: "the county site", says: "corrected locally by rosa, 2026-10-10" } : { value: zone, origin } });
+/** corpus-export R2: the copies taken, newest first. */
+export const EXPORTS = [
+  { seq: 2, at: "2026-10-18T14:05:00Z", scope: "working-corpus", bundles: 38, files: 112, note: "Before the Coliseum lease hearing", tables: 14, rows: 800, format: "json" },
+  { seq: 1, at: "2026-09-02T09:40:00Z", scope: "working-corpus", bundles: 31, files: 87, note: null, tables: 14, rows: 700, format: "json" },
+];
 /** group, read by `me` (instance-setup R10, R11, R84, R85; membership R107; strength's bar). */
 export function groupTable(over = {}) {
   return {
@@ -247,6 +254,9 @@ export function groupTable(over = {}) {
     courtnoticeset: (q, b) => env({ ok: true, choice: b.choice, by: "rosa", at: "2026-10-12T00:00:00Z" }),
     hostingaccessset: (q, b) => env({ ok: true, holders: b.holders, note: b.note || null, recorded_by: "rosa", at: "2026-10-12T00:00:00Z" }),
     strengthbarset: (q, b) => env({ ok: true, group: "eastoak", capture: b.capture, connection: b.connection, author: "rosa", at: "2026-10-12T00:00:00Z", reason: b.reason }),
+    // corpus-export R1, R2: the copy is the answer itself (a manifest); the list is the copies taken, newest first
+    export: (q, b) => env({ ok: true, at: "2026-10-20T10:00:00Z", scope: "working-corpus", counts: { bundles: 40, files: 120, tables: 15, rows: 900 }, logged: true, verify: "v" }),
+    exportlog: env({ ok: true, exports: EXPORTS, limit: 200, truncated: false }),
     ...over,
   };
 }

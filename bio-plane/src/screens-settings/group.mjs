@@ -6,7 +6,11 @@
    to a session that administers (interface-shell R12). Every function is self-contained (interface-shell R21).
    T50: defined terms carry their card where they appear (R44); the team's time zone, named and never coded, with its
    correction (`factconfirm`, R45); a value not set by a member is said as set at setup or by Civicsmith itself, and a saved
-   or unchanged name acknowledged (R52). */
+   or unchanged name acknowledged (R52).
+   T51 FR-25 (R66, R69, R75; C30, C11, T-18; DEC-374, DEC-376, DEC-384): a copy of the team's record, taken by the founder (`export`), and
+   the list of copies every administrator reads (`exportlog`); the file the team puts on its website, drawn as `instance-setup` answers it
+   (`domain_claim.well_known`, the page building none); and a hosting account recorded at setup or by Civicsmith itself said so, not "by
+   set at setup". */
 
 export const group = {
   id: "group",
@@ -82,6 +86,24 @@ export const group = {
       if (latest && latest.verdict && latest.verdict !== "verified") h += `<p>${W(S + "domain.verdict." + (["absent", "mismatched", "undetermined"].indexOf(latest.verdict) >= 0 ? latest.verdict : "undetermined"))}</p>`;
       const dm = A("groupdomainset");
       if (dm) h += `${cs.field("gr-domain", S + "domain.field", { value: claim ? claim.domain : v.domain || "", autocomplete: "off" })}${dm}`;
+      // R69 (C11; DEC-374): the file the team puts on its website, as `instance-setup` answers it (`domain_claim.well_known`: `{path, body}`, or
+      // null) and never built here; the steps that need its path only when it is answered, and each refusal of the check in its fold
+      if (claim) {
+        const F = "screen.domainfile.";
+        const wk = claim.well_known && typeof claim.well_known === "object" && typeof claim.well_known.path === "string" && claim.well_known.body !== undefined ? claim.well_known : null;
+        const segs = wk ? wk.path.split("/").filter(Boolean) : [];
+        const fname = segs.length ? segs[segs.length - 1] : "", folder = segs.length > 1 ? segs[0] : "";
+        const text = wk ? (typeof wk.body === "string" ? wk.body : JSON.stringify(wk.body, null, 2)) + "\n" : "";
+        const address = wk && claim.domain ? "https://" + claim.domain + wk.path : "";
+        const steps = [["step1"], ["step2", folder && { folder: { html: `<code>${E(folder)}</code>` } }], ["step3"], ["step4", address && { address: { html: `<code>${E(address)}</code>` } }], ["step5"]]
+          .filter(([k, fills]) => (k !== "step2" && k !== "step4") || fills);
+        const gap = (kind) => `<div class="cs-gap" data-gap="${kind === "undetermined" ? "undetermined" : "refused"}" data-state="${kind}"><span>${W(F + "refused." + kind)}</span></div>`;
+        h += `<details class="mk-details" data-domainfile><summary>${W(F + "summary")}</summary><p class="mk-small">${W(F + "what")}</p>`
+          + (wk ? `<div class="cs-sheet"><b class="mk-small">${E(fname)}</b><pre class="mk-small" data-domainfile-text>${E(text)}</pre><div class="mk-acts">${String(cs.save(fname, text, { label: F + "download" }) || "")}${String(cs.copy(text, { label: "shell.copy" }) || "")}</div></div>` : "")
+          + `<p class="mk-small">${W(F + "steps")}</p><ol class="mk-small">${steps.map(([k, fills]) => `<li>${W(F + k, fills || undefined)}</li>`).join("")}</ol>`
+          + `<p class="mk-small">${W(F + "daily")}</p>`
+          + `<details class="mk-details"><summary>${W(F + "refused.summary")}</summary><div>${["malformed", "absent", "mismatched", "undetermined", "notadmin"].map(gap).join("")}</div></details></details>`;
+      }
       return h;
     }));
 
@@ -157,7 +179,10 @@ export const group = {
       const hs = A("hostingaccessset");
       // a section that holds nothing is not drawn (R28): the sentence that opens it needs something held, or the form
       if (!cur && !hs) return "";
-      let h = `<p class="mk-note">${W(S + "hosting.says")}</p>` + (cur ? `<p data-state="hosting">${W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) })} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "");
+      // R75: recorded at setup or by Civicsmith itself has its own words; a member is drawn as before
+      const rec = cur ? originOf(cur.recorded_by) : "";
+      const nowLine = !cur ? "" : rec === "setup" || rec === "system" ? W(S + "hosting.now." + rec, { date: D(cur.at) }) : W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) });
+      let h = `<p class="mk-note">${W(S + "hosting.says")}</p>` + (cur ? `<p data-state="hosting">${nowLine} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "");
       if (hs) h += `${cs.field("gr-holders", S + "hosting.field", { rec: true, max: 500, value: cur ? cur.holders : "", autocomplete: "off" })}${cs.field("gr-hnote", S + "hosting.note", { rec: true, max: 280, value: cur && cur.note ? cur.note : "", autocomplete: "off" })}${hs}`;
       return h;
     }), "term.hostingaccount.means");
@@ -173,6 +198,22 @@ export const group = {
       }
       return h;
     }), "term.bar.team.means");
+
+    // R66 (C30; DEC-376; corpus-export R1, R2): a copy of the team's record, taken by the founder (`export`; a session that is not hers is
+    // offered no such act and told who can), and the list of the copies taken, which every administrator reads (`exportlog`), newest first
+    if (admin) {
+      const take = cs.act("export", { tone: "primary" });
+      const ex = ui.exports || null;
+      const list = ex ? (Array.isArray(ex.exports) ? ex.exports : []) : null;
+      const data1 = (x) => `<span class="mk-data">${E(String(x))}</span>`;
+      const logAct = cs.act("exportlog", { label: S + "export.log.act" });
+      let h = `<p class="mk-note">${W(S + "export.says")}</p>`;
+      if (take) h += `${cs.field("gr-exnote", S + "export.note.label", { help: S + "export.note.help", rec: true, autocomplete: "off" })}<p class="mk-small">${W(S + "export.note.cut")}</p>${take}<p class="mk-note">${W(S + "export.undone")} ${W(S + "export.undone.why")}</p>`;
+      else h += `<p class="mk-note">${W(S + "export.refused.founder")} ${W(S + "export.refused.next")}</p>`;
+      h += logAct;
+      if (list) h += cs.sheet(list.map((r) => cs.row("", `${data1(D(r.at))} · ${data1(r.bundles)} · ${data1(r.files)} · ${data1(r.tables)}`, "", r.note ? `<span class="rec">${E(r.note)}</span>` : "")).join("")) + `<p class="mk-note">${W(S + "export.log.cap")}</p>`;
+      section(S + "export.head", h);
+    }
 
     // R40 (DEC-231; instance-setup R11, R77): the group's declared stake, in its own words, who set it and when; an administrator edits it
     // (an emptied field clears it) and may ask the assistant for a draft, kept only by their own save
@@ -234,7 +275,18 @@ export const group = {
         return { raw: f, rawType: f.type };
       } },
     { op: "groupdomainset", rereads: ["identity"],
-      send(view, el, cs) { const domain = String(cs.value("gr-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.group.domain.empty" }; } },
+      send(view, el, cs) { const domain = String(cs.value("gr-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.group.domain.empty" }; },
+      refusals: { GROUP_DOMAIN_MALFORMED: "screen.domainfile.refused.malformed", NOT_AN_ADMIN: "screen.domainfile.refused.notadmin" } },
+    // R66: a copy of the record, with the founder's words for the list; the manifest it answers is the copy itself and is kept nowhere on the page,
+    // the list is read again to show it
+    { op: "export", rereads: [],
+      send(view, el, cs) { const note = String(cs.value("gr-exnote") || "").trim(); return { body: note ? { note } : {} }; },
+      async done(view, answer, cs) { const r = await cs.call("exportlog", {}); const a = r && r.result !== undefined ? r.result : r; if (a && Array.isArray(a.exports)) cs.set("exports", a); },
+      refusals: { ROOT_OF_TRUST_REQUIRED: (r, cs) => `${cs.w("screen.group.export.refused.founder")} ${cs.w("screen.group.export.refused.next")}` } },
+    // the copies taken so far, newest first (corpus-export R2)
+    { op: "exportlog", rereads: [],
+      send() { return {}; },
+      done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; cs.set("exports", a && typeof a === "object" ? a : { exports: [] }); } },
     { op: "grouplanguagesset", rereads: ["languages"],
       send(view, el, cs) {
         const languages = ((view.ui && view.ui.offered) || []).filter((t) => cs.value("gr-lang-" + t) === true);
