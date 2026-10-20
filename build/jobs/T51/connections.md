@@ -58,3 +58,14 @@ T51-193 done on job/T51/connections (head b2b0bd99cf). 129 connections tests pas
 - `checks/run.mjs /home/user/bio`: the findings in other modules are not mine (coverage in agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring; words testcopy in `op-grades/t48.test.mjs:34`, which copies the very sentence my `stepsource` row now also holds).
 
 **Size (session_01Ftd8r8DmURcdkXQn83Gtzb): test runs 16, module lines 2379.**
+
+## J3 · COMPLETE
+
+FR-13 done on job/T51/connections (head a0b8a2d2b3).
+C28 (R70): a connection row read by capture lists the entity's mentions in that document ({ref, occurrence, position, grade}, cut at 256 with mentions_truncated); connectionchoose takes any listed one, and the chosen one is a no-op.
+C29 and the census (R71): DECLARED_OPS for the ten ops (connect, connectionassert, connectionchoose, stepsource, stepsourcewithdraw, themedeclare, themeplace, themepropose, themeread, themewithdraw), each held true by test-support's declaredOpHolds; op-grades.registerDeclaredOps answers all ten as agreed.
+145 connections tests pass; question-explorer 46 and explore 57 pass; format, words and ownership 0 failures.
+NEEDS BOB, two things in build/ that are not mine:
+(1) add test-support to connections' uses in build/modules.json (architecture shows its one finding: declared-ops.test.mjs imports test-support);
+(2) fold requirement lines R70 and R71, whose text is in my record (the ownership check refuses my writing the requirements file; with them, coverage is 71 of 71).
+Also in the record: the hand rows that can go; assertedBy left out of connect's accepts (the door overwrites it with system); screens-inquiry's connectionchoose sends ref only when present while ref is required.
