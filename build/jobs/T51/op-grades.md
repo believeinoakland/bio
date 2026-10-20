@@ -117,3 +117,26 @@ Size (session_01EDK63b7XiZcZsCWWCnFvsT): test runs 18, module lines 3600
 ## J12 · COMPLETE
 
 **COMPLETE again (B11, B12).** Pushed `3191e269a4`, tranche merged. B11 read: the contract stands as built; both input shapes (object, pair list) are taken. B12: MARKS re-taken at `e6d16d8f53` (DEC-382): 39 rungless acts added since `7be06eb4cb` (six more than at 206ed4755b), none changed or dropped; MARKS_KIT_COMMIT and the test pins updated. op-grades 138 tests, 0 fail; words 0 failures; ownership 0 failures. R49/R50/R19 lines unchanged from J11 except R46 now reads: "`e6d16d8f53`, the design as `tranche/T51` holds it (DEC-382), where the registry lists 39 rungless acts more than at `7be06eb4cb`". Size (session_01EDK63b7XiZcZsCWWCnFvsT): test runs 21, module lines 3600
+
+## J13 · QUESTION
+
+**QUESTION (B13–B16; the words check's `testcopy`, and op-grades' module edges).** Pushed `4ebf9b1d66` on `job/T51/op-grades`, with `tranche/T51` merged first (at `4635d09d34`).
+
+**Done (B13, B14, and the rest of B15/B16 I could do):**
+- B13 (K4206): `MARKS` re-taken at `aa8bdcd0b4` (`MARKS_KIT_COMMIT`). The re-take adds one rungless act to the registry, `expertisewithdraw`, as Reasoned (the kit's 2), and changes no other row. R42 and R46 are green, and R46's control is the table without that row, which names the act. One note: B13 says `wizard-scripts` R45 names `aa8bdcd0b4` after FR-49, but on tranche R45 still names `1cc4a957f0` (FR-49's branch, `13fd41af12`, has the change). The kit and registry files in the tree are already `aa8bdcd0b4`.
+- B14 (K4210): `securitymap` is dropped from `RUNG_ABSENT` and is a read in `NON_ACTS` alone. Test: it is in one table only; control: a fresh instance refuses a `caller-owned` declaration for it (`ground-on-read`). The three tests that asserted it as caller-owned (`t35`, `t48`, `t49` R43 count, now 36) are updated. R39 is amended in `build/requirements/op-grades.md`, marked not yet met.
+- B16 (partly): the lines are identified and the seven findings reproduce in the full check (see below); conversion is blocked, as explained.
+- B15 (partly): not done; see below.
+
+**The blocker.** `checks/run.mjs` reports `words … testcopy 7` for op-grades: `t36.test.mjs:47, 49, 52, 55, 59`, `t47.test.mjs:36`, `t48.test.mjs:34`. Each copies a sentence another module declares: `file-safety` (`deepercheck`, `securitytooltest`, `openoriginal`, `openwithwarning`, `releasescanhold`) and `connections` (`stepsource`). I converted all seven to read the owner's `DECLARED_OPS` `.description`: every op-grades test passed (139 of 139). But that adds `file-safety` and `connections` as imports of op-grades' tests, and `checks/architecture` fails, because `op-grades` does not declare them in `uses`. No op-grades test imports another module today. Reading the word table instead does not work yet: the declared sentences have no `setup-words` row (`file-safety.declared.*` is not in `rows.mjs`), so `declaredSentence` throws. I reverted the imports (the files are at `HEAD` again), so the architecture check passes and the seven testcopy findings stand.
+
+**B15 is blocked the same way, and on other branches.** `t47.test.mjs:250` (`reviewcomment`) and `owners.test.mjs:118` (the eight wizard ops) cannot be read through a declaration today: no module on `tranche/T51` declares `reviewcomment`, `writinghelp` or the wizard ops (`review` and `wizard-scripts` are still on their job branches). `review` (index 121) and `wizard-scripts` (140) both precede op-grades (141), so the edges would be legal.
+
+**Options, my recommendation first:**
+1. **(Recommended)** BOB adds `file-safety`, `connections`, `review` and `wizard-scripts` to `op-grades`' `uses` in `build/modules.json`, all four earlier than 141. I then read each declared sentence through its owner's export. That clears the seven findings now, and B15's two items once `review` and `wizard-scripts` declare those ops on the tranche (I can convert them then, in one job pass). The `uses` line is the one act I cannot make: it is the build state, and module edges are yours (P17).
+2. BOB has the `setup-words` rows for the declared ops regenerated, and I use `declaredSentence`. This needs the words pipeline, not `modules.json`.
+3. Keep the seven literal copies and accept the `testcopy` failures. I do not recommend this: the check fails on my module.
+
+**Checks as they stand** (run from `civicos-process`): `format` 0 failures; `architecture` 0 failures; `ownership … tranche/T51 job/T51/op-grades` 0 failures (the one changed file is `build/requirements/op-grades.md`, which B14 allows); `coverage op-grades` 50 of 50 named, 0 failures; `words` for op-grades: 7 `testcopy`, as above. `checks/run.mjs` also lists 7 coverage failures in other modules (`agent-harness` R17; `agent-runner` R37, R38, R40; `citation` R16–R18; `installer-steps` R26, R31; `journey-check` R19; `link-sweep` R13–R15; `monitoring` R75–R77). They are not op-grades' and I did not change them; flagging them as a REPORT would be your call.
+
+Until you rule, I hold at this state and do not post `COMPLETE`. I will not change `modules.json`.
