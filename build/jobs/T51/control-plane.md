@@ -166,3 +166,34 @@ control-plane T51: B12 (K4230) done. `casedetailspublic` is routed.
 Commit `99d5d575ef` on `job/T51/control-plane`, pushed.
 
 Size (session_01EoJxYttG3uMHhXBMdMwTif): test runs 5, module lines 3941
+
+## J9 · COMPLETE · re B13
+
+control-plane T51: B13 (K4234) done. A timed-out `acquire` reads its stages from the object.
+
+**Entries applied**
+- **B13:** `acquire`'s timeout (R115) no longer answers the door's own empty object. A session's `acquire` is minted a trace, handed to the plane's hook as `trace` (beside `timings`, which the hook still receives). On the bound the door asks the store-internal route `acquiretimings?trace=<trace>` and answers the `stageTimes` it gives, as `timings`. With no trace, or an answer with no `stageTimes` object, `timings` is `{}`. The `stageTimes` import is gone from this module (its only use). Commit `200c78c12e`, pushed.
+- **R115 amended** (K4234, B13) in `build/requirements/control-plane.md`.
+
+**Readings to confirm (BOB, PLANE #44)**
+- The shape of the store-internal answer: I read `result.stageTimes` (`{ok: true, result: {ok: true, stageTimes: {...}}}`), the same `result` the door reads from every store answer. If PLANE #44 answers it differently, the door's one read changes.
+- I passed the trace to the hook as `trace` on the `acquire` context (not a new name), so PLANE #44 keys the stages by `ctx.trace`. The door has no other way to tell which object entry a timeout means.
+- Until PLANE #44 builds `acquiretimings`, the store refuses or stays silent on it and the door answers `timings: {}`. That is the B13 "empty when it answers none" case.
+
+**Tests**
+- `t51-acquire-timings.test.mjs` rewritten for B13 (R115, 3 tests). Seen red first: the old door fails the main test and the no-trace control. Green now, 3/3.
+  - The stand-in object answers `acquiretimings` by the trace the hook was handed; the timed-out answer equals the object's `stageTimes`; the read names that trace.
+  - Control: a bootstrap-credential `acquire` (no session, no trace) asks the object nothing and states `{}`.
+  - Control: an answer in time asks the object nothing, and another op is handed no timings.
+
+**Checks and suite**
+- Control-plane suite: 324 tests, 323 pass, 1 fail. The fail is `t47-e2e` R81 (the `home` → `startfrom` FieldMismatch), which is the same on the unchanged code, as reported in J8.
+- `checks/ownership.mjs`: one failure, `build/requirements/control-plane.md` outside the module's paths. K4210 accepts it at merge.
+- `checks/coverage.mjs control-plane`: 83 of 83 live ids named. `checks/format.mjs`: 0 failures. `checks/architecture.mjs control-plane`: 0 failures.
+- `checks/run.mjs` (whole tree): no failure names control-plane. The failures are in other modules: citation's import order, agent-harness, agent-runner, installer-steps, journey-check, strength, and op-grades' test copies. All are as J8 and J7 reported them.
+
+**Deferred:** none.
+
+**Found in other modules:** unchanged from J8 (the R81 wizard walk's FieldMismatch, citation's import order, op-grades' testcopies).
+
+Size (session_01EoJxYttG3uMHhXBMdMwTif): test runs 8, module lines 3952
