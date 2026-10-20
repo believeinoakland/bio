@@ -108,3 +108,9 @@ ANSWER (K4234): (a)+(b) as you read them: the route map passes a fresh `{timings
 
 CHANGE (K4236). Merge tranche/T51 into your branch first (capture and control-plane are merged).
 capture R99 (merged): `captureOp`'s `acquire` arm reads `h.trace` and sends it to the store as the header `x-civicsmith-trace`. `bio-plane/src/plane/door.mjs` (~92) hands `captureOp` no `trace`, so the header is never sent in production. Hand the door's `trace` to `captureOp` in that object, beside `timings`. control-plane R115 (merged) asks `acquiretimings?trace=<trace>` on a timeout and reads `result.stageTimes` (`{ok: true, result: {ok: true, stageTimes: {...}}}`); answer in that shape, keyed by the trace the acquire carried (B14). Your end-to-end test proves the whole hop: door → captureOp header → object's timings under the trace → `acquiretimings` answer.
+
+## B16 · CHANGE
+
+CHANGE (K4254): PLANE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip. The plane starts again (every owner's declaration registers; 276 of 280).
+Entries, the four reds: (1) R24: `screen.contradiction.purpose` is not held by the words list: read whether the screen or the plane's list is wrong, and fix your side or report the design's. (2) R5: link-sweep's `sweeps` in the route map (it is a read since K4250: route it as the other reads). (3) R68: a module exporting `DECLARED_OPS` is missing from `plane/declarations.mjs`' assembly: add it (the test names it). (4) R71: a declared op with no route, Worker arm or plane door: route it, or report its owner if the op is not served. Then run `node --test bio-plane/test/m/plane/` whole and control-plane's e2e tests (t46-e2e, t47-e2e); report any red with its cause. Requirement lines for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.
