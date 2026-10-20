@@ -94,3 +94,6 @@ Recorded in `REQUIREMENTS.md` §10 (his words, provisional). New requirements: g
 
 ## A15 · 2026-10-21 · Second batch of documents read (OpenAI API pricing, xAI AUP)
 `NOTES.md` §Q2c addendum. Notable: a long-context price tier exists at OpenAI (input 2×, output 1.5× of short-context) which raises the cost of long-context probes; xAI's AUP bars "unauthorized automated … means, whether through a bot, script, or otherwise" and scraping or reselling Input or Output, so consumer-subscription use by an app is not supported by xAI's text; no political or election section. Documents Bob could not obtain stay OPEN. A worker is reading `build/terms/anthropic.md` to list Anthropic's gaps.
+
+## A16 · 2026-10-21 · Anthropic's terms register read; gap list
+`NOTES.md` §Q2d. The register covers Claude Code, Agent SDK, sign-in and key handling only; it does not cover retention, training, ZDR, residency, Usage Policy, SLA, deprecation, price changes or privacy/DPA, which Gate 0 needs. Tension recorded without a decision: AT-17 ("may not collect, store, or intermediate Claude.ai credentials or session tokens") versus K3061 (Bob: holding the token is allowed). The register itself needs K3061 added and U-2/U-7 updated (BOB/jobs, not this lane). Lane will read the Anthropic pages that load without a login via workers; Bob's capture only where blocked.
