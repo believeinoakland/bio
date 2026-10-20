@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as IG from "../../../src/inquiry-grammar/index.mjs";
 import * as Grammar from "../../../src/inquiry-grammar/grammar.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { BUNDLE_CASES, REGISTRY_VARIANTS, INFO } from "./corpus.mjs";
 import { GOLDEN, run, plain } from "./fixture.mjs";
 
@@ -62,4 +63,44 @@ test("R19 control: a valid unique name raises neither, and no other corpus case 
   assert.ok(!codes("INQ-2026-0129-versions").some(([, k]) => /^VERSION_NAME_/.test(k)));
   const holders = Object.keys(GOLDEN.bundles).filter((id) => codes(id).some(([, k]) => /^VERSION_NAME_/.test(k))).sort();
   assert.deepEqual(holders, ["INQ-2026-0131-versions-bad", "INQ-2026-0133-version-name-long", "INQ-2026-0134-version-name-twice"]);
+});
+
+/* R68 (K4194): a leg that cuts against is never in a ground; the totality counts the supporting legs only. */
+const AT68 = "2026-07-01T00:00:00Z";
+const G_A = { ground: "a", asserted_by: "member:a", at: AT68 };
+const SUP = (o) => ({ target: INFO, role: "supports", ...o });
+const CUT = (o) => ({ target: INFO, role: "cuts_against", ...o });
+const grounded = (basis, grounds) => plain(run((f) => IG.checkInquiryBasis(
+  { id: "INQ-2026-0001-q", object_type: "inquiry", references: [{ target: INFO, rel: "cites" }], basis, grounds }, f, null, null)).findings);
+
+test("R68 one supporting leg in a declared ground and one cutting leg with none is clean: the partition is the supporting leg alone", () => {
+  assert.deepEqual(grounded([SUP({ ground: "a" }), CUT({})], [G_A]), []);
+  assert.deepEqual(grounded([CUT({}), SUP({ ground: "a" })], [G_A]), [], "order does not matter");
+  assert.deepEqual(grounded([SUP({ ground: "a" }), CUT({}), CUT({})], [G_A]), []);
+});
+
+test("R68 control: a supporting leg left out of the partition is still refused, cutting leg or none", () => {
+  for (const basis of [[SUP({ ground: "a" }), SUP({})], [SUP({ ground: "a" }), SUP({}), CUT({})]]) {
+    const r = grounded(basis, [G_A]);
+    assert.equal(r.length, 1);
+    assert.equal(r[0].check, "C-2.8");
+    assert.equal(r[0].message, localize("inquiry-grammar.grammar.unlabelled_basis_legv1_carrv2_no", "{unlabelled} basis leg{v1} carr{v2} no ground while {length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at", { unlabelled: "1", v1: "", v2: "ies", length: "1" }));
+  }
+});
+
+test("R68 a cutting leg that names a ground is refused with its own finding naming the leg and the label, and the label does not count for it", () => {
+  const r = grounded([SUP({ ground: "a" }), CUT({ ground: "a" })], [G_A]);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].check, "C-2.8");
+  assert.equal(r[0].severity, "error");
+  assert.ok(r[0].message.includes("basis[1]") && r[0].message.includes("'a'"), r[0].message);
+  const alone = grounded([SUP({}), CUT({ ground: "b" })], [{ ...G_A, ground: "b" }]);
+  assert.ok(alone.some((x) => x.message.includes("basis[1]")), "the cutting leg is named");
+  assert.equal(alone.length, 2, "the cutting leg's own finding, and the row whose label no supporting leg carries");
+});
+
+test("R68 control: a basis with no cutting leg is judged as before, and a cutting leg with no ground raises nothing without a grounds block either", () => {
+  assert.deepEqual(grounded([SUP({ ground: "a" }), SUP({ ground: "a" })], [G_A]), []);
+  assert.equal(grounded([SUP({ ground: "a" })], undefined).length, 1);
+  assert.deepEqual(grounded([SUP({}), CUT({})], undefined), []);
 });

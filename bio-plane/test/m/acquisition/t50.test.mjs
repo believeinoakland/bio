@@ -61,7 +61,8 @@ test("R47: a member session's `acquire` with `for` calls recordCapturedFor once 
 
 test("R47: `for` null, absent or from a caller that is not a member session answers as without it and makes no call; a daemon's `for` (even 5) is ignored", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T12:00:00.000Z") });
-  const strip = (r) => JSON.stringify(r.body);
+  /* R95: the one key `acquire` adds to any answer, its times, is set aside by name */
+  const strip = (r) => { const { timings, ...bare } = r.body; return JSON.stringify(bare); };
   const base = strip(await run(world(), { [URL1]: () => text("d") }, { locator: URL1 }));
   for (const [what, body, o] of [["null", { locator: URL1, for: null }, {}], ["undefined", { locator: URL1, for: undefined }, {}],
                                  ["a daemon, valid", { locator: URL1, for: Q }, { cls: "daemon", member: false, sessMember: null, captureRequest: { locator: URL1 } }],
@@ -361,7 +362,8 @@ test("R29 (C-68.1, K850; T50, N1064): every path that answers EVIDENCE_STORAGE_N
                            [{}, { cls: "daemon", member: false, captureRequest: { locator: URL1 } }]]) {
     const w = world({ evidence: false });
     const r = await run(w, {}, body, o);
-    assert.equal(JSON.stringify({ status: r.status, body: r.body }), JSON.stringify(evidenceStorageAbsent("acquire", error, { code: false })), JSON.stringify(body));
+    const { timings, ...bare } = r.body;   /* R95: the times are the one key `acquire` adds, set aside by name */
+    assert.equal(JSON.stringify({ status: r.status, body: bare }), JSON.stringify(evidenceStorageAbsent("acquire", error, { code: false })), JSON.stringify(body));
   }
   /* unpack: the door's body for op `unpack`, with the code */
   const w = world({ evidence: false });

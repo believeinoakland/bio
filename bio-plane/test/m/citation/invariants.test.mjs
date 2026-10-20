@@ -177,7 +177,7 @@ test("K3, R1, R7, R14: the op routes — the control plane's stamps are read fro
   const url = new URL("http://x/?project=P&handle=H&viewer=member:ann&owner=o&note=n&author=member:ann&identity=member:ann"
     + "&role=supports&weight=refuse&extent_kind=pdf-page&extent_page=2&content_id=&other=1&reason=why");
   const ops = citationOps(fake, url);
-  assert.deepEqual(Object.keys(ops).sort(), ["cite", "drawquestion", "reinstate", "sever"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["cite", "citeimported", "drawquestion", "reinstate", "sever", "withdrawimported"]);
   ops.cite(); ops.sever(); ops.reinstate();
   assert.deepEqual(calls[0], ["cite", { project: "P", handle: "H", viewer: "member:ann", owner: "o", note: "n", author: "member:ann",
     identity: "member:ann", role: "supports", extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },

@@ -6,6 +6,15 @@ import { REVIEW_COPY_CHECKS, REVIEW_DRAFT_FIELDS, REVIEW_RECIPIENT_MAX, REVIEW_D
          caseIdentitySentence, noReviewCopy } from "../../../src/review/index.mjs";
 import { PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
 import { mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+
+/* the identity sentences a member reads, read from the word table and never copied (K3810, K4205) */
+const NEXT = (edition, caseId) => word("review.text.next_edition", { edition: String(edition), case_id: caseId });
+const NEXT_AND_NEW = (edition, caseId) => word("review.text.next_edition_draft", { edition: String(edition), case_id: caseId });
+const NEW_CASE = word("review.text.new_case_whose");
+const DERIVED = word("review.index.derived_case_identity");
+/* a grant's boundTo, once, through localize */
+const BOUND_TO = (identity, v1 = "") => localize("review.index.this_grant_reads_caseidentitysentence_and", "this grant reads {caseIdentitySentence} and nothing else. It ends when it is revoked, and when that edition is published and signed.{v1}", { caseIdentitySentence: identity, v1 });
 
 const row = (code) => REVIEW_COPY_CHECKS[code];
 const refused = (r, code) => {
@@ -118,7 +127,8 @@ test("R4: a draft is created under an opaque DRAFT id or edited in place, keeps 
   assert.deepEqual(w.rows(`SELECT * FROM seq`), seqBefore, "never the DRAFT counter");
   assert.ok(w.row(`SELECT 1 AS m FROM minted_ids WHERE id=?`, d.draftId), "recorded by record-core's opaque minter");
   const stored = w.row(`SELECT * FROM case_drafts WHERE draft_id=?`, d.draftId);
-  assert.deepEqual(Object.keys(JSON.parse(stored.params)).sort(), [...REVIEW_DRAFT_FIELDS].sort());
+  /* every field it keeps, but a blank `caseId` is no case (R37 clears a blank value) */
+  assert.deepEqual(Object.keys(JSON.parse(stored.params)).sort(), REVIEW_DRAFT_FIELDS.filter((k) => k !== "caseId").sort());
   assert.deepEqual([stored.project_id, stored.created_by, stored.updated_by, stored.statement_by, stored.created_at],
     [P, "ed", "ed", "ed", NOW]);
   assert.deepEqual(Object.keys(d).sort(), ["caseId", "caseIdentity", "draftId", "edited", "edition", "ok", "project", "read"]);
@@ -131,7 +141,8 @@ test("R4: a draft is created under an opaque DRAFT id or edited in place, keeps 
   assert.deepEqual([e.ok, e.draftId, e.edited], [true, d.draftId, true]);
   let s = w.row(`SELECT * FROM case_drafts WHERE draft_id=?`, d.draftId);
   assert.deepEqual([s.updated_by, s.updated_at, s.statement_by, s.created_by], ["ann", "2026-09-28T02:00:00.000Z", "ed", "ed"]);
-  assert.deepEqual(JSON.parse(s.params), { statement: "v-statement", scope: "new scope" }, "an edit replaces the arguments");
+  assert.deepEqual(JSON.parse(s.params), { ...JSON.parse(stored.params), statement: "v-statement", scope: "new scope" },
+    "an edit replaces each field it sends and keeps the rest (R37)");
   /* the text as a case document would print it: a spelling the record cannot tell apart does not move the writer */
   w.r.act({ act: "draft", author: "bea", draft: d.draftId, statement: '  v-statement\n' });
   assert.equal(w.row(`SELECT statement_by FROM case_drafts WHERE draft_id=?`, d.draftId).statement_by, "ed");
@@ -156,7 +167,7 @@ test("R5: a draft's case identity is read from the published record every time; 
   w.publishedCase("CASE-2026-0001", P, 2);
   const named = w.r.act({ act: "draft", author: "ann", project: P, caseId: " CASE-2026-0001 " });
   assert.deepEqual([named.caseId, named.edition, named.caseIdentity],
-    ["CASE-2026-0001", 3, "the next edition (3) of CASE-2026-0001"]);
+    ["CASE-2026-0001", 3, NEXT(3, "CASE-2026-0001")]);
   assert.equal(w.row(`SELECT case_id FROM case_drafts WHERE draft_id=?`, named.draftId).case_id, "CASE-2026-0001");
   assert.equal(JSON.parse(w.row(`SELECT params FROM case_drafts WHERE draft_id=?`, named.draftId).params).caseId, "CASE-2026-0001");
   assert.equal(w.r.draftIdentity(w.row(`SELECT * FROM case_drafts WHERE draft_id=?`, named.draftId)).edition, 3);
@@ -165,13 +176,13 @@ test("R5: a draft's case identity is read from the published record every time; 
     { caseId: "CASE-2026-0001", edition: 4 }, "never stored: the next read reads the record again");
   const both = w.r.act({ act: "draft", author: "ann", project: P, caseId: "CASE-2026-0001", newCase: true });
   assert.deepEqual([both.edition, both.caseIdentity], [4, caseIdentitySentence("CASE-2026-0001", 4, true)]);
-  assert.match(both.caseIdentity, /UNDETERMINED/);
+  assert.equal(both.caseIdentity, NEXT_AND_NEW(4, "CASE-2026-0001"));
   const fresh = w.r.act({ act: "draft", author: "ann", project: P, newCase: "yes" });
   assert.deepEqual([fresh.caseId, fresh.edition], [null, 1]);
-  assert.match(fresh.caseIdentity, /^a new case/);
+  assert.equal(fresh.caseIdentity, NEW_CASE);
   const derived = w.r.act({ act: "draft", author: "ann", project: P });
   assert.deepEqual([derived.caseId, derived.edition], [null, null], "derived: the edition is not stated");
-  assert.match(derived.caseIdentity, /DERIVES/);
+  assert.equal(derived.caseIdentity, DERIVED);
   assert.deepEqual(w.r.draftIdentity({ case_id: null }), { caseId: null, edition: 1 }, "internally edition 1");
   assert.equal(new Set([named.caseIdentity, both.caseIdentity, fresh.caseIdentity, derived.caseIdentity]).size, 4);
 });
@@ -191,7 +202,7 @@ test("R6: grant's refusals in order, and a grant bound to the draft's case ident
   assert.match(g.grantId, /^RVG-\d{4}-\d{4}$/);
   assert.deepEqual([g.draftId, g.caseId, g.edition, g.recipient, g.issuedBy, g.issuedAt],
     [d.draftId, null, null, "x".repeat(REVIEW_RECIPIENT_MAX), "ann", NOW]);
-  assert.match(g.boundTo, /DERIVES.*It ends when it is revoked, and when that edition is published and signed\.$/s);
+  assert.equal(g.boundTo, BOUND_TO(DERIVED));
   const stored = w.row(`SELECT * FROM review_grants WHERE grant_id=?`, g.grantId);
   assert.deepEqual([stored.case_id, stored.edition, stored.secret_sha, stored.issued_by, stored.revoked_at],
     [null, 1, SECRET(1), "ann", null]);
@@ -200,7 +211,7 @@ test("R6: grant's refusals in order, and a grant bound to the draft's case ident
   const n = w.r.act({ act: "draft", author: "ann", project: P, caseId: "CASE-2026-0001" });
   const gn = w.r.act({ act: "grant", author: "ann", draft: n.draftId, recipient: "R", secretSha: SECRET(2) });
   assert.deepEqual([gn.caseId, gn.edition], ["CASE-2026-0001", 2]);
-  assert.match(gn.boundTo, /^this grant reads the next edition \(2\) of CASE-2026-0001 and nothing else/);
+  assert.equal(gn.boundTo, BOUND_TO(NEXT(2, "CASE-2026-0001")));
   const f = w.r.act({ act: "draft", author: "ann", project: P, newCase: true });
   assert.equal(w.r.act({ act: "grant", author: "ann", draft: f.draftId, recipient: "R", secretSha: SECRET(3) }).edition, 1);
 });
@@ -366,7 +377,6 @@ test("R27: when no free opaque id can be minted, draft's new draft and grant ans
 test("R5: the four identity sentences, in every answer that prints one (casedraft, casedrafts, reviewcopy, the grant's boundTo), say what the record holds and carry no code", () => {
   const w = standard();
   w.publishedCase("CASE-2026-0001", P, 1);
-  const NEW = /not yet allocated/i;
   const CODE = /\b[A-Z]{2,}(?:_[A-Z0-9]+)+\b/;
   const drafts = {
     named: w.r.act({ act: "draft", author: "ann", project: P, caseId: "CASE-2026-0001" }),
@@ -378,7 +388,8 @@ test("R5: the four identity sentences, in every answer that prints one (casedraf
   let n = 0;
   const answers = Object.fromEntries(Object.entries(drafts).map(([k, d]) => {
     const g = w.r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: `R ${k}`, secretSha: SECRET(++n) });
-    const bound = g.boundTo.replace(/^this grant reads /, "").replace(/ and nothing else\. It ends when .*$/s, "");
+    assert.equal(g.boundTo, BOUND_TO(d.caseIdentity), `${k}: the grant says the identity the draft answered`);
+    const bound = d.caseIdentity;
     return [k, [d.caseIdentity, list.drafts.find((x) => x.draft_id === d.draftId).case.identity,
                 w.r.copy({ draft: d.draftId, viewer: V("ann") }).case.identity,
                 w.r.copy({ secretSha: SECRET(n), bySecret: true }).case.identity, bound]];
@@ -390,18 +401,14 @@ test("R5: the four identity sentences, in every answer that prints one (casedraf
   }
   const [named, both, fresh, derived] = ["named", "both", "fresh", "derived"].map((k) => answers[k][0]);
   /* a named case: its next edition, read from the published record */
-  assert.equal(named, "the next edition (2) of CASE-2026-0001");
+  assert.equal(named, NEXT(2, "CASE-2026-0001"));
   /* a named case and newCase: publication refuses the pair, so which case is undetermined; never "the next edition" alone */
-  assert.match(both, /^the next edition \(2\) of CASE-2026-0001 — /);
-  assert.match(both, /refuses/);
-  assert.match(both, /undetermined/i);
+  assert.equal(both, NEXT_AND_NEW(2, "CASE-2026-0001"));
+  assert.notEqual(both, named);
   /* newCase alone: a new case, whose id only publication mints */
-  assert.match(fresh, NEW);
-  assert.match(fresh, /minted only by publication/);
-  assert.doesNotMatch(fresh, /undetermined/i);
+  assert.equal(fresh, NEW_CASE);
   /* neither: derived at publication and undetermined here, never "a new case" */
-  assert.match(derived, /deriv/i);
-  assert.match(derived, /undetermined/i);
-  assert.doesNotMatch(derived, NEW);
+  assert.equal(derived, DERIVED);
+  assert.notEqual(derived, NEW_CASE);
   assert.equal(new Set([named, both, fresh, derived]).size, 4);
 });

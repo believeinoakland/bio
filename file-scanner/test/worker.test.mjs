@@ -40,12 +40,21 @@ test('R10 the bundle exports the Worker and its two container classes, each with
   for (const name of ['FileScanner', 'SafeViewRenderer']) {
     const c = new mod[name](ctx, {});
     assert.equal(c.enableInternet, false, `${name} has no internet (R12)`);
+    c.containerFetch = async () => new Response('');
+    await c.fetch(new Request('http://container/sigs'));
+    assert.equal(c.enableInternet, false, `${name} serving a scan or a render still has none`);
     assert.ok(!c.allowedHosts || c.allowedHosts.length === 0, `${name} allows no host`);
     assert.equal(c.defaultPort, 8080);
   }
+  const updater = new mod.FileScanner(ctx, {});
+  updater.containerFetch = async () => new Response('');
+  await updater.fetch(new Request('http://container/update/r1', { method: 'POST', headers: { 'x-signature-updater': '1' } }));
+  assert.equal(updater.enableInternet, true, 'the signature-updater instance the mirror starts has internet, for freshclam alone (R6, R34)');
+  const renderer = new mod.SafeViewRenderer(ctx, {});
+  assert.equal(renderer.enableInternet, false);
 });
 
-test('R10 through the binding: the bundle answers R8 and R9 from its env, and its scheduled trigger runs the mirror against ClamAV\'s host alone', async () => {
+test('R10 through the binding: the bundle answers R8 and R9 from its env, and its scheduled trigger runs the mirror through the signature-updater instance, the Worker opening no connection', async () => {
   const mod = await loadWorker();
   const bucket = memoryBucket();
   const env = { CAPTURES: bucket, VERSION: pkg.version };
@@ -53,16 +62,21 @@ test('R10 through the binding: the bundle answers R8 and R9 from its env, and it
   assert.deepEqual([v.ok, v.name, v.version], [true, 'file-scanner', pkg.version]);
   const u = await mod.default.fetch(new Request('https://file-scanner/nothing'), env);
   assert.equal(u.status, 404);
-  const hosts = [];
+  const hosts = [], asked = [];
   const saved = globalThis.fetch;
   globalThis.fetch = async (req) => { hosts.push(new URL(req.url ?? req).hostname); return new Response('no', { status: 503 }); };
+  const SCANNER = { idFromName: (n) => n, get: (n) => ({ fetch: async (req) => { asked.push([n, req.method, new URL(req.url).pathname, req.headers.get('x-signature-updater')]);
+    return new Response(JSON.stringify({ ok: false, code: 'MIRROR_REFUSED', detail: 'exit 58: 403 Forbidden' }), { status: 200 }); } }) };
   const waits = [];
   try {
-    mod.default.scheduled({ cron: '17 4 * * *', scheduledTime: NOW }, env, { waitUntil: (p) => waits.push(p) });
+    mod.default.scheduled({ cron: '17 4 * * *', scheduledTime: NOW }, { ...env, SCANNER }, { waitUntil: (p) => waits.push(p) });
     const r = await waits[0];
     assert.equal(r.ok, false);
+    assert.equal(r.error, 'MIRROR_REFUSED:exit 58: 403 Forbidden');
   } finally { globalThis.fetch = saved; }
-  assert.deepEqual([...new Set(hosts)], ['database.clamav.net']);
+  assert.deepEqual(hosts, [], 'the Worker itself reaches no host');
+  assert.deepEqual(asked[0], ['file-scanner-signature-updater', 'POST', asked[0][2], '1'], 'the run goes to the signature-updater instance');
+  assert.ok(asked.every(([n, , , h]) => n === 'file-scanner-signature-updater' && h === '1'), 'and to no other instance');
   assert.ok(bucket.calls.filter(([op]) => op === 'put').every(([, k]) => k.startsWith('clamav/')));
   assert.deepEqual(dialled, []);
 });
@@ -87,7 +101,7 @@ test('R10 the marker states a container member with two digest-pinned classes, i
   assert.deepEqual(m.callers, [{ member: 'bio-plane', binding: 'FILE_SCANNER', kind: 'service' }]);
   assert.deepEqual(m.triggers.crons, wrangler().triggers.crons);
   assert.equal(m.optional_bindings[0].binding, 'SECURITY_VPC');
-  assert.deepEqual(m.egress.containers, []);
+  assert.deepEqual(m.egress.containers, ['FileScanner, the signature-updater instance alone: database.clamav.net, by freshclam (R6, R34)']);
   // as bundler reads it: one part per class, each image's Debian packages from its statement
   const member = discoverMembers().find((x) => x.name === 'file-scanner');
   const published = { ...member, marker: { ...member.marker, containers: member.marker.containers.map((c) => ({ ...c, image: { ...c.image, digest: `sha256:${'a'.repeat(64)}` } })) } };
@@ -170,7 +184,7 @@ test('R12 the sources\' egress: the mirror\'s host alone in the Worker\'s own fe
     for (const m of src.matchAll(/\bfetch\(/g)) {
       const line = src.slice(src.lastIndexOf('\n', m.index) + 1, src.indexOf('\n', m.index));
       if (/^\s*(async\s+)?fetch\(/.test(line)) continue; // a handler's definition, not a call
-      assert.ok(/deps\.fetch\(`https:\/\/\$\{MIRROR_HOST\}|via\(|\.fetch\(new Request\(`http:\/\/container|fetch: \(req\) => fetch\(req\)|deps\.fetch\(req\)|vpc\.fetch\(req\)|ns\.get/.test(line), `${f}: ${line.trim()}`);
+      assert.ok(/via\(|\.fetch\(new Request\(`http:\/\/container|fetch: \(req\) => fetch\(req\)|deps\.fetch\(req\)|vpc\.fetch\(req\)|ns\.get/.test(line), `${f}: ${line.trim()}`);
     }
     assert.ok(!/\bconnect\(\s*\{/.test(src) || f === 'src/providers/net.mjs', `${f} opens a socket only through net.mjs`);
   }

@@ -1,6 +1,6 @@
 # BOB to action-plans (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -23,3 +23,25 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 On your J1 (K4042): (1) SUBJECT_MALFORMED showing the row's text stands (the list wins, K3930). (2) PHASE_MALFORMED: where a row says the same sentence (here differing only in spelling), the row wins (K3984): read `refusal.PHASE_MALFORMED` by `word` and retire your own `action-plans.checks.a_phase_has_an_id` id; the test compares with `word`. R47 needs no edit: its text has no 'keeps its own' clause; the test title's control clause may be dropped as you rewrote it. Then COMPLETE again.
+
+## B3 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-58 · action-plans**): the fix round of T51 (K4206; P7, P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-haiku-5-5 (one judged declaration; one model up if it blocks on tests).
+Your requirements: `build/requirements/action-plans.md` (read whole).
+Why this job: the declaration pass (`build/plan/fix-round-T51-pass.md` §3 step 5; records `build/plan/pass-T51/RECORD*.md`) could not declare `optionadopt` mechanically: one arm with two forms (a proposal id, or an offer with its plan); the body is merged over the proposal's fields. A module where the declaration needs a judgment gets its own job (P7). Screens send these ops; the guard (`interface-shell` R104) checks each request against its owner's declaration.
+Merge order: module index 134, layer 9; independent of the other wave-2 jobs; before the screen that sends the op.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **K4206** · Declare `optionadopt` in your `DECLARED_OPS` (create it beside your ops map, `export const DECLARED_OPS = Object.freeze({...})` on its own line, if you have none) in the shape `op-declarations` R80 and `op-grades` R49 give (read both lines whole): `classes`, `machineClasses`, `mutating`, `weight` and `description` copied from the op's existing rows (a sentence description as `localize("action-plans.declared.<op>", <its sentence>)`; no hand description: its registry label key). For the fields, decide what the declaration can honestly state: `accepts` the fields the arm reads (for an open body, the fields its service reads, as named parameters); `requires` the fields it cannot run without. Where the arm refuses an absent field without naming it, the better fix is in your own arm: the refusal names the field (P8, a flaw in your module), unless your requirements say the answer is deliberately uniform (then `requires` lists only what a refusal names, and your record says why). Never weaken a refusal; never change a meaning your requirements state. Requirement: NEW R (next free id) in your record for BOB. Test: `declared-ops.test.mjs` calling test-support's `declaredOpHolds` (`bio-plane/test/declared-ops.mjs`) for each op; any refusal you changed gets its own test and control. If `test-support` is not in your `uses`, tell BOB in your COMPLETE (BOB adds it).
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure: your requirements, this entry, your ops map and the named arms, R80, R49 and the helper: well under the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio action-plans tranche/T51 job/T51/action-plans`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
