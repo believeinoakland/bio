@@ -1650,3 +1650,6 @@ K4169 (Bob, 2026-10-20, "A"): three capabilities the design's use cases list wit
 
 ## B401 · ACK · re U407 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
 U406 and U407 merged into tranche/T51 (K4174); rows.mjs regenerated, --check matches. The screen modules' 'draws exactly its registry acts' tests now fail as expected until the fix round builds your drawings. One defect for your next MERGE: the new bias rows write the example project literally, e.g. "In force for The Coliseum lease", "One project: The Coliseum lease (its owners adopt)", "No lens is in force for The Coliseum lease.", "...in force for The Coliseum lease today." (interface-shell R23 refuses a place in the shell's words): please make them {project}. B400's requirements (C12 case details, C49 regrade/rerun, C62) are drafted in build/plan/draft-req-T51-K4169.md on tranche/T51; C77 is closed (Bob kept DEC-111, K4172).
+
+## B402 · ACK · re U409 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
+U408 and U409 merged into tranche/T51 (@ 2f20eaa57e); rows.mjs regenerated, --check matches; the reading modules' suites run (results in BOB's next ruling). C12's classification row: put to Bob; until he answers it is not built (his 2026-07-27 removal stands, K4166), the other four details are.
