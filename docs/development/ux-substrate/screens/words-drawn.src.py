@@ -6814,6 +6814,9 @@ W.append(dict(key='screen.contradiction.stated.dates', en='Stated dates: {first}
 W.append(dict(key='screen.contradiction.kinds', en='Kinds: {first} · {second}', protected=False, note='DEC-391: B435 2: the facts row with the two documents\' kinds (fact doctype), first then second'))
 W.append(dict(key='screen.contradiction.passage.meta', en='Dated {date} · {kind} · captured by {member} on {captured}', protected=False, note='DEC-391: B435 2: the small line under a passage: its stated date, its document kind, who captured it and when'))
 W.append(dict(key='screen.contradiction.party.asked', en='Asked on {date}', protected=False, note='DEC-391: B435 2: a project line under The projects: the day that project asked to resolve it'))
+# DEC-391: B435 (K4258) item 5
+W.append(dict(key='screen.project.cmp_only_ours', en='Only in our lens', protected=False, note='DEC-391: B435 5: project, rerun comparison: heading of the list of statements that only this project\'s own lens holds, beside "Only in their lens".'))
+W.append(dict(key='screen.project.cmp_withdraw_do', en='Withdraw this pairing', protected=False, note='DEC-391: B435 5: project, rerun comparison: quiet button on a finding already paired with one of ours; withdraws the pairing (the history keeps both).'))
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
