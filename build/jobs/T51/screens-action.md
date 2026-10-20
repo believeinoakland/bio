@@ -74,3 +74,8 @@ Size (session_01EbJCh72Rrpjqj4Cdt46ya6): test runs 14, module lines 4291
 ## J7 · COMPLETE
 
 COMPLETE (FR-31): all 21 entries applied, R36-R54 written in the requirements file (B10; marks removed), 194 of 194 module tests pass, format, architecture, coverage (54/54) and words 0 for my files, ownership lists only the requirements file. Gaps (missing design keys, writinghelp's declaration lacking op, filingread without exhibits) are in my record's completion section for your ruling.
+
+## J8 · REPORT
+
+REPORT (#8, re B13 item 1): `WRITE_HELP` (`send-steps.mjs`) now sends `op` (the act the words are for, from `data-forop`), `field` and `told`; a help button naming no act sends nothing. Tests: R45's writinghelp test asserts `op`; a control test strips `data-forop` and no request goes. Module suite 195 of 195; format, architecture, coverage (54/54), words, ownership 0. Item 2 (exhibits and `venue_standard` from `filingread` after reload) waits on FILINGS #25: send me a CHANGE when it merges.
+Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 1, module lines 3290
