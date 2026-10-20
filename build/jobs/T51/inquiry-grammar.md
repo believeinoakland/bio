@@ -53,3 +53,7 @@ CR-8 applied: R13 standardLegFindings exported; R19 golden/corpus regenerated fo
 - `ownership.mjs inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 0 failures.
 
 Size (session_01FVBE32weVwYCP8rNDY5AVJ): test runs 6, module lines 2048
+
+## J2 · COMPLETE
+
+FR-44 applied: R68 written and met; checkGrounds leaves cuts_against legs out of the partition and refuses one named in a ground (own finding). Tests 85/85 (4 added, 3 seen failing first); format, architecture, coverage, words, ownership 0 failures for this module. FR-45/strength must know: inquiry must label supporting legs only; strength/arithmetic.mjs ignores role, so an unlabelled cutting leg joins the implicit AND group (see my record). R68 marker is BOB's to lift.
