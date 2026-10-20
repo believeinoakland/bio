@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01Lok5rc1LRdKaFhnhJxw8j2 · depth 3 · COMPLETE · handled B4
+**Status** · session_01Ff44xuNBVDnvzJCTR8DH73 · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -80,3 +80,23 @@ COMPLETE (B4, K3989): the member-readable literals are keyed. `tranche/T51` merg
 Checks: `checks/words.mjs` for the module `inline 0, plain 0, testcopy 0, unkeyed 0; 0 failures`; module tests `tests 137, pass 137, fail 0`; d606, tier2-wire, pdf-worker-binding `pass 1, fail 0` each; probe exit 0; format, architecture, coverage (34 of 34), ownership `0 failures`; `checks/run.mjs` names nothing in reading-pipeline. `rows.mjs` is stale for the new `reading-pipeline.index.*` ids (expected).
 
 Size (session_01Lok5rc1LRdKaFhnhJxw8j2): test runs 9, module lines 1800
+
+## J5 · COMPLETE
+
+COMPLETE (B5, FR-65, L6, K4194): the reading of a captured web page is its content.
+
+**Entry applied.** `visibleTextOfHtml` (`bio-plane/src/reading-pipeline/index.mjs`) now drops, before tags are stripped: any `nav` and any element with `role="navigation"` (first role token, case-insensitive) with its contents, counted by the element's own name so a nested one does not end it early; skip links (an `a` whose `href` begins `#` and whose text, markup removed, begins "Skip to"); and, after references are decoded, the tokens `{digits}`, `{identifier}` and `##LOC[...]##`. Everything else visible is kept; a page with no landmark keeps all its text. R32 is amended in `build/requirements/reading-pipeline.md` with that line (and the Status line), as B5 asked; no id is marked not yet met, because R32 is named by tests.
+
+**Choice made (my ruling, in scope of the entry):** an element with no end tag is not guessed at: its tag goes and its words stay (dropping to the end of the page would lose the article). Noted in R32.
+
+**Tests (`test/m/reading-pipeline/text-units.test.mjs`), written first and seen failing:** the furniture page yields units for the article only, and text_chars and provenance digest are over the whole page as before; each landmark alone; controls: a `nav` inside the article is dropped with its contents and the words around it stay, nesting by name (a sibling after a nested role=navigation div is kept), case-insensitive names, an unclosed nav keeps its words; a page with no landmarks keeps everything; other roles, `#` links not beginning Skip to, a Skip to link that is not a `#` link, and braces that are not a token are kept; plain text is untouched; two readings are identical.
+
+**Found in another module / stale generated artifacts (not edited):** `bio-plane/dist/bio-plane.bundled.mjs`, `agent-worker/dist/agent-worker.bundled.mjs` and the two `release/*.bundled.mjs` hold the old `visibleTextOfHtml`; they are stale until rebuilt. `rows.mjs` is stale for ai-accounts (`build.mjs --check` names `ai-accounts.declared.accountusesset`, not mine). One run of the wider set (extraction, acquisition, answers, query-language) showed 1 failure of 490 that I could not catch again: three further runs and the run before my change were 0 failures; I did not identify the test.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/reading-pipeline/*.test.mjs bio-plane/test/m/extraction/read.test.mjs`: `tests 141, pass 141, fail 0`.
+- `node --test` over extraction, acquisition, answers, query-language: `tests 490, pass 490, fail 0` (three runs).
+- `checks/format.mjs`: `0 failures`; `architecture.mjs reading-pipeline`: `0 failures`; `coverage.mjs reading-pipeline`: `34 of 34 live requirement ids named by a test; 0 failures`; `words.mjs reading-pipeline`: `inline 0, plain 0, testcopy 0 ... 0 failures`; `ownership.mjs`: `0 failures`.
+- `checks/run.mjs /home/user/bio`: no line names reading-pipeline; its 7 coverage and 7 words failures are other modules' (inherited).
+
+Size (session_01Ff44xuNBVDnvzJCTR8DH73): test runs 12, module lines 1790
