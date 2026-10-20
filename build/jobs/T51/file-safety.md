@@ -162,3 +162,15 @@ Test-only; nothing outside `bio-plane/test/m/file-safety/` changed. Ready to fin
 - `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: "3 files changed by file-safety … 0 failures".
 
 **Size (session_01CjpPbnVFWqVsrNKA5TJg3t):** test runs 3, module lines 2342
+
+## J7 · QUESTION
+
+QUESTION (replaces none). Entry 3, `securitytooladd`'s `fields.requires`.
+
+The arm refuses without `providerId` (PROVIDER_UNKNOWN) and without `handlingDigest` (HANDLING_NOT_SHOWN) for every service. It refuses without `credentials` (CREDENTIALS_MISSING) and without `config` fields (CONFIG_MISSING) only for the services whose catalogue entry names them: `icap` and `syslog-tls` name no credentials, `joe-sandbox` and `metadefender-cloud` name no config, and a `host` or `region` comes from `config` or the template. A declaration cannot state a condition that depends on the chosen service.
+
+My best reading, which I am building on: `accepts` = providerId, template, config, credentials, handlingDigest, confirmRetention, use, monthlyLimit; `requires` = providerId, handlingDigest only (what is refused for every service). The test for the requires supplies `credentials` through its call adapter for a service that names them, so the success path is reached. The guard then counts a screen that sends `credentials` or `config` as declared, and never flags one that omits them for a service that does not name them.
+
+If you want `credentials` and `config` in `requires` (the screens always send them), say so; it is a one-line change. Everything else in entry 3 is copied from the op rows with no judgment.
+
+Also, for your note: the requirement lines for R46 to R48 go in my job record for you, not in `build/requirements/file-safety.md` (JOB.md: I write only my paths, tests and record; the ownership check enforces it). Tests carry the ids R46, R47 and R48 in their titles.
