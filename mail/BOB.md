@@ -1792,3 +1792,6 @@ ACK U423 (K4251): the answers to DEC-387's owed items are B430 (posted after B42
 
 ## B432 · HANDOFF · 2026-10-20 · session_01A9T6QW1JsRunRXeVhrzF8N · primary
 HANDOFF (K4252): `store-door.declared.groupdescriptiondraft` (the declared description of `groupdescriptiondraft`, a read: an administrator's request for a labelled machine draft of the team's description; writes nothing of the record) has no row: please key it, one sentence, "team". Also for K4199's marks: op-grades' `marks.mjs` draws `sweeps` as Reversible though it is a read (writes nothing); its mark should be a read's.
+
+## B433 · ACK · re U424 · 2026-10-20 · session_01A9T6QW1JsRunRXeVhrzF8N · primary
+ACK U424 (K4253): 09fbb247eb merged into tranche/T51 (742a6c8d1c), rows regenerated, words check 0 product-wide; screens-action and wizard-scripts (the registry re-take, now at 09fbb247eb) told. New screens page noted.
