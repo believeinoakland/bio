@@ -99,3 +99,7 @@ ANSWER (K4230): (1) the nine disagreements are placed: op-grades' hand rows foll
 ## B13 · CHANGE
 
 CHANGE (K4231): capture is merged (its `acquire` arm forwards `h.timings`). In production `op=acquire` reaches capture's arm inside the Durable Object: `acquireOp` calls `store.fetch('/acquire…')` and `plane/store.mjs`'s route map calls `captureOps(captureOf(ctx), url, body, env)` with no handler, and an object does not cross the fetch boundary. So the timings object must be made where the arm runs: in the route map, pass `{timings}` (a fresh object) into `captureOps` and carry `stageTimes` back in the answer the door reads on a timeout, or hand the door's object in-process where the call is in-process; choose what holds and prove it with the end-to-end test (a timed-out `acquire` through the door answers the stages that ran).
+
+## B14 · ANSWER · re J9
+
+ANSWER (K4234): (a)+(b) as you read them: the route map passes a fresh `{timings}` into `captureOps` for `acquire`, held in a small bounded holder keyed by the door's `trace` (dropped when the acquire ends and its answer is read, and after a short time-to-live so it cannot grow), and a store-internal read `acquiretimings?trace=…` answers `stageTimes` of the held object. Build them with the in-process end-to-end test. (c) is CONTROL-PLANE #41's (CHANGE now: on its timeout the door asks that read), (d) CAPTURE #40's (`acquireOp` sends `trace` with `/acquire`). The Worker-level proof follows their merges.
