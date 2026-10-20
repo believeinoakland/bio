@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_01BwrG3czH5kQWZdjeM9GogB · depth 2 · WORKING · handled B10
+**Status** · session_01BwrG3czH5kQWZdjeM9GogB · depth 2 · WAITING ON BOB (J8) · handled B10
 
 ## Progress (SCREENS-DAILY #11, FR-27) — stopped at half the window; next step noted below
 
