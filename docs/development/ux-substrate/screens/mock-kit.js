@@ -29,7 +29,7 @@ const WEIGHT = {
   goallink:1, goalclose:3, aspirationretire:3,
   biasmanifest:1, biasinhale:1, biasdebt:1, biasadopt:2, biasdebtresolve:3,
   retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, subscriptiondisconnect:3, reviewrevoke:3, escalationend:3, wizardretire:3,
-  signerrevokeown:3, importacceptwithdraw:3,
+  signerrevokeown:3, importacceptwithdraw:3, contradictiondismiss:3, contradictionoptin:3, contradictionrespond:3, contradictionclarify:2, contradictiontakeup:2, contradictionresolve:2,
   release:4, attest:4, caseratify:4, docketpost:4, signerregisterown:4, claim:4, docketfile:2,
   publish:5, publishat:5, findin:1, securitymap:1, archivelist:1, openoriginal:1, safeview:1, deepercheck:1, releasescanhold:2, securitytooladd:2, securitytooltest:1, securitytoolremove:2, aikeepaway:2, openwithwarning:2,
 };

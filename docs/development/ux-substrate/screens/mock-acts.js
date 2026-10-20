@@ -2,6 +2,12 @@
    act does and how it fits the larger work, at the guidance level (DEC-162). The pips keep their own explanation of the
    act's weight. Keyed by op (an owed act by its `owed_` key). */
 const ACT_HELP = {
+  contradictionclarify: 'Records, in your name, how two passages differ or which one is wrong. Neither passage is changed or removed.',
+  contradictiontakeup: 'Opens a question in the project from this contradiction, with both passages as its evidence, so the team can settle it and conclude.',
+  contradictiondismiss: 'Closes a lead with the reason you choose. It stays closed, and your name and reason are kept with it.',
+  contradictionresolve: 'Concludes the question taken up from a contradiction and records what the contradiction turned out to be, in your name.',
+  contradictionoptin: 'Tells the other projects that yours wants this conflict resolved. It cannot be taken back.',
+  contradictionrespond: 'Sends your words to the other projects in the conflict, with only what you choose to share about yourself. It cannot be taken back.',
   bootstrap: 'Takes you to Cloudflare\'s own page to allow this installer into your account, then sets up your team\'s Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.',
   login: 'Signs you in on this device with your handle and password, for as long as you chose. Several wrong tries pause sign-in from here for a while.',
   unlock: 'Unlocks this device with your password after it locked while you were away, and takes you back to where you were; nothing was lost. A wrong password counts as a refused sign-in.',
