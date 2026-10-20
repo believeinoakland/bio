@@ -484,6 +484,44 @@
      "modules": [
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:taskdecide K4169",
+     "label": "Say who issued it, or that you could not tell",
+     "status": "owed"
+    },
+    {
+     "op": "taskforward",
+     "label": "Pass it to someone else",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "tasks"
+     ]
+    },
+    {
+     "op": "adminendorse",
+     "label": "Endorse an administrator",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Add an owner",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "expertiseconfirm",
+     "label": "Confirm expertise",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -1739,6 +1777,35 @@
      ]
     },
     {
+     "op": "owed:taskdecide K4169",
+     "label": "Say who issued it, or that you could not tell",
+     "status": "owed"
+    },
+    {
+     "op": "adminendorse",
+     "label": "Endorse an administrator",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Add an owner",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "expertiseconfirm",
+     "label": "Confirm expertise",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
      "op": "release",
      "label": "Vouch for a capture",
      "status": "declared",
@@ -2689,6 +2756,16 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "owed:rerunread K4169",
+     "label": "Compare with the original",
+     "status": "owed"
+    },
+    {
+     "op": "owed:rerunpair K4169",
+     "label": "This answers the same claim",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4743,6 +4820,16 @@
       "citation",
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:casedetailsset K4169",
+     "label": "Save this detail",
+     "status": "owed"
+    },
+    {
+     "op": "owed:casedetails K4169",
+     "label": "Details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4919,6 +5006,11 @@
       "publish-schedule",
       "queue-producers"
      ]
+    },
+    {
+     "op": "owed:casedetails K4169",
+     "label": "See the details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4996,6 +5088,11 @@
      "op": "owed:pubprint DEC-330",
      "label": "Print the case",
      "status": "owed"
+    },
+    {
+     "op": "owed:casedetailspublic K4169",
+     "label": "Details of this work",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -5052,6 +5149,16 @@
       "case-import",
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:importregrade K4169",
+     "label": "View under another lens",
+     "status": "owed"
+    },
+    {
+     "op": "owed:rerunstart K4169",
+     "label": "Re-run this work in your own project",
+     "status": "owed"
     }
    ],
    "journeys": [

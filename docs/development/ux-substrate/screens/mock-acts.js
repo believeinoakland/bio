@@ -2,6 +2,13 @@
    act does and how it fits the larger work, at the guidance level (DEC-162). The pips keep their own explanation of the
    act's weight. Keyed by op (an owed act by its `owed_` key). */
 const ACT_HELP = {
+  owed_casedetailsset: 'Records one of the case\'s five details: what kind of work it is, the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.',
+  owed_casedetails: 'Shows the five details of this case as they stand now, and who set each and when. None of them stops a case from being published.',
+  owed_casedetailspublic: 'Shows any reader the five details of this case as the team currently states them, with those it has not stated marked Not stated.',
+  owed_importregrade: 'Re-weighs this case\'s findings under the lens you choose and shows which moved and which statement moved each. It saves nothing, changes nothing in the imported case and sends nothing to the source team.',
+  owed_rerunstart: 'Declares one of your team\'s projects a rerun of this edition, so you can compare your work with the original. It records only that; the imported case is not changed, nothing is accepted and nothing is sent to the source team.',
+  owed_rerunpair: 'States that one finding of this project answers the same claim as one of the original\'s, or withdraws that statement. It is your statement, kept in the history, and never changes either finding\'s strength.',
+  owed_rerunread: 'Shows this rerun beside the original: the two lenses\' differences and the findings you paired. It changes nothing.',
   contradictionclarify: 'Records, in your name, how two passages differ or which one is wrong. Neither passage is changed or removed.',
   contradictiontakeup: 'Opens a question in the project from this contradiction, with both passages as its evidence, so the team can settle it and conclude.',
   contradictiondismiss: 'Closes a lead with the reason you choose. It stays closed, and your name and reason are kept with it.',
@@ -98,6 +105,7 @@ const ACT_HELP = {
   wizardapprove: 'Approves a wizard so members are offered it where its steps start.',
   wizardretire: 'Stops offering a wizard. Anyone part-way through can finish.',
   taskresolve: 'Does what this item asks, on the screen it concerns. It leaves your queue when done.',
+  owed_taskdecide: 'Records, in your name, who issued this document, or that you looked and could not tell, with your reason. The task is done and leaves the list. A later answer replaces it, and the earlier one stays in the history.',
   taskforward: 'Passes this item to another member better placed to act.',
   proposedispose: 'Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.',
   queuesnooze: 'Hides the item, and the other items in its case, until the date you choose, when they come back.',

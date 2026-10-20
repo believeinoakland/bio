@@ -26036,9 +26036,9 @@
   },
   {
    "key": "screen.bias.in_force_for_the_coliseum",
-   "en": "In force for The Coliseum lease",
+   "en": "In force for {project}",
    "protected": false,
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.by_admin_for_the_team",
@@ -26246,9 +26246,9 @@
   },
   {
    "key": "screen.bias.one_project_the_coliseum_lease",
-   "en": "One project: The Coliseum lease (its owners adopt)",
+   "en": "One project: {project} (its owners adopt)",
    "protected": false,
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.why_you_adopt_it",
@@ -26312,9 +26312,9 @@
   },
   {
    "key": "screen.bias.ask_one_of_its_owners",
-   "en": "Ask one of its owners: Dev or Rosa.",
+   "en": "Ask one of its owners: {owners}.",
    "protected": false,
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.the_set_must_be_offered",
@@ -26540,9 +26540,9 @@
   },
   {
    "key": "screen.bias.no_lens_is_in_force",
-   "en": "No lens is in force for The Coliseum lease.",
+   "en": "No lens is in force for {project}.",
    "protected": false,
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.a_case_published_now_says",
@@ -26606,9 +26606,9 @@
   },
   {
    "key": "screen.ceremony.this_is_the_lens_in",
-   "en": "This is your team's declared way of reading evidence (its lens), in force for The Coliseum lease today.",
+   "en": "This is your team's declared way of reading evidence (its lens), in force for {project} today.",
    "protected": false,
-   "note": "DEC-374: B398 C47 (bias biasmanifest): the publication ceremony's Bias step; the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest): the publication ceremony's Bias step; the sentence stands alone."
   },
   {
    "key": "screen.ceremony.it_is_fixed_into_the",
@@ -27878,9 +27878,9 @@
   },
   {
    "key": "screen.matter.your_own_assessment_by_mai_the_households",
-   "en": "Your own assessment, by Mai: the households on the rent roll",
+   "en": "Your own assessment, by {name}: the households on the rent roll",
    "protected": false,
-   "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.not_shown_yet_that_the_harm_follows",
@@ -28400,9 +28400,9 @@
   },
   {
    "key": "screen.question.hunch.change.summary",
-   "en": "Change or take back Dev's hunch",
+   "en": "Change or take back {name}'s hunch",
    "protected": false,
-   "note": "DEC-375: B398 C36 (hypotheses hypothesisrevise): question, Hunches section, fold under Keep a hunch; summary; {name} is the member who holds the hunch; keep the possessive"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-375: B398 C36 (hypotheses hypothesisrevise): question, Hunches section, fold under Keep a hunch; summary; {name} is the member who holds the hunch; keep the possessive"
   },
   {
    "key": "screen.question.hunch.change.note",
@@ -30380,15 +30380,15 @@
   },
   {
    "key": "screen.members.help.withdraw.what",
-   "en": "Takes the expertise off Dev's row, confirmation and declaration together.",
+   "en": "Takes the expertise off {name}'s row, confirmation and declaration together.",
    "protected": false,
-   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; explanation of the button Withdraw Dev's expertise; Dev is a sample name; translate in the same plain tone"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; explanation of the button Withdraw Dev's expertise; Dev is a sample name; translate in the same plain tone"
   },
   {
    "key": "screen.members.help.withdraw.again",
-   "en": "Dev can declare it again.",
+   "en": "{name} can declare it again.",
    "protected": false,
-   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; second sentence of that explanation; translate in the same plain tone"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; second sentence of that explanation; translate in the same plain tone"
   },
   {
    "key": "screen.members.help.withdraw.record",
@@ -31832,13 +31832,13 @@
   },
   {
    "key": "screen.start-send.exhibits.heading",
-   "en": "The exhibits, against the venue's standard",
+   "en": "The exhibits, against the court's or office's standard",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section heading, in Start and send and in Brief counsel; the venue is the court or office the filing goes to"
   },
   {
    "key": "screen.start-send.exhibits.intro1",
-   "en": "Each exhibit shows its capture grade, A to D, which says how well the capture can be checked, and how that grade stands against what this venue accepts.",
+   "en": "Each exhibit shows a grade, A to D, for how well its capture can be checked, and whether the court or office this filing goes to accepts that grade.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section intro"
   },
@@ -31850,19 +31850,19 @@
   },
   {
    "key": "screen.start-send.exhibits.intro3",
-   "en": "It shows where to expect a challenge.",
+   "en": "The flag shows where to expect a challenge.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section intro"
   },
   {
    "key": "screen.start-send.exhibits.accepted",
-   "en": "Within the grades this venue accepts.",
+   "en": "Within the grades this court or office accepts.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, after its grade"
   },
   {
    "key": "screen.start-send.exhibits.contestable1",
-   "en": "This venue admits this grade only as contestable.",
+   "en": "This court or office admits this grade only as contestable.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, first sentence"
   },
@@ -31874,7 +31874,7 @@
   },
   {
    "key": "screen.start-send.exhibits.below1",
-   "en": "Below every grade this venue accepts.",
+   "en": "Below every grade this court or office accepts.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, first sentence"
   },
@@ -31886,19 +31886,19 @@
   },
   {
    "key": "screen.start-send.exhibits.undetermined",
-   "en": "Civicsmith cannot say how this exhibit stands against the venue's standard yet.",
+   "en": "Civicsmith cannot say how this exhibit stands against the court's or office's standard yet.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit whose grade or the venue's standard cannot be read"
   },
   {
    "key": "screen.start-send.exhibits.refused.summary",
-   "en": "When the venue's standard is not stated",
+   "en": "When the court's or office's standard is not stated",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): disclosure summary"
   },
   {
    "key": "screen.start-send.exhibits.refused.body1",
-   "en": "Your team's places do not state what evidence this venue accepts for this kind of action, so no exhibit is graded against it.",
+   "en": "Your team's places do not say what evidence this court or office accepts for this kind of action, so no exhibit can be checked against it.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): a gap line"
   },
@@ -31910,7 +31910,7 @@
   },
   {
    "key": "screen.start-send.exhibits.refused.body3",
-   "en": "Check the venue's own rules.",
+   "en": "Check the court's or office's own rules, then add them to your team's places.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): a gap line, what to do next"
   },
@@ -31928,7 +31928,7 @@
   },
   {
    "key": "screen.start-send.template.note2",
-   "en": "A filing must be approved first, and it can be sent or not.",
+   "en": "The filing must be approved first. It does not have to be sent.",
    "protected": false,
    "note": "DEC-375: B398 C75 (filings templatesave): section note"
   },
@@ -31958,13 +31958,13 @@
   },
   {
    "key": "screen.start-send.template.use.help1",
-   "en": "A filing template is offered when a member prepares a filing of this kind.",
+   "en": "A filing template is offered to members preparing a filing of this kind.",
    "protected": false,
    "note": "DEC-375: B398 C75 (filings templatesave): choice help"
   },
   {
    "key": "screen.start-send.template.use.help2",
-   "en": "A brief template is offered when a member briefs counsel.",
+   "en": "A brief template is offered to members briefing counsel.",
    "protected": false,
    "note": "DEC-375: B398 C75 (filings templatesave): choice help"
   },
@@ -32114,7 +32114,7 @@
   },
   {
    "key": "screen.ceremony.conf.intro2",
-   "en": "Finding 1 rests on a document that has neither.",
+   "en": "{finding} rests on a document that has neither, so only your team's own record says when it was captured: published that way, it is marked self-attested.",
    "protected": false,
    "note": "DEC-377: B398 C6 (attestation reattest): intro note; finding number may be a placeholder in use"
   },
@@ -32162,9 +32162,9 @@
   },
   {
    "key": "screen.ceremony.conf.account.label",
-   "en": "Your signed account of the capture (only Mai, who captured it, adds this)",
+   "en": "Your signed account of the capture (only {name}, who captured it, adds this)",
    "protected": false,
-   "note": "DEC-377: B398 C6 (attestation captureaccount): field label; Mai is the sample capturing member"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-377: B398 C6 (attestation captureaccount): field label; Mai is the sample capturing member"
   },
   {
    "key": "screen.ceremony.conf.account.help1",
@@ -32192,7 +32192,7 @@
   },
   {
    "key": "screen.ceremony.conf.refused.unlisted2",
-   "en": "Ask for the confirmation again, or list it as self-attested only with your reason.",
+   "en": "Ask for the confirmation again, or list the document as self-attested, with your reason.",
    "protected": false,
    "note": "DEC-377: B398 C6 (case-disclosures publish selfAttested): refusal, what to do next"
   },
@@ -32219,6 +32219,690 @@
    "en": "Only the member who captured a document adds an account of the capture.",
    "protected": false,
    "note": "DEC-377: B398 C6 (attestation captureaccount): refusal; followed by \"Ask Mai.\" in the drawing"
+  },
+  {
+   "key": "screen.case-editor.details.first",
+   "en": "The details of this work open once you have saved the case: what kind of work it is, the area of government, a point of contact, related work and relationships.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor, first case: the section shown before the first save"
+  },
+  {
+   "key": "screen.case-editor.details.intro1",
+   "en": "These five details travel beside the case.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: opening note of the section; followed by intro2"
+  },
+  {
+   "key": "screen.case-editor.details.intro2",
+   "en": "Each says Not stated until you set it, and none of them stops you from publishing.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: opening note, second sentence"
+  },
+  {
+   "key": "screen.case-editor.details.outward1",
+   "en": "Once the case is published, a change here shows to every reader at once.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: outward-act note; followed by outward2"
+  },
+  {
+   "key": "screen.case-editor.details.outward2",
+   "en": "The signature on an edition does not cover these details.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): case-editor: outward-act note, second sentence"
+  },
+  {
+   "key": "screen.case-editor.details.class.title",
+   "en": "What kind of work this is",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): row title of the classification detail; also on the ceremony checklist and the published page"
+  },
+  {
+   "key": "screen.case-editor.details.area.bodyhint",
+   "en": "A public body the team follows",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): meta under a chosen public body in the area list"
+  },
+  {
+   "key": "screen.case-editor.details.area.addbody",
+   "en": "Add a public body the team follows",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): label of a list of public bodies"
+  },
+  {
+   "key": "screen.case-editor.details.area.words",
+   "en": "Or type the words that name the area",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label"
+  },
+  {
+   "key": "screen.case-editor.details.list.add",
+   "en": "Add to the list",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): button: adds the entry being typed to a list"
+  },
+  {
+   "key": "screen.case-editor.details.contact.legend",
+   "en": "Who readers write to",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): legend of the point-of-contact choices"
+  },
+  {
+   "key": "screen.case-editor.details.contact.doorbell",
+   "en": "Use the team's doorbell",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice; the doorbell is the team public message path, not a person"
+  },
+  {
+   "key": "screen.case-editor.details.contact.words",
+   "en": "Use one line of my own words",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice"
+  },
+  {
+   "key": "screen.case-editor.details.contact.help",
+   "en": "An address or a web form, on one line, up to 254 characters.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): help under the contact words field"
+  },
+  {
+   "key": "screen.case-editor.details.contact.nomember1",
+   "en": "No member is named here.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note under point of contact; followed by nomember2"
+  },
+  {
+   "key": "screen.case-editor.details.contact.nomember2",
+   "en": "The doorbell passes a message to the team without naming anyone.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note, second sentence"
+  },
+  {
+   "key": "screen.case-editor.details.rel.link",
+   "en": "Link to a published case, or a web address",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label for related work"
+  },
+  {
+   "key": "screen.case-editor.details.rel.linkhelp",
+   "en": "A case on any team's public page, or an address that starts with https.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): help under the related-work link field"
+  },
+  {
+   "key": "screen.case-editor.details.rel.choose",
+   "en": "Choose how it relates",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): first, unselected option of the relation list"
+  },
+  {
+   "key": "screen.case-editor.details.rel.same",
+   "en": "Is about the same matter as",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): relation word: the related work covers the same matter"
+  },
+  {
+   "key": "screen.case-editor.details.rel.other",
+   "en": "Relates in another way",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): relation word: any other relation"
+  },
+  {
+   "key": "screen.case-editor.details.rel.words",
+   "en": "Your words about it (optional)",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label"
+  },
+  {
+   "key": "screen.case-editor.details.ties.intro",
+   "en": "The team's ties to the bodies and people this work examines.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note above the relationships choices; followed by ties.public"
+  },
+  {
+   "key": "screen.case-editor.details.ties.public",
+   "en": "The signature on an edition does not cover it, and anyone who reads the case can see it.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note, second sentence; say plainly that the relationships are public"
+  },
+  {
+   "key": "screen.case-editor.details.ties.legend",
+   "en": "What the team states",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): legend of the three relationship states"
+  },
+  {
+   "key": "screen.case-editor.details.ties.none",
+   "en": "None: the team has no ties to state",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice, and the published page word for the none state"
+  },
+  {
+   "key": "screen.case-editor.details.ties.some",
+   "en": "The team is tied to the following",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): radio choice for a list of ties"
+  },
+  {
+   "key": "screen.case-editor.details.ties.with",
+   "en": "A body, an official or another party.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): help under the who-or-what field"
+  },
+  {
+   "key": "screen.case-editor.details.ties.how",
+   "en": "How the team is tied to them",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): field label"
+  },
+  {
+   "key": "screen.case-editor.details.ties.stake",
+   "en": "The team's own stake in what it examines is stated separately, and readers see it beside this.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): note: the stake is not this field"
+  },
+  {
+   "key": "screen.case-editor.details.refused.summary",
+   "en": "When the details cannot be saved",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): disclosure summary"
+  },
+  {
+   "key": "screen.case-editor.details.refused.owner1",
+   "en": "Only the project's owner sets these details.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by Nothing was saved. and Ask and the owner"
+  },
+  {
+   "key": "screen.case-editor.details.refused.body",
+   "en": "A public body you chose is not one the team follows.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by choose-another"
+  },
+  {
+   "key": "screen.case-editor.details.refused.body2",
+   "en": "Choose another, or type its name in words.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal, what to do next"
+  },
+  {
+   "key": "screen.case-editor.details.refused.malformed1",
+   "en": "An entry is empty, runs past its limit, or has a line break.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by shorten"
+  },
+  {
+   "key": "screen.case-editor.details.refused.malformed2",
+   "en": "Shorten it and save again.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal, what to do next"
+  },
+  {
+   "key": "screen.case-editor.details.refused.nocase1",
+   "en": "This case has not been saved yet.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal; followed by save-first"
+  },
+  {
+   "key": "screen.case-editor.details.refused.nocase2",
+   "en": "Save the case first, then set its details.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): refusal, what to do next"
+  },
+  {
+   "key": "screen.ceremony.details.ceremony.notstated1",
+   "en": "A detail left not stated is shown to readers as Not stated.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): ceremony checklist note; followed by never blocks"
+  },
+  {
+   "key": "screen.ceremony.details.ceremony.notstated2",
+   "en": "None of them stops you from publishing.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): ceremony checklist note, second sentence"
+  },
+  {
+   "key": "screen.published.details.pub.current1",
+   "en": "These details are the team's current statement.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): published page note; followed by pub.current2"
+  },
+  {
+   "key": "screen.published.details.pub.current2",
+   "en": "They are not part of the signed edition, and the team can change them.",
+   "protected": false,
+   "note": "DEC-378: B398 C12 (case-inputs casedetailsset): published page note, second sentence"
+  },
+  {
+   "key": "screen.imported.lens_what",
+   "en": "Your team's declared way of reading evidence (its lens).",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the lens section, before the explanation; one sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_does",
+   "en": "This re-weighs the findings above under the lens you choose; nothing is saved and nothing is sent to the source team.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the lens section; one sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_as_published",
+   "en": "As the source published it",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Radio choice, none preselected. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_removed",
+   "en": "With the source's bias removed",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Radio choice, none preselected. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_own",
+   "en": "Under your team's lens",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Radio choice, none preselected. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_shown",
+   "en": "Shown here: with the source's bias removed.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Caption above the table; the lens named changes with the choice (one of the three radio choices, lower-cased start). Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_moved",
+   "en": "Moved: {published} as published, {regraded} without the source's bias.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row of a finding that moved; both placeholders hold a pair of grades; the lens named follows the choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_bar_ours",
+   "en": "It meets your team's bar: {answer}.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row; the placeholder is yes or no. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_bar_theirs",
+   "en": "It met the source's bar: {answer}.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row; the placeholder is yes or no. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_because",
+   "en": "Moved by the statement {statement}, which touches the inference {part}.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row; the statement is a lens statement as the case prints it; the touched part is a leg, an inference or a conclusion. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_unmoved",
+   "en": "Nothing in this lens touches it.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Row of a finding that did not move. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_none_summary",
+   "en": "When your team has no lens in force",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Disclosure summary. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_none",
+   "en": "Your team has no lens in force, so reading under your lens gives the same answer as removing the source's bias.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note inside the disclosure. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_unreadable_summary",
+   "en": "When your team's lens can't be read",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Disclosure summary. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.lens_unreadable",
+   "en": "Your team's lens can't be read, so no finding is shown as moved.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Gap inside the disclosure; nothing is assumed false. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_what",
+   "en": "Redo this team's work under your own lens, in a project of your team's, and set the two side by side.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the rerun section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_pairing_human",
+   "en": "Civicsmith cannot know that two findings answer the same claim, so you say which do.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Intro to the rerun section; second sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_project_label",
+   "en": "Which of your team's projects redoes this work",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Field label of the project choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_project_none",
+   "en": "Choose one of your team's projects",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: First option of the project choice, not a project. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_start_one",
+   "en": "Or start one and come back.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: The word start links to the ordinary new-question flow. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_declares",
+   "en": "This only declares the project a rerun of Edition 2.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button; Edition 2 is the edition shown. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_nothing",
+   "en": "The imported case stays as it is, this is not an acceptance or an endorsement, and nothing is sent to {team}.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button; the placeholder is the source team's name. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_compare_there",
+   "en": "You can compare the two on the project's page.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_owner",
+   "en": "Only an owner of that project can declare it a rerun.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_owner_next",
+   "en": "Ask one of its owners.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_already",
+   "en": "That project already reruns this edition.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.rerun_refused_already_next",
+   "en": "Open it to compare, or choose another project.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_head",
+   "en": "A rerun of Port lease revenue (Edition 2) from West Oakland Neighbors.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Subtitle of the project page for a rerun; the case title, edition and team are sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_unchanged",
+   "en": "The imported case is unchanged.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Subtitle, second sentence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_names",
+   "en": "Civicsmith names the difference between the two lenses and the pairings you make.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Intro to the comparison. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_not_cause",
+   "en": "It does not say why the two readings differ.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Intro to the comparison, second sentence: not a cause. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_lens_diff",
+   "en": "How the two lenses differ",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_only_theirs",
+   "en": "Only in their lens",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Column heading; the source team's lens statements not in this project's lens. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_both",
+   "en": "{count} statements are in both lenses.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Line under the two lists. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_findings",
+   "en": "Their findings and ours",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_paired",
+   "en": "Answers the same claim as our finding {finding}.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Row of a paired finding; the placeholder is the project's finding. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_differ",
+   "en": "The two readings differ.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Row of a pairing whose two pairs of grades are not equal. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_unpaired",
+   "en": "Not paired with a finding of this project yet.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Row of an original finding with no pairing. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_label",
+   "en": "Which finding of this project answers the same claim",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Field label of the pairing choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_none",
+   "en": "Choose one of this project's findings",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: First option of the choice, not a finding. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_is",
+   "en": "A pairing is your statement, not a check.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Note under the pairing button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_strength",
+   "en": "It never changes either finding's strength, and one finding may be paired with several.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Note under the pairing button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_withdraw",
+   "en": "You can withdraw it; the history keeps both.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Note under the pairing button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_pair_refused",
+   "en": "When pairing is refused",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Disclosure summary. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_member",
+   "en": "Only this project's owners and joined members can pair findings.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_member_next",
+   "en": "Join the project first.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_own",
+   "en": "That finding isn't one of this project's.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, first sentence; what to do next follows. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.cmp_refused_own_next",
+   "en": "Choose one from the list.",
+   "protected": false,
+   "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, what to do next. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.queue.routed.auth.item",
+   "en": "Who issued a document your team captured is not known yet.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): row text, the to-do for an authority task; opens the small form beneath it; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.open",
+   "en": "Say who issued it",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): disclosure summary that opens the form; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.question",
+   "en": "Who issued this document?",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): legend over the two choices; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.know",
+   "en": "I know who issued it",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): first choice, not preselected; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.issuer.help1",
+   "en": "Fill this in if you know.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under the field \"The issuing party\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.issuer.help2",
+   "en": "One line, up to 500 characters: the office or organization the document comes from.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under the field \"The issuing party\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.how.label",
+   "en": "How do you know?",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): field label, required when the member knows; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.how.help1",
+   "en": "Required if you know who issued it.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under \"How do you know?\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.how.help2",
+   "en": "One line, up to 2,000 characters: what the document says, or where you checked.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under \"How do you know?\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.tried.help",
+   "en": "One line, up to 2,000 characters: where you looked.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under the field \"What you tried\"; the sentence before it is \"Required if you could not tell.\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.fine1",
+   "en": "Not knowing is a fine answer.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): note under the fields; reassurance, keep the tone warm and plain; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.fine2",
+   "en": "Nothing will be invented for you: the document stays marked as not known, with what you tried kept beside it.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): note under the fields; says the record never fills in an issuer; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.leaves",
+   "en": "This item leaves once you have answered or passed it on.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): small line under the buttons; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.basis",
+   "en": "You gave no answer to “How do you know?” or “What you tried.” Write it, then record your answer again.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal, what to do next; the two quoted phrases are the field labels; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.issuer1",
+   "en": "You said you know who issued it but named no one.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.issuer2",
+   "en": "Name the issuing party, or choose “I could not tell.”",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal, what to do next; the quoted phrase is the second choice; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.yours1",
+   "en": "This item now belongs to someone else.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.yours2",
+   "en": "Ask them, or ask an administrator.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal, what to do next; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.done",
+   "en": "Someone already answered this. It has left your queue.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal; two sentences; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.owner.item",
+   "en": "{who} is proposed as an owner of {project}.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (project-roster projectowneradd): row text: the person proposed and the project (sample data as placeholders); on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.owner.leaves",
+   "en": "This item leaves once you have voted.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (project-roster projectowneradd): end of the row detail; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.endorse.leaves",
+   "en": "This item leaves once you have endorsed.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (member-roster adminendorse): end of the row detail; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.expert.vouch",
+   "en": "Confirm it if you can vouch for it.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (member-roster expertiseconfirm): row detail under the item naming the member and the expertise label; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.expert.leaves",
+   "en": "This item leaves once any administrator confirms.",
+   "protected": false,
+   "note": "DEC-378: C62 K4169 (member-roster expertiseconfirm): end of the row detail; on Home and in Your queue"
   }
  ],
  "rewrite": {
