@@ -55,3 +55,27 @@ test("R20 action-holds declares holdnoticesent: its requires alone raise no refu
   await declaredOpHolds({ op: "holdnoticesent", declaration: DECLARED_OPS["holdnoticesent"], call: mk("holdnoticesent", {"viewer":"member:alice","author":"member:alice"}, async () => (mkWorld(true)), null, (fields, env) => (placed(fields, env))),
     refusedNaming: named({"place":["NO_TARGET"],"at":["BAD_DATE"],"account":["NEITHER_CAPTURE_NOR_TESTIMONY"],"artifact_sha":["NEITHER_CAPTURE_NOR_TESTIMONY"]}, true), values: {"at":"2026-10-02","account":"told by phone"}, same: sameCode });
 });
+
+test("R20 action-holds declares actionpressure: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "actionpressure", declaration: DECLARED_OPS["actionpressure"], call: mk("actionpressure", {"viewer":"member:alice","author":"member:alice"}, null, null, (fields, env) => (placed(fields, env))),
+    refusedNaming: named({"target":["NO_TARGET"],"ord":["PRESSURE_NO_ENTRY"],"pressure":["PRESSURE_REFUSED"],"pressure_kind":["PRESSURE_REFUSED"],"pressure_note":["PRESSURE_REFUSED"]}, true),
+    values: {"ord":0,"pressure":{"kind":"legal","note":"a letter threatening suit"}}, same: sameCode });
+});
+
+test("R20 action-holds declares pressurerecord: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "pressurerecord", declaration: DECLARED_OPS["pressurerecord"], call: mk("pressurerecord", {"viewer":"member:alice","author":"member:alice"}, null, null, (fields, env) => (placed(fields, env))),
+    refusedNaming: named({"project":["NO_SUCH_PROJECT"],"at":["BAD_DATE"],"account":["NEITHER_CAPTURE_NOR_TESTIMONY","CAPTURE_AND_TESTIMONY"],"artifact_sha":["NEITHER_CAPTURE_NOR_TESTIMONY","CAPTURE_AND_TESTIMONY"],"pressure":["PRESSURE_REFUSED"],"pressure_kind":["PRESSURE_REFUSED"],"pressure_note":["PRESSURE_REFUSED"]}, true),
+    values: {"at":"2026-10-02","account":"told by phone","pressure":{"kind":"legal","note":"a letter threatening suit"}}, same: sameCode });
+});
+
+test("R21 action-holds: an actionpressure call without ord is refused naming ord (PRESSURE_NO_ENTRY, field ord), and the same call with ord marks the entry", async () => {
+  const stamps = { viewer: "member:alice", author: "member:alice" };
+  const pressure = { kind: "legal", note: "a letter threatening suit" };
+  const noOrd = await mk("actionpressure", stamps, null, null, (fields, env) => placed(fields, env))({ target: A, pressure });
+  assert.equal(noOrd.ok, false);
+  assert.equal(noOrd.reason, "PRESSURE_NO_ENTRY");
+  assert.equal(noOrd.field, "ord");
+  const withOrd = await mk("actionpressure", stamps, null, null, (fields, env) => placed(fields, env))({ target: A, ord: 0, pressure });
+  assert.equal(withOrd.ok, true);
+  assert.equal(withOrd.ord, 0);
+});
