@@ -2,9 +2,9 @@
    act does and how it fits the larger work, at the guidance level (DEC-162). The pips keep their own explanation of the
    act's weight. Keyed by op (an owed act by its `owed_` key). */
 const ACT_HELP = {
-  owed_casedetailsset: 'Records one of the case\'s five details: what kind of work it is, the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.',
-  owed_casedetails: 'Shows the five details of this case as they stand now, and who set each and when. None of them stops a case from being published.',
-  owed_casedetailspublic: 'Shows any reader the five details of this case as the team currently states them, with those it has not stated marked Not stated.',
+  owed_casedetailsset: 'Records one of the case\'s four details: the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.',
+  owed_casedetails: 'Shows the four details of this case as they stand now, and who set each and when. None of them stops a case from being published.',
+  owed_casedetailspublic: 'Shows any reader the four details of this case as the team currently states them, with those it has not stated marked Not stated.',
   owed_importregrade: 'Re-weighs this case\'s findings under the lens you choose and shows which moved and which statement moved each. It saves nothing, changes nothing in the imported case and sends nothing to the source team.',
   owed_rerunstart: 'Declares one of your team\'s projects a rerun of this edition, so you can compare your work with the original. It records only that; the imported case is not changed, nothing is accepted and nothing is sent to the source team.',
   owed_rerunpair: 'States that one finding of this project answers the same claim as one of the original\'s, or withdraws that statement. It is your statement, kept in the history, and never changes either finding\'s strength.',
@@ -324,6 +324,7 @@ const ACT_HELP = {
   airunclose: 'Stops the assistant\'s run. What it produced so far stays labeled as its draft.',
   person: 'Opens this person\'s page: positions, career and interests, each dated and cited.',
   withdrawidentityclaim: 'Withdraws a claim that two records are the same person, with a reason.',
+  linewithdraw: 'Withdraws a statement that an office keeps the records on a subject or is responsible for it, with a reason. The statement is not deleted: the page still shows that it was there.',
   followregister: 'Follows a public register (licenses, filings) and tells you when an entry for this changes.',
   personexpunge: 'Removes a recorded value for good where the law or a court requires it. It cannot be undone by anyone; a marker stays where it was.',
   createevent: 'Records an event on the timeline from a cited source or your own testimony.',
