@@ -165,3 +165,7 @@ Tests and checks:
 - `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage 5 and words 21 failures, none in credentials.
 
 Size (session_01PVXWdCkqAhUVeYE1E8cxT4): test runs 5, module lines 2750
+
+## J9 · COMPLETE
+
+J8 COMPLETE: R81 met after R76 (two founder pins updated), R82 met, DECLARED_OPS incl. securitymap. Details in my record J8.
