@@ -1,6 +1,6 @@
 # journey-check (T51)
 
-**Status** · session_01KEmRQzhT6pHFHNAtagKobP · depth 2 · COMPLETE · handled B8
+**Status** · session_01GuUGRavFSjzJBKRHYJajpp · depth 2 · COMPLETE · handled B8
 
 ## Completion record (JOURNEY-CHECK #7)
 
@@ -97,3 +97,26 @@ Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 9, module lines 3358
 ## J5 · COMPLETE
 
 COMPLETE (B8 applied, tranche merged). R22 (Action block by address, noted) and R29 (fetched sentences pseudo, data by real markup, fold open) met. Groups: A → R22 (live arm) test in live.test.mjs; B → pseudo.test.mjs R29 (a), setup, security; C → pseudo.test.mjs places, elsewhere; D → pseudo.test.mjs R29 (b) and Home. Suite 83/83 without the walk; architecture, ownership, words, format 0; coverage only R19. Other screens: record text not typed by the walk (project names, queue summaries) counts as data only via the walk's entered list. Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 9, module lines 3358.
+
+## Completion record (JOURNEY-CHECK #9, B9: FR-34 group E)
+
+**Entries applied.** E (walk-E-trace): `pseudoString` remembers each string's answer in a module-level `Map`, and tries a sentence pattern only when the string starts with its first literal part, ends with its last and holds every other (kept on the pattern as `first`, `last`, `parts` when `sentences()` builds it); the result is the one of trying every pattern. `sentencePatterns()` is exported so the test can try every pattern as its reference.
+**R30 line.** The START asked me to write it first, but the ownership check refuses `build/requirements/journey-check.md` as outside my paths (mechanics §7: requirements are BOB's), so I did not commit it. For BOB to place on the tranche branch (the header's "Last changed" line to name FR-34 too):
+
+- **R30** *(not yet met: T51)* (T51 FR-34; K4161 group E, `build/plan/deadends-T51/walk-E-trace.md`; amends R29 (a)) **Making an answer pseudo is cheap.** Making an answer pseudo costs, for a body shaped like the `interfacewords` answer (about 67,000 strings: rows of `{key, text, en, fallback}`), at most 1,000,000 sentence-pattern tries, none for a string it has already made, and gives the same result as trying every pattern, so the walk's event loop is not held for seconds on each page (the stall that cancelled R1 (a)). Test: a body shaped like `interfacewords` through `pseudoJson`, with `RegExp.prototype.exec` counted for the anchored sentence patterns, tries at most 1,000,000 and a second call tries none and answers the same, and every string of it gets the result of trying every pattern; 300 sampled rows with placeholders, filled with a value, are still made pseudo (`escapedIn` finds nothing). Control: a string that is not a sentence of the list is left as it was.
+
+**Tests.** `pseudo-cost.test.mjs` (a file of its own, so it runs without a browser and in a process where no string has been made yet; every title names R30): the budget (a body of 22,457 rows of `{key, text, en, fallback}`, 67k strings with a value filled into each, through `pseudoJson`: seen failing before the fix at 61,136,545 sentence patterns tried, passing after at no more than 1,000,000; the second call tries none and answers the same); the equivalence (every string that reaches the patterns gets the first matching pattern of the whole list); 300 sampled placeholder rows filled and still made pseudo (`escapedIn` finds nothing), control: non-sentences left alone. The walk was not run (K4111).
+**Run.** pseudo-cost 3 pass; pseudo.test.mjs 7 pass; dec340 10 pass; words 3 pass; group.test.mjs 4 pass, 1 fail (below, not mine).
+**Checks.** format 0 failures; architecture 0; words 0 (journey-check); coverage 28 of 29 live ids named (R19, conditional, unmet; R30 joins once BOB writes it); ownership 0 once the requirements file is out of my diff.
+**Deferred.** None.
+**Found in other modules.** `group.test.mjs`:19 (R17's row scan) fails on 15 rows of other modules, none mine: ai-accounts 5 (`declared.aikeepaway`, `declared.groupkeynoticeseen`, ...), intent 2, local-facts 3, strength 2, translations 3: rows of the declaration pass that say "group" for a team and are neither in `GROUP_SENSE` nor a `words.json` "team" row (the DEC-355 route, K4066). The failure does not depend on this job's change.
+
+Size (session_01GuUGRavFSjzJBKRHYJajpp): test runs 7, module lines 3372
+
+## J6 · COMPLETE
+
+COMPLETE (B9, FR-34 group E). pseudoString remembers each string's answer (module-level Map) and tries a sentence pattern only when the string starts with its first literal part, ends with its last and holds every other; same result as trying every pattern. Test pseudo-cost.test.mjs, every title naming R30: a 67k-string body shaped like interfacewords through pseudoJson failed before at 61,136,545 pattern tries, passes after at <= 1,000,000, a second call tries none and answers the same; every string gets the all-patterns result; 300 filled placeholder rows still pseudo; control non-sentence untouched. Walk not run.
+
+FOR YOU: R30 is not in build/requirements/journey-check.md: the ownership check refuses that file as outside my paths, so I left it out of my branch. Its line (ready to paste) is in my record under 'R30 line'; test names carry R30, so coverage reads it once you write it. Checks: format 0, architecture 0, words 0, ownership 0, coverage misses only R19 (conditional) plus R30 until written.
+
+REPORT: group.test.mjs:19 (R17 row scan) is red on 15 rows of other modules, not mine and not caused by this change: ai-accounts 5 (declared.aikeepaway, declared.groupkeynoticeseen ...), intent 2, local-facts 3, strength 2, translations 3: declaration-pass rows saying 'group' for a team, in neither GROUP_SENSE nor a words.json 'team' row (the DEC-355 route, K4066).
