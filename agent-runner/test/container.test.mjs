@@ -133,5 +133,5 @@ test('R33 the container runs at Cloudflare\'s instance type standard-1, declared
   assert.equal(c.instance_type, 'standard-1');
   // control: the figures the container had before R33
   assert.equal(c.max_instances, 10);
-  assert.equal(c.image, 'docker.io/civicsmith/agent-runner@sha256:954ac088c8e758d7ec18c4a9ef4e78bf3fc2cac327ac9536a4162893010014ec');
+  assert.equal(c.image, imageReference(readManifest()), 'the image is the manifest\'s digest-pinned reference, whichever release wrote it');
 });

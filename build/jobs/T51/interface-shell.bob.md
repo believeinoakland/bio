@@ -122,3 +122,10 @@ CHANGE (K4203, K4206): the declaration pass is merged into tranche/T51 (merge it
 - held: heldcaptures sends timer; heldrestore sends id, lacks ids; heldsetaside sends n, lacks ids
 - home: heldcaptures sends closed
 Fix in your own tests and harness only: each stand-in either sends exactly what the owner declares (read it through test-support's collector, never a hand copy, K3268) or uses a fixture op that no owner declares. If a stand-in mirrors a request a real screen sends, say so in your COMPLETE: the screen's own wave-2 job fixes the screen. Test: your suite green; control: a stand-in sending an undeclared field still fails the guard.
+
+## B20 · CHANGE
+
+CHANGE (K4217): two entries, re-opening your job.
+1. **Your stand-ins meet the owners' new declarations.** On tranche/T51 since K4214's merges your suite is 220 pass, 13 fail: the guard now checks declarations that merged after your COMPLETE: nine tests send `promote` with `title` (promotion R61 declares `accepts` the package fields, `requires` `files`, `meta`, `snapKey`), one sends `promote` with none of the three, and three send `openoriginal` with `id`, `sha256` or no capture (file-safety R48). Bring each stand-in to the declared request with `declaredFit`/`fitSend` as you did at J9, never loosening an assertion; where a test's point was the old field, assert the declared one. Merge the tranche first.
+2. **The standard's crumb (screens-investigate J6, DEC-384 entry 9).** `screens-investigate`'s `place(view)` now returns `{project, last}`; the shell's path reads `last` and draws the last crumb as `screen.standard.crumb` with `{name}` (`PATH.standard`, R8), the project's crumb from `project`. Test with a control (a `place` returning a string keeps today's crumb).
+Write your requirement lines yourself (K4210).
