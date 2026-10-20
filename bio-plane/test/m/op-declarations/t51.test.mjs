@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 import { explained } from "./help.mjs";
 import { T51_SHARES, T51_FAMILIES } from "../../../src/op-declarations/t51.mjs";
 import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
@@ -337,4 +338,21 @@ test("R77 (K3826, K3852): heldat's `by` is the session's member alone — stampe
   assert.equal(OPS.heldat.mutating, false);
   assert.ok(!machineAdmits("heldat").includes("ai"));
   assert.ok(!Object.hasOwn(NEEDS, "heldat") || NEEDS.heldat === null);
+});
+
+test("R82 (T51 fix round; K4227; screens-investigate R51; amends R18): standardinforce, standards' in-force read, is in SESSION_OPS.member and SESSION_OPS.admin, so the shell's act gate answers session for it and draws its button — its spec, stamps and NEEDS row are the ones standards declares (admin, member, probe; not mutating; viewer; null), it is explained or named under the read ground (R34), and an `ai` credential is no class of it (negative control: standard and standards, its siblings, stay out of the session sets; an op in no set answers machine)", () => {
+  const owner = REGISTERED.standards.standardinforce;
+  assert.ok(owner, "standards declares no standardinforce");
+  assert.deepEqual(plain(OPS.standardinforce), { classes: [...owner.classes], mutating: owner.mutating });
+  /* its viewer stamp is the action layer's read list (R4), not a family's: unchanged by being a session op */
+  assert.deepEqual(listsOf("standardinforce"), ["ACTION_LAYER_READS", "STANDARDS_READS"]);
+  assert.deepEqual([...(owner.stamps ?? ["viewer"])], ["viewer"]);
+  assert.equal(NEEDS.standardinforce, owner.needs ?? null);
+  assert.ok(SESSION_OPS.member.has("standardinforce") && SESSION_OPS.admin.has("standardinforce"), "standardinforce is not in both session sets");
+  assert.equal(ACT_GATE.mode("standardinforce"), "session");
+  assert.equal(explained("standardinforce") !== ground("standardinforce").length > 0, true, "explained, or named under one ground, never both or neither");
+  assert.ok(!machineAdmits("standardinforce").includes("ai"));
+  /* controls: the siblings are not drawn as session acts, and a name in no set answers machine */
+  for (const op of ["standard", "standards"]) assert.ok(!SESSION_OPS.member.has(op) && ACT_GATE.mode(op) === "machine", op);
+  assert.equal(ACT_GATE.mode("nosuchop"), "machine");
 });

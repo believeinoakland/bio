@@ -10,8 +10,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 import { explained } from "./help.mjs";
-import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { T48_SHARES, T48_FAMILIES } from "../../../src/op-declarations/t48.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
@@ -206,7 +207,9 @@ test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read aga
   const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];
   /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
   const BROWSER = browserActs(registry);
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER].sort());
+  /* R80: an owed act an owner declares is read as served by its declaration (`register-owners.mjs`), an op like any other */
+  assert.deepEqual(owedOf(regActs).sort(), [...new Set(["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...OWED_SERVED_BY_OWNERS, ...BROWSER])].sort());
+  for (const op of OWED_SERVED_BY_OWNERS) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: declared by its owner and not an op`);
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
   for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
@@ -478,7 +481,7 @@ test("R69, R5 (N1039; K3147, K3200): every table and list is built on first read
     let wrote = "none";
     try { m.EDGE_ACTIONS.push("x"); wrote = "pushed"; } catch (e) { wrote = e.constructor.name; }
     let setWrote = "none"; try { m.SESSION_OPS.member.add("x"); setWrote = "added"; } catch (e) { setWrote = e.constructor.name; }
-    process.stdout.write(JSON.stringify({ importMs, atImport, afterKinds, size, firstMs, afterFirst, afterAll, again, same, frozen, wrote, setWrote, kinds, names }));`;
+    process.stdout.write(JSON.stringify({ keys: Object.keys(m.OPS), importMs, atImport, afterKinds, size, firstMs, afterFirst, afterAll, again, same, frozen, wrote, setWrote, kinds, names }));`;
   const r = spawnSync(process.execPath, ["--input-type=module", "-e", script], { encoding: "utf8" });
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
@@ -500,8 +503,13 @@ test("R69, R5 (N1039; K3147, K3200): every table and list is built on first read
   assert.equal(out.kinds.OPS, "object");
   assert.equal(out.kinds.EDGE_ACTIONS, "array");
   assert.equal(Object.values(out.kinds).filter((k) => k === "array").length, 95);
-  /* negative control: this process's own import is lazy too, and agrees with the child's answer */
-  assert.equal(Object.keys(OPS).length, out.size);
+  /* negative control: this process's own import is lazy too, and agrees with the child's answer but for the ops the owners
+     declare (R80): this process registers every owner (`register-owners.mjs`), the child registers none, so the ops here
+     and not there are exactly some of the owners' declarations, and none there is missing here */
+  const here = Object.keys(OPS), there = new Set(out.keys);
+  const declaredNow = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));
+  assert.deepEqual([...there].filter((op) => !Object.hasOwn(OPS, op)), []);
+  assert.deepEqual(here.filter((op) => !there.has(op) && !declaredNow.has(op)), []);
 });
 
 test("R69 (K3147): every export answers exactly as before the tables were lazy — plain bindings read by the same names: the lists are arrays with the same entries in the same order, the tables plain objects with the same keys and frozen leaves, the specs and class lists frozen, the session sets frozen sets answering has, size and iteration, the act gate and decorateAct working over them (negative control: an export outside the list is missing)", () => {
