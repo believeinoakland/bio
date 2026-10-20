@@ -124,3 +124,13 @@ With the rows and those four reads present (both overlays) the module is 175 pas
 **Not done, by the START or by an owner:** I-34 (progress while a timestamp is made; the act is unidentified). The `interface-shell` and other reds in REPORT (J7). Entry 7's `writinghelp` is under the request's description only.
 
 Size (session_0135JUZBcFJA8xpZHnkjPVFw): test runs 48, module lines 2155
+
+## J9 · COMPLETE
+
+COMPLETE (B12, K4243, SCREENS-INTAKE #11). "Your leads" is drawn from `leadlist`: `leads.mjs` reads it as `list`, draws one row per lead the plane answers (in its order, "Open it" by `lead_id`), and keeps no list of its own. The page-memory list and the "plane lists no leads" comment are removed; a lead written in the visit appears because the shell reads every read again after the act. An empty or failed list draws no list (the design has no empty-state row for it; reported, nothing invented).
+
+**Requirement id for BOB: R52** (new, amends R44), in `build/requirements/screens-intake.md`, marked not yet met: T51. Tests: R52 ×2 in `t51-leads.test.mjs` (rows as the plane answers; control: a lead the viewer may not read, not listed by the plane, is not drawn, even when just written). Checks: format 0 failures; architecture 0; coverage 51 of 51; ownership 0 failures; words: only the 6 missingkey lines already in J8 (not mine to add).
+
+Module suite: 179 tests, 156 pass, 23 fail. All 23 are the reds J8 named: the design's missing word rows (HANDOFF B419, B423; accepted by B10, B11), now including `screen.leads.mine.head` and `screen.leads.one.head`, which the leads tests read; and other modules' (writinghelp `op`, SESSION_OPS reads, link-sweep needs). With a local, uncommitted overlay of those two rows plus `screen.leads.state.unclear`, all 9 leads tests pass.
+
+Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 8, module lines 2145
