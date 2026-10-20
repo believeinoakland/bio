@@ -209,7 +209,7 @@ function render(cs, view) {
       (open && Number.isFinite(Number(q.read)) ? `<div data-closenow="open">${cs.sheet(cs.row(cs.icon("clock"), W("screen.project.closenow.open",
         { stage: T("screen.project.stage." + open.stage), count: String(Number(q.concluded) || 0), total: String(Number(q.read)) })))}</div>` : "")
       + cs.checks("project-close-why", "screen.project.closenow.why", [["resolved", "state.item.resolved.name"], ["superseded", "screen.project.closenow.superseded"], ["abandoned", "state.item.abandoned.name"]], { radio: true })
-      + cs.field("project-close-note", "screen.project.closenow.note", { area: true, rec: true })
+      + cs.field("project-close-note", "screen.imported.citeimp.note", { area: true, rec: true })
       + cs.act("projectclose", { tone: "primary" })
       + `<p class="mk-note">${W("screen.project.closenow.note1")} ${W("screen.project.closenow.note2")}</p>`, { help: "screen.project.closenow.tip" }));
   }
@@ -1050,7 +1050,7 @@ const words = Object.freeze([
   ...["what.each.stage.needs", "the.record.decides.the.stage.by", "nothing.here.is.a.button.when", "either.one.reaches.it.the.project",
     "help.for.each.stage.what.it.took", "help.counts.come.from.the.record.each", "how-far-the-project-has-come-toward-its-objectiv"].map((k) => "screen.project." + k),
   ...["head", "open", "why", "superseded", "do", "note1", "note2", "ref.owner", "ref.reason", "tip"].map((k) => "screen.project.closenow." + k),
-  "state.item.resolved.name", "state.item.abandoned.name", "screen.objective.name",
+  "state.item.resolved.name", "state.item.abandoned.name", "screen.objective.name", "screen.imported.citeimp.note",
   ...["head", "unchanged", "names", "not_cause", "lens_diff", "only_theirs", "both", "findings", "paired", "differ", "unpaired", "pair_label", "pair_none",
     "pair_is", "pair_strength", "pair_withdraw", "refused_member", "refused_member_next", "refused_own", "refused_own_next"].map((k) => "screen.project.cmp_" + k),
   "act.owed_rerunread.label.project", "act.owed_rerunpair.label.project", "act.writinghelp.label.project", "act.writinghelp.does",
