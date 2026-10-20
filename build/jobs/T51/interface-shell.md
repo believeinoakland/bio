@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_018RtYmRfvBFKT71cztJSVMH · depth 2 · COMPLETE · handled B17
+**Status** · session_018RtYmRfvBFKT71cztJSVMH · depth 2 · COMPLETE · handled B18
 
 ## J1 · BLOCKED
 
@@ -123,3 +123,15 @@ COMPLETE (re-opened by B12–B17) for `interface-shell` in T51.
 **Checks.** Module suite 231 of 231. Screen suites: the inherited registry reds and R107's consequence above. `checks/run.mjs`: format, words 0 failures; architecture 1 failure (the `uses` edge above); coverage for interface-shell clean; ownership 0 failures.
 
 Size (session_018RtYmRfvBFKT71cztJSVMH): test runs 24, module lines 2874
+
+## J8 · COMPLETE
+
+COMPLETE (B18) for `interface-shell` in T51.
+
+**Applied.** The `reason` the shell adds to a Reasoned act's body is a shell mark like `op` and `background`: the guard never reports it as an unknown field; an owner that declares or requires `reason` has it checked as any field is (test in `declared.test.mjs`: an owner declaring none passes through the real reason box; control: another undeclared field still fails).
+
+**Correction to your acceptance.** The seven R106 "opens where registered" tests were red from my own stand-in (its `render` used a closure variable, which a screen function may not). Fixed: with the six screens now in the registry, the boot arms run for real (path, crumb, a reference of each new kind opening its screen) and pass. Nothing is red in this module.
+
+**Checks.** Module suite 232 of 232 (before the fix 225; the seven were mine). `checks/run.mjs`: format, architecture, words 0 failures; coverage for interface-shell clean; ownership 0 failures.
+
+Size (session_018RtYmRfvBFKT71cztJSVMH): test runs 28, module lines 2886
