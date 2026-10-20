@@ -176,7 +176,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const caps = Array.isArray(ME.capabilities) ? ME.capabilities : [];
     if (need !== undefined && need !== null && !caps.includes(need)) return false;
     const set = ME.tokenClass === "admin" ? SESSION.admin : SESSION.member;
-    if (!set.has(op)) return false;
+    /* K4237: a read is served to any session whose class its op lists; `SESSION_OPS` gates mutating ops alone */
+    const rc = D.readClasses[op];
+    if (!set.has(op) && !(rc === null || (Array.isArray(rc) && rc.includes(ME.tokenClass)))) return false;
     if (ADMIN.has(op) && ME.administer !== true) return false;
     return true;
   }
@@ -976,11 +978,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const steps = [];
     const p = D.paths[route.screen] || null;
     if (p) {
-      let proj = null, last = null;
+      let proj = null, last = null, projKey = null;
       /* R110: `place` answers `{project, last}`; `last` (data: the one the member is on) is the final crumb's `{name}` where the path holds the design's `.crumb` word, else the screen's own name stays */
-      try { const pl = inst && inst.spec.place ? inst.spec.place(inst.view) || {} : {}; proj = pl.project; last = typeof pl.last === "string" && pl.last ? pl.last : null; } catch { proj = null; last = null; }
+      try { const pl = inst && inst.spec.place ? inst.spec.place(inst.view) || {} : {}; proj = pl.project; last = typeof pl.last === "string" && pl.last ? pl.last : null; projKey = typeof pl.projectKey === "string" && has(pl.projectKey) ? pl.projectKey : null; } catch { proj = null; last = null; projKey = null; }
       p.forEach((step, i) => {
-        if (step === "@project") { if (proj && proj.title) steps.push({ label: soft(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
+        if (step === "@project") { if (proj && proj.title) steps.push({ label: projKey ? w(projKey, { name: String(proj.title) }) : soft(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
         else if (i === 0 && D.places.includes(step)) steps.push({ label: w("rail." + step + ".name"), href: placeHref(step) });
         else if (i === p.length - 1 && /\.crumb$/.test(step)) steps.push({ label: last ? w(step, { name: last }) : w(step.replace(/\.crumb$/, ".name")) });
         else steps.push({ label: w(step) });

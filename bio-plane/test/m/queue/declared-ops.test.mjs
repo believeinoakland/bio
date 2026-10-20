@@ -69,3 +69,47 @@ test("R92: each description is read by key, queue.declared.proposedispose, queue
     if (W.hasWord(`queue.declared.${op}`)) assert.equal(W.word(`queue.declared.${op}`), d, `${op}: the word list's sentence`);
   }
 });
+
+/* queue R92 (T51 fix round, B8 / K4238): a SET of proposedispose names each item's identity in `items` and shares the disposition
+   and the reason at the top level (queue-states' set arm; `#perItem` spreads the shared fields onto every item). So `items` is an
+   alternative for the identity groups, and `to` and `reason` stay required at the top level. The set's declaration is held true
+   the same way as the single's: only its requires, each missing one refused naming it, a field outside accepts dropped or refused. */
+test("R92 queue declares proposedispose's set form: `items` satisfies the identity groups, the disposition and the reason stay top-level", async () => {
+  /* a set's refusal names a field either at the top or in the item it retained (its own act's refusal, `items[]`) */
+  const inSet = (answer, field) => named({ to: ["NOT_A_DISPOSITION"] })(answer, field)
+    || (Array.isArray(answer?.items) && answer.items.some((i) => named({ to: ["NOT_A_DISPOSITION"] })(i, field)));
+  /* the module's own declaration names the set form: each identity group carries `items`, and `to`/`state` and `reason` stay as they are */
+  const { accepts, requires } = DECLARED_OPS.proposedispose.fields;
+  assert.ok(requires[0].includes("items") && requires[1].includes("items"), "the identity groups take `items`");
+  assert.deepEqual(requires[2], ["to", "state"]);
+  assert.equal(requires[3], "reason");
+  /* the set's form is the same declaration with `items` first, so the helper's base is a set (it reads each group's first name) */
+  const setDeclaration = { ...DECLARED_OPS.proposedispose, fields: { accepts,
+    requires: [["items", ...requires[0].filter((k) => k !== "items")], ["items", ...requires[1].filter((k) => k !== "items")], requires[2], requires[3]] } };
+  await declaredOpHolds({ op: "proposedispose", declaration: setDeclaration,
+    call: async (fields) => { const w = setup(); const url = new URL("http://x/?" + new URLSearchParams({ op: "proposedispose", ...ALICE }));
+                              return queueOps(w.q, url, { ...fields, decidedBy: "alice" }).proposedispose(); },
+    refusedNaming: inSet,
+    values: { items: [{ project: "PRJ-1", finding: "FINDING::stance-changed-here-not-elsewhere::INQ-1::PRJ-1" }],
+              to: "dismissed", reason: "not worth pursuing" },
+    same: sameCode });
+});
+
+test("R92 control: proposedispose with neither a project, a key, a progression nor items is refused, naming the identity it lacks", async () => {
+  const w = setup();
+  const url = new URL("http://x/?" + new URLSearchParams({ op: "proposedispose", ...ALICE }));
+  const answer = queueOps(w.q, url, { to: "dismissed", reason: "not worth pursuing", decidedBy: "alice" }).proposedispose();
+  assert.equal(answer.ok, false);
+  assert.equal(answer.code, "NO_KEY");
+  assert.match(answer.detail, /progressionKey/);
+});
+
+test("R92 control: a set whose items carry no reason is refused whole, the reason named on each retained item", async () => {
+  const w = setup();
+  const url = new URL("http://x/?" + new URLSearchParams({ op: "proposedispose", ...ALICE }));
+  const answer = queueOps(w.q, url, { items: [{ project: "PRJ-1", finding: "FINDING::stance-changed-here-not-elsewhere::INQ-1::PRJ-1" }],
+                                       to: "dismissed", decidedBy: "alice" }).proposedispose();
+  assert.equal(answer.ok, false);
+  assert.equal(answer.applied, 0);
+  assert.equal(answer.items[0].reason, "NO_REASON");
+});
