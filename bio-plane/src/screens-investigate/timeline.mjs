@@ -20,7 +20,7 @@ function reads(view) {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     people: { op: "peopledirectory", query: { limit: "200" } },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
-    docs: { op: "heldcaptures", query: { project: id, limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { project: id, limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
   if (mode === "matter" && key && eid) out.matter = { op: "instance", query: { key, id: eid } };
   if (mode === "progression" && key) out.def = { op: "progression", query: { key } };

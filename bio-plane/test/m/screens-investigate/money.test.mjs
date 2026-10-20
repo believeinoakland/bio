@@ -75,7 +75,7 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
   assert.ok(panelOf(p, M2).textContent.includes("Grade B: bytes as fetched."), "the grade note, as the capture holds it");
   fill(p, { "mf-address": "https://city.example/afr-2022.pdf" });
   await press(p, "acquire", { within: panelOf(p, M2) });
-  assert.deepEqual(p.byOp("acquire")[0].body, { locator: "https://city.example/afr-2022.pdf", project: P });
+  assert.deepEqual(p.byOp("acquire")[0].body, { locator: "https://city.example/afr-2022.pdf" });
   fill(p, { "mf-expertise": "municipal budget" });
   await press(p, "checkrequest", { within: panelOf(p, M2), reason: "how was it read?" });
   const cr = p.byOp("checkrequest")[0].body;

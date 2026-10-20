@@ -20,7 +20,7 @@ function reads(view) {
     people: { op: "peopledirectory", query: { limit: "200" } },
     entity: { op: "entity", query: { id }, subject: true, empty: (v) => !v || v.found === false },
     naming: { op: "readingname", query: { entity: id } },
-    docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
 }
 

@@ -16,7 +16,7 @@ function reads(view) {
   const S = "screen.money.";
   const id = String(view.subject || "").split("/")[0];
   return /^MSR-/.test(id)
-    ? { docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
+    ? { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
     : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] } };
 }
 
@@ -277,9 +277,7 @@ const acts = [
     send(view, el, cs) {
       const locator = String(cs.value("mf-address") || "").trim();
       if (!/^https:\/\//.test(locator)) return { refuse: "screen.money.f.noaddress" };
-      const t = view.data.trail;
-      const project = t && t.state === "ok" && t.value.set && t.value.set.concerns;
-      return { body: Object.assign({ locator }, project ? { project } : {}) };
+      return { body: { locator } };
     } },
   /* "Ask a member who knows budgets": a check of the project's record, to the members declaring that expertise */
   { op: "checkrequest", label: "act.checkrequest.label.money",
