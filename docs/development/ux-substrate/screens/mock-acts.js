@@ -105,6 +105,7 @@ const ACT_HELP = {
   wizardapprove: 'Approves a wizard so members are offered it where its steps start.',
   wizardretire: 'Stops offering a wizard. Anyone part-way through can finish.',
   taskresolve: 'Does what this item asks, on the screen it concerns. It leaves your queue when done.',
+  owed_taskdecide: 'Records, in your name, who issued this document, or that you looked and could not tell, with your reason. The task is done and leaves the list. A later answer replaces it, and the earlier one stays in the history.',
   taskforward: 'Passes this item to another member better placed to act.',
   proposedispose: 'Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.',
   queuesnooze: 'Hides the item, and the other items in its case, until the date you choose, when they come back.',
