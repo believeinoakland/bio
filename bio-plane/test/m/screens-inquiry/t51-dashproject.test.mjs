@@ -7,6 +7,7 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { COMMON } from "../../../src/screens-inquiry/common.mjs";
 import { dashProjectScreen } from "../../../src/screens-inquiry/dashproject.mjs";
 import { boot, ok, refused, refusedIn } from "../interface-shell/harness.mjs";
+import "./fixtures.mjs";
 
 const P = "PROJ-2026-0007";
 const Q1 = "INQ-2026-0001-seven-days", Q2 = "INQ-2026-0002-closed", Q3 = "INQ-2026-0003-third";

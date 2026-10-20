@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_013FqAXHU9wuVwLZqxBYLrmn · depth 2 · COMPLETE · handled B14
+**Status** · session_01KSJQk5BpCQJRWiVABxqnfZ · depth 2 · COMPLETE · handled B21
 
 ## J1 · REPORT
 
@@ -111,3 +111,42 @@ Checks: format 175 modules 0 failures; architecture 0 failures; coverage 83 of 8
 Still open for you: the draft PR question in my earlier COMPLETE (none opened).
 
 Size (session_013FqAXHU9wuVwLZqxBYLrmn): test runs 9, module lines 4090
+
+## J11 · COMPLETE
+
+COMPLETE for FR-28 (screens-inquiry #15), with three open items for BOB (below). Module suite: 372 pass, 0 fail. Built by five workers (sonnet, medium) on disjoint files; I merged, fixed the shared tests and ran the checks.
+
+**Entries applied (requirement lines R84–R122 were already on the file, marker cleared for each met):**
+- document (document.mjs): R84 (Thread sends key, entity, placement; the first-thread choice is not drawn, no read lists flows), R85 (sends chosen `ref`, B18), R86, R92, R93 (imports `checkOutcome` from screens-intake), R95, R96, R97, R98, R99, R100, R108, R111, R112 (blocks of 20 with their Cite controls), R113, R117, R118; R10 for document.
+- question (question.mjs): R87, R88 (entries 5 and 44), R89, R91, R101, R102, R103, R104, R114 and R121 (required reason box), R116, R117, R120; R10 for question.
+- project (project.mjs): R90, R115, R94, R107, R109, R117, R122, entry 25 (writinghelp), entry 36 (slug trimmed after the cut), entry 43 (reason given through the harness), the link to the objective screen (R106 second half).
+- new screens: `contradiction` (R105, contradiction.mjs) and `objective` (R106, objective.mjs), registered in index.mjs.
+- Tests: new fr28-*.test.mjs files; existing tests fixed where the behaviour changed. `fixtures.mjs` registers every owner's declarations once with test-support's `registerDeclared` (K4245) and op-grades for provenance, case-import and investigation only (registering all owners fails: `DECLARED_OP_DISAGREES: accountusesset description`, a row of another module).
+
+**Not met, and why:**
+1. R110 (C50, citeimported/withdrawimported): not built, as the START says, until BOB sends the CHANGE naming the drawing. Coverage names R110 for it.
+2. R119 (entry 39, the scanner line and safe view): the worker found it belongs to the `open-file` screen that screens-intake owns (`open-file.mjs`), the document registry has no safe-view act (an added act would break R10). Please reassign it to screens-intake; `open-file.mjs:35-37` passes `n.tool`/`n.result` raw instead of `screen.open-file.tool.clamav` and `screen.open-file.result.*` and draws engine and version for a file not scanned.
+3. Architecture check fails (8) because `modules.json` `uses` for screens-inquiry lacks: test-support (tests), op-grades, case-import, investigation, provenance (fixtures.mjs), inquiry-grammar and record-grammar (tests; BUNDLE_ID_RE, importedFindingRef). Only BOB can edit modules.json; please add them, or tell me to avoid any import.
+
+**Needs from other modules (REPORT):**
+- A read of a document's typings (`transcriptions`), of its declared origins, and of its standing route: R97's Confirm, R108's list and R98's standing state are silently absent or session-only until they exist.
+- `contradictioncandidates` should carry who took a candidate up and when; Home and the queue must open `contradiction` as `<candidate>/<project>`; op-grades should grade contradictiondismiss, contradictionoptin, contradictionrespond; `contradictionresolve` cannot succeed on a freshly taken-up question (no reading, NO_CLAIM).
+- `narrowcandidates` and `allocid` have no owner declaration (the guard passes them); the plane's `inquirystrength` has no top-level `ungraded`.
+- case-import `rerunread` should carry the case title and each source finding's title (the page draws slugs and ids).
+- interface-shell: `dash-action` and `objective` need REF_SCREENS entries and `shell.card.*` words (both drawn as quiet buttons meanwhile); `versionnotice` still draws the "Asks for a reason" mark (B17).
+- op-grades row `accountusesset` description disagrees with its owner's; screens-action `matter` still opens by project id (R45 b), so with R90 a project with no determination has no door to make the first one: confirm intended.
+- objective: no read lists progressions or entities or goals under no aspiration; `progress` lacks the reason the measure was set; `triage`, `aspirationdeclare`, `goaldeclare` are Reasoned, so the shell's box doubles the design's own field.
+
+**Design word gaps (nothing invented; each draws as its key or is omitted):** document: "Its text" label and the full/none/unread sentences, "Said by {member}, {date}", the retired-copy sentence, finding-check labels, `screen.capture.address.checked.*`. question: counted sentence for hunches left out and ungraded, hunch history act words, reeval cause rows other than edition, From/To labels. project: `cmp_only_ours`, `cmp_withdraw_do`, "Their/Our reading", stage reached/not-reached labels, "Ask {owners}.". objective: 22 labels (headings, fields, options) listed as `PENDING_WORDS` in objective.mjs. contradiction: 31 keys listed as `GAP_WORDS` in contradiction.mjs, and the rows "Stated dates", "Kinds", the passage meta line and the party lines.
+
+**Decisions:** R112 keeps one Cite control per passage in a block of 20 (the requirement's test line), not a single control; OCR sends `sha256` and `ocr=1` (pdfstructure declares no page field).
+
+**Checks (from civicos-process, against /home/user/bio):** format 175 modules, 0 failures; words: no finding for screens-inquiry; coverage 120 of 122 live ids (R110, R119 unnamed); architecture 8 failures, all the `uses` above; ownership: only `build/requirements/screens-inquiry.md` outside paths (accepted by B16/B17, K4210). Not run: the `setup-words build --check` finding for my module (none seen) and journey-check.
+
+Size (session_01KSJQk5BpCQJRWiVABxqnfZ): test runs 16, module lines 5565
+
+## J12 · COMPLETE
+
+COMPLETE, re B21 (K4248). Merged tranche/T51 (design @ 18f78e4422, rows.mjs regenerated) and read U420, U421 and U422 whole. Nothing of U420 names a key of my module apart from `screen.capture.address.checked.*`, which the document draws through screens-intake's `checkOutcome` (held in words.json now); no code change this round. Module suite: 372 pass, 0 fail. The words check shows no finding for screens-inquiry.
+
+Still waiting on rows (not answered by U420 or U422): the 23 keys of `PENDING_WORDS` (objective.mjs) and the 31 of `GAP_WORDS` (contradiction.mjs), none held yet; the document, question and project gaps listed in J11. Also open as in J11: R110 (your CHANGE), R119 (reassign to screens-intake) and the `uses` edges of modules.json (architecture, 8 failures).

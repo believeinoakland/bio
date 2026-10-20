@@ -11,6 +11,8 @@ import { questionScreen } from "./question.mjs";
 import { documentScreen } from "./document.mjs";
 import { ASSISTANT_SCREEN, MODE_BOUNDS, REFUSALS, WITHHELD } from "./assistant.mjs";
 import { PROJECTAI_SCREEN } from "./projectai.mjs";
+import { CONTRADICTION_SCREEN } from "./contradiction.mjs";
+import { objectiveScreen } from "./objective.mjs";
 
 /** interface-shell R5's own rows: none since R44 (every word is `words.json`'s, through setup-words). */
 export const SCREEN_WORDS = Object.freeze([]);
@@ -19,4 +21,4 @@ export const SCREEN_WORDS = Object.freeze([]);
  *  and (R14) `projectai`, each with the readers it shares (common.mjs) as its parts; the question's "Ask the assistant
  *  to look" opens its run with the dock's bounds (R33, R41). */
 export const SCREENS = Object.freeze([projectScreen(COMMON), dashProjectScreen(COMMON), questionScreen(Object.freeze({ ...COMMON, bounds: MODE_BOUNDS, refusals: REFUSALS, withheld: WITHHELD })),
-  documentScreen(COMMON), ASSISTANT_SCREEN, PROJECTAI_SCREEN]);
+  documentScreen(COMMON), ASSISTANT_SCREEN, PROJECTAI_SCREEN, objectiveScreen(COMMON), CONTRADICTION_SCREEN]);

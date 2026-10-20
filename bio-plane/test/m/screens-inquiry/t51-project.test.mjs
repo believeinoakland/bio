@@ -7,6 +7,9 @@ import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, fill, press, says, word, rawKeys, SCREENS, P } from "./fixtures.mjs";
 
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
+
+
 const at = "/app/project/" + P;
 /* a day as `cs.date` draws it, read through the same words (DEC-333), never copied */
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
@@ -143,10 +146,11 @@ test("R75 a three-owner project: 2 of 3 on the live row; the owner standing down
 
 test("R75 a vote she already cast draws as cast and offers no second; the plane's ALREADY_VOTED and NO_REASON are drawn by their words", async () => {
   const votes = ok({ ok: true, projectId: P, changes: [{ change: "remove", target: "mai", proposed_by: "mai", proposed_at: "2026-10-09T09:00:00Z", agreed: ["mai"], awaiting: ["dev"] }] });
-  const p = await opened({ projectparticipants: TWO, projectownerarith: arith(2), projectownervotes: votes });
-  assert.equal(checks(p)[3].getAttribute("data-holds"), "yes", "a vote she already cast draws as cast");
-  assert.equal(stateE(p).querySelector('[data-vote-for="mai"]').getAttribute("data-voted"), "yes");
-  assert.equal(stateE(p).querySelectorAll('button[data-act="projectownerremove"]').length, 0, "and no second is offered");
+  /* R122: with her removal already waiting, her row says the vote is open and offers no second stand-down */
+  const p = await open(at, { plane: { projectparticipants: TWO, projectownerarith: arith(2), projectownervotes: votes } });
+  const mine = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes("mai"));
+  assert.ok(says(mine, "project.owners.standdown.opened", { awaiting: "dev" }));
+  assert.equal(mine.querySelectorAll('button[data-act="projectownerremove"]').length, 0, "and no second is offered");
   for (const code of ["ALREADY_VOTED", "NO_REASON", "LAST_OWNER", "NOT_AN_OWNER"]) assert.ok(hasWord("refusal." + code), code);
   const refused = await opened({ projectparticipants: TWO, projectownerarith: arith(2), projectownerremove: refusedIn("ALREADY_VOTED") });
   fill(refused, { "project-ownerstand-reason": "again" });
