@@ -54,3 +54,20 @@ Five readings I have built on and carry on with; a different answer to any is a 
 3. **`filingrecordsent` is the screens' name; the arm is `filingsent`** (`OP_ALIASES`). I declare the screens' name only, with `artifact_sha` and its camelCase twin `artifactSha`, which the arm also reads (requires filing, at, and one of account / artifact_sha / artifactSha).
 4. **C75's refusal** was not made anywhere: `filing-templates` refuses a `use: file` template only for a kind whose profile tier is 3, not for an action whose own tier was raised to 3 after the draft was approved. `templateSave` now refuses it, answering `TEMPLATE_TIER3_FILE` with `filing-templates`' own row (C-115.36), for a new template with `use` file or absent and for a new version of a `file` template; `use: brief` is accepted. No new code, row or word row beyond the one `localize` detail.
 5. **Descriptions are the hand rows' sentences** for the four ops whose hand row is a sentence (`communicationprepare`, `holdnoticeprepare`, `templatesave`, `filingsecondapprove`), as op-grades requires; `holdnoticeprepare`'s says "by her own hand" (op-grades' row, not mine to edit; filings R47 says the same).
+
+## J5 · COMPLETE
+
+FR-20 applied on `job/T51/filings` (tranche/T51 merged in; B5–B8 handled; B8 confirmed all five J4 readings). Requirement lines R66, R67, R68 written by me in `build/requirements/filings.md` (not in this record); their tests name them, so they carry no *(not yet met)* mark.
+
+**Entries applied**
+1. C71 · R66: `filingapprove` with `resolutions: [{sentence, resolution, words?}]` and `release: [{ord, reason}]` is accepted for flagged and contradicted text; controls `ASSERTION_UNRESOLVED`, `CONTRADICTED_HELD`. The screen's `index` is screens-action's defect (sent by BOB as CHANGE).
+2. C75/DEC-377 · R67: not refused anywhere before; `templateSave` now answers `TEMPLATE_TIER3_FILE` (filing-templates' own row) for `use: file` of a filing whose action is governed at tier 3; `use: brief` accepted; Tier 1/2 control.
+3, 4. K4168/K4202 · R68: `DECLARED_OPS` beside the ops map for `filingprepare`, `communicationprepare`, `filingapprove`, `filingrecordsent` (screens' name; arm `filingsent`), `filingsecondapprove`, `counselpacket`, `holdnoticeprepare`, `templatesave`; each held by `declaredOpHolds` in `declared-ops.test.mjs`.
+
+**Hand rows that can now go** (op-declarations / op-grades, not mine to edit): the rows for those eight ops, wherever they hold class, weight, description or fields.
+
+**Found in other modules**: none new. Standing from J2: plane store.mjs `filingsOf` not handed `env`/`caseInputs`; action-clocks `whyOf` "[object Object]" (the two packet reds are now green in this run).
+
+**Tests and checks**: `node --test bio-plane/test/m/filings/`: tests 154, pass 154, fail 0. format 0 failures; architecture filings 0; coverage filings 67 of 67; ownership 4 files, 0; `checks/run.mjs`: no finding names filings (remaining failures are other modules').
+
+Size (session_016qbXZJnFcwk8TErZNueoKY): test runs 4, module lines 3758
