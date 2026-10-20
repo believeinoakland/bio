@@ -77,7 +77,8 @@ export const TIMELINE_PARTS = Object.freeze({
     const [, , key] = String(view.subject || "").split("/");
     const back = `<p class="mk-small"><a data-nav href="/app/timeline/${encodeURIComponent(project)}">${cs.w(S + "name")}</a></p>`;
     return back + cs.state("def", view, (v) => {
-      if (!v || v.found === false) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+      /* R49: a progression the record does not hold is the empty state with the form that defines it beside it */
+      if (!v || v.found === false) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>` + view.parts.defineFold(cs);
       const stages = Array.isArray(v.stages) ? v.stages : [];
       const handle = (h) => String(h || "").replace(/^member:/, "");
       const words = { always: "always", usually: "usually", sometimes: "sometimes", unless_exception: "unless", never: "never" };
@@ -99,10 +100,19 @@ export const TIMELINE_PARTS = Object.freeze({
         + fold("progression.revise", `<p class="mk-small">${cs.w("progression.revise.help")}</p>` + cs.field("pd-rv-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" }) + cs.field("pd-rv-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
           + columns + cs.field("pd-rv-steps", "progression.steps", { area: true, rec: true, value: stepsText, help: "progression.steps.help" })
           + cs.act("progressiondefine", { label: "progression.revise", data: { mode: "revise", key: String(key || "") } }))
-        + fold("progression.define", cs.field("pd-name", "theme.name.label", { help: "theme.name.help" }) + cs.field("pd-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" })
-          + cs.field("pd-cite", "entity.relation.cite", { help: "entity.relation.cite.help" }) + `<p class="mk-small">${cs.w(S + "progression.steps.note")}</p>` + columns + cs.field("pd-steps", "progression.steps", { area: true, rec: true, help: "progression.steps.help" })
-          + cs.act("progressiondefine", { label: "progression.define.go", tone: "primary", data: { mode: "define" } }));
+        + view.parts.defineFold(cs);
     });
+  },
+  /** R33 (3), R49: "Define a progression": the fold that declares one (`progressiondefine`), drawn in state c, beside the empty state of
+   *  a progression the record does not hold, and on the project's timeline whether or not it follows a matter yet. */
+  defineFold(cs) {
+    const S = "screen.timeline.";
+    const columns = `<p class="mk-small" data-columns="steps">${["key", "label", "after", "within", "required", "cardinality"].map((c) => cs.w("progression.steps.label." + c)).join(" | ")}</p>`;
+    return `<details class="mk-details" open data-define="1"><summary>${cs.w("progression.define")}</summary>` + cs.field("pd-name", "theme.name.label", { help: "theme.name.help" })
+      + cs.field("pd-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" })
+      + cs.field("pd-cite", "entity.relation.cite", { help: "entity.relation.cite.help" }) + `<p class="mk-small">${cs.w(S + "progression.steps.note")}</p>` + columns
+      + cs.field("pd-steps", "progression.steps", { area: true, rec: true, help: "progression.steps.help" })
+      + cs.act("progressiondefine", { label: "progression.define.go", tone: "primary", data: { mode: "define" } }) + "</details>";
   },
   /** R33 (3): a definition's steps from the lines a member typed: `key | label | after | within | required | cardinality`;
    *  a blank required is "sometimes" and a blank cardinality "0..n", which raise no finding on their own. */

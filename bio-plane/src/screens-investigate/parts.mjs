@@ -29,6 +29,15 @@ export const PARTS = Object.freeze({
     }
     return L[key];
   },
+  /** R55: whom a reply is owed by, from whatever keys a counterparty holds: an addressee's own role and body or name, a described
+   *  audience's description; one not yet determined names nobody ("": no sentence is drawn). */
+  counterparty(c) {
+    if (!c || typeof c !== "object" || c.state === "undetermined") return "";
+    const text = (v) => (typeof v === "string" ? v.trim() : "");
+    if (c.state === "audience") return text(c.description);
+    const named = [text(c.role), text(c.body)].filter(Boolean).join(", ");
+    return named || text(c.name) || text(c.label) || text(c.office) || text(c.description);
+  },
   /** A word as plain text for a record or a request body, not for the page: `cs.w` escapes it as HTML, this undoes that. */
   plain(cs, key, fills) {
     return cs.w(key, fills).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
