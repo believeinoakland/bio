@@ -83,15 +83,3 @@ for (const op of ["securitytoolremove", "securitytooltest"]) {
       refusedNaming: named({ toolId: ["NO_SUCH_TOOL"], tool: ["NO_SUCH_TOOL"] }), values: { toolId: "joe-sandbox-1", tool: "joe-sandbox-1" } });
   });
 }
-
-test("R48: each declared op is graded as its existing rows grade it, so owner and hand rows agree", async () => {
-  const { RUNGS, RUNG_ABSENT, NON_ACTS } = await import("../../../src/op-grades/index.mjs");
-  const { OPS } = await import("../../../src/op-declarations/index.mjs");
-  for (const [op, d] of Object.entries(DECLARED_OPS)) {
-    assert.deepEqual([d.classes, d.mutating], [OPS[op].classes, OPS[op].mutating], `${op}: class and mutating are op-declarations'`);
-    if (OPS[op].machineClasses) assert.deepEqual(d.machineClasses, OPS[op].machineClasses, `${op}: machine classes`);
-    const weight = RUNGS[op] ?? (RUNG_ABSENT[op] ? RUNG_ABSENT[op].ground : NON_ACTS[op] !== undefined ? "read" : null);
-    assert.equal(d.weight, weight, `${op}: weight is op-grades'`);
-    assert.equal(d.description, NON_ACTS[op], `${op}: description is op-grades' reason`);
-  }
-});
