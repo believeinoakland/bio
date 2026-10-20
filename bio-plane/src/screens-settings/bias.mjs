@@ -6,8 +6,9 @@
    from these" promotes them as a draft); and a work product made under an earlier lens (`biasdebt`, the address `/app/bias/<run>`) with
    the reason to settle it (`biasdebtresolve`). Every sentence is a word read by key (R39). The design's headings and labels that
    `words.json` does not yet hold are drawn without them (REPORTED, J11), never as the key or as English written here. A set holds one
-   statement in this form (the drawing's); a set offered earlier is not listed (no op lists them), so adopting acts on the set saved in
-   this sitting. Every function is self-contained (interface-shell R21). */
+   statement in this form (the drawing's). The sets the team offered earlier are listed through `retrieval`'s `list` (`type: "bias"`,
+   `state: "proposed"`, page after page by its cursor, at most five pages), so one is adoptable without writing it again, with the set
+   just saved first. Every function is self-contained (interface-shell R21). */
 
 export const bias = {
   id: "bias",
@@ -19,6 +20,8 @@ export const bias = {
     const r = {
       lens: { op: "biasmanifest", query: sc },
       projects: { op: "projectlist", empty: (v) => !v || !Array.isArray(v.projects) || !v.projects.length },
+      // the bias sets the team offered earlier (first page; the rest are read by the page as the cursor says)
+      earlier: { op: "list", query: { type: "bias", state: "proposed", limit: 50 } },
     };
     // a work product made under an earlier lens, named by the address (the bias-debt reference of interface-shell R106)
     if (view.subject) r.debt = { op: "biasdebt", query: { run: String(view.subject) } };
@@ -91,12 +94,44 @@ export const bias = {
         + cs.field("bi-not", B + "what_this_set_does_not", { area: true, rec: true, help: B + "required_before_the_set_is" }) + `<p class="mk-small">${W(B + "readers_see_it_beside_the")}</p>`
         + `<div class="mk-acts">${save}</div>`
         + `<details class="mk-details"><summary>${W(B + "when_a_set_cannot_be")}</summary>${gap("refused", `<span>${W(B + "a_statement_in_it_says")} ${W(B + "nothing_was_saved_offered_or")} ${W(B + "reword_that_statement_to_say")}</span>`)}${gap("refused", `<span>${W(B + "a_statement_has_no_reason")} ${W(B + "nothing_was_saved_offered_or")} ${W(B + "add_what_it_asks_for")}</span>`)}</details>`;
-      // adopting the set just saved: for the whole team (an administrator) or for one of the member's projects (its owner)
+      // adopting a set that was offered: the one just saved, else any the team offered earlier (`list`, followed by its cursor, five pages at most)
       const saved = ui.saved || null;
-      const adopt = saved ? cs.act("biasadopt", { label: "act.biasadopt.label.bias", tone: "primary" }) : "";
+      const adopt = cs.act("biasadopt", { label: "act.biasadopt.label.bias", tone: "primary" });
+      const later = (key, query) => {
+        const L = ui.later || (ui.later = {});
+        const q = JSON.stringify(query);
+        if (!L[key] || L[key].q !== q) {
+          L[key] = { q, state: "loading" };
+          const settle = (o) => { L[key] = Object.assign({ q }, o); cs.set("later", L); };
+          cs.call("list", { query }).then((a) => {
+            const r = a && a.result !== undefined ? a.result : a;
+            if (!r || r.ok === false) settle({ state: "failed" }); else settle({ state: "ok", value: r });
+          }, () => settle({ state: "failed" }));
+        }
+        return L[key];
+      };
+      const sets = [];
+      let earlierState = "ok";
+      if (saved) sets.push({ id: saved.bundleId, title: saved.name || "", at: "" });
       if (adopt) {
+        let page = okv(data.earlier);
+        if (!page && data.earlier && data.earlier.state === "failed") earlierState = "failed";
+        for (let n = 0; page && n < 5; n++) {
+          const rows = Array.isArray(page) ? page : Array.isArray(page.bundles) ? page.bundles : [];
+          for (const b of rows) if (b && b.object_type === "bias" && b.current_state === "proposed" && b.bundle_id && !sets.some((x) => x.id === b.bundle_id)) sets.push({ id: String(b.bundle_id), title: String(b.title || b.bundle_id), at: b.last_updated || "" });
+          const after = !Array.isArray(page) && page.cursor ? String(page.cursor) : "";
+          if (!after || n === 4) break;
+          const next = later("earlier:" + n, { type: "bias", state: "proposed", limit: 50, after });
+          if (next.state !== "ok") { earlierState = next.state; break; }
+          page = next.value;
+        }
+      }
+      if (adopt && earlierState === "failed" && !sets.length) w += `<p class="cs-state" data-state="failed" role="alert">${W("shell.unread")}</p>`;
+      if (adopt && sets.length) {
         const radios = [{ value: "instance", key: B + "the_whole_team_an_administrator", on: true }, ...projects.map((p) => ({ value: String(p.id), key: B + "one_project_the_coliseum_lease", fills: { project: projTitle(p) } }))];
-        w += `<div data-part="adopt">${cs.checks("bi-adopt", "", radios, { radio: true })}`
+        w += `<div data-part="adopt">`
+          + cs.checks("bi-set", "", sets.map((x, i) => ({ value: x.id, text: x.at ? x.title + " · " + D(x.at) : x.title, on: i === 0 })), { radio: true })
+          + cs.checks("bi-adopt", "", radios, { radio: true })
           + cs.field("bi-adwhy", B + "why_you_adopt_it", { area: true, rec: true, help: B + "required_up_to_characters" }) + `<p class="mk-small">${W(B + "it_is_kept_with_the")}</p>`
           + `<div class="mk-acts">${adopt}</div>`
           + `<p class="mk-small">${W(B + "adopting_names_the_revision_in")} ${W(B + "later_changes_to_the_set")} ${W(B + "adopting_a_different_set_for")}</p>`
@@ -220,12 +255,12 @@ export const bias = {
     // the set just saved, for the whole team or one project, with the adopter's own reason (the field is its reason, so the shell asks none)
     { op: "biasadopt", rereads: ["lens"], reasonField: "reason",
       send(view, el, cs) {
-        const saved = view.ui && view.ui.saved;
+        const set = (cs.value("bi-set") || [])[0];
         const reason = String(cs.value("bi-adwhy") || "").trim();
-        if (!saved) return { refuse: "screen.bias.the_set_must_be_offered" };
+        if (!set) return { refuse: "screen.bias.the_set_must_be_offered" };
         if (!reason || reason.length > 2000) return { refuse: "screen.bias.required_up_to_characters" };
         const picked = ["instance"].concat((view.data && view.data.projects && view.data.projects.value && view.data.projects.value.projects || []).map((p) => String(p.id))).find((v, i) => cs.value("bi-adopt-" + i) === true) || "instance";
-        const body = { bundleId: saved.bundleId, reason };
+        const body = { bundleId: String(set), reason };
         if (picked === "instance") body.scope = "instance"; else { body.scope = "project"; body.scopeId = picked; }
         return { body };
       } },

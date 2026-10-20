@@ -453,8 +453,17 @@ export const DEBT_OPEN = { ok: true, run: "RUN-2026-0042", found: true, open: tr
   moved_basis: "a statement about the City Housing Department was added", lens_then: "41be" + "0".repeat(56) + "a2d0", lens_now: "9f3a" + "0".repeat(56) + "c07e", settled: { settled: false }, settlements: [], limit: 50, truncated: false };
 export const DEBT_SETTLED = { ...DEBT_OPEN, open: false, settled: { settled: true, at: "2026-10-10T00:00:00Z", kind: "resolved", kind_state: "determined" },
   settlements: [{ seq: 1, kind: "resolved", at: "2026-10-10T00:00:00Z", actor: "member:mai", reason: "The new statement is about the Department's reports; this finding cites none.", by_run: null, lens_then: null, lens_now: null }] };
+/* The bias sets `list` answers, in the owner's rows (retrieval R63): two offered, one adopted already, and a bundle of another type. */
+export const BIAS_SETS = [
+  { bundle_id: "BIAS-2026-0001-earlier", object_type: "bias", current_state: "proposed", title: "Earlier set: how we read the county", last_updated: "2026-10-01T10:00:00Z", bundle_sha: "a".repeat(64), route: null },
+  { bundle_id: "BIAS-2026-0002-adopted", object_type: "bias", current_state: "adopted", title: "Already adopted", last_updated: "2026-09-01T10:00:00Z", bundle_sha: "b".repeat(64), route: null },
+  { bundle_id: "STD-2026-0001-other", object_type: "standard", current_state: "proposed", title: "Not a bias set", last_updated: "2026-10-02T10:00:00Z", bundle_sha: "c".repeat(64), route: null },
+  { bundle_id: "BIAS-2026-0004-second", object_type: "bias", current_state: "proposed", title: "Second offered set", last_updated: "2026-10-03T10:00:00Z", bundle_sha: "d".repeat(64), route: null },
+];
+
 export function biasTable(over = {}) {
   return {
+    list: () => env({ bundles: [], limit: 50, cursor: null, total: 0 }),
     biasmanifest: (q) => env(q.scope === "project" ? (q.scopeId === PROJ_BIAS.id ? LENS_PROJECT : { ok: true, scope: "project", scope_id: q.scopeId, in_force: false, note: "none" }) : LENS_TEAM),
     projectlist: env({ ok: true, projects: [PROJ_BIAS] }),
     biasdebt: (q) => env(q.run === "RUN-2026-0042" ? DEBT_OPEN : { ok: true, run: q.run, found: false, note: "none" }),
