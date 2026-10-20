@@ -24,18 +24,42 @@
  * process's tooling in T19 (K648, K749): who cuts a release is the process's
  * question, not this script's.
  *
- * usage (bundler R17, R18, R34), from bio-plane/:
- *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset>
+ * A TEST DEPLOY (bundler R40; K4180, K4186): `--test-instance` deploys a named branch's BUILT plane bundle, unsigned, to a
+ * trial copy. It is for a copy the environment marks as a test instance (CIVICSMITH_TEST_INSTANCE names it) in the
+ * test account only; any other copy and any other account is refused before a request is made. It reads no signed
+ * release: the bytes deployed are the file given, verified by reading them back as ever. Each step logs what it
+ * deploys and the target it can return to. `--dry-run` runs every check and read and deploys nothing.
+ *
+ * usage (bundler R17, R18, R34, R40), from bio-plane/:
+ *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run]
  */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { resolveVersion } from "./resolve-version.mjs";
 
 const [slug, version, assetPath] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const TEST = process.argv.includes("--test-instance"), DRY = process.argv.includes("--dry-run");
 const TOKEN = process.env.CF_TOKEN, ACCT = process.env.CF_ACCT;
 if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
-  console.error("usage: CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset>");
+  console.error("usage: CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run]");
   process.exit(2);
+}
+
+/* R40: A TEST DEPLOY NAMES ITS COPY AND ITS ACCOUNT, and both are checked before the first request. The mark is the
+   environment's (the `deploy-test` environment sets CIVICSMITH_TEST_INSTANCE to the copy it may touch), so a copy
+   nobody marked, or a different one, is not reachable by typing a slug. */
+const TEST_ACCOUNT = "20b533579290b9b93168345edd3b7f72";
+if (TEST) {
+  if (process.env.CIVICSMITH_TEST_INSTANCE !== slug) {
+    console.error(`REFUSED [NOT_A_TEST_INSTANCE]: \`${slug}\` is not marked as a test instance: CIVICSMITH_TEST_INSTANCE is ${process.env.CIVICSMITH_TEST_INSTANCE ? `\`${process.env.CIVICSMITH_TEST_INSTANCE}\`` : "not set"}.`);
+    console.error("A test deploy goes only to the copy the environment marks. Nothing was requested or deployed.");
+    process.exit(1);
+  }
+  if (ACCT !== TEST_ACCOUNT) {
+    console.error(`REFUSED [WRONG_ACCOUNT]: a test deploy goes to account ${TEST_ACCOUNT} only; CF_ACCT is ${ACCT}.`);
+    console.error("Nothing was requested or deployed.");
+    process.exit(1);
+  }
 }
 
 /* DS-2 / D-116: THE VERSION AUTHORITY SPANS THE FLEET, CHECKED BEFORE ANYTHING
@@ -332,6 +356,13 @@ const differences = bindingDifferences(meta.bindings, onScript.bindings);
 const before = await deployed();
 console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}`);
 console.log(`signed: ${want.slice(0, 16)}\u2026  ${version}  ${source.length} bytes`);
+if (TEST) {
+  /* R40: what this step deploys, and where it can return to: the bytes now deployed under the copy's name. */
+  console.log(`test deploy: ${slug} from ${assetPath} sha256 ${want} (a branch's built artifact: no release/ signature is read)`);
+  console.log(before
+    ? `rollback : ${slug} was ${before.slice(0, 16)}\u2026 \u2014 deploy those bytes again to return to it`
+    : `rollback : ${slug} has no readable deployed bytes now (a first deploy, or unreadable); delete the script to return to none`);
+}
 if (before === want) {
   /* Bytes matching is HALF the question — found live on the 0.58.0 cut,
      2026-09-14, the first release whose plane bytes were identical to the
@@ -359,6 +390,8 @@ if (before === want) {
   if (serving !== version)
     console.log(`bytes are identical but the instance serves ${serving ?? "(unreadable)"} — a METADATA deploy proceeds (VERSION var, derived bindings).`);
 }
+
+if (DRY) { console.log("\n--dry-run: nothing was deployed."); process.exit(0); }
 
 for (let attempt = 1; attempt <= 4; attempt++) {
   const fd = new FormData();

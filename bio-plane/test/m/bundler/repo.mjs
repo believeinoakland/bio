@@ -53,11 +53,12 @@ export const DIGEST = "sha256:" + "ab".repeat(32);
 
 /** A member's files: source, marker, configs, and a build script that is the member's own `npm run build`. */
 export function addMember(root, name, { version = VERSION, services = [{ binding: "PLANE", service: "bio-plane" }],
-  assets = null, compat = "2026-07-01", flags = ["nodejs_compat"], account = ACCOUNT, vendored = false } = {}) {
+  assets = null, compat = "2026-07-01", flags = ["nodejs_compat"], account = ACCOUNT, vendored = false, exports = [] } = {}) {
   const dir = join(root, name);
   put(root, `${name}/src/index.mjs`, `import { word } from "./word.mjs";\n`
     + (vendored ? `import { V } from "fakedep";\n` : "const V = 0;\n")
-    + `export default { fetch() { return new Response(word + V); } };\n`);
+    + `export default { fetch() { return new Response(word + V); } };\n`
+    + exports.map((c) => `export class ${c} {}\n`).join(""));   /* R39: the classes the bundle exports, for bindings to name */
   put(root, `${name}/src/word.mjs`, `export const word = ${JSON.stringify(name)};\n`);
   if (vendored) {
     put(root, `${name}/node_modules/fakedep/package.json`, JSON.stringify({ name: "fakedep", type: "module", exports: "./index.mjs" }));
@@ -121,7 +122,7 @@ export function imageSourceHash(root, name, dockerfile) {
 export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK, instanceType, sealed = true } = {}) {
   const dir = join(root, name);
   if (bundle) {
-    addMember(root, name, { services: [] });
+    addMember(root, name, { services: [], exports: ["Runner"] });
     const cfg = parseCfg(join(dir, "wrangler.jsonc"));
     if (containers) cfg.containers = [{ class_name: "Runner", image: `docker.io/civicos/runner@${DIGEST}`, max_instances: 3,
       ...(instanceType !== undefined ? { instance_type: instanceType } : {}) }];
@@ -174,7 +175,7 @@ export function scannerClasses() {
 }
 export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {}, instanceTypes = {}, sealed = true } = {}) {
   const dir = join(root, name);
-  addMember(root, name, { services: [] });
+  addMember(root, name, { services: [], exports: classes.map((c) => c.class_name) });
   const cfg = parseCfg(join(dir, "wrangler.jsonc"));
   cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: `${c.image.repository}@${c.image.digest}`, max_instances: c.max_instances ?? 1,
     ...(instanceTypes[c.class_name] !== undefined ? { instance_type: instanceTypes[c.class_name] } : {}) }));
@@ -242,7 +243,7 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   chmodSync(join(root, ".fakebin/docker"), 0o755);
 
   const version = plane.version ?? VERSION;
-  put(root, "bio-plane/src/plane/index.mjs", `import { tag } from "../tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n`);
+  put(root, "bio-plane/src/plane/index.mjs", `import { tag } from "../tag.mjs";\nexport class Store {}\nexport default { fetch() { return new Response(tag); } };\n`);
   put(root, "bio-plane/src/tag.mjs", `export const tag = "plane";\n`);
   put(root, "bio-plane/wrangler.jsonc", jsonc(planeConfig({ version, ...plane.config })));
   if (realPackageJson) {
