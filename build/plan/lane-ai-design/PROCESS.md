@@ -113,3 +113,20 @@ Bob's direction: "AI tests run and submitted by outside teams/members will run i
 **New requirement text for AIR15/AIR16** (replace the "copy runs the harness" wording): the suite runs only inside a digest-pinned Civicsmith container that holds the key in memory for one run, limits egress to the provider under test and the issuer, builds and seals the bundle inside itself, and records the digest, nonce and an ephemeral signing key in the manifest; the grade of a result is Reproduced only when Civicsmith ran it on an account it controls.
 
 **Open for later:** Cloudflare Containers plan, price and limits per run; whether any attestation of the running image exists; sealed-box format and key custody for Civicsmith's private key; how a Docker run reports its digest honestly; what a team sees while a run is in progress (Q5).
+
+## 9 · Gate 0: privacy requirements (added 2026-10-20 from Bob's direction; draft for his ruling)
+The order becomes: **Gate 0 privacy → Gate 1 conformance → characterization → Bob's decision → release.** Nothing is run on a model at a host that fails Gate 0 (it also saves test cost).
+
+**Draft checklist, each point answered from the host's own text (quote, page, date) or OPEN.** The points are the lane's draft; what is required is Bob's policy.
+1. Inputs and outputs are not used to train or improve models (paid/API terms, not free tier).
+2. No human review of content by default.
+3. Retention: stated period; zero-data-retention available and used where the host offers it; any provider-held conversation state off unless the team's keep-away limits allow it.
+4. Jurisdiction and processing location stated; operator and governing law known (e.g. a host operating and storing data in a jurisdiction Bob excludes fails).
+5. The host's terms permit this use (an application serving the account holder's own members) and the key handling Civicsmith does; written provider confirmation where the text is silent.
+6. Sub-processors and onward routing: none unstated; through an aggregator, the aggregator's own retention and logging policy is a separate entry.
+7. Breach and incident commitments stated, or OPEN and shown as OPEN.
+8. Compatible with the group's keep-away limits (they bind every account, K2352) and with disclosure naming the host before first use.
+
+**Who this binds.** Direct providers, aggregators (per request routing pinned as AIR18), open-weight hosts, and any team-owned or local endpoint that is later offered to others. A team's *own* local endpoint used only by that team is the team's responsibility; whether it may be used by the assistant before the release includes it, or only through the test flow, is a question for Bob (recommended: only through the test flow until included, so the offered list stays closed).
+
+**Consequences found in the research.** OpenRouter by default allows providers that "store user data non-transiently and may train on it" and falls back across hosts, so an unpinned OpenRouter entry would fail Gate 0; its routing controls make a pinned entry possible. DeepSeek's own API stores and processes in the PRC under PRC law; the same model run by a US host is a different (model, host) entry. Free tiers at Google and Mistral fail point 1 and 2.
