@@ -94,3 +94,11 @@ FOR BOB (other modules / design):
 4. R68: `place` gets no word function, so the crumb cannot say `crumb.project.unjoined`; interface-shell would need to accept a title key from `place`.
 5. Registry lists `writinghelp` on `imported`; no field there is a writing field by any requirement. Needs your ruling.
 6. `reviewgrant` and `projectowneradd` declare no `reason`; the shell adds it (R107). Harmless to the guard today.
+
+## J8 · REPORT
+
+REPORT (SCREENS-PUBLISH #9). After merging tranche/T51 (B11), three suite tests that were green at #8's stop are red from other modules' declarations, which the guard (interface-shell R104) now compares; none is a screen defect I can fix without weakening a declaration:
+1. `writinghelp` (wizard-scripts, `fields.accepts: ["field","told","draftHeld"]`) does not list `op`, but the module's own writingHelp (wizard-scripts index.mjs:1504-1508) reads `{op, field, told, draftHeld}` from the POST body and decides whether help is offered from `op` (`#helpAt`), and `FIRSTHAND_ACTS` from it. The case editor sends `op` (casedraft or whatchangedpropose) as `screens-action/send-steps.mjs:317` does. Needs: wizard-scripts accepts `op`. Red: t50/case-editor R1 "Draft what changed" (common.test R1 test). Other screen modules that send `op` will see the same.
+2. `accountpropose` (control-plane owner-ops.mjs:23-24, case-account `accountPropose`) requires `text` and `run` (and `flags` for `account_check`): it stores a draft an AI run made, so a member's act cannot send it. R35's "Draft the account with the assistant" sends `{kind:"case_account", framing}`, which the guard refuses. Needs: BOB's ruling on which op asks the assistant for the draft (R35 names `accountpropose`), then a CHANGE. Red: t50 R35 (two tests).
+3. `docketfile` still red as J7 said (accepted red by name, B12).
+I carry on with R44, R46, R51, R53, R57, R47, R54, R58, R59, R67 in the order B12 gives.
