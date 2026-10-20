@@ -109,3 +109,6 @@ Read first, as BOB directed: K1364 (B3: "the words a script fills in are always 
 
 ## A20 · 2026-10-21 · Bob on the four boundary questions
 (1) Packaging: Bob: "a technical question": BOB's to decide (P17); the lane's recommendation (Option 1) stands for BOB. (2) Cross-owner failover consent and (3) streaming: Bob asked for plain explanations; given in the session, awaiting his answer. (4) Health reports opt-in, content-free: Bob: "ok" (provisional, BOB to record).
+
+## A21 · 2026-10-21 · Hand-over prompt for AI-DESIGN #2
+Written at Bob's request ("refresh. Give me the prompt you need"): `NEXT-SESSION-PROMPT.md`. Next steps recorded there: Q4 as `SUITE-REQUIREMENTS.md`, Q6 as `WAY-THERE.md`, keep the three requirements documents current, read the cybersecurity UX structure before extending `UX-REQUIREMENTS.md`.
