@@ -59,3 +59,23 @@ Tests and checks:
 - checks/run.mjs /home/user/bio: format and architecture 0 failures, words 0 failures; coverage has 7 failures, all in other modules (agent-harness R17, agent-runner R36–R40, citation R16–R18, installer-steps R26 R31, journey-check R19, link-sweep R13–R15, monitoring R75–R77); none in affordances.
 
 Size (session_015oCsKY91WYHFpiM6Ej1HTG): test runs 5, module lines 2702
+
+## J8 · COMPLETE · re B8
+
+COMPLETE (re B8 · CHANGE K4225). Merged tranche/T51 first (no conflicts); pushed on job/T51/affordances.
+
+Entries applied: the two red tests, "R1 R12 R19 R24: case-inputs' ops" and "R1 R4 R12 R19 R24: case-import's ops" (catalogue.test.mjs), no longer hand-list another module's ops (K3268). Cause: the new ops (case-inputs `casedetailsset`, `casedetails`, `casedetailspublic`; case-import `importregrade`, `rerunstart`, `rerunpair`, `rerunread`) have no hand row, so `affordances` grades them only once op-grades has registered the owners' `DECLARED_OPS` (R49).
+- New test support `test/m/affordances/register-owners.mjs`, imported first in catalogue.test.mjs, registers the two owners' `DECLARED_OPS` with op-grades before any table is read (as op-declarations' own register-owners does); the rows are read from the owners.
+- Both tests now take the op set from the owner's ops map and its `DECLARED_OPS`. case-inputs: a declared op the map lacks must be a read (`casedetailspublic`, served by public-read's door); a map op the owner does not declare must have a hand grade. case-import: acts are told by being published, not by name; every declared non-act op must be in the map; the refusal codes are read from the declared `refusal` fields, each a row of case-import's checks and in the justification family, and no other code of its checks is. Kept: the checks' families, a rung or stated absence for every write (now also equal to the declared `weight`), no op an act, the totality with the control plane's rows, and the controls (stale when ungated or carried by no row, an unnamed op unpublished and unranked).
+- Limit, stated: for an op the owner does not declare (`whatchangeddrafts`, `caseimportdocument`, `importedcase(s)`, `importflagclear`), mutating is read from the hand tables (RUNGS/RUNG_ABSENT), so the totality check over those is not independent of the tables; the declared ops' check is (grade against declared weight). `casechecker` and `casefilespec` (case-checker's, not in my uses) stay named as before.
+- No requirement's meaning changed; no requirement line written (K4210). Found in other modules: none. Deferred: none.
+
+Tests and checks:
+- node --test bio-plane/test/m/affordances/*.test.mjs: 280 pass, 0 fail
+- checks/format.mjs: 175 modules, 175 requirements files; 0 failures
+- checks/architecture.mjs affordances: 34 product files, 383 relative imports; 0 failures
+- checks/coverage.mjs affordances: 54 of 54 live requirement ids named by a test; 0 failures
+- checks/words.mjs affordances: 6719 string literals read; 0 failures (testcopy 0, handlist 0)
+- checks/ownership.mjs affordances tranche/T51: 3 files changed by affordances; 0 failures
+
+Size (session_01VxbGzLyFxoWVwut9wPwFpo): test runs 7, module lines 2702
