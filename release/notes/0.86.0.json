@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-20",
+  "security": false,
+  "notes": {
+    "members": "Every screen now follows the new design, and the old interface is gone. You can sign in, open a project, bring in documents by address, file or your own account, read and cite them, and work a question through to a conclusion. Publishing a case, recording a determination and starting a records request do not work yet in this release; they are being fixed for the next one. Your team is called a team everywhere you read about it. Dates read month, day, year, and times use the 12-hour clock.",
+    "administrators": "The screens, the invitation page and the setup steps now share one set of words, and the old setup page and the old member interface are removed. The document scanner's and the assistant's container images are now published where every install can fetch them, so both parts install on every team. This is a test release: publishing a case and several action steps are known not to work yet. Nothing you run today needs to change.",
+    "must_do": ""
+  }
+}
