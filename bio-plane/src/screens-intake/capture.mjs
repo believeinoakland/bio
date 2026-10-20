@@ -295,7 +295,7 @@ function renderCapture(cs, view) {
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
         { address: U.requested.address }) : "")
       + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
-      + (U.checked ? said("screen.capture.address.checked", { title: U.checked }) : "")
+      + (U.checked ? `<p class="mk-note" role="status">${view.parts.checkOutcome(cs, U.checked.answer, U.checked.title)}</p>` : "")
       + `<p class="mk-note">${cs.w("screen.capture.address.note")}</p>`;
   } else if (tab === "file") {
     const how = [["made", "screen.capture.file.how.made"], ["handed", "screen.capture.file.how.handed"],
@@ -469,8 +469,20 @@ async function sendMonitor(view, el, cs) {
   return { body: { bundleId: found.bundleId } };
 }
 function doneMonitor(view, answer, cs) {
-  cs.set("checked", (view.ui && view.ui.target && view.ui.target.title) || "");
+  cs.set("checked", { title: (view.ui && view.ui.target && view.ui.target.title) || "", answer: answer || {} });
 }
+
+/* R42 (C55; K4164: one owner): what a check found, drawn from the answer's `status` (`modified`, `removed`, `unchanged`) and, when
+ * it names none, its `note` (`monitoring` R10): four different sentences, never "Checked just now" for every outcome. The one
+ * drawing of it: `screens-inquiry` imports `checkOutcome` for the document page and draws nothing of its own. Answers the
+ * sentence's HTML. */
+function checkOutcome(cs, answer, title) {
+  const a = answer && typeof answer === "object" ? answer : {};
+  const st = a.status === "modified" || a.status === "removed" || a.status === "unchanged" ? a.status : "unknown";
+  const t = String(title || "");
+  return cs.w("screen.capture.address.checked." + st, st === "unknown" ? { title: t, note: typeof a.note === "string" ? a.note : "" } : { title: t });
+}
+export { checkOutcome };
 
 /* R2: the upload. `statement` composed from the three answers in order, each with its label, at most 2,000 characters;
  * nothing is sent while one is empty, and the screen says which. The file's bytes are the raw body (control-plane R72),
@@ -604,7 +616,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, filedFor, forOf, projectOf, promoteDocument, refusalHtml, titleOf }),
+  parts: Object.freeze({ bundleFor, checkOutcome, filedFor, forOf, projectOf, promoteDocument, refusalHtml, titleOf }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire,
                     refusals: Object.freeze({ BAD_LOCATOR: "refusal.BAD_LOCATOR", SOURCE_REFUSED: "refusal.SOURCE_REFUSED",

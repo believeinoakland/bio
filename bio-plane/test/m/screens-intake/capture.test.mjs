@@ -224,7 +224,7 @@ test("R16 \"Check it now\" sends monitor alone, for the same bundle", async () =
   await press(p, "monitor");
   assert.deepEqual(p.byOp("monitor").map((r) => r.body), [{ bundleId: BUNDLE }]);
   assert.equal(p.byOp("monitorset").length, 0, "checking sets no watching");
-  assert.ok(says(p, "screen.capture.address.checked", { title: UNTITLED }));
+  assert.ok(says(p, "screen.capture.address.checked.unknown", { title: UNTITLED, note: "" }), "R42: an answer naming no status is the could-not-be-told sentence");
 });
 
 test("R14 an address not captured this visit is watched through the held document for that address; none known, nothing is sent", async () => {
@@ -263,7 +263,7 @@ test("R14 NOT_MONITORED, NO_LOCATOR and MONITOR_SET_REFUSED are drawn by the she
     const expected = held ? held[1].split("{")[0].trim() : `Words for ${code}.`;
     assert.ok(r.slot().textContent.includes(expected), `${code}: ${r.slot().textContent}`);
     assert.ok(!says(p, "screen.capture.address.watching", { title: UNTITLED, frequency: word("screen.capture.address.freq.weekly") }), code);
-    assert.ok(!says(p, "screen.capture.address.checked", { title: UNTITLED }), code);
+    assert.ok(!says(p, "screen.capture.address.checked.unknown", { title: UNTITLED, note: "" }), code);
   }
 });
 

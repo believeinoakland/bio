@@ -15,10 +15,15 @@
  * `setup-words`' `WORD_ROWS` each screen draws, and the shell reads every sentence through them. */
 
 import { CAPTURE_SCREEN } from "./capture.mjs";
+
+/* R42 (C55): the one drawing of what a check found, for `screens-inquiry`'s document page to import (K4164) */
+export { checkOutcome } from "./capture.mjs";
 import { HELD_SCREEN } from "./held.mjs";
 import { OPEN_FILE_SCREEN } from "./open-file.mjs";
 import { INBOX_SCREEN } from "./inbox.mjs";
 import { ARCHIVE_SCREEN } from "./archive.mjs";
+import { ABOUT_KNOCKER_SCREEN } from "./about-knocker.mjs";
+import { LEADS_SCREEN } from "./leads.mjs";
 
 /* The keys each screen reads (R26). */
 export const SCREEN_KEYS = Object.freeze({
@@ -27,7 +32,7 @@ export const SCREEN_KEYS = Object.freeze({
     "capture.cite", "capture.cite.tip", "capture.filed.project", "capture.filed.question", "act.monitor.label.capture", "act.monitorset.label.capture",
     "act.testify.label.capture", "act.writinghelp.label.capture", "ai.label.untested", "capture.fieldneeded",
     "photo.reminder", "refusal.BAD_LOCATOR", "refusal.EMPTY", "refusal.FETCH_FAILED", "refusal.SOURCE_REFUSED",
-    "refusal.TOO_LARGE", "screen.capture.address.archive", "screen.capture.address.checked",
+    "refusal.TOO_LARGE", "screen.capture.address.archive", "screen.capture.address.checked.modified", "screen.capture.address.checked.removed", "screen.capture.address.checked.unchanged", "screen.capture.address.checked.unknown",
     "screen.capture.address.done", "screen.capture.address.existed", "screen.capture.address.freq",
     "screen.capture.address.freq.daily", "screen.capture.address.freq.hourly", "screen.capture.address.freq.monthly",
     "screen.capture.address.freq.per_meeting", "screen.capture.address.freq.weekly", "screen.capture.address.help",
@@ -125,6 +130,39 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.open-file.next.head", "screen.open-file.next.yours", "screen.open-file.safetext", "screen.open-file.safetext.cut",
     "shell.unread", "screen.open-file.digest.checked", "refusal.DIGEST_MISMATCH", "refusal.DIGEST_MISMATCH.unheld",
   ]),
+  "about-knocker": Object.freeze([
+    "act.sourcedisclose.label.about-knocker", "act.sourceconsent.label.about-knocker", "act.sourceconsentwithdraw.label.about-knocker",
+    "act.sourcepersonlink.label.about-knocker", "act.writinghelp.label.about-knocker", "capture.fieldneeded", "screen.capture.help.empty",
+    "screen.inbox.ladder", "screen.inbox.ladder.unknown", "screen.inbox.ladder.same", "screen.inbox.ladder.partly", "screen.inbox.ladder.group",
+    "screen.inbox.ladder.public", "screen.inbox.ladder.basis", "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
+    "screen.about-knocker.intro1", "screen.about-knocker.intro2", "screen.about-knocker.known.head", "screen.about-knocker.known.help1",
+    "screen.about-knocker.known.help2", "screen.about-knocker.how.self", "screen.about-knocker.how.third", "screen.about-knocker.how.hostile",
+    "screen.about-knocker.how.opt.self", "screen.about-knocker.how.opt.filing", "screen.about-knocker.how.opt.third", "screen.about-knocker.how.opt.hostile",
+    "screen.about-knocker.how.label", "screen.about-knocker.knownto.group", "screen.about-knocker.audience.member", "screen.about-knocker.audience.group",
+    "screen.about-knocker.audience.public", "screen.about-knocker.knownto.label", "screen.about-knocker.consent.members", "screen.about-knocker.hostile.claim",
+    "screen.about-knocker.kind.attribute", "screen.about-knocker.kind.name", "screen.about-knocker.kind.link", "screen.about-knocker.attribute.label",
+    "screen.about-knocker.attribute.occupation", "screen.about-knocker.attribute.employer", "screen.about-knocker.attribute.role",
+    "screen.about-knocker.value.label", "screen.about-knocker.value.help", "screen.about-knocker.claimedby.label", "screen.about-knocker.claimedby.help1",
+    "screen.about-knocker.claimedby.help2", "screen.about-knocker.claimedat.label", "screen.about-knocker.claimedat.help1", "screen.about-knocker.claimedat.help2",
+    "screen.about-knocker.store.legend", "screen.about-knocker.store.yes", "screen.about-knocker.store.no", "screen.about-knocker.sight.legend",
+    "screen.about-knocker.evidence.label", "screen.about-knocker.evidence.help", "screen.about-knocker.confirms.label", "screen.about-knocker.confirms.none",
+    "screen.about-knocker.confirms.help", "screen.about-knocker.read.logged1", "screen.about-knocker.read.logged2", "screen.about-knocker.notrecorded",
+    "screen.about-knocker.publish.heading", "screen.about-knocker.publish.intro1", "screen.about-knocker.publish.intro2", "screen.about-knocker.consent.detail",
+    "screen.about-knocker.audience.label", "screen.about-knocker.consent.evidence", "screen.about-knocker.person.heading", "screen.about-knocker.person.intro1",
+    "screen.about-knocker.person.intro2", "screen.about-knocker.person.which", "screen.about-knocker.person.replace", "screen.about-knocker.person.refused.org",
+    "screen.about-knocker.person.refused.org.next",
+  ]),
+  leads: Object.freeze([
+    "act.lead.label.leads", "act.leadread.label.leads", "act.leadlook.label.leads", "act.leadshare.label.leads", "act.writinghelp.label.leads",
+    "screen.capture.help.empty", "screen.capture.saw.draft", "screen.leads.intro1", "screen.leads.intro2", "screen.leads.write.heading", "screen.leads.write.words",
+    "screen.leads.write.where", "screen.leads.write.note1", "screen.leads.write.note2", "screen.leads.mine.head", "screen.leads.list.help", "screen.leads.state.never",
+    "screen.leads.state.absent", "screen.leads.state.unclear", "screen.leads.state.part", "screen.leads.state.found", "screen.leads.one.head",
+    "screen.leads.written", "screen.leads.look.line", "screen.leads.shared.line", "screen.leads.look.head", "screen.leads.look.state",
+    "screen.leads.look.opt.absent", "screen.leads.look.opt.unclear", "screen.leads.look.opt.part", "screen.leads.look.opt.found", "screen.leads.look.kind",
+    "screen.leads.look.kind.help", "screen.leads.look.kind.none", "screen.leads.look.kind.doc", "screen.leads.look.kind.passage", "screen.leads.look.which",
+    "screen.leads.look.detail", "screen.leads.share.head", "screen.leads.share.project", "screen.leads.share.project.help", "screen.leads.share.reason",
+    "screen.leads.share.reason.help", "screen.leads.share.note1", "screen.leads.share.note2", "shell.unread",
+  ]),
   inbox: Object.freeze([
     "act.inboxpull.label.inbox", "act.inboxresolve.label.inbox", "act.sourcelink.label.inbox",
     "screen.inbox.discarded", "screen.inbox.empty", "screen.inbox.existed", "screen.inbox.knock",
@@ -136,9 +174,10 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.inbox.resolved", "screen.inbox.same", "screen.inbox.status.discarded",
     "screen.inbox.status.new", "screen.inbox.status.pulled", "screen.inbox.sub", "state.loading",
     "inbox.discard.why", "reference.label", "screen.inbox.alreadyheld", "screen.inbox.alreadyheld.other",
-    "screen.inbox.same.date", "shell.card.document", "size.kb", "size.mb", "size.small",
+    "screen.inbox.same.date", "shell.card.document", "act.knocksof.label.inbox", "screen.inbox.knocker.heading", "screen.inbox.knocker.same1", "screen.inbox.knocker.same2",
+    "screen.inbox.knocker.help1", "screen.inbox.knocker.help2", "screen.inbox.source.line", "screen.about-knocker.name", "size.kb", "size.mb", "size.small",
   ]),
 });
 
-export const SCREENS = Object.freeze([CAPTURE_SCREEN, HELD_SCREEN, ARCHIVE_SCREEN, OPEN_FILE_SCREEN, INBOX_SCREEN]
+export const SCREENS = Object.freeze([CAPTURE_SCREEN, HELD_SCREEN, ARCHIVE_SCREEN, OPEN_FILE_SCREEN, INBOX_SCREEN, ABOUT_KNOCKER_SCREEN, LEADS_SCREEN]
   .map((s) => Object.freeze({ ...s, words: SCREEN_KEYS[s.id] })));
