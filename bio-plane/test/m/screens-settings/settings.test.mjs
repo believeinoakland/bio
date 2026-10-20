@@ -8,7 +8,7 @@ const links = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"])
 
 test("R17 settings: \"Yours\" then, to a session that administers, \"The group's\", each a reference to its screen; a member is drawn only their own", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
-  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards"]);
+  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias"]);
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(l.attrs.href, "/app/" + id);
@@ -16,17 +16,18 @@ test("R17 settings: \"Yours\" then, to a session that administers, \"The group's
   }
   const t = a.text;
   assert.ok(t.indexOf(said("screen.settings.yours")) < t.indexOf(said("screen.settings.groups")), "yours first");
+  assert.ok(t.indexOf(said("screen.settings.groups")) < t.indexOf(said("screen.settings.everyone")), "then the section for every member");
   // control: a member who does not administer is drawn no group section
   const m = await open("settings", { me: MEMBER, table: {} });
-  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery"]);
-  lacks(m, "screen.settings.groups");
+  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery", "bias"]);
+  lacks(m, "screen.settings.groups"); has(m, "screen.settings.everyone");
   assert.ok(!a.html.includes('href="/"'), "no link opens the setup page");
 });
 
 test("R32 settings draws its sections as the design's link list: each its icon and its screen's name as the reference, its purpose beneath, the two never run together", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
   const lists = all(a.tree, (e) => /\bmk-links\b/.test(e.attrs.class || ""));
-  assert.equal(lists.length, 2, "Yours, and the team's");
+  assert.equal(lists.length, 3, "Yours, the team's, and for every member");
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(all(l, (e) => e.tag === "svg").length, 1, `${id} has its icon`);
@@ -40,7 +41,7 @@ test("R32 settings draws its sections as the design's link list: each its icon a
   }
   // control: the group's section is not drawn to a member who does not administer
   const m = await open("settings", { me: MEMBER, table: {} });
-  assert.equal(all(m.tree, (e) => /\bmk-links\b/.test(e.attrs.class || "")).length, 1);
+  assert.equal(all(m.tree, (e) => /\bmk-links\b/.test(e.attrs.class || "")).length, 2, "Yours, and for every member");
   assert.ok(!links(m).includes("updates"), "R27: no Updates section for a member who does not administer");
 });
 

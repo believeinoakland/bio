@@ -5,7 +5,7 @@
    (`biasadopt`); drafting statements from an outside policy (`biasinhale`: proposals, nothing saved, offered or adopted; "Start a set
    from these" promotes them as a draft); and a work product made under an earlier lens (`biasdebt`, the address `/app/bias/<run>`) with
    the reason to settle it (`biasdebtresolve`). Every sentence is a word read by key (R39). The design's headings and labels that
-   `words.json` does not yet hold are drawn without them (REPORTED, J11), never as the key or as English written here. A set holds one
+   `words.json` held not at J11 are the design's now (DEC-387, B427). A set holds one
    statement in this form (the drawing's). The sets the team offered earlier are listed through `retrieval`'s `list` (`type: "bias"`,
    `state: "proposed"`, page after page by its cursor, at most five pages), so one is adoptable without writing it again, with the set
    just saved first. Every function is self-contained (interface-shell R21). */
@@ -41,17 +41,18 @@ export const bias = {
     // the kinds of statement, by the design's long forms (the short names are not held)
     const KINDS = ["scrutiny", "inference", "pattern"];
     const kindWord = (k) => (KINDS.indexOf(k) >= 0 ? W(B + { scrutiny: "scrutiny_how_closely_we_read", inference: "inference_what_we_do_not", pattern: "pattern_how_a_source_has" }[k]) : E(String(k)));
+    const kindShort = (k) => (KINDS.indexOf(k) >= 0 ? W(B + { scrutiny: "kind.scrutiny", inference: "kind.inference", pattern: "kind.pattern" }[k]) : E(String(k)));
     const projects = okv(data.projects) && Array.isArray(okv(data.projects).projects) ? okv(data.projects).projects : [];
     const projTitle = (p) => String((p && (p.title || p.name)) || (p && p.id) || "");
     const projectOf = (id) => projects.find((p) => String(p.id) === String(id)) || null;
     const out = [cs.title(), `<p class="mk-sub">${W(B + "the_lens_your_team_reads")} ${W(B + "it_never_blocks_work")}</p>`];
 
     // ---- the lens in force (R65: biasmanifest) ----
-    const scopeOpts = [{ value: "instance", key: B + "the_whole_team_an_administrator" }, ...projects.map((p) => ({ value: String(p.id), text: projTitle(p) }))];
+    const scopeOpts = [{ value: "instance", key: B + "lens.team" }, ...projects.map((p) => ({ value: String(p.id), text: projTitle(p) }))];
     const acts = {};
     for (const o of scopeOpts) acts[o.value] = "biasmanifest";
     const chosen = ui.scope && ui.scope.project ? String(ui.scope.project) : "instance";
-    const choice = cs.choice("bi-scope", "", scopeOpts, { acts, value: chosen, act: { label: "act.biasmanifest.label.bias" } });
+    const choice = cs.choice("bi-scope", B + "lens.label", scopeOpts, { acts, value: chosen, act: { label: "act.biasmanifest.label.bias" } });
     const lens = okv(data.lens);
     let lensHtml = cs.state(data.lens, (v) => {
       if (v.in_force === false) {
@@ -62,11 +63,16 @@ export const bias = {
       const stmts = Array.isArray(v.statements) ? v.statements : [];
       const bundles = Array.isArray(v.bundles) ? v.bundles : [];
       const residue = Array.isArray(v.residue) ? v.residue : [];
-      const rows = stmts.map((s) => cs.row(icon("flagged"), `<b>${kindWord(s.kind)}</b> · ${data1(s.subject)}<span class="rec" style="display:block">“${E(s.text || "")}”</span>`, "", s.justification ? `<span class="rec">${E(s.justification)}</span>` : "")).join("");
-      let h = cs.sheet(rows);
+      const mark = (s) => (s.scope === "project" ? W(B + "row.project") : s.locked === true ? W(B + "row.team_locked") : "");
+      const rows = stmts.map((s) => cs.row(icon("flagged"), `<b>${kindShort(s.kind)}</b> · ${W(B + "row.about", { subject: String(s.subject == null ? "" : s.subject) })}${mark(s) ? ` · ${mark(s)}` : ""}<span class="rec" style="display:block">“${E(s.text || "")}”</span>`, "", s.justification ? `<span class="rec">${W(B + "row.why", { reason: String(s.justification) })}</span>` : "")).join("");
+      const p0 = ui.scope && ui.scope.project ? projectOf(ui.scope.project) : null;
+      let h = `<h3>${p0 ? W(B + "in_force_for_the_coliseum", { project: projTitle(p0) }) : W(B + "head.team")}</h3>` + cs.sheet(rows);
       // who adopted what, and when (the owner's adoptions, by member id as data)
-      if (bundles.length) h += `<dl class="mk-dl"><dt>${W("screen.standard.state.adopted")}</dt>${bundles.map((b) => `<dd>${data1(String(b.adopted_by || "").replace(/^member:/, ""))} · ${data1(D(b.adopted_at))}</dd>`).join("")}`;
-      else h += `<dl class="mk-dl">`;
+      const by = (b) => String(b.adopted_by || "").replace(/^member:/, "");
+      const teamB = bundles.find((b) => b.scope === "instance"), projB = bundles.find((b) => b.scope === "project");
+      h += `<dl class="mk-dl"><dt>${W(B + "dt.lens")}</dt>`;
+      if (teamB && projB) h += `<dd>${W(B + "by_admin_for_the_team", { admin: by(teamB), admin_date: D(teamB.adopted_at), owner: by(projB), owner_date: D(projB.adopted_at) })}</dd>`;
+      else for (const b of bundles) h += `<dd>${b.scope === "project" ? W(B + "by_admin_for_the_team.project", { owner: by(b), date: D(b.adopted_at) }) : W(B + "by_admin_for_the_team.team", { admin: by(b), date: D(b.adopted_at) })}</dd>`;
       const stated = residue.filter((x) => x && x.stated && x.text);
       if (stated.length) h += `<dt>${W(B + "what_this_set_does_not")}</dt>${stated.map((x) => `<dd><span class="rec">${E(x.text)}</span></dd>`).join("")}`;
       if (v.statements_sha) h += `<dd>${data1(String(v.statements_sha).slice(0, 4) + "…" + String(v.statements_sha).slice(-4))} · ${W(B + "the_same_lens_gives_the")}</dd>`;
@@ -76,7 +82,8 @@ export const bias = {
       if (Array.isArray(v.pins_proposed) && v.pins_proposed.length) h += `<details class="mk-details"><summary>${W(B + "when_an_adopted_set_is")}</summary><p class="mk-note">${W(B + "a_set_that_was_adopted")} ${W(B + "this_page_then_lists_it")}</p></details>`;
       return h;
     });
-    out.push(`<div data-part="lens">${choice}${lensHtml}<p class="mk-note">${W(B + "to_adopt_write_or_draft")} ${W(B + "your_queue_tells_you_when")}</p></div>`);
+    out.push(`<div data-part="lens">${choice}${lensHtml}<p class="mk-note">${W(B + "to_adopt_write_or_draft")} ${W(B + "your_queue_tells_you_when")}</p>`
+      + `<div class="mk-links" data-list="bias"><a class="cs-ref" href="#bi-write">${W(B + "link.write")}</a><a class="cs-ref" href="#bi-inhale">${W(B + "link.draft")}</a></div></div>`);
 
     // ---- writing a set, and adopting it (R65: promote, biasadopt) ----
     const save = cs.act("promote", { label: "act.promote.label.bias", tone: "primary", data: { from: "write" } });
@@ -85,12 +92,12 @@ export const bias = {
       const dr = ui.draft || null;
       let w = `<p class="mk-sub">${W(B + "a_set_is_a_list")} ${W(B + "a_set_stays_a_draft")}</p>`
         + cs.field("bi-name", B + "name_of_the_set", { autocomplete: "off" })
-        + cs.choice("bi-kind", "", KINDS.map((k) => ({ value: k, key: B + { scrutiny: "scrutiny_how_closely_we_read", inference: "inference_what_we_do_not", pattern: "pattern_how_a_source_has" }[k] })), { value: "scrutiny" })
+        + cs.choice("bi-kind", B + "kind.label", KINDS.map((k) => ({ value: k, key: B + { scrutiny: "scrutiny_how_closely_we_read", inference: "inference_what_we_do_not", pattern: "pattern_how_a_source_has" }[k] })), { value: "scrutiny" })
         + `<p class="mk-small">${W(B + "a_pattern_statement_must_cite")}</p>`
         + cs.field("bi-subject", B + "who_or_what_it_is", { autocomplete: "off", help: B + "someone_or_something_the_teams" }) + `<p class="mk-small">${W(B + "add_it_under_people_first")}</p>`
-        + cs.field("bi-text", "", { area: true, rec: true, help: B + "say_how_you_read_it", value: dr && dr.field === "text" ? dr.text : undefined }) + `<p class="mk-small">${W(B + "do_not_say_a_source")}</p>${help("bi-text", "text")}`
+        + cs.field("bi-text", B + "statement.label", { area: true, rec: true, help: B + "say_how_you_read_it", value: dr && dr.field === "text" ? dr.text : undefined }) + `<p class="mk-small">${W(B + "do_not_say_a_source")}</p>${help("bi-text", "text")}`
         + cs.field("bi-why", B + "why_you_read_it_this", { area: true, rec: true, help: B + "required_for_every_statement", value: dr && dr.field === "justification" ? dr.text : undefined }) + help("bi-why", "justification")
-        + cs.field("bi-cite", "", { help: B + "required_for_a_pattern_statement", autocomplete: "off" })
+        + cs.field("bi-cite", B + "cites.label", { help: B + "required_for_a_pattern_statement", autocomplete: "off" })
         + cs.field("bi-not", B + "what_this_set_does_not", { area: true, rec: true, help: B + "required_before_the_set_is" }) + `<p class="mk-small">${W(B + "readers_see_it_beside_the")}</p>`
         + `<div class="mk-acts">${save}</div>`
         + `<details class="mk-details"><summary>${W(B + "when_a_set_cannot_be")}</summary>${gap("refused", `<span>${W(B + "a_statement_in_it_says")} ${W(B + "nothing_was_saved_offered_or")} ${W(B + "reword_that_statement_to_say")}</span>`)}${gap("refused", `<span>${W(B + "a_statement_has_no_reason")} ${W(B + "nothing_was_saved_offered_or")} ${W(B + "add_what_it_asks_for")}</span>`)}</details>`;
@@ -129,15 +136,15 @@ export const bias = {
       if (adopt && earlierState === "failed" && !sets.length) w += `<p class="cs-state" data-state="failed" role="alert">${W("shell.unread")}</p>`;
       if (adopt && sets.length) {
         const radios = [{ value: "instance", key: B + "the_whole_team_an_administrator", on: true }, ...projects.map((p) => ({ value: String(p.id), key: B + "one_project_the_coliseum_lease", fills: { project: projTitle(p) } }))];
-        w += `<div data-part="adopt">`
+        w += `<div data-part="adopt"><h3>${W(B + "head.adopt")}</h3>`
           + cs.checks("bi-set", "", sets.map((x, i) => ({ value: x.id, text: x.at ? x.title + " · " + D(x.at) : x.title, on: i === 0 })), { radio: true })
-          + cs.checks("bi-adopt", "", radios, { radio: true })
+          + cs.checks("bi-adopt", B + "adoptfor.label", radios, { radio: true })
           + cs.field("bi-adwhy", B + "why_you_adopt_it", { area: true, rec: true, help: B + "required_up_to_characters" }) + `<p class="mk-small">${W(B + "it_is_kept_with_the")}</p>`
           + `<div class="mk-acts">${adopt}</div>`
           + `<p class="mk-small">${W(B + "adopting_names_the_revision_in")} ${W(B + "later_changes_to_the_set")} ${W(B + "adopting_a_different_set_for")}</p>`
           + `<details class="mk-details"><summary>${W(B + "when_you_cannot_adopt_it")}</summary>${gap("refused", `<span>${W(B + "only_an_administrator_adopts_a")} ${W(B + "ask_one_or_adopt_it")}</span>`)}${gap("refused", `<span>${W(B + "only_an_owner_of_a")}</span>`)}${gap("refused", `<span>${W(B + "the_set_must_be_offered")} ${W(B + "save_it_and_offer_it")}</span>`)}</details></div>`;
       }
-      out.push(`<div data-part="write">${w}</div>`);
+      out.push(`<div data-part="write" id="bi-write">${cs.sec(B + "head.write", w)}</div>`);
     }
 
     // ---- drafting from an outside policy (R65: biasinhale) ----
@@ -152,17 +159,18 @@ export const bias = {
       if (pr) {
         const props = Array.isArray(pr.statements) ? pr.statements : [];
         const start = props.length ? cs.act("promote", { label: B + "start_a_set_from_these", data: { from: "inhale" } }) : "";
-        if (props.length) c += cs.sheet(props.map((s, i) => cs.row(icon("flagged"), `<b>${kindWord(s.kind)}</b><span class="rec" style="display:block">“${E(s.text || "")}”</span><span class="meta">${W(B + "proposed_not_yet_yours")} ${W(B + "choose_who_it_is_about")}</span>`
+        if (props.length) c += `<h3>${W(B + "head.proposed")}</h3>` + cs.sheet(props.map((s, i) => cs.row(icon("flagged"), `<b>${kindShort(s.kind)}</b><span class="rec" style="display:block">“${E(s.text || "")}”</span><span class="meta">${W(B + "proposed_not_yet_yours")} ${W(B + "choose_who_it_is_about")}</span>`
           + cs.field("bi-psub" + i, B + "who_or_what_it_is", { autocomplete: "off" }) + cs.field("bi-pwhy" + i, B + "why_you_read_it_this", { area: true, rec: true }))).join("")) + `<p class="mk-note">${W(B + "a_pattern_statement_is_never")}</p>${start}`;
         const bars = Array.isArray(pr.bars) ? pr.bars : [], left = Array.isArray(pr.residue) ? pr.residue : [];
+        if (pr.coverage && Number.isFinite(pr.coverage.sentences_read) && Number.isFinite(pr.coverage.sentences_total)) c += `<p class="mk-small">${W(B + "it_read_sentences_of", { read: String(pr.coverage.sentences_read), of: String(pr.coverage.sentences_total) })}</p>`;
         if (bars.length || left.length) {
-          c += `<dl class="mk-dl">${bars.map((b) => `<dd><span class="rec">“${E(b.text || "")}”</span> ${W(B + "it_says_how_strong_support")} ${W(B + "that_is_a_bar_which")}</dd>`).join("")}`
-            + `${left.map((x) => `<dd><span class="rec">“${E(x.text || "")}”</span> ${x.check ? W(B + "it_says_a_source_is") + " " + W(B + "a_lens_never_says_that") : E(x.why || "")}</dd>`).join("")}</dl>`
+          c += `<h3>${W(B + "head.left_out")}</h3><dl class="mk-dl">${bars.map((b) => `<dt>${W(B + "dt.bar")}</dt><dd><span class="rec">“${E(b.text || "")}”</span> ${W(B + "it_says_how_strong_support")} ${W(B + "that_is_a_bar_which")}</dd>`).join("")}`
+            + `${left.map((x) => (x.check ? `<dt>${W(B + "dt.verdict")}</dt><dd><span class="rec">“${E(x.text || "")}”</span> ${W(B + "it_says_a_source_is")} ${W(B + "a_lens_never_says_that")}</dd>` : `<dd><span class="rec">“${E(x.text || "")}”</span> ${E(x.why || "")}</dd>`)).join("")}</dl>`
             + `<p class="mk-small">${W(B + "sentences_that_could_not_become")} ${W(B + "you_can_still_write_your")}</p>`;
         }
         c += `<p class="mk-note">${W(B + "nothing_was_saved_offered_or")} ${W(B + "starting_a_set_from_these")}</p>`;
       }
-      out.push(`<div data-part="inhale">${cs.sec(B + "draft_a_set_from_an", c)}</div>`);
+      out.push(`<div data-part="inhale" id="bi-inhale">${cs.sec(B + "draft_a_set_from_an", c)}</div>`);
     }
 
     // ---- work made under an earlier lens (R65: biasdebt, biasdebtresolve) ----
@@ -175,14 +183,15 @@ export const bias = {
           const open = d.open === true;
           const rec = cs.act("biasdebt", { label: "act.biasdebt.label.bias", data: { run: String(view.subject) } });
           const resolve = open ? cs.act("biasdebtresolve", { label: "act.biasdebtresolve.label.bias", tone: "primary", data: { run: String(view.subject) } }) : "";
-          let h = cs.sheet(cs.row(icon(open ? "flagged" : "accepted"), `${data1(view.subject)}${d.lens_then ? ` · ${data1(String(d.lens_then).slice(0, 8))}` : ""}${d.lens_now ? ` · ${data1(String(d.lens_now).slice(0, 8))}` : ""}`, rec || ""));
+          const made = d.lens_then && d.lens_now ? ` · ${W(B + "earlier.made", { then: String(d.lens_then).slice(0, 8), made_on: D(d.observed), now: String(d.lens_now).slice(0, 8), adopted_on: D(d.raised), change: String(d.moved_basis || "") })}` : "";
+          let h = cs.sheet(cs.row(icon(open ? "flagged" : "accepted"), `${data1(view.subject)}${made}`, rec || ""));
           if (open) {
             h += `<h3>${W(B + "waiting_for_your_word")}</h3>` + cs.field("bi-dreason", "shell.reason", { area: true, rec: true, help: B + "required_up_to_characters2" }) + `<p class="mk-small">${W(B + "say_why_the_lens_change")} ${W(B + "this_is_the_whole_of")}</p><div class="mk-acts">${resolve}</div>`
               + `<p class="mk-small">${W(B + "this_cannot_be_undone_your")} ${W(B + "the_assistant_cannot_settle_it")} ${W(B + "if_you_would_rather_re")}</p>`
               + `<details class="mk-details"><summary>${W(B + "when_it_cannot_be_settled")}</summary>${gap("refused", `<span>${W(B + "you_gave_no_reason")} ${W(B + "write_why_the_change_does")}</span>`)}${gap("refused", `<span>${W(B + "someone_settled_it_already_or")} ${W(B + "open_your_queue_to_see")}</span>`)}</details>`;
           }
           const done = settlements.filter((x) => x && x.reason);
-          if (done.length) h += cs.sheet(done.map((x) => cs.row(icon("accepted"), `${data1(String(x.actor || x.by || "").replace(/^member:/, ""))} · ${data1(D(x.at))}<span class="rec" style="display:block">“${E(x.reason)}”</span>`)).join(""));
+          if (done.length) h += `<h3>${W(B + "head.settled")}</h3>` + cs.sheet(done.map((x) => cs.row(icon("accepted"), W(B + "earlier.settled", { who: String(x.actor || x.by || "").replace(/^member:/, ""), date: D(x.at), reason: String(x.reason) }))).join(""));
           return h;
         })) + `</div>`);
     }

@@ -23,9 +23,10 @@ test("R65 the lens in force for the whole team: each statement's kind, subject, 
   has(a, "screen.bias.the_lens_your_team_reads"); has(a, "screen.bias.it_never_blocks_work");
   const lens = part(a, "lens");
   const t = squash(textOf(lens));
-  assert.ok(t.includes(said("screen.bias.scrutiny_how_closely_we_read")) && t.includes("ENT-2026-0007") && t.includes(LENS_TEAM.statements[0].text) && t.includes(LENS_TEAM.statements[0].justification));
-  assert.ok(t.includes("rosa") && !t.includes("member:rosa"), "who adopted it, by the member's name");
-  assert.ok(t.includes(said("screen.standard.state.adopted")) && t.includes("October 8, 2026"));
+  const B = "screen.bias.";
+  assert.ok(t.includes(said(B + "kind.scrutiny")) && t.includes(said(B + "row.about", { subject: "ENT-2026-0007" })) && t.includes(LENS_TEAM.statements[0].text) && t.includes(said(B + "row.why", { reason: LENS_TEAM.statements[0].justification })));
+  has(a, B + "head.team"); has(a, B + "lens.label"); has(a, B + "lens.team"); has(a, B + "link.write"); has(a, B + "link.draft");
+  assert.ok(t.includes(said(B + "dt.lens")) && t.includes(said(B + "by_admin_for_the_team.team", { admin: "rosa", date: "October 8, 2026" })), "who adopted it and when, for the team");
   assert.ok(t.includes(said("screen.bias.what_this_set_does_not")) && t.includes(LENS_TEAM.residue[0].text));
   assert.ok(t.includes("9f3a…c07e") && t.includes(said("screen.bias.the_same_lens_gives_the")));
   has(a, "screen.bias.to_adopt_write_or_draft"); has(a, "screen.bias.your_queue_tells_you_when");
@@ -42,6 +43,9 @@ test("R65 choosing a project and asking for its lens sends scope and scopeId and
   const t = squash(textOf(part(a, "lens")));
   assert.ok(t.indexOf(LENS_PROJECT.statements[0].text) >= 0 && t.indexOf(LENS_PROJECT.statements[0].text) < t.indexOf(LENS_PROJECT.statements[1].text), "the team's, then the project's");
   assert.equal(all(part(a, "lens"), (e) => /cs-row/.test(e.attrs.class || "")).length, 2);
+  has(a, "screen.bias.in_force_for_the_coliseum", { project: PROJ_BIAS.title });
+  assert.ok(t.includes(said("screen.bias.row.project")), "a project's own statement is marked");
+  assert.ok(t.includes(said("screen.bias.by_admin_for_the_team", { admin: "rosa", admin_date: "October 8, 2026", owner: "dev", owner_date: "October 8, 2026" })), "both adoptions, the team's and the project's");
   // a project nothing is in force for
   const none = await open("bias", { me: ADMIN, table: biasTable({ projectlist: env({ ok: true, projects: [PROJ_BIAS, { id: "PROJ-2026-0009-x", title: "Other" }] }) }) });
   await none.press("biasmanifest", { choose: { "bi-scope": "PROJ-2026-0009-x" } });
@@ -61,6 +65,7 @@ test("R65 the folds: a project statement that met a locked one, and a set adopte
 test("R65 writing a set: the bundle promote takes (a bias bundle offered), the subject resolved from its name, the guard accepts it; a name the record does not know is refused in place; then the saved set can be adopted for the team or a project with the member's reason", async () => {
   const a = await open("bias", { me: ADMIN, table: biasTable(), reachable: true });
   lacks(a, "screen.bias.why_you_adopt_it");
+  for (const k of ["head.write", "kind.label", "statement.label", "cites.label"]) has(a, "screen.bias." + k);
   const values = { "bi-name": "Lakeshore Tenants: how we read the city", "bi-subject": "City Housing Department", "bi-text": "We read the Department's own reports closely.", "bi-why": "It writes the figures it is judged by.", "bi-not": "It sets no bar and rules no source false." };
   const r = await a.press("promote", { data: { from: "write" }, values });
   const sent = r.sent.find((x) => x.op === "promote");
@@ -79,7 +84,7 @@ test("R65 writing a set: the bundle promote takes (a bias bundle offered), the s
   const key = await a.press("promote", { data: { from: "write" }, values: { ...values, "bi-subject": "ENT-2026-0011", "bi-kind": "inference" } });
   assert.ok(key.sent.find((x) => x.op === "promote").body.files[0].text.includes(`subject: "ENT-2026-0011"`) && !key.sent.some((x) => x.op === "entitybyalias"));
   // the set saved this sitting can be adopted: the whole team, then one project, each with its reason
-  has(a, "screen.bias.why_you_adopt_it"); has(a, "screen.bias.the_whole_team_an_administrator"); has(a, "screen.bias.one_project_the_coliseum_lease", { project: PROJ_BIAS.title });
+  has(a, "screen.bias.why_you_adopt_it"); has(a, "screen.bias.head.adopt"); has(a, "screen.bias.adoptfor.label"); has(a, "screen.bias.the_whole_team_an_administrator"); has(a, "screen.bias.one_project_the_coliseum_lease", { project: PROJ_BIAS.title });
   const team = await a.press("biasadopt", { values: { "bi-adwhy": "  We agreed in the meeting.  " } });
   assert.deepEqual([team.sent[0].op, team.sent[0].body], ["biasadopt", { bundleId: "BIAS-2026-0003-lakeshore", reason: "We agreed in the meeting.", scope: "instance" }]);
   assert.equal(team.asked, false, "the reason is the member's own field: the shell asks none");
@@ -144,6 +149,8 @@ test("R65 drafting from an outside policy: biasinhale sends the policy, where it
   assert.deepEqual([r.sent[0].op, r.sent[0].body], ["biasinhale", { policy: "Staff verify every claim against two sources.", source: "Bay Courier standards page", retrieved: "October 8, 2026" }]);
   assert.deepEqual(r.sent.map((x) => x.op), ["biasinhale"], "nothing is saved, offered or adopted");
   const t = squash(textOf(part(a, "inhale")));
+  has(a, "screen.bias.it_read_sentences_of", { read: "4", of: "4" }); has(a, "screen.bias.head.proposed"); has(a, "screen.bias.head.left_out"); has(a, "screen.bias.dt.bar"); has(a, "screen.bias.dt.verdict");
+  assert.ok(t.includes(said("screen.bias.kind.scrutiny")), "a proposal's kind by its short name");
   for (const s of POLICY.statements) assert.ok(t.includes(s.text));
   has(a, "screen.bias.proposed_not_yet_yours"); has(a, "screen.bias.a_pattern_statement_is_never"); has(a, "screen.bias.nothing_was_saved_offered_or"); has(a, "screen.bias.starting_a_set_from_these");
   assert.ok(t.includes(POLICY.bars[0].text) && t.includes(said("screen.bias.it_says_how_strong_support")) && t.includes(said("screen.bias.that_is_a_bar_which")), "a bar");
@@ -164,7 +171,7 @@ test("R65 work made under an earlier lens: the address names the work, its recor
   assert.deepEqual(req(a, "biasdebt")[0].query, { run: "RUN-2026-0042" });
   const d = part(a, "debt");
   has(a, "screen.bias.work_made_under_an_earlier"); has(a, "screen.bias.waiting_for_your_word"); has(a, "screen.bias.this_cannot_be_undone_your"); has(a, "screen.bias.the_assistant_cannot_settle_it");
-  assert.ok(textOf(d).includes("41be0000") && textOf(d).includes("9f3a0000"), "the lens then and now");
+  assert.ok(textOf(d).includes(said("screen.bias.earlier.made", { then: "41be0000", made_on: "October 9, 2026", now: "9f3a0000", adopted_on: "October 9, 2026", change: DEBT_OPEN.moved_basis })), "the lens then and now, when, and the change");
   assert.deepEqual((await a.press("biasdebtresolve", { values: { "bi-dreason": "" } })).sent, []);
   assert.deepEqual((await a.press("biasdebtresolve", { values: { "bi-dreason": "x".repeat(4001) } })).sent, []);
   const r = await a.press("biasdebtresolve", { values: { "bi-dreason": "  The change does not bear on this finding.  " } });
@@ -175,7 +182,8 @@ test("R65 work made under an earlier lens: the address names the work, its recor
   assert.deepEqual(rec.sent[0].query, { run: "RUN-2026-0042" });
   // settled: its settlement is drawn, no settling is offered
   const done = await open("bias", { me: ADMIN, table: biasTable({ biasdebt: env(DEBT_SETTLED) }), subject: "RUN-2026-0042" });
-  assert.ok(textOf(part(done, "debt")).includes(DEBT_SETTLED.settlements[0].reason));
+  assert.ok(textOf(part(done, "debt")).includes(said("screen.bias.earlier.settled", { who: "mai", date: "October 10, 2026", reason: DEBT_SETTLED.settlements[0].reason })));
+  has(done, "screen.bias.head.settled");
   assert.ok(!ops(done).includes("biasdebtresolve")); lacks(done, "screen.bias.waiting_for_your_word");
   // work this reader cannot open (or that carries no debt): nothing is drawn of it
   const none = await open("bias", { me: ADMIN, table: biasTable(), subject: "RUN-2026-9999" });
