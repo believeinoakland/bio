@@ -189,3 +189,7 @@ Reading set (K3678; mechanics §17): your START's digest step stands (FR-28 is o
 ## B20 · CHANGE
 
 CHANGE (K4245): test-support's `registerDeclared(root, ...registrations)` (R17) is merged: wherever your tests compose the real SCREENS, register every owner's declarations with it before the first read, in place of your own `register.mjs` (K3268). Merge `tranche/T51` first (op-declarations, case-authoring and screens-daily are merged too).
+
+## B21 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Any key of yours U420 names (B419's `screen.standard.inforce.*` is screens-investigate's; the case editor's B428 rows are screens-publish's) is drawn by its key; report any red of yours still waiting on a row.
