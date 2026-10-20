@@ -33104,7 +33104,7 @@
   },
   {
    "key": "screen.project.closenow.open",
-   "en": "Still open if you close it now: Matured is not reached, and the project has concluded {count} of the {total} questions it holds.",
+   "en": "Still open if you close it now: {stage} is not reached, and the project has concluded {count} of the {total} questions it holds.",
    "protected": false,
    "note": "DEC-381: B405 C65: project: what is still open; counts are placeholders. Sample names and counts are placeholders."
   },
