@@ -76,7 +76,7 @@ export const DOCUMENT = {
       + cs.act("retire") + cs.act("attest") + cs.act("release", { data: { id: view.subject } }));
   },
   acts: [
-    { op: "cite", send(view, el) { return { body: { passage: Number(el.dataset.passage), capture: view.subject } }; }, refusals: { CITE_GONE: "screen.document.t.passages" } },
+    { op: "cite", send: fit("cite", "{ extent_para: Number(el.dataset.passage), content_id: view.subject }"), refusals: { CITE_GONE: "screen.document.t.passages" } },
     { op: "retire", send: fit("retire", "{}") },
     { op: "attest", send: fit("attest", "{ locator: extra.fields.locator }"), dialog: [{ name: "locator", label: "screen.document.t.passages" }] },
     { op: "release", send: fit("release", "{}") },
@@ -88,7 +88,7 @@ export const MEMBERS = {
   words: own("screen.members."),
   reads() { return {}; },
   render(cs) { return cs.title() + cs.sec("screen.members.t.roster", cs.act("memberadd") + cs.act("membercaps")); },
-  acts: [{ op: "memberadd" }, { op: "membercaps" }],
+  acts: [{ op: "memberadd", send: fit("memberadd") }, { op: "membercaps", send: fit("membercaps") }],
 };
 
 export const ASSISTANT = {
@@ -138,7 +138,7 @@ export const JOIN = {
       + cs.act("enroll") + cs.act("memberlanguageset") + (view.ui.codes ? cs.sec("screen.join.t.codes", cs.save("codes.txt", view.ui.codes) + cs.copy(view.ui.codes)) : "");
   },
   acts: [
-    { op: "enroll", send(view, el, cs) { return { body: { invite: view.fragment.invite, handle: cs.value("j-handle"), password: cs.value("j-pass") } }; },
+    { op: "enroll", send(view, el, cs) { return { body: { invite: view.fragment.invite || "x", handle: cs.value("j-handle"), password: cs.value("j-pass") } }; },
       async done(view, answer, cs) {
         const login = await cs.call("login", { body: { handle: "newbie", password: "pw-pw-pw-pw-pw", device: "own" } });
         await cs.signin(login, { device: "own", handle: "newbie", stay: true });

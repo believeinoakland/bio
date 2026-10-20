@@ -73,7 +73,7 @@ test("R11 (DEC-88) a reasoned act whose screen names a reasonField sends the mem
 test("R11 friction: a reversible act runs on press; a reasoned act opens a reason field in place and sends only with a reason; a terminal or signed act opens a dialog stating what it does and who signs, and sends only on its confirm", async () => {
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
   await p.click(btn(p, "cite"));
-  assert.deepEqual(p.byOp("cite").map((r) => r.body), [{ passage: 1, capture: "c1" }]);
+  assert.deepEqual(p.byOp("cite").map((r) => r.body), [declaredFit("cite", { extent_para: 1, content_id: "c1" })]);
   await p.click(btn(p, "release"));
   assert.equal(p.byOp("release").length, 0);
   const slot = p.root().querySelector('[data-slot="m:3"]');
