@@ -144,36 +144,51 @@ test("R5 (T51; K4213, K4219): link-sweep's arms are handed the request body, as 
   assert.equal((await ask("{}")).code, "REQUIRED_ARGUMENT_MISSING");
 });
 
-/* R73 (T51; K4231, K4234; control-plane R115, acquisition R95): the stage times of an `acquire` the door stopped waiting for are read from the
-   object: the route map holds the call's timings object under the door's `trace`, and `acquiretimings` answers the stages that ran and the
-   one running. The holder is bounded, and a call without a trace holds nothing. */
-test("R73 (T51; K4231, K4234): a stalled `acquire` through the route map answers, by its trace, the stage it is running; after it ends the stages that ran; control: another trace, none, and no trace hold nothing", async () => {
+/* R73 (T51; K4231, K4234, K4236; control-plane R115, capture R99, acquisition R95): the stage times of an `acquire` the door stopped waiting
+   for are read from the object. The door hands its `trace` to capture's arm (`gatedOp`), which sends it as the header
+   `x-civicsmith-trace`; the object holds the call's timings under it, and the store-internal read `acquiretimings` answers
+   `{ok: true, stageTimes}` for that trace. The holder is bounded; a call without the header holds nothing, and a trace in the address
+   is nobody's key. */
+test("R73 (T51; K4236): door -> captureOp header -> the object's timings under the trace -> `acquiretimings`: a stalled `acquire` is read while it runs and after it ends; controls: another trace, none, an address trace, an unkeyed call, the bound", async () => {
   const { acquireTimingsOf, HOLD_MAX } = await import("../../../src/plane/acquire-timings.mjs");
+  const { gatedOp } = await import("../../../src/plane/door.mjs");
   const x = await store({ env: { CAPTURES: bucketStandIn() } });
+  const stub = { fetch: (r, init) => x.s.fetch(r instanceof Request ? r : new Request(r, init)) };
+  const env = { ...x.env, STORE: { idFromName: () => "bio", get: () => stub } };
   const real = globalThis.fetch;
   let release; const gate = new Promise((r) => { release = r; });
   globalThis.fetch = async () => { await gate; return new Response("x", { headers: { "content-type": "text/plain" } }); };
-  const ask = async (path, init) => (await x.fetch(path, init)).json();
+  const read = async (trace) => (await (await x.fetch(`/acquiretimings${trace === undefined ? "" : `?trace=${trace}`}`)).json()).result;
+  const viaDoor = (trace, wait) => {
+    const u = new URL("http://w/acquire");
+    return gatedOp({ req: new Request(u, { method: "POST", body: JSON.stringify({ locator: "https://example.org/stalled" }) }), url: u, env,
+      op: "acquire", cls: "admin", viaSession: false, storeName: "bio", stub, trace, timings: {} });
+  };
   let call;
   try {
-    call = x.fetch("/acquire?trace=T-73&cls=admin&store=bio", { method: "POST", body: JSON.stringify({ locator: "https://example.org/stalled" }) });
-    for (let i = 0; i < 50 && acquireTimingsOf(x.ctx).size === 0; i++) await new Promise((r) => setTimeout(r, 10));
-    const during = await ask("/acquiretimings?trace=T-73");
+    call = viaDoor("T-73");
+    for (let i = 0; i < 100 && acquireTimingsOf(x.ctx).size === 0; i++) await new Promise((r) => setTimeout(r, 10));
+    const during = await read("T-73");
     assert.equal(during.ok, true);
-    assert.ok(during.result.timings && during.result.timings.total_ms >= 0, JSON.stringify(during));
-    assert.equal(typeof during.result.timings.running, "string", "the stage running when the door looked");
-    /* controls: another trace holds nothing */
-    assert.equal((await ask("/acquiretimings?trace=T-other")).result.timings, null);
-    assert.equal((await ask("/acquiretimings")).result.timings, null);
+    assert.ok(during.stageTimes && during.stageTimes.total_ms >= 0, JSON.stringify(during));
+    assert.equal(typeof during.stageTimes.running, "string", "the stage running when the door looked");
+    assert.equal((await read("T-other")).stageTimes, null);
+    assert.equal((await read()).stageTimes, null);
   } finally { release(); await call; globalThis.fetch = real; }
-  const after = await ask("/acquiretimings?trace=T-73");
-  assert.equal(after.result.timings.running, undefined, "nothing running once it ended");
-  assert.ok(Object.keys(after.result.timings.stages).length > 0, "the stages that ran");
-  /* no trace: the arm still gets a fresh object, held nowhere */
+  const after = (await read("T-73")).stageTimes;
+  assert.equal(after.running, undefined, "nothing running once it ended");
+  assert.ok(Object.keys(after.stages).length > 0, "the stages that ran");
+  /* control: no trace handed, nothing held; a trace in the address is not a key */
   const h = acquireTimingsOf(x.ctx), before = h.size;
+  globalThis.fetch = async () => new Response("x", { headers: { "content-type": "text/plain" } });
+  try {
+    await viaDoor(undefined);
+    await x.fetch("/acquire?trace=T-forged&cls=admin&store=bio", { method: "POST", body: JSON.stringify({ locator: "https://example.org/other" }) });
+  } finally { globalThis.fetch = real; }
+  assert.equal(h.size, before);
+  assert.equal((await read("T-forged")).stageTimes, null);
   h.open(null); h.open("");
   assert.equal(h.size, before);
-  /* the holder is bounded */
   for (let i = 0; i < HOLD_MAX + 20; i++) h.open(`T-fill-${i}`);
   assert.ok(h.size <= HOLD_MAX, `held ${h.size}`);
 });

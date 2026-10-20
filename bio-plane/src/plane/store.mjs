@@ -40,7 +40,7 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
-import { acquireHandlerParts, acquireTimingsOps } from "./acquire-timings.mjs";
+import { acquireHandlerParts, acquireTimingsOps, traceStamped } from "./acquire-timings.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
@@ -693,7 +693,8 @@ export class Store extends DurableObject {
      object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
      record's and fails closed), and `action-holds`' `purgeHeld` (its R9, was `actions` R60; T45, K2781 (1)) on the one
      instance R39 builds, each asked at the purge only. */
-  async fetch(req) {
+  async fetch(req0) {
+    const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
       namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionHoldsOf(this.ctx).purgeHeld(q),
       /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. R33

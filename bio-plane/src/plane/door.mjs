@@ -91,7 +91,7 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   {
     const c = await captureOp(op, req, url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
       requiredArgument, cls, member: viaSession, sessMember, storeName, key: (s) => captureKey(storeName, s), viewer,
-      timings,   /* control-plane R115: `acquire`'s stage timings, kept current by the handler for the door's bound */
+      timings, trace,   /* control-plane R115: `acquire`'s stage timings; capture R99: the door's `trace`, sent to the object as a header so it holds them under it (plane R73) */
       readAcquired: (answer, st) => acquireReadingOp(answer, st, { json, storeSilent, storeRefusal, doAnswer, storeName }) });
     if (c) return c;
   }

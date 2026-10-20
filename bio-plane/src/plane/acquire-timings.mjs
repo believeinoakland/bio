@@ -40,6 +40,22 @@ export function acquireTimingsOf(host, { now = () => Date.now() } = {}) {
   return h;
 }
 
+export const TRACE_HEADER = "x-civicsmith-trace";
+const TRACE_VALUE = /^[\x21-\x7e]{1,200}$/;
+
+/** The request as the route map sees it: for `acquire`, the door's trace from the header `x-civicsmith-trace` (capture R99) is set as the
+ *  in-process `trace` parameter (store-door hands on only the headers it names), and a `trace` a caller put in the address is removed, so
+ *  the key is the door's alone. Any other request is returned as it came. */
+export async function traceStamped(req) {
+  let url;
+  try { url = new URL(req.url); } catch { return req; }
+  if (url.pathname.replace(/^\/+/, "") !== "acquire" || req.method !== "POST") return req;
+  const h = req.headers.get(TRACE_HEADER);
+  url.searchParams.delete("trace");
+  if (typeof h === "string" && TRACE_VALUE.test(h)) url.searchParams.set("trace", h);
+  return new Request(url, { method: req.method, headers: req.headers, body: await req.text() });
+}
+
 /** The handler parts `captureOps` takes as `h`: `timings` is made when the `acquire` arm reads it, keyed by this request's `trace`. */
 export function acquireHandlerParts(host, url) {
   const trace = url.searchParams.get("trace");
@@ -48,5 +64,5 @@ export function acquireHandlerParts(host, url) {
 
 /** The store-internal read, an entry of the route map: no caller's own, reached by the door with the stamps it sets. */
 export function acquireTimingsOps(host, url) {
-  return { acquiretimings: () => ({ ok: true, timings: acquireTimingsOf(host).read(url.searchParams.get("trace")) }) };
+  return { acquiretimings: () => ({ ok: true, stageTimes: acquireTimingsOf(host).read(url.searchParams.get("trace")) }) };
 }
