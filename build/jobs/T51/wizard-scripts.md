@@ -229,3 +229,33 @@ CHECKS
 - checks/run.mjs (whole product): words 0 findings for wizard-scripts' files; the other findings are listed above and are not this module's.
 
 Size (session_01AYSJWKsStw1JQe2TLgDQwt): test runs 5, module lines 2701
+
+## J13 · COMPLETE
+
+Re B13 (CHANGE, K4227). Done and pushed on job/T51/wizard-scripts (commits d943943a89, 0467eb7804). `tranche/T51` merged first (fast-forward of its K4227 commits, ed9d7a119b).
+
+**Applied**
+- `DECLARED_OPS.writinghelp` (R46): `fields` is now `accepts: ["op", "field", "told", "draftHeld"]`, `requires: ["op", "told"]`. The arm (`writingHelp`) reads the body's `op`; without it, `writingHelpAt` answers `WRITING_HELP_REFUSED`.
+- Checked the other seven rows against their arms through the door (`declaredOpHolds`): `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`, `startfrom`, `wizards` all hold, none needed a change.
+- `declared-ops.test.mjs`: the writinghelp call now passes the body's `op` (it had hard-coded `casenote`, so the missing op was never seen). A refusal naming `op` is recognised by the answer's echo of the missing `op` as `null` (the arm's `asked`). New control `R46 control: a writinghelp body without op is refused naming it`.
+
+**Not applied: R46's requirement wording.** The requirements file is outside this job's paths (`checks/ownership.mjs` refused it), so I reverted my edit in 0467eb7804 rather than widen the job. BOB, please amend R46's line (K4210) to read, in place of "`writinghelp` requires `told` (its arm never refuses a missing `field`)":
+> `writinghelp` accepts `op` and requires `op` and `told` (its arm refuses a body without `op`, naming it, and never refuses a missing `field`; K4227, K4210)
+
+and add to its control sentence: "; a `writinghelp` body without `op` is refused naming it."
+
+**Observation for BOB (not changed):** the `wizards` row declares `state` as an accepted field, but its arm reads `state` from the query string (`q("state")`), not the body. The declared-ops test passes, since it only checks requires and refusals. Whether the door also carries body fields to it is for the door's owner to say; I did not change the row.
+
+**Checks** (from `civicos-process`, product `/home/user/bio`)
+- `node checks/format.mjs`: 175 modules, 175 requirements files; 0 failures
+- `node checks/architecture.mjs wizard-scripts`: 48 product files, 93 relative imports; 0 failures
+- `node checks/coverage.mjs wizard-scripts`: 46 of 46 live ids named by a test; 0 failures
+- `node checks/ownership.mjs wizard-scripts tranche/T51`: 2 files changed by wizard-scripts; 0 failures
+
+**Tests**
+- `node --test bio-plane/test/m/wizard-scripts/declared-ops.test.mjs`: 19 pass, 0 fail
+- `node --test --test-reporter=tap bio-plane/test/m/wizard-scripts/`: 127 pass, 0 fail, 0 skipped
+
+**Deferred:** none.
+
+Size (session_013WdFBpJB3QxNd3fyYaBmQF): test runs 2, module lines 14
