@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -25,3 +25,36 @@ Merged (K4013); one item before it merges again (K3986): with inquiry-grammar me
 ## B3 · CHANGE
 
 CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B4 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-45 · inquiry** when the round opens): the fix round of T51 (K4165, K4168, K4194; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/inquiry.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: L9 of the live walk (K4194), the second half: `inquiry` must leave cutting legs unlabelled so the strength is the supporting legs'.
+Merge order: module index 78, layer 6. After `inquiry-grammar` (index 75, FR-44: you read its new R68 first); before `screens-inquiry` (164, FR-28), whose extra entry shows the named finding of any refusal that remains.
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **L9 (K4194; live walk; I-22)** · "Say what each passage carries" is refused whenever the question has a leg that cuts against (see FR-44 `inquiry-grammar`, same cause). `inquiry` leaves unnamed legs unlabelled (`inquiry/index.mjs:2605-2636`); with FR-44 merged the grammar's totality rule counts supporting legs only. BOB's ruling (K4194): a leg that cuts against is not a reason for, so it is never in a ground; `inquiry` leaves cutting legs unlabelled. The strength is the supporting legs' (read the strength arithmetic in your code and its use by `strength` whole before you change it: the grounds are OR-related, so a cutting leg must never become a sufficient ground of its own). Requirement: NEW `inquiry` R85 (next free id; amends the partition's labelling) *(not yet met: T51)*: the labels of a partition cover supporting legs only; a leg that cuts against is never labelled. Test: at `inquiry`'s interface, a question with one supporting and one cutting leg accepts a one-part partition of the supporting leg, the cutting leg is left unlabelled, and the strength is the supporting leg's alone; control: a partition leaving a supporting leg out is still refused; a partition naming the cutting leg is refused with the named finding (not the bare `BASIS_REFUSED`). `screens-inquiry` (FR-28, entry 35) draws that named finding.
+
+2. **K4202 (the census)** · Declare in your `DECLARED_OPS` every op of yours the screens send (the census, `build/plan/pass-T51/owners.tsv`, rows marked `job` with you as owner): `inquirydivide`, `inquiryground`. An op another entry here already declares counts once. The rule is the pass's (`build/plan/fix-round-T51-pass.md` §3, read whole): `classes`, `machineClasses`, `mutating`, `weight` and `description` copied from the op's existing rows in `op-declarations` and `op-grades`, never chosen; `fields.accepts` every field your arm reads from `url` and `body` (stamps such as `viewer` and the shell's `reason` excluded unless your arm reads its own `reason`), `fields.requires` each field it refuses without; where the rows disagree or the arm leaves anything to judge, a QUESTION to BOB. Requirement: one NEW R line (next free id) in your record for BOB. Test: `declared-ops.test.mjs` calling test-support's `declaredOpHolds` for each op (only its requires; without each; a field outside accepts).
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 1406 KB, an upper bound that counts every used module's whole public part and all tests): your firm set is your requirements, your code and this START; read the public parts of the services your entries touch and no more. If that set would pass the 600 KB budget, stop and post `BLOCKED` with cause `reading` before you read on (mechanics §17).
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio inquiry tranche/T51 job/T51/inquiry`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B5 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B6 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J4
+
+ANSWER J4 (K4213): `inquiry-grammar` R68 is merged on tranche/T51 (K4214; its text as its J3 gives, which is your one-line rule: cutting legs are not counted as unlabelled): merge the tranche, rerun, COMPLETE. Write R85 and R86 yourself in build/requirements/inquiry.md (K4210) with the ids the START gave (ids never reused; the gap is fine), and amend R34 as you say. The strength finding is confirmed and routed: `strength`'s arithmetic leaves `cuts_against` legs out of the supporting answer's population (Case Making §3, invariant 7: a cutting finding has the same computation, on its own; K4194 L9: a cutting leg is not a reason for): a CHANGE to strength's job. Your requirement text need not claim it.

@@ -243,7 +243,7 @@ test("R16 before the module starts, accepted-work answers absent; once it starts
 
 test("R14 each refusal carries its row in this module's own table, a new family, with a check, a site and a translation", async () => {
   const rows = Object.entries(CASE_IMPORT_CHECKS);
-  assert.equal(rows.length, 16);
+  assert.equal(rows.length, 22, "the sixteen of T28–T34 and the six of T51's rerun");
   const ids = rows.map(([, r]) => r.check);
   assert.equal(new Set(ids).size, ids.length, "each number once");
   const fam = new Set(ids.map((c) => c.replace(/\.\d+$/, "")));

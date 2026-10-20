@@ -1,6 +1,6 @@
 # case-inputs (T51)
 
-**Status** · session_01XQkjrJ84xQvzqWSREkCCoB · depth 2 · COMPLETE · handled B5
+**Status** · session_018B8XxZpqqS4khqQXoeQ55b · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -98,3 +98,43 @@ Merged `tranche/T51` into the job branch. In `fixture.mjs` the two sentences the
 Checks: the full-repo `checks/words.mjs` shows no finding in case-inputs; `node --test test/m/case-inputs/*.test.mjs`: 51 pass, 0 fail; format, architecture, coverage (19 of 19) and ownership: 0 failures.
 
 Size (session_01XQkjrJ84xQvzqWSREkCCoB): test runs 5, module lines 1293
+
+## J7 · QUESTION
+
+QUESTION (not blocking; best reading below).
+
+1. **`uses` edges.** My entries need three modules my `uses` does not list, all earlier in the order than me (index 119): `public-read` (110; R24 registers `casedetailspublic` with its R18 `registerPublicReads`, the way `case-checker` does), `entities` (55; R21's `area.entity` must be an entity the group holds: `entities.has`) and `promotion` (R24's `group` slug is `promotion.fact("producingGroup")`, as `network-notices` reads it). `modules.json` is yours, not mine. Best reading: please add `public-read`, `entities`, `promotion` to `case-inputs`' `uses`. I write the code on that reading; `checks/architecture.mjs` fails on my files until the edges are there.
+2. **`needs` for `casedetailsset`.** A mutating op declared by its owner names its capability (op-declarations R80). Best reading: `needs: "contribute"` (the hand kind `member`: classes admin+member, `machineClasses: []`, as the draft's table says). `casedetails` is a session read (no `needs`).
+3. **Hand rows I leave for BOB.** `statementack` (op-declarations `classes: null`, mutating, op-grades `reasoned`) and `whatchangedpropose` (classes admin/member/probe, `RUNG_ABSENT` ground `undetermined`): my `DECLARED_OPS` rows agree with them; both hand rows can go once the owner rows are registered.
+
+## J8 · COMPLETE
+
+COMPLETE for B6 (FR-17), after merging `tranche/T51` (6c78a2be15 on the job branch).
+
+**Entries applied**
+1. **C12 (K4169, K4171, K4185).** A case's details sit beside the case and never enter its signed document: four fields (area of government, point of contact, related work, relationship disclosure; no classification). `caseDetailsSet`, `caseDetails` (ops `casedetailsset`, `casedetails`, arms in `caseInputsOps`) and the public read `caseDetailsPublic` (`casedetailspublic`, registered with `public-read` R18 by the new `registerCaseInputsPublicReads(host, {publicRead?})`). New table `case_details` (append-only, declared whole to purge). New file `bio-plane/src/case-inputs/details.mjs` (shapes and words). Requirement lines R20–R28 are written by me in `build/requirements/case-inputs.md`, marked *(not yet met: T51)*, with Purpose, Terms, R11, R16, Uses and Satisfies amended (B7: not in this record).
+2. **K4168.** `DECLARED_OPS` beside the ops map, with `casedetailsset` (classes admin, member; `machineClasses: []`; mutating; `reversible`; stamps `by`, `viewer`; needs `contribute`), `casedetails` and `casedetailspublic` (reads). R27.
+3. **K4202.** `statementack` and `whatchangedpropose` declared from their hand rows; both register with `op-declarations` (R80/R81) and `op-grades` (R49/R50) with no disagreement (checked in a scratch process: 3 registered, 2 agreed). The requirement line for BOB is R29, written in the requirements file. Hand rows that can go in the round's second pass: `statementack` (`op-declarations` OPS row, `op-grades` RUNGS row and its description line in `t47.mjs`, `op-capabilities`) and `whatchangedpropose` (`op-declarations` OPS row, `op-grades` RUNG_ABSENT row and its description line, `op-capabilities` needs row).
+
+**Judgments (best reading taken; CHANGE me if wrong)**
+- `statementack` declares `secret`, not `secretSha` and `bySecret`: the door hashes and strips the caller's `secret` (control-plane N761), so `secretSha`/`bySecret` are door-set stamps and `secret` is what the screens send (without it three `screens-publish` R23 tests fail the guard as `FieldMismatch: statementack sent secret`; with it the module's counts are as at the tranche). `requires` is `[["draft","case","secret"],"reason"]`; `edition` (needed with `case`) is accepted and not required, since a conditional requirement cannot be stated.
+- No catalogue rows (no new C-ids) for the new refusals: `MACHINE_CANNOT_SET_DETAILS`, `DETAILS_FIELD_UNKNOWN`, `DETAILS_MALFORMED` answer `reason` and a `detail` written once with `localize('case-inputs.details.*')`, as `BAD_WHAT_CHANGED` and `NOT_THE_PROJECT_OWNER` (case-authoring) do; `NO_SUCH_CASE` reads `refusal.NO_SUCH_CASE`; `NOT_PUBLISHED` is `public-read`'s own row C-98.8 (`rowOf`). If BOB wants rows, they take C-ids and move `CATALOG_VERSION`. The design stream could give `refusal.*` rows for the three.
+- An empty list (`area`, `related`, `relationships.items`) is malformed; a clear is `value: null`. `relationships` `{none: true}` is stated, differing from not stated.
+- The history is the latest 500 entries (`CASE_DETAILS_HISTORY_MAX`, `truncated`), oldest first; the standing values never come from it. A member's `set_by` and `by` are handles; no public answer carries either.
+- Creating the instance (R16) registers nothing with `public-read`: registering there reached `publicReadOf(host)` and so other modules' instances at creation, which broke `action-replies` and `review` fixtures. Hence the exported function (the `case-checker` form).
+
+**For BOB (other modules)**
+- `plane`: call `registerCaseInputsPublicReads(ctx, {publicRead})` at start, beside `registerCaseCheckerPublicReads` (`plane/store.mjs`:332), and let `control-plane`/`op-declarations` route the public op `casedetailspublic` through `public-read`'s door as `casechecker` is. Until then the public read exists but is not registered in the running plane.
+- `screens-publish` (the sheet reads `casedetails`, acts `casedetailsset`, per the declaration; the first case has an id only after its first save).
+- `op-grades` tests hold two sentences that are now this module's `localize` words, so the words check counts them as test copies: `owners.test.mjs`:43 (`whatchangedpropose`) and `t47.test.mjs`:248 (`statementack`); they go with the hand rows in the second pass. The other words findings (`strength` inline, `op-grades` t36, t41, t46, t47:36, t48, t49) are not mine.
+- Reds at the tranche base, unchanged: `op-declarations` R73 R21, `op-grades` R42 and R46 (`expertisewithdraw`, member-roster's), `review` 5, `screens-publish` 10, `interface-shell` 18.
+
+**Deferred.** Nothing in this module.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/case-inputs/*.test.mjs`: 71 pass, 0 fail (new: `details.test.mjs` 14, `declared-ops.test.mjs` 6; `invariants.test.mjs` updated for the fifth table and the five ops). The new tests fail against the tranche's code (not importable) and pass with the change.
+- `checks/format.mjs`: 0 failures; `checks/architecture.mjs case-inputs`: 16 files, 0 failures; `checks/coverage.mjs case-inputs`: 29 of 29 live ids; `checks/ownership.mjs`: 1 failure, the requirements file, accepted per B7.
+- `checks/words.mjs`: no finding in a case-inputs file (the two test copies above are in `op-grades`). `setup-words/build.mjs --check`: stale rows only (a `capture-sources` word), none naming this module.
+- Neighbours: `public-read` 228/0, `test-support` 61/0, `case-authoring` 192/0, `consequences` 69/0, `filings` 140/0, `action-replies` 31/0 (now as at the base).
+
+Size (session_018B8XxZpqqS4khqQXoeQ55b): test runs 32, module lines 1597
