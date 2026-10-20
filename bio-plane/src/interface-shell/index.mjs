@@ -46,7 +46,7 @@ export const PATHS = Object.freeze({
   projects: ["projects"], project: ["projects", "@project"], document: ["projects", "@project", "screen.document.name"],
   question: ["projects", "@project", "screen.question.name"], assistant: ["projects", "@project", "screen.question.name"],
   projectai: ["projects", "@project", "screen.projectai.name"],
-  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.name"],
+  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.crumb"],
   plan: ["projects", "@project", "screen.plan.name"], "start-send": ["projects", "@project", "screen.plan.name", "screen.start-send.name"],
   request: ["projects", "@project", "screen.request.name"], action: ["projects", "@project", "screen.action.name"],
   timeline: ["projects", "@project", "screen.timeline.name"], money: ["projects", "@project", "screen.money.name"],

@@ -54,7 +54,9 @@ CREATE TABLE IF NOT EXISTS member_expertise (
   label     TEXT NOT NULL,
   event     TEXT NOT NULL,
   actor     TEXT NOT NULL,
-  created   TEXT NOT NULL
+  created   TEXT NOT NULL,
+  -- R79: the reason an administrator gave for a withdrawal; NULL on every other entry.
+  reason    TEXT
 );
 CREATE INDEX IF NOT EXISTS mx_member ON member_expertise(member_id, label);
 
@@ -176,6 +178,7 @@ export const MEMBER_ADDITIVE_COLUMNS = [
   ["members", "invite_withdrawn", "TEXT"],
   ["members", "door", "TEXT"],
   ["members", "approved_by", "TEXT"],
+  ["member_expertise", "reason", "TEXT"],
 ];
 
 /* R66, R46: the tables purge never clears (identity, governance and the group's own settings). The credential tables

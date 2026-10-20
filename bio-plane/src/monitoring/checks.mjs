@@ -13,7 +13,8 @@
  * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows
  * were taken by the stamp 1.49.0 (T19's promotion job). T22 (R52, K1019): C-18.11–C-18.15, the refusals of an address's
  * frequency setting (`FREQUENCY_CHECKS`), taken by 1.53.0 (T23's promotion job). T47 (R74, N969): C-18.20 and
- * C-18.21, the refusals of a member's act setting a bundle's monitoring (`MONITOR_SET_CHECKS`), awaiting T48's stamp.
+ * C-18.21, the refusals of a member's act setting a bundle's monitoring (`MONITOR_SET_CHECKS`), awaiting T48's stamp. T51 (R75, K4189): C-18.22 and C-18.23, the refusals of a member's act planting or revising one
+ * named request (`NAMED_REQUEST_CHECKS`), awaiting the stamp.
  *
  * T24 (N506, K1159): the link sweep's arms of C-18.5 (`sweepErrors`, its fields, cadences and bounds, the term matcher)
  * left with the sweep for `link-sweep`, a later module, which hands them back at composition through R66's registration
@@ -35,6 +36,7 @@ function asText(v) {
 }
 
 const at = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
+const atNamed = (fn, region) => `src/monitoring/named-requests.mjs ${fn} > ${region}`;
 
 /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
    FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
@@ -137,14 +139,30 @@ export const MONITOR_SET_CHECKS = Object.freeze({
   }),
 });
 
+/* C-18.22 and C-18.23 — R75's refusals of a member's act planting or revising one named request (T51; K4189; UC-035),
+   each with nothing written: the next free rows of the C-18 family this table holds (`link-sweep` took C-18.24), awaiting
+   the stamp. The translations are BOB's drafts, the UX stream's to re-word. */
+export const NAMED_REQUEST_CHECKS = Object.freeze({
+  MACHINE_CANNOT_SET_REQUEST: Object.freeze({
+    check: 'C-18.22',
+    where: atNamed('namedRequestSet', 'is-named-request-member'),
+    translation: localize('monitoring.checks.only_a_member_plants', 'Only a member asks for a document to be gathered, and this came from an automated credential. Nothing was changed.'),
+  }),
+  NAMED_REQUEST_REFUSED: Object.freeze({
+    check: 'C-18.23',
+    where: atNamed('namedRequestSet', 'is-named-request-shape'),
+    translation: localize('monitoring.checks.this_request_was_not', 'This request was not saved: something it says is not in a form the record can keep. The parts to put right are named. Nothing was changed.'),
+  }),
+});
+
 /** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
 export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS,
-                                                 ...WATCH_END_CHECKS, ...MONITOR_SET_CHECKS });
+                                                 ...WATCH_END_CHECKS, ...MONITOR_SET_CHECKS, ...NAMED_REQUEST_CHECKS });
 
 /** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail.
- *  R52's rows, R71's (which shares R52's first two) and R74's. */
+ *  R52's rows, R71's (which shares R52's first two), R74's and R75's. */
 export function frequencyRefusal(code, detail, extra) {
-  const row = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code] || MONITOR_SET_CHECKS[code];
+  const row = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code] || MONITOR_SET_CHECKS[code] || NAMED_REQUEST_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 }
 

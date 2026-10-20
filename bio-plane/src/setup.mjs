@@ -1,5 +1,5 @@
 /* instance-setup: what a team's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R66, R76–R86,
- * R88–R97; R67–R75 and R87 are `translations`', R94).
+ * R88–R101; R67–R75 and R87 are `translations`', R94).
  *
  * `/` answers the interface (R83, R86; N1002, K3171), so this module composes and serves no page and exports none. What it
  * keeps is R47's one holder of the words on who controls the team's Civicsmith (`HOSTING_CONTROL`, in `setup-fleet.mjs`,
@@ -831,6 +831,22 @@ function instanceAddress(origin) {
   } catch { return null; }
 }
 
+/* R100 (C11, DEC-374; K4164): the one website file the verifier accepts for a claim, `{path, body: {instance, group}}`, from the
+   address the claim was made from and the producing slug; null when either is missing. The verifier's comparison (R8) and the
+   answers of `groupdomainset` and `groupidentity` (R7, R11) all read it here, so the file shown and the file accepted cannot
+   drift. The path is the current file's; the file from before T31 (R8) is read with the same body. */
+function groupWellKnownFile(address, slug) {
+  if (typeof address !== "string" || !address || typeof slug !== "string" || !slug) return null;
+  return { path: GROUP_WELL_KNOWN_PATH, body: { instance: address, group: slug } };
+}
+/* R8, R100: why a claim has no file to look for, the verdict's own reason by key: no producing slug, else no recorded address. */
+const wellKnownWhy = (slug) => (!slug ? word("instance-setup.domain.detail.no_team_name") : word("instance-setup.domain.detail.no_address"));
+/* R100: the answers' `well_known`: the file, or null with `well_known_detail`, the reason. */
+function wellKnownOf(address, slug) {
+  const file = groupWellKnownFile(address, slug);
+  return file ? { well_known: file } : { well_known: null, well_known_detail: wellKnownWhy(slug) };
+}
+
 /* At most `max` bytes of a response body, decoded as UTF-8; the rest is never read (R8: at most 16 KiB). */
 async function boundedText(res, max) {
   const body = res && res.body;
@@ -1159,7 +1175,8 @@ export class InstanceSetup {
     const check = await this.#checkGroupDomain("set");
     try { await this.#scheduler().arm(); } catch { /* the check above stands; the next arm reconciles */ }
     return { ok: true, domain: d, set_at: at, set_by: by, instance_address: address, check,
-             shown_publicly: !!check && check.verdict === "verified", history: this.#identityHistory("domain") };
+             shown_publicly: !!check && check.verdict === "verified", history: this.#identityHistory("domain"),
+             ...wellKnownOf(address, this.producingGroup()) };
   }
 
   /** R8, THE VERIFIER: a governed fetch of the current claim's well-known file, the file from before T31 fetched the
@@ -1172,7 +1189,7 @@ export class InstanceSetup {
     const address = cur.instance_address || null;
     let verdict = "undetermined", status = null, detail;
     if (!slug || !address) {
-      detail = !slug ? word("instance-setup.domain.detail.no_team_name") : word("instance-setup.domain.detail.no_address");
+      detail = wellKnownWhy(slug);
     } else {
       const first = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH, address, slug);
       let answer = first;
@@ -1221,7 +1238,8 @@ export class InstanceSetup {
     const isObject = !!f && typeof f === "object" && !Array.isArray(f);
     const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
     const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
-    if (inst === address && grp === slug)
+    const want = groupWellKnownFile(address, slug).body;
+    if (inst === want.instance && grp === want.group)
       return { verdict: "verified", status, detail: word("instance-setup.domain.detail.verified", { path, address, slug }) };
     return { verdict: "mismatched", status,
              detail: !isObject
@@ -1274,7 +1292,8 @@ export class InstanceSetup {
              display_name_history: this.#identityHistory("display_name"),
              domain_claim: dom ? { domain: dom.value, set_at: dom.set_at, set_by: dom.set_by,
                                    instance_address: dom.instance_address ?? null,
-                                   latest: this.#domainLatestCheck(dom.value) } : null,
+                                   latest: this.#domainLatestCheck(dom.value),
+                                   ...wellKnownOf(dom.instance_address ?? null, this.producingGroup()) } : null,
              domain_history: this.#identityHistory("domain"),
              domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
              domain_checks_limit: max, domain_checks_truncated: checks.length > max,
@@ -2972,6 +2991,66 @@ export function instanceSetupOps(m, url, body) {
     updateskip: () => m.updateSkip({ ...(body || {}), by: q("by") }),
   };
 }
+
+/* R101 (T51 fix round; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send,
+   declared by their owner beside the ops map. Each row's classes, machine classes and mutating are the op's rows in
+   `op-declarations`, its weight and description the op's in `op-grades` (copied, never chosen); its fields are what the arm
+   reads from the request: the stamps (`viewer`, `by`, `origin`) are the control plane's and are no field, and a field a call
+   cannot do without is one the arm refuses without, `null` being an answer where it clears (`stake`, `raw`, `language`,
+   `name` of a place). `runtime` and `selftest` are answered at the Worker (`instanceSetupOp`) and read nothing from the
+   request; they are reads, so their weight is `read`. `officesseed` forces its own `boot`. */
+const ADMIN_ACT = Object.freeze(["admin", "member"]);
+const STAMPED_ACT = Object.freeze(["admin", "member", "probe"]);
+export const DECLARED_OPS = Object.freeze({
+  declaredstakeset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.declaredstakeset", "setting: the group's declared stake in its own words, carried beside its public identity on what it sends or publishes from then; an administrator's act, every earlier value kept; moves no bundle"),
+    fields: { accepts: ["stake"], requires: ["stake"] } },
+  disclosureshown: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "caller-owned",
+    description: localize("instance-setup.declared.disclosureshown", "personal state, keyed by member: the assistant's disclosure shown to them, with its version"),
+    fields: { accepts: ["member", "version"], requires: ["member", "version"] } },
+  groupdomainset: { classes: STAMPED_ACT, mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.groupdomainset", "the group's claimed domain — the subject is the instance's identity, not a bundle"),
+    fields: { accepts: ["domain"], requires: ["domain"] } },
+  grouplanguagesset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.grouplanguagesset", "setting: the languages the group works in; an administrator's act, a later one replacing it; moves no bundle"),
+    fields: { accepts: ["languages"], requires: ["languages"] } },
+  grouplogoset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.grouplogoset", "setting: the group's logo, PNG or JPEG, or none; an administrator's act, a later one replacing it; moves no bundle"),
+    fields: { accepts: ["raw", "rawType"], requires: ["raw"] } },
+  groupnameset: { classes: STAMPED_ACT, mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.groupnameset", "the group's public display name — the subject is the instance's identity, not a bundle"),
+    fields: { accepts: ["name"], requires: ["name"] } },
+  infolevelset: { classes: STAMPED_ACT, machineClasses: [], mutating: true, weight: "caller-owned",
+    description: localize("instance-setup.declared.infolevelset", "personal state, keyed by member: how quickly explanations open, promptly or after a longer pause; nothing is hidden"),
+    fields: { accepts: ["level", "asked"], requires: ["level"] } },
+  memberlanguageset: { classes: STAMPED_ACT, machineClasses: [], mutating: true, weight: "caller-owned",
+    description: localize("instance-setup.declared.memberlanguageset", "personal state, keyed by member: the language the interface speaks to them"),
+    fields: { accepts: ["language"], requires: ["language"] } },
+  officesseed: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.officesseed", "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's"),
+    fields: { accepts: [], requires: [] } },
+  placewanted: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.placewanted", "the instance's configuration: the place the group wants its profile for; an administrator's"),
+    fields: { accepts: ["name"], requires: ["name"] } },
+  profilesset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.profilesset", "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator"),
+    fields: { accepts: ["profiles"], requires: ["profiles"] } },
+  runtime: { classes: STAMPED_ACT, mutating: false, weight: "read",
+    description: localize("instance-setup.declared.runtime", "read: what the instance was measured to cost and where its limits lie (the runtime's measurements, the CPU probe's trail, the subrequest ceiling)"),
+    fields: { accepts: [], requires: [] } },
+  selftest: { classes: STAMPED_ACT, mutating: false, weight: "read",
+    description: localize("instance-setup.declared.selftest", "read: whether the deployment is healthy (its bindings, the store's stats and a storage round trip); it never returns a secret"),
+    fields: { accepts: [], requires: [] } },
+  updatelater: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.updatelater", "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)"),
+    fields: { accepts: ["version"], requires: ["version"] } },
+  updateskip: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reasoned", refusal: "UPDATE_SKIP_NO_REASON",
+    description: localize("instance-setup.declared.updateskip", "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)"),
+    fields: { accepts: ["version", "reason"], requires: ["version", "reason"] } },
+  updatestart: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.updatestart", "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)"),
+    fields: { accepts: ["version"], requires: ["version"] } },
+});
 
 /* ============================================================================================================
  * THE INSTANCE'S REPORTS, WORKER SIDE (R17–R19, R37, R38). The credential, the namespace and the envelope are the
