@@ -197,3 +197,30 @@ control-plane T51: B13 (K4234) done. A timed-out `acquire` reads its stages from
 **Found in other modules:** unchanged from J8 (the R81 wizard walk's FieldMismatch, citation's import order, op-grades' testcopies).
 
 Size (session_01EoJxYttG3uMHhXBMdMwTif): test runs 8, module lines 3952
+
+## J10 · REPORT
+
+**Re B14 (CHANGE K4245), entry 1 done; entry 2 waits for ADMISSION.** Pushed `cfaf800630` on `job/T51/control-plane`.
+
+**Entry 1 (applied).** Tests that compose the real screens and the op tables now register every owner's declarations with one `registerDeclared(root, registerDeclaredOps)` call (K3268): `test/m/control-plane/register-declared.mjs`. It replaces the three hand registrations (`register-tasks.mjs`, `register-case-import.mjs`, `register-case-inputs.mjs`, deleted). `harness.mjs` imports it first, and `t46-app.test.mjs` loads its screen modules after it, because a sibling module without that dependency evaluates concurrently and reads the tables first (R81 "registered after the first read").
+
+**Two fixes found on the way (control-plane's own code, R17/R45/R53).**
+1. A public read (`casedetailspublic`, `casechecker`, `casefilespec`, the network-notice reads) forwarded the caller's `grant` and `session` and any declared stamp to the store. `src/control-plane/index.mjs` now deletes those keys before `publicReadDoorRead`, as R45 states ("none of the caller's stamps").
+2. R53's table expected `by: admin` for the founder on every op. `rerunstart` and `rerunpair` are case-import's acts that stamp `by` as the positional identity (K4219, R49, the existing `CASE_IMPORT_ACTIONS` branch). The test now expects that, and `CASE_IMPORT_ACTIONS` is exported for it.
+
+**Entry 2 (waiting).** R28's `export` expectation is re-pinned to an op no session set holds once BOB tells me ADMISSION has merged. Today `export` answers `ROOT_OF_TRUST_REQUIRED` (C-38.4), so R28 is red until then. I have not merged `tranche/T51` again; I will when BOB's next entry says ADMISSION is in.
+
+**Tests (control-plane suite, 324 tests): 315 pass, 9 fail.** Baseline at the job branch before this change: 303 pass, 21 fail.
+- R28: waits for entry 2 above.
+- R2, R41 (affordances' unaccounted): names unpublished and unranked ops that the full registration now shows: `capturecredentiallist`, `capturecredentialsupply`, `capturecredentialwithdraw`, `casedetails`, `casedetailsset`, `citeimported`, `declareorigin`, `expertisewithdraw`, `export`, `importregrade`, `namedrequests`, `namedrequestset`, `projectclose`, `rerunpair`, `rerunread`, `rerunstart`, `sweepratify`, `sweepset`, `taskdecide`, `withdrawimported`. Not control-plane's: affordances' published list and op-grades' ranks. Was red at baseline too.
+- R75 (t46-e2e: 3 tests, t47-e2e: 3 tests, R81 e2e: 3 tests, R75/R82/R83 e2e): the real plane answers `/app` with 500 `interface-shell: screen members's act names expertisewithdraw, which OPS does not hold` (t46-e2e), and the page's script fails to parse in `interface-shell/harness.mjs` boot (`SyntaxError: Unexpected token ':'`, t47-e2e). See (a) and (b).
+
+**Found in other modules (for BOB).**
+(a) `src/plane/` never calls `registerDeclaredOps`. op-declarations R80 says the plane registers each owner's declared ops before its first read, so the deployed interface answers 500 on `/app` (the e2e tests run the real plane). This is plane's job, and the e2e failures clear when it does.
+(b) The interface page's inline script does not parse in the e2e boot. I did not trace which screen or module emits it; `interface-shell` or the screen modules would need to look.
+(c) The affordances and op-grades list in R2/R41 above.
+(d) `build/modules.json` control-plane `paths` are unchanged and correct (src and tests dirs).
+
+**Checks (run from civicos-process, product /home/user/bio):** format 175 modules, 0 failures; architecture 0 failures; coverage 83 of 83 live ids named by a test, 0 failures; ownership 12 files, 0 failures; words 0 failures.
+
+Size (session_01SfmG5AbML6msbbarrwpi7Y): test runs 9, module lines 3,957
