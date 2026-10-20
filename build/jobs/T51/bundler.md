@@ -192,3 +192,7 @@ Record: build/jobs/T51/bundler.md. Size (session_01Gz6er9hUWEo63Fj3mY19bH): test
 ## J9 · COMPLETE
 
 FR-02 · bundler is done; pushed to job/T51/bundler (9c76d0cd7f). Applied: R39 (release-coherence check: [BINDING_NOT_EXPORTED] naming member, binding and class, run by release-assemble before any write and by fleetbundles section 9, reading the fresh build's exports) and R40 (--test-instance on deploy.mjs and deploy-fleet.mjs: [NOT_A_TEST_INSTANCE], [WRONG_ACCOUNT], test-deploy and rollback log lines, deploy.mjs --dry-run). Requirements R39, R40 written first. Red by name as planned: R39's real-fleet arms (agent-worker REMOTE -> RemoteSession) until agent-runner merges. Bundler tests 137 pass, 1 fail (that arm); format 0, architecture 0, coverage 40/40, ownership 0. Record build/jobs/T51/bundler.md has the exact workflow steps for deploy-test.yml and 2 notes for BOB (a fresh copy cannot pass both preflights; test deploys replace the member's own script). Size (session_01FoYQKjGSDzypze3SYjMYUT): test runs 9, module lines 4228.
+
+## J10 · REPORT
+
+Ownership check: 1 failure, build/requirements/bundler.md is outside bundler's paths, tests and job record. B8 told me to write the NEW R39 and R40 lines first, so I did (that file's diff is only those two lines and the Status line). If BOB keeps the requirements file as its own, take the two lines from my commit 9c76d0cd7f and drop the file from my branch; nothing else in the ownership check fails.
