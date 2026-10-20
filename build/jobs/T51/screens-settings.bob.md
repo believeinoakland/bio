@@ -167,3 +167,9 @@ CHANGE (K4239): interface-shell is merged with R12 (a read is drawn by its class
 ## B21 · CHANGE
 
 CHANGE (K4239): credentials is merged: bootstrap accepts members. Merge tranche/T51; the updates screen's "Show what each part runs" may send members=1.
+
+## B22 · CHANGE
+
+CHANGE (K4246): SCREENS-SETTINGS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entries: (1) K4239's B19 (2), not done by #10 for want of a declared filter: the `bias` screen lists the team's earlier offered sets through `retrieval`'s `list` with `type: "bias"` (declared since RETRIEVAL #23, R91: accepts `type`, `state`, `after`, `limit`), so a set offered earlier is adoptable, not only the one saved this sitting; follow `after` while the answer says more exists, within the page's bound. Test naming R65 (or the id you amend); control: a set of another type is not listed, an empty answer draws no list. (2) `entitybyalias` is declared (entities R62): your bias form's lookup now counts as declared; confirm your test sends only `alias`. (3) Your two R66 `export` tests: `export` is in the founder's session set (op-declarations R83, merged); merge the tranche and confirm they are green. Replace any hand registration in your tests with test-support's `registerDeclared` (R17). Requirement lines for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.
