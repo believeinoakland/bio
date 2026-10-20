@@ -142,3 +142,37 @@ test("R5 (T51; K4213, K4219): link-sweep's arms are handed the request body, as 
   /* control: a body naming no sweep is the argument's own refusal */
   assert.equal((await ask("{}")).code, "REQUIRED_ARGUMENT_MISSING");
 });
+
+/* R73 (T51; K4231, K4234; control-plane R115, acquisition R95): the stage times of an `acquire` the door stopped waiting for are read from the
+   object: the route map holds the call's timings object under the door's `trace`, and `acquiretimings` answers the stages that ran and the
+   one running. The holder is bounded, and a call without a trace holds nothing. */
+test("R73 (T51; K4231, K4234): a stalled `acquire` through the route map answers, by its trace, the stage it is running; after it ends the stages that ran; control: another trace, none, and no trace hold nothing", async () => {
+  const { acquireTimingsOf, HOLD_MAX } = await import("../../../src/plane/acquire-timings.mjs");
+  const x = await store();
+  const real = globalThis.fetch;
+  let release; const gate = new Promise((r) => { release = r; });
+  globalThis.fetch = async () => { await gate; return new Response("x", { headers: { "content-type": "text/plain" } }); };
+  const ask = async (path, init) => (await x.fetch(path, init)).json();
+  let call;
+  try {
+    call = x.fetch("/acquire?trace=T-73&cls=admin&store=bio", { method: "POST", body: JSON.stringify({ locator: "https://example.org/stalled" }) });
+    for (let i = 0; i < 50 && acquireTimingsOf(x.ctx).size === 0; i++) await new Promise((r) => setTimeout(r, 10));
+    const during = await ask("/acquiretimings?trace=T-73");
+    assert.equal(during.ok, true);
+    assert.ok(during.result.timings && during.result.timings.total_ms >= 0, JSON.stringify(during));
+    assert.equal(typeof during.result.timings.running, "string", "the stage running when the door looked");
+    /* controls: another trace holds nothing */
+    assert.equal((await ask("/acquiretimings?trace=T-other")).result.timings, null);
+    assert.equal((await ask("/acquiretimings")).result.timings, null);
+  } finally { release(); await call; globalThis.fetch = real; }
+  const after = await ask("/acquiretimings?trace=T-73");
+  assert.equal(after.result.timings.running, undefined, "nothing running once it ended");
+  assert.ok(Object.keys(after.result.timings.stages).length > 0, "the stages that ran");
+  /* no trace: the arm still gets a fresh object, held nowhere */
+  const h = acquireTimingsOf(x.ctx), before = h.size;
+  h.open(null); h.open("");
+  assert.equal(h.size, before);
+  /* the holder is bounded */
+  for (let i = 0; i < HOLD_MAX + 20; i++) h.open(`T-fill-${i}`);
+  assert.ok(h.size <= HOLD_MAX, `held ${h.size}`);
+});

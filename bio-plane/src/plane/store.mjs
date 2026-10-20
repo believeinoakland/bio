@@ -40,6 +40,7 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
+import { acquireHandlerParts, acquireTimingsOps } from "./acquire-timings.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
@@ -762,7 +763,9 @@ export class Store extends DurableObject {
          host, at acquisition's place before capture's map; `by` is the door's stamp. */
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
-      ...captureOps(captureOf(ctx), url, body, env),
+      /* R73 (K4231, K4234): `acquire` is handed a timings object held under the door's `trace`, and `acquiretimings` answers its stages. */
+      ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
+      ...acquireTimingsOps(ctx, url),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */
       ...doorbellOps(doorbellOf(ctx), url, body),
