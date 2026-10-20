@@ -142,3 +142,26 @@ Tests and checks:
 ## J7 · REPORT
 
 J6: DECLARED_OPS done (17 ops incl. securitymap as read; op-grades must drop RUNG_ABSENT.securitymap), R82 met, R81/R82 lines written. C80/R81 waits on member-roster R76 (not on tranche/T51): its test is written and fails only for that reason. Send CHANGE when R76 is merged. Details in my record J6.
+
+## J8 · COMPLETE
+
+Applied B7 (CHANGE, K4218): merged `tranche/T51` (member-roster R76 on it). R81's test passes with no change to this module's code, as J6 said.
+
+Entries applied: 1 (C80, R81), 2 and 3 (`DECLARED_OPS`, R82; see J6). R81 and R82 are written in `build/requirements/credentials.md` (not in this record), both marked met; the ownership check lists that one file, which B6 accepts.
+
+R76 made two older pins stale, both of the founder being no member; I moved them to the new behaviour (no assertion weakened, the refusal-writes check kept):
+- `keys.test.mjs` (R6): `signerAdd` for `memberId: "admin"` now succeeds after the claim (asserted after the "no refusal writes" check; the final key count is 5).
+- `grant.test.mjs` (R32): the founder is no longer in the "not active" list; `aiGrantMintStanding("admin")` is `NO_ACCOUNT` (active, no account of her own).
+
+Deferred: nothing. Another module: `op-grades` hand row `RUNG_ABSENT.securitymap` (t48.mjs) must go for the `securitymap` declaration to agree; and the hand rows of the 17 declared ops in `op-declarations` and `op-grades` can go once registration agrees. The whole-repo words check shows 20 `testcopy` failures in `op-grades` tests (none in credentials), and coverage shows failures in other modules (none in credentials).
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 183, pass 183, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (accepted, B6).
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage 5 and words 21 failures, none in credentials.
+
+Size (session_01PVXWdCkqAhUVeYE1E8cxT4): test runs 5, module lines 2750
