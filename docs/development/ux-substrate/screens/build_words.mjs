@@ -19,7 +19,7 @@ const fail = m => { console.error('build_words: ' + m); process.exit(1); };
 // the mockup scripts, evaluated as the page evaluates them (functions that touch the DOM are never called here)
 const ctx = vm.createContext({ console, CSS: { escape: s => s } });
 const js = ['mock-acts.js', 'mock-kit.js', 'mock-screens.js', 'mock-shell.js', 'mock-refs.js'].map(R).join('\n')
-  + '\n;globalThis.__W = { ACT_HELP, WNAME, WEIGHT, OUTWARD: [...OUTWARD], RAIL, TABS, SCREEN_HELP, RAIL_HELP, COL_HELP, WRITE_ACT, KINDS, GRAPH_WORDS, NODE_KIND, USAGE_WORDS };';
+  + '\n;globalThis.__W = { ACT_HELP, WNAME, WSHOW, WEIGHT, OUTWARD: [...OUTWARD], RAIL, TABS, SCREEN_HELP, RAIL_HELP, COL_HELP, WRITE_ACT, KINDS, GRAPH_WORDS, NODE_KIND, USAGE_WORDS };';
 vm.runInContext(js, ctx);
 const W = ctx.__W;
 const page = R('page.src.html');
@@ -61,7 +61,7 @@ const opkey = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0]
 const weightOf = op => W.WEIGHT[opkey(op)] || 2;
 
 // 1. Weights: the five names and what each means (protected: the weights, DEC-157 (4))
-W.WNAME.forEach((n, i) => { if (!i) return; add(`weight.${n.toLowerCase()}.name`, n, true, 'mock-kit.js WNAME'); });
+W.WNAME.forEach((n, i) => { if (!i) return; add(`weight.${n.toLowerCase()}.name`, W.WSHOW[n] || n, true, 'mock-kit.js WNAME, WSHOW'); });
 for (const [n, t] of Object.entries(G.weight)) add(`weight.${n.toLowerCase()}.means`, t, true, 'page.src.html marks');
 add('weight.dots.means', must(page, 'page.src.html', 'The dots show how much an act weighs, from two to five. A button without dots does something you can undo.'), true, 'page.src.html marks; S26 (DEC-295): said once, the first time a member opens a marked button\'s explanation');
 

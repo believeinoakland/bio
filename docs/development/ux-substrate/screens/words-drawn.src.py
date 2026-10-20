@@ -479,8 +479,8 @@ w('screen.timeline.threaded.owndate', '{document}, its own date {date}', False, 
 def w273(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-273' + (': ' + note if note else '')))
 w273('shell.queue.waiting', '{n} items wait on you in your queue: {todo} to do, {noticed} noticed, {status} status.', False, "the queue count's explanation in the masthead; {n} their sum")
-w273('shell.queue.open', 'Click to open your queue.', False, "the queue count's explanation, its second line")
-w273('shell.group.open', 'Click to see who your team is.', False, "the team's card in the masthead, its second line; the team's description and purpose are its own words (data)")
+w273('shell.queue.open', 'Press or tap to open your queue.', False, "the queue count's explanation, its second line")
+w273('shell.group.open', 'Press or tap to see who your team is.', False, "the team's card in the masthead, its second line; the team's description and purpose are its own words (data)")
 # --- end DEC-273
 
 # --- DEC-275: explanations keyed, screens account to members. The tip of a reference card is now read as the tip shows it,
@@ -655,7 +655,7 @@ w275('screen.group-identity.tip.draft_why', "Nothing here is saved as the team's
 w275('screen.held.tip.vouching', 'a member signs that a capture is what it says it is', False, "vouching, its card")
 w275('screen.held.tip.vouching_until', 'until then it is held and counts toward nothing', False, "vouching, its card")
 w275('screen.held.tip.vouching_why', 'Nothing on this list supports or cuts against any question until a member vouches for it.', False, "vouching, its card")
-w275('screen.held.tip.photo', 'The photo, as captured. Click to open it full size, in the safe view until it has been checked.', False, "a held photo's thumbnail, its explanation")
+w275('screen.held.tip.photo', 'The photo, as captured. Press or tap to open it full size, in the safe view until it has been checked.', False, "a held photo's thumbnail, its explanation")
 w275('screen.held.tip.crucial', 'Crucial to a finding', False, "a capture crucial to a finding, its card")
 w275('screen.held.tip.crucial_is', 'a capture a finding would fall without', False, "a capture crucial to a finding, its card")
 w275('screen.held.tip.crucial_vouched', 'vouched for one at a time, never in a batch', False, "a capture crucial to a finding, its card")
@@ -2214,7 +2214,7 @@ W.append(dict(key='queue.signer-self-registered.summary', en='{member} registere
 W.append(dict(key='queue.signer-self-registered.summary.comment', en='{member} registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed', en='A member registered a signing key for themselves', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed.comment', en='A member registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}'))
-W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Every administrator is told, and an administrator can revoke it. Nothing here changes the key.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779'))
+W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark this done.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
 # (10) attribution-unchosen
 W.append(dict(key='queue.attribution-unchosen.summary', en='Case {case} uses your observation {observation}: choose how it credits you', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)'))
 W.append(dict(key='queue.attribution-unchosen.detail', en="Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.", protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}'))
@@ -6339,6 +6339,54 @@ n('screen.due-date.rule.go', "See your places' rules", 'E6: the door to the rule
 n('screen.case-editor.nocase.summary', 'A draft that names no case yet', 'L14: the mock\'s label for the heading of a draft with no case')
 n('screen.due-date.rule.summary', 'When your rules state no deadline for this kind of action', 'E6: the label of the refusal and its box')
 n('screen.review-copy.nodraft.summary', 'When there is no draft yet', 'I-29: the label of the refusal and its door')
+# --- DEC-384 (BOB's B411, the live walk of 0.86.0): Queue and Home, Team and settings, the marks under buttons. The code reads each key below by its id.
+def w411(key, en, note=''):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-384: B411 ' + note))
+REWRITE.update({
+  'shell.card.open': 'Press or tap to open it.',   # B411 T-10: a click is not the only way in
+  'screen.home.move.anyone': 'any member can take the next step',   # B411 G1: a queue item whose move is nobody in particular
+})
+# L27 / T-02: step 4 of "Welcome a new member" (WIZ-7db08189cc0e58c3) never opens a subject screen without its subject
+w411('wizard.WIZ-7db08189cc0e58c3.step4.none.what', "Your team has no question yet. A question is what a project sets out to answer from documents anyone can check; its strength against the project's bar says how well they back the answer, and “Undetermined” means they can't settle it.", 'L27 T-02: step 4 when the team has no question: shown in place, without opening a screen')
+w411('wizard.WIZ-7db08189cc0e58c3.step4.none.why', 'Open a question from any project when you are ready. Nothing else in this welcome waits on it.', 'L27 T-02: step 4 when the team has no question')
+w411('wizard.WIZ-7db08189cc0e58c3.step4.none.door', 'Open a question', 'L27 T-02: the step\'s button when the team has no question; it opens the project choice, then a new question')
+# G1, G2, T-15: an item says what to do and names the thing by its title
+w411('queue.unkeyed.summary', 'Something on {title} waits for your act', 'G1 G2: the sentence for a to-do whose kind has no sentence of its own; {title} the document, project or question as it is named (never the file part of an address)')
+w411('queue.unkeyed.detail', 'Open it to see what is asked. It stays in your queue until it is done.', 'G1 G2: under queue.unkeyed.summary')
+w411('queue.act.open.help', 'Opens the screen this item concerns. The item stays in your queue until you have done what it asks.', 'G1: the Open link on an item: it opens, it does not resolve')
+w411('queue.act.dothis.help', 'Does what this item asks, on the screen it concerns. It leaves your queue when done.', 'G1: a button that names its act and also resolves the item, such as Open the check')
+w411('queue.signer-self-registered.members', 'Open Members', 'T-15: a link on the signing-key item to Members, where the key is withdrawn')
+# G4: snooze is a date picker; the answered list says what was answered
+w411('screen.queue.snooze.pick', 'Choose the day it comes back. Tomorrow is the earliest.', 'G4: help under the date picker of Snooze to a date')
+w411('queue.answered.done', 'Marked done: {item}', 'G4: an answered row, taskresolve')
+w411('queue.answered.dismissed', 'Dismissed {item}: “{reason}”', 'G4: an answered row, proposedispose with its reason')
+w411('queue.answered.dismissed.noreason', 'Dismissed {item}', 'G4: an answered row, proposedispose when no reason was kept')
+w411('queue.answered.muted', 'Muted {kind}', 'G4: an answered row, queuemute; {kind} as queue.kind.* names it')
+w411('queue.answered.generic', 'Answered {item}', 'G4: an answered row for any other act, so the row never shows only a name and a day')
+# T-05: what "look after the team's Civicsmith" grants, said before it is granted
+w411('screen.members.cap.administer.confirm.head', 'Make {who} an administrator?', 'T-05: the confirmation before a grant that includes administering')
+w411('screen.members.cap.administer.confirm', "Choosing “look after the team's Civicsmith” makes {who} an administrator. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.", 'T-05: the confirmation')
+w411('screen.members.cap.administer.confirm.yes', 'Make {who} an administrator', 'T-05: the confirming button')
+w411('screen.members.cap.administer.confirm.no', 'Go back', 'T-05: the other button')
+# T-06: after "Stand down as owner"
+w411('project.owners.standdown.opened', 'You asked to stand down as an owner. The vote is open: you stay an owner until {awaiting} agree.', 'T-06: on the owner\'s own row at once, and until the vote ends; {awaiting} the other owners by name')
+w411('project.owners.agree.remove', 'Agree: let {who} stand down as owner', 'T-06: the button on the other owners\' view of the row')
+w411('screen.translations.wrong.sample', '“Asks for a reason” → “Pide una razón”', 'T-07: the sample row of Marked wrong by members; the word is the mark now named Asks for a reason (a sample, not a word the product draws)')
+# T-14: plain words for the file-scanner catalogue (the code's own ids)
+w411('file-scanner.catalogue.icap_server_address_host_or_host', 'Address of your scanning server, as a name or name:port. Without a port, 1344 is used (11344 when connecting over TLS).', 'T-14')
+w411('file-scanner.catalogue.any_icap_server_rfc_3507', 'any scanning server that speaks ICAP, the usual way virus scanners take files', 'T-14')
+w411('file-scanner.catalogue.microsoft_entra_tenant_id', "Microsoft Entra tenant ID (the ID of your organization's Microsoft directory)", 'T-14')
+w411('file-scanner.credential.client_id', 'Client ID', 'T-14: replaces the field name client_id; the code names credential fields by these keys')
+w411('file-scanner.credential.client_secret', 'Client secret', 'T-14: replaces the field name client_secret')
+w411('file-scanner.credential.api_key', 'API key', 'T-14: replaces the field name api_key')
+w411('file-scanner.credential.api_secret', 'API secret', 'T-14: replaces the field name api_secret')
+# T-18: the hosting line composed by the code read "by set at setup"
+w411('screen.group.hosting.now.setup', "Recorded when your team's Civicsmith was set up, on {date}:", 'T-18: used in place of screen.group.hosting.now when the recorder is the setup')
+w411('screen.group.hosting.now.system', 'Recorded by Civicsmith itself on {date}:', 'T-18: used in place of screen.group.hosting.now when the recorder is the system')
+# T-19, T-20, H2
+w411('screen.join.invite.reread', 'Read the invitation again', 'T-19: the label of the Read the invitation button once the invitation has been read')
+w411('project.visibility.start.required', 'Choose who can find this project before you start it. Nothing was started.', 'T-20: the refusal when Start the project is pressed with neither choice made')
+w411('crumb.project.unjoined', 'A project you have not joined', 'H2: the path\'s name for a project whose title this member cannot read; never its identifier')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

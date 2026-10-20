@@ -397,6 +397,17 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .mk-device[data-device="phone"] .mk-plain .cs-dock { border-left: 0; border-top: 3px solid var(--c-ink); max-height: 300px; }
 .mk-device[data-device="phone"] .mk-lanes { grid-template-columns: 1fr; }
 .mk-device[data-device="phone"] .mk-grid2 { grid-template-columns: 1fr; }
+/* B411, the live walk of 0.86.0 at 390 px (T-13, H1, I-40, G3, T-10): nothing in the main column is wider than the screen, a long word or address wraps, and the controls the walk found under 44 px are 44 px */
+.mk-device[data-device="phone"] .cs-main, .mk-device[data-device="phone"] .cs-main > *, .mk-device[data-device="phone"] .cs-section, .mk-device[data-device="phone"] .cs-section > *, .mk-device[data-device="phone"] .cs-sheet, .mk-device[data-device="phone"] .cs-row > *, .mk-device[data-device="phone"] .mk-card, .mk-device[data-device="phone"] .cs-field, .mk-device[data-device="phone"] .mk-acts > * { min-width: 0; max-width: 100%; }
+.mk-device[data-device="phone"] .cs-main :is(p, li, dt, dd, td, th, h1, h2, h3, .rec, .mk-data, .meta, a.cs-ref, code) { overflow-wrap: anywhere; }
+.mk-device[data-device="phone"] .mk-cards { grid-template-columns: minmax(0, 1fr); }
+.mk-device[data-device="phone"] .cs-row .meta, .mk-device[data-device="phone"] .mk-acts { flex-wrap: wrap; }
+.mk-device[data-device="phone"] .tw { max-width: 100%; overflow-x: auto; }
+.mk-device[data-device="phone"] .cs-field :is(input, select, textarea) { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+.mk-device[data-device="phone"] .cs-btn { max-width: 100%; white-space: normal; text-align: left; }
+.mk-device[data-device="phone"] .cs-path a, .mk-device[data-device="phone"] .cs-mast a, .mk-device[data-device="phone"] .cs-mast button, .mk-device[data-device="phone"] .cs-part > summary { display: inline-flex; align-items: center; box-sizing: border-box; min-height: 44px; }
+.mk-device[data-device="phone"] .cs-dock:not(:has(.body > *)), .mk-device[data-device="phone"] .cs-band:empty { display: none; }   /* G3: no dark rule and empty grey box above the title when the assistant's dock or a band has nothing in it */
+.mk-device[data-device="phone"] .cs-tip { max-width: min(300px, calc(100vw - 32px)); pointer-events: none; }   /* T-10: a tip never takes a tap meant for what lies under it */
 .mk-fronthead { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 2px solid var(--c-ink); }
 .mk-fronthead .grp { font: 600 var(--t-3xl)/1.1 var(--f-serif); letter-spacing: -.01em; }
 .mk-flogo { flex: none; width: 56px; height: 56px; display: grid; place-items: center; background: var(--c-accent); color: var(--c-on-accent); font: 700 20px/1 var(--f-serif); border-radius: var(--r-2); }
@@ -818,16 +829,16 @@ const REG = {{REG}};
               flagged: '<b>Flagged</b>: someone marked this for a second look.',
               search: '<b>Found by search</b>: Civicsmith matched these words in what your team holds. Nothing is recorded: a member records it, from its passage, with the usual act.' },
     kind: { todo: '<b>To do</b>: something only you can move forward.', noticed: '<b>Noticed</b>: something changed that you may want to know. Nothing is required of you.', status: '<b>Status</b>: where something you follow stands.' },
-    weight: { Reversible: '<b>Reversible</b>: you can undo this.', Reasoned: '<b>Reasoned</b>: asks for your reason, which becomes part of the record.', Terminal: '<b>Terminal</b>: ends or removes something; reopening it takes a reason.', Signed: '<b>Signed</b>: signed with your key, and stands under your name.', Irreversible: '<b>Irreversible</b>: can never be undone.' },
+    weight: { Reversible: '<b>Reversible</b>: you can undo this.', Reasoned: '<b>Asks for a reason</b>: you are asked why, and your reason becomes part of the record.', Terminal: '<b>Ends something</b>: it ends or removes something; opening it again takes a reason.', Signed: '<b>Signed by you</b>: it is signed with your key and stands under your name.', Irreversible: '<b>Irreversible</b>: can never be undone.' },
     path: { 'Working': '<b>Working</b>: not public; seen by your team\'s members.', 'Shared for review': '<b>Shared for review</b>: named outsiders can read this draft until the owner stops sharing it.', 'Published': '<b>Published</b>: signed and public. It can be corrected by a new edition, never removed.' }
   };
   window.CS_LEVEL = 2;
   /* a button's weight, said under what the act does (DEC-174 as amended October 7): one explanation per button */
   /* S26, Bob's A (DEC-295): the scale is said once, the first time a member opens a marked button's explanation */
   var dotsSaid = false;
-  function weightLine(btn) { var w = btn.querySelector('.w'); if (!w) return ''; var n = w.textContent.replace(/[^A-Za-z]/g, ''); if (!G.weight[n]) return ''; var once = dotsSaid ? '' : ' The dots show how much an act weighs, from two to five. A button without dots does something you can undo.'; dotsSaid = true; return '<span class="more">' + G.weight[n] + once + '</span>'; }
+  function weightLine(btn) { var w = btn.querySelector('.w'); if (!w) return ''; var n = w.getAttribute('data-w') || w.textContent.replace(/[^A-Za-z]/g, ''); if (!G.weight[n]) return ''; var once = dotsSaid ? '' : ' The dots show how much an act weighs, from two to five. A button without dots does something you can undo.'; dotsSaid = true; return '<span class="more">' + G.weight[n] + once + '</span>'; }
   function tipFor(el) {
-    if (el.classList.contains('cs-btn')) return (el.dataset.tip || '<b>' + el.textContent.replace(/(Reversible|Reasoned|Terminal|Signed|Outward)\s*$/, '').trim() + '</b>') + weightLine(el);
+    if (el.classList.contains('cs-btn')) return (el.dataset.tip || '<b>' + el.textContent.replace(/(Reversible|Asks for a reason|Ends something|Signed by you|Irreversible|Outward)\s*$/, '').trim() + '</b>') + weightLine(el);
     if (el.dataset.tip) return el.dataset.tip;
     var c = el.classList;
     if (c.contains('cs-grade')) { var s = G.scale[el.dataset.scale] || ['Grade', '']; var l = el.textContent.trim().slice(-1);
@@ -923,7 +934,7 @@ const REG = {{REG}};
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.mk-page button.cs-btn[data-act]'); if (!b || b.disabled || b.getAttribute('aria-busy') === 'true') return;
     hide(); b.setAttribute('aria-busy', 'true');
     setTimeout(function () { b.removeAttribute('aria-busy'); b.setAttribute('data-done', '');
-      if (/Terminal|Signed|Outward/.test((b.querySelector('.w') || {}).textContent || '')) b.disabled = true; else setTimeout(function () { b.removeAttribute('data-done'); }, 1800); }, 900); });
+      if (/Ends something|Signed by you|Outward/.test((b.querySelector('.w') || {}).textContent || '')) b.disabled = true; else setTimeout(function () { b.removeAttribute('data-done'); }, 1800); }, 900); });
   window.addEventListener('scroll', hide, true);
   new MutationObserver(function () { document.querySelectorAll('.mk-page').forEach(untangle); mark(); }).observe(document.body, { childList: true, subtree: true });
   mark(); window.CS_TIP = { tipFor: tipFor, SEL: SEL };

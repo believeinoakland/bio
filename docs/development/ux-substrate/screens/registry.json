@@ -426,7 +426,7 @@
     },
     {
      "op": "taskresolve",
-     "label": "Open the item",
+     "label": "Mark it done",
      "status": "declared",
      "modules": [
       "op-declarations",
@@ -1648,7 +1648,7 @@
    "acts": [
     {
      "op": "taskresolve",
-     "label": "Open the item",
+     "label": "Mark it done",
      "status": "declared",
      "modules": [
       "op-declarations",

@@ -3477,13 +3477,31 @@
   "key": "updates.running.release_setup",
   "en": "Release {version} · installed {date}, when your team's Civicsmith was set up",
   "protected": false,
-  "note": "DEC-248: D30, screens-settings R37; for an install with no member behind it (setup, admin before a handle, a token)"
+  "note": "DEC-248: D30, screens-settings R37; B411 T-08: only when the release is the one installed at setup, so its install date IS the setup date; for any later install with no member behind it use updates.running.release_noactor"
+ },
+ {
+  "key": "updates.running.release_noactor",
+  "en": "Release {version} · installed {date}",
+  "protected": false,
+  "note": "B411 T-08: an install with no member behind it (a token, an admin before a handle) whose date is not the setup date; the date is the release's own, never the setup date"
+ },
+ {
+  "key": "updates.earlier.installed_noactor",
+  "en": "Release {version} · installed {date}",
+  "protected": false,
+  "note": "B411 T-08: as updates.running.release_noactor, in the list of earlier releases"
+ },
+ {
+  "key": "updates.running.setup_on",
+  "en": "Your team's Civicsmith was set up on {date}.",
+  "protected": false,
+  "note": "B411 T-08: said once, apart from any release, as the one set-up date"
  },
  {
   "key": "updates.earlier.installed_setup",
   "en": "Release {version} · installed {date}, when your team's Civicsmith was set up",
   "protected": false,
-  "note": "DEC-248"
+  "note": "DEC-248; B411 T-08: only when that release is the one installed at setup"
  },
  {
   "key": "refusal.NO_NODE",

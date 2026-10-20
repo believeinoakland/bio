@@ -104,7 +104,7 @@ const ACT_HELP = {
   wizardsubmit: 'Submits a draft wizard for an administrator to approve before members are offered it.',
   wizardapprove: 'Approves a wizard so members are offered it where its steps start.',
   wizardretire: 'Stops offering a wizard. Anyone part-way through can finish.',
-  taskresolve: 'Does what this item asks, on the screen it concerns. It leaves your queue when done.',
+  taskresolve: 'Marks this item done where nothing more is asked of you, and it leaves your queue. An item that needs you to read, check or decide has its own button for that, and stays until you have.',
   owed_taskdecide: 'Records, in your name, who issued this document, or that you looked and could not tell, with your reason. The task is done and leaves the list. A later answer replaces it, and the earlier one stays in the history.',
   taskforward: 'Passes this item to another member better placed to act.',
   proposedispose: 'Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.',

@@ -1064,13 +1064,13 @@
   },
   {
    "key": "screen.plan.subject.from",
-   "en": "from the question \"{title}\" ({status}, {date})",
+   "en": "from the inquiry \"{title}\" ({status}, {date})",
    "protected": false,
    "note": "DEC-259: where a plan's subject comes from; {status} such as suspected"
   },
   {
    "key": "screen.plan.phase.checkpoint",
-   "en": "{item} → checkpoint: \"{checkpoint}\" (judged by a member, once it is due)",
+   "en": "{item} → checkpoint: \"{checkpoint}\" (judged by a member)",
    "protected": false,
    "note": "DEC-259: a scenario's phase"
   },
@@ -1718,13 +1718,13 @@
   },
   {
    "key": "shell.queue.open",
-   "en": "Click to open your queue.",
+   "en": "Press or tap to open your queue.",
    "protected": false,
    "note": "DEC-273: the queue count's explanation, its second line"
   },
   {
    "key": "shell.group.open",
-   "en": "Click to see who your team is.",
+   "en": "Press or tap to see who your team is.",
    "protected": false,
    "note": "DEC-273: the team's card in the masthead, its second line; the team's description and purpose are its own words (data)"
   },
@@ -2732,7 +2732,7 @@
   },
   {
    "key": "screen.held.tip.photo",
-   "en": "The photo, as captured. Click to open it full size, in the safe view until it has been checked.",
+   "en": "The photo, as captured. Press or tap to open it full size, in the safe view until it has been checked.",
    "protected": false,
    "note": "DEC-275: a held photo's thumbnail, its explanation"
   },
@@ -5906,9 +5906,9 @@
   },
   {
    "key": "case.ladder.notyet",
-   "en": "Not checked yet",
+   "en": "not yet checked",
    "protected": false,
-   "note": "DEC-299: a step of the readiness ladder that nothing has judged; never \"not met\" (B411 B2/C8)"
+   "note": "DEC-299: replaces \"not yet evaluated\" on the ladder"
   },
   {
    "key": "ceremony.gate.heading",
@@ -5918,9 +5918,9 @@
   },
   {
    "key": "ceremony.gate.notargets",
-   "en": "This draft has no finding to publish. Add a finding to the case, then check again.",
+   "en": "This draft names no finding to publish. Add at least one finding to the case, then check again.",
    "protected": false,
-   "note": "DEC-299: the publication with no targets; replaces the developer text; B411 D1: a door \"Add a finding\" beside it"
+   "note": "DEC-299: the publication with no targets; replaces the developer text"
   },
   {
    "key": "ceremony.gate.other",
@@ -10286,9 +10286,9 @@
   },
   {
    "key": "queue.signer-self-registered.detail",
-   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Every administrator is told, and an administrator can revoke it. Nothing here changes the key.",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark this done.",
    "protected": false,
-   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779"
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members"
   },
   {
    "key": "queue.attribution-unchosen.summary",
@@ -18632,9 +18632,9 @@
   },
   {
    "key": "refusal.BASIS_REFUSED",
-   "en": "These documents cannot be used here: one of them rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hunch. Take that one out, or choose a document that does, then try again. Nothing was written.",
+   "en": "A piece of evidence cannot be used: it rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hypothesis. Nothing was written.",
    "protected": false,
-   "note": "DEC-342: evidence leg refused by basis rules; B411 I-22: plain words and a way forward"
+   "note": "DEC-342: evidence leg refused by basis rules"
   },
   {
    "key": "refusal.BASIS_VERSION_REFUSED",
@@ -20480,9 +20480,9 @@
   },
   {
    "key": "refusal.NO_SUCH_RULE",
-   "en": "No rule in your places' rules states a deadline for this kind of action, so none was set. Pick one of the deadlines your rules do list, in the box below, or see your places' rules. Nothing was written.",
+   "en": "No active rule in your places' rules states that deadline for this kind of action, so none was set. Name a deadline those rules list. Nothing was written.",
    "protected": false,
-   "note": "DEC-342: deadline rule missing or unknown for the action's kind; B411 E6: a box to name the deadline and a door"
+   "note": "DEC-342: deadline rule missing or unknown for the action's kind"
   },
   {
    "key": "refusal.NO_SUCH_SET",
@@ -33751,268 +33751,202 @@
    "note": "DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders."
   },
   {
-   "key": "strength.arithmetic.unrated_no_leg_on_any_set",
-   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "key": "wizard.WIZ-7db08189cc0e58c3.step4.none.what",
+   "en": "Your team has no question yet. A question is what a project sets out to answer from documents anyone can check; its strength against the project's bar says how well they back the answer, and “Undetermined” means they can't settle it.",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: strength sentence in plain words; the code draws each document by its title, once"
+   "note": "DEC-384: B411 L27 T-02: step 4 when the team has no question: shown in place, without opening a screen"
   },
   {
-   "key": "strength.arithmetic.unrated_no_leg_on_this_axis",
-   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "key": "wizard.WIZ-7db08189cc0e58c3.step4.none.why",
+   "en": "Open a question from any project when you are ready. Nothing else in this welcome waits on it.",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: strength sentence in plain words"
+   "note": "DEC-384: B411 L27 T-02: step 4 when the team has no question"
   },
   {
-   "key": "strength.arithmetic.unrated_this_inquiry_rests_on_nothing",
-   "en": "Not graded yet on {axis}: this question rests on nothing here.",
+   "key": "wizard.WIZ-7db08189cc0e58c3.step4.none.door",
+   "en": "Open a question",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: strength sentence in plain words"
+   "note": "DEC-384: B411 L27 T-02: the step's button when the team has no question; it opens the project choice, then a new question"
   },
   {
-   "key": "strength.arithmetic.present_and_not_yet_load_bearing",
-   "en": "Listed, but not counted yet: {legs}.",
+   "key": "queue.unkeyed.summary",
+   "en": "Something on {title} waits for your act",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G1 G2: the sentence for a to-do whose kind has no sentence of its own; {title} the document, project or question as it is named (never the file part of an address)"
   },
   {
-   "key": "strength.arithmetic.no_computed_strength_a_leg",
-   "en": "There is no strength for {axis} yet: a document that every set of reasons needs is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
+   "key": "queue.unkeyed.detail",
+   "en": "Open it to see what is asked. It stays in your queue until it is done.",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G1 G2: under queue.unkeyed.summary"
   },
   {
-   "key": "strength.arithmetic.no_computed_strength_every_set",
-   "en": "There is no strength for {axis} yet: every set of reasons this rests on is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
+   "key": "queue.act.open.help",
+   "en": "Opens the screen this item concerns. The item stays in your queue until you have done what it asks.",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G1: the Open link on an item: it opens, it does not resolve"
   },
   {
-   "key": "strength.arithmetic.no_computed_strength_stopped",
-   "en": "There is no strength for {axis} yet: {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
+   "key": "queue.act.dothis.help",
+   "en": "Does what this item asks, on the screen it concerns. It leaves your queue when done.",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G1: a button that names its act and also resolves the item, such as Open the check"
   },
   {
-   "key": "strength.arithmetic.no_stronger_than_the_weakest",
-   "en": "{axis} {grade}: no stronger than the weakest {axis} grade it rests on, which is {leg}{via}.",
+   "key": "queue.signer-self-registered.members",
+   "en": "Open Members",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 T-15: a link on the signing-key item to Members, where the key is withdrawn"
   },
   {
-   "key": "strength.arithmetic.strongest_of_the_sets_of_reasons",
-   "en": "{axis} {grade}: the strongest of the {count} sets of reasons that each carry this conclusion on their own is {set}, and it is no stronger than its weakest {axis} grade, which is {leg}{via}.",
+   "key": "screen.queue.snooze.pick",
+   "en": "Choose the day it comes back. Tomorrow is the earliest.",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G4: help under the date picker of Snooze to a date"
   },
   {
-   "key": "strength.arithmetic.that_leg_is_needed_by_every",
-   "en": "That document is needed by every one of those sets, so no set can be stronger than it.",
+   "key": "queue.answered.done",
+   "en": "Marked done: {item}",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G4: an answered row, taskresolve"
   },
   {
-   "key": "strength.arithmetic.further_sets_are_undetermined",
-   "en": "{count} further sets are undetermined and could only be stronger, never weaker: {sets}.",
+   "key": "queue.answered.dismissed",
+   "en": "Dismissed {item}: “{reason}”",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G4: an answered row, proposedispose with its reason"
   },
   {
-   "key": "strength.arithmetic.one_further_set_is_undetermined",
-   "en": "{count} further set is undetermined and could only be stronger, never weaker: {sets}.",
+   "key": "queue.answered.dismissed.noreason",
+   "en": "Dismissed {item}",
    "protected": false,
-   "note": "DEC-384: B411 I-23/A8: plain words"
+   "note": "DEC-384: B411 G4: an answered row, proposedispose when no reason was kept"
   },
   {
-   "key": "screen.standard.crumb",
-   "en": "Standard: {name}",
+   "key": "queue.answered.muted",
+   "en": "Muted {kind}",
    "protected": false,
-   "note": "DEC-384: B411 I-30: the last crumb of a standard says which one the member is on; the project crumb is the project's title"
+   "note": "DEC-384: B411 G4: an answered row, queuemute; {kind} as queue.kind.* names it"
   },
   {
-   "key": "screen.person.same.org",
-   "en": "Same organization?",
+   "key": "queue.answered.generic",
+   "en": "Answered {item}",
    "protected": false,
-   "note": "DEC-384: B411 I-32: heading for an organization"
+   "note": "DEC-384: B411 G4: an answered row for any other act, so the row never shows only a name and a day"
   },
   {
-   "key": "screen.person.same.holds.org",
-   "en": "Records claimed to be this organization stay linked, never merged; each claim is graded and anyone can see its reason or withdraw it with theirs.",
+   "key": "screen.members.cap.administer.confirm.head",
+   "en": "Make {who} an administrator?",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-05: the confirmation before a grant that includes administering"
   },
   {
-   "key": "screen.person.same.claimed.org",
-   "en": "claimed the same organization; the records stay linked, never merged",
+   "key": "screen.members.cap.administer.confirm",
+   "en": "Choosing “look after the team's Civicsmith” makes {who} an administrator. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-05: the confirmation"
   },
   {
-   "key": "screen.person.same.because.org",
-   "en": "claimed the same organization, grade {grade}, because {basis}",
+   "key": "screen.members.cap.administer.confirm.yes",
+   "en": "Make {who} an administrator",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-05: the confirming button"
   },
   {
-   "key": "screen.person.candidates.org",
-   "en": "Records that might be the same organization. These are not claims: a member decides.",
+   "key": "screen.members.cap.administer.confirm.no",
+   "en": "Go back",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-05: the other button"
   },
   {
-   "key": "screen.person.claim.same_as.org",
-   "en": "It is the same organization",
+   "key": "project.owners.standdown.opened",
+   "en": "You asked to stand down as an owner. The vote is open: you stay an owner until {awaiting} agree.",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-06: on the owner's own row at once, and until the vote ends; {awaiting} the other owners by name"
   },
   {
-   "key": "screen.person.claim.not_same_as.org",
-   "en": "It is not the same organization",
+   "key": "project.owners.agree.remove",
+   "en": "Agree: let {who} stand down as owner",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-06: the button on the other owners' view of the row"
   },
   {
-   "key": "screen.person.claim.kind.same_as.org",
-   "en": "claimed the same organization",
+   "key": "screen.translations.wrong.sample",
+   "en": "“Asks for a reason” → “Pide una razón”",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-07: the sample row of Marked wrong by members; the word is the mark now named Asks for a reason (a sample, not a word the product draws)"
   },
   {
-   "key": "screen.person.claim.kind.not_same_as.org",
-   "en": "claimed not the same organization",
+   "key": "file-scanner.catalogue.icap_server_address_host_or_host",
+   "en": "Address of your scanning server, as a name or name:port. Without a port, 1344 is used (11344 when connecting over TLS).",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-14"
   },
   {
-   "key": "screen.person.claim.kind.unsure.org",
-   "en": "unsure whether the same organization",
+   "key": "file-scanner.catalogue.any_icap_server_rfc_3507",
+   "en": "any scanning server that speaks ICAP, the usual way virus scanners take files",
    "protected": false,
-   "note": "DEC-384: B411 I-32"
+   "note": "DEC-384: B411 T-14"
   },
   {
-   "key": "screen.person.kind.help.org",
-   "en": "For an organization a fact can be its name, address or contact. Born, died and where someone lives or works apply to people only.",
+   "key": "file-scanner.catalogue.microsoft_entra_tenant_id",
+   "en": "Microsoft Entra tenant ID (the ID of your organization's Microsoft directory)",
    "protected": false,
-   "note": "DEC-384: B411 I-32: under \"What kind of fact\" for an organization, which offers only name, address and contact"
+   "note": "DEC-384: B411 T-14"
   },
   {
-   "key": "review.title.draft",
-   "en": "Draft: {title}",
+   "key": "file-scanner.credential.client_id",
+   "en": "Client ID",
    "protected": false,
-   "note": "DEC-384: B411 L14/I-37/C3/D1/I-39/I-29: the heading of a draft that names no case; the title is its scope or subject"
+   "note": "DEC-384: B411 T-14: replaces the field name client_id; the code names credential fields by these keys"
   },
   {
-   "key": "review.title.untitled",
-   "en": "A draft with no case named yet",
+   "key": "file-scanner.credential.client_secret",
+   "en": "Client secret",
    "protected": false,
-   "note": "DEC-384: B411 L14: the heading when the draft has no scope or subject either"
+   "note": "DEC-384: B411 T-14: replaces the field name client_secret"
   },
   {
-   "key": "review.body.nocase",
-   "en": "This draft does not name a case yet. Which case it becomes is settled when it is published.",
+   "key": "file-scanner.credential.api_key",
+   "en": "API key",
    "protected": false,
-   "note": "DEC-384: B411 L14: the body text under that heading, in plain words"
+   "note": "DEC-384: B411 T-14: replaces the field name api_key"
   },
   {
-   "key": "review.index.derived_case_identity",
-   "en": "a draft that does not name a case yet; which case it becomes is settled when it is published",
+   "key": "file-scanner.credential.api_secret",
+   "en": "API secret",
    "protected": false,
-   "note": "DEC-384: B411 L14: the code's own id for the identity fragment; the heading is review.title.draft, the sentence review.body.nocase"
+   "note": "DEC-384: B411 T-14: replaces the field name api_secret"
   },
   {
-   "key": "screen.review-copy.nodraft.go",
-   "en": "Make a draft",
+   "key": "screen.group.hosting.now.setup",
+   "en": "Recorded when your team's Civicsmith was set up, on {date}:",
    "protected": false,
-   "note": "DEC-384: B411 I-29/C1: the door beside \"There is no draft to share yet\", to the case editor"
+   "note": "DEC-384: B411 T-18: used in place of screen.group.hosting.now when the recorder is the setup"
   },
   {
-   "key": "screen.case-editor.comments.go",
-   "en": "Read what outside readers said ({n})",
+   "key": "screen.group.hosting.now.system",
+   "en": "Recorded by Civicsmith itself on {date}:",
    "protected": false,
-   "note": "DEC-384: B411 C4: on the case screen, a link to the comments and acknowledgements on its review copy"
+   "note": "DEC-384: B411 T-18: used in place of screen.group.hosting.now when the recorder is the system"
   },
   {
-   "key": "screen.case-editor.comments.none",
-   "en": "No outside reader has commented yet.",
+   "key": "screen.join.invite.reread",
+   "en": "Read the invitation again",
    "protected": false,
-   "note": "DEC-384: B411 C4: the case screen when its review copy has no comment or acknowledgement"
+   "note": "DEC-384: B411 T-19: the label of the Read the invitation button once the invitation has been read"
   },
   {
-   "key": "screen.review-copy.acked",
-   "en": "{who}, an outside reader, read the draft and acknowledged it, {date}",
+   "key": "project.visibility.start.required",
+   "en": "Choose who can find this project before you start it. Nothing was started.",
    "protected": false,
-   "note": "DEC-384: B411 C4: an acknowledgement in the comments of a review copy"
+   "note": "DEC-384: B411 T-20: the refusal when Start the project is pressed with neither choice made"
   },
   {
-   "key": "refusal.PUBLISH_NO_FINDING",
-   "en": "This draft has no finding to publish. Add a finding to the case, then publish again.",
+   "key": "crumb.project.unjoined",
+   "en": "A project you have not joined",
    "protected": false,
-   "note": "DEC-384: B411 D1/L16: publishing a draft with no finding; case-authoring's own code, proposed as PUBLISH_NO_FINDING (the walk fixes none); a door \"Add a finding\" beside it"
-  },
-  {
-   "key": "screen.ceremony.gate.addfinding",
-   "en": "Add a finding",
-   "protected": false,
-   "note": "DEC-384: B411 D1/L16: the door beside both refusals about a draft with no finding, to where findings are added in the case editor"
-  },
-  {
-   "key": "screen.plan.option.unnamed",
-   "en": "Option {n}",
-   "protected": false,
-   "note": "DEC-384: B411 E1: an option with no summary is named by its place in the list, never by its id"
-  },
-  {
-   "key": "screen.plan.phase.unnamed",
-   "en": "Phase {n}",
-   "protected": false,
-   "note": "DEC-384: B411 E1: a phase with no name is named by its place in the list, never by its id"
-  },
-  {
-   "key": "screen.plan.judge.notdue",
-   "en": "You can judge this checkpoint from {date}.",
-   "protected": false,
-   "note": "DEC-384: B411 E1: drawn in place of the Judge control until the checkpoint is due"
-  },
-  {
-   "key": "law.pick",
-   "en": "Choose a law",
-   "protected": false,
-   "note": "DEC-384: B411 E3: the one list of laws, shared by \"Change the law\" and \"Propose another law\""
-  },
-  {
-   "key": "screen.due-date.rule.pick",
-   "en": "A deadline your rules list",
-   "protected": false,
-   "note": "DEC-384: B411 E6: the box beside the refusal \"No rule in your places' rules states a deadline\", to pick a listed deadline"
-  },
-  {
-   "key": "screen.due-date.rule.help",
-   "en": "Pick one of the deadlines your places' rules state, then work out the due date again.",
-   "protected": false,
-   "note": "DEC-384: B411 E6"
-  },
-  {
-   "key": "screen.due-date.rule.go",
-   "en": "See your places' rules",
-   "protected": false,
-   "note": "DEC-384: B411 E6: the door to the rules, in Settings"
-  },
-  {
-   "key": "screen.case-editor.nocase.summary",
-   "en": "A draft that names no case yet",
-   "protected": false,
-   "note": "DEC-384: B411 L14: the mock's label for the heading of a draft with no case"
-  },
-  {
-   "key": "screen.due-date.rule.summary",
-   "en": "When your rules state no deadline for this kind of action",
-   "protected": false,
-   "note": "DEC-384: B411 E6: the label of the refusal and its box"
-  },
-  {
-   "key": "screen.review-copy.nodraft.summary",
-   "en": "When there is no draft yet",
-   "protected": false,
-   "note": "DEC-384: B411 I-29: the label of the refusal and its door"
+   "note": "DEC-384: B411 H2: the path's name for a project whose title this member cannot read; never its identifier"
   }
  ],
  "rewrite": {
@@ -34071,7 +34005,7 @@
   "screen.recovery.shown": "Save these now: they are shown only this once. Keep them somewhere only you can reach, apart from your password. Civicsmith keeps only a fingerprint of each, so it can never show them again.",
   "screen.reset.keeps": "Your handle and everything you did stay as they are, and every other sign-in of yours ends. {name} can't see the password you choose. Your recovery codes still work; if you have lost them too, get ten new ones in Settings › Recovery codes once you are in.",
   "screen.reset.dead.what": "It was used already, it expired, or an administrator withdrew it. Ask an administrator for a new one, in person or however your team talks. Nothing was changed.",
-  "screen.review-copy.heading": "Share this edition for review",
+  "screen.review-copy.heading": "Share Edition {edition} for review",
   "screen.review-copy.reads.until": "can read until {until}",
   "screen.review-outside.heading": "A review copy from {group}",
   "screen.review-outside.draft": "The case: {case}, Edition {edition} (draft)",
@@ -34169,13 +34103,7 @@
   "screen.find-in.question": "For which question",
   "screen.find-in.term.help": "Only passages with this name or term are shown, when you fill it in.",
   "find.query.placeholder": "Words to find",
-  "screen.standard.text": "The document that states it",
-  "screen.standard.text.help": "Pick the document that states the requirement, as captured. The passage is the whole document until you select its words.",
-  "screen.review-copy.nodraft": "There is no draft to share yet. Make a draft of the case first, then share it.",
-  "screen.case-editor.rung.notmet": "Checked: something is missing",
-  "screen.plan.support.hypothetical": "Assumed: not shown yet",
-  "screen.plan.col.ends": "Legal deadline",
-  "screen.plan.noend": "No legal deadline",
-  "screen.start-send.noclock": "No legal deadline for this kind of action (your team's profile names none)"
+  "shell.card.open": "Press or tap to open it.",
+  "screen.home.move.anyone": "any member can take the next step"
  }
 }

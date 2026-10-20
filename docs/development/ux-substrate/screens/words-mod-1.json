@@ -5438,7 +5438,7 @@
   },
   {
    "key": "refusal.NO_REVIEW_COPY",
-   "en": "No review copy answers to this request. A review copy is read through the grant issued for it, or by a member with standing in the project that produced it. A grant that was withdrawn, one whose draft has moved on to another edition, and one that never existed all answer the same way, so this answer tells you nothing about which of those is the case.",
+   "en": "There is no review copy here for you to read. Ask the owner of the project for a new review link, or join the project if you are a member of the team. The answer is the same whether the link was withdrawn, replaced by a newer edition or never existed.",
    "protected": false,
    "note": "DEC-260: review, refusal by its code"
   },
