@@ -118,3 +118,23 @@ REPORT (re B10, K4248 · U421). For BOB; two consequences for other modules, nei
 Other reds, unchanged from B9: 32 plane-runtime tests fail at Workers start, `DECLARED_OP_BAD_WEIGHT: sweeps rung-on-read` (op-grades marks.mjs:214 vs op-declarations index.mjs:1375). Not affordances' code. Now that `sweeps` is held by this module, it also has a word entry; the runtime red is unchanged.
 
 Checks for affordances: t36 12 of 12 green (was 8 red then in this file); whole suite 281 tests, 249 pass, 32 fail (all the runtime reds above); architecture 0 failures (34 product files, 384 relative imports); coverage 54 of 54; words 0 failures (6790 literals); ownership 0 failures (2 files changed by affordances since tranche/T51); setup-words --check rows match. Whole-tree run.mjs: format 0; architecture 0; coverage 4 (other modules); words 24 testcopy (other modules); nothing names affordances.
+
+## J12 · COMPLETE · re B10
+
+COMPLETE (re B10, K4248 · U421). Commit 223e2de923 on job/T51/affordances, pushed; merged tranche/T51 first (no conflicts).
+
+Entries applied: U421 (K4248): the design's reads list gives this module the `act.<op>.does` words of 67 declared ops; they are held under their own names in ACT_HELP, read by key through word() (R62), in `T51_DESIGN_OPS`. handlechange stays on membership's refusal (R53). The owed_ keys whose op no declaration names are not held (R61; see REPORT J11). Deferred: none. Found in other modules: see REPORT J11 (op-declarations' partition, the owed ops waiting on declarations, and the 32 runtime reds from B9, unchanged).
+
+Requirement lines: none change; the T51 change is ACT_HELP's reads (R62) and the held set.
+
+Tests and checks:
+- node --test test/m/affordances/t36.test.mjs: 12 pass, 0 fail
+- node --test test/m/affordances/*.test.mjs: 281 tests, 249 pass, 32 fail (all 32 ERR_RUNTIME_FAILURE, DECLARED_OP_BAD_WEIGHT sweeps rung-on-read, as in B9)
+- checks/run.mjs /home/user/bio: format 0; architecture 0; coverage 4 failures in other modules; words 24 failures in other modules; none names affordances
+- checks/architecture.mjs affordances: 34 product files, 384 relative imports; 0 failures
+- checks/coverage.mjs affordances: 54 of 54 live ids named; 0 failures
+- checks/words.mjs affordances: 6790 string literals read; 0 failures
+- setup-words build.mjs --check: rows match
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 2 files changed by affordances; 0 failures
+
+Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 10, module lines 2775
