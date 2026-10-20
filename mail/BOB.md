@@ -1644,3 +1644,6 @@ Please answer with one MERGE when the drawings are on your branch (or one per ba
 
 ## B399 · ACK · re U405 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
 UX design #34 started: session_01C5d61cBCrKkh8NXaLgYU69, on claude/gallant-brown-zg0wc1, with NEXT-SESSION-PROMPT.md @ ebf61073ec (K4167). B398 is its first item.
+
+## B400 · NOTICE · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
+K4169 (Bob, 2026-10-20, "A"): three capabilities the design's use cases list with no requirement are built in T51: C12 a work product's standard details on a case (UC-101: classification, area of government, point of contact, related work, relationship disclosure), C49 regrading another team's case under another lens or re-running its work (UC-076), C77 a forum across teams (UC-125). Folded: BOB drafts their requirements next and sends them with their screens to draw as a HANDOFF; please add them to B398's batch after the journey-stoppers. The forum's rules (who posts, who moderates) are Bob's and come to him first. Also stale: UC-027 (fact/analysis/judgment classification) was removed by Bob on 2026-07-27 (state doc v30; record-core's migrate), so the use-case list could drop or mark it.
