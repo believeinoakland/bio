@@ -56,7 +56,7 @@ Size (session_01DhBxoHRd3fUcaMLx8zTL85): test runs 7, module lines 2108
 
 ## Completion (K4227 CHANGE, B3)
 
-**Entries applied.** `clockPropose`'s `NO_SUCH_RULE` (R2) also answers `deadlines: [{rule, label?, citation?}]`: the deadlines of the active view (`local-facts.governingView`, as the proposal reads them) that apply to the action's kind, which are the rules `clockPropose` would accept; `label` and `citation` only where the profile states them; `[]` when none applies or no view is held. Built as the exported pure `deadlinesFor(view, kind)`. The code (`NO_SUCH_RULE`), `target`, `rule` and `detail` are unchanged; a valid rule's answer carries no `deadlines`. Requirement line amended in `build/requirements/action-clocks.md` (R2's refusal arm), as K4210 asks.
+**Entries applied.** `clockPropose`'s `NO_SUCH_RULE` (R2) also answers `deadlines: [{rule, label?, citation?}]`: the deadlines of the active view (`local-facts.governingView`, as the proposal reads them) that apply to the action's kind, which are the rules `clockPropose` would accept; `label` and `citation` only where the profile states them; `[]` when none applies or no view is held. Built as the exported pure `deadlinesFor(view, kind)`. The code (`NO_SUCH_RULE`), `target`, `rule` and `detail` are unchanged; a valid rule's answer carries no `deadlines`. The requirement line is BOB's to apply: ownership refuses a module job's edit of `build/requirements/action-clocks.md`; the text is in the COMPLETE post.
 
 **Finding for BOB.** The profile grammar (`jurisdictions` R26) has no `label` field on a deadline and `combine`'s view never carries one, so today every item has `rule` and `citation` only; `label` appears if a deadline ever states one. The screen (screens-investigate R59) should show the citation, or its own words for the rule, until `jurisdictions` adds a label. No sentence added, no refusal added, no word row.
 
@@ -66,7 +66,7 @@ Size (session_01DhBxoHRd3fUcaMLx8zTL85): test runs 7, module lines 2108
 - New in `t51.test.mjs`, each naming R2: the list for a kind with deadlines (three, with citations, the rest of the refusal unchanged, an absent rule alike, each listed rule accepted); the empty list (a kind with none, no active profile; `deadlinesFor` keeps a stated label); the control that a valid rule's proposal is unchanged.
 - `node --test bio-plane/test/m/action-clocks/*.test.mjs`: tests 83, pass 83, fail 0.
 - Consumers: `screens-investigate/due-date.test.mjs` 6/6; action-plans, affordances t45 and t46, plane compose, monitoring: 283/283.
-- `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio action-clocks`: 0 failures. `checks/coverage.mjs bio action-clocks`: 25 of 25 live ids named, 0 failures. `checks/words.mjs bio action-clocks`: 0 failures. `checks/ownership.mjs bio action-clocks tranche/T51 job/T51/action-clocks`: see J3 after commit.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio action-clocks`: 0 failures. `checks/coverage.mjs bio action-clocks`: 25 of 25 live ids named, 0 failures. `checks/words.mjs bio action-clocks`: 0 failures. `checks/ownership.mjs`: 0 failures (the requirements edit reverted).
 - `build.mjs --check`: rows.mjs stale at action-plans' id, not mine.
 
-Size (session_01V7byxdmjg2NpBgmASX69w6): test runs 7, module lines 2128
+Size (session_01V7byxdmjg2NpBgmASX69w6): test runs 7, module lines 2133
