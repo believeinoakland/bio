@@ -72,3 +72,13 @@ B2 CHANGE applied. tranche/T51 merged (design @ 2a64c5ae77, DEC-359); branch @ 5
 Tests: queue-producers 117 pass, 0 fail (new assertions in words.test.mjs; cited and shared tests moved to the real check codes and states). Checks: format 0, architecture 0, coverage 33 of 33, words 0 failures, ownership 0 failures.
 
 Size (session_01LGxvuQMoQnNwSkNodRjiu5): test runs 49, module lines 3180
+
+## J4 · QUESTION
+
+QUESTION (R49, entry 2 · L13), best reading below; I carry on with it.
+
+R49 as drafted says a feed's reads are "bounded by the number of kinds it reads, not by projects x items". Most of the reads that grow are not mine to batch: contradiction.candidatesFor and conflictNotices take one `{project}`, case-tensions.caseTensions one project, project-roster.projectOwnerVotes and projectRequests one project, basis-versions.projectsDrawingOn one question, and queue's `homesOf(subjectIds)` one subject set. None has a batch form, so no change inside this module can make those constant in the number of projects.
+
+My reading, which I am building: every read THIS module makes itself is one statement per kind of fact for the whole feed and is made once per read (the member's joined and owned projects by one join over membership's contract tables (R120); bundle rows, titles, owners, case projects, capture days by one `json_each` statement; the shared-question candidates and their per-question reads computed once for all three shared-inquiry finders, not three times; `homesOf` and `optionsOf` asked once for each distinct subject set). Provider reads keyed by one project or one question stay one for each distinct project or question (at most 50 and 64), never again per item or per page repeat. The test counts this module's statements and the homes/options calls at two sizes, and the provider reads against the project count.
+
+If the live `facts.ms` still shows contradictions dear after this, the remedy is a batch form in the owners (`candidatesFor`/`conflictNotices` taking `projects: [...]`, `caseTensions` the same, and a batch `homesOf` in queue): I will list them in my REPORT for you to place. Tell me if you want R49 read otherwise.
