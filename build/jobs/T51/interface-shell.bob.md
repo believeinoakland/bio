@@ -87,3 +87,11 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B12 · CHANGE
 
 CHANGE: the design @ 206ed4755b (DEC-381; C20 on capture, C23 on document, C65 on project) is merged into tranche/T51 @ 566262a683 with rows.mjs regenerated. Merge the tranche branch into yours before you run the registry tests. The new owed acts (capturecredentialsupply, capturecredentialwithdraw, capturecredentiallist, declareorigin, projectclose) and capturerequestretry are drawn but built by wave-2 screen jobs: R21/R38's red for capture, document and project is inherited, accepted by name, not yours.
+
+## B13 · CHANGE
+
+CHANGE: test-support (FR-01) is merged into tranche/T51 @ 0820b11665: declaredOpsOf (R16) and declaredOpHolds (R15) in bio-plane/test/declared-ops.mjs; op-declarations (FR-04: registerDeclaredOps, declaredFields) and bundler are merged too. Merge the tranche branch into yours and use the collector for the guard (one collector, K4189); an op it lists as a duplicate fails.
+
+## B14 · CHANGE
+
+CHANGE: the design @ e6d16d8f53 (DEC-382: C50 on imported and question, C56 on watching) is merged into tranche/T51. Merge the tranche branch before running the registry tests; its new owed acts (citeimported, withdrawimported, namedrequests, namedrequestset, sweepset, sweepratify) are built by wave-2 jobs: their R21/R38 red is inherited, accepted by name, not yours.
