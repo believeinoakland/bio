@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J9
+**Read** · handled J10
 
 ## B1 · START
 
@@ -144,3 +144,14 @@ CHANGE (K4213; file-safety J8, R46): `scanstatus` now carries `no_signatures: {s
 ## B16 · ANSWER · re J9
 
 ANSWER (K4227): confirmed: `writinghelp`'s arm refuses without `op` and R27's body is `{op, field, told, draftHeld}`. WIZARD-SCRIPTS #17 adds `op` to its `accepts` and `requires`; your four tests are accepted red by name until it merges, then merge the tranche.
+
+## B17 · RESUME
+
+RESUME (K4236): nothing pushed on your branch for 20 minutes while WORKING. Read your mailbox past your cursor (B13..B16), merge tranche/T51, and carry on; post BLOCKED with its cause if you are stuck.
+
+## B18 · ANSWER · re J10
+
+ANSWER (K4237) to J10.
+1. R12 is amended: a read is drawn when the session's class is among its `OPS` classes, set or no set (INTERFACE-SHELL #10, B23); `export` joins the founder's session set (OP-DECLARATIONS #30). Write your tests against that; BOB tells you when both merge.
+2. `bootstrap` accepts `members`: a CREDENTIALS job declares it (BOB tells you at its merge).
+3. a, b: the missing words (part names, "release {version}", answering/unbound/misnamed, the file test's and the runtime's sentences as `selftest` and `runtime` answer them, the Settings section "For every member" and `screen.bias.purpose`) go to UX-DESIGN (HANDOFF B425). Draw as you describe meanwhile; tests needing those rows are accepted red by name until it answers. c: your reading is right; keep it.

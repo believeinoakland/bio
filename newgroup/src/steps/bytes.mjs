@@ -25,20 +25,97 @@ function find(hay, pat, from = 0) {
   }
   return -1;
 }
-/* The `index.mjs` part of a multipart body, as a view of `bytes`, or null. */
-function multipartPart(bytes, boundary) {
-  const delim = ascii("--" + boundary), next = new Uint8Array([...CRLF, ...delim]);
-  for (let at = find(bytes, delim); at !== -1; ) {
-    const start = at + delim.length;
-    if (bytes[start] === 45 && bytes[start + 1] === 45) return null;          /* the closing delimiter */
-    const head = find(bytes, HEADER_END, start);
-    if (head === -1) return null;
-    const headers = new TextDecoder().decode(bytes.subarray(start, head));
-    const end = find(bytes, next, head + HEADER_END.length);
-    if (/name="index\.mjs"/.test(headers)) return bytes.subarray(head + HEADER_END.length, end === -1 ? bytes.length : end);
-    at = end === -1 ? -1 : end + CRLF.length;
+/* SHA-256 taken incrementally (R38): WebCrypto's digest wants the whole input at once, which holds a second copy of a 29 MB
+   module; this takes the bytes as they arrive and holds only a 64-byte block. */
+const K256 = Uint32Array.from({ length: 64 }, (_, i) => {
+  let n = 2; for (let c = 0; c <= i; n++) { let p = true; for (let d = 2; d * d <= n; d++) if (n % d === 0) { p = false; break; } if (p) c++; }
+  return Math.floor((Math.cbrt(n - 1) % 1) * 2 ** 32);
+});
+class Sha256 {
+  constructor() {
+    this.h = Uint32Array.from([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+    this.block = new Uint8Array(64); this.fill = 0; this.length = 0; this.w = new Uint32Array(64);
   }
-  return null;
+  update(bytes) {
+    this.length += bytes.length;
+    let i = 0;
+    if (this.fill) {
+      const take = Math.min(64 - this.fill, bytes.length);
+      this.block.set(bytes.subarray(0, take), this.fill); this.fill += take; i = take;
+      if (this.fill < 64) return this;
+      this.#compress(this.block, 0); this.fill = 0;
+    }
+    for (; i + 64 <= bytes.length; i += 64) this.#compress(bytes, i);
+    if (i < bytes.length) { this.block.set(bytes.subarray(i)); this.fill = bytes.length - i; }
+    return this;
+  }
+  #compress(b, o) {
+    const w = this.w, h = this.h, rotr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let i = 0; i < 16; i++) w[i] = (b[o + 4 * i] << 24) | (b[o + 4 * i + 1] << 16) | (b[o + 4 * i + 2] << 8) | b[o + 4 * i + 3];
+    for (let i = 16; i < 64; i++) {
+      const a = w[i - 15], c = w[i - 2];
+      w[i] = (w[i - 16] + (rotr(a, 7) ^ rotr(a, 18) ^ (a >>> 3)) + w[i - 7] + (rotr(c, 17) ^ rotr(c, 19) ^ (c >>> 10))) | 0;
+    }
+    let [a, bb, c, d, e, f, g, hh] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K256[i] + w[i]) | 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+      hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+    }
+    h[0] += a; h[1] += bb; h[2] += c; h[3] += d; h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
+  }
+  hex() {
+    const bits = this.length * 8, padLen = 1 + ((119 - (this.length % 64)) % 64 + 64) % 64 + 8, pad = new Uint8Array(padLen);
+    pad[0] = 0x80;
+    const view = new DataView(pad.buffer);
+    view.setUint32(padLen - 8, Math.floor(bits / 2 ** 32)); view.setUint32(padLen - 4, bits >>> 0);
+    this.update(pad);
+    return [...this.h].map((x) => x.toString(16).padStart(8, "0")).join("");
+  }
+}
+/* The hash of a byte stream, taken as the chunks arrive; the whole is never held. */
+async function hashStream(stream) {
+  const sha = new Sha256(), reader = stream.getReader();
+  for (let r = await reader.read(); !r.done; r = await reader.read()) sha.update(r.value);
+  return sha.hex();
+}
+/* The hash of the `index.mjs` part of a multipart body arriving as a stream, or null when there is none: the delimiters are
+   found in a window of the last few bytes, and the part's bytes go to the hash as they come (R38). A part the body ends
+   inside is hashed as far as it goes. */
+async function hashPart(stream, boundary) {
+  const delim = ascii("--" + boundary), next = new Uint8Array([...CRLF, ...delim]), reader = stream.getReader();
+  let buf = new Uint8Array(0), state = "preamble", sha = null, done = false;
+  const feed = (n) => { if (sha) sha.update(buf.subarray(0, n)); };
+  while (!done) {
+    const r = await reader.read();
+    if (r.done) break;
+    const joined = new Uint8Array(buf.length + r.value.length);
+    joined.set(buf); joined.set(r.value, buf.length); buf = joined;
+    for (let again = true; again; ) {
+      again = false;
+      if (state === "preamble") {
+        const at = find(buf, delim);
+        if (at === -1) { buf = buf.subarray(Math.max(0, buf.length - delim.length + 1)); }
+        else { buf = buf.subarray(at + delim.length); state = "head"; again = true; }
+      } else if (state === "head") {
+        if (buf.length >= 2 && buf[0] === 45 && buf[1] === 45) return null;
+        const head = find(buf, HEADER_END);
+        if (head === -1) { if (buf.length > 65536) return null; }
+        else {
+          const index = /name="index\.mjs"/.test(new TextDecoder().decode(buf.subarray(0, head)));
+          buf = buf.subarray(head + HEADER_END.length); state = "body"; sha = index ? new Sha256() : null; again = true;
+        }
+      } else {
+        const end = find(buf, next);
+        if (end === -1) { const keep = next.length - 1; if (buf.length > keep) { feed(buf.length - keep); buf = buf.subarray(buf.length - keep); } }
+        else if (sha) { feed(end); done = true; }
+        else { buf = buf.subarray(end + CRLF.length); state = "preamble"; again = true; }
+      }
+    }
+  }
+  if (!done) { if (state !== "body") return null; feed(buf.length); }
+  reader.cancel().catch(() => {});             /* not awaited: a cancel on a teed stream settles only when its twin is cancelled too */
+  return sha ? sha.hex() : null;
 }
 
 /* `source` is the module as text, or already a Blob (a repository release, R33: made once, shared by every upload). */
@@ -48,4 +125,4 @@ function uploadForm(meta, source) {
   fd.append("index.mjs", source instanceof Blob ? source : new Blob([source], { type: "application/javascript+module" }), "index.mjs");
   return fd;
 }
-export { hex, vcmp, relHeaders, b64url, rand, CRLF, HEADER_END, ascii, find, multipartPart, uploadForm };
+export { hex, vcmp, relHeaders, b64url, rand, CRLF, HEADER_END, ascii, find, Sha256, hashStream, hashPart, uploadForm };

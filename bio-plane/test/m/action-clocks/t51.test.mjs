@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
+import { combine } from "../../../../jurisdictions/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d", X = "ACTN-2026-0005-x";
@@ -51,4 +52,44 @@ test("R24 the op clocksrunning reads the viewer from the query and answers clock
   assert.deepEqual(op(`viewer=${M}`), w.c.clocksRunning({ viewer: M }));
   assert.equal(op(`viewer=${M}`).total, 1);
   assert.equal(op("", { viewer: M }).total, 0, "a viewer in the body is not the stamp");
+});
+
+/* R2 (K4227; screens-investigate R59): `NO_SUCH_RULE` also answers the deadlines the profile states for the action's kind. */
+const KINDS = (kind) => combine(["test-port-ellery"]).view.deadlines.filter((d) => d.applies_to === kind);
+const propose = (w, id, rule) => w.c.clockPropose({ target: id, rule, proposer: M, viewer: M });
+
+test("R2 NO_SUCH_RULE answers deadlines: the profile's deadlines for the action's kind, each rule with its citation, and the rest of the refusal unchanged", () => {
+  const w = world();
+  w.action(A, ["action_kind: bylaw_complaint"]);
+  const no = propose(w, A, "no_such");
+  assert.equal(no.reason, "NO_SUCH_RULE");
+  assert.deepEqual(no.deadlines, KINDS("bylaw_complaint").map((d) => ({ rule: d.rule, citation: d.citation })));
+  assert.equal(no.deadlines.length, 3, "the kind's own deadlines only, not the claim kind's nor another kind's");
+  assert.deepEqual([no.ok, no.target, no.rule, Object.keys(no).sort()], [false, A, "no_such", ["deadlines", "detail", "ok", "reason", "rule", "target"]]);
+  /* an absent rule is refused at the same place, with the same list. */
+  assert.deepEqual(propose(w, A, null).deadlines, no.deadlines);
+  /* every rule listed is one clockPropose accepts. */
+  for (const d of no.deadlines) assert.equal(propose(w, A, d.rule).ok, true);
+});
+
+test("R2 NO_SUCH_RULE answers an empty deadlines list when no deadline applies to the kind or no profile is active; a label the profile states is kept", () => {
+  const w = world();
+  w.action(B, ["action_kind: recognition_letter"]);
+  assert.deepEqual(propose(w, B, "records_answer").deadlines, [], "a kind with no deadline of its own");
+  const bare = world({ profiles: null });
+  bare.action(C);
+  assert.deepEqual(propose(bare, C, "records_answer").deadlines, [], "no active profile");
+  /* a deadline the view gives with a label carries it; one without carries none. */
+  assert.deepEqual(clocks.deadlinesFor({ deadlines: [{ rule: "a", applies_to: "k", citation: "c", label: "L" }, { rule: "b", applies_to: "k" }, { rule: "z", applies_to: "other", citation: "x" }] }, "k"),
+    [{ rule: "a", label: "L", citation: "c" }, { rule: "b" }]);
+  assert.deepEqual(clocks.deadlinesFor(null, "k"), []);
+});
+
+test("R2 control: a valid rule is unchanged by the deadlines list, the proposal carrying no deadlines field", () => {
+  const w = world();
+  w.action(D);
+  const p = propose(w, D, "records_answer");
+  assert.equal(p.ok, true);
+  assert.equal("deadlines" in p, false);
+  assert.deepEqual(Object.keys(p).sort(), ["evidence", "ok", "proposal", "says", "target", "weight"]);
 });

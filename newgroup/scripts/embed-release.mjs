@@ -38,8 +38,9 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { gzipSync } from "node:zlib";
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
-import { ARMED_SIGNERS } from "../src/steps/signers.mjs";
+import { ARMED_SIGNERS, planeLimits, reportsBuilds } from "../src/steps/index.mjs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 
@@ -143,22 +144,14 @@ export async function releaseContainers({ manifest, readPart, signers = ARMED_SI
   return out;
 }
 
-/** R33 (K3441, K3442): the release as a BINARY STRING, one character per byte (each 0-255), written as a JavaScript string
- *  literal in printable ASCII: a byte that is not a plain printable character, or is `"` or `\\`, is `\xNN`. A string of
- *  characters all under 256 is held by the engine one byte each, the release's own 21 MB; the release as text would have been
- *  held two bytes each (any character above 255 makes the whole string two-byte), 43 MB resident for as long as the Worker
- *  lives. Deterministic: the same bytes always give the same literal. The installer reads it back to bytes (`index.mjs`,
- *  `releaseBlob`), so what it uploads and hashes is exactly the signed release. */
-export function binaryLiteral(bytes) {
-  const piece = Array.from({ length: 256 }, (_, b) => (b >= 0x20 && b <= 0x7e && b !== 0x22 && b !== 0x5c)
-    ? String.fromCharCode(b) : "\\x" + b.toString(16).padStart(2, "0"));
-  const parts = [];
-  for (let i = 0; i < bytes.length; i += 65536) {
-    let chunk = "";
-    for (const b of bytes.subarray(i, Math.min(bytes.length, i + 65536))) chunk += piece[b];
-    parts.push(chunk);
-  }
-  return '"' + parts.join("") + '"';
+/** R33 (K3441, K3442; K4210): the release PACKED, the signed bytes gzipped and written as base64 in a JavaScript string literal
+ *  (printable ASCII only). At 0.86.0 the plane is 29 MB; held as a string in the bundle it was held twice by the engine (the
+ *  bundle's source text and the literal's heap string), and the real-size install and update went past a Worker's memory. Packed it
+ *  is 10 MB as base64, and the installer expands it once, a few MB at a time, into the one Blob the act uploads (`index.mjs`,
+ *  `builtInRelease`), checking the bytes it gets against the manifest's `sha256`. Deterministic: the same bytes always give the
+ *  same literal (gzip level 9, no name or time in the header). */
+export function packedLiteral(bytes) {
+  return '"' + gzipSync(bytes, { level: 9 }).toString("base64") + '"';
 }
 
 /** The embed (R26): resolve the version, check the signed asset, refuse any published token value, and write
@@ -194,7 +187,10 @@ export async function embedRelease({ planeDir, releaseDir, out, signers = ARMED_
     /* R61: the release's own signed manifest (its fleet statement and signatures), so the built-in plane is installed with its
        own members and never with another release's. */
     + `export const RELEASE_MANIFEST = Object.freeze(${JSON.stringify(manifest)});\n`
-    + `export const RELEASE_BINARY = ${binaryLiteral(bytes)};\n`);
+    /* What the installer reads from the release's text (R20's limits, R15's build fields) is read here, from the verified bytes, so
+       the installer need not expand the release to know it. */
+    + `export const RELEASE_FACTS = Object.freeze(${JSON.stringify({ limits: planeLimits(bytes), capable: reportsBuilds(bytes) })});\n`
+    + `export const RELEASE_PACKED = ${packedLiteral(bytes)};\n`);
   return { version, sha256: manifest.sha256, bytes: bytes.length, containers: containers.length };
 }
 
