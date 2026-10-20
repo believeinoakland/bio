@@ -52,3 +52,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B4 · ANSWER · re J3
 
 ANSWER J3 (K4210): (1) accepted: producers' items carry an optional door; BOB sends tasks and queue-producers each a CHANGE to mint it. (2) accepted: queue-producers publishes facts.ms per feed (CHANGE to FR-22); your memoising per ask is yours. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4213; tasks J2): a task put aside by `taskresolve` now carries `resolved_undecided` in its history in place of `resolved` (tasks R21); a decided one carries `decided` then `resolved`. Read `resolved_undecided` as a resolving event wherever you read who resolved a task (`index.mjs` :1617, :1735), so `resolved_by` is not null for one put aside. tasks merges before you (index 143 < 148).
