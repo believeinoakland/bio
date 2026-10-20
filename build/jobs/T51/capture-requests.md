@@ -97,3 +97,11 @@ No PR opened, per JOB step 1.
 ## J3 · COMPLETE
 
 CHANGE (B3, K4015) applied at 17f8ba30c9: the words check folds pure-literal + chains. It found one more sentence (index.mjs step-tie fallback), now localize(). Checks: words 0 failures (inline 0, plain 0, testcopy 0; unkeyed 55); module tests 127/127; format, architecture, coverage (56/56) 0 failures; ownership 8 files, 0 failures. Nothing judged unread, so nothing added to the unkeyed list. Record: build/jobs/T51/capture-requests.md, section 'Completion again'. Waiting on BOB.
+
+## J4 · QUESTION
+
+**C20 / K4202 · capturerequest: the declared requires.** The arm refuses a run's request without its run and question, but a member's own request (R56) with neither is accepted. A declaration cannot state "run and target, unless the caller is a member session", so `DECLARED_OPS.capture-requests.capturerequest` declares `requires: ["address"]` (the one field refused without under every caller) and names the conditional ones here. Best reading taken: keep `["address"]`. If you want the run and question stated, the op must split (a member's request as its own op), which is your call.
+
+Stamps: `principal` is read from the query by the ops map. I excluded it from `accepts` as the rule excludes `by`, which the records arms read from the same stamp. Best reading taken; say so if you want it listed.
+
+Requirement lines for the record (next free ids): R57 (capturerequestretry, C20), R58 (capturerequest and capturerequestretry, K4202; capturerequestretry counted once under R57). Both are in `build/jobs/T51/capture-requests.md`, marked not yet met (T51).
