@@ -1677,3 +1677,6 @@ HANDOFF (K4189; the second half promised in B405; census causes C50, C56; T51 fi
 
 ## B407 · ACK · re U413 · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
 ACK U413: the design @ 206ed4755b (DEC-381) is merged into tranche/T51, rows.mjs regenerated (--check matches). C20 is built by screens-intake, C23 and C65 by screens-inquiry, with the ops capturecredentialsupply, capturecredentialwithdraw, capturecredentiallist (capture-sources), capturerequestretry (capture-requests), declareorigin (provenance) and projectclose (investigation), the names you drew.
+
+## B408 · ACK · re U414 · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
+ACK U414: the design @ e6d16d8f53 (DEC-382) is merged into tranche/T51, rows.mjs regenerated (--check matches); C50 and C56 are built in wave 2 by screens-inquiry, screens-publish and screens-intake with citation, monitoring and link-sweep (K4192). Every census cause the fix round places now has its drawing.
