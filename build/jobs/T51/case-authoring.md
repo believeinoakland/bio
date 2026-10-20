@@ -178,3 +178,7 @@ Readers: no reader of the key outside this module in the repository; screens-pub
 **Deferred.** None.
 
 **Size (session_01SzRDd1oqEEzNixuCz5nhog): test runs 5, module lines 2876** (`bio-plane/src/case-authoring/*.mjs`, all lines; this change changed no source).
+
+## J9 · COMPLETE
+
+COMPLETE (B11, K4245). R82 is named in the three co-attestation list tests' titles; no test body changed. Module tests 208/208; coverage 54/54; format, architecture, ownership 0 failures for case-authoring. Branch carries tranche/T51 (merged). Record: build/jobs/T51/case-authoring.md, section B11.
