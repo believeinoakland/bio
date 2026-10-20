@@ -116,3 +116,7 @@ Checks after the change: format 0 failures; architecture 0 failures; coverage 38
 Commits on job/T51/observation-log: 37ccba91f7 (the conversion), f6c5cef3ae (merge of tranche/T51 at 940517d41e), ecb70f9274 (B3). Pushed.
 
 Size (session_017p9yDiKdDPqfnyWK37NQsk): test runs 4, module lines 3105
+
+## J5 · QUESTION
+
+B4 asks for a new read op=leads, but op=leadlist already is that read (R20, since D-681): the leads the viewer may read by leadReach (the same reach leadread applies), each once, newest first, with lead_id, author, words, locator, at, latest state, looked_at, looks, bounded by limit (default/max constants) with truncated, and an empty-answer for a viewer who reaches none. It is routed in observationLogOps and op-declarations/op-grades list it. What is missing is its entry in DECLARED_OPS (R39 lists only lead, leadlook, leadshare, leadread), which is why the leads screen cannot send it; SCREENS-INTAKE's comment 'the plane lists no leads' is out of date. My best reading: add NO duplicate op; add leadlist to DECLARED_OPS (classes admin/member/probe, read, accepts [limit], requires []) with its declaredOpHolds test and a reach-control test, and report that screens-intake should send op=leadlist. A new op name op=leads would also need routing in control-plane/op-declarations/op-grades, which are not my module. Proceeding on this reading; tell me if you want op=leads as a second name.
