@@ -167,3 +167,7 @@ Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku,
 ## B28 · CHANGE
 
 CHANGE (K4257), with B27: (1) the words check finds one copy in your tests, `t37.test.mjs:32` (`testcopy`, a translation-directed sentence): read it through `declaredSentence`/the key. (2) DEC-390 keyed `store-door.declared.groupdescriptiondraft` (merged, rows regenerated): its `NON_ACTS` row reads the owner's word (R51), no held sentence.
+
+## B29 · CHANGE
+
+CHANGE (K4258), with B27 and B28: OP-DECLARATIONS #32 has merged (`strengthbarset` out of `OP_ALIASES`, 26 aliases; `ACT_HELP_ABSENT` reads `ACT_HELP`). Merge `tranche/T51` into your branch now, then apply B27 and B28. B28 (2) comes first: the plane's start is refused `DECLARED_OP_DISAGREES: groupdescriptiondraft description` (your `NON_ACTS` row still holds the sentence DEC-390 keyed as `store-door.declared.groupdescriptiondraft`); the plane's suite reads 6 of 46 and control-plane's 315 of 327 until your merge. Run `node --test bio-plane/test/m/plane/` after your fix and report its count in your COMPLETE.
