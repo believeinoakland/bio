@@ -68,3 +68,7 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio wizard-scripts tranche/T51 job/T51/wizard-scripts`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B8 · CHANGE
+
+CHANGE (K4197): the design @ 840099da7c (DEC-384) is merged into tranche/T51 after your START; it rewords the welcome wizard's step 4 (WIZ-7db08189cc0e58c3: new step4.none.* rows; L27) in the library. Re-take the registry, library and front doors at 840099da7c instead of 958d998ccb (R45 amended by BOB to that commit): merge the tranche branch into yours first.
