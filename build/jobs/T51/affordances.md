@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_01VxbGzLyFxoWVwut9wPwFpo · depth 2 · COMPLETE · handled B8
+**Status** · session_018BZD69KvUNUDfmGiun3BEb · depth 2 · WORKING · handled B8
 
 ## J1 · QUESTION
 
