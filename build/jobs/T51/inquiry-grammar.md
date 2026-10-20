@@ -1,6 +1,6 @@
 # inquiry-grammar (T51)
 
-**Status** · session_01FVBE32weVwYCP8rNDY5AVJ · depth 2 · WORKING · handled B0
+**Status** · session_01FVBE32weVwYCP8rNDY5AVJ · depth 2 · WORKING · handled B2
 
 ## Completion (CR-8)
 
@@ -35,3 +35,21 @@ Size (session_01FVkqfj8YYFrYagPu7FJCRG): test runs 7, module lines 2038
 ## J1 · COMPLETE
 
 CR-8 applied: R13 standardLegFindings exported; R19 golden/corpus regenerated for VERSION_NAME_MALFORMED (C-25.36); all 57 words findings converted (119 localize ids). Tests 81/81; format, architecture, coverage, words, ownership 0 failures. See Completion in my record (stale rows.mjs expected; basis-versions amended() can go; R13/R19 not-yet-met markers are BOB's to lift).
+
+## Completion (FR-44, wave 2)
+
+**Entry applied**: L9 (K4194) as R68, written first in `build/requirements/inquiry-grammar.md` (marked not yet met: T51; met by this change, BOB lifts the marker). `checkGrounds` (`grammar.mjs`) leaves every `role: cuts_against` leg out of the partition: its absence of a ground is no gap in the totality, and a non-empty `ground` on one is one C-2.8 error (no code; two new `localize` ids `inquiry-grammar.grammar.basis_i_cuts_against_ground` and `...remove_the_ground_from_the_leg`) naming `basis[i]` and the label; the label then counts toward no ground. Every other basis is judged as before (golden unchanged).
+**Tests** (`t51.test.mjs`, 4 added, three seen failing before the change): supporting plus cutting leg clean; supporting leg left out still refused (control); cutting leg in a ground refused with its own finding; no-cutting-leg basis as before.
+**Deferred**: none.
+
+**For FR-45 (`inquiry`) and `strength`**:
+- The grammar now accepts a basis whose cutting legs carry no `ground`. `inquiry` must not label a cutting leg (its labelling at `inquiry/index.mjs` 2605-2636 should skip `cuts_against` legs and label supporting ones only), or the new finding refuses it.
+- `strength/arithmetic.mjs` does not read `role`: it puts every leg with no ground label into the implicit AND-group (lines 90, 107), so an unlabelled cutting leg would join that group and weaken (or bind) the axis beside the grounds. Found, not mine to change: strength should leave `cuts_against` legs out of the arithmetic's parts (or say that it reads them elsewhere), and its requirement R4 should say so.
+- Sentences are keyed in `rows.mjs` only when BOB regenerates it (the two new ids are stale until then).
+
+**Tests and checks run**
+- `node --test bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 85, pass 85, fail 0.
+- `node checks/format.mjs`: 0 failures. `architecture.mjs inquiry-grammar`: `13 product files, 54 relative imports; 0 failures`. `coverage.mjs inquiry-grammar`: `20 of 20 live requirement ids named by a test; 0 failures`. `words.mjs inquiry-grammar`: 0 failures (inline 0, plain 0, testcopy 0, missingkey 0). `checks/run.mjs`: format, architecture, words 0 failures; coverage 7 failures, all in other modules (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring).
+- `ownership.mjs inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 0 failures.
+
+Size (session_01FVBE32weVwYCP8rNDY5AVJ): test runs 6, module lines 2048
