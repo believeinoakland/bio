@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01Bvmjz46Mg98xC62DtqtJas · depth 2 · WAITING ON BOB (J3) · handled B5
+**Status** · session_01Bvmjz46Mg98xC62DtqtJas · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
