@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01EXU2JECeQbjRAzyd8tuBGX · depth 2 · WORKING · handled B17
+**Status** · session_01EXU2JECeQbjRAzyd8tuBGX · depth 2 · WAITING ON BOB (J17) · handled B17
 
 ## J1 · QUESTION
 
