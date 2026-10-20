@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { collectOwnerRows, fieldMismatches } from "../interface-shell/harness.mjs";
 import { open, ok, refused, refusedIn, text, ops, button, press as pressRaw, beside, last, main, word, hasWord, dmy, withScreens, settle, screen } from "./page.mjs";
 
+// a day well after tomorrow, on the page's own clock (R79 (c): a snooze comes back tomorrow at the earliest)
+const LATER = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
 const R = "looking";
 const press = (p, op, o = {}) => pressRaw(p, op, { reason: R, ...o });
 const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
@@ -100,8 +102,8 @@ test("R58: Snooze sends queuesnooze once for each distinct case among the chosen
   const items = [task("T1"), task("T2"), finding("F1"), task("T3", { case: NOCASE })];
   const p = await open("/app/queue/choose", { queue: queueOf(items), queuesnooze: ok({ ok: true }) });
   await choose(p, ["T1", "T2", "F1", "T3"]);
-  await press(p, "queuesnooze", { nth: 0, values: { "qm-until": "2026-11-01" } });
-  assert.deepEqual(p.byOp("queuesnooze").map((r) => r.body), [{ case: "PROJ-1", until: "2026-11-01" }, { case: "PROJ-2", until: "2026-11-01" }]);
+  await press(p, "queuesnooze", { nth: 0, values: { "qm-until": LATER } });
+  assert.deepEqual(p.byOp("queuesnooze").map((r) => r.body), [{ case: "PROJ-1", until: LATER }, { case: "PROJ-2", until: LATER }]);
   assert.ok(text(p).includes(word("queue.multi.result", { n: "4", done: "3", kept: "1" })));
   const none = await open("/app/queue/choose", { queue: queueOf(items), queuesnooze: ok({ ok: true }) });
   await choose(none, ["T1"]);

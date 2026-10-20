@@ -92,8 +92,14 @@ export function itemWords() {
     const bare = !own || /^(https?:\/\/|www\.)/i.test(own) || /^[A-Z]{1,6}-[0-9A-Za-z-]+$/.test(own) || /^[0-9a-f]{12,64}$/i.test(own);
     const ref = subject(cs, it);
     const detail = it.detail ? (typeof it.detail === "string" ? cs.esc(it.detail) : "") : "";
-    if (!ref) return { summary: bare ? "" : cs.esc(own), detail: detail };
-    return { summary: ref + (bare || own === titleOf(it) ? "" : ' <span class="muted">' + cs.esc(own) + "</span>"), detail: detail };
+    // R79 (b): a kind with no sentence of its own (the producer gave an address, a bare id, or only the title) is `queue.unkeyed.summary`
+    // with the subject named as it is titled, never the file part of an address, and `.detail` when the producer gave none.
+    if (bare || own === titleOf(it)) {
+      const t = ref || (titleOf(it) ? cs.esc(titleOf(it)) : cs.w("queue.source.untitled", { date: { html: cs.date(String(it.since || (it.age && it.age.since) || "")) } }));
+      return { summary: cs.w("queue.unkeyed.summary", { title: { html: t } }), detail: detail || cs.w("queue.unkeyed.detail") };
+    }
+    if (!ref) return { summary: cs.esc(own), detail: detail };
+    return { summary: ref + ' <span class="muted">' + cs.esc(own) + "</span>", detail: detail };
   };
   // R50 (3): a team's own passed date, `due.ours.passed`, explained by `due.ours.passed_says`: its own, not a law's or an office's.
   const ours = function (cs, it) {

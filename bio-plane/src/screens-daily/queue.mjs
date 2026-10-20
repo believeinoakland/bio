@@ -12,10 +12,15 @@ import { sourceItems } from "./source-items.mjs";
 import { itemWords } from "./item-words.mjs";
 import { queueStates } from "./queue-states.mjs";
 import { doors } from "./doors.mjs";
+import { routed, ROUTED_REFUSALS } from "./routed.mjs";
+import { OPS } from "../op-declarations/index.mjs";
+
+// An act whose op the owners have not yet declared is not registered (screens-action's rule): `taskdecide` is `tasks`' alone.
+const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : []; };
 
 export const queue = Object.freeze({
   id: "queue",
-  parts: { sourceItems, itemWords, queueStates, doors },
+  parts: { sourceItems, itemWords, queueStates, doors, routed },
 
   // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind). R59, R61: `/app/queue/answered` reads what the
   // member answered and the set-aside findings; R58: `/app/queue/choose` reads the queue as it is, each item with a box. The queue's
@@ -59,6 +64,7 @@ export const queue = Object.freeze({
     const ui = view.ui || {};
     const sub = String(view.subject || "");
     const choosing = sub === "choose";
+    const states = view.parts.queueStates();
     // R58: an outcome is shown only on the choosing route; leaving it drops the outcome, so choosing again starts clean.
     if (!choosing && ui.outcome) ui.outcome = null;
     // The fields an act needs from the member, drawn in place in a disclosure with the act (interface-shell R11's dialog is
@@ -68,6 +74,21 @@ export const queue = Object.freeze({
       reminderanswer: [["on", "screen.queue.reminder.on"]], promote: [["question", "screen.queue.question"]],
       projectkeyset: [["key", "screen.queue.projectkey"]], queuesnooze: [["until", "screen.queue.snooze.until"]],
     };
+    // R79 (a): an item's own act (not putting it aside) carries `queue.act.dothis.help`; Open carries `queue.act.open.help`. The help
+    // joins the explanation the button already has, never a second one around it.
+    const OWN = ["adoptversion", "keepversion", "reminderanswer", "promote", "projectkeyset", "exploreapprove", "projectjoin", "projectrequestanswer"];
+    const helped = function (html, key) {
+      if (!html) return html;
+      const add = cs.esc('<span class="why">' + cs.w(key) + "</span>");
+      const i = html.indexOf(' data-tip="');
+      if (i < 0) return html.replace("<button", '<button data-level="2" data-tip="' + add + '"');
+      const j = html.indexOf('"', i + 11);
+      return html.slice(0, j) + add + html.slice(j);
+    };
+    const own = function (html) { return helped(html, "queue.act.dothis.help"); };
+    const openLink = function (to) {
+      return '<a class="cs-btn" data-tone="quiet" data-nav href="' + to + '" data-level="2" data-tip="' + cs.esc(cs.w("queue.act.open.help")) + '">' + cs.w("screen.queue.open") + "</a>";
+    };
     let seq = 0;
     const actOf = function (op, data, it) {
       // R42: an owner answers a request to join with Grant or Decline, the answers the item's option carries (queue-producers R42).
@@ -76,15 +97,22 @@ export const queue = Object.freeze({
         const answers = opt && Array.isArray(opt.answers) && opt.answers.length ? opt.answers
           : [{ answer: "grant", label: "screen.home.request.grant" }, { answer: "decline", label: "screen.home.request.decline" }];
         return answers.map(function (a) {
-          return cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) });
+          return own(cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) }));
         }).join("");
       }
+      // R68: Defer beside Dismiss, each asking the member's reason in place; one act, the button's `data-to` says which. Defer's words are
+      // the question screen's held "Defer it: come back to it later" until a queue row exists.
+      if (op === "proposedispose") {
+        return cs.act(op, { label: "act.proposedispose.label.queue", data: Object.assign({}, data, { to: "dismissed" }) })
+          + cs.act(op, { label: "screen.question.say004", data: Object.assign({}, data, { to: "deferred" }) });
+      }
       const fields = FIELDS[op];
-      if (!fields) return cs.act(op, { label: "act." + op + ".label.queue", data: data });
+      if (!fields) return OWN.indexOf(op) >= 0 ? own(cs.act(op, { label: "act." + op + ".label.queue", data: data })) : cs.act(op, { label: "act." + op + ".label.queue", data: data });
       const f = "qa-" + (seq++);
       const button = cs.act(op, { label: "act." + op + ".label.queue", data: Object.assign({}, data, { f: f }) });
       return button ? '<details class="mk-details"><summary>' + cs.w("act." + op + ".label.queue") + "</summary>"
-        + fields.map(function (x) { return cs.field(f + "-" + x[0], x[1], {}); }).join("") + button + "</details>" : "";
+        + fields.map(function (x) { return x[0] === "until" ? states.dayField(cs, f + "-until") : cs.field(f + "-" + x[0], x[1], {}); }).join("")
+        + (OWN.indexOf(op) >= 0 ? own(button) : button) + "</details>" : "";
     };
 
     const caseOf = function (it) {
@@ -155,8 +183,10 @@ export const queue = Object.freeze({
       if ((it.kind === "project-invitation" || it.kind === "project-request") && it.subject && it.subject.id) data.project = String(it.subject.id);
       const drawn = ops.map(function (op) { return actOf(op, data, it); }).join("");
       const to = iw.open(it);
-      const open = other && to ? '<a class="cs-btn" data-tone="quiet" data-nav href="' + to + '">' + cs.w("screen.queue.open") + "</a>" : "";
-      return drawn + open;
+      const open = other && to ? openLink(to) : "";
+      // R79 (e): the signing key a member registered for herself is withdrawn on Members, which the item opens.
+      const members = it.kind === "signer-self-registered" ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/members">' + cs.w("queue.signer-self-registered.members") + "</a>" : "";
+      return drawn + open + members;
     };
     // R13 (DEC-212; `action-producers` R25): the unsent request: "Pick up where you left off" opens the records request at
     // its step (the `request` screen takes the action's id; K3145),
@@ -167,7 +197,7 @@ export const queue = Object.freeze({
       const f = "qa-" + (seq++);
       const snoozeBtn = cas ? cs.act("queuesnooze", { label: "screen.queue.unsent.keep", data: { project: String(cas.id), f: f } }) : "";
       const snooze = snoozeBtn ? '<details class="mk-details"><summary>' + cs.w("screen.queue.unsent.keep") + "</summary>"
-        + cs.field(f + "-until", "screen.queue.snooze.until", {}) + snoozeBtn + "</details>" : "";
+        + states.dayField(cs, f + "-until") + snoozeBtn + "</details>" : "";
       const drop = id ? cs.act("actionmove", { label: "screen.queue.unsent.drop", here: "queue", data: { item: it.id, action: id } }) : "";
       return pick + snooze + drop;
     };
@@ -191,6 +221,9 @@ export const queue = Object.freeze({
         return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "noticed"), g.list + '<span class="meta">' + g.detail + "</span>", "", "");
       }
       const cas = caseOf(it);
+      // R75: the decisions the record routes to a member: the authority form, an endorsement, an owner vote, an expertise.
+      const rt = view.parts.routed().draw(cs, it, { screen: "queue", id: "qr-" + (seq++), ref: iw.subject(cs, it), mark: own });
+      if (rt) return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"), rt.summary + '<span class="meta">' + rt.detail + "</span>" + '<span class="mk-acts">' + rt.acts + "</span>", it.due ? dueOf(it.due) : "", "");
       // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
       const wd = iw.words(cs, it);
       return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"),
@@ -240,7 +273,10 @@ export const queue = Object.freeze({
       return cs.state("queue", function (q) {
         const all = Array.isArray(q.items) ? q.items : [];
         const updates = picking ? [] : all.filter(function (it) { return it && it.kind === "update-ready"; });
-        const rest = picking ? all : all.filter(function (it) { return !(it && it.kind === "update-ready"); });
+        const others = picking ? all : all.filter(function (it) { return !(it && it.kind === "update-ready"); });
+        // R69: an item of a snoozed case is held back from the list, and the snoozed cases are listed apart with "Bring back".
+        const held = picking ? [] : others.filter(function (it) { return it && it.snoozed; });
+        const rest = picking ? others : others.filter(function (it) { return !(it && it.snoozed); });
         const items = picking ? rest : src.fold(rest);
         const groups = [];
         const at = {};
@@ -254,7 +290,7 @@ export const queue = Object.freeze({
         const head = picking ? '<p class="mk-sub">' + cs.w("queue.multi.head") + " " + cs.w("queue.multi.head2") + "</p>"
           : '<p class="mk-sub"><span>' + (n === 1 ? cs.w("screen.queue.count.one") : cs.w("screen.queue.count.many", { n: String(n) }))
           + "</span> · <span>" + cs.w("screen.queue.grouped") + "</span></p>";
-        return head + updateSection(updates) + groups.map(function (g) {
+        return head + updateSection(updates) + states.snoozed(cs, held) + groups.map(function (g) {
           const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
           const snooze = g.c && !picking ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
           return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(function (it) { return itemRow(it, picking); }).join("")) + "</section>";
@@ -291,7 +327,6 @@ export const queue = Object.freeze({
 
     // R41, R60: with nothing waiting and every feed answered, the sentence, each class "none here", the up-to-date row and the door to
     // Home; with a feed that did not answer, the all-clear is withheld and the failed feed named with "Try again".
-    const states = view.parts.queueStates();
     const q = view.data.queue;
     const qv = q && (q.state === "ok" || q.state === "empty") && q.value && typeof q.value === "object" ? q.value : {};
     const again = "/app/queue" + (sub ? "/" + sub : "");
@@ -357,15 +392,19 @@ export const queue = Object.freeze({
         if (el.dataset.multi) return view.parts.queueStates().run("proposedispose", view, el, cs, extra);
         // R61: a deferred set-aside finding is dismissed with a reason: an instance row by its key and version, a project row by both.
         // R70: `definitionVersion` is the word `proposedispose` reads; a finding with none sends none.
-        if (el.dataset.key) return { body: Object.assign({ key: el.dataset.key, to: "dismissed" }, el.dataset.version === "" ? {} : { definitionVersion: Number(el.dataset.version) }) };
-        return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: "dismissed" } };
+        // R68: the button says which: Defer puts the finding off (`deferred`), Dismiss sets it aside (`dismissed`).
+        const to = el.dataset.to === "deferred" ? "deferred" : "dismissed";
+        if (el.dataset.key) return { body: Object.assign({ key: el.dataset.key, to: to }, el.dataset.version === "" ? {} : { definitionVersion: Number(el.dataset.version) }) };
+        return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: to } };
       },
       done: function (view, answer, cs) { cs.set("done", "proposedispose"); } },
     { op: "queuesnooze", label: "act.queuesnooze.label.queue",
       send: function (view, el, cs, extra) {
         if (el.dataset.multi) return view.parts.queueStates().run("queuesnooze", view, el, cs, extra);
-        const until = String(cs.value(el.dataset.f + "-until") || "").trim();
-        return until ? { body: { case: el.dataset.project, until: until } } : { refuse: "screen.queue.fieldfirst" };
+        // R69: "Bring back" clears the snooze of the case; R79 (c): a day before tomorrow is not sent.
+        if (el.dataset.clear) return { body: { case: el.dataset.project, clear: true } };
+        const day = view.parts.queueStates().dayOf(cs, el.dataset.f + "-until");
+        return day.refuse ? day : { body: { case: el.dataset.project, until: day.until } };
       } },
     // R18 (queue R19, R20): "Mute a kind" mutes the item's kind for its nearest home case; with no case, the item.
     { op: "queuemute", label: "act.queuemute.label.queue",
@@ -442,5 +481,19 @@ export const queue = Object.freeze({
       send: function (view, el) { return el.dataset.version ? { body: { version: el.dataset.version } } : null; } },
     { op: "exploreapprove", label: "act.exploreapprove.label.queue",
       send: function (view, el) { return { body: { owner: el.dataset.owner, day: el.dataset.day } }; } },
+    // R75: the decisions the record routes to a member; each item leaves with the next read.
+    { op: "adminendorse", label: "act.adminendorse.label.queue",
+      send: function (view, el) { return el.dataset.memberId ? { body: { memberId: el.dataset.memberId } } : null; },
+      done: function (view, answer, cs) { cs.set("done", "adminendorse"); } },
+    { op: "projectowneradd", label: "act.projectowneradd.label.queue",
+      send: function (view, el) { return el.dataset.projectId && el.dataset.handle ? { query: { projectId: el.dataset.projectId, handle: el.dataset.handle } } : null; },
+      done: function (view, answer, cs) { cs.set("done", "projectowneradd"); } },
+    { op: "expertiseconfirm", label: "act.expertiseconfirm.label.queue",
+      send: function (view, el) { return el.dataset.memberId && el.dataset.label ? { body: { memberId: el.dataset.memberId, label: el.dataset.label } } : null; },
+      done: function (view, answer, cs) { cs.set("done", "expertiseconfirm"); } },
+    // The authority form: the member's decision with its basis, the basis being the act's reason (`taskdecide` is Reasoned).
+    ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.queue", reasonField: "basis", refusals: ROUTED_REFUSALS,
+      send: function (view, el, cs) { return view.parts.routed().decide(cs, el); },
+      done: function (view, answer, cs) { cs.set("done", "taskdecide"); } }),
   ],
 });

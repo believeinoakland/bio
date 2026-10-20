@@ -123,7 +123,7 @@ test("R2: the three-kinds note is shown once per member on the device", async ()
 test("R3: an item's acts are its options and disposition's doors among the registered acts; any other option is \"Open\", a link to its subject's screen", async () => {
   const p = await open("/app/queue", PLANE, { screens: withScreens("document") });
   assert.deepEqual(opsOf(itemOf(p, "TSK-1")), ["taskresolve"]);
-  assert.deepEqual(opsOf(itemOf(p, "FINDING::tension::PROJ-2::x")), ["proposedispose", "queuemute"]);
+  assert.deepEqual(opsOf(itemOf(p, "FINDING::tension::PROJ-2::x")), ["proposedispose", "proposedispose", "queuemute"], "R68: Dismiss, then Defer");
   assert.deepEqual(opsOf(itemOf(p, "FINDING::newer::1")), ["adoptversion", "keepversion", "queuemute"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::action-reminder::ACT-1::0::d")), ["reminderanswer"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::explore-ask::x")), ["exploreapprove"]);
@@ -153,8 +153,8 @@ test("R3: each act sends its op's body for the item it was drawn on; an act aski
   const snooze = button(p, "queuesnooze");
   const f = snooze.dataset.f;
   assert.equal(snooze.closest("details").querySelector("summary").textContent, word("act.queuesnooze.label.queue"));
-  await press(p, "queuesnooze", { values: { [f + "-until"]: "2026-10-20" } });
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: "2026-10-20" });
+  await press(p, "queuesnooze", { values: { [f + "-until"]: day(3) } });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: day(3) });
   const keep = await press(p, "keepversion");
   assert.deepEqual(last(p, "keepversion").body, { notice: "VN-5" });
   const adopt = button(p, "adoptversion");
@@ -258,8 +258,8 @@ test("R13: \"Drop the request\" sends actionmove to abandoned with the member's 
   const b = await press(p, "queuesnooze");
   assert.equal(p.byOp("queuesnooze").length, 0, "control: no day, nothing sent");
   assert.equal(beside(p, b), word("screen.queue.fieldfirst"));
-  await press(p, "queuesnooze", { values: { [snooze.dataset.f + "-until"]: "2026-10-30" } });
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: "2026-10-30" });
+  await press(p, "queuesnooze", { values: { [snooze.dataset.f + "-until"]: day(10) } });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: day(10) });
   await press(p, "actionmove", { reason: "We found the logs online" });
   assert.deepEqual(last(p, "actionmove").body, { target: "ACT-9", to: "abandoned", reason: "We found the logs online" });
   assert.equal(itemOf(p, "CONDITION::request-unsent::FIL-3"), undefined, "re-read after the act: the dropped request leaves the list");
@@ -332,8 +332,8 @@ test("R22: five source-modified items draw one item reading \"5 documents change
   const list = rows[0].querySelector('details[data-sources="source-modified"]');
   assert.ok(list);
   assert.deepEqual(list.querySelectorAll("li").map((li) => li.querySelector(".cs-card, a.cs-ref").textContent.trim()), ["Doc 1", "Doc 2", "Doc 3", "Doc 4", UNTITLED]);
-  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]').length, 5, "each document with its own options");
-  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]')[4].dataset.finding, "FINDING::source-modified::B-5");
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"][data-to="dismissed"]').length, 5, "each document with its own options (R68: and its Defer)");
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"][data-to="dismissed"]')[4].dataset.finding, "FINDING::source-modified::B-5");
 });
 
 test("R22: control: a single item draws .one; source-removed is its own item; on Home the same items are one item too", async () => {

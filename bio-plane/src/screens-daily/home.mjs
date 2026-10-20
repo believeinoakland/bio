@@ -13,10 +13,15 @@ import { startProject } from "./start-project.mjs";
 import { participation } from "./participation.mjs";
 import { homeReadings } from "./home-readings.mjs";
 import { doors } from "./doors.mjs";
+import { routed, ROUTED_REFUSALS } from "./routed.mjs";
+import { OPS } from "../op-declarations/index.mjs";
+
+// An act whose op the owners have not yet declared is not registered (screens-action's rule): `taskdecide` is `tasks`' alone.
+const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : []; };
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors, routed },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -140,10 +145,12 @@ export const home = Object.freeze({
         words = cs.w("home.update.ready", { version: String(d.version || it.version || ""), security: security ? cs.w("home.update.security") : "" });
         open = '<a class="cs-btn" data-tone="quiet" data-nav href="/app/updates">' + cs.w("queue.update.see") + "</a>";
       } else {
+        // R75: the decisions the record routes to a member: the authority form, an endorsement, an owner vote, an expertise.
+        const rt = view.parts.routed().draw(cs, it, { screen: "home", id: "hr-" + (seq++), ref: iw.subject(cs, it) });
         // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
         const wd = iw.words(cs, it);
-        words = wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
-        open = actsOf(it);
+        words = rt ? rt.summary + '<span class="meta">' + rt.detail + "</span>" : wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
+        open = rt ? rt.acts : actsOf(it);
         if (!open) {
           const to = iw.open(it);
           open = '<a class="cs-btn" data-tone="quiet" data-nav href="' + (to || "/app/queue") + '">' + cs.w("screen.home.open") + "</a>";
@@ -382,6 +389,21 @@ export const home = Object.freeze({
       } },
     { op: "keepversion", label: "act.keepversion.label.home", rereads: ["queue"],
       send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
+    // R75: the decisions the record routes to a member, and passing a task on; each item leaves with the next read of the queue.
+    { op: "taskforward", label: "act.taskforward.label.home", rereads: ["queue"],
+      send: function (view, el, cs) {
+        const to = String(cs.value(el.dataset.f + "-to") || "").trim().replace(/^@/, "");
+        return to ? { body: { id: el.dataset.item, to: to } } : { refuse: "screen.home.fieldfirst" };
+      } },
+    { op: "adminendorse", label: "act.adminendorse.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.memberId ? { body: { memberId: el.dataset.memberId } } : null; } },
+    { op: "projectowneradd", label: "act.projectowneradd.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.projectId && el.dataset.handle ? { query: { projectId: el.dataset.projectId, handle: el.dataset.handle } } : null; } },
+    { op: "expertiseconfirm", label: "act.expertiseconfirm.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.memberId && el.dataset.label ? { body: { memberId: el.dataset.memberId, label: el.dataset.label } } : null; } },
+    // The authority form: the member's decision with its basis, the basis being the act's reason (`taskdecide` is Reasoned).
+    ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.home", reasonField: "basis", refusals: ROUTED_REFUSALS, rereads: ["queue"],
+      send: function (view, el, cs) { return view.parts.routed().decide(cs, el); } }),
     // R29: "Join", a project the member is invited to; the projects are read again, her place in it now joined.
     { op: "projectjoin", label: "act.projectjoin.label.home", rereads: ["projects"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
