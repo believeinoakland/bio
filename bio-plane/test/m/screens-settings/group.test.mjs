@@ -282,7 +282,7 @@ test("R66 the founder is drawn the copy of the record (a field for her words, Ta
   // nothing kept of the copy on the page
   assert.ok(!a.html.includes("working-corpus"));
   // no words: the body names none
-  const bare = await a.press("export", {});
+  const bare = await a.press("export", { values: { "gr-exnote": "" } });
   assert.deepEqual(bare.sent[0].body, {});
 });
 
