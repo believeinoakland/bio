@@ -763,9 +763,9 @@ export class Store extends DurableObject {
          host, at acquisition's place before capture's map; `by` is the door's stamp. */
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
-      /* R73 (K4231, K4234): `acquire` is handed a timings object held under the door's `trace`, and `acquiretimings` answers its stages. */
-      ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
+      /* R73 (K4231, K4234): `acquiretimings`, acquisition's stage times of a call still running (its R95), at acquisition's place with the co-archive pair; `acquire` below is handed the timings object it fills, held under the door's `trace`. */
       ...acquireTimingsOps(ctx, url),
+      ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */
       ...doorbellOps(doorbellOf(ctx), url, body),

@@ -27,6 +27,7 @@ import { runProductionsOf, runProductionsOps } from "../../../src/run-production
 import { captureRequestsOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 import { recordOf, recordCoreOps } from "../../../src/record-core/index.mjs";
 import { governorOf, governorRoutes } from "../../../src/host-governor/index.mjs";
+import { acquireTimingsOps } from "../../../src/plane/acquire-timings.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
 import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
@@ -106,7 +107,8 @@ export const MODULE_MAPS = [
      its own (its ops are reached through capture's and control-plane's doors), so the pair is named here as the module's
      whose methods answer them: the plane adds no behaviour, only the entry (plane R9). */
   ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
-                                  coarchivestate: () => acquisitionOf(c).coArchiveState() })],
+                                  coarchivestate: () => acquisitionOf(c).coArchiveState(),
+                                  ...acquireTimingsOps(c, u) })],   /* R73 (K4231): acquisition's stage times of a running call */
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
   ["doorbell", (c, u, b) => doorbellOps(doorbellOf(c), u, b)],   /* R37: directly after capture's */
   ["file-safety", (c, u, b, e) => fileSafetyOps(fileSafetyOf(c), u, b, e)],   /* R26: directly after doorbell's */

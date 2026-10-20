@@ -7,6 +7,7 @@ import { store, storage } from "./fixture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { filingsOf } from "../../../src/filings/index.mjs";
 import { MODULE_MAPS, opsServedBy, servedThroughDoor } from "./maps.mjs";
+import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
 
@@ -148,7 +149,7 @@ test("R5 (T51; K4213, K4219): link-sweep's arms are handed the request body, as 
    one running. The holder is bounded, and a call without a trace holds nothing. */
 test("R73 (T51; K4231, K4234): a stalled `acquire` through the route map answers, by its trace, the stage it is running; after it ends the stages that ran; control: another trace, none, and no trace hold nothing", async () => {
   const { acquireTimingsOf, HOLD_MAX } = await import("../../../src/plane/acquire-timings.mjs");
-  const x = await store();
+  const x = await store({ env: { CAPTURES: bucketStandIn() } });
   const real = globalThis.fetch;
   let release; const gate = new Promise((r) => { release = r; });
   globalThis.fetch = async () => { await gate; return new Response("x", { headers: { "content-type": "text/plain" } }); };
