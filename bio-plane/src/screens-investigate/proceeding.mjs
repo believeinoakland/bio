@@ -22,7 +22,7 @@ function reads(view) {
     parties: { op: "partiesof", query: { proceeding: id } },
     dates: { op: "proceedingdates", query: { proceeding: id } },
     follows: { op: "follows", query: {} },
-    docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
     people: { op: "peopledirectory", query: { limit: "200" } },
     standards: { op: "standards", query: { limit: "200" } },
   });
@@ -151,7 +151,8 @@ const acts = [
       const forum = String(cs.value("pr-forum") || "").trim(), number = String(cs.value("pr-number") || "").trim();
       const kind = String(cs.value("pr-kind") || "").trim(), label = String(cs.value("pr-label") || "").trim(), note = String(cs.value("pr-note") || "").trim();
       if (!forum || !number || !kind || !note) return { refuse: "screen.proceeding.create.empty" };
-      return { body: Object.assign({ kind: "proceeding", note, proceeding: { forum, kind, number } }, label ? { label, aliases: [label] } : {}) };
+      /* `label` is required by `entitycreate`: the neutral label she gave, else the case number as the caption states it */
+      return { body: Object.assign({ kind: "proceeding", label: label || number, note, proceeding: { forum, kind, number } }, label ? { aliases: [label] } : {}) };
     },
     done(view, answer, cs) {
       const r = answer && answer.result !== undefined ? answer.result : answer;
