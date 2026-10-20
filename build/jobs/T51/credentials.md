@@ -108,3 +108,15 @@ Tests and checks:
 No pull request is opened, per the job's rule; BOB merges at the tranche boundary.
 
 Size (session_01XeEQiwMvWUVaEbgAvHSsgC): test runs 1, module lines 2651
+
+## J5 · QUESTION
+
+Three points from reading B5, with my best reading for each. I carry on with everything else.
+
+1. **C80 (R81) cannot be seen failing yet: `member-roster` R76 is not on `tranche/T51`.** B5 says it merged before I started. It has not: `tranche/T51` at abc09b300a has no `member-roster` R76 line, `memberFacts("admin")` still answers null, and `member-roster`'s own job (MEMBER-ROSTER #3) only started after mine. The refusal is `#signerMemberBar` -> `memberFacts`, so the change is `member-roster`'s, not mine, and I will not decide "the founder is active" in this module (it would copy a rule that module owns). Best reading: I write the R81 test now (founder registers a key after the claim; refused before it; a non-founder as before), see it fail for that reason, and finish C80 when `tranche/T51` carries R76. Please tell me when to merge it, or tell me to take another course.
+
+2. **`subscriptionsignin` is not served by this module** (census row: "no ops-map arm found"). `agent-worker/src/signin.mjs` says the plane's door routes it to the member's own runner (`control-plane`; `agent-worker` R66). I declare nothing for it and leave it to its owner. The other 17 ops of entry 3 are declared.
+
+3. **`securitymap` cannot be declared as the rows stand.** It is a read (`op-declarations`: `mutating: false`), but `op-grades` holds a hand row `RUNG_ABSENT.securitymap = {ground: "caller-owned"}` (t48.mjs). A declaration with `weight: "caller-owned"` is refused as a ground on a read (`DECLARED_OP_BAD_WEIGHT`, ground-on-read); `weight: "read"` is refused as disagreeing with the hand row (`DECLARED_OP_DISAGREES`, hand=caller-owned). Best reading: `op-grades` drops that hand row (its `NON_ACTS` row already states the read) and I then declare `securitymap` as `weight: "read"`, `fields: {accepts: ["from","to"], requires: ["from","to"]}`; or you give it its own job. Until then it stays undeclared.
+
+Also decided, to be recorded (no answer needed unless you disagree): `fp` (the bootstrap secret's fingerprint the control plane puts in `claim` and `bootstrap`) is a door stamp like `source` and `country`, so it is not in `accepts`; `login`, `recover` and `reauth` answer a missing field with their one fixed refusal (R4, R47), so their `requires` are the fields without which no call can succeed and the tests count that refusal as naming them. Requirement lines (R81 for C80; R82 for `DECLARED_OPS`, one line for entries 2 and 3) I put in my record for you, because my paths do not include `build/requirements/`.
