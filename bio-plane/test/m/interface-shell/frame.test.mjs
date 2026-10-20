@@ -177,7 +177,7 @@ test("R20 the assistant is reachable when assistantstate answers on and the memb
     assert.ok(p.root().querySelector("#cs-frame").classList.contains("with-dock"));
     assert.ok(p.root().querySelector("#cs-main"), "beside the screen it serves");
     await p.click(dock.querySelector('button[data-act="airunopen"]'));
-    assert.deepEqual(p.byOp("airunopen")[0].body.context, { screen: "document", subject: "c1" });
+    assert.deepEqual([p.byOp("airunopen")[0].body.contextType, p.byOp("airunopen")[0].body.contextId], ["document", "c1"]);
   }
   const NOT = [{ assistantstate: ok({ on: false }), accountreference: ok({ held: true }) }, { ...ON }, { ...ON, groupkeystate: ok({ held: true, on: false }) },
     { ...ON, groupkeystate: ok({ held: false, on: true }) }, { assistantstate: silent, accountreference: ok({ held: true }) },
@@ -306,7 +306,7 @@ test("R30 a screen of the public or published frame is drawn without a session: 
   p.doc.getElementById("d-what").value = "a leaked memo";
   await p.click('button[data-act="knock"]');
   assert.equal(p.byOp("knock")[0].headers.Authorization, undefined);
-  assert.deepEqual(p.byOp("knock")[0].body, { text: "a leaked memo" });
+  assert.deepEqual(p.byOp("knock")[0].body, { content: "a leaked memo" });
   /* control: /app/home with no record still draws front, never the working frame */
   const q = await boot({ screens: [...ALL, FRONT], path: "/app/home", session: null });
   assert.equal(q.root().querySelector("#cs-main").getAttribute("data-screen"), "front");
