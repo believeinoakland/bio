@@ -147,7 +147,7 @@ REWRITE.update({
 w('screen.held.setaside.why', 'Why set it aside?', False, "the reason field for heldsetaside")
 REWRITE.update({
   'screen.held.archive.filed': '{count} files held beside it',
-  'screen.held.ineligible': 'Not eligible for a batch: {reason}',
+  'screen.held.ineligible': 'Not included when you vouch for several at once: {reason}',
   'screen.held.waiting': "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
 })
 # help-records: the law's particulars (its name, windows, reasons and sections) are the place's data, as placeholders
@@ -261,7 +261,7 @@ w('screen.open-file.found.sent', 'sent once to the members who can see it', True
 w('screen.open-file.held.about.outside', 'While it is held, its original cannot be opened, not even with a warning. An outside scanner found it too, so it is released only when two members each give a reason. (Had only the built-in scanner found it, a second, different scanner finding it clean would release it.) A release covers this finding only.', True)
 w('screen.open-file.whole', 'The file read whole', False, 'the structure check of a deeper check')
 w('screen.open-file.flagged', 'Flagged: {what}', False, 'what the structure check flagged, such as "an external link"')
-w('screen.open-file.release.waiting', "{name} gave a reason on {date}; a second member's releases it. The machine never can.")
+w('screen.open-file.release.waiting', "{name} gave a reason on {date}; a second member's releases it. The assistant never can.")
 # people
 w('screen.people.counts.three', 'named in {documents}, {questions} and {projects}', False, 'each a count with its noun, such as "14 documents"')
 w('screen.people.counts.docsonly', 'named in {documents}, in no question or project yet')
@@ -291,8 +291,8 @@ REWRITE.update({
 })
 # plan
 w('screen.plan.check.hostile', 'Scenario {scenario}: no branch answers a hostile response (refusal, obstruction, retaliation) to {item}.', False, "a plan check's finding")
-w('screen.plan.subject.from', 'from the inquiry "{title}" ({status}, {date})', False, "where a plan's subject comes from; {status} such as suspected")
-w('screen.plan.phase.checkpoint', '{item} → checkpoint: "{checkpoint}" (judged by a member)', False, "a scenario's phase")
+w('screen.plan.subject.from', 'from the question "{title}" ({status}, {date})', False, "where a plan's subject comes from; {status} such as suspected")
+w('screen.plan.phase.checkpoint', '{item} → checkpoint: "{checkpoint}" (judged by a member, once it is due)', False, "a scenario's phase")
 w('screen.plan.item.untaken', 'nobody has taken it up', False, 'a started item no member has taken up')
 REWRITE.update({'screen.plan.opened': 'opened {date} by {name}'})   # DEC-265 (B226 (3)): planopen records no reason
 # proceeding
@@ -349,7 +349,7 @@ w('screen.review-copy.band', '{n} people outside the team can read this until {d
 w('screen.review-copy.sub', 'A named reader gets a view that you can stop at any time.')
 w('screen.review-copy.link.line', 'For {who} · works until {until}, or until you stop sharing · Civicsmith sends no email: copy the link and send it yourself.', True, "under the reader's link")
 REWRITE.update({
-  'screen.review-copy.heading': 'Share Edition {edition} for review',
+  'screen.review-copy.heading': 'Share this edition for review',
   'screen.review-copy.reads.until': 'can read until {until}',
 })
 # review-outside
@@ -479,8 +479,8 @@ w('screen.timeline.threaded.owndate', '{document}, its own date {date}', False, 
 def w273(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-273' + (': ' + note if note else '')))
 w273('shell.queue.waiting', '{n} items wait on you in your queue: {todo} to do, {noticed} noticed, {status} status.', False, "the queue count's explanation in the masthead; {n} their sum")
-w273('shell.queue.open', 'Click to open your queue.', False, "the queue count's explanation, its second line")
-w273('shell.group.open', 'Click to see who your team is.', False, "the team's card in the masthead, its second line; the team's description and purpose are its own words (data)")
+w273('shell.queue.open', 'Press or tap to open your queue.', False, "the queue count's explanation, its second line")
+w273('shell.group.open', 'Press or tap to see who your team is.', False, "the team's card in the masthead, its second line; the team's description and purpose are its own words (data)")
 # --- end DEC-273
 
 # --- DEC-275: explanations keyed, screens account to members. The tip of a reference card is now read as the tip shows it,
@@ -655,7 +655,7 @@ w275('screen.group-identity.tip.draft_why', "Nothing here is saved as the team's
 w275('screen.held.tip.vouching', 'a member signs that a capture is what it says it is', False, "vouching, its card")
 w275('screen.held.tip.vouching_until', 'until then it is held and counts toward nothing', False, "vouching, its card")
 w275('screen.held.tip.vouching_why', 'Nothing on this list supports or cuts against any question until a member vouches for it.', False, "vouching, its card")
-w275('screen.held.tip.photo', 'The photo, as captured. Click to open it full size, in the safe view until it has been checked.', False, "a held photo's thumbnail, its explanation")
+w275('screen.held.tip.photo', 'The photo, as captured. Press or tap to open it full size, in the safe view until it has been checked.', False, "a held photo's thumbnail, its explanation")
 w275('screen.held.tip.crucial', 'Crucial to a finding', False, "a capture crucial to a finding, its card")
 w275('screen.held.tip.crucial_is', 'a capture a finding would fall without', False, "a capture crucial to a finding, its card")
 w275('screen.held.tip.crucial_vouched', 'vouched for one at a time, never in a batch', False, "a capture crucial to a finding, its card")
@@ -1368,9 +1368,9 @@ w299('screen.review-copy.until.nozone.member', "Your team's time zone isn't set,
 w299('case.draft.untitled', '{project}: draft case', False, 'the title of a draft that names no case, in its list, its page and the ceremony; never the derivation prose')
 w299('case.prepared.by', 'Draft · prepared by {member}', False, "{member} the member's name or handle, never the account's sign-in name such as admin")
 w299('screen.case-editor.tip.distributed', 'Distributed: published, and each copy handed to the readers the case names, such as the office it is sent to.', False, 'the card the ladder lacked')
-w299('case.ladder.notyet', 'not yet checked', False, 'replaces "not yet evaluated" on the ladder')
+w299('case.ladder.notyet', 'Not checked yet', False, 'a step of the readiness ladder that nothing has judged; never "not met" (B411 B2/C8)')
 w299('ceremony.gate.heading', 'Put these right before you sign', False, "the ceremony's list of what stops the signing")
-w299('ceremony.gate.notargets', 'This draft names no finding to publish. Add at least one finding to the case, then check again.', False, 'the publication with no targets; replaces the developer text')
+w299('ceremony.gate.notargets', 'This draft has no finding to publish. Add a finding to the case, then check again.', False, 'the publication with no targets; replaces the developer text; B411 D1: a door "Add a finding" beside it')
 w299('ceremony.gate.other', "Something in the draft stops the signing: {what}. Put it right in the case, then check again.", False, 'any other gate, {what} its own plain sentence')
 # (4) acknowledgements
 w299('document.vouched', 'Vouched for by {member}, {date}. Your team can use this copy.', False, 'replaces the held-copy box at once after "Vouch for this copy"; stays on the page')
@@ -1814,7 +1814,7 @@ REWRITE.update({'screen.proceeding.kind.help': proceeding_kind_help})  # DEC-319
 def w320(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-320' + (': ' + note if note else '')))
 w320('wizard.subject.none.summary', 'With no project to choose', False, 'screens-wizards R17: wizard.subject.none.project in a fold')
-w320('screen.document.cite.question.help', "Set to the question this document was captured for; this project's questions come first.", False, 'screens-inquiry R61')
+w320('screen.document.cite.question.help', "Set to the question this document was captured for; this project's questions come first. Questions with the same title are told apart by their project.", False, 'screens-inquiry R61')
 w320('screen.document.cite.none.summary', 'Captured for no question', False, 'R61: nothing preselected, the act says to choose')
 w320('screen.request.state.offices', 'offices are known', False, 'screens-action R20: the mockup state')
 w320('screen.request.state.nooffice', 'no office is known yet', False, 'R20: the mockup state')
@@ -1984,7 +1984,7 @@ W.append(dict(key='screen.explore.hop.unnamed', en='an unnamed item', protected=
 # (4) strip reading and the Find field
 W.append(dict(key='find.query.help', en='Leave it empty to browse everything.', protected=False, note='DEC-329: B303 (4): the help under the Find words field (today find.query.placeholder is passed as help); finder.mjs:70'))
 # (5) Acquire timeout; action kinds; the action page's question field
-W.append(dict(key='refusal.ACQUIRE_TIMED_OUT', en="Fetching the page took longer than 25 seconds, so your team's Civicsmith stopped and kept nothing. Try again; if the page is very large, save it yourself and add it as a file.", protected=False, note='DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED'))
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT', en="The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.", protected=False, note='DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED'))
 for _k, _cap, _low in [
     ('cpra_request', 'Records request', 'records request'),
     ('grand_jury', 'Grand jury referral', 'grand jury referral'),
@@ -2214,7 +2214,7 @@ W.append(dict(key='queue.signer-self-registered.summary', en='{member} registere
 W.append(dict(key='queue.signer-self-registered.summary.comment', en='{member} registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed', en='A member registered a signing key for themselves', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed.comment', en='A member registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}'))
-W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Every administrator is told, and an administrator can revoke it. Nothing here changes the key.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779'))
+W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark it done.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
 # (10) attribution-unchosen
 W.append(dict(key='queue.attribution-unchosen.summary', en='Case {case} uses your observation {observation}: choose how it credits you', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)'))
 W.append(dict(key='queue.attribution-unchosen.detail', en="Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.", protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}'))
@@ -2715,17 +2715,17 @@ W.append(dict(key='screen.question.tip077', en='It never changes afterwards, so 
 W.append(dict(key='screen.question.tip078', en='Read before you confirm.', protected=False, note='DEC-330: B306 A23/A37/A40/A41: question screen: explanation'))
 W.append(dict(key='screen.question.tip079', en='This lists what you can see that rests on the question; work you cannot see is not listed, and no other project is named.', protected=False, note='DEC-330: B306 A23/A37/A40/A41: question screen: explanation'))
 # --- DEC-330 (draw1)
-W.append(dict(key="screen.capture.a64.if_the_address_is_already_held_or_the_si", en="If the address is already held, or the site has changed since", protected=False, note='DEC-330: B306 A64: capture drawn word'))
+W.append(dict(key="screen.capture.a64.if_the_address_is_already_held_or_the_si", en="If the address is already held, or the page reads differently now", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.already_in_the_record_as", en="Already in the record as", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.the_site_still_gives_the_same_document", en="the site still gives the same document", protected=False, note='DEC-330: B306 A64: capture drawn word'))
-W.append(dict(key="screen.capture.a64.the_site_has_changed_since", en="The site has changed since", protected=False, note='DEC-330: B306 A64: capture drawn word'))
-W.append(dict(key="screen.capture.a64.your_team_holds_a_capture_from_14_septem", en='your team holds a capture from {date}, and the site now gives a different document', protected=False, note='DEC-330: B306 A64: capture drawn word'))
+W.append(dict(key="screen.capture.a64.the_site_has_changed_since", en="The page reads differently now", protected=False, note='DEC-330: B306 A64: capture drawn word'))
+W.append(dict(key="screen.capture.a64.your_team_holds_a_capture_from_14_septem", en='your team holds a capture from {date}, and the page the site gives now reads differently. A page with a clock, a counter or a live feed reads differently every time it is loaded, so for a capture made minutes ago this may mean nothing.', protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.capturing_it_again_keeps_the_new_copy_be", en="Capturing it again keeps the new copy beside the old one.", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un", en="Whoever cited the old one stays on it until they move.", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.capture_the_new_copy", en="Capture the new copy", protected=False, note='DEC-330: B306 A64: capture drawn word'))
-W.append(dict(key="screen.document.a34.your_citations_leg_by_leg", en="Your citations, leg by leg", protected=False, note='DEC-330: B306 A34: document drawn word'))
+W.append(dict(key="screen.document.a34.your_citations_leg_by_leg", en="Your citations", protected=False, note='DEC-330: B306 A34: document drawn word'))
 W.append(dict(key="screen.document.a34.a_newer_copy_never_moves_a_citation_by_i", en="A newer copy never moves a citation by itself.", protected=False, note='DEC-330: B306 A34: document drawn word'))
-W.append(dict(key="screen.document.a34.each_reasoning_that_rests_on_this_docume", en="Each reasoning that rests on this document is asked about on its own.", protected=False, note='DEC-330: B306 A34: document drawn word'))
+W.append(dict(key="screen.document.a34.each_reasoning_that_rests_on_this_docume", en="Each question that rests on this document is asked about on its own.", protected=False, note='DEC-330: B306 A34: document drawn word'))
 W.append(dict(key="screen.document.a34.a_newer_copy_exists_captured_2_october", en='a newer copy exists, captured {date}', protected=False, note='DEC-330: B306 A34: document drawn word'))
 W.append(dict(key="screen.document.a34.section_3_reads_the_same_in_both", en='section {section} reads the same in both', protected=False, note='DEC-330: B306 A34: document drawn word; B325 2: {section} replaces the sample 3'))
 W.append(dict(key="screen.document.a34.not_checked_yet", en="not yet checked for a newer copy", protected=False, note='DEC-330: B306 A34: document drawn word'))
@@ -2941,16 +2941,16 @@ W.append(dict(key='screen.finder.route.apart', en='These three are counted apart
 W.append(dict(key='screen.finder.route.cross.heading', en='When a search crosses routes', protected=False, note='DEC-330: B306 A15: a folded note'))
 W.append(dict(key='screen.finder.route.cross', en='A search that joins a field and a passage with “or” is refused, because the routes answer apart and their answers cannot be added. Run each on its own.', protected=False, note='DEC-330: B306 A15: the refusal of a query that crosses seams'))
 W.append(dict(key='screen.finder.covered.heading', en='What this search covered', protected=False, note='DEC-330: B306 A15: the honesty panel'))
-W.append(dict(key='screen.finder.covered.levels', en='The record answers at four levels, and they are different facts. Finding nothing at one of them is not evidence of nothing at the next.', protected=False, note='DEC-330: B306 A15: the honesty panel'))
-W.append(dict(key='screen.finder.covered.rests', en='What anything rests on', protected=False, note='DEC-330: B306 A15: level 1 of 4'))
+W.append(dict(key='screen.finder.covered.levels', en='Search looks in four places, and each answers a different question. Finding nothing in one is not a sign that nothing is held in the next.', protected=False, note='DEC-330: B306 A15: the honesty panel'))
+W.append(dict(key='screen.finder.covered.rests', en='Findings and connections', protected=False, note='DEC-330: B306 A15: level 1 of 4'))
 W.append(dict(key='screen.finder.covered.rests.says', en='Findings and connections that match: {n}.', protected=False, note='DEC-330: B306 A15: level 1 of 4'))
-W.append(dict(key='screen.finder.covered.read', en='What has been read out of the documents', protected=False, note='DEC-330: B306 A15: level 2 of 4'))
+W.append(dict(key='screen.finder.covered.read', en='Passages read from the documents', protected=False, note='DEC-330: B306 A15: level 2 of 4'))
 W.append(dict(key='screen.finder.covered.read.says.other', en='Passages were read from {read} of the {n} documents searched. The other {rest} have not been read passage by passage yet, so their words were not searched.', protected=False, note='DEC-330: B306 A15: level 2 of 4: how much was read at passage grain'))
 W.append(dict(key='screen.finder.covered.read.says.one', en='Passages were read from {read} of the {n} documents searched. The other one has not been read passage by passage yet, so its words were not searched.', protected=False, note='DEC-330: the count of one (consistency read)'))
 W.append(dict(key='screen.finder.covered.docs.says.other', en='Searched the {n} documents you may read. {p} projects you can see only by name were not searched for you, and what they hold is not shown.', protected=False, note='DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see; B312 (retrieval R29, R89): counts the projects, never their documents'))
 W.append(dict(key='screen.finder.covered.docs.says.one', en='Searched the {n} documents you may read. 1 project you can see only by name was not searched for you, and what it holds is not shown.', protected=False, note='DEC-330: the count of one (consistency read)'))
-W.append(dict(key='screen.finder.covered.looked', en='Whether anybody looked', protected=False, note='DEC-330: B306 A15: level 4 of 4'))
-W.append(dict(key='screen.finder.covered.docs', en='The documents themselves', protected=False, note='DEC-330: B306 A15: level 3 of 4'))
+W.append(dict(key='screen.finder.covered.looked', en='Where nobody has looked yet', protected=False, note='DEC-330: B306 A15: level 4 of 4'))
+W.append(dict(key='screen.finder.covered.docs', en='Documents searched', protected=False, note='DEC-330: B306 A15: level 3 of 4'))
 W.append(dict(key='state.item.review.means', en="Captured into your team's record and waiting for a member to review it.", protected=False, note="DEC-330: B306 A11: the state chip's explanation and the Glossary"))
 W.append(dict(key='state.item.review.can', en='You can read it and its captured source, mark it reviewed, and revise it; every revision is kept.', protected=False, note="DEC-330: B306 A11: the state chip's explanation and the Glossary"))
 W.append(dict(key='state.item.review.cannot', en='You cannot publish it: only signed work is published.', protected=False, note="DEC-330: B306 A11: the state chip's explanation and the Glossary"))
@@ -3674,7 +3674,7 @@ W.append(dict(key='refusal.BALANCE_CLASS_NOT_IN_FAMILY', en='That balance class 
 W.append(dict(key='refusal.BAR_IS_A_PROJECT_PROPERTY', en='A standard of evidence belongs to a project, not to a single finding or claim, so none can be read for this finding. Look at the project that published it instead.', protected=False, note='DEC-342: bar requested for a target instead of a project'))
 W.append(dict(key='refusal.BASE_UNLINKED', en='A revision in this export does not link to the one before it, so the export could not be verified.', protected=False, note='DEC-342: export verification: promotion base unlinked'))
 W.append(dict(key='refusal.BASIS_IN_PAYLOAD', en='The basis for each piece of evidence must come from the document itself, not from the request. Remove it from the request and try again. Nothing was written.', protected=False, note='DEC-342: promote request carries basis'))
-W.append(dict(key='refusal.BASIS_REFUSED', en='A piece of evidence cannot be used: it rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hypothesis. Nothing was written.', protected=False, note='DEC-342: evidence leg refused by basis rules'))
+W.append(dict(key='refusal.BASIS_REFUSED', en='These documents cannot be used here: one of them rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hunch. Take that one out, or choose a document that does, then try again. Nothing was written.', protected=False, note='DEC-342: evidence leg refused by basis rules; B411 I-22: plain words and a way forward'))
 W.append(dict(key='refusal.BASIS_VERSION_REFUSED', en='This basis version breaks the rules for how a basis is built, so it was declined. Fix the points listed and try again. Nothing was written.', protected=False, note='DEC-342: basis version failed validation findings'))
 W.append(dict(key='refusal.BELOW_PROJECT_STRENGTH', en="A load-bearing finding doesn't reach the strength of evidence your project requires. Strengthen it or mark it supporting. Nothing was published.", protected=False, note="DEC-342: load-bearing finding below project's evidence bar"))
 W.append(dict(key='refusal.BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD', en="The bias acknowledgement is identical to the previous edition's. Write it fresh for this edition. Nothing was published.", protected=False, note='DEC-342: bias acknowledgement unchanged from prior edition'))
@@ -3982,7 +3982,7 @@ W.append(dict(key='refusal.NO_SUCH_PATTERN', en='No built-in pattern has that na
 W.append(dict(key='refusal.NO_SUCH_REFERENCE', en="That captured document's reading holds no such reference, or you cannot see the document, so there is nothing to resolve or read. Nothing was written.", protected=False, note='DEC-342: reference or capture digest not found for resolving'))
 W.append(dict(key='refusal.NO_SUCH_RELATION', en='No declared step with that number is held, or it has been withdrawn. Nothing was written.', protected=False, note='DEC-342: relation id unknown or already withdrawn'))
 W.append(dict(key='refusal.NO_SUCH_ROW', en='The table has no row with that number, so no money fact was recorded for it. Nothing was written.', protected=False, note='DEC-342: money ingest row number not in table'))
-W.append(dict(key='refusal.NO_SUCH_RULE', en="No active rule in your places' rules states that deadline for this kind of action, so none was set. Name a deadline those rules list. Nothing was written.", protected=False, note="DEC-342: deadline rule missing or unknown for the action's kind"))
+W.append(dict(key='refusal.NO_SUCH_RULE', en="No rule in your places' rules states a deadline for this kind of action, so none was set. Pick one of the deadlines your rules do list, in the box below, or see your places' rules. Nothing was written.", protected=False, note="DEC-342: deadline rule missing or unknown for the action's kind; B411 E6: a box to name the deadline and a door"))
 W.append(dict(key='refusal.NO_SUCH_SET', en="That set of money figures is not in your team's record. Check which set you meant. Nothing was written.", protected=False, note='DEC-342: money set id unknown'))
 W.append(dict(key='refusal.NO_SUCH_STEP_SOURCE', en='No source by that number is attached to that step where you can see it, so none was withdrawn. Nothing was written.', protected=False, note='DEC-342: withdraw step source unknown, withdrawn or unseen'))
 W.append(dict(key='refusal.NO_SUCH_TABLE', en='No table matches that fingerprint here, or you may not see it, or its contents are not held. Nothing was written.', protected=False, note='DEC-342: table for binding or ingest not found or hidden'))
@@ -6244,6 +6244,149 @@ W.append(dict(key='screen.watching.sweepdef.ref.machine1', en='The assistant can
 W.append(dict(key='screen.watching.sweepdef.ref.machine2', en='Only a member can, so nothing was changed.', protected=False, note='DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders.'))
 W.append(dict(key='screen.watching.sweepdef.scope', en='Sites: {hosts} · The most it may fetch in one run: {budget}', protected=False, note='DEC-382: B406 C56: watching: scope and budget of the sweep shown before ratifying; sites and budget are placeholders. Sample names and counts are placeholders.'))
 W.append(dict(key='screen.watching.sweepdef.refd', en='When it is refused', protected=False, note='DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders.'))
+
+# --- DEC-384: B411 live walk, capture / held / inbox / doorbell / document / find
+REWRITE.update({
+  'screen.held.ineligible.alone': "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
+  'screen.inbox.ladder.basis': "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
+  'screen.doorbell.received': "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
+  'screen.capture.address.existed': "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
+  'screen.document.cite.question': 'Cite in which question',
+  'screen.finder.widen': 'Documents holding at least one of the words: {n}.',
+  'screen.open-file.safe.ready': 'The safe view is open below: each page as a picture, so nothing in it can run.',
+  'screen.open-file.note.line': '{tool}: {result}',
+})
+def w411(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-384: B411 ' + note))
+w411('screen.capture.address.working.head', 'While it is being fetched', 'A1: progress while capturing')
+w411('screen.capture.address.working', "Fetching the page. This can take up to 25 seconds, longer if you chose to keep it as a visitor saw it. Keep this page open; the result appears here.", 'A1: progress while capturing; the code shows it from Capture until the result, beside the button')
+w411('screen.capture.address.untitled', 'A {kind} from {site}', 'I-03: a capture is named by its title, or failing that by its site and kind; never the file part of its address')
+w411('screen.capture.address.existed.open', 'Open it', 'I-04: the door to the document already held')
+w411('screen.doorbell.reference', 'Your reference: {reference}', 'I-20: the receipt gives something to keep')
+w411('screen.doorbell.after.head', 'After you hand it over', 'I-20')
+w411('screen.document.cite.option', '{question} ({project})', 'I-11, A6: a question in the list is told apart by its project')
+w411('screen.document.cite.choose', 'Choose a question', 'I-11, A6: the list never starts blank')
+w411('screen.document.unwatched.head', "If this address isn't being watched", 'I-35')
+w411('screen.document.unwatched', "This address isn't being watched, so there is nothing to check yet. Watch it, and each new version found is kept beside this one.", 'I-35: shown instead of Check for a new version now while the address is not watched')
+w411('screen.finder.noresult.partial', 'No document holds all of the words “{q}” together.', 'I-14: shown instead of Nothing your team holds matches when some documents hold some of the words')
+w411('screen.finder.partial.head', 'When some documents hold only some of the words', 'I-14')
+w411('screen.open-file.tool.clamav', 'Built-in scanner', 'I-18: the scanner is named for what it is, never clamav')
+w411('screen.open-file.result.not_scanned', 'Not scanned yet', 'I-18: the scanner state in plain words')
+w411('screen.open-file.result.clean', 'Clean: nothing found', 'I-18')
+w411('screen.open-file.result.found', 'Something was found', 'I-18')
+w411('screen.open-file.result.failed', 'Could not be scanned just now', 'I-18')
+# ---- B411 live walk, group 2 (question, standard, people, case/review/ceremony, plan/action/due date): DEC-384
+REWRITE.update({
+    'screen.standard.text': 'The document that states it',
+    'screen.standard.text.help': 'Pick the document that states the requirement, as captured. The passage is the whole document until you select its words.',
+    'screen.review-copy.nodraft': 'There is no draft to share yet. Make a draft of the case first, then share it.',
+    'screen.case-editor.rung.notmet': 'Checked: something is missing',
+    'screen.plan.support.hypothetical': 'Assumed: not shown yet',
+    'screen.plan.col.ends': 'Legal deadline',
+    'screen.plan.noend': 'No legal deadline',
+    'screen.start-send.noclock': "No legal deadline for this kind of action (your team's profile names none)",
+})
+def n(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-384: B411 ' + note))
+# question: strength sentences in plain words (I-22, I-23, A8), code ids strength.arithmetic.*
+n('strength.arithmetic.unrated_no_leg_on_any_set', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.', 'I-23/A8: strength sentence in plain words; the code draws each document by its title, once')
+n('strength.arithmetic.unrated_no_leg_on_this_axis', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.', 'I-23/A8: strength sentence in plain words')
+n('strength.arithmetic.unrated_this_inquiry_rests_on_nothing', 'Not graded yet on {axis}: this question rests on nothing here.', 'I-23/A8: strength sentence in plain words')
+n('strength.arithmetic.present_and_not_yet_load_bearing', 'Listed, but not counted yet: {legs}.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_computed_strength_a_leg', 'There is no strength for {axis} yet: a document that every set of reasons needs is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_computed_strength_every_set', 'There is no strength for {axis} yet: every set of reasons this rests on is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_computed_strength_stopped', 'There is no strength for {axis} yet: {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_stronger_than_the_weakest', '{axis} {grade}: no stronger than the weakest {axis} grade it rests on, which is {leg}{via}.', 'I-23/A8: plain words')
+n('strength.arithmetic.strongest_of_the_sets_of_reasons', '{axis} {grade}: the strongest of the {count} sets of reasons that each carry this conclusion on their own is {set}, and it is no stronger than its weakest {axis} grade, which is {leg}{via}.', 'I-23/A8: plain words')
+n('strength.arithmetic.that_leg_is_needed_by_every', 'That document is needed by every one of those sets, so no set can be stronger than it.', 'I-23/A8: plain words')
+n('strength.arithmetic.further_sets_are_undetermined', '{count} further sets are undetermined and could only be stronger, never weaker: {sets}.', 'I-23/A8: plain words')
+n('strength.arithmetic.one_further_set_is_undetermined', '{count} further set is undetermined and could only be stronger, never weaker: {sets}.', 'I-23/A8: plain words')
+# standard: the crumb
+n('screen.standard.crumb', 'Standard: {name}', 'I-30: the last crumb of a standard says which one the member is on; the project crumb is the project\'s title')
+# people: an organization
+n('screen.person.same.org', 'Same organization?', 'I-32: heading for an organization')
+n('screen.person.same.holds.org', 'Records claimed to be this organization stay linked, never merged; each claim is graded and anyone can see its reason or withdraw it with theirs.', 'I-32')
+n('screen.person.same.claimed.org', 'claimed the same organization; the records stay linked, never merged', 'I-32')
+n('screen.person.same.because.org', 'claimed the same organization, grade {grade}, because {basis}', 'I-32')
+n('screen.person.candidates.org', 'Records that might be the same organization. These are not claims: a member decides.', 'I-32')
+n('screen.person.claim.same_as.org', 'It is the same organization', 'I-32')
+n('screen.person.claim.not_same_as.org', 'It is not the same organization', 'I-32')
+n('screen.person.claim.kind.same_as.org', 'claimed the same organization', 'I-32')
+n('screen.person.claim.kind.not_same_as.org', 'claimed not the same organization', 'I-32')
+n('screen.person.claim.kind.unsure.org', 'unsure whether the same organization', 'I-32')
+n('screen.person.kind.help.org', 'For an organization a fact can be its name, address or contact. Born, died and where someone lives or works apply to people only.', 'I-32: under "What kind of fact" for an organization, which offers only name, address and contact')
+# case, review copy, ceremony
+n('review.title.draft', 'Draft: {title}', 'L14/I-37/C3/D1/I-39/I-29: the heading of a draft that names no case; the title is its scope or subject')
+n('review.title.untitled', 'A draft with no case named yet', 'L14: the heading when the draft has no scope or subject either')
+n('review.body.nocase', 'This draft does not name a case yet. Which case it becomes is settled when it is published.', 'L14: the body text under that heading, in plain words')
+n('review.index.derived_case_identity', 'a draft that does not name a case yet; which case it becomes is settled when it is published', 'L14: the code\'s own id for the identity fragment; the heading is review.title.draft, the sentence review.body.nocase')
+n('screen.review-copy.nodraft.go', 'Make a draft', 'I-29/C1: the door beside "There is no draft to share yet", to the case editor')
+n('screen.case-editor.comments.go', 'Read what outside readers said ({n})', 'C4: on the case screen, a link to the comments and acknowledgements on its review copy')
+n('screen.case-editor.comments.none', 'No outside reader has commented yet.', 'C4: the case screen when its review copy has no comment or acknowledgement')
+n('screen.review-copy.acked', '{who}, an outside reader, read the draft and acknowledged it, {date}', 'C4: an acknowledgement in the comments of a review copy')
+n('refusal.PUBLISH_NO_FINDING', 'This draft has no finding to publish. Add a finding to the case, then publish again.', 'D1/L16: publishing a draft with no finding; case-authoring\'s own code, proposed as PUBLISH_NO_FINDING (the walk fixes none); a door "Add a finding" beside it')
+n('screen.ceremony.gate.addfinding', 'Add a finding', 'D1/L16: the door beside both refusals about a draft with no finding, to where findings are added in the case editor')
+# plan, action, due date
+n('screen.plan.option.unnamed', 'Option {n}', 'E1: an option with no summary is named by its place in the list, never by its id')
+n('screen.plan.phase.unnamed', 'Phase {n}', 'E1: a phase with no name is named by its place in the list, never by its id')
+n('screen.plan.judge.notdue', 'You can judge this checkpoint from {date}.', 'E1: drawn in place of the Judge control until the checkpoint is due')
+n('law.pick', 'Choose a law', 'E3: the one list of laws, shared by "Change the law" and "Propose another law"')
+n('screen.due-date.rule.pick', 'A deadline your rules list', 'E6: the box beside the refusal "No rule in your places\' rules states a deadline", to pick a listed deadline')
+n('screen.due-date.rule.help', 'Pick one of the deadlines your places\' rules state, then work out the due date again.', 'E6')
+n('screen.due-date.rule.go', "See your places' rules", 'E6: the door to the rules, in Settings')
+
+
+n('screen.case-editor.nocase.summary', 'A draft that names no case yet', 'L14: the mock\'s label for the heading of a draft with no case')
+n('screen.due-date.rule.summary', 'When your rules state no deadline for this kind of action', 'E6: the label of the refusal and its box')
+n('screen.review-copy.nodraft.summary', 'When there is no draft yet', 'I-29: the label of the refusal and its door')
+# --- DEC-384 (BOB's B411, the live walk of 0.86.0): Queue and Home, Team and settings, the marks under buttons. The code reads each key below by its id.
+def w411(key, en, note=''):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-384: B411 ' + note))
+REWRITE.update({
+  'shell.card.open': 'Press or tap to open it.',   # B411 T-10: a click is not the only way in
+  'screen.home.move.anyone': 'any member can take the next step',   # B411 G1: a queue item whose move is nobody in particular
+})
+# L27 / T-02: step 4 of "Welcome a new member" (WIZ-7db08189cc0e58c3) never opens a subject screen without its subject
+w411('wizard.WIZ-7db08189cc0e58c3.step4.none.what', "Your team has no question yet. A question is what a project sets out to answer from documents anyone can check; its strength against the project's bar says how well they back the answer, and “Undetermined” means they can't settle it.", 'L27 T-02: step 4 when the team has no question: shown in place, without opening a screen')
+w411('wizard.WIZ-7db08189cc0e58c3.step4.none.why', 'Open a question from any project when you are ready. Nothing else in this welcome waits on it.', 'L27 T-02: step 4 when the team has no question')
+w411('wizard.WIZ-7db08189cc0e58c3.step4.none.door', 'Open a question', 'L27 T-02: the step\'s button when the team has no question; it opens the project choice, then a new question')
+# G1, G2, T-15: an item says what to do and names the thing by its title
+w411('queue.unkeyed.summary', 'Something on {title} waits for your act', 'G1 G2: the sentence for a to-do whose kind has no sentence of its own; {title} the document, project or question as it is named (never the file part of an address)')
+w411('queue.unkeyed.detail', 'Open it to see what is asked. It stays in your queue until it is done.', 'G1 G2: under queue.unkeyed.summary')
+w411('queue.act.open.help', 'Opens the screen this item concerns. The item stays in your queue until you have done what it asks.', 'G1: the Open link on an item: it opens, it does not resolve')
+w411('queue.act.dothis.help', 'Does what this item asks, on the screen it concerns. It leaves your queue when done.', 'G1: a button that names its act and also resolves the item, such as Open the check')
+w411('queue.signer-self-registered.members', 'Open Members', 'T-15: a link on the signing-key item to Members, where the key is withdrawn')
+# G4: snooze is a date picker; the answered list says what was answered
+w411('screen.queue.snooze.pick', 'Choose the day it comes back. Tomorrow is the earliest.', 'G4: help under the date picker of Snooze to a date')
+w411('queue.answered.done', 'Marked done: {item}', 'G4: an answered row, taskresolve')
+w411('queue.answered.dismissed', 'Dismissed {item}: “{reason}”', 'G4: an answered row, proposedispose with its reason')
+w411('queue.answered.dismissed.noreason', 'Dismissed {item}', 'G4: an answered row, proposedispose when no reason was kept')
+w411('queue.answered.muted', 'Muted {kind}', 'G4: an answered row, queuemute; {kind} as queue.kind.* names it')
+w411('queue.answered.generic', 'Answered {item}', 'G4: an answered row for any other act, so the row never shows only a name and a day')
+# T-05: what "look after the team's Civicsmith" grants, said before it is granted
+w411('screen.members.cap.administer.confirm.head', 'Make {who} an administrator?', 'T-05: the confirmation before a grant that includes administering')
+w411('screen.members.cap.administer.confirm', "Choosing “look after the team's Civicsmith” makes {who} an administrator. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.", 'T-05: the confirmation')
+w411('screen.members.cap.administer.confirm.yes', 'Make {who} an administrator', 'T-05: the confirming button')
+w411('screen.members.cap.administer.confirm.no', 'Go back', 'T-05: the other button')
+# T-06: after "Stand down as owner"
+w411('project.owners.standdown.opened', 'You asked to stand down as an owner. The vote is open: you stay an owner until the other owners agree ({awaiting}).', 'T-06: on the owner\'s own row at once, and until the vote ends; {awaiting} the other owners by name')
+w411('project.owners.agree.remove', 'Agree: let {who} stand down as owner', 'T-06: the button on the other owners\' view of the row')
+w411('screen.translations.wrong.sample', '“Asks for a reason” → “Pide una razón”', 'T-07: the sample row of Marked wrong by members; the word is the mark now named Asks for a reason (a sample, not a word the product draws)')
+# T-14: plain words for the file-scanner catalogue (the code's own ids)
+w411('file-scanner.catalogue.icap_server_address_host_or_host', 'Address of your scanning server, as a name or name:port. Without a port, 1344 is used (11344 when connecting over TLS).', 'T-14')
+w411('file-scanner.catalogue.any_icap_server_rfc_3507', 'any scanning server that speaks ICAP, the usual way virus scanners take files', 'T-14')
+w411('file-scanner.catalogue.microsoft_entra_tenant_id', "Microsoft Entra tenant ID (the ID of your organization's Microsoft directory)", 'T-14')
+w411('file-scanner.credential.client_id', 'Client ID', 'T-14: replaces the field name client_id; the code names credential fields by these keys')
+w411('file-scanner.credential.client_secret', 'Client secret', 'T-14: replaces the field name client_secret')
+w411('file-scanner.credential.api_key', 'API key', 'T-14: replaces the field name api_key')
+w411('file-scanner.credential.api_secret', 'API secret', 'T-14: replaces the field name api_secret')
+# T-18: the hosting line composed by the code read "by set at setup"
+w411('screen.group.hosting.now.setup', "Recorded when your team's Civicsmith was set up, on {date}:", 'T-18: used in place of screen.group.hosting.now when the recorder is the setup')
+w411('screen.group.hosting.now.system', 'Recorded by Civicsmith itself on {date}:', 'T-18: used in place of screen.group.hosting.now when the recorder is the system')
+# T-19, T-20, H2
+w411('screen.join.invite.reread', 'Read the invitation again', 'T-19: the label of the Read the invitation button once the invitation has been read')
+w411('project.visibility.start.required', 'Choose who can find this project before you start it. Nothing was started.', 'T-20: the refusal when Start the project is pressed with neither choice made')
+w411('crumb.project.unjoined', 'A project you have not joined', 'H2: the path\'s name for a project whose title this member cannot read; never its identifier')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
