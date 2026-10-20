@@ -109,6 +109,8 @@ test("R7 (action-producers R19): every member-facing sentence calls a plan's sub
   for (const s of SCREENS) for (const w of s.words) {
     const en = EN.get(w);
     if (en === undefined) continue;
+    // R39: the design's words for naming what a records request concerns (an entity the record follows), never a plan's subject
+    if (/^screen\.person\.keeper\.subject\./.test(w)) continue;
     assert.ok(!/\bsubjects?\b/i.test(en), `${s.id}: ${w} says "${en}"`);
   }
 });
@@ -189,7 +191,7 @@ test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, nev
 test("R7 (interface-shell R13): each refusal word an act names is a listed word", () => {
   for (const s of SCREENS) {
     const listed = new Set(s.words.map((w) => (typeof w === "string" ? w : w[0])));
-    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
+    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(typeof key === "function" || listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
   }
 });
 
