@@ -159,9 +159,9 @@ const textOf = (s) => String(s).replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").t
 /* ---------- R110 ---------- */
 
 /* a stand-in for `standard` (a real registry id) whose `place` answers what the test sets (built from source: a screen's function is self-contained) */
-const standardWith = (placed) => ({ id: "standard", words: [], reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: new Function("view", `return ${JSON.stringify(placed)};`) });
-const stepsOf = async (placed) => {
-  const p = await boot({ screens: [standardWith(placed)], path: "/app/standard/S-1" });
+const standardWith = (placed, words = []) => ({ id: "standard", words, reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: new Function("view", `return ${JSON.stringify(placed)};`) });
+const stepsOf = async (placed, words) => {
+  const p = await boot({ screens: [standardWith(placed, words)], path: "/app/standard/S-1" });
   return p.root().querySelector(".cs-crumbs").textContent.split("›").map((t) => t.trim());
 };
 
@@ -185,4 +185,23 @@ test("R110 control: a place answering a string, {project} alone or an empty last
   assert.equal((await stepsOf("a string")).pop(), textOf(word("screen.standard.name")));
   const q = await boot({ screens: [{ id: "calculation", words: [], reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: () => ({ project: { id: "P", title: "T" }, last: "ignored" }) }], path: "/app/calculation/C-1" });
   assert.equal(q.root().querySelector(".cs-crumbs").textContent.split("›").pop().trim(), textOf(word("screen.calculation.name")));
+});
+
+/* ---------- R110: projectKey (B22; screens-publish R68) ---------- */
+
+test("R110 place answering projectKey draws that word in place of the project's title, {name} the title escaped, the last step unchanged", async () => {
+  const project = { id: "PROJ-1", title: "Lease <b>&" };
+  const steps = await stepsOf({ project, last: "AB 32", projectKey: "crumb.project.unjoined" }, ["crumb.project.unjoined"]);
+  assert.equal(steps.length, 3);
+  assert.equal(steps[1], textOf(word("crumb.project.unjoined")));
+  assert.equal(steps[2], word("screen.standard.crumb", { name: "AB 32" }));
+  /* a key whose word holds {name} gets the title, as data */
+  const named = await boot({ screens: [standardWith({ project, projectKey: "screen.standard.crumb" }, ["screen.standard.crumb"])], path: "/app/standard/S-1" });
+  assert.ok(named.root().querySelector(".cs-crumbs").textContent.split("›")[1].trim().endsWith("Lease <b>&"), "the title, as typed, fills {name}");
+  assert.ok(named.root().querySelector(".cs-crumbs").innerHTML.includes("Lease &lt;b&gt;&amp;"), "the title is data, never markup");
+});
+
+test("R110 control: a place answering no projectKey, an unknown key or a non-string draws the project's title as before", async () => {
+  const project = { id: "PROJ-1", title: "Coliseum lease" };
+  for (const projectKey of [undefined, "no.such.word.key", 7, ""]) assert.equal((await stepsOf({ project, last: "AB 32", projectKey }))[1], "Coliseum lease");
 });
