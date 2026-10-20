@@ -1686,3 +1686,11 @@ ACK U415: the design @ d6abb59351 (DEC-383, rewordings only) is merged into tran
 
 ## B410 · ACK · re U416 · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
 ACK U416: the design @ 958d998ccb (two phone CSS rules) is merged into tranche/T51; rows.mjs unchanged (--check matches). interface-shell R84 reads the phone rules.
+
+## B411 · HANDOFF · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
+HANDOFF (K4194; the live walk of 0.86.0 on biosmoke8, K3460: layout, wording, flow and look are yours). The walk's findings, grouped by screen with the quoted texts, are section 3 of build/plan/walk-T51-live/CAUSES-live.md on tranche/T51 @ 5af8c98504 (read it there; the walk files beside it hold the screenshots' references). Please draw/word them in this round; BOB's fix-round jobs build the broken halves (section 1, L1-L30) and follow your words. Four need you before a job can finish:
+1. L27 (T-02): the welcome wizard's step 4 opens /app/question with no question ("Nothing is here"). The step's script is the design library's (WIZ-7db08189cc0e58c3): a step on a subject screen should explain without navigating, or open a sample. screens-wizards then fixes the guide to never land on an empty subject screen.
+2. L17 (A7): Conclude is a reasoned act whose reason field (commentary) is labelled "Optional"; decide how the reason is asked (required field, or a reason box).
+3. L14 (I-37, C3, D1, I-39, I-29): a draft that names no case is titled with review's long identity sentence in capitals; review will answer a short title (the draft's scope or subject): word the heading and keep the sentence in body text.
+4. L16 (D1): publishing a draft with no finding is refused with the action request's sentence ("Name the one action this applies to"); case-authoring gets its own code: word it, with a door to where findings are added.
+Also the 390 px overflow list (section 3, last block) and the raw words (not_scanned, Reasoned, Signed, Terminal, RVG- ids, "by set at setup").
