@@ -72,3 +72,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B8 · CHANGE
 
 CHANGE (K4197): the design @ 840099da7c (DEC-384) is merged into tranche/T51 after your START; it rewords the welcome wizard's step 4 (WIZ-7db08189cc0e58c3: new step4.none.* rows; L27) in the library. Re-take the registry, library and front doors at 840099da7c instead of 958d998ccb (R45 amended by BOB to that commit): merge the tranche branch into yours first.
+
+## B9 · CHANGE
+
+CHANGE (K4198; supersedes B8's commit): your J7 re-took at 958d998ccb, but the design moved since: registry.json and library.json both differ at 1cc4a957f0 (DEC-384's L27 step 4 and acts; DEC-385), merged into tranche/T51. Merge the tranche branch into yours and re-take registry, library and front doors at 1cc4a957f0 (R45 amended to it); a library script that changed gets its next version by R42's rule. The expertiseconfirm duplicate: carried once is right; reported to the design. Then COMPLETE again.
