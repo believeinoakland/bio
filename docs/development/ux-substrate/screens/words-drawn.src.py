@@ -6595,7 +6595,7 @@ ROWS = [
 ('act.projectownerremove.label.queue', 'Agree to remove an owner', 'B422: the button on the owner-vote item when the vote is to let an owner stand down (the add has act.projectowneradd.label.queue, "Add an owner")'),
 # B426: the keys the daily screens guessed
 ('screen.queue.defer', 'Defer', 'B426: the button beside Dismiss with a reason on a hint or finding in the Queue; it puts the item aside until a day with a reason'),
-('screen.queue.bringback', 'Bring back', 'B426: the button on a snoozed or deferred row that returns the item to the Queue now'),
+('screen.queue.bringback', 'Bring back', 'B426: the button on a snoozed or deferred row that returns the item to the Queue now; op queuesnooze with {case, clear} (queue R21; B430, K4249)'),
 ('screen.queue.snoozed.head', 'Snoozed', 'B426: the section of What you answered that holds items hidden until a day you chose'),
 ('screen.queue.snoozed.holds', 'Items you snoozed until a day you chose. They return on that day, or now with Bring back.', 'B426: help under the Snoozed heading'),
 ('screen.queue.snoozed.until', 'comes back {date}', 'B426: a snoozed row'),
@@ -6609,7 +6609,7 @@ ROWS = [
 ('screen.action.what.came.back', 'What came back', 'B424 1: choice between a reply and a silence'),
 ('screen.action.a.reply.came', 'A reply came', 'B424 1: the first choice; the second is screen.action.no.reply.came.by.the.date'),
 ('screen.action.how.it.came', 'How it came', 'B424 1: the reply\'s medium'),
-('screen.action.reply.medium.email', 'Email', 'B424 1: medium option (token email)'),
+('screen.action.reply.medium.email', 'Email', 'B424 1: medium option; medium is free text up to 500 characters (actions R13) and the token email is sent as its value (B430, K4249)'),
 ('screen.action.reply.medium.letter', 'Letter', 'B424 1: medium option (token letter)'),
 ('screen.action.reply.medium.portal', "The city's portal", 'B424 1: medium option (token portal)'),
 ('screen.action.reply.medium.person', 'In person', 'B424 1: medium option (token in_person)'),
@@ -6619,7 +6619,7 @@ ROWS = [
 ('screen.action.reply.follows.none', 'Nothing earlier', 'B424 1: option of It follows'),
 ('screen.action.reply.follows.request', 'The request, sent {date}', 'B424 1: option of It follows naming the request'),
 ('screen.action.reply.follows.reply', 'The {kind}, {date}', 'B424 1: option of It follows naming an earlier reply; {kind} the stage word with its first letter lower case'),
-('screen.action.reply.stage.none', 'Not stated', 'B424 1: stage option (no stage)'),
+('screen.action.reply.stage.none', 'Not stated', 'B424 1: stage option meaning the field is omitted; no none token exists (B430, K4249)'),
 ('screen.action.reply.stage.acknowledgement', 'Acknowledgment', 'B424 1: stage option (token acknowledgement)'),
 ('screen.action.reply.stage.fee_estimate', 'Fee estimate', 'B424 1: stage option (token fee_estimate)'),
 ('screen.action.reply.stage.fee_waiver_decision', 'Decision on a fee waiver', 'B424 1: stage option (token fee_waiver_decision)'),
@@ -6628,7 +6628,7 @@ ROWS = [
 ('screen.action.reply.stage.denial', 'Denial', 'B424 1: stage option (token denial)'),
 ('screen.action.reply.stage.appeal_decision', 'Decision on an appeal', 'B424 1: stage option (token appeal_decision)'),
 ('screen.action.reply.stage.court_decision', 'Court decision', 'B424 1: stage option (token court_decision)'),
-('screen.action.reply.outcome.none', 'Not decided', 'B424 1: outcome option (no outcome)'),
+('screen.action.reply.outcome.none', 'Not decided', 'B424 1: outcome option meaning the field is omitted (no none token); offered only on received entries, and not offered where outcome is required: fee_waiver_decision, denial, appeal_decision, court_decision (B430, K4249)'),
 ('screen.action.reply.outcome.granted', 'Granted', 'B424 1: outcome option (token granted)'),
 ('screen.action.reply.outcome.denied', 'Denied', 'B424 1: outcome option (token denied)'),
 ('screen.action.reply.outcome.partial', 'Granted in part', 'B424 1: outcome option (token partial)'),
@@ -6739,6 +6739,15 @@ ROWS = [
 ]
 for _k, _e, _n in ROWS:
     w387(_k, _e, _n)
+
+# DEC-389: B430 (K4249), BOB's answers to DEC-387's owed items
+W.append(dict(key='act.release.label.start-send', en='Release this sentence', protected=True, note='DEC-389: B430 (2): part of approving, filingapprove with release [{ord, reason}] (filings R34, screens-action R42); not the release act'))
+W.append(dict(key='screen.action.sent.stage.request', en='The request', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token request)'))
+W.append(dict(key='screen.action.sent.stage.fee_waiver_request', en='Request for a fee waiver', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token fee_waiver_request)'))
+W.append(dict(key='screen.action.sent.stage.appeal', en='Appeal', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token appeal)'))
+W.append(dict(key='screen.action.sent.stage.court_filing', en='Court filing', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token court_filing)'))
+W.append(dict(key='screen.updates.health.runtime.unit.ms', en='milliseconds', protected=False, note='DEC-389: B430 (4): runtime unit ms (instance-setup R34), filling {unit}'))
+W.append(dict(key='screen.updates.health.runtime.unit.bytes', en='bytes', protected=False, note='DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit'))
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
