@@ -217,7 +217,7 @@ export const action = Object.freeze({
       const stageOpts = P.replyChoices(cs, view, "stage"), outcomeOpts = P.replyChoices(cs, view, "outcome");
       // R38 (B15 (1)): the reply's document is picked from the project's held captures (`heldcaptures`, capture R77, scoped by
       // `project`): each by its title and the day it was collected, the digest its capture is filed under as the value
-      const held = a.project ? P.later(cs, view, "held", "heldcaptures", { project: a.project, limit: "500" }, "") : null;
+      const held = a.project && cs.can("actioncorrespond") ? P.later(cs, view, "held", "heldcaptures", { project: a.project, limit: "500" }, "") : null;
       const heldRows = held && held.state === "ok" && held.value && Array.isArray(held.value.held) ? held.value.held : [];
       const docOpts = heldRows.filter(function (r) { return r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256; }).map(function (r) {
         return { value: r.capture.sha256, key: "screen.docket.capture.option", fills: { title: r.title || r.bundle_id || "", date: { html: r.collected_since ? cs.date(r.collected_since) : "" } } };
