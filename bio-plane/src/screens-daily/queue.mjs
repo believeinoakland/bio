@@ -100,11 +100,10 @@ export const queue = Object.freeze({
           return own(cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) }));
         }).join("");
       }
-      // R68: Defer beside Dismiss, each asking the member's reason in place; one act, the button's `data-to` says which. Defer's words are
-      // the question screen's held "Defer it: come back to it later" until a queue row exists.
+      // R68: Defer beside Dismiss, each asking the member's reason in place; one act, the button's `data-to` says which.
       if (op === "proposedispose") {
         return cs.act(op, { label: "act.proposedispose.label.queue", data: Object.assign({}, data, { to: "dismissed" }) })
-          + cs.act(op, { label: "screen.question.say004", data: Object.assign({}, data, { to: "deferred" }) });
+          + cs.act(op, { label: "screen.queue.defer", data: Object.assign({}, data, { to: "deferred" }) });
       }
       const fields = FIELDS[op];
       if (!fields) return OWN.indexOf(op) >= 0 ? own(cs.act(op, { label: "act." + op + ".label.queue", data: data })) : cs.act(op, { label: "act." + op + ".label.queue", data: data });
@@ -223,7 +222,8 @@ export const queue = Object.freeze({
       const cas = caseOf(it);
       // R75: the decisions the record routes to a member: the authority form, an endorsement, an owner vote, an expertise.
       const rt = view.parts.routed().draw(cs, it, { screen: "queue", id: "qr-" + (seq++), ref: iw.subject(cs, it), mark: own });
-      if (rt) return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"), rt.summary + '<span class="meta">' + rt.detail + "</span>" + '<span class="mk-acts">' + rt.acts + "</span>", it.due ? dueOf(it.due) : "", "");
+      // A decision with no act of this screen (a vote to remove an owner) leads to its subject's screen with "Open".
+      if (rt) return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"), rt.summary + '<span class="meta">' + rt.detail + "</span>" + '<span class="mk-acts">' + (rt.acts || (iw.open(it) ? openLink(iw.open(it)) : "")) + "</span>", it.due ? dueOf(it.due) : "", "");
       // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
       const wd = iw.words(cs, it);
       return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"),
@@ -401,8 +401,8 @@ export const queue = Object.freeze({
     { op: "queuesnooze", label: "act.queuesnooze.label.queue",
       send: function (view, el, cs, extra) {
         if (el.dataset.multi) return view.parts.queueStates().run("queuesnooze", view, el, cs, extra);
-        // R69: "Bring back" clears the snooze of the case; R79 (c): a day before tomorrow is not sent.
-        if (el.dataset.clear) return { body: { case: el.dataset.project, clear: true } };
+        // R69: "Bring back" clears the snooze of the case (`clear: "1"`, queue R21); R79 (c): a day before tomorrow is not sent.
+        if (el.dataset.clear) return { body: { case: el.dataset.project, clear: "1" } };
         const day = view.parts.queueStates().dayOf(cs, el.dataset.f + "-until");
         return day.refuse ? day : { body: { case: el.dataset.project, until: day.until } };
       } },

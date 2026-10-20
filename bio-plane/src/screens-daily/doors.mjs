@@ -3,7 +3,8 @@
    (`heldcaptures`, `inbox`); `draw(cs, view, screen)` answers the doors' HTML for `screen` ("home" or "queue"): a door to `held`
    with the number held, when `heldcaptures` answers any (`act.release.label.<screen>`, the registry's "Vouch for photos"), and a
    door to `inbox` with the number of knocks still new. Neither is drawn at zero; a failed read is drawn failed in the door's place,
-   never as none. Self-contained: it refers only to its parameters. */
+   never as none. On Home, one status line (`screen.home.waiting.counts`) says both numbers, a zero as 0, whenever either door is
+   drawn and both reads answered. Self-contained: it refers only to its parameters. */
 
 export function doors() {
   const none = function (key, keep) {
@@ -24,6 +25,11 @@ export function doors() {
     };
     const held = view.data.held;
     const inbox = view.data.inbox;
+    const count = function (v, key, keep) {
+      return v && v.state === "ok" && v.value && Array.isArray(v.value[key]) ? v.value[key].filter(keep || function () { return true; }).length : v && v.state === "empty" ? 0 : null;
+    };
+    const nHeld = count(held, "held");
+    const nNew = count(inbox, "inbox", function (k) { return k && k.status === "new"; });
     if (held && held.state === "failed") rows.push(cs.state("held", null));
     else if (held && held.state === "ok" && held.value && Array.isArray(held.value.held) && held.value.held.length) {
       door(held, "/app/held", "act.release.label." + screen, "screen.held.name", held.value.held.length, "hold");
@@ -33,7 +39,10 @@ export function doors() {
       const fresh = inbox.value.inbox.filter(function (k) { return k && k.status === "new"; }).length;
       if (fresh) door(inbox, "/app/inbox", "screen.inbox.name", "", fresh, "capture");
     }
-    return rows.length ? cs.sheet(rows.join("")) : "";
+    // The status line (Home only): both counts, a zero shown as 0, drawn only when something waits and both reads answered.
+    const line = screen === "home" && nHeld !== null && nNew !== null && (nHeld || nNew)
+      ? '<p class="mk-sub">' + cs.w("screen.home.waiting.counts", { held: String(nHeld), inbox: String(nNew) }) + "</p>" : "";
+    return rows.length ? line + cs.sheet(rows.join("")) : "";
   };
   return { reads: reads, draw: draw };
 }

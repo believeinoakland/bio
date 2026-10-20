@@ -1,20 +1,20 @@
-/* The decisions the record routes to a member (R75; C62, DEC-378, K4169) on Home and the queue, on the real served page. The tasks'
+/* The decisions the record routes to a member (R75; C62, DEC-378, K4169) on Home and the queue, on the real served page. The owners'
    declared ops are registered first (`taskdecide` is `tasks`' alone), so the authority form is drawn; every request is checked by the
-   harness against the owners' declarations. Every sentence is asserted as `word(key, vars)` (R34), and the labels no key holds yet
-   are located by their field ids, so no test holds a sentence's English. */
+   harness against the owners' declarations. Every sentence is asserted as `word(key, vars)` (R34), so no test holds a sentence's English.
+   The registration is asynchronous, so the page and the harness are imported after it (a static import would load the screens first). */
 import "./register-tasks.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, text, ops, button, press, beside, last, main, word, hasWord, withScreens } from "./page.mjs";
-import { ADMIN } from "../interface-shell/harness.mjs";
+const { open, ok, text, ops, button, press, beside, last, main, word, hasWord, withScreens } = await import("./page.mjs");
+const { ADMIN } = await import("../interface-shell/harness.mjs");
 
 const NONE = { ungrouped: true, ancestors: [] };
 const AUTH = { id: "TSK-7", class: "OBLIGATION", kind: "authority-undetermined", case: NONE, assignee: "mai", summary: "Say who issued the document",
   subject: { kind: "bundle", id: "INF-7", title: "Permit application" }, options: [], door: ["taskdecide", "taskforward", "taskresolve"], disposition: { available: false, instead: "taskdecide" } };
 const ENDORSE = { id: "OBLIGATION::endorsement-owed::admin::M-9::mai", class: "OBLIGATION", kind: "endorsement-owed", case: NONE, assignee: "mai",
-  subject: { kind: "member", id: "M-9" }, fills: { who: "ana" }, summary: "Endorse ana as an administrator", options: [{ id: "adminendorse" }], door: "adminendorse", disposition: { available: false, instead: "adminendorse" } };
+  subject: { kind: "member", id: "M-9" }, fills: { who: "ana" }, basis: { have: ["bo"], awaiting: ["cy", "di"] }, summary: "Endorse ana as an administrator", options: [{ id: "adminendorse" }], door: "adminendorse", disposition: { available: false, instead: "adminendorse" } };
 const OWNER = (change = "add") => ({ id: `OBLIGATION::endorsement-owed::owner::PROJ-1::${change}:ben::mai`, class: "OBLIGATION", kind: "endorsement-owed", case: NONE, assignee: "mai",
-  subject: { kind: "project", id: "PROJ-1", name: "Pothole repairs", change, target: "ben" }, summary: "Agree on an owner change", options: [{ id: change === "add" ? "projectowneradd" : "projectownerremove" }],
+  subject: { kind: "project", id: "PROJ-1", name: "Pothole repairs", change, target: "ben" }, fills: { who: "ben" }, basis: { agreed: ["mai"], awaiting: [] }, summary: "Agree on an owner change", options: [{ id: change === "add" ? "projectowneradd" : "projectownerremove" }],
   door: change === "add" ? "projectowneradd" : "projectownerremove", disposition: { available: false, instead: change === "add" ? "projectowneradd" : "projectownerremove" } });
 const EXPERT = { id: "OBLIGATION::expertise-confirmation-owed::M-9::tenant law", class: "OBLIGATION", kind: "expertise-confirmation-owed", case: NONE, assignee: "mai",
   subject: { kind: "member", id: "M-9", label: "tenant law" }, fills: { who: "ana" }, summary: "Confirm ana's expertise", options: [{ id: "expertiseconfirm" }], door: "expertiseconfirm", disposition: { available: false, instead: "expertiseconfirm" } };
@@ -25,11 +25,12 @@ const screens = ["queue", "home"];
 const at = { queue: "/app/queue", home: "/app" };
 const planeOf = (items, extra = {}) => ({ ...ADMINS, ...SEEN, queue: ok({ items, item_count: items.length }), ...extra });
 
-test("R75 (words): the labels the authority form needs and no key holds are owed by the design; the rest of its words are held", () => {
+test("R75 (words): the words the authority form and the routed items read are held by the word list", () => {
   for (const k of ["screen.queue.routed.auth.item", "screen.queue.routed.auth.open", "screen.queue.routed.auth.question", "screen.queue.routed.auth.know",
-    "screen.queue.routed.auth.how.label", "screen.queue.routed.auth.fine1", "screen.queue.routed.owner.item", "screen.queue.routed.expert.vouch", "screen.members.endorse.what"]) assert.ok(hasWord(k), k);
-  for (const k of ["screen.queue.routed.auth.cannot", "screen.queue.routed.auth.issuer.label", "screen.queue.routed.auth.tried.label", "screen.queue.routed.auth.tried.required"])
-    assert.ok(hasWord(k), `${k}: owed by UX-DESIGN (B17); red by name until it lands`);
+    "screen.queue.routed.auth.cannot", "screen.queue.routed.auth.issuer.label", "screen.queue.routed.auth.tried.label", "screen.queue.routed.auth.tried.help1",
+    "screen.queue.routed.auth.record", "screen.queue.routed.auth.how.label", "screen.queue.routed.auth.fine1", "queue.owed.nobody",
+    "queue.endorsement-owed.summary", "queue.endorsement-owed.detail", "queue.endorsement-owed.owner.summary.add", "queue.endorsement-owed.owner.summary.remove",
+    "queue.endorsement-owed.owner.detail", "queue.expertise-confirmation-owed.summary", "queue.expertise-confirmation-owed.detail", "act.projectownerremove.label.queue"]) assert.ok(hasWord(k), k);
 });
 
 for (const where of screens) {
@@ -44,6 +45,9 @@ for (const where of screens) {
     assert.deepEqual(radios.map((r) => r.getAttribute("value")), ["known", "unknown"]);
     assert.ok(radios.every((r) => !r.checked), "neither is preselected");
     assert.ok(text(p, main(p).querySelector(`#${f}-who legend`)).includes(word("screen.queue.routed.auth.question")));
+    const form = text(p, b.closest("details"));
+    for (const k of ["screen.queue.routed.auth.cannot", "screen.queue.routed.auth.issuer.label", "screen.queue.routed.auth.tried.label", "screen.queue.routed.auth.tried.help1"]) assert.ok(form.includes(word(k)), k);
+    assert.ok(b.textContent.startsWith(word("screen.queue.routed.auth.record")), "the answer is recorded by its own button");
     // control: nothing chosen sends nothing
     await press(p, "taskdecide");
     assert.equal(p.byOp("taskdecide").length, 0);
@@ -84,11 +88,12 @@ for (const where of screens) {
     assert.equal(beside(p, b), `${word("screen.queue.routed.auth.refused.yours1")} ${word("screen.queue.routed.auth.refused.yours2")}`);
   });
 
-  test(`R75 (${where}): an endorsement owed names the person and sends adminendorse for her; an expertise item names the member and the label and sends expertiseconfirm`, async () => {
+  test(`R75 (${where}): an endorsement owed names the person with who has agreed and who is awaited and sends adminendorse for her; an expertise item names the member and the label and sends expertiseconfirm`, async () => {
     const p = await open(at[where], planeOf([ENDORSE, EXPERT], { adminendorse: ok({ ok: true }), expertiseconfirm: ok({ ok: true }) }), SCR);
-    assert.ok(text(p).includes(word("screen.members.endorse.what", { handle: "ana" })));
-    assert.ok(text(p).includes(word("screen.queue.routed.endorse.leaves")));
-    assert.ok(text(p).includes("tenant law") && text(p).includes(word("screen.queue.routed.expert.vouch")));
+    assert.ok(text(p).includes(word("queue.endorsement-owed.summary", { who: "ana", have: "bo", awaiting: "cy, di" })));
+    assert.ok(text(p).includes(word("queue.endorsement-owed.detail")));
+    assert.ok(text(p).includes(word("queue.expertise-confirmation-owed.summary", { who: "ana", label: "tenant law" })));
+    assert.ok(text(p).includes(word("queue.expertise-confirmation-owed.detail")));
     assert.ok(button(p, "adminendorse").textContent.startsWith(word(`act.adminendorse.label.${where}`)));
     await press(p, "adminendorse", { reason: "I know her work" });
     assert.deepEqual(Object.keys(last(p, "adminendorse").body).sort(), ["memberId", "reason"]);
@@ -98,9 +103,18 @@ for (const where of screens) {
     assert.equal(last(p, "expertiseconfirm").body.label, "tenant law");
   });
 
-  test(`R75 (${where}): an owner vote names the person and the project and sends projectowneradd; a vote to remove an owner is the project's own, so it is opened, not drawn as an act`, async () => {
+  test(`R75 (${where}): nobody agreed or awaited is "no one yet"; with no handle in fills the member's id is drawn`, async () => {
+    const none = { ...ENDORSE, fills: {}, basis: { have: [], awaiting: [] } };
+    const p = await open(at[where], planeOf([none], { adminendorse: ok({ ok: true }) }), SCR);
+    const nobody = word("queue.owed.nobody");
+    assert.ok(text(p).includes(word("queue.endorsement-owed.summary", { who: "M-9", have: nobody, awaiting: nobody })));
+  });
+
+  test(`R75 (${where}): an owner vote names the person, the project and who has agreed and sends projectowneradd; a vote to remove an owner is the project's own, so it is worded and opened, not drawn as an act`, async () => {
     const p = await open(at[where], planeOf([OWNER("add"), OWNER("remove")], { projectowneradd: ok({ ok: true }) }), SCR);
-    assert.ok(text(p).includes(word("screen.queue.routed.owner.item", { who: "ben", project: "Pothole repairs" })));
+    assert.ok(text(p).includes(word("queue.endorsement-owed.owner.summary.add", { who: "ben", project: "Pothole repairs", agreed: "mai", awaiting: word("queue.owed.nobody") })));
+    assert.ok(text(p).includes(word("queue.endorsement-owed.owner.summary.remove", { who: "ben", project: "Pothole repairs", agreed: "mai", awaiting: word("queue.owed.nobody") })));
+    assert.ok(text(p).includes(word("queue.endorsement-owed.owner.detail")));
     assert.ok(main(p).querySelector('a.cs-ref[href="/app/project/PROJ-1"]'), "the project is a reference");
     assert.deepEqual(ops(p).filter((o) => o.startsWith("projectowner")), ["projectowneradd"], "the removal is no act of this screen");
     await press(p, "projectowneradd", { reason: "She has done the work" });

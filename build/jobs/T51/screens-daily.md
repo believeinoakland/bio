@@ -1,6 +1,33 @@
 # screens-daily (T51)
 
-**Status** · session_01QiugB2oLjrSwGcQChnqg5i · depth 2 · COMPLETE · handled B18
+**Status** · session_01H683kiCEiqxBkXJ8cFTJ9t · depth 2 · COMPLETE · handled B20
+
+## Completion (SCREENS-DAILY #13, B19, B20)
+
+**Entries applied, with tests, pushed @ job/T51/screens-daily (merged with tranche/T51 at K4249):**
+- (B19, B422) The three routed items are drawn by the design's rows, on Home and the queue (`routed.mjs`): an endorsement owed is `queue.endorsement-owed.summary` ({who} `fills.who`, else the member's id; {have}, {awaiting} the handles of `basis.have` and `basis.awaiting` joined, `queue.owed.nobody` when empty) with `.detail`; an owner vote is `queue.endorsement-owed.owner.summary.add` or `.remove` ({who}, {project}, {agreed}, {awaiting}) with `.owner.detail`; an expertise item is `queue.expertise-confirmation-owed.summary` ({who}, {label}) with `.detail`. A vote to remove an owner is worded by `.owner.summary.remove` and leads to its project with "Open" (on the queue too); `projectownerremove` is on neither screen's registry row, so `act.projectownerremove.label.queue` is not drawn (REPORT 2). The held sentences these replace (`screen.members.endorse.what`, `screen.queue.routed.owner.*`, `.endorse.leaves`, `.expert.*`) are no longer read.
+- (B19, B426) The authority form reads the confirmed rows: `screen.queue.routed.auth.cannot`, `.issuer.label`, `.tried.label`, `.tried.help1` (replacing the guessed `.tried.required`), and its button is `screen.queue.routed.auth.record`. Defer is `screen.queue.defer`; the snoozed section is `screen.queue.snoozed.head` explained by `.holds`, each case a reference with `screen.queue.snoozed.until` ({date}) and `screen.queue.bringback`; Home's line `screen.home.waiting.counts` ({held}, {inbox}; a zero is 0) is drawn above the doors (`doors.mjs`) whenever either door is drawn and both reads answered; none when nothing waits or a read failed; none on the queue.
+- (B20) Bring back sends `queuesnooze {case, clear: "1"}`.
+- (B19) `register-tasks.mjs` now registers through test-support's `registerDeclared` (R17). It is asynchronous, so `routed.test.mjs` imports `page.mjs` and the harness after it (a static import loads the screens, whose `OWED` reads `OPS`, before the registration finishes: "registered after the first read").
+- Tests: `routed.test.mjs` (R75: the rows, have/awaiting, "no one yet", the id when `fills.who` is absent, remove drawn as words and Open; "R75 (words)" is green), `queue-actions.test.mjs` (R68 Defer, R69 section and `clear: "1"`, R34), `doors.test.mjs` (R65: Home's waiting line and its controls).
+
+**Deferred:** none.
+
+**Requirement lines for BOB:** R65 add: Home's status line `screen.home.waiting.counts` with both counts (a zero as 0), drawn when either door is and both reads answered. R68: Defer's words are `screen.queue.defer`. R69: the section is `screen.queue.snoozed.head` (help `.holds`), each row the case with `screen.queue.snoozed.until`, the button `screen.queue.bringback`, the request `{case, clear: "1"}`; it no longer uses `queue.answered.snoozed` (that stays on "What you answered"). R75: replace the held-sentence names by the `queue.endorsement-owed.*`, `queue.expertise-confirmation-owed.*`, `queue.owed.nobody` rows and `screen.queue.routed.auth.record`; {have}, {awaiting}, {agreed} are read from the item's `basis` lists. Private Uses: `op-declarations` (`OPS`) is read in production code (`OWED` in `home.mjs`, `queue.mjs`) and `test-support` (`declared-ops.mjs`) by tests; `tasks` is no longer imported.
+
+**For BOB (REPORT):**
+1. Architecture: 1 failure, yours as B19 says: `register-tasks.mjs` imports test-support's `declared-ops.mjs`; add `test-support` to `uses` (tests only) and drop `tasks`.
+2. `projectownerremove` is in no registry row of `home` or `queue` and `RE_POINTS` (interface-shell) has no entry: the remove vote cannot be an act here. If the design means it there, UX-DESIGN lists it on both (its label `act.projectownerremove.label.queue` is held).
+3. `queue-producers` R46–R48 carry {have}, {awaiting}, {agreed} as handle lists in `basis` only (`fills` holds `who`); the screens read them from `basis`. If a list holds ids rather than handles it is drawn as it comes.
+4. Not mine, seen at the tranche tip while running `test/m/control-plane/`: 25 failures; `t47-e2e.test.mjs` fails at plane start with `DECLARED_OP_DISAGREES: groupkeynoticeseen description` (ai-accounts' declared row against the hand row the design's DEC-387 reworded), so every plane-booting test of mine in that file cannot run.
+5. Words check over all 35 L11 modules together: 3 findings, all `op-grades` test copies; none names screens-daily.
+
+**Tests and checks run (process repo at its head):**
+- `node --test bio-plane/test/m/screens-daily/`: 207 tests, 207 pass.
+- `node checks/format.mjs /home/user/bio`: 0 failures. `coverage.mjs … screens-daily`: 79 of 79 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `architecture.mjs … screens-daily`: 1 failure (REPORT 1). `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: 0 failures. `setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match.
+- `checks/run.mjs`: format 0, architecture 1 (REPORT 1), coverage 4 failures in other modules, words 24 failures (op-grades), none in this module.
+
+Size (session_01H683kiCEiqxBkXJ8cFTJ9t): test runs 8, module lines 3785
 
 ## Completion (SCREENS-DAILY #12, FR-27)
 
@@ -187,3 +214,10 @@ Done: R75 (a new part `routed.mjs`: the authority form sending `taskdecide`, wit
 Suite: 204 tests, 203 pass; the one red is "R75 (words)", by name: four labels no key holds (I could not tell, The issuing party, What you tried, Required if you could not tell), drawn by guessed keys not listed in `words`. Checks: format 0; coverage 79 of 79; words 0 in this module (also over the L11 modules: screens-intake's six only); ownership lists only the requirements file (accepted); architecture 1 failure, BOB's: the tests' `register-tasks.mjs` imports `tasks` (to register `taskdecide` before the first read, as control-plane's does) and `tasks` is not in my `uses`: add it for tests, or say another way.
 For BOB (the rest in my record): `projectownerremove` is no act of Home or the queue in the registry, so a vote to remove an owner is drawn with its producer's words and an Open to the project; queue-producers R46–R48 items carry no structured handle (the member id is drawn until they carry fills.who); `home.mjs` and `queue.mjs` read OPS at import to include `taskdecide` once its owner is declared (check the plane's start-up order; the requirement's "Tests only: op-declarations" line is now also production use); the signing-key item's "Mark it done" is not drawn (no op).
 Size (session_01QiugB2oLjrSwGcQChnqg5i): test runs 22, module lines 3764
+
+## J11 · COMPLETE
+
+COMPLETE (SCREENS-DAILY #13), re B19 and B20 (K4248, K4249). Pushed @ job/T51/screens-daily; the detail, the requirement lines for you and the check lines are in my record ("Completion (SCREENS-DAILY #13, B19, B20)").
+Done: the endorsement, owner-vote and expertise items drawn by the design's rows on Home and the queue (have/awaiting/agreed from `basis`, "no one yet" when empty, the id when `fills.who` is absent); the authority form's confirmed labels and its button `screen.queue.routed.auth.record`; Defer `screen.queue.defer`; the snoozed section (`screen.queue.snoozed.*`) with Bring back `screen.queue.bringback`, sending `queuesnooze {case, clear: "1"}`; Home's `screen.home.waiting.counts`; `register-tasks.mjs` on test-support's `registerDeclared` (async, so routed.test.mjs imports the page after it). "R75 (words)" is green.
+Suite 207 of 207. format 0; coverage 79 of 79; words 0 (screens-daily); ownership 0; setup-words --check clean; architecture 1: the tests' `register-tasks.mjs` imports test-support, which `uses` does not hold (yours, as B19 says: add test-support for tests, drop `tasks`).
+For you: (2) `projectownerremove` is on neither registry row nor in RE_POINTS, so the remove vote is worded by `.owner.summary.remove` and opened at its project, with no act; (4) not mine: `test/m/control-plane/t47-e2e.test.mjs` fails at plane start with `DECLARED_OP_DISAGREES: groupkeynoticeseen description` (ai-accounts' row against the hand row, from DEC-387's rewording); control-plane shows 25 failures at the tip.

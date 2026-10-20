@@ -3,7 +3,7 @@
    signing key's link to Members. Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, text, ops, button, press, beside, last, main, word, withScreens, screen, hasWord } from "./page.mjs";
+import { open, ok, text, ops, button, press, beside, last, main, word, withScreens, screen, hasWord, dmy } from "./page.mjs";
 
 const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
 const NONE = { ungrouped: true, ancestors: [] };
@@ -22,7 +22,7 @@ test("R68: a finding row offers Defer beside Dismiss, each asking the member's r
   const buttons = row.querySelectorAll('button[data-act="proposedispose"]');
   assert.deepEqual(buttons.map((b) => b.dataset.to), ["dismissed", "deferred"], "Dismiss, then Defer, beside each other");
   assert.ok(buttons[0].textContent.startsWith(word("act.proposedispose.label.queue")));
-  assert.ok(buttons[1].textContent.startsWith(word("screen.question.say004")), "Defer's words: the question screen's held sentence until a queue row exists");
+  assert.ok(buttons[1].textContent.startsWith(word("screen.queue.defer")), "Defer's own words");
   await press(p, "proposedispose", { nth: 1, reason: "Wait for the clerk" });
   assert.deepEqual(last(p, "proposedispose").body, { project: "PROJ-2", finding: FINDING.id, to: "deferred", reason: "Wait for the clerk" });
   await press(p, "proposedispose", { nth: 0, reason: "Not relevant to us" });
@@ -47,9 +47,13 @@ test("R69: an item of a snoozed case leaves the main list and is listed apart by
   assert.ok(text(p).includes("Another finding"), "control: an item with no snoozed stays in the list");
   const section = main(p).querySelectorAll("section").find((s) => s.querySelector('button[data-clear]'));
   assert.ok(section, "the snoozed section");
-  assert.ok(text(p, section).includes(word("queue.answered.snoozed", { item: "Pothole repairs", date: word("date.daymonthyear", { day: String(Number(later.slice(8))), month: word("date.month." + ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"][Number(later.slice(5, 7)) - 1]), year: later.slice(0, 4) }) })));
+  assert.ok(text(p, section).includes("Pothole repairs"), "the case, by its title");
+  assert.ok(text(p, section).includes(word("screen.queue.snoozed.until", { date: dmy(later) })), "the day it comes back");
+  assert.equal(text(p, section.querySelector("h2")), word("screen.queue.snoozed.head"), "the section's own heading");
+  assert.ok((section.querySelector("h2").getAttribute("data-tip") || "").includes(word("screen.queue.snoozed.holds")), "explained by its own help");
+  assert.ok(button(p, "queuesnooze").textContent.startsWith(word("screen.queue.bringback")), "Bring back's own words");
   await press(p, "queuesnooze", {});
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", clear: true });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", clear: "1" });
   assert.ok(text(p).includes("Sign the lease amendment") && !main(p).querySelector('button[data-clear]'), "brought back: it is in the list again");
 });
 
@@ -139,7 +143,7 @@ test("R79 (e): the signing key's item draws Open Members, a link to members", as
 
 test("R34: the words these states read are words of the list and the queue reads them", () => {
   for (const k of ["queue.act.dothis.help", "queue.act.open.help", "queue.unkeyed.summary", "queue.unkeyed.detail", "screen.queue.snooze.pick", "queue.signer-self-registered.members",
-    "queue.answered.done", "queue.answered.dismissed", "queue.answered.dismissed.noreason", "queue.answered.muted", "queue.answered.generic", "screen.question.say004"]) {
+    "queue.answered.done", "queue.answered.dismissed", "queue.answered.dismissed.noreason", "queue.answered.muted", "queue.answered.generic", "screen.queue.defer", "screen.queue.bringback", "screen.queue.snoozed.head", "screen.queue.snoozed.holds", "screen.queue.snoozed.until"]) {
     assert.ok(hasWord(k), k);
     assert.ok(screen("queue").words.includes(k), `queue reads ${k}`);
   }

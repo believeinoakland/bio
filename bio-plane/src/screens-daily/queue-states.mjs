@@ -222,8 +222,8 @@ export function queueStates() {
     if (r.act === "muted" && typeof r.kind === "string" && r.kind) return cs.row(cs.icon("refused"), cs.w("queue.answered.muted", { kind: { html: cs.w("queue.kind." + r.kind) } }) + meta, "", "");
     return cs.row(cs.icon("accepted"), cs.w("queue.answered.generic", { item: { html: title } }) + meta, "", "");
   };
-  // R69: the snoozed cases, apart from the list, each with the day it comes back and "Bring back" (`queuesnooze` with `clear`, the
-  // case); the words are the answered row's and the muted list's "Turn back on" until the design holds its own.
+  // R69: the snoozed cases, apart from the list, under `screen.queue.snoozed.head` (explained by `.holds`): each case as a reference with the
+  // day it comes back (`screen.queue.snoozed.until`) and "Bring back" (`queuesnooze` with `clear`, the case).
   const snoozed = function (cs, items) {
     const cases = [];
     const at = {};
@@ -238,11 +238,11 @@ export function queueStates() {
       });
     });
     if (!cases.length) return "";
-    return '<section class="cs-section mk-sec">' + cs.sheet(cases.map(function (c) {
-      const back = cs.act("queuesnooze", { label: "queue.muted.unmute", data: { project: c.id, clear: "1" } });
-      return cs.row(cs.icon("clock"), cs.w("queue.answered.snoozed", { item: { html: cs.ref("project", c.id, c.title, []) }, date: { html: cs.date(String(c.until || "")) } })
-        + '<span class="meta">' + cs.w("queue.answered.snoozed.meta") + (back ? " " + back : "") + "</span>", "", "");
-    }).join("")) + "</section>";
+    return cs.sec("screen.queue.snoozed.head", cs.sheet(cases.map(function (c) {
+      const back = cs.act("queuesnooze", { label: "screen.queue.bringback", data: { project: c.id, clear: "1" } });
+      return cs.row(cs.icon("clock"), cs.ref("project", c.id, c.title, [])
+        + '<span class="meta">' + cs.w("screen.queue.snoozed.until", { date: { html: cs.date(String(c.until || "")) } }) + (back ? " " + back : "") + "</span>", "", "");
+    }).join("")), { help: "screen.queue.snoozed.holds" });
   };
   // The answered rows (`op=queue` with `answered: true`), then the set-aside findings (R61) on the same page.
   const answered = function (cs, view, asideRows) {
