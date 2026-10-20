@@ -24,7 +24,7 @@ const WEIGHT = {
   conclude:2, narrow:2, promote:2, optiondispose:2, optionadd:2, optionadopt:2, optionpropose:1, scenarioset:2, checkpointrecord:2, plansubjectadd:2,
   proposedispose:2, heldsetaside:2, heldrestore:2, clockadopt:2, recordpersonfact:2, claimidentity:2, withdrawidentityclaim:2, createevent:2, recordfact:2,
   recorddatedfact:2, include:2, exclude:2, reconcile:2, committedagainstpaid:1, authoritychain:1, importaccept:2, importflag:2, inboxpull:2, inboxresolve:2,
-  declaretie:2, withdrawtie:2, memberadd:2, membercaps:2, memberset:2, adminendorse:2, expertiseconfirm:2, expertisedeclare:1, strengthbarset:2,
+  declaretie:2, withdrawtie:2, memberadd:2, membercaps:2, memberset:2, adminendorse:2, expertiseconfirm:2, owed_expertisewithdraw:2, expertisedeclare:1, strengthbarset:2,
   calculationcreate:2, calculationaccept:2, recordcheck:2, actioncreate:2, actionlaws:2, communicationprepare:2, filingprepare:2, optionstart:2,
   actionmove:2, actioncorrespond:2, actionpressure:2, actionhold:2, escalationopen:2, escalationadvance:2, declinetoescalate:2, standarddeclare:2,
   standardadopt:2, lawrelate:2, casedraft:2, reopen:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
