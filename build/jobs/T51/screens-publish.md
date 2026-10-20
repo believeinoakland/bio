@@ -145,3 +145,18 @@ R68 built: the ceremony's `place` answers `projectKey: "crumb.project.unjoined"`
 `node --test test/m/screens-publish/`: 169 tests, 167 pass, 2 fail, 2 todo. Reds named: common.test R10 (`imported`'s registry `writinghelp`) and public.test R8 (`docketfile`), both UX-DESIGN B420; todo: R35's two press tests (K3717). R49 stays unbuilt (B420). Checks: format 0, architecture 0, words 0 findings here, coverage 0 failures, ownership: the requirements file only (B9).
 
 Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 31, module lines 3080
+
+## J12 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #10, session_01XKvVPwnBsk4EaAeXx6RRS9), B15 applied; `tranche/T51` merged (already at its tip).
+
+1. **Capturer and resting findings.** The ceremony's "Documents without a second confirmation" reads `not_co_attested` as `{capture, by, findings}` (case-authoring R82): each row draws the capture, the member who captured it (`by`, as that member's handle when it is the viewer, else as given; none when null) and, for each finding resting on it, `screen.ceremony.conf.intro2` {finding}; the key is in the ceremony's `words`. A bare capture id (the old shape) still draws. I wrote the line as **R69** in `build/requirements/screens-publish.md` (amends R51; the file is outside my paths and the ownership check lists it, accepted as B9): "For each capture the pre-flight lists as `{capture, by, findings}` the ceremony draws the member who captured it (none when `by` is null) and, for each finding resting on it, `screen.ceremony.conf.intro2` with that finding. Test: an entry with a capturer and two findings draws the capturer and both sentences. Control: an entry with `by: null` draws no capturer." Test `R69 …` in `fr30b.test.mjs`.
+2. **`register.mjs` removed.** Each test file now calls test-support's `registerDeclared(root, registerDeclaredOps)` (R17); registering every owner now works (the old link-sweep refusal is gone).
+
+**Needs BOB:** `build/modules.json`: add `test-support` to screens-publish's `uses` (as K4245 did for op-declarations). Without it `architecture.mjs screens-publish` fails 14 times, all one line: each test file "imports bio-plane/test/declared-ops.mjs of test-support, which screens-publish does not declare in uses". Nothing else fails.
+
+Accepted reds unchanged: common.test R10 (`imported` `writinghelp`) and public.test R8 (`docketfile`), UX-DESIGN B420; R49 unbuilt (B420); R35's two press tests are `test.todo` (K3717).
+
+Tests: `node --test bio-plane/test/m/screens-publish/`: 172 tests, 168 pass, 2 fail (the two above), 2 todo. Checks: format 0 failures; architecture 14 (the `uses` line above); coverage 69 of 69 ids; words (screens-publish) 0 findings; ownership: 1 file, `build/requirements/screens-publish.md` (accepted).
+
+Size (session_01XKvVPwnBsk4EaAeXx6RRS9): test runs 6, module lines 3090
