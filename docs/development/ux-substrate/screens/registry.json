@@ -567,6 +567,14 @@
      ]
     },
     {
+     "op": "expertiseconfirm",
+     "label": "Withdraw an expertise",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
      "op": "invitewithdraw",
      "label": "Withdraw an unused invitation",
      "status": "function",
@@ -708,6 +716,14 @@
      "modules": [
       "instance-setup",
       "interface-shell"
+     ]
+    },
+    {
+     "op": "memberpairingset",
+     "label": "Choose whether your cover and handle are published together",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
      ]
     }
    ],
@@ -1079,6 +1095,26 @@
      ]
     },
     {
+     "op": "export",
+     "label": "Take a copy of the record",
+     "status": "declared",
+     "modules": [
+      "corpus-export",
+      "op-declarations",
+      "publication"
+     ]
+    },
+    {
+     "op": "exportlog",
+     "label": "Show the list of copies",
+     "status": "declared",
+     "modules": [
+      "corpus-export",
+      "op-declarations",
+      "publication"
+     ]
+    },
+    {
      "op": "writinghelp",
      "label": "Help me write this",
      "status": "declared",
@@ -1132,6 +1168,36 @@
      "op": "owed:updateskip K3158",
      "label": "Skip this version, with a reason",
      "status": "owed"
+    },
+    {
+     "op": "selftest",
+     "label": "Check your copy now",
+     "status": "declared",
+     "modules": [
+      "installer",
+      "instance-setup",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "bootstrap",
+     "label": "Show what each part runs",
+     "status": "declared",
+     "modules": [
+      "installer",
+      "instance-setup",
+      "membership",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "runtime",
+     "label": "Show what running costs",
+     "status": "declared",
+     "modules": [
+      "instance-setup",
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -3941,7 +4007,7 @@
     },
     {
      "op": "optiondispose",
-     "label": "Choose or decline",
+     "label": "Choose, decline, mark done or blocked, or return to undecided",
      "status": "declared",
      "modules": [
       "action-plans",
@@ -3990,6 +4056,14 @@
      "status": "declared",
      "modules": [
       "plan-work"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -4642,6 +4716,24 @@
      "modules": [
       "case-account"
      ]
+    },
+    {
+     "op": "sever",
+     "label": "Remove a citation",
+     "status": "declared",
+     "modules": [
+      "citation",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "reinstate",
+     "label": "Reinstate",
+     "status": "declared",
+     "modules": [
+      "citation",
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -5023,6 +5115,14 @@
       "op-declarations",
       "sources"
      ]
+    },
+    {
+     "op": "knocksof",
+     "label": "See this knocker's other material",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -5043,11 +5143,169 @@
       "op-declarations",
       "plane"
      ]
+    },
+    {
+     "op": "knockerconsent",
+     "label": "Send my answer",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
+     ]
     }
    ],
    "journeys": [
     20
    ]
+  },
+  {
+   "id": "about-knocker",
+   "name": "A source",
+   "frame": "working",
+   "purpose": "What became known about someone who handed material in, who may read it, what they agreed to publish, and the person they are.",
+   "acts": [
+    {
+     "op": "sourcedisclose",
+     "label": "Record what became known",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
+     ]
+    },
+    {
+     "op": "sourceconsent",
+     "label": "Record their agreement",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
+     ]
+    },
+    {
+     "op": "sourceconsentwithdraw",
+     "label": "Record that they took it back",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "sources"
+     ]
+    },
+    {
+     "op": "sourcepersonlink",
+     "label": "Say this source is that person",
+     "status": "declared",
+     "modules": [
+      "people"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": [
+    20
+   ]
+  },
+  {
+   "id": "leads",
+   "name": "Leads",
+   "frame": "working",
+   "purpose": "Write down something you were told, record who looked and what they found, and share it with a project.",
+   "acts": [
+    {
+     "op": "lead",
+     "label": "Write down the lead",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "leadread",
+     "label": "Open a lead",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "leadlook",
+     "label": "Record the look",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "leadshare",
+     "label": "Share it with the project",
+     "status": "declared",
+     "modules": [
+      "observation-log",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
+  },
+  {
+   "id": "watching",
+   "name": "Watched addresses",
+   "frame": "working",
+   "purpose": "Every address the team watches, pausing the watching, what is due and the sweeps.",
+   "acts": [
+    {
+     "op": "monitoring",
+     "label": "List every watched address",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "monitorpause",
+     "label": "Pause or resume the watching",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "monitorslate",
+     "label": "Read what is due",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "sweeps",
+     "label": "See the sweeps",
+     "status": "declared",
+     "modules": [
+      "link-sweep",
+      "op-declarations"
+     ]
+    }
+   ],
+   "journeys": []
   }
  ]
 }

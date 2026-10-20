@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 5621,
+  "screen": 6093,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 983,
+  "act": 1027,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -229,8 +229,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 16555,
-  "protected": 993
+  "total": 17071,
+  "protected": 1021
  },
  "words": [
   {
@@ -65323,6 +65323,3289 @@
    "note": "DEC-375: B398 C24 (provenance-routes provenanceroute): refusal"
   },
   {
+   "key": "screen.capture.render.keep.site",
+   "en": "The page as the site sent it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition acquire): choice beside Address, the plain capture; the choice of what to keep; this option is the plain capture"
+  },
+  {
+   "key": "screen.capture.render.keep.visitor",
+   "en": "The page as a visitor saw it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; the render option; \"a visitor saw\" means the page after a browser loaded it"
+  },
+  {
+   "key": "screen.capture.render.keep.explain1",
+   "en": "Choose the page as a visitor saw it for a page that fills itself in after it loads, such as a list of agenda items.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; under the keep choice, first sentence"
+  },
+  {
+   "key": "screen.capture.render.keep.explain2",
+   "en": "Your team's Civicsmith opens the page in a browser to keep it, which takes longer and uses part of a daily allowance for rendering pages.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; under the keep choice, second sentence"
+  },
+  {
+   "key": "screen.capture.render.refused.summary",
+   "en": "If the page can't be kept as a visitor saw it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; summary of the refusals of a rendered capture"
+  },
+  {
+   "key": "screen.capture.render.refused.norenderer",
+   "en": "Your team's Civicsmith has no working page renderer, so it cannot keep the page as a visitor saw it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; refusal, first sentence (the plane code is a no-renderer refusal)"
+  },
+  {
+   "key": "screen.capture.render.refused.norenderer.next",
+   "en": "Ask an administrator, or keep the page as the site sent it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; the same refusal, what to do next"
+  },
+  {
+   "key": "screen.capture.archive.summary",
+   "en": "Keeping a copy from a public web archive",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; summary of the note on the archive capture"
+  },
+  {
+   "key": "screen.capture.archive.explain1",
+   "en": "When a watched address stops answering, your team's Civicsmith may look for an archived copy of it by itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; the archive capture is the plane's own fallback, refused to a member; first sentence"
+  },
+  {
+   "key": "screen.capture.archive.explain2",
+   "en": "A member cannot ask for that; if a site no longer answers, ask for this later, or add the page as a file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C19 (acquisition): sits on screen capture; second sentence, what to do instead"
+  },
+  {
+   "key": "screen.capture.watching.line",
+   "en": "Every address your team watches, and when it will next be checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring monitoring): row on the address tab pointing to Watched addresses; before a link"
+  },
+  {
+   "key": "screen.capture.lead.line",
+   "en": "Something you were only told, and want to look into?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log lead): row on the \"What I saw or heard\" tab, before a link to Leads; a question, before a link"
+  },
+  {
+   "key": "screen.capture.lead.link",
+   "en": "Write down a lead",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen capture; link to the Leads screen"
+  },
+  {
+   "key": "screen.inbox.knocker.heading",
+   "en": "Other material from this knocker",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (doorbell knocksof): section heading on Inbox"
+  },
+  {
+   "key": "screen.inbox.knocker.same1",
+   "en": "Each knock listed here presented the same secret phrase.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knocksof): under the list, first sentence"
+  },
+  {
+   "key": "screen.inbox.knocker.same2",
+   "en": "That says it is the same knocker; it says nothing about who they are.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knocksof): second sentence"
+  },
+  {
+   "key": "screen.inbox.source.line",
+   "en": "What is known about this source, and what may be published about them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen inbox"
+  },
+  {
+   "key": "screen.inbox.knocker.help1",
+   "en": "Every knock that presented this knocker's secret phrase, oldest first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knocksof): the heading's explanation, first sentence"
+  },
+  {
+   "key": "screen.inbox.knocker.help2",
+   "en": "It lists the knocks; it never names anyone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knocksof): the heading's explanation, second sentence"
+  },
+  {
+   "key": "screen.doorbell.consent.heading",
+   "en": "If the team asked to publish something about you",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources knockerconsent): section heading on the public doorbell page; the reader has no account"
+  },
+  {
+   "key": "screen.doorbell.consent.intro1",
+   "en": "Say yes, or take your yes back, with the secret phrase you used.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knockerconsent): first sentence"
+  },
+  {
+   "key": "screen.doorbell.consent.intro2",
+   "en": "Nothing here asks who you are.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.detail",
+   "en": "The detail you are answering about",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knockerconsent): field label for the detail's reference"
+  },
+  {
+   "key": "screen.doorbell.consent.detail.help",
+   "en": "The reference the team gave you for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.audience",
+   "en": "Who may be told it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knockerconsent): field label for the audience"
+  },
+  {
+   "key": "screen.doorbell.consent.audience.member",
+   "en": "Only the members listed for it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.yes",
+   "en": "I agree to this being published",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.no",
+   "en": "I take back my agreement",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.permanent1",
+   "en": "Agreeing is permanent for anything published under it: what is published stays published, even if you later take your agreement back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.permanent2",
+   "en": "Taking it back binds only what is published afterward.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.refused.summary",
+   "en": "When your answer is not accepted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.refused.secret",
+   "en": "That secret was not recognised, so nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (knockerconsent): refusal, first sentence (the plane answers every failure alike)"
+  },
+  {
+   "key": "screen.doorbell.consent.refused.rate",
+   "en": "Too many tries have come from here lately.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.doorbell.consent.refused.rate.next",
+   "en": "Wait a while, then try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen doorbell"
+  },
+  {
+   "key": "screen.about-knocker.intro1",
+   "en": "Someone who handed material to your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): subtitle, first sentence"
+  },
+  {
+   "key": "screen.about-knocker.intro2",
+   "en": "Only members you list can read what is stored about them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.known.help1",
+   "en": "Each thing that became known, with how and to whom.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.known.help2",
+   "en": "An entry is never edited; a later one takes its place when read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.how.self",
+   "en": "Told by the source themselves",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.knownto.group",
+   "en": "known to the team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.consent.members",
+   "en": "agreed to publish to members only",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.how.third",
+   "en": "Told by someone else",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.hostile.claim",
+   "en": "Named by {name} on {date}; not confirmed by the team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources R3): how a hostile claim reads; {name} the claimant, {date} when"
+  },
+  {
+   "key": "screen.about-knocker.how.hostile",
+   "en": "Claimed by someone hostile to the source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.kind.link",
+   "en": "A link to another source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sourcedisclose): option of what became known"
+  },
+  {
+   "key": "screen.about-knocker.kind.attribute",
+   "en": "An attribute: occupation, employer or role",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.attribute.help",
+   "en": "Only for an attribute.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.how.label",
+   "en": "How it became known",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.how.opt.self",
+   "en": "The source said it themselves",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.how.opt.filing",
+   "en": "It is in a public filing",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.how.opt.third",
+   "en": "Someone else told us",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.how.opt.hostile",
+   "en": "Someone hostile to the source claimed it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.claimedby.label",
+   "en": "Who made the claim",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.claimedby.help1",
+   "en": "Only when someone hostile to the source claimed it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.claimedby.help2",
+   "en": "It is kept as their claim, not as a fact.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.claimedat.label",
+   "en": "When they made it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.claimedat.help1",
+   "en": "Only for a claim.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.claimedat.help2",
+   "en": "A date such as 2026-10-06.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.store.legend",
+   "en": "Whether to store it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.store.yes",
+   "en": "Store what it is, for the members I list",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.store.no",
+   "en": "Record only that the team knows it, without storing it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.sight.legend",
+   "en": "Members who may read it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.evidence.help",
+   "en": "It is kept with the entry.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.confirms.label",
+   "en": "Confirms a claim made against this source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.confirms.help",
+   "en": "Confirming a hostile claim needs the source's consent before anything is published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.read.logged1",
+   "en": "Every member you list can read this entry, and each time one reads it, the read is logged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.read.logged2",
+   "en": "The entry is never edited or removed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.refused.summary",
+   "en": "When it is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.publish.heading",
+   "en": "What may be published",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sourceconsent): section heading"
+  },
+  {
+   "key": "screen.about-knocker.publish.intro1",
+   "en": "Only what the source agreed to, or what is already public elsewhere, is ever shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.publish.intro2",
+   "en": "Your team is never the first to make a detail more public.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.audience.label",
+   "en": "Who may be told it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.consent.evidence",
+   "en": "Evidence of their agreement",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.person.heading",
+   "en": "Say who this is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (people sourcepersonlink): section heading"
+  },
+  {
+   "key": "screen.about-knocker.person.intro1",
+   "en": "If you have evidence this source is a person your team follows, say so.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.person.intro2",
+   "en": "It is a claim with its evidence; it does not merge the records.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.person.replace",
+   "en": "Saying it again for the same person replaces the earlier claim; the earlier one is kept, with who replaced it and when.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.person.refused.org",
+   "en": "That is an organization, not a person.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.about-knocker.person.refused.org.next",
+   "en": "Choose a person your team follows.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C17 (sources): sits on screen source"
+  },
+  {
+   "key": "screen.leads.intro1",
+   "en": "Something you were told, or have reason to believe, and where it might be found.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): subtitle, first sentence"
+  },
+  {
+   "key": "screen.leads.intro2",
+   "en": "A lead is somewhere to look, never evidence.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.write.heading",
+   "en": "Write down a lead",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (lead): section heading"
+  },
+  {
+   "key": "screen.leads.write.words",
+   "en": "What you were told or suspect",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (lead): field label for the words"
+  },
+  {
+   "key": "screen.leads.write.where",
+   "en": "Where it might be found",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (lead): field label for the locator"
+  },
+  {
+   "key": "screen.leads.write.note1",
+   "en": "Only you can read a lead until you share it with a project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.write.note2",
+   "en": "Writing one down looks nothing up.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.refused.summary",
+   "en": "When it is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.list.help",
+   "en": "Every lead you can read: your own, and those others shared with a project you have joined.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadread): the list heading's explanation"
+  },
+  {
+   "key": "screen.leads.state.never",
+   "en": "Nobody has looked yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.look.line",
+   "en": "{name} looked on {date}: {words}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadlook): a look in the lead's history; {words} the looker's account"
+  },
+  {
+   "key": "screen.leads.shared.line",
+   "en": "Shared with {project} on {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadshare): a share in the lead's history"
+  },
+  {
+   "key": "screen.leads.look.state",
+   "en": "What the look found",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadlook): field label"
+  },
+  {
+   "key": "screen.leads.look.opt.absent",
+   "en": "It is not there",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.look.opt.part",
+   "en": "Found part of it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.look.kind",
+   "en": "What it found, if it found something",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadlook): field label for what the look points at"
+  },
+  {
+   "key": "screen.leads.look.kind.help",
+   "en": "Only a look that found something can point at anything.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.look.kind.none",
+   "en": "Nothing to point at",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.look.kind.doc",
+   "en": "A document in the record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.look.kind.passage",
+   "en": "A passage of a document in the record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.look.detail",
+   "en": "Where you looked and what you found",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadlook): field label for the detail, required"
+  },
+  {
+   "key": "screen.leads.share.project.help",
+   "en": "Only projects you have joined.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadshare): help under the project choice"
+  },
+  {
+   "key": "screen.leads.share.reason",
+   "en": "Why you are sharing it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadshare): field label for the reason, required"
+  },
+  {
+   "key": "screen.leads.share.reason.help",
+   "en": "It is kept with the share.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.share.note1",
+   "en": "Sharing puts what you were told in front of the project's participants, with your reason, and it cannot be taken back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.share.note2",
+   "en": "Only you, as its writer, can share it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (observation-log): sits on screen leads"
+  },
+  {
+   "key": "screen.leads.share.already1",
+   "en": "This lead is already shared with that project, by {name}, on {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C18 (leadshare): repeat, first sentence"
+  },
+  {
+   "key": "screen.watching.intro",
+   "en": "Every address your team's Civicsmith checks for a new version, and when it will next look.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring): subtitle"
+  },
+  {
+   "key": "screen.watching.running.meta",
+   "en": "Administrators can pause it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitorpause): meta of the running state"
+  },
+  {
+   "key": "screen.watching.paused.line",
+   "en": "{name} paused it on {date} at {time}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring, link-sweep): sits on screen watching"
+  },
+  {
+   "key": "screen.watching.paused.effect",
+   "en": "No address is checked and nothing is gathered until an administrator resumes it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring, link-sweep): sits on screen watching"
+  },
+  {
+   "key": "screen.watching.notadmin.summary",
+   "en": "If you are not an administrator",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitorpause): summary of the refusal"
+  },
+  {
+   "key": "screen.watching.unscheduled",
+   "en": "Not scheduled: no frequency declared",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring): a row with no schedule"
+  },
+  {
+   "key": "screen.watching.ended",
+   "en": "Ended {date}, set by {name}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring): a row whose end date has passed"
+  },
+  {
+   "key": "screen.watching.unscheduled.note1",
+   "en": "An address that is not scheduled is not being checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring, link-sweep): sits on screen watching"
+  },
+  {
+   "key": "screen.watching.unscheduled.note2",
+   "en": "Set how often to look from the document that holds it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring, link-sweep): sits on screen watching"
+  },
+  {
+   "key": "screen.watching.list.help",
+   "en": "Every address your team watches that you may see, including those with no schedule, so a document that is not being checked is visible without waiting for a check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring): heading explanation"
+  },
+  {
+   "key": "screen.watching.slate.intro1",
+   "en": "The addresses and sweeps that are due now, written as a prompt you can run by hand when no one else is doing the checking.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitorslate): first sentence"
+  },
+  {
+   "key": "screen.watching.slate.intro2",
+   "en": "Each line is quoted data, never an instruction.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring, link-sweep): sits on screen watching"
+  },
+  {
+   "key": "screen.watching.sweep.ratified",
+   "en": "Ratified by {name} on {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (sweeps): a ratified sweep"
+  },
+  {
+   "key": "screen.watching.sweep.next",
+   "en": "next run {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (sweeps): follows the ratified line"
+  },
+  {
+   "key": "screen.watching.sweep.unratified",
+   "en": "Not ratified: nothing runs until a project owner ratifies it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (sweeps): an unratified sweep"
+  },
+  {
+   "key": "screen.watching.sweep.note1",
+   "en": "A sweep follows links from pages it is told to start from and keeps the documents that match, as new collected material.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring, link-sweep): sits on screen watching"
+  },
+  {
+   "key": "screen.watching.sweep.note2",
+   "en": "It runs only after a project owner has ratified it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (monitoring, link-sweep): sits on screen watching"
+  },
+  {
+   "key": "screen.watching.sweep.help",
+   "en": "The sweeps of the projects you may see, with who ratified each and when it runs next.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C56 (sweeps): heading explanation"
+  },
+  {
+   "key": "screen.case-editor.findings_and_their_roles",
+   "en": "Findings and their roles",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.a_case_is_made_of_findings",
+   "en": "A case is made of findings.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.you_say_for_each_whether_the",
+   "en": "You say, for each, whether the case rests on it or only carries it along.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.finding_1_its_role_in_the",
+   "en": "Finding 1: its role in the case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.relied_on_the_case_rests_on",
+   "en": "Relied on: the case rests on it, so it must meet your project's standard of evidence.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.supporting_it_travels_with_the_case",
+   "en": "Supporting: it travels with the case without carrying it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.required_for_every_finding_at_least",
+   "en": "Required for every finding; at least one must be relied on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.finding_2_its_role_in_the",
+   "en": "Finding 2: its role in the case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.when_the_roles_cant_be_saved",
+   "en": "When the roles can't be saved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.a_finding_has_no_role_or",
+   "en": "A finding has no role, or none is relied on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.choose_a_role_for_every_finding",
+   "en": "Choose a role for every finding, and rely on at least one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.a_finding_you_rely_on_does",
+   "en": "A finding you rely on does not meet your project's standard of evidence.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.make_it_supporting_or_strengthen_it",
+   "en": "Make it supporting, or strengthen it first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.what_the_case_does_not_cover",
+   "en": "What the case does not cover",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.required_up_to_2000_characters_without",
+   "en": "Required, up to 2,000 characters, without quotation marks or line breaks.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.a_case_silent_about_its_limits",
+   "en": "A case silent about its limits claims to cover everything, so say here what it does not.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.something_else_it_leaves_out",
+   "en": "Something else it leaves out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.name_a_document_in_your_record",
+   "en": "Name a document in your record, or describe something outside it, such as a records request still waiting.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.why_it_is_left_out",
+   "en": "Why it is left out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.required_for_each_item",
+   "en": "Required for each item.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.what_is_left_out_and_why",
+   "en": "What is left out and why it is left out are two statements, and one does not stand in for the other.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.this_case_leaves_nothing_material_out",
+   "en": "This case leaves nothing material out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.an_empty_list_is_a_claim",
+   "en": "An empty list is a claim too, and it is allowed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.silence_is_not_say_either_what",
+   "en": "Silence is not: say either what is left out or that nothing is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.another_member_of_your_team_acknowledges",
+   "en": "Another member of your team acknowledges what the case does not cover, so readers are told it was read by a second person.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.acknowledgements_from_whoever_wrote_it_are",
+   "en": "Acknowledgements from whoever wrote it are not counted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.when_it_cant_be_saved",
+   "en": "When it can't be saved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.an_item_names_nothing_or_has",
+   "en": "An item names nothing, or has no reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.say_what_is_left_out_and",
+   "en": "Say what is left out and why, or remove the item.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.a_field_is_longer_than_2000",
+   "en": "A field is longer than 2,000 characters, or holds a quotation mark, a backslash or a line break.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.shorten_it_or_reword_it_then",
+   "en": "Shorten it or reword it, then save again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.putting_this_case_to_the_people",
+   "en": "Putting this case to the people it concerns",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.say_where_the_team_stands",
+   "en": "Say where the team stands.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.choosing_not_to_give_notice_is",
+   "en": "Choosing not to give notice is a legitimate position; it is declared like any other, and it never blocks publishing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.we_asked_and_they_answered",
+   "en": "We asked, and they answered",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.we_asked_and_had_no_answer",
+   "en": "We asked, and had no answer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.we_chose_not_to_give_notice",
+   "en": "We chose not to give notice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.why_the_team_took_this_position",
+   "en": "Why the team took this position",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.a_position_with_no_reasoning_behind",
+   "en": "A position with no reasoning behind it is a box ticked, so say why, including why the team chose not to give notice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.readers_weigh_it_as_they_weigh",
+   "en": "Readers weigh it as they weigh any declared bias.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.when_the_position_cant_be_saved",
+   "en": "When the position can't be saved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.no_position_is_chosen_or_it",
+   "en": "No position is chosen, or it has no reasoning.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.choose_one_and_say_why",
+   "en": "Choose one and say why.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.what_this_bias_means_for_this",
+   "en": "What this bias means for this edition",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.say_what_the_teams_declared_bias",
+   "en": "Say what the team's declared bias means for these findings, as of this edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.write_it_fresh_each_time_the",
+   "en": "Write it fresh each time: the last edition's sentence cannot be reused.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.the_acknowledgement_is_missing_or_it",
+   "en": "The acknowledgement is missing, or it is the same as the last edition's.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.write_it_for_this_edition",
+   "en": "Write it for this edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.it_is_kept_with_the_citation",
+   "en": "It is kept with the citation.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.nothing_is_deleted_a_removed_citation",
+   "en": "Nothing is deleted: a removed citation can be reinstated.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.when_a_citation_cant_be_moved",
+   "en": "When a citation can't be moved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.you_gave_no_reason_or_you",
+   "en": "You gave no reason, or you are not a member of this project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.write_why_or_ask_a_member",
+   "en": "Write why, or ask a member of the project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.the_passages_this_case_cites",
+   "en": "The passages this case cites.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.case-editor.removing_one_takes_it_out_of",
+   "en": "Removing one takes it out of the case and keeps your reason; reinstating puts it back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone."
+  },
+  {
+   "key": "screen.published.what_this_case_leaves_out",
+   "en": "What this case leaves out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The heading of the public page's section on what the case does not cover. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.who_else_read_this_statement",
+   "en": "Who else read this statement",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): A small heading over the list of team members who read the case's statement of what it leaves out. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.when_no_one_else_has",
+   "en": "When no one else has read the statement",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The summary of a details block on the public page. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.no_one_else_on_the",
+   "en": "No one else on the team has said they read this statement.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside the details block; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.it_stands_as_the_team",
+   "en": "It stands as the team that wrote it worded it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside the details block; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.when_the_edition_does_not",
+   "en": "When the edition does not say",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The summary of a details block. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.this_edition_does_not_say",
+   "en": "This edition does not say whether anyone else read the statement.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): A notice that the edition is silent; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.that_is_not_the_same",
+   "en": "That is not the same as no one having read it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.written_by_writer_and_published",
+   "en": "Written by {writer} and published by {publisher}, {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Under the statement of what the case leaves out. Placeholders hold two member names and a date. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.contradictions_the_team_disclosed",
+   "en": "Contradictions the team disclosed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The heading of the public page's section on disclosed contradictions. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.each_one_names_the_finding",
+   "en": "Each one names the finding it touches, both sides with their sources, where it stands, and who has read it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Opens the section; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.held_irreconcilable_to_be_reopened",
+   "en": "Held irreconcilable, to be reopened by new evidence",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The state of a disclosed contradiction, inside a row; one of four states. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.one_side_side",
+   "en": "One side: {side}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside a contradiction row. The placeholder holds a passage from the record, with its source. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_other_side_side",
+   "en": "The other side: {side}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside a contradiction row. The placeholder holds a passage from the record, with its source. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_teams_explanation_explanation",
+   "en": "The team's explanation: {explanation}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside a contradiction row. The placeholder holds the team's own words. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.read_by_who_on_date",
+   "en": "Read by {who} on {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside a contradiction row. Placeholders hold a member name and a date. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.a_contradiction_set_apart_this",
+   "en": "A contradiction set apart this way is one the team could not see the other side of.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the row that rests on a record not shown; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.it_is_told_to_you",
+   "en": "It is told to you so you can weigh the finding knowing it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_other_things_a_disclosed",
+   "en": "The other things a disclosed contradiction can say",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The summary of a details block listing the other states. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.explained_not_yet_shown_the",
+   "en": "Explained, not yet shown: the team gives an explanation but has not yet shown it holds.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): A state of a disclosed contradiction, with what it means. The words before the colon are the state's name. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.taken_up_as_a_question",
+   "en": "Taken up as a question: the team opened a question in its project to settle it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): A state of a disclosed contradiction, with what it means. The words before the colon are the state's name. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.when_the_team_disclosed_none",
+   "en": "When the team disclosed none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The summary of a details block. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_team_disclosed_no_contradictions",
+   "en": "The team disclosed no contradictions in this edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside the details block; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.when_the_edition_was_signed",
+   "en": "When the edition was signed before this was disclosed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The summary of a details block. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.this_edition_was_signed_before",
+   "en": "This edition was signed before cases carried disclosed contradictions, so it states none.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): A notice for an older edition. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.that_is_not_the_same2",
+   "en": "That is not the same as having none.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_lens_this_team_read",
+   "en": "The lens this team read through",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The heading of the public page's section on the team's declared bias. It must agree with the Declared bias screen. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.1_citation_is_held_back",
+   "en": "1 citation is held back, and which one is not said.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside a lens statement's row. The number is a count of withheld citations; it is the signed count. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.when_the_edition_carries_only",
+   "en": "When the edition carries only the lens's fingerprint",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The summary of a details block. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.this_edition_carries_only_the",
+   "en": "This edition carries only the fingerprint of the lens it was made under, not its statements: {fingerprint}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): A notice for an older edition. The placeholder holds a short fingerprint. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_team_declared_no_lens",
+   "en": "The team declared no lens for this edition, and says so here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Inside the details block; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.your_computer_works_out_the",
+   "en": "Your computer works out the file's fingerprint, a 64-character code, and sends only that code.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): Help under the file chooser on the public page's check section; read with the next sentence. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_file_itself_never_leaves",
+   "en": "The file itself never leaves your computer.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.its_fingerprint_worked_out_on",
+   "en": "Its fingerprint, worked out on your computer: {fingerprint}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): Under the file chooser, after a file is chosen. The placeholder holds a short fingerprint. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.or_paste_a_fingerprint_you",
+   "en": "Or paste a fingerprint you already have",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): Label of the field for a pasted fingerprint. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_same_64character_code_as",
+   "en": "The same 64-character code, as letters and numbers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): Help under the pasted-fingerprint field. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.use_it_when_you_were",
+   "en": "Use it when you were given the code and not the file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.when_nothing_can_be_checked",
+   "en": "When nothing can be checked yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): The summary of a details block of refusals. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.choose_a_file_or_paste",
+   "en": "Choose a file, or paste a fingerprint of 64 letters and numbers, then check again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): A refusal when neither a file nor a valid fingerprint was given. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.nothing_was_checked",
+   "en": "Nothing was checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): Ends the refusal before it and the one after the next; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.your_browser_could_not_read",
+   "en": "Your browser could not read that file, so nothing was checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): A refusal when the file cannot be read. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.choose_it_again_or_paste",
+   "en": "Choose it again, or paste its fingerprint instead.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.this_browser_cannot_work_out",
+   "en": "This browser cannot work out a fingerprint.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C10 (public-read verify): A refusal when the browser lacks what is needed. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.paste_one_instead_or_open",
+   "en": "Paste one instead, or open this page in a current browser.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.what_this_finding_leaves_out",
+   "en": "What this finding leaves out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): The heading of a section on one finding's own page. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.what_the_team_says_its",
+   "en": "What the team says its case does not cover, in its own words, so no reader mistakes a gap for something the case covers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Explanation of the section 'What this case leaves out'. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.it_also_says_who_else",
+   "en": "It also says who else on the team read that statement.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.places_where_the_record_holds",
+   "en": "Places where the record holds two passages that disagree.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Explanation of the section 'Contradictions the team disclosed'. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_team_chose_to_tell",
+   "en": "The team chose to tell you about them instead of leaving you to find them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_explanation_is_the_teams",
+   "en": "The explanation is the team's own, not a ruling.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.the_lens_this_team_read2",
+   "en": "The lens this team read evidence through, stated so a reader can discount it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Explanation of the section 'The lens this team read through'. Agrees with the Declared bias screen. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.it_never_blocked_the_teams",
+   "en": "It never blocked the team's work, and a later change does not alter an edition already published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Follows the sentence before it. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.what_the_team_says_this",
+   "en": "What the team says this finding does not cover, in its own words, so no reader takes the gap for something the finding settles.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): Explanation of the section 'What this finding leaves out'. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.published.when_the_team_declared_none",
+   "en": "When the team declared none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C7 (public-read publishedcase): the summary of a details block on the public page, under the lens section; stands alone. Translator: this page is public, read by anyone."
+  },
+  {
+   "key": "screen.members.confirmed.label",
+   "en": "confirmed: {label}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): a row of the roster for a member whose expertise is confirmed; the line of a member row, beside \"declared: {label}\"; {label} is the expertise; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.help.withdraw.what",
+   "en": "Takes the expertise off Dev's row, confirmation and declaration together.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; explanation of the button Withdraw Dev's expertise; Dev is a sample name; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.help.withdraw.again",
+   "en": "Dev can declare it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; second sentence of that explanation; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.help.withdraw.record",
+   "en": "The record keeps every step, so nothing is overwritten.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; third sentence of that explanation; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.expertise.refused.head",
+   "en": "When confirming or withdrawing an expertise is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; summary of a folded list of refusals under the roster; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.expertise.refused.admin",
+   "en": "Only an administrator can confirm or withdraw an expertise.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; a refusal; says who to ask; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.expertise.refused.undeclared",
+   "en": "The member has not declared that expertise, so there is nothing to confirm.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; a refusal when confirming something never declared; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.expertise.refused.undeclared.next",
+   "en": "Ask them to declare it under Your account first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; what to do next; Your account is a screen name; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.expertise.refused.state",
+   "en": "It is already confirmed, or it is not confirmed now, so there is nothing to change.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; a refusal when confirming what is confirmed or withdrawing what is not; translate in the same plain tone"
+  },
+  {
+   "key": "screen.members.expertise.refused.state.next",
+   "en": "Reload the list to see where it stands.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; what to do next; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.head",
+   "en": "Your cover name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): the account screen, section Your cover name; the cover is the name the team knows a member by; section heading; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.says",
+   "en": "Your team knows you as {cover}, your cover, and your work shows your handle, {handle}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; first sentence of the section; {cover} and {handle} are sample data; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.choose",
+   "en": "Choose whether the two are published together.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; second sentence of the section; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.legend",
+   "en": "Who can see which cover goes with your handle",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; legend of the two radio choices; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.private",
+   "en": "Keep it private: only you and your team's administrators see which cover goes with your handle",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; radio choice; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.public",
+   "en": "Publish it: anyone who reads your team's published list of covers and handles sees it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; radio choice; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.change",
+   "en": "You can change this at any time, and so can an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; note under the choice; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.undone",
+   "en": "Publishing it cannot be undone for anyone who already read the list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; note at the act; says what cannot be undone; translate in the same plain tone"
+  },
+  {
+   "key": "screen.account.pairing.save",
+   "en": "Save my choice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C81 (member-roster memberpairingset): on the account screen; button; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.head",
+   "en": "A copy of your team's record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): the team screen, section A copy of your team's record; only the founder may take a copy; section heading; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.says",
+   "en": "It holds every document, file and table the team keeps, with checksums so anyone can check it later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; first sentence of the section; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.note.label",
+   "en": "Why you are taking it (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; label of a text field; the words go to the list of copies; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.note.help",
+   "en": "A few words for the list below, which every administrator can read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; explanation of the field; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.note.cut",
+   "en": "Anything past 280 characters is cut.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; second sentence of that explanation; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.act",
+   "en": "Take a copy of the record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; button; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.undone",
+   "en": "Taking a copy cannot be undone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; note at the act; says what cannot be undone; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.undone.why",
+   "en": "It is added to the list below for good, with the time, the counts and your words, so every administrator knows.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; second sentence of that note; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.refused.head",
+   "en": "When taking a copy is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; summary of a folded refusal; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.refused.founder",
+   "en": "Only the founder can take a copy.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; a refusal; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.refused.next",
+   "en": "Ask the founder to take it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; what to do next; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.log.act",
+   "en": "Show the list of copies",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; button; translate in the same plain tone"
+  },
+  {
+   "key": "screen.group.export.log.cap",
+   "en": "Up to 200 are shown; if more exist, the list says so.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C30 (corpus-export export, exportlog): on the group screen; note under the list; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.head",
+   "en": "How your copy is doing",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): the updates screen, section How your copy is doing; administrators; section heading; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.help",
+   "en": "Whether your team's Civicsmith is working, what release each of its parts runs, and how much work its requests do.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; explanation of the section; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.check",
+   "en": "Check your copy now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; button; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.store",
+   "en": "The team's record answers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.file.test",
+   "en": "A test file was written and read back in {seconds} s",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result; {seconds} is a measured time; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.captures.off",
+   "en": "Captured pages are not set up on this copy",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result for an optional part; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.check.note",
+   "en": "This changes nothing and sends nothing out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; note under the check; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.check.next",
+   "en": "If a line shows a problem, tell whoever holds the hosting account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; what to do next; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.refused.head",
+   "en": "When the check finds a problem",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; summary of a folded refusal; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.refused.store",
+   "en": "The record does not answer, or the file test failed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; a refusal; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.refused.next",
+   "en": "Wait a minute and check again; if it persists, ask whoever holds the hosting account to open the Cloudflare account and look.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; what to do next; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.parts.act",
+   "en": "Show what each part runs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; button; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.part.silent",
+   "en": "did not answer within 4 seconds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line for one part of the copy that was silent; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.parts.note",
+   "en": "Each part should show the release above.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; note under the list of parts; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.parts.next",
+   "en": "A part that shows another release, or does not answer, needs the update run again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; second sentence of that note; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.runtime.act",
+   "en": "Show what running costs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; button; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.runtime.heaviest",
+   "en": "Heaviest single request so far: {ms} ms of work, {calls} outside calls",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; {ms} and {calls} are measured numbers; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.runtime.limits",
+   "en": "Cloudflare refuses a request that makes too many outside calls, so that limit is known by having been reached.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.runtime.cpu",
+   "en": "The work limit ends the request and is found only by a test run.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; translate in the same plain tone"
+  },
+  {
+   "key": "screen.updates.health.runtime.note",
+   "en": "This shows how hard the copy is working. Your Cloudflare account shows what it is charged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; note under the running reading; translate in the same plain tone"
+  },
+  {
+   "key": "screen.project.what.each.stage.needs",
+   "en": "What each stage needs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.the.record.decides.the.stage.by",
+   "en": "The record decides the stage by itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.nothing.here.is.a.button.when",
+   "en": "Nothing here is a button: when what a stage needs happens, the stage moves.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.every.project.starts.here",
+   "en": "Every project starts here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.a.question.this.project.holds.has",
+   "en": "A question this project holds has a leg in its basis.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.either.one.reaches.it.the.project",
+   "en": "Either one reaches it: the project concludes one of the {held} questions it holds, or it owns a case edition that has been ratified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.an.owner.closes.a.project.by",
+   "en": "An owner closes a project by recording why: resolved, superseded or abandoned.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.the.record.never.grows.into.this",
+   "en": "The record never grows into this stage on its own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.an.owner.can.reopen.a.closed",
+   "en": "An owner can reopen a closed project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.when.the.stage.can.t.be",
+   "en": "When the stage can't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.civicsmith.can.t.read.this.project",
+   "en": "Civicsmith can't read this project's stage right now, so it shows none and does not guess.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.the.stages.the.record.does.show",
+   "en": "The stages the record does show stay as they are.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.you.can.read.a.project.s",
+   "en": "You can read a project's stage only as a member of that project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.ask.to.join.it.first",
+   "en": "Ask to join it first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.help.for.each.stage.what.it.took",
+   "en": "For each stage, what it took to reach it or what it still needs.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; an explanation shown on hover or tap; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.project.help.counts.come.from.the.record.each",
+   "en": "Counts come from the record each time you open the page; they are never typed in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; an explanation shown on hover or tap; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.recorded.reply.stays.on.the",
+   "en": "A recorded reply stays on the record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.it.is.never.edited.or.removed",
+   "en": "It is never edited or removed; if it was wrong, record another that corrects it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.record.a.silence.with.its.date",
+   "en": "Record a silence with its date, so the record says no reply came and when.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.it.is.not.the.same.as",
+   "en": "It is not the same as nothing being recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.no.reply.came.by.the.date",
+   "en": "No reply came by the date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.day.it.came.or.the",
+   "en": "The day it came, or the day the reply was due",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.real.calendar.day",
+   "en": "A real calendar day.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.who.it.came.from",
+   "en": "Who it came from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.office.or.person.who.answered",
+   "en": "The office or person who answered, in one line of up to 500 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.what.you.record.it.from",
+   "en": "What you record it from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.either.the.reply.itself.or.your",
+   "en": "Either the reply itself or your own account of it, never both.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.silence.has.neither.because.there",
+   "en": "A silence has neither, because there is nothing to hold.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.reply.itself.a.document.you",
+   "en": "The reply itself, a document you added",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.your.account.of.the.reply",
+   "en": "Your account of the reply",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.in.your.own.words.up.to",
+   "en": "In your own words, up to 500 characters on one line, with no quotation marks.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.document.that.holds.the.reply",
+   "en": "The document that holds the reply",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.only.when.you.record.the.reply",
+   "en": "Only when you record the reply itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.add.the.document.first.under.add",
+   "en": "Add the document first under Add a document.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.where.this.reply.stands.in.the",
+   "en": "Where this reply stands in the request",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.say.what.kind.of.reply.it",
+   "en": "Say what kind of reply it is and what it decided.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.request.s.timeline.then.follows",
+   "en": "The request's timeline then follows from it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.what.kind.of.reply",
+   "en": "What kind of reply",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.sending.has.its.own.kinds",
+   "en": "A sending has its own kinds: a request, a request to waive fees, an appeal or a court filing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.silence.has.no.kind",
+   "en": "A silence has no kind.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.decision.on.a.fee.waiver",
+   "en": "Decision on a fee waiver",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.notice.of.an.extension",
+   "en": "Notice of an extension",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.decision.on.an.appeal",
+   "en": "Decision on an appeal",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.earlier.entry.this.answers.so",
+   "en": "The earlier entry this answers, so the order of the exchange reads true.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.an.appeal.must.follow.the.decision",
+   "en": "An appeal must follow the decision it appeals.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.what.the.office.decided",
+   "en": "What the office decided",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.only.on.a.reply",
+   "en": "Only on a reply.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.denial.a.decision.on.a",
+   "en": "A denial, a decision on a fee waiver or on an appeal, or a court decision must say what it decided.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.no.such.records.exist",
+   "en": "No such records exist",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.exemptions.the.office.cites",
+   "en": "The exemptions the office cites",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.exemptions.or.reasons.for.withholding",
+   "en": "The exemptions or reasons for withholding that the office gave, in its words, on one line of up to 500 characters with no quotation marks.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.office.says.it.will.answer",
+   "en": "The office says it will answer by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.date.the.office.itself.stated",
+   "en": "A date the office itself stated.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.civicsmith.works.out.no.date.for",
+   "en": "Civicsmith works out no date for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.give.the.law.with.it",
+   "en": "Give the law with it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.law.that.date.comes.from",
+   "en": "The law that date comes from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.only.a.law.this.action.goes",
+   "en": "Only a law this action goes under, as shown further down, can be cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.if.the.reply.quotes.a.fee",
+   "en": "If the reply quotes a fee",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.fee.quote.is.kept.as",
+   "en": "A fee quote is kept as evidence, so a waiver or a change can be read against it later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.put.a.waiver.in.as.a",
+   "en": "Put a waiver in as a revision to zero.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.what.the.fee.is.for",
+   "en": "What the fee is for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.optional.in.the.office.s.words",
+   "en": "Optional, in the office's words.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.it.answers.this.sending",
+   "en": "It answers this sending",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.earlier.sending.the.quote.responds",
+   "en": "The earlier sending the quote responds to.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.it.revises.this.quote",
+   "en": "It revises this quote",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.only.when.the.office.changes.a",
+   "en": "Only when the office changes a quote it gave before.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.when.a.reply.is.not.recorded",
+   "en": "When a reply is not recorded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.day.is.not.a.real",
+   "en": "The day is not a real calendar day.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.write.it.as.a.day.that",
+   "en": "Write it as a day that exists, such as October 3, 2026.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.reply.needs.either.the.document",
+   "en": "A reply needs either the document itself or your account of it, and not both.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.choose.one.and.record.again",
+   "en": "Choose one and record again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.silence.has.no.document.or",
+   "en": "A silence has no document or account to hold.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.record.it.with.its.date.alone",
+   "en": "Record it with its date alone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.this.action.says.no.reply.is",
+   "en": "This action says no reply is owed, so a silence cannot be recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.change.that.on.the.action.first",
+   "en": "Change that on the action first if it is wrong.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.that.kind.of.reply.does.not",
+   "en": "That kind of reply does not fit what you are recording.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.sending.is.a.request.a",
+   "en": "A sending is a request, a request to waive fees, an appeal or a court filing; a reply is anything else on the list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.decision.needs.what.it.decided",
+   "en": "A decision needs what it decided, and an outcome belongs only on a reply.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.choose.what.the.office.decided.or",
+   "en": "Choose what the office decided, or leave it blank on a sending.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.fee.quote.needs.an.amount",
+   "en": "A fee quote needs an amount that is a number and a currency, belongs only on a reply, and answers a sending that came before it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.fix.the.quote.and.record.again",
+   "en": "Fix the quote and record again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.the.date.the.office.gave.needs",
+   "en": "The date the office gave needs the law it comes from, and the law must be one this action goes under.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.add.the.law.first.or.leave",
+   "en": "Add the law first, or leave the date out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.a.line.has.a.quotation.mark",
+   "en": "A line has a quotation mark, a backslash or a line break, or is too long.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.take.them.out.and.record.again",
+   "en": "Take them out and record again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.another.member.is.recording.on.this",
+   "en": "Another member is recording on this action right now.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.action.wait.a.moment.and.try.again",
+   "en": "Wait a moment and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C66 (action-replies actioncorrespond): the action screen, section Replies, the form that records a reply; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.option.is.undecided.chosen.declined",
+   "en": "An option is undecided, chosen, declined, done or blocked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.declined.and.blocked.each.keep.their",
+   "en": "Declined and blocked each keep their reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.any.option.can.be.returned.to",
+   "en": "Any option can be returned to undecided.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.one.thing.the.team.could.do",
+   "en": "One thing the team could do about the matters above.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.say.who.it.is.for.and",
+   "en": "Say who it is for and when it matters, and the plan can warn you as dates come near.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.in.a.line.what.the.option",
+   "en": "In a line, what the option is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.what.kind.of.option",
+   "en": "What kind of option",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.only.a.legal.option.can.carry",
+   "en": "Only a legal option can carry a tier.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.the.matters.it.serves",
+   "en": "The matters it serves",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.choose.at.least.one.matter",
+   "en": "Choose at least one matter.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.option.cannot.name.a.matter",
+   "en": "An option cannot name a matter this plan is not about.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.who.it.is.directed.to",
+   "en": "Who it is directed to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.never.a.private.individual",
+   "en": "Never a private individual.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.name.an.office.by.its.role",
+   "en": "Name an office by its role, so it reaches whoever holds the post.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.no.one.in.particular",
+   "en": "No one in particular",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.audience.described.in.words",
+   "en": "An audience, described in words",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.the.body.or.organization",
+   "en": "The body or organization",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.dates.that.bind.it",
+   "en": "Dates that bind it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.date.set.by.law.an",
+   "en": "A date set by law, an order or a commitment.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.every.date.says.where.it.comes",
+   "en": "Every date says where it comes from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.because.the.law.order.or.commitment",
+   "en": "Because: the law, order or commitment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.one.line.up.to.500.characters",
+   "en": "One line, up to 500 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.how.careful.to.be.legal.options",
+   "en": "How careful to be (legal options only)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.member.s.judgment.of.the",
+   "en": "A member's judgment of the legal exposure of acting on it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.left.blank.it.reads.as.not",
+   "en": "Left blank, it reads as not assessed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.this.option.asks.someone.to.enforce",
+   "en": "This option asks someone to enforce or restore a requirement (lobbying)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.the.requirement.it.seeks",
+   "en": "The requirement it seeks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.standard.you.can.read.or",
+   "en": "A standard you can read, or a matter of this plan already found not met.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.required.when.the.option.is.lobbying",
+   "en": "Required when the option is lobbying.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.when.an.option.is.not.added",
+   "en": "When an option is not added",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.option.needs.a.line.saying",
+   "en": "An option needs a line saying what it is, up to 200 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.write.one.and.add.it.again",
+   "en": "Write one and add it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.choose.at.least.one.matter.the",
+   "en": "Choose at least one matter the plan is about.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.option.cannot.serve.a.matter",
+   "en": "An option cannot serve a matter that is not in this plan.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.tier.belongs.only.on.a",
+   "en": "A tier belongs only on a legal option.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.change.the.kind.or.clear.the",
+   "en": "Change the kind, or clear the tier.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.option.marked.as.lobbying.must",
+   "en": "An option marked as lobbying must name the requirement it seeks to have enforced.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.choose.it.or.clear.the.mark",
+   "en": "Choose it, or clear the mark.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.date.needs.the.law.order",
+   "en": "A date needs the law, order or commitment it comes from, and a real calendar day.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.fix.the.date.and.add.again",
+   "en": "Fix the date and add again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.option.can.be.directed.to",
+   "en": "An option can be directed to an office, the press, an organization or an audience, never to a private individual.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.change.who.it.is.for",
+   "en": "Change who it is for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.decide.the.options.you.picked",
+   "en": "Decide the options you picked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.each.decision.is.recorded.with.who",
+   "en": "Each decision is recorded with who made it and when.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.nothing.here.starts.an.action",
+   "en": "Nothing here starts an action.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.starting.a.chosen.option.is.done",
+   "en": "Starting a chosen option is done further down.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.what.to.do.with.them",
+   "en": "What to do with them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.return.them.to.undecided",
+   "en": "Return them to undecided",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.why.required.to.decline.or.to",
+   "en": "Why (required to decline or to mark blocked)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.it.stays.on.the.plan.beside",
+   "en": "It stays on the plan beside your name.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.remind.me.as.a.date.comes",
+   "en": "Remind me as a date comes near",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.only.when.you.choose.an.option",
+   "en": "Only when you choose an option that has dates.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.pick.one.of.its.dates.and",
+   "en": "Pick one of its dates and the day you want to be reminded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.day.before.the.date.in",
+   "en": "A day before the date, in your team's time zone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.when.a.decision.is.not.recorded",
+   "en": "When a decision is not recorded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.declining.an.option.or.marking.it",
+   "en": "Declining an option or marking it blocked needs a reason in your own words.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.reminders.are.set.only.when.you",
+   "en": "Reminders are set only when you choose an option.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.choose.it.or.leave.the.reminder",
+   "en": "Choose it, or leave the reminder out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.reminder.names.a.date.the",
+   "en": "A reminder names a date the option has.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.pick.one.of.its.dates.or",
+   "en": "Pick one of its dates, or add the date to the option first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.pick.at.least.one.option",
+   "en": "Pick at least one option.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.an.option.that.is.not.in",
+   "en": "An option that is not in this plan cannot be decided here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.this.plan.is.closed.so.its",
+   "en": "This plan is closed, so its options can no longer be decided.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.ask.an.owner.to.reopen.it",
+   "en": "Ask an owner to reopen it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.starts.if.phase.1.s.checkpoint",
+   "en": "starts if Phase 1's checkpoint is met",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.otherwise.goes.to.phase.3",
+   "en": "otherwise goes to Phase 3",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.starts.if.phase.1.s.checkpoint.2",
+   "en": "starts if Phase 1's checkpoint is not met",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.scenario.is.a.story.of",
+   "en": "A scenario is a story of what happens if the chosen options are taken in a certain order.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.only.options.the.team.has.chosen",
+   "en": "Only options the team has chosen can be in a phase.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.name.of.the.scenario",
+   "en": "Name of the scenario",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.laying.out.a.number.you.already",
+   "en": "Laying out a number you already have replaces that scenario and keeps the earlier version in its history.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.name.of.the.phase",
+   "en": "Name of the phase",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.each.phase.starts.after.something.else",
+   "en": "Each phase starts after something else or at the start.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.no.phase.can.start.after.itself",
+   "en": "No phase can start after itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.at.the.start.of.the.plan",
+   "en": "At the start of the plan",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.when.another.phase.s.checkpoint.is",
+   "en": "When another phase's checkpoint is met",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.when.another.phase.s.checkpoint.is.2",
+   "en": "When another phase's checkpoint is not met",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.none.this.one.starts.first",
+   "en": "None, this one starts first",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.check.back.after.days",
+   "en": "Check back after (days)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.the.checkpoint.then.waits.for.a",
+   "en": "The checkpoint then waits for a member to judge it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.what.the.checkpoint.tests",
+   "en": "What the checkpoint tests",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.in.words.up.to.500.characters",
+   "en": "In words, up to 500 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.if.the.checkpoint.is.met.go",
+   "en": "If the checkpoint is met, go to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.if.it.is.not.met.go",
+   "en": "If it is not met, go to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.when.a.scenario.is.not.laid",
+   "en": "When a scenario is not laid out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.phase.can.hold.only.options",
+   "en": "A phase can hold only options the team has chosen.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.choose.the.option.first.or.take",
+   "en": "Choose the option first, or take it out of the phase.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.following.when.each.phase.starts.leads",
+   "en": "Following when each phase starts leads back to where it began.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.no.phase.can.start.after.itself.2",
+   "en": "No phase can start after itself; change one of them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.phase.points.to.a.phase",
+   "en": "A phase points to a phase or a matter this scenario does not hold.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.choose.one.that.is.in.it",
+   "en": "Choose one that is in it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.a.phase.needs.a.name.the",
+   "en": "A phase needs a name, the chosen options it holds, and when it starts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.fill.in.the.one.that.is",
+   "en": "Fill in the one that is missing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; wording of a refusal says what to do next; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.add.another.date",
+   "en": "Add another date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a label; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.add.another.phase",
+   "en": "Add another phase",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; a label; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.help.adds.a.line.for.one.more",
+   "en": "Adds a line for one more date, up to 20.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; an explanation shown on hover or tap; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
+   "key": "screen.plan.help.adds.a.phase.to.this.scenario",
+   "en": "Adds a phase to this scenario.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; an explanation shown on hover or tap; translate in the same plain register, \"team\" never \"group\""
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -104358,6 +107641,24 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.about-knocker.name",
+   "en": "A source",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.leads.name",
+   "en": "Leads",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.watching.name",
+   "en": "Watched addresses",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
    "key": "act.bootstrap.label.install",
    "en": "Continue to Cloudflare",
    "protected": true,
@@ -104772,6 +108073,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.memberpairingset.label.account",
+   "en": "Choose whether your cover and handle are published together",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.groupkeynoticeseen.label.connect",
    "en": "Read what the team's key means",
    "protected": true,
@@ -104988,6 +108295,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.export.label.group",
+   "en": "Take a copy of the record",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.exportlog.label.group",
+   "en": "Show the list of copies",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.writinghelp.label.group",
    "en": "Help me write this",
    "protected": true,
@@ -105008,6 +108327,24 @@
   {
    "key": "act.owed_updateskip.label.updates",
    "en": "Skip this version, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.selftest.label.updates",
+   "en": "Check your copy now",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.bootstrap.label.updates",
+   "en": "Show what each part runs",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.runtime.label.updates",
+   "en": "Show what running costs",
    "protected": true,
    "source": "registry.json"
   },
@@ -106681,7 +110018,7 @@
   },
   {
    "key": "act.optiondispose.label.plan",
-   "en": "Choose or decline",
+   "en": "Choose, decline, mark done or blocked, or return to undecided",
    "protected": true,
    "source": "registry.json"
   },
@@ -106712,6 +110049,12 @@
   {
    "key": "act.itemtakeup.label.plan",
    "en": "Take an item up yourself",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.plan",
+   "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
   },
@@ -107106,6 +110449,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.sever.label.case-editor",
+   "en": "Remove a citation",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.reinstate.label.case-editor",
+   "en": "Reinstate",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.reviewgrant.label.review-copy",
    "en": "Share for review",
    "protected": true,
@@ -107304,8 +110659,104 @@
    "source": "registry.json"
   },
   {
+   "key": "act.knocksof.label.inbox",
+   "en": "See this knocker's other material",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.knock.label.doorbell",
    "en": "Hand it over",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.knockerconsent.label.doorbell",
+   "en": "Send my answer",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.sourcedisclose.label.about-knocker",
+   "en": "Record what became known",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.sourceconsent.label.about-knocker",
+   "en": "Record their agreement",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.sourceconsentwithdraw.label.about-knocker",
+   "en": "Record that they took it back",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.sourcepersonlink.label.about-knocker",
+   "en": "Say this source is that person",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.about-knocker",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.lead.label.leads",
+   "en": "Write down the lead",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.leadread.label.leads",
+   "en": "Open a lead",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.leadlook.label.leads",
+   "en": "Record the look",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.leadshare.label.leads",
+   "en": "Share it with the project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.leads",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.monitoring.label.watching",
+   "en": "List every watched address",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.monitorpause.label.watching",
+   "en": "Pause or resume the watching",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.monitorslate.label.watching",
+   "en": "Read what is due",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.sweeps.label.watching",
+   "en": "See the sweeps",
    "protected": true,
    "source": "registry.json"
   },
@@ -107601,6 +111052,36 @@
    "key": "act.adminremove.does",
    "en": "Removes an administrator's powers, with a reason. It cannot leave the team with none.",
    "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.export.does",
+   "en": "Takes a copy of the team's whole working record, with checksums to verify it later, and adds it to the list of copies. It cannot be undone, and every administrator can read the list.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.exportlog.does",
+   "en": "Shows the copies of the record taken so far, newest first, each with its time, counts and the words given.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.memberpairingset.does",
+   "en": "Chooses whether your cover name and your handle are published together. You and any administrator can change it later.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.selftest.does",
+   "en": "Checks that the team's record answers and that stored files can be written and read back. It changes nothing for the team.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.runtime.does",
+   "en": "Shows how much work the copy's requests have done, to see how close it runs to Cloudflare's limits. It changes nothing.",
+   "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
@@ -108855,13 +112336,13 @@
   },
   {
    "key": "act.sever.does",
-   "en": "Removes this citation from the question, with the reason kept. It can be reinstated.",
+   "en": "Removes this citation from the question or the case, with the reason kept. It can be reinstated.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.reinstate.does",
-   "en": "Puts a removed citation back on the question.",
+   "en": "Puts a removed citation back on the question or the case.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -109739,6 +113220,90 @@
    "key": "act.knock.does",
    "en": "Hands the material to the team. You need no account; tell them only what you choose.",
    "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.knocksof.does",
+   "en": "Lists the other material that came in with the same secret phrase, oldest first. It shows that the knocker is the same one; it never says who they are.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.knockerconsent.does",
+   "en": "Records your yes, or your taking it back, for one detail the team asked to publish about you, using your secret phrase. Agreeing is permanent for what is published under it.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.sourcedisclose.does",
+   "en": "Records one thing that became known about a source, how it became known and who knows it, with your evidence. An entry is never edited; a later one takes its place.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.sourceconsent.does",
+   "en": "Records that the source agreed to one detail being shown to one audience. It is permanent for anything published under it.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.sourceconsentwithdraw.does",
+   "en": "Records that the source took their agreement back. It binds only what is published afterward; what was already published stays published.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.sourcepersonlink.does",
+   "en": "Says, with your evidence, that a source is a person your team follows. The two records are not merged; the claim is shown to the members you list.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.lead.does",
+   "en": "Writes down something you were told or suspect, and where it might be found. A lead is somewhere to look, never evidence; only you can read it until you share it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.leadread.does",
+   "en": "Opens a lead with every look recorded against it and the projects it was shared with.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.leadlook.does",
+   "en": "Records that you looked into a lead, what you found and where you looked. It is kept with your name.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.leadshare.does",
+   "en": "Shows your lead to the participants of one project, with your reason. It cannot be taken back.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.monitoring.does",
+   "en": "Lists every address your team watches that you may see, including the ones with no schedule, with when each was last checked and when it is next due.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.monitorpause.does",
+   "en": "For administrators: stops all watching until it is resumed, or resumes it. While paused, no address is checked and nothing is gathered.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.monitorslate.does",
+   "en": "Reads what is due now, the addresses and the sweeps, as a prompt you can run by hand.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.sweeps.does",
+   "en": "Lists the sweeps you may see, with who ratified each, when it runs next and what it has kept.",
+   "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
