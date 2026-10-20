@@ -282,13 +282,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (S && LOCKED) return { state: "locked", handle: S.w || null };
     return { state: "none", handle: null };
   }
-  function instance(spec, subject, key, serves) {
+  function instance(spec, subject, key, serves, project) {
     const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null, images: {}, areas: {}, words: {}, fresh: {}, refreshT: {}, ro: false, sig: {}, typing: {}, typingT: {} };
     inst.view = key === "g"
       /* K3143: the guide's one view for the page's life: `{ui, me, reachable, screen, subject}` */
       ? { ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, get screen() { return ROUTE ? ROUTE.screen : null; },
-        get subject() { return ROUTE ? ROUTE.subject : null; }, parts: spec.parts || {}, origin: win.location.origin }
-      : { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves,
+        get subject() { return ROUTE ? ROUTE.subject : null; }, get project() { return ROUTE && ROUTE.project ? ROUTE.project : null; }, parts: spec.parts || {}, origin: win.location.origin }
+      : { subject, project: typeof project === "string" && project ? project : null, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves,
         get session() { return sessionView(); }, get fragment() { return Object.assign({}, FRAGMENT); },
         parts: spec.parts || {}, origin: win.location.origin };
     /* R30, R45: a screen of the public or published frame is drawn without a session, whatever the record holds */
@@ -557,7 +557,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`) is the item's
            own facts alone */
         const lead = kw("shell.card." + kind);
-        const card = (kind === "theme" && !lead ? "" : "<b>" + lead + "</b>") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
+        const someFact = (facts || []).some((f) => f !== null && f !== undefined && f !== "");
+        const card = (lead || (kind !== "theme" && !someFact) ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
           .map((f) => '<span class="why">' + soft(f) + "</span>").join("")) + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
           ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"
@@ -924,7 +925,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (screen === "home") return "/app";
     const at = Object.keys(D.addresses).find((k) => D.addresses[k] === screen);
     if (at) screen = at;
-    return "/app/" + encodeURIComponent(screen) + (subject !== undefined && subject !== null && subject !== "" ? "/" + encodeURIComponent(subject) : "");
+    /* R105: a screen that takes the project as a second part has a subject written `<id>/<project>` drawn as two parts of the address */
+    const enc = (x) => (D.projectPart.includes(screen) ? String(x).split("/").map(encodeURIComponent).join("/") : encodeURIComponent(x));
+    return "/app/" + encodeURIComponent(screen) + (subject !== undefined && subject !== null && subject !== "" ? "/" + enc(subject) : "");
   }
   function parse(pathname) {
     const p = String(pathname || "");
@@ -942,7 +945,19 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     let subject = sub.length ? sub.join("/") : null;
     try { subject = subject === null ? null : decodeURIComponent(subject); } catch { /* kept as written */ }
     const screen = s ? (Object.hasOwn(D.addresses, s) ? D.addresses[s] : s) : "home";
-    return { screen, subject, root: false };
+    /* R105: the question's address may carry the project it is opened from as a second part; the project part is not an id
+       space of the shell's, so a part that is empty, holds a space, control character, backslash, `?` or `#`, or a third part,
+       is malformed and draws `unavailable` */
+    let project = null, malformed = false;
+    if (D.projectPart.includes(screen) && subject !== null) {
+      const bits = subject.split("/");
+      if (bits.length > 1) {
+        const fit = (x) => x.length > 0 && x.length <= 200 && !/[\s\\?#\u0000-\u001f]/.test(x);
+        if (bits.length > 2 || !bits.every(fit)) malformed = true;
+        else { subject = bits[0]; project = bits[1]; }
+      }
+    }
+    return { screen, subject, project, malformed, root: false };
   }
   const placeOf = (id) => (D.paths[id] && D.places.includes(D.paths[id][0]) ? D.paths[id][0] : ["settings", "people", "more", "projects"].includes(id) ? id : null);
   /* R7, R37: a place opens the first of its screens registered, else the shell's own page for it */
@@ -1286,7 +1301,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      ({page}, {team}); the screen by its `screen.<id>.name`, the team by R60's name */
   function titleOf() {
     const team = GROUP ? GROUP : textOf(w("shell.group.unnamed"));
-    const id = OUTSIDE ? "unavailable" : MAIN && !MAIN.unavail ? MAIN.spec.id : ROUTE.screen;
+    const id = OUTSIDE || ROUTE.malformed ? "unavailable" : MAIN && !MAIN.unavail ? MAIN.spec.id : ROUTE.screen;
     const name = has("screen." + id + ".name") ? textOf(w("screen." + id + ".name"))
       : D.places.includes(ROUTE.screen) ? textOf(w(ROUTE.screen === "more" ? "shell.more" : "rail." + ROUTE.screen + ".name")) : textOf(w("screen.unavailable.name"));
     const plain = OUTSIDE || ENTRY_PAGE || (MAIN && D.publicPages.includes(MAIN.spec.id));
@@ -1364,8 +1379,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     show(id);
   }
   function show(id, subject) {
-    const spec = screenOf(id);
-    MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m") : null;
+    const spec = ROUTE.malformed ? null : screenOf(id);
+    MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m", null, subject !== undefined ? null : ROUTE.project) : null;
     if (ME && S && frameOf(id) === "working") startVersion();
     DOCKI = !MAIN || frameOf(MAIN.spec.id) === "working" ? (REACHABLE && screenOf("assistant") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null) : null;
     draw();

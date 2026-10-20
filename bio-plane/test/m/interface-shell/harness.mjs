@@ -25,6 +25,44 @@ export const ndjson = (events, status = 200) => ({ status, ndjson: events });
 export const bytes = (data, type = "application/pdf") => ({ status: 200, bytes: data, type });
 export const pending = Object.freeze({ pending: true });
 
+/* R104 (K4164 goal 3, K4168): every op request the page makes is compared with the `fields` its owner declares for that op
+   (`DECLARED_OPS`: `{accepts: [...], requires: [...]}`, a `requires` entry that is a list satisfied by any one alternative).
+   A field the op does not accept, or a required one missing, throws `FieldMismatch` in the page's `fetch` (the shell shows
+   "no answer") and fails the test that pressed the act: the next `settle()` (every `click` and `boot` ends in one) rethrows it.
+   An op with no owner declaration is let through and counted. The owners' rows are the collector's (`test-support`'s
+   `declaredOpsOf`, R16): `collectOwnerRows` is its one seam here, never a second copy of the collection; until `test-support`
+   merges it answers none, and a test passes fixture rows as `boot({declared})`. */
+export class FieldMismatch extends Error {
+  constructor(message, detail) { super(message); this.name = "FieldMismatch"; Object.assign(this, detail); }
+}
+export function collectOwnerRows() { return {}; }
+const isRow = (r) => !!(r && typeof r === "object" && r.fields && typeof r.fields === "object");
+const flat = (list) => (Array.isArray(list) ? list : []).flatMap((x) => (Array.isArray(x) ? x : [x]));
+/* the field names a request carries: its query (less the marks the shell adds) and a JSON object body */
+export function fieldsOf(req) {
+  const names = new Set(Object.keys(req.query || {}).filter((k) => k !== "op" && k !== "background"));
+  const b = req.body;
+  if (b && typeof b === "object" && !Array.isArray(b) && !(b instanceof Uint8Array) && !(typeof Blob !== "undefined" && b instanceof Blob)) for (const k of Object.keys(b)) names.add(k);
+  return names;
+}
+/* `[{kind: "unknown" | "missing", field}]` for one request against one owner row */
+export function fieldMismatches(req, row) {
+  const sent = fieldsOf(req);
+  const accepted = new Set([...flat(row.fields.accepts), ...flat(row.fields.requires)]);
+  const present = (f) => (req.body && typeof req.body === "object" && req.body[f] !== undefined) || (req.query && req.query[f] !== undefined);
+  const out = [];
+  for (const f of sent) if (!accepted.has(f)) out.push({ kind: "unknown", field: f });
+  for (const need of Array.isArray(row.fields.requires) ? row.fields.requires : []) {
+    const alt = Array.isArray(need) ? need : [need];
+    if (!alt.some(present)) out.push({ kind: "missing", field: alt.join(" or ") });
+  }
+  return out;
+}
+const unsettled = [];
+const undeclared = new Map();
+/* the ops that went out with no owner declaration, counted over the process (R104: `declared N of M ops`) */
+export const undeclaredOps = () => new Map(undeclared);
+
 export const FRAME = Object.freeze({
   whoami: ok(MEMBER),
   interfacewords: ok({ ok: true, language: null, words: [] }),
@@ -47,7 +85,11 @@ export function served(html, nonce = "n0nce") { return html.split(NONCE_SLOT).jo
 export const scriptOf = (html) => { const at = html.lastIndexOf("<script"); return html.slice(html.indexOf(">", at) + 1, html.lastIndexOf("</script>")); };
 
 const tick = () => new Promise((r) => setImmediate(r));
-export async function settle(n = 40) { for (let i = 0; i < n; i++) await tick(); }
+export async function settle(n = 40) {
+  for (let i = 0; i < n; i++) await tick();
+  /* R104: a request that did not match its owner's declaration fails the test that sent it */
+  if (unsettled.length) { const e = unsettled[0]; unsettled.length = 0; throw e; }
+}
 
 /* A small IndexedDB stand-in (R40): databases kept in `dbs` (a Map shared across boots to stand for a reload), each a
    Map of object stores; values are structured clones, so a CryptoKey is kept as the browser keeps it. */
@@ -89,7 +131,7 @@ export function fakeIndexedDB(dbs = new Map()) {
  * Answers `{doc, win, requests, root, clock, settle, click, fire, back, assigned, store, local, byOp, location, ...}`:
  * `store` is the tab's sessionStorage, `local` its localStorage.
  */
-export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false } = {}) {
+export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, declared = collectOwnerRows() } = {}) {
   html = html || served(interfacePage(screens, { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}) }));
   const doc = documentOf(html);
   const requests = [], polls = [];
@@ -102,6 +144,20 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
       body: init.body === undefined ? undefined : typeof init.body === "string" ? safeJson(init.body) : init.body, method: init.method || "GET" };
     /* R92: the version poll is a plain-text address of its own, no op: kept apart from `requests`, which are the op door's */
     (op === "version" ? polls : requests).push(req);
+    /* R104: the request against its owner's declaration; an op with none is let through and counted */
+    if (op && op !== "version") {
+      const row = declared[op];
+      if (!isRow(row)) undeclared.set(op, (undeclared.get(op) || 0) + 1);
+      else {
+        const bad = fieldMismatches(req, row);
+        if (bad.length) {
+          const screen = (/^\/app\/([^/]+)/.exec(location.pathname) || [])[1] || "home";
+          const err = new FieldMismatch(`${screen}: ${op} ` + bad.map((b) => (b.kind === "unknown" ? `sent ${b.field}, which the op does not accept` : `is missing the required ${b.field}`)).join("; "), { screen, op, mismatches: bad });
+          unsettled.push(err);
+          throw err;
+        }
+      }
+    }
     let a = answers[op];
     if (typeof a === "function") a = await a(req);
     if (a === undefined) a = ok(null);
