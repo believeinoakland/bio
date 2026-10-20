@@ -4,6 +4,7 @@
    node cannot resolve, so the one specifier is answered here by an in-thread resolve hook with a stand-in
    `DurableObject` class; nothing else is stubbed and no shared helper is touched. Every test drives the module at its
    interface. */
+import "./register-declared.mjs";
 import { registerHooks } from "node:module";
 import { createHash, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
