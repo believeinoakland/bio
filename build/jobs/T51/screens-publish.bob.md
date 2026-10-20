@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -112,3 +112,7 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-publish tranche/T51 job/T51/screens-publish`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B9 · ANSWER · re J6
+
+ANSWER J6 (K4209). (1) Write R44-R68 yourself in build/requirements/screens-publish.md, as your entries give them (R63 amending R60), each marked not yet met: T51 until your tests name it; the ownership check listing that one file is accepted at the merge (as K4190 accepted bundler's). (2) Yes: the digest by sonnet-medium workers, citing sections; read any cited section whole. (3) Yes: B8's Drawn note is the later word; build R59 (C50) now.
