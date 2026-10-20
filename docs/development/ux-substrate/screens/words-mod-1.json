@@ -4202,7 +4202,7 @@
   },
   {
    "key": "refusal.ACCEPT_MUST_REAUTHOR",
-   "en": "Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.",
+   "en": "Accepting this as it was proposed would make you vouch for words the assistant wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.",
    "protected": false,
    "note": "DEC-260: record-grammar, refusal by its code"
   },

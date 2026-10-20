@@ -32801,7 +32801,7 @@
   },
   {
    "key": "screen.open-file.release.waiting",
-   "en": "{name} gave a reason on {date}; a second member's releases it. The machine never can.",
+   "en": "{name} gave a reason on {date}; a second member's releases it. The assistant never can.",
    "protected": false,
    "source": "DEC-259"
   },
@@ -43577,7 +43577,7 @@
   },
   {
    "key": "queue.signer-self-registered.detail",
-   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark this done.",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark it done.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members"
@@ -71507,7 +71507,7 @@
   },
   {
    "key": "project.owners.standdown.opened",
-   "en": "You asked to stand down as an owner. The vote is open: you stay an owner until {awaiting} agree.",
+   "en": "You asked to stand down as an owner. The vote is open: you stay an owner until the other owners agree ({awaiting}).",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-384: B411 T-06: on the owner's own row at once, and until the vote ends; {awaiting} the other owners by name"
@@ -76512,7 +76512,7 @@
   },
   {
    "key": "refusal.ACCEPT_MUST_REAUTHOR",
-   "en": "Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.",
+   "en": "Accepting this as it was proposed would make you vouch for words the assistant wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.",
    "protected": false,
    "source": "DEC-260",
    "note": "record-grammar, refusal by its code"

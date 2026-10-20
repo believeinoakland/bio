@@ -261,7 +261,7 @@ w('screen.open-file.found.sent', 'sent once to the members who can see it', True
 w('screen.open-file.held.about.outside', 'While it is held, its original cannot be opened, not even with a warning. An outside scanner found it too, so it is released only when two members each give a reason. (Had only the built-in scanner found it, a second, different scanner finding it clean would release it.) A release covers this finding only.', True)
 w('screen.open-file.whole', 'The file read whole', False, 'the structure check of a deeper check')
 w('screen.open-file.flagged', 'Flagged: {what}', False, 'what the structure check flagged, such as "an external link"')
-w('screen.open-file.release.waiting', "{name} gave a reason on {date}; a second member's releases it. The machine never can.")
+w('screen.open-file.release.waiting', "{name} gave a reason on {date}; a second member's releases it. The assistant never can.")
 # people
 w('screen.people.counts.three', 'named in {documents}, {questions} and {projects}', False, 'each a count with its noun, such as "14 documents"')
 w('screen.people.counts.docsonly', 'named in {documents}, in no question or project yet')
@@ -2214,7 +2214,7 @@ W.append(dict(key='queue.signer-self-registered.summary', en='{member} registere
 W.append(dict(key='queue.signer-self-registered.summary.comment', en='{member} registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed', en='A member registered a signing key for themselves', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778'))
 W.append(dict(key='queue.signer-self-registered.summary.unnamed.comment', en='A member registered a signing key for themselves: {comment}', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}'))
-W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark this done.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
+W.append(dict(key='queue.signer-self-registered.detail', en='A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark it done.', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members'))
 # (10) attribution-unchosen
 W.append(dict(key='queue.attribution-unchosen.summary', en='Case {case} uses your observation {observation}: choose how it credits you', protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)'))
 W.append(dict(key='queue.attribution-unchosen.detail', en="Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.", protected=False, note='DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}'))
@@ -6369,7 +6369,7 @@ w411('screen.members.cap.administer.confirm', "Choosing “look after the team's
 w411('screen.members.cap.administer.confirm.yes', 'Make {who} an administrator', 'T-05: the confirming button')
 w411('screen.members.cap.administer.confirm.no', 'Go back', 'T-05: the other button')
 # T-06: after "Stand down as owner"
-w411('project.owners.standdown.opened', 'You asked to stand down as an owner. The vote is open: you stay an owner until {awaiting} agree.', 'T-06: on the owner\'s own row at once, and until the vote ends; {awaiting} the other owners by name')
+w411('project.owners.standdown.opened', 'You asked to stand down as an owner. The vote is open: you stay an owner until the other owners agree ({awaiting}).', 'T-06: on the owner\'s own row at once, and until the vote ends; {awaiting} the other owners by name')
 w411('project.owners.agree.remove', 'Agree: let {who} stand down as owner', 'T-06: the button on the other owners\' view of the row')
 w411('screen.translations.wrong.sample', '“Asks for a reason” → “Pide una razón”', 'T-07: the sample row of Marked wrong by members; the word is the mark now named Asks for a reason (a sample, not a word the product draws)')
 # T-14: plain words for the file-scanner catalogue (the code's own ids)
