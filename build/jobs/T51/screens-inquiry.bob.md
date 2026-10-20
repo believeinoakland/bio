@@ -174,3 +174,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B17 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B18 · CHANGE
+
+CHANGE (K4213; connections J3): `connectionchoose` requires `ref`; the document page sends it only when present. Always send the chosen mention's `ref` (connections R70: the connection row read by capture lists the entity's mentions `{ref, occurrence, position, grade}`; choosing the one already chosen is a no-op).
