@@ -1253,6 +1253,7 @@ SCR.project = c => ({ st: c.v === 'rescue' ? 'c' : c.v === 'outsider' ? 'd' : EM
   <div class="mk-titlerow">${h1('Pothole repairs', '<span class="mk-data">Is the city repairing reported potholes as its own policy requires?</span>')}${wizmark(2, 'Your first question · Check a claim')}</div>
   <div class="mk-grid2"><div>${ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 1)}</div><div class="row"><span class="muted">${card('Bar', 'How strong each answer in this project must be before the project relies on it: one letter for how well its documents were obtained, one for how firmly they connect to the answer. With no bar of its own, the team\'s applies.')}: B/B</span><details class="mk-details"><summary>Other bars</summary><p class="mk-small muted">Bar: B for sources; none for connection</p><p class="mk-small muted">Bar: none for sources; B for connection</p><p class="mk-small muted">No bar set for this project</p></details></div></div>
   ${acts(btn('findin', 'Find in this project', { icon: 'search' }), ref(I('add') + 'Add a document', 'capture', '<b>Add a document</b> · Opens Add, set to Pothole repairs: what you capture is held for you to vouch for, then filed in it.'))}
+  ${sec('Objective', `<p class="mk-small" style="margin:0">How far the project has come toward its objective, what is still short, the proposals to decide, and the aspirations and goals behind it. ${ref('Open the objective', 'objective', '<b>Objective</b> · what success means for this project, how it is going, what is short, and the proposals to decide')}</p>`)}
   ${sec('Questions', sheet(
     row(I('question'), `<span class="rec">Is the city repairing reported potholes within seven days?</span><span class="meta">${strength('B', 'C', '<b>Short on connection</b> · bar B/B', null, 'the link between report #4471 and the work order (C, matched by street address only). A work-order number on both would raise it to B')}</span>`, '') +
     row(I('question'), `<span class="rec">Does "closed" in the city's records mean "repaired"?</span><span class="meta">${gapm('unrated', '<b>Unrated</b> · rests on nothing yet')}</span>`, '')) +
@@ -1286,6 +1287,98 @@ SCR.project = c => ({ st: c.v === 'rescue' ? 'c' : c.v === 'outsider' ? 'd' : EM
   </div>
   <div class="st st-b"><div class="mk-titlerow">${h1('<span class="mk-data">Rent at the Coliseum lots</span>', 'Opened by Mai on October 12. No questions yet.')}</div>${row(I('question'), '<b>Start with one question the record could answer</b>, such as “Did the city collect rent above the lease?”. Documents, notes and plans gather under it.', '')}${field('mk-pq', 'Your first question', '', { help: 'One question the record could answer, in words a stranger would understand, such as “How many pothole reports did the city close late in 2025?”.' })}${acts(btn('promote', 'Open a question', { tone: 'primary', help: 'Opens the question and puts it in this project; it opens on its own page, ready for its first passage.' }), btn('drawquestion', 'Draw on a question from elsewhere'))}</div>
   <div class="st st-c">${h1('Coliseum lease audit', 'Hidden project · opened by Ben, March 2')}<div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px"><b>Every owner of this project has been gone since July 12</b><span class="mk-small">Ben, its only owner, left the team on July 12, and no one else owns it. The project is hidden, so as an administrator you see only that it exists. You can become its owner to keep its work going: you then see it whole, and its members see that you did it and why.</span>${field('mk-rescuewhy', 'Why', '', { reason: true, help: 'Its members see this beside your name.' })}${acts(btn('projectownerrescue', 'Become its owner'))}</div>${note('A project a member kept for themselves alone is never taken over: when they leave the team, it stays as they left it.')}</div>` });
+
+// DEC-374 objective (B398 C46; intent R2-R18): a project's objective on its own screen: what success means and how it is measured (objectivecondition),
+// how it is going and what is short (objectiveprogress, objectivegaps), the proposals to decide (intentproposals, triage), the aspirations,
+// departures and dead ends (aspirationdeclare, aspirationdepart, aspirationdeadend, aspirationretire) and the goals (goaldeclare, goallink, goalclose).
+const OBJ_GAP = (n, what, why) => row(I('status'), `<b class="mk-data">${what}</b><span class="meta">${why}</span>`, '', n);
+SCR.objective = c => { const st = ({ none: 'b' })[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'projects', title: 'Objective', st, crumbs: ['The Coliseum lease', 'Objective'], main: `
+  <div class="mk-mockctl"><label for="mk-obst">In this mockup, show</label> <select id="mk-obst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>an objective with a measure of success</option><option value="b"${sel('b')}>an objective with no measure yet</option></select></div>
+  ${h1('Objective', '<span class="mk-data">Whether the city kept the terms of its lease of the Coliseum land.</span>')}
+  ${sec('What success means', `
+   <div class="st st-a">${row(I('accepted'), 'Success is reached when at least <span class="mk-data">90 percent</span> of the <span class="mk-data">rent payments</span> made for <span class="mk-data">the Coliseum lease</span> have reached <span class="mk-data">Authorized by council vote</span>, with every link at grade <span class="mk-data">B</span> or better.', '', 'set by <span class="mk-data">Dev</span>, <span class="mk-data">October 8, 2026</span>')}
+    <p class="mk-small muted" style="margin:6px 0 0">Why: <span class="rec">“The lease says the council must vote on every amendment before the city collects under it.”</span></p></div>
+   <div class="st st-b">${row(I('status'), 'This objective has no measure of success yet, so the project cannot tell how far along it is. Choose what counts, and the screen works it out from your documents.', '')}</div>
+   <details class="mk-details"><summary>Set how success is measured</summary>
+    ${note('Say which payments or records count, what each must have reached, and what share of them must. The screen then counts them from your documents; you never type the result.')}
+    ${choice('mk-obflow', 'Which flow of events', ['Rent payments under the lease', 'Lease amendments', 'Council votes'], 0, { act: 'objectivecondition' })}
+    ${choice('mk-obent', 'About which party', ['The City of Oakland', 'Oakland Coliseum Authority', 'The lease operator'], 0, { act: 'objectivecondition' })}
+    ${choice('mk-obrel', 'Linked to it as (optional)', ['Any link', 'Collected from', 'Paid to'], 0, { act: 'objectivecondition' })}
+    ${field('mk-obmin', 'Only amounts of at least (optional)', '$1,000', { act: 'objectivecondition', help: 'Leave it empty to count every amount. A top amount and a currency can be given too.' })}
+    ${checks('Each one must have reached', [['Invoiced', true], ['Paid', true], ['Authorized by council vote', true]], { act: 'objectivecondition' })}
+    ${choice('mk-obgrade', 'Every link at least grade (optional)', ['No grade required', 'A', 'B', 'C', 'D'], 2, { act: 'objectivecondition' })}
+    ${field('mk-obshare', 'Share that must meet it, from 1 to 100 percent', '90', { act: 'objectivecondition' })}
+    <div class="cs-reason">${field('mk-obwhy', 'Why you measure it this way', '', { rec: true, reason: true, area: true, rows: 2, act: 'objectivecondition', help: 'Required, in your own words. It stays on the record with your name.' })}
+    ${acts(btn('objectivecondition', 'Save this measure of success'), btn('objectivecondition', 'Stop measuring this objective', { tone: 'quiet' }))}</div>
+    ${note('If the objective or the party you chose names a person who holds no public role, you are warned first. You can still go on.')}
+    <details class="mk-details"><summary>When the measure is not accepted</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>Only a named member can set it, and only a member who has joined this project. If you have not joined, ask to join first. Nothing was changed.</span></div>
+     <div class="cs-gap" data-gap="refused">${I('refused')}<span>A reason is required, also to remove the measure. Say why, and save again.</span></div>
+     <div class="cs-gap" data-gap="refused">${I('refused')}<span>The measure names a flow, a party or a stage the record does not have, or a grade that is not A, B, C or D, or a share outside 1 to 100. Choose from the lists and save again.</span></div></details></details>`)}
+  ${sec('How it is going', `
+   <div class="st st-a">${row(I('status'), '<span class="mk-data">9 of 12</span> rent payments meet the measure. <span class="mk-data">3</span> are short. Success needs <span class="mk-data">90 percent</span>, so it is not yet reached.', '', 'worked out <span class="mk-data">October 20, 2026</span>')}
+    ${row(I('undetermined'), 'Not yet decidable: <span class="mk-data">1</span> of the short payments may still reach it once a missing document is found.', '')}
+    ${note('This is counted again each time you open the screen, from your documents. It is never typed in.')}</div>
+   <div class="st st-b">${note('Not counted yet: no measure of success is set.')}</div>`)}
+  <div class="st st-a">${sec('What is still short', sheet(
+   OBJ_GAP('grade C', 'Payment of $14,200, March 2026', 'Missing a council vote. No document in the record shows one.') +
+   OBJ_GAP('grade D', 'Payment of $9,800, April 2026', 'Its weakest link is grade C, below the B the measure asks for.') +
+   OBJ_GAP('not graded', 'Payment of $11,500, May 2026', 'Not yet invoiced in any document the project holds.')) +
+   note('Each shortfall is also offered to you as a proposal below, to adopt, turn into a question, put off or dismiss.'))}</div>
+  ${sec('Proposals to decide', `<p class="mk-small muted" style="margin:0 0 6px">Things the record suggests this objective should take on. Nothing happens until a member decides.</p>${sheet(
+   row(I('hint'), '<b>Payment of $14,200, March 2026 is missing a council vote</b><span class="meta">A shortfall of this objective · grade C · shown by the machine</span>', '') +
+   row(I('hint'), '<b>Two payments name a 2019 amendment no document in the record shows</b><span class="meta">A missing step in <span class="mk-data">Rent payments under the lease</span> · shown by the machine</span>', ''))}
+   ${choice('mk-trpick', 'Which proposal', ['Payment of $14,200, March 2026 is missing a council vote', 'Two payments name a 2019 amendment no document shows'], 0, { act: 'triage' })}
+   ${checks('What to do with it', [['Adopt it into this objective', true], ['Open a question from it', false], ['Put it off', false], ['Dismiss it', false]], { radio: true, act: 'triage', group: 'mk-trdo' })}
+   <p class="mk-small muted">Adopting adds it to this objective. Opening a question starts a question in the project. Putting it off or dismissing it needs a reason.</p>
+   <div class="cs-reason">${field('mk-trwhy', 'Why (required to put it off or dismiss it)', '', { rec: true, reason: true, act: 'triage' })}
+   ${acts(btn('triage', 'Decide this proposal'))}</div>
+   <details class="mk-details"><summary>When a proposal is not accepted</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>Putting it off or dismissing it needs a reason in your own words. Write one and decide again.</span></div>
+    <div class="cs-gap" data-gap="refused">${I('refused')}<span>That proposal is no longer open: another member decided it, or what it rests on changed. A decided proposal stays readable with its reason. Reload the list.</span></div>
+    <div class="cs-gap" data-gap="refused">${I('refused')}<span>You can act on a proposal only in a project you have joined. Adopting also needs a project. Join it, or open a question instead.</span></div></details>`)}
+  ${sec('Aspirations', `<p class="mk-small muted" style="margin:0 0 6px">What a team, a project or a member holds itself to. An aspiration is not a measure; it is the standard the work is kept to.</p>${sheet(
+   row(I('group'), '<b class="mk-data">Ask for every record in writing.</b><span class="meta">Held by the whole team · declared by <span class="mk-data">Rosa</span></span>', '', 'this project departed') +
+   row(I('subject'), '<b class="mk-data">Check every amount against a second document.</b><span class="meta">Held by this project · declared by <span class="mk-data">Dev</span></span>', '', ''))}
+   <p class="mk-small muted">This project departed from the team's aspiration on <span class="mk-data">October 12, 2026</span>: <span class="rec">“The city only answers phone requests here.”</span></p>
+   <details class="mk-details"><summary>Declare an aspiration</summary>
+    ${choice('mk-aspscope', 'Whose it is', ['The whole team\'s', 'This project\'s', 'Mine'], 1, { act: 'aspirationdeclare' })}
+    ${field('mk-aspst', 'What it holds to', '', { rec: true, area: true, rows: 2, act: 'aspirationdeclare' })}
+    ${field('mk-aspent', 'Parties it concerns (optional)', '', { act: 'aspirationdeclare' })}${field('mk-aspprog', 'Flows it concerns (optional)', '', { act: 'aspirationdeclare' })}
+    ${acts(btn('aspirationdeclare', 'Declare this aspiration'))}
+    <details class="mk-details"><summary>When an aspiration is not accepted</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>Only an administrator can declare, change or retire an aspiration the whole team holds. Ask one to do it.</span></div>
+     <div class="cs-gap" data-gap="refused">${I('refused')}<span>A member's own aspiration is declared by that member alone. A project's needs a member who has joined it.</span></div>
+     <div class="cs-gap" data-gap="refused">${I('refused')}<span>Say what it holds to, and name only parties and flows the record has. Nothing was saved.</span></div></details></details>
+   <details class="mk-details"><summary>Depart from the team's aspiration</summary>
+    ${note('This project stops holding to the team\'s aspiration, and the reason shows beside it for everyone. The team\'s aspiration stays as it is. A project\'s or a member\'s own aspiration cannot be departed from.')}
+    ${choice('mk-depasp', 'Which aspiration', ['Ask for every record in writing', 'Name a second source for every claim'], 0, { act: 'aspirationdepart' })}
+    <div class="cs-reason">${field('mk-depwhy', 'Why this project departs', '', { rec: true, reason: true, area: true, rows: 2, act: 'aspirationdepart' })}${acts(btn('aspirationdepart', 'Record this departure'))}</div>
+    <details class="mk-details"><summary>When a departure is not accepted</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>A departure records why. Write the reason and save again.</span></div>
+     <div class="cs-gap" data-gap="refused">${I('refused')}<span>This aspiration is retired, so nothing holds to it. There is nothing to depart from.</span></div></details></details>
+   <details class="mk-details"><summary>Record a dead end</summary>
+    ${note('Write what was tried and why it went nowhere. It is added with your name and the date, and it is never removed.')}
+    ${choice('mk-deaasp', 'Which aspiration', ['Check every amount against a second document', 'Ask for every record in writing'], 0, { act: 'aspirationdeadend' })}
+    ${field('mk-deanote', 'What was tried, and why it went nowhere', '', { rec: true, area: true, rows: 3, act: 'aspirationdeadend' })}${acts(btn('aspirationdeadend', 'Record this dead end'))}
+    <p class="mk-small muted">Dead ends so far: <span class="rec">“We asked the Authority for the 2019 vote record. It said none exists.”</span> <span class="mk-data">Dev, September 30, 2026.</span></p>
+    <details class="mk-details"><summary>When a dead end is not accepted</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>Write what was tried and why it went nowhere. Nothing was saved. Only whoever may change the aspiration can add to it.</span></div></details></details>
+   <details class="mk-details"><summary>Retire an aspiration</summary>
+    ${note('A retired aspiration is held by no one. It and its dead ends stay readable. You cannot bring it back; declare it again instead.')}
+    ${choice('mk-retasp', 'Which aspiration', ['Check every amount against a second document'], 0, { act: 'aspirationretire' })}
+    ${field('mk-rettaught', 'What pursuing it taught', '', { rec: true, reason: true, area: true, rows: 2, act: 'aspirationretire' })}${acts(btn('aspirationretire', 'Retire this aspiration'))}
+    <details class="mk-details"><summary>When retiring is refused</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>Retiring records what pursuing it taught. Write it and try again. An aspiration already retired cannot be retired twice.</span></div></details></details>`)}
+  ${sec('Goals this objective serves', `<p class="mk-small muted" style="margin:0 0 6px">A goal is a larger aim, with limits, that several projects can serve.</p>${sheet(
+   row(I('status'), '<b class="mk-data">End unvoted collections on city land.</b><span class="meta">Limit: <span class="mk-data">only leases the council has the right to amend</span> · open · opened by <span class="mk-data">Rosa</span> · served by this project</span>', ''))}
+   <details class="mk-details"><summary>Open a goal</summary>
+    ${field('mk-goalst', 'What it pursues', '', { rec: true, area: true, rows: 2, act: 'goaldeclare' })}${field('mk-goalbd', 'What limits it', '', { rec: true, area: true, rows: 2, act: 'goaldeclare' })}
+    ${choice('mk-goalasp', 'Under which aspiration (optional)', ['None', 'Ask for every record in writing'], 0, { act: 'goaldeclare' })}${acts(btn('goaldeclare', 'Open this goal'))}
+    <details class="mk-details"><summary>When a goal is not accepted</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>Say what it pursues and what limits it. A goal is not opened under a retired aspiration; choose another or none.</span></div></details></details>
+   <details class="mk-details"><summary>Say this objective serves a goal</summary>
+    ${note('Your name and the date are kept with the link. You must have joined this project.')}
+    ${choice('mk-goallink', 'Which goal', ['End unvoted collections on city land'], 0, { act: 'goallink' })}${acts(btn('goallink', 'Link this objective to the goal'))}
+    <details class="mk-details"><summary>When linking is refused</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>A closed goal takes no new objective. Choose an open goal, or open a new one.</span></div></details></details>
+   <details class="mk-details"><summary>Close a goal</summary>
+    ${note('A closed goal stays readable with its projects and your reason. You cannot reopen it.')}
+    ${choice('mk-goalcl', 'Which goal', ['End unvoted collections on city land'], 0, { act: 'goalclose' })}
+    <div class="cs-reason">${field('mk-goalwhy', 'Why it closes', '', { rec: true, reason: true, area: true, rows: 2, act: 'goalclose' })}${acts(btn('goalclose', 'Close this goal'))}</div>
+    <details class="mk-details"><summary>When closing is refused</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>A goal closes with its reason. Write why and try again. A goal already closed stays as it is.</span></div></details></details>`)}` }; };
 
 SCR.projectai = c => { const st = ({ 'projectsigninset': 'b', 'projectkeynoticeseen': 'd' })[c.wizard && c.wizard.act] || ({ signin: 'b', suspended: 'c', member: 'd', notjoined: 'e' })[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'projects', title: 'AI for this project', st, crumbs: ['Pothole repairs', 'AI for this project'], main: `
   <div class="mk-mockctl"><label for="mk-pst">In this mockup, show the screen for</label> <select id="mk-pst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>an owner, the project holding its own API key</option><option value="b"${sel('b')}>an owner who is the project's only member, their own sign-in serving it</option><option value="c"${sel('c')}>an owner, after a second member joined and the sign-in stopped serving</option><option value="d"${sel('d')}>a member who is not an owner</option><option value="e"${sel('e')}>a member of the team who has not joined the project</option></select></div>
