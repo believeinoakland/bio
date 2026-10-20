@@ -69244,7 +69244,7 @@
   },
   {
    "key": "screen.case-editor.details.rel.linkhelp",
-   "en": "A case on any team's public page, or an address that starts with https.",
+   "en": "A case on any team's public page, or an address that starts with https://.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C12 (case-inputs casedetailsset): help under the related-work link field"
@@ -69559,14 +69559,14 @@
   },
   {
    "key": "screen.imported.rerun_declares",
-   "en": "This only declares the project a rerun of Edition 2.",
+   "en": "This only declares the project a rerun of Edition {edition}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button; Edition 2 is the edition shown. Sample names and counts are placeholders."
   },
   {
    "key": "screen.imported.rerun_nothing",
-   "en": "The imported case stays as it is, this is not an acceptance or an endorsement, and nothing is sent to {team}.",
+   "en": "The imported case stays as it is. This is not an acceptance or an endorsement, and nothing is sent to {team}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C49 (case-import, K4169): the imported-case page: Note under the button; the placeholder is the source team's name. Sample names and counts are placeholders."
@@ -69608,7 +69608,7 @@
   },
   {
    "key": "screen.project.cmp_head",
-   "en": "A rerun of Port lease revenue (Edition 2) from West Oakland Neighbors.",
+   "en": "A rerun of {title} (Edition {edition}) from {team}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Subtitle of the project page for a rerun; the case title, edition and team are sample data. Sample names and counts are placeholders."
@@ -69650,7 +69650,7 @@
   },
   {
    "key": "screen.project.cmp_both",
-   "en": "{count} statements are in both lenses.",
+   "en": "Statements in both lenses: {count}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Line under the two lists. Sample names and counts are placeholders."
