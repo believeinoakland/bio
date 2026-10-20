@@ -8,7 +8,7 @@ const WNAME = ['', 'Reversible', 'Reasoned', 'Terminal', 'Signed', 'Irreversible
 const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
-  templatesave:1, reattest:1, captureaccount:2,
+  owed_casedetailsset:1, owed_casedetails:1, owed_casedetailspublic:1, templatesave:1, reattest:1, captureaccount:2,
   cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, owed_updatestart:1, owed_installupdate:1, owed_installalongside:2, owed_installremove:1, owed_installremoveconfirm:5, owed_founderhandleset:2, owed_projectstakeset:1, owed_actionstake:1, planask:1, entityalias:2, relationdeclare:2, resolve:1, resolvetestify:2, connect:1, stepsource:2, stepsourcewithdraw:2, actionreplyquoting:2, readtranslate:1, owed_updatelater:1, owed_updateskip:2, taskforward:1, addparticipant:1, relate:1, followregister:1,
   pdfstructure:2, transcriptionattest:2, provenanceroute:1, connectionassert:2, resolutiondefect:2,
   importwatch:1, standingquestionset:1, standingquestionend:1, keepversion:1, explore:1, explorepreset:1, connectionchoose:1,
