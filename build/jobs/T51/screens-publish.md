@@ -122,3 +122,16 @@ COMPLETE (SCREENS-PUBLISH #9, session_01QD1BUeBCA9NYY1zJLxnCYq), FR-30 part two:
 **Tests and checks.** `node --test test/m/screens-publish/`: 168 tests, 163 pass, 5 fail (the five above). Process checks: `format` 0; `architecture screens-publish` 0 failures; `words`: no finding in this module's files (testcopy cleared); `coverage`: 67 of 68 ids, R68 named by no test; `ownership`: 1 failure, `build/requirements/screens-publish.md` outside paths, accepted at the merge (B9). The R10 registry test now reads a label as `act.owed_<op>.label.<screen>` when the registry row is `owed:<op>`, since the design keys those acts under the owed name.
 
 Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 22, module lines 3090
+
+## J10 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9), B13 applied. J9's entries stand; `tranche/T51` @ 530cffbe90 merged.
+
+1. `writinghelp`: green after the merge (wizard-scripts accepts `op`).
+2. `accountpropose` (R35): the screen sends nothing to it; "Draft the account with the assistant" is still drawn only when the assistant may run, and its press is held (K3717). The two R35 press tests are `test.todo` naming K3717; "Order it", the drawing of a draft and its flags read from `accountdrafts`, the earlier drafts, the BAD_ACCOUNT fold and `NO_SUCH_ACCOUNT_DRAFT` stay tested.
+3. `docketfile` stays red by name (B420). Also red by name: common.test R10 for `imported`'s registry `writinghelp`.
+4. R54's test now waits for the browser's own hash (it failed once in four full runs under load).
+
+`node --test test/m/screens-publish/`: 170 tests, 166 pass, 2 fail (R10 `imported` `writinghelp`; public R8 `docketfile`), 2 todo (K3717), stable over three runs. Process checks: format 0, architecture 0, words 0 findings in this module; coverage: R68 named by no test; ownership: the requirements file only (accepted, B9). J9's finding 1 (`OPS` holds none of the six declared ops until something registers them, so interface-shell's t50 and declared tests, page.test and control-plane's t46-app throw when they compose the real `SCREENS`) still stands for op-declarations.
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 27, module lines 3074
