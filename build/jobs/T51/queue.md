@@ -87,3 +87,33 @@ FR-23 applied: C62 (doors read from the producers' declared `door`, hand list th
 ## J5 · COMPLETE
 
 B6 applied: queue already carried a task row's door onto the item; merged tasks R24, tests now use the real door (feed.test R12 updated from taskresolve to the declared door). Queue suite 197 pass, 0 fail.
+
+## J6 · COMPLETE
+
+Wave-2 change B7 (K4233) applied: queue-producers R46–R51 are merged, and queue now takes what they publish.
+
+**Entries applied**
+- **R60 (B7 1)** a failed feed's row carries `read` and `code` as its failure names them (queue-producers R50): the first failure that names either one; a row with no such failure keeps its keys unchanged (control).
+- **R12 (B7 2)** a members-feed item (`endorsement-owed`, `expertise-confirmation-owed`) keeps the `door` its producer declared (a name, or the owner-vote list led by its first name) and its `summary_key` / `detail_key`. The door is read from the item by `Queue.doorOf`, never a hand list; an item that declares no door takes the kind's rule (control).
+- **R60 / R91 (B7 3)** `members` is a row of `feeds` (classed `OBLIGATION`, added to `QUEUE_FEEDS`), so `facts.ms.members` reaches the answer as that row's `ms`.
+
+**Readings taken**
+- `members` is added to `QUEUE_FEEDS` (queue-producers R45 names it; without the row its time and its failure could not show when it answered). The row list is now 22 rows: tasks, the 20 producer feeds, notice-producers.
+- `read` and `code` are added only where a failure names them, so every other row keeps the key list R91 and R60 state.
+- Requirement line amended: `build/requirements/queue.md` R60 (the fix-round sentence, test named `feeds-cause.test.mjs`). R12 needed no wording: its door sentence already covers producer items.
+
+**Found, not changed**
+- The R12 door test passes on the unchanged module too: `queue` already carried a producer's `door` onto its items and into `disposition.instead`. The fix needed was the R60 row and the `members` row; the door tests are kept as guards (control: an undeclared door takes the kind's rule).
+- Generated artifact stale: `setup-words/rows.mjs` (`build.mjs --check` reports it stale, as at every layer; the new `queue.*` ids are not added this round since none was added).
+- Other modules' reds at the tip, none in queue: `op-grades` words testcopies (26), `strength` inline (1), coverage in `agent-harness`, `agent-runner`, `installer-steps`, `journey-check`; `checks/run.mjs` shows them, `queue` shows none.
+
+**Deferred**: none.
+
+**Tests and checks** (from `/home/user/bio`, process repository at its tip, deps installed per K4113):
+- `node --test bio-plane/test/m/queue/`: 203 pass, 0 fail (197 at the start; `feeds-cause.test.mjs` 6 new). Seen failing against the unchanged module: 4 of 6 (the R60 and R91 tests); the 2 R12 tests pass on it (see above).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs … queue`: 0 failures. `checks/coverage.mjs … queue`: 53 of 53. `checks/words.mjs … queue`: 0 failures. `checks/ownership.mjs … queue tranche/T51 job/T51/queue`: 0 failures (1 file, the requirement file's R60 line plus the code and tests named in the commit).
+- `checks/run.mjs /home/user/bio`: architecture 0 failures; coverage, words and others as listed above, none in queue.
+
+Commit `6ee59179e6` on `job/T51/queue`.
+
+Size (session_01EHph3RAJgMWjTJAKvQgcMD): test runs 4, module lines 3384
