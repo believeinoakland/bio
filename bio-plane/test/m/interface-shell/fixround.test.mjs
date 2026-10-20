@@ -105,7 +105,7 @@ const LINKER = { id: "home", words: [], reads() { return {}; }, acts: [],
 for (const [kind, screen] of KINDS) {
   test(`R106 a reference of kind ${kind} opens ${screen} where it is registered, and is a card only where it is not; its card holds the item's own facts and no empty heading`, async () => {
     const registered = SCREEN_REGISTRY.some((r) => r.id === screen);
-    const target = { id: screen, words: [], reads() { return {}; }, acts: [], render(cs, view) { return `<h1>${cs.esc(screen)}</h1><p id="who">${cs.esc(String(view.subject))}</p>`; } };
+    const target = { id: screen, words: [], reads() { return {}; }, acts: [], render(cs, view) { return `<h1>x</h1><p id="who">${cs.esc(String(view.subject))}</p>`; } };
     const p = await boot({ screens: registered ? [LINKER, target] : [LINKER], path: "/app" });
     const el = p.root().querySelectorAll("a.cs-ref, span.cs-card").find((e) => e.textContent === "the " + kind);
     assert.ok(el, "the reference is drawn");
@@ -136,7 +136,7 @@ test("R106 control: an unknown kind still draws no link", async () => {
 for (const id of NEW) {
   test(`R106 ${id}: where it is registered the page draws its path and its crumb; where it is not, /app/${id} is Nothing is here`, async () => {
     const registered = SCREEN_REGISTRY.some((r) => r.id === id);
-    const spec = { id, words: [], reads() { return {}; }, acts: [], render(cs) { return `<h1>${cs.esc(id)}</h1>`; },
+    const spec = { id, words: [], reads() { return {}; }, acts: [], render(cs) { return "<h1>x</h1>"; },
       place() { return { project: { id: "PROJ-1", title: "Coliseum lease" } }; } };
     const p = await boot({ screens: registered ? [spec] : [], path: `/app/${id}/S-1` });
     if (!registered) {

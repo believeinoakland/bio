@@ -56,7 +56,9 @@ export function fieldMismatches(req, row) {
   const accepted = new Set([...flat(row.fields.accepts), ...flat(row.fields.requires)]);
   const present = (f) => (req.body && typeof req.body === "object" && req.body[f] !== undefined) || (req.query && req.query[f] !== undefined);
   const out = [];
-  for (const f of sent) if (!accepted.has(f)) out.push({ kind: "unknown", field: f });
+  /* B18: the `reason` the shell adds to a Reasoned act's body (R11, R107) is a shell mark like `op` and `background`, never an
+     unknown field; when the owner declares `reason` (an act's own `reasonField`) it is checked as any field is */
+  for (const f of sent) if (!accepted.has(f) && f !== "reason") out.push({ kind: "unknown", field: f });
   for (const need of Array.isArray(row.fields.requires) ? row.fields.requires : []) {
     const alt = Array.isArray(need) ? need : [need];
     if (!alt.some(present)) out.push({ kind: "missing", field: alt.join(" or ") });

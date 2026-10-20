@@ -102,3 +102,19 @@ test("R104 the owners' rows are the collector's, and an op it lists as declared 
   assert.deepEqual(collectedDuplicates(), [], "no op is declared by two owners");
   assert.equal(typeof collectOwnerRows(), "object");
 });
+
+test("R104 B18 the reason the shell adds to a Reasoned act is a shell mark, not a field the guard checks: an owner declaring no reason passes; control: any other undeclared field still fails, and a declared reason is checked as a field", async () => {
+  const row = { fields: { accepts: ["title"], requires: [] } };
+  assert.deepEqual(fieldMismatches({ query: { op: "memberadd" }, body: { title: "A", reason: "because" } }, row), []);
+  assert.deepEqual(fieldMismatches({ query: { op: "memberadd" }, body: { title: "A", reason: "r", colour: "red" } }, row), [{ kind: "unknown", field: "colour" }]);
+  assert.deepEqual(fieldMismatches({ query: { op: "memberadd" }, body: { title: "A" } }, { fields: { accepts: ["title"], requires: ["reason"] } }), [{ kind: "missing", field: "reason" }], "an owner that requires reason still has it checked");
+  /* through the page: a Reasoned act's reason box adds `reason`, and an owner declaring none passes */
+  const act = { id: "members", words: [], reads: () => ({}), acts: [{ op: "memberadd", send: () => ({ body: { title: "A" } }) }], render: (cs) => cs.act("memberadd", { label: "act.memberadd.label.members" }) };
+  const who = { tokenClass: "member", session: true, member: "rosa", handle: "rosa", administer: true, rootOfTrust: false, capabilities: ["contribute", "administer"], vocabulary: [], confinedTo: null };
+  const page = await boot({ screens: [act], path: "/app/members", plane: { whoami: { status: 200, json: { ok: true, result: who } } }, declared: { memberadd: row } });
+  await page.click(page.root().querySelector('button[data-act="memberadd"]'));
+  page.root().querySelector(".mk-slot textarea").value = "because";
+  await page.click(page.root().querySelector('[data-shell="reason-send"]'));
+  assert.equal(page.byOp("memberadd").length, 1);
+  assert.equal(page.byOp("memberadd")[0].body.reason, "because");
+});
