@@ -3,6 +3,7 @@
    Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { collectOwnerRows, fieldMismatches } from "../interface-shell/harness.mjs";
 import { open, ok, refused, refusedIn, text, ops, button, press as pressRaw, beside, last, main, word, hasWord, dmy, withScreens, settle, screen } from "./page.mjs";
 
 const R = "looking";
@@ -200,7 +201,11 @@ test("R61: the set-aside findings are listed on the answered page with the decis
   assert.ok(!text(p, rows[1]).includes(word("queue.aside.v2", { n: "" }).split("{")[0].slice(0, 12)) || !text(p, rows[1]).includes("version"), "control: a project row with no version draws no version line");
   assert.ok(text(p, rows[1]).includes(word("queue.aside.dismissed", { date: dmy("2026-10-08") })) && !rows[1].querySelector('button[data-act="proposedispose"]'));
   await press(p, "proposedispose", { nth: 0, reason: "enough" });
-  assert.deepEqual(last(p, "proposedispose").body, { key: "prog::stage", definition_version: 3, to: "dismissed", reason: "enough" });
+  assert.deepEqual(last(p, "proposedispose").body, { key: "prog::stage", definitionVersion: 3, to: "dismissed", reason: "enough" });
+  // R70: control: the old spelling fails the guard over the owner's declaration.
+  const declared = collectOwnerRows().proposedispose;
+  assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definition_version: 3, to: "dismissed", reason: "r" } }, declared).map((m) => m.field), ["definition_version"]);
+  assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definitionVersion: 3, to: "dismissed", reason: "r" } }, declared), []);
   const other = await open("/app/queue/answered", { queue: (req) => (req.query.aside ? ASIDE([row(1, { decided_by: "rosa" })]) : ANSWERED) });
   assert.ok(text(other).includes(word("queue.aside.dismissed.bymember", { member: "rosa", date: dmy("2026-10-08") })), "another member's decision by her handle");
 });

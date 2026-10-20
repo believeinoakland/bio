@@ -375,3 +375,29 @@ test("R34: every key the queue reads is a word of the list; the retired overdue 
   assert.ok(!screen("queue").words.includes("screen.queue.due.overdue"), "DEC-256's retired row");
   for (const k of ["queue.update.section", "action.noreply.title", "file.trigger.queue"]) assert.ok(screen("queue").words.includes(k), k);
 });
+
+// R71, R73, R74: where an item opens. A subject with a screen opens it; a settling kind opens the screen that settles it; the rest draw no Open.
+const opensOf = async (item, o = {}) => {
+  const p = await open("/app/queue", { queue: ok({ items: [{ id: "X-1", class: "OBLIGATION", case: { ungrouped: true, ancestors: [] }, options: [{ id: "somethingelse" }], disposition: { available: false, instead: "taskresolve" }, summary: "A sentence of its own", ...item }], item_count: 1 }) }, { screens: withScreens("matter", "account", "bias", "contradiction", "document"), ...o });
+  const row = main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes("A sentence of its own"));
+  return row.querySelectorAll("a[data-nav]").filter((a) => a.textContent === word("screen.queue.open")).map((a) => a.getAttribute("href"));
+};
+
+test("R71: an item whose subject kind has a screen opens it (escalation its matter, key the account); one whose subject opens nothing draws no Open", async () => {
+  assert.deepEqual(await opensOf({ kind: "escalation-stage-proposed", subject: { kind: "escalation", id: "ESC-1" } }), ["/app/matter/ESC-1"]);
+  assert.deepEqual(await opensOf({ kind: "signer-self-registered", subject: { kind: "key", id: "mai" } }), ["/app/account/mai"]);
+  assert.deepEqual(await opensOf({ kind: "request-awaiting", subject: { kind: "capture_request", id: "CR-1" } }), [], "a subject that opens nothing draws no Open");
+  // Control: a document subject still opens `document`.
+  assert.deepEqual(await opensOf({ kind: "check", subject: { kind: "bundle", id: "INF-7" } }), ["/app/document/INF-7"]);
+});
+
+test("R73: a bias-debt item's Open opens `bias` at that debt; an item of another kind is unchanged", async () => {
+  assert.deepEqual(await opensOf({ kind: "bias-debt", subject: { kind: "run", id: "RUN-4", context: { type: "project", id: "PROJ-1" } } }), ["/app/bias/RUN-4"]);
+  assert.deepEqual(await opensOf({ kind: "check", subject: { kind: "bundle", id: "INF-7" } }), ["/app/document/INF-7"]);
+});
+
+test("R74: a tension row opens `contradiction` at its pair; other kinds are unchanged", async () => {
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "tension", subject: { kind: "bundle", id: "INF-8", candidate: "CAND-2" } }), ["/app/contradiction/CAND-2"]);
+  assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty", subject: { kind: "contradiction_candidate", id: "CAND-3" } }), ["/app/contradiction/CAND-3"]);
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "newer-capture-affects-reference", subject: { kind: "capture", id: "abc123" } }), ["/app/document/abc123"]);
+});

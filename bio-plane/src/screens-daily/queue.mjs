@@ -356,7 +356,8 @@ export const queue = Object.freeze({
       send: function (view, el, cs, extra) {
         if (el.dataset.multi) return view.parts.queueStates().run("proposedispose", view, el, cs, extra);
         // R61: a deferred set-aside finding is dismissed with a reason: an instance row by its key and version, a project row by both.
-        if (el.dataset.key) return { body: { key: el.dataset.key, definition_version: el.dataset.version === "" ? undefined : Number(el.dataset.version), to: "dismissed" } };
+        // R70: `definitionVersion` is the word `proposedispose` reads; a finding with none sends none.
+        if (el.dataset.key) return { body: Object.assign({ key: el.dataset.key, to: "dismissed" }, el.dataset.version === "" ? {} : { definitionVersion: Number(el.dataset.version) }) };
         return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: "dismissed" } };
       },
       done: function (view, answer, cs) { cs.set("done", "proposedispose"); } },

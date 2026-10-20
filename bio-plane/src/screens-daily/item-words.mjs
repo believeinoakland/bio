@@ -13,7 +13,12 @@ export function itemWords() {
     "action-clock-overdue.theirs", "member-left-items", "watch-keep-or-stop", "plan-review-due", "plan-look-again",
     "litigation-hold.docket", "project-invitation", "project-request"];
   // The screens a subject opens, by the kind of subject an item names, and by the id's own prefix.
-  const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action" };
+  // R71, R73, R74: an escalation opens its matter, a key the account, a contradiction its screen; a subject kind with no screen opens nothing.
+  const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action",
+    escalation: "matter", key: "account", contradiction_candidate: "contradiction", contradiction_notice: "contradiction" };
+  // R73, R74: an item of these kinds opens the screen that settles it, whatever its subject is.
+  const KIND_OPENS = { "bias-debt": "bias", tension: "contradiction", "contradiction-duty": "contradiction", "contradiction-duty-unseen": "contradiction",
+    "contradiction-plurality": "contradiction", "contradiction-plurality-unseen": "contradiction" };
   const screenOf = function (s) {
     const id = s && s.id !== undefined && s.id !== null ? String(s.id) : "";
     if (/^PROJ-/.test(id)) return "project";
@@ -29,10 +34,17 @@ export function itemWords() {
     if (it.kind === "project-invitation" || it.kind === "project-request") return String(it.kind);
     return KEYED.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
   };
-  const open = function (it) {
+  // The screen an item opens and the id it opens at: the kind's settling screen first (R73, R74), else its subject's (R71).
+  const targetOf = function (it) {
     const s = it && it.subject || {};
-    const screen = screenOf(s);
-    return screen && s.id !== undefined && s.id !== null && s.id !== "" ? "/app/" + screen + "/" + encodeURIComponent(String(s.id)) : "";
+    const byKind = it && KIND_OPENS[String(it.kind)];
+    const screen = byKind || screenOf(s);
+    const id = byKind === "contradiction" ? (s.candidate !== undefined && s.candidate !== null ? s.candidate : s.id) : s.id;
+    return screen && id !== undefined && id !== null && id !== "" ? { screen: screen, id: String(id) } : null;
+  };
+  const open = function (it) {
+    const t = targetOf(it);
+    return t ? "/app/" + t.screen + "/" + encodeURIComponent(t.id) : "";
   };
   // A subject's title: the item's own, as the producers carry it (queue-producers R40) or beside its subject.
   const titleOf = function (it) {
@@ -42,11 +54,12 @@ export function itemWords() {
   };
   const subject = function (cs, it) {
     const s = it && it.subject || {};
-    const screen = screenOf(s);
-    if (!screen || s.id === undefined || s.id === null || s.id === "") return "";
+    const t = targetOf(it);
+    if (!t) return "";
+    const screen = t.screen;
     const title = titleOf(it);
     const since = it.since || it.captured || s.captured || (it.age && it.age.since) || "";
-    return cs.ref(screen, String(s.id), title || cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }), []);
+    return cs.ref(screen === "bias" ? "bias-debt" : screen, t.id, title || cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }), []);
   };
   const dated = function (cs, fills) {
     const out = Object.assign({}, fills);

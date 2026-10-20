@@ -35,7 +35,8 @@ export function queueStates() {
   const identity = function (op, it, near) {
     const d = it.disposition || {};
     if (op === "proposedispose") {
-      if (d.key) return { key: String(d.key), definition_version: d.definition_version };
+      // R70: the word `proposedispose` reads is `definitionVersion`.
+      if (d.key) return d.definition_version === undefined || d.definition_version === null ? { key: String(d.key) } : { key: String(d.key), definitionVersion: d.definition_version };
       const project = d.project ? String(d.project) : Array.isArray(d.projects) && d.projects[0] ? String(d.projects[0]) : near ? String(near.id) : "";
       return { project: project, finding: String(d.finding || it.id) };
     }
