@@ -279,7 +279,7 @@ w('queue.plan-look-again.summary', 'Look again at {plan}', False)
 w('queue.plan-look-again.detail', '{plan} was paused on {date}, to look at again today. What it set running carried on meanwhile.', False)
 w('queue.litigation-hold.docket.summary', 'A legal threat with no hold: {entry}', True)
 w('queue.litigation-hold.docket.detail', 'A docket entry is marked as a legal threat, and no litigation hold is stated for it. Place a hold, or say why none is needed.', True)
-for k, t in [('actioncorrespond', 'Record a reply'), ('clockentrystate', 'Mark it met or waived'), ('itemtakeup', 'Take this up'), ('checkpointrecord', 'Record the checkpoint'), ('escalationadvance', 'Advance the escalation'), ('escalationdecline', 'Decline to escalate'), ('reminderanswer', 'Answer the reminder'), ('actionhold', 'Place a hold'), ('watchanswer', 'Keep or stop'), ('planreviewrecord', 'Record the review'), ('planresume', 'Resume the plan')]:
+for k, t in [('actioncorrespond', 'Record a reply'), ('clockentrystate', 'Mark it met or waived'), ('itemtakeup', 'Take this up'), ('checkpointrecord', 'Record the checkpoint'), ('escalationadvance', 'Advance the escalation'), ('escalationdecline', 'Hold at this stage'), ('reminderanswer', 'Answer the reminder'), ('actionhold', 'Place a hold'), ('watchanswer', 'Keep or stop'), ('planreviewrecord', 'Record the review'), ('planresume', 'Resume the plan')]:
     w(f'door.{k}', t, False, 'a queue item\'s leading act')
 w('filings.secondapproval.waiting', 'Waiting for a second member\'s approval. Any member of this project other than {approver} can give it.', True, 'shown on the filing (DEC-194 (3))')
 w('filings.secondapproval.given', 'Second approval given by {member} on {date}.', True)
