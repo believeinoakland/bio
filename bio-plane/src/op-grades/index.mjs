@@ -12,7 +12,7 @@
  *
  * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's, T45's, T46's, T47's and T48's ops are graded in `./t33.mjs`,
  * `./t34.mjs`, `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs`, `./t45.mjs`, `./t46.mjs`,
- * `./t47.mjs`, `./t48.mjs`, `./t49.mjs` and `./t50.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
+ * `./t47.mjs`, `./t48.mjs`, `./t49.mjs` and `./t50.mjs`, spread into the tables below; each of those files imports nothing (t34, t35, t41 and t45 only `word` from `setup-words`), so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -47,6 +47,7 @@ import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
 import { T51_NON_ACTS } from "./t51.mjs";
 /* R49, R50 (T51 fix round; K4168): the owners' op declarations, taken into the tables above (`registerDeclaredOps`). */
 import { createDeclaredOps } from "./declared.mjs";
+import { word } from "../setup-words/index.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -776,7 +777,7 @@ const RUNG_ABSENT_DATA = {
   communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labeled as its preparer's; never sent until a member approves it (filings R23)" },
   templatesave:         { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
-  actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (action-holds R1, was actions R48)" },
+  actionpressure:       { ground: "undetermined", is: word("act.actionpressure.does") },
   /* K727 (T18), on R3's rule: action-plans' acts that ask no authored reason and that no published act takes back —
      opening a plan, adding, proposing and adopting an option, a checkpoint's judgement (its note optional, never
      re-judged) and starting an option as an action (`actioncreate`'s ground). DEC-88 left all six `undetermined`. */
@@ -1139,7 +1140,7 @@ const NON_ACTS_DATA = {
      of which a surface can see in advance. The act the SURFACE offers is
      `op=publish`; this is the signature that act asks for next, and op=publish's
      own answer names it in `next:`. */
-  caseratify: "case publication: its subject is a case edition keyed (case_id, edition) rather than a bundle in a state, and its refusals turn on gate state and signature verification a surface cannot see — op=publish's answer names it in `next:`",
+  caseratify: word("act.caseratify.does"),
   /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. Their subject is a
      DRAFT CASE (keyed draft_id) or a GRANT (keyed grant_id) — neither is a bundle
      in a state, so no object's affordance block can publish them, and their
@@ -1520,16 +1521,16 @@ const NON_ACTS_DATA = {
   /* R11 (DEC-120, DEC-121; N528): `wizard-scripts`' ops. A script and its versions are rows of that module's own, never a
      bundle state `affordanceFacts` describes; each act is reached from the library or a screen's mark. The reads write
      nothing; `wizardcheck` answers any credential, an assistant planning a wizard included (its R12). */
-  wizarddraft: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardrevise: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizarddraft: word("act.wizarddraft.does"),
+  wizardrevise: word("act.wizardrevise.does"),
   wizardpropose: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardsubmit: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardapprove: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardretire: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardsubmit: word("act.wizardsubmit.does"),
+  wizardapprove: word("act.wizardapprove.does"),
+  wizardretire: word("act.wizardretire.does"),
   wizardeditorgrant: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
   wizardeditorrevoke: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
   wizardprogress: "tally: unattributed, keyed by a script's version; names no member",
-  wizards: "read: the wizard scripts the viewer may see, offered versions by default or those in a named state, each with its state, attribution, breaks and use; writes nothing",
+  wizards: word("act.wizards.does"),
   wizardread: "read: one wizard script version with its steps and its whole attribution; writes nothing",
   wizardsat: "read: the offered wizard scripts that start on one screen, with the caller's own drafts marked; needs no machine credential and no key, and writes nothing",
   wizarduse: "read: a script's unattributed daily use tallies by version and day, to its project's owners and its version's author; writes nothing",
@@ -1543,9 +1544,11 @@ const NON_ACTS_DATA = {
   publishatmove: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishatcancel: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishschedule: "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
-  /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
+  /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung.
+     K4247: store-door's declared sentence for this read is `store-door.declared.groupdescriptiondraft`, which the design's
+     word list does not key yet (words check, missingkey), so this row keeps its sentence until BOB rules (R51). */
   groupdescriptiondraft: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
-  writinghelp: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
+  writinghelp: word("act.writinghelp.does"),
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
      T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs, T42's in ./t42.mjs, T45's in
      ./t45.mjs, T46's in ./t46.mjs and T47's in ./t47.mjs. */

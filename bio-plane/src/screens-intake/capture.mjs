@@ -270,14 +270,16 @@ function renderCapture(cs, view) {
     const credSec = !turned.length && !stored.length && !cs.can("capturecredentiallist") ? "" : cs.sec("screen.capture.cred.head",
       (turned.length ? `<p class="mk-small">${cs.w("screen.capture.cred.why1")} ${cs.w("screen.capture.cred.why2")}</p>`
         + cs.sheet(turned.map((r) => cs.row(cs.icon("refused"), `<b>${cs.w("screen.capture.cred.turned", { source: { html: `<span class="mk-data">${cs.esc(r.host || "")}</span>` } })}</b>`,
-          "", [who(r.principal_plane), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" · "))).join(""))
+          "", (who(r.principal_plane) && r.requested_at ? cs.w("screen.capture.cred.askedby", { name: { html: who(r.principal_plane) }, date: { html: cs.date(r.requested_at) }, count: Number(r.attempts) || 0 })
+            : [who(r.principal_plane), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" · ")))).join(""))
         + cs.field("cc-user", "screen.capture.cred.user", { autocomplete: "off" })
         + cs.field("cc-secret", "screen.capture.cred.secret", { type: "password", autocomplete: "off", help: ["screen.capture.cred.sealed1", "screen.capture.cred.sealed2"] })
         + turned.map((r) => `<div class="mk-acts">${cs.act("capturecredentialsupply", { tone: "primary", data: { request: r.request, host: r.host } })}${cs.act("capturerequestretry", { label: "screen.capture.cred.retry", data: { request: r.request } })}</div>`).join("")
         + `<p class="mk-small muted">${cs.w("screen.capture.cred.only1")} ${cs.w("screen.capture.cred.only2")}</p>` : "")
       + credNote
       + stored.map((e) => cs.sheet(cs.row(cs.icon("accepted"), `${cs.w("screen.capture.cred.stored", { source: { html: `<span class="mk-data">${cs.esc(e.host || "")}</span>` } })}<span class="meta">${cs.w("screen.capture.cred.notshown")}</span>`,
-          cs.act("capturecredentialwithdraw", { tone: "quiet", data: { credential: e.credential } }), [who(e.supplied_by), e.supplied_at ? cs.date(e.supplied_at) : ""].filter(Boolean).join(" · ")))).join("")
+          cs.act("capturecredentialwithdraw", { tone: "quiet", data: { credential: e.credential } }), (who(e.supplied_by) && e.supplied_at ? cs.w("screen.capture.cred.givenby", { name: { html: who(e.supplied_by) }, date: { html: cs.date(e.supplied_at) } })
+            : [who(e.supplied_by), e.supplied_at ? cs.date(e.supplied_at) : ""].filter(Boolean).join(" · "))))).join("")
       + `<div class="mk-acts">${cs.act("capturecredentiallist")}</div>`
       + (Array.isArray(U.logins) ? `<p class="mk-small muted">${cs.w("screen.capture.cred.listnote1")} ${cs.w("screen.capture.cred.listnote2")}</p>` : ""),
       { help: ["screen.capture.cred.tip1", "screen.capture.cred.tip2"] });

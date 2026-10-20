@@ -1,6 +1,6 @@
 # BOB to screens-entry (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -62,3 +62,8 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B7 · ANSWER · re J4
 
 ANSWER J4 (K4213): (1) Write R26 and R30 yourself in build/requirements/screens-entry.md (K4210: the ownership listing of that one file is accepted at your merge). (2) R10's red is the design's word: the example "lakeshoretenants.org" in `screen.domainfile.refused.malformed` goes to UX-DESIGN as a HANDOFF to reword with a neutral name; R10's guard stays as it is, and that one red is accepted by name at your merge until the design's merge clears it. (3) Your T-19 reading stands: the button always draws `screen.join.invite.reread`, nothing to read while the read is pending. FR-39 (instance-setup) runs in an earlier batch than yours; merge the tranche before COMPLETE and conform `domainFile()` if its names differ.
+
+## B8 · CHANGE
+
+CHANGE (K4248): SCREENS-ENTRY, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours (B417 1): `screen.domainfile.refused.malformed` draws the malformed website-file refusal; R10's red (accepted until B417) must now be green.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model haiku, medium effort; workers haiku low for mechanical edits.

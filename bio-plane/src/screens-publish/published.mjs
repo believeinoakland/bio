@@ -139,10 +139,10 @@ export const PUBLISHED = Object.freeze({
       const rows = [];
       const said = function (f) { return dd[f] && dd[f].stated ? dd[f].value : null; };
       const area = said("area"), contact = said("contact"), related = said("related"), rels = said("relationships");
-      if (Array.isArray(area)) rows.push(["screen.case-editor.details.area.bodyhint", area.map(function (a) { return cs.esc(a.words); }).join(", ")]);
-      if (contact) rows.push(["screen.case-editor.details.contact.legend", contact.kind === "doorbell" ? cs.w("screen.case-editor.details.contact.doorbell") : cs.esc(contact.text || "")]);
-      if (Array.isArray(related)) rows.push(["screen.case-editor.details.rel.link", related.map(function (r) { return cs.esc(r.url || (r.case_ref ? r.case_ref.case : "")) + (r.words ? " · " + cs.esc(r.words) : ""); }).join("; ")]);
-      if (rels) rows.push(["screen.case-editor.details.ties.legend", rels.none ? cs.w("screen.case-editor.details.ties.none") : (rels.items || []).map(function (t) { return cs.esc(t.with) + " · " + cs.esc(t.nature); }).join("; ")]);
+      if (Array.isArray(area)) rows.push(["screen.case-editor.details.name.area", area.map(function (a) { return cs.esc(a.words); }).join(", ")]);
+      if (contact) rows.push(["screen.case-editor.details.name.contact", contact.kind === "doorbell" ? cs.w("screen.case-editor.details.contact.doorbell") : cs.esc(contact.text || "")]);
+      if (Array.isArray(related)) rows.push(["screen.case-editor.details.name.related", related.map(function (r) { return cs.esc(r.url || (r.case_ref ? r.case_ref.case : "")) + (r.words ? " · " + cs.esc(r.words) : ""); }).join("; ")]);
+      if (rels) rows.push(["screen.case-editor.details.name.relationships", rels.none ? cs.w("screen.case-editor.details.ties.none") : (rels.items || []).map(function (t) { return cs.esc(t.with) + " · " + cs.esc(t.nature); }).join("; ")]);
       if (rows.length) out.push(cs.sec("act.owed_casedetailspublic.label.published", cs.sheet(rows.map(function (r) {
         return cs.row("", "<b>" + cs.w(r[0]) + '</b><span class="meta mk-data" data-detail="' + cs.esc(r[0]) + '">' + r[1] + "</span>", "");
       }).join("")) + '<p class="mk-note">' + cs.w("screen.published.details.pub.current1") + " " + cs.w("screen.published.details.pub.current2") + "</p>"

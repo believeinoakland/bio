@@ -44,20 +44,14 @@ const R24_WRITES = { releasescanhold: "reasoned", deepercheck: "observational", 
   securitytooltest: "substrate" };
 /* the reads of T36's table that are neither R23's two nor R25's `aikeepawaystate`: file-safety's (R24 counts 23 ops in all) */
 const R24_READS = readRows(T36_NON_ACTS).filter((op) => !R23_READS.includes(op) && op !== "aikeepawaystate");
-const FILE_ASKED = "file-directed: keyed by a capture's digest; asks the group's outside tools about this file; records "
-  + "no one";
-const TOOLS = "setting: the group's security tools, an administrator's act; moves no bundle";
+const FILE_ASKED = declaredSentence("file-safety", "deepercheck");
+const TOOLS = declaredSentence("file-safety", "securitytooladd");
 const WAKES = "scheduler: the security wakes; name no member and move no bundle";
 const R24_REASONS = {
-  openoriginal: "file-directed: keyed by a capture's digest, reached from the safe view's one click; answers the "
-    + "original's bytes to a member who may see it, a high-risk file only after a fresh clean deeper check (`override`); "
-    + "records no one",
-  openwithwarning: "file-directed: keyed by a capture's digest, reached from the warning before opening; answers a "
-    + "high-risk original after the member's two confirmations, never under a scan hold; records no one and keeps no "
-    + "confirmation",
+  openoriginal: declaredSentence("file-safety", "openoriginal"),
+  openwithwarning: declaredSentence("file-safety", "openwithwarning"),
   deepercheck: FILE_ASKED, safecopyrequest: FILE_ASKED,
-  releasescanhold: "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one "
-    + "member's reasoned act of two, never a machine's; moves no bundle",
+  releasescanhold: declaredSentence("file-safety", "releasescanhold"),
   securitytooladd: TOOLS, securitytooltest: TOOLS, securitytoolremove: TOOLS,
   scanbatch: WAKES, renderbatch: WAKES, deeperbatch: WAKES, securityforward: WAKES,
 };

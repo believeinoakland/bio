@@ -1,6 +1,8 @@
 /* screens-publish FR-30 (T51 fix round; K4165, K4168, K4192, K4194, K4197): R52 the docket starts the next edition. Each sentence is
  * asserted by its key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
-import "./register.mjs";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, drew, drewIn, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR } from "./fixtures.mjs";
@@ -94,6 +96,50 @@ test("R67 the receipt draws the knock's reference under the heading, by key; an 
   await press(without, "knock");
   assert.ok(without.doc.querySelector("[data-received]"));
   assert.ok(!drew(without, "screen.doorbell.after.head"));
+});
+
+test("R49 the receipt draws the knock's fingerprint, size, pseudonym and a made phrase once each by key; the phrase is kept nowhere (B420 1)", async () => {
+  const MADE = "SENTINEL-MADE-9QX7-4M2K-8TTR";
+  const answer = { ok: true, knockId: "KNOCK-77", sha256: "ab12" + "0".repeat(56) + "ef90", bytes: 2100000, pseudonym: "PSEUD-K3", secret: MADE };
+  const p = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: answer } } } });
+  choose(p, "db-file", new Uint8Array([104, 105]));
+  await press(p, "knock");
+  const r = p.doc.querySelector("[data-receipt]");
+  assert.ok(r, "the receipt is drawn");
+  assert.ok(drew(p, "screen.doorbell.receipt.fingerprint", { fingerprint: "ab120000…0000ef90" }));
+  assert.ok(drew(p, "screen.doorbell.receipt.fingerprint.help"));
+  assert.ok(drew(p, "screen.doorbell.receipt.size", { size: "2.1 MB" }));
+  assert.ok(drew(p, "screen.doorbell.receipt.pseudonym", { pseudonym: "PSEUD-K3" }) && drew(p, "screen.doorbell.receipt.pseudonym.help"));
+  assert.ok(drew(p, "screen.doorbell.receipt.secret", { secret: MADE }) && drew(p, "screen.doorbell.receipt.secret.note"));
+  assert.equal(String(r.textContent).split(MADE).length - 1, 1, "the phrase is drawn once");
+  assert.ok(!JSON.stringify(p.requests).includes(MADE), "the made phrase is in no later request");
+  assert.ok(!String(p.location.href).includes(MADE), "nor in an address");
+  assert.ok(!JSON.stringify(p.storage || {}).includes(MADE), "nor in storage");
+});
+
+test("R49 'Make one for me' sends generateSecret and no phrase, even with one typed; unticked it sends the typed phrase and not generateSecret (control)", async () => {
+  const p = await open("/app/doorbell", { boot: PUBLIC });
+  assert.ok(drew(p, "screen.doorbell.secret.make") && drew(p, "screen.doorbell.secret.make.help"));
+  choose(p, "db-file", new Uint8Array([104, 105]));
+  tick(p, "db-make", "make");
+  fill(p, { "db-secret": "typed-and-then-ignored-by-the-tick" });
+  await press(p, "knock");
+  const b = last(p, "knock").body;
+  assert.equal(b.generateSecret, true);
+  assert.equal(b.knockerSecret, undefined);
+  const q = await open("/app/doorbell", { boot: PUBLIC });
+  choose(q, "db-file", new Uint8Array([104, 105]));
+  await press(q, "knock", { values: { "db-secret": "a-long-enough-secret-phrase-of-mine" } });
+  assert.equal(last(q, "knock").body.knockerSecret, "a-long-enough-secret-phrase-of-mine");
+  assert.equal(last(q, "knock").body.generateSecret, undefined);
+});
+
+test("R49 an answer without the fingerprint, size, pseudonym or phrase draws none of them (control)", async () => {
+  const p = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true, knockId: "KNOCK-1" } } } } });
+  choose(p, "db-file", new Uint8Array([104, 105]));
+  await press(p, "knock");
+  assert.ok(p.doc.querySelector("[data-received]") && p.doc.querySelector("[data-receipt]"));
+  for (const sel of ["[data-fingerprint]", "[data-size]", "[data-pseudonym]", "[data-secret]"]) assert.equal(p.doc.querySelector(sel), null, sel);
 });
 
 const CER = `/app/ceremony/${P}/${DR}`;

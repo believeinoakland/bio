@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J8
+**Read** · handled J11
 
 ## B1 · START
 
@@ -94,3 +94,11 @@ ANSWER (K4234): build with your keys, English exactly as drawn; UX-DESIGN has th
 CHANGE (K4243): SCREENS-INTAKE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
 Entry: "Your leads" (the design's leads list, `leads.mjs`) is drawn from `observation-log`'s `leadlist` (R20; declared since OBSERVATION-LOG #16, R39: classes admin/member/probe, read, accepts `limit`): the leads the viewer may read, newest first, each with `lead_id`, author, words, locator, at, latest state, `looked_at`, `looks`, and `truncated` when the list is cut. Replace the page-memory list and the stale comment "The plane lists no leads" (`leads.mjs:4`); a lead written this visit appears by reading the list again, not by a second store. An empty answer draws the design's empty state. Tests name the requirement id you write it under (a line for BOB in your COMPLETE); control: a lead the viewer may not read is not drawn. Keys the design lacks are reported, not invented (HANDOFF to UX-DESIGN by BOB).
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.
+
+## B13 · CHANGE
+
+CHANGE (K4246): merged (R52 struck). One of your 23 reds is your own, not the design's: R8 "every act names one op OPS holds and a member's session reaches" fails on `inbox: knocksof reached by a member's session`. Since K4237, interface-shell R12 says `SESSION_OPS` gates mutating ops alone and a read is drawn when the session's class is among its `OPS` classes; your R8 test still asks `SESSION_OPS` for reads. Make the test ask reach by R12's rule (a mutating op by `SESSION_OPS`, a read by its `OPS` classes; read the rule from interface-shell's export if it has one, never a hand list). Your branch is at the tranche's tip. Then run the suite: every remaining red must be a missing design row (UNKNOWN_WORD), named in your COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Your keys: (B419, B423, B428) the address check's four outcomes and summary (`screen.capture.address.checked.*`, the modified row's "Capture the new copy" door, `acquire`; `screen.capture.address.checked` retired), the 17 `screen.about-knocker.*`, the 13 `screen.leads.*` (its empty state is not drawn, as you did), `screen.watching.*` with `.counts`, `.sweep.pages.one`, `screen.watching.project`, the source-login rows `screen.capture.cred.{askedby, givenby, given.summary}`. Every red you named as a missing row must now be green; any still red, name with its cause.

@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, has, lacks, open, said, squash, textOf, SCREENS } from "./kit.mjs";
-import { ADMIN, MEMBER, PROJ_BIAS, LENS_TEAM, LENS_PROJECT, POLICY, DEBT_OPEN, DEBT_SETTLED, biasTable, env } from "./fixtures.mjs";
+import { ADMIN, MEMBER, PROJ_BIAS, BIAS_SETS, LENS_TEAM, LENS_PROJECT, POLICY, DEBT_OPEN, DEBT_SETTLED, biasTable, env } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 const part = (o, name) => all(o.tree, (e) => e.attrs["data-part"] === name)[0];
@@ -13,7 +13,8 @@ test("R65 bias lists exactly its registry acts (the red contract test holds it),
   const s = SCREENS.find((x) => x.id === "bias");
   assert.deepEqual(s.acts.map((a) => a.op).sort(), ["biasadopt", "biasdebt", "biasdebtresolve", "biasinhale", "biasmanifest", "promote", "writinghelp"]);
   const a = await open("bias", { me: ADMIN, table: biasTable() });
-  assert.deepEqual(a.p.requests.map((r) => r.op).filter((op) => !["accountreference", "assistantstate", "groupkeystate", "subscriptionsignin"].includes(op)).sort(), ["biasmanifest", "projectlist"]);
+  assert.deepEqual(a.p.requests.map((r) => r.op).filter((op) => !["accountreference", "assistantstate", "groupkeystate", "subscriptionsignin"].includes(op)).sort(), ["biasmanifest", "list", "projectlist"]);
+  assert.deepEqual(req(a, "list")[0].query, { type: "bias", state: "proposed", limit: "50" }, "only the bias sets, as `list` declares");
   assert.deepEqual(req(a, "biasmanifest")[0].query, { scope: "instance" });
 });
 
@@ -22,9 +23,10 @@ test("R65 the lens in force for the whole team: each statement's kind, subject, 
   has(a, "screen.bias.the_lens_your_team_reads"); has(a, "screen.bias.it_never_blocks_work");
   const lens = part(a, "lens");
   const t = squash(textOf(lens));
-  assert.ok(t.includes(said("screen.bias.scrutiny_how_closely_we_read")) && t.includes("ENT-2026-0007") && t.includes(LENS_TEAM.statements[0].text) && t.includes(LENS_TEAM.statements[0].justification));
-  assert.ok(t.includes("rosa") && !t.includes("member:rosa"), "who adopted it, by the member's name");
-  assert.ok(t.includes(said("screen.standard.state.adopted")) && t.includes("October 8, 2026"));
+  const B = "screen.bias.";
+  assert.ok(t.includes(said(B + "kind.scrutiny")) && t.includes(said(B + "row.about", { subject: "ENT-2026-0007" })) && t.includes(LENS_TEAM.statements[0].text) && t.includes(said(B + "row.why", { reason: LENS_TEAM.statements[0].justification })));
+  has(a, B + "head.team"); has(a, B + "lens.label"); has(a, B + "lens.team"); has(a, B + "link.write"); has(a, B + "link.draft");
+  assert.ok(t.includes(said(B + "dt.lens")) && t.includes(said(B + "by_admin_for_the_team.team", { admin: "rosa", date: "October 8, 2026" })), "who adopted it and when, for the team");
   assert.ok(t.includes(said("screen.bias.what_this_set_does_not")) && t.includes(LENS_TEAM.residue[0].text));
   assert.ok(t.includes("9f3a…c07e") && t.includes(said("screen.bias.the_same_lens_gives_the")));
   has(a, "screen.bias.to_adopt_write_or_draft"); has(a, "screen.bias.your_queue_tells_you_when");
@@ -41,6 +43,9 @@ test("R65 choosing a project and asking for its lens sends scope and scopeId and
   const t = squash(textOf(part(a, "lens")));
   assert.ok(t.indexOf(LENS_PROJECT.statements[0].text) >= 0 && t.indexOf(LENS_PROJECT.statements[0].text) < t.indexOf(LENS_PROJECT.statements[1].text), "the team's, then the project's");
   assert.equal(all(part(a, "lens"), (e) => /cs-row/.test(e.attrs.class || "")).length, 2);
+  has(a, "screen.bias.in_force_for_the_coliseum", { project: PROJ_BIAS.title });
+  assert.ok(t.includes(said("screen.bias.row.project")), "a project's own statement is marked");
+  assert.ok(t.includes(said("screen.bias.by_admin_for_the_team", { admin: "rosa", admin_date: "October 8, 2026", owner: "dev", owner_date: "October 8, 2026" })), "both adoptions, the team's and the project's");
   // a project nothing is in force for
   const none = await open("bias", { me: ADMIN, table: biasTable({ projectlist: env({ ok: true, projects: [PROJ_BIAS, { id: "PROJ-2026-0009-x", title: "Other" }] }) }) });
   await none.press("biasmanifest", { choose: { "bi-scope": "PROJ-2026-0009-x" } });
@@ -60,6 +65,7 @@ test("R65 the folds: a project statement that met a locked one, and a set adopte
 test("R65 writing a set: the bundle promote takes (a bias bundle offered), the subject resolved from its name, the guard accepts it; a name the record does not know is refused in place; then the saved set can be adopted for the team or a project with the member's reason", async () => {
   const a = await open("bias", { me: ADMIN, table: biasTable(), reachable: true });
   lacks(a, "screen.bias.why_you_adopt_it");
+  for (const k of ["head.write", "kind.label", "statement.label", "cites.label"]) has(a, "screen.bias." + k);
   const values = { "bi-name": "Lakeshore Tenants: how we read the city", "bi-subject": "City Housing Department", "bi-text": "We read the Department's own reports closely.", "bi-why": "It writes the figures it is judged by.", "bi-not": "It sets no bar and rules no source false." };
   const r = await a.press("promote", { data: { from: "write" }, values });
   const sent = r.sent.find((x) => x.op === "promote");
@@ -78,7 +84,7 @@ test("R65 writing a set: the bundle promote takes (a bias bundle offered), the s
   const key = await a.press("promote", { data: { from: "write" }, values: { ...values, "bi-subject": "ENT-2026-0011", "bi-kind": "inference" } });
   assert.ok(key.sent.find((x) => x.op === "promote").body.files[0].text.includes(`subject: "ENT-2026-0011"`) && !key.sent.some((x) => x.op === "entitybyalias"));
   // the set saved this sitting can be adopted: the whole team, then one project, each with its reason
-  has(a, "screen.bias.why_you_adopt_it"); has(a, "screen.bias.the_whole_team_an_administrator"); has(a, "screen.bias.one_project_the_coliseum_lease", { project: PROJ_BIAS.title });
+  has(a, "screen.bias.why_you_adopt_it"); has(a, "screen.bias.head.adopt"); has(a, "screen.bias.adoptfor.label"); has(a, "screen.bias.the_whole_team_an_administrator"); has(a, "screen.bias.one_project_the_coliseum_lease", { project: PROJ_BIAS.title });
   const team = await a.press("biasadopt", { values: { "bi-adwhy": "  We agreed in the meeting.  " } });
   assert.deepEqual([team.sent[0].op, team.sent[0].body], ["biasadopt", { bundleId: "BIAS-2026-0003-lakeshore", reason: "We agreed in the meeting.", scope: "instance" }]);
   assert.equal(team.asked, false, "the reason is the member's own field: the shell asks none");
@@ -87,6 +93,42 @@ test("R65 writing a set: the bundle promote takes (a bias bundle offered), the s
   // no reason, or one too long, sends nothing
   assert.deepEqual((await a.press("biasadopt", { values: { "bi-adwhy": "" } })).sent, []);
   assert.deepEqual((await a.press("biasadopt", { values: { "bi-adwhy": "x".repeat(2001) } })).sent, []);
+});
+
+test("R65 the team's earlier offered sets are listed and adoptable without writing them again: the cursor is followed, the set just saved comes first, a set of another type or already adopted is not listed, an empty answer draws no list", async () => {
+  const pages = [
+    { bundles: [BIAS_SETS[0], BIAS_SETS[1], BIAS_SETS[2]], limit: 50, cursor: "BIAS-2026-0002-adopted", total: 4 },
+    { bundles: [BIAS_SETS[3]], limit: 50, cursor: null, total: 4 },
+  ];
+  const list = (q) => env(q.after ? pages[1] : pages[0]);
+  const a = await open("bias", { me: ADMIN, table: biasTable({ list }), reachable: true });
+  const wait = async () => { for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 0)); };
+  await wait();
+  const asked = [...new Set(req(a, "list").map((r) => JSON.stringify(r.query)))].map((x) => JSON.parse(x));
+  assert.deepEqual(asked, [{ type: "bias", state: "proposed", limit: "50" }, { type: "bias", state: "proposed", limit: "50", after: "BIAS-2026-0002-adopted" }], "the next page is read by the cursor, each page once");
+  assert.equal(req(a, "list").filter((r) => r.query.after).length, 1, "a page is read once and kept");
+  const adopt = part(a, "adopt");
+  const t = squash(textOf(adopt));
+  assert.ok(t.includes(BIAS_SETS[0].title) && t.includes("October 1, 2026") && t.includes(BIAS_SETS[3].title), "both offered sets, with when they were last written");
+  assert.ok(!t.includes(BIAS_SETS[1].title) && !t.includes(BIAS_SETS[2].title), "an adopted set and one of another type are not listed");
+  assert.equal(all(adopt, (e) => e.attrs.name === "bi-set").length, 2);
+  // adopting an earlier one: its bundle id, the scope and the member's reason
+  const first = await a.press("biasadopt", { values: { "bi-adwhy": "The first." } });
+  assert.equal(first.sent[0].body.bundleId, "BIAS-2026-0001-earlier", "the first listed is the one chosen unless another is");
+  const r = await a.press("biasadopt", { values: { "bi-set-1": true, "bi-adwhy": "We offered it last week." } });
+  assert.deepEqual(r.sent[0].body, { bundleId: "BIAS-2026-0004-second", reason: "We offered it last week.", scope: "instance" });
+  // the set just saved comes first
+  const b = await open("bias", { me: ADMIN, table: biasTable({ list }), reachable: true });
+  await wait();
+  await b.press("promote", { data: { from: "write" }, values: { "bi-name": "Saved now", "bi-subject": "ENT-2026-0007", "bi-text": "T", "bi-why": "W", "bi-not": "N" } });
+  const saved = await b.press("biasadopt", { values: { "bi-adwhy": "Now." } });
+  assert.equal(saved.sent[0].body.bundleId, "BIAS-2026-0003-lakeshore");
+  // control: an empty answer draws no list and no adoption
+  const none = await open("bias", { me: ADMIN, table: biasTable(), reachable: true });
+  assert.ok(!part(none, "adopt")); lacks(none, "screen.bias.why_you_adopt_it");
+  // control: a list that cannot be read is drawn failed, never as no sets
+  const bad = await open("bias", { me: ADMIN, table: biasTable({ list: { ok: false, status: 500, code: "X" } }), reachable: true });
+  assert.ok(!part(bad, "adopt") && all(part(bad, "write"), (e) => e.attrs["data-state"] === "failed").length === 1);
 });
 
 test("R65 a refusal is drawn by the owner's words beside the act, and nothing else changes; a set with no name or no reason is not sent", async () => {
@@ -107,6 +149,8 @@ test("R65 drafting from an outside policy: biasinhale sends the policy, where it
   assert.deepEqual([r.sent[0].op, r.sent[0].body], ["biasinhale", { policy: "Staff verify every claim against two sources.", source: "Bay Courier standards page", retrieved: "October 8, 2026" }]);
   assert.deepEqual(r.sent.map((x) => x.op), ["biasinhale"], "nothing is saved, offered or adopted");
   const t = squash(textOf(part(a, "inhale")));
+  has(a, "screen.bias.it_read_sentences_of", { read: "4", of: "4" }); has(a, "screen.bias.head.proposed"); has(a, "screen.bias.head.left_out"); has(a, "screen.bias.dt.bar"); has(a, "screen.bias.dt.verdict");
+  assert.ok(t.includes(said("screen.bias.kind.scrutiny")), "a proposal's kind by its short name");
   for (const s of POLICY.statements) assert.ok(t.includes(s.text));
   has(a, "screen.bias.proposed_not_yet_yours"); has(a, "screen.bias.a_pattern_statement_is_never"); has(a, "screen.bias.nothing_was_saved_offered_or"); has(a, "screen.bias.starting_a_set_from_these");
   assert.ok(t.includes(POLICY.bars[0].text) && t.includes(said("screen.bias.it_says_how_strong_support")) && t.includes(said("screen.bias.that_is_a_bar_which")), "a bar");
@@ -127,7 +171,7 @@ test("R65 work made under an earlier lens: the address names the work, its recor
   assert.deepEqual(req(a, "biasdebt")[0].query, { run: "RUN-2026-0042" });
   const d = part(a, "debt");
   has(a, "screen.bias.work_made_under_an_earlier"); has(a, "screen.bias.waiting_for_your_word"); has(a, "screen.bias.this_cannot_be_undone_your"); has(a, "screen.bias.the_assistant_cannot_settle_it");
-  assert.ok(textOf(d).includes("41be0000") && textOf(d).includes("9f3a0000"), "the lens then and now");
+  assert.ok(textOf(d).includes(said("screen.bias.earlier.made", { then: "41be0000", made_on: "October 9, 2026", now: "9f3a0000", adopted_on: "October 9, 2026", change: DEBT_OPEN.moved_basis })), "the lens then and now, when, and the change");
   assert.deepEqual((await a.press("biasdebtresolve", { values: { "bi-dreason": "" } })).sent, []);
   assert.deepEqual((await a.press("biasdebtresolve", { values: { "bi-dreason": "x".repeat(4001) } })).sent, []);
   const r = await a.press("biasdebtresolve", { values: { "bi-dreason": "  The change does not bear on this finding.  " } });
@@ -138,7 +182,8 @@ test("R65 work made under an earlier lens: the address names the work, its recor
   assert.deepEqual(rec.sent[0].query, { run: "RUN-2026-0042" });
   // settled: its settlement is drawn, no settling is offered
   const done = await open("bias", { me: ADMIN, table: biasTable({ biasdebt: env(DEBT_SETTLED) }), subject: "RUN-2026-0042" });
-  assert.ok(textOf(part(done, "debt")).includes(DEBT_SETTLED.settlements[0].reason));
+  assert.ok(textOf(part(done, "debt")).includes(said("screen.bias.earlier.settled", { who: "mai", date: "October 10, 2026", reason: DEBT_SETTLED.settlements[0].reason })));
+  has(done, "screen.bias.head.settled");
   assert.ok(!ops(done).includes("biasdebtresolve")); lacks(done, "screen.bias.waiting_for_your_word");
   // work this reader cannot open (or that carries no debt): nothing is drawn of it
   const none = await open("bias", { me: ADMIN, table: biasTable(), subject: "RUN-2026-9999" });

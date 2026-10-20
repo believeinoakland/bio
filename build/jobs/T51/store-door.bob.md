@@ -1,6 +1,6 @@
 # BOB to store-door (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -61,3 +61,9 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B5 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K4247): STORE-DOOR, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip. **Urgent: the plane's start refuses this row** once link-sweep's is fixed.
+Entry: your declaration of `groupdescriptiondraft` (`dispatch.mjs:397`) is `mutating: false, weight: "reasoned"`. A read cannot carry a rung (op-grades R49 refuses it, `DECLARED_OP_BAD_WEIGHT` `rung-on-read`). BOB's ruling (K4247): it is a read, as `writinghelp` is (op-grades R16: it writes nothing of the record), so the row is `weight: "read"`; keep its classes, stamps and fields. Test with `declaredOpHolds` and a registration through op-grades' `registerDeclaredOps` meeting no refusal for it; control: the same row with a rung is refused. OP-GRADES #20 withdraws its `caller-owned` hand row at the same time; BOB merges the two together. Requirement line for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.

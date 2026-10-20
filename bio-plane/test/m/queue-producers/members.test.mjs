@@ -163,3 +163,42 @@ test("R46, R47, R48, R45: the members feed fails on its own: a member-roster rea
   assert.deepEqual(r.items.map((i) => i.id).sort(), base.items.map((i) => i.id).sort(), "the other feeds' items are unchanged");
   assert.ok("members" in r.facts.ms, "R51: the feed that threw has its milliseconds too");
 });
+
+/* T51 fix round, B7 (K4245): each R46–R48 item names its member by handle as `fills.who`, the handle as the roster answers it;
+   a member with no handle carries no `who`, and the item's id still names her. */
+test("R46 (B7): the endorsement item carries the proposed member's handle as fills.who; a member with no handle carries none, and the id stays", () => {
+  const w = proposal();
+  w.run(`UPDATE members SET handle='nova' WHERE member_id='newbie'`);
+  const named = owed(w.read("bob", V("bob")))[0];
+  assert.deepEqual(named.fills, { who: "nova" }, "her handle");
+  assert.equal(named.subject.id, "newbie", "the subject still names her id");
+  const w2 = proposal();
+  const bare = owed(w2.read("bob", V("bob")))[0];
+  assert.deepEqual(bare.fills, {}, "no handle, no who");
+  assert.equal(bare.id, "OBLIGATION::endorsement-owed::admin::newbie::bob", "the id stays");
+  assert.equal(bare.subject.id, "newbie");
+});
+
+test("R47 (B7): the owner-vote item carries the target's handle as fills.who; a target with no handle carries none, and her id stays", () => {
+  const w = parkside();
+  vote(w, "add", "dee", "ann"); vote(w, "add", "dee", "bob");
+  assert.deepEqual(owed(w.read("cal", V("cal")))[0].fills, { who: "dee" }, "dee's handle");
+  const v = parkside();
+  v.member("eve");
+  vote(v, "add", "eve", "ann"); vote(v, "add", "eve", "bob");
+  const bare = owed(v.read("cal", V("cal")))[0];
+  assert.deepEqual(bare.fills, {}, "no handle, no who");
+  assert.equal(bare.id, "OBLIGATION::endorsement-owed::owner::PRJ-1::add:eve::cal", "the id stays");
+  assert.equal(bare.subject.target, "eve", "the target stays her id");
+});
+
+test("R48 (B7): the expertise item carries the declarer's handle as fills.who; a declarer with no handle carries none, and her id stays", () => {
+  const w = declaration();
+  assert.deepEqual(waiting(w.read("ada", V("ada")))[0].fills, { who: "cy" }, "cy's handle");
+  const v = declaration();
+  v.member("dan");
+  assert.equal(v.membership.members.expertiseDeclare({ memberId: "dan", label: "tax law" }).ok, true);
+  const bare = waiting(v.read("ada", V("ada"))).find((i) => i.subject.id === "dan");
+  assert.deepEqual(bare.fills, {}, "no handle, no who");
+  assert.equal(bare.id, "OBLIGATION::expertise-confirmation-owed::dan::tax law", "the id stays");
+});

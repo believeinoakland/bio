@@ -1,7 +1,9 @@
 /* screens-publish R6 (the published case), R7 (another group's case), R8 and R16 (the docket) and R9 (the doorbell), on
  * interface-shell's served page: the two public pages drawn with no session and no credential, the imported case's
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
-import "./register.mjs";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
@@ -160,8 +162,20 @@ test("R8 the docket's entries, each drafted or posted; \"File a docket entry\" w
   assert.ok(t.includes(`${word("screen.docket.kind.edition")} · Edition 2 published, superseding Edition 1`) && drew(p, "screen.docket.posted"));
   assert.ok(t.includes(`${word("screen.docket.kind.court-order")} · Order of 20 November: seal exhibit 4`) && drew(p, "screen.docket.drafted"));
   assert.equal(last(p, "docketprepare").query.entry, "2", "the draft entry is prepared for its post");
-  await press(p, "docketfile", { values: { "dk-kind": "response", "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-proposed": "public", "dk-reason": "It answers a published finding." } });
-  carries(last(p, "docketfile").body, { case: C, kind: "response", from: { kind: "other", name: "Port of Oakland" }, summary: "The Port disputes finding 1.", proposed: "public", reason: "It answers a published finding." });
+  /* B420 2 (DEC-387): the form is drawn whole: the edition it answers (one per ratified edition, the latest first and chosen), the captured
+     document it rests on (the project's captures), and the door to capture it first */
+  assert.equal(last(p, "heldcaptures").query.project, P);
+  const ed = p.doc.getElementById("dk-edition"), cap = p.doc.getElementById("dk-capture");
+  assert.ok(ed && cap, "both choices are drawn");
+  assert.deepEqual([...ed.querySelectorAll("option")].map((o) => o.getAttribute("value")), ["2", "1"], "the latest edition first");
+  assert.equal(ed.value, "2");
+  assert.ok(drew(p, "screen.docket.capture.add") && drew(p, "screen.docket.edition.label") && drew(p, "screen.docket.capture.label"));
+  await press(p, "docketfile", { values: { "dk-kind": "response", "dk-edition": "1", "dk-capture": E1, "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-proposed": "public", "dk-reason": "It answers a published finding." } });
+  carries(last(p, "docketfile").body, { case: C, edition: 1, capture: E1, kind: "response", from: { kind: "other", name: "Port of Oakland" }, summary: "The Port disputes finding 1.", proposed: "public", reason: "It answers a published finding." });
+  /* control: with no document chosen nothing is sent */
+  const q = await open(`/app/docket/${P}/${C}`, { plane: { heldcaptures: ok({ held: [] }) } });
+  await press(q, "docketfile", { values: { "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-reason": "It answers a published finding." } });
+  assert.equal(q.byOp("docketfile").length, 0, "no captured document, nothing sent");
 });
 
 test("R8 R16 \"Post it, signed\": docketStatement in NS_DOCKET through the signer kit, posted with its digest; declined, nothing is sent", async () => {

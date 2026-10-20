@@ -117,12 +117,12 @@ test("R21 every step of every script of the library, walked in the page with no 
 });
 
 test("R21 a fixture script with a step on a screen that needs a subject, which the guide does not ask for, is failed by name", async () => {
-  const ledger = { id: "WIZ-00000000000000a1", name: "Check the due date", steps: [
-    { screen: "finder", act: null, what: "Look", why: "First" }, { screen: "due-date", act: null, what: "Open the due date", why: "It needs an action" }] };
-  assert.ok(!NEEDS.has("due-date"), "the guide's kinds do not name it");
-  const fails = await walkLibrary([ledger], new Set([...NEEDS, "due-date"]));
+  const ledger = { id: "WIZ-00000000000000a1", name: "Check the hold", steps: [
+    { screen: "finder", act: null, what: "Look", why: "First" }, { screen: "hold", act: null, what: "Open the hold", why: "It needs an action" }] };
+  assert.ok(!NEEDS.has("hold"), "the guide's kinds do not name it");
+  const fails = await walkLibrary([ledger], new Set([...NEEDS, "hold"]));
   assert.deepEqual(fails.map((f) => [f.script, f.step, f.found]), [[ledger.id, 2, false], [ledger.id, 2, true]]);
-  assert.ok(fails.every((f) => f.screen === "/app/due-date"));
+  assert.ok(fails.every((f) => f.screen === "/app/hold"));
   // control: the same script is green where the screen needs no subject
   assert.deepEqual(await walkLibrary([ledger], NEEDS), []);
 });

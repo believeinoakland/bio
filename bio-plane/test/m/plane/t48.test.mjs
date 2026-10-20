@@ -414,7 +414,7 @@ test("R55 (T48): the Worker's ask arm passes the door's trace and member ref on 
 /* ===== R5 (T48; K3280, K3282, K3266): the route map re-pinned to T48's ops ===== */
 
 /* Instants and minted ids differ between two objects; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 /* T48's new ops are served by these owners' maps (action-replies R10, filings R59, action-holds R16, ai-use R14, instance-setup's
    update ops): the ops are read from the owners' own maps (K3268), never listed here. */
 const T48_OWNERS = ["action-replies", "filings", "action-holds", "ai-use", "instance-setup"];

@@ -59,7 +59,8 @@ test("R8 every act names one op OPS holds and a member's session reaches, the re
     if (listed.has("capture")) listed.add("captureupload");   /* draft-T46-interface.md §3 item 1 */
     for (const a of s.acts) {
       assert.ok(OPS[a.op], `${s.id}: ${a.op} in OPS`);
-      assert.ok(SESSION_OPS.member.has(a.op), `${s.id}: ${a.op} reached by a member's session`);
+      /* interface-shell R12: SESSION_OPS gates mutating ops alone; a read is reached when the session's class is among its OPS classes */
+      assert.ok(OPS[a.op].mutating ? SESSION_OPS.member.has(a.op) : OPS[a.op].classes.includes("member"), `${s.id}: ${a.op} reached by a member's session`);
       assert.ok(listed.has(a.op), `${s.id}: ${a.op} the registry's`);
     }
     for (const op of listed) if (op !== "capture") assert.ok(s.acts.some((a) => a.op === op), `${s.id} draws ${op}`);

@@ -417,6 +417,7 @@ const TITLE_HELP = {
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the team documents or information, without an account. It says exactly what happens to what is sent.",
 };
 const SCREEN_HELP = {
+  bias: 'The lens your team reads evidence through, stated so a reader can discount it. Write a set, draft one from an outside policy, adopt it, and settle work made under an earlier lens.',
   site: 'Civicsmith\'s own website: what it is, a team\'s published work, the teams that chose to be listed, and how to start a team.',
   install: 'Creates your team\'s Civicsmith in a Cloudflare account your team controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
   update: 'Updates your team\'s Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.',

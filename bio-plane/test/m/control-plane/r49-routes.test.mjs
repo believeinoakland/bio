@@ -4,7 +4,7 @@
    `casefilespec`, credential-free on the public path through public-read's door read (its R18), by their own names and
    as `op=publicread&name=`, with no store route of this module's. Driven through `makeFetch(hooks)`, R48's form
    (`r48-routes.test.mjs`); the store's door through `dispatch` over case-import's own map. */
-import "./register-case-import.mjs";
+import "./register-declared.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, aik, cred, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";

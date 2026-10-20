@@ -213,7 +213,7 @@ test("R26, R5: every op of fileSafetyOps is in the route map, after capture's an
   for (const op of ops) assert.ok(map.includes(op), `the route map lacks ${op}`);
   const capLast = map.indexOf("captureaccounts"), first = map.indexOf(ops[0]);
   assert.ok(capLast !== -1 && capLast < first, "after capture's map");
-  const mask = (t) => t.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+  const mask = (t) => t.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
   for (const op of ops) {
     const path = `${op}?viewer=member:nobody&by=member:nobody&capture=${SHA}`;
     const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });

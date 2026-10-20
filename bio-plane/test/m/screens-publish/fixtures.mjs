@@ -82,7 +82,8 @@ export function plane(o = {}) {
     caseratify: ok({ caseId: C, edition: 2, sitting: [{ bundleId: "FND-2026-0031" }, { bundleId: "INFO-2026-0004" }] }),
     publishat: ok({ case: C, edition: 2, state: "waiting", at: { date: "2026-11-19", time: "06:00", zone: "America/Los_Angeles" } }),
     publishedcase: ok({ caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z",
-      editions: [{ edition: 1 }, { edition: 2 }], manifest_sha: SHA,
+      editions: [1, 2], edition_index: [{ edition: 1, ratified_at: "2026-07-02T10:00:00Z", published_at: "2026-07-02T14:00:00Z" },
+        { edition: 2, ratified_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z" }], manifest_sha: SHA,
       files: [{ path: "FND-2026-0031/snapshots/minutes.pdf", sha256: E1, kind: "capture", bytes: 512, finding: "FND-2026-0031" }],
       findings: [{ bundle_id: "FND-2026-0031", body: { conclusion: "The 2024 adjustments were made without the council vote the lease requires." },
         strength: [{ axis: "capture", grade: "B" }, { axis: "connection", grade: "C" }],
@@ -101,6 +102,8 @@ export function plane(o = {}) {
         findings: [{ finding: "FND-W-1", title: "Port lease revenue fell short of the adopted budget", result: "recreated" },
           { finding: "FND-W-2", title: "The shortfall was not reported to council", result: "partial" },
           { finding: "FND-W-3", title: "The 2025 calculation of arrears", result: "not_recreated" }] }, wrote: false }),
+    heldcaptures: ok({ held: [{ bundle_id: "INFO-2026-0004", title: "Administrator's reply", since: "2026-10-15T10:00:00Z", capture: { sha256: E1 } },
+      { bundle_id: "INFO-2026-0005", title: "Council statement", since: "2026-10-12T10:00:00Z", capture: { sha256: SHA } }] }),
     docket: ok({ case: C, project: P, entries: [
       { shelf: "public", entry: 1, kind: "edition", summary: "Edition 2 published, superseding Edition 1", published_at: "2026-11-19T14:00:00Z" },
       { shelf: "record", entry: 2, kind: "court-order", summary: "Order of 20 November: seal exhibit 4", proposed: "public", state: "filed", filed_at: "2026-11-20T09:00:00Z" }], wrote: false }),

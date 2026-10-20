@@ -10,7 +10,8 @@
    function is self-contained (interface-shell R21).
    T51 FR-25 (R68, R73; C82, T-08; DEC-376, DEC-384): "How your copy is doing": the check (`selftest`), what each part runs (`bootstrap`'s
    `memberVersions`) and what running costs (`runtime`), each drawn from its own answer when the administrator asks; and a release no
-   member recorded is drawn without a claim about setup unless it is the release installed at setup. */
+   member recorded is drawn without a claim about setup unless it is the release installed at setup. The parts are named, and their
+   states and the measured work sentences read, by the design's words (DEC-387); a ceiling not yet learned by a refusal is not drawn. */
 
 export const updates = {
   id: "updates",
@@ -59,6 +60,7 @@ export const updates = {
       const hv = ui.health || null;
       if (hv) {
         const rows = [cs.row(icon("accepted"), W(H + "store"))];
+        if (hv.captures === "read-write ok") rows.push(cs.row(icon("accepted"), W(H + "file.test")));
         if (hv.captures === "not configured") rows.push(cs.row(icon("undetermined"), W(H + "captures.off")));
         hb += cs.sheet(rows.join(""));
       }
@@ -66,18 +68,27 @@ export const updates = {
       hb += `<div>${cs.act("bootstrap", { label: H + "parts.act" })}</div>`;
       const pv = ui.parts || null;
       if (pv) {
-        const rows = Object.entries(pv).filter(([, r]) => r && typeof r === "object").map(([part, r]) => (r.state === "SERVING"
-          ? cs.row(icon("accepted"), `${data1(part)} · ${data1(r.version)}`)
-          : r.state === "SILENT" ? cs.row(icon("refused"), `${data1(part)} · ${W(H + "part.silent")}`)
-            : cs.row(icon("undetermined"), `${data1(part)} · ${data1(r.state)}`)));
+        // a part is named by the design's words under bootstrap's own id, else as the answer names it; its state by the design's words, any other as the answer gives it
+        const NAMES = { "agent-worker": W(H + "part.agent-worker"), "pdf-worker": W(H + "part.pdf-worker"), "ocr-worker": W(H + "part.ocr-worker"), "sheet-worker": W(H + "part.sheet-worker"), "file-scanner": W(H + "part.file-scanner"), "agent-runner": W(H + "part.agent-runner") };
+        const release = (r) => (r.version ? W(H + "part.release", { version: String(r.version) }) : "");
+        const rows = Object.entries(pv).filter(([, r]) => r && typeof r === "object").map(([part, r]) => {
+          const name = Object.hasOwn(NAMES, part) ? NAMES[part] : data1(part);
+          return r.state === "SERVING" ? cs.row(icon("accepted"), `${name} · ${W(H + "part.state.answering")} · ${release(r)}`)
+            : r.state === "SILENT" ? cs.row(icon("refused"), `${name} · ${W(H + "part.silent")}`)
+              : r.state === "UNBOUND" ? cs.row(icon("undetermined"), `${name} · ${W(H + "part.state.unbound")}`)
+                : r.state === "MISNAMED" ? cs.row(icon("undetermined"), `${name} · ${W(H + "part.state.misnamed")}${r.name ? " " + data1(r.name) : ""}${r.version ? " · " + release(r) : ""}`)
+                  : cs.row(icon("undetermined"), `${name} · ${W(H + "part.other")} ${data1(r.state)}`);
+        });
         hb += cs.sheet(rows.join("")) + `<p class="mk-note">${W(H + "parts.note")} ${W(H + "parts.next")}</p>`;
       }
       hb += `<div>${cs.act("runtime", { label: H + "runtime.act" })}</div>`;
       const rv = ui.runtime || null;
       if (rv) {
         const metrics = rv.measured && Array.isArray(rv.measured.metrics) ? rv.measured.metrics : [];
-        const rows = metrics.map((m) => cs.row(icon("status"), data1(m.metric), "", `${data1(num(m.peak) + " " + m.unit)} ${data1(num(m.mean) + " " + m.unit)} ${data1(num(m.samples))}`));
-        hb += cs.sheet(rows.join("") + cs.row(icon("status"), W(H + "runtime.limits")) + cs.row(icon("status"), W(H + "runtime.cpu"))) + `<p class="mk-note">${W(H + "runtime.note")}</p>`;
+        // a measurement in the unit it was recorded in (`ms` or `bytes`, drawn as the code until the design words them); the subrequests ceiling is a count, with no unit
+        const rows = metrics.map((m) => cs.row(icon("status"), data1(m.metric), "", `${W(H + "runtime.heaviest", { peak: num(m.peak), unit: String(m.unit || "") })} · ${W(H + "runtime.average", { mean: num(m.mean), unit: String(m.unit || "") })} · ${W(H + "runtime.samples", { samples: num(m.samples) })}`));
+        const ceiling = rv.subrequests && Number.isFinite(rv.subrequests.observed) ? String(rv.subrequests.observed) : "";
+        hb += cs.sheet(rows.join("") + (ceiling ? cs.row(icon("status"), W(H + "runtime.limits", { ceiling })) : "") + cs.row(icon("status"), W(H + "runtime.cpu"))) + `<p class="mk-note">${W(H + "runtime.note")}</p>`;
       }
       return hb;
     };

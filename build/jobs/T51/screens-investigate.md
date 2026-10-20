@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_013U8Ciq9twS4zjfvFdM57Xa · depth 2 · COMPLETE · handled B10
+**Status** · session_01S8VGM3tuVs3msj6bpgKFvC · depth 2 · COMPLETE · handled B13
 
 ## J1 · QUESTION
 
@@ -85,3 +85,52 @@ Also fixed (guard findings of my screens, not entries): explore's re-read after 
 Found in other modules / for UX-DESIGN (HANDOFF B419 per B10): R51's answer words ("In force", "Not in force", "Overridden") and the day field's label; R54's "we will remind you on {date}"; R50's labels for the office choice and "What says so" and a keyed phrase for a `responsible_for` line (stand-ins in use: `screen.people.today.kind.office`, `screen.person.source`, `screen.person.fact.from`/`.to`, `label.linekinds.responsible_for`); the note `screen.person.keeper.withdraw.a/b` promises a withdrawal the registry gives the person page no act for (`linewithdraw`), drawn as the design has it. The test harness's `refusedIn` carries no extra fields, so R59's test builds its refusal itself.
 Tests and checks (screens-investigate, tranche/T51 merged at f5176d5078+): module suite 175 tests, 174 pass, 1 fail (R51, accepted red); format 0 failures; architecture 0 failures; coverage 59 of 59 ids named; words (module and all 175 modules together) no finding naming this module (the 26 are other modules'); ownership 18 files, 0 failures; setup-words build --check: stale-rows note only (op-declarations/action-plans rows), none naming this module; checks/run.mjs: every failure is in op-grades' tests, none mine.
 Size (session_013U8Ciq9twS4zjfvFdM57Xa): test runs 45, module lines 3,018
+
+## J9 · COMPLETE
+
+COMPLETE (re B12, K4245): R51's test failed on the request's query. The harness's `query` is every URL parameter, and `op` is one of them (as timeline.test.mjs:140 already expects), so the drawing was right. It sends only the declared fields, `id` and `date` (standards' DECLARED_OPS: accepts and requires both). The fix is the test: standard.test.mjs:100 now expects `{ op, id, date }`. No drawing change.
+
+**Entries applied**
+- B12: fixed as above. The R51 test is green, so the red accepted in J8 is cleared. J7 item 1 (`standardinforce` in SESSION_OPS.member) is also settled: op-declarations' t51 test passes on the tranche merged in.
+- B11 (action-clocks `deadlines`): merged at the tranche tip; no change needed in my code.
+
+**Deferred** none.
+
+**Report (for BOB)**
+- Requirements: no line changed by me. R51's own not-yet-met note in build/requirements/screens-investigate.md is out of date now that its test passes; for BOB to clear.
+- Nothing found in another module.
+
+**Tests and checks** (from /home/user/bio/bio-plane): `node --test test/m/screens-investigate/`: 175 pass, 0 fail (was 174 pass, 1 fail). From the process repository: format 0 failures; architecture screens-investigate 0 failures; coverage screens-investigate 59 of 59 live ids named, 0 failures; ownership tranche/T51 1 file, 0 failures.
+
+Size (session_01W8ujgLnaNkquRgeBeghZRT): test runs 3, module lines 3018
+
+## J10 · REPORT
+
+Answers CHANGE B13 (K4248). Commit 4840b98cbb on job/T51/screens-investigate (tranche/T51 merged at fc771223d3).
+
+**Applied**
+- B419 (2): the standard's in-force answer draws `screen.standard.inforce.result.line` ("On {date} it was: {state}") with `screen.standard.inforce.state.{in_force, not_in_force, overridden, undetermined}`; the day field is `screen.standard.inforce.day.label`. Stand-ins removed.
+- B419 (3): the reminder beside its entry, on due-date, draws `screen.reminder.on` ("We will remind you on {date}."). `screen.due-date.on` stays only as the reminder day field's label.
+- B423, keeper rows: the office field `screen.person.keeper.office.label`, the source field `source.label`, the dates `from.label` and `to.label`, and a responsible-for statement `line.responsible` ("is responsible for {subject}"). The `screen.people.today.kind.office`, `screen.person.source`, `screen.person.fact.from`/`.to` and `label.linekinds.responsible_for` stand-ins are gone from the keeper section.
+- Tests: R51 asserts the day label and each state's result line; R54 asserts `screen.reminder.on`; new R50 test asserts the responsible-for key.
+
+**HELD: the withdraw act (B423 `linewithdraw` on person).** I added it. Every screen-module page then failed to build: interface-shell's `checkScreens` rejects an act that the screen registry does not carry for that screen ("is not the registry's for it"). The generated `bio-plane/src/wizard-scripts/screen-registry.mjs` (wizard-scripts' artifact, pinned at the design commit its R41 names) has no `linewithdraw` on `person`, though `docs/development/ux-substrate/screens/registry.json` on this tranche does (`screens[person].acts`). `build-data.mjs --check` passes against its pin, so the artifact is stale against the design, not broken.
+- The one act BOB needs to give: a CHANGE to wizard-scripts to re-take the registry at the design commit now on tranche/T51 (DEC-387/388 and B423's rows), regenerate its three files, and merge. Then I add the act back: a reasoned withdrawal per kept statement, with a reason field, as withdrawidentityclaim draws it, plus its test.
+- Until then, R10 ("each screen draws exactly its registry acts") stays red, cause: this stale pin. The act is not in the module, so no other test is affected.
+- Requirement lines for BOB: R50 gains the withdraw line once the act lands; R51's not-yet-met note is out of date (its test is green, as J9 said).
+
+**Found in other modules (BOB to route; none is in my diff)**
+- `members` screen: act `expertisewithdraw` is not in OPS (interface-shell). It fails every page build in plane t47 and t50 and control-plane t46-app (6 reds: R75, R81, R25). Also op-declarations: DECLARED_OP_DISAGREES on `groupkeynoticeseen` description.
+- `checks/run.mjs` (whole tree): coverage has 4 live ids named by no test: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19. Words: testcopy 24 in op-grades t36, t37, t41, t46, t47, t48, t49.
+- `run.mjs` names nothing of screens-investigate.
+
+**Checks** (module suite: 176 tests, 175 pass, 1 fail = R10, the held act above)
+- format 0 failures; architecture 0 failures; coverage screens-investigate 59 of 59 ids named, 0 failures; words screens-investigate 0 failures (7 unkeyed); ownership tranche/T51 vs job/T51/screens-investigate: 7 files, 0 failures; setup-words build --check: rows match words.json.
+
+## J11 · COMPLETE
+
+COMPLETE (re B13, K4248), with one held act (J10 REPORT). Entries applied: B419 (2) and (3), and the B423 keeper keys, as in the REPORT. Deferred: the withdraw act (`linewithdraw` on person), held until wizard-scripts re-pins its registry; the R10 red is named with that cause.
+
+Tests: module suite 176, 175 pass, 1 fail (R10). Checks: format 0; architecture 0; coverage 59 of 59; words 0 for this module; ownership 7 files, 0 failures; setup-words --check ok; run.mjs names nothing of this module.
+
+Size (session_01S8VGM3tuVs3msj6bpgKFvC): test runs 4, module lines 3024

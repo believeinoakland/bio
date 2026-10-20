@@ -2,7 +2,7 @@
    own name and as `op=publicread&name=` through public-read's door read, with no route of this module's. The public reads are
    read from case-inputs' own DECLARED_OPS, never a list typed here (K3268). Driven through `makeFetch(hooks)`, as R49's
    routing test is (`r49-routes.test.mjs`). */
-import "./register-case-inputs.mjs";
+import "./register-declared.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, refused, FORGED, QUERY_STAMPS } from "./harness.mjs";

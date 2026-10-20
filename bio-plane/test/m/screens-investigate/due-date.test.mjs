@@ -80,7 +80,7 @@ test("R54 after reminderset the entry shows the day the reminder was set for; co
   await press(p, "reminderset");
   const shown = main(p).querySelectorAll("[data-reminder]");
   assert.equal(shown.length, 1);
-  assert.equal(shown[0].textContent, word("screen.due-date.on") + " " + dayOf("2026-10-12").replace(/, 2026$/, "") + ", 2026");
+  assert.equal(shown[0].textContent, word("screen.reminder.on", { date: dayOf("2026-10-12") }), "drawn by the one reminder key (B419 3)");
   assert.ok(main(p).querySelector('[data-reminder="0"]').closest("div"), "beside its entry");
   const bad = await open(at, { plane: { reminderset: refusedIn("REMINDER_REFUSED", "Not a day.") } });
   fill(bad, { "dd-entry": "0", "dd-on": "2026-10-12" });

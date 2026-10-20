@@ -1,7 +1,9 @@
 /* screens-publish FR-30, second part (K4165, K4168, K4192, K4194, K4197; DEC-374 to DEC-378, DEC-382, DEC-384): R44, R46, R51, R53, R57
  * on the case editor and the ceremony; R47, R54 on the published page; R58, R59 on the imported page. Each sentence is asserted by its
  * key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
-import "./register.mjs";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
@@ -142,6 +144,20 @@ test("R51 self-attestation without a reason is refused in place and nothing is s
   assert.equal(p.byOp("publishpreflight").length, 1, "only the page's own read was sent");
   assert.ok(drew(p, "screen.ceremony.conf.refused.noreason1"));
   assert.ok(!ops(p).includes("captureaccount"), "only the member who captured it adds an account");
+});
+
+test("R69 a document without a second confirmation names the member who captured it and each finding resting on it; an entry with no capturer draws none (control)", async () => {
+  const entry = { capture: B64, by: "mai", findings: [F1, "FND-2026-0032"] };
+  const p = await open(CER, { plane: { ...DOCS, publishpreflight: ok(WITH(STEP3({ not_co_attested: [entry] }))) } });
+  const who = p.doc.querySelector(`[data-capturer="${B64}"]`);
+  assert.ok(who && who.textContent === "mai", "the capturer is drawn");
+  const rests = p.doc.querySelectorAll(`[data-rests="${B64}"]`);
+  assert.equal(rests.length, 2, "one sentence for each finding resting on it");
+  assert.ok(drewIn(rests[0], "screen.ceremony.conf.intro2", { finding: F1 }) && drewIn(rests[1], "screen.ceremony.conf.intro2", { finding: "FND-2026-0032" }));
+  const q = await open(CER, { plane: { ...DOCS, publishpreflight: ok(WITH(STEP3({ not_co_attested: [{ capture: B64, by: null, findings: [F1] }] }))) } });
+  assert.ok(q.doc.querySelector(`[data-unconfirmed="${B64}"]`), "the document is listed");
+  assert.ok(!q.doc.querySelector(`[data-capturer="${B64}"]`), "no capturer is drawn when none is recorded");
+  assert.equal(q.doc.querySelectorAll(`[data-rests="${B64}"]`).length, 1);
 });
 
 const md = (refs) => ["---", `id: ${P}`, "object_type: project", "title: \"The Coliseum lease\"", "references:",
@@ -351,4 +367,48 @@ test("R68 a project whose title the viewer cannot read is named by the unjoined 
   assert.ok(drew(p, "refusal.NO_REVIEW_COPY"));
   const q = await open(CER);
   assert.ok(q.root().textContent.includes("The Coliseum lease"), "control: a readable project draws its title");
+});
+
+test("R59 the assistant helps with the citing note only while it is reachable: it sends the note for citeimported and fills the field with its draft (B420 3); not reachable draws no help (control)", async () => {
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+  const p = await open(IMP, { plane: { ...IMPORT(true), ...reach, writinghelp: ok({ ok: true, text: "It states the 2025 schedule.", untested: true }) } });
+  const help = p.root().querySelector('button[data-act="writinghelp"]');
+  assert.ok(help, "help is drawn beside the note");
+  assert.equal(help.getAttribute("data-field"), "note");
+  assert.equal(help.getAttribute("data-forop"), "citeimported");
+  assert.equal(help.getAttribute("data-id"), "im-ci-note-0");
+  assert.equal(p.root().querySelectorAll('button[data-act="writinghelp"]').length, 1, "the citing note only");
+  await press(p, "writinghelp", { values: { "im-ci-note-0": "schedule 2025" } });
+  assert.deepEqual(last(p, "writinghelp").body, { op: "citeimported", field: "note", told: "schedule 2025" });
+  assert.equal(p.doc.getElementById("im-ci-note-0").value, "It states the 2025 schedule.");
+  const off = await open(IMP, { plane: IMPORT(true) });
+  assert.equal(off.root().querySelectorAll('button[data-act="writinghelp"]').length, 0);
+});
+
+test("R57 the details are named by key, Not stated by key, a relation by its word and 'Take out' by key; the ceremony marks a stated detail 'Stated' (B428)", async () => {
+  const stated = (value) => ({ stated: true, value, set_by: "dev", set_at: "2026-10-01T09:00:00Z" });
+  const d = DETAILS({ area: stated([{ words: "Oakland Rent Board" }]), related: stated([{ relation: "builds_on", url: "https://example.org/a" }, { relation: "disagrees_with", url: "https://example.org/b" }]) });
+  const p = await open(EDITOR, { plane: DETAIL_EDITOR(d) });
+  for (const f of ["area", "contact", "related", "relationships"]) assert.ok(drewIn(p.doc.querySelector(`[data-detail="${f}"]`), `screen.case-editor.details.name.${f}`), f);
+  assert.equal(p.doc.querySelectorAll("[data-notstated]").length, 2);
+  assert.ok(drew(p, "case-inputs.details.not_stated"));
+  for (const k of ["builds_on", "disagrees_with"]) assert.ok(drew(p, `screen.case-editor.details.rel.${k}`), k);
+  assert.ok(p.root().querySelectorAll('button[data-act="casedetailsset"]').some((b) => b.textContent.includes(word("screen.case-editor.details.takeout"))), "Take out");
+  const cer = await open(CER, { plane: DETAIL_EDITOR(d) });
+  assert.equal(cer.doc.querySelectorAll("[data-stated]").length, 2);
+  assert.ok(drew(cer, "screen.case-editor.details.stated") && drew(cer, "screen.case-editor.details.name.contact"));
+  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: ok({ ok: true, case: C, group: "river-town", sentence: "x", details: DETAILS_PUBLIC({ area: { stated: true, value: [{ words: "Oakland Rent Board" }], set_at: "2026-10-01T09:00:00Z" } }) }) } });
+  assert.ok(drew(pub, "screen.case-editor.details.name.area"));
+});
+
+test("R44 a finding's role choice is labelled by 'Finding {n}: its role in the case' and its two choices by key (B428)", async () => {
+  const p = await open(EDITOR);
+  const group = p.doc.getElementById("ce-role-0");
+  assert.ok(drewIn(group, "screen.case-editor.finding.role", { n: "1" }));
+  assert.ok(drewIn(group, "screen.case-editor.role.relied") && drewIn(group, "screen.case-editor.role.supporting"));
+});
+
+test("R51 each document held without a second confirmation has its tick 'Publish {document} as self-attested only' (B428)", async () => {
+  const p = await open(CER, { boot: { idb: await keptKey() }, plane: { ...DOCS } });
+  assert.ok(drew(p, "screen.ceremony.conf.self.tick", { document: B64.slice(0, 12) }));
 });

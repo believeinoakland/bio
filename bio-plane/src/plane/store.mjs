@@ -4,6 +4,7 @@
    no table, no row, no refusal, no op (R9); its own stats sight is `stats.mjs`' (R10). Moved from
    `store.mjs`' constructor, `#migrate`, `alarm`, `onAlarm`, `#nowMs`, `#ownNamespace` and `routes`, and from
    `control-plane/dispatch.mjs`' `Store` (control-plane R35, now this module's R1), with their behaviour unchanged. */
+import "./register.mjs";   /* R68 (T51; K4168): the owners' op declarations registered, before any table either registration keeps is read */
 import { DurableObject } from "cloudflare:workers";
 import { actionsOf, actionsOps } from "../actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../action-clocks/index.mjs";
@@ -12,7 +13,7 @@ import { actionRepliesOf, actionRepliesOps } from "../action-replies/index.mjs";
 import { planWorkOf, planWorkOps } from "../plan-work/index.mjs";
 import { caseCheckOf, caseCheckOps } from "../case-check/index.mjs";
 import { localFactsOf, localFactsOps } from "../local-facts/index.mjs";
-import { caseInputsOf, caseInputsOps } from "../case-inputs/index.mjs";
+import { caseInputsOf, caseInputsOps, registerCaseInputsPublicReads } from "../case-inputs/index.mjs";
 import { signinDoorOps } from "../signin-door/ops.mjs";
 import { actionRecordsOf, actionRecordsOps } from "../action-records/index.mjs";
 import { filingTemplatesOf, filingTemplatesOps } from "../filing-templates/index.mjs";
@@ -39,6 +40,7 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
+import { acquireHandlerParts, acquireTimingsOps, traceStamped } from "./acquire-timings.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
@@ -78,6 +80,7 @@ import { stepsOf } from "../steps/index.mjs";
 import { readingGuidesOf, readingGuidesOps } from "../reading-guides/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
+import { investigationOps } from "../investigation/ops.mjs";
 import { publishScheduleOps } from "../publish-schedule/index.mjs";
 import { controlPlaneOwnerOps } from "../control-plane/owner-ops.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
@@ -115,6 +118,7 @@ import { archiveUnpackConsumer } from "./unpack.mjs";
 import { transcriberOf } from "./transcribe.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
+import { captureSourcesOps } from "../capture-sources/ops.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
          ratificationWorker, frontDoorFinder, frontDoorPointer, projectReachReaders } from "./wiring.mjs";
 
@@ -362,6 +366,10 @@ export class Store extends DurableObject {
        running run's principal reaches `planPropose` and `claimFindStep`'s run arm. */
     investigationOf(ctx, { promotion }).registerRunHolder("ai-runs", (by, run) => aiRunsOf(ctx, env).runHolder(by, run));
     caseAuthoringOf(ctx, { publishSchedule });   /* R18: its disclosures, with their attestation, are case-disclosures' (built above) */
+    /* R17 (K4221; case-inputs R24): case-inputs' public read `casedetailspublic`, registered once at start with public-read, over the
+       instance case-authoring's creation made (with its record, membership and clock: a factory reads its deps on its first call
+       only), so case-inputs keeps its place after case-import and case-checker's registration keeps its own. */
+    registerCaseInputsPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     /* R39 (T45; K2839): case-check, last in layer 8 (after review), the one instance per host, over case-authoring,
        publication and case-carriage on this host; at creation it makes and declares its table (its R4). */
     const caseCheck = caseCheckOf(ctx);
@@ -685,7 +693,8 @@ export class Store extends DurableObject {
      object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
      record's and fails closed), and `action-holds`' `purgeHeld` (its R9, was `actions` R60; T45, K2781 (1)) on the one
      instance R39 builds, each asked at the purge only. */
-  async fetch(req) {
+  async fetch(req0) {
+    const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
       namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionHoldsOf(this.ctx).purgeHeld(q),
       /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. R33
@@ -755,7 +764,9 @@ export class Store extends DurableObject {
          host, at acquisition's place before capture's map; `by` is the door's stamp. */
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
-      ...captureOps(captureOf(ctx), url, body, env),
+      /* R73 (K4231, K4234): `acquiretimings`, acquisition's stage times of a call still running (its R95), at acquisition's place with the co-archive pair; `acquire` below is handed the timings object it fills, held under the door's `trace`. */
+      ...acquireTimingsOps(ctx, url),
+      ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */
       ...doorbellOps(doorbellOf(ctx), url, body),
@@ -769,7 +780,7 @@ export class Store extends DurableObject {
       /* K1619: `basis`, `restson`, `earnedbasis` are leg-earning's, after inquiry's delegating entries so its own win. */
       ...legEarningOps(legEarningOf(ctx), url),
       ...hypothesesOps(hypothesesOf(ctx), url, body),   /* K1607 */
-      ...citationOps(citationOf(ctx), url),
+      ...citationOps(citationOf(ctx), url, body),
       ...observationLogOps(observationLogOf(ctx), url, body),
       ...runProductionsOps(runProductionsOf(ctx), url, body),
       ...entitiesOps(entitiesOf(ctx), url, body),
@@ -827,6 +838,9 @@ export class Store extends DurableObject {
       ...provenanceRouteOps(provenanceRoutesOf(ctx), url, body),
       ...contentOps(contentOf(ctx), url, body),
       ...captureRequestsOps(captureRequestsOf(ctx), url, body),
+      /* R69, R70 (T51; K4213): capture-sources' credential ops (over the instance start builds with the seal key and the own hosts) and investigation's `projectclose`, after capture-requests' map. */
+      ...captureSourcesOps(captureCredentialsOf(ctx), url, body),
+      ...investigationOps(investigationOf(ctx), url, body),
       /* R35 (K2567): reading-guides' ops, after capture-requests' map, its place in the modules' order. steps',
          investigation's and question-explorer's ops are control-plane R71's own map (K2560), not routed here. */
       ...readingGuidesOps(readingGuidesOf(ctx), url, body),
@@ -860,7 +874,7 @@ export class Store extends DurableObject {
       ...planWorkOps(planWorkOf(ctx), url, body),   /* R39 (T45): plan-work's ops, directly after action-plans' */
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),
-      ...linkSweepOps(linkSweepOf(ctx), url),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
+      ...linkSweepOps(linkSweepOf(ctx), url, body),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
       ...followingOps(followingOf(ctx), url, body),   /* R21 (T33-79) */
       ...reviewOps(reviewOf(ctx), url, body),
       /* R39 (T45; K2839): case-check's `publishcheck` (graded as publish) and `casecheck`, after review's map. */

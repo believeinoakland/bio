@@ -58,7 +58,7 @@ const WORDS = {
     ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "reauth", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
   notes: [...STATES, "screen.notes.name", ...own("screen.notes."), "ai.label.untested",
     ...LABELS("notes", ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"])],
-  settings: [...STATES, ...own("screen.settings."), ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards"]
+  settings: [...STATES, ...own("screen.settings."), "screen.settings.everyone", ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias"]
     .flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`])],
   group: [...STATES, "screen.group.name", ...own("screen.group."), "settings.set.setup", "settings.set.system", "settings.set.line.setup", "settings.set.line.system", "term.hostingaccount.means", "term.bar.team.means", "member.founder.unnamed",
     ...["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"].map((z) => `label.timezones.${z}`), "stake.group.title", "stake.group.help", "stake.group.label", "stake.group.save", "stake.set", "stake.none", "stake.history", "stake.unreadable", "ai.label.untested",  "screen.group-identity.draft.label",
