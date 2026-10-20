@@ -70,3 +70,7 @@ QUESTION (restart #6, FR-31): (1) Your START says to write NEW R36–R54 first i
 8. The harness does not flag the shell's added `reason` on `consequencerecord`/`successrecord` bodies.
 **Deferred.** The missing-key items above, until the design writes the rows.
 Size (session_01EbJCh72Rrpjqj4Cdt46ya6): test runs 14, module lines 4291
+
+## J7 · COMPLETE
+
+COMPLETE (FR-31): all 21 entries applied, R36-R54 written in the requirements file (B10; marks removed), 194 of 194 module tests pass, format, architecture, coverage (54/54) and words 0 for my files, ownership lists only the requirements file. Gaps (missing design keys, writinghelp's declaration lacking op, filingread without exhibits) are in my record's completion section for your ruling.
