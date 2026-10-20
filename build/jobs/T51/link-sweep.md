@@ -1,6 +1,6 @@
 # link-sweep (T51)
 
-**Status** · session_017cLV7zJGWBZ6MmWK2QsT8y · depth 2 · WORKING · handled B1
+**Status** · session_017cLV7zJGWBZ6MmWK2QsT8y · depth 2 · WAITING ON BOB (J2) · handled B1
 
 ## Completion (T51-242, words)
 
