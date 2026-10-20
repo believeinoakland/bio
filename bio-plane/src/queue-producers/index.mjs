@@ -240,6 +240,15 @@ export class QueueProducers {
     }
     return this.#memo.names.get(id);
   }
+  /** B7 (K4245): a name the roster answers as a member's handle, or null when it is an id (the member holds no handle): held
+   *  by a member's row or by the founder. The fill `fills.who` carries it; the sentence keeps the name either way. */
+  #heldHandle(name) {
+    if (typeof name !== "string" || !name) return null;
+    try {
+      const held = this.#membership.memberByHandle(name) !== null || this.#membership.founderHandle() === name;
+      return held ? name : null;
+    } catch { return null; }
+  }
   /** The group's time zone as publish-schedule R1 carries it (its `groupZone`), or null when none is held. */
   #groupZone() {
     try {
@@ -3124,7 +3133,8 @@ export class QueueProducers {
     for (const row of rows.slice(0, QueueProducers.QUEUE_PROJECT_ITEMS_MAX)) {
       if (!row || typeof row.memberId !== "string" || !row.memberId) continue;
       const have = Array.isArray(row.have) ? row.have : [], awaiting = Array.isArray(row.awaiting) ? row.awaiting : [];
-      const fills = { who: typeof row.handle === "string" && row.handle ? row.handle : this.#memberName(row.memberId), have: have.length, awaiting: awaiting.length };
+      const handle = typeof row.handle === "string" && row.handle ? row.handle : null;
+      const fills = { who: handle ?? this.#memberName(row.memberId), have: have.length, awaiting: awaiting.length };
       const summary = holds("queue.endorsement-owed.summary") ? say("queue.endorsement-owed.summary", fills)
         : localize("queue-producers.index.endorsement_owed_summary", "Endorse {who} as an administrator ({have} endorsed so far, {awaiting} still to endorse)", fills);
       const detail = holds("queue.endorsement-owed.detail") ? say("queue.endorsement-owed.detail")
@@ -3135,6 +3145,7 @@ export class QueueProducers {
         kind: "endorsement-owed",
         case: this.#homesOf([]),
         subject: { kind: "member", id: row.memberId },
+        fills: handle ? { who: handle } : {},
         summary,
         ...(holds("queue.endorsement-owed.summary") ? { summary_key: "queue.endorsement-owed.summary" } : {}),
         detail,
@@ -3177,6 +3188,7 @@ export class QueueProducers {
             || !awaiting.some((x) => mine.has(x))) continue;
         const agreed = Array.isArray(c.agreed) ? c.agreed : [];
         const fills = { who: c.target, project: name, agreed: agreed.length, awaiting: awaiting.length };
+        const who = this.#heldHandle(c.target);
         const add = c.change === "add";
         const summary = add
           ? (holds("queue.endorsement-owed.owner.summary.add") ? say("queue.endorsement-owed.owner.summary.add", fills)
@@ -3192,6 +3204,7 @@ export class QueueProducers {
           kind: "endorsement-owed",
           case: this.#homesOf([]),
           subject: { kind: "project", id: project, name: this.#titleOf(project), change: c.change, target: c.target },
+          fills: who ? { who } : {},
           summary,
           ...(holds(summaryKey) ? { summary_key: summaryKey } : {}),
           detail,
@@ -3226,7 +3239,8 @@ export class QueueProducers {
     const out = [];
     for (const row of rows.slice(0, QueueProducers.QUEUE_PROJECT_ITEMS_MAX)) {
       if (!row || typeof row.memberId !== "string" || !row.memberId || typeof row.label !== "string" || !row.label) continue;
-      const fills = { who: typeof row.handle === "string" && row.handle ? row.handle : this.#memberName(row.memberId), label: row.label };
+      const handle = typeof row.handle === "string" && row.handle ? row.handle : null;
+      const fills = { who: handle ?? this.#memberName(row.memberId), label: row.label };
       const summary = holds("queue.expertise-confirmation-owed.summary") ? say("queue.expertise-confirmation-owed.summary", fills)
         : localize("queue-producers.index.expertise_confirmation_owed_summary", "Confirm {who}'s expertise in {label}", fills);
       const detail = holds("queue.expertise-confirmation-owed.detail") ? say("queue.expertise-confirmation-owed.detail")
@@ -3237,6 +3251,7 @@ export class QueueProducers {
         kind: "expertise-confirmation-owed",
         case: this.#homesOf([]),
         subject: { kind: "member", id: row.memberId, label: row.label },
+        fills: handle ? { who: handle } : {},
         summary,
         ...(holds("queue.expertise-confirmation-owed.summary") ? { summary_key: "queue.expertise-confirmation-owed.summary" } : {}),
         detail,

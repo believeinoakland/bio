@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_013U8Ciq9twS4zjfvFdM57Xa · depth 2 · COMPLETE · handled B10
+**Status** · session_01W8ujgLnaNkquRgeBeghZRT · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -85,3 +85,21 @@ Also fixed (guard findings of my screens, not entries): explore's re-read after 
 Found in other modules / for UX-DESIGN (HANDOFF B419 per B10): R51's answer words ("In force", "Not in force", "Overridden") and the day field's label; R54's "we will remind you on {date}"; R50's labels for the office choice and "What says so" and a keyed phrase for a `responsible_for` line (stand-ins in use: `screen.people.today.kind.office`, `screen.person.source`, `screen.person.fact.from`/`.to`, `label.linekinds.responsible_for`); the note `screen.person.keeper.withdraw.a/b` promises a withdrawal the registry gives the person page no act for (`linewithdraw`), drawn as the design has it. The test harness's `refusedIn` carries no extra fields, so R59's test builds its refusal itself.
 Tests and checks (screens-investigate, tranche/T51 merged at f5176d5078+): module suite 175 tests, 174 pass, 1 fail (R51, accepted red); format 0 failures; architecture 0 failures; coverage 59 of 59 ids named; words (module and all 175 modules together) no finding naming this module (the 26 are other modules'); ownership 18 files, 0 failures; setup-words build --check: stale-rows note only (op-declarations/action-plans rows), none naming this module; checks/run.mjs: every failure is in op-grades' tests, none mine.
 Size (session_013U8Ciq9twS4zjfvFdM57Xa): test runs 45, module lines 3,018
+
+## J9 · COMPLETE
+
+COMPLETE (re B12, K4245): R51's test failed on the request's query. The harness's `query` is every URL parameter, and `op` is one of them (as timeline.test.mjs:140 already expects), so the drawing was right. It sends only the declared fields, `id` and `date` (standards' DECLARED_OPS: accepts and requires both). The fix is the test: standard.test.mjs:100 now expects `{ op, id, date }`. No drawing change.
+
+**Entries applied**
+- B12: fixed as above. The R51 test is green, so the red accepted in J8 is cleared. J7 item 1 (`standardinforce` in SESSION_OPS.member) is also settled: op-declarations' t51 test passes on the tranche merged in.
+- B11 (action-clocks `deadlines`): merged at the tranche tip; no change needed in my code.
+
+**Deferred** none.
+
+**Report (for BOB)**
+- Requirements: no line changed by me. R51's own not-yet-met note in build/requirements/screens-investigate.md is out of date now that its test passes; for BOB to clear.
+- Nothing found in another module.
+
+**Tests and checks** (from /home/user/bio/bio-plane): `node --test test/m/screens-investigate/`: 175 pass, 0 fail (was 174 pass, 1 fail). From the process repository: format 0 failures; architecture screens-investigate 0 failures; coverage screens-investigate 59 of 59 live ids named, 0 failures; ownership tranche/T51 1 file, 0 failures.
+
+Size (session_01W8ujgLnaNkquRgeBeghZRT): test runs 3, module lines 3018

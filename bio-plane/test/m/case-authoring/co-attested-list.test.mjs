@@ -33,7 +33,7 @@ function setup() {
 const capturedBy = (w, sha, actor = "member:alice") =>
   w.st.sql.exec(`INSERT INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`, sha, actor, CAPTURED_AT);
 
-test("B10 (K4240): step three lists each capture the case rests on that is not co-attested as {capture, by, findings}: the member recorded as capturing it, and each finding resting on it, once; a co-attested capture is not listed", () => {
+test("R82 (B10, K4240): step three lists each capture the case rests on that is not co-attested as {capture, by, findings}: the member recorded as capturing it, and each finding resting on it, once; a co-attested capture is not listed", () => {
   const { w, P, a, b } = setup();
   capturedBy(w, b);
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], { selfAttested: [{ capture: b, reason: REASON }] }));
@@ -43,7 +43,7 @@ test("B10 (K4240): step three lists each capture the case rests on that is not c
   assert.ok(!list.some((x) => x.capture === a), "a co-attested capture is never listed");
 });
 
-test("B10 (K4240) control: a capture no finding of the case rests on is not listed, and each finding names only the captures it rests on: a case over Q2 alone lists DOC2 with Q2 alone", () => {
+test("R82 (B10, K4240) control: a capture no finding of the case rests on is not listed, and each finding names only the captures it rests on: a case over Q2 alone lists DOC2 with Q2 alone", () => {
   const { w, P, b } = setup();
   capturedBy(w, b);
   const held = w.graded(DOC3);
@@ -55,7 +55,7 @@ test("B10 (K4240) control: a capture no finding of the case rests on is not list
   assert.deepEqual(only.steps[2].not_co_attested, [{ capture: b, by: "alice", findings: [Q2] }]);
 });
 
-test("B10 (K4240): a capture with no member recorded as capturing it, or only a machine, answers by: null; the pre-flight writes nothing", () => {
+test("R82 (B10, K4240): a capture with no member recorded as capturing it, or only a machine, answers by: null; the pre-flight writes nothing", () => {
   const { w, P, b } = setup();
   const before = w.snapshot();
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], { selfAttested: [{ capture: b, reason: REASON }] }));

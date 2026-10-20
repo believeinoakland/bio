@@ -2,7 +2,9 @@
  * graded by R5 and R3 with `affordances` R12's totality holding over them, each grade read from its owner's requirements
  * as R13 does; and `op-declarations` R21's ALIASES, each taking its op's grade and reason through one frozen table, so an
  * alias never differs from its op. Data only: no op's behaviour is decided here (P6). `./index.mjs` spreads the three
- * tables and applies `aliased` to its own. This file imports nothing, so the spread closes no cycle. */
+ * tables and applies `aliased` to its own. This file imports only `word` from `setup-words`, so the spread closes no cycle. */
+
+import { word } from "../setup-words/index.mjs";
 
 const R = (s) => `read: ${s}; writes nothing`;
 const ROSTER_DOOR = (s) => `roster governance: ${s}; the subject is who may join, not a bundle`;
@@ -70,7 +72,7 @@ export const T34_NON_ACTS = {
   placewantedstate: R("the place the group wants its profile for, and whether one is held"),
   memberlanguageset: "personal state, keyed by member: the language the interface speaks to them",
   memberlanguage: R("a member's own interface language"),
-  startfrom: R("the wizard scripts a new member may start from"),
+  startfrom: word("act.startfrom.does"),
 };
 
 /* ---- `op-declarations` R21's aliases (op-declarations R5, R21): each the op its owner serves it as. `expunge` is no

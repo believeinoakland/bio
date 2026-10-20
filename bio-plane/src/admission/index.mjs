@@ -622,7 +622,7 @@ export function projectCreationGate(caps) {
 /* R5–R11 — THE ADMISSION (REC-79, C-38): every refusal a caller meets before their op runs, in this order, for a gated
    op (`spec.classes` a list; the namespace gates R1–R3 and the public ops come first, at the door):
      a binding class (R5; the retired member key refused MEMBER_TOKEN_RETIRED), else the presented agent credential (R6, `presented` from `aiCredentialPresented`), else a
-     session token resolved (R6) and judged: `export` refused (R8's ROOT_OF_TRUST_REQUIRED, section 8.1), then the
+     session token resolved (R6) and judged: `export` refused to any session but the founder's (R8's ROOT_OF_TRUST_REQUIRED, section 8.1), then the
      session gate (R8); no class (R7); the agent's task scope (R10) or the class list (R9: `machineClasses` for a caller
      not arriving by a session, where the spec gives it); the session's capability (R11); the landing (R4).
    Answers `{ refusal }`, `{ silent }` (the session lookup's store did not answer) or `{ caller }`:
@@ -670,16 +670,16 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
            nobody for it until it is unlocked. */
         if (looked.sess.locked === true && !LOCKED_SESSION_OPS.includes(op))
           return { refusal: { status: 401, body: Credentials.sessionLockedRefusal() } };
-        /* Section 8.1, before the session gate so the answer states the actual rule: the root of trust is the token in
-           the hosting account, and a session (the founder's own browser included) is not it. */
-        if (op === "export")
+        /* Section 8.1 (Membership v2 §4.6; R8), before the session gate so the answer states the actual rule: the root of
+           trust has two forms, the ADMIN_TOKEN holder's bearer (admitted by R9, never here) and the founder's session,
+           the one the claim made from that token (session kind `admin`). Every other session, an enrolled
+           administrator's included, is refused. */
+        if (op === "export" && kind !== "admin")
           return { refusal: { status: 403, body: { ok: false, reason: "ROOT_OF_TRUST_REQUIRED", ...admissionRow("ROOT_OF_TRUST_REQUIRED"), op,
-            detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
-                  + "signed-in session, and not in-app administrator status. A session is derived from a "
-                  + "password; the root of trust is the token held in the hosting account. This refuses "
-                  + "the founder's own browser too, which is the one place in this system where being "
-                  + "the founder is not enough. The published record needs no credential at all: see "
-                  + "op=publishedmanifest." } } };
+            detail: "a full working-corpus export needs the root of trust: the ADMIN_TOKEN-class credential, or the "
+                  + "founder's own session, which the claim made from it. A member's session is neither, and "
+                  + "neither is in-app administrator status: an administrator signs in as a member. The "
+                  + "published record needs no credential at all: see op=publishedmanifest." } } };
         const gated = sessionOpGate(kind, op, spec, method, tables);
         if (gated) return { refusal: gated };
         cls = kind;
