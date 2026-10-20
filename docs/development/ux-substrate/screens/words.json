@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6744,
+  "screen": 6750,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17893,
+  "total": 17899,
   "protected": 1061
  },
  "words": [
@@ -72959,7 +72959,7 @@
    "en": "Bring back",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-387: B426: the button on a snoozed or deferred row that returns the item to the Queue now"
+   "note": "DEC-387: B426: the button on a snoozed or deferred row that returns the item to the Queue now; op queuesnooze with {case, clear} (queue R21; B430, K4249)"
   },
   {
    "key": "screen.queue.snoozed.head",
@@ -73050,7 +73050,7 @@
    "en": "Email",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-387: B424 1: medium option (token email)"
+   "note": "DEC-387: B424 1: medium option; medium is free text up to 500 characters (actions R13) and the token email is sent as its value (B430, K4249)"
   },
   {
    "key": "screen.action.reply.medium.letter",
@@ -73120,7 +73120,7 @@
    "en": "Not stated",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-387: B424 1: stage option (no stage)"
+   "note": "DEC-387: B424 1: stage option meaning the field is omitted; no none token exists (B430, K4249)"
   },
   {
    "key": "screen.action.reply.stage.acknowledgement",
@@ -73183,7 +73183,7 @@
    "en": "Not decided",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-387: B424 1: outcome option (no outcome)"
+   "note": "DEC-387: B424 1: outcome option meaning the field is omitted (no none token); offered only on received entries, and not offered where outcome is required: fee_waiver_decision, denial, appeal_decision, court_decision (B430, K4249)"
   },
   {
    "key": "screen.action.reply.outcome.granted",
@@ -73898,6 +73898,55 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-387: B424 6: a sentence already released; {reason} in quotation marks by the code"
+  },
+  {
+   "key": "act.release.label.start-send",
+   "en": "Release this sentence",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-389: B430 (2): part of approving, filingapprove with release [{ord, reason}] (filings R34, screens-action R42); not the release act"
+  },
+  {
+   "key": "screen.action.sent.stage.request",
+   "en": "The request",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-389: B430 (3): a sent entry's stage (token request)"
+  },
+  {
+   "key": "screen.action.sent.stage.fee_waiver_request",
+   "en": "Request for a fee waiver",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-389: B430 (3): a sent entry's stage (token fee_waiver_request)"
+  },
+  {
+   "key": "screen.action.sent.stage.appeal",
+   "en": "Appeal",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-389: B430 (3): a sent entry's stage (token appeal)"
+  },
+  {
+   "key": "screen.action.sent.stage.court_filing",
+   "en": "Court filing",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-389: B430 (3): a sent entry's stage (token court_filing)"
+  },
+  {
+   "key": "screen.updates.health.runtime.unit.ms",
+   "en": "milliseconds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-389: B430 (4): runtime unit ms (instance-setup R34), filling {unit}"
+  },
+  {
+   "key": "screen.updates.health.runtime.unit.bytes",
+   "en": "bytes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -115547,12 +115596,6 @@
   {
    "key": "act.writinghelp.label.start-send",
    "en": "Help me write this",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.release.label.start-send",
-   "en": "Release this sentence",
    "protected": true,
    "source": "registry.json"
   },
