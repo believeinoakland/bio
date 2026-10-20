@@ -105,7 +105,7 @@ screen('projectai', 'AI for this project', 'working', 'Who pays for the assistan
   [('projectkeyset','Hold the project\'s API key'),('projectsigninset','Use your own sign-in for the project'),('projectaccountswitch','Switch the project\'s account on or off'),('projectaccountremove','Remove the project\'s account'),('projectkeynoticeseen','Read what the project\'s key means'),('accountusesset','Set what the project\'s account pays for'),('ailimitset','Set a limit on the project\'s account'),('projectaikeepaway','Keep the project\'s material away from AI, with a reason'),('projectjoin','Join')], [])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; what each cited passage carries; strength against the bar; its readings and the one a project stands on; what relies on it; concluding.',
   [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('casedraft','Prepare a case from this'),('withdrawconclusion','Withdraw the conclusion'),('reopen','Reopen this finding, with a reason'),
-   ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
+   ('hypothesishold','Keep a hunch'),('hypothesisrevise','Revise a hunch'),('hypothesiswithdraw','Take a hunch back'),('inquirydivide','Divide the question'),('reevaluationrecord','Record that you looked again'),('reevaluations','See what needs a second look'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
    ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source'),
    ('inquiryground','Say what each passage carries'),('versionaccept','Accept this reading'),('versionhide','Hide a reading'),('versionconsider','Weigh a reading'),
    ('versionreject','Reject a reading'),('versionrevert','Undo the decision on a reading'),('versioncurrent','Stand on a reading for a project'),('proposedispose','Set this question aside for the project'),('readtranslate','Read in my language')], [6,9,15,16])
@@ -137,7 +137,7 @@ screen('proceeding', 'Proceeding', 'working', 'A court case or regulatory procee
 screen('due-date', 'How this date was worked out', 'working', 'A due date\'s basis and counting; confirm it; download it (K1431, K1444).',
   [('clockpropose','Work out the due date'),('clockadopt','Confirm the due date'),('reminderset','Remind me')], [7,8])
 screen('standard', 'Standard', 'working', 'A requirement the city set itself, held and searchable.',
-  [('standarddeclare','Hold this as a standard'),('standardadopt','Adopt a proposed standard'),('lawrelate','Relate to a law')], [6,14,22])
+  [('standardinforce','Check a date'),('standarddeclare','Hold this as a standard'),('standardadopt','Adopt a proposed standard'),('lawrelate','Relate to a law')], [6,14,22])
 
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',
