@@ -56,3 +56,25 @@ Two things need your answer; the work is otherwise written and pushed (commit on
 **Flaw fixed in my module (P8):** the door passed a body's `now` to the task acts, so a caller could date a history entry; `taskforward`, `taskresolve` and `taskdecide` no longer read it (the instance's clock stamps them). Existing assertions that R21 and the new op change were updated in `inbox.test.mjs` (`resolved_undecided` for an authority task put aside; `taskdecide` in the op list) and `grammar.test.mjs` (the event list).
 
 Tests: `node --test test/m/tasks/` 129 pass, 0 fail. Checks: format 0, words 0 (tasks), coverage 23 of 23 with the file as I wrote it (19 of 19 on the file as it stands), ownership 0 once the requirements file is left alone, architecture 1 (Q2).
+
+## J3 · COMPLETE
+
+**T51 tasks, restart (TASKS #16): COMPLETE.** Answers B3, B4, B5 applied.
+
+Entries applied:
+- **C62 / K4169 (R20, R21):** `taskDecide` and the `resolved_undecided` rule were already written; the fake provenance is replaced by the real `provenance` (`declareAuthority` R65, `authorityOf` R66), with the real `promotion` and a promoted information bundle holding one register document (`bio-plane/test/m/tasks/authority.mjs`). Its signature matched the draft; no source change was needed. The tests now read the standing authority from `provenance` and its refusals from `PROVENANCE_ACT_CHECKS`.
+- **K4168, K4202 (R22, R23):** `DECLARED_OPS` for `taskdecide`, `taskforward`, `taskresolve`, `checkrequest`, `signrequest` (unchanged this restart; `declared-ops.test.mjs` passes).
+- **B3 (R24, new):** a task of kind `authority-undetermined` carries `door: ["taskdecide","taskforward","taskresolve"]` in `taskList`, `recentTasks` and `resolvedTasks`; other kinds carry none. Test in `decide.test.mjs` (R24, with the control); `inbox.test.mjs` R2's exact-row expectation gains `door`.
+- **B5 (R1):** the claimed founder is an active member and leads `activeAdmins`, but the route still skips her (as R1 means it); the requirement line says so. Test with the founder claimed (alone, and with an administrator) and unclaimed as control.
+- **Requirement lines:** written by me in `build/requirements/tasks.md` (R20–R24, the `provenance` and `test-support` Uses lines, R1's note, the Status line); the ownership check lists that one file, accepted per B3/B4.
+
+Deferred: nothing.
+
+Found in other modules (already routed by B4): `queue` reading `resolved_undecided` as a resolving event; `control-plane` stamping `actor` and routing `taskdecide`; the four hand rows in `op-declarations`/`op-grades`; `INBOX-GRAMMAR.md` gains `decided`, `resolved_undecided`; the words rows are stale for my new `localize` ids (yours to regenerate). New: `queue` reads `door` (R24) when it builds the item's options.
+
+Tests and checks:
+- `node --test test/m/tasks/` (bio-plane): 131 tests, 131 pass, 0 fail. `node --test test/m/queue/`: 180 pass, 0 fail (a user of `recentTasks`).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs tasks`: 0 failures. `checks/coverage.mjs tasks`: 24 of 24 live ids named, 0 failures. `checks/words.mjs tasks`: 0 failures. `checks/ownership.mjs tasks tranche/T51 job/T51/tasks`: 1 failure, `build/requirements/tasks.md`, accepted per B3/B4.
+- `checks/run.mjs`: format 0, architecture 0, channels 0; coverage 5 failures and words 16 failures, none in `tasks` (op-grades test copies and other modules). `setup-words/build.mjs --check`: rows stale as expected (a note on `ai-accounts`).
+
+Size (session_017V6QvFfWXPXUuFw5C8Nu4s): test runs 6, module lines 1698
