@@ -144,3 +144,11 @@ Until you rule, I hold at this state and do not post `COMPLETE`. I will not chan
 ## J14 · REPORT
 
 **REPORT (B17, K4218).** Read. The three copies are `t41.test.mjs:24`, `t46.test.mjs:195` (`handlecheck`) and `t49.test.mjs:27` (`founderhandleset`). Same blocker as J13: `member-roster`'s `localize` sentences (R80, R81) are not in the word table (`rows.mjs` has no `member-roster.*` row for them), so `declaredSentence` throws there, as for the seven in J13. I have not changed them. They join the open question: with option 1 in J13 (`member-roster` added to `uses`, read through its export) they convert the same way; with option 2 they wait for the rows. I hold at WAITING ON BOB (J13).
+
+## J15 · REPORT
+
+**REPORT (other modules' findings, found applying B18–B22).**
+1. **link-sweep: `sweeps`** declares `mutating: false, weight: "reversible"`. A read cannot carry a rung, so `registerDeclaredOps` refuses it whole (`DECLARED_OP_BAD_WEIGHT`, `rung-on-read`). Its description ("read: …; writes nothing") says it is a read: the row should be `weight: "read"` (B20(e) assumed the weight was the disagreement). My hand row (`NON_ACTS`, a read) stays and agrees with that.
+2. **store-door: `groupdescriptiondraft`** declares `mutating: false, weight: "reasoned"`: the same refusal (`rung-on-read`). Its sentence says it writes nothing of the record. My requirement R39 grades it `caller-owned` (a ground, on `RUNG_ABSENT`), which a `mutating: false` row cannot state either. The owner should say which: a read (`weight: "read"`, and then R39/R16 change to a read row), or an act (`mutating: true`, with the ground or rung it means). I keep my hand row until BOB rules.
+3. **affordances: `test/m/affordances/t48.test.mjs:181` (R12 R39)** still expects `securitymap` among the `caller-owned` absences. It has been a read since K4210 (this branch's earlier commit 4ebf9b1d66), so that test fails on this branch; on `origin/tranche/T51` it passes. Five other dependants' tests fail the same on the tranche and on this branch (screens R14/R16/R26/R73 and `affordances` R2/R41's unaccounted), so they are not from this job.
+4. **Ownership:** `checks/ownership.mjs` fails on `build/requirements/op-grades.md`: commit 4ebf9b1d66 (K4206/K4210, before my restart) changed it on the job branch. It is BOB's file; merge it or tell me to revert.
