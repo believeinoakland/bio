@@ -152,3 +152,21 @@ Until you rule, I hold at this state and do not post `COMPLETE`. I will not chan
 2. **store-door: `groupdescriptiondraft`** declares `mutating: false, weight: "reasoned"`: the same refusal (`rung-on-read`). Its sentence says it writes nothing of the record. My requirement R39 grades it `caller-owned` (a ground, on `RUNG_ABSENT`), which a `mutating: false` row cannot state either. The owner should say which: a read (`weight: "read"`, and then R39/R16 change to a read row), or an act (`mutating: true`, with the ground or rung it means). I keep my hand row until BOB rules.
 3. **affordances: `test/m/affordances/t48.test.mjs:181` (R12 R39)** still expects `securitymap` among the `caller-owned` absences. It has been a read since K4210 (this branch's earlier commit 4ebf9b1d66), so that test fails on this branch; on `origin/tranche/T51` it passes. Five other dependants' tests fail the same on the tranche and on this branch (screens R14/R16/R26/R73 and `affordances` R2/R41's unaccounted), so they are not from this job.
 4. **Ownership:** `checks/ownership.mjs` fails on `build/requirements/op-grades.md`: commit 4ebf9b1d66 (K4206/K4210, before my restart) changed it on the job branch. It is BOB's file; merge it or tell me to revert.
+
+## J16 · COMPLETE
+
+**COMPLETE (B18–B23, OP-GRADES #19).**
+
+**Entries applied.**
+- B18/B19/B21 words: `checks/words.mjs … op-grades` reads **0** (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0). The `testcopy` findings were already gone from the tests (J12/J14); what remained were the hand rows themselves.
+- B20/B22 hand rows follow the owner: `NON_ACTS` (and `actionpressure`'s `RUNG_ABSENT.is`) now read the owner's sentence through `word("act.<op>.does")` for `wizards`, `writinghelp`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`, `startfrom`, `caseratify`, `securitymap`, `actionpressure`, `pressurerecord`, and through the composed id `ai-accounts.declared.accountusesset` for `accountusesset` (t41). `RUNG_ABSENT.securitymap` was already gone (K4210). A hand row is no longer a copy, so the owner's word is the one truth.
+- Registration test (R50, B21): `register.test.mjs` registers every owner's `DECLARED_OPS` (384 ops, 0 declared twice) on a fresh instance and expects no `DECLARED_OP_DISAGREES`/`DUPLICATE`. It uses `collectDeclaredOps` (test/m/op-grades/declared.mjs), a copy of test-support's `declaredOpsOf` search, because op-grades does not use test-support (architecture check). Only two owner rows are refused, both `DECLARED_OP_BAD_WEIGHT` `rung-on-read`, owners' to correct (REPORT J15: `sweeps`, `groupdescriptiondraft`); the test sets exactly those two aside and fails on any other.
+- Tests that pinned the old hand sentences or the `read: ` lead of `wizards`, `startfrom`, `securitymap` now compare with `doesSentence(op)` (the word table), in owners, t35, t48.
+
+**Deferred.** `sweeps` and `groupdescriptiondraft`: B20 (d), (e) cannot be applied from here (the owner's row is refused before any hand row is compared; see J15). Nothing else.
+
+**Found in other modules.** J15: link-sweep `sweeps`, store-door `groupdescriptiondraft`, affordances `t48.test.mjs:181` (expects `securitymap` caller-owned; a read since K4210), and ownership on `build/requirements/op-grades.md`. Requirement text note for BOB: R11, R17, R22 still say the wizard/startfrom/securitymap rows lead with "wizard-directed:"/"read: …" (and R22's "the reads `read:`"); the owner's declared sentences do not, by B20.
+
+**Tests and checks.** `node --test bio-plane/test/m/op-grades/`: 140 pass, 0 fail, 0 skipped. `checks/format.mjs .`: 0 failures. `checks/architecture.mjs . op-grades`: 0 failures. `checks/coverage.mjs . op-grades`: 50 of 50 live requirement ids named; 0 failures. `checks/words.mjs . op-grades`: 0 failures. `checks/ownership.mjs . op-grades tranche/T51`: 1 failure, `build/requirements/op-grades.md` (commit 4ebf9b1d66, before this restart; J15 item 4). Dependants' tests (52 files that name op-grades): 613 pass, 6 fail; 5 fail identically on `origin/tranche/T51`, the sixth is affordances `t48` (J15 item 3). `fleetbundles` is stale for the tranche's other modules' sources (BOB regenerates at the layer close); no op-grades file feeds a bundle.
+
+Size (session_01HSAFyMwi4NiSyNZqh5rY1c): test runs 16, module lines 3622
