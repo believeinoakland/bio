@@ -1172,8 +1172,10 @@ export function reviewOps(r, url, body) {
  *  `op-declarations` and `op-grades`, never chosen (the registrations refuse a row that differs). `fields.accepts` is every
  *  field the arm reads from the query and the body, less the control plane's stamps (`author`, `viewer`, `bySecret` and the
  *  grant's `secretSha`, R22, R29); `fields.requires` the ones it refuses without, as the refusal names them. `reviewcomment`
- *  and `reviewcopy` are addressed by `draft` in the query and answer a request without it, like every request the doors
- *  refuse, with the dead answer (R10), which names nothing: so `draft` is accepted there and not required. `casedraft` is
+ *  is addressed by `draft` in the query and answers a request without it, like every request the doors refuse, with the
+ *  dead answer (R10), which names nothing: so `draft` is accepted there and not required. A recipient presents the link's
+ *  `secret` in the body; the control plane takes it, sends only its fingerprint as `secretSha` (R29) and drops the field,
+ *  so the op as a screen reaches it accepts `secret` though this arm never reads one (a member's call sends none). `casedraft` is
  *  satisfied by a project (a new draft) or a draft (an edit), and keeps the fields a draft keeps (R4, R37). */
 export const DECLARED_OPS = Object.freeze({
   casedraft: {
@@ -1194,6 +1196,6 @@ export const DECLARED_OPS = Object.freeze({
   reviewcomment: {
     classes: null, mutating: true, weight: "reversible",
     description: localize("review.declared.reviewcomment", "review-directed: keyed by a review copy; a reader's comment for the case's owner"),
-    fields: { accepts: Object.freeze(["draft", "text"]), requires: Object.freeze(["text"]) },
+    fields: { accepts: Object.freeze(["draft", "text", "secret"]), requires: Object.freeze(["text"]) },
   },
 });
