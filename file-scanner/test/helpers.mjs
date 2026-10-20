@@ -130,7 +130,7 @@ export function recordingNet(routes = {}) {
 /** The member's dependencies for a test. */
 export function depsWith(over = {}) {
   return { bucket: memoryBucket(), scanner: async () => { throw new Error('no scanner'); },
-    renderer: async () => { throw new Error('no renderer'); }, fetch: async () => { throw new Error('no network'); },
+    updater: async () => { throw new Error('no updater'); }, renderer: async () => { throw new Error('no renderer'); }, fetch: async () => { throw new Error('no network'); },
     connect: null, vpc: null, now: () => NOW, version: '0.79.0', ...over };
 }
 
