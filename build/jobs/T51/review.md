@@ -67,3 +67,10 @@ Entry 1 (C3, R37): `case-authoring` exports no list named `DRAFT_FIELDS` (checke
 
 My best reading, and what I build unless you answer otherwise: `REVIEW_DRAFT_FIELDS` is derived, not hand-listed, as `AUTHORED_FIELDS` plus `ACT_FIELDS` minus the four that are not a draft's arguments (`project` and `draft`, which name the draft's own project and id in this module's act, and the stamps `viewer` and `author`). That includes `account` and also widens what a draft keeps (whatChanged, statementCites, the disclosures, accountDraft, reviewComments), which are all things `publishCase` accepts and the dry run (R13) then passes on. The equality test is `REVIEW_DRAFT_FIELDS` equals that derivation of the two exports.
 If you would rather `case-authoring` export the one list itself (a CHANGE for FR-18, which is not mine), say so and I will import it.
+
+## J4 · REPORT
+
+Two things that are not mine to change; I carry on meanwhile.
+
+1. **`build/modules.json`: `review` needs `test-support` in `uses`.** `declared-ops.test.mjs` (R42, entries 4 and 7) imports `bio-plane/test/declared-ops.mjs`, and `checks/architecture.mjs review` fails with "imports bio-plane/test/declared-ops.mjs of test-support, which review does not declare in uses" (`lines`, `money`, `duties` and the other declaring modules carry it). Please add the edge on `tranche/T51`; I merge it when you CHANGE me. Until then that one architecture finding stands, in my file.
+2. **op-grades' test copies a sentence my declaration now makes a word.** `bio-plane/test/m/op-grades/t47.test.mjs:250` asserts `NON_ACTS.reviewcomment` equals the literal "review-directed: keyed by a review copy; a reader's comment for the case's owner". The description in my `DECLARED_OPS.reviewcomment` must equal that hand row (`op-grades` R50), so it is now a `localize` word and the words check reports `testcopy op-grades t47.test.mjs:250`. The fix is op-grades': read the expected text through `word("review.declared.reviewcomment")` or compare to the declaration. I did not touch it.
