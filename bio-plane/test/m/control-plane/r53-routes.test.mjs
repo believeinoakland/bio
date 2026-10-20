@@ -118,6 +118,8 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
         /* R54 (K1863 (7)): membership's administrator acts take `by` as a member id, the custodial acts' expression */
         const want = k === "by" && MEMBER_ID_BY.includes(op)
           ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`)
+          /* R49 (K4219): case-import's acts, the re-run acts among them, stamp `by` as the positional identity for a session */
+          : k === "by" && M.CASE_IMPORT_ACTIONS.includes(op) && c.session ? c.want.author
           /* R68 (T37; admission R21): an admitted op's `source` is admission's `sourceOf` over the request, which states
              no connecting address here; a public op's is the window's fingerprint (`DOOR`) */
           : k === "source" && OPS[op].classes !== null ? "unstated" : c.want[k];

@@ -20,6 +20,8 @@ test("R47 a request turned away for a login is drawn with the login form; only a
   const p = await open();
   assert.ok(says(p, "screen.capture.cred.head"));
   assert.ok(text(p).includes(word("screen.capture.cred.turned", { source: "records.example-city.gov" })));
+  const tail = word("screen.capture.cred.askedby", { name: "N", date: "D", count: 0 }).split("D")[1];
+  assert.ok(tail && text(p).includes(tail), "R47 asked for by the member, the day and the tries, by key");
   assert.equal(main(p).querySelectorAll('button[data-act="capturecredentialsupply"]').length, 1, "one row asked for a login");
   assert.equal(main(p).querySelectorAll('button[data-act="capturerequestretry"]').length, 1, "the retry only on that refused request");
   assert.ok(!text(p).includes("paid.example.org") && !text(p).includes("fine.example.org"), "control: a paywall refusal and an accepted request are not offered a login or a retry");

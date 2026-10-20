@@ -1375,8 +1375,8 @@ const NON_ACTS_DATA = {
   goallink: "goal-directed: the author's dated claim that a project's objective serves a goal, keyed by (goal, project)",
   goalclose: "goal-directed: a member closes a goal with its reason, keyed by goal id",
   goal: "read: one goal by id, with its objectives and, once closed, its reason",
-  aspirationdeclare: "aspiration-directed: a member declares an aspiration of the group, a project or a member, keyed by its scope",
-  aspirationdepart: "aspiration-directed: a project records its departure from a held group aspiration with a reason, keyed by (project, aspiration)",
+  aspirationdeclare: word("intent.declared.aspirationdeclare"),
+  aspirationdepart: word("intent.declared.aspirationdepart"),
   aspirationdeadend: "aspiration-directed: a dead end appended to an aspiration's pursuit record, keyed by aspiration id",
   aspirationretire: "aspiration-directed: a member retires an aspiration with what pursuing it taught, keyed by aspiration id",
   aspirations: "read: the aspirations of a project or a member, keyed by scope",
@@ -1544,7 +1544,9 @@ const NON_ACTS_DATA = {
   publishatmove: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishatcancel: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishschedule: "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
-  /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
+  /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung.
+     K4247: store-door's declared sentence for this read is `store-door.declared.groupdescriptiondraft`, which the design's
+     word list does not key yet (words check, missingkey), so this row keeps its sentence until BOB rules (R51). */
   groupdescriptiondraft: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   writinghelp: word("act.writinghelp.does"),
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,

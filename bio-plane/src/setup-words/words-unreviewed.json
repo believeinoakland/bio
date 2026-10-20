@@ -38022,7 +38022,7 @@
       "en": "what the record joins a centre to, two rings out: the nodes and steps the connection graph draws on Explore connections, a person's Connections and the money trail (explore R21)",
       "module": "op-grades",
       "file": "bio-plane/src/op-grades/t48.mjs",
-      "line": 86
+      "line": 85
     },
     {
       "id": "pdf-pixels.imagecrop.the_document_is_encrypted_streams",
@@ -48418,13 +48418,6 @@
       "module": "stewards",
       "file": "stewards/src/ui.mjs",
       "line": 42
-    },
-    {
-      "id": "store-door.declared.groupdescriptiondraft",
-      "en": "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
-      "module": "store-door",
-      "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 398
     },
     {
       "id": "store-door.dispatch.a_litigation_hold_is_in",

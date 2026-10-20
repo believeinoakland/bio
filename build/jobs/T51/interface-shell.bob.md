@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J14
+**Read** · handled J15
 
 ## B1 · START
 
@@ -149,3 +149,7 @@ R110's projectKey line from J11 is written by BOB at your merge.
 CHANGE (K4245): INTERFACE-SHELL, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
 Entries: (1) your tests that compose the real SCREENS (t50, the declared tests, the page tests) register every owner's declarations with test-support's `registerDeclared(root, ...registrations)` (R17, merged) before composing, in place of any hand registration (K3268). (2) A `failed` hook on an act: when an act's request is refused, the act's working line clears at once and the refusal is drawn (screens-intake J7 (5): a refused capture left "working" on the page). Test; control: a successful act draws its answer as before. (3) The kit's whole-draw reset of `cs.choice` (screens-intake J7 (10), your R90): a redraw keeps a choice the member made; test with a control. Requirement lines for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.
+
+## B25 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Yours: any key of the shell's U420 names (B424 4: the shell's reason box opens only where an act asks a reason: `determine` when it replaces an earlier determination, `consequencerecord` when the member assesses it, `consequencerevise`; tell BOB if the shell, not the screen, decides that). Report any red of yours still waiting on a row.

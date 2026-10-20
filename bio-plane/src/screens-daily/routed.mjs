@@ -7,13 +7,13 @@
    parameters. */
 
 export function routed() {
-  // The kind of decision an item asks. An owner vote to remove an owner is the project's own (its screen draws the act), so it
-  // is none of these: the item's own words and an "Open" lead there.
+  // The kind of decision an item asks. An owner vote to remove an owner is the project's own (its screen draws the act; the
+  // registry lists `projectownerremove` on neither Home nor the queue), so it is `ownerremove`: the design's words and an "Open".
   const kindOf = function (it) {
     const k = it ? String(it.kind || "") : "";
     const s = it && it.subject && typeof it.subject === "object" ? it.subject : {};
     if (k === "authority-undetermined") return "authority";
-    if (k === "endorsement-owed") return s.kind === "member" ? "endorse" : s.kind === "project" && s.change !== "remove" && it.door !== "projectownerremove" ? "owner" : "";
+    if (k === "endorsement-owed") return s.kind === "member" ? "endorse" : s.kind === "project" ? (s.change === "remove" || it.door === "projectownerremove" ? "ownerremove" : "owner") : "";
     if (k === "expertise-confirmation-owed") return "expert";
     return "";
   };
@@ -25,6 +25,12 @@ export function routed() {
     return pick ? String(pick) : "";
   };
   const clean = function (v) { return String(v === undefined || v === null ? "" : v).trim(); };
+  // Who has agreed and who is still awaited, as the producer carries them in the item's `basis` (queue-producers R46, R47): the
+  // handles joined (a plain string, escaped when filled in), or `queue.owed.nobody` when none.
+  const listOf = function (cs, list) {
+    const names = (Array.isArray(list) ? list : []).map(clean).filter(Boolean);
+    return names.length ? names.join(", ") : { html: cs.w("queue.owed.nobody") };
+  };
 
   const draw = function (cs, it, o) {
     const kind = kindOf(it);
@@ -38,7 +44,7 @@ export function routed() {
     if (kind === "authority") {
       // The form that answers who issued the document, and the way to pass the task on (`taskforward`).
       const f = o.id;
-      const decide = mark(cs.act("taskdecide", { label: "act.owed_taskdecide.label." + at, data: { item: id, f: f } }));
+      const decide = mark(cs.act("taskdecide", { label: "screen.queue.routed.auth.record", data: { item: id, f: f } }));
       if (!decide) return null;
       const g = f + "f";
       const pass = cs.act("taskforward", { label: label("taskforward"), data: { item: id, f: g } });
@@ -46,27 +52,33 @@ export function routed() {
         + cs.checks(f + "-who", "screen.queue.routed.auth.question", [["known", "screen.queue.routed.auth.know"], ["unknown", "screen.queue.routed.auth.cannot"]], { radio: true })
         + cs.field(f + "-issuer", "screen.queue.routed.auth.issuer.label", { help: ["screen.queue.routed.auth.issuer.help1", "screen.queue.routed.auth.issuer.help2"], max: 500 })
         + cs.field(f + "-how", "screen.queue.routed.auth.how.label", { help: ["screen.queue.routed.auth.how.help1", "screen.queue.routed.auth.how.help2"], max: 2000 })
-        + cs.field(f + "-tried", "screen.queue.routed.auth.tried.label", { help: ["screen.queue.routed.auth.tried.required", "screen.queue.routed.auth.tried.help"], max: 2000 })
+        + cs.field(f + "-tried", "screen.queue.routed.auth.tried.label", { help: ["screen.queue.routed.auth.tried.help1", "screen.queue.routed.auth.tried.help"], max: 2000 })
         + '<p class="mk-small muted">' + cs.w("screen.queue.routed.auth.fine1") + " " + cs.w("screen.queue.routed.auth.fine2") + "</p>" + decide + "</details>";
       const forward = pass ? '<details class="mk-details"><summary>' + cs.w(label("taskforward")) + "</summary>"
         + cs.field(g + "-to", "screen.queue.forward.to", {}) + pass + "</details>" : "";
       return { summary: cs.w("screen.queue.routed.auth.item") + (o.ref ? " " + o.ref : ""), detail: cs.w("screen.queue.routed.auth.leaves"), acts: form + forward };
     }
+    const basis = it.basis && typeof it.basis === "object" ? it.basis : {};
     if (kind === "endorse") {
       const b = mark(cs.act("adminendorse", { label: label("adminendorse"), data: { item: id, memberId: String(s.id || "") } }));
       if (!b) return null;
-      return { summary: cs.w("screen.members.endorse.what", { handle: whoOf(it) }), detail: cs.w("screen.queue.routed.endorse.leaves"), acts: b };
+      return { summary: cs.w("queue.endorsement-owed.summary", { who: whoOf(it), have: listOf(cs, basis.have), awaiting: listOf(cs, basis.awaiting) }),
+        detail: cs.w("queue.endorsement-owed.detail"), acts: b };
     }
-    if (kind === "owner") {
+    if (kind === "owner" || kind === "ownerremove") {
+      const project = cs.ref("project", String(s.id || ""), clean(s.name) || cs.w("queue.source.untitled", { date: { html: cs.date(String((it.age && it.age.since) || "")) } }), []);
+      const fills = { who: whoOf(it), project: { html: project }, agreed: listOf(cs, basis.agreed), awaiting: listOf(cs, basis.awaiting) };
+      const detail = cs.w("queue.endorsement-owed.owner.detail");
+      // A vote to remove an owner is no act of this screen: the item says what it asks and leads to the project, where the act is.
+      if (kind === "ownerremove") return { summary: cs.w("queue.endorsement-owed.owner.summary.remove", fills), detail: detail, acts: "" };
       const b = mark(cs.act("projectowneradd", { label: label("projectowneradd"), data: { item: id, projectId: String(s.id || ""), handle: String(s.target || "") } }));
       if (!b) return null;
-      const project = cs.ref("project", String(s.id || ""), clean(s.name) || cs.w("queue.source.untitled", { date: { html: cs.date(String((it.age && it.age.since) || "")) } }), []);
-      return { summary: cs.w("screen.queue.routed.owner.item", { who: whoOf(it), project: { html: project } }), detail: cs.w("screen.queue.routed.owner.leaves"), acts: b };
+      return { summary: cs.w("queue.endorsement-owed.owner.summary.add", fills), detail: detail, acts: b };
     }
-    // expert: the member and the expertise she declared, record data, and the sentence that says what confirming is.
+    // expert: the member and the expertise she declared (record data), and what confirming is.
     const b = mark(cs.act("expertiseconfirm", { label: label("expertiseconfirm"), data: { item: id, memberId: String(s.id || ""), label: String(s.label || "") } }));
     if (!b) return null;
-    return { summary: "<b>" + cs.esc(whoOf(it)) + "</b> · " + cs.esc(clean(s.label)), detail: cs.w("screen.queue.routed.expert.vouch") + " " + cs.w("screen.queue.routed.expert.leaves"), acts: b };
+    return { summary: cs.w("queue.expertise-confirmation-owed.summary", { who: whoOf(it), label: clean(s.label) }), detail: cs.w("queue.expertise-confirmation-owed.detail"), acts: b };
   };
 
   // The request of the decision form (`taskdecide` accepts id, outcome, authority, basis; requires id, outcome, basis): "I know who

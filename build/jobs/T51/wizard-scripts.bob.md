@@ -111,3 +111,13 @@ CHANGE (K4227), a new job session (WIZARD-SCRIPTS #17, haiku): `DECLARED_OPS.wri
 ## B14 · CHANGE
 
 CHANGE (K4231), a new job session (WIZARD-SCRIPTS #18, haiku): `DECLARED_OPS.wizardrevise` requires `[version, steps]`, but the arm also takes `adopt` with no `steps` (a copy whose base changed), so the guard refuses screens-wizards' library tests "R1 wizards: a state pressed…" and "R1 a copy whose base changed…". Make it `requires: ["version", ["steps", "adopt"]]` and `accepts` `adopt`; recheck every row's alternatives against its arm's every path (not only the first); keep the declared-ops tests with a control for the adopt path. Write the wording for R46 in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4252): WIZARD-SCRIPTS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry (R41): re-take the screen registry, the front doors and the wizard library at the design commit now on `tranche/T51`, `18f78e4422` (DEC-387, DEC-388; merged by K4248): regenerate `screen-registry.mjs`, `front-doors.mjs` and `civicsmith-library.mjs` with `node bio-plane/src/wizard-scripts/build-data.mjs` (check `--check`), the pinned commit constant moved to it. The registry then carries B423's `linewithdraw` on `person` (SCREENS-INVESTIGATE's held act) and every other act DEC-387 added. Run your suite and interface-shell's `checkScreens` over the composed SCREENS (interface-shell's tests), and report every screen whose acts now differ from what its module draws (BOB sends each to its screen job). Requirement line: R41's commit, for BOB.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B16 · CHANGE
+
+CHANGE (K4253), replaces B15's commit: the design moved again (U424, DEC-389, merged into the tranche at 742a6c8d1c): re-take at `09fbb247eb`, not 18f78e4422. Merge `tranche/T51` first. Known differences to report: `person` gains `linewithdraw` (screens-investigate), `docket` gains `writinghelp` (screens-publish), `start-send` loses `release` (screens-action).

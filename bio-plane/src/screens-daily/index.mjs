@@ -54,17 +54,17 @@ const DATE_KINDS = ["meeting", "adopted", "effective", "signed", "entered", "iss
 const STANDARD_KINDS = ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"];
 const MONEY_KINDS = ["allocation", "balance", "behested", "contribution", "debt", "expenditure", "fee_charged", "gift", "income", "other", "payment", "revenue", "settlement", "transfer"];
 
-// R75: the decisions the record routes to a member, on Home and the queue (the labels the form needs and no key holds are not listed:
-// `screen.queue.routed.auth.cannot`, `.issuer.label`, `.tried.label`, `.tried.required`, for the design to hold). R79 (b): an item with no
-// sentence of its own, drawn by the unkeyed pair on both.
-const ROUTED = ["screen.members.endorse.what", "screen.queue.forward.to", "screen.queue.fieldfirst", "queue.unkeyed.summary", "queue.unkeyed.detail",
-  ...["item", "open", "question", "know", "issuer.help1", "issuer.help2", "how.label", "how.help1", "how.help2", "tried.help", "fine1", "fine2", "leaves",
-    "refused.basis", "refused.issuer1", "refused.issuer2", "refused.yours1", "refused.yours2"].map((k) => `screen.queue.routed.auth.${k}`),
-  "screen.queue.routed.owner.item", "screen.queue.routed.owner.leaves", "screen.queue.routed.endorse.leaves", "screen.queue.routed.expert.vouch", "screen.queue.routed.expert.leaves"];
+// R75: the decisions the record routes to a member, on Home and the queue: the form's words, and the items' own rows for an endorsement,
+// an owner vote and an expertise (B422). R79 (b): an item with no sentence of its own, drawn by the unkeyed pair on both.
+const ROUTED = ["screen.queue.forward.to", "screen.queue.fieldfirst", "queue.unkeyed.summary", "queue.unkeyed.detail", "queue.source.untitled", "queue.owed.nobody",
+  ...["item", "open", "question", "know", "cannot", "issuer.label", "issuer.help1", "issuer.help2", "how.label", "how.help1", "how.help2", "tried.label", "tried.help1", "tried.help",
+    "fine1", "fine2", "leaves", "record", "refused.basis", "refused.issuer1", "refused.issuer2", "refused.yours1", "refused.yours2"].map((k) => `screen.queue.routed.auth.${k}`),
+  "queue.endorsement-owed.summary", "queue.endorsement-owed.detail", "queue.endorsement-owed.owner.summary.add", "queue.endorsement-owed.owner.summary.remove",
+  "queue.endorsement-owed.owner.detail", "queue.expertise-confirmation-owed.summary", "queue.expertise-confirmation-owed.detail"];
 const ROUTED_ACTS = (screen) => [...ACTS(screen, ["adminendorse", "projectowneradd", "expertiseconfirm", "taskforward"]), `act.owed_taskdecide.label.${screen}`, "act.owed_taskdecide.does"];
 
-// R65: the doors to Held captures and the Inbox, on Home and the queue.
-const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name"];
+// R65: the doors to Held captures and the Inbox, on Home and the queue; on Home, the line that says how many wait for a member to look.
+const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name", ...(screen === "home" ? ["screen.home.waiting.counts"] : [])];
 
 const WORDS_OF = {
   home: [...SHARED, ...DOORS_TO("home"), "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion"]),
@@ -107,7 +107,7 @@ const WORDS_OF = {
     "screen.queue.hint.not", "screen.queue.hint.not.text", "screen.queue.forward.to", "screen.queue.snooze.until", "screen.queue.reminder.on", "screen.queue.fieldfirst",
     "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop",
     // R68, R69, R75, R79: Defer beside Dismiss, a snoozed case and "Bring back", the routed decisions, the helps, the day picker, the answered rows.
-    "screen.question.say004", ...ROUTED, ...ROUTED_ACTS("queue"), "queue.act.dothis.help", "queue.act.open.help", "screen.queue.snooze.pick", "queue.signer-self-registered.members",
+    "screen.queue.defer", "screen.queue.bringback", "screen.queue.snoozed.head", "screen.queue.snoozed.holds", "screen.queue.snoozed.until", ...ROUTED, ...ROUTED_ACTS("queue"), "queue.act.dothis.help", "queue.act.open.help", "screen.queue.snooze.pick", "queue.signer-self-registered.members",
     "queue.answered.done", "queue.answered.dismissed", "queue.answered.dismissed.noreason", "queue.answered.muted", "queue.answered.generic",
     // R58 to R61: choosing several items, what was answered, the feeds' honesty and the set-aside findings.
     "queue.multi.entry", "queue.multi.choose", "queue.multi.head", "queue.multi.head2", "queue.multi.chosen", "queue.multi.chosen.one", "queue.multi.done",

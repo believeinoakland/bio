@@ -18,18 +18,19 @@ const R27_WRITES = { obscuremark: "reversible", setpassword: "caller-owned", sub
   translationgrant: "credential", translationdraft: "caller-owned", translationmark: "undetermined",
   translationadopt: "reversible", translationconfirm: "reversible", translationrevert: "reversible" };
 const R27_READS = ["photomarks", "translations", "interfacewords"];
-const WORD = declaredSentence("translations", "translationadopt");
 const R27_REASONS = {
   obscuremark: declaredSentence("case-carriage", "obscuremark"),
-  setpassword: "session-directed: the caller's own password, the role from their session; ends their other sessions; "
-    + "moves no bundle",
-  subscriptionsignin: "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login "
-    + "held here; moves no bundle",
+  setpassword: declaredSentence("credentials", "setpassword"),
+  subscriptionsignin: declaredSentence("control-plane", "subscriptionsignin"),
   translationgrant: declaredSentence("translations", "translationgrant"),
   translationdraft: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a "
     + "granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that "
     + "writes nothing (`to_english`); moves no bundle",
-  translationadopt: WORD, translationconfirm: WORD, translationrevert: WORD, translationmark: WORD,
+  translationadopt: declaredSentence("translations", "translationadopt"),
+  translationconfirm: declaredSentence("translations", "translationconfirm"),
+  translationrevert: declaredSentence("translations", "translationrevert"),
+  translationmark: "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's "
+    + "words, shown to members reading that language; moves no bundle",
 };
 
 test("R27 (T38: R28; T48: R39): T37's ops — translationmark `undetermined`, translationdraft and setpassword `caller-owned`, "

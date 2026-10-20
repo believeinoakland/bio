@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (17893 design words, 1061 protected; SHA-256
-   dba7f5ca190b16234c97df899e073a47e6bdae94f740a6d5db80f6e0c6cc682b) followed by 7090 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (17900 design words, 1061 protected; SHA-256
+   def8c84825661d5db2931f2a64148029b72f17d0992fce6062db62029c21cd49) followed by 7089 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "dba7f5ca19";
+export const WORDS_COMMIT = "def8c84825";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10498,7 +10498,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue.expertise-confirmation-owed.detail","Confirm it if you can vouch for it. This item leaves once any administrator confirms.","DEC-387: B422: under the summary",null,false,"design"],
   ["act.projectownerremove.label.queue","Agree to remove an owner","DEC-387: B422: the button on the owner-vote item when the vote is to let an owner stand down (the add has act.projectowneradd.label.queue, \"Add an owner\")","Ends someone's ownership, with a reason; they stay a member. A project always keeps at least one owner, and with three or more owners the others agree first.",false,"design"],
   ["screen.queue.defer","Defer","DEC-387: B426: the button beside Dismiss with a reason on a hint or finding in the Queue; it puts the item aside until a day with a reason",null,false,"design"],
-  ["screen.queue.bringback","Bring back","DEC-387: B426: the button on a snoozed or deferred row that returns the item to the Queue now",null,false,"design"],
+  ["screen.queue.bringback","Bring back","DEC-387: B426: the button on a snoozed or deferred row that returns the item to the Queue now; op queuesnooze with {case, clear} (queue R21; B430, K4249)",null,false,"design"],
   ["screen.queue.snoozed.head","Snoozed","DEC-387: B426: the section of What you answered that holds items hidden until a day you chose",null,false,"design"],
   ["screen.queue.snoozed.holds","Items you snoozed until a day you chose. They return on that day, or now with Bring back.","DEC-387: B426: help under the Snoozed heading",null,false,"design"],
   ["screen.queue.snoozed.until","comes back {date}","DEC-387: B426: a snoozed row",null,false,"design"],
@@ -10511,7 +10511,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.action.what.came.back","What came back","DEC-387: B424 1: choice between a reply and a silence",null,false,"design"],
   ["screen.action.a.reply.came","A reply came","DEC-387: B424 1: the first choice; the second is screen.action.no.reply.came.by.the.date",null,false,"design"],
   ["screen.action.how.it.came","How it came","DEC-387: B424 1: the reply's medium",null,false,"design"],
-  ["screen.action.reply.medium.email","Email","DEC-387: B424 1: medium option (token email)",null,false,"design"],
+  ["screen.action.reply.medium.email","Email","DEC-387: B424 1: medium option; medium is free text up to 500 characters (actions R13) and the token email is sent as its value (B430, K4249)",null,false,"design"],
   ["screen.action.reply.medium.letter","Letter","DEC-387: B424 1: medium option (token letter)",null,false,"design"],
   ["screen.action.reply.medium.portal","The city's portal","DEC-387: B424 1: medium option (token portal)",null,false,"design"],
   ["screen.action.reply.medium.person","In person","DEC-387: B424 1: medium option (token in_person)",null,false,"design"],
@@ -10521,7 +10521,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.action.reply.follows.none","Nothing earlier","DEC-387: B424 1: option of It follows",null,false,"design"],
   ["screen.action.reply.follows.request","The request, sent {date}","DEC-387: B424 1: option of It follows naming the request",null,false,"design"],
   ["screen.action.reply.follows.reply","The {kind}, {date}","DEC-387: B424 1: option of It follows naming an earlier reply; {kind} the stage word with its first letter lower case",null,false,"design"],
-  ["screen.action.reply.stage.none","Not stated","DEC-387: B424 1: stage option (no stage)",null,false,"design"],
+  ["screen.action.reply.stage.none","Not stated","DEC-387: B424 1: stage option meaning the field is omitted; no none token exists (B430, K4249)",null,false,"design"],
   ["screen.action.reply.stage.acknowledgement","Acknowledgment","DEC-387: B424 1: stage option (token acknowledgement)",null,false,"design"],
   ["screen.action.reply.stage.fee_estimate","Fee estimate","DEC-387: B424 1: stage option (token fee_estimate)",null,false,"design"],
   ["screen.action.reply.stage.fee_waiver_decision","Decision on a fee waiver","DEC-387: B424 1: stage option (token fee_waiver_decision)",null,false,"design"],
@@ -10530,7 +10530,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.action.reply.stage.denial","Denial","DEC-387: B424 1: stage option (token denial)",null,false,"design"],
   ["screen.action.reply.stage.appeal_decision","Decision on an appeal","DEC-387: B424 1: stage option (token appeal_decision)",null,false,"design"],
   ["screen.action.reply.stage.court_decision","Court decision","DEC-387: B424 1: stage option (token court_decision)",null,false,"design"],
-  ["screen.action.reply.outcome.none","Not decided","DEC-387: B424 1: outcome option (no outcome)",null,false,"design"],
+  ["screen.action.reply.outcome.none","Not decided","DEC-387: B424 1: outcome option meaning the field is omitted (no none token); offered only on received entries, and not offered where outcome is required: fee_waiver_decision, denial, appeal_decision, court_decision (B430, K4249)",null,false,"design"],
   ["screen.action.reply.outcome.granted","Granted","DEC-387: B424 1: outcome option (token granted)",null,false,"design"],
   ["screen.action.reply.outcome.denied","Denied","DEC-387: B424 1: outcome option (token denied)",null,false,"design"],
   ["screen.action.reply.outcome.partial","Granted in part","DEC-387: B424 1: outcome option (token partial)",null,false,"design"],
@@ -10633,6 +10633,14 @@ export const WORD_ROWS = Object.freeze([
   ["screen.start-send.release.why","Why you release it","DEC-387: B424 6: the reason field of Release this sentence",null,false,"design"],
   ["screen.start-send.release.why.help","In your own words, up to 500 characters. It is kept beside the text you approve.","DEC-387: B424 6: help under the reason",null,false,"design"],
   ["screen.start-send.release.done","Released by {who} on {date}: {reason}","DEC-387: B424 6: a sentence already released; {reason} in quotation marks by the code",null,false,"design"],
+  ["act.release.label.start-send","Release this sentence","DEC-389: B430 (2): part of approving, filingapprove with release [{ord, reason}] (filings R34, screens-action R42); not the release act","Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.",true,"design"],
+  ["screen.action.sent.stage.request","The request","DEC-389: B430 (3): a sent entry's stage (token request)",null,false,"design"],
+  ["screen.action.sent.stage.fee_waiver_request","Request for a fee waiver","DEC-389: B430 (3): a sent entry's stage (token fee_waiver_request)",null,false,"design"],
+  ["screen.action.sent.stage.appeal","Appeal","DEC-389: B430 (3): a sent entry's stage (token appeal)",null,false,"design"],
+  ["screen.action.sent.stage.court_filing","Court filing","DEC-389: B430 (3): a sent entry's stage (token court_filing)",null,false,"design"],
+  ["screen.updates.health.runtime.unit.ms","milliseconds","DEC-389: B430 (4): runtime unit ms (instance-setup R34), filling {unit}",null,false,"design"],
+  ["screen.updates.health.runtime.unit.bytes","bytes","DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit",null,false,"design"],
+  ["store-door.declared.groupdescriptiondraft","Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.","DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -16967,7 +16975,6 @@ export const WORD_ROWS = Object.freeze([
   ["act.templatesave.label.start-send","Keep as a template",null,"Keeps the text you approved as the first draft of a template for your team. Nothing is offered to members until the team approves it.",true,"design"],
   ["act.owed_actionstake.label.start-send","Save this action's stake",null,"Records what the team has at stake in this one action beyond its usual stake and the project's. It goes beside them on what the action sends, dated and attributed; clearing it falls back to the project's stake.",true,"design"],
   ["act.writinghelp.label.start-send","Help me write this",null,"Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",true,"design"],
-  ["act.release.label.start-send","Release this sentence",null,"Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.",true,"design"],
   ["act.actioncreate.label.actionnew","Start the action",null,"Starts the records request as an action the team follows to its reply.",true,"design"],
   ["act.addresseesuggest.label.actionnew","Choose the office",null,"Chooses the office it goes to, by role, so it reaches whoever holds the post that day.",true,"design"],
   ["act.writinghelp.label.actionnew","Help me write this",null,"Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",true,"design"],
@@ -24818,7 +24825,6 @@ export const WORD_ROWS = Object.freeze([
   ["stewards.ui.state_dismissed","Dismissed",null,null,false,"code"],
   ["stewards.ui.state_undecided","Undecided",null,null,false,"code"],
   ["stewards.ui.state_withdrawn","Withdrawn",null,null,false,"code"],
-  ["store-door.declared.groupdescriptiondraft","draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",null,null,false,"code"],
   ["store-door.dispatch.a_litigation_hold_is_in","a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.",null,null,false,"code"],
   ["store-door.dispatch.asking_the_assistant_to_draft","asking the assistant to draft the team's description",null,null,false,"code"],
   ["store-door.dispatch.the_account_that_would_serve","the account that would serve this draft could not be read; nothing was used",null,null,false,"code"],

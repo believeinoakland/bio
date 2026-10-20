@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J16
+**Read** · handled J21
 
 ## B1 · START
 
@@ -149,3 +149,21 @@ RESUME (K4244): OP-GRADES #19 (sonnet), depth 2 (BOB #235 is depth 1), replaces 
 CHANGE (K4247): OP-GRADES, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip (OP-GRADES #19 merged).
 Entries: (1) R39 amended by BOB: `groupdescriptiondraft` is a read, as `writinghelp` is: remove its `RUNG_ABSENT` `caller-owned` row; its `NON_ACTS` reason is the owner's word (R51, new: a declared op's reason is its owner's word, as #19 built). STORE-DOOR #14 declares it `weight: "read"` at the same time; your registration test then sets aside only `sweeps` until LINK-SWEEP #6 merges, and neither once both have (merge the tranche when BOB tells you). (2) R51 is new: name it in the test that compares each declared op's reason with its owner's word (`register.test.mjs` or the owners test). Tests name R39 and R51; control: a hand row for a declared op that disagrees is refused. Requirement lines are written; strike nothing yourself.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B25 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Yours: (1) the 24 words `testcopy` findings now in your tests (owners.test 43, 84; t35 56, 57 and two more; t36 ×5; t37 ×2; t41; t46 ×2; t47 ×5; t48 ×2; t49): DEC-387 made those sentences rows, so each test reads it through `declaredSentence`/the key (as #19 did for the others). Done when `checks/words.mjs` shows 0 for op-grades. (2) B24 stands.
+
+## B26 · CHANGE
+
+CHANGE (K4252), urgent: merged (with store-door; link-sweep merged too), and the plane's start is still refused, now `DECLARED_OP_DISAGREES: groupkeynoticeseen description`: your `NON_ACTS` hand sentence (`t34.mjs:70`) is not ai-accounts' word since DEC-387 reworded B416's 15 rows (ai-accounts groupkeynoticeseen, aikeepaway, groupkeyremove, groupkeyset, groupkeyswitch; intent aspirationdeclare, aspirationdepart; local-facts ruleconfirm, ruledraft, rulewithdraw; strength projectbarset, strengthbarset; translations translationadopt, translationconfirm, translationrevert). Answers to J17: decision 1 is (b): R51 is scoped to `NON_ACTS` (written); the `RUNG_ABSENT` `is` rows go with the round's hand-row deletion (K4168). Decision 2: `groupdescriptiondraft` keeps the owner's sentence until the design keys it (HANDOFF from BOB). The fix: every declared op's `NON_ACTS` reason reads its owner's word (`act.<op>.does` or the owner's composed id) through the word table, never a held sentence, so a rewording can never refuse the start again; at least these 15 now. Your branch is at the tranche tip. Done when a registration of every owner's `DECLARED_OPS` meets no refusal and `node --test bio-plane/test/m/plane/` starts (report its count); your registration test drops the owed filter (both rows are merged).
+
+## B27 · CHANGE
+
+CHANGE (K4254): OP-GRADES, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip (merge it again once BOB says OP-DECLARATIONS #31 has merged).
+Entries (#20's three reds): (1) R17: the test reads the alias count from `OP_ALIASES` and op-declarations' alias table (they agree: 26 once OP-DECLARATIONS #31 drops `strengthbarset`), never a written number. (2) R42, R46: a declared op's grade is its owner's (K4168, R49): evaluate rungless acts and `MARKS` over the tables after registration, so `strengthbarset` (strength declares it `reasoned`) is graded and needs no rungless mark. Requirement lines for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B28 · CHANGE
+
+CHANGE (K4257), with B27: (1) the words check finds one copy in your tests, `t37.test.mjs:32` (`testcopy`, a translation-directed sentence): read it through `declaredSentence`/the key. (2) DEC-390 keyed `store-door.declared.groupdescriptiondraft` (merged, rows regenerated): its `NON_ACTS` row reads the owner's word (R51), no held sentence.

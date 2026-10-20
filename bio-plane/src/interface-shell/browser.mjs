@@ -632,14 +632,17 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
            `o.value` seeds the draw only until the member chooses */
         const redraw = typeof o.redraw === "string" && o.redraw ? o.redraw : "";
         const values = (options || []).map(valueOf);
+        /* R90 (K4245): a choice the member made is kept in page memory, so a whole-draw redraw (every read loading again, the choice
+           gone from the tree for a moment) draws it again as chosen; `o.value` seeds it only until the member chooses */
+        const made = Object.hasOwn(inst.ui, "choice:" + id) ? values.find((v) => String(v) === String(inst.ui["choice:" + id])) : undefined;
         const chosen = drives ? (values.includes(inst.ui["choice:" + id]) ? inst.ui["choice:" + id] : values.includes(o.value) ? o.value : values[0])
-          : redraw && Object.hasOwn(inst.ui, redraw) ? inst.ui[redraw] : o.value;
+          : redraw && Object.hasOwn(inst.ui, redraw) ? inst.ui[redraw] : made !== undefined ? made : o.value;
         if (drives) inst.ui["choice:" + id] = chosen;
         const opt = (x) => {
           const [v, t] = Array.isArray(x) ? [x[0], w(x[1], x[2])] : x && typeof x === "object" ? [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text)] : [x, esc(x)];
           return '<option value="' + esc(v) + '"' + (chosen === v ? " selected" : "") + ">" + t + "</option>";
         };
-        const field = '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input"' + (drives ? ' data-shell="choice" data-choice="' + esc(id) + '"' : redraw ? ' data-shell="choice" data-redraw="' + esc(redraw) + '"' : "") + ">"
+        const field = '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input"' + (drives ? ' data-shell="choice" data-choice="' + esc(id) + '"' : redraw ? ' data-shell="choice" data-redraw="' + esc(redraw) + '"' : ' data-keep="' + esc(id) + '"') + ">"
           + (options || []).map(opt).join("") + "</select></div>";
         return drives && Object.hasOwn(o.acts, chosen) ? field + cs.act(o.acts[chosen], o.act || {}) : field;
       },
@@ -1935,6 +1938,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     if (a.kind !== "ok") {
       actState(inst, d, null);
+      /* R21 (K4245): the act's optional `failed(view, answer, cs)` runs at once when its request is refused or not answered, so a
+         line the screen raised for the press (a working line) is cleared before the refusal is drawn beside the act */
+      if (d.spec.failed) { try { await d.spec.failed(inst.view, a, kit(inst)); } catch { /* a screen's own hook never stops the shell */ } }
       if (a.kind === "silent" && !S && !inst.pub) return;
       const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, inst) : w("shell.noanswer");
       return refuseBeside(ai, words);
@@ -2052,6 +2058,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (sh) return shell(sh, e);
       /* R49: a choice that drives its act redraws with the act following it */
       const ch = e.target.closest ? e.target.closest('[data-shell="choice"]') : null;
+      /* R90 (K4245): a plain choice records what the member chose in page memory and redraws nothing */
+      const kept = e.target.closest ? e.target.closest("[data-keep]") : null;
+      if (kept) {
+        const inst = ownerOf(kept);
+        if (inst) { activity(); inst.ui["choice:" + kept.getAttribute("data-keep")] = kept.value; }
+        return;
+      }
       if (ch && ch.getAttribute("data-redraw")) {
         /* R90: a choice that redraws sets its value in `view.ui` and redraws; it sends nothing */
         const name = ch.getAttribute("data-redraw");

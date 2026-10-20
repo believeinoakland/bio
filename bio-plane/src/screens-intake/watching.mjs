@@ -120,7 +120,7 @@ function renderWatching(cs, view) {
     }
     const owners = M[s.bundle].state === "ok" ? M[s.bundle].owners : null;
     const mine = !!owners && owners.includes(me);
-    const row = cs.row(cs.icon(s.ratified ? "clock" : "hold"), `<b class="mk-data">${cs.esc(d.title || s.sweep || "")}</b><span class="meta">${cs.w("screen.watching.sweepdef.scope", { hosts: { html: `<span class="mk-data">${cs.esc(hosts)}</span>` }, budget: { html: `<span class="mk-data">${per === null ? "" : cs.w("screen.watching.sweep.pages", { count: per })}</span>` } })}</span>`);
+    const row = cs.row(cs.icon(s.ratified ? "clock" : "hold"), `<b class="mk-data">${cs.esc(d.title || s.sweep || "")}</b><span class="meta">${cs.w("screen.watching.sweepdef.scope", { hosts: { html: `<span class="mk-data">${cs.esc(hosts)}</span>` }, budget: { html: `<span class="mk-data">${per === null ? "" : (per === 1 ? cs.w("screen.watching.sweep.pages.one") : cs.w("screen.watching.sweep.pages", { count: per }))}</span>` } })}</span>`);
     const acts = s.ratified ? cs.act("sweepratify", { label: "screen.watching.sweepdef.stop", data: { sweep: s.sweep, ratified: "false" } })
       : mine ? cs.act("sweepratify", { label: "screen.watching.sweepdef.ratify", tone: "primary", data: { sweep: s.sweep, ratified: "true" } }) : "";
     const who = !s.ratified && owners && !mine && owners.length ? `<p class="mk-note">${cs.w("screen.watching.sweepdef.ref.owner1")} ${cs.w("screen.watching.sweepdef.ref.owner2", { owners: owners.join(", ") })}</p>` : "";

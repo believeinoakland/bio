@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -145,3 +145,8 @@ CHANGE (K4240), re J9/J10. interface-shell is merged (R110 `projectKey`, K4239):
 CHANGE (K4245): SCREENS-PUBLISH, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
 Entries: (1) the ceremony's `screen.ceremony.conf.intro2` {finding} is now drawable: `publishpreflight`'s `not_co_attested` lists `{capture, by, findings}` (case-authoring R82, merged): draw each capture with who captured it (`by`, its handle as the roster draws it; none when null) and each finding resting on it. Test naming the id you write it under; control: an entry with `by: null` draws no capturer. (2) Replace your own `register.mjs` with test-support's `registerDeclared(root, ...registrations)` (R17, merged) wherever your tests compose the real SCREENS (K3268). Requirement lines for BOB in your COMPLETE. Accepted reds stay: `docketfile`, `imported` `writinghelp` (UX-DESIGN B420), R35's press (K3717).
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B16 · CHANGE
+
+CHANGE (K4248): SCREENS-PUBLISH, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours: (B420 1) the doorbell's "Make one for me" tick beside the secret field (`screen.doorbell.secret.make`, `.make.help`; ticked, the field stays empty) and the receipt `screen.doorbell.receipt.*` (R49, now buildable); (B420 2) the docket's file form drawn whole (`screen.docket.edition.*`, `screen.docket.capture.*` with its "Capture it first" door; `writinghelp` on the summary only), clearing public.test R8; (B420 3) `imported` keeps `writinghelp` (the citing note), clearing common.test R10; (B428) the case editor's details rows (`screen.case-editor.details.*`, `.rel.*`, `.role.*`, `.finding.role` replacing the two literal rows) and `screen.ceremony.conf.self.tick`, `case-inputs.details.not_stated`.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model sonnet, medium effort; workers haiku low for mechanical edits.

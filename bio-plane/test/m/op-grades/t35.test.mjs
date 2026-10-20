@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, OP_ALIASES,
          LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
-import { reqText, ticked, tickedAll, readRows, doesSentence } from "./declared.mjs";
+import { reqText, ticked, tickedAll, readRows, declaredSentence, doesSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
@@ -53,11 +53,10 @@ const R22_REASONS = {
   unpack: "archive-directed: keyed by a held archive's capture, reached from its screen; files its entries as captures of "
     + "their own at the archive's grade, each promoted beside it",
   coarchiveset: "setting: the group's choice whether a capture asks for a co-archive; an administrator's act; moves no bundle",
-  signout: "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
-  signouteverywhere: "session-directed: ends the caller's own session, or every session of the caller's role; moves no "
-    + "bundle",
-  recoverycodesissue: "credential: an administrator's own recovery codes, shown once; moves no bundle",
-  recover: "credential: a recovery code and a new password, reached with no session; moves no bundle",
+  signout: declaredSentence("credentials", "signout"),
+  signouteverywhere: declaredSentence("credentials", "signout"),
+  recoverycodesissue: declaredSentence("credentials", "recoverycodesissue"),
+  recover: declaredSentence("credentials", "recover"),
 };
 /* K2043 (B3): the other ops T35 grades for L5's and L6's owners, each with the code its reasoned
    grade rests on (in the family) or its ground */

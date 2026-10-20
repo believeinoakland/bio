@@ -123,3 +123,16 @@ Before tests: every tracked lockfile directory has its node_modules (K4113). Rea
 ## B14 · CHANGE
 
 CHANGE (K4240): FILINGS #25 is merged: filingread answers the stored exhibits and venue_standard (R59, R25). Merge tranche/T51 and do B13's item 2.
+
+## B15 · CHANGE
+
+CHANGE (K4248): SCREENS-ACTION, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours, B424 whole: (1) the reply form (medium, follows, the reply's document; stage, outcome and medium options by vocabulary token: BOB confirms the medium tokens by CHANGE; the document choice needs a per-project document read: name the read you use, or report it missing); (2) `screen.reminder.on`; (3) `screen.request.subject.*`; (4) the matter rows (`screen.matter.*`, stages named without digits, `.proposed`, `.advance` with the name, `.atstage`, `screen.plan.escalation`; reasons asked only where U420 says); (5) the plan's "Add another" and `screen.plan.option.*`, `.dispose.*`, `.phase.*`; (6) the send steps' rows and "A sentence the record contradicts" with its release button (BOB names the op by CHANGE; build the rest first).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B16 · CHANGE
+
+CHANGE (K4249), with B15: (a) releasing a contradicted sentence is not a `release` op (that is ratification's vouching): it rides the approve step's `filingapprove` as `release: [{ord, reason}]` (filings R34; your R42): each held sentence by its index with a non-blank reason; without it the approval is refused `CONTRADICTED_HELD` naming the unreleased ones. Draw the design's "A sentence the record contradicts" rows and button as gathering that entry, not as a separate act. (b) the reply form: `medium` is free text (at most 500 characters; actions R13): send the design's tokens (email, letter, portal, person, other) as the value; `stage` for a received reply is acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision, and `outcome` granted, denied, partial, reversed, affirmed, none_stated, none_exists: the design's "none" for either means the field is omitted (outcome is required on the four decision stages and allowed only on received entries).
+
+## B17 · CHANGE
+
+CHANGE (K4253), with B15 and B16: the design folded B16's answers (U424, DEC-389, merged into the tranche at 742a6c8d1c; rows regenerated): "Release this sentence" and its reason field carry `filingapprove` with `release: [{ord, reason}]` (`release` is off start-send's acts; `act.release.label.start-send` stays a drawn row); `screen.action.reply.stage.none` / `.outcome.none` mean the field is omitted; a sent entry's stages have keys `screen.action.sent.stage.{request, fee_waiver_request, appeal, court_filing}`. Merge `tranche/T51` before you draw them.

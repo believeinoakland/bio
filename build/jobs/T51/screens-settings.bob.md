@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J12
+**Read** · handled J14
 
 ## B1 · START
 
@@ -173,3 +173,11 @@ CHANGE (K4239): credentials is merged: bootstrap accepts members. Merge tranche/
 CHANGE (K4246): SCREENS-SETTINGS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
 Entries: (1) K4239's B19 (2), not done by #10 for want of a declared filter: the `bias` screen lists the team's earlier offered sets through `retrieval`'s `list` with `type: "bias"` (declared since RETRIEVAL #23, R91: accepts `type`, `state`, `after`, `limit`), so a set offered earlier is adoptable, not only the one saved this sitting; follow `after` while the answer says more exists, within the page's bound. Test naming R65 (or the id you amend); control: a set of another type is not listed, an empty answer draws no list. (2) `entitybyalias` is declared (entities R62): your bias form's lookup now counts as declared; confirm your test sends only `alias`. (3) Your two R66 `export` tests: `export` is in the founder's session set (op-declarations R83, merged); merge the tranche and confirm they are green. Replace any hand registration in your tests with test-support's `registerDeclared` (R17). Requirement lines for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B23 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Your keys: (B425) the health parts by bootstrap's id (`screen.updates.health.part.*`, `.part.release`, `.part.state.*`, `.part.other`, `.file.test`, `.runtime.{heaviest, average, samples, limits}`), `screen.settings.everyone`; (B427) the `bias` screen's labels, kinds, headings, row templates, `it_read_sentences_of`, `by_admin_for_the_team` with its `.team`/`.project` variants; (B417 2) `screen.bias.purpose`. Runtime's unit codes need a word each: BOB sends the list. Every test you held for these rows must now be green.
+
+## B24 · CHANGE
+
+CHANGE (K4249), with B23: `runtime`'s units are exactly two codes, `ms` and `bytes` (instance-setup R34; a metric ending `_bytes` is bytes, else ms); the subrequests ceiling carries no unit. The design is told; until it gives each a word, draw the code beside the number.

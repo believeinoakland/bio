@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_01VxbGzLyFxoWVwut9wPwFpo · depth 2 · COMPLETE · handled B8
+**Status** · session_018BZD69KvUNUDfmGiun3BEb · depth 2 · COMPLETE · handled B11
 
 ## J1 · QUESTION
 
@@ -79,3 +79,97 @@ Tests and checks:
 - checks/ownership.mjs affordances tranche/T51: 3 files changed by affordances; 0 failures
 
 Size (session_01VxbGzLyFxoWVwut9wPwFpo): test runs 7, module lines 2702
+
+## J9 · REPORT · re B9
+
+REPORT (re B9, K4247). For BOB; none blocks this job.
+
+1. t48.test.mjs:181 (R12 R39) is fixed in my module (commit 8e65393d3f). Cause: the test hand-listed `groupdescriptiondraft` and `securitymap` as caller-owned absences. `securitymap` is a read now (op-grades R39 as amended, K4210), so `RUNG_ABSENT.securitymap` is undefined and the test threw. The test now reads every `caller-owned` absence from op-grades' `RUNG_ABSENT` (K3268). `groupdescriptiondraft` is read the same way and leaves the set when OP-GRADES #20 merges, with no edit here. The test's controls are unchanged. t48 is 6 of 6 green.
+
+2. Other affordances reds on the tranche tip: 32 tests, none in my code. Every one fails at Workers runtime start (`MiniflareCoreError ERR_RUNTIME_FAILURE`, `plane.test.mjs:176` and the other suites that start the plane runtime). The cause, from the runtime's stderr: `DECLARED_OP_BAD_WEIGHT: sweeps rung-on-read`, raised at `bio-plane/src/op-grades/declared.mjs:45` while `bio-plane/src/plane/declarations.mjs:182` registers the owners' declared ops. The two owners disagree on `sweeps`. op-declarations (`src/op-declarations/index.mjs:1375`) declares it a read (`mutating: false`), while op-grades `src/op-grades/marks.mjs:214` gives it the rung `Reversible`. The registry refuses a rung on a read, so the plane runtime cannot start. Owners: op-grades (marks.mjs) and op-declarations. Affordances' own code is not involved. Until that is fixed, these 32 stay red; the 249 non-runtime affordances tests pass.
+
+3. Whole-tree checks, read-only: coverage has 4 failures in agent-harness, agent-runner, installer-steps and journey-check, none in affordances. Words has 31 failures in strength, screens-intake and op-grades, none in affordances (no line names affordances). setup-words `--check` reports rows.mjs stale at word 20774 (entities), the expected stale-rows note, not a refusal of mine.
+
+Checks for affordances: format 0 failures (whole tree 175 modules); architecture 0 failures (34 product files, 383 relative imports); coverage 54 of 54 live ids named; ownership 1 file changed by affordances, 0 failures.
+
+## J10 · COMPLETE · re B9
+
+COMPLETE (re B9, K4247). Commit 8e65393d3f on job/T51/affordances, pushed.
+
+Entries applied: t48.test.mjs:181 (R12 R39). Reads op-grades' caller-owned absences from RUNG_ABSENT, never a hand list; no requirement line changes (none needed). Deferred: none. Other reds: see REPORT J9 (32 plane-runtime reds, cause in op-grades and op-declarations, not this module).
+
+Tests and checks:
+- node --test test/m/affordances/t48.test.mjs: 6 pass, 0 fail
+- node --test test/m/affordances/*.test.mjs: 281 tests, 249 pass, 32 fail (all 32 ERR_RUNTIME_FAILURE from DECLARED_OP_BAD_WEIGHT sweeps rung-on-read, see REPORT)
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; words: no finding names affordances (31 in other modules); coverage: 4 failures, none in affordances
+- setup-words build.mjs --check: stale-rows note only (expected)
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 1 file changed by affordances; 0 failures
+
+Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 9, module lines 2702
+
+## J11 · REPORT · re B10
+
+REPORT (re B10, K4248 · U421). For BOB; two consequences for other modules, neither blocks this job's COMPLETE.
+
+1. op-declarations (its R34 partition, ACT_HELP_ABSENT): this module now holds the 67 declared ops (the list is `T51_DESIGN_OPS` in src/affordances/act-help.mjs, exported) plus `accountdrafts` and `accountpropose`. op-declarations' ACT_HELP_ABSENT still names all 69 (in `read`, `unexplained` or `alias`), so its partition check goes red until it drops them. That check belongs in op-declarations: this module comes earlier in the order, so its tests may not import op-declarations (checks/architecture.mjs flags it), and I removed my copy of the partition test for that reason. Its own test must read affordances' ACT_HELP (K3268).
+2. Owed words not held: the design's reads list gives 24 `act.owed_<op>.does` keys for ops no declaration names yet: capturecredentiallist, capturecredentialsupply, capturecredentialwithdraw, casedetails, casedetailspublic, casedetailsset, citeimported, declareorigin, expertisewithdraw, importregrade, installalongside, installremove, installremoveconfirm, installupdate, namedrequests, namedrequestset, projectclose, rerunpair, rerunread, rerunstart, sweepratify, sweepset, taskdecide, withdrawimported. R61 holds an owed text only under a declared op, so these wait. The test's owed list (`OWED_HELD` in t36) names the ones held; when a declaration arrives, its op joins ACT_HELP through a CHANGE to this module. The four `installremove`-family and `installalongside`/`installupdate` keys are the installer's, and no plane op carries them.
+3. Test-side limit (stated, K3268): t36 cannot read op-declarations' declared ops (order), so the held-op grading check treats `T51_DESIGN_OPS` as graded by op-grades' registration at the plane's start (R49), and says so in its comment.
+
+Other reds, unchanged from B9: 32 plane-runtime tests fail at Workers start, `DECLARED_OP_BAD_WEIGHT: sweeps rung-on-read` (op-grades marks.mjs:214 vs op-declarations index.mjs:1375). Not affordances' code. Now that `sweeps` is held by this module, it also has a word entry; the runtime red is unchanged.
+
+Checks for affordances: t36 12 of 12 green (was 8 red then in this file); whole suite 281 tests, 249 pass, 32 fail (all the runtime reds above); architecture 0 failures (34 product files, 384 relative imports); coverage 54 of 54; words 0 failures (6790 literals); ownership 0 failures (2 files changed by affordances since tranche/T51); setup-words --check rows match. Whole-tree run.mjs: format 0; architecture 0; coverage 4 (other modules); words 24 testcopy (other modules); nothing names affordances.
+
+## J12 · COMPLETE · re B10
+
+COMPLETE (re B10, K4248 · U421). Commit 223e2de923 on job/T51/affordances, pushed; merged tranche/T51 first (no conflicts).
+
+Entries applied: U421 (K4248): the design's reads list gives this module the `act.<op>.does` words of 67 declared ops; they are held under their own names in ACT_HELP, read by key through word() (R62), in `T51_DESIGN_OPS`. handlechange stays on membership's refusal (R53). The owed_ keys whose op no declaration names are not held (R61; see REPORT J11). Deferred: none. Found in other modules: see REPORT J11 (op-declarations' partition, the owed ops waiting on declarations, and the 32 runtime reds from B9, unchanged).
+
+Requirement lines: none change; the T51 change is ACT_HELP's reads (R62) and the held set.
+
+Tests and checks:
+- node --test test/m/affordances/t36.test.mjs: 12 pass, 0 fail
+- node --test test/m/affordances/*.test.mjs: 281 tests, 249 pass, 32 fail (all 32 ERR_RUNTIME_FAILURE, DECLARED_OP_BAD_WEIGHT sweeps rung-on-read, as in B9)
+- checks/run.mjs /home/user/bio: format 0; architecture 0; coverage 4 failures in other modules; words 24 failures in other modules; none names affordances
+- checks/architecture.mjs affordances: 34 product files, 384 relative imports; 0 failures
+- checks/coverage.mjs affordances: 54 of 54 live ids named; 0 failures
+- checks/words.mjs affordances: 6790 string literals read; 0 failures
+- setup-words build.mjs --check: rows match
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 2 files changed by affordances; 0 failures
+
+Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 10, module lines 2775
+
+## J13 · REPORT · re B11
+
+REPORT (re B11, K4250). For BOB. Your item (1) corrects my J9: I was wrong that `marks.mjs` caused the `sweeps` refusal. Noted; nothing in my records relies on it.
+
+Item (2), R2 and R41 (`unaccounted`): the failing test is control-plane's `totality.test.mjs` (R2, R41), which calls my `unaccounted` over the door's op table. Its 20 names are unpublished and unranked there because their owners' declarations are not in op-grades' tables in that test process. Registration is what puts them there (op-grades R49). It refuses at the plane's start, so they never arrive:
+
+  `DECLARED_OP_DISAGREES: groupkeynoticeseen description`
+
+I checked it directly: `assembleDeclaredOps()` in src/plane/declarations.mjs throws that refusal on the tranche tip. op-declarations and op-grades disagree on `groupkeynoticeseen`'s description. That is the blocker for all twenty, and it is an owner's row, not `unaccounted`. Owners: op-declarations (its declaration) and op-grades (its row). Once they agree, the registration completes and the twenty are accounted.
+
+I did not change `unaccounted`. It already reads op-grades' tables, the registered declarations included, so a rank or absence for each owner op comes from its owner through the registration. There is no hand list in it. If a rank must come from op-grades rather than the owner, BOB routes that, and I will not add one here. The totality test is control-plane's to register its owners in, as affordances' catalogue test does with register-owners.mjs (K3268).
+
+My own suite: the R2/R41 tests in t41, t31, services, catalogue and backing all pass. The only affordances failures left are the 32 plane-runtime tests, which fail at that same registration refusal.
+
+Change in my module this round: t34 "R1 R12" (commit b42e5414d9). groupdescriptiondraft is a read now (K4247; store-door declares it, op-grades R39 gives it no row), so the test carries it as a gated read. Carried as a write it reads unranked. The test had carried it as a write.
+
+Checks: t34 9 of 9; whole suite 281 tests, 249 pass, 32 fail (all the runtime registration refusal); architecture 0 failures; words 0 failures; ownership 5 files changed by affordances, 0 failures.
+
+## J14 · COMPLETE · re B11
+
+COMPLETE (re B11, K4250). Commit b42e5414d9 on job/T51/affordances, pushed; tranche/T51 merged first (no conflicts).
+
+Entries applied: (1) noted, no change needed (my J9 reading was wrong; the start-up refusal was link-sweep's `sweeps` row, now fixed). (2) R2/R41: no change in `unaccounted`. The twenty ops are accounted once the owners' declarations register, and they do not register while `groupkeynoticeseen`'s description disagrees between op-declarations and op-grades (REPORT J13). My R2/R41 tests pass. The t34 test follows groupdescriptiondraft's read status (K4247).
+
+Deferred: none. Found in other modules: the registration refusal above (op-declarations and op-grades); control-plane's totality test runs without its owners' registration.
+
+Tests and checks:
+- node --test test/m/affordances/t34.test.mjs: 9 pass, 0 fail
+- node --test test/m/affordances/*.test.mjs: 281 tests, 249 pass, 32 fail (all the plane-runtime registration refusal)
+- checks/architecture.mjs affordances: 34 product files, 384 relative imports; 0 failures
+- checks/words.mjs affordances: 6791 string literals read; 0 failures
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 5 files changed by affordances; 0 failures
+
+Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 7, module lines 2775

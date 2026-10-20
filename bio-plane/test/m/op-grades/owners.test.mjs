@@ -40,8 +40,7 @@ test("R7: T23's ops — whatchangedpropose `undetermined`, noticepost `attested`
   assert.equal(RUNG_ABSENT.whatchangedpropose.ground, "undetermined");
   assert.equal(RUNGS.noticepost, "attested");
   assert.equal(RUNGS.noticepost, RUNGS.caseratify);
-  assert.equal(NON_ACTS.whatchangedpropose, "case-directed: keyed by a published case, reached from its next edition; a "
-    + "draft, never a statement until a member adopts it");
+  assert.equal(NON_ACTS.whatchangedpropose, declaredSentence("case-inputs", "whatchangedpropose"));
   assert.equal(NON_ACTS.noticepost, declaredSentence("network-notices", "noticepost"));
   for (const op of ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices"])
     assert.ok(isRead(op), op);
@@ -81,8 +80,7 @@ test("R9: the docket's ops — docketfile and docketdecline `reasoned` (DOCKET_N
 });
 
 /* ---- R10, R12 ------------------------------------------------------------------------------------------------------ */
-const IMPORT = "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the "
-  + "imported cases; writes this module's rows and moves no bundle";
+const IMPORT = declaredSentence("case-import", "import_directed");
 test("R10: case-import's and case-checker's ops — the four DEC-96 acts `reasoned` with both codes in the family, "
    + "caseimport and caseimportdocument `undetermined`, each import-directed; the reads and public reads apart; none a "
    + "machine refusal", () => {
@@ -253,12 +251,12 @@ test("R15: notewrite and noteturn `caller-owned` as reminderset, note-directed, 
 });
 
 /* ---- R16 ----------------------------------------------------------------------------------------------------------- */
-test("R16 R39: groupdescriptiondraft and writinghelp carry the draft sentence and are no machine refusal; writinghelp takes no "
-   + "rung, groupdescriptiondraft the `caller-owned` ground (R39, T48)", () => {
+test("R16 R39: groupdescriptiondraft and writinghelp carry their owner's draft sentence and are no machine refusal; neither "
+   + "takes a rung or a ground, both being reads (R39, K4247)", () => {
   assert.equal(NON_ACTS.groupdescriptiondraft, declaredSentence("store-door", "groupdescriptiondraft"));
   assert.equal(NON_ACTS.writinghelp, doesSentence("writinghelp"));
   assert.equal(gradeOf("writinghelp"), null);
-  assert.equal(gradeOf("groupdescriptiondraft"), "caller-owned");
+  assert.equal(gradeOf("groupdescriptiondraft"), null, "a read carries no ground");
   notMachine(["groupdescriptiondraft", "writinghelp"]);
 });
 

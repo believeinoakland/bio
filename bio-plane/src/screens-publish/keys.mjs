@@ -7,6 +7,8 @@
 
 export const SCREEN_KEYS = Object.freeze({
   "case-editor": Object.freeze([
+    "refusal.NOT_THE_PROJECT_OWNER", "refusal.PROJECT_ACT_NOT_THE_OWNER", "refusal.reference",
+    "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships", "screen.case-editor.details.stated", "screen.case-editor.details.rel.builds_on", "screen.case-editor.details.rel.responds_to", "screen.case-editor.details.rel.disagrees_with", "screen.case-editor.details.takeout", "screen.case-editor.role.relied", "screen.case-editor.role.supporting", "screen.case-editor.finding.role", "case-inputs.details.not_stated",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.case-editor.name", "screen.case-editor.purpose",
     "act.casedraft.label.case-editor", "act.casedraft.does", "act.whatchangedpropose.label.case-editor",
     "act.whatchangedpropose.does", "act.statementack.label.case-editor", "act.statementack.does",
@@ -70,6 +72,8 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   ceremony: Object.freeze([
+    "refusal.NOT_THE_PROJECT_OWNER", "refusal.PROJECT_ACT_NOT_THE_OWNER",
+    "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships", "screen.case-editor.details.stated", "screen.ceremony.conf.self.tick", "case-inputs.details.not_stated",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.ceremony.name", "screen.ceremony.purpose",
     "act.publishpreflight.label.ceremony", "act.publishpreflight.does", "act.publishtensions.label.ceremony",
     "act.publishtensions.does", "act.caseratify.label.ceremony", "act.caseratify.does", "act.publish.label.ceremony",
@@ -125,6 +129,8 @@ export const SCREEN_KEYS = Object.freeze({
     "act.owed_casedetails.label.case-editor", "act.owed_casedetails.label.ceremony", "act.owed_casedetails.does", "screen.person.fact.notstated", "screen.ceremony.details.ceremony.notstated1", "screen.ceremony.details.ceremony.notstated2", "screen.case-editor.details.area.bodyhint", "screen.case-editor.details.contact.legend", "screen.case-editor.details.rel.link", "screen.case-editor.details.ties.legend",
   ]),
   published: Object.freeze([
+    "refusal.NO_SUCH_CASE",
+    "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.published.name", "screen.published.purpose",
     "act.verify.label.published", "act.verify.does", "act.publishedcase.label.published", "act.publishedcase.does",
     "screen.published.below", "screen.published.dated", "screen.published.download", "screen.published.download.done",
@@ -160,6 +166,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.published.what_this_case_leaves_out", "screen.published.written_by_writer_and_published", "screen.published.who_else_read_this_statement", "screen.published.no_one_else_on_the", "screen.published.this_edition_does_not_say", "screen.published.when_the_edition_does_not", "screen.published.contradictions_the_team_disclosed", "screen.published.each_one_names_the_finding", "screen.published.one_side_side", "screen.published.the_other_side_side", "screen.published.read_by_who_on_date", "screen.published.the_team_disclosed_no_contradictions", "screen.published.this_edition_was_signed_before", "screen.published.the_lens_this_team_read", "screen.published.the_lens_this_team_read2", "screen.case-editor.details.area.bodyhint", "screen.case-editor.details.contact.legend", "screen.case-editor.details.contact.doorbell", "screen.case-editor.details.rel.link", "screen.case-editor.details.ties.legend", "screen.case-editor.details.ties.none", "act.owed_casedetailspublic.label.published", "act.owed_casedetailspublic.does", "screen.published.details.pub.current1", "screen.published.details.pub.current2", "screen.person.fact.notstated", "screen.published.choose_a_file_or_paste", "screen.published.the_file_itself_never_leaves", "screen.published.choose_it_again_or_paste",
   ]),
   imported: Object.freeze([
+    "refusal.IMPORT_ACCEPT_NO_REASON", "refusal.IMPORT_NOTHING_ACCEPTED",
+    "act.writinghelp.label.imported", "act.writinghelp.does", "screen.start-send.draft.machine", "refusal.IMPORTED_NOT_ACCEPTED",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.imported.name", "screen.imported.purpose",
     "act.caseimport.label.imported", "act.caseimport.does", "act.importaccept.label.imported",
     "act.importaccept.does", "act.importflag.label.imported", "act.importflag.does", "act.importwatch.label.imported",
@@ -179,6 +187,8 @@ export const SCREEN_KEYS = Object.freeze({
     "act.owed_importregrade.label.imported", "act.owed_importregrade.does", "act.owed_rerunstart.label.imported", "act.owed_rerunstart.does", "act.owed_citeimported.label.imported", "act.owed_citeimported.does", "screen.imported.lens_what", "screen.imported.lens_does", "screen.imported.lens_as_published", "screen.imported.lens_removed", "screen.imported.lens_own", "screen.imported.lens_moved", "screen.imported.lens_because", "screen.imported.lens_unmoved", "screen.imported.lens_none_summary", "screen.imported.lens_none", "screen.imported.lens_unreadable_summary", "screen.imported.lens_unreadable", "screen.imported.rerun_what", "screen.imported.rerun_pairing_human", "screen.imported.rerun_project_label", "screen.imported.rerun_start_one", "screen.imported.rerun_declares", "screen.imported.rerun_nothing", "screen.imported.rerun_compare_there", "screen.imported.rerun_refused_owner", "screen.imported.rerun_refused_owner_next", "screen.imported.rerun_refused_already", "screen.imported.rerun_refused_already_next", "screen.imported.citeimp.head", "screen.imported.citeimp.q", "screen.imported.citeimp.role", "screen.imported.citeimp.role.supports", "screen.imported.citeimp.role.cuts", "screen.imported.citeimp.note", "screen.imported.citeimp.inherit1", "screen.imported.citeimp.inherit2", "screen.imported.citeimp.ref.notaccepted1", "screen.imported.citeimp.ref.notaccepted2",
   ]),
   docket: Object.freeze([
+    "refusal.NO_SUCH_CASE", "refusal.REVIEW_NO_SUCH_CASE", "screen.action.pressure.note",
+    "screen.docket.edition.label", "screen.docket.edition.help", "screen.docket.edition.option", "screen.docket.capture.label", "screen.docket.capture.help", "screen.docket.capture.option", "screen.docket.capture.add",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.docket.name", "screen.docket.purpose",
     "act.docketfile.label.docket", "act.docketfile.does", "act.docketpost.label.docket", "act.docketpost.does",
     "screen.docket.drafted", "screen.docket.entries", "screen.docket.file", "screen.docket.file.needed",
@@ -199,6 +209,7 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   "docket-public": Object.freeze([
+    "refusal.NO_SUCH_CASE",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.docket-public.name", "screen.docket-public.purpose", "screen.docket-public.sub",
     "screen.docket-public.back", "screen.docket.kind.correction", "screen.docket.kind.court-order", "screen.docket.kind.edition",
     "screen.docket.kind.other", "screen.docket.kind.outcome", "screen.docket.kind.reaction", "screen.docket.kind.response",
@@ -206,6 +217,8 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.nothing.title",
   ]),
   doorbell: Object.freeze([
+    "refusal.SECRET_NOT_RECOGNISED",
+    "screen.doorbell.secret.make", "screen.doorbell.secret.make.help", "screen.doorbell.receipt.fingerprint", "screen.doorbell.receipt.fingerprint.help", "screen.doorbell.receipt.size", "screen.doorbell.receipt.pseudonym", "screen.doorbell.receipt.pseudonym.help", "screen.doorbell.receipt.secret", "screen.doorbell.receipt.secret.note",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.doorbell.name", "screen.doorbell.purpose",
     "act.knock.label.doorbell", "act.knock.does", "screen.doorbell.file.help", "screen.doorbell.file.label",
     "screen.doorbell.happens.court", "screen.doorbell.happens.only", "screen.doorbell.happens.phrase",

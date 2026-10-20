@@ -368,3 +368,47 @@ test("R68 a project whose title the viewer cannot read is named by the unjoined 
   const q = await open(CER);
   assert.ok(q.root().textContent.includes("The Coliseum lease"), "control: a readable project draws its title");
 });
+
+test("R59 the assistant helps with the citing note only while it is reachable: it sends the note for citeimported and fills the field with its draft (B420 3); not reachable draws no help (control)", async () => {
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+  const p = await open(IMP, { plane: { ...IMPORT(true), ...reach, writinghelp: ok({ ok: true, text: "It states the 2025 schedule.", untested: true }) } });
+  const help = p.root().querySelector('button[data-act="writinghelp"]');
+  assert.ok(help, "help is drawn beside the note");
+  assert.equal(help.getAttribute("data-field"), "note");
+  assert.equal(help.getAttribute("data-forop"), "citeimported");
+  assert.equal(help.getAttribute("data-id"), "im-ci-note-0");
+  assert.equal(p.root().querySelectorAll('button[data-act="writinghelp"]').length, 1, "the citing note only");
+  await press(p, "writinghelp", { values: { "im-ci-note-0": "schedule 2025" } });
+  assert.deepEqual(last(p, "writinghelp").body, { op: "citeimported", field: "note", told: "schedule 2025" });
+  assert.equal(p.doc.getElementById("im-ci-note-0").value, "It states the 2025 schedule.");
+  const off = await open(IMP, { plane: IMPORT(true) });
+  assert.equal(off.root().querySelectorAll('button[data-act="writinghelp"]').length, 0);
+});
+
+test("R57 the details are named by key, Not stated by key, a relation by its word and 'Take out' by key; the ceremony marks a stated detail 'Stated' (B428)", async () => {
+  const stated = (value) => ({ stated: true, value, set_by: "dev", set_at: "2026-10-01T09:00:00Z" });
+  const d = DETAILS({ area: stated([{ words: "Oakland Rent Board" }]), related: stated([{ relation: "builds_on", url: "https://example.org/a" }, { relation: "disagrees_with", url: "https://example.org/b" }]) });
+  const p = await open(EDITOR, { plane: DETAIL_EDITOR(d) });
+  for (const f of ["area", "contact", "related", "relationships"]) assert.ok(drewIn(p.doc.querySelector(`[data-detail="${f}"]`), `screen.case-editor.details.name.${f}`), f);
+  assert.equal(p.doc.querySelectorAll("[data-notstated]").length, 2);
+  assert.ok(drew(p, "case-inputs.details.not_stated"));
+  for (const k of ["builds_on", "disagrees_with"]) assert.ok(drew(p, `screen.case-editor.details.rel.${k}`), k);
+  assert.ok(p.root().querySelectorAll('button[data-act="casedetailsset"]').some((b) => b.textContent.includes(word("screen.case-editor.details.takeout"))), "Take out");
+  const cer = await open(CER, { plane: DETAIL_EDITOR(d) });
+  assert.equal(cer.doc.querySelectorAll("[data-stated]").length, 2);
+  assert.ok(drew(cer, "screen.case-editor.details.stated") && drew(cer, "screen.case-editor.details.name.contact"));
+  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: ok({ ok: true, case: C, group: "river-town", sentence: "x", details: DETAILS_PUBLIC({ area: { stated: true, value: [{ words: "Oakland Rent Board" }], set_at: "2026-10-01T09:00:00Z" } }) }) } });
+  assert.ok(drew(pub, "screen.case-editor.details.name.area"));
+});
+
+test("R44 a finding's role choice is labelled by 'Finding {n}: its role in the case' and its two choices by key (B428)", async () => {
+  const p = await open(EDITOR);
+  const group = p.doc.getElementById("ce-role-0");
+  assert.ok(drewIn(group, "screen.case-editor.finding.role", { n: "1" }));
+  assert.ok(drewIn(group, "screen.case-editor.role.relied") && drewIn(group, "screen.case-editor.role.supporting"));
+});
+
+test("R51 each document held without a second confirmation has its tick 'Publish {document} as self-attested only' (B428)", async () => {
+  const p = await open(CER, { boot: { idb: await keptKey() }, plane: { ...DOCS } });
+  assert.ok(drew(p, "screen.ceremony.conf.self.tick", { document: B64.slice(0, 12) }));
+});
