@@ -50,3 +50,19 @@ Checks on the merged tree after the change:
 - node checks/ownership.mjs /home/user/bio ratification tranche/T51 job/T51/ratification: 0 failures.
 
 Size (session_01BEW2JCeWXjiogDsVNixAnp): test runs 4, module lines 3677
+
+## J4 · REPORT
+
+Decisions made in this job, for BOB to record in build/rulings.md (this job does not write that file):
+
+1. `publish` is NOT declared in `DECLARED_OPS` (B3 entry 1 named it). Reason: the door's `publish` is case-authoring's state act. The control plane aliases door `publish` to `publishcase` (`control-plane/index.mjs`:1069), and case-authoring's `DECLARED_OPS` already holds `publish` with its own row. This module's `publish` arm (R5) is the store's internal committer that the Worker calls; no screen sends it. Declaring it here would give `publish` two owners, which `declaredOpsOf` reports as a duplicate and R81 refuses. Only `caseratify` is declared (R54). If BOB wants `publish` declared by this module, the door-to-internal mapping must change first, which is case-authoring's and control-plane's to decide.
+
+2. B5 (provenance resolver) is done differently from the wording. The resolver is passed in the store half, `ratifyGate` (`ratification/index.mjs`), which is the only place in this module with a provenance instance. The Worker half (`ops.mjs`:511) has no provenance and cannot call `containerResolver()`, so I removed the Worker's own `withRegisterChecks` pass and the store's wrapper at the publish call site. The arm order is unchanged (catalogue, register, then bias and case-member in the Worker). Requirement R55 states it; the test is `provenance-gate.test.mjs`.
+
+Other modules (found by `checks/run.mjs`, not worked by this job, described against their requirements):
+
+- Coverage, live ids named by no test: `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19; `link-sweep` R13, R14, R15.
+- Words, inline: `bio-plane/src/strength/method.mjs`:349 (a member-facing sentence, "11. Legs that cut against the finding. ...").
+- Words, testcopy (15): `bio-plane/test/m/op-grades/owners.test.mjs`:84 and `t36.test.mjs`:47, 49, 52, 55, 59; `t41.test.mjs`:24; `t46.test.mjs`:33, 195; `t47.test.mjs`:36, 63, 83; `t48.test.mjs`:31, 34; `t49.test.mjs`:27 (test copies of op-grades' sentences).
+
+Ownership: the one failure is `build/requirements/ratification.md`, outside the module's paths, which B4 accepts at merge.
