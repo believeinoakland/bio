@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, OP_ALIASES,
          LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
-import { reqText, ticked, tickedAll, readRows } from "./declared.mjs";
+import { reqText, ticked, tickedAll, readRows, doesSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
@@ -71,7 +71,8 @@ const B3_CODES = { standardforce: "STANDARD_NO_REASON", standardforcewithdraw: "
   standardbenchmark: "STANDARD_NO_REASON", usewithdraw: "NO_REASON", uselink: "DUTY_NO_REASON",
   useunlink: "DUTY_NO_REASON" };
 /* the reads of T35's table: R22 names its own in backticks (`credit` is public and apart), the rest are K2043's */
-const T35_READS = readRows(T35_NON_ACTS).filter((op) => op !== "credit");
+/* a read whose owner words it without the "read: " lead holds the owner's sentence (K4168): securitymap */
+const T35_READS = [...readRows(T35_NON_ACTS), ...Object.keys(T35_NON_ACTS).filter((op) => T35_NON_ACTS[op] === doesSentence(op))].filter((op) => op !== "credit");
 const R22_READS = T35_READS.filter((op) => tickedAll(reqText(22)).includes(op));
 const B3_READS = T35_READS.filter((op) => !R22_READS.includes(op));
 
@@ -92,7 +93,8 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
   for (const [op, why] of Object.entries(R22_REASONS)) assert.equal(NON_ACTS[op], why, op);
   for (const op of ["noterevise", "notedelete"]) assert.equal(NON_ACTS[op], NON_ACTS.notewrite, op);
   for (const op of R22_READS) {
-    assert.ok(NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 20, op);
+    /* securitymap is declared in its owner's words, which do not lead with "read: " (K4168) */
+    assert.ok(op === "securitymap" ? NON_ACTS[op] === doesSentence(op) : NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 20, op);
     assert.equal(gradeOf(op), null, op); /* a read takes no grade; securitymap is one too (K4210) */
   }
   assert.match(NON_ACTS.findin, /records nothing/);

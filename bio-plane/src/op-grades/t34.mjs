@@ -70,7 +70,7 @@ export const T34_NON_ACTS = {
   placewantedstate: R("the place the group wants its profile for, and whether one is held"),
   memberlanguageset: "personal state, keyed by member: the language the interface speaks to them",
   memberlanguage: R("a member's own interface language"),
-  startfrom: R("the wizard scripts a new member may start from"),
+  startfrom: "Starts from where you are: a problem you live with, a document, a deadline, a claim to check or a person. Each opens the right first step.",
 };
 
 /* ---- `op-declarations` R21's aliases (op-declarations R5, R21): each the op its owner serves it as. `expunge` is no

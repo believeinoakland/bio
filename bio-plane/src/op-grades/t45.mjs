@@ -106,8 +106,7 @@ export const T45_NON_ACTS = {
   openitemswith: R("the open actions the viewer may see addressed to the same office, with their overdue replies, as facts "
     + "and never a block"),
   /* action-holds (R11, R12) */
-  pressurerecord: "project-directed: keyed by a project; a member records pressure that arrived outside any action, as "
-    + "evidence, creating no action; moves no bundle",
+  pressurerecord: "Records pressure that arrived outside any action, such as a letter, post or call. A legal threat can carry a litigation hold.",
   /* following (R22–R25) */
   followend: WATCH("keyed by follow; its author, or the once-only question's answer, sets or removes its end date"),
   watchlink: WATCH("keyed by (plan, watch); a member records that the plan set the watch running, append-only"),

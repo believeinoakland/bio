@@ -11,7 +11,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
-import { reqText, ticked, readRows, asksNotTheAccount } from "./declared.mjs";
+import { reqText, ticked, readRows, asksNotTheAccount, declaredSentence, doesSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -88,9 +88,8 @@ test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescr
   }
   assert.equal(RUNG_ABSENT.translationdraft.ground, "caller-owned");
   assert.match(NON_ACTS.translationdraft, /^translation-directed: keyed by a language and interface words; drafts labeled machine work/);
-  assert.equal(NON_ACTS.groupdescriptiondraft, "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; "
-    + "the member's words only by the member's own act of keeping it");
-  assert.match(NON_ACTS.securitymap, /^read: the group's count-only security tally by kind and period/);
+  assert.equal(NON_ACTS.groupdescriptiondraft, declaredSentence("store-door", "groupdescriptiondraft"));
+  assert.equal(NON_ACTS.securitymap, doesSentence("securitymap"));
   /* the ground is as memberlanguageset's */
   assert.equal(gradeOf("translationdraft"), gradeOf("memberlanguageset"));
   /* controls */
@@ -104,7 +103,7 @@ test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescr
 
 test("R39 (K4210): securitymap is graded `read` once: its NON_ACTS sentence stands and no absence, rung or machine refusal "
    + "holds it; control: a fresh instance refuses a ground on it, as its owner's declaration would (ground-on-read)", async () => {
-  assert.match(NON_ACTS.securitymap, /^read: the group's count-only security tally by kind and period/);
+  assert.equal(NON_ACTS.securitymap, doesSentence("securitymap"));
   const TABLES = { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS };
   assert.deepEqual(Object.keys(TABLES).filter((t) => Object.hasOwn(TABLES[t], "securitymap")), ["NON_ACTS"]);
   /* control: the declaration a ground would make, on an instance not yet read, is refused naming the op */

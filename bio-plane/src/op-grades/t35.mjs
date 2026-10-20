@@ -80,8 +80,7 @@ export const T35_NON_ACTS = {
   findin: R("what a scope holds of the kinds asked, each match with its words and extent, found by search; it records "
     + "nothing"),
   entitieskind: R("the group's registered entities of one kind, within the viewer's gate"),
-  securitymap: R("the group's count-only security tally by kind and period, with its usual and its level, to an "
-    + "administrator; it names no address and no handle"),
+  securitymap: "Shows how hard your team's Civicsmith was tried over the period you choose, against its usual. Counts only.",
   recoverycodesstate: R("how many of an administrator's own recovery codes are unspent, never a code"),
   adminrecoverystep: R("whether the group's second-administrator step is done, to an administrator"),
   credit: "read: public, no credential",

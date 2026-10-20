@@ -123,7 +123,7 @@ export const T41_NON_ACTS = {
     + "reason; moves no bundle",
   projectaikeepawaystate: R("whether a project keeps its material away from the assistant, with the reason, who set it "
     + "and when"),
-  accountusesset: ACCOUNT_SETTING("one of an account's uses switched by its owner"),
+  accountusesset: "the account's configuration: an owner sets one of its uses' switches (explore no, ask or yes); it moves no document, claim or grade",
   accountuses: R("one account's uses and keep-aways, to that account's owners, never a key"),
   accounthistory: R("every change to one account's settings with who and when, to its owners, never a key"),
   /* ai-use (R41) */

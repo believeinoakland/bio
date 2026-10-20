@@ -3,7 +3,7 @@
    a declaration of another module; what a requirement of this module states, in backticks or as plain words, is the
    contract, and the tables are the data under test. */
 import { readFileSync } from "node:fs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 /* ---- this module's own requirements ------------------------------------------------------------------------------- */
 const REQ_LINES = readFileSync(new URL("../../../../build/requirements/op-grades.md", import.meta.url), "utf8").split("\n");
@@ -69,3 +69,7 @@ export const readRows = (table) => Object.keys(table).filter((op) => table[op].s
  *  (`setup-words`, which this module uses) by its id, never copied here (P7, K3810). The id is composed, not typed: the
  *  words check judges a literal key against the design's list, and these ids are code-held until the design takes them. */
 export const declaredSentence = (module, op) => word(`${module}.declared.${op}`);
+
+/** The sentence an owner declared for `op` as its design key `act.<op>.does` (K4168: the owner's declaration is the truth, so
+ *  a hand row holds this sentence and the test reads it from the word table, never from a copy). The id is composed. */
+export const doesSentence = (op) => (hasWord(`act.${op}.does`) ? word(`act.${op}.does`) : null);
