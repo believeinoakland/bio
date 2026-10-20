@@ -2,9 +2,6 @@
  * page over a scripted plane. `rerunread` and `rerunpair` are `case-import`'s declared ops (its R31, R30), their fixtures the
  * shapes `rerunRead` answers; the harness compares every request with the owner's declaration (R104). Every expectation is a
  * word read by key (R44); grades are read through the kit's marks. */
-import { registerDeclaredOps as registerGrades } from "../../../src/op-grades/index.mjs";
-import { DECLARED_OPS as CASE_IMPORT } from "../../../src/case-import/index.mjs";
-import { DECLARED_OPS as INVESTIGATION } from "../../../src/investigation/ops.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
@@ -13,7 +10,6 @@ import { open, main, actsIn, button, fill, press, says, section, word, P, Q, Q2 
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245) */
 /* the weights of the two owners whose acts these tests press (registering every owner's weights is refused today by `accountusesset`'s row, an owner's defect reported to BOB) */
-registerGrades({ "case-import": CASE_IMPORT, investigation: INVESTIGATION });
 
 
 const at = "/app/project/" + P;

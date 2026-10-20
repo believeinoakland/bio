@@ -8,9 +8,15 @@ import { boot, ok, textNodes } from "../interface-shell/harness.mjs";
 import { fileURLToPath } from "node:url";
 import { registerDeclared } from "../../declared-ops.mjs";
 import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+import { registerDeclaredOps as registerGrades } from "../../../src/op-grades/index.mjs";
+import { DECLARED_OPS as CASE_IMPORT } from "../../../src/case-import/index.mjs";
+import { DECLARED_OPS as INVESTIGATION } from "../../../src/investigation/ops.mjs";
+import { DECLARED_OPS as PROVENANCE } from "../../../src/provenance/ops.mjs";
 
 /* K4245: every owner's declarations are registered before the first read, once for the module's tests */
 await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
+/* op-grades is given `provenance`'s, `case-import`'s and `investigation`'s alone: registering every owner is refused at `accountusesset`'s description (reported to BOB) */
+registerGrades({ provenance: PROVENANCE, "case-import": CASE_IMPORT, investigation: INVESTIGATION });
 
 export { SCREENS, word };
 export const P = "PROJ-2026-0007";

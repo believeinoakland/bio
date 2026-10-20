@@ -2,7 +2,6 @@
  * capture was held for, the document's own project's questions first, and none when it was held for none; a cite with none
  * chosen sends nothing and says so in place. On interface-shell's served page over a scripted plane; every expectation is a
  * word read by key (R44). */
-import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";

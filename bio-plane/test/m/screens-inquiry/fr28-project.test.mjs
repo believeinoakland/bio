@@ -3,9 +3,6 @@
  * (writing help, and R10: the screen draws exactly its registry acts). On interface-shell's served page over a scripted plane;
  * every request is compared with its owner's declaration by the harness's guard (R104), so a FieldMismatch fails the test that
  * pressed the act. Every expectation is a word read by key (R44). */
-import { registerDeclaredOps as registerGrades } from "../../../src/op-grades/index.mjs";
-import { DECLARED_OPS as CASE_IMPORT } from "../../../src/case-import/index.mjs";
-import { DECLARED_OPS as INVESTIGATION } from "../../../src/investigation/ops.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -16,7 +13,6 @@ import { open, main, actsIn, button, fill, press, says, section, word, projectWi
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245) */
 /* the weights of the two owners whose acts these tests press (registering every owner's weights is refused today by `accountusesset`'s row, an owner's defect reported to BOB) */
-registerGrades({ "case-import": CASE_IMPORT, investigation: INVESTIGATION });
 
 
 const at = "/app/project/" + P;
@@ -233,7 +229,7 @@ test("R106 the project page opens the objective screen with the project's id; co
   const p = await open(at, { boot });
   const s = section(p, "screen.objective.name");
   assert.ok(says(s, "screen.project.how-far-the-project-has-come-toward-its-objectiv"));
-  const a = s.querySelector("a.cs-ref");
+  const a = s.querySelector("a[data-work='objective']");
   assert.equal(a.getAttribute("href"), "/app/objective/" + P);
   assert.ok(says(a, "screen.objective.name"));
   const invited = await open(at, { boot, plane: { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "invited", owner: 0 }] }) } });

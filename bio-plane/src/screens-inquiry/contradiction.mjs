@@ -370,7 +370,8 @@ const acts = [
 
 /** The keys the screen names beyond its own family (R44: every one a words.json word). */
 const words = Object.freeze([...BORROWED, "mark.origin.machine.name", "mark.origin.machine.means", "state.undetermined", "state.empty", "draft.machine.label",
-  "ai.label.untested.writinghelp", "refusal.DISMISSAL_REASON_UNKNOWN", "act.writinghelp.label.contradiction"]);
+  "ai.label.untested.writinghelp", "refusal.DISMISSAL_REASON_UNKNOWN", "act.writinghelp.label.contradiction",
+  ...["clarify", "takeup", "dismiss", "resolve", "optin", "respond"].map((o) => `act.contradiction${o}.label.contradiction`)]);
 
 /** R105: "Two documents in tension" (interface-shell R21), with the readers it shares as its parts. */
 export const CONTRADICTION_SCREEN = Object.freeze({ id: "contradiction", reads, place, render, acts, words,

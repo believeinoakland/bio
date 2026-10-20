@@ -216,7 +216,7 @@ function render(cs, view) {
 
   /* R106 (the project's half): the objective has its own page, which the project opens with its id */
   out.push(cs.sec("screen.objective.name", `<p class="mk-small">${W("screen.project.how-far-the-project-has-come-toward-its-objectiv")} `
-    + cs.ref("objective", id, T("screen.objective.name"), [T("screen.objective.name")]) + "</p>"));
+    + `<a class="cs-btn" data-tone="quiet" href="/app/objective/${cs.esc(id)}" data-nav data-work="objective">${cs.esc(T("screen.objective.name"))}</a>` + "</p>"));
 
   /* R9: the project's questions, paged to the end; each a reference opening `question`, with its strength */
   const pages = [];

@@ -1,7 +1,6 @@
 /* screens-inquiry FR-28 (B15), the `document` screen's new controls (DEC-374, DEC-375, DEC-381): R96 (how complete its text is, and OCR),
  * R97 (confirm another member's typing), R98 (whether its route can be shown), R99 (assert a connection), R100 (report a wrong match),
  * R108 (where this document came from). Each act's request is checked by the shell's guard against its owner's declaration. Words by key. */
-import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";

@@ -2,7 +2,6 @@
  * concluded question's case, how a run ends and what it cost, its progress as it is made, the affirmation of a reading of
  * several parts, and the stopped run's decline; the document page's held copy and themes. On interface-shell's served page
  * over a scripted plane. Every expectation is a word read by key (R44). */
-import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
@@ -24,7 +23,7 @@ test("R50 Conclude takes a member's own reading: reading is sent in place of ver
   assert.equal(p.doc.getElementById("question-conclude-reading").value, "", "no reading stands: her own is the choice");
   assert.ok(says(p.doc.getElementById("question-conclude-reading"), "question.conclude.own.choice"));
   assert.ok(p.doc.getElementById("question-conclude-own"), "Your reading");
-  fill(p, { "question-conclude-falsifier": "records showing repair", "question-conclude-own": "", "question-conclude-commentary": "my note" });
+  fill(p, { "question-conclude-falsifier": "records showing repair", "question-conclude-own": "", "question-conclude-reason": "my reason", "question-conclude-commentary": "my note" });
   await press(p, "conclude");
   assert.equal(p.byOp("conclude").length, 0, "an empty reading sends nothing");
   fill(p, { "question-conclude-own": "Most reports are repaired within seven days." });
@@ -52,7 +51,7 @@ test("R51 the three steps: each state draws its step as current; the new questio
   assert.deepEqual(steps(stands), [["source", "done"], ["mark", "done"], ["conclude", "current"]]);
   const more = main(stands).querySelector('details[data-fold="more"]');
   assert.ok(says(more.querySelector("summary"), "question.more"));
-  assert.deepEqual(actsIn(more).sort(), ["checkrequest", "narrow", "planopen", "proposedispose", "search"], "R71: set aside for the project is among them");
+  assert.deepEqual(actsIn(more).sort(), ["checkrequest", "inquirydivide", "planopen", "proposedispose", "search"], "R71: set aside for the project is among them");
   const done = await open(at, { ...A, plane: { basisversions: ok(BASIS({ conclusion: { claim: { text: "x" }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" })) } });
   assert.deepEqual(steps(done), [["source", "done"], ["mark", "done"], ["conclude", "done"]]);
 });

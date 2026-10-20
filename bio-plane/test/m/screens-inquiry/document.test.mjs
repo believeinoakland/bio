@@ -1,6 +1,5 @@
 /* screens-inquiry R3, R8, R15, R22, R32, R39: the document screen, on interface-shell's served page over a scripted plane.
  * Every expectation is a word read by key (R44). */
-import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";

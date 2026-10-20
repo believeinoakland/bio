@@ -5,7 +5,6 @@
  * watch), and R10 for `document` (it draws exactly its registry acts). On interface-shell's served page over a scripted plane; every
  * request is checked by the shell's guard against its owner's declaration (a FieldMismatch fails the test that pressed the act).
  * Every expectation is a word read by key (K3810). */
-import "./fr28-document-register.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
