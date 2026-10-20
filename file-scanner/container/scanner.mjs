@@ -12,8 +12,13 @@
 //   PUT  /job/<job>/<i>            one target's copy
 //   DELETE /job/<job>/<i>          a copy whose digest did not hold (R2)
 //   POST /job/<job>/scan?set=<s>   {ok, engine_version, results: {<i>: {result, findings, detail?}}}  then removed
-import { createWriteStream } from 'node:fs';
-import { mkdir, readdir, rename, rm, stat } from 'node:fs/promises';
+//   POST /update/<run>             {ok, files: [<name>]} | {ok:false, code, detail}  ClamAV's own `freshclam` fetches the
+//                                  databases into a fresh directory (R6, R34); only the signature-updater instance, the
+//                                  one the Worker starts with internet, can reach the mirror
+//   GET  /update/<run>/<file>      one fetched file
+//   DELETE /update/<run>           the run's directory removed
+import { createWriteStream, createReadStream } from 'node:fs';
+import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
 import { join } from 'node:path';
 import { NAME, json, run, serve, freshDir, removeDir } from './common.mjs';
@@ -22,6 +27,9 @@ import { SCAN_MAX_BYTES, SCAN_TIME_MS } from '../src/limits.mjs';
 const scanTimeMs = () => Number(process.env.SCAN_TIME_MS || SCAN_TIME_MS);
 const CLAMSCAN = process.env.CLAMSCAN || 'clamscan';
 const SIGTOOL = process.env.SIGTOOL || 'sigtool';
+export const MIRROR_HOST = 'database.clamav.net';
+const UPDATE_TIME_MS = 900_000;
+const FETCHED = /^(main|daily|bytecode)\.(cvd|cld)$/;
 const jobs = new Map();
 const sigRoot = () => process.env.FILE_SCANNER_SIGS || '/var/lib/file-scanner/sigs';
 
@@ -82,6 +90,25 @@ export async function verifyFile(path) {
     ...(verified ? {} : { detail: (r.err || r.out).trim().split('\n').pop().slice(0, 200) }) };
 }
 
+/** R6, R34: ClamAV's own updater, under its own identity (it states `ClamAV/<version>` itself; no agent is set here),
+ *  fetches the three databases from the official host into a fresh directory. Answers the files, or why it did not. */
+export async function fetchSignatures(dir) {
+  await mkdir(dir, { recursive: true });
+  const conf = join(dir, 'freshclam.conf');
+  const settings = [['DatabaseDirectory', dir], ['DatabaseMirror', MIRROR_HOST], ['DNSDatabaseInfo', 'current.cvd.clamav.net'],
+    ['CompressLocalDatabase', 'no'], ['Foreground', 'yes']];
+  await writeFile(conf, settings.map(([k, v]) => `${k} ${v}`).join('\n') + '\n');
+  const r = await run(process.env.FRESHCLAM || 'freshclam', [`--config-file=${conf}`, `--datadir=${dir}`, '--stdout', '--no-warnings'], { ms: UPDATE_TIME_MS });
+  const files = (await readdir(dir)).filter((n) => FETCHED.test(n)).sort();
+  const have = new Set(files.map((n) => n.split('.')[0]));
+  if (r.code === 0 && ['main', 'daily', 'bytecode'].every((d) => have.has(d))) return { ok: true, files };
+  const text = (r.timedOut ? 'TIME_LIMIT' : `${r.err}\n${r.out}`).split('\n').map((l) => l.trim()).filter(Boolean)
+    .filter((l) => /error|fail|refus|forbidden|403|429|cool|connect|TIME_LIMIT/i.test(l)).slice(-2).join(' | ');
+  return { ok: false, code: 'MIRROR_REFUSED', detail: `exit ${r.code}${text ? `: ${text}` : ''}`.replaceAll(dir, '').slice(0, 300) };
+}
+
+const updateDir = (run) => join(sigRoot(), '..', 'update', run);
+
 async function routes(req, res, url) {
   const p = url.pathname.split('/').filter(Boolean);
   if (req.method === 'GET' && url.pathname === '/version') return json(res, 200, { ok: true, clamav_version: await clamavVersion() });
@@ -108,6 +135,23 @@ async function routes(req, res, url) {
       for (const n of (await readdir(dir).catch(() => [])).sort()) files[n] = await verifyFile(join(dir, n));
       return json(res, 200, { ok: true, files });
     } finally { await removeDir(dir); }
+  }
+  if (p[0] === 'update' && NAME.test(p[1] || '')) {
+    if (p.length === 2 && req.method === 'POST') {
+      const dir = updateDir(p[1]);
+      const r = await fetchSignatures(dir);
+      if (!r.ok) await removeDir(dir);
+      return json(res, 200, r);
+    }
+    if (p.length === 3 && req.method === 'GET' && FETCHED.test(p[2])) {
+      const f = join(updateDir(p[1]), p[2]);
+      const st = await stat(f).catch(() => null);
+      if (!st) return json(res, 404, { ok: false, code: 'UNKNOWN' });
+      res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-length': String(st.size) });
+      await pipeline(createReadStream(f), res);
+      return true;
+    }
+    if (p.length === 2 && req.method === 'DELETE') { await removeDir(updateDir(p[1])); return json(res, 200, { ok: true }); }
   }
   if (p[0] === 'job' && NAME.test(p[1] || '')) {
     // A job's directory is made by its first copy and removed by its scan or its deletion, whichever ends it.

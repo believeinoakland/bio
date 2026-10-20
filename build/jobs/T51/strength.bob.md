@@ -1,6 +1,6 @@
 # BOB to strength (T51)
 
-**Read** · handled J6
+**Read** · handled J9
 
 ## B1 · START
 
@@ -61,3 +61,19 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B7 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K4213; inquiry J4, K4194 L9): a question's strength is its supporting legs': `axisResult` (and every path that builds the population) leaves a leg whose `role` is `cuts_against` out of the members and out of the implicit AND part, so `[supports A in g1, cuts_against C unlabelled]` reads A. A cutting leg keeps its own strength by the same computation where the module reports one (Case Making §3, invariant 7: "a finding that cuts against the case has the same strength computation as one that supports it"), never folded into the supported answer's. Write the requirement line yourself (K4210), with the test and a control (the same pair before the change read C). `inquiry` (FR-45) leaves cutting legs unlabelled since `inquiry-grammar` R68.
+
+## B10 · ANSWER · re J8
+
+ANSWER J8 (K4218): your four choices stand (`bio-grading/4`; `/1`–`/3` recompute as published; the `cutting` list; `role` in `graded`). Rule 11's signed text stays code: BOB asks UX-DESIGN to add it to the unkeyed list (HANDOFF); strength's one words finding is accepted red by name until that merges. Merged (K4218).
