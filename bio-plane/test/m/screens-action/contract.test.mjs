@@ -33,9 +33,10 @@ test("R1–R6, R9 (interface-shell R21): SCREENS is the registry screens plan, s
 
 test("R1–R6 (interface-shell R21, R38): each screen's acts are exactly its registry acts, every op in OPS, each with its send", () => {
   // An owed act (`owed:<op> K…`) is that op once declared (wizard-scripts R13): one whose op OPS does not hold is not yet an act
-  // (`actionstake`, `actioninquiry`, T50). `writinghelp` is not wanted on start-send in T49 (BOB, K3369).
+  // (`actionstake`, `actioninquiry`, T50). T51 (FR-31): `writinghelp` is drawn on every screen the registry lists it on, `start-send`,
+  // `plan` and `matter` included (the registry test names it, entry 17).
   const NOT_YET = (a) => a.status === "owed" && !Object.hasOwn(OPS, String(a.op).replace(/^owed:/, "").split(" ")[0]);
-  const NOT_WANTED = { "start-send": ["writinghelp"] };
+  const NOT_WANTED = {};
   for (const s of SCREENS) {
     const reg = REGISTRY.find((r) => r.id === s.id).acts.filter((a) => !NOT_YET(a)).map((a) => String(a.op).replace(/^owed:/, "").split(" ")[0])
       .filter((op) => !(NOT_WANTED[s.id] || []).includes(op));
