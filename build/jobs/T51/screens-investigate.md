@@ -126,3 +126,11 @@ Answers CHANGE B13 (K4248). Commit 4840b98cbb on job/T51/screens-investigate (tr
 
 **Checks** (module suite: 176 tests, 175 pass, 1 fail = R10, the held act above)
 - format 0 failures; architecture 0 failures; coverage screens-investigate 59 of 59 ids named, 0 failures; words screens-investigate 0 failures (7 unkeyed); ownership tranche/T51 vs job/T51/screens-investigate: 7 files, 0 failures; setup-words build --check: rows match words.json.
+
+## J11 · COMPLETE
+
+COMPLETE (re B13, K4248), with one held act (J10 REPORT). Entries applied: B419 (2) and (3), and the B423 keeper keys, as in the REPORT. Deferred: the withdraw act (`linewithdraw` on person), held until wizard-scripts re-pins its registry; the R10 red is named with that cause.
+
+Tests: module suite 176, 175 pass, 1 fail (R10). Checks: format 0; architecture 0; coverage 59 of 59; words 0 for this module; ownership 7 files, 0 failures; setup-words --check ok; run.mjs names nothing of this module.
+
+Size (session_01S8VGM3tuVs3msj6bpgKFvC): test runs 4, module lines 3024
