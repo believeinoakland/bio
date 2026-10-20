@@ -2,12 +2,18 @@
  * page over a scripted plane. `rerunread` and `rerunpair` are `case-import`'s declared ops (its R31, R30), their fixtures the
  * shapes `rerunRead` answers; the harness compares every request with the owner's declaration (R104). Every expectation is a
  * word read by key (R44); grades are read through the kit's marks. */
-import "./fr28-project-register.test.mjs";
+import { fileURLToPath } from "node:url";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { open, main, actsIn, button, fill, press, says, section, word, P, Q, Q2 } from "./fixtures.mjs";
+
+/* every owner's declarations, registered once before the first read (test-support R17, K4245) */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
+
 
 const at = "/app/project/" + P;
 const IMPORT = "a".repeat(64);

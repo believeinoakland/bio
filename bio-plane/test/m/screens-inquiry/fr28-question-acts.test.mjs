@@ -4,11 +4,17 @@
  * shell's guard against the owner's declared fields. Every expectation is a word read by key (R44), never copied (K3810). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
+import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
+import { registerDeclared } from "../../declared-ops.mjs";
 import { readFileSync } from "node:fs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, day, word, SCREENS, POLICY, P, Q, D } from "./fixtures.mjs";
+
+/* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerOps);
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const at = "/app/question/" + Q;

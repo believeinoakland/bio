@@ -2,12 +2,18 @@
  * open and who is awaited, at once and until the vote ends; another owner's view of the row has the button to agree; and the
  * reason box the shell now opens before "Make an owner" is given as a member gives it. On interface-shell's served page over a
  * scripted plane. Every expectation is a word read by key (R44). */
-import "./fr28-project-register.test.mjs";
+import { fileURLToPath } from "node:url";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, MEMBER } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, fill, press, says, section, plane, word, SCREENS, P } from "./fixtures.mjs";
+
+/* every owner's declarations, registered once before the first read (test-support R17, K4245) */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
+
 
 const at = "/app/project/" + P;
 const PROJECT = SCREENS.find((s) => s.id === "project");

@@ -2,6 +2,9 @@
  * notice (the signer kit, namespace `bio-working-on`), and sees it published with its level, its next check and "Change it or
  * stop it"; on interface-shell's served page over a scripted plane, with a real key held on the device. Every expectation is a
  * word read by key (R44); dates through the same words as `cs.date`; a refusal by its `refusal.<CODE>` key. */
+import { fileURLToPath } from "node:url";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
@@ -9,6 +12,10 @@ import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { verifySshsig, NS_NOTICE } from "../../../src/sshsig.mjs";
 import { open, main, actsIn, fill, says, word, rawKeys, SCREENS, P } from "./fixtures.mjs";
+
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
+
 
 const at = "/app/project/" + P;
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];

@@ -3,7 +3,9 @@
  * (writing help, and R10: the screen draws exactly its registry acts). On interface-shell's served page over a scripted plane;
  * every request is compared with its owner's declaration by the harness's guard (R104), so a FieldMismatch fails the test that
  * pressed the act. Every expectation is a word read by key (R44). */
-import "./fr28-project-register.test.mjs";
+import { fileURLToPath } from "node:url";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -11,6 +13,10 @@ import { ok, refused, refusedIn } from "../interface-shell/harness.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/index.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, button, fill, press, says, section, word, projectWith, SCREENS, P, Q } from "./fixtures.mjs";
+
+/* every owner's declarations, registered once before the first read (test-support R17, K4245) */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
+
 
 const at = "/app/project/" + P;
 const PROJECT = SCREENS.find((s) => s.id === "project");
@@ -114,7 +120,7 @@ test("R109 Close this project now: an owner sees what is still open, three reaso
   choose(p, "project-close-why", "superseded");
   await press(p, "projectclose");
   assert.ok(says(main(p).querySelector('[data-ladder="stage"] [aria-current="step"]'), "screen.project.stage.closed"));
-  assert.ok(says(main(p).querySelector("[data-closed-reason=superseded]"), "screen.project.closenow.superseded"));
+  assert.ok(says(main(p).querySelector('[data-closed-reason="superseded"]'), "screen.project.closenow.superseded"));
   assert.equal(section(p, "screen.project.closenow.head"), undefined, "a closed project offers no close");
 });
 

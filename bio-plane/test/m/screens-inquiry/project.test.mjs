@@ -1,10 +1,17 @@
 /* screens-inquiry R1, R8–R11, R14, R16, R27–R30, R36, R38–R40, R43: the project screen, on interface-shell's served page
  * over a scripted plane. Every expectation is a word read by key (R44). */
+import { fileURLToPath } from "node:url";
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
 import { NEEDS } from "../../../src/op-declarations/index.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, lead, word, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
+
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps);
+
 
 const PROJECT = SCREENS.find((s) => s.id === "project");
 /* a day as `cs.date` draws it (`date.daymonthyear`, `date.month.*`, DEC-333), read through the same words, never copied */

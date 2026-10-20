@@ -126,7 +126,7 @@ test("R92 Watch for changes sends the frequency chosen; the page says it is watc
 });
 
 test("R92 control: none chosen sends nothing and refuses in place, naming the missing frequency; a refused answer says nothing of watching", async () => {
-  const p = await openWith(at, withMd(UNWATCHED, { plane: { monitorset: refusedIn("MONITOR_SET_REFUSED", "Say how often.") } }));
+  const p = await openWith(at, withMd(UNWATCHED, { plane: { monitorset: refusedIn("SOME_UNHELD_CODE", "Say how often.") } }));
   const slot = await press(p, "monitorset");
   assert.equal(p.byOp("monitorset").length, 0);
   assert.ok(says(slot, "capture.fieldneeded", { field: word("screen.capture.address.freq") }));
@@ -259,7 +259,7 @@ test("R113 Stop using this copy, confirmed with a reason, sends select then reti
 });
 
 test("R113 a select that fails draws its refusal; control: Confirm with no reason is refused in place and nothing is sent", async () => {
-  const p = await openWith(at, { plane: { select: refusedIn("NO_SUCH_BUNDLE", "That copy could not be selected just now."), retire: ok({ ok: true }) } });
+  const p = await openWith(at, { plane: { select: refusedIn("SOME_UNHELD_CODE", "That copy could not be selected just now."), retire: ok({ ok: true }) } });
   await press(p, "retire");
   dialog(p).querySelector("textarea").value = "wrong page";
   await p.click(dialog(p).querySelector('[data-shell="confirm"]'));

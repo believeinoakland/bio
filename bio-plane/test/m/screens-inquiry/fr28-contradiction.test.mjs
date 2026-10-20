@@ -6,13 +6,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
+import { OPS, registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
+import { registerDeclared } from "../../declared-ops.mjs";
 import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { CONTRADICTION_SCREEN, GAP_WORDS } from "../../../src/screens-inquiry/contradiction.mjs";
 import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
 import { plane, main, press, fill, says, word, day, P, SHA, DOCUMENT_MD } from "./fixtures.mjs";
 
+/* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
+await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerOps);
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const S = "screen.contradiction.";
 const CAND = "c0".repeat(32), INQ = "INQ-2026-0020-which-date", OTHER = "PROJ-2026-0042";

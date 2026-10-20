@@ -29,7 +29,7 @@ export const GAP_WORDS = Object.freeze(["first.passage", "second.passage", "they
   "what.shows.it", "the.first.passage", "the.second.passage", "optional.at.most.200.characters", "optional.at.most.500.characters",
   "dismiss.it", "anything.to.add", "ask.it.around", "taken.up", "conclude.it", "your.conclusion", "two.rules.conflict", "ask.for",
   "the.projects", "responses", "respond", "your.response", "share.with.the.other.projects", "my.cover.name", "my.email.address",
-  "your.email.address", "send.my.response", "your.project.can.ask.to.resolve.it", "help.needed"].map((k) => S + k));
+  "your.email.address", "send.my.response", "your.project.can.ask.to.resolve.it", "help.needed", "when.it.cannot.be.concluded"].map((k) => S + k));
 
 /** The keys read from another screen's row (`words.json` holds one row for one English: DEC-179), the rest being this screen's. */
 const BORROWED = Object.freeze(["screen.case-editor.scope.label", "project.start.title", "screen.calculation.question", "screen.security.cando.heading",
@@ -216,7 +216,7 @@ function render(cs, view) {
       + cs.field("cd-qb", S + "what.holds.for.the.second.passage", { max: 200, help: [S + "optional.at.most.200.characters"] })
       + evid + note(S + "with.something.that.shows.it.the", S + "with.only.your.words.the.tension")
       + acts(cs.act("contradictionclarify", { label: S + "say.how.they.differ", tone: "primary", data: { choice: "differs" } })), { help: [S + "help.use.this.when.the.two.passages"] }));
-    out.push(cs.sec(S + "say.that.one.of.them.is.wrong", cs.choice("cd-wrong", S + "which.one.is.wrong", K.SIDES, { value: "a" })
+    out.push(cs.sec(S + "say.that.one.of.them.is", cs.choice("cd-wrong", S + "which.one.is.wrong", K.SIDES, { value: "a" })
       + cs.field("cd-why", S + "why.it.is.wrong", { area: true, rec: true, max: 1000, help: [S + "every.member.who.sees.this.will"] })
       + note(S + "the.passage.is.never.deleted", S + "it.is.marked.as.corrected.with")
       + acts(cs.act("contradictionclarify", { label: S + "mark.it.wrong.with.a.reason", data: { choice: "one_wrong" } }))));
