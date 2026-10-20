@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 import { linkSweepOps } from "../../../src/link-sweep/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, PLAN_RUN_SCOPE } = O;
@@ -153,14 +154,23 @@ test("R10, R6: every op T23's modules serve has a spec the door answers by name 
   for (const op of ["noticemethod", "groupkeys"]) assert.ok(!Object.hasOwn(OPS, op), op);
 });
 
-test("R10, R6 (N506, K1207): sweeps is declared for link-sweep's map — every op link-sweep's ops map serves has a spec, and the one it serves is sweeps, R10's read; link-sweep's read list names exactly that map (negative control: an op added to the map without a spec is seen)", () => {
+test("R10, R6 (N506, K1207): sweeps is declared for link-sweep's map — every op link-sweep's ops map serves has a spec, the ones its owner declares (R80) held by their declarations, and the one this module declares by hand is sweeps, R10's read; link-sweep's read list names exactly the map's reads (negative control: an op added to the map without a spec is seen)", () => {
   const served = Object.keys(linkSweepOps({}, new URL("https://instance.invalid/")));
-  assert.deepEqual(served, ["sweeps"]);
+  assert.ok(served.includes("sweeps"), "link-sweep's map does not serve sweeps");
+  /* the ops link-sweep declares are read from its own declaration (K3268), never a hand list */
+  const declared = Object.keys(REGISTERED["link-sweep"] ?? {});
+  assert.ok(declared.length > 0, "link-sweep declares no op");
   for (const op of served) {
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
-    assert.deepEqual(plain(OPS[op]), R10[op].spec, op);
+    assert.ok(op === "sweeps" || declared.includes(op), `${op}: neither R10's sweeps nor declared by link-sweep`);
   }
-  assert.deepEqual([...O.LINK_SWEEP_READS].sort(), served.filter((op) => !OPS[op].mutating).sort());
+  assert.deepEqual(plain(OPS.sweeps), R10.sweeps.spec);
+  for (const op of declared.filter((o) => served.includes(o))) {
+    assert.equal(OPS[op].mutating, REGISTERED["link-sweep"][op].mutating, op);
+    assert.ok(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), `${op} is not in both session sets`);
+  }
+  assert.deepEqual([...O.LINK_SWEEP_READS].sort(), ["sweeps"]);
+  assert.ok(served.filter((op) => !OPS[op].mutating).includes("sweeps"));
   /* Negative control: a map that serves an op with no spec is seen. */
   const unspecified = [...served, "sweepretry"].filter((op) => !Object.hasOwn(OPS, op));
   assert.deepEqual(unspecified, ["sweepretry"]);

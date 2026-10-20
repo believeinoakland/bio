@@ -4,6 +4,9 @@
    check that what is left is declared or named as before. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+/* browser.mjs reads `OPS` as it is evaluated, so the owners are registered first (R80); a sibling import would otherwise run
+   while register-owners.mjs awaits the collector. */
+import { REGISTERED } from "./register-owners.mjs";
 import { BROWSER_ACTS, OPS } from "../../../src/op-declarations/index.mjs";
 
 export const browserActs = (registry) => {
@@ -24,6 +27,10 @@ export const browserActs = (registry) => {
    route; an act leaves the list when it becomes an op. */
 const INSTALLER = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
 const registryRows = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
-export const OWED_BY_FIX_ROUND = [...new Set(registryRows.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed")
-  .map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))]
+const OWED_ALL = [...new Set(registryRows.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed")
+  .map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))];
+const DECLARED_BY_OWNERS = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));
+/** The owed acts an owner declares (class (a) of R21, R80): each is read as served by its declaration, so it is an op. */
+export const OWED_SERVED_BY_OWNERS = OWED_ALL.filter((act) => DECLARED_BY_OWNERS.has(act) && !Object.hasOwn(BROWSER_ACTS, act)).sort();
+export const OWED_BY_FIX_ROUND = OWED_ALL
   .filter((act) => !Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act) && !INSTALLER.includes(act)).sort();
