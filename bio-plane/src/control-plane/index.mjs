@@ -98,6 +98,9 @@ const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "
                                            "rerunstart", "rerunpair"]);
 const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase", "importregrade", "rerunread"]);
 const CASE_CHECKER_PUBLIC_READS = Object.freeze(["casechecker", "casefilespec"]);
+/* R49 (T51; K4230; case-inputs R24; public-read R18): case-inputs' credential-free public read `casedetailspublic`, registered at
+   the plane's start, routed by its own name through public-read's door read exactly as the case-checker reads are */
+const CASE_INPUTS_PUBLIC_READS = Object.freeze(["casedetailspublic"]);
 
 /* R50 (DEC-120, DEC-121; N528; op-declarations R15; K1402): `wizard-scripts`' ops, routed through its own map by the
    general forward. Every act is stamped `author`, the one key its map reads every identity from (the
@@ -975,8 +978,8 @@ export function makeFetch(hooks = {}) {
          public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
          credential and none of the caller's stamps; the read is handed only the parameters it declared. Asked as
          `op=publicread&name=<name>`, the same read is the public hook's (plane's, through `publicReadDoorOp`). */
-      /* R49 (case-checker R15): case-checker's two public reads, by the same door read. */
-      if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op))
+      /* R49 (case-checker R15): case-checker's two public reads, by the same door read; R49 (T51, K4230): case-inputs' one. */
+      if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op) || CASE_INPUTS_PUBLIC_READS.includes(op))
         return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country });
