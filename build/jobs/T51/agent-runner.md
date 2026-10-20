@@ -49,3 +49,7 @@ T51-149 done and pushed (5c919018ea): R41 met. agent-runner 70 tests, 59 pass, 0
 - **Found in other modules.** `fleetbundles.test.mjs` still fails here (132 pass, 15 fail) for reasons outside my module: agent-worker's bundle is stale against plane sources (`bundles.mjs` regenerates, BOB's at close), and R39's remaining findings are `FILE_SCANNER` (a binding naming file-scanner, not a member here) and file-scanner's fresh build failing in this checkout. R39's `RemoteSession` finding is gone, and the agent-runner arms are green.
 - **Tests and checks.** `agent-runner` `node --test test/`: 75 tests, 64 pass, 0 fail, 11 suspended by R35. `checks/run.mjs`: format 0, architecture 0, words 0 findings; coverage names no test for R36 R37 R38 R40 only (T50). `checks/ownership.mjs`: 0 failures.
 - Size (session_01MdnNBzBAyEqGyj1L1rTrT7): test runs 6, module lines 34
+
+## J5 · COMPLETE
+
+FR-14 done and pushed: R42 met. Worker exports RemoteSession (DurableObject, no container; every request 503 REMOTE_UNAVAILABLE, /remote/version included); migration v2 beside v1; agent-worker untouched. agent-runner 75 tests, 64 pass, 0 fail, 11 suspended by R35. Also fixed R33's control (pinned the pre-0.86.0 digest). checks: format/architecture/words/ownership 0 failures; coverage names only R36 R37 R38 R40 (T50). fleetbundles: agent-runner arms green, R39's RemoteSession finding gone; remaining reds are agent-worker's stale bundle and FILE_SCANNER/file-scanner build (not mine). Details in my record.
