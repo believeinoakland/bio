@@ -142,3 +142,23 @@ Tests and checks (from the process repo, against /home/user/bio):
 - `node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`: 1 file changed (the requirement file), 0 failures.
 
 Size (session_0153H53S2RwjRhNVSVQfv5k8): test runs 2, module lines 1688
+
+## J8 · COMPLETE
+
+Applied B7 (K4226), pushed on job/T51/citation (merged tranche/T51 first).
+
+- `bio-plane/test/m/citation/register.test.mjs` no longer imports op-declarations and makes no `registerDeclaredOps` calls. It holds the shape only: every mutating row of `DECLARED_OPS` names `needs: "contribute"`, and citeimported and withdrawimported are named explicitly.
+- R18 in `build/requirements/citation.md` now names the shape test and says registration is proven by op-declarations' `register-owners.mjs` (OP-DECLARATIONS #29 adds citation there).
+
+Deferred: none. Other modules: none new.
+
+Tests and checks:
+- `node --test bio-plane/test/m/citation/`: 122 pass, 0 fail.
+- `node checks/architecture.mjs /home/user/bio` (whole product): 3832 product files, 0 failures.
+- `node checks/architecture.mjs /home/user/bio citation`: 0 failures.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `node checks/coverage.mjs /home/user/bio citation`: 19 of 19 live ids named by a test, 0 failures.
+- `node checks/words.mjs /home/user/bio citation`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`: 0 files changed by citation beyond the merge, 0 failures.
+
+Size (session_0153H53S2RwjRhNVSVQfv5k8): test runs 2, module lines 1688
