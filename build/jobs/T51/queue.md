@@ -117,3 +117,36 @@ Wave-2 change B7 (K4233) applied: queue-producers R46–R51 are merged, and queu
 Commit `6ee59179e6` on `job/T51/queue`.
 
 Size (session_01EHph3RAJgMWjTJAKvQgcMD): test runs 4, module lines 3384
+
+## J7 · COMPLETE
+
+QUEUE #30 (session_016RSk6PPCHyxn8XjwFBsMoF), depth 2. B8 (K4238) applied; the rest of the wave-2 entries stay as QUEUE #28 and #29 completed them (their records above).
+
+**Entry applied (B8)**: `DECLARED_OPS.proposedispose` now takes `items` as an alternative for its two identity groups: `requires` is `[project|key|progressionKey|items]`, `[finding|key|progressionKey|items]`, `[to|state]`, `reason`. `to` and `reason` stay at the top level for a set, because the set arm (`queue-states` `run`) sends them there and `#perItem` spreads them onto every item (`reason` still required: each item's refusal would be NO_REASON otherwise). No code path changed; only the declaration. Readings taken: `to` is top-level in the set the screen sends (`shared.to`), so it is not an alternative for `items`.
+
+**Requirement line (R92, amended in `build/requirements/queue.md`)**: the set form is written into R92's sentence on `proposedispose`: a project or a key or `items`; a finding or a key or `items`; a disposition word and a reason; the set names each item's identity in the item and shares the disposition and the reason at the top level (K4238). The line is marked as before; the file is the one the ownership check lists (B4 accepts it).
+
+**Tests** (`bio-plane/test/m/queue/declared-ops.test.mjs`), each seen failing first:
+- R92 set form: `declaredOpHolds` over the set declaration (`items` first in each identity group, derived from the module's own `requires`, so the helper's base is a set). First run red: the `to` group had no refusal naming it at the top level; the set's refusal names it inside `items[]` (its own act's `NOT_A_DISPOSITION`), so the test's refusal reader now looks there too. Green after the declaration change.
+- R92 control: a request with neither a project, a key, a progression nor items is refused, `NO_KEY`, naming `progressionKey`.
+- R92 control: a set whose items carry no reason is refused whole (`SET_ITEMS_RETAINED`), the item retained with `NO_REASON`, nothing applied.
+- The existing single-form test still holds.
+
+**Fixture change (`bio-plane/test/m/queue/world.mjs`)**: the default fake of `progressions.disposeProposal` answered ok for any identity, so the control could not see a refusal. It now refuses an identity that names no progression as `NO_KEY`, the code progressions' own generic refusal uses (`progressions/checks.mjs` GENERIC_CODES). The fake answers ok for every call that names one, as before. No other queue test changed; the suite passes.
+
+**Deferred**: none.
+
+**Found in other modules**
+- `screens-daily` (queue-states `identity()`, its C60): a set's `proposedispose` item for a KEY-identified finding carries `definition_version` (snake case) inside the item. The arm reads `definitionVersion` (camel) only, so the item's version is dropped and the decision binds no version (null). The single path is not affected (it sends `definitionVersion`). Owner: screens-daily; the fix is in its identity() (camel case, as the disposition's `requires` says). Not changed here.
+- `progressions`: none new; its generic `NO_KEY` is the refusal the control names.
+- Hand rows that can go: none for `proposedispose`, `queuemute`, `queuesnooze` beyond those listed in #28 (the declaration's fields are not compared with `op-declarations`' hand rows, which carry no fields).
+
+**Tests and checks** (from `/home/user/bio`, lockfile directories installed per K4113: agent-runner, bio-plane/src/journey-check, file-scanner, sheet-worker, site):
+- `node --test bio-plane/test/m/queue/`: 206 pass, 0 fail (203 at the start; 3 new in declared-ops.test.mjs).
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs … queue`: 0 failures. `checks/coverage.mjs … queue`: 53 of 53, 0 failures. `checks/words.mjs … queue`: 0 failures.
+- `checks/ownership.mjs /home/user/bio queue tranche/T51 job/T51/queue`: 1 failure, `build/requirements/queue.md` outside queue's paths, tests and job record. It is the one requirement file B4 accepts at merge; no other file.
+- `checks/run.mjs /home/user/bio`: format 0, architecture 0, coverage 4 failures in other modules, words 27 failures (op-grades' test copies 26, strength inline 1). None in queue.
+
+Commit `925b86b8a8` on `job/T51/queue` (merge of `tranche/T51` at `7195cf675c` is `289423cbb2`).
+
+Size (session_016RSk6PPCHyxn8XjwFBsMoF): test runs 9, module lines 3386
