@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01HSAFyMwi4NiSyNZqh5rY1c · depth 2 · COMPLETE · handled B23
+**Status** · session_01J5x9uuvhngES6Vq6VYWnWb · depth 2 · WORKING · handled B24
 
 ## J1 · QUESTION
 
@@ -170,3 +170,50 @@ Until you rule, I hold at this state and do not post `COMPLETE`. I will not chan
 **Tests and checks.** `node --test bio-plane/test/m/op-grades/`: 140 pass, 0 fail, 0 skipped. `checks/format.mjs .`: 0 failures. `checks/architecture.mjs . op-grades`: 0 failures. `checks/coverage.mjs . op-grades`: 50 of 50 live requirement ids named; 0 failures. `checks/words.mjs . op-grades`: 0 failures. `checks/ownership.mjs . op-grades tranche/T51`: 1 failure, `build/requirements/op-grades.md` (commit 4ebf9b1d66, before this restart; J15 item 4). Dependants' tests (52 files that name op-grades): 613 pass, 6 fail; 5 fail identically on `origin/tranche/T51`, the sixth is affordances `t48` (J15 item 3). `fleetbundles` is stale for the tranche's other modules' sources (BOB regenerates at the layer close); no op-grades file feeds a bundle.
 
 Size (session_01HSAFyMwi4NiSyNZqh5rY1c): test runs 16, module lines 3622
+
+## J17 · QUESTION
+
+**QUESTION (B24; R51's absence half, and one design key).** Pushed `c20825d428` on `job/T51/op-grades`.
+
+R51, as written, says a declared op's reason is its owner's word in its `NON_ACTS` row **or** its `RUNG_ABSENT` row. Registration (`src/op-grades/declared.mjs`) compares only the `NON_ACTS` reason. Comparing the absence's `is` as well shows 113 ops whose hand `is` differs from the owner's declared description:
+- 108 have an owner word id in the word table (105 `localize`, 3 `word` keys), e.g. `member-roster.declared.adminendorse`, `file-safety.declared.deepercheck`.
+- 5 cannot be referenced yet: `capturerequest` and `capturerequestretry` (capture-requests declares literal sentences, not a word id); `caseimport` (case-import declares the constant `IMPORT_DIRECTED`); `checkrequest` (tasks: not located); `ask` (plane: `plane.declared.ask` is not in `rows.mjs` yet).
+
+I have not converted the 113 and have not tightened registration. Tightening now would make the real registration refuse those five owners, and the plane registers next. The `is` text may show to members, so changing it is a visible change to the text.
+
+**Decision 1, for you.** (a) **Recommended:** convert the 108 `is` rows to their owners' word ids now; capture-requests, case-import, tasks and plane give their five a word id; then registration compares `is` too (R50) and R51's test extends to it. (b) Amend R51 to `NON_ACTS` only, as the test checks today, and leave the 113 `is` rows as they are.
+
+**Decision 2, for you.** `groupdescriptiondraft` (store-door): its declared word `store-door.declared.groupdescriptiondraft` has no design key, so `word("…")` in `src` fails the words check (`missingkey`). I kept the sentence on its `NON_ACTS` row, equal to the owner's text. Either the design keys it (then I switch the row to `word(...)`), or it stays held until the owner's word is keyed.
+
+Also: the registration test still sets aside `sweeps` and `groupdescriptiondraft` (the owed filter), since link-sweep #6 and store-door #14 are not on `tranche/T51` yet. I have not merged the tranche (B24: when you say so). Tell me when to merge.
+
+## J18 · REPORT
+
+**REPORT (other modules' findings, from the product-wide `checks/run.mjs`; not my module, not changed).**
+- coverage, named by no test: `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19.
+- words, `missingkey` (`screens-intake`): `screen.about-knocker.known.head`, `screen.about-knocker.attribute.occupation`, `screen.about-knocker.evidence.label` (`t51-about-knocker.test.mjs` 25, 32, 57); `screen.watching.sweep.pages` (`t51-watching-named.test.mjs` 92); `screen.watching.pause`, `screen.watching.resume` (`t51-watching.test.mjs` 46, 51).
+- words, `inline` (`strength`): `bio-plane/src/strength/method.mjs:349`.
+- Still open from J15, on their branches: `link-sweep` `sweeps` (weight `reversible` on a read) and `store-door` `groupdescriptiondraft` (weight `reasoned` on a read); both go when their branches merge (B24).
+
+## J19 · COMPLETE
+
+**COMPLETE (B24, OP-GRADES #20).**
+
+**Entries applied.**
+1. **R39 (amended K4247):** `groupdescriptiondraft` has no `RUNG_ABSENT` row now (`src/op-grades/t48.mjs`); it is a read, in `NON_ACTS` alone, with store-door's declared sentence (QUESTION, decision 2). Tests: `owners.test` R16 (no grade); `t48.test` R39 (control: no row in `RUNGS` or `RUNG_ABSENT`) and R38–R41 (the table is `WRITES`); `pins` R39 comment; `t49.test` R43 tally 36 → 35 (control 34).
+2. **R51 (new):** `register.test.mjs`: every declared op's `NON_ACTS` reason equals its owner's declared description; control: a read whose reason differs from its owner's is refused naming the op (`DECLARED_OP_DISAGREES`), and the owner's word is accepted. The `RUNG_ABSENT` half is open (QUESTION, decision 1).
+3. **Words, product-wide (not in the module check):** 26 test copies of other modules' `localize` sentences in 11 test files (`owners`, `t35`, `t36`, `t37`, `t41`, `t46`, `t47`, `t48`, `t49`) now read through `declaredSentence(owner, op)`; each assertion kept.
+
+**Deferred.** The `RUNG_ABSENT` `is` rows (113; QUESTION 1); `groupdescriptiondraft`'s design key (QUESTION 2); the owed filter for `sweeps` and `groupdescriptiondraft` until link-sweep #6 and store-door #14 merge; tranche not merged.
+
+**Found in other modules:** REPORT posted (coverage, words, inline).
+
+**Tests and checks** (run from civicos-process, product `/home/user/bio`):
+- `node --test bio-plane/test/m/op-grades/`: 141 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs op-grades`: 0 failures. `checks/coverage.mjs op-grades`: 51 of 51 named, 0 failures.
+- `checks/words.mjs op-grades`: 0 failures; product-wide, no finding in op-grades.
+- `checks/ownership.mjs op-grades tranche/T51 job/T51/op-grades`: 0 failures.
+- `setup-words/build.mjs --check`: stale-rows note only (expected).
+- `checks/run.mjs`: format 0, architecture 0; coverage and words failures only in other modules (REPORT).
+
+Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 9, module lines 3623

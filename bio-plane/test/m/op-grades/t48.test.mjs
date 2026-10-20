@@ -22,17 +22,14 @@ const countOf = (code) => JUSTIFICATION_REFUSALS.filter((c) => c === code).lengt
 const WRITES = { actionreplyquoting: "reversible", updateskip: "reasoned", updatelater: "reversible",
   updatestart: "reversible", planask: "reversible", stepsource: "reasoned", stepsourcewithdraw: "reasoned",
   lookedsince: "caller-owned" };
-const R39_ROWS = { translationdraft: "caller-owned", groupdescriptiondraft: "caller-owned" };
+const R39_ROWS = { translationdraft: "caller-owned" };
 const READS = readRows(T48.T48_NON_ACTS);
 const R41_READS = READS.filter((op) => op !== "proceedingdates" && op !== "updatenotice");
 /* the ops R41 names that T48's tables hold */
 const R41_CONTROL = ticked(reqText(41)).filter((op) => Object.hasOwn(T48.T48_RUNGS, op) || Object.hasOwn(T48.T48_RUNG_ABSENT, op)
   || Object.hasOwn(T48.T48_NON_ACTS, op));
-const UPDATE = "release-directed: keyed by a verified release notice, reached from Settings › Updates and the "
-  + "administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer "
-  + "installs, with Cloudflare's consent)";
-const STEP = "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of a "
-  + "declared step, withdrawn only by a reasoned act and never erased; moves no bundle";
+const UPDATE = declaredSentence("instance-setup", "updatelater");
+const STEP = declaredSentence("connections", "stepsource");
 
 /* ---- R38 ----------------------------------------------------------------------------------------------------------- */
 test("R38: actionreplyquoting `reversible` as actionreplybearing, an ACTS row on an action with no NON_ACTS row, a machine "
@@ -76,8 +73,8 @@ test("R38: proceedingdates is a read, `read: …`, ungraded; readtranslate takes
 });
 
 /* ---- R39 ----------------------------------------------------------------------------------------------------------- */
-test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescriptiondraft is given a `caller-owned` row "
-   + "with its NON_ACTS sentence unchanged; each a phone act and no machine refusal; control: translationmark stays "
+test("R39 (K4247): translationdraft leaves `undetermined` for `caller-owned`; groupdescriptiondraft is a read with no row, "
+   + "its owner's NON_ACTS sentence unchanged; each a phone act and no machine refusal; control: translationmark stays "
    + "`undetermined`", () => {
   for (const [op, g] of Object.entries(R39_ROWS)) {
     assert.equal(RUNG_ABSENT[op].ground, g, op);
@@ -89,6 +86,9 @@ test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescr
   assert.equal(RUNG_ABSENT.translationdraft.ground, "caller-owned");
   assert.match(NON_ACTS.translationdraft, /^translation-directed: keyed by a language and interface words; drafts labeled machine work/);
   assert.equal(NON_ACTS.groupdescriptiondraft, declaredSentence("store-door", "groupdescriptiondraft"));
+  /* control: a read carries no ground, so the draft has no row in either table (K4247) */
+  assert.equal(Object.hasOwn(RUNG_ABSENT, "groupdescriptiondraft"), false);
+  assert.equal(Object.hasOwn(RUNGS, "groupdescriptiondraft"), false);
   assert.equal(NON_ACTS.securitymap, doesSentence("securitymap"));
   /* the ground is as memberlanguageset's */
   assert.equal(gradeOf("translationdraft"), gradeOf("memberlanguageset"));
@@ -201,7 +201,7 @@ test("R38 R39 R40 R41: T48's tables hold exactly these ops, none both graded and
    + "requirement words it", () => {
   const T48W = { ...Object.fromEntries(Object.keys(T48.T48_RUNGS).map((o) => [o, T48.T48_RUNGS[o]])),
     ...Object.fromEntries(Object.keys(T48.T48_RUNG_ABSENT).map((o) => [o, T48.T48_RUNG_ABSENT[o].ground])) };
-  assert.deepEqual(T48W, { ...WRITES, groupdescriptiondraft: "caller-owned" });
+  assert.deepEqual(T48W, WRITES);
   for (const [op, g] of Object.entries({ ...WRITES, ...R39_ROWS })) assert.equal(gradeOf(op), g, op);
   for (const op of Object.keys(T48.T48_RUNGS)) assert.ok(!Object.hasOwn(T48.T48_RUNG_ABSENT, op), op);
   for (const [op, e] of Object.entries(T48.T48_RUNG_ABSENT)) assert.ok(e.is.length > 40, op);
