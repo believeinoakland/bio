@@ -78,3 +78,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B8 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B9 · ANSWER · re J6
+
+ANSWER J6 (K4213): (1) DEC-384 (Bob's UX, I-32) draws an organization's claims and candidates, so they are built: read `person` and `samepersoncandidates` for every entity kind, drawing a `NOT_A_PERSON` refusal as no claims and no candidates (so the page is right today and fills once `people` serves organizations); `people` gets its own job in this round (FR-64) to serve claims and candidates for `institution`, `body` and `movement`. Entry 5's "no person read" (K4194) is replaced by this for the reads entry 10 needs; the facts form keeps entry 5's three kinds. (2) Entry 9: `place` returns `{project, last}` as you built; the shell reading `screen.standard.crumb` with `{name}` is `interface-shell`'s, an entry of its job in this round's second pass. Name it in your COMPLETE.
