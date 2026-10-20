@@ -1,6 +1,6 @@
 # file-scanner (T51)
 
-**Status** · session_01MT3yXPXwH15CT1r2FMdw2j · depth 2 · COMPLETE · handled B8
+**Status** · session_0172oS2PZLHiPd6oiG9rpt9D · depth 2 · COMPLETE · handled B9
 
 ## J1 · QUESTION
 
@@ -89,3 +89,14 @@ COMPLETE for B8 (CHANGE, K4125), on job/T51/file-scanner (tranche/T51 merged in 
 - Ran: `node --test test/` in file-scanner: 78 tests, 68 pass, 0 fail, 10 skipped (clamscan, sigtool absent). format 0 failures; architecture 0 failures; coverage 33 of 33 ids named; ownership 4 files changed by file-scanner, 0 failures; words: no finding in file-scanner.
 - Generated artifact stale: `file-scanner/dist/`, as before.
 - Size (session_01MT3yXPXwH15CT1r2FMdw2j): test runs 5, module lines 4654 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)
+
+## J11 · COMPLETE
+
+COMPLETE. Entry FR-SCAN (K4182) applied; choice (a): ClamAV's own `freshclam` in the FileScanner image.
+- Why (a): measured live today, `database.clamav.net` answers 403 to our `file-scanner/… (as cvdupdate)` agent and 200 to `ClamAV/<ver> (…)` and `CVDUPDATE/…`, so the block is by agent. ClamAV's mirroring page says not to use `cvdupdate` unless you host a private mirror (it downloads whole files daily, rate-limited by IP) and that `freshclam` is the client for ordinary use; `cvdupdate` is Python on a cron host, which the Cloudflare account has none of. freshclam is already in the image (clamav-freshclam is in packages-scanner.json), so no package change.
+- How: new image route `POST /update/<run>` runs freshclam (config: database.clamav.net only, no agent set) in a fresh directory, `GET /update/<run>/<file>` streams a file, `DELETE` removes the run. The Worker's `runMirror` no longer fetches: it asks a second instance of the same `FileScanner` class (name `file-scanner-signature-updater`, started with header `x-signature-updater: 1`, the only instance with `enableInternet`), streams the files into R2, verifies each with sigtool as before, and replaces `current.json` last. A refusal is reported as `MIRROR_REFUSED:<freshclam's reason>` in `/mirror` and `/version` `signatures.last_error`; with no set every scan is `not_scanned`/`SIGNATURES_ABSENT`. Each run is a full download (no seeding of the previous set so no CDIFF patching); deferred: seed the previous files to let freshclam patch, only if bandwidth or the IP rate limit bites.
+- NEEDS BOB (requirements file is outside my paths; ownership refused my edit, so I reverted it): add **R34** in the file, and amend R6, R12 and the marker/R10 egress sentence. My full wording is at commit bf97a18595, `git show bf97a18595:build/requirements/file-scanner.md`; in short: R34 "the scanner obtains its signatures by ClamAV's official path under its own identity (`freshclam` in the image's signature-updater instance; no other tool's User-Agent, K3658); a refused mirror is reported with its reason, never as a scan result"; R6 says freshclam in place of "as cvdupdate does"; R12 says the mirror run reaches the database host only from the signature-updater instance, the Worker opening no connection and the scanning containers none.
+- Image changes (scanner.mjs, Dockerfile comment): its digest and `source_sha256` in `fleet-member.json` and wrangler.jsonc are `bundler`'s concern at the cut (R36); I report it. I rebuilt my own `dist/file-scanner.bundled.mjs` and `.bundle.json` with `npm run build` (marker `egress.containers` now names the updater instance).
+- Tests: R34 x3 (refusal with reason + SIGNATURES_ABSENT; the image's updater runs freshclam for the official host alone with no agent set and keeps nothing on refusal; a set from the official path is loaded and used: EICAR found, clean clean, control with no set `not_scanned`), R6 x3 and the worker tests changed to the new path. Installed clamav here to run them: file-scanner 81 tests, 81 pass, 0 skipped. format 0, architecture 0, words 0, coverage 33/33 (R34 is named by tests but not yet in the file), ownership 0 failures; checks/run.mjs other modules' coverage reds are not mine.
+- Found in other modules: none. Live check after the redeploy is yours (the 27 files).
+- Size (session_0172oS2PZLHiPd6oiG9rpt9D): test runs 12, module lines 2606

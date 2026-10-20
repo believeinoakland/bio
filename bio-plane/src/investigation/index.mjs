@@ -11,6 +11,7 @@
  *   planPropose, planProposals, planAccept (R20)                          the assistant's planning proposals, accepted
  *   quietState, quietPrompts, projectWatch, projectCloseWithGaps,         when the work goes quiet, and where the evidence
  *   watchedProjects, watchArrival, projectStanding (R17–R19)              stands
+ *   projectClose (R24)                                                    the owner's close, quiet or not
  *   check (R12)                                                           registered with `promotion`
  *
  * SHAPE (K61). `investigationOf(host, deps)` answers the one instance per host; making it creates and declares the
@@ -1201,20 +1202,41 @@ export class Investigation {
   }
 
   /** R18: `projectCloseWithGaps({project, reason, note?, by})`: the project closes with `closed_reason` `reason`
-   *  (`intent` R29), the gaps read at the act kept beside it as what remains unknown. */
+   *  (`intent` R29), the gaps read at the act kept beside it as what remains unknown. The quiet path. */
   projectCloseWithGaps({ project = null, reason = null, note = null, by = null } = {}) {
     const g = this.#doorGate(project, by, "projectCloseWithGaps");
     if (g.refusal) return g.refusal;
+    return this.#closeKept(project, reason, note, by, g.actor, () => this.#spell(project, true));
+  }
+
+  /** R24 (amends R18; C65): `projectClose({project, reason, note?, by})`: the owner's recorded close, whether or not the
+   *  work has gone quiet. Refusals are R18's but never `QUIET_NOT_QUIET`, and `PROJECT_ACT_NOT_THE_OWNER` (membership
+   *  R122) for a joined participant who does not own the project. */
+  projectClose({ project = null, reason = null, note = null, by = null } = {}) {
+    const g = this.#memberGate(project, by, "projectClose");
+    if (g.refusal) return g.refusal;
+    const notOwner = this.#membership.projectAuthority(project, g.actor.viewer, "owner", "projectClose");
+    if (notOwner) return notOwner;
+    /* a spell already open is the one the close belongs to; none is opened for it */
+    return this.#closeKept(project, reason, note, by, g.actor, () => {
+      const open = this.#one(`SELECT spell_id FROM inv_quiet_spells WHERE project_id = ? AND ended_at IS NULL ORDER BY spell_id DESC LIMIT 1`, project);
+      return open ? Number(open.spell_id) : null;
+    });
+  }
+
+  /* R18, R24: the close both doors make, past each one's gate: the reason and note checked, the gaps read at the act, the
+     document revised through `promotion`, the act kept with the gaps beside it. */
+  #closeKept(project, reason, note, by, actor, spellOf) {
     if (!CLOSED_REASONS.includes(reason)) return refuse("CLOSE_BAD_REASON", `the reason is one of ${CLOSED_REASONS.join(", ")}`);
     if (note !== null && note !== undefined && (!filled(note) || chars(note) > REASON_MAX)) return refuse("INVESTIGATION_NO_REASON", `1–${REASON_MAX} characters`);
-    const gaps = this.#intent.gaps({ project, viewer: g.actor.viewer });
+    const gaps = this.#intent.gaps({ project, viewer: actor.viewer });
     const kept = gaps && gaps.ok !== false ? { gaps: gaps.gaps ?? [], ...(gaps.why ? { why: gaps.why } : {}) } : { gaps: null, why: word("investigation.why.gaps_read") };
     const at = this.#at();
     return this.#record.transact(() => {
-      const w = this.#closeProject(project, reason, note, by, g.actor.viewer, at);
+      const w = this.#closeProject(project, reason, note, by, actor.viewer, at);
       if (!w || w.ok !== true) return w;
       this.#sql.exec(`INSERT INTO inv_quiet_acts (project_id, spell_id, act, closed_reason, note, gaps_json, by_actor, at) VALUES (?,?,?,?,?,?,?,?)`,
-        project, this.#spell(project, true), "close", reason, filled(note) ? note.trim() : null, json(kept), by, at);
+        project, spellOf(), "close", reason, filled(note) ? note.trim() : null, json(kept), by, at);
       return { ok: true, project, closed_reason: reason, gaps: kept.gaps, at };
     });
   }
