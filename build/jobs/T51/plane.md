@@ -90,3 +90,24 @@ QUESTION (PLANE #43, B6 / FR-32). Three points; I carry on with entries 1 and 5 
 2. Entry 5, `ask`: the plane's arm (`askOp` / `askOnObject`) refuses nothing for a missing `question`; agent-worker's /ask does. Best reading: `fields.requires: []` and `accepts: ["question","conversation","project","store","token"]` (token: body or query, as `presentedToken` reads it). `readtranslate`: `accepts: ["subject","language"]`, `requires: ["subject"]` (the arm answers BAD_TASK 400 naming `subject`). `ask` is copied as classes admin+member, machineClasses [], mutating true, weight `caller-owned` (RUNG_ABSENT), description the NON_ACTS sentence; `readtranslate` as mutating false, weight `read`, description its NON_ACTS sentence. Tell me if `question` should be required.
 
 3. Entry 1, shape: ES modules cannot enumerate their imports, so the assembly is `plane/declarations.mjs`: one static import per composed module that exports `DECLARED_OPS` (as `DECLARED_OPS as <module>`), the plane's own included, called once at the top of store.mjs before the Store class exists. Seven modules (answers, attestation, content, escalation, explore, provenance-routes, workbooks) declare in `ops.mjs` and do not re-export from `index.mjs`; I import their `ops.mjs` directly. `sources` is composed through store-door, not store.mjs; I import its declaration too. The test iterates `declaredOpsOf(root)` (modules.json) against the assembled table, so a module missing from the file fails by name; no test lists a module's ops.
+
+## J7 · REPORT
+
+REPORT (PLANE #43, FR-32): entries 1, 5 and the iterable part of 4 are applied and pushed; 2 and 3 wait for the owners.
+
+Applied
+- R68 (entry 1): `plane/declarations.mjs` (one static import per declaring module, the plane's own included; `assembleDeclaredOps` refuses a duplicate naming the op and both modules before either registration is called) and `plane/register.mjs`, the first import of both `index.mjs` and `store.mjs`. Registering inside store.mjs was not enough: `control-plane/index.mjs` reads the op tables when it loads and `index.mjs` imports it before `store.mjs`, so a late call would crash the Worker's start (R81, registered after the first read). Consequence for tests: a test that reads an op table before it imports the plane must import `register.mjs` first; t42 to t45 now do. The real modules register with no duplicate and no disagreement (219 ops, 55 owners).
+- R72 (entry 5): `plane/declared.mjs` declares `ask` and `readtranslate`, copied from their hand rows; fields as BOB accepted at B7.
+- R71 (entry 4, iterable part): every declared op is in the route map (door name or alias) or answered by a Worker arm or the plane's own doors; the ops of provenance, case-inputs, case-import, citation, monitoring, link-sweep and the store door (tasks, queue) answer through the door once each. Nothing needed spreading: all those maps were already spread (tasks and queue through store-door's map).
+- Requirement lines R68 to R72 are written in build/requirements/plane.md (K4210); the ownership check lists that file, accepted. R69 and R70 are marked not yet met.
+
+Waiting
+- R69, R70 (entries 2, 3): `captureSourcesOps` and `investigationOps` are still not on tranche/T51 (tip 1cd462473b merged). Send a CHANGE when capture-sources and investigation are merged; I then spread them, add them to test/m/plane/maps.mjs, test them and re-run R71.
+
+For BOB (modules.json, other modules)
+1. architecture FAIL: plane/declarations.mjs imports `sources/index.mjs` (its DECLARED_OPS; sources is composed through store-door), and plane does not declare `sources` in uses. Please add the edge (earlier than plane). I keep the import; it is the only architecture failure.
+2. `test/m/plane/release.test.mjs` R24 "a title or purpose a surface draws is the screen's own key" fails: `screen.bias.purpose` is not in docs/development/ux-substrate/screens/words.json (also so on the tranche, not caused by this job). The words list or the registry, not plane.
+3. coverage fails in other modules only (agent-harness R17, agent-runner, citation R16 to R18, installer-steps, journey-check R19, link-sweep R13 to R15, monitoring R75 to R77).
+
+Tests and checks: `node --test "test/m/plane/**/*.test.mjs"`: 235 tests, 230 pass, 5 fail at the first run; the 4 import-order failures (t42 to t45) fixed and re-run green (18, 6, 6, 14 pass); the fifth is item 2. New: declarations.test.mjs (6), declared-ops.test.mjs (3). format 0, words 0, ownership 0 failures (requirements file listed, accepted).
+Size (session_01Wi1UPiyBRVvgj1bzVSUFVr): test runs 4, module lines 164 new (declarations 140, declared 16, register 8)
