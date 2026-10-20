@@ -1,6 +1,6 @@
 # capture-sources (T51)
 
-**Status** · session_015AzGmWcjbqBcwr292qPePs · depth 2 · COMPLETE · handled B0
+**Status** · session_01VkPqfYMY5TAWWZDzvyfhZm · depth 2 · WAITING ON BOB (J3) · handled B2
 
 ## J1 · REPORT
 
@@ -35,3 +35,7 @@ Size (session_015AzGmWcjbqBcwr292qPePs): test runs 3, module lines 2664
 ## J2 · COMPLETE
 
 capture-sources (T51-181) complete on b6aaa8fb43: the words findings are fixed by key and the module's tests, checks and ownership pass. Details are in J1.
+
+## J3 · QUESTION
+
+R67's test uses test-support's declaredOpHolds (BOB's START names it), but capture-sources' modules.json uses does not list test-support, so checks/architecture.mjs capture-sources fails: 'imports bio-plane/test/declared-ops.mjs of test-support, which capture-sources does not declare in uses' (1 failure; everything else green: tests 110/110, coverage 67/67, words 0, format 0, ownership 0). modules.json is yours (ownership). Best reading: add "test-support" to capture-sources' uses (it is already ordered before it). Code is pushed on db9afe06a7 (R66, R67, ops.mjs with captureSourcesOps and DECLARED_OPS, tests). I carry on with my record meanwhile; I will merge tranche/T51 and COMPLETE once the edge is there.
