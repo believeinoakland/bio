@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_018RtYmRfvBFKT71cztJSVMH · depth 2 · COMPLETE · handled B18
+**Status** · session_01TP4eDyx3cz3mY4jPr8VbyZ · depth 2 · COMPLETE · handled B23
 
 ## J1 · BLOCKED
 
@@ -135,3 +135,60 @@ COMPLETE (B18) for `interface-shell` in T51.
 **Checks.** Module suite 232 of 232 (before the fix 225; the seven were mine). `checks/run.mjs`: format, architecture, words 0 failures; coverage for interface-shell clean; ownership 0 failures.
 
 Size (session_018RtYmRfvBFKT71cztJSVMH): test runs 28, module lines 2886
+
+## J9 · COMPLETE
+
+COMPLETE (B19) for `interface-shell` in T51.
+
+**Applied.** The 15 red tests are green: the guard now checks real declarations (`declared 162 of 299 ops`) and every stand-in of this module sends what its owner declares or uses an op with no declaration. `harness.mjs` gains `declaredFit(op, extra)` (the fields the owner requires, read through the collector, never a hand copy, K3268) and `fitSend(op, extra)` (a self-contained `send` built from source with those fields carried as data); the fixture screens, `stand` in `t50`, and the stand-ins in `acts`, `design`, `idle`, `kit`, `frame` use them. Where a test asserted a stand-in's old request, it now asserts the declared one: `airunopen` carries `contextType` and `contextId` (not `context`), `knock` carries `content` (not `text`), `heldrestore` and `heldsetaside` carry `ids`, `attest`'s dialog field is `locator`, and a discriminating read query is `state` or `q` (not `closed`, `timer`, `show`, `n`). No assertion was loosened.
+**Control.** `declared.test.mjs`: against the real declarations a stand-in sending `knock` `text` fails with `FieldMismatch` (unknown field `text`), and one sending `content` passes. Module suite 232 of 232.
+
+**Stand-ins that mirror a real screen's request** (each real screen's wave-2 job fixes its own screen; the screen suites show the guard's findings by name):
+- Findings from the real screens' suites today (screen, op, what): settings/connect `accountreferenceset` and `accountreferenceremove` send `member` (not accepted); daily/find-in `recordfact` sends `date`, `tabledeclare` lacks `schema`; inquiry/question `hypothesishold` lacks `about`, `narrow` lacks `ord` and `extent`; investigate/explore `explore` lacks `from` and `at`, investigate/proceeding `entitycreate` lacks `label`; publish/docket `docketfile` lacks `edition or takesBack` and `capture or takesBack`. screens-settings now fails 27 (R107's reason box, B17, plus the connect two above), publish 10, inquiry 4, daily 3, investigate 5; intake 1 is the owed `capturerequestretry` of the design merge (registry red, not mine). Entry, wizards, action: no guard finding.
+
+**Checks.** `checks/run.mjs`: format, architecture, words 0 failures; coverage for interface-shell clean; ownership 0 failures.
+
+Size (session_018RtYmRfvBFKT71cztJSVMH): test runs 33, module lines 2886
+
+## J10 · COMPLETE
+
+COMPLETE (B20) for `interface-shell` in T51.
+
+**1. Stand-ins meet the owners' new declarations.** The 13 red tests are green. `promote` (promotion R61: requires `files`, `meta`, `snapKey`): the fixture `home` screen's act now sends the declared fields (`declaredFit("promote")`, read through the collector, K3268) with the typed title carried as `meta`; the two assertions of the old body (`acts` R21, `idle` R34) assert the declared one. `openoriginal` (file-safety R48): the stand-in without a `send` uses `fitSend("openoriginal")`, the two `cs.download` stand-ins send `capture` (not `sha256`/`id`). R64's loop stand-in uses `fitSend(op)`. No assertion loosened; control unchanged (`declared.test.mjs`: a stand-in sending an undeclared field still fails with `FieldMismatch`).
+Stand-ins that mirror a real screen's request: the fixture `home` `promote` mirrors screens-daily's/queue's `promote`; the real screens-daily `queue` screen sends `project` with `promote` (not accepted): new guard finding for screens-daily's wave-2 job, beside the ones listed at J9 (screens-daily now fails 4: the registry red R1–R13, find-in `recordfact` `date`, `tabledeclare` lacks `schema`, queue `promote` sends `project`; screens-settings 27 as before).
+
+**2. The standard's crumb (R110, new).** `place(view)` may answer `{project, last}`; on `standard` the path's last step is `screen.standard.crumb` filled with `{name}` = `last` (data, escaped, never a key), the project's step still its title. `PATHS.standard` ends in `screen.standard.crumb`; where `place` gives no `last` (a string, `{project}` alone, an empty or non-string `last`) the step falls back to `screen.standard.name`, today's crumb. Two tests in `fixround.test.mjs` (test and control). One older assertion moved with it: `frame.test.mjs` R28 compares every path to the design's, now with `standard`'s last step the crumb word (R110), every other step still the design's.
+
+**Checks.** Module suite 235 of 235. `checks/run.mjs`: format 0, architecture 0, words 0 failures for interface-shell (the run's other failures are other modules': coverage in agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring; testcopy in op-grades); `coverage.mjs interface-shell` 107 of 107; ownership 0 failures.
+
+Size (session_01Sy13QU3XNn8qQ1dY4WHoab): test runs 8, module lines 2876
+
+## J11 · COMPLETE
+
+COMPLETE (B21, B22; B20 was J10) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**B22 (R110, K4228).** `place(view)` may answer `{project, last, projectKey?}`: when `projectKey` is a string the page holds (the screen lists it in its `words`) the project's step draws that word with `{name}` = the project's title, escaped data, in place of the title; absent, not a string or an unknown key, the title as before. Tests in `fixround.test.mjs`: the word replaces the title and the last step is unchanged, a `{name}` word gets the title as typed (`<b>&` escaped), and the control (none, unknown, non-string, empty keep the title). **Requirement line (ownership bars me from `build/requirements/interface-shell.md`, as at J7; please enter it):** R110 (K4228, `screens-publish` R68) — append: *`place` may also answer `projectKey`, a word key the screen holds in its `words`: the project's step then draws that word, `{name}` = the project's title (HTML-escaped data), in place of the title; where `projectKey` is absent, not a string, or not a key the page holds, the step is the title as before. Test: `projectKey` draws that word for the project's step, a `{name}` word gets the title as data; control: none, an unknown key or a non-string keeps the title.* Status: `Last changed T51 (K4228: R110 amended, projectKey)`. **Screens-publish must list `crumb.project.unjoined` in its `words`** (it is in `rows.mjs`, design row) or the key is not held and the title is drawn.
+
+**B21.** `projectowneradd` stand-in (`b17.test.mjs`, shared by `memberadd`, `memberset`, `membercaps`, `expertiseconfirm`, `memberlanguageset`) now sends the declared fields (`fitSend`). The tranche merge brought further declarations; the guard also found and I brought to the declared request: `cite` (fixture screen: `extent_para` and `content_id` with the declared required fields; `acts.test` asserts them, `frame.test` stand-in), `enroll` (fixture: `invite` always present), `wizarddraft` (`kit.test`), the fixture members screen's `memberadd` and `membercaps`. No assertion loosened.
+
+**Checks.** Module suite 236 of 236. `format`, `architecture`, `coverage` (107 of 107), `ownership` 0 failures.
+
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 9, module lines 2876
+
+## J12 · COMPLETE
+
+COMPLETE (B21, B22) — see J11 in my record. R110 projectKey applied with test and control; stand-ins brought to the owners' declarations (projectowneradd and the other member acts, cite, enroll, wizarddraft). Module suite 236/236; format, architecture, coverage (107/107), ownership 0 failures. Needs your edit: the R110 requirement line (ownership bars me from the requirements file), text in J11. Screens-publish must list crumb.project.unjoined in its words.
+
+## J13 · COMPLETE
+
+COMPLETE (B23) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**R12 (K4237).** `can` draws a read (`OPS[op].mutating` false) that no `SESSION_OPS` set holds when the session's class is among `OPS[op].classes`, or when the op is public (`classes: null`, `bootstrap`); the page data gains `readClasses` (`pick` over `OPS`). Tests in `fixround.test.mjs`: `selftest`, `runtime`, `bootstrap` (updates), `exportlog` (group), `biasmanifest`, `biasinhale`, `biasdebt` (bias) drawn for an admin and a member session, all in neither set; controls: `export` (mutating, outside the set) not drawn, and `selftest` not drawn to a session of class `agent`, which it does not list. The first test fails without the change. `export`'s session reach stays OP-DECLARATIONS #30's. R110's projectKey line is BOB's at the merge (J11).
+
+**Checks.** Module suite 239 of 239; format, architecture, coverage, ownership below.
+
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 4, module lines 2880
+
+## J14 · COMPLETE
+
+COMPLETE (B23) — see J13. R12: a read in no SESSION_OPS set is drawn when the session's class is among OPS[op].classes (a public read too); the eight acts' reads (selftest, runtime, bootstrap, exportlog, biasmanifest, biasinhale, biasdebt) now draw; export (mutating) stays outside, as you said. Test and controls; module suite 239/239; format, architecture, coverage 107/107, ownership 0 failures.

@@ -2136,3 +2136,51 @@ export function credentialsOps(c, url, body, env) {
     },
   };
 }
+
+/* R82 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by
+   their owner beside the ops map: each row's classes, weight and description are the op's existing rows', its fields are what
+   the arm reads from `url` and `body`, less the door's stamps (`by`, `session`, `source`, `country`, and `fp`, the fingerprint
+   of the bootstrap secret). `signerregisterown` and `signerrevokeown` are the screens' names for the arms the store door
+   routes as `signerregister` and `signerrevoke` (op-declarations R21); they call `signerRegisterOwn` and `signerRevokeOwn`
+   here. `login`, `recover` and `reauth` refuse a missing field with the one refusal they give for every arm (R4, R47, R65),
+   which names no field; their `requires` are the fields without which no call can succeed. `subscriptionsignin` is the
+   control plane's route to the member's own runner (`agent-worker` R66), not an arm of this module. `securitymap` is a read the
+   administrator's screen sends with `from` and `to` (K4210: `op-grades` drops its hand row that grounded a read). */
+export const DECLARED_OPS = Object.freeze({
+  /* `members` (not required) is the screens' ask for each member's own build, answered at the public door by instance-setup's
+     `bootstrapOp` (setup.mjs), not by the arm above (K4237, SCREENS-SETTINGS #10); declared here so the screen's field is accepted. */
+  bootstrap: { classes: null, mutating: false, weight: "read", description: "act.bootstrap.does",
+    fields: { accepts: ["members"], requires: [] } },
+  claim: { classes: null, mutating: true, weight: "credential", description: localize("credentials.declared.claim", "claims an instance at bootstrap"),
+    fields: { accepts: ["password","handle"], requires: ["password"] } },
+  login: { classes: null, mutating: false, weight: "read", description: "act.login.does",
+    fields: { accepts: ["handle","password","ttlSeconds","device"], requires: ["handle","password"] } },
+  passwordreset: { classes: null, mutating: true, weight: "credential", description: localize("credentials.declared.passwordreset", "credential: a reset link and a new password, reached with no session; moves no bundle"),
+    fields: { accepts: ["link","password"], requires: ["link","password"] } },
+  passwordresetlink: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.passwordresetlink", "credential: an administrator's reset link for one member, answered once; moves no bundle"),
+    fields: { accepts: ["member"], requires: ["member"] } },
+  reauth: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.reauth", "session-directed: the caller's own session, its password asked again for five minutes; moves no bundle"),
+    fields: { accepts: ["password"], requires: ["password"] } },
+  recover: { classes: null, mutating: true, weight: "credential", description: localize("credentials.declared.recover", "credential: a recovery code and a new password, reached with no session; moves no bundle"),
+    fields: { accepts: ["handle","code","password"], requires: ["handle","code","password"] } },
+  recoverycodesissue: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.recoverycodesissue", "credential: an administrator's own recovery codes, shown once; moves no bundle"),
+    fields: { accepts: [], requires: [] } },
+  securitymap: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: "act.securitymap.does",
+    fields: { accepts: ["from","to"], requires: ["from","to"] } },
+  setpassword: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("credentials.declared.setpassword", "session-directed: the caller's own password, the role from their session; ends their other sessions; moves no bundle"),
+    fields: { accepts: ["current","password"], requires: ["current","password"] } },
+  signeradd: { classes: ["admin","member","probe"], machineClasses: ["admin","probe"], mutating: true, weight: "credential", description: localize("credentials.declared.signeradd", "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)"),
+    fields: { accepts: ["keyB64","memberId","comment"], requires: ["keyB64","memberId"] } },
+  signerregisterown: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.signerregisterown", "signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle"),
+    fields: { accepts: ["keyB64","comment"], requires: ["keyB64"] } },
+  signerrevokeown: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.signerrevokeown", "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle"),
+    fields: { accepts: ["keyB64"], requires: ["keyB64"] } },
+  signerset: { classes: ["admin","member","probe"], machineClasses: ["admin","probe"], mutating: true, weight: "credential", description: localize("credentials.declared.signerset", "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)"),
+    fields: { accepts: ["keyB64","status"], requires: ["keyB64","status"] } },
+  signout: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("credentials.declared.signout", "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle"),
+    fields: { accepts: [], requires: [] } },
+  signouteverywhere: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("credentials.declared.signouteverywhere", "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle"),
+    fields: { accepts: [], requires: [] } },
+  unlock: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.unlock", "session-directed: the caller's own locked session, cleared with their password; moves no bundle"),
+    fields: { accepts: ["password"], requires: ["password"] } },
+});

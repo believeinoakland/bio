@@ -1,3 +1,6 @@
+// src/worker.mjs
+import { DurableObject as DurableObject2 } from "cloudflare:workers";
+
 // node_modules/@cloudflare/containers/dist/lib/helpers.js
 function generateId(length = 9) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -1607,6 +1610,7 @@ function says(code, vars = {}) {
 
 // src/worker.mjs
 var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
+var UNAVAILABLE = JSON.stringify({ ok: false, code: "REMOTE_UNAVAILABLE" });
 var DISABLED = JSON.stringify({ ok: false, code: "LOCAL_RUNNER_DISABLED" });
 var HOLD_KEY = "signin_hold_until";
 var LIBRARY_DETAIL_MAX = 120;
@@ -1774,6 +1778,11 @@ var AgentRunner = class extends Container {
     throw error;
   }
 };
+var RemoteSession = class extends DurableObject2 {
+  async fetch() {
+    return new Response(UNAVAILABLE, { status: 503, headers: { "content-type": "application/json" } });
+  }
+};
 var worker_default = {
   fetch() {
     return new Response(UNKNOWN, { status: 404, headers: { "content-type": "application/json" } });
@@ -1782,5 +1791,6 @@ var worker_default = {
 export {
   AgentRunner,
   RefusalLoggingProxy as ContainerProxy,
+  RemoteSession,
   worker_default as default
 };

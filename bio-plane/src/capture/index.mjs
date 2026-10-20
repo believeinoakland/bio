@@ -832,6 +832,9 @@ export class Capture {
    *  (`signatures.verifySshsig`, `NS_RATIFY`) over `signatures.captureAccountStatement(captureSha, text)` (its R41) against one of `by`'s
    *  attesting keys (`credentials.attestingKeys`, its R11). Append-only. */
   async recordCaptureAccount({ captureSha, text, signature, by, at = null } = {}) {
+    /* R98 (T51; K4206): an absent captureSha names itself; C-118.5 is for a capture no member recorded as theirs */
+    if (captureSha == null || (typeof captureSha === "string" && !captureSha.trim()))
+      return Capture.#missingArgument("captureaccount", "captureSha", "<64 lowercase hex>", captureSha);
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who = memberIdOf(by);
     const actors = HEX64.test(sha) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha).map((r) => memberIdOf(r.actor)) : [];
@@ -2778,9 +2781,10 @@ export function captureOwns(t) {
 
 /* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
    them in, and control-plane's `dispatch` answers every store request over it). `url` carries the control plane's
-   stamps; `body` the parsed body. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
+   stamps; `body` the parsed body; `h` the handler's in-process parts (R73; K4226), of which `timings` is forwarded to
+   `acquire` as its `opts.timings` when given. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
    defaults to READ_LIMIT's), and pages by `after`. */
-export function captureOps(c, url, body, env) {
+export function captureOps(c, url, body, env, h = {}) {
   const q = (k) => url.searchParams.get(k);
   const viewerOf = () => (url.searchParams.has("viewer") ? q("viewer") : undefined);
   const page = { limit: q("limit") || READ_LIMIT.default, after: q("after") || null };
@@ -2824,12 +2828,14 @@ export function captureOps(c, url, body, env) {
                                        viewer: q("viewer") ?? "" }),
     reattest: () => c.reattest({ ...(body || {}), by: q("by") ?? (body && body.by) ?? null }),
     lateattestations: () => c.lateAttestationsOf(q("capture") ?? (body && body.captureSha)),
-    captureaccount: () => c.recordCaptureAccount({ ...(body || {}), by: q("by") ?? (body && body.by) }),
+    /* R98 (K4206): the account's instant is this instance's clock, as `op=sourcereach` takes its own (R90): a body's `at` is
+       not read, so a member cannot date an account the signature does not cover. In-process callers may still pass `at`. */
+    captureaccount: () => c.recordCaptureAccount({ ...(body || {}), at: undefined, by: q("by") ?? (body && body.by) }),
     /* N388: the accounts answer by the caller's sight; an unstamped call sees nothing (REC-30's fail-closed posture). */
     captureaccounts: () => c.captureAccountsOf(q("capture") ?? (body && body.captureSha), { viewer: q("viewer") ?? "" }),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
     acquire: () => c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
-                                          storeName: q("store") || "bio" }),
+                                          storeName: q("store") || "bio", ...(h.timings ? { timings: h.timings } : {}) }),
     archivelookup: () => c.archiveLookup({ address: (body && body.address) || q("address") }),
     /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
        plane's stamps, never the body's, and the body names only the archive. */
@@ -2857,4 +2863,14 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["captureSha","locator"], requires: ["captureSha"] } },
   heldrestore: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldrestore", "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record"),
     fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
+  /* K4206 (T51 FR-52): `acquire` hands its body to acquisition's act, which reads these fields; a call with none of locator,
+     continue or address is refused naming the locator (BAD_LOCATOR), an archive call without address naming it (BAD_ADDRESS).
+     `matchedSweep` is never read from the body (acquisition R31), so it is not declared. */
+  acquire: { classes: ["admin","member","probe","daemon"], mutating: true, weight: "substrate", description: localize("capture.declared.acquire", "substrate: the fetch layer (M2')"),
+    fields: { accepts: ["address","at","authority","coArchive","continue","file","for","locator","render","request","subresources","via"], requires: [["locator","continue","address"]] } },
+  /* K4206 (T51 FR-52; R98): `text` is read, and an empty one is C-118.6 by its row's words (R69), so it is accepted and not
+     required; a missing captureSha names itself (R98), a missing signature is refused naming the signature. The instant is
+     the server's (R98), so `at` is not declared. */
+  captureaccount: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: localize("capture.declared.captureaccount", "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested"),
+    fields: { accepts: ["captureSha","signature","text"], requires: ["captureSha","signature"] } },
 });

@@ -118,3 +118,13 @@ test("R104 B18 the reason the shell adds to a Reasoned act is a shell mark, not 
   assert.equal(page.byOp("memberadd").length, 1);
   assert.equal(page.byOp("memberadd")[0].body.reason, "because");
 });
+
+test("R104 B19 control: against the owners' real declarations a stand-in sending an undeclared field still fails the guard, and one sending what the owner declares passes", async () => {
+  const bad = { id: "doorbell", words: [], reads: () => ({}), acts: [{ op: "knock", send: () => ({ body: { text: "a memo" } }) }], render: (cs) => cs.act("knock") };
+  const good = { ...bad, acts: [{ op: "knock", send: () => ({ body: { content: "a memo" } }) }] };
+  const a = await boot({ screens: [bad], path: "/app/doorbell", session: null });
+  await assert.rejects(() => a.click('button[data-act="knock"]'), (e) => e instanceof FieldMismatch && e.op === "knock" && e.mismatches.some((m) => m.kind === "unknown" && m.field === "text"));
+  const b = await boot({ screens: [good], path: "/app/doorbell", session: null });
+  await b.click('button[data-act="knock"]');
+  assert.equal(b.byOp("knock").length, 1);
+});

@@ -20,11 +20,11 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
-import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
+import { caseImportOf, caseImportOps, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
 import { readCaseFile } from "../../../src/case-checker/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { caseFilePath, casePartDigest, CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CALCULATION_FIELDS, biasApplicationsLines,
-         biasApplicationsOf } from "../../../src/case-grammar/index.mjs";
+         biasApplicationsOf, lensBlockLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 
 /* as workerd binds: an ArrayBuffer is a BLOB (node:sqlite takes it as a typed array), and a BLOB reads back as an
@@ -114,12 +114,13 @@ export function findingText(id, pair = { capture: "B", connection: "C" }) {
 }
 /** The case document: its lens (`bias_manifest.statements_sha`) and the source's bar (`required_strength`). */
 export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar = { capture: "B", connection: "B" }, note = "",
-                              calcs = null, apps = null } = {}) {
+                              calcs = null, apps = null, printedLens = null } = {}) {
   return ["---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`, "bias_manifest:",
           `  in_force: ${lens ? "true" : "false"}`, `  statements_sha: ${lens ?? "null"}`, "required_strength:",
           `  declared: ${bar ? "true" : "false"}`, `  capture: ${bar?.capture ?? "null"}`, `  connection: ${bar?.connection ?? "null"}`,
           ...(calcs ? calculationsBlock(calcs) : []),
           ...(apps ? biasApplicationsLines(apps) : []),
+          ...(printedLens ? lensBlockLines(printedLens) : []),
           "---", "", `# Case ${caseId}`, note, ""].join("\n");
 }
 
@@ -141,10 +142,10 @@ export function calcInputAt(calc, hash) {
  *  document and its signature in part 1 and each other file in a part of its own. A document is a material, carried
  *  at `materials/<name>/document`. */
 export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, lens = LENS, bar, note = "", findings = [F1, F2, F3],
-                           pairs = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [], apps = null } = {}) {
+                           pairs = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [], apps = null, printedLens = null } = {}) {
   const at = (kind, key) => caseFilePath(kind, key);
   const files = [
-    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs, apps })) },
+    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs, apps, printedLens })) },
     { path: at("case_signature"), kind: "case_signature", bytes: bytes(`-----BEGIN SSH SIGNATURE-----\n${caseId}/${edition}\n`) },
     { path: at("complete_edition"), kind: "complete_edition", bytes: bytes(`<!doctype html><title>${caseId}</title>`) },
     ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id])) })),
@@ -184,6 +185,13 @@ export function world({ minimal = false, realChecker = false } = {}) {
   /* the producing group is `strength`'s dep (promotion's fact on the plane); accepted-work makes its own promotion */
   const strength = minimal ? { strengthBarOf: () => ({ ok: true, group: SLUG, bar: null }) }
     : strengthOf(host, { record, membership, producingGroup: () => SLUG });
+  /* R31: an own finding's pair (`strength.strengthOf`), as the test scripts it; and the project's findings
+     (`basis-versions.projectQuestions`, its R41) */
+  const pairs = new Map();
+  const baseStrengthOf = typeof strength.strengthOf === "function" ? strength.strengthOf.bind(strength) : null;
+  strength.strengthOf = (id, o) => (pairs.has(id) ? pairs.get(id) : baseStrengthOf ? baseStrengthOf(id, o) : { ok: false, reason: "NO_ID" });
+  const projectFindings = new Map();
+  const basisVersions = { projectQuestions: ({ project }) => ({ items: (projectFindings.get(project) ?? []).map((inquiry) => ({ inquiry, legs: false, stance: "none" })), cursor: null }) };
   const acceptedWork = minimal ? { registerAcceptedWork: (module) => ({ ok: true, module }) }
     : acceptedWorkOf(host, { record });
   /* case-checker's checkCaseFile, scripted per finding */
@@ -222,26 +230,37 @@ export function world({ minimal = false, realChecker = false } = {}) {
      reader lens does not name is reversed and named under `lens_changes` (the stand-in's convention: a reversed
      `grade_lowered` restores the capture axis to `from`; any other effect leaves the pair). With `realChecker`, the real
      `reweigh` re-weighs. Each records its calls. */
-  const lens = { inForce: new Map(), sha: "c3".repeat(32), asked: [], reweighed: [], throws: false, limit: "The checker's limit." };
+  const lens = { inForce: new Map(), sha: "c3".repeat(32), asked: [], reweighed: [], throws: false, limit: "The checker's limit.",
+                 /* R31: a project's effective lens (`bias.biasManifest` at project scope): its statements, false for no manifest
+                    in force, null for undetermined */
+                 project: new Map(), manifestAsked: [] };
   const bias = { statementInForce({ statement, scope, viewer }) {
     lens.asked.push({ statement, scope, viewer });
     const v = lens.inForce.has(statement) ? lens.inForce.get(statement) : false;
     return { ok: true, statement, scope: { type: "instance", id: "" }, in_force: v, kind: v ? "scrutiny" : null,
              text: v ? `the text of ${statement}` : null, bundle_id: v ? "BIA-home" : null, level: v ? "group" : null, locked: v ? false : null,
              statements_sha: v === null ? null : lens.sha, stated: v === null ? "undetermined" : v ? "in force" : "not in force" };
+  },
+  biasManifest({ scope, scopeId, viewer }) {
+    lens.manifestAsked.push({ scope, scopeId, viewer });
+    const m = lens.project.has(scopeId) ? lens.project.get(scopeId) : false;
+    if (m === false) return { ok: true, scope, scope_id: scopeId, in_force: false, statements: [], count: 0, total: 0 };
+    if (m === null) return { ok: true, scope, scope_id: scopeId, in_force: null, statements: [], count: 0, total: 0 };
+    return { ok: true, scope, scope_id: scopeId, in_force: true, statements: m, count: m.length, total: m.length, offset: 0, truncated: false };
   } };
   const reweigh = ({ parts, documents = [], answer, lens: reader }) => {
     lens.reweighed.push({ parts: parts.length, documents: documents.length, lens: reader });
     if (lens.throws) throw new Error("re-weighing down");
     if (lens.async) { lens.async = false; const r = reweigh({ parts, documents, answer, lens: reader }); lens.reweighed.pop(); return Promise.resolve(r); }
-    const held = new Set(reader.statements);
+    const named = typeof reader === "string" ? reader : "reader";
+    const held = new Set(named === "reader" ? reader.statements : []);
     const doc = readCaseFile(parts).files.find((x) => x.kind === "case_document");
     const carried = (doc && biasApplicationsOf(parseFrontmatter(new TextDecoder().decode(doc.content)).data)) || [];
-    return { lens: { name: "reader", statements: reader.statements, departure: null, not_applied: [] }, lens_statement: lens.limit,
+    return { lens: { name: named, statements: named === "reader" ? reader.statements : null, departure: null, not_applied: [] }, lens_statement: lens.limit,
              findings: answer.findings.map((f) => {
       const pair = f.pair ? JSON.parse(JSON.stringify(f.pair)) : null;
       const changed = [];
-      for (const a of carried.filter((x) => x.finding === f.finding && !held.has(x.statement))) {
+      for (const a of named === "as_published" ? [] : carried.filter((x) => x.finding === f.finding && !held.has(x.statement))) {
         if (pair && a.effect === "grade_lowered") pair.capture = { state: "graded", grade: a.from };
         changed.push({ ...a, how: "reversed" });
       }
@@ -257,7 +276,7 @@ export function world({ minimal = false, realChecker = false } = {}) {
     citedCaseMoved(q) { reeval.moved.push(q); if (reeval.movedThrows) throw new Error("moves listeners down");
                         return { ok: true, told: true, kind: "cited_case_moved", move: q.move.move, dependents: 0 }; } };
   const w = {
-    st, host, record, membership, strength, acceptedWork, clock, script, checker, reeval, lens,
+    st, host, record, membership, strength, acceptedWork, clock, script, checker, reeval, lens, pairs, projectFindings,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, for "nothing written", "append-only" and "byte-identical". */
@@ -271,6 +290,27 @@ export function world({ minimal = false, realChecker = false } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, ?, '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role, status);
     },
+    /** A project of this group as membership holds it: its bundle and its participants (`owner` owns and has joined; `joined`
+     *  have joined; `invited` have only been invited). */
+    project(id, { owner = "alice", joined = [], invited = [] } = {}) {
+      st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
+                   VALUES (?, 'project', ?, ?, 'forming', 't', 't', 'x')`, id, SLUG, `Project ${id}`);
+      const add = (m, state, own) => st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
+                                                  VALUES (?,?,?,?,'t','t')`, id, m, state, own ? 1 : 0);
+      if (owner) add(owner, "joined", true);
+      for (const m of joined) add(m, "joined", false);
+      for (const m of invited) add(m, "invited", false);
+      projectFindings.set(id, []);
+      return id;
+    },
+    /** A finding (an inquiry bundle) of a project, with the pair `strength.strengthOf` answers for it (null: none scripted). */
+    ownFinding(project, id, pair = null) {
+      st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, project)
+                   VALUES (?, 'inquiry', ?, ?, 'open', 't', 't', 'x', ?)`, id, SLUG, `Question ${id}`, project);
+      projectFindings.get(project).push(id);
+      if (pair) pairs.set(id, { ok: true, bundleId: id, ...pair });
+      return id;
+    },
     /** This group's default bar, as `strengthBarSet` leaves it. */
     bar({ capture = null, connection = null } = {}) {
       st.sql.exec(`INSERT OR REPLACE INTO group_strength_bar (group_id, capture, connection, author, at, reason) VALUES (?,?,?,?,?,?)`,
@@ -278,7 +318,7 @@ export function world({ minimal = false, realChecker = false } = {}) {
     },
   };
   w.ci = caseImportOf(host, { record, membership, strength, acceptedWork, reevaluation: reeval,
-                              ...(realChecker ? { bias } : { checkCaseFile, bias, reweigh }),
+                              basisVersions, ...(realChecker ? { bias } : { checkCaseFile, bias, reweigh }),
                               now: () => clock.now });
   return w;
 }
@@ -315,4 +355,12 @@ export async function refusedThenAccepted(w, bad, good, code) {
   const ok = await good();
   assert.equal(ok.ok, true, `${code}'s control: ${JSON.stringify(ok).slice(0, 300)}`);
   return r;
+}
+
+/** The op as the door runs it (`caseImportOps`): the stamps `viewer` and `by` in the query, every other field in the body. */
+export function door(w, op, { viewer = null, by = null, ...fields } = {}) {
+  const q = new URLSearchParams();
+  if (viewer !== null) q.set("viewer", viewer);
+  if (by !== null) q.set("by", by);
+  return caseImportOps(w.ci, new URL(`http://x/?${q}`), fields)[op]();
 }

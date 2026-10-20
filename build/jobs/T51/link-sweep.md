@@ -1,6 +1,6 @@
 # link-sweep (T51)
 
-**Status** · session_01HmAPWZPEejc5eMANEyUgYq · depth 2 · COMPLETE · handled B1
+**Status** · session_011Wj2qq9nxhTBq6sjHBwEG7 · depth 2 · COMPLETE · handled B6
 
 ## Completion (T51-242, words)
 
@@ -34,3 +34,59 @@ Choices, for BOB's record: a sentence whose text is a code fragment (`out_of_sco
 ## J1 · COMPLETE
 
 T51-242 (words) done on job/T51/link-sweep at 1af3138760 (code, tests) and the record's completion section. Words check for link-sweep: 0 failures (was 15). Module tests 29/29 pass. Format, architecture, coverage, ownership: 0 failures. setup-words --check: the expected stale-rows note for link-sweep.checks.is_missing only. Other modules' repo-wide findings (run.mjs words 1161, coverage 24; cross-module words 60) name no link-sweep line. Deferred: none. Waiting on BOB (J1).
+
+## J2 · REPORT
+
+Entries 1-4 (R13 sweepSet, R14 sweepRatify, R15 DECLARED_OPS for sweeps, sweepset, sweepratify) are built and pushed on job/T51/link-sweep, with tests (sweep-write.test.mjs, declared-ops.test.mjs; seam.test.mjs updated for the new row and ops). Three things are BOB's:
+
+1. monitoring R77's `sweepHost().write` is not on tranche/T51 nor on job/T51/monitoring yet (checked just now). My arms call `host.write({bundle, mutate, author, viewer, log})` as R77 states it (mutate edits the parsed object in place and returns it; log is the Session Log sentence). I ran my 39 tests against a throwaway stand-in of `write` kept outside the repo (all pass); they must be re-run against monitoring's real one. I will merge tranche/T51 after monitoring merges. Please tell me when it has, or say if the `write` shape differs.
+2. modules.json: `link-sweep` does not use `test-support`, so `node checks/architecture.mjs` fails on declared-ops.test.mjs ("imports bio-plane/test/declared-ops.mjs of test-support, which link-sweep does not declare in uses"). B2 says no edge to add; money and others have it. Please add `test-support` to link-sweep's uses.
+3. plane (not mine): `bio-plane/src/plane/store.mjs:863` calls `linkSweepOps(linkSweepOf(ctx), url)` without the body; `sweepset` and `sweepratify` read the POST body, so that line needs `, body` as every neighbour has. Until plane does so the two ops get an empty body.
+Also for the record: the new row MACHINE_CANNOT_SET_SWEEP took C-18.24 (monitoring's two new rows should take C-18.22 and C-18.23; renumber if they differ). Its translation is read by localize('link-sweep.checks.machine_cannot_set_sweep') since refusal.* rows do not exist in rows.mjs yet.
+
+## J3 · COMPLETE
+
+FR-37 (B2) complete on job/T51/link-sweep.
+
+Entries applied: 1 (R13 `sweepSet`, `op=sweepset`), 2 (R14 `sweepRatify`, `op=sweepratify`), 3 (R15 `DECLARED_OPS` extended with `sweepset`, `sweepratify`; the ratify screen's words by key), 4 (the `sweeps` declaration, already present, kept as is). Requirement lines R13–R15 are BOB's own (written K4189, still marked *(not yet met: T51)*; every id is now named by a test, so BOB may lift the mark). No new R line of mine was needed: R15 states all three declared ops.
+
+Against monitoring's real writer: after merging tranche/T51 (monitoring R77 is on it), `sweepHost().write({bundle, mutate, author, viewer, log})` has the shape J2 assumed; my 39 tests, which ran earlier against a stand-in, pass against it unchanged. Row `MACHINE_CANNOT_SET_SWEEP` stands at C-18.24 (B5).
+
+Deferred: none. Found in another module: the plane's `store.mjs:863` missing `body` (already sent to the plane by BOB, B5); otherwise none. Hand rows in `op-declarations`/`op-grades` for `sweepset`, `sweepratify`, `sweeps` can go now that this module declares them.
+
+Tests and checks (run after the last change, process repo pulled):
+- `node --test test/m/link-sweep/*.test.mjs` (bio-plane): tests 39, pass 39, fail 0.
+- format: 175 modules, 0 failures. architecture link-sweep: 0 failures. coverage link-sweep: 15 of 15 live ids named; 0 failures. ownership: 7 files changed by link-sweep; 0 failures.
+- words link-sweep: 0 failures; words monitoring following link-sweep scheduler: 0 failures (dev 3, unkeyed 52 are other modules').
+- setup-words `build.mjs --check`: stale-rows note only (names ai-accounts, not this module); no refusal.
+- `checks/run.mjs` full run not repeated this restart; the per-check runs above cover format, architecture, coverage, words and ownership for this module.
+
+Size (session_01Th8FDaUxr9PkjaKXvKcKvP): test runs 2, module lines 1230
+
+## J4 · COMPLETE
+
+B6 (CHANGE, K4230) applied on job/T51/link-sweep at cf794caf96 (tranche/T51 merged first, 11c04574b5).
+
+**Entries applied.** `needs` added to the two mutating rows of `DECLARED_OPS` (bio-plane/src/link-sweep/index.mjs): `sweepset` and `sweepratify`, each `needs: "contribute"`.
+
+**Choice and why.** `contribute`. A member's act on a team's sweeps is a member's own bundle-directed write that fetches nothing, the same shape as monitoring's `namedrequestset`, which declares `needs: "contribute"`. The owner-only ratify is refused by the arm (R3, R14: SWEEP_RATIFY_NOT_AN_OWNER), not by a capability. A stop by any writer is also `contribute`. `administer` is not a working capability in op-capabilities (it moves only by the roster's own mechanism), so it was not an option.
+
+**Requirement line.** R15 amended in build/requirements/link-sweep.md (K4230): every mutating row declares its `needs`; `contribute` for both.
+
+**Test.** declared-ops.test.mjs, "R15 link-sweep declares a need on every mutating op it serves ...": the shape check (no mutating row without `needs`, checked on this module's own rows; op-declarations is not imported), pins `contribute` on both, and a control names a mutating row with no need and passes a read. Written first and seen failing (sweepset and sweepratify listed as missing `needs`), then the two rows edited.
+
+**Deferred.** None.
+
+**Found in another module.** None in this job.
+
+**Tests and checks** (after the last change):
+- `node --test test/m/link-sweep/` (bio-plane): tests 40, pass 40, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio link-sweep`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio link-sweep`: 15 of 15 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio link-sweep`: 0 failures.
+- `node checks/run.mjs /home/user/bio` (saved output, grep for `link-sweep`: none): format 0 failures, architecture 1 failure, channels 0, coverage 4 failures, words 27 failures, all in other modules (run exit 1 from those).
+- `node bio-plane/src/setup-words/build.mjs --check`: "words-unreviewed.json is stale or absent". This job changed no sentence a member reads, so it is not from this change; no refusal names link-sweep.
+- `node checks/ownership.mjs /home/user/bio link-sweep tranche/T51 job/T51/link-sweep`: 1 failure, `build/requirements/link-sweep.md` outside link-sweep's paths, tests and job record. Per B3 that listing of the one requirements file is accepted at merge.
+
+**Size (session_011Wj2qq9nxhTBq6sjHBwEG7):** test runs 3, module lines 1230.

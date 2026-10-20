@@ -97,3 +97,15 @@ test("R52 action-plans declares planask: its requires alone raise no refusal nam
   await declaredOpHolds({ op: "planask", declaration: DECLARED_OPS["planask"], call: mk("planask", {"author":"member:bob","viewer":"member:bob"}, null, null, (fields, env) => (held(fields, env))),
     refusedNaming: named({"plan":["NO_SUCH_PLAN"]}, true), same: sameCode });
 });
+
+/* R53: optionadopt's proposal form is the one its requires name; a real proposal is given, so the refusal of an absent id is not the case tested */
+test("R53 action-plans declares optionadopt: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  const withProposal = async () => {
+    const w = mkWorld(0);
+    const p = await w.ap.optionPropose({ plan: w.PL, summary: "Hold a public meeting", category: "grassroots", subjects: [w.S1], why: "the clerk can take it up", proposer: BOB, viewer: BOB });
+    if (!p.ok) throw new Error("fixture proposal refused: " + JSON.stringify(p));
+    return { ...w, PR: p.proposal.id };
+  };
+  await declaredOpHolds({ op: "optionadopt", declaration: DECLARED_OPS["optionadopt"], call: mk("optionadopt", {"author":"member:bob","viewer":"member:bob"}, withProposal, null, (fields, env) => ({ ...held(fields, env), ...("proposal" in fields ? { proposal: env.PR } : {}) })),
+    refusedNaming: named({"proposal":["NO_SUCH_PLAN_PROPOSAL"]}, true), same: sameCode });
+});

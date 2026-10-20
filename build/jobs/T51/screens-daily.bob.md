@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -106,3 +106,31 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-daily tranche/T51 job/T51/screens-daily`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B12 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B13 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K4221): interface-shell's guard (merged) finds the `queue` screen's `promote` sending `project`, which promotion R61 does not accept (it requires `files`, `meta`, `snapKey`): send only the declared fields, read through the declaration, never a hand list (K3268). Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4233), for SCREENS-DAILY #11: queue-producers is merged; queue's follow-up is QUEUE #29 (merges before you). The Queue now carries three new kinds of item (C62's endorsement, owner vote and expertise confirmation, queue-producers R46–R48), each with its `door` and `summary_key`/`detail_key`; draw them by key (UX-DESIGN HANDOFF B422 holds the rows; until they land, tests that need those rows are accepted red by name). The add door's label is `act.projectowneradd.label.queue`, the removal's `act.projectownerremove.label.queue`.
+
+## B16 · CHANGE
+
+CHANGE (K4236). Merge tranche/T51 into your branch first (capture, link-sweep, wizard-scripts, queue, control-plane, contradiction and screens-action are merged).
+Home's front doors send fields `startfrom` does not take: `home.mjs` ~199 and ~202 pass `data: {door}` and `{script, version}` to `cs.act("startfrom", …)`, and wizard-scripts declares `startfrom` accepting only `message` and `parts` (its arm reads nothing else, R23, R37). The guard refuses it (FieldMismatch), so control-plane's t47-e2e R81 walk is red on the tranche. The door, script and version are the screen's own state: keep them on the screen (view state) and send `startfrom` with only declared fields (none, or `message` where the member typed one). Test at your interface: the door press sends no undeclared field and still opens the door's offer in place; then run `node --test --test-force-exit bio-plane/test/m/control-plane/t47-e2e.test.mjs` (its R81 wizard walk must pass) beside your suite.
+
+## B17 · CHANGE
+
+CHANGE (K4238): SCREENS-DAILY #12, depth 2 (BOB #234 is depth 1), continues FR-27 from #11's record ("Progress (SCREENS-DAILY #11, FR-27)", J8). Your branch carries the tranche.
+Left: R75 (C62's authority form, endorsement, owner-vote and expertise items and their acts on Home and the queue), R68 (Defer), R69 (snoozed section, Bring back), R79 (helps, unkeyed pair, date input, answered rows, Open Members), then the checks and COMPLETE.
+Answers to J8: (1) words no key holds (Defer, Bring back, the held/inbox count sentence, R75's four form labels): use your guessed keys; BOB forwards them to UX-DESIGN with B422; tests needing those rows are accepted red by name until it answers. (2) `filingapprove`'s door stays with the screens the registry names. (3) the signing-key item's "Mark it done": draw it only if its owner declares an op for it; else REPORT. (4) startfrom takes no `door`: R40's wording is BOB's to fix (done with this CHANGE's ruling). (5) queue-states R58's set arm: `proposedispose`'s declaration requires top-level fields though its set arm carries them per item: QUEUE #30 fixes the declaration; keep that test red by name until BOB tells you it merged.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): read your record, requirements, code and the tests naming the ids you change, whole (long files in consecutive ranges). Model sonnet, medium effort; workers sonnet medium, haiku low. Post BLOCKED (context) again at half your window.

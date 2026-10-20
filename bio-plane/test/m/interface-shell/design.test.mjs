@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { interfacePage, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
-import { boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
+import { fitSend, boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
 import { documentOf } from "./dom.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { ALL, HELD } from "./screens.fixture.mjs";
@@ -302,7 +302,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
   const cases = [["front", "login"], ["finder", "search"], ["home", "promote"], ["capture", "acquire"], ["queue", "queuemute"]];
   for (const [id, op] of cases) {
     assert.ok(Object.hasOwn(MARKS, op), op + " in MARKS");
-    const s = { id, reads: () => ({}), acts: [{ op }], render: fn(`return cs.act("${op}");`) };
+    const s = { id, reads: () => ({}), acts: [{ op, send: fitSend(op) }], render: fn(`return cs.act("${op}");`) };
     const p = await boot({ screens: [s], path: "/app/" + id, plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "create_projects", "publish"] }) } });
     const b = btn(p, op);
     assert.ok(b, op);
@@ -323,7 +323,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
     assert.equal(p.byOp(op).length, 1, op + " runs on press");
   }
   /* control: a weighed act carries its weight */
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release", send: fitSend("release") }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
   assert.equal(btn(q, "release").querySelector(".w").hasAttribute("data-mark"), false);
   assert.equal(btn(q, "cite").querySelector(".w"), null, "R77: a Reversible act draws no weight");

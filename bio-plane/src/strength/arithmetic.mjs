@@ -93,10 +93,13 @@ function stoppedAt(exhausted, depthBound) {
  *  structured never silently becomes stronger. An undetermined ground beside a graded one is named, and can only have
  *  been stronger; the axis is undetermined only when the implicit part is, or every ground is.
  *
+ *  `cutting` (R42, K4213) holds the members of the legs that cut against the finding. They are in no part and in no
+ *  ground, and are reported beside the answer with their own grades, never folded into it.
+ *
  *  EVERY `detail` BELOW IS MEMBER-FACING (D-269): it is printed on the inquiry page, on the published case, beside the
  *  leg that set the grade, and inside a leg's `why`. DEC-32 clause 1 therefore binds here: the sentences never say AND,
  *  OR, disjunction or grounds. They use UI-27's elicitation words, "sets of reasons" and "carries it on its own". */
-export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
+export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND, cutting = []) {
   /* The partition, in first-appearance (document) order. */
   const keys = [];
   const bucket = new Map();
@@ -128,7 +131,11 @@ export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
   const allExhausted = grounds.flatMap((g) => g.undetermined_at ?? []);
   const loadBearing = grounds.reduce((n, g) => n + g.load_bearing, 0);
   const population = grounds.reduce((n, g) => n + g.population, 0);
-  const withGrounds = (o) => structured ? { ...o, grounds } : o;
+  /* R42 (K4213): a cutting leg is in no part; its own result is kept beside the axis, never folded into it. */
+  const withGrounds = (o) => {
+    const grounded = structured ? { ...o, grounds } : o;
+    return cutting.length ? { ...grounded, cutting: cutting.map(namedMember) } : grounded;
+  };
   const nlb = inert.map((m) => m.target_id).join(", ");
   const label = (g) => `"${g.ground}"`;
 

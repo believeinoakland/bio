@@ -20,7 +20,7 @@ function reads(view) {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     people: { op: "peopledirectory", query: { limit: "200" } },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
-    docs: { op: "heldcaptures", query: { project: id, limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { project: id, limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
   if (mode === "matter" && key && eid) out.matter = { op: "instance", query: { key, id: eid } };
   if (mode === "progression" && key) out.def = { op: "progression", query: { key } };
@@ -133,6 +133,8 @@ function render(cs, view) {
   const qs = view.data.questions && view.data.questions.state === "ok" && Array.isArray(view.data.questions.value.bundles) ? view.data.questions.value.bundles : [];
   const cited = doc ? doc.refs.filter((r) => /^INQ-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target) : [];
   const qChoice = cited.map((q) => { const b = qs.find((x) => x.bundle_id === q); return { value: q, text: (b && b.title) || q }; });
+  /* R49: the first expected flow is defined from the project's own timeline, not only from inside a flow's page */
+  if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
     P.docChoice(cs, view, "tl-doc")
     + cs.choice("tl-kind", S + "evkind", ["vote", "meeting", "decision", "award", "statement", "filing", "other"].map((k) => [k, S + "evkind." + k]), {})

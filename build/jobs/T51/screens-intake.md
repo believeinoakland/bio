@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_01XiUV1oniArn1H66oUHgn4p · depth 2 · COMPLETE · handled B6
+**Status** · session_0135JUZBcFJA8xpZHnkjPVFw · depth 2 · COMPLETE · handled B11
 
 ## Record
 
@@ -12,6 +12,16 @@
 - **DEC-342** (`capture.mjs`): `promoteDocument` no longer falls back to the builder's `detail`; a promotion's refusal is drawn by `refusal.<CODE>` when the table holds it, else the answer's translation, else `refusal.uncatalogued` with the code; the same for open-file's refusals.
 - **Words** (4 findings): the five-code hand-list in `capture.test.mjs` is now the screen's own `refusals`; the ops hand-list in `common.test.mjs` is assembled from the open-file screen's own `reads` and `acts`; the two test copies ("Captured for a question you may not see", "It contains a macro.") are neutral fixtures. `capture.test.mjs`:66's regular expression compares with `refusal.HOST_COOLING_OFF` by key.
 - Tests: R38 (7 tests), R39 (4), R40 (2, and the R35 tests re-read for R40), refusal-words controls. `heldat` is stubbed in the tests: it is declared in `op-declarations` only by T51-107.
+
+**Fix round FR-26 (SCREENS-INTAKE #10, START B7, CHANGE B8/B9):** entries applied: 1 (R42), 2 (R43), 3 (R44), 4 (R45), 5 (R46), 6 (R47), 7 (R48, built now: the START says B406 is drawn), 8 (R49), 9 (R50), 10 (R51). The new and amended requirement lines are in `build/requirements/screens-intake.md` (R42–R51, each marked not yet met: T51), not here.
+
+- **R42** `capture.mjs`: `checkOutcome(cs, answer, title)` draws `screen.capture.address.checked.{modified,removed,unchanged,unknown}` from `status` and `note`; exported by name from `bio-plane/src/screens-intake/index.mjs` for `screens-inquiry` (the one owner, K4164; carried in `parts` as `capture`'s own are). The four rows are not yet in `words.json` (HANDOFF B419; B10 accepts the `hasWord` tests red by name until they land).
+- **R43** new `about-knocker.mjs` (`sourceof` by the capture digest, `sourcerung`, `sourcepublishable`, `memberlist`, `peopledirectory`; `sourcedisclose`, `sourceconsent`, `sourceconsentwithdraw`, `sourcepersonlink`, `writinghelp`); `inbox.mjs` draws `knocksof` ("Other material from this knocker", only where another knock of the secret is in the inbox) and the door to the source.
+- **R44** new `leads.mjs` (`lead`, `leadread`, `leadlook`, `leadshare`, `writinghelp`). **R46/R48** new `watching.mjs` (`monitoring`, `monitorpause`, `monitorslate`, `sweeps`; `namedrequests`, `namedrequestset`, `sweepset`, `sweepratify`, `writinghelp`).
+- **R45** the render choice and the told-and-unoffered web archive; **R47** the login section (`capturerequests` read; `capturecredentialsupply` then `capturerequestretry`; list and withdraw); **R49** `doneAcquire` asks `heldat` by digest on `existed: true`; **R50** working line, status line under the button, untitled name (kind and site), existed link, `ACQUIRE_TIMED_OUT` by its key; **R51** `held.mjs` "Open it".
+- Existing tests changed because behaviour R49/R50 amend: titles of untitled captures (R33 control and its callers: "A PDF from www.example.gov", never the file part), `existed: true` no longer "captured" (the callers script `heldat` by digest or a promotion), `t48` R18 (the credential section is its own, so the capture's acts are counted as the row holding `acquire`), `common` R9 (`capturerequests` is a screen read) and R8/R15 (eight screens), `page.mjs` (registers the owners' new declarations through the harness collector).
+- **Not built:** I-34 (progress while a timestamp is made; the act is not identified, as the START says). "A link to another source" is not offered in `sourcedisclose`'s kind choice: the drawing gives it no target field (the inbox's `sourcelink` records a link). "Add another place" is not a button: the places are one to a line.
+- **Reds:** see the REPORT (the `hasWord` reds by name, and the reds that are another module's).
 
 **Deferred / reported (REPORT to BOB):**
 1. R39's mismatch test (`open-file.test.mjs`, "R39 altered bytes hand nothing over") is red until `interface-shell` R98 (`cs.download`'s `verify`) is merged: the kit in `tranche/T51` ignores `verify`. The match, safe-view and control tests pass because the stale kit hands the bytes over unchecked; after the merge the matching tests prove the check too (their bytes hash to the subject).
@@ -50,3 +60,65 @@ COMPLETE (T51-117), B5 applied. `tranche/T51` merged; the suite runs against the
 ## J4 · COMPLETE
 
 COMPLETE (B6, K4094). held no longer draws a slug: a row names its project by the name projectlist gives (a project it does not name is not drawn, never its id), and an archive file with no name is screen.held.untitled, never its document id. Test B6 with controls; 124 of 124 module tests pass; words 0 failures, coverage 40 of 40, architecture and ownership clean.
+
+## J5 · QUESTION
+
+Entry 1 (C55, R42) needs four member-facing sentences that no drawn row holds. I searched `words.json` and `rows.mjs` (keys under `screen.capture.address.*`, `screen.document.monitor.*`, `monitoring.*`): the only drawn one is `screen.capture.address.checked` ("Checked {title} just now…"), which is today's single answer. The `monitoring.note.*` rows are the plane's own notes, already English in the answer, not drawn rows. Words rules (K3810, DRAWN_MODULES) forbid me `localize` in a screens module and forbid inventing a sentence on a drawn screen.
+
+My best reading, which I am building now: four keys in place of `screen.capture.address.checked`, chosen by the answer's `status` (modified / removed / unchanged, any other or none = could not be told), each with `{title}`, the last also with `{note}` (the plane's note, drawn as record data):
+- `screen.capture.address.checked.modified`: "Checked {title} just now: the page reads differently from the copy your team holds. Nothing was captured; capture it again to keep the new copy."
+- `screen.capture.address.checked.removed`: "Checked {title} just now: the site no longer gives this page. The copy your team holds is kept."
+- `screen.capture.address.checked.unchanged`: "Checked {title} just now: the site still gives the same document your team holds."
+- `screen.capture.address.checked.unknown`: "Checked {title} just now, but it could not be told whether the page changed: {note}"
+
+Please have UX-DESIGN write these four rows (or give the rows they prefer) into `words.json`; I will use the keys as I give them and rename on your word. `screens-inquiry` will import one exported function, `checkOutcome(cs, answer, title)`, returning the sentence's HTML; it is carried in a screen's `parts` as `capture.mjs`' own parts are. Until the rows exist my R42 tests cannot pass `hasWord`; I carry on with the other entries and will post BLOCKED (cause: needs Bob? no: needs the design's rows) only if they are still absent when everything else is done.
+
+## J6 · QUESTION
+
+Entries 2, 3 and 5 (R43, R44, R46) and entry 6 (R47): the drawn screens `about-knocker`, `leads`, `watching` and capture's login section have **headings, field labels, options and status words that no word row holds** (DEC-375/381 wrote the sentences, not these labels; `mock-screens.js` draws them inline). K3810 and the words check (`DRAWN_MODULES`) forbid me to write them, so I need rows. I compared every English literal of the four drawings with `words.json` (rows I could reuse with the same English are used already). Missing, with the key I will read them by, English exactly as drawn, so UX-DESIGN can add them under these keys or tell me theirs; I rename on your word:
+
+about-knocker: `screen.about-knocker.known.head` "What became known"; `.attribute.label` "Which attribute"; `.attribute.occupation` "Occupation"; `.attribute.employer` "Employer"; `.attribute.role` "Role"; `.kind.name` "A name"; `.value.label` "What it is"; `.value.help` "At most 400 characters."; `.knownto.label` "Who knows it"; `.audience.member` "One member"; `.audience.group` "The team"; `.audience.public` "The public"; `.evidence.label` "Your evidence"; `.confirms.none` "No claim"; `.consent.detail` "Which detail"; `.person.which` "Which person"; `.notrecorded` "not recorded".
+leads: `screen.leads.mine.head` "Your leads"; `.one.head` "One lead"; `.written` "Written by you on {date}"; `.look.head` "Record a look"; `.look.opt.unclear` "Could not tell"; `.look.opt.found` "It is there"; `.look.which` "Which one"; `.share.head` "Share it with a project"; `.share.project` "Which project"; the four result words as the list shows each look (drawn once: "We looked and could not tell"): `.state.absent`, `.state.unclear` "We looked and could not tell", `.state.part`, `.state.found` (the other three are not drawn; please word them).
+watching: `screen.watching.running.head` "The watching"; `.running` "Watching is running."; `.paused` "Watching is paused."; `.pause` "Pause the watching"; `.resume` "Resume the watching"; `.list.head` "Every watched address"; `.counts` "{due} due now · {scheduled} scheduled · {unscheduled} not scheduled · {ended} ended"; `.slate.head` "What is due"; `.sweeps.head` "Sweeps"; `.sweep.budget`/`.sweep.pages` "{count} pages".
+capture's login section: `screen.capture.cred.askedby` "Asked for by {name}, {date} · tried {count} time(s)"; `.givenby` "Given by {name}, {date}".
+Also for C55 (my J5): the four `screen.capture.address.checked.*` rows.
+
+Until the rows exist my tests for these cannot pass `hasWord`; I build everything else, and if they are still absent when the rest is done I post BLOCKED (cause: needs the design's rows) rather than invent a sentence.
+
+## J7 · REPORT
+
+REPORT (FR-26, found in other modules and in the design; none blocks my COMPLETE):
+
+**Other modules (each shown by a test of mine that is red on `tranche/T51` for that cause alone):**
+1. `wizard-scripts` `DECLARED_OPS.writinghelp` accepts `field`, `told`, `draftHeld` but not `op`, which its arm reads (`writingHelp({op, field, …})`, R27: the act the draft is for). Every screen's `{op, field, told}` request therefore fails interface-shell's guard (`FieldMismatch … writinghelp sent op`). Red since before this round: `capture.test.mjs` "R3 R10 writinghelp under the words…" and "…carries the test-instance label…". My three new screens send the same body; their tests only draw the button (`t51-common.test.mjs`). Fix: add `op` to `accepts`.
+2. `op-declarations`: `SESSION_OPS.member` and `.admin` do not hold the reads `knocksof`, `leadread`, `monitoring`, `monitorslate`, so `cs.act` draws none of them for a member (their hand rows are `classes: [admin, member]`). Red for that cause alone: `common.test.mjs` "R8 every act … a member's session reaches … every registry act is drawn", R43 "the knocker's other material", R44 "reading it back / recording a look / sharing / the refusals", R46 "an empty list… the list act" and "what is due".
+3. `link-sweep` `DECLARED_OPS.sweepset` and `.sweepratify` are mutating with no `needs`: `registerDeclaredOps` refuses them (`NEEDS_MISSING (R80)`), so `OPS` never holds them (my `watching` act list names them, as the registry's owed acts). My test helper adds `needs: "contribute"` and the stamps to those two rows only for the page (`page.mjs`), so the screens' requests are still held to link-sweep's declared fields. Nothing registers the new ops (`capturecredential*`, `namedrequest*`, `sweep*`) for the served plane yet (`registerDeclaredOps` is called by tests only): FR-32's, I assume.
+4. `observation-log` has no read that lists a member's leads (`leadread` needs an id): the design draws "Your leads, every lead you can read". The screen keeps the leads written in the visit in page memory and opens one by its id (`/app/leads/<id>`); leads written in an earlier visit are unreachable from the screen. A list read would close it.
+5. `interface-shell` has no hook for a refused act: the capture's working line (`screen.capture.address.working`, A1) is cleared when the answer is drawn (`done`) and after 90 s by a page timer; after a refusal it stays up to 90 s. A `failed` hook on an act would end it at once.
+6. `interface-shell`'s own test `t50.test.mjs` "R73 … every act of the nine screen modules' real SCREENS composes" is red because of my `capture` and `watching` act lists: the served `OPS` holds `capturecredential*`, `namedrequestset` and `sweep*` only once an owner's `DECLARED_OPS` is registered, and nothing in the process registers them (item 3). It turns green when the plane's assembly (FR-32) or the harness registers them. The other interface-shell reds I compared (acts, frame, kit, session, b17: 12 tests) are the same 12 with my module as the tranche has it.
+7. Generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` (the page's source) is stale by this change.
+
+**The design (UX-DESIGN):**
+8. Rows I read that `words.json` lacks (J5, J6; B10, B11 accepted them red by name): the four `screen.capture.address.checked.*`; and `screen.about-knocker.{known.head, attribute.label, attribute.occupation, attribute.employer, attribute.role, kind.name, value.label, value.help, knownto.label, audience.member, audience.group, audience.public, evidence.label, confirms.none, consent.detail, person.which, notrecorded}`, `screen.leads.{mine.head, one.head, written, look.head, look.opt.unclear, look.opt.found, look.which, share.head, share.project, state.absent, state.unclear, state.part, state.found}`, `screen.watching.{running.head, running, paused, pause, resume, list.head, counts, slate.head, sweeps.head, sweep.pages}`. **One more than J6 gave:** `screen.watching.project` "Which project" (the named request and the sweep are kept in a project's gathering file; the drawing has no field for which project, and `namedrequestset` and `sweepset` require `bundle`). Not read after all: `screen.capture.cred.askedby` and `.givenby` (J6 proposed them; the login rows draw the member by handle, then the day, with no connecting words).
+9. Drawing/owner mismatches I resolved without asking: the sweep's "How often" offers daily, weekly and monthly (link-sweep R1 takes no hourly or none; the drawing offers five); the budget is one field, `per_run`, and `backlog` is sent as ten times it, at most 1,000 (R1 requires both); "Add another place" is not a button (the places are one to a line); "A link to another source" is left out of the disclose form (no target field is drawn; the inbox's `sourcelink` records a link); the render choice's legend "What to keep" has no row on the capture screen, so it reads `screen.watching.sweepdef.match` (same English); "Open the source" has no row, so the door is labelled by the target screen's name `screen.about-knocker.name`.
+10. The whole-draw reset of a `cs.choice` to its seeded value after any redraw (a chosen audience returns to "The team" after the first act) is the kit's (R90), not this module's.
+
+The reds this module's own record names for the missing rows (they pass with the rows present, shown by a local overlay of exactly the rows listed above): every test that draws a key of item 7 (R42 ×2, R43 ×3, R44 ×7, R46 ×6, R48 ×2, R26 ×2, R14 "NOT_MONITORED…", R16 "Check it now").
+
+## J8 · COMPLETE
+
+COMPLETE (FR-26, SCREENS-INTAKE #10). All ten entries applied: 1 (R42), 2 (R43), 3 (R44), 4 (R45), 5 (R46), 6 (R47), 7 (R48, built now as the START says the drawing is merged), 8 (R49), 9 (R50; I-34 not built, as the START says), 10 (R51). Pushed on `job/T51/screens-intake` (merged `tranche/T51` @ ed9d7a119b). The new and amended requirement lines are in `build/requirements/screens-intake.md` (R42–R51, each marked not yet met: T51), not in the record; the ownership check lists that one file, accepted at the merge (K4210).
+
+**Exported for `screens-inquiry`:** `checkOutcome(cs, answer, title)`, a named export of `bio-plane/src/screens-intake/index.mjs` (defined in `capture.mjs`), answering the HTML of the sentence for the check's `status` and `note`; also carried in `capture`'s `parts`. It reads `screen.capture.address.checked.{modified,removed,unchanged,unknown}`.
+
+**New screens** registered in `SCREENS` (eight now): `about-knocker`, `leads`, `watching`. The inbox gains `knocksof` and the door to the source.
+
+**Tests and checks** (clean tree, no overlay): module tests 177, pass 149, fail 28. The 28 are, by name:
+- *Accepted red until the design's rows land (B10, B11; HANDOFF B419, B423):* every test that draws a key of REPORT item 8: R42 ×2, R43 "nothing known / recording what became known / what became known and how", R44 ×7, R46 ×6 (the list, pause and resume, the non-administrator, the sweeps, an empty list, what is due: the last two also red for item 2), R48 ×2, R26 ×2 (each screen's keys are words; the capture screen's keys), R14 "NOT_MONITORED…", R16 "Check it now". With exactly those rows added by a local overlay (not committed) every one of them passes.
+- *Another module's, REPORT items 1–3:* R3 ×2 (`writinghelp` declaration omits `op`), R8 "every registry act is drawn / a member's session reaches" and the tests above that also need `knocksof`, `leadread`, `monitoring`, `monitorslate` in `SESSION_OPS`.
+With the rows and those four reads present (both overlays) the module is 175 pass, 2 fail (the `writinghelp` pair only).
+`format` 0 failures; `architecture screens-intake` 0 findings; `coverage screens-intake` 50 of 50 ids named; `ownership` one file (the requirements file, above); `checks/run.mjs`: words shows only `missingkey` for the keys of REPORT item 8 (6 literal keys in my tests), no `inline`, `copy` or `marker` for my files (I fixed a `testcopy` of mine). Existing tests changed for behaviour R49/R50 amend are listed in my record.
+
+**Not done, by the START or by an owner:** I-34 (progress while a timestamp is made; the act is unidentified). The `interface-shell` and other reds in REPORT (J7). Entry 7's `writinghelp` is under the request's description only.
+
+Size (session_0135JUZBcFJA8xpZHnkjPVFw): test runs 48, module lines 2155

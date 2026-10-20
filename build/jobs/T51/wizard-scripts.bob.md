@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J9
+**Read** · handled J14
 
 ## B1 · START
 
@@ -95,3 +95,19 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio wizard-scripts tranche/T51 job/T51/wizard-scripts`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B11 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B12 · ANSWER · re J11
+
+ANSWER J11 (K4213): declare all eight in `DECLARED_OPS` now (none waits). Descriptions are each op's `act.<op>.does` key: words.json holds all eight (`act.writinghelp.does`, `act.wizards.does`, `act.startfrom.does`, `act.wizarddraft.does`, `act.wizardrevise.does`, `act.wizardsubmit.does`, `act.wizardapprove.does`, `act.wizardretire.does`), so no `localize` and no new row. (1) `writinghelp` is declared by its owner like every op (K4168): accepts `field`, `told`, `draftHeld`, requires `field`, `told`; the door's route stays. (2) The testcopy in `op-grades` owners.test.mjs:118, and any hand description of op-grades that the agreement check finds disagreeing with your declared key, are op-grades' to fix: sent to its job as a CHANGE; your branch and op-grades' merge together, op-grades first, so the registration never disagrees on the tranche. Name in your COMPLETE every op for which op-grades' `registerDeclaredOps` answers `DECLARED_OP_DISAGREES` on your branch.
+
+## B13 · CHANGE
+
+CHANGE (K4227), a new job session (WIZARD-SCRIPTS #17, haiku): `DECLARED_OPS.writinghelp` (R46) omits `op`, which the arm requires (`writingHelpAt` answers `WRITING_HELP_REFUSED` without a non-empty `op`; R27's body is `{op, field, told, draftHeld}`), so the guard refuses every screen's request. Add `op` to `accepts` and `requires` (`requires: ["op", "told"]`), check the other seven rows the same way against their arms, and keep your declared-ops tests holding (with a control: a body without `op` is refused naming it). Amend R46's line (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B14 · CHANGE
+
+CHANGE (K4231), a new job session (WIZARD-SCRIPTS #18, haiku): `DECLARED_OPS.wizardrevise` requires `[version, steps]`, but the arm also takes `adopt` with no `steps` (a copy whose base changed), so the guard refuses screens-wizards' library tests "R1 wizards: a state pressed…" and "R1 a copy whose base changed…". Make it `requires: ["version", ["steps", "adopt"]]` and `accepts` `adopt`; recheck every row's alternatives against its arm's every path (not only the first); keep the declared-ops tests with a control for the adopt path. Write the wording for R46 in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

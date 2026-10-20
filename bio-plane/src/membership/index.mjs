@@ -1294,6 +1294,9 @@ export class Membership {
   expertiseDeclare(...a) { return this.members.expertiseDeclare(...a); }
   expertiseConfirm(...a) { return this.members.expertiseConfirm(...a); }
   expertiseList(...a) { return this.members.expertiseList(...a); }
+  expertiseWithdraw(...a) { return this.members.expertiseWithdraw(...a); }
+  expertiseAwaitingConfirmation(...a) { return this.members.expertiseAwaitingConfirmation(...a); }
+  endorsementsOwed(...a) { return this.members.endorsementsOwed(...a); }
   handleCheck(...a) { return this.members.handleCheck(...a); }
   handleChange(...a) { return this.members.handleChange(...a); }
   founderHandle(...a) { return this.members.founderHandle(...a); }

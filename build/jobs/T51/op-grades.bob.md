@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J12
+**Read** · handled J14
 
 ## B1 · START
 
@@ -103,3 +103,39 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio op-grades tranche/T51 job/T51/op-grades`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B14 · CHANGE
+
+CHANGE (K4210): also drop RUNG_ABSENT.securitymap (t48.mjs; ground caller-owned): securitymap is a read and your NON_ACTS row already states it, so its owner (credentials) declares it as weight read and the registration must agree. Test: securitymap is graded read once; control: a ground on a read still refused. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B15 · CHANGE
+
+CHANGE (K4213; review J4, wizard-scripts J11): two more entries. (1) `t47.test.mjs:250` copies `NON_ACTS.reviewcomment`'s sentence, which review's `DECLARED_OPS.reviewcomment` now makes a word (`review.declared.reviewcomment`): read the expected text through the word or the declaration (P7's mechanical fix, as part D's `declaredSentence`). (2) `owners.test.mjs:118` copies the start of the hand description the five wizard-drafting ops share; wizard-scripts now declares `writinghelp`, `wizards`, `startfrom`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire` with descriptions `act.<op>.does`: read the test's expectation through the declaration, and where your hand row's description for one of them disagrees with the declared key, make the hand row agree (it is deleted in the second pass anyway). Your branch merges just before wizard-scripts'; say in your COMPLETE which of the eight you changed.
+
+## B16 · CHANGE
+
+CHANGE (K4217): one more entry of the same kind as B15 (1): seven `testcopy` findings on tranche/T51 since file-safety's `DECLARED_OPS` (R48) made its op descriptions words: `t36.test.mjs` lines 47, 49, 52, 55, 59, `t47.test.mjs`:36, `t48.test.mjs`:34 copy those sentences. Read each expected text through the declaration or the word (`declaredSentence`), keeping every control; `node checks/words.mjs /home/user/bio op-grades` must read 0.
+
+## B17 · CHANGE
+
+CHANGE (K4218; member-roster J6): three more copies of the same kind: `t41.test.mjs`:24 and `t46.test.mjs`:195 (`handlecheck`) and `t49.test.mjs`:27 (`founderhandleset`) copy sentences member-roster's `localize` calls now hold (member-roster R80, R81). Read them through `declaredSentence` as the others.
+
+## B18 · ANSWER · re J13
+
+ANSWER J13 (K4219): option 2. No edges: BOB regenerates `rows.mjs` so every declared sentence has its row, and every copy reads through `declaredSentence` (K3268). Your session is archived now (it would wait on other merges); OP-GRADES #18 restarts once review, wizard-scripts and control-plane have merged, and converts every copy then in one go: t36 47/49/52/55/59, t47:36, t48:34, t41:24, t46:195, t49:27, t37:26 (control-plane's `subscriptionsignin`), owners:84 (case-import's `import_directed`), t47:250 (review's `reviewcomment`), owners:118 (wizard-scripts' eight ops), with any hand description that disagrees with a declaration made to agree. Your B13/B14 work on the branch stands.
+
+## B19 · CHANGE
+
+CHANGE (K4221), for OP-GRADES #18: (1) credentials declares `securitymap` (merged): the hand row `RUNG_ABSENT.securitymap` (t48.mjs) disagrees and goes, so the declaration registers; (2) case-inputs (merged) holds two sentences your tests copy: `owners.test.mjs`:43 (`whatchangedpropose`) and `t47.test.mjs`:248 (`statementack`): read them through `declaredSentence` like the others of B18. Other hand rows of declared ops stay until the round's second pass (K4168).
+
+## B20 · CHANGE
+
+CHANGE (K4223), for OP-GRADES #18: your hand rows disagree with owners' merged declarations, which R50 refuses at the plane's registration; bring each hand row to the owner's declaration (the owner's is the truth, K4168): (a) the descriptions of wizard-scripts' eight (`wizards`, `startfrom`, `writinghelp`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`: each is its `act.<op>.does` word; your sentences near index.mjs 825–828, 1523–1548 and t34.mjs:73); (b) `accountusesset` and `caseratify` (description); (c) `securitymap` (weight and description; see B19); (d) `groupdescriptiondraft` (declared weight `reasoned`, your hand weight is caller-owned); (e) `sweeps` (declared `reversible`, yours `read`). The full list with lines: `build/plan/draft-handrows-T51.md`. Your test then registers every owner's `DECLARED_OPS` through test-support's collector and expects no DECLARED_OP_DISAGREES.
+
+## B21 · CHANGE
+
+CHANGE (K4229), for OP-GRADES #18: review, wizard-scripts and control-plane are merged and `rows.mjs` is regenerated on the tranche (member-roster's R80/R81 rows are there now, so `declaredSentence` resolves them: J13/J14's blocker is gone). Apply B18, B19, B20 together: every `testcopy` finding in your tests (run `checks/words.mjs` over op-grades: owners, t35, t36, t37, t41, t46, t47, t48, t49) reads its sentence through `declaredSentence`/the key, and every hand row that disagrees with an owner's declaration follows the owner. Done when words shows 0 for op-grades, your suite passes, and a registration of every owner's `DECLARED_OPS` meets no DECLARED_OP_DISAGREES. Merge `tranche/T51` first.
+
+## B22 · CHANGE
+
+CHANGE (K4230), with B20: the plane's start also finds action-holds' `actionpressure` and `pressurerecord` descriptions disagreeing with your hand rows (action-holds merged): bring them to the owner's declaration too. `sweepset`/`sweepratify`'s NEEDS_MISSING is link-sweep's (LINK-SWEEP #5).

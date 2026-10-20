@@ -53,6 +53,8 @@ const verdict = (capture_sha, tool, engine, fields) => ({ capture_sha, tool, eng
      refresh[id]()        → a reputation list refresh's answer (default {ok, list_version, fetched_at}); `NO_LOCAL_LIST`
                             for a tool with no local list
      test[id]             → {passed, detail}
+     signatures           → the signature state /version answers (default: a set published an hour ago); `null` versions and
+                            `published` is a scanner that has mirrored none
      render(sha, route)   → bytes | {code, detail}
    Every request is recorded as `{path, body}`. */
 export function scanner(script = {}, { now = () => T0 } = {}) {
@@ -68,7 +70,7 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
       calls.push({ path: u.pathname, body, method: req.method });
       const at = now();
       if (u.pathname === "/version") return reply({ ok: true, name: "file-scanner", version: "1.0.0", clamav_version: "1.4.3",
-        signatures: { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
+        signatures: s.signatures ?? { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
         providers: {}, reputation_lists: s.lists ?? [], renderer_version: "libreoffice 7; poppler 24", bounds: {} });
       if (u.pathname === "/scan") {
         const out = [];

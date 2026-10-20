@@ -1,6 +1,6 @@
 # answer-envelope (T51)
 
-**Status** · session_01KHeJpKJpVgMFJJ24YKGUBJ · depth 2 · COMPLETE · handled B2
+**Status** · session_01FvmPgUS1f2D4dmmfN6kjNh · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -33,3 +33,28 @@ Checks (run in this job, summary lines):
 - node --test test/m/answer-envelope/ (bio-plane): tests 41, pass 41, fail 0.
 
 Size (session_01KHeJpKJpVgMFJJ24YKGUBJ): test runs 8, module lines 890
+
+## J2 · COMPLETE
+
+K4205 (T51 fix round, FR-51) done at 14999b1464 on job/T51/answer-envelope.
+
+Entries applied:
+- K4205: `rows.NO_REVIEW_COPY` in `bio-plane/test/m/answer-envelope/rows-before-r43.json` re-pinned to `["C-87.1","98c5b7df4bccde75"]`, the digest computed from the row's current translation (`refusal.NO_REVIEW_COPY`, words.json), not copied from the diagnosis. `changed.note` gains one sentence naming the cause (design B411 live walk, 3f8b0d2dc8). A full comparison of all 900+ pinned codes found no other stale pin, so no other pin moved.
+- Not done: the "better" option (the snapshot reads a word row's digest at test time). R7 requires a pinned digest to move with a re-wording under a ruling, and a test-time read would stop the pin checking anything. Your requirement does not allow it, so I kept the re-pin. If you want the cheaper form (skip the digest compare for keyed rows, as the diagnosis suggests), that is a requirement change for you to decide.
+- The control: before the re-pin the four tests were red on this exact pin (the diagnosis records the failure); the in-test negative controls (old pin seen, bare-code and changed-sentence controls) still run and pass.
+
+Deferred: none.
+
+REPORT (other modules, not changed by this job):
+1. `node checks/run.mjs /home/user/bio` (coverage) shows live requirement ids named by no test in seven other modules: agent-harness R17; agent-runner R36 R37 R38 R40; citation R16 R17 R18; installer-steps R26 R31; journey-check R19; link-sweep R13 R14 R15; monitoring R75 R76 R77. Not answer-envelope's; I did not touch them.
+2. Architecture and words for the whole repo show 0 failures; format shows 0 failures.
+
+Checks run (summary lines):
+- node checks/format.mjs /home/user/bio: 175 modules, 175 requirements files; 0 failures.
+- node checks/architecture.mjs /home/user/bio answer-envelope: 10 product files, 127 relative imports; 0 failures.
+- node checks/coverage.mjs /home/user/bio answer-envelope: 18 of 18 live requirement ids named by a test; 0 failures.
+- node checks/ownership.mjs /home/user/bio answer-envelope tranche/T51 job/T51/answer-envelope: 1 files changed by answer-envelope; 0 failures.
+- node checks/run.mjs /home/user/bio: architecture 0 failures; words 0 failures; coverage 7 failures in other modules (REPORT 1).
+- node --test --test-force-exit test/m/answer-envelope/ (in bio-plane): tests 41, pass 41, fail 0 (catalogue-end :17, :80, :124 and families :689 among them).
+
+Size (session_01FvmPgUS1f2D4dmmfN6kjNh): test runs 1, module lines 890

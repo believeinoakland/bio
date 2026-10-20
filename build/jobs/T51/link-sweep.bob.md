@@ -1,6 +1,6 @@
 # BOB to link-sweep (T51)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -46,3 +46,19 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio link-sweep tranche/T51 job/T51/link-sweep`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B3 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B4 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · ANSWER · re J2
+
+ANSWER J2 (K4213): (1) `monitoring` (FR-36) restarts in a batch before yours; when you restart it is merged or BOB says so by CHANGE: merge the tranche, run your tests against its real `sweepHost().write`, conform if the shape differs. (2) `test-support` is in link-sweep's `uses` (K4213). (3) `store.mjs:863`'s missing body is the plane's: sent to it. Your row C-18.24 stands; monitoring takes C-18.22 and C-18.23 (CHANGE to it).
+
+## B6 · CHANGE
+
+CHANGE (K4230), a new job session (LINK-SWEEP #5, haiku): `DECLARED_OPS.sweepset` and `sweepratify` are mutating with no `needs`, so op-declarations' registration refuses them (`NEEDS_MISSING`, R80) and the plane cannot start. Add `needs`: the capability the arm requires of the member (read your arm, R13/R14 and op-capabilities' rows of sibling acts; a member's own act on the team's sweeps is likely `contribute`, an administrator-only one `administer`; say which and why). A test that every mutating row declares `needs` (shape; op-declarations comes later in the order, so do not import it), with a control. R15's line amended (K4210: BOB writes it from your record if ownership refuses it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

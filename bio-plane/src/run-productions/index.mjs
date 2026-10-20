@@ -202,7 +202,7 @@ export class RunProductions {
     const kind = String(args.kind ?? "").trim();
     if (!Object.prototype.hasOwnProperty.call(SUGGEST_KINDS, kind))
       return refusal("SUGGEST_UNKNOWN_KIND",
-        `'${kind.slice(0, 40) || "(none)"}' is not one of §9's kinds: ${Object.keys(SUGGEST_KINDS).join(", ")}. `
+        `pass kind=<one of §9's kinds>: '${kind.slice(0, 40) || "(none)"}' is not one of §9's kinds: ${Object.keys(SUGGEST_KINDS).join(", ")}. `
         + `The set is closed because §15's empty-run instrument needs an object to count — without `
         + `'level-empty' a run that honestly found nothing is indistinguishable from a run that emitted `
         + `nothing.`,
@@ -1451,3 +1451,16 @@ export function runProductionsOps(p, url, body) {
     bearingnotes: () => p.bearingNotes({ bundleId: q("bundle"), question: q("question"), viewer: q("viewer") }),
   };
 }
+
+/** The op declarations (op-declarations R80, op-grades R49), beside the ops map and held true by declared-ops.test.mjs
+ *  (R27). `classes`, `mutating` and `weight` agree with the hand rows that still hold `suggest`, and `description` is the
+ *  sentence op-grades' non-act row holds, so registration finds no disagreement. `requires` names only what a refusal
+ *  names: `name` is not one, because basis-versions' BASIS_VERSION_REFUSED, relayed unchanged (R3), names no field. */
+export const DECLARED_OPS = Object.freeze({
+  suggest: {
+    classes: ["admin", "member", "probe"], mutating: true, weight: "reversible",
+    description: localize("run-productions.declared.suggest", "the investigative session's ONE write (§4 group 2), keyed by inquiry and run: proposes a reading of the evidence in state suggested. Not object-directed — no member takes it; the six acts ON the proposal are the member-facing ones and they are ACTS rows"),
+    fields: { accepts: ["target", "kind", "run", "name", "description", "claim", "relationship", "derived_from", "level", "observed_at", "grounds", "legs"],
+              requires: ["target", "kind", "run", "description"] },
+  },
+});

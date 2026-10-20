@@ -1595,10 +1595,12 @@ var fleet_member_default = {
     }
   ],
   egress: {
-    containers: [],
-    worker: "database.clamav.net (R6), and per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
+    containers: [
+      "FileScanner, the signature-updater instance alone: database.clamav.net, by freshclam (R6, R34)"
+    ],
+    worker: "no host of its own for the mirror (R6, R34); per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
   },
-  note: "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the team's bucket and hands them copies.",
+  note: "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet except the one instance the daily mirror starts: `FileScanner` as the signature updater, where ClamAV's own `freshclam` reaches ClamAV's database host and nothing else (`egress.containers`); the Worker reads every byte from the team's bucket and hands the scanning instance copies.",
   callers: [
     {
       member: "bio-plane",
@@ -1771,171 +1773,7 @@ async function readJson(bucket, key) {
   }
 }
 
-// ../bio-plane/src/setup-words/rows.mjs
-var WORD_ROWS = Object.freeze([
-  ["tokens.group_civicsmith_binds", "Your team's Civicsmith binds no Claude account to its own settings, and none can be set there. The assistant is reached through a member's own Claude account or API key, or through the team's API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.", null, null, false, "design"],
-  ["file-scanner.catalogue.any_https_endpoint_taking_a_json", "any HTTPS endpoint taking a JSON POST", null, null, false, "code"],
-  ["file-scanner.catalogue.any_icap_server_rfc_3507", "any ICAP server (RFC 3507)", null, null, false, "code"],
-  ["file-scanner.catalogue.any_syslog_collector_rfc_5424", "any syslog collector (RFC 5424 over TLS)", null, null, false, "code"],
-  ["file-scanner.catalogue.azure_storage_account_name", "Azure storage account name", null, null, false, "code"],
-  ["file-scanner.catalogue.blob_container_the_files_are", "Blob container the files are scanned in", null, null, false, "code"],
-  ["file-scanner.catalogue.cloud_not_stored_in_private", "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours", null, null, false, "code"],
-  ["file-scanner.catalogue.cloud_scan_results_remain_limited", "Cloud: scan results remain, limited to the submitter", null, null, false, "code"],
-  ["file-scanner.catalogue.cloudflare_account_id", "Cloudflare account ID", null, null, false, "code"],
-  ["file-scanner.catalogue.cloudflare_inc_the_teams_own", "Cloudflare, Inc. (the team's own account)", null, null, false, "code"],
-  ["file-scanner.catalogue.cloudflare_intel_cloudflares_network", "Cloudflare's network", null, null, false, "code"],
-  ["file-scanner.catalogue.cloudflare_intel_the_teams_own", "the team's own Cloudflare account, a token with Intel Read", null, null, false, "code"],
-  ["file-scanner.catalogue.connect_over_tls_yes_or", "Connect over TLS: yes or no (default no)", null, null, false, "code"],
-  ["file-scanner.catalogue.data_collection_endpoint_host", "Data collection endpoint host", null, null, false, "code"],
-  ["file-scanner.catalogue.data_collection_rule_immutable_id", "Data collection rule immutable ID", null, null, false, "code"],
-  ["file-scanner.catalogue.deep_cdr_metadefender_cloud_or", "Deep CDR (MetaDefender Cloud or Core)", null, null, false, "code"],
-  ["file-scanner.catalogue.deep_cdr_not_stated_cloud", "not stated (Cloud); the organization's own servers (Core)", null, null, false, "code"],
-  ["file-scanner.catalogue.deep_cdr_opswat_inc_cloud_or", "OPSWAT, Inc. (Cloud), or the organization's own Core server", null, null, false, "code"],
-  ["file-scanner.catalogue.defender_storage_the_blobs_index", "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them", null, null, false, "code"],
-  ["file-scanner.catalogue.defender_storage_the_organizations_own", "the organization's own Azure subscription, billed per GB scanned", null, null, false, "code"],
-  ["file-scanner.catalogue.defender_storage_the_service_does", "the service does not retain the scanned content; this adapter deletes the blob after the result", null, null, false, "code"],
-  ["file-scanner.catalogue.defender_storage_the_storage_accounts", "the storage account's region; content read within it", null, null, false, "code"],
-  ["file-scanner.catalogue.elastic_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
-  ["file-scanner.catalogue.elastic_the_organizations_own", "the organization's own Elastic deployment", null, null, false, "code"],
-  ["file-scanner.catalogue.elastic_the_organizations_own_deployment", "the organization's own deployment", null, null, false, "code"],
-  ["file-scanner.catalogue.elasticsearch_address_host_or_host", "Elasticsearch address (host, or host:port)", null, null, false, "code"],
-  ["file-scanner.catalogue.endpoint_address_host_or_host", "Endpoint address (host, or host:port)", null, null, false, "code"],
-  ["file-scanner.catalogue.falcon_sandbox_community_access_off", "community access off: every upload confidential", null, null, false, "code"],
-  ["file-scanner.catalogue.falcon_sandbox_falcon_intelligence", "Falcon Sandbox (Falcon Intelligence)", null, null, false, "code"],
-  ["file-scanner.catalogue.falcon_sandbox_get_settings_before_each", "GET /falconx/entities/settings/v1 before each send: community access is off for the API client", null, null, false, "code"],
-  ["file-scanner.catalogue.falcon_sandbox_kept_in_the", "kept in the Falcon platform", null, null, false, "code"],
-  ["file-scanner.catalogue.falcon_sandbox_stored_in_the", "stored in the Falcon platform; period not stated", null, null, false, "code"],
-  ["file-scanner.catalogue.falcon_sandbox_the_falcon_cloud_chosen", "the Falcon cloud chosen", null, null, false, "code"],
-  ["file-scanner.catalogue.falcon_sandbox_with_the_organizations", "with the organization's Falcon subscription", null, null, false, "code"],
-  ["file-scanner.catalogue.glasswall_an_entitlement_to", "an entitlement to a number of files or a volume a day", null, null, false, "code"],
-  ["file-scanner.catalogue.glasswall_halo_api_address_host", "Glasswall Halo API address (host, or host:port)", null, null, false, "code"],
-  ["file-scanner.catalogue.glasswall_removed_according_to", "removed according to the deployment's file retention policy", null, null, false, "code"],
-  ["file-scanner.catalogue.glasswall_the_analysis_report", "the analysis report, as the deployment keeps it", null, null, false, "code"],
-  ["file-scanner.catalogue.glasswall_the_halo_deployment", "the Glasswall Halo deployment the organization runs or subscribes to", null, null, false, "code"],
-  ["file-scanner.catalogue.glasswall_where_that_deployment_runs", "where that deployment runs", null, null, false, "code"],
-  ["file-scanner.catalogue.google_cloud_project_id", "Google Cloud project ID", null, null, false, "code"],
-  ["file-scanner.catalogue.google_llc_the_organizations_own", "Google LLC (the organization's own instance)", null, null, false, "code"],
-  ["file-scanner.catalogue.google_secops_as_the_instance", "as the instance keeps its logs", null, null, false, "code"],
-  ["file-scanner.catalogue.google_secops_the_instances_region", "the instance's region", null, null, false, "code"],
-  ["file-scanner.catalogue.google_secops_the_organizations_own_instance", "the organization's own instance", null, null, false, "code"],
-  ["file-scanner.catalogue.google_security_operations_importlogs", "Google Security Operations (ImportLogs)", null, null, false, "code"],
-  ["file-scanner.catalogue.google_web_risk_no_file", "no file is sent; the server sees only a hash prefix on a local match", null, null, false, "code"],
-  ["file-scanner.catalogue.google_web_risk_the_organizations_own", "the organization's own Google Cloud project; results must not be redistributed", null, null, false, "code"],
-  ["file-scanner.catalogue.https_webhook_the_organizations_own_endpoint", "the organization's own endpoint", null, null, false, "code"],
-  ["file-scanner.catalogue.icap_server_address_host_or_host", "ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)", null, null, false, "code"],
-  ["file-scanner.catalogue.icap_service_name_default_avscan", "ICAP service name (default avscan)", null, null, false, "code"],
-  ["file-scanner.catalogue.icap_the_organizations_own_server", "the organization's own server and licence", null, null, false, "code"],
-  ["file-scanner.catalogue.index_the_counts_are_written", "Index the counts are written to (default civicsmith-security-counts)", null, null, false, "code"],
-  ["file-scanner.catalogue.instance_customer_id", "Instance (customer) ID", null, null, false, "code"],
-  ["file-scanner.catalogue.instance_location", "Instance location", null, null, false, "code"],
-  ["file-scanner.catalogue.intelix_clean_files_up_to", "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)", null, null, false, "code"],
-  ["file-scanner.catalogue.intelix_metadata_up_to_6", "metadata up to 6 months for research", null, null, false, "code"],
-  ["file-scanner.catalogue.intelix_the_organizations_own", "the organization's own Intelix account (free monthly allowance, then pay as you go)", null, null, false, "code"],
-  ["file-scanner.catalogue.intelix_the_region_chosen", "the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)", null, null, false, "code"],
-  ["file-scanner.catalogue.joe_sandbox_an_edition_of", "an edition of Light or above, whose analyses and results are private", null, null, false, "code"],
-  ["file-scanner.catalogue.joe_sandbox_cloud_light_and", "Joe Sandbox Cloud (Light and above)", null, null, false, "code"],
-  ["file-scanner.catalogue.joe_sandbox_kept_until_the", "kept until the customer deletes it; then securely deleted in near real time", null, null, false, "code"],
-  ["file-scanner.catalogue.joe_sandbox_kept_until_the_2", "kept until the customer deletes it", null, null, false, "code"],
-  ["file-scanner.catalogue.joe_sandbox_post_account_info_before_each", "POST /api/v2/account/info before each send: the account is not of the Basic edition", null, null, false, "code"],
-  ["file-scanner.catalogue.joe_sandbox_the_organizations_own", "the organization's own Light, Pro or Enterprise subscription", null, null, false, "code"],
-  ["file-scanner.catalogue.log_type_the_counts_are", "Log type the counts are imported as", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_cloud_file_not", "private mode: not stored or shared; permanently removed from storage", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_cloud_private_mode", "MetaDefender Cloud (private mode)", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_cloud_scan_results", "scan results remain in the MetaDefender Cloud database, limited to the submitter", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_cloud_the_organizations_own_paid", `the organization's own paid licence; "solely for Your internal use" (OPSWAT's written yes needed for product use)`, null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_core_as_the_organization", "as the organization configures its server", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_core_as_the_organization_2", "as the organization configures its server", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_core_server_address_host", "MetaDefender Core server address (host, or host:port)", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_core_server_address_host_2", "MetaDefender Core server address (host, or host:port; Core only)", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_core_the_organizations_own", "the organization's own MetaDefender Core server", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_core_the_organizations_own_servers", "the organization's own servers", null, null, false, "code"],
-  ["file-scanner.catalogue.metadefender_get_v4_apikey_before_each", "GET /v4/apikey/ before each send: the key's licence is paid and private processing is on", null, null, false, "code"],
-  ["file-scanner.catalogue.microsoft_defender_for_storage", "Microsoft Defender for Storage", null, null, false, "code"],
-  ["file-scanner.catalogue.microsoft_entra_tenant_id", "Microsoft Entra tenant ID", null, null, false, "code"],
-  ["file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api", "Microsoft Sentinel (Logs Ingestion API)", null, null, false, "code"],
-  ["file-scanner.catalogue.microsoft_the_organizations_own_azure", "Microsoft (the organization's own Azure storage account)", null, null, false, "code"],
-  ["file-scanner.catalogue.microsoft_the_organizations_own_workspace", "Microsoft (the organization's own workspace)", null, null, false, "code"],
-  ["file-scanner.catalogue.no_file_is_sent", "no file is sent", null, null, false, "code"],
-  ["file-scanner.catalogue.palo_alto_networks_inc", "Palo Alto Networks, Inc.", null, null, false, "code"],
-  ["file-scanner.catalogue.palo_alto_networks_inc_2", "Palo Alto Networks, Inc.", null, null, false, "code"],
-  ["file-scanner.catalogue.path_on_the_endpoint_default", "Path on the endpoint (default /)", null, null, false, "code"],
-  ["file-scanner.catalogue.private_mode_samplesharing_0", "private mode: samplesharing 0 and private processing on every call (paid licence only)", null, null, false, "code"],
-  ["file-scanner.catalogue.region_one_of_keys", "Region: one of {keys}", null, null, false, "code"],
-  ["file-scanner.catalogue.sandbox_environment_id_default_160", "Sandbox environment ID (default 160, Windows 10 64-bit)", null, null, false, "code"],
-  ["file-scanner.catalogue.scanii_chosen_by_the_team", "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it", null, null, false, "code"],
-  ["file-scanner.catalogue.scanii_deleted_on_completion", "deleted on completion of analysis", null, null, false, "code"],
-  ["file-scanner.catalogue.scanii_the_teams_own_key", "the team's own key; terms allow use within its own products made available to its clients", null, null, false, "code"],
-  ["file-scanner.catalogue.scanii_up_to_400_days", "up to 400 days in the processing region", null, null, false, "code"],
-  ["file-scanner.catalogue.sentinel_as_the_workspace", "as the workspace keeps its logs", null, null, false, "code"],
-  ["file-scanner.catalogue.sentinel_the_organizations_own", "the organization's own Azure workspace", null, null, false, "code"],
-  ["file-scanner.catalogue.sentinel_the_workspaces_region", "the workspace's region", null, null, false, "code"],
-  ["file-scanner.catalogue.splunk_hec_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
-  ["file-scanner.catalogue.splunk_hec_the_organizations_own_splunk", "the organization's own Splunk", null, null, false, "code"],
-  ["file-scanner.catalogue.splunk_hec_the_organizations_own_splunk_2", "the organization's own Splunk", null, null, false, "code"],
-  ["file-scanner.catalogue.splunk_http_event_collector", "Splunk HTTP Event Collector", null, null, false, "code"],
-  ["file-scanner.catalogue.splunk_http_event_collector_address", "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)", null, null, false, "code"],
-  ["file-scanner.catalogue.stated_by_the_administrator", "stated by the administrator", null, null, false, "code"],
-  ["file-scanner.catalogue.stream_name_in_the_rule", "Stream name in the rule", null, null, false, "code"],
-  ["file-scanner.catalogue.syslog_collector_address_host_or", "Syslog collector address (host, or host:port; port 6514 unless named)", null, null, false, "code"],
-  ["file-scanner.catalogue.syslog_tls_the_organizations_own_collector", "the organization's own collector", null, null, false, "code"],
-  ["file-scanner.catalogue.the_engines_the_tool_runs", "The engines the tool runs, as its maker names them", null, null, false, "code"],
-  ["file-scanner.catalogue.the_organizations_own_licence", "the organization's own licence", null, null, false, "code"],
-  ["file-scanner.catalogue.the_tools_statement_of_what", "The tool's statement of what it receives, keeps and shares", null, null, false, "code"],
-  ["file-scanner.catalogue.vmray_kept_in_the_account", "kept in the account", null, null, false, "code"],
-  ["file-scanner.catalogue.vmray_not_stated_beyond", "not stated beyond the account", null, null, false, "code"],
-  ["file-scanner.catalogue.vmray_the_organizations_own_subscription", "the organization's own subscription", null, null, false, "code"],
-  ["file-scanner.catalogue.vmray_us_or_germany_as_the", "US or Germany, as the account is hosted", null, null, false, "code"],
-  ["file-scanner.catalogue.web_risk_update_api", "Web Risk (Update API)", null, null, false, "code"],
-  ["file-scanner.catalogue.where_it_runs", "where it runs", null, null, false, "code"],
-  ["file-scanner.catalogue.where_that_statement_is_published", "Where that statement is published", null, null, false, "code"],
-  ["file-scanner.catalogue.wildfire_benign_14_days_malicious", "benign 14 days; malicious 10 years", null, null, false, "code"],
-  ["file-scanner.catalogue.wildfire_signatures_and_reports", "signatures and reports kept indefinitely", null, null, false, "code"],
-  ["file-scanner.catalogue.wildfire_the_organizations_own_wildfire_api", "the organization's own WildFire API subscription (150 submissions a day base)", null, null, false, "code"],
-  ["file-scanner.catalogue.wildfire_the_regional_cloud", "the regional cloud chosen; some metadata shared across regional clouds", null, null, false, "code"],
-  ["file-scanner.clamav.file_scanner_v1_signature_mirror", "file-scanner/{v1} (signature mirror; as cvdupdate)", null, null, false, "code"],
-  ["file-scanner.handler.libreoffice_versionof_poppler_utils_versionof", "libreoffice {versionOf}; poppler-utils {versionOf_2}", null, null, false, "code"],
-  ["file-scanner.render.the_renderer_answered_status", "the renderer answered {status}", null, null, false, "code"],
-  ["file-scanner.render.the_renderer_could_not", "the renderer could not be reached", null, null, false, "code"],
-  ["file-scanner.routes.a_test_record_of", "a test record of zero counts was accepted", null, null, false, "code"],
-  ["file-scanner.routes.no_safe_view", "no safe view", null, null, false, "code"],
-  ["file-scanner.routes.removed_names", "removed: {names}", null, null, false, "code"],
-  ["file-scanner.routes.the_eicar_test_file_answered", "the EICAR test file answered found", null, null, false, "code"],
-  ["file-scanner.routes.the_eicar_test_file_did", "the EICAR test file did not answer found", null, null, false, "code"],
-  ["file-scanner.routes.the_safe_view_reported_nothing", "the safe view reported nothing removed", null, null, false, "code"],
-  ["file-scanner.routes.the_sandbox_was_still_running", "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms", null, null, false, "code"],
-  ["file-scanner.routes.the_test_address_answered", "the test address answered listed", null, null, false, "code"],
-  ["file-scanner.routes.the_test_address_did", "the test address did not answer listed", null, null, false, "code"]
-]);
-
-// ../bio-plane/src/setup-words/index.mjs
-var table;
-var rowsByKey = () => table ??= new Map(WORD_ROWS.map((r) => [r[0], r]));
-var fail = (code, message) => Object.assign(new Error(`${code}: ${message}`), { code });
-var PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
-var ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
-function fill(key, text, vars) {
-  return text.replace(PLACEHOLDER, (_, name) => {
-    const v = vars?.[name];
-    if (!Object.hasOwn(vars ?? {}, name) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
-    if (typeof v === "object" && typeof v.key === "string") return word(v.key, v.vars ?? {});
-    return String(v);
-  });
-}
-function word(key, vars = {}) {
-  const row = typeof key === "string" ? rowsByKey().get(key) : void 0;
-  if (!row) throw fail("UNKNOWN_WORD", `no word ${typeof key === "string" ? key : String(key)}`);
-  return fill(key, row[1], vars);
-}
-function localize(id, en, vars = {}) {
-  if (typeof id !== "string" || !ID.test(id)) throw fail("BAD_WORD_ID", `${typeof id === "string" ? id : String(id)} is not a word id`);
-  const row = rowsByKey().get(id);
-  if (!row && typeof en !== "string") throw fail("BAD_WORD_EN", `${id} has no row and no sentence`);
-  return fill(id, row ? row[1] : en, vars);
-}
-
 // src/clamav.mjs
-var MIRROR_HOST = "database.clamav.net";
-var DATABASES = Object.freeze(["main.cvd", "daily.cvd", "bytecode.cvd"]);
 var CURRENT = "clamav/current.json";
 var STATE = "clamav/state.json";
 var runId = (now) => `r${new Date(now).toISOString().replace(/[-:.TZ]/g, "")}${Math.random().toString(36).slice(2, 8)}`;
@@ -2055,6 +1893,15 @@ async function putStream(bucket, key, response) {
   }
   return writeObject(bucket, key, body);
 }
+async function askUpdater(deps, path, init) {
+  try {
+    const r = await deps.updater(path, init);
+    const body = await r.json().catch(() => null);
+    return body && typeof body === "object" ? body : { ok: false, code: "UPDATER_UNAVAILABLE" };
+  } catch {
+    return { ok: false, code: "UPDATER_UNAVAILABLE" };
+  }
+}
 async function runMirror(deps) {
   const now = deps.now();
   const previous = await readJson(deps.bucket, CURRENT);
@@ -2063,25 +1910,26 @@ async function runMirror(deps) {
   const files = {};
   let error = null;
   try {
-    for (const db of DATABASES) {
-      const prev = previous && previous.files[db];
-      const headers = { "user-agent": localize("file-scanner.clamav.file_scanner_v1_signature_mirror", "file-scanner/{v1} (signature mirror; as cvdupdate)", { v1: String(deps.version || "unknown") }) };
-      if (prev && prev.last_modified) headers["if-modified-since"] = prev.last_modified;
-      let r;
-      try {
-        r = await deps.fetch(`https://${MIRROR_HOST}/${db}`, { headers });
-      } catch {
-        throw new Error(`UNREACHABLE:${db}`);
+    const got = await askUpdater(deps, `/update/${run}`, { method: "POST" });
+    if (!got.ok || !Array.isArray(got.files)) {
+      throw new Error(got.code === "MIRROR_REFUSED" ? `MIRROR_REFUSED:${String(got.detail || "no reason given").slice(0, 300)}` : "UPDATER_UNAVAILABLE");
+    }
+    try {
+      for (const name of got.files) {
+        let r;
+        try {
+          r = await deps.updater(`/update/${run}/${name}`);
+        } catch {
+          throw new Error(`UPDATER_UNAVAILABLE:${name}`);
+        }
+        if (r.status !== 200 || !r.body) throw new Error(`UPDATER_UNAVAILABLE:${name}`);
+        const key = `clamav/sets/${run}/${name}`;
+        await putStream(deps.bucket, key, r);
+        staged.push(key);
+        files[name] = { key, last_modified: null };
       }
-      if (r.status === 304 && prev) {
-        files[db] = prev;
-        continue;
-      }
-      if (r.status !== 200 || !r.body) throw new Error(`REFUSED:${db}:${r.status}`);
-      const key = `clamav/sets/${run}/${db}`;
-      await putStream(deps.bucket, key, r);
-      staged.push(key);
-      files[db] = { key, last_modified: r.headers.get("last-modified") || null };
+    } finally {
+      await askUpdater(deps, `/update/${run}`, { method: "DELETE" });
     }
     const fresh = Object.entries(files).filter(([, f]) => staged.includes(f.key));
     if (fresh.length) {
@@ -2135,6 +1983,167 @@ async function signatureState(bucket) {
     last_attempt: state ? state.last_attempt : null,
     last_error: state ? state.last_error : null
   };
+}
+
+// ../bio-plane/src/setup-words/rows.mjs
+var WORD_ROWS = Object.freeze([
+  ["file-scanner.catalogue.icap_server_address_host_or_host", "Address of your scanning server, as a name or name:port. Without a port, 1344 is used (11344 when connecting over TLS).", "DEC-384: B411 T-14", null, false, "design"],
+  ["file-scanner.catalogue.any_icap_server_rfc_3507", "any scanning server that speaks ICAP, the usual way virus scanners take files", "DEC-384: B411 T-14", null, false, "design"],
+  ["file-scanner.catalogue.microsoft_entra_tenant_id", "Microsoft Entra tenant ID (the ID of your organization's Microsoft directory)", "DEC-384: B411 T-14", null, false, "design"],
+  ["tokens.group_civicsmith_binds", "Your team's Civicsmith binds no Claude account to its own settings, and none can be set there. The assistant is reached through a member's own Claude account or API key, or through the team's API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.", null, null, false, "design"],
+  ["file-scanner.catalogue.any_https_endpoint_taking_a_json", "any HTTPS endpoint taking a JSON POST", null, null, false, "code"],
+  ["file-scanner.catalogue.any_syslog_collector_rfc_5424", "any syslog collector (RFC 5424 over TLS)", null, null, false, "code"],
+  ["file-scanner.catalogue.azure_storage_account_name", "Azure storage account name", null, null, false, "code"],
+  ["file-scanner.catalogue.blob_container_the_files_are", "Blob container the files are scanned in", null, null, false, "code"],
+  ["file-scanner.catalogue.cloud_not_stored_in_private", "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours", null, null, false, "code"],
+  ["file-scanner.catalogue.cloud_scan_results_remain_limited", "Cloud: scan results remain, limited to the submitter", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_account_id", "Cloudflare account ID", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_inc_the_teams_own", "Cloudflare, Inc. (the team's own account)", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_intel_cloudflares_network", "Cloudflare's network", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_intel_the_teams_own", "the team's own Cloudflare account, a token with Intel Read", null, null, false, "code"],
+  ["file-scanner.catalogue.connect_over_tls_yes_or", "Connect over TLS: yes or no (default no)", null, null, false, "code"],
+  ["file-scanner.catalogue.data_collection_endpoint_host", "Data collection endpoint host", null, null, false, "code"],
+  ["file-scanner.catalogue.data_collection_rule_immutable_id", "Data collection rule immutable ID", null, null, false, "code"],
+  ["file-scanner.catalogue.deep_cdr_metadefender_cloud_or", "Deep CDR (MetaDefender Cloud or Core)", null, null, false, "code"],
+  ["file-scanner.catalogue.deep_cdr_not_stated_cloud", "not stated (Cloud); the organization's own servers (Core)", null, null, false, "code"],
+  ["file-scanner.catalogue.deep_cdr_opswat_inc_cloud_or", "OPSWAT, Inc. (Cloud), or the organization's own Core server", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_blobs_index", "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_organizations_own", "the organization's own Azure subscription, billed per GB scanned", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_service_does", "the service does not retain the scanned content; this adapter deletes the blob after the result", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_storage_accounts", "the storage account's region; content read within it", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_the_organizations_own", "the organization's own Elastic deployment", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_the_organizations_own_deployment", "the organization's own deployment", null, null, false, "code"],
+  ["file-scanner.catalogue.elasticsearch_address_host_or_host", "Elasticsearch address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.endpoint_address_host_or_host", "Endpoint address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_community_access_off", "community access off: every upload confidential", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_falcon_intelligence", "Falcon Sandbox (Falcon Intelligence)", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_get_settings_before_each", "GET /falconx/entities/settings/v1 before each send: community access is off for the API client", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_kept_in_the", "kept in the Falcon platform", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_stored_in_the", "stored in the Falcon platform; period not stated", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_the_falcon_cloud_chosen", "the Falcon cloud chosen", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_with_the_organizations", "with the organization's Falcon subscription", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_an_entitlement_to", "an entitlement to a number of files or a volume a day", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_halo_api_address_host", "Glasswall Halo API address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_removed_according_to", "removed according to the deployment's file retention policy", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_the_analysis_report", "the analysis report, as the deployment keeps it", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_the_halo_deployment", "the Glasswall Halo deployment the organization runs or subscribes to", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_where_that_deployment_runs", "where that deployment runs", null, null, false, "code"],
+  ["file-scanner.catalogue.google_cloud_project_id", "Google Cloud project ID", null, null, false, "code"],
+  ["file-scanner.catalogue.google_llc_the_organizations_own", "Google LLC (the organization's own instance)", null, null, false, "code"],
+  ["file-scanner.catalogue.google_secops_as_the_instance", "as the instance keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.google_secops_the_instances_region", "the instance's region", null, null, false, "code"],
+  ["file-scanner.catalogue.google_secops_the_organizations_own_instance", "the organization's own instance", null, null, false, "code"],
+  ["file-scanner.catalogue.google_security_operations_importlogs", "Google Security Operations (ImportLogs)", null, null, false, "code"],
+  ["file-scanner.catalogue.google_web_risk_no_file", "no file is sent; the server sees only a hash prefix on a local match", null, null, false, "code"],
+  ["file-scanner.catalogue.google_web_risk_the_organizations_own", "the organization's own Google Cloud project; results must not be redistributed", null, null, false, "code"],
+  ["file-scanner.catalogue.https_webhook_the_organizations_own_endpoint", "the organization's own endpoint", null, null, false, "code"],
+  ["file-scanner.catalogue.icap_service_name_default_avscan", "ICAP service name (default avscan)", null, null, false, "code"],
+  ["file-scanner.catalogue.icap_the_organizations_own_server", "the organization's own server and licence", null, null, false, "code"],
+  ["file-scanner.catalogue.index_the_counts_are_written", "Index the counts are written to (default civicsmith-security-counts)", null, null, false, "code"],
+  ["file-scanner.catalogue.instance_customer_id", "Instance (customer) ID", null, null, false, "code"],
+  ["file-scanner.catalogue.instance_location", "Instance location", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_clean_files_up_to", "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_metadata_up_to_6", "metadata up to 6 months for research", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_the_organizations_own", "the organization's own Intelix account (free monthly allowance, then pay as you go)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_the_region_chosen", "the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_an_edition_of", "an edition of Light or above, whose analyses and results are private", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_cloud_light_and", "Joe Sandbox Cloud (Light and above)", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_kept_until_the", "kept until the customer deletes it; then securely deleted in near real time", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_kept_until_the_2", "kept until the customer deletes it", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_post_account_info_before_each", "POST /api/v2/account/info before each send: the account is not of the Basic edition", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_the_organizations_own", "the organization's own Light, Pro or Enterprise subscription", null, null, false, "code"],
+  ["file-scanner.catalogue.log_type_the_counts_are", "Log type the counts are imported as", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_file_not", "private mode: not stored or shared; permanently removed from storage", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_private_mode", "MetaDefender Cloud (private mode)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_scan_results", "scan results remain in the MetaDefender Cloud database, limited to the submitter", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_the_organizations_own_paid", `the organization's own paid licence; "solely for Your internal use" (OPSWAT's written yes needed for product use)`, null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_as_the_organization", "as the organization configures its server", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_as_the_organization_2", "as the organization configures its server", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_server_address_host", "MetaDefender Core server address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_server_address_host_2", "MetaDefender Core server address (host, or host:port; Core only)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_the_organizations_own", "the organization's own MetaDefender Core server", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_the_organizations_own_servers", "the organization's own servers", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_get_v4_apikey_before_each", "GET /v4/apikey/ before each send: the key's licence is paid and private processing is on", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_defender_for_storage", "Microsoft Defender for Storage", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api", "Microsoft Sentinel (Logs Ingestion API)", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_the_organizations_own_azure", "Microsoft (the organization's own Azure storage account)", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_the_organizations_own_workspace", "Microsoft (the organization's own workspace)", null, null, false, "code"],
+  ["file-scanner.catalogue.no_file_is_sent", "no file is sent", null, null, false, "code"],
+  ["file-scanner.catalogue.palo_alto_networks_inc", "Palo Alto Networks, Inc.", null, null, false, "code"],
+  ["file-scanner.catalogue.palo_alto_networks_inc_2", "Palo Alto Networks, Inc.", null, null, false, "code"],
+  ["file-scanner.catalogue.path_on_the_endpoint_default", "Path on the endpoint (default /)", null, null, false, "code"],
+  ["file-scanner.catalogue.private_mode_samplesharing_0", "private mode: samplesharing 0 and private processing on every call (paid licence only)", null, null, false, "code"],
+  ["file-scanner.catalogue.region_one_of_keys", "Region: one of {keys}", null, null, false, "code"],
+  ["file-scanner.catalogue.sandbox_environment_id_default_160", "Sandbox environment ID (default 160, Windows 10 64-bit)", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_chosen_by_the_team", "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_deleted_on_completion", "deleted on completion of analysis", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_the_teams_own_key", "the team's own key; terms allow use within its own products made available to its clients", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_up_to_400_days", "up to 400 days in the processing region", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_as_the_workspace", "as the workspace keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_the_organizations_own", "the organization's own Azure workspace", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_the_workspaces_region", "the workspace's region", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_hec_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_hec_the_organizations_own_splunk", "the organization's own Splunk", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_hec_the_organizations_own_splunk_2", "the organization's own Splunk", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_http_event_collector", "Splunk HTTP Event Collector", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_http_event_collector_address", "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)", null, null, false, "code"],
+  ["file-scanner.catalogue.stated_by_the_administrator", "stated by the administrator", null, null, false, "code"],
+  ["file-scanner.catalogue.stream_name_in_the_rule", "Stream name in the rule", null, null, false, "code"],
+  ["file-scanner.catalogue.syslog_collector_address_host_or", "Syslog collector address (host, or host:port; port 6514 unless named)", null, null, false, "code"],
+  ["file-scanner.catalogue.syslog_tls_the_organizations_own_collector", "the organization's own collector", null, null, false, "code"],
+  ["file-scanner.catalogue.the_engines_the_tool_runs", "The engines the tool runs, as its maker names them", null, null, false, "code"],
+  ["file-scanner.catalogue.the_organizations_own_licence", "the organization's own licence", null, null, false, "code"],
+  ["file-scanner.catalogue.the_tools_statement_of_what", "The tool's statement of what it receives, keeps and shares", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_kept_in_the_account", "kept in the account", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_not_stated_beyond", "not stated beyond the account", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_the_organizations_own_subscription", "the organization's own subscription", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_us_or_germany_as_the", "US or Germany, as the account is hosted", null, null, false, "code"],
+  ["file-scanner.catalogue.web_risk_update_api", "Web Risk (Update API)", null, null, false, "code"],
+  ["file-scanner.catalogue.where_it_runs", "where it runs", null, null, false, "code"],
+  ["file-scanner.catalogue.where_that_statement_is_published", "Where that statement is published", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_benign_14_days_malicious", "benign 14 days; malicious 10 years", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_signatures_and_reports", "signatures and reports kept indefinitely", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_the_organizations_own_wildfire_api", "the organization's own WildFire API subscription (150 submissions a day base)", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_the_regional_cloud", "the regional cloud chosen; some metadata shared across regional clouds", null, null, false, "code"],
+  ["file-scanner.handler.libreoffice_versionof_poppler_utils_versionof", "libreoffice {versionOf}; poppler-utils {versionOf_2}", null, null, false, "code"],
+  ["file-scanner.render.the_renderer_answered_status", "the renderer answered {status}", null, null, false, "code"],
+  ["file-scanner.render.the_renderer_could_not", "the renderer could not be reached", null, null, false, "code"],
+  ["file-scanner.routes.a_test_record_of", "a test record of zero counts was accepted", null, null, false, "code"],
+  ["file-scanner.routes.no_safe_view", "no safe view", null, null, false, "code"],
+  ["file-scanner.routes.removed_names", "removed: {names}", null, null, false, "code"],
+  ["file-scanner.routes.the_eicar_test_file_answered", "the EICAR test file answered found", null, null, false, "code"],
+  ["file-scanner.routes.the_eicar_test_file_did", "the EICAR test file did not answer found", null, null, false, "code"],
+  ["file-scanner.routes.the_safe_view_reported_nothing", "the safe view reported nothing removed", null, null, false, "code"],
+  ["file-scanner.routes.the_sandbox_was_still_running", "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms", null, null, false, "code"],
+  ["file-scanner.routes.the_test_address_answered", "the test address answered listed", null, null, false, "code"],
+  ["file-scanner.routes.the_test_address_did", "the test address did not answer listed", null, null, false, "code"]
+]);
+
+// ../bio-plane/src/setup-words/index.mjs
+var table;
+var rowsByKey = () => table ??= new Map(WORD_ROWS.map((r) => [r[0], r]));
+var fail = (code, message) => Object.assign(new Error(`${code}: ${message}`), { code });
+var PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
+var ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
+function fill(key, text, vars) {
+  return text.replace(PLACEHOLDER, (_, name) => {
+    const v = vars?.[name];
+    if (!Object.hasOwn(vars ?? {}, name) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
+    if (typeof v === "object" && typeof v.key === "string") return word(v.key, v.vars ?? {});
+    return String(v);
+  });
+}
+function word(key, vars = {}) {
+  const row = typeof key === "string" ? rowsByKey().get(key) : void 0;
+  if (!row) throw fail("UNKNOWN_WORD", `no word ${typeof key === "string" ? key : String(key)}`);
+  return fill(key, row[1], vars);
+}
+function localize(id, en, vars = {}) {
+  if (typeof id !== "string" || !ID.test(id)) throw fail("BAD_WORD_ID", `${typeof id === "string" ? id : String(id)} is not a word id`);
+  const row = rowsByKey().get(id);
+  if (!row && typeof en !== "string") throw fail("BAD_WORD_EN", `${id} has no row and no sentence`);
+  return fill(id, row ? row[1] : en, vars);
 }
 
 // src/render.mjs
@@ -4390,11 +4399,13 @@ async function handle(request, deps) {
 
 // src/worker.mjs
 var classOf = (name) => fleet_member_default.containers.find((c) => c.class_name === name);
+var UPDATER_HEADER = "x-signature-updater";
 var FileScanner = class extends Container {
   defaultPort = classOf("FileScanner").image.port;
   sleepAfter = "10m";
   enableInternet = false;
   async fetch(request) {
+    this.enableInternet = request.headers.get(UPDATER_HEADER) === "1";
     return this.containerFetch(request, this.defaultPort);
   }
 };
@@ -4406,11 +4417,15 @@ var SafeViewRenderer = class extends Container {
     return this.containerFetch(request, this.defaultPort);
   }
 };
-function container(ns, name) {
+function container(ns, name, headers = {}) {
   if (!ns) return async () => {
     throw new Error("container not bound");
   };
-  return (path, init = {}) => ns.get(ns.idFromName(name)).fetch(new Request(`http://container${path}`, init));
+  return (path, init = {}) => {
+    const req = new Request(`http://container${path}`, init);
+    for (const [k, v] of Object.entries(headers)) req.headers.set(k, v);
+    return ns.get(ns.idFromName(name)).fetch(req);
+  };
 }
 async function socketConnect(address, options) {
   const { connect } = await import("cloudflare:sockets");
@@ -4420,6 +4435,7 @@ function depsOf(env) {
   return {
     bucket: env.CAPTURES || null,
     scanner: container(env.SCANNER, "file-scanner"),
+    updater: container(env.SCANNER, "file-scanner-signature-updater", { [UPDATER_HEADER]: "1" }),
     renderer: container(env.RENDERER, "safe-view"),
     fetch: (req) => fetch(req),
     connect: socketConnect,

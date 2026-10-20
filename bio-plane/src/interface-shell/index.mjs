@@ -46,7 +46,7 @@ export const PATHS = Object.freeze({
   projects: ["projects"], project: ["projects", "@project"], document: ["projects", "@project", "screen.document.name"],
   question: ["projects", "@project", "screen.question.name"], assistant: ["projects", "@project", "screen.question.name"],
   projectai: ["projects", "@project", "screen.projectai.name"],
-  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.name"],
+  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.crumb"],
   plan: ["projects", "@project", "screen.plan.name"], "start-send": ["projects", "@project", "screen.plan.name", "screen.start-send.name"],
   request: ["projects", "@project", "screen.request.name"], action: ["projects", "@project", "screen.action.name"],
   timeline: ["projects", "@project", "screen.timeline.name"], money: ["projects", "@project", "screen.money.name"],
@@ -295,6 +295,8 @@ function dataOf(screens, guide) {
     /* R30, R45: the public ops (`classes: null`), the only ones a page with no session calls, by an act or by `cs.call` */
     publicOps: Object.keys(OPS).filter((op) => OPS[op].classes === null),
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
+    /* R12 (K4237): a read is gated by its classes, not by `SESSION_OPS`, which holds mutating ops alone */
+    readClasses: pick((op) => (OPS[op] && OPS[op].mutating === false && (OPS[op].classes === null || Array.isArray(OPS[op].classes)) ? (OPS[op].classes === null ? null : [...OPS[op].classes]) : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
     markAsks: [...ops].filter((op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op)),

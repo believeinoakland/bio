@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 import { NEEDS, SESSION_OPS } from "../../../src/op-declarations/index.mjs";
-import { boot, ok, refused, refusedIn, httpError, silent, pending, bytes, MEMBER, ADMIN } from "./harness.mjs";
+import { declaredFit, fitSend, boot, ok, refused, refusedIn, httpError, silent, pending, bytes, MEMBER, ADMIN } from "./harness.mjs";
 import { ALL, HOME, HELD, FIXTURE_WORDS } from "./screens.fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -45,7 +45,7 @@ test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither tabl
   await p.click(btn(p, "captureupload"));
   assert.equal(p.byOp("captureupload").length, 0, "asks a reason first");
   assert.ok(p.root().querySelector('[data-slot="m:0"] textarea'));
-  const o = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal" }], render: (cs) => cs.act("openoriginal") };
+  const o = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal", send: fitSend("openoriginal") }], render: (cs) => cs.act("openoriginal") };
   const q = await boot({ screens: [o], path: "/app/open-file/ab" });
   /* R64, R77: its kit mark is Reversible, so none is drawn; it runs on press */
   assert.equal(btn(q, "openoriginal").querySelector(".w"), null);
@@ -73,7 +73,7 @@ test("R11 (DEC-88) a reasoned act whose screen names a reasonField sends the mem
 test("R11 friction: a reversible act runs on press; a reasoned act opens a reason field in place and sends only with a reason; a terminal or signed act opens a dialog stating what it does and who signs, and sends only on its confirm", async () => {
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
   await p.click(btn(p, "cite"));
-  assert.deepEqual(p.byOp("cite").map((r) => r.body), [{ passage: 1, capture: "c1" }]);
+  assert.deepEqual(p.byOp("cite").map((r) => r.body), [declaredFit("cite", { extent_para: 1, content_id: "c1" })]);
   await p.click(btn(p, "release"));
   assert.equal(p.byOp("release").length, 0);
   const slot = p.root().querySelector('[data-slot="m:3"]');
@@ -84,7 +84,7 @@ test("R11 friction: a reversible act runs on press; a reasoned act opens a reaso
   assert.ok(slot.textContent.includes(word("shell.reason.needed")));
   slot.querySelector("textarea").value = "  it was checked  ";
   await p.click(slot.querySelector('[data-shell="reason-send"]'));
-  assert.deepEqual(p.byOp("release")[0].body, { ids: ["c1"], reason: "it was checked" });
+  assert.deepEqual(p.byOp("release")[0].body, { ...declaredFit("release"), reason: "it was checked" });
   for (const [op, signs] of [["retire", "Done in your name, mai."], ["attest", "Signed with your key, in your name, mai."]]) {
     await p.click(btn(p, op));
     const dlg = p.root().querySelector('[role="dialog"]');
@@ -101,7 +101,7 @@ test("R11 friction: a reversible act runs on press; a reasoned act opens a reaso
     assert.equal(p.byOp(op).length, 1, op);
   }
   assert.ok(p.root().querySelector('button[data-act="retire"]'));
-  assert.deepEqual(p.byOp("attest")[0].body, { id: "c1", note: "noted" }, "a dialog's fields arrive as extra.fields");
+  assert.deepEqual(p.byOp("attest")[0].body, { ...declaredFit("attest"), locator: "noted" }, "a dialog's fields arrive as extra.fields");
 });
 
 test("R11 a terminal act's dialog states what the act does (act.<op>.does)", async () => {
@@ -193,35 +193,35 @@ test("R21 an act's send: null sends nothing; {refuse: key} draws that word besid
   const q = await boot({ screens: ALL, plane: { promote: ok({ project: "P9" }), projectdirectory: ok({ projects: [] }) } });
   q.doc.getElementById("home-title").value = "New";
   await q.click(btn(q, "promote"));
-  assert.deepEqual(q.byOp("promote")[0].body, { title: "New" });
+  assert.deepEqual(q.byOp("promote")[0].body, { ...declaredFit("promote"), meta: { title: "New" } }, "the declared fields, the typed title carried as meta");
   assert.equal(q.location.pathname, "/app/project/P9", "done opened another screen");
   let reads = 0;
   const s = { id: "held", reads: () => ({ a: { op: "heldcaptures" }, b: { op: "gradenote" } }), render: (cs) => cs.act("heldrestore"),
-    acts: [{ op: "heldrestore", send: async () => ({ body: { id: "x" } }), rereads: ["a"] }] };
+    acts: [{ op: "heldrestore", send: fitSend("heldrestore", "{ ids: ['x'] }"), rereads: ["a"] }] };
   const r = await boot({ screens: [s], path: "/app/held", plane: { heldcaptures: () => (reads++, ok({ items: [1] })) } });
   assert.equal(reads, 1);
   await r.click(btn(r, "heldrestore")); r.root().querySelector("textarea").value = "back"; await r.click(r.root().querySelector('[data-shell="reason-send"]'));
-  assert.deepEqual(r.byOp("heldrestore")[0].body, { id: "x", reason: "back" });
+  assert.deepEqual(r.byOp("heldrestore")[0].body, { ...declaredFit("heldrestore", { ids: ["x"] }), reason: "back" });
   assert.equal(reads, 2);
   assert.equal(r.byOp("gradenote").length, 1, "only the named read again");
 });
 
 test("R21 (K2999) a picked-rows act receives the picked keys as extra.picked; send may answer {query, raw}, the raw body sent as it is under the session header with no JSON content type", async () => {
-  const s = { id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldsetaside", send: (view, el, cs, extra) => ({ query: { n: String(extra.picked.length) }, raw: "RAW:" + extra.picked.join(",") }) }],
+  const s = { id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldsetaside", send: (view, el, cs, extra) => ({ query: { ids: String(extra.picked.length) }, raw: "RAW:" + extra.picked.join(",") }) }],
     render: (cs) => cs.state("h", (v) => cs.rows({ id: "t", pick: true, cols: ["screen.held.name"], items: v.items, key: (i) => i.id, name: (i) => i.title, cells: (i) => [cs.esc(i.title)], hold: () => cs.act("heldsetaside") })) };
   const p = await boot({ screens: [s], path: "/app/held", plane: { heldcaptures: HELDA } });
   for (const id of ["h1", "h2"]) { const box = p.doc.getElementById("pick-t-" + id); box.checked = true; p.fire(box, "change"); await p.settle(); }
   await p.click(btn(p, "heldsetaside")); p.root().querySelector("textarea").value = "dup"; await p.click(p.root().querySelector('[data-shell="reason-send"]'));
   const r = p.byOp("heldsetaside")[0];
   assert.equal(r.body, "RAW:h1,h2");
-  assert.equal(r.query.n, "2");
+  assert.equal(r.query.ids, "2");
   assert.equal(r.query.reason, "dup", "a raw body's reason travels in the query");
   assert.equal(r.headers.Authorization, "Bearer tok-1");
   assert.equal(r.headers["content-type"], undefined);
 });
 
 test("R21 (K2999) cs.download hands a byte answer to the browser as a file, its object address released once the download starts; a refusal answers {ok: false}", async () => {
-  const s = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal", async send(view, el, cs) { const r = await cs.download("openoriginal", { query: { sha256: "ab" } }); el.setAttribute("data-got", String(r.ok)); return null; } }],
+  const s = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal", async send(view, el, cs) { const r = await cs.download("openoriginal", { query: { capture: "ab" } }); el.setAttribute("data-got", String(r.ok)); return null; } }],
     render: (cs) => cs.act("openoriginal") };
   const p = await boot({ screens: [s], path: "/app/open-file/ab", plane: { openoriginal: bytes("%PDF-1.7") } });
   const press = async (x) => { await x.click(btn(x, "openoriginal")); };
@@ -236,15 +236,15 @@ test("R21 (K2999) cs.download hands a byte answer to the browser as a file, its 
 });
 
 test("R21 (K2998) a screen's closed(cs, view) is called when the member leaves it, and on pagehide; its ui is kept across redraws of the same page", async () => {
-  const s = { id: "held", reads: () => ({}), acts: [], closed: (cs, view) => { view.ui.n = (view.ui.n || 0); cs.call("heldcaptures", { query: { closed: "1" } }); },
+  const s = { id: "held", reads: () => ({}), acts: [], closed: (cs, view) => { view.ui.n = (view.ui.n || 0); cs.call("heldcaptures", { query: { state: "closed" } }); },
     render: (cs, view) => "<button type=button id=b data-shell=x>" + cs.esc(String(view.ui.k || 0)) + "</button>" };
   const p = await boot({ screens: [s, HOME], path: "/app/held", plane: { projectdirectory: ok({ projects: [] }) } });
   await p.click('a[href="/app"]');
-  assert.equal(p.requests.filter((r) => r.op === "heldcaptures" && r.query.closed === "1").length, 1);
+  assert.equal(p.requests.filter((r) => r.op === "heldcaptures" && r.query.state === "closed").length, 1);
   const q = await boot({ screens: [s], path: "/app/held" });
   for (const f of q.win.listeners.pagehide || []) f({});
   await q.settle();
-  assert.equal(q.requests.filter((r) => r.op === "heldcaptures" && r.query.closed === "1").length, 1);
+  assert.equal(q.requests.filter((r) => r.op === "heldcaptures" && r.query.state === "closed").length, 1);
 });
 
 export { HELD };
@@ -340,7 +340,7 @@ test("R21 (K3011) a streamed answer (application/x-ndjson) reaches done and cs.c
 test("R11 (K3011) a read (an op OPS declares not mutating) carries no weight mark and runs on press, whatever op-grades' tables hold (control: a mutating act keeps its weight)", async () => {
   const { OPS } = await import("../../../src/op-declarations/index.mjs");
   for (const op of ["search", "findin", "frontier", "ruleanswer"]) assert.equal(OPS[op].mutating, false, op);
-  const s = { id: "finder", reads: () => ({}), acts: [{ op: "search" }, { op: "findin" }, { op: "frontier" }, { op: "select" }], render: (cs) => cs.act("search") + cs.act("findin") + cs.act("frontier") + cs.act("select") };
+  const s = { id: "finder", reads: () => ({}), acts: [{ op: "search" }, { op: "findin", send: fitSend("findin") }, { op: "frontier" }, { op: "select" }], render: (cs) => cs.act("search") + cs.act("findin") + cs.act("frontier") + cs.act("select") };
   const p = await boot({ screens: [s], path: "/app/finder" });
   for (const op of ["search", "findin"]) {
     assert.equal(btn(p, op).querySelector(".w"), null, op + ": R77: a Reversible mark draws nothing");
@@ -350,7 +350,7 @@ test("R11 (K3011) a read (an op OPS declares not mutating) carries no weight mar
   const { SESSION_OPS } = await import("../../../src/op-declarations/index.mjs");
   assert.equal(btn(p, "frontier") === null, !SESSION_OPS.member.has("frontier"), "frontier is gated by R12 alone");
   assert.equal(OPS.cite.mutating, true);
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }], render: (cs) => cs.act("release") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release", send: fitSend("release") }], render: (cs) => cs.act("release") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
   assert.equal(btn(q, "release").querySelector(".w").textContent, word("weight.reasoned.name"), "control: a mutating act keeps its weight");
 });

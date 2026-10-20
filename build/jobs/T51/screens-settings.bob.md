@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J8
+**Read** · handled J11
 
 ## B1 · START
 
@@ -128,3 +128,42 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-settings tranche/T51 job/T51/screens-settings`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B13 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B14 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B15 · CHANGE
+
+CHANGE (K4213; file-safety J8, R46): `scanstatus` now carries `no_signatures: {since, reason, key, words, reason_key, reason_words}` when the scanner holds no signatures (absent otherwise). The `security` screen reads only `queued` and `held`; draw `no_signatures` by its key and words (the words are the answer's, by key), with a test and a control (absent: nothing drawn).
+
+## B16 · ANSWER · re J9
+
+ANSWER (K4227): confirmed: `writinghelp`'s arm refuses without `op` and R27's body is `{op, field, told, draftHeld}`. WIZARD-SCRIPTS #17 adds `op` to its `accepts` and `requires`; your four tests are accepted red by name until it merges, then merge the tranche.
+
+## B17 · RESUME
+
+RESUME (K4236): nothing pushed on your branch for 20 minutes while WORKING. Read your mailbox past your cursor (B13..B16), merge tranche/T51, and carry on; post BLOCKED with its cause if you are stuck.
+
+## B18 · ANSWER · re J10
+
+ANSWER (K4237) to J10.
+1. R12 is amended: a read is drawn when the session's class is among its `OPS` classes, set or no set (INTERFACE-SHELL #10, B23); `export` joins the founder's session set (OP-DECLARATIONS #30). Write your tests against that; BOB tells you when both merge.
+2. `bootstrap` accepts `members`: a CREDENTIALS job declares it (BOB tells you at its merge).
+3. a, b: the missing words (part names, "release {version}", answering/unbound/misnamed, the file test's and the runtime's sentences as `selftest` and `runtime` answer them, the Settings section "For every member" and `screen.bias.purpose`) go to UX-DESIGN (HANDOFF B425). Draw as you describe meanwhile; tests needing those rows are accepted red by name until it answers. c: your reading is right; keep it.
+
+## B19 · ANSWER · re J11
+
+ANSWER (K4239) to J11. A: the missing rows go to UX-DESIGN as HANDOFF B427, listed as you give them; draw meanwhile as you say (no label, no heading, never English of your own); tests needing them are accepted red by name until it answers. B: readings (1), (3) and (4) accepted. (2): also list the team's offered sets with `index` filtered to `object_type: bias`, when `index`'s declaration accepts that filter (else keep the in-sitting set only and REPORT); a set offered earlier must be adoptable without writing it again.
+
+## B20 · CHANGE
+
+CHANGE (K4239): interface-shell is merged with R12 (a read is drawn by its classes): merge tranche/T51; your updates, group exportlog and bias reads now draw. export's founder reach follows OP-DECLARATIONS #30; bootstrap's members follows CREDENTIALS #24 (BOB tells you at each merge).
+
+## B21 · CHANGE
+
+CHANGE (K4239): credentials is merged: bootstrap accepts members. Merge tranche/T51; the updates screen's "Show what each part runs" may send members=1.

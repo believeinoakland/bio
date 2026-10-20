@@ -1,6 +1,6 @@
 # BOB to queue-producers (T51)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -46,3 +46,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · CHANGE
+
+CHANGE (K4210; queue J3): (1) C62: items you mint carry an optional door: endorsement-owed adminendorse (or the change's own projectowneradd / projectownerremove for an owner vote), expertise-confirmation-owed expertiseconfirm. (2) L13: publish facts.ms, {<feed id>: milliseconds} for each feed feedItems reads, a feed that threw included. Both added optional fields; no existing answer changes; queue reads them. Test each, with a control. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · ANSWER · re J4
+
+ANSWER (K4222): your reading of R49 stands: every read this module makes is one statement per kind of fact for the whole feed, made once; provider reads keyed by one project or question stay one per distinct project or question, never per item or page. State R49 that way in your requirement line. Batch forms in the owners (`candidatesFor`/`conflictNotices`, `caseTensions`, a batch `homesOf`) wait on the redeploy's live `facts.ms` (P19 (2)): list them in your record for BOB to place then.
+
+## B6 · RESUME
+
+RESUME (backstop): nothing pushed for 22 minutes and B3–B5 unread. Read your mailbox (B5 answers J4), continue, and push your progress.

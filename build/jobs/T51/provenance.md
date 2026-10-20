@@ -1,6 +1,6 @@
 # provenance (T51)
 
-**Status** · session_01RpNUgdyt5VkXqp8Ksfx3zR · depth 2 · COMPLETE · handled B2
+**Status** · session_01QcdtgzU4W4MpK8weg47ZqT · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -57,3 +57,46 @@ Checks, run from civicos-process after this commit:
 Deferred: none.
 
 Size (session_01RpNUgdyt5VkXqp8Ksfx3zR): test runs 4, module lines 2819
+
+## J4 · QUESTION
+
+Q1 (requirements file). Your START says to write each NEW R64–R67 (and the DECLARED_OPS line) first in build/requirements/provenance.md, but ownership.mjs fails any job diff that touches a file outside the module's paths, tests and record (build/requirements/provenance.md is none of them), and JOB.md says BOB updates requirements first. My best reading, which I am carrying on with: I do NOT edit the requirements file. I take the ids R64 (declareorigin), R65–R67 (declareAuthority, authorityOf, AI only proposes; text from the draft §4.3), R68 (DECLARED_OPS: testify, declareorigin) and R69 (the K4202 census: testify) as numbered, name them in my tests, and put each line's text in my record for you to land on tranche/T51 (marked not yet met: T51). If you would rather I edit the file and accept an ownership failure on it, say so. Q2 (fyi, no answer needed unless you disagree): C-18.9 reads a decision through the resolver (containerResolver().authority), so ratification's withRegisterChecks calls (ratification/index.mjs:1393, ops.mjs:511) must pass provenance's containerResolver() for the ratify gate to see a decision; that is ratification's change, I will report it.
+
+## J5 · COMPLETE
+
+FR-10 (provenance, T51) complete on job/T51/provenance at 98ef98eab4 (tranche/T51 merged at the restart, 95a1be260b). Answers B3 (START) and B4 (ANSWER to J4): the requirement lines are written in `build/requirements/provenance.md` (the ownership check lists that one file, accepted per B4).
+
+**Entries applied**
+1. C23 · R64: `provenanceOps` serves `declareorigin {bundleId, system}` (body, else query; `author` and `viewer` the stamps). Refusals are R29's. Test: `ops.test.mjs` (R64, two tests).
+2. C62 · R65–R67: `declareAuthority({bundle, capture, outcome, authority?, basis, by, viewer})` and `authorityOf(bundle, capture)` (table `authority_decisions`, dated, append-only, the latest standing; the register's acquisition-time value the first history entry). Five new refusal rows C-103.8 to C-103.12 (`AUTHORITY_NOT_A_MEMBER`, `_NOT_A_DOCUMENT`, `_NO_BASIS`, `_NO_ISSUER`, `_OUTCOME_UNKNOWN`), words by `localize`. `containerResolver().authority(sha)` carries the standing decision, and C-18.9 (R46) reads state, issuer and basis from it before the document's own. A machine/AI identity is refused by name and writes nothing. Tests: `authority.test.mjs` (9).
+3. K4168 · R68: `DECLARED_OPS` in `provenance/ops.mjs`: `testify` and `declareorigin`. Test: `declared-ops.test.mjs` through test-support's `declaredOpHolds`.
+4. K4202 · R69 (the census, `testify`): its row copies the existing hand rows (classes admin, member; mutating; weight reasoned; the NON_ACTS sentence); `accepts` words, observedAt, title; `requires` words, observedAt. A body naming an author is a claim refused `TESTIMONY_AUTHOR_SUPPLIED`, not a field (control in the same test).
+
+Requirement lines: R64–R69 new, R53 (seven ops), R41 (`authority_decisions`) and R58 (C-103.8–.12) amended. R64–R69 are named by passing tests, so I removed their "not yet met: T51" marks; restore them if you want them held until the merge.
+
+**Existing tests I changed (each only to state the new truth, none weakened):** `ops.test.mjs` R53 (seven arms; `DECLARED_OPS` among the exports), `register.test.mjs` R41 and `seam.test.mjs` R41/R58 (`PROVENANCE_TABLES` and the C-103 list gain the new table and rows).
+
+**Deferred:** none.
+
+**Hand rows that can now go (another module's, not edited):**
+- `op-declarations`: the `testify` spec (index.mjs:1111; its entries in the act lists at :2292 and :2403 stay for the lists) once the plane registers provenance's `DECLARED_OPS`.
+- `op-grades`: `testify` in RUNGS (:551) and its NON_ACTS sentence (:1026); the MARKS row `declareorigin` (marks.mjs:70), which is rungless only until `declareorigin` is declared.
+- `declareorigin` has no hand row in either module, so its whole declaration (classes admin, member; mutating; `stamps` viewer, author; `needs` contribute; weight reversible per the kit mark; description by key `provenance.declared.declareorigin`) is mine. Choice made without a hand row: no `machineClasses` (as `testify`, the module refuses a machine by name rather than the door).
+
+**Found in other modules (P9), to be done by their owners**
+- `ratification`: its `withRegisterChecks` calls (ratification/index.mjs:1393, ops.mjs:511) pass no resolver, so the ratify gate reads a document's own authority, not a decision. They must pass `provenance.containerResolver()` for the gate to see a decision (J4 Q2; R66).
+- `plane` / `control-plane`: `declareorigin` is served only once the composition registers provenance's `DECLARED_OPS` with `registerDeclaredOps` (op-declarations R80) so the door stamps `author` and `viewer` from `OP_STAMPS` and knows the op; I find no such registration for any owner yet in `src/plane` or `src/control-plane`.
+- `case-disclosures` R4 and `tasks` (`taskdecide`, R20) are to ask `authorityOf` and call `declareAuthority`; C-18.1 (R42) keeps judging the document's own register shape, deliberately.
+- Not mine, not caused here: test-time failures about `expertisewithdraw` in `op-declarations` R73/R21, `op-grades` R42 and R46 (member-roster's op, absent from the marks and the declared set).
+
+**Tests and checks**
+- `node --test bio-plane/test/m/provenance/*.test.mjs`: 149 pass, 0 fail (was 134 at the last job; 15 new).
+- `node --test bio-plane/test/mk6-bundle-names-no-author.test.mjs bio-plane/test/publishingproject.mjs bio-plane/test/adoptable-reading.mjs`: 3 pass, 0 fail.
+- New tests seen failing without the code (13 fail, 4 pass with `src/provenance` stashed), then pass with it.
+- Wave-1 readers: `test/m/test-support`, `op-declarations`, `op-grades`: 438 of 441 pass; the 3 failures are the `expertisewithdraw` ones above. `interface-shell/declared.test.mjs`: 7 pass ("declared 180 of 299 ops").
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `checks/architecture.mjs /home/user/bio provenance`: 27 product files, 0 failures. `checks/coverage.mjs /home/user/bio provenance`: 54 of 54 live ids named by a test, 0 failures.
+- `checks/run.mjs /home/user/bio`: format 0, architecture 0; words show 0 findings for provenance (inline 0, plain 0, testcopy 0 for my module; the 7 testcopy failures are in `op-grades`' tests); coverage failures are in other modules (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring).
+- `checks/ownership.mjs /home/user/bio provenance tranche/T51 job/T51/provenance`: 12 files, 1 failure: `build/requirements/provenance.md`, the file B4 accepts.
+- `setup-words/build.mjs --check`: the stale-rows note only (BOB regenerates `rows.mjs`); new ids: `provenance.checks.*` (5), `provenance.index.*` (5), `provenance.declared.testify`, `provenance.declared.declareorigin`.
+
+Size (session_01QcdtgzU4W4MpK8weg47ZqT): test runs 12, module lines 2987

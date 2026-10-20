@@ -1,7 +1,7 @@
 /* provenance's tables (requirements: `build/requirements/provenance.md`, R41, R48). Moved out of the legacy
  * `schema.mjs` at this module's extraction (layers.md ruling 3, "each module owns its tables"; K72 (3)'s pattern):
  * the register and the acquisition receipts (`captured_locators`), with the comments that record why each is shaped
- * as it is; and the table this module added, the declared origins (R29). `register` and `captured_locators` are a
+ * as it is; and the tables this module added, the declared origins (R29) and the authority decisions (R65). `register` and `captured_locators` are a
  * stated read contract (R48): later modules may join their capture digest, `bundle_id`, path, locator columns; every
  * write to them is this module's (R41). `provenance_route_marks` is `provenance-routes`' (its R12), and
  * `receipt_keys` and `signed_receipts` are `attestation`'s (its R10), each created and written by that module alone
@@ -112,6 +112,22 @@ CREATE TABLE IF NOT EXISTS origin_declarations (
   by        TEXT    NOT NULL, -- the member who declared it. Never a machine
   at        TEXT    NOT NULL, -- this module's clock at the declaration
   PRIMARY KEY (bundle_id, seq)
+);
+
+-- K4169 (C62; R65, R66): A MEMBER'S DECISION ON A CAPTURED DOCUMENT'S CONTENT AUTHORITY (who issued it), per document,
+-- dated, append-only; the row with the highest seq for a (bundle, capture) is the standing decision and the ones before it
+-- stay readable. The register's own acquisition-time value is the first entry of the history but is not stored here: it is
+-- read from the bundle's data/provenance.json. A machine never writes one (R67).
+CREATE TABLE IF NOT EXISTS authority_decisions (
+  bundle_id   TEXT    NOT NULL,
+  capture_sha TEXT    NOT NULL,
+  seq         INTEGER NOT NULL, -- MAX+1 per (bundle, capture). The highest is the standing decision
+  outcome     TEXT    NOT NULL, -- determined | undetermined_after_review
+  authority   TEXT,             -- the issuing party, NULL for undetermined_after_review (no issuer is invented)
+  basis       TEXT    NOT NULL, -- how the member knows, or what they tried
+  by          TEXT    NOT NULL, -- the deciding member. Never a machine
+  at          TEXT    NOT NULL, -- this module's clock at the decision
+  PRIMARY KEY (bundle_id, capture_sha, seq)
 );
 `;
 

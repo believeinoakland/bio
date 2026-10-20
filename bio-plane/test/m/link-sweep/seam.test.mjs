@@ -93,11 +93,12 @@ test("R4 R7 (monitoring R65): the run reaches monitoring only through sweepHost:
   assert.match(w.fm(filed[0].bundle_id).title, /^Swept by INFO-2026-0990-list#minutes: /);
 });
 
-test("R3 C-18.16–C-18.18: this module's own table holds the three sweep rows, each with its code, number, a canned translation and a where naming this module's site; a refusal answers with its row", () => {
+test("R3 R13 C-18.16–C-18.18, C-18.24: this module's own table holds the four sweep rows, each with its code, number, a canned translation and a where naming this module's site; a refusal answers with its row", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(SWEEP_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
     SWEEP_TERM_REFUSED: ["C-18.16", "src/link-sweep/checks.mjs sweepGrammar > is-sweep-term"],
     SWEEP_NOT_A_MEMBER: ["C-18.17", "src/link-sweep/sweep.mjs sweepFence > is-sweep-member"],
     SWEEP_RATIFY_NOT_AN_OWNER: ["C-18.18", "src/link-sweep/sweep.mjs sweepFence > is-sweep-owner"],
+    MACHINE_CANNOT_SET_SWEEP: ["C-18.24", "src/link-sweep/sweep.mjs sweepSet > is-sweep-set-member"],
   });
   for (const r of Object.values(SWEEP_CHECKS)) {
     assert.ok(typeof r.translation === "string" && r.translation.length > 40, "a canned sentence (DEC-49)");
@@ -109,10 +110,10 @@ test("R3 C-18.16–C-18.18: this module's own table holds the three sweep rows, 
                         translation: SWEEP_CHECKS.SWEEP_NOT_A_MEMBER.translation, detail: "why", sweeps: ["x"] });
 });
 
-test("R9 the op map holds `sweeps` alone, read through the control plane's viewer stamp", () => {
+test("R9 R13 R14 the op map holds `sweeps`, `sweepset` and `sweepratify`, `sweeps` read through the control plane's viewer stamp", () => {
   const { w } = listWorld({ list: LIST, project: PROJ, sweeps: [sweepDef()] });
   const ops = linkSweepOps(w.s, new URL("http://do/sweeps?viewer=member%3Aalice"), { viewer: "member:nobody" });
-  assert.deepEqual(Object.keys(ops), ["sweeps"]);
+  assert.deepEqual(Object.keys(ops), ["sweeps", "sweepset", "sweepratify"]);
   assert.deepEqual(ops.sweeps().sweeps.map((s) => s.sweep), [`${LIST}#minutes`]);
   assert.equal(linkSweepOps(w.s, new URL("http://do/sweeps"), {}).sweeps().sweeps.length, 0, "no stamp sees nothing");
 });

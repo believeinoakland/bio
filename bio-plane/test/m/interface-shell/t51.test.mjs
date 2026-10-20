@@ -484,13 +484,13 @@ test("R97 a passphrase of the empty string with keep false makes the unprotected
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 const GOT = {
   id: "finder", reads: () => ({}),
-  acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { id: "c1" }, name: "x.bin", verify: view.ui.verify || undefined }))); return null; } }],
+  acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: view.ui.verify || undefined }))); return null; } }],
   render: (cs, view) => cs.act("search") + '<pre id="dl">' + cs.esc(view.ui.dl || "") + "</pre>",
 };
 test("R98 cs.download with verify hashes the bytes in the browser before any file is made: matching bytes download; altered bytes save nothing and answer DIGEST_MISMATCH with expected and got; control: without verify a download saves as before", async () => {
   const body = new Uint8Array([1, 2, 3, 4, 5, 250]);
   const page = async (verify) => {
-    const screen = { ...GOT, acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { id: "c1" }, name: "x.bin", verify: VERIFY }))); return null; } }] };
+    const screen = { ...GOT, acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: VERIFY }))); return null; } }] };
     const src = interfacePage([screen]).replace("VERIFY", JSON.stringify(verify));
     return boot({ screens: [screen], path: "/app/finder", html: src.split("__CSP_NONCE__").join("n0nce"), plane: { openoriginal: bytes(body, "application/octet-stream") } });
   };
@@ -689,7 +689,7 @@ test("R103 an explanation opens below what it explains, else above: the first th
 
 const SEARCHING = {
   id: "finder", words: [["screen.finder.t.l", "fx l", false], ["screen.finder.t.a", "fx a", false], ["screen.finder.t.b", "fx b", false], ["screen.finder.t.h1", "fx h1", false], ["screen.finder.t.h2", "fx h2", false]],
-  reads: (view) => ({ list: { op: "search", query: { show: view.ui.show || "a" }, refusals: { BAD: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }),
+  reads: (view) => ({ list: { op: "search", query: { q: view.ui.show || "a" }, refusals: { BAD: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }),
   acts: [],
   render(cs, view) {
     return cs.choice("c1", "screen.finder.t.l", [["a", "screen.finder.t.a"], ["b", "screen.finder.t.b"]], { redraw: "show" })
@@ -710,7 +710,7 @@ test("R90 (K4072) a choice that redraws re-runs the screen's reads with the choi
   assert.equal(p.byOp("search").length, 1, "no read beyond the redraw's");
   await pickIn(p, "c1", "b");
   assert.equal(p.byOp("search").length, 2, "read once more");
-  assert.equal(p.byOp("search")[1].query.show, "b", "with the new query");
+  assert.equal(p.byOp("search")[1].query.q, "b", "with the new query");
 });
 
 test("R90 (K4073) cs.sec and cs.field take help as one key or a list, each its own sentence; a read's own refusal function is handed the kit; cs.checks takes the redraw option", async () => {

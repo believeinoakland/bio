@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J2
+**Read** · handled J6
 
 ## B1 · START
 
@@ -48,3 +48,25 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio queue tranche/T51 job/T51/queue`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · ANSWER · re J3
+
+ANSWER J3 (K4210): (1) accepted: producers' items carry an optional door; BOB sends tasks and queue-producers each a CHANGE to mint it. (2) accepted: queue-producers publishes facts.ms per feed (CHANGE to FR-22); your memoising per ask is yours. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4213; tasks J2): a task put aside by `taskresolve` now carries `resolved_undecided` in its history in place of `resolved` (tasks R21); a decided one carries `decided` then `resolved`. Read `resolved_undecided` as a resolving event wherever you read who resolved a task (`index.mjs` :1617, :1735), so `resolved_by` is not null for one put aside. tasks merges before you (index 143 < 148).
+
+## B6 · CHANGE
+
+CHANGE (K4222): tasks is merged: a task of kind `authority-undetermined` now carries `door: ["taskdecide","taskforward","taskresolve"]` (tasks R24) in `taskList`, `recentTasks` and `resolvedTasks`. Build the item's options from that `door` (never a hand list, K3268). Merge `tranche/T51` first.
+
+## B7 · CHANGE
+
+CHANGE (K4233), a new job session (QUEUE #29, haiku): queue-producers is merged (R46–R51): (1) carry `read` and `code` from `facts.failed[]` into the answer's `feeds[]` entry for that feed, so the live copy can say which read refused (L12); (2) the `members` feed's items (`endorsement-owed`, `expertise-confirmation-owed`) carry `door` (`adminendorse`, `projectowneradd`/`projectownerremove`, `expertiseconfirm`) and `summary_key`/`detail_key`: check your item-building reads them as for tasks' `door` (R12), never a hand list; (3) `facts.ms` includes `members`. Tests with controls; requirement lines (K4210) in your record if ownership refuses the file. Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B8 · CHANGE
+
+CHANGE (K4238): QUEUE #30, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry: `DECLARED_OPS.proposedispose` requires `[project|key|progressionKey]`, `[finding|key|progressionKey]`, `[to|state]` and `reason` at the top level, but its set arm (`items`) carries those per item, so the guard refuses a set (SCREENS-DAILY #11 J8: queue-states R58's set arm). Read the arm: each group a set request satisfies through `items` gains `items` as an alternative; a field the set arm still needs at the top level (e.g. `reason`, if it does) stays required. Test with test-support's `declaredOpHolds` over a set and a single request; control: a request with neither the fields nor `items` is refused naming them. Requirement line for BOB in your COMPLETE.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, the arm and the tests naming the ids it changes, whole. Model haiku, medium effort; workers haiku low.

@@ -17,10 +17,11 @@
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS } from "../src/picturepixels.mjs";
+import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS, PREPARE_TILT_MAX, PREPARE_TILT_FLOOR, PREPARE_LINE_PX, PREPARE_SCALE_MAX } from "../src/picturepixels.mjs";
 import { PNG_REFUSES, MEMORY_FEATURE } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
@@ -669,6 +670,157 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
   const key = (r) => JSON.stringify({ ...r, bytes: r.bytes ? hex(r.bytes) : null });
   const a = await picture(pic("orient-7"), 0, { maxEdge: 10, grey: false }), b = await picture(pic("orient-7"), 0, { maxEdge: 10, grey: false });
   t("R40 R42 the same picture and options: the same answer twice", key(a) === key(b), true);
+}
+
+console.log("\n--- R44: a photographed page, made ready for the engine ---");
+{
+  /* The photographs are `pages` of `fixtures/picture-variants.json` (made by `make-picture-fixtures.py`): a page of
+     printed words drawn, then tilted, reduced, lit unevenly, flattened, blurred and given noise from formulas. The
+     words each one holds are the page's own text; the real engine (tesseract-wasm 0.11.0 and the tessdata_fast model `ocr-worker` pins) reads the prepared and the unprepared picture, and the
+     share of the page's words found (each word counted once per occurrence, case and punctuation ignored) is
+     compared with the floor. The tilt and the contrast are measured on the returned pixels by the readings below,
+     written here from their definitions, not by the subject. */
+  const PV = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8"));
+  const PAGES = Object.fromEntries(PV.pages.map((p) => [p.name, p]));
+  const bytesOf = (name) => new Uint8Array(Buffer.from(PAGES[name].b64, "base64"));
+  const variant = (name) => new Uint8Array(Buffer.from(PV.variants.find((v) => v.name === name).b64, "base64"));
+  const FLOOR = 0.9;
+  /* The engine is the vendor package `ocr-worker` pins, resolved through that module's package.json (as miniflare is
+     above, through bio-plane's), and the model is the file that module ships; no source of `ocr-worker` is imported. */
+  const ocrPkg = createRequire(fileURLToPath(new URL("../../ocr-worker/package.json", import.meta.url)));
+  const { createOCREngine } = await import(pathToFileURL(ocrPkg.resolve("tesseract-wasm")).href);
+  const engineWasm = readFileSync(ocrPkg.resolve("tesseract-wasm").replace(/lib\.js$/, "tesseract-core.wasm"));
+  const engineModel = new Uint8Array(readFileSync(fileURLToPath(new URL("../../ocr-worker/assets/eng.traineddata", import.meta.url))));
+  const words = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
+  const shareRead = (truth, got) => {
+    const left = new Map();
+    for (const w of words(got)) left.set(w, (left.get(w) || 0) + 1);
+    const want = words(truth);
+    let hit = 0;
+    for (const w of want) if (left.get(w) > 0) { hit++; left.set(w, left.get(w) - 1); }
+    return want.length ? hit / want.length : 0;
+  };
+  const readByEngine = async (png) => {
+    const p = readPng(png), rgba = new Uint8ClampedArray(p.width * p.height * 4);
+    for (let i = 0; i < p.width * p.height; i++) rgba.fill(p.samples[i], i * 4, i * 4 + 3), rgba[i * 4 + 3] = 255;
+    const engine = await createOCREngine({ wasmBinary: engineWasm });
+    try {
+      engine.loadModel(engineModel);
+      engine.loadImage({ data: rgba, width: p.width, height: p.height });
+      return (engine.getTextBoxes("line") || []).map((b) => b.text).join(" ");
+    } finally { engine.destroy(); }
+  };
+  const photo = async (name, opts = {}) => { const r = await renderPictureToPixels(bytesOf(name), 0, { maxEdge: 4096, grey: true, ...opts }); answers.push(r); return r; };
+  /* The tilt of the lines in grey samples, in degrees (positive when they rise to the right): the angle, over a
+     tenth-degree sweep, at which the ink's rows are most unevenly filled. */
+  const tiltOf = (png) => {
+    const p = readPng(png), pts = [];
+    for (let y = 0; y < p.height; y++) for (let x = (y % 3); x < p.width; x += 3) if (p.samples[y * p.width + x] < 100) pts.push([x, y]);
+    let best = 0, bestScore = -1;
+    for (let a = -6; a <= 6.0001; a += 0.1) {
+      const sl = Math.tan((a * Math.PI) / 180), rows = new Map();
+      for (const [x, y] of pts) { const k = Math.round(y + x * sl); rows.set(k, (rows.get(k) || 0) + 1); }
+      let sq = 0; for (const c of rows.values()) sq += c * c;
+      if (sq > bestScore) { bestScore = sq; best = a; }
+    }
+    return best;
+  };
+  /* The text lines of grey samples: the runs of rows holding ink, and the median one's height in pixels. */
+  const lineHeight = (png) => {
+    const p = readPng(png), runs = [];
+    let run = 0;
+    for (let y = 0; y <= p.height; y++) {
+      let ink = 0;
+      if (y < p.height) for (let x = 0; x < p.width; x++) if (p.samples[y * p.width + x] < 100) ink++;
+      if (ink > p.width * 0.004) run++; else { if (run >= 4) runs.push(run); run = 0; }
+    }
+    runs.sort((a, b) => a - b);
+    return runs.length ? runs[runs.length >> 1] : 0;
+  };
+  /* The light: the mean of the brighter half of the pixels in each third of the width, and the darkest half percent. */
+  const light = (png) => {
+    const p = readPng(png), mean = [];
+    for (let i = 0; i < 3; i++) {
+      const v = [];
+      for (let y = 0; y < p.height; y++) for (let x = Math.floor((i * p.width) / 3); x < Math.floor(((i + 1) * p.width) / 3); x++) v.push(p.samples[y * p.width + x]);
+      v.sort((a, b) => a - b);
+      const up = v.slice(v.length >> 1);
+      mean.push(up.reduce((a, b) => a + b, 0) / up.length);
+    }
+    const all = Array.from(p.samples).sort((a, b) => a - b);
+    return { paper: Math.min(...mean), spread: Math.max(...mean) - Math.min(...mean), ink: all[Math.floor(all.length * 0.005)] };
+  };
+
+  t("R44 (the constants the requirement states)", [PREPARE_TILT_MAX, PREPARE_TILT_FLOOR, PREPARE_LINE_PX, PREPARE_SCALE_MAX], [10, 0.1, 40, 4]);
+  t("R44 (the fixture set holds the entry's pictures: a 2.4 degree tilt, 110 dpi, noise, and a picture with no text)",
+    ["page-tilt-2.4", "page-110dpi", "page-noise-shade", "page-combined-a", "page-combined-b", "page-big-text", "page-blank"].every((n) => PAGES[n]), true);
+
+  const READ_PAGES = PV.pages.filter((p) => p.words);
+  const shares = {};
+  for (const pg of READ_PAGES) {
+    const prepared = await photo(pg.name, { prepare: true });
+    const raw = await photo(pg.name);
+    shares[pg.name] = { prepared: shareRead(pg.words, await readByEngine(prepared.bytes)), raw: shareRead(pg.words, await readByEngine(raw.bytes)) };
+    t(`R44 the floor: ${pg.name} read through the engine after preparation, at least ${FLOOR * 100} percent of its words`, shares[pg.name].prepared >= FLOOR, true);
+  }
+  console.log("  (words read, prepared / unprepared: " + Object.entries(shares).map(([n, v]) => `${n} ${Math.round(v.prepared * 100)}/${Math.round(v.raw * 100)}`).join(", ") + ")");
+  /* The control: what the preparation fixes is what falls under the floor without it. */
+  for (const n of ["page-noise-shade", "page-combined-a", "page-combined-b"])
+    t(`R44 control: ${n} unprepared falls under the floor (the preparation is the cause)`, shares[n].raw < FLOOR, true);
+
+  for (const n of ["page-tilt-2.4", "page-combined-a", "page-combined-b"]) {
+    const pg = PAGES[n], r = await photo(n, { prepare: true }), raw = await photo(n);
+    t(`R44 tilt: ${n} (true tilt ${pg.tilt_deg}) is found within half a degree`, Math.abs(r.prepared.tilt_deg - pg.tilt_deg) <= 0.5, true);
+    t(`R44 tilt: ${n} prepared is level to within half a degree, by the test's own reading of its pixels`, Math.abs(tiltOf(r.bytes)) <= 0.5, true);
+    t(`R44 tilt control: ${n} unprepared is still tilted past half a degree, the cause being the preparation`, Math.abs(tiltOf(raw.bytes) - pg.tilt_deg) <= 0.5 && Math.abs(tiltOf(raw.bytes)) > 0.5, true);
+  }
+  {
+    const level = await photo("page-clean", { prepare: true });
+    t("R44 tilt: a level page is not turned (under PREPARE_TILT_FLOOR)", level.prepared.tilt_deg, 0);
+  }
+
+  for (const n of ["page-noise-shade", "page-combined-a", "page-combined-b"]) {
+    const r = await photo(n, { prepare: true }), raw = await photo(n), lp = light(r.bytes), lr = light(raw.bytes);
+    t(`R44 contrast: ${n} prepared has paper at least 243, thirds within 12 of one another, ink at most 30`, [lp.paper >= 243, lp.spread <= 12, lp.ink <= 30], [true, true, true]);
+    t(`R44 contrast control: ${n} unprepared has none of the three`, [lr.paper >= 243, lr.spread <= 12, lr.ink <= 30], [false, false, false]);
+  }
+
+  {
+    const raw = await photo("page-110dpi"), r = await photo("page-110dpi", { prepare: true });
+    const lines = lineHeight(raw.bytes), got = lineHeight(r.bytes);
+    t("R44 scale: 110 dpi lines (under 40 px) are enlarged to 40 px, the factor answered, the size following it",
+      [lines < PREPARE_LINE_PX, Math.abs(got - PREPARE_LINE_PX) <= 3, r.prepared.scale > 1 && r.prepared.scale <= PREPARE_SCALE_MAX,
+       Math.abs(r.width - Math.round(raw.width * r.prepared.scale)) <= 2, r.width > raw.width],
+      [true, true, true, true, true]);
+    const capped = await photo("page-110dpi", { prepare: true, maxEdge: 1200 });
+    t("R44 scale: never past maxEdge", [Math.max(capped.width, capped.height) <= 1200, capped.prepared.scale > 1], [true, true]);
+    const big = await photo("page-big-text", { prepare: true }), bigRaw = await photo("page-big-text");
+    t("R44 scale control: lines of 40 px or more keep their size", [big.prepared.scale, big.width, big.height, lineHeight(bigRaw.bytes) >= PREPARE_LINE_PX], [1, bigRaw.width, bigRaw.height, true]);
+  }
+
+  {
+    const blank = await photo("page-blank", { prepare: true }), plain = await photo("page-blank");
+    t("R44 no text: a picture with no text lines says so and is handed on as R42 made it",
+      [blank.ok, blank.prepared, blank.pixels_sha256, blank.width, blank.height], [true, { text_found: false, tilt_deg: 0, scale: 1, line_px: 0 }, plain.pixels_sha256, plain.width, plain.height]);
+    t("R44 no text: the engine reads no words from it (it says so, it does not return a short text)", words(await readByEngine(blank.bytes)), []);
+    t("R44 no text control: a page with text says text_found", (await photo("page-clean", { prepare: true })).prepared.text_found, true);
+  }
+
+  {
+    const a = await photo("page-combined-a", { prepare: true }), b = await photo("page-combined-a", { prepare: true });
+    t("R44 R40 the same bytes and options prepare to the same pixels, and the answer's keys are R42's with `prepared`",
+      [a.pixels_sha256 === b.pixels_sha256, Object.keys(a).sort(), a.route, a.mediaType, a.upright, a.page],
+      [true, ["bytes", "height", "mediaType", "ok", "orientation", "page", "pixels_sha256", "prepared", "reduced_by", "route", "source", "upright", "width"], "decoded-picture", "image/png", true, 0]);
+    t("R44 the pixels_sha256 is over the prepared samples", a.pixels_sha256, createHash("sha256").update(readPng(a.bytes).samples).digest("hex"));
+    t("R44 control: without prepare the answer carries no `prepared` and is R42's grey", [(await photo("page-combined-a")).prepared, (await photo("page-combined-a")).width], [undefined, PAGES["page-combined-a"].width]);
+    const colour = await renderPictureToPixels(variant("reduce"), 0, { maxEdge: 200, prepare: true });
+    t("R44 prepare implies grey: a colour JPEG answers an 8-bit grey PNG", [colour.ok, readPng(colour.bytes).colorType], [true, 0]);
+    const png = await renderPictureToPixels(variant("png-rgb"), 0, { maxEdge: 200, prepare: true });
+    t("R44 a PNG is prepared by the same rule (no text lines in this one: text_found false)", [png.ok, png.prepared.text_found], [true, false]);
+    const tiny = await renderPictureToPixels(variant("orient-1"), 0, { maxEdge: 64, prepare: true });
+    t("R44 R42 a refusal still refuses as R42 does (bytes that are no picture)", (await renderPictureToPixels(new Uint8Array([1, 2, 3, 4]), 0, { maxEdge: 64, prepare: true })).reason, "NOT_A_PICTURE");
+    t("R44 a tiny picture with no text lines is answered, not refused", [tiny.ok, tiny.prepared.text_found], [true, false]);
+  }
 }
 
 console.log("\n--- R41: no place named ---");

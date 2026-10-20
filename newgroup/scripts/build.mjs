@@ -19,7 +19,7 @@ async function bundledInputs() {
   const stub = { name: "stub-big-inputs", setup(build) {
     build.onLoad({ filter: /setup-words[\\/]rows\.mjs$/ }, () => ({ loader: "js", contents: "export const WORDS_COMMIT = ''; export const WORD_ROWS = [];" }));
     build.onLoad({ filter: /newgroup[\\/]src[\\/]release\.mjs$/ }, () => ({ loader: "js",
-      contents: "export const RELEASE_BINARY = '', RELEASE_VERSION = '', RELEASE_MANIFEST = null, RELEASE_CONTAINERS = [];" }));
+      contents: "export const RELEASE_PACKED = '', RELEASE_FACTS = null, RELEASE_VERSION = '', RELEASE_MANIFEST = null, RELEASE_CONTAINERS = [];" }));
   } };
   const built = await esbuild.build({ absWorkingDir: NG, entryPoints: ["src/index.mjs"], bundle: true, format: "esm", platform: "neutral",
     write: false, metafile: true, plugins: [stub], logLevel: "silent" });

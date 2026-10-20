@@ -2,7 +2,7 @@
    screen, and the password asked again. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boot, ok, refused, STORE_KEY } from "./harness.mjs";
+import { declaredFit, fitSend, boot, ok, refused, STORE_KEY } from "./harness.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -47,13 +47,13 @@ test("R33 a shared device at 15 minutes without the member's input sends signout
 });
 
 test("R33 every read the shell makes on its own timers carries background=1 (cs.later's calls, the queue count); the member's own reads and acts do not", async () => {
-  const s = { id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldrestore" }],
-    render: (cs, view) => { if (!view.ui.armed) { view.ui.armed = true; cs.later(300000, (c) => c.call("heldcaptures", { query: { timer: "1" } })); } return cs.act("heldrestore"); } };
+  const s = { id: "held", reads: () => ({ h: { op: "heldcaptures" } }), acts: [{ op: "heldrestore", send: fitSend("heldrestore") }],
+    render: (cs, view) => { if (!view.ui.armed) { view.ui.armed = true; cs.later(300000, (c) => c.call("heldcaptures", { query: { state: "timer" } })); } return cs.act("heldrestore"); } };
   const p = await boot({ screens: [s], path: "/app/held", plane: { heldcaptures: HELD } });
   assert.equal(p.byOp("queue")[0].query.background, "1");
   assert.equal(p.byOp("heldcaptures")[0].query.background, undefined, "the screen's own read");
   await p.clock.tick(5 * MIN);
-  const timed = p.byOp("heldcaptures").find((r) => r.query.timer === "1");
+  const timed = p.byOp("heldcaptures").find((r) => r.query.state === "timer");
   assert.equal(timed.query.background, "1");
   /* control: a timer's read alone never keeps the page awake: the lock still comes at 30 minutes */
   await p.clock.tick(25 * MIN + 1);
@@ -127,7 +127,8 @@ test("R34 an act answered REAUTH_DUE opens the password dialog (session.reauth),
   p.doc.getElementById("cs-reauth-pw").value = "pw";
   await p.click('[data-shell="reauth"]');
   assert.equal(p.root().querySelector('[data-overlay="reauth"]'), null);
-  assert.deepEqual(p.byOp("promote").map((r) => r.body), [{ title: "New" }, { title: "New" }], "sent once more, the same");
+  const sent = { ...declaredFit("promote"), meta: { title: "New" } };
+  assert.deepEqual(p.byOp("promote").map((r) => r.body), [sent, sent], "sent once more, the same");
   assert.deepEqual(p.byOp("reauth").map((r) => [r.headers.Authorization, r.body.password]), [["Bearer tok-1", "nope"], ["Bearer tok-1", "pw"]]);
   assert.equal(p.location.pathname, "/app/project/P1", "its done ran");
 });

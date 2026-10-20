@@ -1,6 +1,6 @@
 # membership (T51)
 
-**Status** · session_018mYefzYbzbFYsZ9Kx9F2np · depth 2 · COMPLETE · handled B7
+**Status** · session_017s65dDGHCvSe8iRWnSsjCe · depth 2 · COMPLETE · handled B8
 
 ## J1 · COMPLETE
 
@@ -167,3 +167,25 @@ Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 4, module lines 1625
 **Raw lines of source**: `bio-plane/src/membership/` four files: 1,627 (was 1,625; the import swap and the own-keys block).
 
 Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 8, module lines 1627
+
+## J9 · COMPLETE
+
+**COMPLETE**, FR-66 · membership (B8 START), on `job/T51/membership`; `tranche/T51` merged first (no conflict).
+
+**Entries applied**
+1. **C80 (member-roster R76).** `t49-founder-handle.test.mjs` no longer asserts `memberFacts("admin")` is null for the claimed founder (the old "R68: she is no members row" line). It asserts her facts, `{cover: null, handle: "steward", role: "admin", status: "active"}`. A new test, "`member-roster` R76 memberFacts(admin)…", covers the unclaimed founder (null), claimed with no handle held (`handle: null`), claimed with one (`steward`), with controls (an unknown id and her handle both null). R68 is retired in `membership.md` (moved to `member-roster` R24) and states no null, so no requirement line changed for this.
+2. **R154 (delegation).** `Membership` gained `expertiseWithdraw` (R79), `endorsementsOwed` (R77) and `expertiseAwaitingConfirmation` (R78), each `(...a) => this.members.x(...a)`. `t51-delegation.test.mjs` now asserts the three are public names of `Members`, are `Membership`'s own functions, answer what the module answers (reads for an administrator and a member), and that a write (a withdrawal) through the delegate is read back by the module with its refusal (`NOT_CONFIRMED`) the module's. Both tests were seen failing before the change.
+3. **Requirements.** R154's line in `build/requirements/membership.md` now says each public name `member-roster` adds later is a delegate too, naming the three, and its test line says so. Not marked *(not yet met)*: a test names it.
+
+**Deferred**: none.
+**Found in other modules**: none. `run.mjs` coverage lists 5 failures and words 16; none names `membership`.
+
+**Checks** (process repo): `format.mjs` 0 failures; `architecture.mjs membership` 0 failures; `coverage.mjs membership` 50 of 50 ids named; `words.mjs membership` 0 failures; `run.mjs /home/user/bio`: no line names membership; `ownership.mjs membership tranche/T51 job/T51/membership`: 1 failure, `build/requirements/membership.md` listed as outside paths (accepted at the merge, per B8).
+**Tests**: `node --test test/m/membership/*.test.mjs test/members.test.mjs` from `bio-plane/`: 178 pass, 0 fail.
+**Raw lines of source**: `bio-plane/src/membership/` four files: 1,645 (was 1,642 after the merge; three delegates).
+
+Size (session_017s65dDGHCvSe8iRWnSsjCe): test runs 6, module lines 1645
+
+## J10 · COMPLETE
+
+FR-66 done (J9 in the record, pushed): C80 R68's test now follows member-roster R76 (claimed founder answers her facts, unclaimed null, both tested); R154 delegates added for expertiseWithdraw, endorsementsOwed, expertiseAwaitingConfirmation, test green. Membership suites 178 pass, 0 fail; checks 0 failures; ownership lists build/requirements/membership.md only (R154 amended). Module lines 1645.

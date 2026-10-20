@@ -1272,6 +1272,12 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["target","reason"], requires: ["target","reason"] } },
   projectfork: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("promotion.declared.projectfork", "creates a NEW project; gated on the create_projects shape, not on the source object's state"),
     fields: { accepts: ["projectId","title","visibility"], requires: ["projectId","title"] } },
+  /* R61 (T51, K4206; op-grades' substrate ground, RUNG_ABSENT and NON_ACTS): the write path every act rides. Its fields are the
+     ones the arm reads from the package: files, meta and snapKey are refused by name when absent (R7, R11), and bundleId is
+     not required of a project's creation, which mints it (R19). refs and basis are refused by name when sent (R7), so they
+     are not accepted. */
+  promote: { classes: ["admin","member","probe"], mutating: true, weight: "substrate", description: localize("promotion.declared.promote", "substrate: the one write path every act rides"),
+    fields: { accepts: ["bundleId","base","files","meta","snapKey","author","replay","writer","operation","visibility","ownerMemberId","actorIdentity","actorViewer","actorMemberId","drop","register"], requires: ["files","meta","snapKey"] } },
 });
 
 const instances = new WeakMap();
