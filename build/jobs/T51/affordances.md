@@ -31,3 +31,11 @@ REPORT (re B3 · CHANGE K4073). Nothing in affordances' paths can name them. `un
 
 COMPLETE (re B4 · CHANGE K4093). Merged tranche/T51; ACT_HELP re-taken at the design now on the tranche (2a64c5ae77): `actionholdrelease` (DEC-359, `act.actionholdrelease.does`) is held; t36.test.mjs :89 and :191 are green. Suite whole: 280 pass, 0 fail; words check 0 failures; coverage 54 of 54; format and architecture unchanged. Consequence for op-declarations: `actionholdrelease` is in its `unexplained` ACT_HELP_ABSENT group and must leave it (R34 partition), as for the six of J1.
 Size (session_0184gxzpn1s2EDqr1qacRUZ3): test runs 18, module lines 2700
+
+## J6 · REPORT
+
+REPORT (re B5, FR-40 · K4190), for BOB. Nothing here blocks this job.
+
+The K4190 red is `t36.test.mjs` :321, not a `meetsR48` control: `hasWord("act.selftest.does")` was true. The design's word list gained that key (DEC-376, the updates screen's check, `mock-acts.js`:64), and the test still asserted the word was absent. `selftest` is instance-setup's probe: affordances draws no act for it (not in ACTS, CAPTURE_ACTS, PER_ITEM_ACTS or unaccounted), and `words-reads.json` does not give `act.selftest.does` to this module, so R62 holds it none. ACT_HELP is right; the test's premise was stale. Fixed in my module: the assertion now checks the reads list, and a new control shows that holding the word departs from R48.
+
+Design-side gap, for the design stream (K3944) and your decision: 64 declared ops (`op-declarations` OPS) have an `act.<op>.does` word in words.json that affordances' reads list in words-reads.json does not give, so ACT_HELP does not hold them. They include selftest, export, exportlog, memberpairingset and runtime (declared, with design text in mock-acts.js), and contradiction*, bias*, goal*, aspiration*, lead*, escalation*, reevaluation*, sweeps, triage and others. Their words are newer than the reads list. If the design regenerates words-reads.json, R48's reading would hold them and ACT_HELP would need their texts. The test would then start failing on the new keys, and its `selftest` assertion would have to change again. I have not made that change, since the list is the design's and R62 names it as the source.
