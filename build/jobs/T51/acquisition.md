@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01DLwzAV6FQiymjBcASeUu4S · depth 2 · WORKING · handled B0
+**Status** · session_01DLwzAV6FQiymjBcASeUu4S · depth 2 · WORKING · handled B2
 
 ## J1 · REPORT
 
