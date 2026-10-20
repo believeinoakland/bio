@@ -291,8 +291,8 @@ REWRITE.update({
 })
 # plan
 w('screen.plan.check.hostile', 'Scenario {scenario}: no branch answers a hostile response (refusal, obstruction, retaliation) to {item}.', False, "a plan check's finding")
-w('screen.plan.subject.from', 'from the inquiry "{title}" ({status}, {date})', False, "where a plan's subject comes from; {status} such as suspected")
-w('screen.plan.phase.checkpoint', '{item} → checkpoint: "{checkpoint}" (judged by a member)', False, "a scenario's phase")
+w('screen.plan.subject.from', 'from the question "{title}" ({status}, {date})', False, "where a plan's subject comes from; {status} such as suspected")
+w('screen.plan.phase.checkpoint', '{item} → checkpoint: "{checkpoint}" (judged by a member, once it is due)', False, "a scenario's phase")
 w('screen.plan.item.untaken', 'nobody has taken it up', False, 'a started item no member has taken up')
 REWRITE.update({'screen.plan.opened': 'opened {date} by {name}'})   # DEC-265 (B226 (3)): planopen records no reason
 # proceeding
@@ -349,7 +349,7 @@ w('screen.review-copy.band', '{n} people outside the team can read this until {d
 w('screen.review-copy.sub', 'A named reader gets a view that you can stop at any time.')
 w('screen.review-copy.link.line', 'For {who} · works until {until}, or until you stop sharing · Civicsmith sends no email: copy the link and send it yourself.', True, "under the reader's link")
 REWRITE.update({
-  'screen.review-copy.heading': 'Share Edition {edition} for review',
+  'screen.review-copy.heading': 'Share this edition for review',
   'screen.review-copy.reads.until': 'can read until {until}',
 })
 # review-outside
@@ -1368,9 +1368,9 @@ w299('screen.review-copy.until.nozone.member', "Your team's time zone isn't set,
 w299('case.draft.untitled', '{project}: draft case', False, 'the title of a draft that names no case, in its list, its page and the ceremony; never the derivation prose')
 w299('case.prepared.by', 'Draft · prepared by {member}', False, "{member} the member's name or handle, never the account's sign-in name such as admin")
 w299('screen.case-editor.tip.distributed', 'Distributed: published, and each copy handed to the readers the case names, such as the office it is sent to.', False, 'the card the ladder lacked')
-w299('case.ladder.notyet', 'not yet checked', False, 'replaces "not yet evaluated" on the ladder')
+w299('case.ladder.notyet', 'Not checked yet', False, 'a step of the readiness ladder that nothing has judged; never "not met" (B411 B2/C8)')
 w299('ceremony.gate.heading', 'Put these right before you sign', False, "the ceremony's list of what stops the signing")
-w299('ceremony.gate.notargets', 'This draft names no finding to publish. Add at least one finding to the case, then check again.', False, 'the publication with no targets; replaces the developer text')
+w299('ceremony.gate.notargets', 'This draft has no finding to publish. Add a finding to the case, then check again.', False, 'the publication with no targets; replaces the developer text; B411 D1: a door "Add a finding" beside it')
 w299('ceremony.gate.other', "Something in the draft stops the signing: {what}. Put it right in the case, then check again.", False, 'any other gate, {what} its own plain sentence')
 # (4) acknowledgements
 w299('document.vouched', 'Vouched for by {member}, {date}. Your team can use this copy.', False, 'replaces the held-copy box at once after "Vouch for this copy"; stays on the page')
@@ -3674,7 +3674,7 @@ W.append(dict(key='refusal.BALANCE_CLASS_NOT_IN_FAMILY', en='That balance class 
 W.append(dict(key='refusal.BAR_IS_A_PROJECT_PROPERTY', en='A standard of evidence belongs to a project, not to a single finding or claim, so none can be read for this finding. Look at the project that published it instead.', protected=False, note='DEC-342: bar requested for a target instead of a project'))
 W.append(dict(key='refusal.BASE_UNLINKED', en='A revision in this export does not link to the one before it, so the export could not be verified.', protected=False, note='DEC-342: export verification: promotion base unlinked'))
 W.append(dict(key='refusal.BASIS_IN_PAYLOAD', en='The basis for each piece of evidence must come from the document itself, not from the request. Remove it from the request and try again. Nothing was written.', protected=False, note='DEC-342: promote request carries basis'))
-W.append(dict(key='refusal.BASIS_REFUSED', en='A piece of evidence cannot be used: it rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hypothesis. Nothing was written.', protected=False, note='DEC-342: evidence leg refused by basis rules'))
+W.append(dict(key='refusal.BASIS_REFUSED', en='These documents cannot be used here: one of them rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hunch. Take that one out, or choose a document that does, then try again. Nothing was written.', protected=False, note='DEC-342: evidence leg refused by basis rules; B411 I-22: plain words and a way forward'))
 W.append(dict(key='refusal.BASIS_VERSION_REFUSED', en='This basis version breaks the rules for how a basis is built, so it was declined. Fix the points listed and try again. Nothing was written.', protected=False, note='DEC-342: basis version failed validation findings'))
 W.append(dict(key='refusal.BELOW_PROJECT_STRENGTH', en="A load-bearing finding doesn't reach the strength of evidence your project requires. Strengthen it or mark it supporting. Nothing was published.", protected=False, note="DEC-342: load-bearing finding below project's evidence bar"))
 W.append(dict(key='refusal.BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD', en="The bias acknowledgement is identical to the previous edition's. Write it fresh for this edition. Nothing was published.", protected=False, note='DEC-342: bias acknowledgement unchanged from prior edition'))
@@ -3982,7 +3982,7 @@ W.append(dict(key='refusal.NO_SUCH_PATTERN', en='No built-in pattern has that na
 W.append(dict(key='refusal.NO_SUCH_REFERENCE', en="That captured document's reading holds no such reference, or you cannot see the document, so there is nothing to resolve or read. Nothing was written.", protected=False, note='DEC-342: reference or capture digest not found for resolving'))
 W.append(dict(key='refusal.NO_SUCH_RELATION', en='No declared step with that number is held, or it has been withdrawn. Nothing was written.', protected=False, note='DEC-342: relation id unknown or already withdrawn'))
 W.append(dict(key='refusal.NO_SUCH_ROW', en='The table has no row with that number, so no money fact was recorded for it. Nothing was written.', protected=False, note='DEC-342: money ingest row number not in table'))
-W.append(dict(key='refusal.NO_SUCH_RULE', en="No active rule in your places' rules states that deadline for this kind of action, so none was set. Name a deadline those rules list. Nothing was written.", protected=False, note="DEC-342: deadline rule missing or unknown for the action's kind"))
+W.append(dict(key='refusal.NO_SUCH_RULE', en="No rule in your places' rules states a deadline for this kind of action, so none was set. Pick one of the deadlines your rules do list, in the box below, or see your places' rules. Nothing was written.", protected=False, note="DEC-342: deadline rule missing or unknown for the action's kind; B411 E6: a box to name the deadline and a door"))
 W.append(dict(key='refusal.NO_SUCH_SET', en="That set of money figures is not in your team's record. Check which set you meant. Nothing was written.", protected=False, note='DEC-342: money set id unknown'))
 W.append(dict(key='refusal.NO_SUCH_STEP_SOURCE', en='No source by that number is attached to that step where you can see it, so none was withdrawn. Nothing was written.', protected=False, note='DEC-342: withdraw step source unknown, withdrawn or unseen'))
 W.append(dict(key='refusal.NO_SUCH_TABLE', en='No table matches that fingerprint here, or you may not see it, or its contents are not held. Nothing was written.', protected=False, note='DEC-342: table for binding or ingest not found or hidden'))
@@ -6275,6 +6275,70 @@ w411('screen.open-file.result.not_scanned', 'Not scanned yet', 'I-18: the scanne
 w411('screen.open-file.result.clean', 'Clean: nothing found', 'I-18')
 w411('screen.open-file.result.found', 'Something was found', 'I-18')
 w411('screen.open-file.result.failed', 'Could not be scanned just now', 'I-18')
+# ---- B411 live walk, group 2 (question, standard, people, case/review/ceremony, plan/action/due date): DEC-384
+REWRITE.update({
+    'screen.standard.text': 'The document that states it',
+    'screen.standard.text.help': 'Pick the document that states the requirement, as captured. The passage is the whole document until you select its words.',
+    'screen.review-copy.nodraft': 'There is no draft to share yet. Make a draft of the case first, then share it.',
+    'screen.case-editor.rung.notmet': 'Checked: something is missing',
+    'screen.plan.support.hypothetical': 'Assumed: not shown yet',
+    'screen.plan.col.ends': 'Legal deadline',
+    'screen.plan.noend': 'No legal deadline',
+    'screen.start-send.noclock': "No legal deadline for this kind of action (your team's profile names none)",
+})
+def n(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-384: B411 ' + note))
+# question: strength sentences in plain words (I-22, I-23, A8), code ids strength.arithmetic.*
+n('strength.arithmetic.unrated_no_leg_on_any_set', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.', 'I-23/A8: strength sentence in plain words; the code draws each document by its title, once')
+n('strength.arithmetic.unrated_no_leg_on_this_axis', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.', 'I-23/A8: strength sentence in plain words')
+n('strength.arithmetic.unrated_this_inquiry_rests_on_nothing', 'Not graded yet on {axis}: this question rests on nothing here.', 'I-23/A8: strength sentence in plain words')
+n('strength.arithmetic.present_and_not_yet_load_bearing', 'Listed, but not counted yet: {legs}.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_computed_strength_a_leg', 'There is no strength for {axis} yet: a document that every set of reasons needs is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_computed_strength_every_set', 'There is no strength for {axis} yet: every set of reasons this rests on is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_computed_strength_stopped', 'There is no strength for {axis} yet: {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.', 'I-23/A8: plain words')
+n('strength.arithmetic.no_stronger_than_the_weakest', '{axis} {grade}: no stronger than the weakest {axis} grade it rests on, which is {leg}{via}.', 'I-23/A8: plain words')
+n('strength.arithmetic.strongest_of_the_sets_of_reasons', '{axis} {grade}: the strongest of the {count} sets of reasons that each carry this conclusion on their own is {set}, and it is no stronger than its weakest {axis} grade, which is {leg}{via}.', 'I-23/A8: plain words')
+n('strength.arithmetic.that_leg_is_needed_by_every', 'That document is needed by every one of those sets, so no set can be stronger than it.', 'I-23/A8: plain words')
+n('strength.arithmetic.further_sets_are_undetermined', '{count} further sets are undetermined and could only be stronger, never weaker: {sets}.', 'I-23/A8: plain words')
+n('strength.arithmetic.one_further_set_is_undetermined', '{count} further set is undetermined and could only be stronger, never weaker: {sets}.', 'I-23/A8: plain words')
+# standard: the crumb
+n('screen.standard.crumb', 'Standard: {name}', 'I-30: the last crumb of a standard says which one the member is on; the project crumb is the project\'s title')
+# people: an organization
+n('screen.person.same.org', 'Same organization?', 'I-32: heading for an organization')
+n('screen.person.same.holds.org', 'Records claimed to be this organization stay linked, never merged; each claim is graded and anyone can see its reason or withdraw it with theirs.', 'I-32')
+n('screen.person.same.claimed.org', 'claimed the same organization; the records stay linked, never merged', 'I-32')
+n('screen.person.same.because.org', 'claimed the same organization, grade {grade}, because {basis}', 'I-32')
+n('screen.person.candidates.org', 'Records that might be the same organization. These are not claims: a member decides.', 'I-32')
+n('screen.person.claim.same_as.org', 'It is the same organization', 'I-32')
+n('screen.person.claim.not_same_as.org', 'It is not the same organization', 'I-32')
+n('screen.person.claim.kind.same_as.org', 'claimed the same organization', 'I-32')
+n('screen.person.claim.kind.not_same_as.org', 'claimed not the same organization', 'I-32')
+n('screen.person.claim.kind.unsure.org', 'unsure whether the same organization', 'I-32')
+n('screen.person.kind.help.org', 'For an organization a fact can be its name, address or contact. Born, died and where someone lives or works apply to people only.', 'I-32: under "What kind of fact" for an organization, which offers only name, address and contact')
+# case, review copy, ceremony
+n('review.title.draft', 'Draft: {title}', 'L14/I-37/C3/D1/I-39/I-29: the heading of a draft that names no case; the title is its scope or subject')
+n('review.title.untitled', 'A draft with no case named yet', 'L14: the heading when the draft has no scope or subject either')
+n('review.body.nocase', 'This draft does not name a case yet. Which case it becomes is settled when it is published.', 'L14: the body text under that heading, in plain words')
+n('review.index.derived_case_identity', 'a draft that does not name a case yet; which case it becomes is settled when it is published', 'L14: the code\'s own id for the identity fragment; the heading is review.title.draft, the sentence review.body.nocase')
+n('screen.review-copy.nodraft.go', 'Make a draft', 'I-29/C1: the door beside "There is no draft to share yet", to the case editor')
+n('screen.case-editor.comments.go', 'Read what outside readers said ({n})', 'C4: on the case screen, a link to the comments and acknowledgements on its review copy')
+n('screen.case-editor.comments.none', 'No outside reader has commented yet.', 'C4: the case screen when its review copy has no comment or acknowledgement')
+n('screen.review-copy.acked', '{who}, an outside reader, read the draft and acknowledged it, {date}', 'C4: an acknowledgement in the comments of a review copy')
+n('refusal.PUBLISH_NO_FINDING', 'This draft has no finding to publish. Add a finding to the case, then publish again.', 'D1/L16: publishing a draft with no finding; case-authoring\'s own code, proposed as PUBLISH_NO_FINDING (the walk fixes none); a door "Add a finding" beside it')
+n('screen.ceremony.gate.addfinding', 'Add a finding', 'D1/L16: the door beside both refusals about a draft with no finding, to where findings are added in the case editor')
+# plan, action, due date
+n('screen.plan.option.unnamed', 'Option {n}', 'E1: an option with no summary is named by its place in the list, never by its id')
+n('screen.plan.phase.unnamed', 'Phase {n}', 'E1: a phase with no name is named by its place in the list, never by its id')
+n('screen.plan.judge.notdue', 'You can judge this checkpoint from {date}.', 'E1: drawn in place of the Judge control until the checkpoint is due')
+n('law.pick', 'Choose a law', 'E3: the one list of laws, shared by "Change the law" and "Propose another law"')
+n('screen.due-date.rule.pick', 'A deadline your rules list', 'E6: the box beside the refusal "No rule in your places\' rules states a deadline", to pick a listed deadline')
+n('screen.due-date.rule.help', 'Pick one of the deadlines your places\' rules state, then work out the due date again.', 'E6')
+n('screen.due-date.rule.go', "See your places' rules", 'E6: the door to the rules, in Settings')
+
+
+n('screen.case-editor.nocase.summary', 'A draft that names no case yet', 'L14: the mock\'s label for the heading of a draft with no case')
+n('screen.due-date.rule.summary', 'When your rules state no deadline for this kind of action', 'E6: the label of the refusal and its box')
+n('screen.review-copy.nodraft.summary', 'When there is no draft yet', 'I-29: the label of the refusal and its door')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
