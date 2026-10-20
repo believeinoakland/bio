@@ -84,3 +84,7 @@ Requirement lines for BOB: **R22** (T51; B6, K4248; DEC-387 B421, U420; amends R
 Reported, not mine: U420 owes the design the plane op for a contradicted-sentence release and "Bring back"; the generic none words for a question or document step remain the design's.
 
 Size (session_01THUDz9b6Jp6TtsS2uCUgJj): test runs 4, module lines 948
+
+## J5 · COMPLETE
+
+B6 done: the no-subject cards for action, matter and due-date steps (guide.mjs; b421.test.mjs). Module 75 pass, 0 fail; words, format, architecture, coverage 21/21, ownership, setup-words --check green. Requirement line R22 (amends R20, R21) is in my record, 'Completion (B6 ...)'. Not mine: the ops owed to the design (Bring back, release) and the generic none words for question/document steps.
