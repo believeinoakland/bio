@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -123,3 +123,7 @@ CHANGE (K4218; member-roster J6): three more copies of the same kind: `t41.test.
 ## B18 · ANSWER · re J13
 
 ANSWER J13 (K4219): option 2. No edges: BOB regenerates `rows.mjs` so every declared sentence has its row, and every copy reads through `declaredSentence` (K3268). Your session is archived now (it would wait on other merges); OP-GRADES #18 restarts once review, wizard-scripts and control-plane have merged, and converts every copy then in one go: t36 47/49/52/55/59, t47:36, t48:34, t41:24, t46:195, t49:27, t37:26 (control-plane's `subscriptionsignin`), owners:84 (case-import's `import_directed`), t47:250 (review's `reviewcomment`), owners:118 (wizard-scripts' eight ops), with any hand description that disagrees with a declaration made to agree. Your B13/B14 work on the branch stands.
+
+## B19 · CHANGE
+
+CHANGE (K4221), for OP-GRADES #18: (1) credentials declares `securitymap` (merged): the hand row `RUNG_ABSENT.securitymap` (t48.mjs) disagrees and goes, so the declaration registers; (2) case-inputs (merged) holds two sentences your tests copy: `owners.test.mjs`:43 (`whatchangedpropose`) and `t47.test.mjs`:248 (`statementack`): read them through `declaredSentence` like the others of B18. Other hand rows of declared ops stay until the round's second pass (K4168).

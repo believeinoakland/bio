@@ -114,3 +114,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B13 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K4221): interface-shell's guard (merged) finds the `queue` screen's `promote` sending `project`, which promotion R61 does not accept (it requires `files`, `meta`, `snapKey`): send only the declared fields, read through the declaration, never a hand list (K3268). Merge `tranche/T51` first.

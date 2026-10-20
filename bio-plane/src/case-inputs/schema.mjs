@@ -1,4 +1,4 @@
-/* case-inputs' tables (requirements: `build/requirements/case-inputs.md`, R2, R6, R9, R11, R16): the statement's
+/* case-inputs' tables (requirements: `build/requirements/case-inputs.md`, R2, R6, R9, R11, R16, R22, R26): the statement's
  * acknowledgements, the drafts of an edition's statement of what changed, and the outcomes carried into a case's next
  * edition with their withdrawals. Copied from `case-authoring`'s `schema.mjs` with the DDL unchanged (K624; N908), so a
  * running store's rows are kept with no data move; `case-authoring` deletes its copy (T47-32). Every other table this
@@ -74,6 +74,20 @@ CREATE TABLE IF NOT EXISTS carried_outcome_withdrawals (
   by         TEXT NOT NULL,
   at         TEXT NOT NULL
 );
+
+-- R22 (T51; K4169, K4171, K4185): A CASE'S STANDARD DETAILS, BESIDE THE CASE. One row per set or clear of one field (area,
+-- contact, related, relationships), append-only: the standing value of a field is its latest row, value a JSON text or the
+-- text 'null' for a clear. set_by is the owner's member id; no public answer carries it. Not part of the case document
+-- (R25). Working material: the whole-store purge clears it (R26).
+CREATE TABLE IF NOT EXISTS case_details (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  case_id TEXT NOT NULL,
+  field   TEXT NOT NULL,
+  value   TEXT NOT NULL,
+  set_by  TEXT NOT NULL,
+  at      TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_details_case ON case_details(case_id, field, seq);
 `;
 
 /** R11 (was case-authoring R28, R71's purge clause): declared whole to record-core's purge (K23) as working material: a
@@ -82,7 +96,9 @@ export const CASE_INPUTS_TABLES = Object.freeze([{ name: "statement_acknowledgem
                                                     { name: "what_changed_drafts", keys: [] },
                                                     /* R9: R11's form */
                                                     { name: "carried_outcomes", keys: [] },
-                                                    { name: "carried_outcome_withdrawals", keys: [] }]);
+                                                    { name: "carried_outcome_withdrawals", keys: [] },
+                                                    /* R26 (T51): R11's form */
+                                                    { name: "case_details", keys: [] }]);
 
 /** Creates the table where absent, and adds R1's `reason` column (DEC-88) to a table created before it, never filling
  *  it: an acknowledgement recorded before the acknowledger's words were asked for carries none (K1050). Idempotent. */

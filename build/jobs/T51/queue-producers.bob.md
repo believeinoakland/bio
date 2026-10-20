@@ -1,6 +1,6 @@
 # BOB to queue-producers (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -50,3 +50,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B4 · CHANGE
 
 CHANGE (K4210; queue J3): (1) C62: items you mint carry an optional door: endorsement-owed adminendorse (or the change's own projectowneradd / projectownerremove for an owner vote), expertise-confirmation-owed expertiseconfirm. (2) L13: publish facts.ms, {<feed id>: milliseconds} for each feed feedItems reads, a feed that threw included. Both added optional fields; no existing answer changes; queue reads them. Test each, with a control. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · ANSWER · re J4
+
+ANSWER (K4222): your reading of R49 stands: every read this module makes is one statement per kind of fact for the whole feed, made once; provider reads keyed by one project or question stay one per distinct project or question, never per item or page. State R49 that way in your requirement line. Batch forms in the owners (`candidatesFor`/`conflictNotices`, `caseTensions`, a batch `homesOf`) wait on the redeploy's live `facts.ms` (P19 (2)): list them in your record for BOB to place then.
