@@ -4,6 +4,7 @@
    no table, no row, no refusal, no op (R9); its own stats sight is `stats.mjs`' (R10). Moved from
    `store.mjs`' constructor, `#migrate`, `alarm`, `onAlarm`, `#nowMs`, `#ownNamespace` and `routes`, and from
    `control-plane/dispatch.mjs`' `Store` (control-plane R35, now this module's R1), with their behaviour unchanged. */
+import "./register.mjs";   /* R68 (T51; K4168): the owners' op declarations registered, before any table either registration keeps is read */
 import { DurableObject } from "cloudflare:workers";
 import { actionsOf, actionsOps } from "../actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../action-clocks/index.mjs";

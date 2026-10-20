@@ -2,6 +2,7 @@
    each composed from the arms' owners' handlers (`door.mjs`); `Store` is the Durable Object class `wrangler.jsonc` binds
    (R1). The published read is handed its plane binding (`bindPublishedPlane`, public-read's) when this module loads. No
    other export. */
+import "./register.mjs";   /* R68 (T51; K4168): first, since control-plane reads the op tables when it loads */
 import { makeFetch, PUBLISHED_STORE } from "../control-plane/index.mjs";
 import { json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON,
          STORE_SILENT_DETAIL } from "../answer-envelope/index.mjs";   /* K1907, K2041: the envelope's */
