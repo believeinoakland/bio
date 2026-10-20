@@ -55,8 +55,8 @@ async function projectOf(cs, id) {
 
 /* R33 (N1139; DEC-325): a document is titled from its own title: the reading's `title` when it is not null; else what the
  * answer's document states; else, for an address that gives only a host, `document.untitled.web` (`{site}` the host,
- * `{date}` the day captured), never a slug or an address; else the address's last segment, as before. Plain text, at most
- * 200 characters. */
+ * `{date}` the day captured), never a slug or an address; else R50's `screen.capture.address.untitled` (`{kind}` from the document's
+ * format, `{site}` the address's host), never the address's file part. Plain text, at most 200 characters. */
 function titleOf(cs, o) {
   const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
   const read = o.reading && typeof o.reading.title === "string" ? o.reading.title.replace(/\s+/g, " ").trim() : "";
@@ -70,8 +70,18 @@ function titleOf(cs, o) {
     const day = new Date(cs.now ? cs.now() : Date.now()).toISOString().split(".")[0] + "Z";
     return plain(cs.w("document.untitled.web", { site: host, date: { html: cs.date(day) } })).slice(0, 200);
   }
-  const last = (address.replace(/[?#].*$/, "").match(/\/([^/]+)\/?$/) || [])[1] || "";
-  return String(last || address).slice(0, 200);
+  /* R50 (DEC-384 I-03): a document with no title is "A {kind} from {site}", never the file part of its address. `kind` is the
+     document's own format (`document.kind.*`), else what its declared media type names, else "file". */
+  const prof = o.doc && o.doc.profile && o.doc.profile.format && typeof o.doc.profile.format.format === "string" ? o.doc.profile.format.format : "";
+  const media = String((o.doc && o.doc.capture && o.doc.capture.content_type) || (o.doc && o.doc.profile && o.doc.profile.source_content_type) || "").toLowerCase().split(";")[0].trim();
+  const BY_MEDIA = { "application/pdf": "pdf", "text/html": "html", "application/xhtml+xml": "html", "text/plain": "text", "text/csv": "csv",
+    "image/jpeg": "jpeg", "image/png": "png", "application/zip": "zip",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx", "application/vnd.oasis.opendocument.text": "odt",
+    "application/vnd.oasis.opendocument.spreadsheet": "ods", "application/vnd.oasis.opendocument.presentation": "odp" };
+  const kinds = ["pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "jpeg", "png", "html", "zip", "text"];
+  const kind = kinds.includes(prof) ? prof : BY_MEDIA[media] || "undetermined";
+  return plain(cs.w("screen.capture.address.untitled", { kind: plain(cs.w("document.kind." + kind)), site: host || "" })).slice(0, 200);
 }
 
 /* R13, DEC-342: a refusal in words, beside the act or the address that met it: `refusal.<CODE>` when the table holds the code,
@@ -158,8 +168,9 @@ function renderCapture(cs, view) {
     .map(([k, w]) => `<span role="tab"${k === tab ? ' aria-selected="true"' : ""}><a href="/app/capture/${k}${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav${k === tab ? ' aria-current="page"' : ""}>${cs.w(w)}</a></span>`).join("");
   /* R24: the capture's result links the document it made; R22: "Cite a passage" opens `find-in` over it, with the question
      chosen when the capture was made for one. Nothing is linked for a refused promotion or an answer naming no bundle. */
+  const plainText = (s) => String(s).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
-    ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.title || g.bundleId, [])}`
+    ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.existed ? plainText(cs.w("screen.capture.address.existed.open")) : g.title || g.bundleId, [])}`
       + (g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
       /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
       + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
@@ -232,18 +243,28 @@ function renderCapture(cs, view) {
           + cs.row(cs.icon("clock"), `${cs.w("screen.capture.a64.capturing_it_again_keeps_the_new_copy_be")} ${cs.w("screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un")}`) : ""))
           + `<div class="mk-acts">${cs.act("acquire", { label: "screen.capture.a64.capture_the_new_copy", data: { again: "1" } })}${leave}</div>`;
     }
-    body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
-      + forq
-      + (watch && cs.can("monitorset") ? `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
-        + cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
-      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}${watch ? `${cs.act("monitorset")}${cs.act("monitor")}` : ""}</div>`
-      + unfinished
-      + a64
-      + (got ? (got.archive
+    /* R45 (C19; DEC-375): keep the page as the site sent it or as a visitor saw it (`render: true`); the web-archive capture is
+       refused to members, so it is told and offered nothing */
+    const keep = cs.checks("ci-render", "screen.watching.sweepdef.match", [["site", "screen.capture.render.keep.site", !U.render], ["visitor", "screen.capture.render.keep.visitor", !!U.render]], { radio: true })
+      + `<p class="mk-small muted">${cs.w("screen.capture.render.keep.explain1")} ${cs.w("screen.capture.render.keep.explain2")}</p>`
+      + `<details class="mk-details"><summary>${cs.w("screen.capture.archive.summary")}</summary><p class="mk-small">${cs.w("screen.capture.archive.explain1")} ${cs.w("screen.capture.archive.explain2")}</p></details>`;
+    /* R50 (A1, A2): the working line from the press until the answer; the result is a status line under the button */
+    const working = U.working ? `<p class="mk-note" role="status" data-working><b>${cs.w("screen.capture.address.working.head")}</b> ${cs.w("screen.capture.address.working")}</p>` : "";
+    const result = (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
         : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title }) + made(got)) : "")
-      + refusedPromotion("address")
+      + refusedPromotion("address");
+    body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
+      + forq
+      + keep
+      + (watch && cs.can("monitorset") ? `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
+        + cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
+      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}${watch ? `${cs.act("monitorset")}${cs.act("monitor")}` : ""}</div>`
+      + working
+      + result
+      + unfinished
+      + a64
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
         { address: U.requested.address }) : "")
       + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
@@ -311,12 +332,17 @@ async function sendAcquire(view, el, cs) {
   const chosen = view.parts.forOf(view).id;
   const question = /^INQ-/.test(chosen) ? String(cs.value("ci-for") || chosen).trim() : "";
   const body = question ? { locator: address, for: question } : { locator: address };
-  if (el && el.dataset && el.dataset.again === "1") { cs.set("a64", null); return { body }; }
+  /* R45: the page as a visitor saw it is asked for only when that is chosen; the site's own copy sends no `render` */
+  const visitor = cs.value("ci-render-1") === true;
+  if (visitor) body.render = true;
+  cs.set("render", visitor);
+  const begin = () => { cs.set("captured", null); cs.set("working", true); cs.later(90000, (k, v) => { if (v && v.ui && v.ui.working) k.set("working", false); }); };
+  if (el && el.dataset && el.dataset.again === "1") { cs.set("a64", null); begin(); return { body }; }
   cs.set("a64", { looking: true });
   const asked = await cs.call("heldat", { query: { address, check: "true" } });
   const r = asked && asked.result && typeof asked.result === "object" ? asked.result : asked;
   if (!r || r.ok === false || typeof r.held !== "boolean") { cs.set("a64", { failed: r && r.ok === false ? view.parts.refusalHtml(cs, r) : "" }); return null; }
-  if (r.held === false) { cs.set("a64", null); return { body }; }
+  if (r.held === false) { cs.set("a64", null); begin(); return { body }; }
   const state = r.changed && (r.changed.state === "unchanged" || r.changed.state === "changed") ? r.changed.state : "undetermined";
   cs.set("a64", { state, copy: r.copy && typeof r.copy === "object" ? r.copy : {} });
   return null;
@@ -332,6 +358,7 @@ async function doneAcquire(view, answer, cs) {
   const fin = view.ui && view.ui.finishing;
   const title = fin && fin.session && fin.title ? fin.title : view.parts.titleOf(cs, { reading: a.reading, doc, address });
   const sha = doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "";
+  cs.set("working", false);
   cs.set("promoteRefused", null);
   /* R31: a continuation (`continued`) files nothing new: its supporting files join the capture it resumed */
   if (a.continued) { cs.set("captured", { title, address, bundleId: null, sha }); cs.set("finishing", null); return; }
@@ -340,7 +367,15 @@ async function doneAcquire(view, answer, cs) {
                          bundleId: typeof a.bundleId === "string" ? a.bundleId : null });
     return;
   }
-  if (a.existed === true) { cs.set("captured", { existed: true, title, address, bundleId: typeof a.bundleId === "string" ? a.bundleId : null, sha }); return; }
+  /* R49 (L3; K4194): `existed: true` says the object store held the bytes, not that a document the viewer can see does. The
+     record is asked (`heldat`, no `check`: nothing is fetched) for the document that holds the sha as this viewer sees it: one
+     that shows is linked and nothing is written; none that shows is promoted for the viewer below, as a new capture is. */
+  if (a.existed === true) {
+    const held = sha ? await cs.call("heldat", { query: { sha256: sha } }) : null;
+    const h = held && held.result && typeof held.result === "object" ? held.result : held;
+    const doc0 = h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" && h.copy.document ? h.copy.document : "";
+    if (doc0) { cs.set("captured", { existed: true, title, address, bundleId: doc0, sha }); return; }
+  }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });

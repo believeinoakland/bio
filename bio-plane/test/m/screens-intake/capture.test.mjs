@@ -14,7 +14,12 @@ const failed = (p) => main(p).querySelector('[data-state="failed"][role="alert"]
 
 const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
 const SHA = "a".repeat(64);
-const DOC = { capture: { sha256: SHA, bytes: 1200, encoding: "binary" }, file: "snapshots/a.pdf", title: null };
+const DOC = { capture: { sha256: SHA, bytes: 1200, encoding: "binary", content_type: "application/pdf" }, file: "snapshots/a.pdf", title: null };
+/* R50 (I-03): a document with no title is "A {kind} from {site}", by the keys, never the address's file part */
+const UNTITLED = word("screen.capture.address.untitled", { kind: word("document.kind.pdf"), site: "www.example.gov" });
+/* R49: `acquire` says `existed: true` of bytes the object store held; the record is asked (`heldat` by digest) for the document the viewer sees */
+const HELD_BY_SHA = (document = "INFO-2026-0002-report") => (req) => (req.query.sha256 ? ok({ ok: true, held: true, copy: { sha256: SHA, document, project: null, retrieved: "2026-10-01T10:00:00Z", actor: "member:x", grade: null, address: ADDRESS },
+  versions: 1, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } }) : NOT_HELD);
 const sha256 = (t) => createHash("sha256").update(t, "utf8").digest("hex");
 /* record-grammar's canonical JSON, restated here for flat documents: keys sorted, no space */
 const canon = (v) => Array.isArray(v) ? `[${v.map(canon).join(",")}]` : v && typeof v === "object"
@@ -36,7 +41,7 @@ test("R26 every key the capture screen reads is a word of the list", async () =>
 });
 
 test("R1 R16 the address tab draws acquire, capturerequest, and the two watching acts, monitorset and monitor", async () => {
-  const p = await open("/app/capture/address", { plane: { acquire: ok({ ok: true, existed: true, document: DOC, bundleId: "INFO-2026-0002-report" }) } });
+  const p = await open("/app/capture/address", { plane: { heldat: HELD_BY_SHA(), acquire: ok({ ok: true, existed: true, document: DOC }) } });
   for (const op of ["acquire", "capturerequest"]) assert.ok(btn(p, op), op);
   assert.ok(!btn(p, "monitorset") && !btn(p, "monitor"), "R18: watching waits for a captured address");
   fill(p, { "ci-address": ADDRESS });
@@ -103,7 +108,7 @@ test("R1 (N747) an answer carrying promoted is not promoted again by the screen"
 
 const CAPTURED = { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0001" }),
                    promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) };
-const BUNDLE = "INFO-2026-0001-street-maintenance-2026-pdf";
+const BUNDLE = "INFO-2026-0001-a-pdf-from-www-example-gov";
 
 test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an information bundle at collected that meets verified's entry, and links the document", async () => {
   const p = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0007" }),
@@ -113,7 +118,7 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   await p.settle();
   assert.deepEqual(p.byOp("allocid")[0].query, { op: "allocid", prefix: "INFO", year: String(new Date().getUTCFullYear()) });
   const b = p.byOp("promote")[0].body;
-  assert.equal(b.bundleId, "INFO-2026-0007-street-maintenance-2026-pdf");
+  assert.equal(b.bundleId, "INFO-2026-0007-a-pdf-from-www-example-gov");
   assert.equal(b.base, null);
   assert.equal(b.meta.object_type, "information");
   assert.equal(b.meta.current_state, "collected");
@@ -135,7 +140,7 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   assert.equal(ds.sha256, sha256(ds.text));
   assert.equal(ds.bytes, Buffer.byteLength(ds.text, "utf8"));
   /* R21 R24: said only once the promotion answered; the result links the document it made */
-  assert.ok(says(p, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }));
+  assert.ok(says(p, "screen.capture.address.done", { title: UNTITLED }));
   assert.ok(main(p).querySelector(`a[href*="${b.bundleId}"]`), "R24: the result links the document");
   /* control: a refused promote is drawn on the tab with the owner's words, says nothing waits, and links nothing */
   const q = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0008" }),
@@ -144,7 +149,7 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   await press(q, "acquire");
   await q.settle();
   assert.match(text(q), /The checks refused it\./);
-  assert.ok(!says(q, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }));
+  assert.ok(!says(q, "screen.capture.address.done", { title: UNTITLED }));
   assert.equal(main(q).querySelector('a[href*="INFO-2026-0008"]'), null, "R24 control: a refused promotion draws no link");
   /* DEC-342: a code the table holds is drawn by its word, never by the builder's detail; a coded refusal with neither is the shell's uncatalogued path */
   assert.ok(hasWord("refusal.GATE_REFUSED"));
@@ -170,7 +175,7 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   await press(r, "acquire");
   await r.settle();
   assert.ok(failed(r), "a failure with no words is still drawn as failed");
-  assert.ok(!says(r, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }));
+  assert.ok(!says(r, "screen.capture.address.done", { title: UNTITLED }));
 });
 
 test("R1 R21 (D29) an answer of ok: true that carries ok: false is a refusal at either step of a promotion, never a capture that waits", async () => {
@@ -180,7 +185,7 @@ test("R1 R21 (D29) an answer of ok: true that carries ok: false is a refusal at 
     fill(p, { "ci-address": ADDRESS });
     await press(p, "acquire");
     await p.settle();
-    assert.ok(!says(p, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }), words);
+    assert.ok(!says(p, "screen.capture.address.done", { title: UNTITLED }), words);
     assert.ok(failed(p), `${words}: drawn failed`);
     assert.equal(main(p).querySelector(`a[href*="${BUNDLE}"]`), null, `${words}: no link`);
     const u = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, ...plane } });
@@ -203,7 +208,7 @@ test("R16 \"Watch this address\" sends monitorset alone, enabled with the freque
   assert.deepEqual(sent, { bundleId: BUNDLE, enabled: true, frequency: "daily" });
   assert.equal(p.byOp("monitorset").length, 1);
   assert.equal(p.byOp("monitor").length, 0, "watching sends no check");
-  assert.ok(says(p, "screen.capture.address.watching", { title: "street-maintenance-2026.pdf", frequency: word("screen.capture.address.freq.daily") }));
+  assert.ok(says(p, "screen.capture.address.watching", { title: UNTITLED, frequency: word("screen.capture.address.freq.daily") }));
   /* the frequency left as drawn is weekly */
   const q = await open("/app/capture", { plane: { ...CAPTURED, monitorset: ok({ ok: true }) } });
   fill(q, { "ci-address": ADDRESS });
@@ -219,21 +224,23 @@ test("R16 \"Check it now\" sends monitor alone, for the same bundle", async () =
   await press(p, "monitor");
   assert.deepEqual(p.byOp("monitor").map((r) => r.body), [{ bundleId: BUNDLE }]);
   assert.equal(p.byOp("monitorset").length, 0, "checking sets no watching");
-  assert.ok(says(p, "screen.capture.address.checked", { title: "street-maintenance-2026.pdf" }));
+  assert.ok(says(p, "screen.capture.address.checked", { title: UNTITLED }));
 });
 
 test("R14 an address not captured this visit is watched through the held document for that address; none known, nothing is sent", async () => {
   const held = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0003-other", title: "Other", source: { address: "https://x.example/y" } },
                                      { bundle_id: "INFO-2026-0002-report", title: "The report", source: { address: ADDRESS } }] });
-  const p = await open("/app/capture", { plane: { heldcaptures: held, acquire: ok({ ok: true, existed: true, document: DOC }), monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
-  fill(p, { "ci-address": ADDRESS });
+  const p = await open("/app/capture", { plane: { heldcaptures: held, heldat: HELD_BY_SHA("INFO-2026-0009-seen"), acquire: ok({ ok: true, existed: true, document: DOC }), monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
+  /* a different address is captured this visit (R49 links the document that holds it); the watched one is found among the held */
+  fill(p, { "ci-address": "https://other.example/captured-now" });
   await press(p, "acquire");
+  fill(p, { "ci-address": ADDRESS });
   await press(p, "monitorset", { reason: "r" });
   assert.equal(p.byOp("monitorset")[0].body.bundleId, "INFO-2026-0002-report");
   await press(p, "monitor");
   assert.equal(p.byOp("monitor")[0].body.bundleId, "INFO-2026-0002-report");
   /* control: an address no held document names: nothing is sent, and the member is told to capture it first */
-  const q = await open("/app/capture", { plane: { heldcaptures: held, acquire: ok({ ok: true, existed: true, document: DOC }) } });
+  const q = await open("/app/capture", { plane: { heldcaptures: held, heldat: HELD_BY_SHA("INFO-2026-0009-seen"), acquire: ok({ ok: true, existed: true, document: DOC }) } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "acquire");
   fill(q, { "ci-address": "https://never.example/z" });
@@ -255,8 +262,8 @@ test("R14 NOT_MONITORED, NO_LOCATOR and MONITOR_SET_REFUSED are drawn by the she
     const held = WORD_ROWS.find((w) => w[0] === `refusal.${code}`);
     const expected = held ? held[1].split("{")[0].trim() : `Words for ${code}.`;
     assert.ok(r.slot().textContent.includes(expected), `${code}: ${r.slot().textContent}`);
-    assert.ok(!says(p, "screen.capture.address.watching", { title: "street-maintenance-2026.pdf", frequency: word("screen.capture.address.freq.weekly") }), code);
-    assert.ok(!says(p, "screen.capture.address.checked", { title: "street-maintenance-2026.pdf" }), code);
+    assert.ok(!says(p, "screen.capture.address.watching", { title: UNTITLED, frequency: word("screen.capture.address.freq.weekly") }), code);
+    assert.ok(!says(p, "screen.capture.address.checked", { title: UNTITLED }), code);
   }
 });
 
@@ -643,7 +650,7 @@ test("R29 BAD_FOR is drawn by refusal.BAD_FOR beside the field in a fold titled 
   assert.ok(fold && fold.hasAttribute("open"), "a fold, open whenever drawn");
   assert.ok(saysIn(fold.querySelector("summary"), "capture.forquestion.refused.summary"));
   assert.equal(p.byOp("promote").length, 0);
-  assert.ok(!says(p, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }), "nothing was captured");
+  assert.ok(!says(p, "screen.capture.address.done", { title: UNTITLED }), "nothing was captured");
   assert.equal(main(p).querySelector('a[href*="INFO-"]'), null);
 });
 
@@ -696,13 +703,13 @@ test("R33 a page that states no title and whose address gives only a host is tit
   }
 });
 
-test("R33 control: a capture whose reading is null (or absent) falls back to the address's last segment as before; a blank title is none", async () => {
+test("R33 control: a capture whose reading is null (or absent) is titled by R50's untitled sentence, its kind and site, never the address's file part; a blank title is none", async () => {
   for (const reading of [null, undefined, { title: "   " }, { title: null }]) {
     const p = await open("/app/capture", { plane: { opencaptures: OPEN0, ...CAPTURED, acquire: ok({ ok: true, document: DOC, ...(reading === undefined ? {} : { reading }) }) } });
     fill(p, { "ci-address": ADDRESS });
     await press(p, "acquire");
     await p.settle();
-    assert.match(bundleMd(p), /^title: "street-maintenance-2026\.pdf"$/m, JSON.stringify(reading));
+    assert.match(bundleMd(p), new RegExp(`^title: ${JSON.stringify(UNTITLED)}$`, "m"), JSON.stringify(reading));
   }
 });
 
@@ -908,8 +915,8 @@ test("R38 'Finish it' and an empty address send no heldat; the address tab alone
 });
 
 test("R40 the document Watch and Check act on is found among the held and the vouched: heldcaptures is asked with state held_and_vouched", async () => {
-  const p = await open("/app/capture/address", { plane: { ...A64, heldat: NOT_HELD, acquire: ok({ ok: true, existed: true, document: DOC }), monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
-  fill(p, { "ci-address": ADDRESS });
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: HELD_BY_SHA("INFO-2026-0009-seen"), acquire: ok({ ok: true, existed: true, document: DOC }), monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
+  fill(p, { "ci-address": "https://other.example/captured-now" });
   await press(p, "acquire");
   fill(p, { "ci-address": ADDRESS });
   await press(p, "monitorset", { reason: "r" });

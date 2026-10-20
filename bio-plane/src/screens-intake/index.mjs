@@ -55,6 +55,12 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.a64.capturing_it_again_keeps_the_new_copy_be", "screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un",
     "screen.capture.a64.capture_the_new_copy", "state.loading", "screen.capture.a64.captured_by", "screen.capture.a64.nothing_added",
     "screen.capture.a64.undetermined",
+    /* R45, R50 (T51 fix round; DEC-375, DEC-384) */
+    "screen.capture.address.working", "screen.capture.address.working.head", "screen.capture.address.untitled", "screen.capture.address.existed.open",
+    "screen.capture.render.keep.site", "screen.capture.render.keep.visitor", "screen.capture.render.keep.explain1", "screen.capture.render.keep.explain2",
+    "screen.capture.archive.summary", "screen.capture.archive.explain1", "screen.capture.archive.explain2", "screen.watching.sweepdef.match",
+    "document.kind.pdf", "document.kind.docx", "document.kind.xlsx", "document.kind.pptx", "document.kind.odt", "document.kind.ods", "document.kind.odp",
+    "document.kind.csv", "document.kind.jpeg", "document.kind.png", "document.kind.html", "document.kind.zip", "document.kind.text", "document.kind.undetermined",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",
@@ -73,6 +79,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.setaside", "screen.held.setasidecount", "screen.held.sub", "screen.held.thumb",
     "screen.held.untitled", "screen.held.vouchbad", "screen.held.vouchmissing", "screen.held.waiting",
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
+    "screen.capture.openit", "screen.capture.openit.help",
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",
