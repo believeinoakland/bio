@@ -174,34 +174,39 @@ One worker (sonnet, medium) in BOB's session, after wave 1 has merged and before
 **FR-04 · `op-declarations`** (wave 1, sonnet, 1 entry): Wave 1's declaration half of the op-declaration assembly (K4168).
 **FR-05 · `interface-shell`** (wave 1, sonnet, 3 entries): The guard that compares every screen act's request with its owner's declared fields (K4164 goal 3, K4168), counting the undeclared; the router part C52 needs; and the paths of the six new screens.
 **FR-06 · `file-scanner`** (wave 2, sonnet, 1 entry): FR-SCAN (K4182): the scanner has never had signatures. After the redeploy BOB confirms the 27 files scan.
-**FR-07 · `member-roster`** (wave 2, sonnet, 3 entries): C80 (the provider half), C62's two reads, and the declarations of the three ops the Settings screens send.
+**FR-07 · `member-roster`** (wave 2, sonnet, 4 entries): C80 (the provider half), C62's two reads, the withdrawal's behaviour (C79) and the declarations of the four ops the Settings screens and the queue send.
 **FR-08 · `project-roster`** (wave 2, sonnet, 2 entries): C84's provider half; `screens-daily` draws the mark.
 **FR-09 · `credentials`** (wave 2, sonnet, 2 entries): C80's credentials half.
 **FR-10 · `provenance`** (wave 2, sonnet, 3 entries): C23 (NO-OP) and C62's fact (the authority decision).
-**FR-11 · `capture-sources`** (wave 2, sonnet, 2 entries): C20 (NO-OP) and the credential ops' own declaration; the retry screen is not drawn (see Left out in the plan).
+**FR-11 · `capture-sources`** (wave 2, sonnet, 2 entries): C20 (NO-OP) and the credential ops' own declaration; the controls are drawn (DEC-381) and built by `screens-intake`; the retry op `capturerequestretry` is `capture-requests`' (section 7).
 **FR-12 · `file-safety`** (wave 2, sonnet, 1 entry): FR-SCAN's second half (K4182).
 **FR-13 · `connections`** (wave 2, sonnet, 2 entries): C28's provider half and the two connection ops' declaration.
 **FR-14 · `agent-runner`** (wave 2, sonnet, 1 entry): K4176 (2): the minimal fix that makes the release deployable as a whole, in the module the requirement says exports the class.
-**FR-15 · `investigation`** (wave 2, sonnet, 2 entries): C65 (NO-OP, partly: the existing op is gated on quiet).
+**FR-15 · `investigation`** (wave 2, sonnet, 2 entries): C65 (NO-OP, partly: the existing op is gated on quiet); canon makes a close the owner's recorded act (`project-stage` R2; State Rules K362); `screens-inquiry` draws the control (DEC-381).
 **FR-16 · `case-import`** (wave 2, sonnet, 3 entries): C49, built now that Bob ruled 'A' (K4169); its screens are drawn (DEC-378) and are `screens-publish`'s and `screens-inquiry`'s entries; and C51's withdraw op.
 **FR-17 · `case-inputs`** (wave 2, sonnet, 2 entries): C12 without its classification row (K4185), built now that Bob ruled 'A' (K4169) and BOB drafted its requirement (K4171). Its screen is drawn (DEC-378) and is `screens-publish`'s entry.
 **FR-18 · `case-authoring`** (wave 2, sonnet, 3 entries): C1 (BUG), the ceremony fields of C5/C6, and the three ops' declaration.
 **FR-19 · `review`** (wave 2, sonnet, 4 entries): C3 (BUG), C2's provider half, C9's draft, and the `casedraft` declaration.
-**FR-20 · `filings`** (wave 2, haiku, 3 entries): Declares `filingapprove`, `templatesave`: the ops the newly drawn controls send, so interface-shell's guard checks them (K4168).
+**FR-20 · `filings`** (wave 2, sonnet, 3 entries): Declares `filingapprove`, `templatesave`: the ops the newly drawn controls send, so interface-shell's guard checks them (K4168).
 **FR-21 · `tasks`** (wave 2, sonnet, 2 entries): C62's one op (UC-046).
 **FR-22 · `queue-producers`** (wave 2, sonnet, 1 entry): C62's two reads' consumers: the items the record routes to a member.
 **FR-23 · `queue`** (wave 2, sonnet, 2 entries): C62's door boundary, and the two declarations C59/C60 need.
-**FR-24 · `screens-entry`** (wave 2, sonnet, 1 entry): C11 (DEC-374) on `setup`: the file a non-technical administrator needs to verify the team's domain.
-**FR-25 · `screens-settings`** (wave 2, sonnet, 7 entries): C79, C80, the new `bias` screen (C47), C30, C81, C82, C11 (the team's page).
-**FR-26 · `screens-intake`** (wave 2, sonnet, 5 entries): C55 (capture half) and the controls DEC-375 draws on intake: C17, C18, C19, C56.
+**FR-24 · `screens-entry`** (wave 2, sonnet, 1 entry): C11 (DEC-374) on `setup`: drawing (not building) the file `instance-setup` answers (FR-39): the file a non-technical administrator needs to verify the team's domain.
+**FR-25 · `screens-settings`** (wave 2, sonnet, 7 entries): C79, C80, the new `bias` screen (C47), C30, C81, C82, C11 (the team's page: draws the same `instance-setup` answer).
+**FR-26 · `screens-intake`** (wave 2, sonnet, 7 entries): C55 (capture half; owns and exports the outcome drawing `screens-inquiry` imports) and the controls DEC-375 draws on intake: C17, C18, C19, C56; C20's controls (DEC-381); and, when B406 is drawn, C56's named requests and sweeps.
 **FR-27 · `screens-daily`** (wave 2, sonnet, 13 entries): C13, C14, C15, C27, C33 (frontier), C58, C59, C60, C61, C84, and the two doors to the new screens.
-**FR-28 · `screens-inquiry`** (wave 2, sonnet, 25 entries): The draft's twelve (C25, C28, C32, C34, C35, C37, C44, C52, C54, C55, C64, C85), the DEC-374/375 controls of the document, question and project pages (C21, C22, C24, C29, C31, C36, C39, C57, C9) and the two new screens (C48, C46). C83 is closed (DEC-376: the rescue for a hidden project is as meant).
+**FR-28 · `screens-inquiry`** (wave 2, sonnet, 28 entries): The draft's twelve (C25, C28, C32, C34, C35, C37, C44, C52, C54, C55, C64, C85), the DEC-374/375 controls of the document, question and project pages (C21, C22, C24, C29, C31, C36, C39, C57, C9), the two new screens (C48, C46), the controls DEC-381 draws for C23 and C65 and, when B406 is drawn, C50. C55's outcome drawing is imported from `screens-intake`. C83 is closed (DEC-376: the rescue for a hidden project is as meant).
 **FR-29 · `screens-investigate`** (wave 2, sonnet, 3 entries): C26 and the controls DEC-374/375 draw on `person` and `standard`.
-**FR-30 · `screens-publish`** (wave 2, sonnet, 16 entries): The case-to-publication path (C1 to C8, C16) and the controls DEC-374 to DEC-377 draw on the ceremony, docket, case editor, published page, imported page and doorbell (C6, C9, C10, C17, C51, C53).
+**FR-30 · `screens-publish`** (wave 2, sonnet, 17 entries): The case-to-publication path (C1 to C8, C16) and the controls DEC-374 to DEC-377 draw on the ceremony, docket, case editor, published page, imported page and doorbell (C6, C9, C10, C17, C51, C53) and, when B406 is drawn, C50's control on `imported`.
 **FR-31 · `screens-action`** (wave 2, sonnet, 17 entries): The draft's C45, C63, C66 to C73 and the DEC-374/376/377 controls (C41, C42, C43, C68 pointer, C74, C75, C76).
-**FR-32 · `plane`** (wave 2, sonnet, 4 entries): The second half of the op-declaration assembly (the collector), and the spreads of the three new ops maps.
-**FR-33 · `installer`** (wave 2, sonnet, 2 entries): R33 and R11, the reds of K4176 that stop any team from installing 0.86.0.
+**FR-32 · `plane`** (wave 2, sonnet, 4 entries): The second half of the op-declaration assembly (the plane's own assembly by its static imports; `test-support`'s collector is test tooling only), and the spreads of the new ops maps.
+**FR-33 · `installer`** (wave 2, sonnet, 2 entries): R33 (the part outside `newgroup/src/steps/`) and R11, the reds of K4176 that stop any team from installing 0.86.0.
 **FR-34 · `journey-check`** (wave 2, sonnet, 1 entry): Group E: the walk's stall, one cause in one place, with the equivalence proved offline.
+**FR-35 · `citation`** (wave 2, sonnet, 3 entries): C50 (K4189): citing another team's accepted finding from a question and taking it back, and the declaration of the two ops.
+**FR-36 · `monitoring`** (wave 2, sonnet, 4 entries): C56: the door to a bundle's named requests, their read, the one writer of the gathering file, and the declaration of the two new ops.
+**FR-37 · `link-sweep`** (wave 2, sonnet, 3 entries): C56: the two doors that define and ratify a sweep, and their declaration.
+**FR-38 · `installer-steps`** (wave 2, sonnet, 1 entry): K4176 (1) R33, the part of the memory red that sits in `newgroup/src/steps/` (K4164: the fix in the module that owns the cause); merges before `installer`.
+**FR-39 · `instance-setup`** (wave 2, sonnet, 1 entry): C11: `groupdomainset` and `groupidentity` answer the exact website file the verifier accepts, so both screens only draw it.
 
 ## 7. Left out, with the hard reason (P19: only the three)
 
