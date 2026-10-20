@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6257,
+  "screen": 6281,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1048,
+  "act": 1058,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -229,8 +229,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17256,
-  "protected": 1032
+  "total": 17290,
+  "protected": 1041
  },
  "words": [
   {
@@ -69754,6 +69754,174 @@
    "note": "DEC-378: B398 C49 (case-import, K4169): the rerun project's page: Refusal, what to do next. Sample names and counts are placeholders."
   },
   {
+   "key": "screen.queue.routed.auth.item",
+   "en": "Who issued a document your team captured is not known yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): row text, the to-do for an authority task; opens the small form beneath it; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.open",
+   "en": "Say who issued it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): disclosure summary that opens the form; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.question",
+   "en": "Who issued this document?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): legend over the two choices; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.know",
+   "en": "I know who issued it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): first choice, not preselected; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.issuer.help1",
+   "en": "Fill this in if you know.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under the field \"The issuing party\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.issuer.help2",
+   "en": "One line, up to 500 characters: the office or organization the document comes from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under the field \"The issuing party\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.how.label",
+   "en": "How do you know?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): field label, required when the member knows; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.how.help1",
+   "en": "Required if you know who issued it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under \"How do you know?\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.how.help2",
+   "en": "One line, up to 2,000 characters: what the document says, or where you checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under \"How do you know?\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.tried.help",
+   "en": "One line, up to 2,000 characters: where you looked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): help under the field \"What you tried\"; the sentence before it is \"Required if you could not tell.\"; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.fine1",
+   "en": "Not knowing is a fine answer.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): note under the fields; reassurance, keep the tone warm and plain; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.fine2",
+   "en": "Nothing will be invented for you: the document stays marked as not known, with what you tried kept beside it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): note under the fields; says the record never fills in an issuer; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.leaves",
+   "en": "This item leaves once you have answered or passed it on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): small line under the buttons; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.basis",
+   "en": "You gave no answer to “How do you know?” or “What you tried.” Write it, then record your answer again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal, what to do next; the two quoted phrases are the field labels; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.issuer1",
+   "en": "You said you know who issued it but named no one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.issuer2",
+   "en": "Name the issuing party, or choose “I could not tell.”",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal, what to do next; the quoted phrase is the second choice; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.yours1",
+   "en": "This item now belongs to someone else.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.yours2",
+   "en": "Ask them, or ask an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal, what to do next; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.auth.refused.done",
+   "en": "Someone already answered this. It has left your queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (tasks taskdecide): refusal; two sentences; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.owner.item",
+   "en": "{who} is proposed as an owner of {project}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (project-roster projectowneradd): row text: the person proposed and the project (sample data as placeholders); on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.owner.leaves",
+   "en": "This item leaves once you have voted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (project-roster projectowneradd): end of the row detail; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.endorse.leaves",
+   "en": "This item leaves once you have endorsed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (member-roster adminendorse): end of the row detail; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.expert.vouch",
+   "en": "Confirm it if you can vouch for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (member-roster expertiseconfirm): row detail under the item naming the member and the expertise label; on Home and in Your queue"
+  },
+  {
+   "key": "screen.queue.routed.expert.leaves",
+   "en": "This item leaves once any administrator confirms.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-378: C62 K4169 (member-roster expertiseconfirm): end of the row detail; on Home and in Your queue"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -109077,6 +109245,36 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_taskdecide.label.home",
+   "en": "Say who issued it, or that you could not tell",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.taskforward.label.home",
+   "en": "Pass it to someone else",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.adminendorse.label.home",
+   "en": "Endorse an administrator",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectowneradd.label.home",
+   "en": "Add an owner",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.expertiseconfirm.label.home",
+   "en": "Confirm expertise",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.memberadd.label.members",
    "en": "Invite a member",
    "protected": true,
@@ -109787,6 +109985,30 @@
   {
    "key": "act.projectrequestanswer.label.queue",
    "en": "Grant or decline",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_taskdecide.label.queue",
+   "en": "Say who issued it, or that you could not tell",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.adminendorse.label.queue",
+   "en": "Endorse an administrator",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectowneradd.label.queue",
+   "en": "Add an owner",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.expertiseconfirm.label.queue",
+   "en": "Confirm expertise",
    "protected": true,
    "source": "registry.json"
   },
@@ -112589,6 +112811,12 @@
   {
    "key": "act.taskresolve.does",
    "en": "Does what this item asks, on the screen it concerns. It leaves your queue when done.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_taskdecide.does",
+   "en": "Records, in your name, who issued this document, or that you looked and could not tell, with your reason. The task is done and leaves the list. A later answer replaces it, and the earlier one stays in the history.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

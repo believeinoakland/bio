@@ -484,6 +484,44 @@
      "modules": [
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:taskdecide K4169",
+     "label": "Say who issued it, or that you could not tell",
+     "status": "owed"
+    },
+    {
+     "op": "taskforward",
+     "label": "Pass it to someone else",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "tasks"
+     ]
+    },
+    {
+     "op": "adminendorse",
+     "label": "Endorse an administrator",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Add an owner",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "expertiseconfirm",
+     "label": "Confirm expertise",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -1733,6 +1771,35 @@
     {
      "op": "projectrequestanswer",
      "label": "Grant or decline",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:taskdecide K4169",
+     "label": "Say who issued it, or that you could not tell",
+     "status": "owed"
+    },
+    {
+     "op": "adminendorse",
+     "label": "Endorse an administrator",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Add an owner",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "expertiseconfirm",
+     "label": "Confirm expertise",
      "status": "declared",
      "modules": [
       "op-declarations"
