@@ -148,3 +148,7 @@ Deferred: none. Found in other modules: `rows.mjs` is stale for the 16 new ids (
 Tests and checks: instance-setup 216 pass, 0 fail. Consumers: control-plane 309, store-door 48, screens-entry 86, answer-envelope 41 all pass; op-declarations 241 pass, 1 fail (above). Not run: plane, installer, installer-steps, stewards (R100/R101 only add keys and an export). format 0; architecture 0; coverage 73 of 73; words 0 findings for instance-setup (whole tree: 9 testcopy in op-grades); ownership: 1 failure, the requirements file (accepted, B7).
 
 Size (session_01HudVPERVJyVzstKHMw2ZzA): test runs 16, module lines 3668
+
+## J11 · COMPLETE
+
+COMPLETE (re B6, B7): R100 (the website file in groupdomainset and groupidentity) and R101 (sixteen ops declared) applied; requirement lines are in build/requirements/instance-setup.md. instance-setup 216 pass; consumers pass except op-declarations' registryActGaps (expertisewithdraw, not mine). Details in my record J10.
