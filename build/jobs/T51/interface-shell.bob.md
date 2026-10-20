@@ -95,3 +95,7 @@ CHANGE: test-support (FR-01) is merged into tranche/T51 @ 0820b11665: declaredOp
 ## B14 · CHANGE
 
 CHANGE: the design @ e6d16d8f53 (DEC-382: C50 on imported and question, C56 on watching) is merged into tranche/T51. Merge the tranche branch before running the registry tests; its new owed acts (citeimported, withdrawimported, namedrequests, namedrequestset, sweepset, sweepratify) are built by wave-2 jobs: their R21/R38 red is inherited, accepted by name, not yours.
+
+## B15 · CHANGE
+
+CHANGE (K4194; the live walk, CAUSES-live.md L23, I-05, I-08): a redraw empties a chosen file. draw() saves every input's value except files (browser.mjs:1247, el.type !== 'file') and rebuilds #cs-root (:1251); a file input cannot be restored, so the file a member chose before the screen's reads arrived (~1.5 s) is gone. Keep the node across a redraw (move the file input into the new tree). Also check I-08: ticking four rows keeps two (the pick toggle, :2288-2291) if a redraw between clicks loses picks. Test at your harness: choose a file, let the reads complete, the file is still chosen; four picks across a redraw leave four picked. This is an extra entry of this job (P10).
