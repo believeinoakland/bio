@@ -84,3 +84,40 @@ CHANGE B4 applied (commit 7f5f85e069 on job/T51/test-support, tranche/T51 merged
 Tests and checks: `node --test bio-plane/test/m/test-support/`: 61 pass, 0 fail, 0 skipped (R16 on this repository green). `checks/words.mjs test-support`: 0 failures. `checks/coverage.mjs test-support`: 16 of 16. `checks/architecture.mjs test-support`: 0 failures. `checks/run.mjs`: format 0, channels 0, architecture 0, words 0; coverage failures only in other modules (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring). `checks/ownership.mjs`: only `build/requirements/test-support.md` listed, the requirement lines the START told me to write and B4 accepted.
 
 Size (session_0191CQmcSf7uN8VoqE7fDryB): test runs 9, module lines 112
+
+## J6 · COMPLETE
+
+CHANGE B5 applied (K4240). Commit 1cf205fc9c on job/T51/test-support, pushed; tranche/T51 merged in first (BOB's tranche had moved past my branch: queue R-tests, the handoff, the B5 entry's predecessors; no test-support file changed by BOB except my job record).
+
+**Entries applied.** B5 (the only entry): R17 `registerDeclared(root, ...registrations)` in `bio-plane/test/declared-ops.mjs`.
+
+**Change.** `registerDeclared` calls each registration once per process with every owner's declaration as `[owner, DECLARED_OPS]` pairs, in `modules.json` order, duplicates included. A registration already called (identity, kept in a WeakSet) is skipped, so a second call is a no-op for it; a new one in the same call is called. A registration's own refusal propagates and rejects the call. A call with no registrations reads nothing.
+
+**Deviation from the wording, for BOB to note.** The entry says "from `declaredOpsOf(root)`". `declaredOpsOf` answers `{ops, owners, duplicates}` and keeps only the first owner of a duplicate op, so it cannot give every owner's full declaration. I split its file walk into an internal `pairsOf(root)` that yields the pairs; `declaredOpsOf` now builds its three parts from it and answers exactly as before (R16 unchanged, its tests unchanged and green). `registerDeclared` reads through the same `pairsOf`, so both answers read the same files by the same rule.
+
+**Rulings for build/rulings.md (I did not edit it: outside my paths; BOB to record once).**
+1. `registerDeclared` passes `pairsOf(root)`'s pairs, the same ones `declaredOpsOf` is built from; the pairs carry a duplicate op's second owner (the plane refuses it, DECLARED_OP_DUPLICATE).
+2. A registration is marked called before it runs, so a refusing registration is not silently re-run by a later call; a refusal stops the rest of that call's registrations, which stay uncalled and unmarked.
+3. "Once per process" is per registration function identity, not per root.
+
+**Requirement line for BOB (R17; not written to build/requirements/test-support.md by me):**
+**R17** `registerDeclared(root, ...registrations)` calls each registration function once per process with every owner's declaration as `[owner, DECLARED_OPS]` pairs (R16's collector, duplicates included, `modules.json` order); a registration already called is skipped by a later call, and a registration's refusal propagates, naming what it refused. Test tooling: only tests call it.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/test-support/`: 65 pass, 0 fail, 0 skipped (4 new R17 tests in `declared-ops.test.mjs`: each called once with every owner's pairs incl. the duplicate; a second call a no-op for the old one and a new one called; a refusal propagates naming `bar`; no registrations reads nothing).
+- Before the change, `declared-ops.test.mjs`: 18 pass.
+- `checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio test-support`: 8 product files; 0 failures.
+- `checks/coverage.mjs /home/user/bio test-support`: 16 of 16 live ids named by a test; 0 failures. (R17 is not yet a live id in the requirements file; its test names it.)
+- `checks/words.mjs /home/user/bio test-support`: 0 failures.
+- `checks/ownership.mjs /home/user/bio test-support tranche/T51 job/T51/test-support`: 1 file changed by test-support; 0 failures. Its two files are `bio-plane/test/declared-ops.mjs` and its test.
+- `checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; words 33 failures and coverage 4 failures, none in test-support (below).
+- `node_modules` installed for every tracked lockfile directory first (K4113).
+
+**Deferred.** None.
+
+**Found in other modules (not changed; for BOB to route).**
+- coverage (checks/coverage.mjs): agent-harness R17 named by no test; agent-runner R37, R38, R40 named by no test; installer-steps R26, R31 named by no test (both stated "by design" in K4234, not met); journey-check R19 named by no test.
+- words (checks/run.mjs): 33 failures in other modules, 26 testcopy and 6 missingkey (op-grades' tests t35–t49 among them), and 1 inline. None in test-support.
+
+Size (session_0161FtoUuJFb1r4CZvpGeae3): test runs 4, module lines 136
