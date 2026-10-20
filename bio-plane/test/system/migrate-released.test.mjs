@@ -162,6 +162,10 @@ const RELEASES = [
      on it, so 0.85.0 boots on that store. The commit is dist/cut-0.84.0's signed cut with the installer's embed
      (K3235), whose release/ holds it. */
   ["0.84.0", "396d992d316a9a61e1127ae801be5a5805f4bce9"],
+  /* 0.85.0: deployed to biosmoke8 2026-10-14 to 2026-10-16 (K3569, K3581) and not distributed; biosmoke8's store migrated and
+     was written on it, so 0.86.0 boots on that store. The commit is dist/cut-0.85.0's signed cut with the installer's
+     embed (step 8), whose release/ holds it. */
+  ["0.85.0", "1053faa726f56a1e322ff64ad9243eb0adab6e90"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });

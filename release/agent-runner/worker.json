@@ -1,0 +1,20 @@
+{
+  "r2_buckets": [],
+  "crons": [],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "AGENT_RUNNER",
+        "class_name": "AgentRunner"
+      }
+    ],
+    "migrations": [
+      {
+        "tag": "v1",
+        "classes": [
+          "AgentRunner"
+        ]
+      }
+    ]
+  }
+}
