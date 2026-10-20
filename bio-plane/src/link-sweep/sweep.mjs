@@ -552,6 +552,99 @@ export class LinkSweep {
     return { ok: true, as_of: stampInstant("second", nowMs), paused: pause, sweeps: items, formats: listFormats() };
   }
 
+  /* ================================================================== *
+   * Writing a sweep (R13, R14): a member's two doors, each through monitoring's one writer of the file (its R77)
+   * ================================================================== */
+
+  /** R13, R14: the gate both doors share, in R13's order before the write: a machine or nameless author
+   *  (`MACHINE_CANNOT_SET_SWEEP`), the required argument, then a bundle absent or unseen (`ABSENT`, identically) and,
+   *  when a sweep is named, one the file lacks (`NO_SUCH_SWEEP`). Answers `{refusal}` or `{who, bundle, file, entry}`. */
+  #door(op, { bundle, sweep, author, viewer, required }) {
+    const who = typeof author === "string" ? author.trim() : "";
+    /* DEC-49 REGION is-sweep-set-member */
+    if (!who || isMachineIdentity(who)) return { refusal: sweepRefusal("MACHINE_CANNOT_SET_SWEEP", localize("link-sweep.sweep.a_sweep_is_defined_or", "a sweep is defined, changed or ratified by a named member; a machine may stop one and never sets one. Nothing was written.")) };
+    /* END DEC-49 REGION is-sweep-set-member */
+    const missing = (argument) => ({ refusal: { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", code: "REQUIRED_ARGUMENT_MISSING", op, argument,
+      shape: "a non-empty string in the POST body", error: `${op} needs ${argument}`,
+      detail: `op=${op} needs '${argument}' in the shape a non-empty string in the POST body, and this request carried none the operation could use. Nothing was changed.` } });
+    const name = typeof sweep === "string" && sweep ? sweep : null;
+    const cut = name ? name.lastIndexOf("#") : -1;
+    const id = cut > 0 ? name.slice(cut + 1) : null;
+    const given = required === "sweep" ? (cut > 0 ? name.slice(0, cut) : null) : bundle;
+    if (required === "sweep" && !name) return missing("sweep");
+    if (required === "bundle" && (typeof bundle !== "string" || !bundle)) return missing("bundle");
+    const img = typeof given === "string" && given && this.membership.inSight(given, viewer) ? this.record.readImage(given) : null;
+    if (!img || typeof img["bundle.md"] !== "string") return { refusal: { ok: false, reason: "ABSENT", bundle: given ?? null } };
+    const file = parse(typeof img[GJ] === "string" ? img[GJ] : null);
+    const entry = name ? sweepsOf(file).find((s) => s.id === id) || null : null;
+    if (name && !entry) return { refusal: { ok: false, reason: "NO_SUCH_SWEEP", code: "NO_SUCH_SWEEP", sweep: name,
+      detail: localize("link-sweep.sweep.no_sweep_is_named_string_2", "no sweep is named {String} in this bundle. Nothing was written.", { String: String(name.slice(0, 80)) }) } };
+    return { who, bundle: given, file, entry, id };
+  }
+
+  /** R13 (T51; K4189; UC-034): a member adds a sweep (its id minted from the title, unique, written `ratified: false`)
+   *  or, with `sweep`, changes one and leaves `ratified` as it is, through monitoring's `write` (its R77). The fields are
+   *  R1's and nothing else, stored as given; the grammar, the term check and the fence are monitoring's R27 and this
+   *  module's registered arms, relayed from the write, never re-checked here. Answers the sweep as `sweeps` (R9) reads it. */
+  async sweepSet({ bundle = null, sweep = null, title, sources, seeds, match, cadence, budget, author = null, viewer = null } = {}) {
+    const d = this.#door("sweepset", { bundle, sweep, author, viewer, required: "bundle" });
+    if (d.refusal) return d.refusal;
+    let minted = d.id;
+    const member = d.who.startsWith("member:") ? d.who.slice(7) : d.who;
+    const r = await this.host.write({ bundle: d.bundle, author: d.who, viewer,
+      log: d.entry ? localize("link-sweep.sweep.sweep_v1_changed_by_member", "Sweep {v1} changed by {member}: its definition only; it stays as ratified as it was, and nothing was fetched.", { v1: String(d.id), member: String(member) })
+                   : localize("link-sweep.sweep.sweep_added_by_member", "A sweep added by {member}, not ratified; nothing was fetched.", { member: String(member) }),
+      mutate: (g) => {
+        const held = Array.isArray(g.sweeps) ? g.sweeps : [];
+        if (d.entry) {
+          const at = held.findIndex((s) => s && s.id === d.id);
+          g.sweeps = held.map((s, i) => (i === at ? { id: d.id, title, ratified: s.ratified, sources, seeds, match, cadence, budget } : s));
+        } else {
+          minted = this.#mint(title, held);
+          g.sweeps = [...held, { id: minted, title, ratified: false, sources, seeds, match, cadence, budget }];
+        }
+        return g;
+      } });
+    if (!r || r.ok !== true) return r && typeof r === "object" ? r : { ok: false, reason: null, detail: localize("link-sweep.sweep.the_write_gave_no_answer", "the write gave no answer. Nothing was written.") };
+    return this.#answer(d.bundle, minted, viewer);
+  }
+
+  /** R14 (T51; K4189; R3; UC-035): sets only `ratified` of `sweep` (`<bundle>#<id>`). To `true` the project's owner only
+   *  (the fence's `SWEEP_RATIFY_NOT_AN_OWNER`, relayed); to `false` any member who may write the bundle. Already in the
+   *  asked state answers `{ok: true, existed: true}` and writes nothing. Answers `{ok, sweep, ratified, ratified_by,
+   *  ratified_at, due, next}`. */
+  async sweepRatify({ sweep = null, ratified, author = null, viewer = null } = {}) {
+    const d = this.#door("sweepratify", { sweep, author, viewer, required: "sweep" });
+    if (d.refusal) return d.refusal;
+    if (typeof ratified !== "boolean")
+      return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", code: "REQUIRED_ARGUMENT_MISSING", op: "sweepratify", argument: "ratified", shape: "true or false in the POST body",
+               error: "sweepratify needs ratified", detail: "op=sweepratify needs 'ratified' in the shape true or false in the POST body, and this request carried none the operation could use. Nothing was changed." };
+    if ((d.entry.ratified === true) === ratified) return { ok: true, existed: true, sweep, ratified };
+    const member = d.who.startsWith("member:") ? d.who.slice(7) : d.who;
+    const r = await this.host.write({ bundle: d.bundle, author: d.who, viewer,
+      log: ratified ? localize("link-sweep.sweep.sweep_v1_ratified_by_member", "Sweep {v1} ratified by {member}: its fetches may now run within its scope and budget, each filing at collected.", { v1: String(d.id), member: String(member) })
+                    : localize("link-sweep.sweep.sweep_v1_stopped_by_member", "Sweep {v1} stopped by {member}: it is not ratified, so it no longer runs.", { v1: String(d.id), member: String(member) }),
+      mutate: (g) => { g.sweeps = (Array.isArray(g.sweeps) ? g.sweeps : []).map((s) => (s && s.id === d.id ? { ...s, ratified } : s)); return g; } });
+    if (!r || r.ok !== true) return r && typeof r === "object" ? r : { ok: false, reason: null, detail: localize("link-sweep.sweep.the_write_gave_no_answer", "the write gave no answer. Nothing was written.") };
+    const a = this.#answer(d.bundle, d.id, viewer);
+    return { ok: true, sweep, ratified: a.ratified, ratified_by: a.ratified_by, ratified_at: a.ratified_at, due: a.due, next: a.next };
+  }
+
+  /** R13: a sweep id minted from its title in R1's form (lowercase letters, digits and hyphens, at most 40), unique among
+   *  the file's, with a numeral from 2 when the title's is taken. */
+  #mint(title, held) {
+    const taken = new Set(held.filter((s) => s && typeof s.id === "string").map((s) => s.id));
+    const base = String(typeof title === "string" ? title : "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 36).replace(/-+$/, "") || "sweep";
+    if (!taken.has(base)) return base;
+    for (let n = 2; ; n++) { const id = `${base}-${n}`; if (!taken.has(id)) return id; }
+  }
+
+  /** R13, R14: the written sweep as `sweeps` (R9) reads it. */
+  #answer(bundle, id, viewer) {
+    const x = this.sweeps({ viewer }).sweeps.find((y) => y.sweep === `${bundle}#${id}`);
+    return { ok: true, ...(x || { sweep: `${bundle}#${id}` }) };
+  }
+
   #silent(runs, held) { return !held && runs.length >= SILENT_RUNS && runs.slice(0, SILENT_RUNS).every((r) => r.filed === 0); }
 
   /** R11: each sweep's conditions that need a member's look, derived on read and writing nothing. */

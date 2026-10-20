@@ -39,3 +39,18 @@ test("R27 explore declares explorepreset: its requires alone raise no refusal na
   await declaredOpHolds({ op: "explorepreset", declaration: DECLARED_OPS["explorepreset"], call: mk("explorepreset", {"viewer":"alice"}),
     refusedNaming: named({"preset":["UNKNOWN_PRESET"]}, true), values: {"preset":"chain"}, same: sameCode });
 });
+
+/* R28 (T51; K4206): `exploreverify` takes a chain or one derivation's ends. Its requires are the ends (`from` and `to`) or a chain: a derivation
+   missing its kind, date, method or id is answered `matches: false` with the reason (R12), so those four are not required. */
+test("R28 explore declares exploreverify: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "exploreverify", declaration: DECLARED_OPS["exploreverify"], call: mk("exploreverify", {"viewer":"alice"}),
+    refusedNaming: named({"from":[{"code":"NO_NODE","whyHas":"no from is named"}],"to":[{"code":"NO_NODE","whyHas":"no to is named"}]}, true), values: { from: ent(1), to: ent(2) }, same: sameCode });
+});
+
+test("R28 exploreverify answers a chain alone, as the screen sends it: no refusal naming a declared field, and the chain's hops answered", async () => {
+  const env = await mkEnv();
+  const url = new URL("http://x/?op=exploreverify&viewer=alice");
+  const answer = await exploreOps(env, url, { chain: [{ id: "org", kind: "line:part_of", owner: "lines" }] }).exploreverify();
+  assert.equal(answer.refused, undefined);
+  assert.equal(answer.matches, true);
+});
