@@ -75,3 +75,7 @@ Requirement lines are written in `build/requirements/queue.md` (B4 option one), 
 - `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs … queue`: 0 failures. `node checks/coverage.mjs … queue`: 53 of 53, 0 failures. `node checks/ownership.mjs … queue tranche/T51 job/T51/queue`: see COMPLETE. `node checks/words.mjs … queue`: 0 failures. `node checks/run.mjs` over the whole product: architecture 0 findings; words: 16 failures, none in a file of mine (op-grades' test copies, strength:349); coverage: 5 failures in other modules (agent-harness, agent-runner, installer-steps, journey-check, link-sweep).
 
 Size (session_01LFGQNNUSg4rqKWLPjYWTBr): test runs 16, module lines 3373
+
+## J4 · COMPLETE
+
+FR-23 applied: C62 (doors read from the producers' declared `door`, hand list the fallback, R28's bridge reads the caller's live item), DECLARED_OPS for proposedispose, queuemute, queuesnooze (agreed with both hand rows), L13 (feeds[].ms, feeds_ms, ask-scoped reads), B5 (resolved_undecided). Requirement lines R12/R28/R39 amended and R91, R92 new are written in build/requirements/queue.md (B4 option one), so the ownership check lists that one file, as B4 accepts. Queue suite 196 pass, 0 fail; format, architecture, coverage (53 of 53), words: 0 failures. For you: plane's tests R2,R5 (N13) and R45,R48 (T47) go red on op=queue's two new timing fields (their mask covers instants only); hand rows for the three ops can go; tasks/queue-producers have yet to mint door and facts.ms; setup-words rows are stale. Details in the record's Completion (QUEUE #28).
