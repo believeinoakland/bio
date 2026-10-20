@@ -46,3 +46,31 @@ Size (session_01MjHoyG8YgVa17VY9VtDzG2): test runs 24, module lines 3,905
 ## J3 · COMPLETE · re B5
 
 control-plane re-completed (B5): heldat's arm now expects the ai refusal, daemon control kept; control-plane suite 309 of 309 pass; words 0, coverage 79/79, ownership 0. Record updated.
+
+## J4 · BLOCKED
+
+Cause: needs Bob (items 1 and 3) and tests (item 2).
+
+The fix round's control-plane entries are applied and pushed on `job/T51/control-plane` (f442ae0d72): K4206 and K4210 (R112), K4213 (R113). Three items wait on Bob or on another module; the rest is done.
+
+**Done**
+- **R112 (K4206, K4210):** `DECLARED_OPS` in `bio-plane/src/control-plane/owner-ops.mjs` declares `captureupload`, `accountdrafts`, `accountpropose`, `clockpropose` and `subscriptionsignin`. Classes, machine classes, mutating flag, stamps and needs are copied from the hand rows. Weight and description come from the grade; each description is `control-plane.declared.<op>`. Accepts are the fields each arm reads. Requires are only the fields a refusal names when absent: `statement` (`UPLOAD_NO_STATEMENT`), `case` (`NO_SUCH_CASE`), `framing` (`BAD_ACCOUNT_FRAMING`), `text` (`BAD_ACCOUNT_DRAFT`, field `text`), `run` (`NO_SUCH_RUN`), `target` (`NO_TARGET`), `rule` (`NO_SUCH_RULE`), `step` (`BAD_STEP`). No arm changed.
+- **R113 (K4213):** `index.mjs` gives `taskdecide` the body `actor` stamp that `taskforward`, `taskresolve`, `taskdrain` and `biasdebtresolve` take.
+- **Tests:** `declared-ops.test.mjs` (6, `declaredOpHolds` per op through real owners), `declared-registration.test.mjs` and `declared-disagree.test.mjs` (the registrations take the rows; a disagreeing row is refused naming the op), `t51-taskdecide.test.mjs` (2). The module's suite: 317 of 319 pass.
+
+**Waiting**
+1. **Needs Bob, architecture (1 failure):** `declared-ops.test.mjs` imports the `action-clocks` test fixture, because `clockpropose` is run through its real owner. `action-clocks` is not in control-plane's `uses`. Please add it as a test-only use, or tell me to test `clockpropose` another way.
+2. **Tests, R113 (2 red):** `taskdecide` has no spec on `tranche/T51` yet. It is `tasks` R20 (FR-21), so the door answers `UNKNOWN_OP`. `tasks` (index 143) merges before control-plane (168), so I expect this to clear when FR-21 lands. I will merge `tranche/T51` and re-run once it does.
+3. **Needs Bob, ownership:** `build/requirements/control-plane.md` is outside my paths. K4210 accepts that at merge. R112 and R113 are written there, R113 marked not yet met.
+
+**Reports (not my files)**
+- **Words, `op-grades`:** `bio-plane/test/m/op-grades/t37.test.mjs:26` holds the sentence I declare as `control-plane.declared.subscriptionsignin`, so the words check now reports a testcopy. That test should read the key, not the sentence. The other seven testcopy findings are other modules' and predate this job.
+- **Generated, setup-words:** `bio-plane/src/setup-words/rows.mjs` is stale for the new `control-plane.declared.*` keys and for keys other jobs added. Regenerate it at the merge or in the pass.
+- **To confirm:** `subscriptionsignin`'s `step` requirement is checked against a stand-in for agent-worker R66's `BAD_STEP`, since agent-worker is another module. The door relays that refusal as given. The hand rows stay in `op-declarations` and `op-grades` until the removal pass (K4168).
+
+**Checks**
+- `checks/format`: 0 failures.
+- `checks/architecture`: 1 failure (item 1).
+- `checks/coverage`: 81 of 81 live ids named.
+- `checks/ownership`: item 3 only.
+- `checks/words`: the t37 testcopy above.
