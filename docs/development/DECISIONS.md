@@ -5917,3 +5917,18 @@ decided: 2026-10-20 · the design session (P17)
 the design: (C50) `imported`: "Rest one of our questions on this" after "Accepted by your team" (`citeimported`: which question, "It supports the question" or "It cuts against the question", a note); "Citing another team's finding carries the fact that they published it, not the strength of what it says. It counts here at the grade the edition published, never higher." (DEC-92); already cited is the note "This question already rests on that finding."; refusals: not accepted yet ("Accept it first, then rest a question on it."), a machine. `question`: "Cite another team's finding" beside "Cite a passage" (case, edition, finding, role, note); a leg so cited carries the origin mark "Another team's" with "{team} · Edition {edition} · accepted by {name}, {date}" and "Take it back" (`withdrawimported`, a required reason; refusals: not cited, no reason). (C56) `watching`: "Named requests" (`namedrequests`: where, authority, status, last attempt, due, next) and "Ask for this to be gathered on a schedule" (`namedrequestset`: what to gather, a description, the places with the authoritative publisher first, who stands behind the source, Crucial or Supporting, every hour, day, week or month or not on a schedule; "Retire this request"; refusals: a machine, a place not starting with https://, no target); "Define a sweep" (`sweepset`: name, sites, starting pages, what to keep, how often, the most it may fetch in one run) and "Ratify this sweep" / "Stop this sweep" (`sweepratify`), the scope sentence stated first ("Ratifying sends your team's fetches to the named hosts, within the scope and budget shown. Each thing found is filed as collected, never higher."), the owner's only ("Only the project's owner can ratify a sweep. Ask {owners}."). 99 keys `screen.imported.citeimp.*`, `screen.question.citeimp.*`, `screen.watching.nr.*`, `screen.watching.sweepdef.*`. (UC-061) now "Follow a hunch, then clear it before publishing": a hunch is kept beside a question as a hypothesis (Keep a hunch; Change or take back a hunch), never a leg, never moving a grade or a finding; publication refuses an uncleared hunch.
 reasoning recorded in: this entry; `screens/*` (blocks "DEC-382"); `ux-experience.json` (UC-061).
 owed: BOB, T51 fix round: the screen jobs build C50 on `imported` and `question`, C56 on `watching`.
+
+### DEC-383 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (the standing consistency read after DEC-381 and DEC-382)
+for: design
+question: Do DEC-381's and DEC-382's 142 rows agree with the words already established?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: a machine author's refusals say "The assistant cannot …" as older rows do (five rows); a sweep is ratified by "an owner of the project" (projects have several owners; four rows); "Rest one of your team's questions on this", "Which of your team's questions"; the take-back tip "Takes a finding of another team's case off this question's answer"; a sweep reaches "the named sites" and files "collected material"; named requests are "checked" (last checked, never checked), as the watching screen's older rows say; "A second declaration never replaces the first."; the close's open work is number-safe ("Questions concluded: {count} of {total}.").
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: none.

@@ -32966,7 +32966,7 @@
   },
   {
    "key": "screen.capture.cred.ref.machine1",
-   "en": "A machine cannot give a login.",
+   "en": "The assistant cannot give a login.",
    "protected": false,
    "note": "DEC-381: B405 C20: capture: refusal, a machine author. Sample names and counts are placeholders."
   },
@@ -33062,13 +33062,13 @@
   },
   {
    "key": "screen.document.origin.second2",
-   "en": "It never replaces it.",
+   "en": "A second declaration never replaces the first.",
    "protected": false,
    "note": "DEC-381: B405 C23: document: note. Sample names and counts are placeholders."
   },
   {
    "key": "screen.document.origin.ref.machine1",
-   "en": "A machine cannot say where a document came from.",
+   "en": "The assistant cannot say where a document came from.",
    "protected": false,
    "note": "DEC-381: B405 C23: document: refusal, a machine author. Sample names and counts are placeholders."
   },
@@ -33104,7 +33104,7 @@
   },
   {
    "key": "screen.project.closenow.open",
-   "en": "Still open if you close it now: {stage} is not reached, and the project has concluded {count} of the {total} questions it holds.",
+   "en": "Still open if you close it now: {stage} is not reached. Questions concluded: {count} of {total}.",
    "protected": false,
    "note": "DEC-381: B405 C65: project: what is still open; counts are placeholders. Sample names and counts are placeholders."
   },
@@ -33158,13 +33158,13 @@
   },
   {
    "key": "screen.imported.citeimp.head",
-   "en": "Rest one of our questions on this",
+   "en": "Rest one of your team's questions on this",
    "protected": false,
    "note": "DEC-382: B406 C50: imported: section heading and button label. Sample names and counts are placeholders."
   },
   {
    "key": "screen.imported.citeimp.q",
-   "en": "Which of our questions",
+   "en": "Which of your team's questions",
    "protected": false,
    "note": "DEC-382: B406 C50: imported: label of the question choice. Sample names and counts are placeholders."
   },
@@ -33230,7 +33230,7 @@
   },
   {
    "key": "screen.imported.citeimp.ref.machine1",
-   "en": "A machine cannot cite another team's finding.",
+   "en": "The assistant cannot cite another team's finding.",
    "protected": false,
    "note": "DEC-382: B406 C50: imported: refusal, a machine author. Sample names and counts are placeholders."
   },
@@ -33350,7 +33350,7 @@
   },
   {
    "key": "screen.question.citeimp.wd.tip",
-   "en": "Removes a finding of another team's case from this question's answer, with the reason you give.",
+   "en": "Takes a finding of another team's case off this question's answer, with the reason you give.",
    "protected": false,
    "note": "DEC-382: B406 C50: question: explanation of the section. Sample names and counts are placeholders."
   },
@@ -33362,7 +33362,7 @@
   },
   {
    "key": "screen.watching.nr.tip",
-   "en": "Lists each thing your team asked to have gathered, where it is looked for and when it was last tried.",
+   "en": "Lists each thing your team asked to have gathered, where it is looked for and when it was last checked.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: explanation of the section. Sample names and counts are placeholders."
   },
@@ -33392,9 +33392,9 @@
   },
   {
    "key": "screen.watching.nr.never",
-   "en": "Never attempted",
+   "en": "Never checked",
    "protected": false,
-   "note": "DEC-382: B406 C56: watching: last attempt of a new request. Sample names and counts are placeholders."
+   "note": "DEC-382: B406 C56: watching: last checked of a new request. Sample names and counts are placeholders."
   },
   {
    "key": "screen.watching.nr.due",
@@ -33404,7 +33404,7 @@
   },
   {
    "key": "screen.watching.nr.last",
-   "en": "last attempt",
+   "en": "last checked",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: row label. Sample names and counts are placeholders."
   },
@@ -33422,7 +33422,7 @@
   },
   {
    "key": "screen.watching.nr.listnote",
-   "en": "A request that has not been tried yet is due at the next check.",
+   "en": "A request that has not been checked yet is due at the next check.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: note under the list. Sample names and counts are placeholders."
   },
@@ -33560,7 +33560,7 @@
   },
   {
    "key": "screen.watching.nr.ref.machine1",
-   "en": "A machine cannot ask for this.",
+   "en": "The assistant cannot ask for this.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders."
   },
@@ -33662,7 +33662,7 @@
   },
   {
    "key": "screen.watching.sweepdef.n2",
-   "en": "Nothing runs until the project's owner ratifies it.",
+   "en": "Nothing runs until an owner of the project ratifies it.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: note under the define button. Sample names and counts are placeholders."
   },
@@ -33686,25 +33686,25 @@
   },
   {
    "key": "screen.watching.sweepdef.rattip",
-   "en": "Lets the project's owner start a sweep, and lets any member who can write to the project stop it.",
+   "en": "Lets an owner of the project start a sweep, and lets any member who can write to the project stop it.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: explanation of the section. Sample names and counts are placeholders."
   },
   {
    "key": "screen.watching.sweepdef.rat1",
-   "en": "Ratifying sends your team's fetches to the named hosts, within the scope and budget shown.",
+   "en": "Ratifying sends your team's fetches to the named sites, within the scope and budget shown.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: what ratifying does, stated before the button. Sample names and counts are placeholders."
   },
   {
    "key": "screen.watching.sweepdef.rat2",
-   "en": "Each thing found is filed as collected, never higher.",
+   "en": "Each thing found is filed as collected material, never higher.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: what ratifying does, stated before the button. Sample names and counts are placeholders."
   },
   {
    "key": "screen.watching.sweepdef.ratnote1",
-   "en": "Only the project's owner can ratify a sweep.",
+   "en": "Only an owner of the project can ratify a sweep.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: note under the buttons. Sample names and counts are placeholders."
   },
@@ -33716,7 +33716,7 @@
   },
   {
    "key": "screen.watching.sweepdef.ref.owner1",
-   "en": "Only the project's owner can ratify a sweep.",
+   "en": "Only an owner of the project can ratify a sweep.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: refusal, not an owner. Sample names and counts are placeholders."
   },
@@ -33728,7 +33728,7 @@
   },
   {
    "key": "screen.watching.sweepdef.ref.machine1",
-   "en": "A machine cannot define or ratify a sweep.",
+   "en": "The assistant cannot define or ratify a sweep.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders."
   },
