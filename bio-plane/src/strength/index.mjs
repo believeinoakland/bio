@@ -1669,7 +1669,7 @@ function refusePairComposed(out) {
 export { refusePairComposed };
 
 /** The module's ops (K3): `strength` (in-process), `inquirystrength`, `versionstrength`, `partitionindependence`,
- *  `strengthbar`, `projectbarset` (R40), `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
+ *  `strengthbar` and `strengthbarset` (R41), `projectbarset` (R40), `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
 export function strengthOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1681,6 +1681,8 @@ export function strengthOps(s, url, body) {
       partition: (body && body.partition !== undefined) ? body.partition : q("partition"),
       version: q("version"), viewer: q("viewer") }),
     strengthbar: () => s.strengthBarSet({ ...(body || {}), author: q("author") }),
+    /* R41 (T51; K4258): the same act under the name the screens send; `strengthbar` stays served until its hand row goes. */
+    strengthbarset: () => s.strengthBarSet({ ...(body || {}), author: q("author") }),
     /* R40: the project from the body, else the query; `author`, `viewer` and `identity` are the control plane's stamps,
        never the body's. */
     projectbarset: () => s.projectBarSet({ ...(body || {}), project: (body && body.project != null) ? body.project : q("project"),
@@ -1694,7 +1696,7 @@ export function strengthOps(s, url, body) {
 /* R41 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
-  strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
+  strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", needs: "publish", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
     fields: { accepts: ["group","capture","connection","reason"], requires: [["capture","connection"],"reason"] } },
   projectbarset: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("strength.declared.projectbarset", "project-directed: keyed by a project; the project's own required strength, set with the member's reason; never the group's bar, and it gates nothing (`strength` R21)"),
     fields: { accepts: ["project","capture","connection","reason"], requires: ["project","reason"] } },
