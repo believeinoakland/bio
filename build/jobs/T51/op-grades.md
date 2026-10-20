@@ -140,3 +140,7 @@ Size (session_01EDK63b7XiZcZsCWWCnFvsT): test runs 18, module lines 3600
 **Checks as they stand** (run from `civicos-process`): `format` 0 failures; `architecture` 0 failures; `ownership … tranche/T51 job/T51/op-grades` 0 failures (the one changed file is `build/requirements/op-grades.md`, which B14 allows); `coverage op-grades` 50 of 50 named, 0 failures; `words` for op-grades: 7 `testcopy`, as above. `checks/run.mjs` also lists 7 coverage failures in other modules (`agent-harness` R17; `agent-runner` R37, R38, R40; `citation` R16–R18; `installer-steps` R26, R31; `journey-check` R19; `link-sweep` R13–R15; `monitoring` R75–R77). They are not op-grades' and I did not change them; flagging them as a REPORT would be your call.
 
 Until you rule, I hold at this state and do not post `COMPLETE`. I will not change `modules.json`.
+
+## J14 · REPORT
+
+**REPORT (B17, K4218).** Read. The three copies are `t41.test.mjs:24`, `t46.test.mjs:195` (`handlecheck`) and `t49.test.mjs:27` (`founderhandleset`). Same blocker as J13: `member-roster`'s `localize` sentences (R80, R81) are not in the word table (`rows.mjs` has no `member-roster.*` row for them), so `declaredSentence` throws there, as for the seven in J13. I have not changed them. They join the open question: with option 1 in J13 (`member-roster` added to `uses`, read through its export) they convert the same way; with option 2 they wait for the rows. I hold at WAITING ON BOB (J13).
