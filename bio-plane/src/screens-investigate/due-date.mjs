@@ -26,13 +26,17 @@ function render(cs, view) {
   const clock = a && Array.isArray(a.clock) ? a.clock : [];
   const next = (pos !== null && clock[pos]) || clock.find((e) => e.status === "pending" && e.date) || null;
   const out = [cs.title(next ? cs.w(S + "due", { date: cs.date(next.date) }) : cs.w("screen.due-date.name"),
-    { thing: { kind: "action", facts: a ? [a.kind || "", (a.counterparty && (a.counterparty.role || a.counterparty.body)) || ""] : [] } })];
-  if (a && a.counterparty) out.push(`<p class="mk-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : "") })}</p>`);
+    { thing: { kind: "action", facts: a ? [a.kind || "", view.parts.counterparty(a.counterparty)] : [] } })];
+  const who = a ? view.parts.counterparty(a.counterparty) : "";
+  if (who) out.push(`<p class="mk-sub">${cs.w(S + "of", { who })}</p>`);
+  /* R54: the reminders this page set, by entry position, kept in page memory (the day each was set for) */
+  const reminded = view.ui.reminded && typeof view.ui.reminded === "object" ? view.ui.reminded : {};
   /* the confirmed entries: what each is, its basis and when */
   out.push(cs.sec(S + "entries", cs.state("action", view, () => (clock.length
     ? cs.sheet(clock.map((e, i) => (i === pos ? '<div aria-current="true">' : "<div>") + cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
       `<b>${cs.esc(e.description || e.text || "")}</b><span class="meta">${cs.w(S + "basis", { basis: e.basis || "" })}${e.due_at ? " · " + cs.w(S + "at", { time: String(e.due_at).slice(11, 16), zone: e.due_zone || "" }) : ""}</span>`,
-      `<span class="mk-small">${cs.w(S + "status." + (["pending", "met", "overdue", "waived"].includes(e.status) ? e.status : "pending"))}</span>`) + "</div>").join(""))
+      `<span class="mk-small">${cs.w(S + "status." + (["pending", "met", "overdue", "waived"].includes(e.status) ? e.status : "pending"))}</span>`
+      + (Array.isArray(reminded[i]) ? reminded[i].map((on) => ` <span class="mk-small" data-reminder="${i}">${cs.w(S + "on")} ${cs.date(on, { year: true })}</span>`).join("") : "")) + "</div>").join(""))
     : "")
     /* drawn only once the clock is read, so its first value is the entry the address names, never one kept from before */
     + cs.choice("dd-entry", S + "entry", clock.map((e, i) => ({ value: String(i), text: (e.description || e.text || "") + " · " + (e.date || "") })), { value: pos !== null ? String(pos) : undefined }))
@@ -54,9 +58,17 @@ function render(cs, view) {
       + `<ol class="mk-list">${steps.join("")}</ol>`
       + cs.act("clockadopt", { label: "act.clockadopt.label.due-date", tone: "primary", data: { proposal: p.key } }) + "</div>";
   };
+  /* R59: the refusal that no rule of the member's places states a deadline brought the deadlines their rules do list; they are
+     drawn to pick from, with the door to the rules in Settings (the refusal itself is drawn beside the act by the shell) */
+  const rules = Array.isArray(view.ui.rules) ? view.ui.rules.filter((d) => d && typeof d.rule === "string" && d.rule) : [];
+  const pick = rules.length ? `<details class="mk-details" open data-rules="1"><summary>${cs.w(S + "rule.summary")}</summary>`
+    + cs.choice("dd-rule", S + "rule.pick", rules.map((d) => ({ value: d.rule, text: [d.label || d.description || d.rule, d.citation || ""].filter(Boolean).join(" · ") })), {})
+    + `<p class="mk-small">${cs.w(S + "rule.help")}</p>`
+    + cs.act("clockpropose", { label: "act.clockpropose.label.due-date" })
+    + `<a class="cs-ref" href="/app/places" data-nav data-screen="places">${cs.w(S + "rule.go")}</a></details>` : "";
   out.push(cs.sec(S + "how", cs.state("proposals", view, (v) => ((v.proposals || []).length
     ? cs.field("dd-why", S + "why", { help: S + "why.help" }) + v.proposals.map(trace).join("") : ""))
-    + cs.act("clockpropose", { label: "act.clockpropose.label.due-date" })));
+    + cs.act("clockpropose", { label: "act.clockpropose.label.due-date" }) + pick));
   out.push(`<p class="mk-note">${cs.w(S + "queue")}</p>`);
   return out.join("");
 }
@@ -64,11 +76,17 @@ function render(cs, view) {
 const acts = [
   /* "Work it out again": a proposal, never the date until a member confirms it */
   { op: "clockpropose", label: "act.clockpropose.label.due-date",
-    send(view) {
+    /* R59: a refusal that no rule states a deadline for this kind of action keeps the deadlines its answer carries, to be picked from */
+    refusals: { NO_SUCH_RULE: function (refusal, cs) {
+      if (cs) cs.set("rules", Array.isArray(refusal.deadlines) ? refusal.deadlines : []);
+      return cs ? cs.w("refusal.NO_SUCH_RULE") : "";
+    } },
+    send(view, el, cs) {
       const id = String(view.subject || "").split("~")[0];
       const p = view.data.proposals && view.data.proposals.state === "ok" ? (view.data.proposals.value.proposals || [])[0] : null;
       const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : null;
-      return { body: Object.assign({ target: id }, p && p.rule ? { rule: p.rule } : a && a.kind ? { rule: a.kind } : {}) };
+      const chosen = String(cs.value("dd-rule") || "").trim();
+      return { body: Object.assign({ target: id }, chosen ? { rule: chosen } : p && p.rule ? { rule: p.rule } : a && a.kind ? { rule: a.kind } : {}) };
     } },
   /* "Confirm this due date": only on a standing proposal, naming it */
   { op: "clockadopt", label: "act.clockadopt.label.due-date", reasonField: "why",
@@ -82,6 +100,16 @@ const acts = [
       const entry = Number(cs.value("dd-entry")), on = String(cs.value("dd-on") || "").trim();
       if (!Number.isInteger(entry) || !/^\d{4}-\d{2}-\d{2}$/.test(on)) return { refuse: "screen.due-date.remind.empty" };
       return { body: { target: String(view.subject || "").split("~")[0], entry, on } };
+    },
+    /* R54: the day the reminder was set for is drawn beside its entry; a refused day (the shell draws the refusal) adds none */
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      if (!r || r.ok === false || typeof r.on !== "string") return undefined;
+      const kept = Object.assign({}, view.ui.reminded || {});
+      const at = Number.isInteger(r.entry) ? r.entry : Number(r.entry);
+      kept[at] = (Array.isArray(kept[at]) ? kept[at] : []).filter((d) => d !== r.on).concat([r.on]);
+      cs.set("reminded", kept);
+      return { stay: true };
     } },
 ];
 
@@ -89,6 +117,7 @@ const DUE_KEYS = [
   "screen.due-date.due", "screen.due-date.of", "screen.due-date.entries", "screen.due-date.basis", "screen.due-date.at",
   "screen.due-date.status.pending", "screen.due-date.status.met", "screen.due-date.status.overdue", "screen.due-date.status.waived",
   "screen.due-date.entry", "screen.due-date.on", "screen.due-date.remind.empty", "screen.due-date.download", "screen.due-date.how",
+  "screen.due-date.rule.summary", "screen.due-date.rule.pick", "screen.due-date.rule.help", "screen.due-date.rule.go", "refusal.NO_SUCH_RULE",
   "screen.due-date.proposal", "screen.due-date.step.basis", "screen.due-date.step.received.receipt", "screen.due-date.step.received.sent",
   "screen.due-date.step.received.service", "screen.due-date.noreceipt", "screen.due-date.step.counted", "screen.due-date.step.skipped",
   "screen.due-date.step.due", "screen.due-date.nodate", "screen.due-date.why", "screen.due-date.why.help", "screen.due-date.queue",

@@ -137,6 +137,7 @@ test("R57 the last step of a standard's own page is screen.standard.crumb with t
   const p = await open(at);
   const nav = crumbs(p);
   assert.ok(nav.textContent.includes(word("screen.standard.crumb", { name: "Administrative Instruction 9.1, §2" })), "Standard: <cite>");
-  const bare = await open(at, { plane: { standard: refusedIn("NO_ENTITY", "None.") } });
-  assert.ok(crumbs(bare).textContent.includes(word("screen.standard.name")), "control: no standard read, the screen's own name");
+  const onProject = await open("/app/standard/" + P);
+  assert.ok(crumbs(onProject).textContent.includes(word("screen.standard.name")), "control: a project's page names no standard, so the last step is the screen's own name");
+  assert.ok(!crumbs(onProject).textContent.includes(word("screen.standard.crumb", { name: "" }).trim()), "and not the crumb word");
 });
