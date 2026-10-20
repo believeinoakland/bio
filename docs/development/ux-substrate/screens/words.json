@@ -53,7 +53,7 @@
   "wizard": 326,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6474,
+  "screen": 6518,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -78,7 +78,7 @@
   "progression": 38,
   "dock": 8,
   "count": 6,
-  "translations": 4,
+  "translations": 7,
   "due": 2,
   "reading": 4,
   "held": 5,
@@ -131,15 +131,17 @@
   "retrieval-browse": 1,
   "observation-log": 75,
   "lines": 72,
-  "local-facts": 51,
+  "local-facts": 54,
   "case-grammar": 79,
   "skills": 28,
   "wizard-scripts": 66,
   "notice-producers": 20,
   "network-notices": 20,
-  "strength": 81,
+  "strength": 83,
   "file-scanner": 7,
   "crumb": 1,
+  "ai-accounts": 7,
+  "intent": 51,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -159,7 +161,6 @@
   "sign-release": 97,
   "case-disclosures": 98,
   "action-grammar": 13,
-  "intent": 49,
   "run-productions": 21,
   "action-clocks": 58,
   "signpage": 58,
@@ -192,7 +193,6 @@
   "ai-runs": 37,
   "inquiry": 20,
   "textchain": 27,
-  "ai-accounts": 2,
   "plan-work": 27,
   "provenance-routes": 13,
   "case-carriage": 20,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17561,
+  "total": 17620,
   "protected": 1058
  },
  "words": [
@@ -61903,7 +61903,7 @@
   },
   {
    "key": "screen.domainfile.refused.malformed",
-   "en": "That is not a website name. Type only the name, such as lakeshoretenants.org: no https://, no page, no port and no numbers-only address. Nothing was recorded.",
+   "en": "That is not a website name. Type only the name, such as example-tenants.org: no https://, no page, no port and no numbers-only address. Nothing was recorded.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-374: B398 C11 (instance-setup groupdomainset): refusal for an address that is not a bare host name"
@@ -61959,7 +61959,7 @@
   },
   {
    "key": "screen.bias.by_admin_for_the_team",
-   "en": "By {admin} for the team, and by {owner} for this project, on {date}, each with a reason.",
+   "en": "By {admin} for the team on {admin_date}, and by {owner} for this project on {owner_date}, each with a reason.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone. Placeholders hold a member name, a date or the title of the work."
@@ -62365,7 +62365,7 @@
   },
   {
    "key": "screen.bias.it_read_sentences_of",
-   "en": "It read 4 sentences of 4.",
+   "en": "It read {read} of {of} sentences.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
@@ -67265,7 +67265,7 @@
   },
   {
    "key": "screen.updates.health.file.test",
-   "en": "A test file was written and read back in {seconds} s",
+   "en": "A test file was written and read back",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result; {seconds} is a measured time; translate in the same plain tone"
@@ -67349,14 +67349,14 @@
   },
   {
    "key": "screen.updates.health.runtime.heaviest",
-   "en": "Heaviest single request so far: {ms} ms of work, {calls} outside calls",
+   "en": "Heaviest so far: {peak} {unit}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; {ms} and {calls} are measured numbers; translate in the same plain tone"
   },
   {
    "key": "screen.updates.health.runtime.limits",
-   "en": "Cloudflare refuses a request that makes too many outside calls, so that limit is known by having been reached.",
+   "en": "Cloudflare refuses a request that makes more than {ceiling} outside calls.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; translate in the same plain tone"
@@ -71609,6 +71609,412 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-384: B411 H2: the path's name for a project whose title this member cannot read; never its identifier"
+  },
+  {
+   "key": "ai-accounts.declared.aikeepaway",
+   "en": "Sets whether your team keeps its material away from every assistant, with a reason. Only an administrator can.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "ai-accounts.declared.groupkeynoticeseen",
+   "en": "Records that you have seen the notice about your team's assistant key.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "ai-accounts.declared.groupkeyremove",
+   "en": "Removes your team's assistant key. Only an administrator can.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "ai-accounts.declared.groupkeyset",
+   "en": "Saves your team's assistant key, which is never shown again. Only an administrator can.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "ai-accounts.declared.groupkeyswitch",
+   "en": "Turns your team's assistant key on or off. Only an administrator can.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "intent.declared.aspirationdeclare",
+   "en": "Declares an aspiration for your team, a project or yourself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "intent.declared.aspirationdepart",
+   "en": "Records that a project departs from one of your team's aspirations, with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "local-facts.declared.ruleconfirm",
+   "en": "Confirms a rule another member drafted, so it applies to your team from then on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "local-facts.declared.ruledraft",
+   "en": "Drafts a rule for your team from its primary source, with a reason. Another member confirms it before it applies.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "local-facts.declared.rulewithdraw",
+   "en": "Withdraws one of your team's rules, with a reason. The rule stays on the record and is never deleted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "strength.declared.projectbarset",
+   "en": "Sets how strong support must be for this project's findings, with a reason. It blocks no work.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "strength.declared.strengthbarset",
+   "en": "Sets how strong support must be, by default, for your team's findings. Only an administrator can.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "translations.declared.translationadopt",
+   "en": "Keeps your team's own wording of one of Civicsmith's words, so members reading that language see it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "translations.declared.translationconfirm",
+   "en": "Confirms your team's wording of a protected word, so members reading that language then see it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "translations.declared.translationrevert",
+   "en": "Undoes the latest change to your team's wording of one of Civicsmith's words. Only an administrator can.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does"
+  },
+  {
+   "key": "screen.updates.health.part.agent-worker",
+   "en": "The assistant's worker",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as agent-worker; the code shows it, never the module id"
+  },
+  {
+   "key": "screen.updates.health.part.pdf-worker",
+   "en": "Reading PDFs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as pdf-worker; the code shows it, never the module id"
+  },
+  {
+   "key": "screen.updates.health.part.ocr-worker",
+   "en": "Reading text in images",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as ocr-worker; the code shows it, never the module id"
+  },
+  {
+   "key": "screen.updates.health.part.sheet-worker",
+   "en": "Reading spreadsheets",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as sheet-worker; the code shows it, never the module id"
+  },
+  {
+   "key": "screen.updates.health.part.file-scanner",
+   "en": "The file scanner",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as file-scanner; the code shows it, never the module id"
+  },
+  {
+   "key": "screen.updates.health.part.agent-runner",
+   "en": "The assistant's runner",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as agent-runner; the code shows it, never the module id"
+  },
+  {
+   "key": "screen.updates.health.part.release",
+   "en": "release {version}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the release one part runs"
+  },
+  {
+   "key": "screen.updates.health.part.state.answering",
+   "en": "answering",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state of a part"
+  },
+  {
+   "key": "screen.updates.health.part.state.silent",
+   "en": "silent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state of a part that did not answer (beside part.silent)"
+  },
+  {
+   "key": "screen.updates.health.part.state.unbound",
+   "en": "not connected to your copy",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state unbound: the part is not wired to this copy"
+  },
+  {
+   "key": "screen.updates.health.part.state.misnamed",
+   "en": "answers under another name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; state misnamed: the part answered, but as another part"
+  },
+  {
+   "key": "screen.updates.health.part.other",
+   "en": "Other things a part can show",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; the summary of the fold listing the two rarer states"
+  },
+  {
+   "key": "screen.updates.health.runtime.average",
+   "en": "average {mean} {unit}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; one metric of the running reading, its mean in the unit the runtime answers"
+  },
+  {
+   "key": "screen.updates.health.runtime.samples",
+   "en": "measured over {samples} requests",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: the updates screen, the copy's health; how many requests the metric rests on"
+  },
+  {
+   "key": "screen.settings.everyone",
+   "en": "For every member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B425 K4237: settings, the third section heading (Declared bias)"
+  },
+  {
+   "key": "screen.bias.lens.label",
+   "en": "Whose lens",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label of the choice"
+  },
+  {
+   "key": "screen.bias.lens.team",
+   "en": "The whole team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): its option; the other option is a project, named by its title"
+  },
+  {
+   "key": "screen.bias.kind.label",
+   "en": "Kind of statement",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label"
+  },
+  {
+   "key": "screen.bias.kind.scrutiny",
+   "en": "Scrutiny",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): short name of the kind in a statement's row"
+  },
+  {
+   "key": "screen.bias.kind.inference",
+   "en": "Inference",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): short name of the kind"
+  },
+  {
+   "key": "screen.bias.kind.pattern",
+   "en": "Pattern",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): short name of the kind"
+  },
+  {
+   "key": "screen.bias.statement.label",
+   "en": "The statement",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label"
+  },
+  {
+   "key": "screen.bias.cites.label",
+   "en": "What it cites",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label"
+  },
+  {
+   "key": "screen.bias.adoptfor.label",
+   "en": "Adopt it for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): label of the choice"
+  },
+  {
+   "key": "screen.bias.head.team",
+   "en": "In force for the whole team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): section heading when the lens is the whole team (a project's is screen.bias.in_force_for_the_coliseum)"
+  },
+  {
+   "key": "screen.bias.head.write",
+   "en": "Write a set",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+  },
+  {
+   "key": "screen.bias.head.adopt",
+   "en": "Adopt it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+  },
+  {
+   "key": "screen.bias.head.proposed",
+   "en": "Proposed statements",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+  },
+  {
+   "key": "screen.bias.head.left_out",
+   "en": "Left out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+  },
+  {
+   "key": "screen.bias.head.settled",
+   "en": "Settled",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): heading"
+  },
+  {
+   "key": "screen.bias.row.about",
+   "en": "about {subject}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row: who or what it is about"
+  },
+  {
+   "key": "screen.bias.row.why",
+   "en": "Why: {reason}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row"
+  },
+  {
+   "key": "screen.bias.row.team_locked",
+   "en": "the team's, locked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row: the team's statement, which a project cannot replace"
+  },
+  {
+   "key": "screen.bias.row.project",
+   "en": "this project's",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): a statement's row: the project's own statement"
+  },
+  {
+   "key": "screen.bias.dt.lens",
+   "en": "Lens",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): definition term"
+  },
+  {
+   "key": "screen.bias.dt.bar",
+   "en": "A bar",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): definition term of a sentence left out"
+  },
+  {
+   "key": "screen.bias.dt.verdict",
+   "en": "A verdict",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): definition term of a sentence left out"
+  },
+  {
+   "key": "screen.bias.link.write",
+   "en": "Write a set · statements about how your team reads sources, written by you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the link row"
+  },
+  {
+   "key": "screen.bias.link.draft",
+   "en": "Draft one from an outside policy · Civicsmith reads another organization's policy and proposes statements.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the link row"
+  },
+  {
+   "key": "screen.bias.earlier.made",
+   "en": "Made under lens {then} on {made_on}. In force now: {now}, adopted {adopted_on}. The change: {change}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): work made under an earlier lens"
+  },
+  {
+   "key": "screen.bias.earlier.settled",
+   "en": "Settled by {who} on {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): work settled with a reason"
+  },
+  {
+   "key": "screen.bias.by_admin_for_the_team.team",
+   "en": "By {admin} for the team, on {date}, with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the Adopted line when only the team has adopted a set"
+  },
+  {
+   "key": "screen.bias.by_admin_for_the_team.project",
+   "en": "By {owner} for this project, on {date}, with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 B427 K4239: the Declared bias screen (SCR.bias): the Adopted line when only the project has adopted a set"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -109906,6 +110312,12 @@
    "en": "Declared bias",
    "protected": false,
    "source": "registry.json"
+  },
+  {
+   "key": "screen.bias.purpose",
+   "en": "The lens your team reads evidence through, stated so a reader can discount it. Write a set, draft one from an outside policy, adopt it, and settle work made under an earlier lens.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
   },
   {
    "key": "screen.places.name",
