@@ -3,9 +3,11 @@
  * totality holding over them, each grade read from its owner's requirements as R13 and R17 do; and `personexpunge`'s
  * consequence statement (N623, DEC-142), a named exception beside `actionholdrelease` (R8, DEC-113's tier). Data only: no
  * op's behaviour is decided here (P6). `./index.mjs` spreads the four tables into `RUNGS`, `RUNG_ABSENT`, `NON_ACTS` and
- * `CONSEQUENCE_STATEMENTS`, and derives R21's Irreversible weight. This file imports nothing, so the spread closes no
+ * `CONSEQUENCE_STATEMENTS`, and derives R21's Irreversible weight. This file imports only `word` from `setup-words`, so the spread closes no
  * cycle. None of these ops is in `MACHINE_REFUSALS`, which holds only `affordances`' `ACTS` (R5, `affordances` R20).
  * `subscriptionsignin` had no op in T35 and no grade (`op-declarations` R27); R27 grades it in `./t37.mjs` (T37). */
+
+import { word } from "../setup-words/index.mjs";
 
 const R = (s) => `read: ${s}; writes nothing`;
 const NOTE_DIRECTED = "note-directed: a member's own note, keyed by the note and answered to its author alone; never a "
@@ -80,7 +82,7 @@ export const T35_NON_ACTS = {
   findin: R("what a scope holds of the kinds asked, each match with its words and extent, found by search; it records "
     + "nothing"),
   entitieskind: R("the group's registered entities of one kind, within the viewer's gate"),
-  securitymap: "Shows how hard your team's Civicsmith was tried over the period you choose, against its usual. Counts only.",
+  securitymap: word("act.securitymap.does"),
   recoverycodesstate: R("how many of an administrator's own recovery codes are unspent, never a code"),
   adminrecoverystep: R("whether the group's second-administrator step is done, to an administrator"),
   credit: "read: public, no credential",

@@ -10,7 +10,7 @@
  * recorded at most once is `filingapprove`'s `terminal`; a record judged once, never re-judged, `checkpointrecord`'s
  * `undetermined`. The assertion resolution per sentence is `filings`' approval (reconciliation R1), graded there.
  *
- * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports nothing, so the
+ * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports only `word` from `setup-words`, so the
  * spread closes no cycle. (K2885, K2887) The ten acts `affordances` R51 makes ACTS rows on an action target have no
  * NON_ACTS row here, and eight of them are in `MACHINE_REFUSALS` (`./index.mjs`) with their owners' codes; every other op
  * here is a non-act, refused a machine by its owner's own code where it is. By R18 `phone` follows the rung. No consequence
@@ -19,6 +19,8 @@
  * declared under R49 after this module's T45 merge (`grouprules`, `advocacycheck`, `advocacychecks`, `infractiondraft`,
  * `bearingdraft`) are graded here by the same rule; none is an act of `affordances` or a machine refusal (`case-account`
  * refuses a machine itself, `MACHINE_CANNOT_CHECK_ADVOCACY`). */
+
+import { word } from "../setup-words/index.mjs";
 
 const R = (s) => `read: ${s}; writes nothing`;
 const PLAN = (s) => `plan-directed: ${s}; kept in the plan's history, never published; moves no bundle`;
@@ -106,7 +108,7 @@ export const T45_NON_ACTS = {
   openitemswith: R("the open actions the viewer may see addressed to the same office, with their overdue replies, as facts "
     + "and never a block"),
   /* action-holds (R11, R12) */
-  pressurerecord: "Records pressure that arrived outside any action, such as a letter, post or call. A legal threat can carry a litigation hold.",
+  pressurerecord: word("act.pressurerecord.does"),
   /* following (R22–R25) */
   followend: WATCH("keyed by follow; its author, or the once-only question's answer, sets or removes its end date"),
   watchlink: WATCH("keyed by (plan, watch); a member records that the plan set the watch running, append-only"),

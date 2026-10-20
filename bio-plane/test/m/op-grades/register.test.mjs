@@ -6,6 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { hasWord, word, WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { collectDeclaredOps } from "./declared.mjs";
 
 let n = 0;
 const load = () => import(`../../../src/op-grades/index.mjs?instance=${n++}`);
@@ -231,8 +232,7 @@ test("R50: a refused registration leaves the module open, so the corrected rows 
 });
 
 test("R50 (B21): registering every owner's DECLARED_OPS meets no DECLARED_OP_DISAGREES and no DECLARED_OP_DUPLICATE; a hand row follows its owner's declaration (K4168)", async () => {
-  const { declaredOpsOf } = await import("../../declared-ops.mjs");
-  const { ops, owners, duplicates } = await declaredOpsOf(new URL("../../../../", import.meta.url).pathname);
+  const { ops, owners, duplicates } = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
   assert.deepEqual(duplicates, []);
   const byOwner = {};
   for (const [op, d] of Object.entries(ops)) (byOwner[owners[op]] ??= {})[op] = d;

@@ -112,9 +112,8 @@ test("R11 R47: wizard-scripts' ops — wizardretire `reasoned` (WIZARD_REASON_RE
     wizardeditorgrant: "credential", wizardeditorrevoke: "credential", wizardprogress: "observational" };
   assert.deepEqual(grades(W), W);
   assert.ok(JUSTIFICATION_REFUSALS.includes("WIZARD_REASON_REFUSED"));
-  /* the owner's declaration is the truth (K4168, B20): the five ops wizard-scripts declares hold its sentence */
-  const WIZARD_DECLARED = ["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire"];
-  for (const op of Object.keys(W).filter((op) => op !== "wizardprogress")) assert.equal(NON_ACTS[op], WIZARD_DECLARED.includes(op) ? doesSentence(op) :
+  /* the owner's declaration is the truth (K4168, B20): an op whose owner words it as `act.<op>.does` holds that sentence */
+  for (const op of Object.keys(W).filter((op) => op !== "wizardprogress")) assert.equal(NON_ACTS[op], doesSentence(op) ?? 
     "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes "
     + "this module's rows and moves no bundle", op);
   assert.equal(NON_ACTS.wizardprogress, "tally: unattributed, keyed by a script's version; names no member");

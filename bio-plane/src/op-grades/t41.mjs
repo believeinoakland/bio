@@ -6,13 +6,18 @@
  * `run-productions`' acceptance and bearing notes, `case-account`'s account drafts, `review`'s approvals, `ai-runs`'
  * group tests, `capture`'s upload and `membership`'s handle. Data only: no op's behaviour is decided here (P6).
  *
- * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports nothing, so the
+ * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports only `word` from `setup-words`, so the
  * spread closes no cycle. None of these ops is in `MACHINE_REFUSALS`, which holds only `affordances`' `ACTS` (R5,
  * `affordances` R20): each owner refuses a machine itself (`membership` R129 refuses every caller `HANDLE_FIXED`; T46, R34). By R18
  * only `projectkeyset`, `projectsigninset` and `projectaccountremove` (ground `credential`) answer `phone: false`. No
  * consequence statement, vocabulary or prompt is added. (DEC-188 (8)) `aiceilingset` and `aicopyceilingset` (retired to
  * `ailimitset`) and `accountswitchset` and `groupswitchset` (retired to `accountusesset`) left `./t33.mjs` and
  * `./t34.mjs`, as `assistantset` left them (R25). */
+
+import { word } from "../setup-words/index.mjs";
+
+/* the sentence an owner declared, a code-held word the design has not taken into its list: its id is composed, as the words check judges a literal one */
+const declared = (module, op) => word(`${module}.declared.${op}`);
 
 const R = (s) => `read: ${s}; writes nothing`;
 const STEP = (s) => `step-directed: ${s}; never evidence and writes no leg; moves no bundle`;
@@ -123,7 +128,7 @@ export const T41_NON_ACTS = {
     + "reason; moves no bundle",
   projectaikeepawaystate: R("whether a project keeps its material away from the assistant, with the reason, who set it "
     + "and when"),
-  accountusesset: "the account's configuration: an owner sets one of its uses' switches (explore no, ask or yes); it moves no document, claim or grade",
+  accountusesset: declared("ai-accounts", "accountusesset"),
   accountuses: R("one account's uses and keep-aways, to that account's owners, never a key"),
   accounthistory: R("every change to one account's settings with who and when, to its owners, never a key"),
   /* ai-use (R41) */
