@@ -3203,7 +3203,9 @@ export function makeFetch(hooks = {}) {
        obligation is the whole of what the act records beside the reason, so it is the server's word and
        never the caller's; and a machine credential arriving honestly named `token:<class>` is precisely
        what lets the store refuse it BY SHAPE rather than by guessing from an absence. */
-    if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain"
+    /* R113 (T51; K4213; tasks R20): `taskdecide` takes the same body stamp, and its route is `tasks`' own (`tasksOps`, spread by
+       store-door), so the decider is the server's word here as it is for the other task acts. */
+    if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain" || op === "taskdecide"
          || op === "biasdebtresolve") && passBody) {
       try {
         const b = JSON.parse(passBody);
