@@ -85,3 +85,39 @@ Tests and checks
 - checks/run.mjs: capture has no finding of its own; the handlist failures listed above are other modules'.
 
 Size (session_01Hpc4xpSYy9jXRfRGxtGfm6): test runs 3, module lines 3756
+
+## J4 · COMPLETE
+
+**COMPLETE**, FR-52 · capture (commit `3932c68a83` on `job/T51/capture`, K4206).
+
+**Entries applied**
+1. **K4206 · declared `acquire` and `captureaccount`** in `DECLARED_OPS` (`bio-plane/src/capture/index.mjs`), beside the ops map, with the six already declared by part 1.
+   - `acquire`: classes `admin`, `member`, `probe`, `daemon`; `mutating: true` (copied from `op-declarations`); weight `substrate` and description `substrate: the fetch layer (M2')` (copied from `op-grades`' ground row and its one-liner). `accepts`: `address, at, authority, coArchive, continue, file, for, locator, render, request, subresources, via` (every body field the act reads, `acquisition` `acquire`). `requires`: one group, `locator | continue | address` (the act refuses without any of them; BAD_LOCATOR names `locator`, BAD_ADDRESS names `address`). `matchedSweep` is not declared: the act never reads it from the body (acquisition R31).
+   - `captureaccount`: classes `admin`, `member`, `probe`; `mutating: true`; weight `attested`; description copied from `op-grades`. `accepts`: `captureSha, signature, text`. `requires`: `captureSha, signature`.
+2. **The judgment in `captureaccount`:** a missing `captureSha` was refused NOT_THE_CAPTURING_ACTOR, naming nothing. Fixed in my own arm (P8): an absent, null or blank `captureSha` is now the required-argument refusal (`REQUIRED_ARGUMENT_MISSING`, `argument: captureSha`, through the module's existing `#missingArgument`), before the actor check, writing nothing. A present but malformed or unrecorded digest keeps C-118.5, as the existing knocker test pins.
+3. **Flaw found and fixed in my module (P8):** through the op, `captureaccount` took the account's instant `at` from the request body. The signature does not cover it, so a member could date an account. The arm now passes no body `at`, so the server's clock dates it (the R90 precedent for `sourcereach`). In-process callers still pass `at` (`knocker.test.mjs` does). This is a change of behaviour through the op; BOB should confirm it is wanted.
+
+**Choices for BOB to check**
+- `text` is accepted but not required for `captureaccount`: an empty text is C-118.6, whose row words are fixed by R69, so the refusal is uniform and does not name the field. The declaration test supplies the account's words itself.
+- `acquire`'s description copies the existing one-liner `substrate: the fetch layer (M2')` rather than a registry label key or the act's help sentence (`act.acquire.does`). Say if you want the act's help sentence instead; it would need a new word key.
+- The `acquire` fields are `accepts` from body reads only: the stamps `cls`, `member`, `sessMember` and `store` come from the query and are not declared, as the other ops' stamps are not.
+
+**NEW R for BOB (the next free id, R98; text for `build/requirements/capture.md`)**
+- **R98** *(not yet met: T51)* (T51; K4206; R69; amends R97) `captureaccount` refuses an absent `captureSha` (absent, null or blank) with the required-argument refusal naming it, writing nothing, before the actor check; a present digest that is malformed or not recorded as the member's is C-118.5 as R69 states. Through `op=captureaccount` the account's instant is this instance's clock: a body's `at` is not read. In-process callers keep `at`. Test: `declared-ops.test.mjs` (R98 twice, with the controls).
+- **R97 amended (for BOB to write):** the op list gains `acquire` and `captureaccount`; both are declared as in entry 1 and tested in `declared-ops.test.mjs` (`R97 capture declares acquire`, `R97 capture declares captureaccount`).
+
+**Reported stale generated artifacts** (not regenerated here; `manifest` §14)
+- `bio-plane/src/setup-words/rows.mjs`: `node bio-plane/src/setup-words/build.mjs --check` reports it stale, word 18927 (`capture.declared.acquire`), because `acquire` and `captureaccount` add two `localize` ids. Owner: setup-words; regenerate at layer close.
+- `bio-plane/dist/bio-plane.bundled.mjs`: the plane's source includes `capture`, so the plane bundle is stale. Regenerate at layer close with `node bio-plane/scripts/bundles.mjs`.
+
+**Found in other modules (not touched here; for BOB)**
+- `checks/run.mjs` coverage: 7 modules have live requirement ids named by no test: `agent-harness` R17; `agent-runner` R36, R37, R38, R40; `citation` R16, R17, R18; `installer-steps` R26, R31; `journey-check` R19; `link-sweep` R13, R14, R15; `monitoring` R75, R76, R77. None of those modules' files changed in this job. I did not run them against a baseline.
+
+**Tests and checks**
+- `node --test test/m/capture/ test/cap13-reuse-pages.test.mjs test/d57selflink.test.mjs` (bio-plane): 209 pass, 0 fail (baseline 205 before this job).
+- `node --test test/m/capture/declared-ops.test.mjs`: 10 pass, 0 fail. Against the original source, the three new declarations and the R98 test failed (3 fail, 6 pass), as they should.
+- Cross-module declaration and op-grades agreement (`op-declarations/declared`, `op-declarations/t48`, `op-grades/ladder`, `op-grades/register`, `test-support/declared-ops`): 74 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio capture`: 0 failures. `checks/coverage.mjs /home/user/bio capture`: 50 of 50 live ids, 0 failures. `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 0 failures.
+- `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; words 0 failures (words check: `missingkey 0`); coverage 7 failures, all in other modules (above).
+
+Size (session_014hQZyBTbmm6Zp4ZEjLodrd): test runs 7, module lines 3788
