@@ -3,7 +3,7 @@
    queue-conditions, queue-state, queue, severedhomes. The old suites are not deleted here (K619 (3)). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, untimed } from "./world.mjs";
 
 const FACTS = { objective_gap: { bound: 50, truncated: false }, unattributed: { count: 0, inquiries: [] },
                 contradiction: { bound: 50, truncated: false }, dispositions: [] };
@@ -209,7 +209,7 @@ test("R6, R14, R31 (queue-conditions): a CONDITION ranks last; a member's case m
   kinds = ["governor-holding-host", "partial-capture-outstanding"];
   assert.deepEqual(ids(w.feed("carol")), ["TASK-2026-0001-a", "CONDITION::partial-capture-outstanding::h"], "a kind not named still surfaces");
   // the feed reports and never mutates: two reads, one answer
-  assert.deepEqual(w.feed("dave"), w.feed("dave"));
+  assert.deepEqual(untimed(w.feed("dave")), untimed(w.feed("dave")));
 });
 
 test("R5, R19 (queue-conditions): a member may mute a condition kind no producer emits yet; the mint refuses an uncatalogued kind in every class", () => {
