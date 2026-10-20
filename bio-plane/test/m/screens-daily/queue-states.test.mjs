@@ -98,6 +98,17 @@ test("R58: Forward sends taskforward once with items and the one member; Dismiss
   assert.equal(stripButton(empty, "taskforward"), null);
 });
 
+test("R58, R70: a set of findings of a declared flow sends each item's key with definitionVersion (the word proposedispose reads), never definition_version; one with no version sends the key alone", async () => {
+  const staged = (id, version) => finding(id, { disposition: { available: true, op: "proposedispose", scope: "instance", key: "prog::" + id, ...(version === null ? {} : { definition_version: version }) } });
+  const items = [staged("S1", 4), staged("S2", null)];
+  const p = await open("/app/queue/choose", { queue: queueOf(items), proposedispose: ok({ ok: true, count: 2, applied: 2, retained: 0, items: [{ index: 0, outcome: "applied" }, { index: 1, outcome: "applied" }] }) });
+  await choose(p, ["S1", "S2"]);
+  await press(p, "proposedispose", { nth: 0, reason: "settled by the flow" });
+  assert.equal(p.byOp("proposedispose").length, 1);
+  assert.deepEqual(p.byOp("proposedispose")[0].body, { items: [{ key: "prog::S1", definitionVersion: 4 }, { key: "prog::S2" }], to: "dismissed", reason: "settled by the flow" });
+  assert.ok(!JSON.stringify(p.byOp("proposedispose")[0].body).includes("definition_version"), "control: the old spelling is not sent");
+});
+
 test("R58: Snooze sends queuesnooze once for each distinct case among the chosen items, the day from the field; an item with no case is not handled", async () => {
   const items = [task("T1"), task("T2"), finding("F1"), task("T3", { case: NOCASE })];
   const p = await open("/app/queue/choose", { queue: queueOf(items), queuesnooze: ok({ ok: true }) });
