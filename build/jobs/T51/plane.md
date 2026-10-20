@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_011vKkDz3Fp8T8FuWAfs336Z · depth 2 · COMPLETE · handled B5
+**Status** · session_01HpHBfhUsJDqQs6EQDqvKuj · depth 2 · COMPLETE · handled B15
 
 ## Record (PLANE #41, T51-125)
 
@@ -80,3 +80,100 @@ Tests and checks:
 - format 0 failures; architecture 0 failures; coverage (plane) 67 of 67; ownership (plane, tranche/T51, job/T51/plane) 0 failures; words 0 failures; `checks/run.mjs` ran: coverage fails only in other modules listed above.
 
 Size (session_011vKkDz3Fp8T8FuWAfs336Z): test runs 4, module lines 2307
+
+## J6 · QUESTION
+
+QUESTION (PLANE #43, B6 / FR-32). Three points; I carry on with entries 1 and 5 on my best readings.
+
+1. Entries 2, 3 and part of 4 need exports that are not on tranche/T51 (tip 62068caf14, merged into my branch): `captureSourcesOps` (capture-sources, FR-11, C20) and `investigationOps` (investigation, FR-15, C65) do not exist in any file under bio-plane/src, and the job branches job/T51/capture-sources and job/T51/investigation hold no such map either (their records show J2 COMPLETE / J1 COMPLETE from the earlier round). The START says every owner above merges before me. I cannot spread, test or write R69/R70 truthfully until they are on the tranche. Best reading: I do entries 1, 5 and the iterable parts of 4 now, post COMPLETE-pending-owners as a REPORT, and wait for a CHANGE that says capture-sources and investigation are merged; then I apply 2, 3 and re-run 4.
+
+2. Entry 5, `ask`: the plane's arm (`askOp` / `askOnObject`) refuses nothing for a missing `question`; agent-worker's /ask does. Best reading: `fields.requires: []` and `accepts: ["question","conversation","project","store","token"]` (token: body or query, as `presentedToken` reads it). `readtranslate`: `accepts: ["subject","language"]`, `requires: ["subject"]` (the arm answers BAD_TASK 400 naming `subject`). `ask` is copied as classes admin+member, machineClasses [], mutating true, weight `caller-owned` (RUNG_ABSENT), description the NON_ACTS sentence; `readtranslate` as mutating false, weight `read`, description its NON_ACTS sentence. Tell me if `question` should be required.
+
+3. Entry 1, shape: ES modules cannot enumerate their imports, so the assembly is `plane/declarations.mjs`: one static import per composed module that exports `DECLARED_OPS` (as `DECLARED_OPS as <module>`), the plane's own included, called once at the top of store.mjs before the Store class exists. Seven modules (answers, attestation, content, escalation, explore, provenance-routes, workbooks) declare in `ops.mjs` and do not re-export from `index.mjs`; I import their `ops.mjs` directly. `sources` is composed through store-door, not store.mjs; I import its declaration too. The test iterates `declaredOpsOf(root)` (modules.json) against the assembled table, so a module missing from the file fails by name; no test lists a module's ops.
+
+## J7 · REPORT
+
+REPORT (PLANE #43, FR-32): entries 1, 5 and the iterable part of 4 are applied and pushed; 2 and 3 wait for the owners.
+
+Applied
+- R68 (entry 1): `plane/declarations.mjs` (one static import per declaring module, the plane's own included; `assembleDeclaredOps` refuses a duplicate naming the op and both modules before either registration is called) and `plane/register.mjs`, the first import of both `index.mjs` and `store.mjs`. Registering inside store.mjs was not enough: `control-plane/index.mjs` reads the op tables when it loads and `index.mjs` imports it before `store.mjs`, so a late call would crash the Worker's start (R81, registered after the first read). Consequence for tests: a test that reads an op table before it imports the plane must import `register.mjs` first; t42 to t45 now do. The real modules register with no duplicate and no disagreement (219 ops, 55 owners).
+- R72 (entry 5): `plane/declared.mjs` declares `ask` and `readtranslate`, copied from their hand rows; fields as BOB accepted at B7.
+- R71 (entry 4, iterable part): every declared op is in the route map (door name or alias) or answered by a Worker arm or the plane's own doors; the ops of provenance, case-inputs, case-import, citation, monitoring, link-sweep and the store door (tasks, queue) answer through the door once each. Nothing needed spreading: all those maps were already spread (tasks and queue through store-door's map).
+- Requirement lines R68 to R72 are written in build/requirements/plane.md (K4210); the ownership check lists that file, accepted. R69 and R70 are marked not yet met.
+
+Waiting
+- R69, R70 (entries 2, 3): `captureSourcesOps` and `investigationOps` are still not on tranche/T51 (tip 1cd462473b merged). Send a CHANGE when capture-sources and investigation are merged; I then spread them, add them to test/m/plane/maps.mjs, test them and re-run R71.
+
+For BOB (modules.json, other modules)
+1. architecture FAIL: plane/declarations.mjs imports `sources/index.mjs` (its DECLARED_OPS; sources is composed through store-door), and plane does not declare `sources` in uses. Please add the edge (earlier than plane). I keep the import; it is the only architecture failure.
+2. `test/m/plane/release.test.mjs` R24 "a title or purpose a surface draws is the screen's own key" fails: `screen.bias.purpose` is not in docs/development/ux-substrate/screens/words.json (also so on the tranche, not caused by this job). The words list or the registry, not plane.
+3. coverage fails in other modules only (agent-harness R17, agent-runner, citation R16 to R18, installer-steps, journey-check R19, link-sweep R13 to R15, monitoring R75 to R77).
+
+Tests and checks: `node --test "test/m/plane/**/*.test.mjs"`: 235 tests, 230 pass, 5 fail at the first run; the 4 import-order failures (t42 to t45) fixed and re-run green (18, 6, 6, 14 pass); the fifth is item 2. New: declarations.test.mjs (6), declared-ops.test.mjs (3). format 0, words 0, ownership 0 failures (requirements file listed, accepted).
+Size (session_01Wi1UPiyBRVvgj1bzVSUFVr): test runs 4, module lines 164 new (declarations 140, declared 16, register 8)
+
+## Record: CHANGE B8, B9, B10 (K4213, K4219, K4221) · PLANE #44
+- B8 (2): `store.mjs` spreads `captureSourcesOps(captureCredentialsOf(ctx), url, body)` and `investigationOps(investigationOf(ctx), url, body)` after capture-requests' map (R69, R70); `maps.mjs` lists both. B8 (3), B9 (b): `linkSweepOps` and `citationOps` are handed `body`. `t51.test.mjs`: R69 (the three credential ops once each, through the door as the owner's map answers, a machine credential refused each), R70 (`projectclose`, a non-owner's close refused by the owner's arm), the body hand-over (`sweepratify` answers for the sweep the body names; control: `{}` is the argument's refusal). All checked red without the change.
+- B8 (1): `sources` is in plane's `uses`; B9 (a): case-import's ops (including the four new) are spread by `caseImportOps`; `accepted.test.mjs` reads them from the owner's map, nothing listed.
+- B10: `registerCaseInputsPublicReads(ctx, {publicRead})` is called in `store.mjs` right after `caseAuthoringOf(ctx, …)`, not beside case-checker's: case-inputs' factory reads its deps on its first call and case-authoring's creation hands it its record, membership and clock, and `accepted.test.mjs` R17 pins case-inputs after case-import. `casedetailspublic` answers at `/publicread?name=casedetailspublic` (test; control: a second registration refused, an unknown name no read).
+- R68: `declarations.mjs` imports the 22 modules that declare ops since the first job (member-roster, project-roster, credentials, provenance, capture-sources, file-safety, connections, inquiry, citation, run-productions, capture-requests, investigation, case-import, case-inputs, case-authoring, review, filings, monitoring, link-sweep, tasks, instance-setup (`setup.mjs`), store-door (`dispatch.mjs`)); `OWNERS` is in `modules.json` order. `t47` R45 reads case-inputs' ops from its map (no hand list); `notices` R2 expects case-inputs' public read beside case-checker's.
+
+**For BOB (other modules and artifacts; none is plane's to change)**
+1. The plane does not boot on `tranche/T51`: `register.mjs` stops at the first owner row that disagrees. Found by registering the owners one op at a time (nine ops, seven modules): citation `citeimported`, `withdrawimported` (op-declarations: NEEDS_MISSING); link-sweep `sweepset`, `sweepratify` (NEEDS_MISSING) and `sweeps` (op-grades: DECLARED_OP_BAD_WEIGHT, rung-on-read); ai-accounts `accountusesset` (description differs from op-grades' hand row, `t41.mjs`:126, "…switched by its owner…"); credentials `securitymap` (weight hand=caller-owned, owner=read); ratification `caseratify` (description differs from the hand row); store-door `groupdescriptiondraft` (DECLARED_OP_BAD_WEIGHT, rung-on-read). With those nine skipped (a local, uncommitted skip) the plane suite is 271 of 282.
+2. `casedetailspublic` (case-inputs R24) is not routed: `control-plane/index.mjs`:97 `CASE_CHECKER_PUBLIC_READS` lists only case-checker's two, so `declarations.test.mjs` R71 ("every op an owner declares is reachable") names it. Add it to that list (or a case-inputs list beside it); the read answers at `op=publicread&name=casedetailspublic` today.
+3. architecture: `plane/declarations.mjs` imports `member-roster/index.mjs` (its `DECLARED_OPS`), and `member-roster` is not in plane's `uses`: add the edge (as `sources` was).
+4. ownership: `build/requirements/plane.md` (R68 to R72, K4210, written by the earlier job) is still listed as outside the paths; accepted as before. R69 and R70 are met by this job; their *(not yet met)* marks are BOB's to clear.
+5. `release.test.mjs` R24 (`screen.bias.purpose` absent from words.json): the design's, accepted by name (B8 (4)).
+
+**Tests and checks** (the nine ops skipped locally; workerd-run tests cannot take the skip and fail on the first row above: t42 R37, t46 R42, worker R6 ×2)
+- `node --test "bio-plane/test/m/plane/*.test.mjs"`: tests 282, pass 271, fail 11: the three workerd files and R68 and R5 (`op=sweeps`) because of the skip, R71 (item 2), R24 (item 5).
+- format 0 failures; coverage 72 of 72; words 0 failures; architecture 1 failure (item 3); ownership 1 failure (item 4).
+- Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 14, module lines 150 new
+
+## Record: CHANGE B11 (K4226) · PLANE #44
+- (1) The queue's timing fields vary by run: every `mask` in the plane's tests (and `maps.mjs`' `servedThroughDoor`) now also masks `"ms"` and `"feeds_ms"` as `"<n>"`; the assertions are kept (the queue's answer is still compared whole). `door.test.mjs` R2, R5 (N13) and `t47.test.mjs` R45, R48 pass.
+- (2) `door.mjs`: `gatedOp` takes `timings` (default null) and hands it to `captureOp` as `h.timings`. Deferred, with why: the end-to-end test (a timed-out `acquire` through the door answers the stages that ran) cannot be written green yet. `control-plane`'s part (R115: it creates `timings` and passes it to `gatedOp`) is on `job/T51/control-plane` only, not on `tranche/T51`; `capture/ops.mjs` (`acquireOp`) does not forward `h.timings` yet (CAPTURE #39), and `acquire` runs in the Store through `store.fetch`, so the hand-over from the arm to `acquisition`'s `opts.timings` is capture's design. Send a CHANGE when both are merged; I then add the test.
+- Declarations: since B8 the ops of `action-holds` (`actionpressure`, `pressurerecord`: description differs from the hand row) also disagree and citation's two no longer do: nine ops in seven modules on this tranche tip (link-sweep `sweepset`, `sweepratify`, `sweeps`; ai-accounts `accountusesset`; credentials `securitymap`; ratification `caseratify`; action-holds `actionpressure`, `pressurerecord`; store-door `groupdescriptiondraft`).
+- Suite with those nine skipped locally (uncommitted): tests 282, pass 271, fail 11 (the three workerd files, R68 and R5 `op=sweeps` because of the skip; R71 `casedetailspublic`, R24 as listed above). Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 20, module lines 160 new
+
+## J8 · REPORT
+
+REPORT (PLANE #44; B8 to B11): pushed on job/T51/plane; full detail in the record.
+Applied: R69, R70 (capture-sources' and investigation's maps spread; tests checked red without); body to citation and link-sweep; case-inputs' public read registered at start (after case-authoring's creation, which keeps case-inputs after case-import); R68's assembly now imports the 22 modules that declare since; the queue's timing fields masked; `gatedOp` hands `timings` to captureOp.
+Waiting on others (BOB):
+1. The plane does not boot on tranche/T51: nine owner rows disagree with hand rows: link-sweep sweepset, sweepratify (NEEDS_MISSING), sweeps (rung-on-read); ai-accounts accountusesset, ratification caseratify, action-holds actionpressure and pressurerecord (descriptions); credentials securitymap (weight); store-door groupdescriptiondraft (rung-on-read). With them skipped locally the suite is 271 of 282; the 11 are explained in the record.
+2. casedetailspublic is not routed: control-plane/index.mjs:97 CASE_CHECKER_PUBLIC_READS (R71 names it).
+3. architecture: plane imports member-roster's DECLARED_OPS; add member-roster to plane's uses. ownership: build/requirements/plane.md (accepted as before); R69, R70 marks are yours to clear.
+4. B11 (2) end-to-end test deferred: control-plane's R115 is only on its job branch and capture's acquireOp does not forward h.timings yet; send a CHANGE when both are merged.
+
+## J9 · QUESTION
+
+QUESTION (re B13; K4231): the timings cannot be carried on the answer, because on a timeout there is no answer, and the door's object cannot reach the object. Read from the code on the merged tranche:
+- Worker side: `plane/door.mjs` `gatedOp` now hands `h.timings` to `captureOp` (capture/ops.mjs), but its `acquireOp` ignores it: it only does `store.fetch('http://x/acquire?…')`. Nothing there keeps or sends it.
+- Object side: `plane/store.mjs`:765 calls `captureOps(captureOf(ctx), url, body, env)` with no `h`; capture's `acquire` arm would pass `h.timings` to `acquisition` (R95), which fills it as the stages run and puts `stageTimes` in the answer only when it ends. The object keeps running after the door's bound, so the object's times exist only inside the object.
+Best reading, the smallest design that holds: (a) the route map passes a fresh `{timings}` into `captureOps` for `acquire` and keeps it in a small holder in the plane's Store keyed by the door's `trace` (already sent to the object as a query/body string, plane R55); (b) a new store-internal read `acquiretimings?trace=…` in the plane's route map answers `stageTimes` of the held object (undefined trace: none); (c) on its timeout the door (control-plane, R115) asks the object that read and answers `timings` from it, instead of from its own empty object; (d) capture's `acquireOp` must send `trace` with the `/acquire` request (capture). I build (a) and (b) with an in-process end-to-end test (a store whose acquire stalls, then the read answers the stages that ran); (c) and (d) are control-plane's and capture's, and the Worker-level proof waits for them. Alternatives: the object holds the timings in its answer to a later poll with no new op (not possible: nothing identifies the call). Please answer: (a)+(b) as above, or a different split.
+
+## Record: CHANGE B13, ANSWER B14 (K4231, K4234) · PLANE #44
+- New `plane/acquire-timings.mjs`: a holder per host (bounded at 64, each entry kept 60 s from its start, ended acquires included so a door that asks just after the end still reads them: a small departure from "dropped when the acquire ends", for that race), `acquireHandlerParts(host, url)` (the `h` for `captureOps`: `timings` is made when the `acquire` arm reads it, keyed by the request's `trace`; with no trace a fresh object is held nowhere) and `acquireTimingsOps` (`acquiretimings?trace=` answers `{ok, timings: stageTimes(...) | null}`).
+- `store.mjs`: `acquiretimings` at acquisition's place (before capture's map, with the co-archive pair); `captureOps(..., acquireHandlerParts(ctx, url))`. `maps.mjs` lists the read in the `acquisition` entry (as the co-archive pair is), so R5 and R9 hold.
+- Test `t51.test.mjs` R73: a stalled `acquire` (fetch held) through the route map, with `trace`, is read by `acquiretimings` while running (names the running stage) and after it ends (stages that ran, none running); controls: another trace, no trace, an unkeyed call, the bound. Red without the change (`acquiretimings` is an unknown op).
+- For BOB: R73 is the id the test names; its requirement text (plane R73: the holder, the read, the bound and time to live) is yours to write. (c) control-plane #41 and (d) capture #40 are the remaining parts; the Worker-level proof follows them.
+- Suite with the nine ops skipped locally: tests 283, pass 272, fail 11, the same eleven as before (accepted by name, B12). Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 26, module lines 210 new
+
+## J10 · COMPLETE
+
+COMPLETE (PLANE #44; B8 to B14): pushed on job/T51/plane; record in full.
+B13/B14 built: `plane/acquire-timings.mjs` (bounded holder keyed by the door's trace, 64 entries, 60 s; `acquiretimings?trace=` read at acquisition's place in the route map; `acquire` is handed the held object); end-to-end test R73 in t51.test.mjs (stalled acquire read while running and after), red without the change. Departure: an ended acquire's entry stays until the time to live, so a late ask still reads it. R73's requirement text is BOB's to write (the test names R73). Remaining: (c) control-plane #41 asks the read on its timeout, (d) capture #40 sends trace with /acquire; the Worker-level proof follows.
+Checks: format, architecture, coverage (72/72), words 0 failures; ownership as before.
+Accepted reds (B12), 11 of 283 with the nine disagreeing owner rows skipped locally: t42 R37, t46 R42, worker R6 x2 (workerd), R68, R5 op=sweeps, R6 bootstrap (instance-setup R95), R71 (casedetailspublic, CONTROL-PLANE #41), R24 (design). After OP-GRADES #18 and LINK-SWEEP #5 merge I merge the tranche and re-run.
+
+## Record: CHANGE B15 (K4236) · PLANE #44
+- `door.mjs`: `gatedOp` hands the door's `trace` to `captureOp` beside `timings` (capture R99 sends it as `x-civicsmith-trace`).
+- The object reads the header: `store-door`'s `HANDED` list names only its own headers, so `Store.fetch` (`store.mjs`) first calls `traceStamped` (`acquire-timings.mjs`): for a POST `acquire` it sets the in-process `trace` parameter from the header (printable, at most 200 characters) and removes any `trace` a caller put in the address, so the key is the door's alone. (A header handed on by store-door itself would be tidier: for BOB if wanted, store-door's R9 list.)
+- `acquiretimings` answers `{ok: true, stageTimes}` (null when none is held), the shape control-plane R115 reads.
+- `t51.test.mjs` R73 now runs the whole hop: `gatedOp` (door, with `trace`) -> capture's header -> the Store (held fetch) -> `acquiretimings` while running (names the running stage) and after (stages that ran); controls: another trace, none, an address trace, an unkeyed call, the bound.
+- Suite with the seven still-disagreeing owner rows skipped locally: tests 283, pass 272, fail 11, the accepted eleven. Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 29, module lines 240 new
+
+## J11 · COMPLETE
+
+COMPLETE (PLANE #44; B15): pushed. `gatedOp` hands `trace` to captureOp; the object reads capture's header `x-civicsmith-trace` (Store.fetch sets the in-process `trace` for a POST acquire and strips a caller's own, because store-door's HANDED list does not carry it: you may prefer store-door to hand it on); `acquiretimings` answers {ok, stageTimes}. R73's test runs the whole hop (door -> header -> object's timings under the trace -> read, while running and after). Checks: format, architecture, coverage 0 failures. Suite (seven owner rows still disagreeing skipped locally): 272 of 283, the accepted eleven. R73's requirement text is yours to write.

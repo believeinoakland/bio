@@ -23,7 +23,7 @@ import { answersOf } from "../../../src/answers/index.mjs";
 import { draftOnObject } from "../../../src/plane/ask.mjs";
 
 /* Instants and minted ids differ between two objects; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 const SESSION = "s".repeat(64);
 const member = (x, id, role = "member") => x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status,
   capabilities, created, updated) VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
@@ -69,7 +69,8 @@ test("R45 (T47; N908, N961; case-inputs R16, action-records R15): case-inputs' m
   const keys = Object.keys(x.s.routes(u, null));
   const ci = Object.keys(caseInputsOps(caseInputsOf(x.ctx), u, null));
   const ar = Object.keys(actionRecordsOps(actionRecordsOf(x.ctx), u, null));
-  assert.deepEqual(ci, ["whatchangedpropose", "whatchangeddrafts", "statementack"]);
+  /* K3268: the arms are read from case-inputs' own map; the three of T47 are among them (R27, R29 added more) */
+  for (const op of ["whatchangedpropose", "whatchangeddrafts", "statementack"]) assert.ok(ci.includes(op), `${op} is case-inputs'`);
   /* R58 (T50; K3746): the arms are read from action-records' own map, never counted here; T50's two are among them */
   for (const op of ["actionstake", "actioninquiry"]) assert.ok(ar.includes(op), `${op} is action-records'`);
   assert.ok(ar.length > 0 && new Set(ar).size === ar.length, "its arms, each once");
