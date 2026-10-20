@@ -32,6 +32,7 @@ const VALUES = {
   captureaccounts: { ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-01T00:00:00Z" }], accounts: [] },
   projectlist: { projects: [{ id: "PROJ-1", name: "P" }] },
   memberlist: { members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }] },
+  capturerequests: { ok: true, requests: [{ request: "CR-1", host: "records.example.gov", state: "refused", source_reason: "login", requested_at: "2026-10-01T00:00:00Z", principal_plane: "member:mai" }] },
 };
 const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] }, opencaptures: { ok: true, captures: [] },
                 archivelist: { ok: true, archive: {}, summary: {}, entries: [] } };

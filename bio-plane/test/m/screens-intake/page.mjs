@@ -2,6 +2,12 @@
  * harness and DOM stand-in (`../interface-shell/harness.mjs`, `dom.mjs`), the plane scripted per op. A few helpers to
  * open a screen, fill its fields and press its acts as a member would. */
 import { boot, ok, refused, refusedIn, bytes, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
+import { DECLARED_OPS as CAPTURE_SOURCES } from "../../../src/capture-sources/ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+
+/* The owners' declarations of the ops this module's screens send that no hand row holds, registered as the plane registers them at
+   start-up (op-declarations R80, R81), once per process before any table is read: `capture-sources`' three credential ops (C20). */
+registerDeclaredOps({ "capture-sources": CAPTURE_SOURCES });
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 

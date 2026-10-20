@@ -15,6 +15,8 @@ function captureReads(view) {
   return { open: { op: "opencaptures", query: {}, empty: (v) => !v || !Array.isArray(v.captures) || !v.captures.length },
            held: { op: "heldcaptures", query: { limit: 200, state: "held_and_vouched" } },
            members: { op: "memberlist" },
+           /* R47 (C20): the member's team's requests a source turned away for a login */
+           refused: { op: "capturerequests", query: { state: "refused", limit: 50 }, empty: (v) => !v || !Array.isArray(v.requests) || !v.requests.length },
            ...(/^INQ-[A-Za-z0-9-]+$/.test(id) ? { questions: { op: "search", query: { q: "type:inquiry", limit: "200" },
              empty: (v) => !v || !Array.isArray(v.hits) || !v.hits.length } } : {}) };
 }
@@ -255,6 +257,30 @@ function renderCapture(cs, view) {
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
         : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title }) + made(got)) : "")
       + refusedPromotion("address");
+    /* R47 (C20; DEC-381): "A source that asked for a login": each request a source turned away for a login, a username and a secret
+       field (the secret is typed into a password field, sent once and never drawn back), the login given and the request tried
+       again, a retry by itself, the stored logins and their withdrawal. No secret, length or digest is ever drawn. */
+    const R = D.refused;
+    const turned = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) ? R.value.requests.filter((r) => r && r.source_reason === "login" && r.state === "refused") : [];
+    const stored = (Array.isArray(U.logins) ? U.logins : []).filter((e) => e && !e.withdrawn_at);
+    const who = (m) => { const id = String(m || "").replace(/^member:/, ""); const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
+      const h = id ? ((roster.find((x) => x && x.member_id === id) || {}).handle || "") : ""; return h ? cs.ref("member", id, h, []) : ""; };
+    const credNote = U.credDone
+      ? (U.credDone.refused !== undefined ? `<p class="cs-state" data-state="failed" role="alert">${U.credDone.refused}</p>` : "") : "";
+    const credSec = !turned.length && !stored.length && !cs.can("capturecredentiallist") ? "" : cs.sec("screen.capture.cred.head",
+      (turned.length ? `<p class="mk-small">${cs.w("screen.capture.cred.why1")} ${cs.w("screen.capture.cred.why2")}</p>`
+        + cs.sheet(turned.map((r) => cs.row(cs.icon("refused"), `<b>${cs.w("screen.capture.cred.turned", { source: { html: `<span class="mk-data">${cs.esc(r.host || "")}</span>` } })}</b>`,
+          "", [who(r.principal_plane), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" · "))).join(""))
+        + cs.field("cc-user", "screen.capture.cred.user", { autocomplete: "off" })
+        + cs.field("cc-secret", "screen.capture.cred.secret", { type: "password", autocomplete: "off", help: ["screen.capture.cred.sealed1", "screen.capture.cred.sealed2"] })
+        + turned.map((r) => `<div class="mk-acts">${cs.act("capturecredentialsupply", { tone: "primary", data: { request: r.request, host: r.host } })}${cs.act("capturerequestretry", { label: "screen.capture.cred.retry", data: { request: r.request } })}</div>`).join("")
+        + `<p class="mk-small muted">${cs.w("screen.capture.cred.only1")} ${cs.w("screen.capture.cred.only2")}</p>` : "")
+      + credNote
+      + stored.map((e) => cs.sheet(cs.row(cs.icon("accepted"), `${cs.w("screen.capture.cred.stored", { source: { html: `<span class="mk-data">${cs.esc(e.host || "")}</span>` } })}<span class="meta">${cs.w("screen.capture.cred.notshown")}</span>`,
+          cs.act("capturecredentialwithdraw", { tone: "quiet", data: { credential: e.credential } }), [who(e.supplied_by), e.supplied_at ? cs.date(e.supplied_at) : ""].filter(Boolean).join(" · ")))).join("")
+      + `<div class="mk-acts">${cs.act("capturecredentiallist")}</div>`
+      + (Array.isArray(U.logins) ? `<p class="mk-small muted">${cs.w("screen.capture.cred.listnote1")} ${cs.w("screen.capture.cred.listnote2")}</p>` : ""),
+      { help: ["screen.capture.cred.tip1", "screen.capture.cred.tip2"] });
     body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
       + forq
       + keep
@@ -265,6 +291,7 @@ function renderCapture(cs, view) {
       + result
       + unfinished
       + a64
+      + credSec
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
         { address: U.requested.address }) : "")
       + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
@@ -523,6 +550,56 @@ function doneWritingHelp(view, answer, cs) {
   cs.set("draft", { handle: (view.me && view.me.handle) || "", untested });
 }
 
+/* R47 (C20; DEC-381): "Give a login for this source and try again". The login is a username and a secret typed here, sent once as
+ * `secret` ("user:secret", the form `capture-sources` R56 hands to Basic) for the refused request's host, at the team's scope; the
+ * secret is read from its field and held nowhere else, never put in the page's state. Its refusals are drawn by the design's words. */
+function sendCredentialSupply(view, el, cs) {
+  const user = String(cs.value("cc-user") || "").trim(), secret = String(cs.value("cc-secret") || "");
+  const host = el && el.dataset ? String(el.dataset.host || "") : "";
+  const request = el && el.dataset ? String(el.dataset.request || "") : "";
+  if (!user) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.cred.user") } } };
+  if (!secret) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.cred.secret") } } };
+  cs.set("credDone", null);
+  cs.set("credFor", { request, host });
+  return { body: { kind: "login", host, secret: `${user}:${secret}`, scope: "group" } };
+}
+/* the login stored, the turned-away request goes back in the queue (`capturerequestretry`); a request its source did not turn
+   away is refused in words and the login stays stored */
+async function doneCredentialSupply(view, answer, cs) {
+  const f = (view.ui && view.ui.credFor) || {};
+  cs.set("credFor", null);
+  const a = f.request ? await cs.call("capturerequestretry", { body: { request: f.request } }) : null;
+  const r = a && a.result && typeof a.result === "object" ? a.result : a;
+  if (r && r.ok === false) { cs.set("credDone", { refused: view.parts.refusalHtml(cs, r) }); return; }
+  cs.set("credDone", { retried: f.request });
+  const l = await cs.call("capturecredentiallist", { body: {} });
+  const v = l && l.result && typeof l.result === "object" ? l.result : l;
+  if (v && Array.isArray(v.entries)) cs.set("logins", v.entries);
+}
+function sendCredentialRetry(view, el, cs) {
+  cs.set("credDone", null);
+  return { body: { request: el && el.dataset ? String(el.dataset.request || "") : "" } };
+}
+function doneCredentialRetry(view, answer, cs) { cs.set("credDone", { retried: true }); }
+function sendCredentialList() { return { body: {} }; }
+function doneCredentialList(view, answer, cs) {
+  const a = answer || {};
+  cs.set("logins", Array.isArray(a.entries) ? a.entries : []);
+}
+function sendCredentialWithdraw(view, el, cs) {
+  return { body: { credential: el && el.dataset ? String(el.dataset.credential || "") : "" } };
+}
+async function doneCredentialWithdraw(view, answer, cs) {
+  const l = await cs.call("capturecredentiallist", { body: {} });
+  const v = l && l.result && typeof l.result === "object" ? l.result : l;
+  cs.set("logins", v && Array.isArray(v.entries) ? v.entries : []);
+}
+/* R47: the refusals of the three, by the design's words: a machine, the team's own Civicsmith, a request its source did not turn away */
+const CRED_REFUSALS = Object.freeze({
+  CAPTURE_CREDENTIAL_NOT_A_MEMBER: function (refusal, cs) { return cs.w("screen.capture.cred.ref.machine1") + " " + cs.w("screen.capture.cred.ref.machine2"); },
+  CAPTURE_CREDENTIAL_OWN_HOST: function (refusal, cs) { return cs.w("screen.capture.cred.ref.own1") + " " + cs.w("screen.capture.cred.ref.own2"); },
+});
+
 export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
@@ -542,6 +619,11 @@ export const CAPTURE_SCREEN = Object.freeze({
                     refusals: Object.freeze({ UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE",
                                               MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" }) }),
+    Object.freeze({ op: "capturecredentialsupply", label: "act.owed_capturecredentialsupply.label.capture", send: sendCredentialSupply, done: doneCredentialSupply, refusals: CRED_REFUSALS }),
+    Object.freeze({ op: "capturerequestretry", label: "act.capturerequestretry.label.capture", send: sendCredentialRetry, done: doneCredentialRetry,
+                    refusals: Object.freeze({ CAPTURE_REQUEST_NOT_RETRYABLE: function (refusal, cs) { return cs.w("screen.capture.cred.ref.notretry"); } }) }),
+    Object.freeze({ op: "capturecredentiallist", label: "act.owed_capturecredentiallist.label.capture", send: sendCredentialList, done: doneCredentialList }),
+    Object.freeze({ op: "capturecredentialwithdraw", label: "act.owed_capturecredentialwithdraw.label.capture", send: sendCredentialWithdraw, done: doneCredentialWithdraw }),
     Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, reasonField: "words" }),
     Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, reasonField: "told" }),
   ]),
