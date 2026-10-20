@@ -2005,6 +2005,30 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "owed:capturecredentialsupply DEC-381",
+     "label": "Give a login for this source and try again",
+     "status": "owed"
+    },
+    {
+     "op": "capturerequestretry",
+     "label": "Try a refused request again",
+     "status": "declared",
+     "modules": [
+      "capture-requests",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:capturecredentiallist DEC-381",
+     "label": "Show the stored logins",
+     "status": "owed"
+    },
+    {
+     "op": "owed:capturecredentialwithdraw DEC-381",
+     "label": "Withdraw this login",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2370,6 +2394,11 @@
      "modules": [
       "entities"
      ]
+    },
+    {
+     "op": "owed:declareorigin DEC-381",
+     "label": "Say where this document came from",
+     "status": "owed"
     },
     {
      "op": "themeplace",
@@ -2766,6 +2795,11 @@
      "op": "owed:rerunpair K4169",
      "label": "This answers the same claim",
      "status": "owed"
+    },
+    {
+     "op": "owed:projectclose DEC-381",
+     "label": "Close this project with a reason",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2957,6 +2991,24 @@
       "citation",
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:citeimported DEC-382",
+     "label": "Cite another team's finding",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    },
+    {
+     "op": "owed:withdrawimported DEC-382",
+     "label": "Take another team's finding back",
+     "status": "owed"
     },
     {
      "op": "sever",
@@ -5159,6 +5211,19 @@
      "op": "owed:rerunstart K4169",
      "label": "Re-run this work in your own project",
      "status": "owed"
+    },
+    {
+     "op": "owed:citeimported DEC-382",
+     "label": "Rest one of our questions on this",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
     }
    ],
    "journeys": [
@@ -5436,6 +5501,34 @@
      "modules": [
       "link-sweep",
       "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:namedrequests DEC-382",
+     "label": "List every named request",
+     "status": "owed"
+    },
+    {
+     "op": "owed:namedrequestset DEC-382",
+     "label": "Ask for this to be gathered on a schedule",
+     "status": "owed"
+    },
+    {
+     "op": "owed:sweepset DEC-382",
+     "label": "Define a sweep",
+     "status": "owed"
+    },
+    {
+     "op": "owed:sweepratify DEC-382",
+     "label": "Ratify or stop a sweep",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],

@@ -1,6 +1,6 @@
 # test-support — requirements
 
-**Status** · In force: a helper module, its requirements BOB's (K20). Last changed T35 (T35-3: R10–R14; K1844, K1852); every requirement met (K1919).
+**Status** · In force: a helper module, its requirements BOB's (K20). Last changed T51 fix round (FR-01: R15, R16; K4168, K4189); every requirement met.
 
 ## Public
 
@@ -43,6 +43,10 @@ Gives any test process a temporary-file sandbox it owns and removes, and standar
 
 **`zipBomb({kernel, entries})` → `Uint8Array`, `nestedZip({depth, fanout, leaf})` → `Uint8Array`** (N688; F7)
 - **R14** `zipBomb` writes one deflated kernel of `kernel` zero bytes once and `entries` central-directory entries that all point at it (R12's overlap), each declaring `kernel` uncompressed bytes, so the declared total is `kernel × entries` while the archive stays near one kernel's compressed size. `nestedZip` writes an archive `depth` levels deep (1 is a plain archive of leaves): each level holds `fanout` entries, each the next level's archive, and the deepest holds `fanout` copies of `leaf` (bytes, written stored or deflated as R10). Both are deterministic and built on `makeZip` alone (R13).
+
+**`declaredOpHolds({op, declaration, call, refusedNaming})` → Promise, `declaredOpsOf(root)` → Promise** (`bio-plane/test/declared-ops.mjs`; K4168, K4189)
+- **R15** `declaredOpHolds` holds an owner's op declaration (`DECLARED_OPS[op]`: `fields: {accepts, requires}`, a `requires` entry a field name or a list of alternatives) true against the op as the door runs it. `call(fields)` runs the op and answers what the door answers (a `Response` is read as `{status, ...body}`); `refusedNaming(answer, field)` says whether an answer is a refusal naming that field (default: the answer's `code` or `detail` names it as a whole word). It (a) calls with only the `requires` satisfied (the first alternative of each list) and expects no refusal naming any declared field, (b) calls once without each required entry (without every alternative of a list) and expects a refusal naming that field (any alternative of a list), (c) calls once with a field outside `accepts` and `requires` (`outside`, default one generated name) and expects the op to drop it (the answer equals (a)'s, by `same`, default JSON equality) or refuse it naming it. Optional keys: `values` (a sample value per field name; default a string made from the name), `outside`, `same`. A breach rejects with an `Error` naming the op and the field; a declaration without `fields.accepts` and `fields.requires` arrays rejects naming the op. The helper is test tooling: only tests import it.
+- **R16** `declaredOpsOf(root)` reads `build/modules.json` under `root`, takes the source files (`.mjs`, `.js`) of every module's `paths` (a path ending in `/` is a directory, read recursively, `node_modules` skipped) whose text contains `export const DECLARED_OPS`, imports each and answers `{ops, owners, duplicates}`: `ops` the declarations by op name, `owners` the module id of each op, `duplicates` every op declared by two or more modules as `{op, owners}` (`ops` and `owners` keep the first in `modules.json` order). A file without the text is not imported; a file that has it and does not export an object `DECLARED_OPS` rejects naming the file. It lists no module by hand (K3268) and is called only from tests, never from product code, because it imports later modules' files by path (P4; K4189).
 
 ## Private
 

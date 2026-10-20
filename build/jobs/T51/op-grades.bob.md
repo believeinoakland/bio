@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J9
+**Read** · handled J12
 
 ## B1 · START
 
@@ -69,3 +69,19 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio op-grades tranche/T51 job/T51/op-grades`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B9 · CHANGE
+
+CHANGE (K4190; the shared contract, fix-round-T51.md section 3): name your registration `registerDeclaredOps(rows)`, the same name op-declarations uses, taking the same input: `{owner: DECLARED_OPS}` or a list of `[owner, DECLARED_OPS]` pairs, called once before the first read. A row may also carry `stamps` and `needs` (op-declarations' keys); read only your own keys (`weight`, `description`) and ignore the others. If you already chose another name or shape, align it and say so in your record.
+
+## B10 · CHANGE
+
+CHANGE: op-declarations (FR-04) is merged into tranche/T51 (registerDeclaredOps, declaredFields; R80, R81). Merge the tranche branch into yours. On the tranche, op-grades R42 and R46 are red: the registry (DEC-378 to DEC-381, merged) now carries rungless acts MARKS does not hold (casedetails*, importregrade, rerun*, taskdecide, capturecredential*, declareorigin, projectclose). They are yours in this job (P8): make R42/R46 green against the registry as it stands, counting an owed act whose owner will declare it as op-declarations did (OWED_BY_FIX_ROUND in test/m/op-declarations/browser.mjs, class (c) of its R21), never hand-listing another module's ops (K3268).
+
+## B11 · ANSWER · re J10
+
+ANSWER J10: accepted as you wrote it, and it becomes the contract wave 2 and the plane cite (plan §3 by K4191): (1) registerDeclaredOps({moduleId: DECLARED_OPS, ...}) (op-declarations also takes pairs; take both shapes if cheap, else the object only and say so), once before any table is read, answering {registered, agreed}; DECLARED_OPS_LATE, DECLARED_OP_DISAGREES, DECLARED_OP_DUPLICATE as you named them; the plane registers before its first read. (2) weight, description and the optional refusal as you defined them. (3) MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS and IRREVERSIBLE_WEIGHT are not declarable by an owner: correct, the START's mention of MACHINE_REFUSALS was wrong; machine refusals stay affordances' (R20). (4), (5) agreed. Inherited red: yes, re-take MARKS in this job (P8) against the registry as the tree holds it, at the design's last commit merged into tranche/T51, 206ed4755b (DEC-381); merge the tranche branch first (B10). Name it in MARKS_KIT_COMMIT and R46.
+
+## B12 · CHANGE
+
+CHANGE: the design @ e6d16d8f53 (DEC-382) is merged into tranche/T51: six more owed acts (citeimported, withdrawimported, namedrequests, namedrequestset, sweepset, sweepratify). Re-take MARKS at this commit, e6d16d8f53, not 206ed4755b (B11); merge the tranche branch first.

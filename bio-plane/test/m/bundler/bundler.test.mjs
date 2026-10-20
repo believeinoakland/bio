@@ -18,7 +18,7 @@ import {
   isContainer, isGuarded, containerDescriptor, imageReference, containerClasses, containerParts, classPackages,
   statementPackages, markerIsContainer, workerPart, WORKER_PART_PATH, BUCKET_ROLES,
   SOURCE_FIELD, containerSourceHash, containerImageStates, containerImageFindings, recordContainerDigest,
-  planeMember, wordKeysOf,
+  planeMember, wordKeysOf, bundleExports, bindingFindings, releaseBindingFindings,
 } from "../../../scripts/fleet-bundle.mjs";
 import { build as esbuildBuild } from "esbuild";
 import { parseJsonc } from "../../../scripts/jsonc.mjs";
@@ -1323,4 +1323,72 @@ test("R38: over the real fleet, a member whose inputs hold a word read with a va
     console.log(`# R38 real fleet: ${m.name} keeps the whole table (${built.words.total} rows) for ${man.wordSites.length} site(s): ${man.wordSites.join(", ")}`);
   }
   assert.ok(!keepsWhole.includes("pdf-worker") && !keepsWhole.includes("ocr-worker") && !keepsWhole.includes("sheet-worker"), `the members that keep the whole table: ${keepsWhole.join(", ")}`);
+});
+
+/* --------------------------------------------------------------------- R39 */
+
+const unit = (name, exports, config = {}) => ({ name, exports, config });
+const naming = (fs, member, binding, what) => fs.filter((f) => f.member === member && f.binding === binding && f.name === what);
+
+test("R39: every kind of binding is held to what the release exports: a service names the plane or a member; a Durable Object with a script_name names a member whose bundle exports the class, one without names its own bundle's; a container class and each class a migration creates, renames to or transfers are exported by the member's own bundle", () => {
+  const plane = unit("bio-plane", ["Store", "default"], { durable_objects: { bindings: [{ name: "STORE", class_name: "Store" }] },
+    services: [{ binding: "SELF", service: "bio-plane" }, { binding: "PDF", service: "pdf-worker" }] });
+  const pdf = unit("pdf-worker", ["default"], { services: [{ binding: "PLANE", service: "bio-plane" }] });
+  const runner = unit("agent-runner", ["AgentRunner", "default"], {
+    containers: [{ class_name: "AgentRunner" }], durable_objects: { bindings: [{ name: "AGENT_RUNNER", class_name: "AgentRunner" }] },
+    migrations: [{ tag: "v1", new_sqlite_classes: ["AgentRunner"] }] });
+  const worker = unit("agent-worker", ["default", "SegmentDriver"], { services: [{ binding: "PLANE", service: "bio-plane" }],
+    durable_objects: { bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" },
+      { name: "REMOTE", class_name: "AgentRunner", script_name: "agent-runner" }] } });
+  assert.deepEqual(bindingFindings([plane, pdf, runner, worker]), [], "a coherent release has no finding");
+
+  /* the defect K4176 found: REMOTE names a class the other member's bundle lacks */
+  const lacking = bindingFindings([plane, pdf, { ...runner, exports: ["default"] }, { ...worker,
+    config: { ...worker.config, durable_objects: { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" }] } } }]);
+  const remote = naming(lacking, "agent-worker", "REMOTE", "RemoteSession");
+  assert.equal(remote.length, 1, JSON.stringify(lacking));
+  assert.match(remote[0].text, /agent-worker/);
+  assert.match(remote[0].text, /REMOTE/);
+  assert.match(remote[0].text, /RemoteSession/);
+  assert.match(remote[0].text, /agent-runner/);
+
+  /* a service naming no member of the release */
+  const stray = bindingFindings([plane, { ...pdf, config: { services: [{ binding: "GHOST", service: "ghost-worker" }] } }]);
+  assert.equal(naming(stray, "pdf-worker", "GHOST", "ghost-worker").length, 1);
+  assert.equal(naming(stray, "bio-plane", "PDF", "pdf-worker").length, 0, "pdf-worker is in this release");
+  /* a script_name naming no member */
+  const nowhere = bindingFindings([unit("a", [], { durable_objects: { bindings: [{ name: "X", class_name: "C", script_name: "nobody" }] } })]);
+  assert.equal(naming(nowhere, "a", "X", "C").length, 1);
+  /* no script_name: the member's own bundle; a script_name naming itself is the same */
+  const own = bindingFindings([unit("a", ["C"], { durable_objects: { bindings: [{ name: "X", class_name: "C" }, { name: "Y", class_name: "C", script_name: "a" }, { name: "Z", class_name: "D" }] } })]);
+  assert.deepEqual(own.map((f) => [f.binding, f.name]), [["Z", "D"]]);
+  /* a container class and the migration forms */
+  const cont = bindingFindings([unit("a", ["A"], { containers: [{ class_name: "A" }, { class_name: "B" }],
+    migrations: [{ tag: "v1", new_sqlite_classes: ["A", "M1"] }, { tag: "v2", new_classes: ["M2"] },
+      { tag: "v3", renamed_classes: [{ from: "Old", to: "M3" }] }, { tag: "v4", transferred_classes: [{ from: "O", from_script: "s", to: "M4" }] },
+      { tag: "v5", deleted_classes: ["Gone"] }] })]);
+  assert.deepEqual(cont.map((f) => f.name).sort(), ["B", "M1", "M2", "M3", "M4"], "a deleted class needs no export");
+  /* a config with none of these keys, or none at all, binds nothing */
+  assert.deepEqual(bindingFindings([unit("a", []), { name: "b", exports: new Set(), config: null }]), []);
+});
+
+test("R39: bundleExports reads the names the built bundle exports from the build, not from the source", async () => {
+  const root = tmp("r39x");
+  try {
+    const abs = join(root, "probe");
+    mkdirSync(join(abs, "src"), { recursive: true });
+    writeFileSync(join(abs, "src/dep.mjs"), "export class FromDep {}\nexport class NeverExported {}\n");
+    writeFileSync(join(abs, "src/index.mjs"), 'import { FromDep } from "./dep.mjs";\nclass Local {}\nexport { FromDep as Renamed, Local };\nexport class Direct {}\nexport default { fetch() { return new Response("ok"); } };\n');
+    const m = { dir: "probe", name: "probe", abs, entry: "src/index.mjs", bundle: { entry: "src/index.mjs", outfile: "dist/probe.bundled.mjs", manifest: "dist/probe.bundle.json", external: [...DEFAULT_EXTERNAL] } };
+    const built = await buildMember(m);
+    assert.deepEqual([...bundleExports(m, built)].sort(), ["Direct", "Local", "Renamed", "default"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R39: over the real fleet as it stands, every service and Durable Object binding the plane's and each member's configuration declares names a class or service the release exports (red by name until agent-runner exports RemoteSession, K4176)", async () => {
+  const members = [planeMember(), ...discoverMembers().filter((m) => m.bundle)];
+  const { findings, unchecked } = await releaseBindingFindings(members);
+  for (const u of unchecked) console.log(`# R39 real fleet: ${u.name} not checked: ${u.reason}`);
+  assert.deepEqual(findings.map((f) => f.text), [], "every binding is exported by the bundle that would ship");
+  assert.deepEqual(unchecked.map((u) => u.name), [], "every bundle was built, none left unread");
 });

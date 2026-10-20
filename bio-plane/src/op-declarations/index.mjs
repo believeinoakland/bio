@@ -1,7 +1,8 @@
 /* op-declarations: WHAT EACH OP IS (R1–R79; T45's ops in `t45.mjs`, R49; T46's owners' shares in `t46.mjs`, R50, R51; T47's
    shares, families and `REAUTH_ACTS` in `t47.mjs`, R55, R57–R59, R61; T48's shares and families in `t48.mjs`, R64, R66–R68;
    T49's shares in `t49.mjs`, R71, R72; T50's shares and families in `t50.mjs`, R73; T51's shares and families in `t51.mjs`,
-   R77–R79, and the browser acts of R76 (`BROWSER_ACTS`, below); the composition of `NEEDS` in `compose.mjs`, R3).
+   R77–R79, and the browser acts of R76 (`BROWSER_ACTS`, below); the composition of `NEEDS` in `compose.mjs`, R3; the owners'
+   declarations, R80, R81, registered below and shaped in `declared.mjs`).
    Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table (composed here, R3, from `op-capabilities`' hand-written rows and the families'),
    the recorded decisions that a verb is not a person's, and the act gate read
@@ -24,6 +25,7 @@ import { T50_SHARES, T50_FAMILIES } from "./t50.mjs";
 import { T51_SHARES, T51_FAMILIES, BROWSER_ACT_ROWS } from "./t51.mjs";
 import { needsRows } from "../op-capabilities/index.mjs";
 import { composeNeeds } from "./compose.mjs";
+import { declaredRows, disagreement, specOf, stampsOf, needsOf, isPublic, needsRequired } from "./declared.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 /* R69 (T48; N1039, K3147, K3200): EVALUATING THIS MODULE BUILDS NO TABLE. Every table and list below is frozen data
@@ -33,7 +35,7 @@ import { localize } from "../setup-words/index.mjs";
    operation after is forwarded to the filled target, so each reads exactly as the frozen value did (its entries, length,
    prototype, frozenness; `Array.isArray` holds of the lists). It is `court-citations` R11's form. `REAUTH_ACTS` is
    `t47.mjs`' own literal and `decorateAct` a function; neither is a table built here. */
-function build() {
+function build(declared = NO_DECLARED) {
 /* R5: a set that answers `has`, `size` and iteration as a Set does and has no way to change. Its members live in a
    private field, so `Set.prototype.add.call` finds no set to add to; it has no `add`, `delete` or `clear` of its own
    (each refuses by name, so a reader who reaches for one is told why); it and its prototype are frozen. */
@@ -645,7 +647,7 @@ const ASK_GRANT_OPS = frozenList(["askceiling", "askcheck", "askusage"]);
    (R30): `claim` and `login` keep their specs and are stamped `source` and `country` (admission R21), as `recover` is;
    `agentpack` is stamped `viewer`, as the untargeted `affordances` it is served apart from. */
 const stampKey = (st) => (!st || st.key === "viewer" ? null : st.key === "by" ? (st.at === "body" ? "bodyBy" : "by") : st.key);
-const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
+const OP_STAMPS_HAND = aliasRows(Object.fromEntries([
   ...Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds).map((op) => {
     if (OP_KINDS[f.kinds[op]].stamped === false) return [op, frozenList([...(f.extra[op] ?? [])])];
     const who = f.acts.includes(op) ? stampKey(f.actor) : f.proposals.includes(op) ? stampKey(f.proposer) : null;
@@ -655,7 +657,7 @@ const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
   ["exportpage", frozenList([])], ["moneydetectorsrun", frozenList([])],
   ["claim", frozenList(["source", "country"])], ["login", frozenList(["source", "country"])],
   ["agentpack", frozenList(["viewer"])],
-])));
+]));
 
 /* BIO plane, control plane entry (this note came with the table from `control-plane/ops.mjs`; the gates it names are
  * `admission`'s since the split: `classify`, `scopeFor`).
@@ -694,7 +696,7 @@ const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
  * reads, not from who holds a token.
  */
 
-const OPS = frozenTable(aliasRows({
+const OPS_HAND = aliasRows({
   //  op          class allowed              mutating
   selftest:   { classes: ["admin", "member", "probe"],           mutating: false },
   livefire:   { classes: ["admin", "probe"],                     mutating: true  },
@@ -1518,7 +1520,15 @@ const OPS = frozenTable(aliasRows({
   securityforward: { classes: ["admin", "probe", "daemon"],      mutating: true  },
   /* T33 (R17–R20): every family's ops, each from its one entry in `OP_FAMILIES` above. */
   ...FAMILY_SPECS,
-}));
+});
+/* R80 (T51; K4168): THE OWNERS' DECLARATIONS, merged beside the hand rows. An op the hand tables above do not hold and an
+   owner declared (registered before the first read, `registerDeclaredOps`) joins `OPS`, `OP_STAMPS`, `NEEDS` and, unless
+   public, both session sets, as its row says; an op they hold keeps its hand row, which the registration found equal to
+   the owner's (R81). Nothing else about an op's routing changes: no family, alias or act list is touched. */
+const DECLARED_NEW = frozenList([...declared.keys()].filter((op) => !Object.hasOwn(OPS_HAND, op)));
+const OPS = frozenTable(DECLARED_NEW.reduce((t, op) => { t[op] = specOf(declared.get(op)); return t; }, OPS_HAND));
+const OP_STAMPS = Object.freeze(DECLARED_NEW.reduce((t, op) => { t[op] = frozenList(stampsOf(declared.get(op))); return t; }, OP_STAMPS_HAND));
+const DECLARED_SESSION_OPS = frozenList(DECLARED_NEW.filter((op) => !isPublic(declared.get(op))));
 
 /* What a signed-in browser session may do, the write arc's evolution of the
    read-only session rule. Intake is browser-writable: it is append-only,
@@ -2367,7 +2377,7 @@ const SESSION_OPS = Object.freeze({
                    "aicredentialmint", "aicredentialrevoke",
                    /* T33 (R17–R20): every op of every family, in BOTH sets — an enrolled administrator's session is a
                       `member` kind (D-136), and the owner or the roster decides the rest. */
-                   ...FAMILY_SESSION_OPS,
+                   ...FAMILY_SESSION_OPS, ...DECLARED_SESSION_OPS,
                    /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. A
                       session op before anything else, on `aicredentialmint`'s
                       reasoning: each is attributed to the person who performed it,
@@ -2441,7 +2451,7 @@ const SESSION_OPS = Object.freeze({
                    "monitorpause",
                    "profilesset",
                    "aicredentialmint", "aicredentialrevoke",
-                   ...FAMILY_SESSION_OPS,
+                   ...FAMILY_SESSION_OPS, ...DECLARED_SESSION_OPS,
                    /* T49 (R71): the founder's own acts, in this set alone. */
                    ...FAMILY_FOUNDER_OPS,
                    "casedraft", "reviewgrant", "reviewrevoke"])),
@@ -2460,7 +2470,11 @@ const SESSION_OPS = Object.freeze({
    proposal (proposing is contributing, never publishing); NO WORKING CAPABILITY for an administrator's act (D-136), a
    member's act on their own account, attention or ties (`queuemute`'s reasoning) and an unattributed tally; and a
    present null for every read, which affordances names a NON_ACT (its R40, R12). */
-const NEEDS = Object.freeze(aliasRows(composeNeeds(needsRows(), FAMILY_NEEDS)));
+const NEEDS = Object.freeze(DECLARED_NEW.reduce((t, op) => {
+  const [has, value] = needsOf(declared.get(op));
+  if (has && !Object.hasOwn(t, op)) t[op] = value;
+  return t;
+}, aliasRows(composeNeeds(needsRows(), FAMILY_NEEDS))));
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
    op=affordances answer for the same subject are identical by construction and not by agreement. N177 (T8): the
@@ -2742,7 +2756,10 @@ const BROWSER_ACTS = frozenTable(Object.fromEntries(BROWSER_ACT_ROWS.map(([act, 
 }
 
 const TARGETS = {};
+const NO_DECLARED = new Map();
 let loaded = false;
+let registered = null;
+const DECLARED_FIELDS = new Map();
 const copy = (src, target) => {
   if (Array.isArray(target)) target.push(...src);
   else { Object.defineProperties(target, Object.getOwnPropertyDescriptors(src)); Object.setPrototypeOf(target, Object.getPrototypeOf(src)); }
@@ -2752,7 +2769,7 @@ function load() {
   if (loaded) return;
   loaded = true;
   let built;
-  try { built = build(); } catch (e) { loaded = false; throw e; }
+  try { built = build(registered ?? NO_DECLARED); } catch (e) { loaded = false; throw e; }
   for (const [name, target] of Object.entries(TARGETS)) copy(built[name], target);
 }
 const TRAPS = ["get", "set", "has", "ownKeys", "getOwnPropertyDescriptor", "defineProperty", "deleteProperty", "getPrototypeOf",
@@ -2761,6 +2778,32 @@ const lazy = (name, target) => {
   TARGETS[name] = target;
   return new Proxy(target, Object.fromEntries(TRAPS.map((t) => [t, (_, ...a) => { load(); return Reflect[t](target, ...a); }])));
 };
+
+/* R80, R81 (T51; K4168): THE OWNERS' DECLARATIONS. `registerDeclaredOps(rows)`, called once with every owner's `DECLARED_OPS`
+   (`{owner: {op: row}}` or `[[owner, {op: row}]]`) before the first read of any export, records them for `build()` to merge
+   beside the hand rows (see `DECLARED_NEW` above). It builds no table a reader can see: to judge an owner's row against
+   the hand row it builds a throwaway copy of the hand tables, which is no read of an export. Refused, naming the op and
+   changing nothing: a malformed row, an op in two owners' rows, an owner's row that differs from the hand row of the same
+   op (`disagreement`), a mutating op without a `needs`, a registration after the first read and a second registration.
+   `declaredFields(op)` answers the frozen `{accepts, requires}` an owner declared for the op, else `undefined`. */
+export function registerDeclaredOps(input) {
+  const rows = declaredRows(input);
+  const first = rows.size ? rows.keys().next().value : "(no op)";
+  if (loaded) throw new TypeError(`op-declarations: ${first}: registered after the first read (R81)`);
+  if (registered) throw new TypeError(`op-declarations: ${first}: a second registration (R81)`);
+  if (rows.size) {
+    const hand = build();
+    for (const [op, rec] of rows) {
+      if (!Object.hasOwn(hand.OPS, op)) { needsRequired(rec, op); continue; }
+      const field = disagreement(rec, { spec: hand.OPS[op], stamps: hand.OP_STAMPS[op] ?? [], hasNeeds: Object.hasOwn(hand.NEEDS, op),
+        needs: hand.NEEDS[op] });
+      if (field) throw new TypeError(`op-declarations: ${op}: ${rec.owner}'s row differs from the hand row on ${field} (R81)`);
+    }
+  }
+  registered = rows;
+  for (const [op, rec] of rows) if (rec.fields) DECLARED_FIELDS.set(op, rec.fields);
+}
+export const declaredFields = (op) => DECLARED_FIELDS.get(op);
 
 /* R1: the act gate's decoration, shared by `op=affordances` and `op=queue`; the gate is read only when a request is decorated. */
 const decorateAct = (a) => decorate(a, ACT_GATE);

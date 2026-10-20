@@ -207,7 +207,7 @@ test("R19: nothing here writes — every export is data or a pure function, and 
   out.extra = "x";
   assert.equal(snap(), before);
   assert.deepEqual(Object.entries(G).filter(([, v]) => typeof v === "function").map(([k]) => k).sort(),
-    ["aliased", "phoneOf"]);
+    ["aliased", "phoneOf", "registerDeclaredOps"], "R19 (T51): the one writer is registerDeclaredOps, R49's, and it changes this module's tables only");
   assert.ok(Object.isFrozen(OP_ALIASES) && Object.isFrozen(CONSEQUENCE_STATEMENTS) && Object.isFrozen(G.IRREVERSIBLE_WEIGHT));
 });
 

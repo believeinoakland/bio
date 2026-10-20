@@ -1854,3 +1854,164 @@ test("R36: a change to a non-container member's code writes no digest: bundles.m
     assert.doesNotMatch(listed.stdout, /alpha-worker/);
   } finally { rm(root); }
 });
+
+/* --------------------------------------------------------------------- R39 */
+
+test("R39: the release assembly refuses BINDING_NOT_EXPORTED, naming the member, the binding and the class, for a Durable Object binding to a class the other member's bundle lacks, before anything is written; control: with the class exported it assembles", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    editConfig(root, "alpha-worker", (c) => { c.durable_objects = { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "beta-worker" }] }; });
+    await buildAll(root);
+    const before = snapshot(root);
+    const dry = assemble(root, ["--dry-run"]);
+    refused(dry, "BINDING_NOT_EXPORTED");
+    assert.match(dry.stderr, /alpha-worker/);
+    assert.match(dry.stderr, /REMOTE/);
+    assert.match(dry.stderr, /RemoteSession/);
+    assert.match(dry.stderr, /beta-worker/);
+    assert.deepEqual(snapshot(root), before, "nothing written");
+    const real = assemble(root, ["--emit-payload", join(root, "p.txt")]);
+    refused(real, "BINDING_NOT_EXPORTED");
+    assert.equal(existsSync(join(root, "p.txt")), false, "no payload emitted either");
+
+    /* the class exported by the bundle that would ship: the same release assembles */
+    writeFileSync(join(root, "beta-worker/src/index.mjs"), readFileSync(join(root, "beta-worker/src/index.mjs"), "utf8") + "export class RemoteSession {}\n");
+    await buildAll(root);
+    const ok = assemble(root, ["--dry-run"]);
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+
+    /* exported by the SOURCE but not the bundle (a different name from the one bound) is still refused */
+    editConfig(root, "alpha-worker", (c) => { c.durable_objects.bindings[0].class_name = "RemoteSessions"; });
+    refused(assemble(root, ["--dry-run"]), "BINDING_NOT_EXPORTED");
+  } finally { rm(root); }
+});
+
+test("R39: a service naming no member of the release, a container class and a migration class that no bundle exports are each refused BINDING_NOT_EXPORTED, naming the member and the class; a service bound to the plane's templated name and an own Durable Object the bundle exports pass", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    /* passes: the phantom plane, another member, an own object the plane exports */
+    editConfig(root, "alpha-worker", (c) => { c.services = [{ binding: "PLANE", service: "bio-plane" }, { binding: "BETA", service: "beta-worker" }]; });
+    await buildAll(root);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0);
+
+    editConfig(root, "alpha-worker", (c) => { c.services = [{ binding: "GHOST", service: "ghost-worker" }]; });
+    const svc = assemble(root, ["--dry-run"]);
+    refused(svc, "BINDING_NOT_EXPORTED");
+    assert.match(svc.stderr, /alpha-worker/);
+    assert.match(svc.stderr, /GHOST/);
+    assert.match(svc.stderr, /ghost-worker/);
+    editConfig(root, "alpha-worker", (c) => { c.services = [{ binding: "PLANE", service: "bio-plane" }]; });
+
+    editConfig(root, "alpha-worker", (c) => { c.migrations = [{ tag: "v1", new_sqlite_classes: ["Unbuilt"] }]; });
+    const mig = assemble(root, ["--dry-run"]);
+    refused(mig, "BINDING_NOT_EXPORTED");
+    assert.match(mig.stderr, /alpha-worker/);
+    assert.match(mig.stderr, /Unbuilt/);
+    editConfig(root, "alpha-worker", (c) => { delete c.migrations; });
+
+    addContainerMember(root, "runner");
+    await buildAll(root);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "control: the container member's class is exported");
+    editConfig(root, "runner", (c) => { c.containers[0].class_name = "Missing"; });
+    const cont = assemble(root, ["--dry-run"]);
+    refused(cont, "BINDING_NOT_EXPORTED");
+    assert.match(cont.stderr, /runner/);
+    assert.match(cont.stderr, /Missing/);
+    assert.doesNotMatch(cont.stderr, /alpha-worker/, "only the member that is incoherent is named");
+  } finally { rm(root); }
+});
+
+/* --------------------------------------------------------------------- R40 */
+
+const TEST_ACCOUNT = "20b533579290b9b93168345edd3b7f72";
+const OTHER_ACCOUNT = "ffffffffffffffffffffffffffffffff";
+const COPY = "trial-copy";
+const OLD_BYTES = "// what the account holds now";
+/** A fixture fleet pinned to the test account, with no `release/` signature anywhere: the branch's built artifacts only. */
+const testFleet = () => makeRepo({ members: { "alpha-worker": { account: TEST_ACCOUNT }, "beta-worker": { account: TEST_ACCOUNT } },
+  plane: { config: { services: [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }] } } });
+const MARK = { CIVICSMITH_TEST_INSTANCE: COPY };
+const testStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { [COPY]: { body: OLD_BYTES }, "alpha-worker": { body: OLD_BYTES, settings: {} } },
+  serving: { "alpha-worker": JSON.stringify({ version: VERSION }), "beta-worker": JSON.stringify({ version: VERSION }) }, ...extra });
+const testFleetDeploy = (root, member, { env = { CF_TOKEN: "t", ...MARK }, flags = ["--test-instance", "--dry-run"], instance = COPY, stub = testStub() } = {}) =>
+  run(root, ".", ["bio-plane/scripts/deploy-fleet.mjs", member, "--instance", instance, ...flags], { env, stub });
+const testPlaneDeploy = (root, { env = { CF_TOKEN: "t", CF_ACCT: TEST_ACCOUNT, ...MARK }, flags = ["--test-instance", "--dry-run"], slug = COPY, stub = testStub() } = {}) =>
+  run(root, "bio-plane", ["scripts/deploy.mjs", slug, VERSION, ASSET, ...flags], { env, stub });
+
+test("R40: a marked test copy and the right account run every member in order and then the plane in the dry-run arm, from built artifacts with no release/ signature, each step with its log line and its rollback target and nothing deployed", async () => {
+  const root = await testFleet();
+  try {
+    assert.equal(existsSync(join(root, "release/RELEASE.json")), false, "no signed release exists in this fixture");
+    const names = discoverMembers(root).map((m) => m.name);
+    assert.deepEqual(names, ["alpha-worker", "beta-worker"], "the order the module lists the members in (R1)");
+    const before = snapshot(root);
+    for (const member of names) {
+      const r = testFleetDeploy(root, member);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(r.stdout, new RegExp(`^test deploy: ${member} to ${COPY} from dist/${member}\\.bundled\\.mjs sha256 [0-9a-f]{64}`, "m"));
+      assert.match(r.stdout, /no release\/ signature is read/);
+      assert.deepEqual(r.wrangler, [], "dry-run deploys nothing");
+      assert.deepEqual(r.calls.filter((c) => c.method !== "GET"), [], "and sends nothing but reads");
+    }
+    /* each member's rollback target is what the account holds under its name now */
+    const alpha = testFleetDeploy(root, "alpha-worker");
+    assert.match(alpha.stdout, new RegExp(`^rollback : alpha-worker was ${hex(OLD_BYTES).slice(0, 16)}`, "m"));
+    const beta = testFleetDeploy(root, "beta-worker");
+    assert.match(beta.stdout, /^rollback : beta-worker is not deployed in 20b533579290b9b93168345edd3b7f72/m);
+    const plane = testPlaneDeploy(root);
+    assert.equal(plane.status, 0, plane.stdout + plane.stderr);
+    assert.match(plane.stdout, new RegExp(`^test deploy: ${COPY} from ${ASSET} sha256 ${hex(readFileSync(join(root, "bio-plane", ASSET)))}`, "m"));
+    assert.match(plane.stdout, new RegExp(`^rollback : ${COPY} was ${hex(OLD_BYTES).slice(0, 16)}`, "m"));
+    assert.match(plane.stdout, /--dry-run: nothing was deployed/);
+    assert.deepEqual(plane.calls.filter((c) => c.method === "PUT"), [], "the plane's dry run uploads nothing");
+    assert.deepEqual(snapshot(root), before, "and writes nothing");
+
+    /* the same steps for real: the built artifacts go out unsigned, verified by the bytes read back */
+    const realFleet = testFleetDeploy(root, "alpha-worker", { flags: ["--test-instance"] });
+    assert.equal(realFleet.status, 0, realFleet.stdout + realFleet.stderr);
+    assert.equal(realFleet.wrangler.length, 1);
+    assert.match(realFleet.stdout, /^rollback : alpha-worker was /m);
+    const realPlane = testPlaneDeploy(root, { flags: ["--test-instance"] });
+    assert.equal(realPlane.status, 0, realPlane.stdout + realPlane.stderr);
+    assert.equal(puts(realPlane).length, 1);
+    assert.match(realPlane.stdout, /verified: deployed bytes are hash-identical to the signed asset/);
+  } finally { rm(root); }
+});
+
+test("R40: a copy the environment does not mark as a test instance, and an account other than the test account, are each refused naming it before any request is made, by deploy-fleet.mjs and by deploy.mjs", async () => {
+  const root = await testFleet();
+  try {
+    const attempts = [
+      [() => testFleetDeploy(root, "alpha-worker", { env: { CF_TOKEN: "t" } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testFleetDeploy(root, "alpha-worker", { env: { CF_TOKEN: "t", CIVICSMITH_TEST_INSTANCE: "another-copy" } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: TEST_ACCOUNT } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: TEST_ACCOUNT, CIVICSMITH_TEST_INSTANCE: "another-copy" } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: OTHER_ACCOUNT, ...MARK } }), "WRONG_ACCOUNT", OTHER_ACCOUNT],
+    ];
+    for (const [go, code, named] of attempts) {
+      const r = go();
+      refused(r, code);
+      assert.ok(r.stderr.includes(named), `${code} names ${named}:\n${r.stderr}`);
+      assert.deepEqual(r.calls, [], `${code}: no request was made`);
+      assert.deepEqual(r.wrangler, []);
+    }
+    /* a member whose configuration pins another account */
+    addMember(root, "gamma-worker", { account: OTHER_ACCOUNT });
+    const wrong = testFleetDeploy(root, "gamma-worker");
+    refused(wrong, "WRONG_ACCOUNT");
+    assert.ok(wrong.stderr.includes(OTHER_ACCOUNT));
+    assert.deepEqual(wrong.calls, []);
+    assert.deepEqual(wrong.wrangler, []);
+    /* the order of the checks: the mark first, then the account */
+    const both = testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: OTHER_ACCOUNT } });
+    refused(both, "NOT_A_TEST_INSTANCE");
+
+    /* control: without the flag the signed-release path is unchanged: no mark is asked for and any account is served */
+    const plain = testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: OTHER_ACCOUNT }, flags: [], stub: testStub() });
+    assert.equal(plain.status, 0, plain.stdout + plain.stderr);
+    assert.doesNotMatch(plain.stdout, /test deploy:|rollback :/);
+    const plainFleet = testFleetDeploy(root, "gamma-worker", { env: { CF_TOKEN: "t" }, flags: ["--dry-run"] });
+    assert.equal(plainFleet.status, 0, plainFleet.stdout + plainFleet.stderr);
+    assert.doesNotMatch(plainFleet.stdout, /test deploy:|rollback :/);
+  } finally { rm(root); }
+});

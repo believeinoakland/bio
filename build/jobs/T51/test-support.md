@@ -1,6 +1,6 @@
 # test-support (T51)
 
-**Status** · session_01EFMiVNACxY3XDRbufBuqk3 · depth 2 · COMPLETE · handled B2
+**Status** · session_0191CQmcSf7uN8VoqE7fDryB · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -51,3 +51,36 @@ CR-2 · test-support: applied. Commit b7ee6bb68f on job/T51/test-support (test f
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; coverage and words findings all in other modules (above); none in test-support.
 
 Size (session_01EFMiVNACxY3XDRbufBuqk3): test runs 10, module lines 723
+
+## J3 · QUESTION
+
+R15/R16 need a new source file. modules.json lists test-support's paths as four files (sandbox.mjs, stdio.mjs, make-pdf.mjs, make-zip.mjs); none fits (sandbox.mjs is an import-for-side-effect module, R8). My best reading: I create bio-plane/test/declared-ops.mjs exporting declaredOpHolds and declaredOpsOf, and BOB adds that path to test-support's paths in build/modules.json (and regenerates member-roster order.mjs per manifest, if it applies). I carry on on this reading; the ownership check will name the file until the path is added. Extra optional keys I add to declaredOpHolds beyond the contract: values (sample value per field), outside (field names probed for check c; default one generated unknown name), same (answer equality for 'dropped'). Contract names and the four required keys are unchanged.
+
+## J4 · COMPLETE
+
+FR-01 · test-support: applied (commit 1c23c02de0 on job/T51/test-support).
+
+**Entries applied.** K4168: R15 `declaredOpHolds({op, declaration, call, refusedNaming})` and R16 `declaredOpsOf(root)`, new file `bio-plane/test/declared-ops.mjs` (111 lines; no side effect on import). Requirement lines R15, R16 written first in `build/requirements/test-support.md` (status line updated; marked met now). Optional keys beyond the contract: `values`, `outside`, `same`; the contract names and shapes are unchanged. A `Response` answer is read as `{status, ...body}` before `refusedNaming` sees it. Check (c) probes `outside` (default one generated name `undeclared_field_<op>`): the op passes if its answer equals check (a)'s or it refuses naming the field.
+
+**NEEDS BOB before merge (the J3 QUESTION, unanswered).** `bio-plane/test/declared-ops.mjs` is in no module's `paths`: add it to test-support's `paths` in `build/modules.json` (and regenerate member-roster's `order.mjs` if that applies, manifest §14). Until then `architecture.mjs` reports it "owned by no module", and `ownership.mjs` lists it and `build/requirements/test-support.md` (the START told me to write the lines) as outside my paths: 2 failures, both of this kind.
+
+**Deferred.** None. **Found in other modules.** Coverage failures remain in agent-harness (R17), agent-runner (R36 R37 R38 R40), installer-steps (R26 R31), journey-check (R19); none is test-support's.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/test-support/`: 61 tests, 61 pass, 0 fail, 0 skipped (18 new in `declared-ops.test.mjs`).
+- `checks/coverage.mjs test-support`: 16 of 16 live ids named by a test; 0 failures.
+- `checks/architecture.mjs test-support`: 7 product files; 0 failures.
+- `checks/run.mjs /home/user/bio`: format 0; words 0 findings; channels 0; architecture 1 (the path above); coverage 4 modules, none mine.
+- `checks/ownership.mjs`: 2 failures, the path above and the requirements file.
+
+Size (session_0191CQmcSf7uN8VoqE7fDryB): test runs 5, module lines 111
+
+## J5 · COMPLETE
+
+CHANGE B4 applied (commit 7f5f85e069 on job/T51/test-support, tranche/T51 merged in first).
+
+`declaredOpsOf` now takes a file only when it has a real export: a line-anchored `^export const DECLARED_OPS\b`, so a comment or string that only mentions the phrase (including its own source) is not imported. A file with that line that exports no object still rejects naming the file. The R16 test with two fake modules gained a file that only mentions the phrase in a comment and a string and throws if imported; it is not imported. The helper's breach messages are now direct arguments of `new Error(...)` (the words check read them as plain sentences once the path was owned).
+
+Tests and checks: `node --test bio-plane/test/m/test-support/`: 61 pass, 0 fail, 0 skipped (R16 on this repository green). `checks/words.mjs test-support`: 0 failures. `checks/coverage.mjs test-support`: 16 of 16. `checks/architecture.mjs test-support`: 0 failures. `checks/run.mjs`: format 0, channels 0, architecture 0, words 0; coverage failures only in other modules (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring). `checks/ownership.mjs`: only `build/requirements/test-support.md` listed, the requirement lines the START told me to write and B4 accepted.
+
+Size (session_0191CQmcSf7uN8VoqE7fDryB): test runs 9, module lines 112

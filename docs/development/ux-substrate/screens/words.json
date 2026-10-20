@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6280,
+  "screen": 6422,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1058,
+  "act": 1086,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -229,8 +229,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17289,
-  "protected": 1041
+  "total": 17459,
+  "protected": 1057
  },
  "words": [
   {
@@ -69915,6 +69915,1000 @@
    "note": "DEC-378: C62 K4169 (member-roster expertiseconfirm): end of the row detail; on Home and in Your queue"
   },
   {
+   "key": "screen.capture.cred.head",
+   "en": "A source that asked for a login",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20 (capturecredentialsupply): capture: heading of the section for a source that turned a request away for a login. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.turned",
+   "en": "Turned away: {source} asked for a login",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: row for the refused request; the source is sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.why1",
+   "en": "The source turned this request away, not your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: explains who refused. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.why2",
+   "en": "Give a login for it and the request goes back in the queue to be tried again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: what giving a login does. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.user",
+   "en": "Username for this source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: label of the username field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.secret",
+   "en": "Password or secret for this source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: label of the secret field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.sealed1",
+   "en": "It is kept sealed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: help of the secret field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.sealed2",
+   "en": "It is never shown again, to you or to anyone on your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: help of the secret field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.retry",
+   "en": "Try the request again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20 (capturerequestretry): capture: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.only1",
+   "en": "Only a request the source itself turned away can be tried again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.only2",
+   "en": "Giving a login does not capture anything by itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.machine1",
+   "en": "The assistant cannot give a login.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.machine2",
+   "en": "Only a member can, so nothing was stored.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.own1",
+   "en": "This source is your own team's Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: refusal, the own host. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.own2",
+   "en": "It never needs a login to be captured, so nothing was stored.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: refusal, the own host. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.ref.notretry",
+   "en": "This request was not turned away by its source, so it cannot be tried again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: refusal of the retry. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.stored",
+   "en": "A login is stored for {source}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: row showing a stored login; the source is sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.notshown",
+   "en": "The secret is not shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: meta of the stored-login row. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.list",
+   "en": "Show the logins your team has stored",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20 (capturecredentiallist): capture: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.listnote1",
+   "en": "The list names each source and who gave its login.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: note under the list. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.listnote2",
+   "en": "It never shows a secret.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: note under the list. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.tip1",
+   "en": "Some sites ask for a login before they give a document.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.cred.tip2",
+   "en": "A login you give is used only to capture from that site.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C20: capture: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.head",
+   "en": "Where this document came from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23 (declareorigin): document: section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.field",
+   "en": "The system it came from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: field label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.eg",
+   "en": "For example, the city's records portal.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: help of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.second1",
+   "en": "A second declaration is added beside the first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: note. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.second2",
+   "en": "A second declaration never replaces the first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: note. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.machine1",
+   "en": "The assistant cannot say where a document came from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.machine2",
+   "en": "Only a member can, so nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.empty",
+   "en": "Name the system it came from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: refusal, an empty system. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.ref.notdoc",
+   "en": "This record is not a document, so it has no origin to declare.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: refusal, the record is no document. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.document.origin.tip",
+   "en": "Records, in your name and with the date, where this document came from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C23: document: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.head",
+   "en": "Close this project now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65 (projectclose): project: section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.open",
+   "en": "Still open if you close it now: {stage} is not reached. Questions concluded: {count} of {total}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: what is still open; counts are placeholders. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.why",
+   "en": "Why you are closing it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: label of the reason choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.superseded",
+   "en": "Superseded by other work",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: one reason. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.do",
+   "en": "Close this project with this reason",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.note1",
+   "en": "This closes the project now, whether or not its work has gone quiet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: note under the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.note2",
+   "en": "What was still open at the close is kept beside your reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: note under the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.ref.owner",
+   "en": "Only an owner can close this project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: refusal, not an owner; the owners follow as sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.ref.reason",
+   "en": "Choose one of the three reasons: resolved, superseded by other work or abandoned.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: refusal, a reason outside the three. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.project.closenow.tip",
+   "en": "Ends the project at an owner's choice, with the reason you give.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-381: B405 C65: project: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.head",
+   "en": "Rest one of your team's questions on this",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: section heading and button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.q",
+   "en": "Which of your team's questions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: label of the question choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.role",
+   "en": "How it bears on the question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: label of the role choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.role.supports",
+   "en": "It supports the question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: one role. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.role.cuts",
+   "en": "It cuts against the question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: one role. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.note",
+   "en": "A note (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: label of the note field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.inherit1",
+   "en": "Citing another team's finding carries the fact that they published it, not the strength of what it says.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: what citing carries (the sentence stated first). Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.inherit2",
+   "en": "It counts here at the grade the edition published, never higher.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: what grade a cited finding has. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.already",
+   "en": "This question already rests on that finding.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: the answer, not a refusal, when the finding is already cited. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.later",
+   "en": "To follow a later edition, record that you looked again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: why a later edition is no second citation. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.ref.notaccepted1",
+   "en": "Your team has not accepted this finding yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: refusal, the finding is not accepted. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.ref.notaccepted2",
+   "en": "Accept it first, then rest a question on it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: refusal, the finding is not accepted. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.ref.machine1",
+   "en": "The assistant cannot cite another team's finding.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.ref.machine2",
+   "en": "Only a member can, so nothing was cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.tip",
+   "en": "Cites this finding as part of the answer to one of your team's questions, at the edition shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.imported.citeimp.refd",
+   "en": "When it is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: imported: summary of the refusals. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.head",
+   "en": "Cite another team's finding",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: section heading and button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.case",
+   "en": "Another team's case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: label of the case choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.edition",
+   "en": "Edition",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: label of the edition choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.finding",
+   "en": "Finding",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: label of the finding choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.origin",
+   "en": "Another team's",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: origin mark of a leg cited from another team. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.origin.meta",
+   "en": "{team} · Edition {edition} · accepted by {name}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: what the origin mark carries; team, edition, name and date are placeholders. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.takeback",
+   "en": "Take it back",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: button label on a cited leg. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.head",
+   "en": "Take back another team's finding",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.why",
+   "en": "Why you are taking it back",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: label of the required reason. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.help",
+   "en": "It comes off this question's answer, and the history keeps it with your reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: help of the reason field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.do",
+   "en": "Take it back, with a reason",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.note",
+   "en": "Remove does not take back another team's finding; use Take it back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: note under the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.ref.notcited",
+   "en": "This question does not rest on that finding, so there is nothing to take back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: refusal, not cited. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.ref.noreason",
+   "en": "Say why you are taking it back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: refusal, no reason. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.ref.nothing",
+   "en": "Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: refusal, no reason. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.tip",
+   "en": "Cites a finding your team accepted from another team's case, at the edition it accepted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.question.citeimp.wd.tip",
+   "en": "Takes a finding of another team's case off this question's answer, with the reason you give.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C50: question: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.head",
+   "en": "Named requests",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.tip",
+   "en": "Lists each thing your team asked to have gathered, where it is looked for and when it was last checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.where",
+   "en": "Where",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: row label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.authority",
+   "en": "Authority",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: row label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.open",
+   "en": "Open",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: status of a request. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.retired",
+   "en": "Retired",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: status of a request. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.never",
+   "en": "Never checked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: last checked of a new request. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.due",
+   "en": "due now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: due state. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.last",
+   "en": "last checked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: row label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.next",
+   "en": "next",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: row label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.list",
+   "en": "List every named request",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.listnote",
+   "en": "A request that has not been checked yet is due at the next check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the list. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.ask",
+   "en": "Ask for this to be gathered on a schedule",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: section heading and button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.asktip",
+   "en": "Records a request to gather one thing from the places you name, and how often to look.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.target",
+   "en": "What to gather",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.desc",
+   "en": "Describe it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.loc",
+   "en": "Where to find it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.lochelp",
+   "en": "Put the publisher that holds the authoritative copy first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: help of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.add",
+   "en": "Add another place",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.auth",
+   "en": "Who stands behind the source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the authority field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.authhelp",
+   "en": "For example, the department that publishes it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: help of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.matters",
+   "en": "How much it matters",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.crucial",
+   "en": "Crucial",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: one choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.supporting",
+   "en": "Supporting",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: one choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.often",
+   "en": "How often",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.c.hour",
+   "en": "Every hour",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: one cadence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.c.day",
+   "en": "Every day",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: one cadence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.c.week",
+   "en": "Every week",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: one cadence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.c.month",
+   "en": "Every month",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: one cadence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.f.c.none",
+   "en": "Not on a schedule",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: one cadence. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.retire",
+   "en": "Retire this request",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.n1",
+   "en": "Asking does not fetch anything by itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.n2",
+   "en": "A new request is due at the next check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.n3",
+   "en": "A retired request is no longer gathered, and it stays in the list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.ref.machine1",
+   "en": "The assistant cannot ask for this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.ref.machine2",
+   "en": "Only a member can, so nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.ref.https",
+   "en": "Every place must be a public address that starts with https://.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, a locator that is not public https. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.ref.nothing",
+   "en": "Nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, a locator that is not public https. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.ref.target",
+   "en": "Say what to gather, in one line of no more than 200 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, the target. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.nr.refd",
+   "en": "When it is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.head",
+   "en": "Define a sweep",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: section heading and button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.tip",
+   "en": "Defines a sweep: where it may go, which pages it starts from, what it keeps and how often it runs.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.title",
+   "en": "Name of the sweep",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.sources",
+   "en": "Sites it may visit",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.sourceshelp",
+   "en": "One site on each line. It never leaves these sites.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: help of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.seeds",
+   "en": "Pages it starts from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.match",
+   "en": "What to keep",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.matchhelp",
+   "en": "Say what a page must be to be kept, for example agendas and staff reports.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: help of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.often",
+   "en": "How often",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the choice. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.budget",
+   "en": "The most it may fetch in one run",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: label of the field. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.n1",
+   "en": "Defining a sweep does not start it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the define button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.n2",
+   "en": "Nothing runs until an owner of the project ratifies it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the define button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.ratify",
+   "en": "Ratify this sweep",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.stop",
+   "en": "Stop this sweep",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: button label. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.rathead",
+   "en": "Ratify or stop a sweep",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: section heading. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.rattip",
+   "en": "Lets an owner of the project start a sweep, and lets any member who can write to the project stop it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: explanation of the section. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.rat1",
+   "en": "Ratifying sends your team's fetches to the named sites, within the scope and budget shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: what ratifying does, stated before the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.rat2",
+   "en": "Each thing found is filed as collected material, never higher.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: what ratifying does, stated before the button. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.ratnote1",
+   "en": "Only an owner of the project can ratify a sweep.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.ratnote2",
+   "en": "Any member who can write to the project can stop it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: note under the buttons. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.ref.owner1",
+   "en": "Only an owner of the project can ratify a sweep.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, not an owner. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.ref.owner2",
+   "en": "Ask {owners}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, not an owner; the owners are sample data. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.ref.machine1",
+   "en": "The assistant cannot define or ratify a sweep.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.ref.machine2",
+   "en": "Only a member can, so nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.scope",
+   "en": "Sites: {hosts} · The most it may fetch in one run: {budget}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: scope and budget of the sweep shown before ratifying; sites and budget are placeholders. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.watching.sweepdef.refd",
+   "en": "When it is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders."
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -110126,6 +111120,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_capturecredentialsupply.label.capture",
+   "en": "Give a login for this source and try again",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.capturerequestretry.label.capture",
+   "en": "Try a refused request again",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_capturecredentiallist.label.capture",
+   "en": "Show the stored logins",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_capturecredentialwithdraw.label.capture",
+   "en": "Withdraw this login",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.heldcaptures.label.held",
    "en": "See held captures",
    "protected": true,
@@ -110344,6 +111362,12 @@
   {
    "key": "act.resolutiondefect.label.document",
    "en": "Report this match as wrong",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_declareorigin.label.document",
+   "en": "Say where this document came from",
    "protected": true,
    "source": "registry.json"
   },
@@ -110606,6 +111630,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_projectclose.label.project",
+   "en": "Close this project with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.objectivecondition.label.objective",
    "en": "Save this measure of success",
    "protected": true,
@@ -110722,6 +111752,24 @@
   {
    "key": "act.cite.label.question",
    "en": "Cite a passage",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_citeimported.label.question",
+   "en": "Cite another team's finding",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.question",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_withdrawimported.label.question",
+   "en": "Take another team's finding back",
    "protected": true,
    "source": "registry.json"
   },
@@ -112052,6 +113100,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_citeimported.label.imported",
+   "en": "Rest one of our questions on this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.imported",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.docketfile.label.docket",
    "en": "File a docket entry",
    "protected": true,
@@ -112186,6 +113246,36 @@
   {
    "key": "act.sweeps.label.watching",
    "en": "See the sweeps",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_namedrequests.label.watching",
+   "en": "List every named request",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_namedrequestset.label.watching",
+   "en": "Ask for this to be gathered on a schedule",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_sweepset.label.watching",
+   "en": "Define a sweep",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_sweepratify.label.watching",
+   "en": "Ratify or stop a sweep",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.watching",
+   "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
   },
@@ -113136,6 +114226,78 @@
   {
    "key": "act.lookedsince.does",
    "en": "Remembers when you last looked at Home, so Home can show what happened since.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_capturecredentialsupply.does",
+   "en": "Stores the login you type for this source, sealed, and then puts the turned-away request back in the queue to be tried again. The password or secret is never shown again, and a machine cannot give one.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.capturerequestretry.does",
+   "en": "Puts a request the source itself turned away back in the queue to be tried again, with what your team holds for that source. Any other request is left as it is.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_capturecredentiallist.does",
+   "en": "Lists the sources your team has stored a login for, and who gave each, with the date. It never shows a username or a secret.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_capturecredentialwithdraw.does",
+   "en": "Destroys the stored login for this source. Requests to it are turned away for a login again until someone gives a new one.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_declareorigin.does",
+   "en": "Records, with your name and the date, the system this document came from. A second declaration is added beside the first and never replaces it. The document itself does not change.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_citeimported.does",
+   "en": "Rests one of your team's questions on a finding your team accepted from another team's case, at the edition shown. It carries the fact that they published it, and the grade the edition published, never higher.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_withdrawimported.does",
+   "en": "Takes another team's finding off this question's answer, with your reason. The history keeps it, and so does each version already frozen.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_namedrequests.does",
+   "en": "Lists the requests to gather something on a schedule that you may see, with where each is looked for, when it was last tried and when it is next due.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_namedrequestset.does",
+   "en": "Saves one request to gather something from the places you name, and how often to look, or retires it. It fetches nothing by itself.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_sweepset.does",
+   "en": "Saves a sweep: the sites it may visit, the pages it starts from, what it keeps, how often it runs and the most it may fetch. It does not run until the project's owner ratifies it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_sweepratify.does",
+   "en": "The project's owner starts a sweep, or any member who can write to the project stops it. Ratifying sends your team's fetches to the named sites, within the scope and budget shown.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectclose.does",
+   "en": "Closes this project now, whether or not its work has gone quiet, with the reason you choose and an optional note. What was still open at the close is kept beside the reason. An owner can reopen it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
