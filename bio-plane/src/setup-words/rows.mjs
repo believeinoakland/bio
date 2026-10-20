@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (17559 design words, 1057 protected; SHA-256
-   a0734c5dd01dab3431bfc473a3d6efa1f46d51abfb592b51e3efe6192b382ecc) followed by 6721 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (17561 design words, 1058 protected; SHA-256
+   113b25e902f84828f7a1d38e9e1d7de961955aeb3819c4f3d2debaa0612c997e) followed by 6721 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "a0734c5dd0";
+export const WORDS_COMMIT = "113b25e902";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -16266,6 +16266,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.adminendorse.label.members","Endorse an administrator",null,"Adds your endorsement to make a member an administrator. With one administrator the team depends on one person.",true,"design"],
   ["act.adminremove.label.members","Remove an administrator",null,"Removes an administrator's powers, with a reason. It cannot leave the team with none.",true,"design"],
   ["act.expertiseconfirm.label.members","Confirm declared expertise",null,"Confirms a member's declared expertise, so it can be asked for when a check needs it.",true,"design"],
+  ["act.owed_expertisewithdraw.label.members","Withdraw an expertise",null,"Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it.",true,"design"],
   ["act.invitewithdraw.label.members","Withdraw an unused invitation",null,"Cancels an invitation nobody has used yet. The link stops working at once.",true,"design"],
   ["act.websitekeycreate.label.members","Create a website key",null,"Creates a key that lets your team's website invite people, through an open form or an application someone approves.",true,"design"],
   ["act.joinlinkenable.label.members","Turn on the reusable join link",null,"Turns on one reusable link anyone with it can use to ask to join. You can turn it off at any time.",true,"design"],
@@ -16822,6 +16823,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.selftest.does","Checks that the team's record answers and that stored files can be written and read back. It changes nothing for the team.",null,null,false,"design"],
   ["act.runtime.does","Shows how much work the copy's requests have done, to see how close it runs to Cloudflare's limits. It changes nothing.",null,null,false,"design"],
   ["act.expertiseconfirm.does","Confirms a member's declared expertise, so it can be asked for when a check needs it.",null,null,false,"design"],
+  ["act.owed_expertisewithdraw.does","Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it.",null,null,false,"design"],
   ["act.invitewithdraw.does","Cancels an invitation nobody has used yet. The link stops working at once.",null,null,false,"design"],
   ["act.websitekeycreate.does","Creates a key that lets your team's website invite people, through an open form or an application someone approves.",null,null,false,"design"],
   ["act.joinlinkenable.does","Turns on one reusable link anyone with it can use to ask to join. You can turn it off at any time.",null,null,false,"design"],
