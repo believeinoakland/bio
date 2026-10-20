@@ -46,7 +46,7 @@ test("R17 control (K4206): the declared row reads as a read that writes nothing 
   assert.deepEqual(row.classes, ["admin", "member"]);
   assert.deepEqual(row.machineClasses, []);
   assert.equal(row.mutating, false);
-  assert.equal(row.weight, "reasoned");
+  assert.equal(row.weight, "read");
   assert.deepEqual(row.stamps, ["viewer", "by"]);
   assert.deepEqual(row.fields, { accepts: ["answers"], requires: ["answers"] });
   assert.equal(typeof row.description, "string");
@@ -58,4 +58,26 @@ test("R17 control (K4206): the holds check is live — a declaration that requir
   await assert.rejects(declaredOpHolds({ op: "groupdescriptiondraft",
     declaration: { ...D.DECLARED_OPS.groupdescriptiondraft, fields: { accepts: ["answers", "viewer"], requires: ["answers", "viewer"] } },
     call: askedOf(r), values: { answers: ANSWERS }, outside: [] }), /"viewer"/);
+});
+
+/* R17 (K4247; op-grades R49): the row is a read, so op-grades takes it into its tables with no refusal; a rung on the same
+   row (a read cannot carry one, op-grades R49 `rung-on-read`) is refused naming the op. Each registration is a fresh op-grades
+   instance, so one test's registration never reaches the other. */
+let grades = 0;
+const freshGrades = () => import(`../../../src/op-grades/index.mjs?instance=store-door-r17-${grades++}`);
+
+test("R17 (K4247; op-grades R49): `groupdescriptiondraft`, declared as a read, registers through op-grades without refusal — it enters NON_ACTS with its declared description, and no rung or absence is added for it", async () => {
+  const G = await freshGrades();
+  const answer = G.registerDeclaredOps({ "store-door": D.DECLARED_OPS });
+  assert.deepEqual(answer.agreed, [], "no hand row disagrees with the owner's row");
+  assert.deepEqual(answer.registered, ["groupdescriptiondraft"]);
+  assert.equal(G.NON_ACTS.groupdescriptiondraft, D.DECLARED_OPS.groupdescriptiondraft.description);
+  assert.equal(Object.hasOwn(G.RUNGS, "groupdescriptiondraft"), false, "a read is no rung");
+});
+
+test("R17 control (K4247): the same row declared with a rung is refused by op-grades, naming the op and `rung-on-read`, so the registration above is not vacuous", async () => {
+  const G = await freshGrades();
+  const reasoned = { ...D.DECLARED_OPS.groupdescriptiondraft, weight: "reasoned" };
+  assert.throws(() => G.registerDeclaredOps({ "store-door": { groupdescriptiondraft: reasoned } }),
+    (e) => e.code === "DECLARED_OP_BAD_WEIGHT" && e.message.includes("groupdescriptiondraft") && e.message.includes("rung-on-read"));
 });
