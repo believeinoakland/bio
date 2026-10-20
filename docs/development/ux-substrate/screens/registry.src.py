@@ -166,7 +166,7 @@ screen('matter', 'Matter', 'working', 'One government act: determination, conseq
 
 # --- publishing
 screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.',
-  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason'),('writinghelp','Help me write this'),('accountpropose','Draft the account with the assistant'),('accountdrafts','See its earlier drafts')], [15,23])
+  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason'),('writinghelp','Help me write this'),('accountpropose','Draft the account with the assistant'),('accountdrafts','See its earlier drafts'),('sever','Remove a citation'),('reinstate','Reinstate')], [15,23])
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment'),('owed:reviewexport DEC-330','Save as a file')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob\'s D9, K3060; Q4): when it becomes public, the password asked again (D3), the member\'s own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn\'t an owner (DEC-207).',
