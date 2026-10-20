@@ -4137,6 +4137,15 @@
      ]
     },
     {
+     "op": "templatesave",
+     "label": "Keep as a template",
+     "status": "declared",
+     "modules": [
+      "filings",
+      "op-declarations"
+     ]
+    },
+    {
      "op": "owed:actionstake K3230",
      "label": "Save this action's stake",
      "status": "owed"
@@ -4806,6 +4815,24 @@
      "status": "declared",
      "modules": [
       "case-authoring",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "reattest",
+     "label": "Ask for the confirmation again",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "captureaccount",
+     "label": "Add your signed account",
+     "status": "declared",
+     "modules": [
+      "capture",
       "op-declarations"
      ]
     },
