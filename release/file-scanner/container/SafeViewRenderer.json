@@ -1,8 +1,9 @@
 {
   "class_name": "SafeViewRenderer",
-  "image": "ghcr.io/believeinoakland/file-scanner-renderer@sha256:90385aeddbc05b66882506a0ae6ec48dfb635119bae8c20cfba3c31e4afb974b",
+  "image": "docker.io/civicsmith/file-scanner-renderer@sha256:8817aefd13a90bbf25c59914cd70d701536ec8b245a9cdb39939a0508cb05bf9",
   "scheduling_policy": "default",
   "max_instances": 3,
+  "instance_type": "standard-1",
   "bind": [
     {
       "member": "file-scanner",

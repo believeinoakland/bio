@@ -1,0 +1,30 @@
+{
+  "r2_buckets": [],
+  "crons": [],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SEGMENTS",
+        "class_name": "SegmentDriver"
+      },
+      {
+        "name": "CHECKS",
+        "class_name": "CheckRecord"
+      }
+    ],
+    "migrations": [
+      {
+        "tag": "v1",
+        "classes": [
+          "SegmentDriver"
+        ]
+      },
+      {
+        "tag": "v2",
+        "classes": [
+          "CheckRecord"
+        ]
+      }
+    ]
+  }
+}
