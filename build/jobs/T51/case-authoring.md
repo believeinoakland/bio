@@ -135,3 +135,30 @@ REPORT (FR-18; findings in other modules, none blocks this job).
 ## J7 · COMPLETE
 
 COMPLETE (FR-18, B7 with B8 and B9). C1: a draft named by `draft` supplies every authored field the call did not send (R78, DRAFT_FIELDS exported for review). C5/C6: the pre-flight and the publication judge the ceremony's lists through the same case-disclosures calls; the real defect was the unread draft (R79, tests hold both). K4168/K4202: DECLARED_OPS for publish, publishpreflight and publishtensions (R81; both registerDeclaredOps accept them). L16: PUBLISH_NO_FINDING with its own word (R80). Requirement lines R78-R81 are written in build/requirements/case-authoring.md (marked not yet met: T51); the ownership check lists that one file, accepted at the merge per B8/B9. Module tests 205/205; format 0, architecture 0, coverage 53/53, words 0 for my files. Decision for the record: publishtensions requires only the project (it answers an empty list for no finding). Record: build/jobs/T51/case-authoring.md, commit 8af3914b6b on job/T51/case-authoring. Size (session_01UiW51kYAYDBQ6nmNeZEATc): test runs 14, module lines 2854.
+
+## Completion record for B10 (CHANGE, K4240)
+
+**Entries applied.** `publishpreflight`'s step three, `not_co_attested`, now lists each capture the case rests on that is not co-attested as `{capture, by, findings}`, built by the private `#notCoAttested` from the case's own capture rows (one row per finding and capture, `disclosureBlocks`). `capture` keeps the id, so a reader that maps `.capture` keeps working. A capture no finding of the case rests on is not listed (it never enters the rows). Only the pre-flight changes; `publish` and its document are unchanged.
+
+**Decided, not asked (P17).**
+- `by` is the member `capture` records as capturing the bytes (its R69, `captureAccountsOf(...).actors`): the first member actor by time, with the `member:` tag dropped, the same spelling the capture module gives its own first actor (`memberIdOf`). A machine actor is not a member; with no member actor `by` is `null`. Where two members captured one capture, `by` is the earlier one; the other is not listed. (Rare in the record; BOB may prefer a list, which would change the shape the screen reads.)
+- `findings` are the finding ids (each finding's `target`, its bundle id) that rest on the capture in this case, in the case's member order, each once.
+- The `capture` module is read through a new lazy getter `capture` (`captureOf(host)`, the same instance case-disclosures reads), which is an edge already in this module's `uses` (`modules.json`); no new edge.
+- No requirement in `build/requirements/case-authoring.md` describes this list's shape (R34's step three names the exclusions, searched section, bias, tensions, self-attested documents and sources, not co-attestation). I did not write the line into the file, as B10 asks for it in this COMPLETE.
+
+**Requirement line for BOB** (next free id; proposed R82, amends R34; marked not yet met until BOB writes it in):
+> **R82** (T51; K4240; amends R34) The pre-flight's step three, `not_co_attested`, lists each capture the case rests on that is not co-attested, as `{capture, by, findings}`: `by` is the member the capture module records as capturing it (its R69, the first member actor by time, `member:` dropped), `null` when none, and `findings` the findings resting on it in this case, each once. A capture no finding rests on is not listed. Test: a pre-flight over a case resting on a non-co-attested capture answers that entry with its capturer and both findings; control: a capture no finding rests on is not listed, and a case over one finding names only that finding.
+
+**Readers.** I searched the repository for the key `not_co_attested`: its only reader outside this module is none. The literal occurs in `bio-plane/src/case-authoring/index.mjs` alone (the other hits are the generated bundles under `release/` and `bio-plane/dist/`, and the word tables). BOB's note says screens-publish reads the list; if it reads it by a path other than that literal, screens-publish's J9 should confirm it reads `{capture, by, findings}` and not the old string list. I did not change any screen (not this module's).
+
+**Deferred.** None.
+
+**Found in other modules (not mine, not changed).** `checks/run.mjs` on this tranche shows, for other modules only: coverage in `agent-harness` (R17), `agent-runner` (R37, R38, R40), `installer-steps` (R26, R31) and `journey-check` (R19); words `missingkey` in `screens-intake` (its `t51-about-knocker` and `t51-watching` tests); `testcopy` in `op-grades`; `inline strength` in `bio-plane/src/strength/method.mjs:349`. None names case-authoring.
+
+**Tests and checks.**
+- New: `bio-plane/test/m/case-authoring/co-attested-list.test.mjs`, three tests, seen failing before the change (the old string list), then passing: the entry with its capturer and both findings, and a co-attested capture not listed; the control (a capture no finding rests on is not listed; a case over Q2 alone names Q2 only); `by: null` with no member actor, and with a machine actor; the pre-flight writes nothing.
+- `node --test bio-plane/test/m/case-authoring/`: 208 of 208 pass.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `node checks/architecture.mjs /home/user/bio case-authoring`: 0 failures. `node checks/coverage.mjs /home/user/bio case-authoring`: 53 of 53 live ids named by a test, 0 failures. `node checks/words.mjs`: no finding in case-authoring. `node checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`: 1 file changed by case-authoring (the module's source; the new test file and this record are the job's own paths), 0 failures.
+- `node checks/run.mjs /home/user/bio`: no finding in case-authoring (the failures listed above are other modules').
+
+**Size (session_01SzRDd1oqEEzNixuCz5nhog): test runs 4, module lines 2876** (`bio-plane/src/case-authoring/*.mjs`, all lines).
