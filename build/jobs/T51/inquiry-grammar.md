@@ -57,3 +57,11 @@ Size (session_01FVBE32weVwYCP8rNDY5AVJ): test runs 6, module lines 2048
 ## J2 · COMPLETE
 
 FR-44 applied: R68 written and met; checkGrounds leaves cuts_against legs out of the partition and refuses one named in a ground (own finding). Tests 85/85 (4 added, 3 seen failing first); format, architecture, coverage, words, ownership 0 failures for this module. FR-45/strength must know: inquiry must label supporting legs only; strength/arithmetic.mjs ignores role, so an unlabelled cutting leg joins the implicit AND group (see my record). R68 marker is BOB's to lift.
+
+## J3 · REPORT
+
+Ownership refuses my writing build/requirements/inquiry-grammar.md, so R68 is not in the file; I removed my edit (ownership now 0 failures). Please add this line to the requirements (public, leg-grammar section, marked not yet met or met as you judge), my tests t51.test.mjs name R68:
+
+- **R68** (T51; K4194; amends R1, R4) **A leg that cuts against is never in a ground.** The totality of the grounds (C-2.8: "a basis is grouped whole or not at all") counts the supporting legs only: when any leg names a ground, every leg whose `role` is not `cuts_against` must; a `cuts_against` leg need not, and a basis whose supporting legs all name grounds is judged whole whatever its cutting legs. A `cuts_against` leg that names a ground (a non-empty `ground`) is one C-2.8 error naming the leg and the label, and the label is not counted toward a ground, so a ground that only it carried is "declared, no basis leg belongs to it" as ever. A basis with no `cuts_against` leg is judged exactly as before. The strength arithmetic's side (`strength`, `inquiry`) leaves the cutting leg out of every ground likewise. *(not yet met: T51)* Test: one supporting and one cutting leg, the first in a declared ground, is clean; control: a supporting leg left out of the partition is still refused, as is a cutting leg named in a ground (with its own finding naming the leg); a basis with no cutting leg is judged as the golden answers have it.
+
+Until it is there, coverage cannot count R68 live (my tests name it already). Also lift the R13/R19 not-yet-met markers (met in CR-8).
