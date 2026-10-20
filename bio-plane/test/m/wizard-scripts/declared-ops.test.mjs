@@ -20,6 +20,8 @@ const PROSE = ["ASSISTANT_DRAFT_UNAVAILABLE"];
 const refusedNaming = (answer, field) => {
   if (!answer || typeof answer !== "object" || PROSE.includes(answer.code)) return false;
   if ((NAMED[answer.code] ?? []).includes(field)) return true;
+  /* a writing-help body without `op` is refused WRITING_HELP_REFUSED, its answer echoing the missing `op` as null (writingHelp's `asked`) */
+  if (field === "op" && answer.code === "WRITING_HELP_REFUSED" && answer.op === null) return true;
   return new RegExp(`(^|[^\\w])${field}($|[^\\w])`).test([answer.code, answer.detail].filter(Boolean).join(" "));
 };
 /* two answers are the same when they agree on their outcome: a fresh world mints its own ids, so the answers are compared by code */
@@ -34,10 +36,10 @@ const call = (op) => (fields) => {
   const d = draft(w, {});
   if (op === "wizardapprove") w.wz.wizardSubmit({ version: d.version, author: F, viewer: F });
   const real = { version: d.version, script: d.script, project: w.P, name: "Check the fence", steps: STEPS, reason: "Changed my mind",
-    field: "note", told: "The fence was paid twice", state: "draft", message: "a tangle", parts: [{ subject: "Fence" }] };
+    field: "note", told: "The fence was paid twice", state: "draft", message: "a tangle", parts: [{ subject: "Fence" }], op: "casenote" };
   const given = Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v === `sample-${k}` ? real[k] : v]));
   if (op === "writinghelp") {
-    return w.wz.writingHelp({ op: "casenote", field: given.field, told: given.told, draftHeld: given.draftHeld,
+    return w.wz.writingHelp({ op: given.op, field: given.field, told: given.told, draftHeld: given.draftHeld,
       assistant: { on: true, account: "ACC-test" }, by: F, viewer: F });
   }
   const author = op === "wizardapprove" ? A : F;
@@ -58,6 +60,12 @@ for (const op of OPS) {
     assert.equal(wz.DECLARED_OPS[op].description, word(`act.${op}.does`));
   });
 }
+
+test("R46 control: a writinghelp body without op is refused naming it", async () => {
+  const answer = await call("writinghelp")({ told: "The fence was paid twice" });
+  assert.equal(answer.ok, false);
+  assert.equal(refusedNaming(answer, "op"), true);
+});
 
 test("R46 control: a declaration whose required field the arm never reads is caught by name", async () => {
   const bad = { ...wz.DECLARED_OPS.wizards, fields: { accepts: ["state"], requires: ["nothere"] } };

@@ -1751,7 +1751,7 @@ export const DECLARED_OPS = Object.freeze({
   startfrom: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
     description: word("act.startfrom.does"), fields: { accepts: ["message", "parts"], requires: [] } },
   writinghelp: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",
-    description: word("act.writinghelp.does"), fields: { accepts: ["field", "told", "draftHeld"], requires: ["told"] } },
+    description: word("act.writinghelp.does"), fields: { accepts: ["op", "field", "told", "draftHeld"], requires: ["op", "told"] } },
   wizarddraft: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reversible",
     description: word("act.wizarddraft.does"), fields: { accepts: ["project", "name", "recorded", "from", "copy"], requires: [["project", "from", "copy"]] } },
   wizardrevise: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
