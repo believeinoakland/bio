@@ -21,6 +21,27 @@
 
 Size (session_01M31mHwuWGwKStqD3B57zBx): test runs 10, module lines 888
 
+## Completion (FR-47: L27 / T-02)
+
+**Requirement lines**: written in `build/requirements/screens-wizards.md` (R20, R21 new, R17 noted as amended, Status line), as BOB's B5 allows; the ownership check lists that one file.
+
+**Entries applied**
+- Entry 1 (R20): a step on a project, question or document screen never navigates without its subject (`guide.mjs`). A project step asks or says it has none, as R17/R18. A question or document step reads `list` (type `inquiry` or `information`), opens the most recently updated (`last_updated`; the list's order for equals), asks no choice, and keeps it for the run. With none it stays on the card (`ui.none`), draws the step's own `wizard.<id>.step<n>.none.what` and `.none.why` in place of its words, and (a question step) the `.none.door` button, whose press (`door`) opens the project choice and then `project` on the chosen project with `promote` ("Open a question") rung once and nothing pressed; with no project it draws `wizard.subject.none.project` in its fold. A step the library holds no `none` words for (every step but the welcome's step 4) draws its own words and Next and opens nothing. The unopened step is counted once. Reading ruling (J3, BOB's B5): the most recent at once, no choice, for a question or a document.
+- Entry 2 (R21): `walk.test.mjs` walks every step of every script of `CIVICSMITH_LIBRARY` (wizard-scripts' export) in the real page, with no subject to be found and with subjects to be found, and fails any step whose screen draws `shell.unavailable.nothing.title`. A script that leaves the working frame (the public pages draw no dock) is walked again from the step after it, and a walk that ends before its last step fails. Seen failing first: against the guide before R20 the walk fails on 7 steps, among them step 4 of the welcome (`WIZ-7db08189cc0e58c3`); a fixture script on `due-date`, a subject screen the guide does not name, is failed by name.
+- Tests changed because R20 amends R17 (premise changed, nothing weakened): `t50.test.mjs`'s R17 question/document test (a choice and "as it always did" became the most recent), `guide.test.mjs` (`list` answers one record of each kind; R2 expects `["document","DOC-1"]`; R6's subject check allows that record).
+- New: `l27.test.mjs` (R20 ×8), `walk.test.mjs` (R21 ×2).
+
+**Found in other modules (REPORT to BOB)**
+1. `wizard-scripts`' row for `wizardrevise` declares `fields.requires: ["version", "steps"]`, but the op itself takes `adopt` with no `steps` (`wizardRevise`: `body = steps ?? taken`). Since the interface-shell guard (wave 1) checks a request against the owner's row, 2 of this module's tests are red: `library.test.mjs` "R1 wizards: a state pressed…" and "R1 a copy whose base changed…" (`FieldMismatch: wizardrevise is missing the required steps`). They were red on the tranche before my change (checked by stash). The screen sends what the owner's op takes; the fix is the row (`requires: ["version"]` with `steps` or `adopt`, as `declaredFit` reads alternatives). No test of mine was changed for it.
+2. The design's words `wizard.subject.question` and `wizard.subject.document` (R17's choices) are no longer read by this module (R20 asks no choice); the design may drop them from `words-reads.json`. The generic `none` words for a question or document step (and a door for a document) are the design's, as BOB's B5 hands off.
+3. The R21 walk's "needs a subject" set is the guide's own kinds (`GUIDE.parts.kinds()`); a screen outside them whose reads name a subject is its own module's to keep, and this module cannot import their screens (architecture). Library steps on such screens, for BOB: `request`, `start-send`, `matter`, `action`, `due-date`, `calculation`, `proceeding`, `imported`, `ceremony`, `case-editor` (their reads name a subject only when an address carries one, so none was proven to fail).
+
+**Deferred**: none.
+
+**Checks and tests** (process repo): `words.mjs screens-wizards` 0 failures; `format.mjs` 0 failures; `architecture.mjs screens-wizards` 0 failures; `coverage.mjs screens-wizards` 21 of 21 ids named, 0 failures; `ownership.mjs` 1 failure, `build/requirements/screens-wizards.md` (accepted at merge, B5); `checks/run.mjs`: no finding in this module (its 26 words failures are op-grades' test copies). Module tests: 69, 67 pass, 2 fail (finding 1).
+
+Size (session_01E5NuDNnu6Tf6sHWb5YMV1j): test runs 30, module lines 926
+
 ## J1 · COMPLETE
 
 T51-115 done on job/T51/screens-wizards (record: build/jobs/T51/screens-wizards.md). R18 (plan asks which project, a plan's id never taken for the project), R19 (template draft placed from templatebyhandle), the recording list's doubled bullet+number fixed (rendered at 1280/390), 7 words findings fixed (0 left in the module). Checks green: words, format, architecture, coverage 19/19, ownership, setup-words --check.
