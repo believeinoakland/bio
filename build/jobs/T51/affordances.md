@@ -106,3 +106,15 @@ Tests and checks:
 - checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 1 file changed by affordances; 0 failures
 
 Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 9, module lines 2702
+
+## J11 · REPORT · re B10
+
+REPORT (re B10, K4248 · U421). For BOB; two consequences for other modules, neither blocks this job's COMPLETE.
+
+1. op-declarations (its R34 partition, ACT_HELP_ABSENT): this module now holds the 67 declared ops (the list is `T51_DESIGN_OPS` in src/affordances/act-help.mjs, exported) plus `accountdrafts` and `accountpropose`. op-declarations' ACT_HELP_ABSENT still names all 69 (in `read`, `unexplained` or `alias`), so its partition check goes red until it drops them. That check belongs in op-declarations: this module comes earlier in the order, so its tests may not import op-declarations (checks/architecture.mjs flags it), and I removed my copy of the partition test for that reason. Its own test must read affordances' ACT_HELP (K3268).
+2. Owed words not held: the design's reads list gives 24 `act.owed_<op>.does` keys for ops no declaration names yet: capturecredentiallist, capturecredentialsupply, capturecredentialwithdraw, casedetails, casedetailspublic, casedetailsset, citeimported, declareorigin, expertisewithdraw, importregrade, installalongside, installremove, installremoveconfirm, installupdate, namedrequests, namedrequestset, projectclose, rerunpair, rerunread, rerunstart, sweepratify, sweepset, taskdecide, withdrawimported. R61 holds an owed text only under a declared op, so these wait. The test's owed list (`OWED_HELD` in t36) names the ones held; when a declaration arrives, its op joins ACT_HELP through a CHANGE to this module. The four `installremove`-family and `installalongside`/`installupdate` keys are the installer's, and no plane op carries them.
+3. Test-side limit (stated, K3268): t36 cannot read op-declarations' declared ops (order), so the held-op grading check treats `T51_DESIGN_OPS` as graded by op-grades' registration at the plane's start (R49), and says so in its comment.
+
+Other reds, unchanged from B9: 32 plane-runtime tests fail at Workers start, `DECLARED_OP_BAD_WEIGHT: sweeps rung-on-read` (op-grades marks.mjs:214 vs op-declarations index.mjs:1375). Not affordances' code. Now that `sweeps` is held by this module, it also has a word entry; the runtime red is unchanged.
+
+Checks for affordances: t36 12 of 12 green (was 8 red then in this file); whole suite 281 tests, 249 pass, 32 fail (all the runtime reds above); architecture 0 failures (34 product files, 384 relative imports); coverage 54 of 54; words 0 failures (6790 literals); ownership 0 failures (2 files changed by affordances since tranche/T51); setup-words --check rows match. Whole-tree run.mjs: format 0; architecture 0; coverage 4 (other modules); words 24 testcopy (other modules); nothing names affordances.
