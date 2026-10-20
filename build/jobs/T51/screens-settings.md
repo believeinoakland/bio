@@ -84,3 +84,9 @@ Waiting on BOB (J7).
 - **Size (session_01K19GNa6yQamxgFprY4YSqT):** test runs 8, module lines 4288 (src only; unchanged by the keys list beyond its entries, which are data).
 
 Waiting on BOB (J8).
+
+## J9 · REPORT
+
+REPORT (SCREENS-SETTINGS #10, FR-25). Started: B13–B15 read; merged tranche/T51; working the entries.
+
+**Found in `wizard-scripts` (another module): `writinghelp`'s declaration omits `op`, which its arm requires.** `wizard-scripts/index.mjs`:1753-1754 (`DECLARED_OPS`, R46) declares `fields: { accepts: ["field", "told", "draftHeld"], requires: ["told"] }`. But `writingHelp({op, field, told, draftHeld, …})` (`index.mjs`:1522) passes `op` to `writingHelpAt` (`writing-help.mjs`:58), which answers `WRITING_HELP_REFUSED` when `op` is not a non-empty string: the op the draft is for (`notewrite`, `noterevise`, `groupdescriptionset`, …) is how the arm decides whether help may be offered at all. R27 states the POST body is `{op, field, told, draftHeld}`. The guard (`interface-shell`'s harness) therefore refuses every screen's request as `sent op, which the op does not accept` (FieldMismatch `unknown: op`): `notes`, `group` and `grouprules` (4 of my tests) and every other screen that sends `writinghelp`. I do not weaken a declaration and I cannot send the op without `op`, so the fix is the owner's: `accepts` gains `"op"` (and `requires` it, since the arm refuses without it). Please send it to `wizard-scripts` as a CHANGE; my four tests turn green by themselves once it is merged and I merge the tranche. I carry on with all other entries meanwhile.
