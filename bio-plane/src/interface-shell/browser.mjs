@@ -1284,10 +1284,16 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const el = doc.getElementById(id);
       if (!el || el.getAttribute("data-shell") === "pick") return;
       if ("checked" in v) { if (el.checked === !!DRAWN[id]) el.checked = v.checked; }
-      else if (el.value === "" || el.value === (DRAWN[id] === undefined ? "" : DRAWN[id])) el.value = v.value;
+      else { const d = drawnValue(el); if (d === "" || d === (DRAWN[id] === undefined ? "" : DRAWN[id])) el.value = v.value; }
     };
+    /* a select's value is drawn only when the screen marked an option `selected`; the browser's default first option is no choice */
+    function drawnValue(el) {
+      if (el.localName !== "select") return el.value;
+      const o = Array.from(el.querySelectorAll("option")).find((x) => x.hasAttribute("selected"));
+      return o ? o.getAttribute("value") || "" : "";
+    }
     const asDrawn = {};
-    for (const el of root.querySelectorAll("input, textarea, select")) if (el.id && el.type !== "file") asDrawn[el.id] = el.type === "checkbox" || el.type === "radio" ? !!el.checked : el.value;
+    for (const el of root.querySelectorAll("input, textarea, select")) if (el.id && el.type !== "file") asDrawn[el.id] = el.type === "checkbox" || el.type === "radio" ? !!el.checked : drawnValue(el);
     for (const [id, v] of Object.entries(values)) restore(id, v);
     DRAWN = asDrawn;
     for (const inst of [MAIN, DOCKI, GUIDEI]) {
