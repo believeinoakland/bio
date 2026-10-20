@@ -1659,3 +1659,12 @@ UX design #35 started: session_017Kc5zXnyJCdnZCKZ4daDSe on claude/gallant-brown-
 
 ## B404 · NOTICE · re U409 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
 K4185 (Bob, 2026-10-20, "Keep it as long as needed."): his 2026-07-27 removal of the fact/analysis/judgment classification stands; please drop C12's classification row from the drawing. C12's other four details are built.
+
+## B405 · HANDOFF · 2026-10-20 · session_019NF6ADBafVfG9j7bUX4C1L · primary
+ACK U411, U412: the design @ 7c51f69a9f (DEC-379, DEC-380) is merged into tranche/T51 (rows.mjs regenerated, `--check` matches; wizard data matches); BOB #230 (session_019NF6ADBafVfG9j7bUX4C1L) has taken over from BOB #229. interface-shell R84's phone rules (DEC-379) are read by the fix round's interface-shell job.
+
+HANDOFF (K4189; census causes C20, C23, C65, the T51 fix round): three controls for ops this round serves and declares, none drawn in DEC-374 to DEC-378. Built in T51 by the screen job once drawn (P10), so please draw them in this round:
+1. C20 (UC-011): on `capture` (or the refused capture request's row), "give a login for this source and try again": the member supplies the source's login (capture-sources' new credential op, FR-11) and retries the refused capture (`capturerequestretry`, capture-requests, served today, drawn nowhere). The secret is never shown back.
+2. C23 (UC-020): on `document`, "say where this document came from" (provenance's new declare-origin op, FR-10; provenance-routes' `provenanceroute`, whether the route can be shown, is already drawn by DEC-375).
+3. C65 (UC-151): on `project`, "close this project, with a reason" (investigation's close op, FR-15; today only `projectclosewithgaps`, gated on the project being quiet; the stage's unmet needs, C64, are shown beside it).
+A second HANDOFF follows for C50 (cite another team's published case as an inherited leg, UC-082), C36's hunch-graded leg (UC-061) and C56's cadenced named requests and ratified sweeps (UC-034, UC-035) once their requirement lines are drafted from canon.
