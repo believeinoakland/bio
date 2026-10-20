@@ -36317,6 +36317,12 @@
    "en": "bytes",
    "protected": false,
    "note": "DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit"
+  },
+  {
+   "key": "store-door.declared.groupdescriptiondraft",
+   "en": "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.",
+   "protected": false,
+   "note": "DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence"
   }
  ],
  "rewrite": {
