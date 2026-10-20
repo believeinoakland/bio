@@ -88,7 +88,7 @@ const SCREEN_REFS = {
     ["Nobody looked","finder","<b>Nobody looked</b> · a gap mark · no member has searched a source for this yet","Members act on it, so the Spanish must read as a gap, not as a finding."],
     ["needs a second check",null,"<b>Second check</b> · a protected word changed by one speaker waits for another granted speaker or an administrator","Until Teo or Rosa confirms it, members reading Español see the English."],
     ["Held together","finder","<b>Held together</b> · a set of documents a member holds in Find to count, cite or act on as one","Still untranslated: members reading Español see it in English."],
-    ["Reasoned",null,"<b>Reasoned</b> · the mark on an act that asks for a reason, which becomes part of the record","Ana's suggestion, “Justificado”, waits for a granted speaker to keep it or explain why not."]
+    ["Asks for a reason",null,"<b>Asks for a reason</b> · the mark on an act that asks for a reason, which becomes part of the record","Ana's suggestion, “Pide un motivo”, waits for a granted speaker to keep it or explain why not."]
   ],
   "wizards": [
     ["Get a record, Oakland style","request","<b>Get a record, Oakland style</b> · your team's copy of Civicsmith's Get a record · approved by Rosa","Civicsmith's original changed since the copy; a wizard editor decides whether to bring the change across."],
@@ -410,7 +410,7 @@ const TITLE_HELP = {
   "action": "<b>Records request: inspection logs</b>: your team's request to the Office of the City Clerk, sent by Mai on October 2. What was sent, when the reply is due and what came back are here.",
   "matter": "<b><span class=mk-data>The 2024 rent adjustment, made without a council vote</span></b>: what your team is pursuing about this one problem, judged noncompliant with lease §7.2 and established, from the first letter to the outcome.",
   "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your team's published case. Nothing here is public until an owner signs and publishes it.",
-  "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
+  "review-copy": "<b>Share this edition for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
   "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Publishing makes this edition permanent and public. It can be corrected by a new edition, never removed.",
   "published": "<b>The Coliseum lease</b>: your team's published case as anyone reads it: Edition 2, published September 18, 2026, which corrects Edition 1.",
   "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on October 1. Nothing in it counts for your team until a member accepts it.",

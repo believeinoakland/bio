@@ -5,6 +5,8 @@
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const I = (n, cls='i') => `<svg class="${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const WNAME = ['', 'Reversible', 'Reasoned', 'Terminal', 'Signed', 'Irreversible'];
+/* B411 T-07: what the mark says under a button (WNAME stays the key's name: weight.<name>.name) */
+const WSHOW = { Reasoned: 'Asks for a reason', Terminal: 'Ends something', Signed: 'You sign this' };
 const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
@@ -52,7 +54,7 @@ function btn(op, label, o = {}) {
   const out = o.out ?? OUTWARD.has(key(op));
   const help = typeof ACT_HELP !== 'undefined' && ACT_HELP[key(op)];
   const say = o.help || help;  // o.help: what this button does here, when the act's general explanation would be vague in context
-  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}${w >= 2 ? `<span class="w">${pips(w)}${WNAME[w]}</span>` : ''}</button>`;  // S26 (DEC-295): no mark on a reversible act
+  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}${w >= 2 ? `<span class="w" data-w="${WNAME[w]}">${pips(w)}${WSHOW[WNAME[w]] || WNAME[w]}</span>` : ''}</button>`;  // S26 (DEC-295): no mark on a reversible act
 }
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon, help) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet"${help ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(help)}"` : ''}>${icon ? I(icon) : ''}${esc(label)}</a>`;
