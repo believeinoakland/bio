@@ -247,3 +247,13 @@ test("R63: projects draws a search by name and a filter (all, in, own), narrowin
   assert.deepEqual(p.requests.slice(before).filter((r) => r.op === "projectlist"), [], "it sends no read of the list again and no act");
   assert.equal(p.requests.slice(before).filter((r) => r.method !== "GET").length, 0);
 });
+
+test("R72: a project whose row says rescue_open is marked and opens the project; a row without is unchanged", async () => {
+  const stranded = { id: "PROJ-9", name: "Library hours", rescue_open: true, stage: null, owner: null, participation: null, scope: null, lastChange: null, members: [], activity: [0, 0, 0, 0, 0, 0, 0, 0], mine: { in: false, owner: false } };
+  const plane = { projectlist: ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [stranded, { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", rescue_open: false }] }), projectquestions: QUESTIONS };
+  const p = await open("/app/projects", plane, { screens: withScreens("project") });
+  const rowOf = (name) => rows(p).find((r) => r.querySelectorAll("a.cs-ref").some((a) => a.textContent === name));
+  assert.equal(rowOf("Library hours").querySelectorAll("a.cs-ref").find((a) => a.textContent === "Library hours").getAttribute("href"), "/app/project/PROJ-9", "the row opens the project, where the rescue is");
+  assert.ok(text(p, rowOf("Library hours")).includes(word("project.rescue.title.nodate")), "the stranded project is marked");
+  assert.ok(!text(p, rowOf("The Coliseum lease")).includes(word("project.rescue.title.nodate")), "control: a row without rescue_open is not marked");
+});

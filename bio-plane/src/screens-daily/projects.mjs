@@ -39,13 +39,13 @@ export const projects = Object.freeze({
     }).join(", ");
     const start = starts ? view.parts.startProject().form(cs, "projects", "act.promote.label.projects", cs.act("promote", { label: "project.start.go", tone: "primary" }))
       : '<p class="mk-note">' + cs.w("screen.projects.nocreate", { admins: { html: admins } }) + "</p>";
-    // R43: the Themes section, under the list: each theme its name, a reference opening `theme`, nothing else on the row; and
-    // "Every theme". Not drawn when none is declared.
+    // R43, R66: the Themes section, under the list: each theme its name, a reference opening `theme`, nothing else on the row; and
+    // "Every theme", the door to `theme`, drawn also when none is declared yet.
     const tv = ok(view.data.themes);
     const themeList = tv && Array.isArray(tv.themes) ? tv.themes : [];
-    const themes = themeList.length ? cs.sec("theme.section", '<p class="mk-small muted">' + cs.w("theme.never.evidence") + "</p>"
-      + cs.sheet(themeList.map(function (t) { return cs.row("", cs.ref("theme", String(t.theme_id), String(t.name || t.theme_id), []), "", ""); }).join(""))
-      + '<p class="mk-acts"><a class="cs-ref" data-nav href="/app/theme">' + cs.w("theme.every") + "</a></p>", { help: "theme.across" }) : "";
+    const themes = cs.sec("theme.section", (themeList.length ? '<p class="mk-small muted">' + cs.w("theme.never.evidence") + "</p>"
+      + cs.sheet(themeList.map(function (t) { return cs.row("", cs.ref("theme", String(t.theme_id), String(t.name || t.theme_id), []), "", ""); }).join("")) : "")
+      + '<p class="mk-acts"><a class="cs-ref" data-nav href="/app/theme">' + cs.w("theme.every") + "</a></p>", { help: "theme.across" });
     // R42: the findable projects (not the member's own), each with "Ask to join", and the request she has open with "Withdraw".
     const dv = ok(view.data.directory);
     const rv = ok(view.data.requests);

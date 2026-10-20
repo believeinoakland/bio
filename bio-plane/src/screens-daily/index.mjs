@@ -43,7 +43,7 @@ const SOURCES = ["queue.source-modified.one", "queue.source-modified.many", "que
   "queue.source.detail", "queue.source.untitled"];
 const PROJECT_ROWS = (w) => [`${w}.questions.one`, `${w}.questions.many`, `${w}.owner`, `${w}.owner.none`, `${w}.lastchange`, `${w}.lastchange.none`,
   `${w}.truncated`, `${w}.stage.means`, `${w}.stage.none`, ...["forming", "investigating", "matured", "closed"].map((s) => `${w}.stage.${s}`),
-  "member.founder.unnamed", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet"];
+  "member.founder.unnamed", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "project.rescue.title.nodate"];
 // R25, R30: "Start a project".
 const START = ["project.start.title", "project.start.title.help", "project.start.go", "project.visibility.title", "project.visibility.start.hidden",
   "project.visibility.start.discoverable", "project.visibility.start.later"];
@@ -54,8 +54,11 @@ const DATE_KINDS = ["meeting", "adopted", "effective", "signed", "entered", "iss
 const STANDARD_KINDS = ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"];
 const MONEY_KINDS = ["allocation", "balance", "behested", "contribution", "debt", "expenditure", "fee_charged", "gift", "income", "other", "payment", "revenue", "settlement", "transfer"];
 
+// R65: the doors to Held captures and the Inbox, on Home and the queue.
+const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name"];
+
 const WORDS_OF = {
-  home: [...SHARED, "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion"]),
+  home: [...SHARED, ...DOORS_TO("home"), "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion"]),
     "act.projectjoin.label.home", "act.projectjoin.does",
     "door.front.head", "door.front.intro", "door.front.blank", ...DOORS.flatMap((k) => [`door.front.${k}.name`, `door.front.${k}.hint`]),
     ...MARKS(["kind.todo", "kind.noticed", "kind.status"]), "mark.due.means", "home.update.ready", "home.update.security", "queue.update.see",
@@ -79,7 +82,7 @@ const WORDS_OF = {
   elsewhere: [...SHARED, "screen.elsewhere.name", "screen.elsewhere.purpose", "elsewhere.title", "elsewhere.says", "elsewhere.records_nothing",
     ...ELSEWHERE_KINDS.flatMap((k) => [`elsewhere.kind.${k}`, `elsewhere.kind.${k}_says`]), ...["phone", "web", "email", "address", "mail"].map((h) => `elsewhere.reach.${h}`),
     "elsewhere.source", "elsewhere.none.head", "elsewhere.none.says", "elsewhere.none.noplace", "elsewhere.danger", "elsewhere.back"],
-  queue: [...SHARED, "screen.queue.name", "screen.queue.purpose", ...MARKS(["kind.todo", "kind.noticed", "kind.status", "origin.accepted"]),
+  queue: [...SHARED, ...DOORS_TO("queue"), "screen.queue.name", "screen.queue.purpose", ...MARKS(["kind.todo", "kind.noticed", "kind.status", "origin.accepted"]),
     "mark.due.means", "mark.hint.label", "mark.hint.means",
     ...ACTS("queue", ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote",
       "projectkeyset", "exploreapprove", "actionmove"]),

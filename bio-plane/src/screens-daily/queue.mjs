@@ -11,10 +11,11 @@
 import { sourceItems } from "./source-items.mjs";
 import { itemWords } from "./item-words.mjs";
 import { queueStates } from "./queue-states.mjs";
+import { doors } from "./doors.mjs";
 
 export const queue = Object.freeze({
   id: "queue",
-  parts: { sourceItems, itemWords, queueStates },
+  parts: { sourceItems, itemWords, queueStates, doors },
 
   // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind). R59, R61: `/app/queue/answered` reads what the
   // member answered and the set-aside findings; R58: `/app/queue/choose` reads the queue as it is, each item with a box. The queue's
@@ -37,6 +38,9 @@ export const queue = Object.freeze({
       },
       // R50 (1): what the member has muted, `queue` R55's list, at the foot.
       muted: { op: "queue", query: { muted: "true" }, empty: none("muted") },
+      // R65: the doors to Held captures and the Inbox, on the list only.
+      held: view.parts.doors().reads().held,
+      inbox: view.parts.doors().reads().inbox,
     };
   },
 
@@ -325,13 +329,15 @@ export const queue = Object.freeze({
       const have = q && q.state === "ok" && q.value && Array.isArray(q.value.items) ? q.value.items.filter(function (it) { return it && picked.indexOf(String(it.id)) >= 0; }).length : 0;
       return cs.title(undefined, {}) + doneNote + listOf(true) + (have ? states.strip(cs, have) : "") + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/queue">' + cs.w("queue.multi.back") + "</a></p>" + mutedPart;
     }
+    // R65: the doors to Held captures and the Inbox, on the list and its empty states.
+    const doorsHtml = view.parts.doors().draw(cs, view, "queue");
     if (q && q.state === "empty") {
       if (qv.feeds && qv.all_answered === false) {
-        return cs.title(undefined, {}) + doneNote + '<p class="mk-sub">' + cs.w("queue.allclear.withheld") + "</p>" + failedRow + mutedPart;
+        return cs.title(undefined, {}) + doneNote + '<p class="mk-sub">' + cs.w("queue.allclear.withheld") + "</p>" + failedRow + doorsHtml + mutedPart;
       }
-      return cs.title(undefined, {}) + doneNote + listOf(false) + (qv.feeds ? states.allClear(cs, qv) : "") + mutedPart;
+      return cs.title(undefined, {}) + doneNote + doorsHtml + listOf(false) + (qv.feeds ? states.allClear(cs, qv) : "") + mutedPart;
     }
-    return cs.title(undefined, {}) + doneNote + (q && q.state === "ok" ? failedRow + states.entry(cs) : "") + note + sorts + listOf(false) + mutedPart;
+    return cs.title(undefined, {}) + doneNote + (q && q.state === "ok" ? failedRow + states.entry(cs) : "") + doorsHtml + note + sorts + listOf(false) + mutedPart;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).

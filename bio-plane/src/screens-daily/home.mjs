@@ -12,10 +12,11 @@ import { itemWords } from "./item-words.mjs";
 import { startProject } from "./start-project.mjs";
 import { participation } from "./participation.mjs";
 import { homeReadings } from "./home-readings.mjs";
+import { doors } from "./doors.mjs";
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -36,6 +37,9 @@ export const home = Object.freeze({
       published: { op: "publishedlist" },
       followed: { op: "peopledirectory", query: { show: "people", limit: "1" }, empty: function () { return false; } },
       clocks: { op: "clocksrunning" },
+      // R65: the doors to Held captures and the Inbox.
+      held: view.parts.doors().reads().held,
+      inbox: view.parts.doors().reads().inbox,
     };
     if (view.me && view.me.member && !(view.me.administer === true || (Array.isArray(view.me.capabilities) && view.me.capabilities.indexOf("create_projects") >= 0))) {
       out.members = { op: "memberlist", empty: list("members") };
@@ -362,7 +366,8 @@ export const home = Object.freeze({
         return cs.row("", cs.ref("project", String(p.id), p.name || String(p.id), []), '<span class="muted">' + cs.w("screen.home.since.changed", { date: cs.date(String(p.lastChange)) }) + "</span>", "");
       }).join(""))) : "";
 
-    return strip + heading + queueFailed + needsYou + needsGroup + joinPart + areas + projects + recent + front;
+    // R65: the doors to Held captures and the Inbox, each only when it holds something.
+    return strip + heading + queueFailed + needsYou + needsGroup + view.parts.doors().draw(cs, view, "home") + joinPart + areas + projects + recent + front;
   },
 
   acts: [
