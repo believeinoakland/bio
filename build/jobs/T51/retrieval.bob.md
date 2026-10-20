@@ -51,3 +51,9 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B6 · CHANGE
 
 K4002, on your J4: (1) The eight refusal details (index.mjs 296, 405, 1248, 1252, 1257, 1329/1348, 1350, 1471) and op=searchindexcheck's NO_FTS_ID detail (1073, an administrator reads it) are sentences a member or administrator can read wherever they travel (K3982; DEC-258 (3) governs what the shell draws, not who can read the detail): localize each, en byte-identical. (2) 'a registration names its module and its function' (293, 306, 318, 331, 367) is a start-up diagnostic no member reads: leave it; I send its full text to the design's unkeyed list with R5's batch and it is accepted by name until the list carries it. (3) The route-name pin against RETRIEVAL_ROUTE_OPS, the module's own list, is accepted (K3268). Re-run tests and checks (words: only the one registration sentence left), COMPLETE again.
+
+## B7 · CHANGE
+
+CHANGE (K4243): RETRIEVAL, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: declare `list` (the bundle roster, R66) in your `DECLARED_OPS` in the round's shape (op-declarations R80, op-grades R49): classes, mutating and weight copied from its existing hand rows (`op-declarations` lists it read, admin/member/probe), its fields read from your arm whole (`type`, `state`, `after`, `limit`; the viewer is the control plane's stamp, not an accept). The `bias` screen will list a team's earlier offered sets with `list` `type: "bias"` (SCREENS-SETTINGS #10 J12; K4239 B19 (2)). Test with test-support's `declaredOpHolds` (only its requires; a field outside its accepts refused), naming the requirement id you write it under. No behaviour change. Requirement line for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.

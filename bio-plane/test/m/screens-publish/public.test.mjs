@@ -1,6 +1,7 @@
 /* screens-publish R6 (the published case), R7 (another group's case), R8 and R16 (the docket) and R9 (the doorbell), on
  * interface-shell's served page: the two public pages drawn with no session and no credential, the imported case's
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
+import "./register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
@@ -132,7 +133,7 @@ test("R7 another group's case: each finding recreated, in part or not, read-only
   const r = main(p).querySelectorAll("[data-r]").map((x) => x.getAttribute("data-r"));
   assert.deepEqual(r, ["yes", "part", "no"]);
   for (const k of ["yes", "part", "no"]) assert.ok(drew(p, `screen.imported.result.${k}`), k);
-  assert.deepEqual(ops(p).sort(), ["caseimport", "importaccept", "importflag", "importwatch"]);
+  assert.deepEqual(ops(p).sort(), ["caseimport", "importaccept", "importflag", "importregrade", "importwatch", "rerunstart"]);
   await press(p, "importaccept", { values: { "im-checked": "Each document's hash against theirs.", "im-reason": "It recreated whole." } });
   carries(last(p, "importaccept").body, { import: "IMP-2026-0001", edition: 2, findings: ["FND-W-1"], checked: "Each document's hash against theirs.", reason: "It recreated whole." });
   await press(p, "importflag", { values: { "im-issue": "Their arrears figure double-counts March." }, reason: R });

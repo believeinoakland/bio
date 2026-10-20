@@ -12,13 +12,13 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREENS, SCREEN_WORDS, KEYS } from "../../../src/screens-settings/index.mjs";
 import { open, said, day } from "./kit.mjs";
 import { interfacePage, checkScreens } from "../../../src/interface-shell/index.mjs";
-import { ADMIN, MEMBER, membersTable, teamaiTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable, grouprulesTable } from "./fixtures.mjs";
+import { ADMIN, MEMBER, membersTable, teamaiTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable, grouprulesTable, biasTable } from "./fixtures.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const PATH = "docs/development/ux-substrate/screens/registry.json";
 // the registry as merged into tranche/T47 at L11's START (PR #33's head; wizard-scripts R35)
 const registry = () => JSON.parse(readFileSync(join(ROOT, PATH), "utf8"));
-const IDS = ["settings", "members", "teamai", "account", "connect", "notes", "group", "group-identity", "places", "recovery", "security", "translations", "updates", "glossary", "grouprules"];
+const IDS = ["settings", "members", "teamai", "account", "connect", "notes", "group", "group-identity", "places", "recovery", "security", "translations", "updates", "glossary", "grouprules", "bias"];
 
 test("the screens are the registry's, each listing exactly its registry acts, an owed act by the op it owes (interface-shell R38)", () => {
   const reg = registry().screens;
@@ -49,7 +49,7 @@ test("the shell serves the screens: interfacePage passes its R21 check, and the 
   const html = interfacePage(SCREENS);
   for (const s of SCREENS) for (const a of s.acts) assert.ok(html.includes(a.op), `${s.id}'s ${a.op} is in the page`);
   const tables = { settings: {}, members: membersTable(), teamai: teamaiTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN), group: groupTable(), "group-identity": identityTable(),
-    places: placesTable(), recovery: recoveryTable(), security: securityTable(), translations: translationsTable(), updates: updatesTable(), glossary: {}, grouprules: grouprulesTable() };
+    places: placesTable(), recovery: recoveryTable(), security: securityTable(), translations: translationsTable(), updates: updatesTable(), glossary: {}, grouprules: grouprulesTable(), bias: biasTable() };
   for (const s of SCREENS) {
     const o = await open(s.id, { me: ADMIN, table: tables[s.id], reachable: true });
     assert.ok(o.text.includes(said(`screen.${s.id}.name`)), `${s.id} drawn`);

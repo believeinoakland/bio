@@ -256,3 +256,36 @@ test("R57 (1), (2) a key made with a typed passphrase opens no dialog, sends key
   assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("a typed passphrase 123") || String(v).includes("BIOKEY1.")), "kept nowhere");
   assert.ok(!JSON.stringify(r.sent).includes("a typed passphrase 123") && !JSON.stringify(r.sent).includes("BIOKEY1."), "sent nowhere");
 });
+
+/* ---- T51 FR-25: C81 (R67) ---- */
+
+test("R67 Your cover name: the cover and handle said, the stored choice the only one preselected, and memberpairingset sends memberId and published; the state is read back", async () => {
+  let stored = false;
+  const table = accountTable(MEMBER, {
+    memberpairings: () => env({ ok: true, pairings: [{ handle: "ana", cover: "Ana the CPA", published: true }, { handle: "dev", cover: "Dev from 60th", published: stored }], limit: 200, truncated: false }),
+    memberpairingset: (q, b) => { stored = b.published === true; return env({ ok: true, memberId: b.memberId, published: stored, by: "dev" }); },
+  });
+  const a = await open("account", { me: MEMBER, table });
+  for (const k of ["screen.account.pairing.head", "screen.account.pairing.choose", "screen.account.pairing.legend", "screen.account.pairing.private", "screen.account.pairing.public", "screen.account.pairing.change", "screen.account.pairing.undone"]) has(a, k);
+  has(a, "screen.account.pairing.says", { cover: "Dev from 60th", handle: "dev" });
+  const radios = () => all(a.tree, (e) => e.tag === "input" && e.attrs.type === "radio" && /^ma-pair-/.test(e.attrs.id));
+  assert.equal(radios().length, 2);
+  assert.deepEqual(radios().map((r) => r.attrs.checked !== undefined), [true, false], "the stored choice (kept private) is the one chosen; nothing else is");
+  assert.deepEqual(ops(a).filter((o) => o === "memberpairingset"), ["memberpairingset"]);
+  assert.ok(textOf(all(a.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "memberpairingset")[0]).includes(said("screen.account.pairing.save")));
+  const r = await a.press("memberpairingset", { values: { "ma-pair-1": true } });
+  assert.deepEqual([r.sent[0].op, r.sent[0].body], ["memberpairingset", { memberId: "dev", published: true }]);
+  assert.ok(r.sent.some((x) => x.op === "memberpairings"), "the pairings are read again");
+  assert.deepEqual(radios().map((r) => r.attrs.checked !== undefined), [false, true], "the state read back is the one drawn chosen");
+  const back = await a.press("memberpairingset", { values: { "ma-pair-0": true } });
+  assert.deepEqual(back.sent[0].body, { memberId: "dev", published: false });
+});
+
+test("R67 control: a member the pairings do not hold (the founder, who has no cover) is drawn no such section; a failed read is drawn failed, never as a choice", async () => {
+  const founder = { member: "admin", handle: "sparky", administer: true, capabilities: ["contribute"], vocabulary: ["contribute"], tokenClass: "session" };
+  const a = await open("account", { me: founder, table: accountTable(founder, { memberpairings: env({ ok: true, pairings: [{ handle: "ana", cover: "Ana the CPA", published: true }], limit: 200, truncated: false }) }) });
+  lacks(a, "screen.account.pairing.head");
+  assert.ok(!ops(a).includes("memberpairingset"));
+  const f = await open("account", { me: MEMBER, table: accountTable(MEMBER, { memberpairings: refuse("NOT_SERVED") }) });
+  assert.ok(!ops(f).includes("memberpairingset"), "no choice is drawn from a read that failed");
+});

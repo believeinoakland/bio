@@ -20,11 +20,22 @@ export const DOORBELL = Object.freeze({
     out.push('<ul class="mk-list" data-what-happens>' + ["only", "reads", "phrase", "court"].map(function (k) { return "<li>" + cs.w("screen.doorbell.happens." + k) + "</li>"; }).join("") + "</ul>");
     if (view.ui.received) {
       out.push('<p class="mk-note" role="status" data-received>' + cs.w("screen.doorbell.received", { at: { html: cs.date(view.ui.received.at) } }) + "</p>");
+      // R67 (I-20; DEC-384): the knock's reference, the `knockId` the doorbell answers (doorbell R11), so the knocker has something to keep; an answer without one draws the receipt as before
+      if (view.ui.received.reference) out.push("<h2>" + cs.w("screen.doorbell.after.head") + "</h2><p data-reference>" + cs.w("screen.doorbell.reference", { reference: view.ui.received.reference }) + "</p>");
     }
     out.push(cs.field("db-file", "screen.doorbell.file.label", { type: "file", help: "screen.doorbell.file.help" })
       + cs.field("db-note", "screen.doorbell.note.label", { area: true })
       + cs.field("db-secret", "screen.doorbell.secret.label", { type: "password", autocomplete: "off", help: "screen.doorbell.secret.help" })
       + '<div class="mk-acts">' + cs.act("knock", { tone: "primary" }) + "</div>" + view.parts.said(view, "knock"));
+    // R56 (C17; DEC-375): the knocker's own form for what may be published about them: the secret phrase used, the detail's
+    // reference, who may be told, and agree or take back. It asks nothing about who they are.
+    out.push(cs.sec("screen.doorbell.consent.heading", "<p>" + cs.w("screen.doorbell.consent.intro1") + " " + cs.w("screen.doorbell.consent.intro2") + "</p>"
+      + cs.field("dc-secret", "screen.doorbell.secret.label", { type: "password", autocomplete: "off" })
+      + cs.field("dc-entry", "screen.doorbell.consent.detail", { rec: true, help: "screen.doorbell.consent.detail.help" })
+      + cs.choice("dc-audience", "screen.doorbell.consent.audience", [["member", "screen.doorbell.consent.audience.member"]], { value: "member" })
+      + cs.choice("dc-answer", "screen.doorbell.consent.heading", [{ value: "", text: "–" }, { value: "yes", key: "screen.doorbell.consent.yes" }, { value: "no", key: "screen.doorbell.consent.no" }])
+      + "<p class=\"muted\">" + cs.w("screen.doorbell.consent.permanent1") + " " + cs.w("screen.doorbell.consent.permanent2") + "</p>"
+      + '<div class="mk-acts">' + cs.act("knockerconsent", { tone: "primary" }) + "</div>" + view.parts.said(view, "knockerconsent")));
     return out.join("");
   },
 
@@ -52,8 +63,30 @@ export const DOORBELL = Object.freeze({
       },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "knock", answer)) return { stay: true }; // D29: nothing is received on a refusal
-        view.ui.received = { at: new Date(cs.now()).toISOString() };
+        const r = view.parts.value(answer) || {};
+        view.ui.received = { at: new Date(cs.now()).toISOString(), reference: typeof r.knockId === "string" && r.knockId ? r.knockId : "" };
         cs.fill("db-note", "");
+        return { stay: true };
+      },
+    },
+    {
+      // R56: "Send my answer": agree, or take the agreement back; with no answer chosen nothing is sent. Every failure is one
+      // refusal (`SECRET_NOT_RECOGNISED`), drawn in its fold with the rate sentences.
+      op: "knockerconsent", label: "act.knockerconsent.label.doorbell",
+      refusals: { SECRET_NOT_RECOGNISED: function (r, cs) { return cs.w("screen.doorbell.consent.refused.secret"); },
+        RATE_IP: function (r, cs) { return cs.w("screen.doorbell.consent.refused.rate") + " " + cs.w("screen.doorbell.consent.refused.rate.next"); },
+        RATE_GLOBAL: function (r, cs) { return cs.w("screen.doorbell.consent.refused.rate") + " " + cs.w("screen.doorbell.consent.refused.rate.next"); } },
+      send: function (view, el, cs) {
+        const answer = String(cs.value("dc-answer") || "");
+        const secret = String(cs.value("dc-secret") || "");
+        const entry = String(cs.value("dc-entry") || "").trim();
+        if (answer !== "yes" && answer !== "no") return null;
+        if (!secret || !entry) return null;
+        return { body: { knockerSecret: secret, entry: entry, audience: String(cs.value("dc-audience") || "member"), withdraw: answer === "no" } };
+      },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "knockerconsent", answer)) return { stay: true };
+        cs.fill("dc-secret", "");
         return { stay: true };
       },
     },

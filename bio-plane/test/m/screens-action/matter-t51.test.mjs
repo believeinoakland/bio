@@ -344,7 +344,18 @@ test("R45, R50, R51 (writinghelp): the helper is drawn beside each field the des
   await press(on, "writinghelp", { values: { "mt-h-why": "we wait" } });
   assert.equal(last(on, "writinghelp").body.told, "we wait");
   assert.equal(last(on, "writinghelp").body.field, "reason");
+  assert.equal(last(on, "writinghelp").body.op, "escalationdecline", "the help request carries the act the words are for (wizard-scripts R46)");
   assert.equal(main(on).querySelector("#mt-h-why").value, "A clearer sentence.");
+});
+
+test("R45 (writinghelp control): a help button that names no act sends no help request", async () => {
+  const on = await open(AT, { ...DATA_PLANE, ...REACH, writinghelp: ok({ ok: true, text: "A clearer sentence." }) });
+  await choose(on, "mt-mode", "escalationdecline");
+  const b = button(on, "writinghelp");
+  b.removeAttribute("data-forop");
+  const before = on.byOp("writinghelp").length;
+  await press(on, b, { values: { "mt-h-why": "we wait" } });
+  assert.equal(on.byOp("writinghelp").length, before);
 });
 
 // R19 through R45, R50, R51: every sentence a form draws is a key of the word table, read through W

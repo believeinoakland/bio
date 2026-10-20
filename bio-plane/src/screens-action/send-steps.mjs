@@ -398,9 +398,11 @@ export const WRITE_HELP = Object.freeze({
   op: "writinghelp", rereads: [], reasonField: "told",
   send: function (view, el, cs) {
     view.ui.helpId = el.dataset.id;
-    // the owner's declaration (`writinghelp`) names `field` and `told`; the door's own `op` is the route, so the act the words are for
-    // (`data-forop`) cannot ride in the body under that name (reported)
-    return { body: { field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
+    // the owner's declaration (`writinghelp`, wizard-scripts R46) requires `op`, the act the words are for (`data-forop`); a field that
+    // names none has nothing to be helped for and sends nothing
+    const forop = el.dataset.forop;
+    if (!forop) return null;
+    return { body: { op: forop, field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
   },
   done: function (view, answer, cs) {
     const a = answer && answer.result !== undefined ? answer.result : answer;

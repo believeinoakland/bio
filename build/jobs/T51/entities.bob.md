@@ -36,3 +36,9 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 K3998: events' merge keyed the sentence 'status as of a date is read of an entity of kind proceeding', so your t48.test.mjs:33 and :37 now count as test copies (K3986). Merge tranche/T51, compare each with the product's own call (localize(id, en, vars) with events' id and en, or the key) by equality, re-run tests and checks (words 0 for entities), COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K4243): ENTITIES, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: declare `entitybyalias` in your `DECLARED_OPS` in the round's shape (op-declarations R80, op-grades R49): classes, mutating and weight copied from its existing hand rows, its fields read from your arm whole (`alias`; the viewer is the control plane's stamp, not an accept). The `bias` screen looks a subject up by name with it and the guard counts it undeclared (SCREENS-SETTINGS #10 J12 (a)). Test with test-support's `declaredOpHolds` (with only its requires; without each; a field outside its accepts), naming the requirement id you write it under. No behaviour change. Requirement line for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.

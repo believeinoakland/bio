@@ -46,6 +46,7 @@ export const CASE_EDITOR = Object.freeze({
     const edition = caseOf && caseOf.edition !== undefined && caseOf.edition !== null ? String(caseOf.edition) : "";
     out.push(cs.title(named ? caseOf.identity + (edition ? " · " + edition : "")
       : chosen ? P.plain(cs.w("case.draft.untitled", { project: projectTitle })) : null, { thing: "case" }));
+    out.push('<span id="what-goes-in"></span>');
     if (!settled) return out.concat([cs.sec("screen.case-editor.drafts", cs.state("drafts", function () { return ""; }))]).join("");
 
     // R28: who prepared it is the member's handle, never the sign-in name when the handle is known.
@@ -90,6 +91,29 @@ export const CASE_EDITOR = Object.freeze({
     const authored = copy.state === "ok" && copy.value.authored ? copy.value.authored : {};
     out.push(cs.sec("screen.case-editor.scope", scope(authored)));
 
+    // R44 (C2; DEC-376): what a case states about itself, held beside the scope and sent with `casedraft`: each finding's role, and the
+    // team's position on putting the case to the people it concerns with its reasoning. Drawn from the copy's own choices, and only
+    // once the copy has answered (R20).
+    const have = copy.state === "ok" ? copy.value : null;
+    const choices = have && have.choices && typeof have.choices === "object" ? have.choices : {};
+    const roleList = Array.isArray(choices.roles) ? choices.roles : [];
+    const positionList = Array.isArray(choices.subject_positions) ? choices.subject_positions : [];
+    const found = have && Array.isArray(have.findings) ? have.findings : [];
+    const ROLE = { load_bearing: "case-grammar.load_bearing", supporting: "screen.watching.nr.f.supporting" };
+    const POSITION = { sought_and_answered: "screen.case-editor.we_asked_and_they_answered", sought_no_answer: "screen.case-editor.we_asked_and_had_no_answer",
+      not_sought: "screen.case-editor.we_chose_not_to_give_notice" };
+    const option = function (v, names, on) { return names[v] ? [v, names[v], on] : { value: v, text: v, on: on }; };
+    if (found.length && roleList.length) out.push(cs.sec("screen.case-editor.findings_and_their_roles", found.map(function (f, i) {
+      return cs.row("", cs.w("screen.published.finding", { n: String(i + 1) }) + ' · <span class="rec">' + cs.esc(f.statement || f.text || f.target || "") + "</span>", "")
+        + cs.checks("ce-role-" + i, { key: "screen.published.finding", fills: { n: String(i + 1) } }, roleList.map(function (r) { return option(r, ROLE, f.role === r); }), { radio: true });
+    }).join("") + '<p class="mk-small">' + cs.w("screen.case-editor.relied_on_the_case_rests_on") + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.supporting_it_travels_with_the_case")
+      + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.required_for_every_finding_at_least") + "</p>" + P.said(view, "casedraft"),
+    { help: ["screen.case-editor.a_case_is_made_of_findings", "screen.case-editor.you_say_for_each_whether_the"] }));
+    if (have && positionList.length) out.push(cs.sec("screen.case-editor.putting_this_case_to_the_people",
+      cs.checks("ce-pos", { key: "screen.case-editor.say_where_the_team_stands" }, positionList.map(function (v) { return option(v, POSITION, authored.subjectPosition === v); }), { radio: true })
+      + '<p class="mk-small">' + cs.w("screen.case-editor.choosing_not_to_give_notice_is") + "</p>"
+      + cs.field("ce-posjust", "screen.case-editor.why_the_team_took_this_position", { area: true, rec: true, value: authored.subjectJustification || "", help: "screen.case-editor.a_position_with_no_reasoning_behind" })));
+
     // The readiness ladder: each rung "not yet checked" until its check answers (R1, R28).
     const check = caseOf && caseOf.case_id ? P.later(cs, view, "check", "casecheck", { query: { case: caseOf.case_id, edition: edition } }) : null;
     const doc = caseOf && caseOf.case_id && edition ? P.later(cs, view, "document", "casedocument", { query: { case: caseOf.case_id, edition: edition } }) : null;
@@ -99,21 +123,31 @@ export const CASE_EDITOR = Object.freeze({
     const rungs = [
       ["draft", true],
       ["internal", held === "held" || held === "published" ? true : held === "void" ? false : null],
-      ["external", gates === "passed" ? true : gates === "refused" ? false : null],
+      // R48 (C8): the external rung is "not yet evaluated" until an evaluation of compliance is read; the publish gates' verdict is
+      // drawn as what is missing (R47), never as that rung. R64: "something is missing" only where a check refused (the internal one).
+      ["external", gates === "passed" ? true : null],
       ["distributed", distributed ? true : null],
     ];
+    // R63 (L14): a draft that names no case says so in a fold, by the sentence `review` states; R47 (C7): the publish gates' first
+    // refusal, from the copy, as what is missing
+    if (copy.state === "ok" && !(copy.value.case && copy.value.case.case_id)) out.push(P.fold(cs, "screen.case-editor.nocase.summary", "<p>" + cs.w("review.body.nocase") + "</p>"));
+    const miss = copy.state === "ok" && copy.value.gates === "refused" && Array.isArray(copy.value.missing) ? copy.value.missing[0] : null;
+    const missing = miss ? '<ul class="mk-list" data-missing><li role="alert">' + (P.refusalText(cs, miss) || cs.esc(String(miss.reason || ""))) + "</li></ul>" : "";
+    // R65 (C4): the owner's way to the reader's comments, or that there are none
+    const said = copy.state === "ok" && Array.isArray(copy.value.comments) ? copy.value.comments.length : 0;
+    const talk = copy.state === "ok" ? '<p data-comments>' + (said ? '<a href="/app/review-copy/' + encodeURIComponent(project + "/" + chosen.draft_id) + '" data-nav>' + cs.w("screen.case-editor.comments.go", { n: String(said) }) + "</a>"
+      : cs.w("screen.case-editor.comments.none")) + "</p>" : "";
     out.push(cs.sec("screen.case-editor.ladder", '<ol class="cs-ladder" data-ladder="ready">' + rungs.map(function (r) {
       const said = r[1] === true ? "" : r[1] === false ? cs.w("screen.case-editor.rung.notmet") : cs.w("case.ladder.notyet");
       return '<li data-rung="' + r[0] + '" class="' + (r[1] === true ? "on" : "") + '">' + cs.w("screen.case-editor.rung." + r[0])
         + (said ? ' <span class="meta">' + said + "</span>" : "") + "</li>";
-    }).join("") + '</ol><p class="muted" data-ladder-note>' + cs.w("screen.case-editor.tip.distributed") + "</p>" + (check ? cs.state(check, function () { return ""; }) : "")));
+    }).join("") + '</ol><p class="muted" data-ladder-note>' + cs.w("screen.case-editor.tip.distributed") + "</p>" + missing + talk + (check ? cs.state(check, function () { return ""; }) : "")));
 
-    // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1); not drawn when
-    // it names nothing it leaves out and nobody has acknowledged (R20).
+    // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1), and the fields that add a
+    // row (R44): what is left out and why, or the claim that nothing material is. The acknowledgement is drawn once something is left out.
     out.push(P.sec(cs, "screen.case-editor.leavesout", cs.state(copy, function (v) {
       const ex = Array.isArray(v.authored && v.authored.excluded) ? v.authored.excluded : v.authored && v.authored.excluded ? [v.authored.excluded] : [];
       const acks = v.statement_acknowledgements && Array.isArray(v.statement_acknowledgements.acknowledgements) ? v.statement_acknowledgements.acknowledgements : [];
-      if (!ex.length && !acks.length) return "";
       return (ex.length ? cs.sheet(ex.map(function (e) {
         return cs.row("", '<span class="rec">' + cs.esc(typeof e === "string" ? e : e.description || e.target || "") + "</span>",
           typeof e === "object" && e.reason ? '<span class="meta">' + cs.esc(e.reason) + "</span>" : "");
@@ -121,9 +155,24 @@ export const CASE_EDITOR = Object.freeze({
         + (acks.length ? cs.sheet(acks.map(function (a) {
           return cs.row("", cs.w("screen.case-editor.ack.by", { who: a.by || a.recipient || "" }), '<span class="rec">' + cs.esc(a.reason || "") + "</span>", a.at ? cs.date(a.at) : "");
         }).join("")) : "")
-        + cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
-        + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack");
+        + cs.field("ce-exwhat", "screen.case-editor.something_else_it_leaves_out", { help: "screen.case-editor.name_a_document_in_your_record" })
+        + cs.field("ce-exwhy", "screen.case-editor.why_it_is_left_out", { help: ["screen.case-editor.required_for_each_item", "screen.case-editor.what_is_left_out_and_why"] })
+        + (ex.length ? "" : cs.checks("ce-exnone", { text: "" }, [["none", "screen.case-editor.this_case_leaves_nothing_material_out", false]])
+          + '<p class="mk-small">' + cs.w("screen.case-editor.an_empty_list_is_a_claim") + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.silence_is_not_say_either_what") + "</p>")
+        + (ex.length || acks.length ? cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
+          + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack") : "");
     })));
+
+    // R53 (C53; DEC-376): the passages the case cites, each removed or, once removed, reinstated, with a reason the shell asks for (the
+    // acts are reasoned); nothing is deleted. Read from the project's own document, which keeps a removed citation.
+    const cites = P.references(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null)
+      .filter(function (r) { return !r.rel || r.rel === "cites"; });
+    if (cites.length) out.push(cs.sec("screen.case-editor.the_passages_this_case_cites", cs.sheet(cites.map(function (r) {
+      const gone = r.status === "severed";
+      return cs.row("", '<span class="rec" data-cited="' + cs.esc(r.target) + '" data-status="' + (gone ? "severed" : "live") + '">' + cs.esc(r.target) + "</span>"
+        + (gone && r.note ? '<span class="meta">' + cs.esc(r.note) + "</span>" : ""), "",
+        cs.act(gone ? "reinstate" : "sever", { data: { handle: r.target } }));
+    }).join("")) + P.said(view, "citation"), { help: ["screen.case-editor.removing_one_takes_it_out_of", "screen.case-editor.nothing_is_deleted_a_removed_citation"] }));
 
     // The people it names, each with its reason or that the reason is missing (R1; `attribute`).
     out.push(P.sec(cs, "screen.case-editor.people", cs.state(copy, function (v) {
@@ -186,6 +235,61 @@ export const CASE_EDITOR = Object.freeze({
         + P.said(view, "accountdrafts") + P.said(view, "account"), { help: "screen.case-editor.account.help" }));
       out.push(P.listed(cs, drawn, function () { return ""; }));
     }
+    // R57 (C12; DEC-378; K4185): "Details of this work", beside the case and never in its signed bytes; before the case's first save, the
+    // note that they open once it is saved. Four details, each not stated until set (no classification row, K4185); none blocks publishing.
+    const dTitle = "act.owed_casedetails.label.case-editor";
+    if (!(caseOf && caseOf.case_id)) out.push(cs.sec(dTitle, '<p class="mk-note">' + cs.w("screen.case-editor.details.first") + "</p>"));
+    else {
+      const rd = P.later(cs, view, "details", "casedetails", { query: { case: caseOf.case_id } });
+      const bodies = P.later(cs, view, "bodies", "entitieskind", { query: { kind: "body" } }, function (v) { return !v || !Array.isArray(v.entities) || !v.entities.length; });
+      out.push(cs.sec(dTitle, cs.state(rd, function (v) {
+        const d = v && v.details && typeof v.details === "object" ? v.details : {};
+        const val = function (f) { return d[f] && d[f].stated ? d[f].value : null; };
+        const area = Array.isArray(val("area")) ? val("area") : [];
+        const related = Array.isArray(val("related")) ? val("related") : [];
+        const rels = val("relationships");
+        const items = rels && Array.isArray(rels.items) ? rels.items : [];
+        const contact = val("contact");
+        const NOTSTATED = '<span class="muted" data-notstated>' + cs.w("screen.person.fact.notstated") + "</span>";
+        const RELATION = { same_matter: "screen.case-editor.details.rel.same", other: "screen.case-editor.details.rel.other" };
+        const takeOut = function (field, i) { return cs.act("casedetailsset", { label: "screen.panel.limit.remove", data: { field: field, mode: "remove", index: String(i) } }); };
+        const part = function (field, head, body) { return '<div data-detail="' + field + '"><p><b>' + head + "</b> · " + (d[field] && d[field].stated ? '<span class="muted">' + cs.date(d[field].set_at) + "</span>" : NOTSTATED) + "</p>" + body + "</div>"; };
+        const bodyList = bodies.state === "ok" ? bodies.value.entities : [];
+        return '<p class="mk-note">' + cs.w("screen.case-editor.details.intro1") + " " + cs.w("screen.case-editor.details.intro2") + "</p>"
+          + '<p class="mk-note">' + cs.w("screen.case-editor.details.outward1") + " " + cs.w("screen.case-editor.details.outward2") + "</p>"
+          + part("area", cs.w("screen.case-editor.details.area.bodyhint"), (area.length ? cs.sheet(area.map(function (a, i) {
+            return cs.row("", '<span class="mk-data">' + cs.esc(a.words) + "</span>", takeOut("area", i));
+          }).join("")) : "")
+            + (bodyList.length ? cs.choice("cd-body", "screen.case-editor.details.area.addbody", [{ value: "", text: "" }].concat(bodyList.map(function (b) { return { value: b.entity_id, text: b.label || b.entity_id }; }))) : "")
+            + cs.field("cd-words", "screen.case-editor.details.area.words")
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "area", mode: "add" } }) + "</div>")
+          + part("contact", cs.w("screen.case-editor.details.contact.legend"), cs.checks("cd-contact", { key: "screen.case-editor.details.contact.legend" }, [
+            ["doorbell", "screen.case-editor.details.contact.doorbell", !!contact && contact.kind === "doorbell"], ["text", "screen.case-editor.details.contact.words", !!contact && contact.kind === "text"]], { radio: true })
+            + cs.field("cd-contact-text", "screen.case-editor.details.contact.words", { value: contact && contact.kind === "text" ? contact.text : "", help: "screen.case-editor.details.contact.help" })
+            + '<p class="mk-note">' + cs.w("screen.case-editor.details.contact.nomember1") + " " + cs.w("screen.case-editor.details.contact.nomember2") + "</p>"
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { data: { field: "contact", mode: "save" } }) + "</div>")
+          + part("related", cs.w("screen.case-editor.details.rel.link"), (related.length ? cs.sheet(related.map(function (r, i) {
+            return cs.row("", '<span class="mk-data">' + cs.esc(r.url || (r.case_ref ? r.case_ref.case : "")) + '</span><span class="meta">' + (RELATION[r.relation] ? cs.w(RELATION[r.relation]) : cs.esc(r.relation)) + "</span>", takeOut("related", i));
+          }).join("")) : "")
+            + cs.field("cd-rel-link", "screen.case-editor.details.rel.link", { help: "screen.case-editor.details.rel.linkhelp" })
+            + cs.choice("cd-rel-relation", "screen.case-editor.details.rel.choose", ["builds_on", "responds_to", "same_matter", "disagrees_with", "other"].map(function (k) {
+              return RELATION[k] ? [k, RELATION[k]] : { value: k, text: k };
+            }))
+            + cs.field("cd-rel-words", "screen.case-editor.details.rel.words")
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "related", mode: "add" } }) + "</div>")
+          + part("relationships", cs.w("screen.case-editor.details.ties.legend"), '<p class="mk-small">' + cs.w("screen.case-editor.details.ties.intro") + " " + cs.w("screen.case-editor.details.ties.public") + "</p>"
+            + cs.checks("cd-rels", { key: "screen.case-editor.details.ties.legend" }, [
+              ["none", "screen.case-editor.details.ties.none", !!rels && rels.none === true], ["some", "screen.case-editor.details.ties.some", items.length > 0]], { radio: true })
+            + (items.length ? cs.sheet(items.map(function (t, i) {
+              return cs.row("", '<span class="mk-data">' + cs.esc(t.with) + '</span><span class="meta mk-data">' + cs.esc(t.nature) + "</span>", takeOut("relationships", i));
+            }).join("")) : "")
+            + cs.field("cd-with", "screen.case-editor.details.ties.with") + cs.field("cd-nature", "screen.case-editor.details.ties.how")
+            + '<p class="mk-note">' + cs.w("screen.case-editor.details.ties.stake") + "</p>"
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "relationships", mode: "add" } })
+            + cs.act("casedetailsset", { data: { field: "relationships", mode: "save" } }) + cs.act("casedetails") + "</div>")
+          + P.said(view, "casedetailsset");
+      })));
+    }
     if (doc) out.push(cs.state(doc, function () { return ""; }));
     return out.join("");
   },
@@ -201,10 +305,34 @@ export const CASE_EDITOR = Object.freeze({
         const scope = String(cs.value("ce-scope") || "").trim();
         const statement = String(cs.value("ce-statement") || "").trim();
         if (!scope) return { refuse: "screen.case-editor.scope.needed" };
-        const body = { scope: scope };
-        if (statement) body.statement = statement;
-        if (view.ui.draft) body.draft = view.ui.draft.draft_id;
-        else {
+        const body = {};
+        const account = view.ui.draft && el && el.dataset && el.dataset.account === "1" ? String(cs.value("ce-account") || "") : "";
+        if (view.ui.draft) {
+          // R44 (C3): a draft that stands is changed field by field: a Save sends only what it changed, and names no finding, so the
+          // draft keeps its own (review R37). What the draft holds is what its copy answered.
+          const copy = view.parts.copyOf(view) || {};
+          const held = copy.authored || {};
+          body.draft = view.ui.draft.draft_id;
+          if (scope !== String(held.scope || "")) body.scope = scope;
+          if (statement && statement !== String(held.statement || "")) body.statement = statement;
+          const pos = (cs.value("ce-pos") || [])[0];
+          if (pos && pos !== held.subjectPosition) body.subjectPosition = pos;
+          const why = cs.value("ce-posjust");
+          if (typeof why === "string" && why.trim() && why.trim() !== String(held.subjectJustification || "")) body.subjectJustification = why.trim();
+          const found = Array.isArray(copy.findings) ? copy.findings : [];
+          const roles = {};
+          found.forEach(function (f, i) { const r = (cs.value("ce-role-" + i) || [])[0]; if (r && f.target) roles[f.target] = r; });
+          if (found.some(function (f) { return f.target && roles[f.target] && roles[f.target] !== f.role; })) body.roles = roles;
+          const had = Array.isArray(held.excluded) ? held.excluded : [];
+          const what = String(cs.value("ce-exwhat") || "").trim(), because = String(cs.value("ce-exwhy") || "").trim();
+          const none = (cs.value("ce-exnone") || []).includes("none");
+          if (what || because) {
+            if (!what || !because) return { refuse: "screen.case-editor.say_what_is_left_out_and" };
+            body.excluded = had.map(function (e) { return typeof e === "string" ? { description: e } : e; }).concat([{ description: what, reason: because }]);
+          } else if (none && !had.length) body.excluded = [];
+        } else {
+          body.scope = scope;
+          if (statement) body.statement = statement;
           const ticked = cs.value("ce-targets");
           const targets = (Array.isArray(ticked) ? ticked : []).filter(function (id) { return (view.ui.concluded || []).includes(id); });
           if (!targets.length) {
@@ -214,7 +342,6 @@ export const CASE_EDITOR = Object.freeze({
           body.project = String(view.subject || "").split("/")[0];
           body.targets = targets;
         }
-        const account = view.ui.draft && el && el.dataset && el.dataset.account === "1" ? String(cs.value("ce-account") || "") : "";
         if (account.trim()) {
           body.account = account.split("\n").map(function (t) { return t.trim(); }).filter(Boolean).map(function (t) { return { text: t, cites: [] }; });
           const began = view.ui.accountDraft && view.ui.accountDraft.id;
@@ -273,6 +400,69 @@ export const CASE_EDITOR = Object.freeze({
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "attribute", answer)) view.parts.forget(view); }, // D29
     },
     {
+      // R57 (C12): one of a case's four details set, or cleared, from the case editor once the case has an id; the list details
+      // (area, related work, relationships) are sent whole with the entry added or taken out. The owner's refusals are drawn in a fold.
+      op: "casedetailsset", label: "act.owed_casedetailsset.label.case-editor",
+      refusals: {
+        NOT_THE_PROJECT_OWNER: function (r, cs) { return cs.w("screen.case-editor.details.refused.owner1"); },
+        DETAILS_MALFORMED: function (r, cs) { return cs.w("screen.case-editor.details.refused.malformed1") + " " + cs.w("screen.case-editor.details.refused.malformed2"); },
+        NO_SUCH_CASE: function (r, cs) { return cs.w("screen.case-editor.details.refused.nocase1") + " " + cs.w("screen.case-editor.details.refused.nocase2"); },
+      },
+      send: function (view, el, cs) {
+        const c = view.ui.draft && view.ui.draft.case;
+        if (!c || !c.case_id) return { refuse: "screen.case-editor.details.refused.nocase1" };
+        const L = view.ui.later && view.ui.later.details;
+        const now = L && L.state === "ok" && L.value && L.value.details ? L.value.details : {};
+        const have = function (f) { return now[f] && now[f].stated && Array.isArray(now[f].value) ? now[f].value : []; };
+        const field = el.dataset.field, mode = el.dataset.mode;
+        const text = function (id) { return String(cs.value(id) || "").trim(); };
+        let value = null;
+        if (field === "contact") {
+          const kind = (cs.value("cd-contact") || [])[0];
+          value = kind === "doorbell" ? { kind: "doorbell" } : kind === "text" ? { kind: "text", text: text("cd-contact-text") } : null;
+        } else if (mode === "remove") {
+          const list = field === "relationships" ? (now.relationships && now.relationships.value && now.relationships.value.items || []) : have(field);
+          const rest = list.filter(function (x, i) { return String(i) !== el.dataset.index; });
+          value = field === "relationships" ? (rest.length ? { items: rest } : null) : rest.length ? rest : null;
+        } else if (mode === "save" && field === "relationships") {
+          const pick = (cs.value("cd-rels") || [])[0];
+          const kept = now.relationships && now.relationships.value && now.relationships.value.items || [];
+          value = pick === "none" ? { none: true } : pick === "some" && kept.length ? { items: kept } : null;
+        } else if (field === "area") {
+          const words = text("cd-words"), ent = text("cd-body");
+          const label = ent && words ? words : ent ? ((view.ui.later.bodies && view.ui.later.bodies.value && view.ui.later.bodies.value.entities || []).find(function (b) { return b.entity_id === ent; }) || {}).label || ent : words;
+          if (!label) return { refuse: "screen.case-editor.details.refused.malformed1" };
+          value = have("area").concat([ent ? { entity: ent, words: label } : { words: label }]);
+        } else if (field === "related") {
+          const link = text("cd-rel-link"), relation = text("cd-rel-relation"), words = text("cd-rel-words");
+          if (!link || !relation) return { refuse: "screen.case-editor.details.refused.malformed1" };
+          value = have("related").concat([Object.assign({ relation: relation, url: link }, words ? { words: words } : {})]);
+        } else if (field === "relationships") {
+          const who = text("cd-with"), nature = text("cd-nature");
+          if (!who || !nature) return { refuse: "screen.case-editor.details.refused.malformed1" };
+          const kept = now.relationships && now.relationships.value && now.relationships.value.items || [];
+          value = { items: kept.concat([{ with: who, nature: nature }]) };
+        }
+        return { body: { case: c.case_id, field: field, value: value } };
+      },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetailsset", answer)) view.parts.forget(view); }, // D29
+    },
+    {
+      // R57: the details as they stand, and who set each and when, read again.
+      op: "casedetails", label: "act.owed_casedetails.label.case-editor",
+      send: function (view) { const c = view.ui.draft && view.ui.draft.case; return c && c.case_id ? { query: { case: c.case_id } } : null; },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetails", answer)) view.parts.forget(view); return { stay: true }; }, // D29
+    },
+    ...["sever", "reinstate"].map(function (op) {
+      return {
+        // R53 (C53): a citation of the case's own taken out, or put back; the reason is the shell's (the acts are reasoned) and the
+        // citation is the project's reference the row names. Nothing is deleted.
+        op: op, label: "act." + op + ".label.case-editor",
+        send: function (view, el) { return { body: { project: String(view.subject || "").split("/")[0], handle: el.dataset.handle } }; },
+        done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "citation", answer)) view.parts.forget(view); }, // D29
+      };
+    }),
+    {
       // R1 (interface-shell R20): help with the scope's or "what changed"'s words, never a reason; drawn as a labeled draft.
       op: "writinghelp", label: "act.writinghelp.label.case-editor",
       send: function (view, el, cs) {
@@ -292,24 +482,11 @@ export const CASE_EDITOR = Object.freeze({
       },
     },
     {
-      // R35: the assistant's draft of the account, in the framing the member chose, drawn as machine work; the member
-      // takes it into her own words, and the draft is never sent back as the account.
+      // R35: "Draft the account with the assistant", drawn only when the assistant may run. Its press is assistant work and is held with
+      // the assistant (K3717; B13): `accountpropose` stores a draft an AI run made, which a member's press cannot supply, so the screen
+      // sends nothing to it. The drafts the plane holds are read from `accountdrafts` and drawn as machine work.
       op: "accountpropose", label: "act.accountpropose.label.case-editor",
-      send: function (view, el, cs) {
-        const c = view.ui.draft && view.ui.draft.case;
-        if (!c || !c.case_id) return null;
-        return { query: { case: c.case_id }, body: { kind: "case_account", framing: String(cs.value("ce-framing") || "time_order") } };
-      },
-      done: function (view, answer, cs) {
-        if (view.parts.refused(cs, view, "accountpropose", answer)) return { stay: true }; // D29
-        const r = view.parts.value(answer) || {};
-        if (r.draft && typeof r.draft === "object") {
-          if (r.draft.kind === "account_check") view.ui.accountFlags = (view.ui.accountFlags || []).concat(r.draft.flags || []);
-          else view.ui.accountDraft = r.draft;
-        }
-        view.parts.forget(view);
-        return { stay: true };
-      },
+      send: function () { return null; },
     },
     {
       // R35: "See its earlier drafts": the case's drafts of its account, each labeled machine work.
