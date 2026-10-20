@@ -1,6 +1,7 @@
 /* screens-publish R2 (the review copy) and R17 (the review copy, from outside), on interface-shell's served page: the
  * named readers and their acts, the reader's link shown once and kept nowhere, the comments and replies; and the outside
  * reader's page, its secret only in a request's body. */
+import "./register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, tipOf, drew, drewIn, day, clock, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";

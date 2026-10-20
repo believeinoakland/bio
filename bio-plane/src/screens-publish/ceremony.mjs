@@ -116,6 +116,19 @@ export const CEREMONY = Object.freeze({
             : '<p data-ready="no">' + cs.w("screen.ceremony.notready") + "</p>");
     }) + '<div class="mk-acts">' + cs.act("publishpreflight") + "</div>"));
 
+    // R57 (C12; DEC-378): the four details of this work, stated or not stated, never blocking the signing; read once the case has an id.
+    if (c.case_id) {
+      const dd = P.later(cs, view, "cdetails", "casedetails", { query: { case: c.case_id } });
+      const d = dd.state === "ok" && dd.value && dd.value.details && typeof dd.value.details === "object" ? dd.value.details : null;
+      if (d) out.push(cs.sec("act.owed_casedetails.label.case-editor", cs.sheet([["area", "screen.case-editor.details.area.bodyhint"], ["contact", "screen.case-editor.details.contact.legend"],
+        ["related", "screen.case-editor.details.rel.link"], ["relationships", "screen.case-editor.details.ties.legend"]].map(function (f) {
+        const x = d[f[0]] || {};
+        return cs.row("", '<span data-detail="' + f[0] + '">' + cs.w(f[1]) + "</span>", x.stated ? '<span class="muted" data-stated>' + (x.set_at ? cs.date(x.set_at) : "") + "</span>"
+          : '<span class="muted" data-notstated>' + cs.w("screen.person.fact.notstated") + "</span>");
+      }).join("")) + '<p class="mk-note">' + cs.w("screen.ceremony.details.ceremony.notstated1") + " " + cs.w("screen.ceremony.details.ceremony.notstated2") + "</p>"
+        + '<div class="mk-acts">' + cs.act("casedetails") + "</div>"));
+    }
+
     // R3: what will be disclosed with the case; "See everything that will be disclosed". Not drawn when nothing is to be
     // disclosed, and no count is drawn at zero (R20). R46 (C5; DEC-377): each candidate has a tick and an optional field for the
     // owner's words; `publishpreflight` and `publish` send the ticked ones as `tensionsDisclosed`.
@@ -329,6 +342,12 @@ export const CEREMONY = Object.freeze({
         view.ui.allTensions = view.parts.value(answer);
         return { stay: true };
       },
+    },
+    {
+      // R57: "See the details of this work": the four details, read again; the ceremony only lists them.
+      op: "casedetails", label: "act.owed_casedetails.label.ceremony",
+      send: function (view) { const copy = view.parts.copyOf(view); const c = copy && copy.case; return c && c.case_id ? { query: { case: c.case_id } } : null; },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetails", answer)) view.parts.forget(view); return { stay: true }; }, // D29
     },
     {
       // R51 (C6; DEC-377): "Ask for the confirmation again": a document held without a second confirmation is timestamped and archived

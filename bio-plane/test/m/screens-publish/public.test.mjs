@@ -1,6 +1,7 @@
 /* screens-publish R6 (the published case), R7 (another group's case), R8 and R16 (the docket) and R9 (the doorbell), on
  * interface-shell's served page: the two public pages drawn with no session and no credential, the imported case's
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
+import "./register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";

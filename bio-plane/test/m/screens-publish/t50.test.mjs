@@ -3,6 +3,7 @@
  * answer; the confirmation's own explanation; a project's first case; publish with nothing prepared; the public page's
  * "Corrections and orders" and the public docket; the case editor's account; `publishedcase` read asynchronously. Each
  * sentence is asserted by its key (R24). */
+import "./register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ADMIN } from "../interface-shell/harness.mjs";

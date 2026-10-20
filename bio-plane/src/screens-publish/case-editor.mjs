@@ -235,6 +235,61 @@ export const CASE_EDITOR = Object.freeze({
         + P.said(view, "accountdrafts") + P.said(view, "account"), { help: "screen.case-editor.account.help" }));
       out.push(P.listed(cs, drawn, function () { return ""; }));
     }
+    // R57 (C12; DEC-378; K4185): "Details of this work", beside the case and never in its signed bytes; before the case's first save, the
+    // note that they open once it is saved. Four details, each not stated until set (no classification row, K4185); none blocks publishing.
+    const dTitle = "act.owed_casedetails.label.case-editor";
+    if (!(caseOf && caseOf.case_id)) out.push(cs.sec(dTitle, '<p class="mk-note">' + cs.w("screen.case-editor.details.first") + "</p>"));
+    else {
+      const rd = P.later(cs, view, "details", "casedetails", { query: { case: caseOf.case_id } });
+      const bodies = P.later(cs, view, "bodies", "entitieskind", { query: { kind: "body" } }, function (v) { return !v || !Array.isArray(v.entities) || !v.entities.length; });
+      out.push(cs.sec(dTitle, cs.state(rd, function (v) {
+        const d = v && v.details && typeof v.details === "object" ? v.details : {};
+        const val = function (f) { return d[f] && d[f].stated ? d[f].value : null; };
+        const area = Array.isArray(val("area")) ? val("area") : [];
+        const related = Array.isArray(val("related")) ? val("related") : [];
+        const rels = val("relationships");
+        const items = rels && Array.isArray(rels.items) ? rels.items : [];
+        const contact = val("contact");
+        const NOTSTATED = '<span class="muted" data-notstated>' + cs.w("screen.person.fact.notstated") + "</span>";
+        const RELATION = { same_matter: "screen.case-editor.details.rel.same", other: "screen.case-editor.details.rel.other" };
+        const takeOut = function (field, i) { return cs.act("casedetailsset", { label: "screen.panel.limit.remove", data: { field: field, mode: "remove", index: String(i) } }); };
+        const part = function (field, head, body) { return '<div data-detail="' + field + '"><p><b>' + head + "</b> · " + (d[field] && d[field].stated ? '<span class="muted">' + cs.date(d[field].set_at) + "</span>" : NOTSTATED) + "</p>" + body + "</div>"; };
+        const bodyList = bodies.state === "ok" ? bodies.value.entities : [];
+        return '<p class="mk-note">' + cs.w("screen.case-editor.details.intro1") + " " + cs.w("screen.case-editor.details.intro2") + "</p>"
+          + '<p class="mk-note">' + cs.w("screen.case-editor.details.outward1") + " " + cs.w("screen.case-editor.details.outward2") + "</p>"
+          + part("area", cs.w("screen.case-editor.details.area.bodyhint"), (area.length ? cs.sheet(area.map(function (a, i) {
+            return cs.row("", '<span class="mk-data">' + cs.esc(a.words) + "</span>", takeOut("area", i));
+          }).join("")) : "")
+            + (bodyList.length ? cs.choice("cd-body", "screen.case-editor.details.area.addbody", [{ value: "", text: "" }].concat(bodyList.map(function (b) { return { value: b.entity_id, text: b.label || b.entity_id }; }))) : "")
+            + cs.field("cd-words", "screen.case-editor.details.area.words")
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "area", mode: "add" } }) + "</div>")
+          + part("contact", cs.w("screen.case-editor.details.contact.legend"), cs.checks("cd-contact", { key: "screen.case-editor.details.contact.legend" }, [
+            ["doorbell", "screen.case-editor.details.contact.doorbell", !!contact && contact.kind === "doorbell"], ["text", "screen.case-editor.details.contact.words", !!contact && contact.kind === "text"]], { radio: true })
+            + cs.field("cd-contact-text", "screen.case-editor.details.contact.words", { value: contact && contact.kind === "text" ? contact.text : "", help: "screen.case-editor.details.contact.help" })
+            + '<p class="mk-note">' + cs.w("screen.case-editor.details.contact.nomember1") + " " + cs.w("screen.case-editor.details.contact.nomember2") + "</p>"
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { data: { field: "contact", mode: "save" } }) + "</div>")
+          + part("related", cs.w("screen.case-editor.details.rel.link"), (related.length ? cs.sheet(related.map(function (r, i) {
+            return cs.row("", '<span class="mk-data">' + cs.esc(r.url || (r.case_ref ? r.case_ref.case : "")) + '</span><span class="meta">' + (RELATION[r.relation] ? cs.w(RELATION[r.relation]) : cs.esc(r.relation)) + "</span>", takeOut("related", i));
+          }).join("")) : "")
+            + cs.field("cd-rel-link", "screen.case-editor.details.rel.link", { help: "screen.case-editor.details.rel.linkhelp" })
+            + cs.choice("cd-rel-relation", "screen.case-editor.details.rel.choose", ["builds_on", "responds_to", "same_matter", "disagrees_with", "other"].map(function (k) {
+              return RELATION[k] ? [k, RELATION[k]] : { value: k, text: k };
+            }))
+            + cs.field("cd-rel-words", "screen.case-editor.details.rel.words")
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "related", mode: "add" } }) + "</div>")
+          + part("relationships", cs.w("screen.case-editor.details.ties.legend"), '<p class="mk-small">' + cs.w("screen.case-editor.details.ties.intro") + " " + cs.w("screen.case-editor.details.ties.public") + "</p>"
+            + cs.checks("cd-rels", { key: "screen.case-editor.details.ties.legend" }, [
+              ["none", "screen.case-editor.details.ties.none", !!rels && rels.none === true], ["some", "screen.case-editor.details.ties.some", items.length > 0]], { radio: true })
+            + (items.length ? cs.sheet(items.map(function (t, i) {
+              return cs.row("", '<span class="mk-data">' + cs.esc(t.with) + '</span><span class="meta mk-data">' + cs.esc(t.nature) + "</span>", takeOut("relationships", i));
+            }).join("")) : "")
+            + cs.field("cd-with", "screen.case-editor.details.ties.with") + cs.field("cd-nature", "screen.case-editor.details.ties.how")
+            + '<p class="mk-note">' + cs.w("screen.case-editor.details.ties.stake") + "</p>"
+            + '<div class="mk-acts">' + cs.act("casedetailsset", { label: "screen.case-editor.details.list.add", data: { field: "relationships", mode: "add" } })
+            + cs.act("casedetailsset", { data: { field: "relationships", mode: "save" } }) + cs.act("casedetails") + "</div>")
+          + P.said(view, "casedetailsset");
+      })));
+    }
     if (doc) out.push(cs.state(doc, function () { return ""; }));
     return out.join("");
   },
@@ -343,6 +398,60 @@ export const CASE_EDITOR = Object.freeze({
           level: String(cs.value("ce-level-" + i) || "name"), reason: String(cs.value("ce-why-" + i) || "").trim() } };
       },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "attribute", answer)) view.parts.forget(view); }, // D29
+    },
+    {
+      // R57 (C12): one of a case's four details set, or cleared, from the case editor once the case has an id; the list details
+      // (area, related work, relationships) are sent whole with the entry added or taken out. The owner's refusals are drawn in a fold.
+      op: "casedetailsset", label: "act.owed_casedetailsset.label.case-editor",
+      refusals: {
+        NOT_THE_PROJECT_OWNER: function (r, cs) { return cs.w("screen.case-editor.details.refused.owner1"); },
+        DETAILS_MALFORMED: function (r, cs) { return cs.w("screen.case-editor.details.refused.malformed1") + " " + cs.w("screen.case-editor.details.refused.malformed2"); },
+        NO_SUCH_CASE: function (r, cs) { return cs.w("screen.case-editor.details.refused.nocase1") + " " + cs.w("screen.case-editor.details.refused.nocase2"); },
+      },
+      send: function (view, el, cs) {
+        const c = view.ui.draft && view.ui.draft.case;
+        if (!c || !c.case_id) return { refuse: "screen.case-editor.details.refused.nocase1" };
+        const L = view.ui.later && view.ui.later.details;
+        const now = L && L.state === "ok" && L.value && L.value.details ? L.value.details : {};
+        const have = function (f) { return now[f] && now[f].stated && Array.isArray(now[f].value) ? now[f].value : []; };
+        const field = el.dataset.field, mode = el.dataset.mode;
+        const text = function (id) { return String(cs.value(id) || "").trim(); };
+        let value = null;
+        if (field === "contact") {
+          const kind = (cs.value("cd-contact") || [])[0];
+          value = kind === "doorbell" ? { kind: "doorbell" } : kind === "text" ? { kind: "text", text: text("cd-contact-text") } : null;
+        } else if (mode === "remove") {
+          const list = field === "relationships" ? (now.relationships && now.relationships.value && now.relationships.value.items || []) : have(field);
+          const rest = list.filter(function (x, i) { return String(i) !== el.dataset.index; });
+          value = field === "relationships" ? (rest.length ? { items: rest } : null) : rest.length ? rest : null;
+        } else if (mode === "save" && field === "relationships") {
+          const pick = (cs.value("cd-rels") || [])[0];
+          const kept = now.relationships && now.relationships.value && now.relationships.value.items || [];
+          value = pick === "none" ? { none: true } : pick === "some" && kept.length ? { items: kept } : null;
+        } else if (field === "area") {
+          const words = text("cd-words"), ent = text("cd-body");
+          const label = ent && words ? words : ent ? ((view.ui.later.bodies && view.ui.later.bodies.value && view.ui.later.bodies.value.entities || []).find(function (b) { return b.entity_id === ent; }) || {}).label || ent : words;
+          if (!label) return { refuse: "screen.case-editor.details.refused.malformed1" };
+          value = have("area").concat([ent ? { entity: ent, words: label } : { words: label }]);
+        } else if (field === "related") {
+          const link = text("cd-rel-link"), relation = text("cd-rel-relation"), words = text("cd-rel-words");
+          if (!link || !relation) return { refuse: "screen.case-editor.details.refused.malformed1" };
+          value = have("related").concat([Object.assign({ relation: relation, url: link }, words ? { words: words } : {})]);
+        } else if (field === "relationships") {
+          const who = text("cd-with"), nature = text("cd-nature");
+          if (!who || !nature) return { refuse: "screen.case-editor.details.refused.malformed1" };
+          const kept = now.relationships && now.relationships.value && now.relationships.value.items || [];
+          value = { items: kept.concat([{ with: who, nature: nature }]) };
+        }
+        return { body: { case: c.case_id, field: field, value: value } };
+      },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetailsset", answer)) view.parts.forget(view); }, // D29
+    },
+    {
+      // R57: the details as they stand, and who set each and when, read again.
+      op: "casedetails", label: "act.owed_casedetails.label.case-editor",
+      send: function (view) { const c = view.ui.draft && view.ui.draft.case; return c && c.case_id ? { query: { case: c.case_id } } : null; },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetails", answer)) view.parts.forget(view); return { stay: true }; }, // D29
     },
     ...["sever", "reinstate"].map(function (op) {
       return {

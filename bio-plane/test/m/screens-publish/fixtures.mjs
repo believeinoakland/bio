@@ -51,6 +51,17 @@ export const DOCUMENT = (o = {}) => ({ case_id: C, edition: 2, doc_sha: SHA, tex
   citations: [{ target: "INFO-2026-0004", version: E1, capture: "x" }, { target: "FND-2026-0031", version: B1 }, { target: "INFO-2026-0005", version: "undetermined" }],
   ...o });
 
+/** `casedetails`' standing values (case-inputs R23): each `{stated, value, set_by, set_at}`; every one not stated unless `o` sets it. */
+export const DETAILS = (o = {}) => {
+  const none = { stated: false, value: null, set_by: null, set_at: null };
+  return { area: none, contact: none, related: none, relationships: none, ...o };
+};
+/** `casedetailspublic`' standing values (case-inputs R24): each `{stated, value, set_at}`, never who set it. */
+export const DETAILS_PUBLIC = (o = {}) => {
+  const none = { stated: false, value: null, set_at: null, says: "Not stated." };
+  return { area: none, contact: none, related: none, relationships: none, ...o };
+};
+
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
   return {
@@ -101,6 +112,9 @@ export function plane(o = {}) {
     accountdrafts: ok({ case: C, drafts: [], truncated: false }),
     docketprepare: ok({ entry: "{}", digest: DIGEST, statement: `bio-docket ${C} 3 ${DIGEST}\n`, warning: "Posting is public and permanent.", expires: "2999-01-01T00:00:00Z" }),
     docketpost: ok({ case: C, seq: 3, entry: 2, published_at: "2026-11-21T09:00:00Z" }),
+    casedetails: ok({ ok: true, case: C, published: false, truncated: false, history: [], details: DETAILS() }),
+    casedetailspublic: ok({ ok: true, case: C, group: "river-town", details: DETAILS_PUBLIC(), sentence: "These details are the team's current statement." }),
+    entitieskind: ok({ ok: true, kind: "body", entities: [{ entity_id: "ENT-1", kind: "body", label: "Oakland Rent Board" }], count: 1, truncated: false, next: null }),
     knock: ok({ ok: true, knockId: "KNOCK-1", sha256: SHA, bytes: 3, received: true, pseudonym: null }),
     ...o,
   };

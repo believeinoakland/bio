@@ -1,6 +1,7 @@
 /* screens-publish FR-30, second part (K4165, K4168, K4192, K4194, K4197; DEC-374 to DEC-378, DEC-382, DEC-384): R44, R46, R51, R53, R57
  * on the case editor and the ceremony; R47, R54 on the published page; R58, R59 on the imported page. Each sentence is asserted by its
  * key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
+import "./register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, drew, drewIn, ops, press, last, fill, tick, until, keptKey, answerSign, ok, refusedIn, word, hasWord, COPY, PREFLIGHT, P, C, DR } from "./fixtures.mjs";

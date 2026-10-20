@@ -2,6 +2,7 @@
  * served page: each screen with each of its reads pending, refused and unanswered draws that read in its own state and
  * no key the page holds no word for; after an act the screen reads again what it changed; no secret is kept; the
  * module's screens are the registry's, each drawing exactly its registry acts; it holds no English, only keys (R24). */
+import "./register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -117,9 +118,11 @@ test("R10 (interface-shell R21) the nine registry screens, each drawing exactly 
     assert.deepEqual(s.acts.map((a) => a.op).sort(), named.sort(), s.id);
     for (const a of s.acts) {
       assert.ok(browser(a.op) ? !Object.hasOwn(OPS, a.op) : Object.hasOwn(OPS, a.op), `${a.op} is a browser act or in OPS`);
-      assert.equal(a.label, browser(a.op) ? `act.owed_${a.op}.label.${s.id}` : `act.${a.op}.label.${s.id}`);
+      /* the design keys an act the registry holds as `owed:<op> <ref>` under that owed name, whether the op is declared yet or not */
+      const owedRow = reg.acts.some((x) => String(x.op).startsWith(`owed:${a.op} `));
+      assert.equal(a.label, browser(a.op) || owedRow ? `act.owed_${a.op}.label.${s.id}` : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
-      if (browser(a.op)) assert.ok(s.words.includes(`act.owed_${a.op}.does`), `${a.op}: its explanation listed`);
+      if (browser(a.op) || owedRow) assert.ok(s.words.includes(`act.owed_${a.op}.does`), `${a.op}: its explanation listed`);
     }
     assert.ok(Object.isFrozen(s) && typeof s.render === "function" && typeof s.reads === "function");
   }
