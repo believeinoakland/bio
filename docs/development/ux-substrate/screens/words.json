@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1086,
+  "act": 1088,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,8 +231,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17559,
-  "protected": 1057
+  "total": 17561,
+  "protected": 1058
  },
  "words": [
   {
@@ -111018,6 +111018,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_expertisewithdraw.label.members",
+   "en": "Withdraw an expertise",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.invitewithdraw.label.members",
    "en": "Withdraw an unused invitation",
    "protected": true,
@@ -114350,6 +114356,12 @@
   {
    "key": "act.expertiseconfirm.does",
    "en": "Confirms a member's declared expertise, so it can be asked for when a check needs it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_expertisewithdraw.does",
+   "en": "Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

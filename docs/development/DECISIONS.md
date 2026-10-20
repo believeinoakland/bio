@@ -5962,3 +5962,18 @@ decided: 2026-10-20 · the design session (P17)
 the design: the stand-down notice is number-safe ("you stay an owner until the other owners agree ({awaiting})."); two older rows that still said "the machine" say "the assistant" (`screen.open-file.release.waiting`, `refusal.ACCEPT_MUST_REAUTHOR`); the signer's queue item says "mark it done", as its button does. Kept: "Reversible" and "Irreversible" (plain words); the published page's "Leg" labels (the canon's term for one thing a finding rests on, on the reader's page as Bob's doctrine names it); straight quotation marks in older rows.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-mod-1.src.py`, `screens/mock-screens.js`.
 owed: none.
+
+### DEC-386 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (BOB's NOTICE B414, K4198, from WIZARD-SCRIPTS #14)
+for: design
+question: The members screen's "Withdraw an expertise" was registered with the confirming op `expertiseconfirm`, so the screen and the guard could not tell the two acts apart.
+why it is Bob's: it is not (P17): the registry's detail.
+provisional: as below.
+alternative: keep one op with a withdraw flag (not chosen: one control, one op).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: "Withdraw an expertise" is its own act, `owed:expertisewithdraw` (member-roster's withdrawal, C79, FR-07; today `expertiseConfirm({withdraw: true})`), weight 2, its explanation "Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it."; "Confirm declared expertise" stays `expertiseconfirm`.
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`.
+owed: BOB: member-roster serves the withdrawal as its own op (`expertisewithdraw`) and declares it.
