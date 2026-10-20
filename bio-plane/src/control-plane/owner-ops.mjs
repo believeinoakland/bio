@@ -7,6 +7,30 @@
    `of`, a set of getters (`of.aiUse()`, `of.aiRuns()`, `of.caseAccount()`, `of.review()`, `of.legEarning()`,
    `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, since T47 `of.actionClocks()` and since T51 `of.filings()` and `of.actionPlans()`), each asked only when its op is served. */
 
+import { localize } from "../setup-words/index.mjs";
+
+/* control-plane R112 (T51; K4206, K4210; op-declarations R80, op-grades R49): the ops this door's own map serves and no owner
+   declares, declared here beside the map. Each row's classes, machineClasses, mutating, stamps and needs are the hand rows'
+   (`op-declarations` and `control-plane`'s stamps); its weight is the grade's ground or rung, its description the grade's
+   sentence as a word key; its fields are what the arm reads (accepts) and what a refusal names when absent (requires). */
+export const DECLARED_OPS = Object.freeze({
+  captureupload: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: "contribute",
+    weight: "undetermined", description: localize("control-plane.declared.captureupload", "upload-directed: a member's bytes held as a capture under their digest, in her own name, with its receipt; reached from the upload, never beside a bundle"),
+    fields: { accepts: ["statement", "name", "type", "step"], requires: ["statement"] } },
+  accountdrafts: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null,
+    weight: "read", description: localize("control-plane.declared.accountdrafts", "read: a case's drafts of its account, each labeled machine work; writes nothing"),
+    fields: { accepts: ["case"], requires: ["case"] } },
+  accountpropose: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: "contribute",
+    weight: "undetermined", description: localize("control-plane.declared.accountpropose", "case-directed: keyed by a case, reached from its account; the system's draft of the account, labeled machine work, never the published account until a member writes it"),
+    fields: { accepts: ["case", "kind", "framing", "text", "flags", "run"], requires: ["case", "framing", "text", "run"] } },
+  clockpropose: { classes: ["admin", "member", "probe"], mutating: true, stamps: ["viewer", "proposer"], needs: "contribute",
+    weight: "reversible", description: localize("control-plane.declared.clockpropose", "action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it"),
+    fields: { accepts: ["target", "rule"], requires: ["target", "rule"] } },
+  subscriptionsignin: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: null,
+    weight: "credential", description: localize("control-plane.declared.subscriptionsignin", "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle"),
+    fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } },
+});
+
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
    owners that compare a bare member id with their roster are handed the bare id, and a machine stamp unchanged, so the
    owner refuses it by name. */
