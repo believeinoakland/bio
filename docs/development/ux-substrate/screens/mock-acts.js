@@ -170,7 +170,7 @@ const ACT_HELP = {
   owed_namedrequests: 'Lists the requests to gather something on a schedule that you may see, with where each is looked for, when it was last tried and when it is next due.',
   owed_namedrequestset: 'Saves one request to gather something from the places you name, and how often to look, or retires it. It fetches nothing by itself.',
   owed_sweepset: 'Saves a sweep: the sites it may visit, the pages it starts from, what it keeps, how often it runs and the most it may fetch. It does not run until the project\'s owner ratifies it.',
-  owed_sweepratify: 'The project\'s owner starts a sweep, or any member who can write to the project stops it. Ratifying sends your team\'s fetches to the named hosts, within the scope and budget shown.',
+  owed_sweepratify: 'The project\'s owner starts a sweep, or any member who can write to the project stops it. Ratifying sends your team\'s fetches to the named sites, within the scope and budget shown.',
   owed_projectclose: 'Closes this project now, whether or not its work has gone quiet, with the reason you choose and an optional note. What was still open at the close is kept beside the reason. An owner can reopen it.',
   owed_projectstakeset: 'Records what the team has at stake in this project beyond its usual stake. It goes beside the team\'s statement on what this project sends or publishes, dated and attributed; clearing it leaves the team\'s statement alone.',
   owed_actionstake: 'Records what the team has at stake in this one action beyond its usual stake and the project\'s. It goes beside them on what the action sends, dated and attributed; clearing it falls back to the project\'s stake.',
