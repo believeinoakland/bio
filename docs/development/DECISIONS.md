@@ -6022,3 +6022,18 @@ decided: 2026-10-20 · the design session (P17)
 the design: (1) "Bring back" (`screen.queue.bringback`) is `queuesnooze` with `{case, clear}` (queue R21). (2) "Release this sentence" on Start and send is part of approving: its button and reason field carry `filingapprove` with `release: [{ord, reason}]` (filings R34, screens-action R42); `release` leaves start-send's acts; `act.release.label.start-send` stays as a drawn row ("Release this sentence"). (3) The reply's medium is free text up to 500 characters (actions R13): the five options send their tokens as the value. "Not stated" and "Not decided" omit the field (no `none` token); "Not decided" is offered only on received entries and never where outcome is required (fee_waiver_decision, denial, appeal_decision, court_decision). A sent entry's stages are worded: "The request", "Request for a fee waiver", "Appeal", "Court filing". (4) `runtime`'s units are worded "milliseconds" (`ms`) and "bytes" (`bytes`), filling `{unit}`; the subrequests ceiling shows no unit.
 reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/words-drawn.src.py` (rows noted "DEC-389" or "B430").
 owed: none.
+
+### DEC-390 · answered
+raised: 2026-10-20 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B432, K4252)
+for: design
+question: What does `groupdescriptiondraft`'s declared description say, and what mark does `sweeps` carry?
+why it is Bob's: it is not (P17): words and marks beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: `store-door.declared.groupdescriptiondraft` reads "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record." `sweeps` keeps the kit's weight 1, which is every read's weight (as `monitoring` and `monitorslate`): `WNAME` spells weight 1 "Reversible", and a weight-1 act draws no mark under its button (`btn` draws one only from weight 2). So `marks.mjs`'s "Reversible" for `sweeps` already is a read's mark; nothing changes in the kit.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (row noted "DEC-390").
+owed: none.
