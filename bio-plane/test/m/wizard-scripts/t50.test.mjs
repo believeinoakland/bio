@@ -21,9 +21,9 @@ const GEN_DIR = fileURLToPath(new URL("../../../src/wizard-scripts/", import.met
 const src = (f) => readFileSync(join(SOURCE_DIR, f), "utf8");
 const REG_FILE = JSON.parse(src("registry.json")), LIB_T50 = JSON.parse(src("library-7be06eb4cb.json"));
 const COMMIT = "2a64c5ae77";
-const FIX = "840099da7c";   /* R45: the fix round re-takes the doors and the library again */
-const LIB_R45 = JSON.parse(src("library-840099da7c.json"));
-const REG_COMMIT = "840099da7c";   /* the registry's pin, moved by R44 and again by R45 */
+const FIX = "1cc4a957f0";   /* R45: the fix round re-takes the doors and the library again */
+const LIB_R45 = JSON.parse(src("library-1cc4a957f0.json"));
+const REG_COMMIT = "1cc4a957f0";   /* the registry's pin, moved by R44 and again by R45 */
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 const status = (s) => REG_FILE.screens.flatMap((f) => f.acts.filter((a) => a.status === s).map((a) => [f.id, a.op]));
 const OWED_OPS = [...new Set(status("owed").map(([, op]) => OWED.exec(op)[1]))];
@@ -103,8 +103,8 @@ test("R41 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) build-data.mjs --check 
   /* each generated file names the source it comes from: the commit, the path and the file's SHA-256 */
   const sha = (f) => createHash("sha256").update(src(f), "utf8").digest("hex");
   assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: REG_COMMIT, path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
-  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-840099da7c.json") });
-  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-1), { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-840099da7c.json") });
+  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-1cc4a957f0.json") });
+  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-1), { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-1cc4a957f0.json") });
   assert.ok(!existsSync(join(GEN_DIR, "front-doors.mjs.orig")));
 });
 

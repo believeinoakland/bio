@@ -32,7 +32,7 @@ const ADDED_T48 = ["Update your group's Civicsmith"];
    BOB re-takes whole (K2241): 23 scripts, one version in the file each; DEC-281's team pass renamed four. */
 const LIB_T50 = JSON.parse(src("library-7be06eb4cb.json"));
 const T50 = { by: "BOB", at: "2026-10-17", ruling: "K2241" };
-const LIB_R45 = JSON.parse(src("library-840099da7c.json"));   /* R45: the fix round re-takes the library again */
+const LIB_R45 = JSON.parse(src("library-1cc4a957f0.json"));   /* R45: the fix round re-takes the library again */
 const R45 = { by: "BOB", at: "2026-10-20", ruling: "K2241" };
 const RENAMED = { "Say who your group is": word("wizard.WIZ-4d42b0233d48913f.name"), "Update your group's Civicsmith": word("wizard.WIZ-7de505135a9ecd4f.name"),
                   "Use another group's case": word("wizard.WIZ-4cdbd26939d4cc6d.name"), "Comment for the group": word("wizard.WIZ-f06504b9133b8d61.name") };
@@ -80,7 +80,7 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "840099da7c", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "1cc4a957f0", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
   assert.equal(wz.SCREEN_REGISTRY.length, 83, "R45: the file at the design commit named at the fix round of T51");
   REG_FILE.screens.forEach((f, i) => {
@@ -146,7 +146,7 @@ test("R13 (T37; K2171) the registry is re-taken from PR #14's merge onward: conn
 test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act is registered as its op, in the file's order, only once the member op table declares it; with no op table none is", () => {
   /* the acts the file still owes (R35, R38, R41): the installer's four routes, `founderhandleset`, members' `passwordresetlink` after
      memberadd, DEC-226's three update acts and the six T50 adds (K3674 among them); fifteen ops, `updatelater` on two screens */
-  assert.equal(OWED_OPS.length, 41, "R45: forty-one owed ops at 840099da7c (the earlier twenty-two among them)");
+  assert.equal(OWED_OPS.length, 41, "R45: forty-one owed ops at 1cc4a957f0 (the earlier twenty-two among them)");
   for (const op of ["installupdate", "installalongside", "installremove", "installremoveconfirm", "founderhandleset", "passwordresetlink", "updatestart", "updatelater", "updateskip"])
     assert.ok(OWED_OPS.includes(op), op);
   const w = seeded({ register: false });
@@ -286,7 +286,7 @@ test("R22, R30, R32, R36, R42 CIVICSMITH_LIBRARY is the 23 scripts of library.js
     { commit: "7be06eb4cb", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") },
     { commit: "20c8001300", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-20c8001300.json") },
     { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-2a64c5ae77.json") },
-    { commit: "840099da7c", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-840099da7c.json") }]);
+    { commit: "1cc4a957f0", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-1cc4a957f0.json") }]);
   const lib = wz.CIVICSMITH_LIBRARY;
   assert.equal(lib.length, 23);
   assert.equal(LIB_T50.scripts.length, 23);
@@ -315,7 +315,7 @@ test("R22, R30, R32, R36, R42 CIVICSMITH_LIBRARY is the 23 scripts of library.js
     if (k2.name !== k.name || JSON.stringify(stepsIn(LIB_R45, k.id)) !== JSON.stringify(stepsIn(LIB_T50, k.id))) {
       second.push(k2.name);
       held = [...held, { version: want[0], steps: stepsIn(LIB_T50, k.id), author: "civicsmith", approved: want[2], source: want[1] }];
-      want = [want[0] + 1, "840099da7c", R45];
+      want = [want[0] + 1, "1cc4a957f0", R45];
     }
     assert.deepEqual([e.version, e.source, e.approved], want, `${k.name}: version`);
     if (held.length) assert.deepEqual(e.earlier, held, `${k.name}: every earlier version kept whole, oldest first`);
