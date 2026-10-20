@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (17559 design words, 1057 protected; SHA-256
-   d3607bae0c5ccf5aae37edcecb8709a2bbbcc4afbb158ceff6c4cee06c09a9f4) followed by 6674 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   a0734c5dd01dab3431bfc473a3d6efa1f46d51abfb592b51e3efe6192b382ecc) followed by 6674 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "d3607bae0c";
+export const WORDS_COMMIT = "a0734c5dd0";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -4750,7 +4750,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.open-file.held.about.outside","While it is held, its original cannot be opened, not even with a warning. An outside scanner found it too, so it is released only when two members each give a reason. (Had only the built-in scanner found it, a second, different scanner finding it clean would release it.) A release covers this finding only.",null,null,true,"design"],
   ["screen.open-file.whole","The file read whole","the structure check of a deeper check",null,false,"design"],
   ["screen.open-file.flagged","Flagged: {what}","what the structure check flagged, such as \"an external link\"",null,false,"design"],
-  ["screen.open-file.release.waiting","{name} gave a reason on {date}; a second member's releases it. The machine never can.",null,null,false,"design"],
+  ["screen.open-file.release.waiting","{name} gave a reason on {date}; a second member's releases it. The assistant never can.",null,null,false,"design"],
   ["screen.people.counts.three","named in {documents}, {questions} and {projects}","each a count with its noun, such as \"14 documents\"",null,false,"design"],
   ["screen.people.counts.docsonly","named in {documents}, in no question or project yet",null,null,false,"design"],
   ["screen.person.testify.basis","How you know (for “I know this is them”)",null,null,false,"design"],
@@ -6301,7 +6301,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue.signer-self-registered.summary.comment","{member} registered a signing key for themselves: {comment}","DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}",null,false,"design"],
   ["queue.signer-self-registered.summary.unnamed","A member registered a signing key for themselves","DEC-329: B303 (10): queue-producers/index.mjs:1778",null,false,"design"],
   ["queue.signer-self-registered.summary.unnamed.comment","A member registered a signing key for themselves: {comment}","DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}",null,false,"design"],
-  ["queue.signer-self-registered.detail","A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark this done.","DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members",null,false,"design"],
+  ["queue.signer-self-registered.detail","A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key; if you did, mark it done.","DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members",null,false,"design"],
   ["queue.attribution-unchosen.summary","Case {case} uses your observation {observation}: choose how it credits you","DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)",null,false,"design"],
   ["queue.attribution-unchosen.detail","Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.","DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}",null,false,"design"],
   ["queue.docket-core-due.what.response","a response","DEC-329: B303 (10): queue-producers/index.mjs:1890 (DOCKET_CORE_WORDS)",null,false,"design"],
@@ -10291,7 +10291,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.members.cap.administer.confirm","Choosing “look after the team's Civicsmith” makes {who} an administrator. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.","DEC-384: B411 T-05: the confirmation",null,false,"design"],
   ["screen.members.cap.administer.confirm.yes","Make {who} an administrator","DEC-384: B411 T-05: the confirming button",null,false,"design"],
   ["screen.members.cap.administer.confirm.no","Go back","DEC-384: B411 T-05: the other button",null,false,"design"],
-  ["project.owners.standdown.opened","You asked to stand down as an owner. The vote is open: you stay an owner until {awaiting} agree.","DEC-384: B411 T-06: on the owner's own row at once, and until the vote ends; {awaiting} the other owners by name",null,false,"design"],
+  ["project.owners.standdown.opened","You asked to stand down as an owner. The vote is open: you stay an owner until the other owners agree ({awaiting}).","DEC-384: B411 T-06: on the owner's own row at once, and until the vote ends; {awaiting} the other owners by name",null,false,"design"],
   ["project.owners.agree.remove","Agree: let {who} stand down as owner","DEC-384: B411 T-06: the button on the other owners' view of the row",null,false,"design"],
   ["screen.translations.wrong.sample","“Asks for a reason” → “Pide una razón”","DEC-384: B411 T-07: the sample row of Marked wrong by members; the word is the mark now named Asks for a reason (a sample, not a word the product draws)",null,false,"design"],
   ["file-scanner.catalogue.icap_server_address_host_or_host","Address of your scanning server, as a name or name:port. Without a port, 1344 is used (11344 when connecting over TLS).","DEC-384: B411 T-14",null,false,"design"],
@@ -11006,7 +11006,7 @@ export const WORD_ROWS = Object.freeze([
   ["capture.response.group_civicsmith_evidence","your team's Civicsmith has no evidence storage configured","capture, response",null,false,"design"],
   ["refusal.NO_BASIS","This asks the record to stand behind something without saying what it rests on. Say what that is first — what the question is grounded in, what you personally observed, or why a settled thing is being changed — and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked.","record-grammar, refusal by its code",null,false,"design"],
   ["refusal.NO_CITATION","A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held — if it is not public, say who holds it and how it was seen, which is still an address and is still checkable.","record-grammar, refusal by its code",null,false,"design"],
-  ["refusal.ACCEPT_MUST_REAUTHOR","Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.","record-grammar, refusal by its code",null,false,"design"],
+  ["refusal.ACCEPT_MUST_REAUTHOR","Accepting this as it was proposed would make you vouch for words the assistant wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.","record-grammar, refusal by its code",null,false,"design"],
   ["record-grammar.proposal.governing_laws.machine_proposed","a machine credential proposed these citations. That is machine work, labeled as machine work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing here is this action's list of governing laws, and nothing becomes one until a member states it themselves","record-grammar, machine_proposed",null,false,"design"],
   ["record-grammar.proposal.governing_laws.member_proposed","a member proposed these citations to whoever states this action's governing laws. It is a proposal and not the list: only the governing-laws act sets that, and the record holds who made it","record-grammar, member_proposed",null,false,"design"],
   ["record-grammar.proposal.governing_laws.unstated","the record does not say who proposed these citations","record-grammar, unstated",null,false,"design"],
