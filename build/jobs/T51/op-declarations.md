@@ -153,3 +153,11 @@ Cause: context (reading). Stopping before any change; nothing is edited or commi
 **Next step:** a fresh job session reads requirements, `index.mjs` and the two tests whole, then applies B14 (register owners, link-sweep excluded and reported) and B15 (both session sets, with control), reruns the suite, checks, and posts COMPLETE.
 
 Size: not yet measured; no module code changed.
+
+## J15 · REPORT
+
+Three things in other modules, found while doing B14, B15 and B17 (op-declarations #30):
+
+1. **Architecture edge (B14).** `register-owners.mjs` now registers every owner through test-support's `declaredOpsOf`; the architecture check refuses it: `bio-plane/test/m/op-declarations/register-owners.mjs imports bio-plane/test/declared-ops.mjs of test-support, which op-declarations does not declare in uses`. Please add `test-support` to op-declarations' `uses` in `build/modules.json` (the requirements' Uses line already names it, tests only). Every owner registers without a refusal (link-sweep's `needs: "contribute"` is merged); no owner is excluded.
+2. **B17 (`export` in `SESSION_OPS.admin`) turns admission's tests red, and it does not yet let the founder take a copy.** Admission answers a session's call to `export` `ROOT_OF_TRUST_REQUIRED` (C-38.4) before it reads the session sets. Its tests pin that: `admission.test.mjs` R8 (:42, :48), the order test (:66–70, :209), R14 and `invariants.test.mjs` (:22, :26) use `export` as the op a session cannot reach; `control-plane` R28 (the gates' order) goes red with it. Admission's job must change its gate and re-pin those tests (use `purge` or `instancegroupseed` as the unreachable op); I changed only the tables, as B17 says. Without the change in admission the founder's button is drawn and the call is refused.
+3. **screens-investigate R51 (standardinforce).** With B15 the shell now draws `standardinforce`, but `test/m/screens-investigate/standard.test.mjs:89` ("a date sends standardinforce with the declared fields") fails on a field `op: 'standardinforce'` in the sent fields, which is that module's own test and drawing, not a table of mine. The 12 reds in `interface-shell`, the others in `screens-*` and the 20 in `control-plane`/8 in `plane` are the same with and without my changes (checked by reverting `index.mjs`), apart from item 2.
