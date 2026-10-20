@@ -455,7 +455,7 @@ export const DEBT_SETTLED = { ...DEBT_OPEN, open: false, settled: { settled: tru
   settlements: [{ seq: 1, kind: "resolved", at: "2026-10-10T00:00:00Z", actor: "member:mai", reason: "The new statement is about the Department's reports; this finding cites none.", by_run: null, lens_then: null, lens_now: null }] };
 export function biasTable(over = {}) {
   return {
-    biasmanifest: (q) => env(q.scope === "project" ? (q.scopeId === PROJ_BIAS.id ? LENS_PROJECT : { ok: true, scope: "project", scope_id: q.scopeId, in_force: false, note: "no manifest was in force" }) : LENS_TEAM),
+    biasmanifest: (q) => env(q.scope === "project" ? (q.scopeId === PROJ_BIAS.id ? LENS_PROJECT : { ok: true, scope: "project", scope_id: q.scopeId, in_force: false, note: "none" }) : LENS_TEAM),
     projectlist: env({ ok: true, projects: [PROJ_BIAS] }),
     biasdebt: (q) => env(q.run === "RUN-2026-0042" ? DEBT_OPEN : { ok: true, run: q.run, found: false, note: "none" }),
     biasinhale: () => env(POLICY),

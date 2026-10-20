@@ -201,9 +201,10 @@ test("R77 a scanner that holds no signatures is said so by the key and words sca
   assert.equal(textOf(second), ns.reason_words);
   assert.ok(!/waiting/i.test(textOf(first) + textOf(second)));
   // never signatures obtained, no date: the other keys, the answer's words
-  const b = await open("security", { me: ADMIN, table: sc({ no_signatures: { since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", words: "The file scanner has no signatures.", reason_key: "file-safety.index.signatures_not_fetched", reason_words: "No download of signatures has finished yet." } }) });
-  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), "The file scanner has no signatures.");
-  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), "No download of signatures has finished yet.");
+  const none2 = { since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", words: "sentinel words one", reason_key: "file-safety.index.signatures_not_fetched", reason_words: "sentinel words two" };
+  const b = await open("security", { me: ADMIN, table: sc({ no_signatures: none2 }) });
+  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), none2.words);
+  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), none2.reason_words);
   // control: signatures held (no_signatures absent): nothing drawn
   const none = await open("security", { me: ADMIN, table: sc({}) });
   assert.equal(all(none.tree, (e) => /^nosignatures/.test(e.attrs["data-state"] || "")).length, 0);

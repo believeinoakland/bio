@@ -207,8 +207,8 @@ export const bias = {
           for (const s of statements) {
             yaml.push("  - id: " + q(s.id), "    kind: " + q(s.kind), "    subject: " + q(s.subject), "    text: " + q(s.text), "    justification: " + q(s.justification), "    citations: " + JSON.stringify(s.citations), "    locked: false");
           }
-          yaml.push("---");
-          const text = yaml.join("\n") + "\n\n## What This Does Not Enforce\n\n" + residue + "\n";
+          yaml.push("---", "", "## What This Does Not Enforce", "", residue, "");
+          const text = yaml.join("\n");
           return { body: { base: null, snapKey: iso.replace(/[-:]/g, "") + "_" + nonce, meta: { object_type: "bias", title, current_state: state, created: iso, last_updated: iso }, files: [{ path: "bundle.md", text }], register: [] } };
         })();
       },
