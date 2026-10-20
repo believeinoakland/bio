@@ -39,3 +39,7 @@
 ## J1 · COMPLETE
 
 T51-108 (words pass) is done and pushed (f71da31fdc). The one words finding, the handlist in t50.test.mjs:34, is fixed by asserting the count of administrator acts read from op-declarations; the stale civicos-ui comment at checks.mjs:139 is reworded. Admission: 58 of 58 tests pass; words, format, architecture, coverage (31 of 31), ownership, setup-words --check all clean. Full words run lists no admission line (K3986). Record: build/jobs/T51/admission.md.
+
+## J2 · COMPLETE
+
+B2 (K4245) applied and pushed. export is admitted to the ADMIN_TOKEN bearer (R9) and the founder's session (kind admin); every other session, an enrolled administrator's included, is refused ROOT_OF_TRUST_REQUIRED before R9/R11. Tests re-pinned (admission.test.mjs R8, order test; invariants.test.mjs) with controls for the founder's session, administrator session, member session, capability-less session, retired member key, probe and daemon bindings. 58/58 pass; format, architecture, coverage (31/31), ownership, words clean. R8 amended line, and a note that words row refusal.ROOT_OF_TRUST_REQUIRED may still say the founder is refused, are in my record (build/jobs/T51/admission.md). CONTROL-PLANE re-pins its R28 test after merge.
