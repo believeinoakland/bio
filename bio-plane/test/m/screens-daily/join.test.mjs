@@ -95,7 +95,7 @@ test("R42: an owner's request to join waits in Needs you and the queue with Gran
   }
 });
 
-test("R43: Projects reads themeread and draws the Themes section under the list: each theme its name as a reference opening theme, no count, and \"Every theme\"; not drawn when none is declared", async () => {
+test("R43: Projects reads themeread and draws the Themes section under the list: each theme its name as a reference opening theme, no count, and \"Every theme\"", async () => {
   const themes = ok({ ok: true, themes: [{ theme_id: "THM-1", name: "Deferred maintenance", test: "a repair put off", at: "2026-10-01" }, { theme_id: "THM-2", name: "Overtime", test: "x", at: "2026-09-01" }, { theme_id: "THM-3", name: "Contracts", test: "y", at: "2026-08-01" }] });
   const plane = { ...BASE, ...CREATE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Mine", participation: "joined" }] }), projectquestions: ok({ ok: true, items: [], cursor: null }), themeread: themes };
   const p = await open("/app/projects", plane);
@@ -110,9 +110,19 @@ test("R43: Projects reads themeread and draws the Themes section under the list:
   assert.equal(every.getAttribute("href"), "/app/theme");
   const row = sec.querySelectorAll("a").find((a) => a.textContent === "Overtime");
   assert.equal(row.getAttribute("href"), "/app/theme/THM-2", "a reference opening theme");
-  // Control: none declared, no section.
-  const none = await open("/app/projects", { ...plane, themeread: ok({ ok: true, themes: [] }) });
-  assert.ok(!text(none).includes(word("theme.section")));
+});
+
+test("R66: Projects with no theme declared still draws the Themes section with its door to theme, and no theme rows", async () => {
+  const plane = { ...BASE, ...CREATE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Mine", participation: "joined" }] }), projectquestions: ok({ ok: true, items: [], cursor: null }), themeread: ok({ ok: true, themes: [] }) };
+  const p = await open("/app/projects", plane);
+  const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word("theme.section"));
+  assert.ok(sec, "the Themes section is drawn with none declared");
+  const every = sec.querySelectorAll("a").find((a) => a.textContent === word("theme.every"));
+  assert.equal(every.getAttribute("href"), "/app/theme");
+  assert.equal(sec.querySelectorAll(".cs-row").length, 0, "no theme rows");
+  // The same with the read failed: the door is still there.
+  const failed = await open("/app/projects", { ...plane, themeread: refused("THEMES_DOWN", "x", 500) });
+  assert.ok(main(failed).querySelectorAll("a").some((a) => a.getAttribute("href") === "/app/theme"));
 });
 
 test("R43: Find's Theme filter lists what was placed in the chosen theme, then its hunches apart; a hunch is never drawn as membership", async () => {

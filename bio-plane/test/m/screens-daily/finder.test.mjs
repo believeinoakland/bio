@@ -71,8 +71,10 @@ test("R4: each result with its grade and where it matched (Found by search), a r
   assert.ok(main(p).querySelectorAll(".cs-card, a.cs-ref").some((a) => a.textContent === "Memo 88-31 on stormwater"));
   assert.equal(p.doc.getElementById("finder-pick-INF-1").getAttribute("aria-label"), word("screen.finder.pick", { title: "Public Works work orders, FY2025" }));
   const none = await open("/app/finder/zz", { search: ok({ total: 0, hits: [], widen: { total: 4 } }) });
-  assert.ok(text(none).includes(word("screen.finder.noresult", { q: "zz" })));
+  assert.ok(text(none).includes(word("screen.finder.noresult.partial", { q: "zz" })), "R78: a widened count above 0 draws the partial sentence");
   assert.ok(text(none).includes(word("screen.finder.widen", { n: "4" })));
+  const nothing = await open("/app/finder/zz", { search: ok({ total: 0, hits: [], widen: null }) });
+  assert.ok(text(nothing).includes(word("screen.finder.noresult", { q: "zz" })));
   const one = await open("/app/finder/pothole", { search: ok({ total: 1, hits: [HITS.json.result.hits[0]] }) });
   assert.ok(text(one).includes(word("screen.finder.route.fields.holds.one")), "R25: one result, the singular key");
 });
@@ -108,25 +110,53 @@ test("R4: selectionrelease lets the set go; \"Find in these\" opens find-in over
   assert.equal(p.location.pathname, "/app/find-in/sel-abc");
 });
 
-test("R4: frontier draws Nobody looked (mark.gap.nobody) for where nobody looked", async () => {
+// R67: a `frontier` answer for each level: `perLevel[level]` is that level's answer.
+const LEVELS = ["document", "content", "meaning", "internet"];
+const frontierPlane = (perLevel) => ({ frontier: (req) => ok(perLevel[req.query.level] === undefined ? null : perLevel[req.query.level]) });
+const GOT = { found: true, built: true, never_looked: [], never_looked_count: 0, tally: { LOOKED_FOUND: 4, LOOKED_ABSENT: 1 }, note: "" };
+const HTMLF = () => served(interfacePage(SCREENS).replace('"sessionOps":{"member":[', '"sessionOps":{"member":["frontier",'));
+const rowsOfLevels = (p) => main(p).querySelectorAll(".cs-row").filter((r) => LEVELS.some((l) => r.querySelector("b") && r.querySelector("b").textContent === word("screen.answers.level." + l)));
+
+test("R4, R67: frontier is read at each of its four levels and draws one row for each, with the places nobody looked at and the look states", async () => {
   // `frontier` is a read in no session set, so the shell's gate (interface-shell R12) draws it to nobody today
   // (SCREENS-DAILY #1's REPORT); with it in the member's set, as the registry's act needs, the screen draws and sends it.
   const absent = await open("/app/finder", {});
   assert.equal(ops(absent).includes("frontier"), SESSION_OPS.member.has("frontier"));
-  // The page as it would be served with `frontier` in the member's session set.
-  const html = served(interfacePage(SCREENS).replace('"sessionOps":{"member":[', '"sessionOps":{"member":["frontier",'));
-  const p = await open("/app/finder", { frontier: ok({ never_looked: [{ referent: "Council minutes 2024" }, "Budget FY24"], never_looked_count: 2 }) }, { html });
+  const html = HTMLF();
+  const per = { document: { ...GOT, never_looked: [{ referent: "Council minutes 2024" }, "Budget FY24"], never_looked_count: 2 }, content: { ...GOT, never_looked_count: 34, never_looked: [] }, meaning: GOT,
+    internet: { found: true, built: false, never_looked: [], never_looked_count: 0, tally: {}, note: "this reader reads no such level" } };
+  const p = await open("/app/finder", frontierPlane(per), { html });
   assert.ok(ops(p).includes("frontier"));
   await press(p, "frontier", { reason: R });
-  assert.equal(last(p, "frontier").query.level, "document");
+  assert.deepEqual([...new Set(p.byOp("frontier").map((r) => r.query.level))].sort(), [...LEVELS].sort(), "all four levels are read");
+  const rows = rowsOfLevels(p);
+  assert.equal(rows.length, 4, "four rows, one for each level");
+  const rowOf = (l) => rows.find((r) => r.querySelector("b").textContent === word("screen.answers.level." + l));
   assert.ok(main(p).querySelector('.cs-gap[data-gap="nobody"]'));
-  assert.ok(text(p).includes(word("screen.finder.nobody", { n: "2" })) && text(p).includes("Council minutes 2024") && text(p).includes("Budget FY24"));
-  const single = await open("/app/finder", { frontier: ok({ never_looked: ["Budget FY24"], never_looked_count: 1 }) }, { html });
-  await press(single, "frontier", { reason: R });
-  assert.ok(text(single).includes(word("screen.finder.nobody.one")), "R25: one place, the singular key");
-  const none = await open("/app/finder", { frontier: ok({ never_looked: [] }) }, { html });
-  await press(none, "frontier", { reason: R });
-  assert.ok(text(none).includes(word("screen.finder.nobody.none")));
+  assert.ok(text(p, rowOf("document")).includes(word("screen.finder.nobody", { n: "2" })) && text(p, rowOf("document")).includes("Council minutes 2024") && text(p, rowOf("document")).includes("Budget FY24"));
+  assert.ok(text(p, rowOf("content")).includes(word("screen.finder.nobody", { n: "34" })), "the passage level names the 34 nobody read");
+  assert.ok(text(p, rowOf("meaning")).includes(word("screen.answers.state.LOOKED_FOUND")) && text(p, rowOf("meaning")).includes(word("screen.answers.state.LOOKED_ABSENT")), "the look states its tally names");
+  assert.ok(text(p, rowOf("internet")).includes(word("state.undetermined", { reason: "this reader reads no such level" })), "a level the reader does not read is undetermined with the note");
+  // Control (R20): fewer levels answered draws fewer rows; one place nobody looked takes the singular key.
+  const fewer = await open("/app/finder", frontierPlane({ document: { ...GOT, never_looked_count: 1, never_looked: ["Budget FY24"] }, content: GOT }), { html });
+  await press(fewer, "frontier", { reason: R });
+  assert.equal(rowsOfLevels(fewer).length, 2);
+  assert.ok(text(fewer).includes(word("screen.finder.nobody.one")), "R25: one place, the singular key");
+});
+
+test("R77: \"Somebody has looked everywhere\" is drawn only when every level answered and none has a place left unlooked", async () => {
+  const html = HTMLF();
+  const open1 = async (per) => { const p = await open("/app/finder", frontierPlane(per), { html }); await press(p, "frontier", { reason: R }); return p; };
+  // The document level empty, the passage level unread: no "everywhere", and the unread level is named.
+  const partial = await open1({ document: GOT, content: { ...GOT, never_looked_count: 34 }, meaning: GOT, internet: GOT });
+  assert.ok(!text(partial).includes(word("screen.finder.nobody.none")), "no 'everywhere' sentence while the passage level is unread");
+  assert.ok(text(partial, rowsOfLevels(partial).find((r) => r.querySelector("b").textContent === word("screen.answers.level.content"))).includes(word("screen.finder.nobody", { n: "34" })));
+  // Control: all four levels looked draws it.
+  const all = await open1({ document: GOT, content: GOT, meaning: GOT, internet: GOT });
+  assert.ok(text(all).includes(word("screen.finder.nobody.none")));
+  // A level that failed or is not built is not "looked".
+  const unbuilt = await open1({ document: GOT, content: GOT, meaning: GOT, internet: { found: false, built: false, never_looked: [], never_looked_count: 0, tally: {}, note: "no such level" } });
+  assert.ok(!text(unbuilt).includes(word("screen.finder.nobody.none")));
 });
 
 test("R4: \"Count\" makes a count over the held set as a calculation, asking what and when in place, and says what it counted", async () => {
@@ -157,4 +187,18 @@ test("R12 (DEC-201 (13)): a search with no result says what search covers and of
 
 test("R34: every key find reads is a word of the list", () => {
   for (const k of screen("finder").words) assert.ok(hasWord(k), k);
+});
+
+test("R78: a hit is headed by its document's title; no hits with a widened count draws the partial key, not the no-match key; a count of 0 draws the no-match key", async () => {
+  const withTitle = await open("/app/finder/pothole", { ...PLANE, search: ok({ total: 1, hits: [{ bundle_id: "INF-1", object_type: "information", title: "Public Works work orders, FY2025", snippet: "x" }] }) });
+  assert.ok(main(withTitle).querySelectorAll(".cs-card, a.cs-ref").some((a) => a.textContent === "Public Works work orders, FY2025"), "headed by the title");
+  const noTitle = await open("/app/finder/pothole", { ...PLANE, search: ok({ total: 1, hits: [{ bundle_id: "INF-9", object_type: "information", title: null, last_updated: "2026-10-01T00:00:00Z" }] }) });
+  assert.ok(!main(noTitle).querySelectorAll(".cs-card, a.cs-ref").some((a) => a.textContent === "INF-9"), "never headed by its id");
+  const partial = await open("/app/finder/pothole repair", { ...PLANE, search: ok({ total: 0, hits: [], widen: { interpretation: "OR", total: 2, q: "pothole repair" } }) });
+  assert.ok(text(partial).includes(word("screen.finder.noresult.partial", { q: "pothole repair" })));
+  assert.ok(text(partial).includes(word("screen.finder.partial.head")));
+  assert.ok(!text(partial).includes(word("screen.finder.noresult", { q: "pothole repair" })));
+  const none = await open("/app/finder/pothole repair", { ...PLANE, search: ok({ total: 0, hits: [], widen: { interpretation: "OR", total: 0, q: "x" } }) });
+  assert.ok(text(none).includes(word("screen.finder.noresult", { q: "pothole repair" })));
+  assert.ok(!text(none).includes(word("screen.finder.noresult.partial", { q: "pothole repair" })));
 });

@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { explained } from "./help.mjs";
-import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { T47_SHARES, T47_FAMILIES, REAUTH_ACTS } from "../../../src/op-declarations/t47.mjs";
 import { T51_SHARES } from "../../../src/op-declarations/t51.mjs";
 import * as AFF from "../../../src/affordances.mjs";
@@ -310,7 +310,9 @@ test("R54, R60 (K3062; DEC-198–DEC-217): R21 read against the registry at PR #
   const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];
   /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
   const BROWSER = browserActs(registry);
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER].sort());
+  /* R80: an owed act an owner declares is read as served by its declaration (`register-owners.mjs`), an op like any other */
+  assert.deepEqual(owedOf(regActs).sort(), [...new Set(["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...OWED_SERVED_BY_OWNERS, ...BROWSER])].sort());
+  for (const op of OWED_SERVED_BY_OWNERS) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: declared by its owner and not an op`);
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
   for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);

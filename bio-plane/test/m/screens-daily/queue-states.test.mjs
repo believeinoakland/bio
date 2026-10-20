@@ -3,8 +3,11 @@
    Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { collectOwnerRows, fieldMismatches } from "../interface-shell/harness.mjs";
 import { open, ok, refused, refusedIn, text, ops, button, press as pressRaw, beside, last, main, word, hasWord, dmy, withScreens, settle, screen } from "./page.mjs";
 
+// a day well after tomorrow, on the page's own clock (R79 (c): a snooze comes back tomorrow at the earliest)
+const LATER = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
 const R = "looking";
 const press = (p, op, o = {}) => pressRaw(p, op, { reason: R, ...o });
 const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
@@ -95,12 +98,23 @@ test("R58: Forward sends taskforward once with items and the one member; Dismiss
   assert.equal(stripButton(empty, "taskforward"), null);
 });
 
+test("R58, R70: a set of findings of a declared flow sends each item's key with definitionVersion (the word proposedispose reads), never definition_version; one with no version sends the key alone", async () => {
+  const staged = (id, version) => finding(id, { disposition: { available: true, op: "proposedispose", scope: "instance", key: "prog::" + id, ...(version === null ? {} : { definition_version: version }) } });
+  const items = [staged("S1", 4), staged("S2", null)];
+  const p = await open("/app/queue/choose", { queue: queueOf(items), proposedispose: ok({ ok: true, count: 2, applied: 2, retained: 0, items: [{ index: 0, outcome: "applied" }, { index: 1, outcome: "applied" }] }) });
+  await choose(p, ["S1", "S2"]);
+  await press(p, "proposedispose", { nth: 0, reason: "settled by the flow" });
+  assert.equal(p.byOp("proposedispose").length, 1);
+  assert.deepEqual(p.byOp("proposedispose")[0].body, { items: [{ key: "prog::S1", definitionVersion: 4 }, { key: "prog::S2" }], to: "dismissed", reason: "settled by the flow" });
+  assert.ok(!JSON.stringify(p.byOp("proposedispose")[0].body).includes("definition_version"), "control: the old spelling is not sent");
+});
+
 test("R58: Snooze sends queuesnooze once for each distinct case among the chosen items, the day from the field; an item with no case is not handled", async () => {
   const items = [task("T1"), task("T2"), finding("F1"), task("T3", { case: NOCASE })];
   const p = await open("/app/queue/choose", { queue: queueOf(items), queuesnooze: ok({ ok: true }) });
   await choose(p, ["T1", "T2", "F1", "T3"]);
-  await press(p, "queuesnooze", { nth: 0, values: { "qm-until": "2026-11-01" } });
-  assert.deepEqual(p.byOp("queuesnooze").map((r) => r.body), [{ case: "PROJ-1", until: "2026-11-01" }, { case: "PROJ-2", until: "2026-11-01" }]);
+  await press(p, "queuesnooze", { nth: 0, values: { "qm-until": LATER } });
+  assert.deepEqual(p.byOp("queuesnooze").map((r) => r.body), [{ case: "PROJ-1", until: LATER }, { case: "PROJ-2", until: LATER }]);
   assert.ok(text(p).includes(word("queue.multi.result", { n: "4", done: "3", kept: "1" })));
   const none = await open("/app/queue/choose", { queue: queueOf(items), queuesnooze: ok({ ok: true }) });
   await choose(none, ["T1"]);
@@ -200,7 +214,11 @@ test("R61: the set-aside findings are listed on the answered page with the decis
   assert.ok(!text(p, rows[1]).includes(word("queue.aside.v2", { n: "" }).split("{")[0].slice(0, 12)) || !text(p, rows[1]).includes("version"), "control: a project row with no version draws no version line");
   assert.ok(text(p, rows[1]).includes(word("queue.aside.dismissed", { date: dmy("2026-10-08") })) && !rows[1].querySelector('button[data-act="proposedispose"]'));
   await press(p, "proposedispose", { nth: 0, reason: "enough" });
-  assert.deepEqual(last(p, "proposedispose").body, { key: "prog::stage", definition_version: 3, to: "dismissed", reason: "enough" });
+  assert.deepEqual(last(p, "proposedispose").body, { key: "prog::stage", definitionVersion: 3, to: "dismissed", reason: "enough" });
+  // R70: control: the old spelling fails the guard over the owner's declaration.
+  const declared = collectOwnerRows().proposedispose;
+  assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definition_version: 3, to: "dismissed", reason: "r" } }, declared).map((m) => m.field), ["definition_version"]);
+  assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definitionVersion: 3, to: "dismissed", reason: "r" } }, declared), []);
   const other = await open("/app/queue/answered", { queue: (req) => (req.query.aside ? ASIDE([row(1, { decided_by: "rosa" })]) : ANSWERED) });
   assert.ok(text(other).includes(word("queue.aside.dismissed.bymember", { member: "rosa", date: dmy("2026-10-08") })), "another member's decision by her handle");
 });

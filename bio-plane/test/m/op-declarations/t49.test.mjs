@@ -159,13 +159,14 @@ test("R3 (T49; K3298, K3339): NEEDS is composed from op-capabilities.needsRows()
   assert.deepEqual(Object.keys(fam).filter((op) => Object.hasOwn(hand, op)), []);
   const aliasRows = Object.entries(OP_ALIASES).filter(([, op]) => Object.hasOwn(NEEDS, op)).map(([al]) => al);
   assert.equal(aliasRows.length, 27);
-  assert.equal(Object.keys(NEEDS).length, 323 + 530 + 27);
-  assert.equal(Object.keys(NEEDS).length, 848 + 2 + 15 + 15, "848 before the split, founderhandleset and projectownervotes (T49), R73's 15 (T50) and T51's 15");
+  /* R83 (K4237): and `export`'s row, the founder's session act that is no family op */
+  assert.equal(Object.keys(NEEDS).length, 323 + 530 + 27 + 1);
+  assert.equal(Object.keys(NEEDS).length, 848 + 2 + 15 + 15 + 1, "848 before the split, founderhandleset and projectownervotes (T49), R73's 15 (T50), T51's 15 and export (R83)");
   for (const [op, row] of Object.entries(hand)) assert.equal(NEEDS[op], row, `${op}: the hand-written row`);
   for (const [op, row] of Object.entries(fam)) assert.equal(NEEDS[op], row, `${op}: the family row`);
   for (const al of aliasRows) assert.equal(NEEDS[al], NEEDS[OP_ALIASES[al]], `${al}: an alias row equals its op's`);
   /* nothing else is in the table */
-  assert.deepEqual(Object.keys(NEEDS).filter((op) => !Object.hasOwn(hand, op) && !Object.hasOwn(fam, op) && !aliasRows.includes(op)), []);
+  assert.deepEqual(Object.keys(NEEDS).filter((op) => !Object.hasOwn(hand, op) && !Object.hasOwn(fam, op) && !aliasRows.includes(op)), ["export"]);
   /* the new ops' rows come from their kinds: present nulls */
   for (const op of ["founderhandleset", "projectownervotes"]) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
   assert.ok(!Object.hasOwn(hand, "founderhandleset") && !Object.hasOwn(hand, "projectownervotes"));

@@ -129,7 +129,7 @@ test("R10, R25: \"Start a project\" sends promote with the member's title, writt
   const b = await press(p, "promote", { values: { "projects-title": " " } });
   assert.equal(p.byOp("promote").length, 0);
   assert.equal(beside(p, b), word("screen.projects.title.needed"));
-  await press(p, "promote", { values: { "projects-title": " Park bond oversight " } });
+  await press(p, "promote", { values: { "projects-visibility-hidden": true, "projects-title": " Park bond oversight " } });
   const body = last(p, "promote").body;
   assert.deepEqual([body.base, body.meta.object_type, body.meta.title, body.meta.current_state], [null, "project", "Park bond oversight", "forming"]);
   assert.match(body.files[0].text, /^---\nobject_type: project\ntitle: "Park bond oversight"\nobjective: "Park bond oversight"\ncurrent_state: forming\n/);
@@ -138,22 +138,26 @@ test("R10, R25: \"Start a project\" sends promote with the member's title, writt
   assert.deepEqual(ops(await open("/app/projects", { ...PLANE, whoami: ok({ ...MEMBER, capabilities: [] }) })), [], "drawn only to a session that may contribute");
 });
 
-test("R30: the form asks the title and who can find it; hidden is preselected and an untouched form sends it; choosing findable sends discoverable; refusals by their words", async () => {
+test("R30, R80: the form asks the title and who can find it; neither is preselected, none chosen sends nothing; choosing findable sends discoverable; refusals by their words", async () => {
   const p = await open("/app/projects", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77" }) });
   const start = main(p).querySelector('details[data-start="project"]');
   assert.ok(start.querySelector("label[for=projects-title]").textContent.includes(word("project.start.title")));
   assert.ok(start.textContent.includes(word("project.start.title.help")) && start.textContent.includes(word("project.visibility.start.later")));
   const sel = start.querySelector("#projects-visibility");
-  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.textContent), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
-  assert.equal(sel.value, "hidden");
-  await press(p, "promote", { values: { "projects-title": "Parks" } });
-  assert.equal(last(p, "promote").body.visibility, "hidden", "control: an untouched form sends hidden");
+  assert.deepEqual(sel.querySelectorAll("input[type=radio]").map((o) => o.parentNode.textContent.trim()), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
+  assert.equal(sel.querySelectorAll("input[type=radio]").filter((o) => o.checked).length, 0, "R80: nothing is chosen for the member");
+  const refusedBtn = await press(p, "promote", { values: { "projects-title": "Parks" } });
+  assert.equal(p.byOp("promote").length, 0, "R80: Start with neither chosen sends nothing");
+  assert.ok(beside(p, refusedBtn).includes(word("project.visibility.start.required")), "R80: refused in place with the required key");
   const q = await open("/app/projects", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-78" }) });
-  await press(q, "promote", { values: { "projects-title": "Parks", "projects-visibility": "discoverable" } });
+  await press(q, "promote", { values: { "projects-title": "Parks", "projects-visibility-discoverable": true } });
   assert.equal(last(q, "promote").body.visibility, "discoverable");
+  const h = await open("/app/projects", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-79" }) });
+  await press(h, "promote", { values: { "projects-title": "Parks", "projects-visibility-hidden": true } });
+  assert.equal(last(h, "promote").body.visibility, "hidden", "control: hidden, once chosen, is sent");
   for (const code of ["PROJECT_VISIBILITY_NO_OWNER", "NAME_TAKEN"]) {
     const t = await open("/app/projects", { ...PLANE, ...CREATOR, promote: refused(code, null, 409) });
-    const c = await press(t, "promote", { values: { "projects-title": "Parks" } });
+    const c = await press(t, "promote", { values: { "projects-title": "Parks", "projects-visibility-hidden": true } });
     assert.equal(beside(t, c).replace(/\s+/g, " "), word(`refusal.${code}`), code);
   }
 });
@@ -246,4 +250,14 @@ test("R63: projects draws a search by name and a filter (all, in, own), narrowin
   assert.ok(text(p).includes(word("projects.empty.sub")), "a search finding none says so with the empty-list sentence");
   assert.deepEqual(p.requests.slice(before).filter((r) => r.op === "projectlist"), [], "it sends no read of the list again and no act");
   assert.equal(p.requests.slice(before).filter((r) => r.method !== "GET").length, 0);
+});
+
+test("R72: a project whose row says rescue_open is marked and opens the project; a row without is unchanged", async () => {
+  const stranded = { id: "PROJ-9", name: "Library hours", rescue_open: true, stage: null, owner: null, participation: null, scope: null, lastChange: null, members: [], activity: [0, 0, 0, 0, 0, 0, 0, 0], mine: { in: false, owner: false } };
+  const plane = { projectlist: ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [stranded, { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", rescue_open: false }] }), projectquestions: QUESTIONS };
+  const p = await open("/app/projects", plane, { screens: withScreens("project") });
+  const rowOf = (name) => rows(p).find((r) => r.querySelectorAll("a.cs-ref").some((a) => a.textContent === name));
+  assert.equal(rowOf("Library hours").querySelectorAll("a.cs-ref").find((a) => a.textContent === "Library hours").getAttribute("href"), "/app/project/PROJ-9", "the row opens the project, where the rescue is");
+  assert.ok(text(p, rowOf("Library hours")).includes(word("project.rescue.title.nodate")), "the stranded project is marked");
+  assert.ok(!text(p, rowOf("The Coliseum lease")).includes(word("project.rescue.title.nodate")), "control: a row without rescue_open is not marked");
 });

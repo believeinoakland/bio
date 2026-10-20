@@ -43,10 +43,10 @@ const SOURCES = ["queue.source-modified.one", "queue.source-modified.many", "que
   "queue.source.detail", "queue.source.untitled"];
 const PROJECT_ROWS = (w) => [`${w}.questions.one`, `${w}.questions.many`, `${w}.owner`, `${w}.owner.none`, `${w}.lastchange`, `${w}.lastchange.none`,
   `${w}.truncated`, `${w}.stage.means`, `${w}.stage.none`, ...["forming", "investigating", "matured", "closed"].map((s) => `${w}.stage.${s}`),
-  "member.founder.unnamed", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet"];
+  "member.founder.unnamed", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "project.rescue.title.nodate"];
 // R25, R30: "Start a project".
 const START = ["project.start.title", "project.start.title.help", "project.start.go", "project.visibility.title", "project.visibility.start.hidden",
-  "project.visibility.start.discoverable", "project.visibility.start.later"];
+  "project.visibility.start.discoverable", "project.visibility.start.later", "project.visibility.start.required"];
 
 // R47, R48: the lists the recording forms are chosen from (`find-in-forms.mjs`), each worded by key.
 const SEVEN_ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
@@ -54,8 +54,20 @@ const DATE_KINDS = ["meeting", "adopted", "effective", "signed", "entered", "iss
 const STANDARD_KINDS = ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"];
 const MONEY_KINDS = ["allocation", "balance", "behested", "contribution", "debt", "expenditure", "fee_charged", "gift", "income", "other", "payment", "revenue", "settlement", "transfer"];
 
+// R75: the decisions the record routes to a member, on Home and the queue (the labels the form needs and no key holds are not listed:
+// `screen.queue.routed.auth.cannot`, `.issuer.label`, `.tried.label`, `.tried.required`, for the design to hold). R79 (b): an item with no
+// sentence of its own, drawn by the unkeyed pair on both.
+const ROUTED = ["screen.members.endorse.what", "screen.queue.forward.to", "screen.queue.fieldfirst", "queue.unkeyed.summary", "queue.unkeyed.detail",
+  ...["item", "open", "question", "know", "issuer.help1", "issuer.help2", "how.label", "how.help1", "how.help2", "tried.help", "fine1", "fine2", "leaves",
+    "refused.basis", "refused.issuer1", "refused.issuer2", "refused.yours1", "refused.yours2"].map((k) => `screen.queue.routed.auth.${k}`),
+  "screen.queue.routed.owner.item", "screen.queue.routed.owner.leaves", "screen.queue.routed.endorse.leaves", "screen.queue.routed.expert.vouch", "screen.queue.routed.expert.leaves"];
+const ROUTED_ACTS = (screen) => [...ACTS(screen, ["adminendorse", "projectowneradd", "expertiseconfirm", "taskforward"]), `act.owed_taskdecide.label.${screen}`, "act.owed_taskdecide.does"];
+
+// R65: the doors to Held captures and the Inbox, on Home and the queue.
+const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name"];
+
 const WORDS_OF = {
-  home: [...SHARED, "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion"]),
+  home: [...SHARED, ...DOORS_TO("home"), "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion"]),
     "act.projectjoin.label.home", "act.projectjoin.does",
     "door.front.head", "door.front.intro", "door.front.blank", ...DOORS.flatMap((k) => [`door.front.${k}.name`, `door.front.${k}.hint`]),
     ...MARKS(["kind.todo", "kind.noticed", "kind.status"]), "mark.due.means", "home.update.ready", "home.update.security", "queue.update.see",
@@ -63,7 +75,7 @@ const WORDS_OF = {
     ...START, "file.trigger.home", "screen.home.title.needed",
     "screen.home.script", "home.ready.title", "screen.home.invite", "screen.home.saywho", "screen.home.first.invite", "screen.home.first.identity", "screen.home.first.project",
     "act.promote.here.home", ...JOIN, ...OURS, "home.strip.ours_passed.one", "home.strip.ours_passed.other", "home.strip.ours_passed.opens", "screen.home.request.grant", "screen.home.request.decline",
-    "act.projectrequestanswer.label.home",
+    "act.projectrequestanswer.label.home", ...ROUTED, ...ROUTED_ACTS("home"),
     "screen.home.strip.you", "screen.home.strip.group", "screen.home.needsyou", "screen.home.needsyou.holds", "screen.home.needsgroup", "screen.home.needsgroup.holds",
     "screen.home.open", "screen.home.why", "screen.home.fieldfirst", "screen.home.move.admin", "screen.home.move.member", "screen.home.move.anyone",
     "screen.home.areas", "screen.home.areas.holds", ...["investigation", "action", "members", "administration"].map((a) => `screen.home.area.${a}`),
@@ -79,7 +91,7 @@ const WORDS_OF = {
   elsewhere: [...SHARED, "screen.elsewhere.name", "screen.elsewhere.purpose", "elsewhere.title", "elsewhere.says", "elsewhere.records_nothing",
     ...ELSEWHERE_KINDS.flatMap((k) => [`elsewhere.kind.${k}`, `elsewhere.kind.${k}_says`]), ...["phone", "web", "email", "address", "mail"].map((h) => `elsewhere.reach.${h}`),
     "elsewhere.source", "elsewhere.none.head", "elsewhere.none.says", "elsewhere.none.noplace", "elsewhere.danger", "elsewhere.back"],
-  queue: [...SHARED, "screen.queue.name", "screen.queue.purpose", ...MARKS(["kind.todo", "kind.noticed", "kind.status", "origin.accepted"]),
+  queue: [...SHARED, ...DOORS_TO("queue"), "screen.queue.name", "screen.queue.purpose", ...MARKS(["kind.todo", "kind.noticed", "kind.status", "origin.accepted"]),
     "mark.due.means", "mark.hint.label", "mark.hint.means",
     ...ACTS("queue", ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote",
       "projectkeyset", "exploreapprove", "actionmove"]),
@@ -94,6 +106,9 @@ const WORDS_OF = {
     "screen.queue.hint.how", "screen.queue.hint.matched", "screen.queue.hint.method", "screen.queue.hint.trust", "screen.queue.hint.rate", "screen.queue.hint.rate.none",
     "screen.queue.hint.not", "screen.queue.hint.not.text", "screen.queue.forward.to", "screen.queue.snooze.until", "screen.queue.reminder.on", "screen.queue.fieldfirst",
     "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop",
+    // R68, R69, R75, R79: Defer beside Dismiss, a snoozed case and "Bring back", the routed decisions, the helps, the day picker, the answered rows.
+    "screen.question.say004", ...ROUTED, ...ROUTED_ACTS("queue"), "queue.act.dothis.help", "queue.act.open.help", "screen.queue.snooze.pick", "queue.signer-self-registered.members",
+    "queue.answered.done", "queue.answered.dismissed", "queue.answered.dismissed.noreason", "queue.answered.muted", "queue.answered.generic",
     // R58 to R61: choosing several items, what was answered, the feeds' honesty and the set-aside findings.
     "queue.multi.entry", "queue.multi.choose", "queue.multi.head", "queue.multi.head2", "queue.multi.chosen", "queue.multi.chosen.one", "queue.multi.done",
     "queue.multi.forward", "queue.multi.snooze", "queue.multi.snooze.help", "queue.multi.dismiss", "queue.multi.refused", "queue.multi.result", "queue.multi.result.one",
@@ -138,6 +153,9 @@ const WORDS_OF = {
     "screen.finder.route.cross", "screen.finder.route.cross.heading", ...["source", "office", "ordinance", "parcel", "contract", "fund", "program", "place", "proceeding"].map((k) => `find.row.kind.${k}`),
     "screen.finder.covered.heading", "screen.finder.covered.levels", "screen.finder.covered.rests", "screen.finder.covered.read", "screen.finder.covered.read.says.one",
     "screen.finder.covered.read.says.other", "screen.finder.covered.docs", "screen.finder.covered.docs.says.one", "screen.finder.covered.docs.says.other", "screen.finder.covered.looked",
+    // R67, R77, R78: the frontier at four levels, the partial match, a hit with no title.
+    "screen.answers.look", "screen.answers.state.other", ...["document", "content", "meaning", "internet"].map((l) => `screen.answers.level.${l}`), ...["LOOKED_FOUND", "LOOKED_ABSENT", "NOT_LOOKED"].map((s) => `screen.answers.state.${s}`),
+    "screen.finder.noresult.partial", "screen.finder.partial.head", "queue.source.untitled",
     "screen.find-in.passage", "act.cite.label.find-in", "screen.document.cite.question", "screen.document.cite.role", "screen.document.cite.noquestion", "screen.findin.cite.supports",
     "screen.findin.cite.against", "screen.findin.cite.norole", "queue.answered.col.did", ...["newly_cited_supporting_the_question", "left_as_it_was", "the_question_already_cited_it",
       "cite_every_document_you_hold_together_in", "each_document_is_cited_whole_as_its_own_", "a_document_the_question_already_cites_is", "if_the_set_changed_after_you_held_it_wha",

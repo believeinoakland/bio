@@ -13,7 +13,12 @@ export function itemWords() {
     "action-clock-overdue.theirs", "member-left-items", "watch-keep-or-stop", "plan-review-due", "plan-look-again",
     "litigation-hold.docket", "project-invitation", "project-request"];
   // The screens a subject opens, by the kind of subject an item names, and by the id's own prefix.
-  const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action" };
+  // R71, R73, R74: an escalation opens its matter, a key the account, a contradiction its screen; a subject kind with no screen opens nothing.
+  const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action",
+    escalation: "matter", key: "account", contradiction_candidate: "contradiction", contradiction_notice: "contradiction" };
+  // R73, R74: an item of these kinds opens the screen that settles it, whatever its subject is.
+  const KIND_OPENS = { "bias-debt": "bias", tension: "contradiction", "contradiction-duty": "contradiction", "contradiction-duty-unseen": "contradiction",
+    "contradiction-plurality": "contradiction", "contradiction-plurality-unseen": "contradiction" };
   const screenOf = function (s) {
     const id = s && s.id !== undefined && s.id !== null ? String(s.id) : "";
     if (/^PROJ-/.test(id)) return "project";
@@ -29,10 +34,17 @@ export function itemWords() {
     if (it.kind === "project-invitation" || it.kind === "project-request") return String(it.kind);
     return KEYED.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
   };
-  const open = function (it) {
+  // The screen an item opens and the id it opens at: the kind's settling screen first (R73, R74), else its subject's (R71).
+  const targetOf = function (it) {
     const s = it && it.subject || {};
-    const screen = screenOf(s);
-    return screen && s.id !== undefined && s.id !== null && s.id !== "" ? "/app/" + screen + "/" + encodeURIComponent(String(s.id)) : "";
+    const byKind = it && KIND_OPENS[String(it.kind)];
+    const screen = byKind || screenOf(s);
+    const id = byKind === "contradiction" ? (s.candidate !== undefined && s.candidate !== null ? s.candidate : s.id) : s.id;
+    return screen && id !== undefined && id !== null && id !== "" ? { screen: screen, id: String(id) } : null;
+  };
+  const open = function (it) {
+    const t = targetOf(it);
+    return t ? "/app/" + t.screen + "/" + encodeURIComponent(t.id) : "";
   };
   // A subject's title: the item's own, as the producers carry it (queue-producers R40) or beside its subject.
   const titleOf = function (it) {
@@ -42,11 +54,12 @@ export function itemWords() {
   };
   const subject = function (cs, it) {
     const s = it && it.subject || {};
-    const screen = screenOf(s);
-    if (!screen || s.id === undefined || s.id === null || s.id === "") return "";
+    const t = targetOf(it);
+    if (!t) return "";
+    const screen = t.screen;
     const title = titleOf(it);
     const since = it.since || it.captured || s.captured || (it.age && it.age.since) || "";
-    return cs.ref(screen, String(s.id), title || cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }), []);
+    return cs.ref(screen === "bias" ? "bias-debt" : screen, t.id, title || cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }), []);
   };
   const dated = function (cs, fills) {
     const out = Object.assign({}, fills);
@@ -79,8 +92,14 @@ export function itemWords() {
     const bare = !own || /^(https?:\/\/|www\.)/i.test(own) || /^[A-Z]{1,6}-[0-9A-Za-z-]+$/.test(own) || /^[0-9a-f]{12,64}$/i.test(own);
     const ref = subject(cs, it);
     const detail = it.detail ? (typeof it.detail === "string" ? cs.esc(it.detail) : "") : "";
-    if (!ref) return { summary: bare ? "" : cs.esc(own), detail: detail };
-    return { summary: ref + (bare || own === titleOf(it) ? "" : ' <span class="muted">' + cs.esc(own) + "</span>"), detail: detail };
+    // R79 (b): a kind with no sentence of its own (the producer gave an address, a bare id, or only the title) is `queue.unkeyed.summary`
+    // with the subject named as it is titled, never the file part of an address, and `.detail` when the producer gave none.
+    if (bare || own === titleOf(it)) {
+      const t = ref || (titleOf(it) ? cs.esc(titleOf(it)) : cs.w("queue.source.untitled", { date: { html: cs.date(String(it.since || (it.age && it.age.since) || "")) } }));
+      return { summary: cs.w("queue.unkeyed.summary", { title: { html: t } }), detail: detail || cs.w("queue.unkeyed.detail") };
+    }
+    if (!ref) return { summary: cs.esc(own), detail: detail };
+    return { summary: ref + ' <span class="muted">' + cs.esc(own) + "</span>", detail: detail };
   };
   // R50 (3): a team's own passed date, `due.ours.passed`, explained by `due.ours.passed_says`: its own, not a law's or an office's.
   const ours = function (cs, it) {

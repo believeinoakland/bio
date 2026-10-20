@@ -1,4 +1,4 @@
-/* The op-declaration helper and its collector (test-support R15, R16; K4168, K4189).
+/* The op-declaration helper, its collector and the registration call (test-support R15, R16, R17; K4168, K4189, K4240).
  *
  * Test tooling: only tests import it, never product code, because `declaredOpsOf`
  * imports later modules' files by path (P4). It performs no side effect on import. */
@@ -87,24 +87,50 @@ function filesOf(root, path) {
   return out;
 }
 
-/** The declarations of every module, found from `build/modules.json` under `root` with no module listed by hand.
- *  → `{ops, owners, duplicates}`. */
-export async function declaredOpsOf(root) {
+/** Every module's `DECLARED_OPS` found from `build/modules.json` under `root`, as `[owner, DECLARED_OPS]` pairs in
+ *  `modules.json` order: the one collector that `declaredOpsOf` and `registerDeclared` both read through. */
+async function pairsOf(root) {
   const { modules } = JSON.parse(readFileSync(join(root, "build", "modules.json"), "utf8"));
-  const ops = {}, owners = {}, who = {};
+  const pairs = [];
   for (const mod of modules) {
     for (const path of mod.paths ?? []) {
       for (const file of filesOf(root, path)) {
         if (!EXPORT_LINE.test(readFileSync(file, "utf8"))) continue;
         const { DECLARED_OPS } = await import(pathToFileURL(file).href);
         if (!DECLARED_OPS || typeof DECLARED_OPS !== "object") throw new Error(`${file}: has a DECLARED_OPS export line but exports no object DECLARED_OPS`);
-        for (const [op, declaration] of Object.entries(DECLARED_OPS)) {
-          (who[op] ??= []).push(mod.id);
-          if (!(op in ops)) { ops[op] = declaration; owners[op] = mod.id; }
-        }
+        pairs.push([mod.id, DECLARED_OPS]);
       }
+    }
+  }
+  return pairs;
+}
+
+/** The declarations of every module, found from `build/modules.json` under `root` with no module listed by hand.
+ *  → `{ops, owners, duplicates}`. */
+export async function declaredOpsOf(root) {
+  const ops = {}, owners = {}, who = {};
+  for (const [owner, DECLARED_OPS] of await pairsOf(root)) {
+    for (const [op, declaration] of Object.entries(DECLARED_OPS)) {
+      (who[op] ??= []).push(owner);
+      if (!(op in ops)) { ops[op] = declaration; owners[op] = owner; }
     }
   }
   const duplicates = Object.entries(who).filter(([, ids]) => ids.length > 1).map(([op, ids]) => ({ op, owners: ids }));
   return { ops, owners, duplicates };
+}
+
+/** The registrations this process has already called (R17): a registration is called once, whichever call names it. */
+const called = new WeakSet();
+
+/** Calls each registration function given (e.g. a module's `registerDeclaredOps`) once per process with every owner's
+ *  declaration as `[owner, DECLARED_OPS]` pairs (the pairs `declaredOpsOf` reads). A registration already called is
+ *  skipped; a registration's own refusal propagates and names what it refused. Test tooling: only tests call it. */
+export async function registerDeclared(root, ...registrations) {
+  const todo = [...new Set(registrations)].filter((registration) => !called.has(registration));
+  if (todo.length === 0) return;
+  const pairs = await pairsOf(root);
+  for (const registration of todo) {
+    called.add(registration);
+    await registration(pairs);
+  }
 }
