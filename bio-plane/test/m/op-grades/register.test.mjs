@@ -256,7 +256,7 @@ test("R50 (B21): registering every owner's DECLARED_OPS meets no DECLARED_OP_DIS
   const { ops, owners, duplicates } = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
   assert.deepEqual(duplicates, []);
   const { owed } = await registerOwners(ops, owners);
-  assert.deepEqual(owed.filter((op) => !["sweeps", "groupdescriptiondraft"].includes(op)), [], "no other owner row is set aside");
+  assert.deepEqual(owed, [], "no owner row is set aside: link-sweep and store-door have merged (K4252)");
 });
 
 /* ---- R51 ----------------------------------------------------------------------------------------------------------- */

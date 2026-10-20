@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01J5x9uuvhngES6Vq6VYWnWb · depth 2 · WORKING · handled B24
+**Status** · session_01J5x9uuvhngES6Vq6VYWnWb · depth 2 · COMPLETE · handled B26
 
 ## J1 · QUESTION
 
@@ -217,3 +217,28 @@ Also: the registration test still sets aside `sweeps` and `groupdescriptiondraft
 - `checks/run.mjs`: format 0, architecture 0; coverage and words failures only in other modules (REPORT).
 
 Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 9, module lines 3623
+
+## J20 · COMPLETE
+
+**COMPLETE (B25, B26; OP-GRADES #20, after the DEC-387 merge).** Pushed `657f162b5b`.
+
+**Applied.**
+1. **B26 (the start refusal):** every hand `NON_ACTS` reason of the 15 reworded ops now reads its owner's word (`word("<owner>.declared.<op>")` in `index`, `t34`, `t36`, `t37`, `t45`, `t47`), not a held sentence. `strengthbarset` leaves `OP_ALIASES`: strength declares it itself (`reasoned`), so it takes its own owner row, not `strengthbar`'s. The registration test (R50, B21) drops the owed filter (`owed` must be empty; link-sweep and store-door are merged). It passes.
+2. **B25 (words):** `checks/words.mjs op-grades` reads 0 (inline, testcopy, missingkey). The 24 testcopy findings were already converted in my earlier commit; the tests that copied the reworded sentences now read through `declaredSentence`.
+3. **B24 stands:** R39 and R51 (scoped to `NON_ACTS`, per your decision 1(b)).
+
+**Tests.** `node --test bio-plane/test/m/op-grades/`: 141 tests, 138 pass, 3 fail. The three are below.
+- `R17`: asserts 27 aliases; there are 26 now (`strengthbarset` removed). The count is in the requirement text, so the amendment is BOB's.
+- `R42` and `R46`: in the static tables (not registered), `strengthbarset` is a rungless act with no `MARKS` entry. Once the owner's registration applies, it is `reasoned` and no longer rungless. The mark table follows the design kit (`MARKS_KIT_COMMIT`), which is also BOB's to take.
+
+**Plane (`node --test bio-plane/test/m/plane/`):** 280 tests, 276 pass, 4 fail, none in op-grades' files as far as I can see: `R24` (`screen.contradiction.purpose` not held by the words list), `R5` (link-sweep `sweeps` in the route map), `R68` (a module exporting `DECLARED_OPS` missing from the assembly, named in `declarations.mjs`), `R71` (a declared op with no route, Worker arm or plane door). I did not verify the last two's cause beyond that. The plane starts: the registration no longer refuses.
+
+**Checks.** `format` 0 failures; `architecture` 0; `coverage op-grades` 51 of 51; `ownership` 0 failures (it was run before the last push).
+
+**Open for BOB.** R17's count (26), the `MARKS` entry for `strengthbarset` (or the amendment that says the mark follows registration), and the four plane failures above.
+
+Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 14, module lines 3640
+
+## J21 · REPORT
+
+Correction to J20 (Size line): module lines are 3627 (wc -l of bio-plane/src/op-grades/*.mjs), not 3640.

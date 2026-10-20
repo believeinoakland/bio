@@ -174,9 +174,9 @@ export const T45_NON_ACTS = {
   declaredstakeset: "setting: the group's declared stake in its own words, carried beside its public identity on what it "
     + "sends or publishes from then; an administrator's act, every earlier value kept; moves no bundle",
   /* local-facts (R10–R13) */
-  ruledraft: RULE("keyed by a profile section and an entry; a member drafts a rule from its primary source, with a reason"),
-  ruleconfirm: RULE("keyed by group rule; a member other than its drafter confirms it, and it applies from then"),
-  rulewithdraw: RULE("keyed by group rule; a member withdraws it with a reason, kept and never deleted"),
+  ruledraft: word("local-facts.declared.ruledraft"),
+  ruleconfirm: word("local-facts.declared.ruleconfirm"),
+  rulewithdraw: word("local-facts.declared.rulewithdraw"),
   ruleoffer: R("a confirmed group rule's entry and primary source as canonical bytes with their digest, for a member to "
     + "carry to the shared profile's maintainers; transmits nothing"),
   /* (T46; K2881) the five ops op-declarations declared under R49 after this module's T45 merge, graded on R32's rule:
