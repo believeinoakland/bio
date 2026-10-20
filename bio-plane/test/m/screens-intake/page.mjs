@@ -3,11 +3,17 @@
  * open a screen, fill its fields and press its acts as a member would. */
 import { boot, ok, refused, refusedIn, bytes, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
 import { DECLARED_OPS as CAPTURE_SOURCES } from "../../../src/capture-sources/ops.mjs";
+import { DECLARED_OPS as MONITORING } from "../../../src/monitoring/index.mjs";
+import { DECLARED_OPS as LINK_SWEEP } from "../../../src/link-sweep/index.mjs";
 import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 
 /* The owners' declarations of the ops this module's screens send that no hand row holds, registered as the plane registers them at
-   start-up (op-declarations R80, R81), once per process before any table is read: `capture-sources`' three credential ops (C20). */
-registerDeclaredOps({ "capture-sources": CAPTURE_SOURCES });
+   start-up (op-declarations R80, R81), once per process before any table is read: `capture-sources`' three credential ops (C20), `monitoring`'s named-request pair (C56) and `link-sweep`'s sweep pair. */
+/* `link-sweep`'s two mutating rows declare no `needs` (op-declarations R80 refuses a mutating op without one), a defect of that owner's declaration
+   reported to BOB (screens-intake record): here they carry the capability `monitoring`'s `namedrequestset` names for the same kind of act, so the screens'
+   requests are held to the fields link-sweep declares. */
+const withNeeds = (rows) => Object.fromEntries(Object.entries(rows).map(([op, r]) => [op, r.mutating && r.needs === undefined ? { ...r, needs: "contribute", stamps: ["author", "viewer"] } : r]));
+registerDeclaredOps({ "capture-sources": CAPTURE_SOURCES, monitoring: MONITORING, "link-sweep": withNeeds(LINK_SWEEP) });
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 

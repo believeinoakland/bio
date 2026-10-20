@@ -24,6 +24,7 @@ import { INBOX_SCREEN } from "./inbox.mjs";
 import { ARCHIVE_SCREEN } from "./archive.mjs";
 import { ABOUT_KNOCKER_SCREEN } from "./about-knocker.mjs";
 import { LEADS_SCREEN } from "./leads.mjs";
+import { WATCHING_SCREEN } from "./watching.mjs";
 
 /* The keys each screen reads (R26). */
 export const SCREEN_KEYS = Object.freeze({
@@ -163,6 +164,29 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.leads.look.detail", "screen.leads.share.head", "screen.leads.share.project", "screen.leads.share.project.help", "screen.leads.share.reason",
     "screen.leads.share.reason.help", "screen.leads.share.note1", "screen.leads.share.note2", "shell.unread",
   ]),
+  watching: Object.freeze([
+    "act.monitoring.label.watching", "act.monitorpause.label.watching", "act.monitorslate.label.watching", "act.sweeps.label.watching",
+    "screen.watching.intro", "screen.watching.running.head", "screen.watching.running", "screen.watching.running.meta", "screen.watching.paused",
+    "screen.watching.paused.line", "screen.watching.paused.effect", "screen.watching.pause", "screen.watching.resume", "screen.watching.list.head",
+    "screen.watching.list.help", "screen.watching.counts", "screen.watching.unscheduled", "screen.watching.unscheduled.note1", "screen.watching.unscheduled.note2",
+    "screen.watching.ended", "screen.watching.nr.last", "screen.watching.nr.due", "screen.watching.nr.next", "monitor.freq.hourly", "monitor.freq.daily",
+    "monitor.freq.weekly", "monitor.freq.monthly", "monitor.freq.per_meeting", "screen.watching.slate.head", "screen.watching.slate.intro1",
+    "screen.watching.slate.intro2", "screen.watching.sweeps.head", "screen.watching.sweep.help", "screen.watching.sweep.ratified", "screen.watching.sweep.next",
+    "screen.watching.sweep.unratified", "screen.watching.sweep.note1", "screen.watching.sweep.note2", "state.empty",
+    "capture.fieldneeded", "act.writinghelp.label.watching", "screen.capture.help.empty", "screen.watching.project", "screen.watching.sweep.pages", "screen.watching.nr.head", "screen.watching.nr.tip", "screen.watching.nr.where",
+    "screen.watching.nr.authority", "screen.watching.nr.open", "screen.watching.nr.retired", "screen.watching.nr.never", "screen.watching.nr.list",
+    "screen.watching.nr.listnote", "screen.watching.nr.ask", "screen.watching.nr.asktip", "screen.watching.nr.f.target", "screen.watching.nr.f.desc",
+    "screen.watching.nr.f.loc", "screen.watching.nr.f.lochelp", "screen.watching.nr.f.auth", "screen.watching.nr.f.authhelp", "screen.watching.nr.f.matters",
+    "screen.watching.nr.f.crucial", "screen.watching.nr.f.supporting", "screen.watching.nr.f.often", "screen.watching.nr.f.c.hour", "screen.watching.nr.f.c.day",
+    "screen.watching.nr.f.c.week", "screen.watching.nr.f.c.month", "screen.watching.nr.f.c.none", "screen.watching.nr.retire", "screen.watching.nr.n1",
+    "screen.watching.nr.n2", "screen.watching.nr.n3", "screen.watching.nr.ref.machine1", "screen.watching.nr.ref.machine2", "screen.watching.nr.ref.https",
+    "screen.watching.nr.ref.nothing", "screen.watching.nr.ref.target", "screen.watching.sweepdef.head", "screen.watching.sweepdef.tip", "screen.watching.sweepdef.title",
+    "screen.watching.sweepdef.sources", "screen.watching.sweepdef.sourceshelp", "screen.watching.sweepdef.seeds", "screen.watching.sweepdef.match",
+    "screen.watching.sweepdef.matchhelp", "screen.watching.sweepdef.often", "screen.watching.sweepdef.budget", "screen.watching.sweepdef.n1", "screen.watching.sweepdef.n2",
+    "screen.watching.sweepdef.ratify", "screen.watching.sweepdef.stop", "screen.watching.sweepdef.rathead", "screen.watching.sweepdef.rattip", "screen.watching.sweepdef.rat1",
+    "screen.watching.sweepdef.rat2", "screen.watching.sweepdef.ratnote1", "screen.watching.sweepdef.ratnote2", "screen.watching.sweepdef.ref.owner1",
+    "screen.watching.sweepdef.ref.owner2", "screen.watching.sweepdef.ref.machine1", "screen.watching.sweepdef.ref.machine2", "screen.watching.sweepdef.scope",
+  ]),
   inbox: Object.freeze([
     "act.inboxpull.label.inbox", "act.inboxresolve.label.inbox", "act.sourcelink.label.inbox",
     "screen.inbox.discarded", "screen.inbox.empty", "screen.inbox.existed", "screen.inbox.knock",
@@ -179,5 +203,5 @@ export const SCREEN_KEYS = Object.freeze({
   ]),
 });
 
-export const SCREENS = Object.freeze([CAPTURE_SCREEN, HELD_SCREEN, ARCHIVE_SCREEN, OPEN_FILE_SCREEN, INBOX_SCREEN, ABOUT_KNOCKER_SCREEN, LEADS_SCREEN]
+export const SCREENS = Object.freeze([CAPTURE_SCREEN, HELD_SCREEN, ARCHIVE_SCREEN, OPEN_FILE_SCREEN, INBOX_SCREEN, ABOUT_KNOCKER_SCREEN, LEADS_SCREEN, WATCHING_SCREEN]
   .map((s) => Object.freeze({ ...s, words: SCREEN_KEYS[s.id] })));
