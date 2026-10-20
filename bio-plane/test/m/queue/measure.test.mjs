@@ -32,7 +32,7 @@ test("R91: every feed's row states its milliseconds: this module's measure for t
 
 test("R91: a producer that states no facts.ms leaves every one of its feeds null (control); a feed id R45 does not know is a row that carries its stated time", () => {
   const f = setup().feed("alice");
-  assert.deepEqual(f.feeds.filter((x) => x.feed !== "tasks" && x.feed !== "notice-producers").map((x) => x.ms), Array(19).fill(null));
+  assert.deepEqual(f.feeds.filter((x) => x.feed !== "tasks" && x.feed !== "notice-producers").map((x) => x.ms), Array(20).fill(null));
   const g = setup({ facts: { failed: [{ feed: "a-new-feed", reason: "threw" }], ms: { "a-new-feed": 7 } } }).feed("alice");
   assert.deepEqual([row(g, "a-new-feed").answered, row(g, "a-new-feed").ms], [false, 7]);
 });
