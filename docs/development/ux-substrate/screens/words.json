@@ -61908,10 +61908,10 @@
   },
   {
    "key": "screen.bias.in_force_for_the_coliseum",
-   "en": "In force for The Coliseum lease",
+   "en": "In force for {project}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.by_admin_for_the_team",
@@ -62153,10 +62153,10 @@
   },
   {
    "key": "screen.bias.one_project_the_coliseum_lease",
-   "en": "One project: The Coliseum lease (its owners adopt)",
+   "en": "One project: {project} (its owners adopt)",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.why_you_adopt_it",
@@ -62230,10 +62230,10 @@
   },
   {
    "key": "screen.bias.ask_one_of_its_owners",
-   "en": "Ask one of its owners: Dev or Rosa.",
+   "en": "Ask one of its owners: {owners}.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.the_set_must_be_offered",
@@ -62496,10 +62496,10 @@
   },
   {
    "key": "screen.bias.no_lens_is_in_force",
-   "en": "No lens is in force for The Coliseum lease.",
+   "en": "No lens is in force for {project}.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone."
   },
   {
    "key": "screen.bias.a_case_published_now_says",
@@ -62573,10 +62573,10 @@
   },
   {
    "key": "screen.ceremony.this_is_the_lens_in",
-   "en": "This is your team's declared way of reading evidence (its lens), in force for The Coliseum lease today.",
+   "en": "This is your team's declared way of reading evidence (its lens), in force for {project} today.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-374: B398 C47 (bias biasmanifest): the publication ceremony's Bias step; the sentence stands alone."
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest): the publication ceremony's Bias step; the sentence stands alone."
   },
   {
    "key": "screen.ceremony.it_is_fixed_into_the",
@@ -64057,10 +64057,10 @@
   },
   {
    "key": "screen.matter.your_own_assessment_by_mai_the_households",
-   "en": "Your own assessment, by Mai: the households on the rent roll",
+   "en": "Your own assessment, by {name}: the households on the rent roll",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C41-C43 (conformance determine; consequences; escalation): a sentence on the matter screen in one of its mockup states. a refusal or an explanation where it is the plane's own, same meaning"
   },
   {
    "key": "screen.matter.not_shown_yet_that_the_harm_follows",
@@ -64666,10 +64666,10 @@
   },
   {
    "key": "screen.question.hunch.change.summary",
-   "en": "Change or take back Dev's hunch",
+   "en": "Change or take back {name}'s hunch",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-375: B398 C36 (hypotheses hypothesisrevise): question, Hunches section, fold under Keep a hunch; summary; {name} is the member who holds the hunch; keep the possessive"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-375: B398 C36 (hypotheses hypothesisrevise): question, Hunches section, fold under Keep a hunch; summary; {name} is the member who holds the hunch; keep the possessive"
   },
   {
    "key": "screen.question.hunch.change.note",
@@ -66976,17 +66976,17 @@
   },
   {
    "key": "screen.members.help.withdraw.what",
-   "en": "Takes the expertise off Dev's row, confirmation and declaration together.",
+   "en": "Takes the expertise off {name}'s row, confirmation and declaration together.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; explanation of the button Withdraw Dev's expertise; Dev is a sample name; translate in the same plain tone"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; explanation of the button Withdraw Dev's expertise; Dev is a sample name; translate in the same plain tone"
   },
   {
    "key": "screen.members.help.withdraw.again",
-   "en": "Dev can declare it again.",
+   "en": "{name} can declare it again.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; second sentence of that explanation; translate in the same plain tone"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-376: B398 C79 (member-roster expertiseconfirm): on the members screen; second sentence of that explanation; translate in the same plain tone"
   },
   {
    "key": "screen.members.help.withdraw.record",
@@ -69055,10 +69055,10 @@
   },
   {
    "key": "screen.ceremony.conf.account.label",
-   "en": "Your signed account of the capture (only Mai, who captured it, adds this)",
+   "en": "Your signed account of the capture (only {name}, who captured it, adds this)",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-377: B398 C6 (attestation captureaccount): field label; Mai is the sample capturing member"
+   "note": "DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-377: B398 C6 (attestation captureaccount): field label; Mai is the sample capturing member"
   },
   {
    "key": "screen.ceremony.conf.account.help1",
