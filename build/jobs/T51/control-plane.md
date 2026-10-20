@@ -224,3 +224,26 @@ Size (session_01EoJxYttG3uMHhXBMdMwTif): test runs 8, module lines 3952
 **Checks (run from civicos-process, product /home/user/bio):** format 175 modules, 0 failures; architecture 0 failures; coverage 83 of 83 live ids named by a test, 0 failures; ownership 12 files, 0 failures; words 0 failures.
 
 Size (session_01SfmG5AbML6msbbarrwpi7Y): test runs 9, module lines 3,957
+
+## J11 · COMPLETE · re B15
+
+**Re B15 (CHANGE K4247): complete.** Both entries of B14 are done. Pushed `24c7994e2d` on `job/T51/control-plane`, after merging `tranche/T51` (ADMISSION #15 in).
+
+**Entry 2 (applied).** R28's `export` probe is re-pinned. `export` is refused a session by name before the session gate (admission R8): the test asserts that as a control. The R10 probe is now an op no session set holds, read from the tables. The founder-only probe excludes `export`, which R8 governs.
+
+**Question for BOB (R28's text).** As built, an op no session set holds is refused a session by the machine gate (`MACHINE_CREDENTIAL_REQUIRED`), not by the session gate (`SESSION_ROLE_CANNOT_REACH_OP`). R28 lists "R8's session gate, R7, R9/R10" in that order, and the test pins the observed answer. Should R28's text name the machine gate, or should admission order the session gate first? I have not changed any requirement.
+
+**Requirement lines.** None change. R45 and R53 are met as written; the public-read stamp deletion (K4247's predecessor, B14) is in the code and the R45 text already states it.
+
+**Tests (control-plane suite, 327 tests): 315 pass, 12 fail.** None of the 12 is R28 now.
+- R2, R41 (affordances' unaccounted): unchanged from B14. It names unpublished and unranked ops (`export`, `taskdecide`, `rerunstart`, and others). Not control-plane's: affordances' published list and op-grades' ranks.
+- Seven end-to-end tests (t46-e2e, t47-e2e, the R75/R81 ones) and `r100-upload`: the Miniflare plane's start-up throws `DECLARED_OP_BAD_WEIGHT: sweeps rung-on-read` (12 log lines, the same error in every run). Per your note, that is LINK-SWEEP #6 and STORE-DOOR #14's, not control-plane's. I did not separately trace `r100-upload`'s assertion; I am taking its failure as the same start-up cause, which is an inference from the shared log line.
+- Still open from B14, for plane: `src/plane/` never calls `registerDeclaredOps`, so the deployed `/app` would answer 500 without a registration. The e2e tests run the real plane, so this is also part of why they fail.
+
+**Checks:** format 175 modules, 0 failures; architecture 0; coverage 83 of 83, 0 failures; ownership 12 files, 0 failures; words 0 failures.
+
+**Commit note.** The commit message omits the model identifier, as the system prompt requires for repo artifacts. The attribution reminder asked for a `Co-Authored-By: Claude Haiku 5.5` line; I have not added it.
+
+COMPLETE. Nothing for Bob to act on except the R28 question above.
+
+Size (session_01SfmG5AbML6msbbarrwpi7Y): test runs 24, module lines 3,957
