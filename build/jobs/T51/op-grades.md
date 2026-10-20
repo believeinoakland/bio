@@ -170,3 +170,19 @@ Until you rule, I hold at this state and do not post `COMPLETE`. I will not chan
 **Tests and checks.** `node --test bio-plane/test/m/op-grades/`: 140 pass, 0 fail, 0 skipped. `checks/format.mjs .`: 0 failures. `checks/architecture.mjs . op-grades`: 0 failures. `checks/coverage.mjs . op-grades`: 50 of 50 live requirement ids named; 0 failures. `checks/words.mjs . op-grades`: 0 failures. `checks/ownership.mjs . op-grades tranche/T51`: 1 failure, `build/requirements/op-grades.md` (commit 4ebf9b1d66, before this restart; J15 item 4). Dependants' tests (52 files that name op-grades): 613 pass, 6 fail; 5 fail identically on `origin/tranche/T51`, the sixth is affordances `t48` (J15 item 3). `fleetbundles` is stale for the tranche's other modules' sources (BOB regenerates at the layer close); no op-grades file feeds a bundle.
 
 Size (session_01HSAFyMwi4NiSyNZqh5rY1c): test runs 16, module lines 3622
+
+## J17 · QUESTION
+
+**QUESTION (B24; R51's absence half, and one design key).** Pushed `c20825d428` on `job/T51/op-grades`.
+
+R51, as written, says a declared op's reason is its owner's word in its `NON_ACTS` row **or** its `RUNG_ABSENT` row. Registration (`src/op-grades/declared.mjs`) compares only the `NON_ACTS` reason. Comparing the absence's `is` as well shows 113 ops whose hand `is` differs from the owner's declared description:
+- 108 have an owner word id in the word table (105 `localize`, 3 `word` keys), e.g. `member-roster.declared.adminendorse`, `file-safety.declared.deepercheck`.
+- 5 cannot be referenced yet: `capturerequest` and `capturerequestretry` (capture-requests declares literal sentences, not a word id); `caseimport` (case-import declares the constant `IMPORT_DIRECTED`); `checkrequest` (tasks: not located); `ask` (plane: `plane.declared.ask` is not in `rows.mjs` yet).
+
+I have not converted the 113 and have not tightened registration. Tightening now would make the real registration refuse those five owners, and the plane registers next. The `is` text may show to members, so changing it is a visible change to the text.
+
+**Decision 1, for you.** (a) **Recommended:** convert the 108 `is` rows to their owners' word ids now; capture-requests, case-import, tasks and plane give their five a word id; then registration compares `is` too (R50) and R51's test extends to it. (b) Amend R51 to `NON_ACTS` only, as the test checks today, and leave the 113 `is` rows as they are.
+
+**Decision 2, for you.** `groupdescriptiondraft` (store-door): its declared word `store-door.declared.groupdescriptiondraft` has no design key, so `word("…")` in `src` fails the words check (`missingkey`). I kept the sentence on its `NON_ACTS` row, equal to the owner's text. Either the design keys it (then I switch the row to `word(...)`), or it stays held until the owner's word is keyed.
+
+Also: the registration test still sets aside `sweeps` and `groupdescriptiondraft` (the owed filter), since link-sweep #6 and store-door #14 are not on `tranche/T51` yet. I have not merged the tranche (B24: when you say so). Tell me when to merge.
