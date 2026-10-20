@@ -176,7 +176,7 @@ test("R12: options are affordances' acts on the first 8 subjects, once each; dis
   const fin = f["FINDING::p::s"];
   assert.deepEqual(fin.options, acts, "the union over eight subjects, each act once");
   assert.equal(seen.filter((t) => /^INF-[89]$/.test(t)).length, 0, "no subject past the eighth is asked");
-  assert.deepEqual(f["TASK-2026-0001-a"].disposition.instead, "taskresolve");
+  assert.deepEqual(f["TASK-2026-0001-a"].disposition.instead, ["taskdecide", "taskforward", "taskresolve"], "an authority task declares its door (tasks R24, queue R12)");
   assert.equal(f["TASK-2026-0001-a"].disposition.available, false);
   assert.equal(f["OBLIGATION::bias-debt::r1"].disposition.instead, "biasdebtresolve");
   const c = f["CONDITION::governor-holding-host::h.example"].disposition;

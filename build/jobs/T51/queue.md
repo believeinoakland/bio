@@ -79,3 +79,7 @@ Size (session_01LFGQNNUSg4rqKWLPjYWTBr): test runs 16, module lines 3373
 ## J4 · COMPLETE
 
 FR-23 applied: C62 (doors read from the producers' declared `door`, hand list the fallback, R28's bridge reads the caller's live item), DECLARED_OPS for proposedispose, queuemute, queuesnooze (agreed with both hand rows), L13 (feeds[].ms, feeds_ms, ask-scoped reads), B5 (resolved_undecided). Requirement lines R12/R28/R39 amended and R91, R92 new are written in build/requirements/queue.md (B4 option one), so the ownership check lists that one file, as B4 accepts. Queue suite 196 pass, 0 fail; format, architecture, coverage (53 of 53), words: 0 failures. For you: plane's tests R2,R5 (N13) and R45,R48 (T47) go red on op=queue's two new timing fields (their mask covers instants only); hand rows for the three ops can go; tasks/queue-producers have yet to mint door and facts.ms; setup-words rows are stale. Details in the record's Completion (QUEUE #28).
+
+## Completion of B6 (QUEUE #28)
+
+`tasks` R24 merged: authority-undetermined rows carry `door` in `recentTasks`; queue already carried a row's `door` onto the item and led `disposition.instead` with it (R12), no hand list. Tests: doors.test.mjs now uses the real `tasks` door (control: a check-requested task keeps taskresolve); feed.test.mjs R12 expected the old `taskresolve` for an authority task and now expects the declared door. Queue suite 197 pass, 0 fail.

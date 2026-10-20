@@ -21,13 +21,11 @@ function produced(make) {
 const obl = (kind, rest, extra = {}) => ({ id: `OBLIGATION::${kind}::${rest}`, class: "OBLIGATION", kind, subjects: ["DOC-1"], ...extra });
 const pd = (w, a) => w.q.proposeDispose({ to: "deferred", reason: "r", decidedBy: "alice", viewer: "member:alice", identity: "member:alice", ...a });
 
-test("R12 (C62): `tasks` rows declare the door of authority-undetermined; the item carries it and its disposition leads with it; a task declaring none keeps taskresolve (control)", () => {
+test("R12 (C62): `tasks` declares the door of authority-undetermined (its R24); the item carries it and its disposition leads with it; a task of another kind declaring none keeps taskresolve (control)", () => {
   const w = world();
   w.member("alice"); w.bundle("DOC-1"); w.bundle("DOC-2");
   w.task("TASK-2026-0001-a", "DOC-1", { assignee: "alice" });
-  w.task("TASK-2026-0002-a", "DOC-2", { assignee: "alice" });
-  const orig = w.tasks.recentTasks.bind(w.tasks);
-  w.tasks.recentTasks = (a) => orig(a).map((r) => (r.id === "TASK-2026-0001-a" ? { ...r, door: ["taskdecide", "taskforward", "taskresolve"] } : r));
+  w.task("TASK-2026-0002-a", "DOC-2", { assignee: "alice", kind: "check-requested" });
   const m = byId(w.feed("alice"));
   assert.deepEqual(m["TASK-2026-0001-a"].door, ["taskdecide", "taskforward", "taskresolve"]);
   assert.deepEqual(m["TASK-2026-0001-a"].disposition.instead, ["taskdecide", "taskforward", "taskresolve"]);
