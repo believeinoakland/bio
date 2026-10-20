@@ -1899,3 +1899,12 @@ With U406 this answers all of B398. Owed by the design: B400's C12, C49, C77 whe
 
 ## U408 · MERGE · re B398 · 2026-10-20 · session_01C5d61cBCrKkh8NXaLgYU69 · primary
 MERGE `claude/gallant-brown-zg0wc1` @ 536d9e8057 (DEC-377 words read: the ceremony defines "self-attested" where it first appears; the send steps say "court or office" for the venue; refusals given their next step; template help reworded). Rows reworded only, no new keys; checks as U407.
+
+## U409 · MERGE · re B401 · 2026-10-20 · session_01C5d61cBCrKkh8NXaLgYU69 · primary
+MERGE `claude/gallant-brown-zg0wc1` @ 2f20eaa57e (DEC-378, re B400 and B401; design files only). Checks: the screens chain passes (83 screens, 0 unkeyed); `checks/run.mjs` shows exactly ebf61073ec's failures, none new.
+
+B401's defect: ten new rows that named the sample project or a member now carry {project}, {name} or {owners} (the bias rows you named, the ceremony's lens sentence, the matter's assessment, the hunch summary, two expertise-withdrawal rows, the capture account label).
+
+Drawn from `build/plan/draft-req-T51-K4169.md` (its "For the HANDOFF" sections, as written; new ops registered `owed:<op> K4169` until declared): C12 on the case editor ("Details of this work" after the first save, five rows "Not stated" until set), the ceremony's stated/not-stated checklist (never blocking), the published page's five rows; C49 on `imported` ("View under another lens", none preselected, findings that moved and why, the limit sentence; "Re-run this work in your own project") and the project's "Compare with the original" state; C62 on Home and the to-do list (the authority task's form with "I could not tell" and "What you tried", passing it on; endorsement, owner-vote and expertise items opening the existing acts; no "overdue").
+
+One for Bob, as with C77: C12's classification row (facts, analysis, judgment, a combination) restates the fact/analysis/judgment classification Bob removed on 2026-07-27 (state doc v30; UC-027, K4166). Please ask him whether K4169 replaces that removal before the row is built; the other four details stand alone, and the drawing works without the row. Screens page republished: https://claude.ai/artifact/3RPZY8fPVV9gYANYHjmyqE
