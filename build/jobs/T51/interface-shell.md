@@ -178,3 +178,13 @@ Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 9, module lines 2876
 ## J12 · COMPLETE
 
 COMPLETE (B21, B22) — see J11 in my record. R110 projectKey applied with test and control; stand-ins brought to the owners' declarations (projectowneradd and the other member acts, cite, enroll, wizarddraft). Module suite 236/236; format, architecture, coverage (107/107), ownership 0 failures. Needs your edit: the R110 requirement line (ownership bars me from the requirements file), text in J11. Screens-publish must list crumb.project.unjoined in its words.
+
+## J13 · COMPLETE
+
+COMPLETE (B23) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**R12 (K4237).** `can` draws a read (`OPS[op].mutating` false) that no `SESSION_OPS` set holds when the session's class is among `OPS[op].classes`, or when the op is public (`classes: null`, `bootstrap`); the page data gains `readClasses` (`pick` over `OPS`). Tests in `fixround.test.mjs`: `selftest`, `runtime`, `bootstrap` (updates), `exportlog` (group), `biasmanifest`, `biasinhale`, `biasdebt` (bias) drawn for an admin and a member session, all in neither set; controls: `export` (mutating, outside the set) not drawn, and `selftest` not drawn to a session of class `agent`, which it does not list. The first test fails without the change. `export`'s session reach stays OP-DECLARATIONS #30's. R110's projectKey line is BOB's at the merge (J11).
+
+**Checks.** Module suite 239 of 239; format, architecture, coverage, ownership below.
+
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 4, module lines 2884

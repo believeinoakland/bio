@@ -176,7 +176,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const caps = Array.isArray(ME.capabilities) ? ME.capabilities : [];
     if (need !== undefined && need !== null && !caps.includes(need)) return false;
     const set = ME.tokenClass === "admin" ? SESSION.admin : SESSION.member;
-    if (!set.has(op)) return false;
+    /* K4237: a read is served to any session whose class its op lists; `SESSION_OPS` gates mutating ops alone */
+    const rc = D.readClasses[op];
+    if (!set.has(op) && !(rc === null || (Array.isArray(rc) && rc.includes(ME.tokenClass)))) return false;
     if (ADMIN.has(op) && ME.administer !== true) return false;
     return true;
   }
