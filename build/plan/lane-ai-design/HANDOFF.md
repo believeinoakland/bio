@@ -112,3 +112,6 @@ Read first, as BOB directed: K1364 (B3: "the words a script fills in are always 
 
 ## A21 · 2026-10-21 · Hand-over prompt for AI-DESIGN #2
 Written at Bob's request ("refresh. Give me the prompt you need"): `NEXT-SESSION-PROMPT.md`. Next steps recorded there: Q4 as `SUITE-REQUIREMENTS.md`, Q6 as `WAY-THERE.md`, keep the three requirements documents current, read the cybersecurity UX structure before extending `UX-REQUIREMENTS.md`.
+
+## A22 · 2026-10-21 · Bob's answers to the boundary questions
+Bob: cross-owner failover only with the other owner's standing opt-in, off by default: **agreed**; turn-level progress acceptable where an AI cannot stream: **agreed**; health reports opt-in and content-free: ok (A20). Packaging stays BOB's. `AI-PROVIDER-REQUIREMENTS.md` and `NEXT-SESSION-PROMPT.md` updated. BOB to record as K. Bob is refreshing the session; AI-DESIGN #2 starts from `NEXT-SESSION-PROMPT.md`.
