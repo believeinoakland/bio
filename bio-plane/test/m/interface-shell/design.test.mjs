@@ -302,7 +302,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
   const cases = [["front", "login"], ["finder", "search"], ["home", "promote"], ["capture", "acquire"], ["queue", "queuemute"]];
   for (const [id, op] of cases) {
     assert.ok(Object.hasOwn(MARKS, op), op + " in MARKS");
-    const s = { id, reads: () => ({}), acts: [{ op }], render: fn(`return cs.act("${op}");`) };
+    const s = { id, reads: () => ({}), acts: [{ op, send: fitSend(op) }], render: fn(`return cs.act("${op}");`) };
     const p = await boot({ screens: [s], path: "/app/" + id, plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "create_projects", "publish"] }) } });
     const b = btn(p, op);
     assert.ok(b, op);

@@ -51,7 +51,9 @@ test("R9 refusals in order, each writing nothing: no member behind the caller (C
     ["SIGNER_MEMBER_NOT_ENROLLED", "C-63.1", SIGNER_ENROLMENT_CHECKS.SIGNER_MEMBER_NOT_ENROLLED.translation, "cal", false]);
   const dee = reg(w, "dee", "AAAAannkey");
   assert.deepEqual([dee.reason, dee.member_status, dee.enrolled], ["SIGNER_MEMBER_NOT_ACTIVE", "revoked", true]);
-  for (const by of ["nobody", "admin"]) assert.deepEqual(reg(w, by, "AAAAnew"), noSuchMember(by), by);
+  assert.deepEqual(reg(w, "nobody", "AAAAnew"), noSuchMember("nobody"));
+  /* the founder is no member before the instance is claimed (R81: after it she is, t51.test.mjs) */
+  assert.deepEqual(reg(world(), "admin", "AAAAnew"), noSuchMember("admin"));
   /* SIGNER_KEY_HELD_BY_ANOTHER: exactly its fields and row, naming no one */
   const held = reg(w, "bob", "AAAAannkey", "mine now");
   assert.deepEqual(Object.keys(held).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);

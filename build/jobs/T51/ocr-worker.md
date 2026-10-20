@@ -1,6 +1,6 @@
 # ocr-worker (T51)
 
-**Status** · session_01GcznjZ3hvv6U15cyGqiVkP · depth 2 · COMPLETE · handled B2
+**Status** · session_01DuirV8btJ9Ff4eRbjgcxEv · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -45,3 +45,21 @@ Re-run after CHANGE B2 (K3962, K3965): merged tranche/T51 and civicos-process ea
 **Tests.** `node test/ocr-worker.test.mjs`: 249 passed, 0 failed. The first run after the merge failed R19 (stale bundle); `npm run build` regenerated `dist/` (this module's own output), and the rerun is green.
 
 Size (session_01GcznjZ3hvv6U15cyGqiVkP): test runs 4, module lines 799 (ocr-worker/src excluding the generated src/tesslib.mjs).
+
+## J3 · COMPLETE
+
+FR-67 · ocr-worker · entry 1 (L26, K4194) applied.
+
+**Entry applied.** `ocr-worker/src/member.mjs`: a photographed page is rendered with `renderPicture(bytes, page, { maxEdge, grey: true, prepare: true })`, so the engine reads pdf-pixels' prepared pixels. A picture whose answer says `prepared.text_found: false` is not handed to the engine: it is answered `NOTHING_TRANSCRIBED` (the module's existing no-text path) with `boxes`, `blank`, `unanchored` all 0, after the container and the frame bound and before the engine runs. `MAX_FRAME_BYTES` is judged on the frame the renderer answers, which is already the prepared size (checked by a test with a prepared frame over the bound). New id `ocr-worker.member.the_picture_has_no_lines_of_text` (a `localize` sentence). New requirement written by me in `build/requirements/ocr-worker.md`: **R24**, named by its tests (no *not yet met* marker left).
+
+**Tests** (`ocr-worker/test/ocr-worker.test.mjs`, new section A11; the R23 renderer-options test now also names R24). Written first and seen failing (4 failures, then the suite ending at A11). Through the member's real path, with the real picture renderer and the real engine in node: page-noise-shade reads 97 percent prepared, 0 unprepared; page-combined-a 100 vs 26; page-110dpi 100 vs 100 (this engine reads it whole either way, so no control on that one); the blank picture is answered `NOTHING_TRANSCRIBED` and the engine never runs. Stand-in renderer tests: no-text, text found, no prepared field (old answer), frame over the bound on the prepared size, bound before no-text, PDF unchanged. Fixtures copied into my tests path: `page-*.jpg`, `page-words.json` (from pdf-worker's `picture-variants.json`, pages).
+
+**Deferred.** None.
+
+**Stale generated artifact (report to BOB).** `ocr-worker/dist/` (`ocr-worker.bundled.mjs`, `ocr-worker.bundle.json`) is stale against `src/member.mjs`; not edited, as instructed. Test R19 ("the committed manifest's input and asset hashes match the tree") fails in my suite for that reason: it also failed before my change on this branch after merging `tranche/T51`, so the bundle was already stale at START. Part B (workerd, the committed bundle) therefore does not yet show the prepared path; BOB regenerates `dist/` with `npm run build` at the round's close and R19 then reads green.
+
+**Found in other modules.** None.
+
+**Checks** (process repository, against /home/user/bio): format 175 modules, 0 failures; architecture 23 product files, 29 relative imports, 0 failures; coverage 24 of 24 live requirement ids named, 0 failures; words: no finding in ocr-worker; ownership: one failure, the listing of build/requirements/ocr-worker.md, accepted at my merge by B3. Module tests (`node test/ocr-worker.test.mjs`): 265 passed, 1 failed (R19, the stale bundle above).
+
+Size (session_01DuirV8btJ9Ff4eRbjgcxEv): test runs 7, module lines 808

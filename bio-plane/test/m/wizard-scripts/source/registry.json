@@ -605,12 +605,9 @@
      ]
     },
     {
-     "op": "expertiseconfirm",
+     "op": "owed:expertisewithdraw DEC-386",
      "label": "Withdraw an expertise",
-     "status": "declared",
-     "modules": [
-      "op-declarations"
-     ]
+     "status": "owed"
     },
     {
      "op": "invitewithdraw",
