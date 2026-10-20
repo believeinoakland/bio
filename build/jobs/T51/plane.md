@@ -159,3 +159,10 @@ Best reading, the smallest design that holds: (a) the route map passes a fresh `
 - Test `t51.test.mjs` R73: a stalled `acquire` (fetch held) through the route map, with `trace`, is read by `acquiretimings` while running (names the running stage) and after it ends (stages that ran, none running); controls: another trace, no trace, an unkeyed call, the bound. Red without the change (`acquiretimings` is an unknown op).
 - For BOB: R73 is the id the test names; its requirement text (plane R73: the holder, the read, the bound and time to live) is yours to write. (c) control-plane #41 and (d) capture #40 are the remaining parts; the Worker-level proof follows them.
 - Suite with the nine ops skipped locally: tests 283, pass 272, fail 11, the same eleven as before (accepted by name, B12). Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 26, module lines 210 new
+
+## J10 · COMPLETE
+
+COMPLETE (PLANE #44; B8 to B14): pushed on job/T51/plane; record in full.
+B13/B14 built: `plane/acquire-timings.mjs` (bounded holder keyed by the door's trace, 64 entries, 60 s; `acquiretimings?trace=` read at acquisition's place in the route map; `acquire` is handed the held object); end-to-end test R73 in t51.test.mjs (stalled acquire read while running and after), red without the change. Departure: an ended acquire's entry stays until the time to live, so a late ask still reads it. R73's requirement text is BOB's to write (the test names R73). Remaining: (c) control-plane #41 asks the read on its timeout, (d) capture #40 sends trace with /acquire; the Worker-level proof follows.
+Checks: format, architecture, coverage (72/72), words 0 failures; ownership as before.
+Accepted reds (B12), 11 of 283 with the nine disagreeing owner rows skipped locally: t42 R37, t46 R42, worker R6 x2 (workerd), R68, R5 op=sweeps, R6 bootstrap (instance-setup R95), R71 (casedetailspublic, CONTROL-PLANE #41), R24 (design). After OP-GRADES #18 and LINK-SWEEP #5 merge I merge the tranche and re-run.
