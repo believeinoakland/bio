@@ -220,6 +220,27 @@ test("R49: the proposals feed reads the bundles behind its instances once for al
   assert.equal(large.statements, small.statements, `${small.statements} statements at 2 proposals, ${large.statements} at 20`);
 });
 
+test("R49: the leads read where their captures are registered and what points at those bundles once for all of them: the statements do not grow with the number of leads, and each lead's basis entry is its own", () => {
+  const run = (K) => {
+    const requests = Array.from({ length: K }, (_, j) => ({ request: `CR-${j}`, run: "r", target: "INQ-A", lead_inquiry: "INQ-S", address: `https://x.example/${j}`,
+      host: "x.example", purpose: "investigate", ua_mode: "civicos", capture_sha: `sha${j}`, captured_at: iso(NOW), attribution: { ok: true, statement: "s" } }));
+    const w = world({ captureRequests: { leads: () => ({ requests }) }, provenance: { homeOf: (sha) => ({ bundleId: `DOC-${sha.slice(3)}` }) } });
+    w.member("alice"); w.bundle("INQ-S", "inquiry"); w.bundle("INQ-A", "inquiry");
+    for (let j = 0; j < K; j++) w.bundle(`DOC-${j}`);
+    w.leg("INQ-S", "DOC-1");                                       // only the second document is part of a case
+    w.read("alice");
+    const before = w.statements.length;
+    const r = w.read("alice");
+    return { r, statements: w.statements.length - before };
+  };
+  const small = run(3), large = run(24);
+  const entry = (r, j) => r.items.find((i) => i.id === `FINDING::out-of-inquiry-lead::CR-${j}`).basis.basis_entry;
+  assert.deepEqual([entry(small.r, 0).state, entry(small.r, 0).basis_legs, entry(small.r, 0).bundle_id], ["absent", 0, "DOC-0"]);
+  assert.deepEqual([entry(small.r, 1).state, entry(small.r, 1).basis_legs, entry(small.r, 1).bundle_state], ["present", 1, "collected"]);
+  assert.equal(large.r.items.filter((i) => i.kind === "out-of-inquiry-lead").length, 24);
+  assert.equal(large.statements, small.statements, `${small.statements} statements at 3 leads, ${large.statements} at 24`);
+});
+
 /* The small fixture's answer as the code produced it before the change (R49's control). */
 const SMALL_SHAPE = [
   ["FINDING::source-modified::DOC-000", [], ["DOC-000"]],

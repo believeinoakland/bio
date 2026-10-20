@@ -152,7 +152,7 @@ export class QueueProducers {
   #memo = null;
   #fresh() {
     return { titles: new Map(), cases: new Map(), owners: new Map(), seen: new Map(), names: new Map(), caseProject: new Map(),
-             authors: new Map(), captured: new Map(), homes: new Map(), options: new Map(), shared: null, quiet: false };
+             authors: new Map(), captured: new Map(), lead: { homes: new Map(), facts: new Map() }, homes: new Map(), options: new Map(), shared: null };
   }
   /** The ids of `ids` that are strings, once each, that `held` has not answered yet. */
   static #missing(held, ids) { return [...new Set((ids || []).filter((x) => typeof x === "string" && x))].filter((x) => !held.has(x)); }
@@ -542,18 +542,16 @@ export class QueueProducers {
       return { state: "undetermined", reason: "no_capture_sha", bundle_id: null, bundle_state: null,
                basis_legs: null, version_legs: null,
                detail: localize("queue-producers.index.the_request_records_no_capture", "the request records no capture digest, so there is no document to ask about. That this producer could not look is a different fact from the document being part of nothing, and it is reported as the first rather than the second.") };
-    const home = this.#provenance.homeOf(sha);
+    const home = this.#memo.lead.homes.has(sha) ? this.#memo.lead.homes.get(sha) : this.#provenance.homeOf(sha);
     const reg = home ? { bundle_id: home.bundleId } : null;
     if (!reg)
       return { state: "undetermined", reason: "unregistered_capture", bundle_id: null, bundle_state: null,
                basis_legs: null, version_legs: null,
                detail: localize("queue-producers.index.no_register_entry_answers_to", "no register entry answers to this capture, so the bytes are not attached to a document this store can name and there is nothing whose place in a case could be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape).") };
-    const head = this.#record.head(reg.bundle_id);
-    const b = head ? { current_state: head.currentState } : null;
-    const legs = this.#one(
-      `SELECT COUNT(*) AS n FROM inquiry_basis WHERE target_id=?`, reg.bundle_id).n;
-    const vlegs = this.#one(
-      `SELECT COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id=?`, reg.bundle_id).n;
+    const held = this.#leadFacts([reg.bundle_id]).get(reg.bundle_id);
+    const b = held.state === undefined ? null : { current_state: held.state };
+    const legs = held.legs;
+    const vlegs = held.vlegs;
     const none = legs === 0 && vlegs === 0;
     return {
       state: none ? "absent" : "present",
@@ -565,6 +563,24 @@ export class QueueProducers {
         ? localize("queue-producers.index.looked_for_and_not_there", "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the case, which is a different sentence from nobody having read it, and this producer counted both basis projections to be able to say which.")
         : localize("queue-producers.index.this_document_is_carried_by", "this document IS carried by a reading of some question, so the lead has already been acted on or the document was evidence before the lead was raised. Reported rather than suppressed: the item is still the record of an observation somebody made."),
     };
+  }
+
+  /** R49: what the leads' basis absence asks of each bundle the captures are registered under (its state, and how many legs of the
+   *  inquiries' bases and of the proposed readings point at it), every bundle not yet held read at once by three statements. */
+  #leadFacts(bundleIds) {
+    const held = this.#memo.lead.facts;
+    const todo = QueueProducers.#missing(held, bundleIds);
+    if (todo.length) {
+      const json = JSON.stringify(todo);
+      const states = new Map(this.#rows(`SELECT bundle_id, current_state FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`, json)
+        .map((r) => [r.bundle_id, r.current_state]));
+      const legs = new Map(this.#rows(`SELECT target_id, COUNT(*) AS n FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?)) GROUP BY target_id`, json)
+        .map((r) => [r.target_id, r.n]));
+      const vlegs = new Map(this.#rows(`SELECT target_id, COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id IN (SELECT value FROM json_each(?)) GROUP BY target_id`, json)
+        .map((r) => [r.target_id, r.n]));
+      for (const id of todo) held.set(id, { state: states.has(id) ? states.get(id) : undefined, legs: legs.get(id) ?? 0, vlegs: vlegs.get(id) ?? 0 });
+    }
+    return held;
   }
 
   /** `out-of-inquiry-lead` (D-213, ANSWERED 2026-08-06 by Bob under DEC-60) —
@@ -621,6 +637,16 @@ export class QueueProducers {
     const requests = QueueProducers.#answered(this.#captureRequests.leads({ viewer }), "requests", "capture-requests.leads");
     /* R49: the sight and titles of the questions the leads name, read at once */
     seen.prefetch(requests.map((r) => r && r.target)); this.#titlesOf(requests.flatMap((r) => (r ? [r.target, r.lead_inquiry] : [])));
+    /* and where each capture is registered, and what points at those bundles (R49): the register read for each capture, the legs at once */
+    const registered = [];
+    for (const r of requests) {
+      const sha = r && r.attribution && r.attribution.ok && typeof r.capture_sha === "string" ? r.capture_sha.trim() : "";
+      if (!sha || this.#memo.lead.homes.has(sha)) continue;
+      const home = this.#provenance.homeOf(sha);
+      this.#memo.lead.homes.set(sha, home);
+      if (home) registered.push(home.bundleId);
+    }
+    this.#leadFacts(registered);
     for (const r of requests) {
       const attribution = r.attribution;
       /* THE SAME DEFENCE `#conditionsCaptureRequested` STATES, for the same
@@ -1558,7 +1584,6 @@ export class QueueProducers {
    *  documents and the archive addresses are bounded by monitoring's reads (its R47, R48), which publish their bounds. */
   static QUEUE_NOTICES_MAX = 1000;
   static QUEUE_OBJECTIVE_GAP_PROJECTS = 50;
-  static QUEUE_OBJECTIVE_GAP_PAGE = 200;
   /** D-86: the OBLIGATION items the sweep raised, for `queueFeed`. Synchronous, like every producer there. The
    *  row is gated by `#bundleGate` over the run's `context_id` — the predicate `aiRunRead` compiles for the run
    *  itself, so an item about a run is shown exactly to the readers of that run. A member who is not a recipient
