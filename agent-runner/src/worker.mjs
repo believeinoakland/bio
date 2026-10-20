@@ -15,12 +15,14 @@
 // R10's egress is applied here from the member's own configuration (`fleet-member.json` `egress`): the container has
 // no internet but the listed hosts, and its HTTPS goes through Cloudflare's outbound interception, whose CA the image
 // trusts (`Dockerfile`, NODE_EXTRA_CA_CERTS).
+import { DurableObject } from 'cloudflare:workers';
 import { Container, ContainerProxy } from '@cloudflare/containers';
 import member from '../fleet-member.json' with { type: 'json' };
 import { SIGNIN_HOLD_MS, WAITING_HEADER, TRACE_HEADER } from './waits.mjs';
 import { says } from './says.mjs';
 
 const UNKNOWN = JSON.stringify({ ok: false, code: 'UNKNOWN' });
+const UNAVAILABLE = JSON.stringify({ ok: false, code: 'REMOTE_UNAVAILABLE' });
 const DISABLED = JSON.stringify({ ok: false, code: 'LOCAL_RUNNER_DISABLED' });
 // R25: the one key of the class's own storage, the hold's deadline (ms since the epoch).
 const HOLD_KEY = 'signin_hold_until';
@@ -172,6 +174,15 @@ export class AgentRunner extends Container {
     // The library's own handler only prints the raw error and rethrows; this line replaces its print (R29's scrub).
     await this.lifecycle('error', { error_head: libraryWords(error && error.message ? error.message : error) });
     throw error;
+  }
+}
+
+// R42: the second Durable Object class `agent-worker` binds as `REMOTE` (its R35), with no container. Until R36 is built
+// it answers every request, `GET /remote/version` included, 503 REMOTE_UNAVAILABLE, so the release deploys as a whole and
+// `agent-worker` R110 answers ASSISTANT_REMOTE_NOT_READY. It reads no body, touches no storage and holds no credential (R8).
+export class RemoteSession extends DurableObject {
+  async fetch() {
+    return new Response(UNAVAILABLE, { status: 503, headers: { 'content-type': 'application/json' } });
   }
 }
 
