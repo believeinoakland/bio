@@ -88,12 +88,13 @@ test("R1 R12: groupdescriptiondraft and writinghelp are no act; with the control
    + "them and baseupdates nothing is unaccounted, and carried as mutating each would read unranked", () => {
   for (const op of ["groupdescriptiondraft", "writinghelp"]) assert.ok(!published(op), op);
   const OPS = ["groupdescriptiondraft", "writinghelp", "baseupdates"];
-  /* T48 (op-grades R39): `groupdescriptiondraft` is given a `RUNG_ABSENT` row (`caller-owned`), so it is carried as mutating, as
-     every op with a rung or an absence is; the other two stay gated reads */
-  const table = OPS.map((op) => ({ op, mutating: op === "groupdescriptiondraft", gated: true }));
+  /* K4247 (op-grades R39 as amended): `groupdescriptiondraft` is a read, its NON_ACTS reason its owner's word, and holds no row, so
+     every gated op here is a gated read; carried as a write it would read unranked */
+  const table = OPS.map((op) => ({ op, mutating: false, gated: true }));
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => OPS.includes(op)), []);
+  assert.deepEqual(A.unaccounted([{ op: "groupdescriptiondraft", mutating: true, gated: true }]).unranked, ["groupdescriptiondraft"]);
   assert.deepEqual(A.unaccounted([{ op: "writinghelp", mutating: true, gated: true }]).unranked, ["writinghelp"]);
   assert.ok(A.unaccounted([]).stale.includes("writinghelp"), "carried by no row, it reads stale");
 });
