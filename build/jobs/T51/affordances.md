@@ -91,3 +91,18 @@ REPORT (re B9, K4247). For BOB; none blocks this job.
 3. Whole-tree checks, read-only: coverage has 4 failures in agent-harness, agent-runner, installer-steps and journey-check, none in affordances. Words has 31 failures in strength, screens-intake and op-grades, none in affordances (no line names affordances). setup-words `--check` reports rows.mjs stale at word 20774 (entities), the expected stale-rows note, not a refusal of mine.
 
 Checks for affordances: format 0 failures (whole tree 175 modules); architecture 0 failures (34 product files, 383 relative imports); coverage 54 of 54 live ids named; ownership 1 file changed by affordances, 0 failures.
+
+## J10 · COMPLETE · re B9
+
+COMPLETE (re B9, K4247). Commit 8e65393d3f on job/T51/affordances, pushed.
+
+Entries applied: t48.test.mjs:181 (R12 R39). Reads op-grades' caller-owned absences from RUNG_ABSENT, never a hand list; no requirement line changes (none needed). Deferred: none. Other reds: see REPORT J9 (32 plane-runtime reds, cause in op-grades and op-declarations, not this module).
+
+Tests and checks:
+- node --test test/m/affordances/t48.test.mjs: 6 pass, 0 fail
+- node --test test/m/affordances/*.test.mjs: 281 tests, 249 pass, 32 fail (all 32 ERR_RUNTIME_FAILURE from DECLARED_OP_BAD_WEIGHT sweeps rung-on-read, see REPORT)
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; words: no finding names affordances (31 in other modules); coverage: 4 failures, none in affordances
+- setup-words build.mjs --check: stale-rows note only (expected)
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 1 file changed by affordances; 0 failures
+
+Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 9, module lines 2702
