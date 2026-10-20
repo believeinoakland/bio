@@ -59,3 +59,7 @@ Size (session_01Sh7KmqBakPppJ1owzmtxQf): test runs 6 (+8 dependents'), module li
 ## J3 · COMPLETE
 
 CHANGE B3 handled. Pulled civicos-process d424c32, merged tranche/T51 (no conflict), ran node checks/words.mjs /home/user/bio contradiction: 7 findings, the same seven as J2, none new from the chained-literal rule; no member-read sentence among them. For the design's unkeyed list: contradiction.mjs:31 JUDGEMENT_PROMPT, :99 RECOMMEND_PROMPT, :84 pair line (model input pinned by digest, R2/R41/R57); index.mjs:2001 derived-id method string (hashed identifier); index.mjs:361 and :364 registerRunGate details (module wiring); text.mjs:43 the '## Session Log' heading splice. Other open item unchanged: modules.json contradiction uses needs setup-words (9 architecture failures until added). Tests: node --test bio-plane/test/m/contradiction/: 120 pass, 0 fail, 8 todo. Size (session_01Sh7KmqBakPppJ1owzmtxQf): test runs 7, module lines 3641.
+
+## J4 · REPORT
+
+NEEDS BOB, one line in build/modules.json: contradiction's uses does not list member-roster. index.mjs now imports viewerMember, baseViewer and ROOT_ADMIN from member-roster, as BOB's B4 prescribes; until member-roster is added to contradiction's uses, checks/architecture.mjs shows 1 failure on that import (0 otherwise).
