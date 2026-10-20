@@ -62,7 +62,8 @@ export const CEREMONY = Object.freeze({
 
     // R3's reads: the checks against the bar, what will be disclosed, and an edition waiting to publish.
     const pre = P.later(cs, view, "preflight", "publishpreflight", { body: args });
-    const ten = P.later(cs, view, "tensions", "publishtensions", { body: { project: args.project, targets: args.targets } });
+    const ten = P.later(cs, view, "tensions", "publishtensions", { body: { project: args.project, draft: draft } });
+    const found = P.findingsOf(copy);
     const prepared = ui.prepared || null;
     const caseId = prepared ? prepared.caseId : c.case_id;
     const sched = caseId ? P.later(cs, view, "schedule", "publishschedule", { query: { case: caseId } },
@@ -92,17 +93,21 @@ export const CEREMONY = Object.freeze({
     out.push(cs.sec("screen.ceremony.checks", cs.state(pre, function (v) {
       const what = stepWith("pinned");
       const pinned = what && Array.isArray(what.pinned) ? what.pinned : [];
-      const found = (v.first ? [v.first] : []).concat(Array.isArray(v.blockers) ? v.blockers : []);
+      const foundAll = (v.first ? [v.first] : []).concat(Array.isArray(v.blockers) ? v.blockers : []);
       const seen = {};
       const lines = [];
-      found.forEach(function (b) {
+      foundAll.forEach(function (b) {
         const code = String(b && (b.code || b.reason) || "");
-        if (code === "NO_TARGET" || (code && seen[code])) return;
+        if (code === "PUBLISH_NO_FINDING" || code === "NO_TARGET" || (code && seen[code])) return;
         seen[code] = true;
         const says = b && b.says && typeof b.says.key === "string" ? cs.w(b.says.key, b.says.vars || {}) : P.refusalText(cs, b);
         lines.push(cs.w("ceremony.gate.other", { what: { html: says.replace(/[.\s]+$/, "") } }));
       });
-      if (!args.targets.length || found.some(function (b) { return b && (b.code || b.reason) === "NO_TARGET"; })) lines.unshift(cs.w("ceremony.gate.notargets"));
+      // R66 (L16; DEC-384): a draft that names no finding is refused `PUBLISH_NO_FINDING`; the gate says so and offers the door that
+      // adds one (the case editor, at "What goes in")
+      const nofinding = !found.length || foundAll.some(function (b) { return b && (b.code || b.reason) === "PUBLISH_NO_FINDING"; });
+      if (nofinding) lines.unshift(cs.w("ceremony.gate.notargets") + ' <a class="cs-btn" data-tone="quiet" data-addfinding href="/app/case-editor/' + encodeURIComponent(s[0] + "/" + draft) + '#what-goes-in" data-nav>'
+        + cs.w("screen.ceremony.gate.addfinding") + "</a>");
       return (pinned.length ? cs.sheet(pinned.map(function (f) { return cs.row("", cs.ref("question", f.target, f.target, []), ""); }).join("")) : "")
         + (v.ready && !lines.length ? '<p data-ready="yes">' + cs.w("screen.ceremony.ready") + "</p>"
           : lines.length ? '<p data-ready="no"><b>' + cs.w("ceremony.gate.heading") + '</b></p><ul class="mk-list" data-blockers>' + lines.map(function (l) { return '<li role="alert">' + l + "</li>"; }).join("") + "</ul>"
@@ -215,7 +220,9 @@ export const CEREMONY = Object.freeze({
             { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) + "</div>"
           + '<p class="muted">' + cs.w("screen.ceremony.device.next") + "</p>";
       }
-      if (ui.nokey) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
+      // R45 (C4): the making of a signing key is offered as soon as the step is drawn when this browser holds none
+      if (ui.keyHeld === undefined && !ui.keyAsked) { ui.keyAsked = true; cs.signer.held().then(function (h) { cs.set("keyHeld", !!(h && h.held)); }, function () { cs.set("keyHeld", true); }); }
+      if (ui.nokey || ui.keyHeld === false) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
         + cs.checks("ce-keep", "screen.ceremony.keep.legend", [["keep", "signing.ceremony.keepkey", false]])
         + '<div class="mk-acts">' + cs.act("signerregisterown", { tone: "primary" }) + "</div>" + P.said(view, "register") + "</div>";
       if (ui.notowner) sign += '<div class="cs-dialog" data-notowner><p>' + cs.w("signing.ceremony.notowner", { project: projectTitle, owners: ui.notowner.owners || "" }) + "</p>"
@@ -257,8 +264,7 @@ export const CEREMONY = Object.freeze({
       send: function (view) {
         const copy = view.parts.copyOf(view);
         if (!copy) return null;
-        const a = view.parts.caseArgs(copy, "");
-        return { body: { project: a.project, targets: a.targets } };
+        return { body: { project: copy.project, draft: view.ui.draftId || "" } };
       },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "publishtensions", answer)) return { stay: true }; // D29
@@ -391,7 +397,7 @@ export const CEREMONY = Object.freeze({
       },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "sign", answer)) return; // D29
-        view.ui.nokey = false;
+        view.ui.nokey = false; view.ui.keyHeld = true;
         view.parts.say(cs, view, "sign", cs.w("screen.ceremony.registered"));
       },
     },

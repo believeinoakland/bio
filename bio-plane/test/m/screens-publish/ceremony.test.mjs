@@ -23,8 +23,8 @@ test("R3 the steps in order, the current one marked; the reads: checks, disclosu
   const steps = main(p).querySelectorAll("[data-step]");
   assert.deepEqual(steps.map((s) => s.textContent), ["what", "strength", "leavesout", "people", "photos", "disclosures", "bias", "preview", "ties", "sign"].map((k) => word(`screen.ceremony.step.${k}`)));
   assert.equal(main(p).querySelector('[aria-current="step"]').getAttribute("data-step"), "photos", "an unchecked photo holds the ceremony at Photos");
-  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P, targets: ["FND-2026-0031"], caseId: C });
-  assert.deepEqual(last(p, "publishtensions").body, { project: P, targets: ["FND-2026-0031"] });
+  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P }, "R50: the draft and the project alone");
+  assert.deepEqual(last(p, "publishtensions").body, { project: P, draft: DR });
   assert.equal(last(p, "photomarks").query.capture, PHOTO);
   assert.equal(last(p, "publishschedule").query.case, C);
 });
@@ -118,7 +118,7 @@ test("R5 the Ties step's confirmation sends publish with tieAttested: true; no S
   const b = last(p, "publish").body;
   assert.equal(b.tieAttested, true);
   assert.equal(b.draft, DR);
-  assert.equal(b.caseId, C);
+  assert.deepEqual(Object.keys(b).sort(), ["draft", "project", "tieAttested"], "R50: only what was attested here; the findings, the case and the words are the draft's");
   assert.ok(ops(p).includes("caseratify"), "Sign offered once publish answered");
   const q = await open(PATH, { plane: { publish: pending } });
   tick(q, "ce-tie", "yes");

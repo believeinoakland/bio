@@ -122,7 +122,7 @@ test("R28 the ceremony lists what stops the signing under its heading, each gate
 });
 
 test("R28 a draft naming no finding says ceremony.gate.notargets and no code; a ceremony with no gate draws no heading (control)", async () => {
-  const none = await open(PATH, { plane: { reviewcopy: ok(COPY({ findings: [] })), ...pre({ first: { ok: false, code: "NO_TARGET", translation: "pass targets" }, blockers: [] }) } });
+  const none = await open(PATH, { plane: { reviewcopy: ok(COPY({ findings: [] })), ...pre({ first: { ok: false, code: "PUBLISH_NO_FINDING", translation: "pass targets" }, blockers: [] }) } });
   assert.ok(drew(none, "ceremony.gate.notargets"));
   assert.ok(!text(none).includes("NO_TARGET") && !text(none).includes("pass targets"));
   assert.equal(main(none).querySelector("[data-blockers]").querySelectorAll("li").length, 1, "said once");
@@ -245,7 +245,7 @@ test("R32 a project with a draft draws the ceremony as R3 says (the newest draft
   assert.equal(main(p).querySelectorAll("[data-step]").length, 10);
   assert.equal(last(p, "reviewcopy").query.draft, DR);
   assert.ok(p.byOp("publishpreflight").length > 0 && !drew(p, "screen.ceremony.nothing"));
-  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P, targets: ["FND-2026-0031"], caseId: C });
+  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P });
   const bad = await open(`/app/ceremony/${P}`, { plane: { casedrafts: refusedIn("SOME_REFUSAL", "The plane refused this read.") } });
   assert.ok(main(bad).querySelector('[data-state="failed"]') && !drew(bad, "screen.ceremony.nothing"));
 });

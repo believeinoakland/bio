@@ -224,15 +224,13 @@ export const PARTS = Object.freeze({
     } catch (e) { return ""; }
   },
 
-  /* The members, project and case `publish` and `publishpreflight` take for a draft, from its review copy's answer
-     (`case-authoring` R34's arguments): its findings as `targets`, the case named or a new one. */
+  /* R50 (C1; `case-authoring` R78): what the ceremony's requests name: the draft and the project. The findings, the case and the
+     authored words are the draft's and are never sent again; only what the member attested in this step is added. */
   caseArgs: function (copy, draft) {
-    const c = (copy && copy.case) || {};
-    const args = { draft: draft, project: copy && copy.project,
-      targets: (copy && Array.isArray(copy.findings) ? copy.findings : []).map(function (f) { return f.target; }).filter(Boolean) };
-    if (c.case_id && !c.newCase) args.caseId = c.case_id; else args.newCase = true;
-    return args;
+    return { draft: draft, project: copy && copy.project };
   },
+  /* the findings a review copy names (a draft that names none cannot be published, R66) */
+  findingsOf: function (copy) { return (copy && Array.isArray(copy.findings) ? copy.findings : []).map(function (f) { return f.target; }).filter(Boolean); },
 
   /* What one sitting signs (interface-shell R41; ratification R52; this module's R13): the case statement `casedocument`
      answers, one `bio-ratify <id> <sha>` line per finding the prepared edition pins, and one per piece of evidence the
