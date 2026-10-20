@@ -30,7 +30,9 @@
  *     design's reads list for this module gives (R62); `op-declarations`' `ACT_HELP_ABSENT` keeps none of them;
  *   - T51 (K4093; DEC-359): `actionholdrelease`, which the design @ `2a64c5ae77` explains, is held (R70 re-taken at that design);
  *   - T51 (R69): the seven browser acts, `BROWSER_ACTS`, are held under their own names from `act.owed_<name>.does`;
- *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61).
+ *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61);
+ *   - `selftest` (FR-40, K4190): the word list holds `act.selftest.does` for the updates screen (DEC-376), but this module's reads
+ *     list (R62) does not give it and no act this module draws is `selftest` (instance-setup's probe), so it is held none.
  * A retired op is not held. */
 import { word } from "../setup-words/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../membership/index.mjs";

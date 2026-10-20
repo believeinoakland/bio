@@ -1,6 +1,6 @@
 # inquiry (T51)
 
-**Status** · session_01NvSSvWMYsZ2nhZyzjqLjdo · depth 2 · COMPLETE · handled B3
+**Status** · session_01CYcxZgZhrDnqWKu6J5KF4X · depth 2 · COMPLETE · handled B7
 
 ## J1 · COMPLETE
 
@@ -70,3 +70,52 @@ Tests and checks:
 Note: my local civicos-process checkout is at an older commit (4ec1c4c) because the pull diverged; the words results above come from the d424c32 clone.
 
 Size (session_01NvSSvWMYsZ2nhZyzjqLjdo): test runs 5, module lines 3814
+
+## J4 · REPORT
+
+B4 (FR-45) applied, one part waiting on FR-44. Commits a349296263 and its follow-up on job/T51/inquiry; tranche/T51 merged in (no conflicts). Session session_01HHv6yiUNNMusUY87v5exzx (INQUIRY #22, depth 2).
+
+**Entry 2 (K4202, the census) · done and green.** `DECLARED_OPS` is exported from `bio-plane/src/inquiry/index.mjs` beside `inquiryOps`: `inquirydivide` (accepts `target`, `reason`, `children`; requires all three: NO_TARGET, NO_REASON, TOO_FEW_CHILDREN) and `inquiryground` (accepts `target`, `grounds`, `reason`; requires `target` and `grounds`: NO_TARGET, NO_PARTITION; `reason` is asked of a restructure only, decided from the record, R27, so it is accepted and not required). Classes `admin`, `member`, `probe`, mutating, weight `reasoned`, description `act.inquirydivide.does` and `act.inquiryground.does`, copied from the existing rows. `op-grades.registerDeclaredOps` answers both as `agreed`; `op-declarations` accepts the rows and answers the fields back. Test: `declared-ops.test.mjs` (4 tests, green): `declaredOpHolds` for each op, and a control that fails a declaration requiring `reason` of `inquiryground`.
+
+**Entry 1 (L9, K4194) · my half is done; its tests are red until FR-44 (inquiry-grammar R68) merges.**
+- `ground` (`index.mjs`): a partition that names a leg whose role is `cuts_against` is refused `BASIS_REFUSED` with the finding in `findings[]` (`check` C-2.8, `ord`, `target`, `detail` by `localize`, `repairs`), nothing written. The grammar's findings in the ground refusal now also carry `code` when the grammar gives one.
+- `divide`: a child given every supporting leg of a group carries the group whole even when it also holds a cutting leg (an unlabelled cutting leg no longer drops the partition); a child with part of a group still carries none; a child of cutting legs only carries none.
+- Test: `cutting-legs.test.mjs` (4 tests) and `divide.test.mjs` (its grouped-division test changed: it grouped a cutting leg with a supporting one, which R85 refuses; the cutting leg is now unlabelled and the group is `[0,3]`). With the totality rule of `checkGrounds` counted over supporting legs only (I simulated R68 with a one-line scratch patch to `inquiry-grammar/grammar.mjs`, reverted, not committed) all 226 tests of the module pass (225 pass, 1 todo). On tranche/T51 as it stands, without R68: tests 226, pass 221, fail 4 (the four above that need a partition leaving the cutting leg unlabelled). I confirmed the division fix is the cause: with the old `keepGroups` the division test fails.
+- Please tell me (a CHANGE) when FR-44 is merged on tranche/T51; I merge it, rerun, and COMPLETE. If R68 reads differently from the one-line rule I assumed (cutting legs not counted as unlabelled), I will bring my side in line.
+
+**Requirement lines (ownership: `build/requirements/inquiry.md` is outside a job's write set, so I wrote none; the check refused it). For BOB to write:**
+- **R85** *(not yet met: T51)* (FR-45; K4194; L9; `inquiry-grammar` R68; amends R8, R27, R34; DEC-32) **A partition labels supporting legs only: a leg that cuts against is never in a ground.** `ground` (R27) accepts a partition that covers every leg whose role is `supports` and names no leg that cuts against; cutting legs stay unlabelled, keep their place in `basis[]`, and the candidate is judged by `inquiry-grammar`'s totality rule over supporting legs (its R68). A partition leaving a supporting leg out is refused as before (`BASIS_REFUSED`, the grammar's finding). A partition naming a leg that cuts against is refused `BASIS_REFUSED` with that leg named in `findings[]` (`check`, `ord`, `target`, `detail`), never the bare code; nothing is written. `divide` (R24) carries a group whole to a child that holds every supporting leg of it, whether or not the child also holds legs that cut against. `partitionOf` (R65) lists a cutting leg among `ungrouped`. Test: `cutting-legs.test.mjs`.
+- **R86** *(not yet met: T51)* (FR-45; K4168, K4202; the T51 declaration pass) **The module declares the ops it serves that the screens send**: `DECLARED_OPS` exported beside the ops map, `inquirydivide` (accepts `target`, `reason`, `children`; requires all) and `inquiryground` (accepts `target`, `grounds`, `reason`; requires `target`, `grounds`), class, weight and description from the op's existing rows. Test: `declared-ops.test.mjs`.
+- The START gave R85 as the next free id; the file's highest id is R65, so R66 is the next free by the file. I used R85 and R86 in the tests' names as the START gives them. If you write them as R66 and R67, the test names change (a rename, no logic).
+- Amends R34 ("A leg that cuts against travels every path a supporting leg does: apportionment, projection, grounds"): grounds no longer, by R85.
+
+**Found in another module (P9) · `strength`, for BOB.** Your ruling (K4194) says the strength is the supporting legs'. `strength` does not know the role: its arithmetic (`strength/arithmetic.mjs` `axisResult`) takes every leg of a question as a member, and a leg with no ground label is "needed by every one of those sets", an AND part beside the grounds' OR part. So a question whose supporting leg is grouped `g1` (grade A) and whose cutting leg is unlabelled and graded C reads **C**, not A (checked directly: `axisResult("capture", [supports A in g1, cuts_against C unlabelled])` answers `graded C`, "no stronger than the weakest ... That document is needed by every one of those sets"); the same cutting leg ungraded reads A. Before R85 the grammar forced the cutting leg into a ground, which made it a sufficient ground of its own (the thing you said must never happen); after R85 it becomes a necessary leg instead. Neither is "the supporting legs' strength". Fixing it is `strength`'s: its arithmetic must leave legs of role `cuts_against` out of the population (members and the implicit part), or you rule that a graded cutting leg lowering the strength is intended. No entry for it is in FR-xx of the fix round that I can see (checked `fix-round-T51.md`). My requirement text does not claim the strength is the supporting legs' (only that no ground holds a cutting leg and the document labels supporting legs only); say which you want.
+
+**Other.** `inquiry` is unchanged elsewhere; flaws found in the module: none. Deferred: none.
+
+**Tests and checks** (process repo at the commit cloned this session; `git reset` to refresh it was refused, so it is the clone of 2026-10-20):
+- `node --test bio-plane/test/m/inquiry/`: tests 226, pass 221, fail 4, todo 1 (the four need R68; with R68 simulated: pass 225, fail 0, todo 1).
+- `node --test bio-plane/test/m/{strength,screens-inquiry}/`: 2 and 4 failures, identical on tranche/T51 without my change (stash comparison), none mine; `basis-versions`, `citation`: 0 fail.
+- format: 175 modules, 175 requirements files; 0 failures. architecture inquiry: 39 product files, 138 relative imports; 0 failures. coverage inquiry: 56 of 56 live requirement ids named by a test; 0 failures (R85 and R86 are named by tests but are not live ids until you write them). words inquiry: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures; 12 unkeyed (the design's list). ownership inquiry tranche/T51 job/T51/inquiry: 5 files changed; 0 failures.
+- I did not run `checks/run.mjs` whole nor `setup-words build --check` yet: they come with COMPLETE.
+
+Size (session_01HHv6yiUNNMusUY87v5exzx): test runs 9, module lines 3835
+
+## J5 · COMPLETE
+
+FR-45 complete after restart (INQUIRY #23, session_01CYcxZgZhrDnqWKu6J5KF4X). `inquiry-grammar` R68 is on tranche/T51 and merged in (tranche head e67a3a1c3c).
+
+Entries applied
+- Entry 1 (L9, K4194): a partition labels supporting legs only; a partition naming a cutting leg is refused `BASIS_REFUSED` with the named finding; `divide` carries a group whole to a child holding every supporting leg. Tests: `cutting-legs.test.mjs`, `divide.test.mjs`.
+- Entry 2 (K4202): `DECLARED_OPS` with `inquirydivide` and `inquiryground`. Test: `declared-ops.test.mjs`.
+- Requirement lines written in `build/requirements/inquiry.md` (K4210): R85 and R86 new (met), R34 amended (cutting legs travel apportionment and projection, not grounds), Status line updated. The ids are R85 and R86 as the START gave; the file's own next free id was R66.
+
+Deferred: none. Flaws found in the module: none.
+Found in another module: `strength` arithmetic must leave `cuts_against` legs out of the population (already confirmed and routed by B7).
+
+Tests and checks
+- `node --test bio-plane/test/m/inquiry/`: tests 226, pass 225, fail 0, todo 1.
+- format: 175 modules, 175 requirements files; 0 failures. architecture inquiry: 41 product files, 142 relative imports; 0 failures. coverage inquiry: 58 of 58 live requirement ids named by a test; 0 failures. ownership inquiry tranche/T51 job/T51/inquiry: 5 files changed; 0 failures.
+- `checks/run.mjs` whole: format and architecture 0 failures; words inline 0, plain 0, missingkey 0 (nothing for inquiry); the 7 coverage failures (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring) and 7 testcopy failures (op-grades) are other modules', none in my files.
+
+Size (session_01CYcxZgZhrDnqWKu6J5KF4X): test runs 4, module lines 3835
