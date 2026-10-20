@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01GykvWFgopputGrmd98pLi2 · depth 2 · WORKING · handled B19
+**Status** · session_01GykvWFgopputGrmd98pLi2 · depth 2 · COMPLETE · handled B19
 
 ## J1 · QUESTION
 
