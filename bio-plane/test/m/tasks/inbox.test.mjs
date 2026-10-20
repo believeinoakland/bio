@@ -108,7 +108,7 @@ test("R1, R3 (queue suite's share): a task routed with no manager and no adminis
   const r = w.t.taskResolve({ id: made.id, actor: "dave", note: "checked; unchanged", now: iso(NOW + 1000) });
   assert.deepEqual(r, { ok: true, id: made.id, status: "resolved", resolved_at: iso(NOW + 1000) });
   const row = w.all(`SELECT * FROM tasks WHERE id=?`, made.id)[0];
-  assert.deepEqual(JSON.parse(row.history).map((h) => [h.event, h.actor]), [["created", "consumer"], ["resolved", "dave"]]);
+  assert.deepEqual(JSON.parse(row.history).map((h) => [h.event, h.actor]), [["created", "consumer"], ["resolved_undecided", "dave"]]); // R21: an authority task put aside
   assert.equal(JSON.stringify(row).includes("checked"), false, "the note is not stored");
   assert.equal(w.t.taskResolve({ id: made.id, actor: "dave" }).already, true, "resolved once");
 });
@@ -464,7 +464,7 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   const done = res({ id: "TASK-2026-0001-a", actor: "alice", now: iso(NOW) });
   assert.deepEqual(done, { ok: true, id: "TASK-2026-0001-a", status: "resolved", resolved_at: iso(NOW) });
   const r2 = w.all(`SELECT status, resolved_at, history FROM tasks WHERE id='TASK-2026-0001-a'`)[0];
-  assert.deepEqual([r2.status, r2.resolved_at, JSON.parse(r2.history).at(-1)], ["resolved", iso(NOW), { at: iso(NOW), event: "resolved", actor: "alice" }]);
+  assert.deepEqual([r2.status, r2.resolved_at, JSON.parse(r2.history).at(-1)], ["resolved", iso(NOW), { at: iso(NOW), event: "resolved_undecided", actor: "alice" }]); // R21
   // the set form, each item on its own through record-core's perItem, the actor forced on every item
   w.task("TASK-2026-0005-e", DOC3);
   const set = w.t.taskResolve({ items: [{ id: "TASK-2026-0005-e", actor: "token:daemon" }, { id: "TASK-NONE" }], actor: "bob" });
@@ -674,7 +674,7 @@ test("R10: the viewer comes only from the control plane's stamp in the URL, neve
   const body = { viewer: "class:admin", actor: "alice", id: "TASK-1", to: "bob", limit: 3 };
   const ops = tasksOps(t, url, body);
   assert.deepEqual(Object.keys(ops).sort(), ["checkrecord", "checkrequest", "checkrequests", "checksof", "checktake",
-                                             "signrequest", "taskdrain", "taskforward", "taskresolve", "tasks"]);
+                                             "signrequest", "taskdecide", "taskdrain", "taskforward", "taskresolve", "tasks"]);
   ops.tasks(); ops.taskdrain(); ops.taskforward(); ops.taskresolve();
   assert.deepEqual(seen, [
     ["taskList", { assignee: "alice", status: "open", refersTo: "D", limit: "5", viewer: "member:alice" }],
