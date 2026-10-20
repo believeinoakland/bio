@@ -188,3 +188,7 @@ Applied: (K4011) the R38 real-fleet arm skips a member whose build records no wo
 Tests: bundler, release, and the four bundler system files, 0 failures. format 0; architecture 0; coverage 38 of 38; ownership 0. checks/run.mjs shows only other modules' findings (in the REPORT).
 
 Record: build/jobs/T51/bundler.md. Size (session_01Gz6er9hUWEo63Fj3mY19bH): test runs 5, module lines 4024.
+
+## J9 · COMPLETE
+
+FR-02 · bundler is done; pushed to job/T51/bundler (9c76d0cd7f). Applied: R39 (release-coherence check: [BINDING_NOT_EXPORTED] naming member, binding and class, run by release-assemble before any write and by fleetbundles section 9, reading the fresh build's exports) and R40 (--test-instance on deploy.mjs and deploy-fleet.mjs: [NOT_A_TEST_INSTANCE], [WRONG_ACCOUNT], test-deploy and rollback log lines, deploy.mjs --dry-run). Requirements R39, R40 written first. Red by name as planned: R39's real-fleet arms (agent-worker REMOTE -> RemoteSession) until agent-runner merges. Bundler tests 137 pass, 1 fail (that arm); format 0, architecture 0, coverage 40/40, ownership 0. Record build/jobs/T51/bundler.md has the exact workflow steps for deploy-test.yml and 2 notes for BOB (a fresh copy cannot pass both preflights; test deploys replace the member's own script). Size (session_01FoYQKjGSDzypze3SYjMYUT): test runs 9, module lines 4228.
