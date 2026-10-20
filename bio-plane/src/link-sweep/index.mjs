@@ -92,7 +92,7 @@ export function linkSweepOps(s, url, body) {
 export const RATIFY_NOTICE = localize("link-sweep.ratify.notice", "Ratifying sends the team's fetches to the named hosts within the scope and budget shown, each filing at collected, never higher.");
 
 export const DECLARED_OPS = Object.freeze({
-  sweeps: { classes: ["admin", "member", "probe"], mutating: false, weight: "reversible",
+  sweeps: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
     description: localize("link-sweep.declared.sweeps", "read: the link sweeps the viewer may see, each with its definition as quoted data, its ratification, its schedule and its last runs; writes nothing"),
     fields: { accepts: ["now"], requires: [] } },
   sweepset: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible",
