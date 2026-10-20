@@ -404,3 +404,37 @@ test("R105 writinghelp: offered beside her own-words fields while the assistant 
   const q = await open("/app/contradiction/" + CAND, view(cand()));
   assert.equal(main(q).querySelector('button[data-act="writinghelp"]'), null, "not reachable: no help");
 });
+
+/* ---- words by key (R44; K874): every key the source names is held or listed as a gap ---- */
+
+test("R105 R44 every screen.contradiction key the source reads is a held word (hasWord) or listed in GAP_WORDS, and no gap key is held already; control: the keys read from another screen's row are held", () => {
+  const src = readFileSync(new URL("../../../src/screens-inquiry/contradiction.mjs", import.meta.url), "utf8");
+  const used = new Set([...src.matchAll(/\bS \+ "([a-z0-9.]+)"/g)].map((m) => S + m[1]));
+  assert.ok(used.size > 100, "the keys read: " + used.size);
+  for (const k of used) assert.ok(hasWord(k) || GAP_WORDS.includes(k), `${k} is neither a held word nor a listed gap`);
+  for (const k of GAP_WORDS) { assert.ok(used.has(k), `${k} is listed but not read`); assert.ok(!hasWord(k), `${k} is held now: drop it from GAP_WORDS`); }
+  for (const k of ["screen.case-editor.scope.label", "project.start.title", "screen.calculation.question", "screen.security.cando.heading", "question.conclude.falsifier",
+    "question.conclude.nofalsifier", "question.conclude.reading", "screen.settings.yours", "draft.machine.label", "ai.label.untested.writinghelp"]) assert.ok(hasWord(k), k);
+});
+
+test("R105 what the record cannot state is not drawn or offered: a stated date the record gives as undetermined draws no dates row and no evidence to name (control)", async () => {
+  const facts = { ...FACTS, facts: FACTS.facts.map((f) => (f.fact === "stated_date" ? { ...f, undetermined: true, a: null, why: "x" } : f)) };
+  const p = await open("/app/contradiction/" + CAND, view(cand(), { plane: { contradictionfacts: ok(facts) } }));
+  assert.equal(main(p).querySelector('[data-fact="stated_date"]'), null);
+  assert.equal(p.doc.getElementById("cd-evid"), null);
+  assert.ok(main(p).querySelector('[data-fact="doctype"]'), "control: the kinds the record states stay");
+});
+
+test("R105 writinghelp: beside her conclusion on a taken-up question and beside her response once the projects are named, never beside what would change it", async () => {
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), writinghelp: ok({ ok: true, text: "Done." }) };
+  const c = await open("/app/contradiction/" + CAND, { ...TAKEN(), plane: { ...TAKEN().plane, ...reach } });
+  assert.deepEqual(main(c).querySelectorAll('button[data-act="writinghelp"]').map((b) => b.getAttribute("data-field")), ["conclusion"]);
+  fill(c, { "cd-concl": "They differ in time." });
+  await c.click(main(c).querySelector('button[data-act="writinghelp"]'));
+  assert.deepEqual(c.byOp("writinghelp")[0].body, { op: "contradictionresolve", field: "conclusion", told: "They differ in time." });
+  const e = await open(`/app/contradiction/${CAND}/${P}`, { ...REVEALED(), plane: { ...REVEALED().plane, ...reach } });
+  assert.deepEqual(main(e).querySelectorAll('button[data-act="writinghelp"]').map((b) => b.getAttribute("data-field")), ["response"]);
+  fill(e, { "cd-resp": "Our notice came from the letter." });
+  await e.click(main(e).querySelector('button[data-act="writinghelp"]'));
+  assert.deepEqual(e.byOp("writinghelp")[0].body, { op: "contradictionrespond", field: "response", told: "Our notice came from the letter." });
+});

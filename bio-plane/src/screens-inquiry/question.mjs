@@ -379,6 +379,16 @@ function render(cs, view) {
       + (project ? cs.act("casedraft", { label: "act.casedraft.label.question", data: { project }, tone: "primary" }) : "")
       + cs.field("question-plan", "screen.question.plan.label", {}) + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } })
       + cs.act("withdrawconclusion", { label: "act.withdrawconclusion.label.question", data: { inquiry: id } }), { id: "state-g" }));
+    /* R104: "Reopen this finding, with a reason": the way to a correction; the reason required; the docket where the next edition is started */
+    const pub = d.relies && d.relies.state === "ok" && d.relies.value && Array.isArray(d.relies.value.backlinks)
+      ? d.relies.value.backlinks.find((x) => x && (x.from_type === "published" || (x.from_type === "case" && x.from_state === "published"))) : null;
+    out.push(`<details class="mk-details" data-reopen="1"><summary>${W("screen.question.reopen.summary")}</summary>`
+      + `<p class="mk-small">${W("screen.question.reopen.what")} ${W("screen.question.reopen.case")} ${W("screen.question.reopen.kept")}</p>`
+      + cs.field("question-reopen-why", "screen.question.reopen.why", { rec: true, help: "screen.question.reopen.why.help" })
+      + cs.act("reopen", { label: "act.reopen.label.question", data: { inquiry: id } })
+      + `<p class="mk-small">${W("screen.question.reopen.next")}${pub ? " " + W("screen.question.reopen.next.link", { link: { html: cs.ref("docket", String(pub.from), T("screen.question.reopen.next.link.text"), [T("shell.card.docket")]) } }) : ""}</p>`
+      + `<details class="mk-details"><summary>${W("screen.question.reopen.refused.summary")}</summary><div style="display:grid;gap:6px">`
+      + ["noreason", "badreason", "notsetdown"].map((k) => `<p class="cs-gap" data-gap="refused">${W("screen.question.reopen.refused." + k)}</p>`).join("") + "</div></details></details>");
   }
 
   /* two grades, never one score (R2); a grade's strength sentence is drawn by its words (R34), never raw grade text */
@@ -854,6 +864,46 @@ function render(cs, view) {
     }
   }
 
+  /* R103: what needs a second look, from the reminders the record holds for each document this question cites (`reevaluations` with that
+     target), the dependents that are this question; recording that one was looked at closes its cause for her question. A finding with
+     no reminder draws none (R20); a read that fails is drawn failed */
+  {
+    const targets = [...new Set(citedLegs.filter(live).map((l) => String(l.target)))].slice(0, 20);
+    const reads = targets.map((t) => ({ t, r: later("reeval:" + t, "reevaluations", { target: t }, String(ui.reevalSeq || 0)) }));
+    const failedRead = reads.find((x) => x.r.state === "failed");
+    const openCauses = [], doneCauses = [];
+    for (const { t, r } of reads) {
+      const v = r.state === "ok" && r.value && typeof r.value === "object" ? r.value : null;
+      if (!v) continue;
+      for (const o of Array.isArray(v.obligations) ? v.obligations : []) {
+        if (!o || o.bundle_id !== id) continue;
+        for (const c of Array.isArray(o.causes) ? o.causes : []) openCauses.push({ target: String(o.target || t), cause: c });
+        for (const c of Array.isArray(o.closed) ? o.closed : []) doneCauses.push({ target: String(o.target || t), cause: c });
+      }
+      for (const o of Array.isArray(v.closed) ? v.closed : []) {
+        if (!o || o.bundle_id !== id) continue;
+        for (const c of Array.isArray(o.causes) ? o.causes : []) doneCauses.push({ target: String(o.target || t), cause: c });
+      }
+    }
+    const docOf = (t) => titleOf(t) || T("shell.card.document");
+    if (failedRead && !openCauses.length && !doneCauses.length) out.push(cs.sec("screen.question.reeval.heading", cs.state(failedRead.r, () => ""), { id: "reeval" }));
+    else if (openCauses.length || doneCauses.length) {
+      const rowsHtml = openCauses.map(({ target, cause }) => `<p data-reeval="open">`
+          + (cause.source === "edition" ? `<b>${W("screen.question.reeval.edition", { document: docOf(target) })}</b>` : `<b>${cs.esc(String(cause.detail || cause.source || ""))}</b>`)
+          + `<span class="mk-small">${cause.since ? cs.date(String(cause.since), { year: true }) + " · " : ""}${cause.source === "edition" ? W("screen.question.reeval.edition.meta") : ""}</span></p>`).join("")
+        + doneCauses.map(({ target, cause }) => `<p data-reeval="done">${W("screen.question.reeval.done", { name: P.who(cs, cause.closed_by || ""), date: { html: cause.closed_at ? cs.date(String(cause.closed_at), { year: true }) : "" }, note: String(cause.note || "") })}`
+          + `<span class="mk-small">${W("screen.question.reeval.done.meta", { what: docOf(target) })}</span></p>`).join("");
+      const causes = openCauses.map(({ target, cause }) => ({ target, source: String(cause.source || ""), since: cause.since ? String(cause.since) : "" }));
+      const record = causes.length
+        ? (causes.length > 1 ? cs.choice("question-reeval-cause", "screen.question.reeval.edition.meta", causes.map((c, i) => ({ value: String(i), text: docOf(c.target) + " · " + c.source })), {}) : "")
+          + cs.field("question-reeval-note", "screen.question.reeval.note.label", { area: true, rec: true })
+          + cs.act("reevaluationrecord", { label: "act.reevaluationrecord.label.question", data: { causes: JSON.stringify(causes) } }) : "";
+      out.push(cs.sec("screen.question.reeval.heading", rowsHtml + record + cs.act("reevaluations", { label: "act.reevaluations.label.question", data: { inquiry: id }, tone: "quiet" })
+        + `<details class="mk-details"><summary>${W("screen.question.reeval.refused.summary")}</summary><div class="cs-gap" data-gap="refused"><span>${W("screen.question.reeval.refused.body")} ${W("screen.question.reeval.refused.body2")}</span></div></details>`,
+        { id: "reeval", help: ["screen.question.reeval.help", "screen.question.reeval.help2"] }));
+    }
+  }
+
   /* Concluding (R35, R41, R50, R51): offered once the question cites a passage, on an accepted reading or one she writes
      herself; open by itself when a reading stands */
   const stands = project ? (current && vs.some((v) => v.name === currentName && v.state === "accepted")) : accepted.length > 0;
@@ -896,7 +946,21 @@ function render(cs, view) {
     + (concluded ? "" : cs.field("question-plan", "screen.question.plan.label", {}) + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } }))
     /* R71: in state a only (a decided question has the receipt above, a concluded one its own row); a failed read is drawn failed */
     + (joined && !concluded && !decision && asideRead ? (asideRead.state === "failed" ? cs.state(asideRead, () => "") : asideRead.state === "loading" ? "" : asideFold()) : "");
-  out.push(`<details class="mk-details" data-fold="more"><summary>${W("question.more")}</summary>${moreInner}</details>`);
+  /* R102: divide this question into two: the reason, a question of her own for each, and where each passage goes (at least one of the two);
+     each new question is numbered by the plane's allocator and drawn with its number once made */
+  const divideFold = legs.length ? `<details class="mk-details" data-divide="1"><summary>${W("screen.question.divide.summary")}</summary>`
+    + `<p class="mk-note">${W("screen.question.divide.note")} ${W("screen.question.divide.note2")} ${W("screen.question.divide.note3")}</p>`
+    + cs.field("question-divide-reason", "screen.question.divide.reason", { area: true, rec: true, help: "screen.question.divide.limits" })
+    + cs.field("question-divide-q1", "screen.question.divide.q1", { area: true, rec: true, help: "screen.question.divide.limits" })
+    + cs.field("question-divide-q2", "screen.question.divide.q2", { area: true, rec: true, help: "screen.question.divide.limits" })
+    + legs.map((l) => cs.checks("question-divide-leg-" + l.ord, { key: "screen.question.divide.leg", fills: { passage: legName(l) } },
+      [["1", "screen.question.divide.to1"], ["2", "screen.question.divide.to2"]])).join("")
+    + `<p class="mk-note">${W("screen.question.divide.numbered")} ${W("screen.question.divide.every")}</p>`
+    + cs.act("inquirydivide", { label: "screen.question.divide.button", data: { inquiry: id } })
+    + (Array.isArray(ui.divided) && ui.divided.length ? `<div data-divided="1">` + ui.divided.map((c) => `<p data-child="${cs.esc(c.id)}">`
+      + cs.ref("question", c.id, c.question, [c.id]) + ` <span class="mk-small rec" data-number="1">${cs.esc(c.id)}</span></p>`).join("") + "</div>" : "")
+    + `<details class="mk-details"><summary>${W("screen.question.divide.refused.summary")}</summary><div class="cs-gap" data-gap="refused"><span>${W("screen.question.divide.refused.body")} ${W("screen.question.divide.refused.body2")}</span></div></details></details>` : "";
+  out.push(`<details class="mk-details" data-fold="more"><summary>${W("question.more")}</summary>${moreInner}${divideFold}</details>`);
 
   out[stepsAt] = stepsHtml(concluded ? ["done", "done", "done"] : !cited ? ["current", "todo", "todo"] : stands ? ["done", "done", "current"] : ["done", "current", "todo"]) + receipt;
   return out.join("");
@@ -1084,6 +1148,81 @@ const acts = [
       if (!s || s.ok === false || !sr || sr.ok === false || !sr.handle) return { refuse: "screen.question.leg.unselectable" };
       return { query: { project: String(view.subject || ""), handle: String(sr.handle) }, raw: "" };
     } })),
+  /* R102: the division of a question into two. Each child's number is minted by the plane's allocator (as "Open a question" mints
+     one), its slug cut and trimmed so the id never ends in a hyphen; every passage must go to at least one of the two */
+  { op: "inquirydivide", label: "act.inquirydivide.label.question", reasonField: "reason", rereads: ["inquiry", "basis", "strength"],
+    refusals: { CHILD_REFUSED: function (refusal, cs) {
+      const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
+      if (!f) throw new Error("no finding");
+      return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
+    } },
+    async send(view, el, cs) {
+      const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
+      const basis = view.parts.front(text).lists.basis || [];
+      const reason = String(cs.value("question-divide-reason") || "").trim();
+      const qs = [String(cs.value("question-divide-q1") || "").trim(), String(cs.value("question-divide-q2") || "").trim()];
+      const homes = [[], []];
+      let orphan = false;
+      basis.forEach((l, ord) => {
+        if (!l || !l.target) return;
+        const on = cs.value("question-divide-leg-" + ord) || [];
+        if (on.includes("1")) homes[0].push(ord);
+        if (on.includes("2")) homes[1].push(ord);
+        if (!on.includes("1") && !on.includes("2")) orphan = true;
+      });
+      if (!reason || !qs[0] || !qs[1] || orphan || !basis.length) return { refuse: "screen.question.divide.refused.body" };
+      const res = (a) => (a && a.result !== undefined ? a.result : a);
+      const year = String(new Date(cs.now()).getUTCFullYear());
+      const children = [];
+      for (let i = 0; i < 2; i++) {
+        const r = res(await cs.call("allocid", { query: { prefix: "INQ", year } }).then((x) => x, () => null));
+        if (!r || r.ok === false || !r.id) return { refuse: "state.failed", fills: { reason: "" } };
+        const slug = qs[i].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+/, "").slice(0, 40).replace(/-+$/, "");
+        children.push({ id: String(r.id) + "-" + (slug || "part-" + (i + 1)), question: qs[i], legs: homes[i] });
+      }
+      return { body: { target: String(view.subject || ""), reason, children } };
+    },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const kids = r && Array.isArray(r.children) ? r.children : [];
+      cs.set("divided", kids.map((c) => ({ id: String(c && c.id || ""), question: String(c && c.question || "") })).filter((c) => c.id));
+    } },
+  /* R103: the reminders are read again at her press; recording that one was looked at names the dependent (this question), the cause
+     and her note, and closes that cause for it */
+  { op: "reevaluations", label: "act.reevaluations.label.question",
+    send(view, el, cs) { cs.set("reevalSeq", (view.ui.reevalSeq || 0) + 1); return null; } },
+  { op: "reevaluationrecord", label: "act.reevaluationrecord.label.question", reasonField: "note",
+    refusals: { REEVALUATION_NO_SUCH_CAUSE: "screen.question.reeval.refused.body2", REEVALUATION_NOTE_MALFORMED: "screen.question.reeval.refused.body" },
+    send(view, el, cs) {
+      let list = [];
+      try { list = JSON.parse(String(el.dataset.causes || "[]")); } catch { list = []; }
+      const note = String(cs.value("question-reeval-note") || "").trim();
+      if (!note) return { refuse: "screen.question.reeval.refused.body" };
+      const c = list.length > 1 ? list[Number(cs.value("question-reeval-cause"))] || list[0] : list[0];
+      if (!c) return null;
+      return { body: { dependent: String(view.subject || ""), target: String(c.target), source: String(c.source), ...(c.since ? { since: String(c.since) } : {}), note } };
+    },
+    done(view, answer, cs) { cs.set("reevalSeq", (view.ui.reevalSeq || 0) + 1); } },
+  /* R104: a concluded finding reopened with a reason (the promotion's reopen, from the query) */
+  { op: "reopen", label: "act.reopen.label.question", reasonField: "reason", rereads: ["inquiry", "basis", "strength"],
+    refusals: { NO_REASON: "screen.question.reopen.refused.noreason", BAD_REASON: "screen.question.reopen.refused.badreason", NOT_SET_DOWN: "screen.question.reopen.refused.notsetdown" },
+    send(view, el, cs) {
+      const reason = String(cs.value("question-reopen-why") || "").trim();
+      if (!reason) return { refuse: "screen.question.reopen.refused.noreason" };
+      return { query: { target: String(view.subject || ""), reason }, raw: "" };
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } },
+  /* R10: the assistant's help with one own-words field (`wizard-scripts` R27): drawn only while it is reachable; the draft is labelled
+     machine work and nothing is kept until she saves */
+  { op: "writinghelp", label: "act.writinghelp.label.question", rereads: [], reasonField: "told",
+    send(view, el, cs) {
+      view.ui.helpId = el.dataset.id;
+      return { body: { field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
+    },
+    done(view, answer, cs) {
+      const a = answer && answer.result !== undefined ? answer.result : answer;
+      if (a && typeof a.text === "string" && view.ui.helpId) cs.fill(view.ui.helpId, a.text, { label: "screen.start-send.draft.machine" });
+    } },
   { op: "heldrestore", label: "act.heldrestore.label.question",
     send(view, el) { return { body: { ids: [el.dataset.doc || ""] } }; } },
   { op: "search", label: "act.search.label.question",
@@ -1278,7 +1417,7 @@ const words = Object.freeze([
   ...["to1", "to2"].map((k) => "screen.question.divide." + k),
   ...["heading", "edition", "edition.meta", "done", "done.meta", "note.label", "refused.summary", "refused.body", "refused.body2", "help", "help2"].map((k) => "screen.question.reeval." + k),
   ...["summary", "what", "case", "kept", "why", "why.help", "next", "next.link", "next.link.text", "refused.summary", "refused.noreason", "refused.badreason", "refused.notsetdown"].map((k) => "screen.question.reopen." + k),
-  "act.writinghelp.does", "refusal.NOT_SET_DOWN",
+  "act.writinghelp.does",
 ]);
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */

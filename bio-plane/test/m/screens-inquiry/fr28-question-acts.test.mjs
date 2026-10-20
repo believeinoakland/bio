@@ -8,14 +8,14 @@ import { readFileSync } from "node:fs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, day, word, SCREENS, P, Q, D } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, day, word, SCREENS, POLICY, P, Q, D } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const at = "/app/question/" + Q;
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
 const grouped = (o = {}) => inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)), grounds: GROUNDS, ...o });
 const A = { images: { [Q]: { "bundle.md": grouped() } } };
-const DOC_TITLE = "Pothole repair policy, Administrative Instruction 4.12";
+const DOC_TITLE = POLICY;
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), agentpack: ok({ ok: true, pack: { version: "p@1" } }), airuns: ok({ ok: true, runs: [] }) };
 const reach = (o = {}) => ({ ...o, boot: { plane: { ...plane(o), ...REACH } } });
 const CONCLUDED = (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {}));
@@ -29,23 +29,24 @@ const hunches = (list) => ({ hypotheses: ok({ ok: true, inquiry: Q, hypotheses: 
 
 test("R101 any member who sees the question revises or takes back a hunch, each with her reason: revise sends the hunch, the new statement and the reason; withdraw sends the hunch and the reason", async () => {
   const p = await open(at, { ...A, plane: { ...hunches([HUNCH()]), hypothesisrevise: ok({ ok: true }), hypothesiswithdraw: ok({ ok: true }) } });
-  const fold = main(p).querySelector('[data-hunch="HYP-1"] details');
+  const foldNow = () => main(p).querySelector('[data-hunch="HYP-1"] details');
+  const fold = foldNow();
   assert.ok(fold && says(fold.querySelector("summary"), "screen.question.hunch.change.summary", { name: "dev" }), "the fold for dev's hunch");
   assert.ok(says(fold, "screen.question.hunch.change.note") && says(fold, "screen.question.hunch.revise.label") && says(fold, "screen.question.hunch.revise.help") && says(fold, "screen.question.hunch.revise.reason"));
   assert.equal(p.doc.getElementById("question-hrev-0").value, "Crews close reports when they inspect.", "the statement to change is the current one");
   /* revise: the new statement and the reason */
   fill(p, { "question-hrev-0": "Crews close reports at inspection, not repair.", "question-hrevr-0": "the crew foreman said so" });
-  await press(p, "hypothesisrevise", { within: fold });
+  await press(p, "hypothesisrevise", { within: foldNow() });
   assert.deepEqual(p.byOp("hypothesisrevise")[0].body, { hypothesisId: "HYP-1", statement: "Crews close reports at inspection, not repair.", reason: "the crew foreman said so" });
   /* revise with the words left as they are: only the reason changes (the statement is omitted) */
   fill(p, { "question-hrev-0": "Crews close reports when they inspect.", "question-hrevr-0": "I checked it again" });
-  await press(p, "hypothesisrevise", { within: fold });
+  await press(p, "hypothesisrevise", { within: foldNow() });
   assert.deepEqual(p.byOp("hypothesisrevise")[1].body, { hypothesisId: "HYP-1", reason: "I checked it again" });
   /* withdraw: the hunch and the reason, with the sentences that say it cannot be undone */
-  assert.ok(says(fold, "screen.question.hunch.withdraw.reason") && says(fold, "screen.question.hunch.withdraw.note") && says(fold, "screen.question.hunch.withdraw.note2"));
-  assert.ok(says(button(p, "hypothesiswithdraw", fold), "screen.question.hunch.withdraw.button"));
+  assert.ok(says(foldNow(), "screen.question.hunch.withdraw.reason") && says(foldNow(), "screen.question.hunch.withdraw.note") && says(foldNow(), "screen.question.hunch.withdraw.note2"));
+  assert.ok(says(button(p, "hypothesiswithdraw", foldNow()), "screen.question.hunch.withdraw.button"));
   fill(p, { "question-hwr-0": "the foreman corrected me" });
-  await press(p, "hypothesiswithdraw", { within: fold });
+  await press(p, "hypothesiswithdraw", { within: foldNow() });
   assert.deepEqual(p.byOp("hypothesiswithdraw")[0].body, { hypothesisId: "HYP-1", reason: "the foreman corrected me" });
   assert.ok(p.byOp("hypotheses").length >= 3, "the hunches are read again after each change");
 });
@@ -124,11 +125,11 @@ test("R102 control: a missing reason, a missing question or a passage sent nowhe
   /* a question whose 40th character falls on a hyphen */
   const long = "Did the city close every one of the reported potholes - on time";
   let n = 0;
-  const q = await open(at, { ...A, plane: { allocid: () => ok({ ok: true, id: "INQ-2026-" + String(++n + 100).padStart(4, "0") }), inquirydivide: refusedIn("CITED") } });
+  const q = await open(at, { ...A, plane: { allocid: () => ok({ ok: true, id: "INQ-2026-" + String(++n + 100).padStart(4, "0") }), inquirydivide: refusedIn("CHILD_EXISTS") } });
   const f = main(q).querySelector("details[data-divide]");
   fill(q, { "question-divide-reason": "r", "question-divide-q1": long, "question-divide-q2": "Two?" });
   for (const o of [0, 1, 2]) { q.doc.getElementById(`question-divide-leg-${o}-0`).checked = true; q.doc.getElementById(`question-divide-leg-${o}-1`).checked = true; }
-  assert.ok(says(await press(q, "inquirydivide", { within: f }), "refusal.CITED"), "the owner's refusal by its words");
+  assert.ok(says(await press(q, "inquirydivide", { within: f }), "refusal.CHILD_EXISTS"), "the owner's refusal by its words");
   for (const c of q.byOp("inquirydivide")[0].body.children) assert.match(c.id, BUNDLE_ID_RE);
 });
 
@@ -141,7 +142,7 @@ const reeval = (list) => ({ reevaluations: (r) => ok({ ok: true, target: r.query
 
 test("R103 what needs a second look is listed from the reminders the record holds for what this question rests on, and recording that one was looked at sends the dependent, the cause and the note", async () => {
   const p = await open(at, { ...A, plane: { ...reeval([OBLIGATION()]), reevaluationrecord: ok({ ok: true, closed: true }) } });
-  assert.deepEqual(p.byOp("reevaluations").map((r) => r.query.target).sort(), [D, "INFO-2026-0005", "INFO-2026-0006"].sort(), "read for each document the question cites");
+  assert.deepEqual(p.byOp("reevaluations").map((r) => r.query.target).sort(), [D, "INFO-2026-0006"].sort(), "read for each document the question cites that is not taken back");
   const s = main(p).querySelector("#reeval");
   assert.ok(s && says(s.querySelector("h2"), "screen.question.reeval.heading"));
   const open1 = s.querySelector('[data-reeval="open"]');
@@ -155,7 +156,7 @@ test("R103 what needs a second look is listed from the reminders the record hold
   assert.deepEqual(p.byOp("reevaluationrecord")[0].body, { dependent: Q, target: D, source: "edition", since: "2026-10-06T09:00:00Z", note: "The new edition repeats the clause." });
   /* "See what needs a second look" reads again */
   const before = p.byOp("reevaluations").length;
-  await press(p, "reevaluations", { within: s });
+  await press(p, "reevaluations", { within: main(p).querySelector("#reeval") });
   assert.ok(p.byOp("reevaluations").length > before, "read again");
 });
 
@@ -204,9 +205,11 @@ test("R104 the owner's refusals are drawn by the design's words: no reason, a re
     fill(p, { "question-reopen-why": "a reason" });
     assert.ok(says(await press(p, "reopen", { within: main(p).querySelector("details[data-reopen]") }), key), code);
   }
+  const open1 = await open(at, { ...A, plane: { basisversions: CONCLUDED } });
   /* a published case that carries it offers the way to the next edition */
   const c = await open(at, { ...A, plane: { basisversions: CONCLUDED, backlinks: (r) => ok({ ok: true, target: r.query.target, backlinks: r.query.target === Q ? [{ from: "CASE-2026-0001", from_type: "published", from_title: "Street safety" }] : [] }) } });
-  assert.ok(main(c).querySelector('details[data-reopen] a.cs-ref[href="/app/docket/CASE-2026-0001"]'), "the docket, where the next edition is started");
+  assert.ok(says(main(c).querySelector("details[data-reopen]"), "screen.question.reopen.next.link", { link: word("screen.question.reopen.next.link.text") }), "the docket, where the next edition is started");
+  assert.ok(!main(open1).textContent.includes(word("screen.question.reopen.next.link.text")), "control: none when no published case carries it");
   for (const k of ["screen.question.reopen.summary", "screen.question.reopen.what", "screen.question.reopen.case", "screen.question.reopen.kept", "screen.question.reopen.why", "screen.question.reopen.why.help",
     "screen.question.reopen.next", "screen.question.reopen.next.link", "screen.question.reopen.next.link.text", "screen.question.reopen.refused.summary", "screen.question.reopen.refused.noreason",
     "screen.question.reopen.refused.badreason", "screen.question.reopen.refused.notsetdown", "act.reopen.label.question"]) assert.ok(hasWord(k), k);

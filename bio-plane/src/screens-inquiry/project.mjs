@@ -36,8 +36,30 @@ function reads(view) {
     stake: { op: "projectstake", query: { projectId: id } },
     votes: { op: "projectownervotes", query: { projectId: id } },
     plans: { op: "plans", query: { project: id }, empty: (v) => !v || !(Array.isArray(v.plans) ? v.plans : v.items || []).length },
+    /* R90: the determinations the project holds, which its Matter row opens; none held is a list of none, not an absence */
+    dets: { op: "determinations", query: { project: id, live: "true", limit: "200" }, empty: () => false },
+    /* R107: the project's reruns of imported editions (case-import R31); a project that is no rerun answers none, and no tab is drawn */
+    rerun: { op: "rerunread", query: { project: id }, empty: (v) => !v || !Array.isArray(v.reruns) || !v.reruns.length },
     ...directory,
   };
+}
+
+/** R117: the words of a refusal's findings (`findings[]`: `{check, code?, detail}`), each by the key of its code or check
+ *  (`refusal.<code>`) when the table holds one, else its own detail as the plane states it; "" when it names none, so the
+ *  code's own sentence stands. Self-contained (interface-shell R21 (1)). */
+function findingWords(cs, list) {
+  const out = [];
+  for (const f of Array.isArray(list) ? list.slice(0, 5) : []) {
+    if (!f || typeof f !== "object") continue;
+    let said = "";
+    for (const c of [f.code, f.check]) {
+      const key = typeof c === "string" && c ? "refusal." + c : "";
+      if (key && cs.w(key) !== key) { said = cs.w(key); break; }
+    }
+    if (!said && (f.detail || f.message)) said = cs.esc(String(f.detail || f.message));
+    if (said) out.push(said);
+  }
+  return out.join(" ");
 }
 
 /** The path's project step: the project's title as read (R39: never its id). */
@@ -165,8 +187,10 @@ function render(cs, view) {
   const items = pages.filter((x) => x && x.inquiry);
   const firstQuestion = d.questions && d.questions.state === "ok" && !items.length && !pending && !failed;
   const nd = ui.notDrawn;
-  const said = (ui.promoteRefusal ? `<p class="mk-msg" role="alert" data-refusal="promote">${ui.promoteRefusal.translation
-      ? cs.esc(ui.promoteRefusal.translation) : W("state.failed", { reason: ui.promoteRefusal.code || "" })}</p>` : "")
+  /* R117: a refusal that names its findings draws each finding's words (by the key of its check, else its detail), not only the
+     code's generic sentence */
+  const said = (ui.promoteRefusal ? `<p class="mk-msg" role="alert" data-refusal="promote">${P.findings(cs, ui.promoteRefusal.findings)
+      || (ui.promoteRefusal.translation ? cs.esc(ui.promoteRefusal.translation) : W("state.failed", { reason: ui.promoteRefusal.code || "" }))}</p>` : "")
     + (nd ? `<p class="mk-msg" role="alert" data-refusal="drawquestion">${W("screen.project.questions.notdrawn",
         { reason: nd.translation || nd.code || "" })} ${cs.ref("question", nd.id, nd.title || T("state.undetermined", { reason: "" }), [nd.title || ""])}</p>` : "");
   const adddoc = `<a class="cs-btn" data-tone="quiet" href="/app/capture/address/${cs.esc(id)}" data-nav data-adddoc="project">${W("project.adddoc")}</a>`;
@@ -541,7 +565,8 @@ const acts = [
       const res = (a) => (a && a.result !== undefined ? a.result : a);
       const fail = (a) => {
         const r = res(a);
-        cs.set("promoteRefusal", { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "", translation: r && r.translation });
+        cs.set("promoteRefusal", { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "", translation: r && r.translation,
+          findings: r && Array.isArray(r.findings) ? r.findings : a && Array.isArray(a.findings) ? a.findings : [] });
       };
       cs.set("promoteRefusal", null);
       cs.set("notDrawn", null);
@@ -550,7 +575,9 @@ const acts = [
       cs.call("allocid", { query: { prefix: "INQ", year } }).then((a) => {
         const r = res(a);
         if (!r || !r.id) return fail(a);
-        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+        /* L20: the slug is cut at 40 and then trimmed again, so a cut that falls on a hyphen leaves no trailing one (record-grammar's
+           BUNDLE_ID_RE refuses it, and every act resting on the question with it) */
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-+$/, "");
         const id = r.id + (slug ? "-" + slug : "");
         const now = clock.toISOString().split(".")[0] + "Z";
         /* an inquiry document as record-grammar's inquiry grammar asks (HEADINGS.inquiry; first legal state `open`),
@@ -875,5 +902,5 @@ const words = Object.freeze([
 
 /** The project screen (interface-shell R21), with the module's shared readers as its parts. */
 export function projectScreen(parts) {
-  return Object.freeze({ id: "project", reads, place, render, acts, words, parts });
+  return Object.freeze({ id: "project", reads, place, render, acts, words, parts: Object.freeze({ ...parts, findings: findingWords }) });
 }
