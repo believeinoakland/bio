@@ -1265,6 +1265,15 @@ export function promotionOps(promotion, url, body) {
   };
 }
 
+/* R60 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  reopen: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.reopen.label.question",
+    fields: { accepts: ["target","reason"], requires: ["target","reason"] } },
+  projectfork: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("promotion.declared.projectfork", "creates a NEW project; gated on the create_projects shape, not on the source object's state"),
+    fields: { accepts: ["projectId","title","visibility"], requires: ["projectId","title"] } },
+});
+
 const instances = new WeakMap();
 
 /** The one promotion instance for `host` (the Durable Object's `ctx`); `deps` are read on the first call only. */

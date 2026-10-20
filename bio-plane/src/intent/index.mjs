@@ -1720,6 +1720,27 @@ export function intentOps(i, url, body) {
   };
 }
 
+/* R34 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  objectivecondition: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.objectivecondition", "objective-directed: sets, replaces or removes a project's satisfaction condition, keyed by project, with the author's reason for measuring progress this way, now required (intent R2, R30; DEC-88: `reasoned`); a new revision of the project's document"),
+    fields: { accepts: ["project","condition","reason","personWarningSeen"], requires: ["project","reason"] } },
+  goaldeclare: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.goaldeclare", "goal-directed: a member declares a goal, keyed by the new goal; acts on no existing bundle's state"),
+    fields: { accepts: ["statement","bounds","aspiration"], requires: ["statement","bounds"] } },
+  goallink: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("intent.declared.goallink", "goal-directed: the author's dated claim that a project's objective serves a goal, keyed by (goal, project)"),
+    fields: { accepts: ["goal","project"], requires: ["goal","project"] } },
+  goalclose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.goalclose", "goal-directed: a member closes a goal with its reason, keyed by goal id"),
+    fields: { accepts: ["goal","reason"], requires: ["goal","reason"] } },
+  aspirationdeclare: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.aspirationdeclare", "aspiration-directed: a member declares an aspiration of the group, a project or a member, keyed by its scope"),
+    fields: { accepts: ["scope","owner","statement","entities","progressions"], requires: ["scope","statement"] } },
+  aspirationdepart: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.aspirationdepart", "aspiration-directed: a project records its departure from a held group aspiration with a reason, keyed by (project, aspiration)"),
+    fields: { accepts: ["project","aspiration","reason"], requires: ["project","aspiration","reason"] } },
+  aspirationdeadend: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.aspirationdeadend", "aspiration-directed: a dead end appended to an aspiration's pursuit record, keyed by aspiration id"),
+    fields: { accepts: ["aspiration","note"], requires: ["aspiration","note"] } },
+  aspirationretire: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("intent.declared.aspirationretire", "aspiration-directed: a member retires an aspiration with what pursuing it taught, keyed by aspiration id"),
+    fields: { accepts: ["aspiration","taught"], requires: ["aspiration","taught"] } },
+});
+
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It registers its check with promotion

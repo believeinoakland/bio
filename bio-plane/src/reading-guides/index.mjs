@@ -665,6 +665,13 @@ export function readingGuidesOps(s, url, body) {
   };
 }
 
+/* R16 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  procedureguides: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("reading-guides.declared.procedureguides", "read: the procedure guides for a kind of action and their items, with each guide's origin; writes nothing"),
+    fields: { accepts: ["kind"], requires: [] } },
+});
+
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. Its tables are created with it and declared

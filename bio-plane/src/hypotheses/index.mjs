@@ -907,3 +907,14 @@ export function hypothesesOps(hypotheses, url, body) {
     shares: () => hypotheses.sharesOf({ project: q("project"), viewer: q("viewer") }),
   };
 }
+
+/* R24 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  hypothesishold: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("hypotheses.declared.hypothesishold", "inquiry-directed: keyed by a new HYP- id in an inquiry; held as a hypothesis, never a fact or a leg"),
+    fields: { accepts: ["inquiry","kind","statement","about"], requires: ["inquiry","kind","statement","about"] } },
+  hypothesisrevise: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("hypotheses.declared.hypothesisrevise", "hypothesis-directed: keyed by hypothesis; a new statement with its reason, the history kept"),
+    fields: { accepts: ["hypothesisId","statement","about","reason"], requires: ["hypothesisId","reason"] } },
+  hypothesiswithdraw: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("hypotheses.declared.hypothesiswithdraw", "hypothesis-directed: keyed by hypothesis; keeps it, shown withdrawn"),
+    fields: { accepts: ["hypothesisId","reason"], requires: ["hypothesisId","reason"] } },
+});

@@ -2822,6 +2822,13 @@ export function standardsOps(s, url, body) {
   };
 }
 
+/* R61 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  standardinforce: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("standards.declared.standardinforce", "read: whether one standard was in force on a date, with why; writes nothing"),
+    fields: { accepts: ["id","date"], requires: ["id","date"] } },
+});
+
 const instances = new WeakMap();
 /* R48 (K1563 (1)): the instance the module's one registration in connection-grammar's default registry reads: the
    host's, when the registry passes `host`, else the isolate's one instance; with several and no host, ambiguous. */

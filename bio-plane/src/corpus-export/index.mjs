@@ -449,6 +449,13 @@ export function corpusExportOps(ce, q) {
   };
 }
 
+/* R11 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  export: { classes: ["admin"], mutating: true, weight: "substrate", description: localize("corpus-export.declared.export", "writes an export manifest of what is already there"),
+    fields: { accepts: ["note"], requires: [] } },
+});
+
 const instances = new WeakMap();
 
 /** The one instance for a host (K61). The first call creates it with `deps` (a test passes its own), creates

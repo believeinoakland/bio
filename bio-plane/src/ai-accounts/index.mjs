@@ -1712,3 +1712,22 @@ export function aiAccountsOps(a, url, body, env) {
                                                              viewer: url.searchParams.get("viewer") }),
   };
 }
+
+/* R35 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  subscriptiondisconnect: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.subscriptiondisconnect", "credential governance: a member clears their own subscription fact; the subject is a credential, not a bundle"),
+    fields: { accepts: [], requires: [] } },
+  groupkeynoticeseen: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("ai-accounts.declared.groupkeynoticeseen", "personal state, keyed by member: the notice of the group's key seen by them"),
+    fields: { accepts: [], requires: [] } },
+  groupkeyremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.groupkeyremove", "credential governance: the group's assistant key, an administrator's"),
+    fields: { accepts: [], requires: [] } },
+  groupkeyswitch: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("ai-accounts.declared.groupkeyswitch", "the copy's configuration: whether the group's assistant key is on; an administrator's, not an act on an object"),
+    fields: { accepts: ["on"], requires: [] } },
+  groupkeyset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.groupkeyset", "credential governance: the group's assistant key, an administrator's; never answered"),
+    fields: { accepts: ["key"], requires: ["key"] } },
+  accountreferenceset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.accountreferenceset", "credential governance: a member's own assistant account reference, never answered; the subject is a credential, not a bundle"),
+    fields: { accepts: ["kind","secret"], requires: ["kind","secret"] } },
+  accountreferenceremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.accountreferenceremove", "credential governance: a member removes their own account reference; the subject is a credential, not a bundle"),
+    fields: { accepts: [], requires: [] } },
+});

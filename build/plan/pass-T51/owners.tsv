@@ -1,0 +1,369 @@
+accountdrafts	case-account	screens-publish/case-editor	pass	arm in control-plane/owner-ops.mjs (control-plane/owner-ops.mjs:controlPlaneOwnerOps); service of case-account | not reached (budget): left for a continuation or its owner's job
+accountpropose	case-account	screens-publish/case-editor	pass	arm in control-plane/owner-ops.mjs (control-plane/owner-ops.mjs:controlPlaneOwnerOps); service of case-account | not reached (budget): left for a continuation or its owner's job
+accountreferenceremove	ai-accounts	screens-settings/connect	pass	ai-accounts/index.mjs:aiAccountsOps | declared by the pass
+accountreferenceset	ai-accounts	screens-settings/connect	pass	ai-accounts/index.mjs:aiAccountsOps | declared by the pass
+accountusesset	ai-accounts	screens-settings/teamai screens-settings/connect screens-inquiry/projectai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+acquire	capture	screens-intake/capture screens-investigate/money	judgment	capture/index.mjs:captureOps | JUDGMENT: the arm hands the whole body to acquisition's acquire(), which reads some twenty fields across its archive, capture-request, render and co-archive arms (a job module's service), more than one declaration can state
+actioncorrespond	actions	screens-action/action	pass	actions/index.mjs:actionsOps | not reached (budget): left for a continuation or its owner's job
+actioncreate	actions	screens-investigate/money screens-action/request screens-action/actionnew screens-action/dash-action	pass	actions/index.mjs:actionsOps | not reached (budget): left for a continuation or its owner's job
+actionhold	action-holds	screens-action/hold	pass	action-holds/index.mjs:actionHoldsOps | not reached (budget): left for a continuation or its owner's job
+actionholdrelease	action-holds	screens-action/hold	pass	action-holds/index.mjs:actionHoldsOps | not reached (budget): left for a continuation or its owner's job
+actioninquiry	action-records	screens-action/action	pass	action-records/index.mjs:actionRecordsOps | not reached (budget): left for a continuation or its owner's job
+actionlaws	actions	screens-action/request screens-action/action	pass	actions/index.mjs:actionsOps | not reached (budget): left for a continuation or its owner's job
+actionlawspropose	action-records	screens-action/action	pass	action-records/index.mjs:actionRecordsOps | not reached (budget): left for a continuation or its owner's job
+actionmove	actions	screens-daily/queue screens-action/action	pass	actions/index.mjs:actionsOps | not reached (budget): left for a continuation or its owner's job
+actionpressure	action-holds	screens-action/action	pass	action-holds/index.mjs:actionHoldsOps | not reached (budget): left for a continuation or its owner's job
+actionrisktier	actions	screens-action/action	pass	actions/index.mjs:actionsOps | not reached (budget): left for a continuation or its owner's job
+actionscope	action-records	screens-action/action	pass	action-records/index.mjs:actionRecordsOps | not reached (budget): left for a continuation or its owner's job
+actionstake	action-records	screens-action/start-send	pass	action-records/index.mjs:actionRecordsOps | not reached (budget): left for a continuation or its owner's job
+addparticipant	events	screens-investigate/timeline	pass	events/index.mjs:eventsOps (alias of participantadd) | not reached (budget): left for a continuation or its owner's job
+addressedrecord	consequences	registry/matter	pass	consequences/index.mjs:consequencesOps | not reached (budget): left for a continuation or its owner's job
+addresseesuggest	actions	screens-action/request screens-action/actionnew	pass	actions/index.mjs:actionsOps | not reached (budget): left for a continuation or its owner's job
+addworkbook	workbooks	screens-investigate/calculation	pass	workbooks/ops.mjs:workbooksOps (alias of workbookadd) | not reached (budget): left for a continuation or its owner's job
+adminendorse	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+adminremove	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+adoptversion	reevaluation	screens-daily/home screens-daily/queue screens-inquiry/dash-project screens-inquiry/document	pass	reevaluation/index.mjs:reevaluationOps (alias of versionadopt) | not reached (budget): left for a continuation or its owner's job
+aikeepaway	ai-accounts	screens-entry/setup screens-settings/teamai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+ailimitset	ai-use	screens-entry/setup screens-settings/teamai screens-settings/connect screens-inquiry/projectai	pass	ai-use/index.mjs:aiUseOps | not reached (budget): left for a continuation or its owner's job
+airunclose	ai-runs	screens-inquiry/question screens-inquiry/assistant	pass	ai-runs/index.mjs:aiRunsOps | not reached (budget): left for a continuation or its owner's job
+airunopen	ai-runs	screens-inquiry/question screens-inquiry/assistant	pass	ai-runs/index.mjs:aiRunsOps | not reached (budget): left for a continuation or its owner's job
+aliaswithdraw	entities	screens-investigate/person	pass	entities/index.mjs:entitiesOps | declared by the pass
+archivelist	capture	screens-intake/archive	pass	capture/index.mjs:captureOps | declared by the pass
+ask	plane	screens-daily/answers	job	served by plane/store.mjs ask (the plane's own door)
+aspirationdeadend	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+aspirationdeclare	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+aspirationdepart	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+aspirationretire	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+attest	attestation	screens-inquiry/document	pass	Worker arm attestOp(req, env, store, ...) in attestation/ops.mjs, not an ops-map arm | not reached (budget): left for a continuation or its owner's job
+attribute	case-tensions	screens-publish/case-editor	pass	case-tensions/index.mjs:caseTensionsOps | not reached (budget): left for a continuation or its owner's job
+authoritychain	money	screens-investigate/money	pass	money/index.mjs:moneyOps | not reached (budget): left for a continuation or its owner's job
+biasadopt	bias	registry/bias	pass	bias/index.mjs:biasOps | not reached (budget): left for a continuation or its owner's job
+biasdebt	bias	registry/bias	pass	bias/index.mjs:biasOps | declared by the pass
+biasdebtresolve	bias	registry/bias	pass	bias/index.mjs:biasOps | declared by the pass
+biasinhale	bias	registry/bias	judgment	bias/index.mjs:biasOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+biasmanifest	bias	registry/bias	judgment	bias/index.mjs:biasOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+bind	workbooks	screens-investigate/calculation	pass	workbooks/ops.mjs:workbooksOps (alias of workbookbind) | not reached (budget): left for a continuation or its owner's job
+bootstrap	credentials	registry/install registry/update registry/updates	job	credentials/index.mjs
+calculationaccept	calculations	screens-investigate/calculation	pass	calculations/index.mjs:calculationsOps | not reached (budget): left for a continuation or its owner's job
+calculationcreate	calculations	screens-daily/finder screens-investigate/calculation	pass	calculations/index.mjs:calculationsOps | not reached (budget): left for a continuation or its owner's job
+calculationdraw	calculations	screens-investigate/calculation	pass	calculations/index.mjs:calculationsOps | not reached (budget): left for a continuation or its owner's job
+captureaccount	capture	registry/ceremony	judgment	capture/index.mjs:captureOps | JUDGMENT: a missing captureSha is refused NOT_THE_CAPTURING_ACTOR, which names no field, so its required field cannot be stated as the refusal names it
+captureprogressions	progressions	registry/document	judgment	progressions/index.mjs:progressionOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+capturerequest	capture-requests	screens-intake/capture	job	capture-requests/index.mjs:captureRequestsOps
+capturerequestretry	capture-requests	registry/capture	job	capture-requests/index.mjs:captureRequestsOps
+captureupload	capture	screens-intake/capture	judgment	arm in control-plane/owner-ops.mjs (control-plane/owner-ops.mjs:controlPlaneOwnerOps); service of capture | JUDGMENT: its arm is in control-plane/owner-ops.mjs, a later module than capture, so capture's test cannot import it (architecture: not earlier in the order) and declaredOpHolds cannot be run against the door's arm there
+casedraft	review	screens-inquiry/question screens-publish/case-editor	job	review/index.mjs:reviewOps
+caseimport	case-import	screens-publish/imported	job	case-import/index.mjs:caseImportOps
+caseratify	ratification	screens-publish/ceremony	pass	ratification/index.mjs:ratificationOps | not reached (budget): left for a continuation or its owner's job
+checkpointrecord	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+checkrequest	tasks	screens-inquiry/question screens-investigate/money	job	tasks/index.mjs:tasksOps
+cite	citation	screens-daily/finder screens-daily/find-in screens-inquiry/question screens-inquiry/document	job	citation/index.mjs:905
+claim	credentials	screens-entry/setup	job	credentials/index.mjs:2084
+clockadopt	action-clocks	screens-investigate/due-date	pass	action-clocks/index.mjs:actionClocksOps | not reached (budget): left for a continuation or its owner's job
+clockpropose	action-clocks	screens-investigate/due-date	pass	arm in control-plane/owner-ops.mjs (control-plane/owner-ops.mjs:controlPlaneOwnerOps); service of action-clocks | not reached (budget): left for a continuation or its owner's job
+committedagainstpaid	money	screens-investigate/money	pass	money/index.mjs:moneyOps | not reached (budget): left for a continuation or its owner's job
+communicationprepare	filings	screens-action/start-send screens-action/request	job	filings/index.mjs:filingsOps
+conclude	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+connect	connections	screens-investigate/person	job	connections/index.mjs:connectionsOps
+connectionassert	connections	registry/document	job	connections/index.mjs:connectionsOps
+connectionchoose	connections	screens-inquiry/document	job	connections/index.mjs:connectionsOps
+consequencerecord	consequences	registry/matter	pass	consequences/index.mjs:consequencesOps | not reached (budget): left for a continuation or its owner's job
+consequencerevise	consequences	registry/matter	pass	consequences/index.mjs:consequencesOps | not reached (budget): left for a continuation or its owner's job
+contradictionclarify	contradiction	registry/contradiction	pass	contradiction/index.mjs:contradictionOps | not reached (budget): left for a continuation or its owner's job
+contradictiondismiss	contradiction	registry/contradiction	pass	contradiction/index.mjs:contradictionOps | not reached (budget): left for a continuation or its owner's job
+contradictionoptin	contradiction	registry/contradiction	pass	contradiction/index.mjs:contradictionOps | not reached (budget): left for a continuation or its owner's job
+contradictionresolve	contradiction	registry/contradiction	pass	contradiction/index.mjs:contradictionOps | not reached (budget): left for a continuation or its owner's job
+contradictionrespond	contradiction	registry/contradiction	pass	contradiction/index.mjs:contradictionOps | not reached (budget): left for a continuation or its owner's job
+contradictiontakeup	contradiction	registry/contradiction	pass	contradiction/index.mjs:contradictionOps | not reached (budget): left for a continuation or its owner's job
+counselpacket	filings	screens-action/counsel	job	filings/index.mjs:filingsOps
+courtlink	standards	screens-investigate/proceeding	pass	standards/index.mjs:standardsOps | not reached (budget): left for a continuation or its owner's job
+courtnoticeset	member-roster	screens-entry/setup screens-settings/group	job	member-roster/index.mjs:membersOps
+createevent	events	screens-investigate/timeline screens-investigate/money	pass	events/index.mjs:eventsOps (alias of eventcreate) | not reached (budget): left for a continuation or its owner's job
+createset	money	screens-investigate/money	pass	money/index.mjs:moneyOps (alias of moneysetcreate) | not reached (budget): left for a continuation or its owner's job
+declare	duties	screens-investigate/proceeding	pass	duties/index.mjs:dutiesOps (alias of dutydeclare) | not reached (budget): left for a continuation or its owner's job
+declaredstakeset	instance-setup	screens-settings/group	job	setup.mjs:instanceSetupOps
+declaretie	people	screens-investigate/ties	pass	people/index.mjs:peopleOps (alias of membertie) | not reached (budget): left for a continuation or its owner's job
+declinetoescalate	escalation	screens-action/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+deepercheck	file-safety	screens-intake/open-file	job	file-safety/index.mjs:fileSafetyOps
+determine	conformance	registry/matter	pass	conformance/index.mjs:conformanceOps | not reached (budget): left for a continuation or its owner's job
+discharge	progressions	screens-investigate/timeline	pass	progressions/index.mjs:progressionOps | not reached (budget): left for a continuation or its owner's job
+disclosureshown	instance-setup	screens-settings/connect	job	setup.mjs:instanceSetupOps
+docketfile	docket	screens-publish/docket	pass	docket/index.mjs:docketOps | not reached (budget): left for a continuation or its owner's job
+docketpost	docket	screens-publish/docket	pass	docket/index.mjs:docketOps | not reached (budget): left for a continuation or its owner's job
+drawquestion	citation	screens-inquiry/project	job	citation/index.mjs:citationOps
+enroll	member-roster	screens-entry/join	job	member-roster/index.mjs:membersOps
+entityalias	entities	screens-investigate/person	pass	entities/index.mjs:entitiesOps | declared by the pass
+entitycreate	entities	screens-entry/setup screens-settings/places screens-investigate/people screens-investigate/proceeding	pass	entities/index.mjs:entitiesOps | declared by the pass
+escalationadvance	escalation	screens-action/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationattach	escalation	registry/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationdecline	escalation	registry/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationend	escalation	screens-action/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationevaluate	escalation	registry/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationopen	escalation	screens-action/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationreopen	escalation	screens-action/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationresume	escalation	registry/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationstoppursuing	escalation	screens-action/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+escalationsuspend	escalation	registry/matter	pass	escalation/ops.mjs:escalationOps | not reached (budget): left for a continuation or its owner's job
+exclude	money	screens-investigate/money	pass	money/index.mjs:moneyOps (alias of moneysetexclude) | not reached (budget): left for a continuation or its owner's job
+expertiseconfirm	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+expertisedeclare	member-roster	screens-settings/account	job	member-roster/index.mjs:membersOps
+explore	explore	screens-inquiry/document screens-investigate/people screens-investigate/person screens-investigate/explore	pass	explore/ops.mjs:exploreOps | not reached (budget): left for a continuation or its owner's job
+exploreapprove	ai-use	screens-daily/queue	pass	ai-use/index.mjs:aiUseOps | not reached (budget): left for a continuation or its owner's job
+explorepreset	explore	screens-investigate/explore	pass	explore/ops.mjs:exploreOps | not reached (budget): left for a continuation or its owner's job
+exploreverify	explore	screens-investigate/explore	pass	explore/ops.mjs:exploreOps | not reached (budget): left for a continuation or its owner's job
+export	corpus-export	registry/group	pass	corpus-export/index.mjs:444 | declared by the pass
+exportlog	corpus-export	registry/group	judgment	corpus-export/index.mjs:corpusExportOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+factconfirm	local-facts	screens-settings/group	pass	local-facts/index.mjs:localFactsOps | not reached (budget): left for a continuation or its owner's job
+filingapprove	filings	screens-action/start-send screens-action/request screens-action/dash-action	job	filings/index.mjs:filingsOps
+filingprepare	filings	screens-action/start-send	job	filings/index.mjs:filingsOps
+filingrecordsent	filings	screens-action/start-send screens-action/request	job	filings/index.mjs:filingsOps (alias of filingsent)
+filingsecondapprove	filings	screens-action/start-send	job	filings/index.mjs:filingsOps
+findin	retrieval	screens-daily/finder screens-daily/find-in screens-inquiry/project screens-inquiry/document screens-investigate/timeline screens-investigate/money	pass	retrieval/index.mjs retrievalRoutes | not reached (budget): left for a continuation or its owner's job
+followregister	following	screens-investigate/person screens-investigate/proceeding	pass	following/index.mjs:followingOps | declared by the pass
+founderhandleset	member-roster	screens-entry/setup	job	member-roster/index.mjs:membersOps
+frontier	retrieval	screens-daily/finder	judgment	retrievalRoutes | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+goalclose	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+goaldeclare	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+goallink	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+gradenote	capture	screens-intake/archive screens-inquiry/document screens-investigate/money	pass	capture/index.mjs:captureOps | declared by the pass
+groupdescriptiondraft	store-door	screens-settings/group-identity	judgment	routed by store-door/dispatch.mjs:457 itself (draft door), no ops-map arm | JUDGMENT: the draft door routes it itself (store-door/dispatch.mjs:457); no ops-map arm of any module serves it
+groupdescriptionset	member-roster	screens-settings/group-identity	job	member-roster/index.mjs:membersOps
+groupdomainset	instance-setup	screens-entry/setup screens-settings/group	job	setup.mjs:instanceSetupOps
+groupkeynoticeseen	ai-accounts	screens-settings/connect	pass	ai-accounts/index.mjs:aiAccountsOps | declared by the pass
+groupkeyremove	ai-accounts	screens-settings/teamai	pass	ai-accounts/index.mjs:aiAccountsOps | declared by the pass
+groupkeyset	ai-accounts	screens-entry/setup screens-settings/teamai	pass	ai-accounts/index.mjs:aiAccountsOps | declared by the pass
+groupkeyswitch	ai-accounts	screens-entry/setup screens-settings/teamai	pass	ai-accounts/index.mjs:aiAccountsOps | declared by the pass
+grouplanguagesset	instance-setup	screens-settings/group	job	setup.mjs:instanceSetupOps
+grouplogoset	instance-setup	screens-settings/group	job	setup.mjs:instanceSetupOps
+groupnameset	instance-setup	screens-entry/setup screens-settings/group	job	setup.mjs:instanceSetupOps
+handlecheck	member-roster	screens-entry/join	job	member-roster/index.mjs:membersOps
+heldcaptures	capture	screens-intake/held	pass	capture/index.mjs:captureOps | declared by the pass
+heldrestore	capture	screens-intake/held screens-inquiry/question	pass	capture/index.mjs:captureOps | declared by the pass
+heldsetaside	capture	screens-intake/held screens-intake/archive	pass	capture/index.mjs:captureOps | declared by the pass
+holdnoticeprepare	filings	screens-action/holdnotice	job	filings/index.mjs:filingsOps
+holdnoticesent	action-holds	screens-action/holdnotice	pass	action-holds/index.mjs:actionHoldsOps | not reached (budget): left for a continuation or its owner's job
+hostingaccessset	member-roster	screens-entry/setup screens-settings/group	job	member-roster/index.mjs:membersOps
+hypothesishold	hypotheses	screens-inquiry/question screens-investigate/timeline screens-investigate/money	pass	hypotheses/index.mjs:hypothesesOps | declared by the pass
+hypothesisrevise	hypotheses	registry/question	pass	hypotheses/index.mjs:hypothesesOps | declared by the pass
+hypothesiswithdraw	hypotheses	registry/question	pass	hypotheses/index.mjs:hypothesesOps | declared by the pass
+identityclaim	people	screens-inquiry/document screens-investigate/person	pass	people/index.mjs:peopleOps | not reached (budget): left for a continuation or its owner's job
+importaccept	case-import	screens-publish/imported	job	case-import/index.mjs:caseImportOps
+importacceptwithdraw	case-import	registry/imported	job	case-import/index.mjs:caseImportOps
+importflag	case-import	screens-publish/imported	job	case-import/index.mjs:caseImportOps
+importwatch	case-import	screens-publish/imported	job	case-import/index.mjs:caseImportOps
+inboxpull	doorbell	screens-intake/inbox	pass	doorbell/index.mjs:doorbellOps | declared by the pass
+inboxresolve	doorbell	screens-intake/inbox	pass	doorbell/index.mjs:doorbellOps | declared by the pass
+include	money	screens-investigate/money	pass	money/index.mjs:moneyOps (alias of moneysetinclude) | not reached (budget): left for a continuation or its owner's job
+infolevelset	instance-setup	screens-settings/account	job	setup.mjs:instanceSetupOps
+inquirydivide	inquiry	registry/question	job	inquiry/index.mjs:inquiryOps
+inquiryground	inquiry	screens-inquiry/question	job	inquiry/index.mjs:inquiryOps
+instance	progressions	registry/timeline	judgment	progressions/index.mjs:1604 | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+invitelook	member-roster	screens-entry/join	job	member-roster/index.mjs:membersOps
+invitewithdraw	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+itemtakeup	plan-work	screens-action/plan	pass	plan-work/index.mjs:planWorkOps | not reached (budget): left for a continuation or its owner's job
+joinlinkenable	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+joinlinkinvite	member-roster	screens-entry/join	job	member-roster/index.mjs:membersOps
+keepversion	reevaluation	screens-daily/home screens-daily/queue screens-inquiry/dash-project screens-inquiry/document	pass	reevaluation/index.mjs:reevaluationOps (alias of versionkeep) | not reached (budget): left for a continuation or its owner's job
+knock	doorbell	screens-publish/doorbell	pass	doorbell/index.mjs:doorbellOps | declared by the pass
+knockerconsent	sources	registry/doorbell	pass	sources/index.mjs:sourcesOps | not reached (budget): left for a continuation or its owner's job
+knocksof	doorbell	registry/inbox	pass	doorbell/index.mjs:doorbellOps | declared by the pass
+lawrelate	standards	screens-investigate/standard	pass	standards/index.mjs:standardsOps | not reached (budget): left for a continuation or its owner's job
+lead	observation-log	registry/leads	pass	observation-log/index.mjs:1085 | declared by the pass
+leadlook	observation-log	registry/leads	pass	observation-log/index.mjs:observationLogOps | declared by the pass
+leadread	observation-log	registry/leads	pass	observation-log/index.mjs:observationLogOps | declared by the pass
+leadshare	observation-log	registry/leads	pass	observation-log/index.mjs:observationLogOps | declared by the pass
+login	credentials	screens-entry/front	job	credentials/index.mjs:credentialsOps
+memberadd	member-roster	screens-entry/setup screens-settings/members	job	member-roster/index.mjs:membersOps
+membercaps	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+memberlanguageset	instance-setup	screens-settings/account	job	setup.mjs:instanceSetupOps
+memberpairingset	member-roster	registry/account	job	member-roster/index.mjs:membersOps
+memberset	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+monitor	monitoring	screens-intake/capture screens-inquiry/document	job	monitoring/index.mjs:monitoringOps
+monitoring	monitoring	registry/watching	job	monitoring/index.mjs:monitoringOps
+monitorpause	monitoring	registry/watching	job	monitoring/index.mjs:monitoringOps
+monitorset	monitoring	screens-intake/capture screens-inquiry/document	job	monitoring/index.mjs:monitoringOps
+monitorslate	monitoring	registry/watching	job	monitoring/index.mjs:monitoringOps
+narrow	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+notedelete	hypotheses	screens-settings/notes	judgment	hypotheses/index.mjs:hypothesesOps | JUDGMENT: same as notewrite (the four note ops share the sentence)
+noterevise	hypotheses	screens-settings/notes	judgment	hypotheses/index.mjs:hypothesesOps | JUDGMENT: same as notewrite (the four note ops share the sentence)
+noteturn	hypotheses	screens-settings/notes	judgment	hypotheses/index.mjs:hypothesesOps | JUDGMENT: same as notewrite (the four note ops share the sentence)
+notewrite	hypotheses	screens-settings/notes	judgment	hypotheses/index.mjs:hypothesesOps | JUDGMENT: op-grades' own test (owners.test.mjs:241) copies the start of the note ops' shared hand description, so repeating it in the declaration fails the words check's testcopy arm in a module the pass may not edit
+noticepost	network-notices	screens-inquiry/project	pass	network-notices/index.mjs:networkNoticesOps | not reached (budget): left for a continuation or its owner's job
+noticeprepare	network-notices	screens-inquiry/project	pass	network-notices/index.mjs:networkNoticesOps | not reached (budget): left for a continuation or its owner's job
+objectivecondition	intent	registry/objective	pass	intent/index.mjs:intentOps | declared by the pass
+obscuremark	case-carriage	screens-publish/ceremony	pass	case-carriage/index.mjs:caseCarriageOps | not reached (budget): left for a continuation or its owner's job
+obscuremarkwithdraw	case-carriage	screens-publish/ceremony	pass	case-carriage/index.mjs:caseCarriageOps | not reached (budget): left for a continuation or its owner's job
+officesseed	instance-setup	screens-entry/setup screens-settings/places	job	setup.mjs:instanceSetupOps
+openoriginal	file-safety	screens-intake/open-file	job	file-safety/index.mjs:fileSafetyOps
+openwithwarning	file-safety	screens-intake/open-file	job	file-safety/index.mjs:fileSafetyOps
+optionadd	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+optionadopt	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+optiondispose	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+optionstart	action-plans	screens-action/start-send	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+optionstartpreview	action-plans	screens-action/plan screens-action/start-send	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+pagetranscribe	extraction	screens-inquiry/document	pass	extraction/index.mjs:extractionOps | not reached (budget): left for a continuation or its owner's job
+passwordreset	credentials	screens-entry/reset	job	credentials/index.mjs:credentialsOps
+passwordresetlink	credentials	screens-settings/members	job	credentials/index.mjs:credentialsOps
+pdfstructure	extraction	registry/document	judgment	extraction/index.mjs:extractionOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+personexpunge	people	screens-investigate/person	pass	people/index.mjs:peopleOps | not reached (budget): left for a continuation or its owner's job
+placewanted	instance-setup	screens-entry/setup screens-settings/places	job	setup.mjs:instanceSetupOps
+planask	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+planclose	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+planopen	action-plans	screens-inquiry/project screens-inquiry/question	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+plansubjectadd	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+pressurerecord	action-holds	screens-action/hold	pass	action-holds/index.mjs:actionHoldsOps | not reached (budget): left for a continuation or its owner's job
+procedureguides	reading-guides	screens-action/action	pass	reading-guides/index.mjs:readingGuidesOps | declared by the pass
+profilesset	instance-setup	screens-entry/setup screens-settings/places	job	setup.mjs:instanceSetupOps
+progression	progressions	registry/timeline	judgment	progressions/index.mjs:progressionOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+progressiondefine	progressions	screens-investigate/timeline	pass	progressions/index.mjs:progressionOps | not reached (budget): left for a continuation or its owner's job
+projectaccountremove	ai-accounts	screens-inquiry/projectai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+projectaccountswitch	ai-accounts	screens-inquiry/projectai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+projectaikeepaway	ai-accounts	screens-inquiry/projectai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+projectbarset	strength	screens-inquiry/project	pass	strength/index.mjs:strengthOps | not reached (budget): left for a continuation or its owner's job
+projectfork	promotion	screens-inquiry/project	pass	promotion/index.mjs:promotionOps | declared by the pass
+projectinvite	membership	screens-inquiry/project	pass	membership/index.mjs:membershipOps | not reached (budget): left for a continuation or its owner's job
+projectjoin	membership	screens-daily/home screens-daily/projects screens-daily/queue screens-inquiry/project screens-inquiry/projectai	pass	membership/index.mjs:membershipOps | not reached (budget): left for a continuation or its owner's job
+projectkeynoticeseen	ai-accounts	screens-inquiry/projectai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+projectkeyset	ai-accounts	screens-daily/queue screens-inquiry/projectai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+projectleave	membership	screens-inquiry/project	pass	membership/index.mjs:membershipOps | not reached (budget): left for a continuation or its owner's job
+projectowneradd	project-roster	screens-inquiry/project	job	project-roster/index.mjs:projectRosterOps
+projectownerremove	project-roster	screens-inquiry/project	job	project-roster/index.mjs:projectRosterOps
+projectownerrescue	project-roster	screens-inquiry/project	job	project-roster/index.mjs:projectRosterOps
+projectremove	membership	screens-inquiry/project	pass	membership/index.mjs:membershipOps | not reached (budget): left for a continuation or its owner's job
+projectrequest	project-roster	screens-daily/home screens-daily/projects screens-inquiry/project	job	project-roster/index.mjs:projectRosterOps
+projectrequestanswer	project-roster	screens-daily/home screens-daily/queue	job	project-roster/index.mjs:projectRosterOps
+projectrequestwithdraw	project-roster	screens-daily/home screens-daily/projects screens-inquiry/project	job	project-roster/index.mjs:projectRosterOps
+projectsigninset	ai-accounts	screens-inquiry/projectai	pass	ai-accounts/index.mjs:aiAccountsOps | not reached (budget): left for a continuation or its owner's job
+projectstakeset	project-roster	screens-inquiry/project	job	project-roster/index.mjs:projectRosterOps
+projectvisibilityset	membership	screens-inquiry/project	pass	membership/index.mjs:membershipOps | not reached (budget): left for a continuation or its owner's job
+promote	promotion	screens-daily/home screens-daily/projects screens-daily/queue screens-inquiry/project screens-investigate/explore	judgment	promotion/index.mjs:promotionOps | JUDGMENT: the arm hands the request body whole to promote() as the bundle package (base, snapKey, files and the rest), an open set of fields
+proposedispose	queue	screens-daily/queue screens-inquiry/question screens-investigate/timeline	job	queue/index.mjs:queueOps
+provenanceroute	provenance-routes	registry/document	pass	provenance-routes/ops.mjs:provenanceRouteOps | declared by the pass
+publish	ratification	screens-publish/ceremony	pass	ratification/index.mjs:ratificationOps | not reached (budget): left for a continuation or its owner's job
+publishat	ratification	screens-publish/ceremony	judgment	ratification/index.mjs:ratificationOps | JUDGMENT: its hand grade is the rung irreversible, which op-grades R49 refuses in a declaration (IRREVERSIBLE_WEIGHT is derived from the hand rows)
+publishatcancel	publish-schedule	screens-publish/ceremony	pass	publish-schedule/index.mjs:publishScheduleOps | not reached (budget): left for a continuation or its owner's job
+publishatmove	publish-schedule	screens-publish/ceremony	judgment	publish-schedule/index.mjs:publishScheduleOps | JUDGMENT: its hand grade is the rung irreversible, which op-grades R49 refuses in a declaration
+publishedcase	public-read	screens-publish/published	judgment	public-read/index.mjs:publicReadOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+publishpreflight	case-authoring	screens-publish/ceremony	job	case-authoring/index.mjs:caseAuthoringOps
+publishtensions	case-authoring	screens-publish/ceremony	job	case-authoring/index.mjs:caseAuthoringOps
+queuemute	queue	screens-daily/queue	job	queue/index.mjs:queueOps
+queuesnooze	queue	screens-daily/queue	job	queue/index.mjs:queueOps
+readtranslate	plane	screens-inquiry/question	job	plane/ask.mjs draft path; no ops map serves it (op-declarations t48.mjs:26)
+reattest	capture	registry/ceremony	pass	capture/index.mjs:captureOps | declared by the pass
+reauth	credentials	screens-settings/connect	job	credentials/index.mjs:credentialsOps
+reconcile	money	screens-investigate/money	pass	money/index.mjs:moneyOps (alias of moneyreconcile) | not reached (budget): left for a continuation or its owner's job
+recordcheck	workbooks	screens-investigate/calculation	pass	workbooks/ops.mjs:workbooksOps (alias of workbooksecondcheck) | not reached (budget): left for a continuation or its owner's job
+recorddatedfact	events	screens-daily/find-in screens-investigate/timeline	pass	events/index.mjs:eventsOps (alias of datedfact) | not reached (budget): left for a continuation or its owner's job
+recordfact	money	screens-daily/find-in screens-investigate/money	pass	money/index.mjs:moneyOps (alias of moneyrecord) | not reached (budget): left for a continuation or its owner's job
+recordline	lines	screens-investigate/proceeding	pass	lines/index.mjs:linesOps (alias of linerecord) | not reached (budget): left for a continuation or its owner's job
+recordpersonfact	people	screens-daily/find-in screens-investigate/person	pass	people/index.mjs:peopleOps (alias of personfact) | not reached (budget): left for a continuation or its owner's job
+recover	credentials	screens-entry/forgot	job	credentials/index.mjs:credentialsOps
+recoverycodesissue	credentials	screens-entry/setup screens-settings/recovery	job	credentials/index.mjs:credentialsOps
+reevaluationrecord	reevaluation	registry/question	pass	reevaluation/index.mjs:reevaluationOps | not reached (budget): left for a continuation or its owner's job
+reevaluations	reevaluation	registry/question	judgment	reevaluation/index.mjs:reevaluationOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+reinstate	citation	screens-inquiry/question	job	citation/index.mjs:citationOps
+relate	events	screens-investigate/timeline	pass	events/index.mjs:eventsOps (alias of eventrelate) | not reached (budget): left for a continuation or its owner's job
+relationdeclare	entities	screens-investigate/person	pass	entities/index.mjs:entitiesOps | declared by the pass
+release	ratification	screens-intake/held screens-intake/archive screens-inquiry/dash-project screens-inquiry/document	pass	ratification/index.mjs:1666 (also action-holds/filings keys of other ops) | not reached (budget): left for a continuation or its owner's job
+releasescanhold	file-safety	screens-intake/open-file	job	file-safety/index.mjs:fileSafetyOps
+reminderanswer	action-clocks	screens-daily/queue screens-action/dash-action	pass	action-clocks/index.mjs:actionClocksOps | not reached (budget): left for a continuation or its owner's job
+reminderset	action-clocks	screens-investigate/due-date screens-action/action	pass	action-clocks/index.mjs:actionClocksOps | not reached (budget): left for a continuation or its owner's job
+reopen	promotion	registry/question	pass	promotion/index.mjs:promotionOps | declared by the pass
+resolutiondefect	entities	registry/document	judgment	entities/index.mjs:entitiesOps | JUDGMENT: op-grades' own test (ladder.test.mjs:167) copies the start of its hand description, so repeating that sentence in this declaration (op-grades R50 requires it equal) fails the words check's testcopy arm in a module the pass may not edit
+resolve	entities	screens-investigate/person	pass	entities/index.mjs:entitiesOps | declared by the pass
+resolvetestify	entities	screens-investigate/person	pass	entities/index.mjs:entitiesOps | declared by the pass
+retire	ratification	screens-inquiry/document	pass	ratification/index.mjs:ratificationOps | not reached (budget): left for a continuation or its owner's job
+reviewcomment	review	screens-publish/review-copy screens-publish/review-outside	job	review/index.mjs:reviewOps
+reviewgrant	review	screens-publish/review-copy	job	review/index.mjs:reviewOps
+reviewrevoke	review	screens-publish/review-copy	job	review/index.mjs:reviewOps
+ruleanswer	answers	screens-daily/answers	pass	alias of rule; answers/ops.mjs | not reached (budget): left for a continuation or its owner's job
+ruleconfirm	local-facts	screens-settings/grouprules	pass	local-facts/index.mjs:localFactsOps | not reached (budget): left for a continuation or its owner's job
+ruledraft	local-facts	screens-settings/grouprules	pass	local-facts/index.mjs:localFactsOps | not reached (budget): left for a continuation or its owner's job
+rulewithdraw	local-facts	screens-settings/grouprules	pass	local-facts/index.mjs:localFactsOps | not reached (budget): left for a continuation or its owner's job
+runtime	instance-setup	registry/updates	job	setup.mjs:instanceSetupOps
+safeview	file-safety	screens-intake/open-file	job	file-safety/index.mjs:fileSafetyOps
+scenarioset	action-plans	screens-action/plan	pass	action-plans/index.mjs:actionPlansOps | not reached (budget): left for a continuation or its owner's job
+search	retrieval	screens-daily/finder screens-daily/find-in screens-daily/answers screens-inquiry/question screens-investigate/people	judgment	retrievalRoutes | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+secondlook	following	screens-daily/finder	pass	following/index.mjs:followingOps | not reached (budget): left for a continuation or its owner's job
+secondlookclear	following	screens-daily/finder	pass	following/index.mjs:followingOps | not reached (budget): left for a continuation or its owner's job
+securitymap	credentials	screens-settings/security	job	credentials/index.mjs:credentialsOps
+securitytooladd	file-safety	screens-entry/setup screens-settings/security	job	file-safety/index.mjs:fileSafetyOps
+securitytoolremove	file-safety	screens-settings/security	job	file-safety/index.mjs:fileSafetyOps
+securitytooltest	file-safety	screens-settings/security	job	file-safety/index.mjs:fileSafetyOps
+select	retrieval	screens-daily/finder	pass	retrievalRoutes | not reached (budget): left for a continuation or its owner's job
+selectionrelease	retrieval	screens-daily/finder	pass	retrievalRoutes | not reached (budget): left for a continuation or its owner's job
+selftest	instance-setup	registry/updates	job	setup.mjs:instanceSetupOps
+setpassword	credentials	screens-settings/account	job	credentials/index.mjs:credentialsOps
+sever	citation	screens-inquiry/question	job	citation/index.mjs:citationOps
+signeradd	credentials	screens-settings/members	job	credentials/index.mjs:credentialsOps
+signerregisterown	credentials	screens-settings/account screens-publish/ceremony	job	alias of signerregister
+signerrevokeown	credentials	screens-settings/account	job	alias of signerrevoke
+signerset	credentials	screens-settings/members	job	credentials/index.mjs:credentialsOps
+signout	credentials	screens-settings/account	job	credentials/index.mjs:credentialsOps
+signouteverywhere	credentials	screens-settings/account	job	credentials/index.mjs:credentialsOps
+signrequest	tasks	screens-publish/ceremony	job	tasks/index.mjs:tasksOps
+sourceconsent	sources	registry/about-knocker	pass	sources/index.mjs:sourcesOps | not reached (budget): left for a continuation or its owner's job
+sourceconsentwithdraw	sources	registry/about-knocker	pass	sources/index.mjs:sourcesOps | not reached (budget): left for a continuation or its owner's job
+sourcedisclose	sources	registry/about-knocker	pass	sources/index.mjs:sourcesOps | not reached (budget): left for a continuation or its owner's job
+sourcelink	sources	screens-intake/inbox	pass	sources/index.mjs:sourcesOps | not reached (budget): left for a continuation or its owner's job
+sourcepersonlink	people	registry/about-knocker	pass	people/index.mjs:peopleOps | not reached (budget): left for a continuation or its owner's job
+spotcheckvisit	calculations	screens-investigate/calculation	pass	calculations/index.mjs:calculationsOps | not reached (budget): left for a continuation or its owner's job
+standardadopt	standards	screens-investigate/standard	pass	standards/index.mjs:standardsOps | not reached (budget): left for a continuation or its owner's job
+standarddeclare	standards	screens-daily/find-in screens-investigate/standard	pass	standards/index.mjs:standardsOps | not reached (budget): left for a continuation or its owner's job
+standardinforce	standards	registry/standard	pass	standards/index.mjs:standardsOps | declared by the pass
+standingquestionend	answers	screens-daily/answers	pass	answers/ops.mjs:answersOps (alias of standingend) | not reached (budget): left for a continuation or its owner's job
+standingquestionset	answers	screens-daily/find-in screens-daily/answers	pass	answers/ops.mjs:answersOps (alias of standingset) | not reached (budget): left for a continuation or its owner's job
+startfrom	wizard-scripts	screens-daily/home	pass	wizard-scripts/index.mjs:wizardScriptsOps | not reached (budget): left for a continuation or its owner's job
+statementack	case-inputs	screens-publish/case-editor screens-publish/review-outside	job	case-inputs/index.mjs:caseInputsOps
+stepsource	connections	screens-investigate/explore	job	connections/index.mjs:connectionsOps
+stepsourcewithdraw	connections	screens-investigate/explore	job	connections/index.mjs:connectionsOps
+strengthbarset	strength	screens-settings/group	pass	strength/index.mjs:strengthOps (alias of strengthbar) | not reached (budget): left for a continuation or its owner's job
+subscriptiondisconnect	ai-accounts	screens-settings/connect	pass	ai-accounts/index.mjs:aiAccountsOps | declared by the pass
+subscriptionsignin	credentials	screens-settings/connect	job	op-declarations R36 credentials family; no ops-map arm found
+successrecord	consequences	registry/matter	pass	consequences/index.mjs:consequencesOps | not reached (budget): left for a continuation or its owner's job
+suggest	run-productions	screens-inquiry/assistant	pass	run-productions/index.mjs:runProductionsOps | not reached (budget): left for a continuation or its owner's job
+sweeps	link-sweep	registry/watching	job	link-sweep/index.mjs:linkSweepOps
+tabledeclare	calculations	screens-daily/find-in screens-investigate/calculation	pass	calculations/index.mjs:calculationsOps | not reached (budget): left for a continuation or its owner's job
+taskforward	tasks	screens-daily/queue	job	tasks/index.mjs:tasksOps
+taskresolve	tasks	screens-daily/home screens-daily/queue screens-action/dash-action	job	tasks/index.mjs:tasksOps
+templatesave	filings	registry/start-send	job	filings/index.mjs:filingsOps
+testify	provenance	screens-intake/capture screens-investigate/calculation	job	provenance/ops.mjs:provenanceOps
+themedeclare	connections	screens-investigate/theme	job	connections/index.mjs:connectionsOps
+themeplace	connections	screens-inquiry/question screens-inquiry/document screens-investigate/theme	job	connections/index.mjs:connectionsOps
+themepropose	connections	screens-inquiry/document	job	connections/index.mjs:connectionsOps
+themeread	connections	screens-daily/projects screens-daily/finder screens-investigate/theme	job	connections/index.mjs:connectionsOps
+themewithdraw	connections	screens-inquiry/document screens-investigate/theme	job	connections/index.mjs:connectionsOps
+thread	progressions	screens-inquiry/document screens-investigate/timeline	pass	progressions/index.mjs:progressionOps | not reached (budget): left for a continuation or its owner's job
+transcribe	content	screens-inquiry/document	pass	content/ops.mjs:contentOps | not reached (budget): left for a continuation or its owner's job
+transcriptionattest	content	registry/document	pass	content/ops.mjs:contentOps | not reached (budget): left for a continuation or its owner's job
+translationadopt	translations	screens-settings/translations	pass	translations/index.mjs:translationsOps | not reached (budget): left for a continuation or its owner's job
+translationconfirm	translations	screens-settings/translations	pass	translations/index.mjs:translationsOps | not reached (budget): left for a continuation or its owner's job
+translationdraft	translations	screens-settings/translations	pass	translations/index.mjs:translationsOps | not reached (budget): left for a continuation or its owner's job
+translationgrant	translations	screens-settings/translations	pass	translations/index.mjs:translationsOps | not reached (budget): left for a continuation or its owner's job
+translationrevert	translations	screens-settings/translations	pass	translations/index.mjs:translationsOps | not reached (budget): left for a continuation or its owner's job
+triage	intent	registry/objective	pass	intent/index.mjs:intentOps | not reached (budget): left for a continuation or its owner's job
+unlock	credentials	screens-entry/front	job	credentials/index.mjs:credentialsOps
+updatelater	instance-setup	screens-settings/updates screens-daily/queue	job	setup.mjs:instanceSetupOps
+updateskip	instance-setup	screens-settings/updates	job	setup.mjs:instanceSetupOps
+updatestart	instance-setup	screens-settings/updates	job	setup.mjs:instanceSetupOps
+verify	public-read	screens-publish/published	judgment	public-read/index.mjs:publicReadOps | JUDGMENT: no op-grades row: it is in none of RUNGS, RUNG_ABSENT, NON_ACTS (op-grades marks only), so its weight and description have nothing to copy
+versionaccept	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+versionconsider	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+versioncurrent	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+versionhide	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+versionnotice	reevaluation	screens-inquiry/document	pass	reevaluation/index.mjs:reevaluationOps | declared by the pass
+versionreject	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+versionrevert	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+watchitem	following	screens-daily/finder	pass	following/index.mjs:followingOps | not reached (budget): left for a continuation or its owner's job
+websitekeycreate	member-roster	screens-settings/members	job	member-roster/index.mjs:membersOps
+whatchangedpropose	case-inputs	screens-publish/case-editor	job	case-inputs/index.mjs:caseInputsOps
+withdrawconclusion	basis-versions	screens-inquiry/question	pass	basis-versions/index.mjs:basisVersionsOps | not reached (budget): left for a continuation or its owner's job
+withdrawidentityclaim	people	screens-investigate/person	pass	people/index.mjs:peopleOps (alias of identitywithdraw) | not reached (budget): left for a continuation or its owner's job
+withdrawtie	people	screens-investigate/ties	pass	people/index.mjs:peopleOps (alias of membertiewithdraw) | not reached (budget): left for a continuation or its owner's job
+wizardapprove	wizard-scripts	screens-wizards/wizards	pass	wizard-scripts/index.mjs:wizardScriptsOps | not reached (budget): left for a continuation or its owner's job
+wizarddraft	wizard-scripts	screens-wizards/wizards	pass	wizard-scripts/index.mjs:wizardScriptsOps | not reached (budget): left for a continuation or its owner's job
+wizardretire	wizard-scripts	screens-wizards/wizards	pass	wizard-scripts/index.mjs:wizardScriptsOps | not reached (budget): left for a continuation or its owner's job
+wizardrevise	wizard-scripts	screens-wizards/wizards	pass	wizard-scripts/index.mjs:wizardScriptsOps | not reached (budget): left for a continuation or its owner's job
+wizards	wizard-scripts	screens-wizards/wizards	pass	wizard-scripts/index.mjs:wizardScriptsOps | not reached (budget): left for a continuation or its owner's job
+wizardsubmit	wizard-scripts	screens-wizards/wizards	pass	wizard-scripts/index.mjs:wizardScriptsOps | not reached (budget): left for a continuation or its owner's job
+writinghelp	wizard-scripts	screens-settings/notes screens-settings/group screens-settings/grouprules screens-intake/capture screens-investigate/person screens-publish/case-editor screens-action/action screens-action/actionnew screens-action/hold screens-action/holdnotice	judgment	routed by store-door/dispatch.mjs:475 itself (the door routes it); no ops-map arm of wizard-scripts | JUDGMENT: the door routes it itself (store-door/dispatch.mjs:475); no wizard-scripts arm serves it (the expected case)

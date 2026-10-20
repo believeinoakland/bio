@@ -1703,3 +1703,10 @@ export function followingOps(f, url, body) {
     watchquestions: () => f.watchQuestions({ after: q("after"), limit: q("limit"), viewer: q("viewer") }),
   };
 }
+
+/* R36 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  followregister: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("following.declared.followregister", "register-directed: keyed by the register's address; a member's follow, moving no bundle"),
+    fields: { accepts: ["address","render","gated","cadence","home","ends","proceeding"], requires: ["address"] } },
+});

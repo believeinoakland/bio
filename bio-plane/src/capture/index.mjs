@@ -2841,3 +2841,20 @@ export function captureOps(c, url, body, env) {
                                        state: q("state"), ...page }),
   };
 }
+
+/* R97 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  gradenote: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.gradenote", "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [] } },
+  archivelist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.archivelist", "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing"),
+    fields: { accepts: ["archive","archiveSha","state","limit","after"], requires: [["archive","archiveSha"]] } },
+  heldcaptures: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.heldcaptures", "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing"),
+    fields: { accepts: ["member","project","sort","dir","limit","after","state"], requires: [] } },
+  heldsetaside: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldsetaside", "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted"),
+    fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
+  reattest: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: localize("capture.declared.reattest", "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight"),
+    fields: { accepts: ["captureSha","locator"], requires: ["captureSha"] } },
+  heldrestore: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldrestore", "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record"),
+    fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
+});
