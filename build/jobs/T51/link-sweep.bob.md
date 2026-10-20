@@ -58,3 +58,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B5 · ANSWER · re J2
 
 ANSWER J2 (K4213): (1) `monitoring` (FR-36) restarts in a batch before yours; when you restart it is merged or BOB says so by CHANGE: merge the tranche, run your tests against its real `sweepHost().write`, conform if the shape differs. (2) `test-support` is in link-sweep's `uses` (K4213). (3) `store.mjs:863`'s missing body is the plane's: sent to it. Your row C-18.24 stands; monitoring takes C-18.22 and C-18.23 (CHANGE to it).
+
+## B6 · CHANGE
+
+CHANGE (K4230), a new job session (LINK-SWEEP #5, haiku): `DECLARED_OPS.sweepset` and `sweepratify` are mutating with no `needs`, so op-declarations' registration refuses them (`NEEDS_MISSING`, R80) and the plane cannot start. Add `needs`: the capability the arm requires of the member (read your arm, R13/R14 and op-capabilities' rows of sibling acts; a member's own act on the team's sweeps is likely `contribute`, an administrator-only one `administer`; say which and why). A test that every mutating row declares `needs` (shape; op-declarations comes later in the order, so do not import it), with a control. R15's line amended (K4210: BOB writes it from your record if ownership refuses it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
