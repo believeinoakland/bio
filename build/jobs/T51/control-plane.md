@@ -137,3 +137,32 @@ The fix round's control-plane entries are complete, on `job/T51/control-plane` (
 - Whole-tree `checks/run.mjs`: failures remain in other modules (op-grades testcopies above, agent-harness, agent-runner, installer-steps, journey-check, strength). None is in control-plane.
 
 Size (session_01RasjDSWd3ESDe1rnPqU6Zf): test runs 30, module lines 3938
+
+## J8 · COMPLETE · re B12
+
+control-plane T51: B12 (K4230) done. `casedetailspublic` is routed.
+
+**Entries applied**
+- **B12:** `casedetailspublic` (case-inputs' credential-free public read, `classes: null`, read only) is now routed. `bio-plane/src/control-plane/index.mjs` gains `CASE_INPUTS_PUBLIC_READS` and the public-read branch serves it through public-read's door read by its own name and as `op=publicread&name=`, the same path as `casechecker` and `casefilespec`. Before, a bare op name fell through to the plane's public hook. The only name typed here is that one constant; the op's declaration is case-inputs' `DECLARED_OPS`.
+- **R49 amended** (the sub-bullet for case-inputs' read, K4230, `case-inputs` R24) in `build/requirements/control-plane.md`. B12 says R71 names the read. R71 does not: it covers `op-declarations` R43's ops. The public reads are named under R45 and R49, so I amended R49. BOB: please confirm that reading.
+
+**Tests**
+- New `bio-plane/test/m/control-plane/r49-case-inputs-public.test.mjs` (names R49, R2, R26) with `register-case-inputs.mjs` (the plane's registration of case-inputs' rows before the harness loads). The public-read list comes from case-inputs' `DECLARED_OPS`, never typed here.
+- Seen red first: against the unrouted code the bare op answers `read: undefined` (the public hook's answer). Green with the change.
+- Control: a member's `casedetails` is refused at admission and no public read is asked for it.
+
+**Checks and suite**
+- `node --test bio-plane/test/m/control-plane/*.test.mjs`: 323 tests, 322 pass, 1 fail. The failure is `t47-e2e` R81 (the wizard walk: `home` sends `door` to `startfrom`, which does not accept it, an interface-shell harness FieldMismatch). It fails identically on the unchanged code (checked with the change stashed), so it is not from B12 and is not control-plane's.
+- `checks/ownership.mjs`: 0 failures (the one file outside paths is the requirements file, accepted at merge, K4210).
+- `checks/coverage.mjs control-plane`: 83 of 83 live ids named.
+- `checks/run.mjs` (whole tree): format 0 failures; architecture 1 failure, in `citation/register.test.mjs` (imports `op-declarations`, which is not earlier in the order). Other failures are in other modules (op-grades test copies, agent-harness, agent-runner, installer-steps, journey-check, strength). None names control-plane.
+
+**Deferred:** none.
+
+**Found in other modules (reported, not changed):**
+- `interface-shell` or `screens-wizards`: `home` sends `door` to `startfrom`, which does not accept it (the R81 walk, above).
+- `citation/register.test.mjs`: imports `op-declarations` before it is earlier in the order (the architecture check).
+
+Commit `99d5d575ef` on `job/T51/control-plane`, pushed.
+
+Size (session_01EoJxYttG3uMHhXBMdMwTif): test runs 5, module lines 3941
