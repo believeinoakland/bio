@@ -73,9 +73,13 @@ function render(cs, view) {
     const r = view.ui.inforce;
     const whyHtml = (w) => (typeof w === "string" ? cs.esc(w) : w && typeof w === "object" ? P.why(cs, w) : "");
     const per = (s && s.period) || {};
-    const answer = r ? cs.sheet(cs.row("", `<span data-inforce="${cs.esc(String(r.state || ""))}">${r.state === "undetermined" ? cs.mark("gap", "undetermined", { reason: whyHtml(r.why) }) : `${cs.date(r.date)} · ${whyHtml(r.why)}`}</span>`
+    /* B419 (DEC-387): the state is drawn by its key, "On {date} it was: {state}"; a state the owner gives that no key names is undetermined */
+    const KNOWN = ["in_force", "not_in_force", "overridden", "undetermined"];
+    const st = r && KNOWN.includes(r.state) ? r.state : "undetermined";
+    const line = r ? cs.w(S + "inforce.result.line", { date: cs.date(r.date), state: cs.w(S + "inforce.state." + st) }) : "";
+    const answer = r ? cs.sheet(cs.row("", `<span data-inforce="${cs.esc(String(r.state || ""))}">${line}${st === "undetermined" ? " " + cs.mark("gap", "undetermined", { reason: whyHtml(r.why) }) : ` · ${whyHtml(r.why)}`}</span>`
       + (r.state === "in_force" && per.from && !per.to ? `<span class="meta">${cs.w(S + "inforce.result.meta", { from: cs.date(per.from) })}</span>` : ""), "")) : "";
-    out.push(cs.sec(S + "inforce.heading", cs.field("st-inforce-day", "act.standardinforce.label.standard", { type: "date", help: S + "inforce.day.help" })
+    out.push(cs.sec(S + "inforce.heading", cs.field("st-inforce-day", S + "inforce.day.label", { type: "date", help: S + "inforce.day.help" })
       + cs.act("standardinforce", { label: "act.standardinforce.label.standard" }) + answer
       + `<details class="mk-details"><summary>${cs.w(S + "inforce.refused.summary")}</summary><p>${cs.w(S + "inforce.refused.body")} ${cs.w(S + "inforce.refused.body2")}</p></details>`, { help: S + "inforce.help" }));
   }
@@ -157,6 +161,8 @@ const STANDARD_KEYS = [
   "screen.standard.relate.effective",
   "screen.standard.inforce.heading", "screen.standard.inforce.day.help", "screen.standard.inforce.result.meta", "screen.standard.inforce.refused.summary",
   "screen.standard.inforce.refused.body", "screen.standard.inforce.refused.body2", "screen.standard.inforce.help", "crumb.project.unjoined",
+  "screen.standard.inforce.day.label", "screen.standard.inforce.result.line",
+  "screen.standard.inforce.state.in_force", "screen.standard.inforce.state.not_in_force", "screen.standard.inforce.state.overridden", "screen.standard.inforce.state.undetermined",
 ];
 
 const words = ["screen.standard.name", "screen.standard.purpose",
