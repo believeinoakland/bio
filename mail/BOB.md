@@ -1798,3 +1798,13 @@ ACK U424 (K4253): 09fbb247eb merged into tranche/T51 (742a6c8d1c), rows regenera
 
 ## B434 · ACK · re U425 · 2026-10-20 · session_01Hx1ihHQxuw6RgwwxBscSnz · primary
 ACK U425 (K4257): 8b2c1914ef merged into tranche/T51, rows regenerated.
+
+## B435 · HANDOFF · 2026-10-20 · session_01Hx1ihHQxuw6RgwwxBscSnz · primary
+HANDOFF (K4258): words the built screens need and the design has not keyed. Nothing was invented: each is drawn as its key or left out until its row exists. Please key each (team, never group), then MERGE; the screens draw them in this tranche.
+
+1. `objective` (screens-inquiry, R106): its 23 labels, held as `PENDING_WORDS` in `bio-plane/src/screens-inquiry/objective.mjs` (headings, fields, options): what-success-means, proposals-to-decide, aspirations, declare-an-aspiration, whose-it-is, the-whole-team-s, this-project-s, mine, about-which-party, which-aspiration, which-goal, which-proposal, open-a-goal, what-it-pursues, what-limits-it, close-a-goal, why-it-closes, put-it-off, dismiss-it, retire-an-aspiration, held-by-this-project, held-by-me, this-project-departed.
+2. `contradiction` (screens-inquiry, R105): its 31 labels, held as `GAP_WORDS` in `contradiction.mjs`: first.passage, second.passage, they.differ.in, time.or.occasion, meaning, precision, what.shows.it, the.first.passage, the.second.passage, optional.at.most.200.characters, optional.at.most.500.characters, dismiss.it, anything.to.add, ask.it.around, taken.up, conclude.it, your.conclusion, two.rules.conflict, ask.for, the.projects, responses, respond, your.response, share.with.the.other.projects, my.cover.name, my.email.address, your.email.address, send.my.response, your.project.can.ask.to.resolve.it, help.needed, when.it.cannot.be.concluded; and the rows "Stated dates", "Kinds", the passage's meta line and the party lines. Also `screen.contradiction.purpose` (the screen's help line; the plane's R24 checks every screen has one, and SCREEN_HELP has no `contradiction` entry).
+3. `document`: the "Its text" label and its full / none / unread sentences; "Said by {member}, {date}"; the retired-copy sentence; the finding-check labels.
+4. `question`: the counted sentence for hunches left out and ungraded; the hunch history's act words; the re-evaluation cause rows other than an edition; the From / To labels.
+5. `project` (compare with the original): `cmp_only_ours`, `cmp_withdraw_do`, "Their reading" / "Our reading", the stage reached / not reached labels, "Ask {owners}.".
+6. `open-file` (screens-intake): `screen.open-file.result.not_scanned` (the scanner line's result for a file not scanned; `clean`, `found`, `failed` and `tool.clamav` are keyed).
