@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R47, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R47, R95–R96, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -214,6 +214,36 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
       url = next;
     }
   };
+}
+
+/* R95 (T51; K4194): THE MILLISECONDS EACH STAGE OF `acquire` TOOK, by name, on every answer. The caller may hand in its own
+   `opts.timings` object, which `acquire` keeps current as the stages run, so a caller that stops waiting (the door's bound,
+   control-plane R105) reads what had run and what was running when it stopped, through `stageTimes`. Stages never nest;
+   `receipt`, `fetch`, `read` and the others add up over the hops or parts that repeat them. */
+const clockNow = () => performance.now();
+function openTimings(given) {
+  const t = given && typeof given === "object" && !Array.isArray(given) ? given : {};
+  t.start = clockNow(); t.end = null; t.stages = {}; t.running = null;
+  return t;
+}
+function stageBegin(t, name) { stageEnd(t); t.running = { name, since: clockNow() }; }
+function stageEnd(t) {
+  if (!t.running) return;
+  t.stages[t.running.name] = (t.stages[t.running.name] || 0) + (clockNow() - t.running.since);
+  t.running = null;
+}
+async function timed(t, name, work) {
+  stageBegin(t, name);
+  try { return await work(); } finally { stageEnd(t); }
+}
+/** R95: `{total_ms, stages: {<stage>: ms}}` of an `acquire`, read at any moment: whole milliseconds, every stage floored and
+ *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. */
+export function stageTimes(t) {
+  if (!t || typeof t !== "object" || !t.stages) return { total_ms: 0, stages: {} };
+  const now = clockNow(), stages = {};
+  for (const [k, v] of Object.entries(t.stages)) stages[k] = Math.floor(v);
+  if (t.running) stages[t.running.name] = Math.floor((t.stages[t.running.name] || 0) + (now - t.running.since));
+  return { total_ms: Math.ceil((t.end ?? now) - t.start), stages, ...(t.running ? { running: t.running.name } : {}) };
 }
 
 /* R47: the longest `for` (a question's id) a member may name. */
@@ -565,8 +595,17 @@ function ownHostRefused(locator, extra = {}) {
  *  (whether the caller is a member session), `sessMember` (that member), `storeName`, `ownHosts` (R42), `reputation` (a spec, null or a reader) and
  *  `fileScanner` (R44), and — only from the in-process drain, never from a request — `captureRequest` (the draining
  *  row's address, purpose, agent, render flag and the member's co-archive choice, K58). Answers `{status, body}`. */
-export async function acquire(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null,
-                                           ownHosts = null, reputation: reputationTool = undefined, fileScanner = null } = {}) {
+export async function acquire(cap, body0, opts = {}) {
+  const t = openTimings(opts && opts.timings);
+  let out;
+  try { out = await acquireRun(cap, body0, opts || {}, t); }
+  finally { stageEnd(t); t.end = clockNow(); }
+  /* R95: on every outcome, a refusal included, the answer carries the times of the stages that ran. */
+  return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
+    ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;
+}
+async function acquireRun(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null,
+                                       ownHosts = null, reputation: reputationTool = undefined, fileScanner = null } = {}, t) {
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
@@ -707,7 +746,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      R42 (F16): no fetch goes to one of the group's own hosts, the render arm's included; refused before any request. */
   if (!archiveAsked && !session && onOwnHost(locator, own)) return answer(403, { ...ownHostRefused(locator), op });
   /* END DEC-49 REGION is-own-host */
-  if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own });
+  if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t });
 
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
@@ -770,8 +809,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R44: the document's public address asked of the scanner before any fetch of it, on every arm that fetches one (a
      continuation fetches none and has returned above): the archive arm's `address`, the Drive link as given, else the
      locator. */
-  const reputation = await addressReputation(archiveAsked || (driveCapture ? driveCapture.address : locator),
-    reputationToolOf(cap, reputationTool), fileScannerOf(cap, fileScanner));
+  const reputation = await timed(t, "reputation", () => addressReputation(archiveAsked || (driveCapture ? driveCapture.address : locator),
+    reputationToolOf(cap, reputationTool), fileScannerOf(cap, fileScanner)));
 
   /* R3, R32: the memento, found through the archive's TimeGate or TimeMap; its raw bytes are answered unread, so the
      bytes this call files are the bytes the choice is made over (`chooseMemento`, below). */
@@ -779,12 +818,12 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   if (archiveAsked) {
     /* N510: the body's first bytes are read ahead, unconsumed; a memento with none is refused by selectCapture's own
        words over its row and the lookup goes on to the next candidate, so nothing of it reaches the store. */
-    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res, answer }) => {
+    const m = await timed(t, "archive", () => mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res, answer }) => {
       const p = await peekBody(res);
       if (p.failed) return { fail: archiveBroke(p.failed) };
       /* its row's digest is the empty-body digest, which selectCapture refuses by R29's own reason */
       return p.empty ? { row: mementoRow(answer, { sha256: EMPTY_SHA256, bytes: 0 }) } : { res: p.res };
-    } });
+    } }));
     if (!m.ok) return answer(m.status, m.payload);
     archiveMemento = m; locator = m.locator; archiveAddress = m.answer.original;
   }
@@ -813,8 +852,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const home = hostOf(locator);
     const byHand = !!sweepScope || !!own;
     for (let hop = 0; ; hop++) {
-      const g = await governedFetch(cap, url, crPurpose || "acquire", crAgent, { headers: conditional,
-        credential: byHand && hostOf(url) !== home ? null : crCredential, manual: byHand });
+      const g = await timed(t, "fetch", () => governedFetch(cap, url, crPurpose || "acquire", crAgent, { headers: conditional,
+        credential: byHand && hostOf(url) !== home ? null : crCredential, manual: byHand }));
       if (g.refusedByGovernor) {
         await noteOutcome("governed", null);
         return answer(429, { ok: false, reason: "HOST_COOLING_OFF",
@@ -934,6 +973,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let driveHeadBytes = 0;
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
+  stageBegin(t, "read");
   for (;;) {
     /* R10: a body that breaks off mid-stream is a fetch that did not complete, answered by name, never a throw; the
        parts already stored are content-addressed and named by no document, as TOO_LARGE's are. */
@@ -980,6 +1020,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
                          detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
   }
   await flush();
+  stageEnd(t);
   let sha = whole.hex();
   /* R32: the memento is chosen over the bytes just received (an empty one was passed over before any byte was stored, N510). */
   if (archiveMemento) {
@@ -1039,6 +1080,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     }
     /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
     /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
+    stageBegin(t, "render");
     try { answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
     catch (e) { answerR = { ok: false, error: String(e && e.message || e) }; }
     try { cap.renderSpend({ ms: answerR && answerR.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
@@ -1057,6 +1099,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const rsha = await sha256Hex(rbytes);
     const renderedExisted = !!(await ev.head(rsha));
     if (!renderedExisted) await ev.put(rsha, rbytes);
+    stageEnd(t);
     shellRecorded = { file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
                       method: localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"), ...(ct ? { content_type: ct } : {}), transport };
     renderRecorded = rb.render;
@@ -1072,11 +1115,13 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R13, D-58: the acquisition receipt, UNCONDITIONALLY, for every filed capture: under the DOCUMENT address (the
      CDX original, the Drive link as given, or for a direct fetch the address it resolved to), `via`, and the
      retrieval locator. A failed receipt write does not fail the capture. */
+  stageBegin(t, "receipt");
   try {
     await cap.provenance?.recordReceipt?.({ address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
       addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator), captureSha: sha, retrieved,
       via, retrievalLocator: locator, reputation });
   } catch { /* an unfiled receipt is not a failed capture */ }
+  stageEnd(t);
   /* R16, capture R69: the member this capture's document names as its actor is recorded as one who captured these bytes. */
   const actor = member && typeof sessMember === "string" && sessMember ? sessMember : null;
   if (actor) {
@@ -1120,8 +1165,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R19: supporting files, on request. */
   let subs = null, subsSkipped = sessionSkip, sessionId = null;
   if (body.subresources === true && !subsSkipped) {
-    const w = await walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
-                                             retrieved, resume: null, sessionId: null, own, openedBy: actor });
+    const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
+                                             retrieved, resume: null, sessionId: null, own, openedBy: actor }));
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
   }
 
@@ -1132,6 +1177,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      a member session's request included, so it is always `"fetch"`; `"member"` is only for bytes a member supplied by
      their own act outside the copy (an upload), which a caller of `profileOf` states. So a content type
      read only from a member's own capture (court-doctypes R2) never matches a fetch. */
+  stageBegin(t, "profile");
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
                                     retrieved, origin: "fetch", parts: renderRecorded ? null : parts });
   /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
@@ -1148,13 +1194,14 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     }
     driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
   }
+  stageEnd(t);
 
   /* R20, R43 (K60, K1888): co-attestation at every capture; the co-archive as the group's setting asks, unless the member
      chose for this capture (the body's `coArchive` from a member session, or the request's on the capture-request arm). */
   const memberChoice = captureRequest ? captureRequest.coArchive
     : (member && typeof sessMember === "string" && sessMember ? body.coArchive : undefined);
   const coArchive = typeof memberChoice === "boolean" ? { on: memberChoice, by: "member" } : { on: coArchiveStateOf(cap.core).on, by: "group" };
-  const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive });
+  const attestations = await timed(t, "attest", () => coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive }));
 
   const document = {
     file: `snapshots/${name}`, locator, retrieved,
@@ -1219,10 +1266,10 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let unpacked = null;
   if (profile && profile.format && profile.format.format === "zip") {
     try {
-      unpacked = await unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
+      unpacked = await timed(t, "unpack", () => unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
         parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
         address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
-        addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) });
+        addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) }));
     } catch (e) {
       const row = ARCHIVE_CHECKS.ARCHIVE_UNREADABLE;
       unpacked = { ok: false, reason: "ARCHIVE_UNREADABLE", code: "ARCHIVE_UNREADABLE", check: row.check, translation: row.translation,
@@ -1503,15 +1550,15 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
 /** R12: a continuation resumes the session's outstanding supporting files against the session's OWN primary, read
  *  back from the store by its digest; the primary is not fetched again, and nothing new is filed about it, so the
  *  answer carries no document: the first tick answered it. */
-async function continueCapture(cap, { body, session, cls, storeName, ev, own = null }) {
+async function continueCapture(cap, { body, session, cls, storeName, ev, own = null, t }) {
   const name = String(session.primaryFile || "snapshots/capture").replace(/^snapshots\//, "");
   let obj = null;
   try { obj = await ev.head(session.primarySha); } catch { obj = null; }
   const size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : 0;
-  const w = await walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
+  const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
     name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own,
     /* R19: a session parked again keeps the member who began it, whoever continues it */
-    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null });
+    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null }));
   return { status: 200, body: {
     ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },

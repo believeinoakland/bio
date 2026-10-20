@@ -30,7 +30,8 @@ test("R144 the founder's member id stays admin everywhere: R43, R44, R64, R86 an
   assert.equal(w.m.isAdministrator("admin"), true, "R64");
   assert.equal(w.m.positionalMember("admin"), null, "R76: the bare founder viewer names no member");
   assert.equal(w.m.positionalMember("member:admin"), "admin", "and the second spelling names `admin`, not her handle");
-  assert.equal(w.m.memberFacts("admin"), null, "R68: she is no members row");
+  assert.deepEqual(w.m.memberFacts("admin"), { cover: null, handle: "steward", role: "admin", status: "active" },
+    "`member-roster` R76: claimed, the founder answers her facts, her held handle as `handle`, though she is no members row");
   assert.equal(w.m.memberByHandle("steward"), null, "R119: a handle in `members` only");
   /* R147: the roster lists the founder, first, as `admin` in member_id only; her handle is the one she holds */
   const listed = w.m.memberList({ administer: true }).members;
@@ -46,6 +47,18 @@ test("R144 the founder's member id stays admin everywhere: R43, R44, R64, R86 an
   assert.equal(w.m.sight("PROJ-F", "admin"), Membership.SIGHT_FULL, "R44");
   /* control: her handle names no participant */
   assert.equal(w.m.participation("PROJ-F", "steward"), null);
+});
+
+test("R144 `member-roster` R76 memberFacts(admin) answers null for the unclaimed founder and her facts once claimed, with or without a held handle", async () => {
+  const w = world();
+  assert.equal(w.m.memberFacts("admin"), null, "unclaimed: the founder is no member yet");
+  await w.claim();
+  assert.deepEqual(w.m.memberFacts("admin"), { cover: null, handle: null, role: "admin", status: "active" }, "claimed, no handle held");
+  assert.equal(w.m.founderHandleSet({ handle: "steward", by: "admin" }).ok, true);
+  assert.equal(w.m.memberFacts("admin").handle, "steward", "claimed, handle held");
+  /* control: R76 widens no other id, and a member's row is read as before */
+  assert.equal(w.m.memberFacts("nobody"), null);
+  assert.equal(w.m.memberFacts("steward"), null, "her handle is no member id");
 });
 
 test("R144 R77 a hidden project's existence shows its owners' handles: the founder's is her own handle once she holds one, and never admin; control: null while she holds none", async () => {
