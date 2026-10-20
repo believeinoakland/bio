@@ -127,6 +127,28 @@ test("R1 (N329): with no project manager the task goes to the earliest active ad
   assert.deepEqual(r.created.map((c) => [c.assignee, c.assignee_role]), [["bea", "group-admin"]]);
 });
 
+test("R1 (K4218; member-roster R76, R29): a claimed founder is an active member and still takes no routed task; the task goes to the first administrator after her, and with none it is unassigned (control: unclaimed)", async () => {
+  const route = async ({ claimed, admins = [] }) => {
+    const w = box([ev("a3")]);
+    w.bundle(DOC2);
+    for (const a of admins) w.member(a, { role: "admin" });
+    if (claimed) assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);
+    return { w, made: w.t.taskDrain({ actor: "alarm" }).created.map((c) => [c.assignee, c.assignee_role]) };
+  };
+  /* claimed: memberFacts answers her as an active member, and activeAdmins leads with her */
+  const a = await route({ claimed: true });
+  assert.equal(a.w.membership.memberFacts("admin").status, "active");
+  assert.equal(a.w.membership.activeAdmins()[0], "admin");
+  assert.deepEqual(a.made, [["unassigned", "group-admin"]], "the founder alone is no routing target");
+  const b = await route({ claimed: true, admins: ["ada"] });
+  assert.deepEqual(b.made, [["ada", "group-admin"]], "the first administrator after the founder");
+  /* control: unclaimed, memberFacts("admin") is null and the routing is the same */
+  const c = await route({ claimed: false });
+  assert.equal(c.w.membership.memberFacts("admin"), null);
+  assert.deepEqual(c.made, [["unassigned", "group-admin"]]);
+  assert.deepEqual((await route({ claimed: false, admins: ["ada"] })).made, [["ada", "group-admin"]]);
+});
+
 test("R1 (N322): an exhausted task id space keeps the event, its waiting entry carrying record-core R62's code, check and detail", () => {
   const w = box([ev("a3")]);
   w.bundle(DOC2);
@@ -405,7 +427,8 @@ test("R2: taskList lists visible tasks newest first, filtered, bounded with trun
   assert.deepEqual([all.limit, all.truncated], [200, false]);
   assert.deepEqual(all.tasks[0], { id: "TASK-2026-0004-d", kind: "authority-undetermined", refers_to: DOC,
     subject: { text: `about ${DOC}` }, assignee: "unassigned", assignee_role: "group-admin", status: "resolved",
-    created: iso(NOW - 500), resolved_at: iso(NOW), history: [{ at: iso(NOW - 500), event: "created", actor: "alarm" }] });
+    created: iso(NOW - 500), resolved_at: iso(NOW), history: [{ at: iso(NOW - 500), event: "created", actor: "alarm" }],
+    door: ["taskdecide", "taskforward", "taskresolve"] });
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", assignee: "alice" }).tasks.map((t) => t.id), ["TASK-2026-0001-a"]);
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", status: "resolved" }).tasks.map((t) => t.id), ["TASK-2026-0004-d"]);
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", refersTo: PRJ }).tasks, []);

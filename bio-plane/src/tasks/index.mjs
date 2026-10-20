@@ -71,6 +71,8 @@ const CHECK_VERDICTS = Object.freeze(["check", "concern"]);
 const CHECK_NOTE_MAX = 1000, CHECK_REASON_MAX = 4000;
 /* R19 (DEC-207 (8)): the task kind an owner's To do to sign a prepared edition carries. */
 export const SIGN_TASK_KIND = "sign-requested";
+/* R24 (K4210): the doors an authority task offers, the one a screen leads with first; queue R12 reads them. */
+const AUTHORITY_DOOR = ["taskdecide", "taskforward", "taskresolve"];
 /* membership R21's normalisation of a label (trimmed, whitespace collapsed, at most 120), so the label recorded on a
    request is the one membership R106 addressed by. */
 const normLabel = (label) => String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
@@ -248,6 +250,7 @@ export class Tasks {
       ...(row.resolved_at ? { resolved_at: row.resolved_at } : {}),
       history,
       ...(row.kind === SIGN_TASK_KIND ? { sign: this.#signOf(row.id) } : {}),
+      ...(row.kind === TASK_EVENT_KIND ? { door: [...AUTHORITY_DOOR] } : {}),
     };
   }
 

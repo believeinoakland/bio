@@ -1,12 +1,12 @@
 /* Deciding an authority task at its interface (T51; K4169, UC-046; R20, R21): `taskDecide` records the member's decision
    through provenance's `declareAuthority` (its R65) and resolves the task in one transaction; `taskResolve` puts the task
    aside and leaves the document undetermined. membership is real (its R54/R65 owners, R60/R80 sight, R64 administrators);
-   provenance is a fake in the shape its R65 and R66 publish, keeping its decisions in a table of the same storage, so the
-   two writes are one transaction as they are in the instance. */
+   promotion and provenance are real, on the same storage, so the two writes are one transaction as they are in the instance. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { NOW, iso } from "./world.mjs";
 import { CHECK_REQUEST_CHECKS, TASK_ACTOR_CHECKS, tasksOps, checkInboxGrammar } from "../../../src/tasks/index.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/index.mjs";
 import { seeded, PRJ, DOC, HID, SHA, MACHINE } from "./authority.mjs";
 
 const ID = "TASK-2026-0001-doc";
@@ -18,12 +18,12 @@ function refused(r, code, rows = CHECK_REQUEST_CHECKS) {
 
 test("R20: the assignee decides; the document's standing authority changes and the task is resolved with `decided` then `resolved` in its history", () => {
   const w = seeded();
-  assert.equal(w.fakes.provenance.authorityOf(PRJ, SHA), null);
+  assert.equal(w.authorityOf().authority_state, "undetermined");
   const r = decide(w);
   assert.deepEqual(r, { ok: true, id: ID, status: "resolved", resolved_at: iso(NOW), outcome: "determined" });
-  assert.deepEqual(w.calls, [{ bundle: PRJ, capture: SHA, outcome: "determined", authority: "The City Clerk", basis: "the seal on page 1",
+  assert.deepEqual(w.calls, [{ bundle: DOC, capture: SHA, outcome: "determined", authority: "The City Clerk", basis: "the seal on page 1",
                                by: "ann", viewer: "member:ann" }]);
-  const st = w.fakes.provenance.authorityOf(PRJ, SHA);
+  const st = w.authorityOf();
   assert.deepEqual([st.authority_state, st.authority, st.basis, st.by], ["determined", "The City Clerk", "the seal on page 1", "ann"]);
   const row = w.row();
   assert.deepEqual([row.status, row.resolved_at], ["resolved", iso(NOW)]);
@@ -38,7 +38,7 @@ test("R20: the assignee decides; the document's standing authority changes and t
   /* control: undetermined after review is a decision too, and needs no issuer */
   const w2 = seeded();
   const r2 = decide(w2, { outcome: "undetermined_after_review", authority: undefined, basis: "no seal, no letterhead" });
-  assert.equal(r2.ok, true); assert.equal(w2.fakes.provenance.authorityOf(PRJ, SHA).authority_state, "undetermined");
+  assert.equal(r2.ok, true); assert.equal(w2.authorityOf().authority_state, "undetermined");
 });
 
 test("R20: a forwarded task is decided by the member it was forwarded to, not the previous assignee; an administrator who sees the subject, and anyone when it is unassigned, may decide", () => {
@@ -59,8 +59,8 @@ test("R20: a forwarded task is decided by the member it was forwarded to, not th
   assert.deepEqual(decide(h, { id: "TASK-2026-0002-hid", actor: "ada" }), { ok: false, reason: "NO_SUCH_TASK" });
   /* unassigned: any member */
   const u = seeded();
-  u.task("TASK-2026-0003-open", DOC, { assignee: "unassigned", capture: SHA });
-  assert.equal(decide(u, { id: "TASK-2026-0003-open", actor: "cy" }).ok, true);
+  u.run(`UPDATE tasks SET assignee='unassigned' WHERE id=?`, ID);
+  assert.equal(decide(u, { actor: "cy" }).ok, true);
 });
 
 test("R20: a refused decision leaves the task open and nothing recorded; the same call with what was missing then succeeds", () => {
@@ -69,7 +69,7 @@ test("R20: a refused decision leaves the task open and nothing recorded; the sam
                               [{ outcome: "maybe" }, "AUTHORITY_OUTCOME_UNKNOWN"]]) {
     const before = w.row();
     const r = decide(w, bad);
-    assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, code, `P-${code}`, `tr ${code}`], code);
+    assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, code, PROVENANCE_ACT_CHECKS[code].check, PROVENANCE_ACT_CHECKS[code].translation], code);
     assert.deepEqual(w.row(), before, "the task is as it was");
     assert.deepEqual(w.decisions(), []);
   }
@@ -121,16 +121,18 @@ test("R20: the door — `op=taskdecide` reads id, outcome, authority and basis f
   const door = (body) => tasksOps(w.t, new URL("http://do/x?viewer=member%3Aann"), body).taskdecide();
   const r = door({ id: ID, outcome: "determined", authority: "The City Clerk", basis: "the seal", actor: "ann", now: "2001-01-01T00:00:00Z", extra: 1 });
   assert.equal(r.ok, true); assert.equal(r.resolved_at, iso(NOW), "the instance's clock");
-  assert.deepEqual(w.calls[0], { bundle: PRJ, capture: SHA, outcome: "determined", authority: "The City Clerk", basis: "the seal",
+  assert.deepEqual(w.calls[0], { bundle: DOC, capture: SHA, outcome: "determined", authority: "The City Clerk", basis: "the seal",
                                  by: "ann", viewer: "member:ann" });
   assert.deepEqual(door({ id: ID, outcome: "determined", authority: "x", basis: "y" }).reason, "NO_ACTOR");
 });
 
 test("R21: a resolve without a decision leaves the authority undetermined and the history marked `resolved_undecided`; a decision leaves `decided` and `resolved`, never that", () => {
   const w = seeded();
+  const standing = w.authorityOf();
   const r = w.t.taskResolve({ id: ID, actor: "ann", now: iso(NOW) });
   assert.deepEqual(r, { ok: true, id: ID, status: "resolved", resolved_at: iso(NOW) });
-  assert.equal(w.fakes.provenance.authorityOf(PRJ, SHA), null, "provenance's standing authority is unchanged");
+  assert.deepEqual(w.authorityOf(), standing, "provenance's standing authority is unchanged");
+  assert.deepEqual(w.decisions(), [], "and no decision was recorded");
   assert.deepEqual(w.events(ID), ["created", "resolved_undecided"]);
   assert.deepEqual([w.row().status, w.row().resolved_at], ["resolved", iso(NOW)]);
   assert.equal(w.calls.length, 0, "nothing was asked of provenance");
@@ -157,4 +159,26 @@ test("R21: a resolve without a decision leaves the authority undetermined and th
   const s = seeded();
   s.t.taskResolve({ items: [{ id: ID }], actor: "ann", now: iso(NOW) });
   assert.deepEqual(s.events(ID), ["created", "resolved_undecided"]);
+});
+
+test("R24: a task of kind authority-undetermined carries the doors a screen leads with, `taskdecide` first; every other row is unchanged", () => {
+  const w = seeded();
+  const doors = (rows) => rows.map((t) => t.door);
+  const asked = tasksOps(w.t, new URL("http://do/x?viewer=class%3Aadmin"), {});
+  for (const rows of [w.t.recentTasks({ viewer: "class:admin" }), w.t.taskList({ viewer: "class:admin" }).tasks])
+    assert.deepEqual(doors(rows), [["taskdecide", "taskforward", "taskresolve"]]);
+  /* the doors are ops the module itself serves */
+  for (const d of w.t.recentTasks({ viewer: "class:admin" })[0].door) assert.equal(typeof asked[d], "function", d);
+  /* a resolved authority task still names them; the returned list is a copy */
+  decide(w);
+  const rows = w.t.recentTasks({ viewer: "class:admin" });
+  rows[0].door.push("x");
+  assert.deepEqual(w.t.recentTasks({ viewer: "class:admin" })[0].door, ["taskdecide", "taskforward", "taskresolve"]);
+  /* control: the other kinds carry no door */
+  const o = seeded();
+  o.task("TASK-2026-0012-chk", PRJ, { kind: "check-requested", assignee: "ann", role: "member" });
+  o.task("TASK-2026-0013-sig", PRJ, { kind: "sign-requested", assignee: "ann", role: "member" });
+  const others = o.t.recentTasks({ viewer: "class:admin" }).filter((t) => t.kind !== "authority-undetermined");
+  assert.equal(others.length, 2);
+  for (const t of others) assert.equal("door" in t, false, t.kind);
 });
