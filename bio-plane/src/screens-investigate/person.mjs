@@ -221,14 +221,14 @@ function render(cs, view) {
       const dated = (l) => (span(l.valid) || cs.mark("gap", "undetermined"));
       const srcNow = view.ui["choice:kp-src"] === "own" ? "own" : "doc";
       out.push(cs.sec(K + "heading", `<p>${cs.w(K + "intro.a")} ${cs.w(K + "intro.b")}</p>`
-        + (kept.length ? cs.sheet(kept.map((x) => cs.row(gradeOf({ assertion: x.line.assertion }), `${cs.esc(x.office)} ${x.line.kind === "custodian_of" ? cs.w(K + "line", { subject: cs.esc(subjectName(x.line.to)) }) : `${cs.w("label.linekinds.responsible_for")} ${cs.esc(subjectName(x.line.to))}`} · ${dated(x.line)}`,
+        + (kept.length ? cs.sheet(kept.map((x) => cs.row(gradeOf({ assertion: x.line.assertion }), `${cs.esc(x.office)} ${x.line.kind === "custodian_of" ? cs.w(K + "line", { subject: cs.esc(subjectName(x.line.to)) }) : cs.w(K + "line.responsible", { subject: cs.esc(subjectName(x.line.to)) })} · ${dated(x.line)}`,
           cite(x.line.basis && x.line.basis.captureSha ? { captureSha: x.line.basis.captureSha, extent: x.line.basis.extent } : null))).join("")) : "")
-        + cs.choice("kp-office", "screen.people.today.kind.office", offices, {}) + `<p class="mk-small">${cs.w(K + "office.help")}</p>`
+        + cs.choice("kp-office", K + "office.label", offices, {}) + `<p class="mk-small">${cs.w(K + "office.help")}</p>`
         + cs.choice("kp-kind", K + "kind.label", [["custodian_of", K + "kind.keeps"], ["responsible_for", K + "kind.responsible"]], {}) + `<p class="mk-small">${cs.w(K + "kind.help.a")} ${cs.w(K + "kind.help.b")}</p>`
         + cs.choice("kp-subject", K + "subject.label", subjects, {}) + `<p class="mk-small">${cs.w(K + "subject.help.a")} ${cs.w(K + "subject.help.b")}</p>`
-        + cs.choice("kp-src", "screen.person.source", [["doc", K + "source.doc"], ["own", K + "source.own"]], { acts: {}, value: "doc" }) + `<p class="mk-small">${cs.w(K + "source.help.a")} ${cs.w(K + "source.help.b")}</p>`
+        + cs.choice("kp-src", K + "source.label", [["doc", K + "source.doc"], ["own", K + "source.own"]], { acts: {}, value: "doc" }) + `<p class="mk-small">${cs.w(K + "source.help.a")} ${cs.w(K + "source.help.b")}</p>`
         + (srcNow === "doc" ? P.docChoice(cs, view, "kp-doc", { label: K + "doc.label", passage: false }) : cs.field("kp-statement", S + "claim.note", { area: true, rec: true }))
-        + cs.field("kp-from", S + "fact.from", { type: "date" }) + cs.field("kp-to", S + "fact.to", { type: "date" })
+        + cs.field("kp-from", K + "from.label", { type: "date" }) + cs.field("kp-to", K + "to.label", { type: "date" })
         + `<p class="mk-small">${cs.w(K + "dates.note.a")} ${cs.w(K + "dates.note.b")}</p>`
         + cs.act("recordline", { label: K + "button" })
         + `<details class="mk-details"><summary>${cs.w(K + "refused.summary")}</summary>`
@@ -470,8 +470,8 @@ const PERSON_KEYS = [
   /* R50: Records its offices keep */
   ...["heading", "intro.a", "intro.b", "line", "office.help", "kind.label", "kind.help.a", "kind.help.b", "kind.keeps", "kind.responsible", "subject.help.a", "subject.help.b",
     "subject.label", "source.help.a", "source.help.b", "source.own", "source.doc", "doc.label", "dates.note.a", "dates.note.b", "button", "refused.summary", "refused.nobasis.a",
-    "refused.nobasis.b", "refused.self.a", "refused.self.b", "refused.dates.a", "refused.dates.b", "withdraw.a", "withdraw.b"].map((k) => "screen.person.keeper." + k),
-  "screen.person.fact.to", "label.linekinds.responsible_for",
+    "refused.nobasis.b", "refused.self.a", "refused.self.b", "refused.dates.a", "refused.dates.b", "withdraw.a", "withdraw.b",
+    "office.label", "source.label", "from.label", "to.label", "line.responsible"].map((k) => "screen.person.keeper." + k),
   /* R53, R58: an organization's page */
   "screen.person.kind.help.org", "screen.person.same.org", "screen.person.same.holds.org", "screen.person.same.claimed.org", "screen.person.same.because.org", "screen.person.candidates.org",
   "screen.person.claim.same_as.org", "screen.person.claim.not_same_as.org", "screen.person.claim.kind.same_as.org", "screen.person.claim.kind.not_same_as.org", "screen.person.claim.kind.unsure.org",

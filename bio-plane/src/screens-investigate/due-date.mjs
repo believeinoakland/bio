@@ -36,7 +36,7 @@ function render(cs, view) {
     ? cs.sheet(clock.map((e, i) => (i === pos ? '<div aria-current="true">' : "<div>") + cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
       `<b>${cs.esc(e.description || e.text || "")}</b><span class="meta">${cs.w(S + "basis", { basis: e.basis || "" })}${e.due_at ? " · " + cs.w(S + "at", { time: String(e.due_at).slice(11, 16), zone: e.due_zone || "" }) : ""}</span>`,
       `<span class="mk-small">${cs.w(S + "status." + (["pending", "met", "overdue", "waived"].includes(e.status) ? e.status : "pending"))}</span>`
-      + (Array.isArray(reminded[i]) ? reminded[i].map((on) => ` <span class="mk-small" data-reminder="${i}">${cs.w(S + "on")} ${cs.date(on, { year: true })}</span>`).join("") : "")) + "</div>").join(""))
+      + (Array.isArray(reminded[i]) ? reminded[i].map((on) => ` <span class="mk-small" data-reminder="${i}">${cs.w("screen.reminder.on", { date: cs.date(on, { year: true }) })}</span>`).join("") : "")) + "</div>").join(""))
     : "")
     /* drawn only once the clock is read, so its first value is the entry the address names, never one kept from before */
     + cs.choice("dd-entry", S + "entry", clock.map((e, i) => ({ value: String(i), text: (e.description || e.text || "") + " · " + (e.date || "") })), { value: pos !== null ? String(pos) : undefined }))
@@ -116,7 +116,7 @@ const acts = [
 const DUE_KEYS = [
   "screen.due-date.due", "screen.due-date.of", "screen.due-date.entries", "screen.due-date.basis", "screen.due-date.at",
   "screen.due-date.status.pending", "screen.due-date.status.met", "screen.due-date.status.overdue", "screen.due-date.status.waived",
-  "screen.due-date.entry", "screen.due-date.on", "screen.due-date.remind.empty", "screen.due-date.download", "screen.due-date.how",
+  "screen.due-date.entry", "screen.due-date.on", "screen.due-date.remind.empty", "screen.reminder.on", "screen.due-date.download", "screen.due-date.how",
   "screen.due-date.rule.summary", "screen.due-date.rule.pick", "screen.due-date.rule.help", "screen.due-date.rule.go", "refusal.NO_SUCH_RULE",
   "screen.due-date.proposal", "screen.due-date.step.basis", "screen.due-date.step.received.receipt", "screen.due-date.step.received.sent",
   "screen.due-date.step.received.service", "screen.due-date.noreceipt", "screen.due-date.step.counted", "screen.due-date.step.skipped",

@@ -119,3 +119,10 @@ test("R50 a statement with no source sends nothing; the owner's refusals are dra
   const person = await open("/app/person/" + ENT, { plane: keeperPlane() });
   assert.equal(secOf(person, "screen.person.keeper.heading"), undefined, "control: a person's page has none");
 });
+
+/* B423 (T51; DEC-384 design rows, words.json): an office's responsible-for statement is drawn by its own key */
+test("R50 B423 a statement that an office is responsible for is drawn by its own key, never the bare relation word", async () => {
+  const r = await open(at, { plane: keeperPlane({ linesof: (x) => ok({ ok: true, entity: x.query.entity, truncated: false, lines: x.query.kinds === "post_in" ? [{ line_id: "LIN-1", kind: "post_in", from: OFFICE, to: ORG }]
+    : x.query.entity === OFFICE && x.query.kinds === "custodian_of,responsible_for" ? [{ line_id: "LIN-8", kind: "responsible_for", from: OFFICE, to: SUBJECT, valid: null, assertion: "B", basis: { captureSha: SHA, extent: { kind: "pdf-page", page: 3 } } }] : [] }) }) });
+  drew(secOf(r, "screen.person.keeper.heading"), "screen.person.keeper.line.responsible", { subject: "Street repair and potholes" });
+});

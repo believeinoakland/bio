@@ -93,6 +93,7 @@ test("R51 a date sends standardinforce with the declared fields and draws the ow
   const sec = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.standard.inforce.heading"));
   assert.ok(sec, "the section is drawn with the standard");
   drew(sec, "screen.standard.inforce.refused.summary");
+  assert.ok(sec.textContent.includes(word("screen.standard.inforce.day.label")), "the day field is labelled by its key (B419 2)");
   await press(p, "standardinforce");
   assert.equal(p.byOp("standardinforce").length, 0, "no day, nothing sent");
   fill(p, { "st-inforce-day": "2026-10-08" });
@@ -100,16 +101,19 @@ test("R51 a date sends standardinforce with the declared fields and draws the ow
   assert.deepEqual(p.byOp("standardinforce")[0].query, { op: "standardinforce", id: STD, date: "2026-10-08" }, "the op is the request's; the declared fields are id and date");
   let shown = main(p).querySelector('[data-inforce="in_force"]');
   assert.ok(shown && shown.textContent.includes("that day lies within the period"));
+  drew(shown, "screen.standard.inforce.result.line", { date: dayOf("2026-10-08"), state: word("screen.standard.inforce.state.in_force") });
   drew(shown.parentElement, "screen.standard.inforce.result.meta", { from: dayOf("2023-01-01") });
   fill(p, { "st-inforce-day": "2022-05-01" });
   await press(p, "standardinforce");
   shown = main(p).querySelector('[data-inforce="not_in_force"]');
   assert.ok(shown && shown.textContent.includes("the period starts after that day"), "not in force is drawn with its reason");
+  drew(shown, "screen.standard.inforce.result.line", { date: dayOf("2022-05-01"), state: word("screen.standard.inforce.state.not_in_force") });
   assert.equal(main(p).querySelector('[data-inforce="in_force"]'), null);
   const und = await open(at, { plane: { standardinforce: ok({ ok: true, id: STD, date: "2026-10-08", state: "undetermined", why: "the standard states no period" }) } });
   fill(und, { "st-inforce-day": "2026-10-08" });
   await press(und, "standardinforce");
   assert.ok(main(und).querySelector('[data-inforce="undetermined"] .cs-gap'), "undetermined is the gap mark with its reason");
+  drew(main(und).querySelector('[data-inforce="undetermined"]'), "screen.standard.inforce.result.line", { date: dayOf("2026-10-08"), state: word("screen.standard.inforce.state.undetermined") });
   const bad = await open(at, { plane: { standardinforce: refusedIn("DATE_INVALID", "That day does not exist.") } });
   fill(bad, { "st-inforce-day": "2026-02-30" });
   await press(bad, "standardinforce");
