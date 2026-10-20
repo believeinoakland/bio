@@ -91,9 +91,12 @@ import { AI_GRANT_OPS } from "../credentials/index.mjs";
    registered with `public-read` (its R18) and served by public-read's door read, credential-free, as R45's are. */
 /* R52 (DEC-101 (3); N534; op-declarations R16): the watch acts `importwatch` and `importunwatch` (case-import R17) join
    them, stamped as they are (`by` and `viewer`), each for a member's session only by its row. */
+/* T51 (K4219): the re-run acts `rerunstart` and `rerunpair` are acts of a member's project, stamped `by` as the other acts are;
+   `importregrade` and `rerunread` are reads, stamped with the viewer alone */
 const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
-                                           "importflag", "importflagclear", "importwatch", "importunwatch"]);
-const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase"]);
+                                           "importflag", "importflagclear", "importwatch", "importunwatch",
+                                           "rerunstart", "rerunpair"]);
+const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase", "importregrade", "rerunread"]);
 const CASE_CHECKER_PUBLIC_READS = Object.freeze(["casechecker", "casefilespec"]);
 
 /* R50 (DEC-120, DEC-121; N528; op-declarations R15; K1402): `wizard-scripts`' ops, routed through its own map by the
