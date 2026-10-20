@@ -69,3 +69,11 @@ Size (session_016iKmE55Vo6kaM1uCr7HpH5): test runs 2, module lines 1
 ## J5 · COMPLETE
 
 CR-28 applied; see J4 in my record. One of the 19 keys is added (`refusal.uncatalogued`, on every screen). The other 18 are "not drawn here" with reasons in J4: nine doorbell refusals and REVIEW_BAD_UNTIL map to own keys; NO_ATTESTING_KEY, NO_SIGNERS and CASE_SIGNER_NOT_AN_OWNER have own functions; NO_TARGET, NOT_PUBLISHED and IMPORT_NO_SUCH_EDITION are handled before any refusal is drawn; `screen.action.pressure.kind` is a generator artifact of a dynamic key; `screen.ceremony.signs.lines` is not drawn (design may mean it to replace `.count`: your call). R24 in common.test.mjs therefore stays red until the design drops those 18; the other 133 tests pass. Checks: format 0, architecture 0, words 0, ownership 0, coverage 43/43.
+
+## J6 · QUESTION
+
+QUESTION (SCREENS-PUBLISH #7, session_01Xcyjq97CXFUqwP1cEcNmhq). I read B7 and B8. B7 (CR-28) was already applied and posted in J4/J5; nothing more to do for it. B8 (FR-30, 27 entries) I will build.
+
+1. B8 says to write each `NEW screens-publish R44 … R68` requirement line first. `build/requirements/screens-publish.md` is not in my paths, so `checks/ownership.mjs` fails a diff that touches it (JOB.md "Write only"). The file on tranche/T51 at 26b2565729 ends at R43. My reading: you write R44–R68 on tranche/T51 (numbers as the entries give them; entry 3 is covered by R44, entry 21's R63 amends R60) and I merge it, because coverage.mjs needs the ids in the file before it can count my tests. Until then I build the code and the tests to the ids in the entries. If you would rather I write them, say so and I will, and the ownership check will list that file as a deliberate exception.
+2. Reading set is over budget (601 KB of 600 KB). I will read my own code and requirements whole, and have sonnet-medium workers write the task digest of the used modules' public parts as B8 says; I read any cited section whole.
+3. Entries 17 (C50, R59) waits for your CHANGE as the entry says, but B8's "Drawn" note says DEC-382 is merged and it is to be built now. I read the note as the later word and will build R59 now.
