@@ -47,6 +47,27 @@ export const PARTS = Object.freeze({
   /* An answer's own value: the door's `result` when it wraps one, else the answer itself. */
   value: function (answer) { return answer && typeof answer === "object" && answer.result !== undefined ? answer.result : answer; },
 
+  /* R53 (C53; DEC-376): the `references` a project's document holds, each live or severed as `citation` R15 keeps it: `{target, rel, status,
+     note}` in the document's order, read from the front matter of `image`'s `bundle.md`. [] when it holds none. */
+  references: function (image) {
+    const text = image && typeof image === "object" ? image["bundle.md"] : image;
+    if (typeof text !== "string") return [];
+    const head = text.replace(/^---\s*\n/, "").split(/\n---\s*(\n|$)/)[0];
+    const val = function (v) { v = String(v).trim(); try { if (v.startsWith("\"")) v = JSON.parse(v); } catch (e) { /* the raw value */ } return v; };
+    const out = [];
+    let on = false, cur = null;
+    head.split("\n").forEach(function (line) {
+      const top = /^(\w+):\s*(.*)$/.exec(line);
+      if (top) { on = top[1] === "references" && top[2].trim() === ""; cur = null; return; }
+      if (!on) return;
+      const item = /^\s+-\s+(\w+):\s*(.*)$/.exec(line);
+      if (item) { cur = {}; cur[item[1]] = val(item[2]); out.push(cur); return; }
+      const sub = /^\s{4,}(\w+):\s*(.*)$/.exec(line);
+      if (sub && cur) cur[sub[1]] = val(sub[2]);
+    });
+    return out.filter(function (r) { return r && r.target; });
+  },
+
   /* A project's title from its bundle's front matter, as `image` answers it (the path's project step, interface-shell R8). */
   titleOf: function (image, fallback) {
     const text = image && typeof image === "object" ? image["bundle.md"] : image;
@@ -229,6 +250,34 @@ export const PARTS = Object.freeze({
   caseArgs: function (copy, draft) {
     return { draft: draft, project: copy && copy.project };
   },
+  /* R44, R46, R50, R51 (C1, C2, C5, C6; DEC-376, DEC-377): what the member attested in this step, read from its controls when the act
+     is pressed: the contradictions ticked, each with her words (`tensionsDisclosed`); the documents listed as self-attested only, each
+     with the reason it requires (`selfAttested`); and the declared bias for this edition (`biasAcknowledgement`). `body` holds only what
+     was given, so a request names nothing else; `held` is what the controls show again after a redraw. `refuse` is the word key of
+     the reason a ticked document lacks. */
+  attested: function (view, cs) {
+    const ui = view.ui, listOf = function (v) { return Array.isArray(v) ? v : []; };
+    const body = {}, held = { disc: [], words: {}, sa: [], why: {}, bias: "" };
+    const tens = ui.tensionIds || [], docs = ui.confIds || [];
+    listOf(cs.value("ce-disc")).forEach(function (id) {
+      const i = tens.indexOf(id), words = i < 0 ? "" : String(cs.value("ce-dw-" + i) || "").trim();
+      held.disc.push(id);
+      if (words) held.words[id] = words;
+    });
+    if (held.disc.length) body.tensionsDisclosed = held.disc.map(function (id) { return held.words[id] ? { candidate: id, words: held.words[id] } : { candidate: id }; });
+    let refuse = null;
+    listOf(cs.value("ce-sa")).forEach(function (sha) {
+      const i = docs.indexOf(sha), why = i < 0 ? "" : String(cs.value("ce-sar-" + i) || "").trim();
+      held.sa.push(sha);
+      held.why[sha] = why;
+      if (!why) refuse = "screen.ceremony.conf.refused.noreason1";
+    });
+    if (held.sa.length) body.selfAttested = held.sa.map(function (sha) { return { capture: sha, reason: held.why[sha] }; });
+    const bias = cs.value("ce-bias");
+    if (typeof bias === "string" && bias.trim()) { held.bias = bias.trim(); body.biasAcknowledgement = held.bias; }
+    return { body: body, held: held, refuse: refuse };
+  },
+
   /* R60, R63 (L14; DEC-384): the heading of a draft is the short `title` `review` answers ("Case X, edition N", `review.title.draft` or
      `review.title.untitled`, already in the design's words), never the identity sentence, which is body text (`review.body.nocase`
      where the draft names no case). null when the copy states none. */

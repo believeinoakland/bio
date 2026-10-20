@@ -91,6 +91,29 @@ export const CASE_EDITOR = Object.freeze({
     const authored = copy.state === "ok" && copy.value.authored ? copy.value.authored : {};
     out.push(cs.sec("screen.case-editor.scope", scope(authored)));
 
+    // R44 (C2; DEC-376): what a case states about itself, held beside the scope and sent with `casedraft`: each finding's role, and the
+    // team's position on putting the case to the people it concerns with its reasoning. Drawn from the copy's own choices, and only
+    // once the copy has answered (R20).
+    const have = copy.state === "ok" ? copy.value : null;
+    const choices = have && have.choices && typeof have.choices === "object" ? have.choices : {};
+    const roleList = Array.isArray(choices.roles) ? choices.roles : [];
+    const positionList = Array.isArray(choices.subject_positions) ? choices.subject_positions : [];
+    const found = have && Array.isArray(have.findings) ? have.findings : [];
+    const ROLE = { load_bearing: "case-grammar.load_bearing", supporting: "screen.watching.nr.f.supporting" };
+    const POSITION = { sought_and_answered: "screen.case-editor.we_asked_and_they_answered", sought_no_answer: "screen.case-editor.we_asked_and_had_no_answer",
+      not_sought: "screen.case-editor.we_chose_not_to_give_notice" };
+    const option = function (v, names, on) { return names[v] ? [v, names[v], on] : { value: v, text: v, on: on }; };
+    if (found.length && roleList.length) out.push(cs.sec("screen.case-editor.findings_and_their_roles", found.map(function (f, i) {
+      return cs.row("", cs.w("screen.published.finding", { n: String(i + 1) }) + ' · <span class="rec">' + cs.esc(f.statement || f.text || f.target || "") + "</span>", "")
+        + cs.checks("ce-role-" + i, { key: "screen.published.finding", fills: { n: String(i + 1) } }, roleList.map(function (r) { return option(r, ROLE, f.role === r); }), { radio: true });
+    }).join("") + '<p class="mk-small">' + cs.w("screen.case-editor.relied_on_the_case_rests_on") + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.supporting_it_travels_with_the_case")
+      + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.required_for_every_finding_at_least") + "</p>" + P.said(view, "casedraft"),
+    { help: ["screen.case-editor.a_case_is_made_of_findings", "screen.case-editor.you_say_for_each_whether_the"] }));
+    if (have && positionList.length) out.push(cs.sec("screen.case-editor.putting_this_case_to_the_people",
+      cs.checks("ce-pos", { key: "screen.case-editor.say_where_the_team_stands" }, positionList.map(function (v) { return option(v, POSITION, authored.subjectPosition === v); }), { radio: true })
+      + '<p class="mk-small">' + cs.w("screen.case-editor.choosing_not_to_give_notice_is") + "</p>"
+      + cs.field("ce-posjust", "screen.case-editor.why_the_team_took_this_position", { area: true, rec: true, value: authored.subjectJustification || "", help: "screen.case-editor.a_position_with_no_reasoning_behind" })));
+
     // The readiness ladder: each rung "not yet checked" until its check answers (R1, R28).
     const check = caseOf && caseOf.case_id ? P.later(cs, view, "check", "casecheck", { query: { case: caseOf.case_id, edition: edition } }) : null;
     const doc = caseOf && caseOf.case_id && edition ? P.later(cs, view, "document", "casedocument", { query: { case: caseOf.case_id, edition: edition } }) : null;
@@ -120,12 +143,11 @@ export const CASE_EDITOR = Object.freeze({
         + (said ? ' <span class="meta">' + said + "</span>" : "") + "</li>";
     }).join("") + '</ol><p class="muted" data-ladder-note>' + cs.w("screen.case-editor.tip.distributed") + "</p>" + missing + talk + (check ? cs.state(check, function () { return ""; }) : "")));
 
-    // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1); not drawn when
-    // it names nothing it leaves out and nobody has acknowledged (R20).
+    // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1), and the fields that add a
+    // row (R44): what is left out and why, or the claim that nothing material is. The acknowledgement is drawn once something is left out.
     out.push(P.sec(cs, "screen.case-editor.leavesout", cs.state(copy, function (v) {
       const ex = Array.isArray(v.authored && v.authored.excluded) ? v.authored.excluded : v.authored && v.authored.excluded ? [v.authored.excluded] : [];
       const acks = v.statement_acknowledgements && Array.isArray(v.statement_acknowledgements.acknowledgements) ? v.statement_acknowledgements.acknowledgements : [];
-      if (!ex.length && !acks.length) return "";
       return (ex.length ? cs.sheet(ex.map(function (e) {
         return cs.row("", '<span class="rec">' + cs.esc(typeof e === "string" ? e : e.description || e.target || "") + "</span>",
           typeof e === "object" && e.reason ? '<span class="meta">' + cs.esc(e.reason) + "</span>" : "");
@@ -133,9 +155,24 @@ export const CASE_EDITOR = Object.freeze({
         + (acks.length ? cs.sheet(acks.map(function (a) {
           return cs.row("", cs.w("screen.case-editor.ack.by", { who: a.by || a.recipient || "" }), '<span class="rec">' + cs.esc(a.reason || "") + "</span>", a.at ? cs.date(a.at) : "");
         }).join("")) : "")
-        + cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
-        + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack");
+        + cs.field("ce-exwhat", "screen.case-editor.something_else_it_leaves_out", { help: "screen.case-editor.name_a_document_in_your_record" })
+        + cs.field("ce-exwhy", "screen.case-editor.why_it_is_left_out", { help: ["screen.case-editor.required_for_each_item", "screen.case-editor.what_is_left_out_and_why"] })
+        + (ex.length ? "" : cs.checks("ce-exnone", { text: "" }, [["none", "screen.case-editor.this_case_leaves_nothing_material_out", false]])
+          + '<p class="mk-small">' + cs.w("screen.case-editor.an_empty_list_is_a_claim") + "</p><p class=\"mk-small\">" + cs.w("screen.case-editor.silence_is_not_say_either_what") + "</p>")
+        + (ex.length || acks.length ? cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
+          + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack") : "");
     })));
+
+    // R53 (C53; DEC-376): the passages the case cites, each removed or, once removed, reinstated, with a reason the shell asks for (the
+    // acts are reasoned); nothing is deleted. Read from the project's own document, which keeps a removed citation.
+    const cites = P.references(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null)
+      .filter(function (r) { return !r.rel || r.rel === "cites"; });
+    if (cites.length) out.push(cs.sec("screen.case-editor.the_passages_this_case_cites", cs.sheet(cites.map(function (r) {
+      const gone = r.status === "severed";
+      return cs.row("", '<span class="rec" data-cited="' + cs.esc(r.target) + '" data-status="' + (gone ? "severed" : "live") + '">' + cs.esc(r.target) + "</span>"
+        + (gone && r.note ? '<span class="meta">' + cs.esc(r.note) + "</span>" : ""), "",
+        cs.act(gone ? "reinstate" : "sever", { data: { handle: r.target } }));
+    }).join("")) + P.said(view, "citation"), { help: ["screen.case-editor.removing_one_takes_it_out_of", "screen.case-editor.nothing_is_deleted_a_removed_citation"] }));
 
     // The people it names, each with its reason or that the reason is missing (R1; `attribute`).
     out.push(P.sec(cs, "screen.case-editor.people", cs.state(copy, function (v) {
@@ -213,10 +250,34 @@ export const CASE_EDITOR = Object.freeze({
         const scope = String(cs.value("ce-scope") || "").trim();
         const statement = String(cs.value("ce-statement") || "").trim();
         if (!scope) return { refuse: "screen.case-editor.scope.needed" };
-        const body = { scope: scope };
-        if (statement) body.statement = statement;
-        if (view.ui.draft) body.draft = view.ui.draft.draft_id;
-        else {
+        const body = {};
+        const account = view.ui.draft && el && el.dataset && el.dataset.account === "1" ? String(cs.value("ce-account") || "") : "";
+        if (view.ui.draft) {
+          // R44 (C3): a draft that stands is changed field by field: a Save sends only what it changed, and names no finding, so the
+          // draft keeps its own (review R37). What the draft holds is what its copy answered.
+          const copy = view.parts.copyOf(view) || {};
+          const held = copy.authored || {};
+          body.draft = view.ui.draft.draft_id;
+          if (scope !== String(held.scope || "")) body.scope = scope;
+          if (statement && statement !== String(held.statement || "")) body.statement = statement;
+          const pos = (cs.value("ce-pos") || [])[0];
+          if (pos && pos !== held.subjectPosition) body.subjectPosition = pos;
+          const why = cs.value("ce-posjust");
+          if (typeof why === "string" && why.trim() && why.trim() !== String(held.subjectJustification || "")) body.subjectJustification = why.trim();
+          const found = Array.isArray(copy.findings) ? copy.findings : [];
+          const roles = {};
+          found.forEach(function (f, i) { const r = (cs.value("ce-role-" + i) || [])[0]; if (r && f.target) roles[f.target] = r; });
+          if (found.some(function (f) { return f.target && roles[f.target] && roles[f.target] !== f.role; })) body.roles = roles;
+          const had = Array.isArray(held.excluded) ? held.excluded : [];
+          const what = String(cs.value("ce-exwhat") || "").trim(), because = String(cs.value("ce-exwhy") || "").trim();
+          const none = (cs.value("ce-exnone") || []).includes("none");
+          if (what || because) {
+            if (!what || !because) return { refuse: "screen.case-editor.say_what_is_left_out_and" };
+            body.excluded = had.map(function (e) { return typeof e === "string" ? { description: e } : e; }).concat([{ description: what, reason: because }]);
+          } else if (none && !had.length) body.excluded = [];
+        } else {
+          body.scope = scope;
+          if (statement) body.statement = statement;
           const ticked = cs.value("ce-targets");
           const targets = (Array.isArray(ticked) ? ticked : []).filter(function (id) { return (view.ui.concluded || []).includes(id); });
           if (!targets.length) {
@@ -226,7 +287,6 @@ export const CASE_EDITOR = Object.freeze({
           body.project = String(view.subject || "").split("/")[0];
           body.targets = targets;
         }
-        const account = view.ui.draft && el && el.dataset && el.dataset.account === "1" ? String(cs.value("ce-account") || "") : "";
         if (account.trim()) {
           body.account = account.split("\n").map(function (t) { return t.trim(); }).filter(Boolean).map(function (t) { return { text: t, cites: [] }; });
           const began = view.ui.accountDraft && view.ui.accountDraft.id;
@@ -284,6 +344,15 @@ export const CASE_EDITOR = Object.freeze({
       },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "attribute", answer)) view.parts.forget(view); }, // D29
     },
+    ...["sever", "reinstate"].map(function (op) {
+      return {
+        // R53 (C53): a citation of the case's own taken out, or put back; the reason is the shell's (the acts are reasoned) and the
+        // citation is the project's reference the row names. Nothing is deleted.
+        op: op, label: "act." + op + ".label.case-editor",
+        send: function (view, el) { return { body: { project: String(view.subject || "").split("/")[0], handle: el.dataset.handle } }; },
+        done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "citation", answer)) view.parts.forget(view); }, // D29
+      };
+    }),
     {
       // R1 (interface-shell R20): help with the scope's or "what changed"'s words, never a reason; drawn as a labeled draft.
       op: "writinghelp", label: "act.writinghelp.label.case-editor",
