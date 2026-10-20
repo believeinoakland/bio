@@ -30050,7 +30050,7 @@
   },
   {
    "key": "screen.published.what_this_case_leaves_out",
-   "en": "What this case leaves out",
+   "en": "Left out of this case",
    "protected": false,
    "note": "DEC-376: B398 C7 (public-read publishedcase): The heading of the public page's section on what the case does not cover. Translator: this page is public, read by anyone."
   },
@@ -30164,7 +30164,7 @@
   },
   {
    "key": "screen.published.explained_not_yet_shown_the",
-   "en": "Explained, not yet shown: the team gives an explanation but has not yet shown it holds.",
+   "en": "An explanation not yet shown to hold: the team gives one, but has not shown that it holds.",
    "protected": false,
    "note": "DEC-376: B398 C7 (public-read publishedcase): A state of a disclosed contradiction, with what it means. The words before the colon are the state's name. Translator: this page is public, read by anyone."
   },
