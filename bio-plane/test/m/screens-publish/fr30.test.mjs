@@ -2,7 +2,7 @@
  * asserted by its key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, drew, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, P, C, DR } from "./fixtures.mjs";
+import { open, main, drew, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR } from "./fixtures.mjs";
 
 const tick = (p, id, v) => { p.doc.getElementById(id).querySelectorAll("input").forEach((b) => { if (b.value === v) b.checked = true; }); };
 const DOCKET = `/app/docket/${P}/${C}`;
@@ -124,4 +124,49 @@ test("R45 a browser that holds no signing key is offered one as soon as the Sign
   await until(q, () => ops(q).includes("caseratify"));
   await q.settle();
   assert.ok(!q.doc.querySelector("[data-nokey]"));
+});
+
+const NOCASE = (o = {}) => COPY({ case: { case_id: null, edition: null, identity: "A CASE THIS DRAFT DOES NOT NAME AND PUBLICATION DERIVES", newCase: true }, title: word("review.title.draft", { title: "Rents, 2024 to 2026" }), ...o });
+
+const REVIEW = `/app/review-copy/${P}/${DR}`;
+const OUTSIDE = { session: null, hash: "#grant=" + GRANT_SECRET };
+const heading = (p) => p.doc.querySelector("h1").textContent;
+
+test("R60 R63 the ceremony, the review copy and the reader's page are headed by the title review answers, by key; the identity sentence is body text; a draft naming a case draws its title (control)", async () => {
+  for (const [path, boot] of [[`/app/ceremony/${P}/${DR}`, {}], [REVIEW, {}], ["/app/review", OUTSIDE]]) {
+    const p = await open(path, { boot, plane: { reviewcopy: ok(NOCASE()) } });
+    assert.equal(heading(p), word("review.title.draft", { title: "Rents, 2024 to 2026" }), path);
+    assert.ok(drew(p, "review.body.nocase"), path);
+    assert.ok(!heading(p).includes("DOES NOT NAME"), path);
+    const un = await open(path, { boot, plane: { reviewcopy: ok(NOCASE({ title: word("review.title.untitled") })) } });
+    assert.equal(heading(un), word("review.title.untitled"), path);
+    const named = await open(path, { boot, plane: { reviewcopy: ok(COPY({ title: "Case The Coliseum lease, edition 2" })) } });
+    assert.equal(heading(named), "Case The Coliseum lease, edition 2", path);
+    assert.ok(!drew(named, "review.body.nocase"), path);
+  }
+});
+
+test("R61 the reader's page draws each finding's statement and no file line; a finding with no statement draws its target (control)", async () => {
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { reviewcopy: ok(COPY({ findings: [{ target: "FND-1", present: true, text: "--- id: INQ-1\nobject_type: inquiry", statement: "The rents rose without a vote." }, { target: "FND-2", present: true, text: "--- id: INQ-2" }] })) } });
+  const t = main(p).textContent;
+  assert.ok(t.includes("The rents rose without a vote.") && !t.includes("---") && !t.includes("object_type"));
+  assert.ok(t.includes("FND-2"));
+});
+
+test("R62 R65 a draft naming no case still draws the reader's comment and the acknowledgement by key, with no raw reader id; none draws neither (control)", async () => {
+  const p = await open(REVIEW, { plane: { reviewcopy: ok(NOCASE({ statement_acknowledgements: { acknowledgements: [{ kind: "recipient", by: "RVG-2026-0007", recipient: "Prof. N. Iyer", at: "2026-10-08T09:00:00Z", reason: "ok" }] } })) } });
+  assert.ok(drew(p, "screen.review-copy.comments"));
+  assert.ok(main(p).textContent.includes("Finding 1 should say which schedule the council approved."));
+  assert.ok(p.doc.querySelector("[data-acked]").textContent.includes(word("screen.review-copy.acked", { who: "Prof. N. Iyer", date: "" }).split(",")[0]), "named by what the grant states, by key");
+  assert.ok(!main(p).textContent.includes("RVG-"));
+  const none = await open(REVIEW, { plane: { reviewcopy: ok(NOCASE({ comments: [], statement_acknowledgements: null })) } });
+  assert.ok(!drew(none, "screen.review-copy.comments") && !none.doc.querySelector("[data-acked]"));
+});
+
+test("R64 no draft draws the sentence and the door that makes one; with a draft there is none (control)", async () => {
+  const p = await open(`/app/review-copy/${P}`, { plane: { casedrafts: ok({ drafts: [] }) } });
+  assert.ok(drew(p, "screen.review-copy.nodraft") && drew(p, "screen.review-copy.nodraft.go"));
+  assert.equal(p.doc.querySelector("[data-nodraft-go]").getAttribute("href"), `/app/case-editor/${P}`);
+  const q = await open(REVIEW);
+  assert.ok(!q.doc.querySelector("[data-nodraft-go]"));
 });

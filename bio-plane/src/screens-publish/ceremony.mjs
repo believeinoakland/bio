@@ -55,8 +55,8 @@ export const CEREMONY = Object.freeze({
     ui.draftId = draft;
     const copy = copyR && copyR.state === "ok" ? copyR.value : null;
     const c = copy && copy.case ? copy.case : {};
-    const out = [cs.title(c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null, { thing: "case" }),
-      '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"];
+    const out = [cs.title(P.titleOf2(cs, copy, c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null), { thing: "case" }),
+      P.noCase(cs, copy), '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"];
     if (!copy) { out.push(cs.state(copyR, function () { return ""; })); return out.join(""); }
     const args = P.caseArgs(copy, draft);
 

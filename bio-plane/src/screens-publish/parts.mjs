@@ -229,6 +229,17 @@ export const PARTS = Object.freeze({
   caseArgs: function (copy, draft) {
     return { draft: draft, project: copy && copy.project };
   },
+  /* R60, R63 (L14; DEC-384): the heading of a draft is the short `title` `review` answers ("Case X, edition N", `review.title.draft` or
+     `review.title.untitled`, already in the design's words), never the identity sentence, which is body text (`review.body.nocase`
+     where the draft names no case). null when the copy states none. */
+  titleOf2: function (cs, copy, fallback) {
+    return copy && typeof copy.title === "string" && copy.title ? copy.title : fallback;
+  },
+  noCase: function (cs, copy) {
+    const c = copy && copy.case ? copy.case : {};
+    return copy && !c.case_id ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
+  },
+
   /* the findings a review copy names (a draft that names none cannot be published, R66) */
   findingsOf: function (copy) { return (copy && Array.isArray(copy.findings) ? copy.findings : []).map(function (f) { return f.target; }).filter(Boolean); },
 

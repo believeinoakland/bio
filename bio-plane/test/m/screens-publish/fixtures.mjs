@@ -33,6 +33,7 @@ export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft:
   statement_acknowledgements: { acknowledgements: [{ by: "mai", reason: "The fairness question is another project's.", at: "2026-10-05T10:00:00Z" }] },
   observations: [{ observation: "OBS-2026-0001", chosen: { level: "name" }, stated: "signed the March 2024 adjustment" },
     { observation: "OBS-2026-0002", chosen: null, stated: null }],
+  comments: [{ comment_id: "RVC-1", author_kind: "recipient", author: "Prof. N. Iyer", grant_id: "GRT-1", recipient: "Prof. N. Iyer", text: "Finding 1 should say which schedule the council approved.", at: "2026-10-07T09:00:00Z" }],
   grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone: "America/Los_Angeles" }],
   ...o });
 

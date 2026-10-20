@@ -107,7 +107,7 @@ test("R2 R11 the grant's secret is shown once as the reader's link with \"Civics
 
 test("R2 the readers' comments, each answered by \"Reply\" (reviewcomment with the draft and the member's words)", async () => {
   const p = await open(PATH);
-  assert.equal(last(p, "reviewcomments").query.case, C);
+  assert.equal(p.byOp("reviewcomments").length, 0, "R62: the comments come from the copy answer, not a read keyed on the case");
   assert.ok(text(p).includes("Finding 1 should say which schedule the council approved.") && drew(p, "screen.review-copy.from.reader", { who: "Prof. N. Iyer" }));
   await press(p, "reviewcomment", { values: { "rc-reply-0": "Thank you: it is schedule B." } });
   assert.equal(last(p, "reviewcomment").query.draft, DR);

@@ -9,7 +9,7 @@ import { interfacePage, SHELL_OPS } from "../../../src/interface-shell/index.mjs
 import { OPS, BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
-import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
+import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, COPY, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["screens-publish"];
@@ -66,7 +66,7 @@ test("R10 an empty read is drawn empty, never failed: no drafts, no comments, no
     assert.ok(main(p).querySelector('[data-state="empty"]'), path);
     assert.equal(main(p).querySelector('[data-state="failed"]'), null, path);
   }
-  const q = await open(`/app/review-copy/${P}`, { plane: { reviewcomments: ok({ comments: [] }) } });
+  const q = await open(`/app/review-copy/${P}`, { plane: { reviewcopy: ok(COPY({ comments: [], statement_acknowledgements: null })) } });
   assert.ok(!drew(q, "screen.review-copy.comments"), "R20: a section that holds nothing is not drawn");
   assert.equal(q.root().querySelector('[data-state="failed"]'), null);
 });
