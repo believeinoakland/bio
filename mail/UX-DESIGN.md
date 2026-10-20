@@ -1957,3 +1957,7 @@ Code and flow for the fix round's jobs:
 Not placed: I-34's act; the reader's page raw file text (L15, a code cause); G6 ("Acknowledged by RVG-…") is a case-screen finding the code must word by key (`screen.review-copy.acked`).
 Checks: run.mjs exactly the base's failures (words 2 fewer); screens chain 83 screens, 537 steps, 0 unkeyed.
 Folded: DECISIONS.md DEC-384; HANDOFF §0. Owed (its owed: line): BOB, T51 fix round: the changes above; the 390 re-walk.
+
+## U418 · MERGE · 2026-10-20 · session_017Kc5zXnyJCdnZCKZ4daDSe · primary
+MERGE claude/gallant-brown-zg0wc1 @ 1cc4a957f0 (DEC-385, the design's): DEC-384's rows read for consistency; rewordings only, no new keys: `project.owners.standdown.opened` "… you stay an owner until the other owners agree ({awaiting})." (number-safe); `screen.open-file.release.waiting` and `refusal.ACCEPT_MUST_REAUTHOR` say "the assistant", not "the machine"; `queue.signer-self-registered.detail` "mark it done". Checks: run.mjs exactly the base's failures; screens chain 0 unkeyed.
+Folded: DECISIONS.md DEC-385; HANDOFF §0. Owed (its owed: line): none.
