@@ -1,4 +1,4 @@
-/* screens-entry R7 (and R8–R11): `join`, "Your invitation", in the setup frame at `/app/join` (the shell forwards
+/* screens-entry R7 (and R8–R11, R30): `join`, "Your invitation", in the setup frame at `/app/join` (the shell forwards
    `/#invite=` and `/#join=` here and hands the fragment as `view.fragment`, taken from the address on load). An
    invitation is read with `invitelook`; a join link first asks the name the group will know the person by and sends
    `joinlinkinvite`. A dead link draws "This link no longer works" and no form (state e), the daily cap in its own fold. Then the language among the group's
@@ -72,7 +72,7 @@ export const join = {
         + (said ? `<p class="cs-due" data-due="${check.state === "free" ? "met" : "near"}" role="status">${said}</p>` : "")
         + cs.field("jn-pw", "screen.entry.password", { type: "password", help: "screen.entry.twelve", autocomplete: "new-password" })
         + cs.field("jn-pw2", "screen.entry.again", { type: "password", autocomplete: "new-password" })
-        + `<div class="mk-acts">${cs.act("enroll", { tone: "primary" })}${cs.act("invitelook", { tone: "quiet" })}</div>`
+        + `<div class="mk-acts">${cs.act("enroll", { tone: "primary" })}${cs.act("invitelook", { tone: "quiet", label: S + "invite.reread" })}</div>`
         + `<p class="mk-note">${W(S + "codes.after")}</p>` + member;
     });
   },
