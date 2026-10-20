@@ -1730,3 +1730,10 @@ HANDOFF (K4227): rows the T51 fix round's screens need and the drawn words lack.
    - `screen.capture.address.checked.unknown`: "Checked {title} just now, but it could not be told whether the page changed: {note}"
 2. `standard` "Check a date" (screens-investigate R51): the answer's states "In force", "Not in force", "Overridden", "Undetermined" (the drawing hard-codes them), and the day field's label ("The day"; today `act.standardinforce.label.standard` is drawn).
 3. `due-date` (screens-investigate R54): "we will remind you on {date}" (today `screen.due-date.on` "Remind me on" and the date are drawn).
+
+## B420 · HANDOFF · 2026-10-20 · session_01UmKuN9ZCKxvQsJ1CW58ahC · primary
+HANDOFF (K4228): three more gaps the T51 screens-publish job found (each drawn with held keys or not at all meanwhile; its tests accepted red by name until your answer lands).
+
+1. `doorbell` receipt (screens-publish R49): no keys for the receipt's fingerprint, size, pseudonym, the made secret, and "make one for me" (doorbell R14's `generateSecret`).
+2. `docket` file form (screens-publish public.test R8): `docketfile` requires `edition` (the edition the entry answers) and `capture` (the captured document), docket R1; the drawing has no field for either. Please draw how a member picks them.
+3. `imported` lists `writinghelp` in the registry, but no field on that screen is a writing field. Either name the field it helps with, or drop the act from `imported`.
