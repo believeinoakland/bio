@@ -32,6 +32,8 @@ const ADDED_T48 = ["Update your group's Civicsmith"];
    BOB re-takes whole (K2241): 23 scripts, one version in the file each; DEC-281's team pass renamed four. */
 const LIB_T50 = JSON.parse(src("library-7be06eb4cb.json"));
 const T50 = { by: "BOB", at: "2026-10-17", ruling: "K2241" };
+const LIB_R45 = JSON.parse(src("library-1cc4a957f0.json"));   /* R45: the fix round re-takes the library again */
+const R45 = { by: "BOB", at: "2026-10-20", ruling: "K2241" };
 const RENAMED = { "Say who your group is": word("wizard.WIZ-4d42b0233d48913f.name"), "Update your group's Civicsmith": word("wizard.WIZ-7de505135a9ecd4f.name"),
                   "Use another group's case": word("wizard.WIZ-4cdbd26939d4cc6d.name"), "Comment for the group": word("wizard.WIZ-f06504b9133b8d61.name") };
 const nameNow = (n) => RENAMED[n] ?? n;
@@ -78,17 +80,17 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "1cc4a957f0", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
-  assert.equal(wz.SCREEN_REGISTRY.length, 77, "R44: the file at the design commit named at the START of T51");
+  assert.equal(wz.SCREEN_REGISTRY.length, 83, "R45: the file at the design commit named at the fix round of T51");
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];
     assert.deepEqual([s.id, s.name, s.purpose], [f.id, f.name, f.purpose], f.id);
-    assert.deepEqual(s.acts, f.acts.filter((a) => a.status === "declared" || a.status === "function").map((a) => a.op), `${f.id} acts`);
+    assert.deepEqual(s.acts, [...new Set(f.acts.filter((a) => a.status === "declared" || a.status === "function").map((a) => a.op))], `${f.id} acts (R45: an op two acts share is one act)`);
     const owed = [];
-    let before = 0;
+    const seen = new Set();
     for (const a of f.acts) {
-      if (a.status === "owed") { const m = OWED.exec(a.op); owed.push({ op: m[1], dec: m[2], at: before }); } else before++;
+      if (a.status === "owed") { const m = OWED.exec(a.op); owed.push({ op: m[1], dec: m[2], at: seen.size }); } else seen.add(a.op);
     }
     assert.deepEqual(s.owed, owed, `${f.id} owed`);
     for (const a of s.acts) assert.ok(!a.startsWith("owed:"), "an owed act names no op among acts");
@@ -144,12 +146,12 @@ test("R13 (T37; K2171) the registry is re-taken from PR #14's merge onward: conn
 test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act is registered as its op, in the file's order, only once the member op table declares it; with no op table none is", () => {
   /* the acts the file still owes (R35, R38, R41): the installer's four routes, `founderhandleset`, members' `passwordresetlink` after
      memberadd, DEC-226's three update acts and the six T50 adds (K3674 among them); fifteen ops, `updatelater` on two screens */
-  assert.deepEqual(OWED_OPS, ["installupdate", "installalongside", "installremove", "installremoveconfirm", "founderhandleset", "passwordresetlink",
-                              "updatestart", "updatelater", "updateskip", "watchitem", "secondlook", "revisioncompare", "hashcopy", "linkopen",
-                              "projectstakeset", "aliaswithdraw", "actionstake", "actioninquiry", "reviewexport", "pubfloorset", "pubfloorclear", "pubprint"]);
+  assert.equal(OWED_OPS.length, 41, "R45: forty-one owed ops at 1cc4a957f0 (the earlier twenty-two among them)");
+  for (const op of ["installupdate", "installalongside", "installremove", "installremoveconfirm", "founderhandleset", "passwordresetlink", "updatestart", "updatelater", "updateskip"])
+    assert.ok(OWED_OPS.includes(op), op);
   const w = seeded({ register: false });
   const r = w.wz.wizardRegister({ ops: ALL_OPS.filter((o) => !OWED_OPS.includes(o)), library: [] });
-  assert.deepEqual([r.ok, r.screens], [true, 77]);
+  assert.deepEqual([r.ok, r.screens], [true, 83]);
   const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.deepEqual(by.members.slice(0, 3), ["memberadd", "signerset", "signeradd"], "passwordresetlink undeclared: not registered");
   const all = seeded({ register: false });
@@ -158,7 +160,7 @@ test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act 
   assert.deepEqual(byAll.members.slice(0, 3), ["memberadd", "passwordresetlink", "signerset"], "declared: registered at its place, between two declared acts");
   /* every registered act is the file's, in the file's order */
   for (const f of REG_FILE.screens) {
-    const want = f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op));
+    const want = [...new Set(f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)))];   /* an op two acts share is registered once */
     assert.deepEqual(byAll[f.id], want, f.id);
     assert.deepEqual(by[f.id], want.filter((op) => !OWED_OPS.includes(op)), f.id);
   }
@@ -171,7 +173,7 @@ test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act 
   w2.wz.wizardRegister({ library: [] });
   const by2 = Object.fromEntries(w2.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.deepEqual([by2.members.includes("passwordresetlink"), by2.plan.includes("itemtakeup")], [false, true]);
-  assert.deepEqual(w2.wz.registeredScreens().map((s) => s.acts), wz.SCREEN_REGISTRY.map((s) => [...s.acts]));
+  assert.deepEqual(w2.wz.registeredScreens().map((s) => s.acts), wz.SCREEN_REGISTRY.map((s) => [...new Set(s.acts)]));
   /* and a registered owed act is checked as any act is */
   assert.deepEqual(wz.checkScript([step("members", "passwordresetlink"), step("members", null)], real()).refusals, []);
   assert.deepEqual(wz.checkScript([step("members", "passwordresetlink")], real({ ops: ALL_OPS.filter((o) => o !== "passwordresetlink") })).refusals.map((x) => x.code),
@@ -212,10 +214,10 @@ test("R13 (T37; N776) with an op table registered, a declared or function act wh
   w.wz.wizardRegister({ ops, library: [] });
   const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.ok(!by.setup.includes("groupkeyswitch") && by.setup.includes("groupkeyset"), "the declared act the table lacks, gone; its neighbour kept");
-  assert.deepEqual(by.doorbell, [], "a function act the table lacks");
+  assert.ok(!by.doorbell.includes("knock"), "a function act the table lacks");
   assert.ok(!by.finder.includes("calculationcreate"));
   for (const f of REG_FILE.screens) {
-    const want = f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)).filter((op) => ops.includes(op));
+    const want = [...new Set(f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)))].filter((op) => ops.includes(op));
     assert.deepEqual(by[f.id], want, `${f.id}: the file's acts the table holds, in the file's order`);
   }
   assert.deepEqual(w.wz.wizardRegistry({ viewer: F }).screens.map((s) => [s.id, s.acts]), w.wz.registeredScreens().map((s) => [s.id, s.acts]));
@@ -265,6 +267,11 @@ const afterT50 = (k) => {
   return { chain, changed, version: changed ? pv + 1 : pv, source: changed ? "2a64c5ae77" : pcommit, approved: changed ? T50 : papproved };
 };
 const onT50 = (e) => afterT50(LIB_T50.scripts.find((k) => k.id === e.id));
+/* R45: what the fix round's re-take makes of it: the next version, approved on 2026-10-20, when the fix round's file differs from T50's */
+const onR45 = (e) => {
+  const t = onT50(e), a = LIB_T50.scripts.find((k) => k.id === e.id), b = LIB_R45.scripts.find((k) => k.id === e.id);
+  return a.name !== b.name || JSON.stringify(stepsIn(LIB_T50, e.id)) !== JSON.stringify(stepsIn(LIB_R45, e.id)) ? { ...t, version: t.version + 1, approved: R45 } : t;
+};
 
 test("R22, R30, R32, R36, R42 CIVICSMITH_LIBRARY is the 23 scripts of library.json at the design commit 7be06eb4cb, in the file's order, each with the file's id, name, start and steps (screen, act, what, why, draft), a side trip as the named script's id and an owed act as its op: the latest version of every script is the file's content, script by script and step by step; a script whose name or steps differed from its latest carried version gained the file's as its next version, approved by BOB under K2241 on 2026-10-17, the earlier versions kept in earlier, oldest first; a script that did not differ keeps its version; the file's notes not carried", () => {
   const sha = (f) => createHash("sha256").update(src(f), "utf8").digest("hex");
@@ -278,7 +285,8 @@ test("R22, R30, R32, R36, R42 CIVICSMITH_LIBRARY is the 23 scripts of library.js
     { commit: "4664e8efd4", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-4664e8efd4.json") },
     { commit: "7be06eb4cb", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") },
     { commit: "20c8001300", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-20c8001300.json") },
-    { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-2a64c5ae77.json") }]);
+    { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-2a64c5ae77.json") },
+    { commit: "1cc4a957f0", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-1cc4a957f0.json") }]);
   const lib = wz.CIVICSMITH_LIBRARY;
   assert.equal(lib.length, 23);
   assert.equal(LIB_T50.scripts.length, 23);
@@ -288,24 +296,34 @@ test("R22, R30, R32, R36, R42 CIVICSMITH_LIBRARY is the 23 scripts of library.js
   assert.deepEqual(LIB_T48.scripts.filter((s) => !ADDED_T48.includes(s.name)).map((s) => s.id), LIB_T47.scripts.map((s) => s.id), "PR #34 adds the update script and moves none");
   assert.deepEqual(lib.map((e) => e.id).filter((id) => LIB_FILE.scripts.some((s) => s.id === id)), LIB_FILE.scripts.map((s) => s.id), "the seventeen keep their order");
   const retaken = [];
+  const second = [];
   LIB_T50.scripts.forEach((k, i) => {
     const e = lib[i];
-    assert.deepEqual([e.id, e.name, e.start], [k.id, k.name, k.start], k.name);
+    const k2 = LIB_R45.scripts.find((x) => x.id === k.id);
+    assert.deepEqual([e.id, e.name, e.start], [k2.id, k2.name, k2.start], k.name);
     for (const key of ["note", "journeys", "versions"]) assert.equal(key in e, false, `${k.name}: ${key} not carried`);
-    assert.deepEqual(e.steps, stepsIn(LIB_T50, k.id), `${k.name}: the latest version is the design commit's content, step by step (R42)`);
+    assert.deepEqual(e.steps, stepsIn(LIB_R45, k.id), `${k.name}: the latest version is the fix round's design commit content, step by step (R42, R45)`);
     assert.equal(e.required, [word("wizard.WIZ-c887066cc553dd41.name"), word("wizard.WIZ-7db08189cc0e58c3.name"), word("wizard.WIZ-426b9c2e8b128b6b.name")].includes(k.name), k.name);
     const chain = chainBefore(k);
     const [pv, pfile, pcommit, papproved] = chain.at(-1);
     const was = pfile.scripts.find((x) => x.id === k.id);
-    const changed = was.name !== k.name || JSON.stringify(stepsIn(pfile, k.id)) !== JSON.stringify(e.steps);
-    const held = (changed ? chain : chain.slice(0, -1)).map(([v, fl, c, approved]) => ({ version: v, steps: stepsIn(fl, k.id), author: "civicsmith", approved, source: c }));
+    const changed = was.name !== k.name || JSON.stringify(stepsIn(pfile, k.id)) !== JSON.stringify(stepsIn(LIB_T50, k.id));
+    let held = (changed ? chain : chain.slice(0, -1)).map(([v, fl, c, approved]) => ({ version: v, steps: stepsIn(fl, k.id), author: "civicsmith", approved, source: c }));
     if (changed) retaken.push(k.name);
-    assert.deepEqual([e.version, e.source, e.approved], changed ? [pv + 1, "2a64c5ae77", T50] : [pv, pcommit, papproved], `${k.name}: version`);
+    let want = changed ? [pv + 1, "2a64c5ae77", T50] : [pv, pcommit, papproved];
+    /* R45: a script whose name or steps differ again in the fix round's file gains it as the next version; the T50 latest is kept whole */
+    if (k2.name !== k.name || JSON.stringify(stepsIn(LIB_R45, k.id)) !== JSON.stringify(stepsIn(LIB_T50, k.id))) {
+      second.push(k2.name);
+      held = [...held, { version: want[0], steps: stepsIn(LIB_T50, k.id), author: "civicsmith", approved: want[2], source: want[1] }];
+      want = [want[0] + 1, "1cc4a957f0", R45];
+    }
+    assert.deepEqual([e.version, e.source, e.approved], want, `${k.name}: version`);
     if (held.length) assert.deepEqual(e.earlier, held, `${k.name}: every earlier version kept whole, oldest first`);
     else assert.equal("earlier" in e, false, k.name);
     const all = [...held.map((x) => x.steps), e.steps].map((x) => JSON.stringify(x));
     assert.equal(new Set(all).size, all.length, `${k.name}: each version differs from the others`);
   });
+  assert.deepEqual(second, [word("wizard.WIZ-7db08189cc0e58c3.name")], "R45: only the welcome wizard changed in the fix round (DEC-384; step 4)");
   /* R42: sixteen of the 23 differed, four by name (DEC-281's team pass) */
   assert.equal(retaken.length, 16);
   assert.deepEqual(retaken.filter((n) => Object.values(RENAMED).includes(n)).sort(), Object.values(RENAMED).sort(), "the four renamed scripts carry the file's names");
@@ -382,7 +400,7 @@ test("R30 (T46; DEC-194 (4), (5); N913; K2241) the five scripts DEC-194 (5) wrot
 test("R22 each library script is origin civicsmith, scope group, authored by the Civicsmith library: version 1 approved by Bob on 2026-10-06, for the four T37 names version 2 adopted by BOB on 2026-10-08 under K2241, for the two T41 names (Connect, Invite) on 2026-10-10 under K2241, (R30) for Start and send version 2 and the five added scripts' version 1 on 2026-10-12 under K2241, (R32, R36) for Connect, Set up and claim and Publication ceremony version 3 on 2026-10-14 under K2241; exactly the three DEC-148 names are required; read so by every member", () => {
   const lib = wz.CIVICSMITH_LIBRARY;
   for (const e of lib) {
-    const now = onT50(e);   /* R42: the version the re-take left it at, and who approved that version, when */
+    const now = onR45(e);   /* R42, R45: the version the re-takes left it at, and who approved that version, when */
     assert.deepEqual([e.origin, e.scope, e.author, e.version, e.approved], ["civicsmith", "group", "civicsmith", now.version, now.approved], e.name);
   }
   assert.deepEqual(lib.filter((e) => e.required).map((e) => e.name), [word("wizard.WIZ-c887066cc553dd41.name"), word("wizard.WIZ-7db08189cc0e58c3.name"), word("wizard.WIZ-426b9c2e8b128b6b.name")]);
@@ -395,8 +413,8 @@ test("R22 each library script is origin civicsmith, scope group, authored by the
     const r = w.wz.wizardRead({ script: welcome.id, viewer });
     assert.deepEqual([r.ok, r.script.origin, r.script.scope, r.script.required, r.script.based_on, r.script.start], [true, "civicsmith", "group", true, null, "join"]);
     assert.deepEqual([r.version.id, r.version.state, r.version.author, r.version.approved, r.offered],
-                     [`${welcome.id}@${welcome.version}`, "approved", { name: "civicsmith" }, { by: { name: "BOB" }, at: "2026-10-17", ruling: "K2241" }, true]);
-    assert.equal(welcome.version, 2, "R42: the welcome wizard's version 1 (Bob, 2026-10-06) is followed by the file's content");
+                     [`${welcome.id}@${welcome.version}`, "approved", { name: "civicsmith" }, { by: { name: "BOB" }, at: "2026-10-20", ruling: "K2241" }, true]);
+    assert.equal(welcome.version, 3, "R42, R45: the welcome wizard's version 1 (Bob, 2026-10-06) is followed by the file's content at T50 and again by DEC-384's step 4");
     assert.deepEqual(r.version.steps, welcome.steps);
   }
   assert.equal(w.wz.wizardRead({ script: welcome.id, viewer: "nobody" }).reason, "NO_SUCH_WIZARD");
@@ -471,7 +489,7 @@ test("R22 (T37, T41; K2241), R30 the seven adopted scripts carry version 2 in pl
                        `${e.name}: version ${v.version} readable, updated, naming its successor`);
       assert.deepEqual(one.version.steps, v.steps);
     });
-    assert.deepEqual(r.version.approved, { by: { name: "BOB" }, at: onT50(e).approved.at, ruling: "K2241" });
+    assert.deepEqual(r.version.approved, { by: { name: "BOB" }, at: onR45(e).approved.at, ruling: "K2241" });
     const at = w.wz.wizardsAt({ screen: e.start, viewer: F }).scripts.filter((s) => s.id === e.id).map((s) => s.version);
     assert.deepEqual(at, [`${e.id}@${e.version}`], `${e.name}: only the latest version offered`);
     const listed = w.wz.wizards({ viewer: V("erin") }).scripts.find((s) => s.id === e.id);

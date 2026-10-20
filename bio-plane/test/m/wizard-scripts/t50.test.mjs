@@ -21,7 +21,9 @@ const GEN_DIR = fileURLToPath(new URL("../../../src/wizard-scripts/", import.met
 const src = (f) => readFileSync(join(SOURCE_DIR, f), "utf8");
 const REG_FILE = JSON.parse(src("registry.json")), LIB_T50 = JSON.parse(src("library-7be06eb4cb.json"));
 const COMMIT = "2a64c5ae77";
-const REG_COMMIT = "2a64c5ae77";   /* the registry's pin, moved by R44 */
+const FIX = "1cc4a957f0";   /* R45: the fix round re-takes the doors and the library again */
+const LIB_R45 = JSON.parse(src("library-1cc4a957f0.json"));
+const REG_COMMIT = "1cc4a957f0";   /* the registry's pin, moved by R44 and again by R45 */
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 const status = (s) => REG_FILE.screens.flatMap((f) => f.acts.filter((a) => a.status === s).map((a) => [f.id, a.op]));
 const OWED_OPS = [...new Set(status("owed").map(([, op]) => OWED.exec(op)[1]))];
@@ -29,6 +31,8 @@ const INSTALL = ["installupdate", "installalongside", "installremove", "installr
 /* the owed acts the file names at the design commit (R41; R44 adds DEC-330's and DEC-340's seven), each registered once its op is declared (R13) */
 const T50_OWED = ["watchitem", "secondlook", "projectstakeset", "actionstake", "actioninquiry", "aliaswithdraw", "updatestart", "updatelater", "updateskip",
                   "founderhandleset", "passwordresetlink", "revisioncompare", "hashcopy", "linkopen", "reviewexport", "pubfloorset", "pubfloorclear", "pubprint"];
+/* R45: every owed act the file names now (DEC-374 to DEC-383 add owed acts), apart from the installer's four; T50's are among them */
+const OWED_NOW = OWED_OPS.filter((op) => !INSTALL.includes(op));
 /* every declared and function act of the file: the member op table once the owed acts are not yet declared */
 const DECLARED_OPS = [...new Set(REG_FILE.screens.flatMap((f) => f.acts.filter((a) => a.status !== "owed").map((a) => a.op)))];
 const ALL_OPS = [...DECLARED_OPS, ...OWED_OPS];
@@ -99,31 +103,31 @@ test("R41 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) build-data.mjs --check 
   /* each generated file names the source it comes from: the commit, the path and the file's SHA-256 */
   const sha = (f) => createHash("sha256").update(src(f), "utf8").digest("hex");
   assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: REG_COMMIT, path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
-  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: COMMIT, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") });
-  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-1), { commit: COMMIT, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") });
+  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-1cc4a957f0.json") });
+  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-1), { commit: FIX, path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-1cc4a957f0.json") });
   assert.ok(!existsSync(join(GEN_DIR, "front-doors.mjs.orig")));
 });
 
 test("R41 (T50; DEC-266, DEC-279, DEC-281) SCREEN_REGISTRY is the registry at the design commit named at START, screen by screen and act by act: 71 screens and 413 acts, 269 declared, 128 function and 16 owed naming 15 ops; the four screens new since R38 are docket-public, more, teamai and theme; control: the earlier commit's registry is not it", () => {
   assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, REG_COMMIT);
-  assert.equal(wz.SCREEN_REGISTRY.length, 77);
+  assert.equal(wz.SCREEN_REGISTRY.length, 83);
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id), "the file's order");
   const acts = REG_FILE.screens.flatMap((f) => f.acts);
   assert.deepEqual([acts.length, acts.filter((a) => a.status === "declared").length, acts.filter((a) => a.status === "function").length, acts.filter((a) => a.status === "owed").length],
-                   [442, 287, 132, 23]);
-  assert.equal(OWED_OPS.length, 22, "twenty-three owed acts name twenty-two ops: updatelater is owed on two screens");
+                   [554, 426, 83, 45]);
+  assert.equal(OWED_OPS.length, 41, "forty-five owed acts name forty-one ops: updatelater, taskdecide and others are owed on more than one screen");
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];
     assert.deepEqual([s.id, s.name, s.purpose], [f.id, f.name, f.purpose], f.id);
-    assert.deepEqual(s.acts, f.acts.filter((a) => a.status !== "owed").map((a) => a.op), `${f.id}: its declared and function acts, in the file's order`);
+    assert.deepEqual(s.acts, [...new Set(f.acts.filter((a) => a.status !== "owed").map((a) => a.op))], `${f.id}: its declared and function acts, in the file's order`);
     assert.deepEqual(s.owed.map((o) => o.op), f.acts.filter((a) => a.status === "owed").map((a) => OWED.exec(a.op)[1]), `${f.id}: its owed acts`);
   });
   const before = JSON.parse(src("registry-4664e8efd4.json")).screens.map((s) => s.id);
-  assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id).filter((id) => !before.includes(id)).sort(), ["actionnew", "counsel", "docket-public", "glossary", "grouprules", "hold", "holdnotice", "more", "teamai", "theme"]);
+  assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id).filter((id) => !before.includes(id)).sort(), ["about-knocker", "actionnew", "bias", "contradiction", "counsel", "docket-public", "glossary", "grouprules", "hold", "holdnotice", "leads", "more", "objective", "teamai", "theme", "watching"]);
   assert.ok(!before.includes("teamai") && wz.SCREEN_REGISTRY.some((s) => s.id === "teamai"), "control: PR #34's registry has no teamai");
   /* registered as the plane registers it: the screens, and with no op table the declared and function acts */
   const w = world({ register: false });
-  assert.equal(w.wz.wizardRegister({ library: [] }).screens, 77);
+  assert.equal(w.wz.wizardRegister({ library: [] }).screens, 83);
   assert.deepEqual(w.wz.registeredScreens().map((s) => s.id), wz.SCREEN_REGISTRY.map((s) => s.id));
   assert.deepEqual(w.wz.registeredScreens().find((s) => s.id === "docket-public").acts, [], "docket-public lists no act");
   assert.deepEqual(w.wz.registeredScreens().find((s) => s.id === "theme").acts, ["themeread", "themedeclare", "themeplace", "themewithdraw"]);
@@ -134,16 +138,16 @@ test("R41 (T50; N1130; K3674) the check that every registry act has a declaratio
   assert.deepEqual(status("owed").map(([, op]) => OWED.exec(op)[1]).filter((op) => INSTALL.includes(op)), INSTALL, "the file owes the four");
   /* every function act is an op in the table or an alias: here, the table is the file's own acts */
   const functions = status("function");
-  assert.equal(functions.length, 132);
+  assert.equal(functions.length, 83);
   assert.deepEqual(wz.registryActGaps({ screens: wz.SCREEN_REGISTRY, declared: DECLARED_OPS }).filter((g) => !g.owed), [], "every declared and function act has its declaration");
   for (const [screen, op] of functions) assert.ok(DECLARED_OPS.includes(op), `${screen}/${op}`);
   /* owed acts: gaps until declared, the installer's four never */
   const owedGaps = wz.registryActGaps({ screens: wz.SCREEN_REGISTRY, declared: DECLARED_OPS });
   assert.deepEqual(owedGaps.every((g) => g.owed), true);
-  assert.deepEqual([...new Set(owedGaps.map((g) => g.act))].sort(), [...T50_OWED].sort(), "the owed acts that wait for a declaration, none of the installer's");
+  assert.deepEqual([...new Set(owedGaps.map((g) => g.act))].sort(), [...OWED_NOW].sort(), "the owed acts that wait for a declaration, none of the installer's");
   assert.deepEqual(owedGaps.filter((g) => g.act === "updatelater").map((g) => g.screen).sort(), ["queue", "updates"], "updatelater is owed on two screens");
   assert.ok(!owedGaps.some((g) => INSTALL.includes(g.act)), "control: the installer's routes are excluded by name");
-  assert.deepEqual(wz.registryActGaps({ screens: wz.SCREEN_REGISTRY, declared: [...DECLARED_OPS, ...T50_OWED] }), [], "declared, no gap remains");
+  assert.deepEqual(wz.registryActGaps({ screens: wz.SCREEN_REGISTRY, declared: [...DECLARED_OPS, ...OWED_NOW] }), [], "declared, no gap remains");
   assert.deepEqual(wz.registryActGaps({ screens: wz.SCREEN_REGISTRY, declared: new Set(ALL_OPS) }), []);
   assert.deepEqual(wz.registryActGaps({ screens: wz.SCREEN_REGISTRY, declared: Object.fromEntries(ALL_OPS.map((o) => [o, true])) }), [], "an object keyed by op is a table too");
   /* control: a registry act with no declaration, other than the four named, fails by name */
@@ -162,14 +166,14 @@ test("R41 (T50; N1130; R13) each of the owed acts the file names is registered a
   const where = (op) => status("owed").filter(([, o]) => OWED.exec(o)[1] === op).map(([screen]) => screen);
   const base = real({ ops: DECLARED_OPS });
   const none = new Map(base.wz.registeredScreens().map((s) => [s.id, s.acts]));
-  for (const op of T50_OWED) {
+  for (const op of OWED_NOW) {
     assert.ok(where(op).length > 0, `${op}: the file owes it`);
     for (const screen of where(op)) assert.ok(!none.get(screen).includes(op), `${screen}/${op}: not registered while undeclared`);
     const w = real({ ops: [...DECLARED_OPS, op] });
     const reg = new Map(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
     for (const screen of where(op)) {
       assert.ok(reg.get(screen).includes(op), `${screen}/${op}: registered once declared`);
-      const file = REG_FILE.screens.find((f) => f.id === screen).acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op));
+      const file = [...new Set(REG_FILE.screens.find((f) => f.id === screen).acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)))];
       assert.deepEqual(reg.get(screen), file.filter((o) => o === op || DECLARED_OPS.includes(o)), `${screen}: in the file's order`);
     }
     /* and a step naming it passes R12 only then */
@@ -179,14 +183,15 @@ test("R41 (T50; N1130; R13) each of the owed acts the file names is registered a
     assert.deepEqual(check(w), [], `${op}: admitted once declared`);
     assert.deepEqual(check(base), [["WIZARD_ACT_UNKNOWN", 1]], `${op}: refused while undeclared`);
   }
-  assert.equal(new Set(T50_OWED).size, 18);
+  assert.equal(new Set(OWED_NOW).size, 37);
+  assert.ok(T50_OWED.every((op) => OWED_NOW.includes(op)), "T50's owed acts are still owed or declared in the file");
   /* aliaswithdraw is the entities' op, declared already (K3674): a table that holds it registers it now */
   assert.ok(where("aliaswithdraw").length > 0);
   for (const op of INSTALL) assert.ok(!base.wz.registeredScreens().some((s) => s.acts.includes(op)), `${op}: no plane op, not registered`);
 });
 
 test("R41 (T50; N1130; R37) the front doors are regenerated from the file's doors, which now end with the sixth: FRONT_DOORS are its five, in its order, and ELSEWHERE_DOOR is the file's sixth, {door: \"elsewhere\", scripts: [], opens: \"elsewhere\"}, read from the file and still answered to every viewer; control: with the sixth door gone from the file the frozen data answers the same", () => {
-  assert.equal(wz.FRONT_DOORS_SOURCE.commit, COMMIT);
+  assert.equal(wz.FRONT_DOORS_SOURCE.commit, FIX);
   const sixth = LIB_T50.doors.find((d) => d.door === "elsewhere");
   assert.deepEqual(sixth, { door: "elsewhere", scripts: [], opens: "elsewhere" }, "the file holds the sixth door");
   assert.deepEqual(LIB_T50.doors.map((d) => d.door), ["problem", "person", "money", "read", "tip", "elsewhere"]);
@@ -220,12 +225,13 @@ test("R42 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) the library is re-taken
     return { screen: t.screen, act: m ? m[1] : t.act, what: t.what, why: t.why, ...(t.draft ? { draft: t.draft } : {}), ...(t.via ? { via: idOf[t.via] } : {}) };
   });
   assert.deepEqual(LIB_T50.scripts.map((k) => k.versions.length), LIB_T50.scripts.map(() => 1), "one version in the file each");
-  LIB_T50.scripts.forEach((k, i) => {
+  LIB_R45.scripts.forEach((k, i) => {
     const e = wz.CIVICSMITH_LIBRARY[i];
     assert.deepEqual([e.id, e.name, e.start, e.steps], [k.id, k.name, k.start, fileSteps(k)], `${k.name}: the latest version is the file's, step by step`);
   });
-  const gained = wz.CIVICSMITH_LIBRARY.filter((e) => e.source === COMMIT), same = wz.CIVICSMITH_LIBRARY.filter((e) => e.source !== COMMIT);
-  assert.equal(gained.length, 16);
+  const gained = wz.CIVICSMITH_LIBRARY.filter((e) => e.source === COMMIT), same = wz.CIVICSMITH_LIBRARY.filter((e) => e.source !== COMMIT && e.source !== FIX);
+  assert.equal(gained.length, 15, "sixteen at T50; the welcome wizard gained a later version in the fix round (R45)");
+  assert.deepEqual(wz.CIVICSMITH_LIBRARY.filter((e) => e.source === FIX).map((e) => e.id), ["WIZ-7db08189cc0e58c3"]);
   assert.deepEqual(same.map((e) => e.name).sort(), ["Build a timeline", "Check a claim", "Follow a proceeding", "Follow the money", "Keep asking this", "Pick up a plan", "Your first question"]);
   for (const e of gained) {
     assert.deepEqual([e.author, e.approved, e.origin, e.scope], ["civicsmith", { by: "BOB", at: "2026-10-17", ruling: "K2241" }, "civicsmith", "group"], e.name);
@@ -256,7 +262,7 @@ test("R42 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241) the library is re-taken
   assert.ok(!JSON.stringify(wz.CIVICSMITH_LIBRARY).includes("owed:"));
   /* a script's name and steps are read from the file: this module holds no sentence of its own */
   for (const e of wz.CIVICSMITH_LIBRARY) for (const t of e.steps) {
-    const k = LIB_T50.scripts.find((x) => x.id === e.id);
+    const k = LIB_R45.scripts.find((x) => x.id === e.id);
     assert.ok(k.versions[0].steps.some((u) => u.what === t.what && u.why === t.why), `${e.name}: ${t.what.slice(0, 40)}`);
   }
 });

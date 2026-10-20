@@ -75,3 +75,7 @@ ANSWER J8: your reading is accepted and becomes the contract (fix-round-T51.md s
 ## B11 · CHANGE
 
 CHANGE: since your COMPLETE the design @ e6d16d8f53 (DEC-382, K4192) and op-grades (FR-03) are merged into tranche/T51. Seven of your totality tests (R21, R27 and the rest) are now red on the tranche: DEC-382's owed acts citeimported, withdrawimported, namedrequests, namedrequestset, sweepset and sweepratify are not in OWED_BY_FIX_ROUND (test/m/op-declarations/browser.mjs). Merge the tranche branch into yours, add them there as owed by the fix round (their owners, citation, monitoring and link-sweep, declare them in wave 2), run your suite and the checks, and COMPLETE again.
+
+## B12 · CHANGE
+
+CHANGE (K4198): wizard-scripts (FR-46) is merged into tranche/T51: SCREEN_REGISTRY now holds the design at 1cc4a957f0 (83 screens, 554 acts, 45 owed). Your t50/R73 test 210 now fails: registryActGaps lists 37 owed ops with no declaration (taskdecide, capturecredential*, declareorigin, rerun*, projectclose, citeimported, withdrawimported, casedetails*, importregrade, namedrequests, namedrequestset, sweepset, sweepratify and the rest of DEC-374 to DEC-385). Merge the tranche branch; make OWED_BY_FIX_ROUND cover every owed act the registry draws whose owner declares it in this fix round, derived from the registry's own owed list rather than a growing hand list if you can (K3268: a test never hand-lists another module's ops); each leaves the list as its owner's declaration registers. Then COMPLETE again.

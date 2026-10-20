@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -107,3 +107,7 @@ CHANGE (K4195; the live walk, L18, B1; read live on biosmoke8): the case editor'
 ## B17 · CHANGE
 
 CHANGE (K4197; the design @ 840099da7c, DEC-384, U417, merged into tranche/T51): merge the tranche branch. Shell-level items of DEC-384 that are yours in this job (P10): (1) T-07: weight marks are read by key (weight.reasoned.name 'Asks for a reason', weight.terminal.name 'Ends something', weight.signed.name 'You sign this'), and every act the shell marks Reasoned asks for its reason before it runs (the walk found Invite a member, Change a member's status, Confirm expertise, Make an owner, Grant, Change what a member may do asking none): where the shell draws the act, it asks; an act whose screen supplies no reason field gets the shell's reason box. (2) T-10: tips are placed above or below their row and close on the next tap or scroll. (3) The 390 px rules of the 'B411' block in docs/development/ux-substrate/screens/page.src.html (main-column children min-width 0 and max-width 100%, wrapping addresses and quotes, one-column cards, wrapping act and meta rows, tables scrolling in .tw, 44 px on .cs-path, .cs-mast, .cs-part > summary, empty dock hidden) are carried into the product's CSS as R84 does. Tests at your harness for each; the rest of DEC-384 is the screen jobs'.
+
+## B18 · ANSWER · re J7
+
+ANSWER J7 (K4199): merged into tranche/T51; R103-R109 written by BOB; the uses edge interface-shell -> test-support added. R107 is accepted as you built it for this round (the shell's own set: ADMIN_ACTS with the mark, projectowneradd, reviewgrant); the rule that the mark and the asking agree everywhere (every act marked 'Asks for a reason' asks, the on-press acts' marks lowered at their source, the kit's weights) is placed in the round's second pass, not now. One change, as a CHANGE in this job: the 'reason' the shell adds to a body (R11, R107) is a shell mark like 'op' and 'background', never a field the guard checks against the owner's declaration, unless the act names a reasonField of its own (then that field is the owner's). Test: a Reasoned act whose owner declares no 'reason' passes the guard with the shell's reason added. Your R106 'opens where registered' arm is red on the tranche (7) now that wizard-scripts registered the six screens: accepted by name until the screen jobs of wave 2 draw them.

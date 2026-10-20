@@ -5,7 +5,7 @@
  * build-data.mjs. */
 import { deepFreeze } from "./data.mjs";
 
-export const FRONT_DOORS_SOURCE = deepFreeze({"commit":"2a64c5ae77","path":"docs/development/ux-substrate/screens/library.json","sha256":"1ff268c60031b7df88bc1f3ef98312dd2797de3d9eb7f52d2b57fd105da7483e"});
+export const FRONT_DOORS_SOURCE = deepFreeze({"commit":"1cc4a957f0","path":"docs/development/ux-substrate/screens/library.json","sha256":"241837dec9ead614ffd81930dd9ee5e7ae0b5d9aff8816e531489fdd60e59c76"});
 
 export const FRONT_DOORS = deepFreeze([
   {"door":"problem","scripts":["WIZ-86b7f4007e3b0e3c","WIZ-cb0ad18a17a04233","WIZ-33b5887790b7561b"]},
