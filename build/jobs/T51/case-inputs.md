@@ -98,3 +98,11 @@ Merged `tranche/T51` into the job branch. In `fixture.mjs` the two sentences the
 Checks: the full-repo `checks/words.mjs` shows no finding in case-inputs; `node --test test/m/case-inputs/*.test.mjs`: 51 pass, 0 fail; format, architecture, coverage (19 of 19) and ownership: 0 failures.
 
 Size (session_01XQkjrJ84xQvzqWSREkCCoB): test runs 5, module lines 1293
+
+## J7 · QUESTION
+
+QUESTION (not blocking; best reading below).
+
+1. **`uses` edges.** My entries need three modules my `uses` does not list, all earlier in the order than me (index 119): `public-read` (110; R24 registers `casedetailspublic` with its R18 `registerPublicReads`, the way `case-checker` does), `entities` (55; R21's `area.entity` must be an entity the group holds: `entities.has`) and `promotion` (R24's `group` slug is `promotion.fact("producingGroup")`, as `network-notices` reads it). `modules.json` is yours, not mine. Best reading: please add `public-read`, `entities`, `promotion` to `case-inputs`' `uses`. I write the code on that reading; `checks/architecture.mjs` fails on my files until the edges are there.
+2. **`needs` for `casedetailsset`.** A mutating op declared by its owner names its capability (op-declarations R80). Best reading: `needs: "contribute"` (the hand kind `member`: classes admin+member, `machineClasses: []`, as the draft's table says). `casedetails` is a session read (no `needs`).
+3. **Hand rows I leave for BOB.** `statementack` (op-declarations `classes: null`, mutating, op-grades `reasoned`) and `whatchangedpropose` (classes admin/member/probe, `RUNG_ABSENT` ground `undetermined`): my `DECLARED_OPS` rows agree with them; both hand rows can go once the owner rows are registered.
