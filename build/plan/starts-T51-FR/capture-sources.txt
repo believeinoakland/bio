@@ -1,6 +1,6 @@
 Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-11 · capture-sources** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
 Your requirements: `build/requirements/capture-sources.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
-Why this job: C20 (NO-OP) and the credential ops' own declaration; the retry screen is not drawn (see Left out in the plan).
+Why this job: C20 (NO-OP) and the credential ops' own declaration; the controls are drawn (DEC-381, HANDOFF B405; K4189) and built by `screens-intake` (FR-26) after you. The retry op `capturerequestretry` is `capture-requests`', not yours: its declaration is a separate haiku job, and you serve and declare only the three credential ops.
 Merge order: module index 45, layer 3. Before `plane` (index 45 < 169); `plane` spreads your new ops map and its assembly reads your declaration.
 Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
 
