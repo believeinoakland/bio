@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -90,3 +90,9 @@ ANSWER (K4227): (1) `standardinforce` into the member and admin session sets: CH
 ## B11 · CHANGE
 
 CHANGE (K4232): action-clocks is merged: `NO_SUCH_RULE` now answers `deadlines: [{rule, label?, citation?}]` (R2). Profiles carry no `label` today (jurisdictions' grammar has none), so each item has `rule` and `citation`: draw the citation as the choice's text when `label` is absent. Merge `tranche/T51`; your R59 tests run against the real owner now.
+
+## B12 · CHANGE
+
+CHANGE (K4245): SCREENS-INVESTIGATE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: R51. `standardinforce` is declared and drawn (op-declarations R82, merged), but `test/m/screens-investigate/standard.test.mjs:89` ("a date sends standardinforce with the declared fields") fails on a field `op: 'standardinforce'` among the sent fields. Find whether your drawing sends `op` as a field (fix the drawing: the op is the request's, never a body field) or your test reads it from the wrong place (fix the test); the declaration (standards' `DECLARED_OPS`) is the truth. Then run your suite whole. Requirement lines, if any change, for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.

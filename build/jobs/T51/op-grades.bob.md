@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J14
+**Read** · handled J16
 
 ## B1 · START
 
@@ -143,3 +143,9 @@ CHANGE (K4230), with B20: the plane's start also finds action-holds' `actionpres
 ## B23 · RESUME
 
 RESUME (K4244): OP-GRADES #19 (sonnet), depth 2 (BOB #235 is depth 1), replaces #18, whose container restarted before its start was confirmed. Your branch holds #17's B13/B14 work. Merge `tranche/T51` first, then apply B18 to B22 together as B21 says: every `testcopy` finding reads through `declaredSentence`/the key, and every hand row that disagrees with an owner's declaration follows the owner (B19, B20, B22). Done when words shows 0 for op-grades, your suite passes and a registration of every owner's `DECLARED_OPS` meets no DECLARED_OP_DISAGREES. PLANE #44 merges after you. Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B24 · CHANGE
+
+CHANGE (K4247): OP-GRADES, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip (OP-GRADES #19 merged).
+Entries: (1) R39 amended by BOB: `groupdescriptiondraft` is a read, as `writinghelp` is: remove its `RUNG_ABSENT` `caller-owned` row; its `NON_ACTS` reason is the owner's word (R51, new: a declared op's reason is its owner's word, as #19 built). STORE-DOOR #14 declares it `weight: "read"` at the same time; your registration test then sets aside only `sweeps` until LINK-SWEEP #6 merges, and neither once both have (merge the tranche when BOB tells you). (2) R51 is new: name it in the test that compares each declared op's reason with its owner's word (`register.test.mjs` or the owners test). Tests name R39 and R51; control: a hand row for a declared op that disagrees is refused. Requirement lines are written; strike nothing yourself.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.

@@ -111,7 +111,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.ceremony.disc.intro1", "screen.ceremony.disc.intro2", "screen.ceremony.disc.list.legend", "screen.ceremony.disc.words.label",
     "screen.ceremony.disc.words.help1", "screen.ceremony.disc.words.help2", "screen.ceremony.disc.refused.summary", "screen.ceremony.disc.refused.notlisted1",
     "screen.ceremony.disc.refused.notlisted2", "screen.ceremony.disc.refused.standing1", "screen.ceremony.disc.refused.standing2", "screen.ceremony.disc.refused.unread",
-    "screen.ceremony.conf.heading", "screen.ceremony.conf.intro1", "screen.ceremony.conf.row.meta", "screen.ceremony.conf.retry.note", "screen.ceremony.conf.self.legend",
+    "screen.ceremony.conf.heading", "screen.ceremony.conf.intro1", "screen.ceremony.conf.intro2", "screen.ceremony.conf.row.meta", "screen.ceremony.conf.retry.note", "screen.ceremony.conf.self.legend",
     "screen.ceremony.conf.reason.label", "screen.ceremony.conf.reason.help1", "screen.ceremony.conf.reason.help2", "screen.ceremony.conf.self.note",
     "screen.ceremony.conf.account.label", "screen.ceremony.conf.account.help1", "screen.ceremony.conf.account.help2", "screen.ceremony.conf.refused.summary",
     "screen.ceremony.conf.refused.unlisted1", "screen.ceremony.conf.refused.unlisted2", "screen.ceremony.conf.refused.noreason1", "screen.ceremony.conf.refused.noreason2",

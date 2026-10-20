@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -139,3 +139,9 @@ ANSWER (K4236) to J8. Merge tranche/T51 into your branch first.
 ## B14 · CHANGE
 
 CHANGE (K4240), re J9/J10. interface-shell is merged (R110 `projectKey`, K4239): merge tranche/T51 and build R68 (the crumb before joining), listing `crumb.project.unjoined` in your `words`. J9 (1): the six ops' registration in tests is placed with test-support (a shared helper that registers every owner's declaration), then the tests that compose the real SCREENS call it; keep your own `register.mjs` until then. J9 (2) words go to UX-DESIGN (HANDOFF B428); J9 (3) `not_co_attested` with the capturing member and the findings resting on each goes to case-authoring; J9 (4) accepted. Then COMPLETE with the reds named.
+
+## B15 · CHANGE
+
+CHANGE (K4245): SCREENS-PUBLISH, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entries: (1) the ceremony's `screen.ceremony.conf.intro2` {finding} is now drawable: `publishpreflight`'s `not_co_attested` lists `{capture, by, findings}` (case-authoring R82, merged): draw each capture with who captured it (`by`, its handle as the roster draws it; none when null) and each finding resting on it. Test naming the id you write it under; control: an entry with `by: null` draws no capturer. (2) Replace your own `register.mjs` with test-support's `registerDeclared(root, ...registrations)` (R17, merged) wherever your tests compose the real SCREENS (K3268). Requirement lines for BOB in your COMPLETE. Accepted reds stay: `docketfile`, `imported` `writinghelp` (UX-DESIGN B420), R35's press (K3717).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.

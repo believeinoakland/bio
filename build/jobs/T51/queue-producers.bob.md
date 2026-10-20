@@ -1,6 +1,6 @@
 # BOB to queue-producers (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -58,3 +58,9 @@ ANSWER (K4222): your reading of R49 stands: every read this module makes is one 
 ## B6 · RESUME
 
 RESUME (backstop): nothing pushed for 22 minutes and B3–B5 unread. Read your mailbox (B5 answers J4), continue, and push your progress.
+
+## B7 · CHANGE
+
+CHANGE (K4245): QUEUE-PRODUCERS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: your R46–R48 items (endorsement owed, owner vote, expertise confirmation) name the member only by id, so Home and the queue draw a member id where a person's name belongs (SCREENS-DAILY #12 J10). Each item also carries the member's handle as a structured fill, `fills.who` (the handle as the roster answers it; absent when the member has none), beside the id it carries today. Test at the interface naming the ids you amend; control: a member with no handle carries no `who`, and the id stays. A SCREENS-DAILY job draws `fills.who` after you merge. Requirement lines for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
