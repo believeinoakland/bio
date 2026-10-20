@@ -66,3 +66,23 @@ Other modules (found by `checks/run.mjs`, not worked by this job, described agai
 - Words, testcopy (15): `bio-plane/test/m/op-grades/owners.test.mjs`:84 and `t36.test.mjs`:47, 49, 52, 55, 59; `t41.test.mjs`:24; `t46.test.mjs`:33, 195; `t47.test.mjs`:36, 63, 83; `t48.test.mjs`:31, 34; `t49.test.mjs`:27 (test copies of op-grades' sentences).
 
 Ownership: the one failure is `build/requirements/ratification.md`, outside the module's paths, which B4 accepts at merge.
+
+## J5 · COMPLETE
+
+Entries applied (commit 31ac3cb2b8, pushed to job/T51/ratification):
+
+- K4206 (B3 entry 1): `DECLARED_OPS.caseratify` declared: classes admin, member, probe; mutating; weight `attested`; description `act.caseratify.does`; accepts caseId, edition, expectedSha, sig, members; requires caseId, edition, expectedSha, sig. `publish` is not declared (REPORT J4, decision 1). New requirement R54 written in `build/requirements/ratification.md` (B4), and R53 amended to name caseratify as R54's. Refusals are already named: the Worker half's MALFORMED detail names each field, so no refusal changed.
+- K4219 (B5): the ratify gate reads the provenance resolver. Done in the store half `ratifyGate` with `this.provenance.containerResolver()`; the Worker's duplicate register pass and the store's wrapper are removed (REPORT J4, decision 2). New requirement R55 written. Test `provenance-gate.test.mjs`: control (no decision: C-18.9 refused), and a standing `determined` decision: no C-18.9.
+
+Deferred: none in this module.
+
+Tests and checks (run on job/T51/ratification after the commit):
+- `node --test bio-plane/test/m/ratification/`: tests 251, pass 251, fail 0 (246 before, plus 5 new).
+- Red first: with `bio-plane/src/ratification` stashed, `declared-ops.test.mjs` (R54) and `provenance-gate.test.mjs` (R55 control) fail. The R55 decision test passes on the original code, which is only trivial: the original store half ran no register arm. The bug was in the Worker call, which the unit tests do not reach. Stated plainly so it is not read as a control of the fix.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio ratification`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio ratification`: 54 of 54 live ids named by a test, 0 failures.
+- `node checks/run.mjs /home/user/bio`: architecture 0 failures; the ratification module has no line in the coverage or words arms. Failures in other modules are in REPORT J4.
+- `node checks/ownership.mjs /home/user/bio ratification tranche/T51 job/T51/ratification`: 7 files, 1 failure, `build/requirements/ratification.md` (accepted at merge, B4).
+
+Size (session_017fBDjJ7yCsJ4GrHnDn78Xw): test runs 5, module lines 3691
