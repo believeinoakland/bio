@@ -31832,13 +31832,13 @@
   },
   {
    "key": "screen.start-send.exhibits.heading",
-   "en": "The exhibits, against the venue's standard",
+   "en": "The exhibits, against the court's or office's standard",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section heading, in Start and send and in Brief counsel; the venue is the court or office the filing goes to"
   },
   {
    "key": "screen.start-send.exhibits.intro1",
-   "en": "Each exhibit shows its capture grade, A to D, which says how well the capture can be checked, and how that grade stands against what this venue accepts.",
+   "en": "Each exhibit shows a grade, A to D, for how well its capture can be checked, and whether the court or office this filing goes to accepts that grade.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section intro"
   },
@@ -31850,19 +31850,19 @@
   },
   {
    "key": "screen.start-send.exhibits.intro3",
-   "en": "It shows where to expect a challenge.",
+   "en": "The flag shows where to expect a challenge.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section intro"
   },
   {
    "key": "screen.start-send.exhibits.accepted",
-   "en": "Within the grades this venue accepts.",
+   "en": "Within the grades this court or office accepts.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, after its grade"
   },
   {
    "key": "screen.start-send.exhibits.contestable1",
-   "en": "This venue admits this grade only as contestable.",
+   "en": "This court or office admits this grade only as contestable.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, first sentence"
   },
@@ -31874,7 +31874,7 @@
   },
   {
    "key": "screen.start-send.exhibits.below1",
-   "en": "Below every grade this venue accepts.",
+   "en": "Below every grade this court or office accepts.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, first sentence"
   },
@@ -31886,19 +31886,19 @@
   },
   {
    "key": "screen.start-send.exhibits.undetermined",
-   "en": "Civicsmith cannot say how this exhibit stands against the venue's standard yet.",
+   "en": "Civicsmith cannot say how this exhibit stands against the court's or office's standard yet.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit whose grade or the venue's standard cannot be read"
   },
   {
    "key": "screen.start-send.exhibits.refused.summary",
-   "en": "When the venue's standard is not stated",
+   "en": "When the court's or office's standard is not stated",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): disclosure summary"
   },
   {
    "key": "screen.start-send.exhibits.refused.body1",
-   "en": "Your team's places do not state what evidence this venue accepts for this kind of action, so no exhibit is graded against it.",
+   "en": "Your team's places do not say what evidence this court or office accepts for this kind of action, so no exhibit can be checked against it.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): a gap line"
   },
@@ -31910,7 +31910,7 @@
   },
   {
    "key": "screen.start-send.exhibits.refused.body3",
-   "en": "Check the venue's own rules.",
+   "en": "Check the court's or office's own rules, then add them to your team's places.",
    "protected": false,
    "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): a gap line, what to do next"
   },
@@ -31928,7 +31928,7 @@
   },
   {
    "key": "screen.start-send.template.note2",
-   "en": "A filing must be approved first, and it can be sent or not.",
+   "en": "The filing must be approved first. It does not have to be sent.",
    "protected": false,
    "note": "DEC-375: B398 C75 (filings templatesave): section note"
   },
@@ -31958,13 +31958,13 @@
   },
   {
    "key": "screen.start-send.template.use.help1",
-   "en": "A filing template is offered when a member prepares a filing of this kind.",
+   "en": "A filing template is offered to members preparing a filing of this kind.",
    "protected": false,
    "note": "DEC-375: B398 C75 (filings templatesave): choice help"
   },
   {
    "key": "screen.start-send.template.use.help2",
-   "en": "A brief template is offered when a member briefs counsel.",
+   "en": "A brief template is offered to members briefing counsel.",
    "protected": false,
    "note": "DEC-375: B398 C75 (filings templatesave): choice help"
   },
@@ -32114,7 +32114,7 @@
   },
   {
    "key": "screen.ceremony.conf.intro2",
-   "en": "Finding 1 rests on a document that has neither.",
+   "en": "{finding} rests on a document that has neither, so only your team's own record says when it was captured: published that way, it is marked self-attested.",
    "protected": false,
    "note": "DEC-377: B398 C6 (attestation reattest): intro note; finding number may be a placeholder in use"
   },
@@ -32192,7 +32192,7 @@
   },
   {
    "key": "screen.ceremony.conf.refused.unlisted2",
-   "en": "Ask for the confirmation again, or list it as self-attested only with your reason.",
+   "en": "Ask for the confirmation again, or list the document as self-attested, with your reason.",
    "protected": false,
    "note": "DEC-377: B398 C6 (case-disclosures publish selfAttested): refusal, what to do next"
   },
