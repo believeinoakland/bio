@@ -56,7 +56,7 @@ test("R6: the escalation: the seven stages, the proposed next stage and its trig
   assert.ok(draws(p, "escalationstoppursuing"));
   assert.equal(drawn(p).length, 3, "an open escalation: these acts and no other");
   assert.ok(!draws(p, "escalationreopen") && !draws(p, "escalationopen"), "control: no reopening, no second opening");
-  assert.ok(button(p, "escalationadvance").textContent.includes(W("screen.matter.advance", { n: "3" })));
+  assert.ok(button(p, "escalationadvance").textContent.includes(W("screen.matter.advance", { stage: W("screen.matter.stage.3") })));
   await press(p, "escalationadvance", { reason: "no reply" });
   assert.deepEqual(last(p, "escalationadvance").body, { id: ESC, to: 3, reason: "no reply" });
   await press(p, "escalationstoppursuing", { reason: "the group moved on" });

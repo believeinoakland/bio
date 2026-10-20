@@ -158,21 +158,24 @@ export function sendSteps(cs, view, filings, o) {
   const n = String(ui.draftN || 0);
   // R48: on `start-send` alone, the filing kept as the team's template, once approved (the step is second, send or sent)
   const keep = !req && view.parts.templateKeep ? view.parts.templateKeep(cs, view, d, step) : "";
+  // what the approval released, said once it lands (who: the member who pressed it; the day: the page's clock)
+  const wasReleased = ui.releasedDone && Array.isArray(ui.releasedDone.items) && ui.releasedDone.items.length && (step === "second" || step === "send" || step === "sent") && view.me && view.me.handle
+    ? ui.releasedDone.items.map(function (r) { return '<p class="mk-note">' + cs.w("screen.start-send.release.done", { who: String(view.me.handle), date: { html: cs.date(new Date(cs.now()).toISOString().slice(0, 10)) }, reason: r.reason }) + "</p>"; }).join("") : "";
   if (step === "sent") {
     const s = d.sent.sending;
-    return '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
+    return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
       + (s.reference ? " · " + cs.w("screen.start-send.reference", { reference: s.reference }) : "") + "</p>"
       + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep;
   }
   if (step === "second") {
     // R3: while a second approval waits, the screen says so and offers no send.
-    return '<p class="mk-note" role="status">' + cs.w("screen.start-send.waitsecond") + "</p>"
+    return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.waitsecond") + "</p>"
       + '<div class="mk-acts">' + cs.act("filingsecondapprove", { data: { filing: d.open.filing } }) + "</div>" + nosend + keep;
   }
   if (step === "send") {
     // R3, R4, R8: the outward warning, then the member's record of the sending: the day, how, and the venue's number.
     const how = req ? [1, 2, 3, 4].map(function (n) { return part("screen.request.howsend." + n); }).filter(Boolean) : [];
-    return (how.length ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + how.join("</li><li>") + "</li></ol>") : "")
+    return wasReleased + (how.length ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + how.join("</li><li>") + "</li></ol>") : "")
       + '<div class="cs-dialog" role="group" aria-label="' + cs.w("screen.start-send.outward") + '">' + '<span class="cs-tag-outward">' + cs.w("screen.start-send.outward") + "</span>"
       + '<p class="ends">' + cs.w(req ? "screen.request.outward" : "screen.start-send.outward.says") + "</p>"
       + cs.field("send-at", "screen.start-send.sentat", { type: "date", help: "screen.start-send.sentat.help" })
@@ -222,8 +225,8 @@ export function sendSteps(cs, view, filings, o) {
     ? cs.sec("screen.start-send.exhibits.heading", '<p class="mk-small">' + cs.w("screen.start-send.exhibits.intro1") + " " + cs.w("screen.start-send.exhibits.intro2") + " "
       + cs.w("screen.start-send.exhibits.intro3") + "</p>" + cs.sheet(draft.exhibits.map(function (e) {
         const letter = e.grade && typeof e.grade === "object" ? String(e.grade.grade || "") : "";
-        const name = cs.esc(e.locator || e.sha256 || "") + (e.captured_at ? " · " + cs.date(e.captured_at) : "");
-        return cs.row("", '<span class="mk-data">' + name + "</span>", "", (/^[A-D]$/.test(letter) ? cs.grade("capture", letter) : cs.mark("gap", "undetermined")) + " · " + venueWords(e));
+        const name = cs.esc(e.locator || e.sha256 || "") + (e.captured_at ? " · " + cs.w("screen.start-send.exhibits.captured", { date: { html: cs.date(e.captured_at) } }) : "");
+        return cs.row("", '<span class="mk-data">' + name + "</span>", "", (/^[A-D]$/.test(letter) ? cs.grade("capture", letter) : cs.w("screen.start-send.exhibits.nograde")) + " · " + venueWords(e));
       }).join(""))
       + (draft.venueStandard && draft.venueStandard.state === "undetermined"
         ? '<details class="mk-details"><summary>' + cs.w("screen.start-send.exhibits.refused.summary") + "</summary><p class=\"mk-small\">" + cs.w("screen.start-send.exhibits.refused.body1") + " "
@@ -239,13 +242,22 @@ export function sendSteps(cs, view, filings, o) {
         + cs.checks("assert-pick-" + x.index, "phrasing.assertion.pointed", [["rewrite", "assertion.resolve.rewrite"], ["breach_claim", "assertion.resolve.breach_claim"]], { radio: true })
         + cs.field("assert-words-" + x.index, "assertion.resolve.only_asks", { max: 500 }) + "</div>";
     }).join("") : "";
+  // R42 (B16 a): a sentence the record contradicts is held until it is rewritten or released with a reason; the release is not an act
+  // of its own (the `release` op is ratification's vouching) but an entry the approval carries (`filingapprove`'s `release`, filings
+  // R34): each sentence is drawn with its reason and a tick, and the next press of "Approve this text" sends the ticked ones.
+  const held = step === "approve" && ui.contradicted && ui.contradicted.filing === d.open.filing && Array.isArray(ui.contradicted.items) && ui.contradicted.items.length
+    ? ui.contradicted.items.map(function (x) {
+      return cs.sec("screen.start-send.release.head", '<p class="mk-small"><span class="rec">“' + cs.esc(x.text) + "”</span></p>" + '<p class="mk-note">' + cs.w("pointer.record.contradicted") + "</p>"
+        + cs.field("release-why-" + x.index, "screen.start-send.release.why", { max: 500, rec: true, help: "screen.start-send.release.why.help" })
+        + cs.checks("release-pick-" + x.index, "act.release.label.start-send", [["release", "act.release.label.start-send"]]));
+    }).join("") : "";
   const acts = step === "prepare"
     ? cs.act("communicationprepare", {}) + cs.act("filingprepare", {}) + help
     : cs.act("filingapprove", { tone: "primary", data: { filing: d.open.filing } }) + help;
   if (reading) return reading + nosend;
   // R21: the stake, above the approval; the question on `start-send` alone
   const stake = (!req && P.stakeAsk ? P.stakeAsk(cs, view) : "") + P.stakeLines(cs, view);
-  return fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers + exhibits + pointed
+  return fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers + exhibits + pointed + held
     + (req && part("screen.request.describe") ? '<p class="mk-note">' + part("screen.request.describe") + "</p>" : "") + stake
     + '<div class="mk-acts">' + acts + "</div>" + '<p class="mk-note">' + cs.w("screen.start-send.approvefixes") + "</p>" + nosend;
 }
@@ -314,6 +326,12 @@ export const APPROVE = Object.freeze({
       cs.set("assertions", { filing: typeof refusal.filing === "string" ? refusal.filing : "", items: list.map(function (x, i) { return { index: typeof x.index === "number" ? x.index : i, text: x.text }; }) });
       return cs.w("refusal.ASSERTION_UNRESOLVED");
     },
+    // B16 (a): the sentences the record contradicts, held until released with a reason (drawn by the steps, above the approval)
+    CONTRADICTED_HELD: function (refusal, cs) {
+      const list = Array.isArray(refusal.sentences) ? refusal.sentences.filter(function (x) { return x && typeof x.text === "string"; }) : [];
+      cs.set("contradicted", { filing: typeof refusal.filing === "string" ? refusal.filing : "", items: list.map(function (x, i) { return { index: typeof x.index === "number" ? x.index : i, text: x.text }; }) });
+      return cs.w("refusal.CONTRADICTED_HELD");
+    },
   },
   send: function (view, el, cs) {
     const body = { filing: el.dataset.filing };
@@ -335,9 +353,25 @@ export const APPROVE = Object.freeze({
     const now = own ? (edited || view.ui.draft.text || "") : "";
     const resolutions = Object.keys(kept).filter(function (k) { return !now || now.indexOf(k) >= 0; }).map(function (k) { return kept[k]; });
     if (resolutions.length) body.resolutions = resolutions;
+    // B16 (a): a sentence ticked for release goes with the approval as `release: [{ord, reason}]` (the sentence's index and a
+    // non-blank reason of at most 500 characters); a tick with no reason is refused in place
+    const held = view.ui.contradicted && view.ui.contradicted.filing === el.dataset.filing && Array.isArray(view.ui.contradicted.items) ? view.ui.contradicted.items : [];
+    const release = [];
+    for (const x of held) {
+      const pick = cs.value("release-pick-" + x.index);
+      if (!(Array.isArray(pick) && pick.includes("release"))) continue;
+      const why = String(cs.value("release-why-" + x.index) || "").replace(/\s+/g, " ").trim().slice(0, 500);
+      if (!why) return { refuse: "shell.reason.needed" };
+      release.push({ ord: x.index, reason: why });
+    }
+    if (release.length) body.release = release;
     return { body: body };
   },
-  done: function (view) { view.ui.assertions = null; view.ui.resolved = null; },
+  done: function (view, answer, cs) {
+    view.ui.assertions = null; view.ui.resolved = null; view.ui.contradicted = null;
+    const out = answer && Array.isArray(answer.released) ? answer.released.filter(function (r) { return r && typeof r.reason === "string" && r.reason; }) : [];
+    cs.set("releasedDone", { items: out });
+  },
 });
 
 export const STAKE = Object.freeze({

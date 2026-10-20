@@ -90,7 +90,7 @@ test("R45 (d): revising a determination names the one it replaces, opens with it
   assert.equal(b.act.event, "The 2024 rent adjustment");
   // control: a first determination is plain
   const q = await open(`/app/matter/${PROJECT}`, { ...NONE, determine: ok({ ok: true, id: DET }) });
-  assert.ok(button(q, "determine").textContent.includes(W("act.determine.label.matter")));
+  assert.ok(button(q, "determine").textContent.includes(W("screen.matter.record.this")), "a first determination reads `screen.matter.record.this`, a revision `screen.matter.record_the_revised_determination`");
 });
 
 test("R45: the determination's refusals are drawn by their words (refusal.<CODE>); control: a recorded one draws none", async () => {
@@ -361,19 +361,21 @@ test("R45 (writinghelp control): a help button that names no act sends no help r
 // R19 through R45, R50, R51: every sentence a form draws is a key of the word table, read through W
 const FORM_KEYS = {
   determine: ["screen.matter.the_earlier_determination_stays_readable_with_a", "screen.matter.it_is_not_edited", "screen.matter.whether_the_act_met_the_rule_with", "screen.matter.the_event_it_was_part_of",
-    "screen.matter.an_office_or_body", "screen.matter.the_evidence_that_the_act_happened", "screen.actionnew.rests", "screen.matter.a_determination_rests_on_findings_your_team",
+    "screen.matter.f.body", "screen.matter.f.role", "screen.matter.revise", "screen.matter.replaces", "screen.matter.act", "screen.matter.a_new_determination_that_replaces_the_earlier",
+    "screen.matter.f.did", "screen.matter.f.rule", "screen.matter.f.determination", "screen.matter.f.cause", "screen.matter.if_you_choose_unclear", "screen.matter.f.findings",
+    "screen.matter.the_evidence_that_the_act_happened", "screen.actionnew.rests", "screen.matter.a_determination_rests_on_findings_your_team",
     "screen.matter.the_rule_it_is_measured_against", "screen.matter.what_the_rule_requires", "screen.matter.how_the_two_compare", "screen.matter.against_this_rule_the_act_is",
-    "screen.matter.outcome.compliant", "screen.matter.outcome.noncompliant", "screen.matter.outcome.unclear", "screen.matter.each_rule_gets_its_own_outcome", "screen.matter.they_are_never_combined_into_one_verdict",
+    "screen.matter.f.outcome.compliant", "screen.matter.f.outcome.noncompliant", "screen.matter.f.outcome.unclear", "screen.matter.each_rule_gets_its_own_outcome", "screen.matter.they_are_never_combined_into_one_verdict",
     "screen.matter.the_question_that_would_settle_it", "screen.matter.the_question_is_opened_in_this_project", "screen.matter.why_it_happened_optional", "screen.matter.say_a_cause_only_if_evidence_you",
     "screen.matter.otherwise_leave_it_empty_and_the_determination", "screen.matter.this_cannot_be_edited_afterward", "screen.matter.a_mistake_is_put_right_by_recording", "screen.matter.record_the_revised_determination"],
-  consequencerecord: ["screen.matter.each_part_says_what_was_done_and", "screen.matter.the_rule_it_breached", "screen.matter.who_or_what_was_affected", "screen.matter.people_as_a_class", "screen.matter.an_office_or_body",
+  consequencerecord: ["screen.matter.each_part_says_what_was_done_and", "screen.matter.the_rule_it_breached", "screen.matter.who_or_what_was_affected", "screen.matter.f.describe", "screen.matter.kind.class", "screen.matter.kind.office", "screen.matter.unit.money", "screen.matter.unknown", "shell.reason",
     "screen.matter.what_it_is_measured_in", "screen.matter.amount_or_the_lowest_and_highest_it", "screen.matter.worked_out_from_figures_in_the_record", "screen.matter.my_own_assessment_with_my_reason",
     "screen.matter.if_you_assess_it_yourself", "screen.matter.name_what_the_assessment_rests_on", "screen.matter.a_part_you_assess_is_shown_as", "screen.matter.the_question_showing_the_harm_follows_from",
     "screen.matter.without_a_concluded_question_the_part_is", "screen.matter.zero_is_recorded_as_no_harm_claimed"],
   consequencerevise: ["screen.matter.change_what_is_wrong_say_why_then", "screen.matter.consequences", "screen.matter.why_you_are_revising_it"],
   addressedrecord: ["screen.matter.one_part_at_a_time_with_evidence", "screen.matter.in_what_way_addressed_only", "label.harmaddressed.remedied", "label.harmaddressed.mitigated", "label.harmaddressed.compensated",
-    "label.harmaddressed.acknowledged", "label.harmaddressed.cannot_be_undone", "screen.matter.there_is_no_percentage_of_redress", "screen.matter.part_of_a_remedy_does_not_end"],
-  successrecord: ["screen.matter.a_change_the_matter_brought_about_in", "screen.matter.the_order_of_events_optional", "screen.matter.the_order_of_events_is_shown_as", "screen.matter.if_you_say_why_it_happened",
+    "label.harmaddressed.acknowledged", "screen.matter.way.cannot", "screen.matter.f.part", "screen.matter.f.partwas", "screen.matter.f.addressed", "screen.matter.f.notaddressed", "screen.matter.there_is_no_percentage_of_redress", "screen.matter.part_of_a_remedy_does_not_end"],
+  successrecord: ["screen.matter.a_change_the_matter_brought_about_in", "screen.matter.the_order_of_events_optional", "screen.matter.the_order_of_events_is_shown_as", "screen.matter.if_you_say_why_it_happened", "screen.matter.f.when", "screen.matter.f.cause",
     "screen.matter.your_team_s_own_act_cannot_be"],
   escalationattach: ["screen.matter.your_reason_for_attaching_it", "screen.matter.only_a_breach_action_that_rests_on"],
   escalationdecline: ["screen.matter.you_can_move_to_it_or_hold", "screen.matter.why_you_are_holding_at_this_stage", "screen.matter.holding_keeps_the_proposal_in_view_with", "screen.matter.the_escalation_stays_open"],

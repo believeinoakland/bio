@@ -160,7 +160,7 @@ test("R44 (b): each refusal of a scenario is drawn by its two sentences, beside 
 const DATED = { ...PLAN, options: [
   { id: "opt-1", summary: "Public comment", category: "legal", subjects: [`outcome:${DET}#STD-1`], dates: [{ date: "2026-11-30", basis: "law" }], disposition: "open", dispositions: [], action: null },
   { id: "opt-2", summary: "Story with a reporter", category: "awareness", subjects: [`outcome:${DET}#STD-1`], dates: [], disposition: "blocked", dispositions: [{ disposition: "blocked", reason: "no signatures" }], action: null }] };
-const labelOf = { done: "screen.plan.disposition.done", blocked: "screen.plan.disposition.blocked", open: "screen.plan.return.them.to.undecided", chosen: "screen.plan.choose", declined: "screen.plan.decline" };
+const labelOf = { done: "screen.plan.dispose.done", blocked: "screen.plan.dispose.blocked", open: "screen.plan.dispose.open", chosen: "screen.plan.choose", declined: "screen.plan.decline" };
 const markBtn = (p, option, disposition) => main(p).querySelectorAll('button[data-act="optiondispose"]').find((b) => b.dataset.option === option && b.dataset.disposition === disposition);
 
 test("R44 (c): an option can be marked done or blocked, or returned to undecided, each sending its reason; never the mark it already has", async () => {

@@ -91,7 +91,7 @@ test("R52 (L21): after `reminderset` the entry shows the day the member set, by 
   assert.deepEqual(last(p, "reminderset").body, { target: ACTION_ID, entry: 1, on: "2099-10-20" });
   const mark = main(p).querySelector('[data-reminder="1"]');
   assert.ok(mark, "the reminder is drawn beside its entry");
-  assert.ok(mark.textContent.includes(W("screen.action.remindon")) && mark.textContent.includes(D("2099-10-20")));
+  assert.ok(mark.textContent.includes(W("screen.reminder.on", { date: D("2099-10-20") })), "the sentence by key (DEC-387: `screen.reminder.on`), with the day");
   assert.equal(main(p).querySelector('[data-reminder="0"]'), null, "only the entry it was set on");
   const r = await open(ROUTES.action, { ...DATA_PLANE, reminderset: refusedIn("REMINDER_REFUSED", "the owner's own sentence") });
   const b = await press(r, "reminderset", { nth: 1, values: { "remind-1": "2099-10-20" } });
