@@ -8330,7 +8330,7 @@
   },
   {
    "key": "screen.document.cite.question.help",
-   "en": "Set to the question this document was captured for; this project's questions come first.",
+   "en": "Set to the question this document was captured for; this project's questions come first. Questions with the same title are told apart by their project.",
    "protected": false,
    "note": "DEC-320: screens-inquiry R61"
   },
@@ -9164,7 +9164,7 @@
   },
   {
    "key": "refusal.ACQUIRE_TIMED_OUT",
-   "en": "Fetching the page took longer than 25 seconds, so your team's Civicsmith stopped and kept nothing. Try again; if the page is very large, save it yourself and add it as a file.",
+   "en": "The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.",
    "protected": false,
    "note": "DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED"
   },
@@ -12944,7 +12944,7 @@
   },
   {
    "key": "screen.capture.a64.if_the_address_is_already_held_or_the_si",
-   "en": "If the address is already held, or the site has changed since",
+   "en": "If the address is already held, or the page reads differently now",
    "protected": false,
    "note": "DEC-330: B306 A64: capture drawn word"
   },
@@ -12962,13 +12962,13 @@
   },
   {
    "key": "screen.capture.a64.the_site_has_changed_since",
-   "en": "The site has changed since",
+   "en": "The page reads differently now",
    "protected": false,
    "note": "DEC-330: B306 A64: capture drawn word"
   },
   {
    "key": "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
-   "en": "your team holds a capture from {date}, and the site now gives a different document",
+   "en": "your team holds a capture from {date}, and the page the site gives now reads differently. A page with a clock, a counter or a live feed reads differently every time it is loaded, so for a capture made minutes ago this may mean nothing.",
    "protected": false,
    "note": "DEC-330: B306 A64: capture drawn word"
   },
@@ -12992,7 +12992,7 @@
   },
   {
    "key": "screen.document.a34.your_citations_leg_by_leg",
-   "en": "Your citations, leg by leg",
+   "en": "Your citations",
    "protected": false,
    "note": "DEC-330: B306 A34: document drawn word"
   },
@@ -13004,7 +13004,7 @@
   },
   {
    "key": "screen.document.a34.each_reasoning_that_rests_on_this_docume",
-   "en": "Each reasoning that rests on this document is asked about on its own.",
+   "en": "Each question that rests on this document is asked about on its own.",
    "protected": false,
    "note": "DEC-330: B306 A34: document drawn word"
   },
@@ -14276,13 +14276,13 @@
   },
   {
    "key": "screen.finder.covered.levels",
-   "en": "The record answers at four levels, and they are different facts. Finding nothing at one of them is not evidence of nothing at the next.",
+   "en": "Search looks in four places, and each answers a different question. Finding nothing in one is not a sign that nothing is held in the next.",
    "protected": false,
    "note": "DEC-330: B306 A15: the honesty panel"
   },
   {
    "key": "screen.finder.covered.rests",
-   "en": "What anything rests on",
+   "en": "Findings and connections",
    "protected": false,
    "note": "DEC-330: B306 A15: level 1 of 4"
   },
@@ -14294,7 +14294,7 @@
   },
   {
    "key": "screen.finder.covered.read",
-   "en": "What has been read out of the documents",
+   "en": "Passages read from the documents",
    "protected": false,
    "note": "DEC-330: B306 A15: level 2 of 4"
   },
@@ -14324,13 +14324,13 @@
   },
   {
    "key": "screen.finder.covered.looked",
-   "en": "Whether anybody looked",
+   "en": "Where nobody has looked yet",
    "protected": false,
    "note": "DEC-330: B306 A15: level 4 of 4"
   },
   {
    "key": "screen.finder.covered.docs",
-   "en": "The documents themselves",
+   "en": "Documents searched",
    "protected": false,
    "note": "DEC-330: B306 A15: level 3 of 4"
   },
@@ -33749,6 +33749,108 @@
    "en": "When it is refused",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders."
+  },
+  {
+   "key": "screen.capture.address.working.head",
+   "en": "While it is being fetched",
+   "protected": false,
+   "note": "DEC-384: B411 A1: progress while capturing"
+  },
+  {
+   "key": "screen.capture.address.working",
+   "en": "Fetching the page. This can take up to 25 seconds, longer if you chose to keep it as a visitor saw it. Keep this page open; the result appears here.",
+   "protected": false,
+   "note": "DEC-384: B411 A1: progress while capturing; the code shows it from Capture until the result, beside the button"
+  },
+  {
+   "key": "screen.capture.address.untitled",
+   "en": "A {kind} from {site}",
+   "protected": false,
+   "note": "DEC-384: B411 I-03: a capture is named by its title, or failing that by its site and kind; never the file part of its address"
+  },
+  {
+   "key": "screen.capture.address.existed.open",
+   "en": "Open it",
+   "protected": false,
+   "note": "DEC-384: B411 I-04: the door to the document already held"
+  },
+  {
+   "key": "screen.doorbell.reference",
+   "en": "Your reference: {reference}",
+   "protected": false,
+   "note": "DEC-384: B411 I-20: the receipt gives something to keep"
+  },
+  {
+   "key": "screen.doorbell.after.head",
+   "en": "After you hand it over",
+   "protected": false,
+   "note": "DEC-384: B411 I-20"
+  },
+  {
+   "key": "screen.document.cite.option",
+   "en": "{question} ({project})",
+   "protected": false,
+   "note": "DEC-384: B411 I-11, A6: a question in the list is told apart by its project"
+  },
+  {
+   "key": "screen.document.cite.choose",
+   "en": "Choose a question",
+   "protected": false,
+   "note": "DEC-384: B411 I-11, A6: the list never starts blank"
+  },
+  {
+   "key": "screen.document.unwatched.head",
+   "en": "If this address isn't being watched",
+   "protected": false,
+   "note": "DEC-384: B411 I-35"
+  },
+  {
+   "key": "screen.document.unwatched",
+   "en": "This address isn't being watched, so there is nothing to check yet. Watch it, and each new version found is kept beside this one.",
+   "protected": false,
+   "note": "DEC-384: B411 I-35: shown instead of Check for a new version now while the address is not watched"
+  },
+  {
+   "key": "screen.finder.noresult.partial",
+   "en": "No document holds all of the words “{q}” together.",
+   "protected": false,
+   "note": "DEC-384: B411 I-14: shown instead of Nothing your team holds matches when some documents hold some of the words"
+  },
+  {
+   "key": "screen.finder.partial.head",
+   "en": "When some documents hold only some of the words",
+   "protected": false,
+   "note": "DEC-384: B411 I-14"
+  },
+  {
+   "key": "screen.open-file.tool.clamav",
+   "en": "Built-in scanner",
+   "protected": false,
+   "note": "DEC-384: B411 I-18: the scanner is named for what it is, never clamav"
+  },
+  {
+   "key": "screen.open-file.result.not_scanned",
+   "en": "Not scanned yet",
+   "protected": false,
+   "note": "DEC-384: B411 I-18: the scanner state in plain words"
+  },
+  {
+   "key": "screen.open-file.result.clean",
+   "en": "Clean: nothing found",
+   "protected": false,
+   "note": "DEC-384: B411 I-18"
+  },
+  {
+   "key": "screen.open-file.result.found",
+   "en": "Something was found",
+   "protected": false,
+   "note": "DEC-384: B411 I-18"
+  },
+  {
+   "key": "screen.open-file.result.failed",
+   "en": "Could not be scanned just now",
+   "protected": false,
+   "note": "DEC-384: B411 I-18"
   }
  ],
  "rewrite": {
@@ -33773,7 +33875,7 @@
   "screen.group-identity.purpose.field": "Why the team exists, in your own words",
   "screen.group-identity.visibility.choice.public": "Also our public page and the network directory",
   "screen.held.archive.filed": "{count} files held beside it",
-  "screen.held.ineligible": "Not eligible for a batch: {reason}",
+  "screen.held.ineligible": "Not included when you vouch for several at once: {reason}",
   "screen.held.waiting": "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
   "screen.help-records.must.1": "Answer within {days} days whether it holds records it can release, why or why not, and when they will be ready ({cite}).",
   "screen.help-records.must.2": "Take longer only by written notice, saying why and when, for reasons the law lists ({reasons}); never more than {extra} extra days ({cite}).",
@@ -33904,6 +34006,14 @@
   "screen.proceeding.kind.help": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
   "screen.find-in.question": "For which question",
   "screen.find-in.term.help": "Only passages with this name or term are shown, when you fill it in.",
-  "find.query.placeholder": "Words to find"
+  "find.query.placeholder": "Words to find",
+  "screen.held.ineligible.alone": "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
+  "screen.inbox.ladder.basis": "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
+  "screen.doorbell.received": "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
+  "screen.capture.address.existed": "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
+  "screen.document.cite.question": "Cite in which question",
+  "screen.finder.widen": "Documents holding at least one of the words: {n}.",
+  "screen.open-file.safe.ready": "The safe view is open below: each page as a picture, so nothing in it can run.",
+  "screen.open-file.note.line": "{tool}: {result}"
  }
 }

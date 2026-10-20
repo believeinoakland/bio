@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6422,
+  "screen": 6439,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17459,
+  "total": 17476,
   "protected": 1057
  },
  "words": [
@@ -12947,10 +12947,10 @@
   },
   {
    "key": "screen.finder.widen",
-   "en": "No document holds all of these words; {n} hold at least one of them.",
+   "en": "Documents holding at least one of the words: {n}.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.finder.pick",
@@ -15635,10 +15635,10 @@
   },
   {
    "key": "screen.document.cite.question",
-   "en": "In which question",
+   "en": "Cite in which question",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.document.cite.role",
@@ -16279,10 +16279,10 @@
   },
   {
    "key": "screen.capture.address.existed",
-   "en": "Your team's record already held exactly these bytes: {title}. Nothing new was written.",
+   "en": "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.capture.address.archive",
@@ -16496,7 +16496,7 @@
   },
   {
    "key": "screen.capture.file.wherehelp",
-   "en": "Filled from the photo where it says; correct it if it is wrong.",
+   "en": "Required. Write the place, then the date and time, such as “6012 Seminary Ave, October 4, 2026, 9:12 AM”; the time can't be later than now. Where the photo records them they are filled in; correct them if wrong.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-intake's own rows; DEC-257: reworded"
@@ -16755,17 +16755,17 @@
   },
   {
    "key": "screen.held.ineligible",
-   "en": "Not eligible for a batch: {reason}",
+   "en": "Not included when you vouch for several at once: {reason}",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.held.ineligible.alone",
-   "en": "Vouch for it on its own.",
+   "en": "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.held.ineligible.crucial",
@@ -17049,10 +17049,10 @@
   },
   {
    "key": "screen.open-file.note.line",
-   "en": "{tool} · {engine}: {result}",
+   "en": "{tool}: {result}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.open-file.note.at",
@@ -17133,10 +17133,10 @@
   },
   {
    "key": "screen.open-file.safe.ready",
-   "en": "The safe copy is ready and was handed to your browser as a file.",
+   "en": "The safe view is open below: each page as a picture, so nothing in it can run.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.open-file.deeper",
@@ -17427,10 +17427,10 @@
   },
   {
    "key": "screen.inbox.ladder.basis",
-   "en": "Known from this inbox only: a secret phrase marks the same knocker; what the team knows more is kept with the source.",
+   "en": "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.inbox.pulled",
@@ -23797,10 +23797,10 @@
   },
   {
    "key": "screen.doorbell.received",
-   "en": "Received, {at}. A member of the team will read it.",
+   "en": "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-publish's own rows"
+   "note": "adopted from screens-publish's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.doorbell.refused.empty",
@@ -41251,7 +41251,7 @@
   },
   {
    "key": "screen.document.cite.question.help",
-   "en": "Set to the question this document was captured for; this project's questions come first.",
+   "en": "Set to the question this document was captured for; this project's questions come first. Questions with the same title are told apart by their project.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-320: screens-inquiry R61"
@@ -42224,7 +42224,7 @@
   },
   {
    "key": "refusal.ACQUIRE_TIMED_OUT",
-   "en": "Fetching the page took longer than 25 seconds, so your team's Civicsmith stopped and kept nothing. Try again; if the page is very large, save it yourself and add it as a file.",
+   "en": "The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED"
@@ -46634,7 +46634,7 @@
   },
   {
    "key": "screen.capture.a64.if_the_address_is_already_held_or_the_si",
-   "en": "If the address is already held, or the site has changed since",
+   "en": "If the address is already held, or the page reads differently now",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A64: capture drawn word"
@@ -46655,14 +46655,14 @@
   },
   {
    "key": "screen.capture.a64.the_site_has_changed_since",
-   "en": "The site has changed since",
+   "en": "The page reads differently now",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A64: capture drawn word"
   },
   {
    "key": "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
-   "en": "your team holds a capture from {date}, and the site now gives a different document",
+   "en": "your team holds a capture from {date}, and the page the site gives now reads differently. A page with a clock, a counter or a live feed reads differently every time it is loaded, so for a capture made minutes ago this may mean nothing.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A64: capture drawn word"
@@ -46690,7 +46690,7 @@
   },
   {
    "key": "screen.document.a34.your_citations_leg_by_leg",
-   "en": "Your citations, leg by leg",
+   "en": "Your citations",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A34: document drawn word"
@@ -46704,7 +46704,7 @@
   },
   {
    "key": "screen.document.a34.each_reasoning_that_rests_on_this_docume",
-   "en": "Each reasoning that rests on this document is asked about on its own.",
+   "en": "Each question that rests on this document is asked about on its own.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A34: document drawn word"
@@ -48188,14 +48188,14 @@
   },
   {
    "key": "screen.finder.covered.levels",
-   "en": "The record answers at four levels, and they are different facts. Finding nothing at one of them is not evidence of nothing at the next.",
+   "en": "Search looks in four places, and each answers a different question. Finding nothing in one is not a sign that nothing is held in the next.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: the honesty panel"
   },
   {
    "key": "screen.finder.covered.rests",
-   "en": "What anything rests on",
+   "en": "Findings and connections",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: level 1 of 4"
@@ -48209,7 +48209,7 @@
   },
   {
    "key": "screen.finder.covered.read",
-   "en": "What has been read out of the documents",
+   "en": "Passages read from the documents",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: level 2 of 4"
@@ -48244,14 +48244,14 @@
   },
   {
    "key": "screen.finder.covered.looked",
-   "en": "Whether anybody looked",
+   "en": "Where nobody has looked yet",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: level 4 of 4"
   },
   {
    "key": "screen.finder.covered.docs",
-   "en": "The documents themselves",
+   "en": "Documents searched",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: level 3 of 4"
@@ -70909,6 +70909,125 @@
    "note": "DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders."
   },
   {
+   "key": "screen.capture.address.working.head",
+   "en": "While it is being fetched",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 A1: progress while capturing"
+  },
+  {
+   "key": "screen.capture.address.working",
+   "en": "Fetching the page. This can take up to 25 seconds, longer if you chose to keep it as a visitor saw it. Keep this page open; the result appears here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 A1: progress while capturing; the code shows it from Capture until the result, beside the button"
+  },
+  {
+   "key": "screen.capture.address.untitled",
+   "en": "A {kind} from {site}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-03: a capture is named by its title, or failing that by its site and kind; never the file part of its address"
+  },
+  {
+   "key": "screen.capture.address.existed.open",
+   "en": "Open it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-04: the door to the document already held"
+  },
+  {
+   "key": "screen.doorbell.reference",
+   "en": "Your reference: {reference}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-20: the receipt gives something to keep"
+  },
+  {
+   "key": "screen.doorbell.after.head",
+   "en": "After you hand it over",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-20"
+  },
+  {
+   "key": "screen.document.cite.option",
+   "en": "{question} ({project})",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-11, A6: a question in the list is told apart by its project"
+  },
+  {
+   "key": "screen.document.cite.choose",
+   "en": "Choose a question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-11, A6: the list never starts blank"
+  },
+  {
+   "key": "screen.document.unwatched.head",
+   "en": "If this address isn't being watched",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-35"
+  },
+  {
+   "key": "screen.document.unwatched",
+   "en": "This address isn't being watched, so there is nothing to check yet. Watch it, and each new version found is kept beside this one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-35: shown instead of Check for a new version now while the address is not watched"
+  },
+  {
+   "key": "screen.finder.noresult.partial",
+   "en": "No document holds all of the words “{q}” together.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-14: shown instead of Nothing your team holds matches when some documents hold some of the words"
+  },
+  {
+   "key": "screen.finder.partial.head",
+   "en": "When some documents hold only some of the words",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-14"
+  },
+  {
+   "key": "screen.open-file.tool.clamav",
+   "en": "Built-in scanner",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-18: the scanner is named for what it is, never clamav"
+  },
+  {
+   "key": "screen.open-file.result.not_scanned",
+   "en": "Not scanned yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-18: the scanner state in plain words"
+  },
+  {
+   "key": "screen.open-file.result.clean",
+   "en": "Clean: nothing found",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-18"
+  },
+  {
+   "key": "screen.open-file.result.found",
+   "en": "Something was found",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-18"
+  },
+  {
+   "key": "screen.open-file.result.failed",
+   "en": "Could not be scanned just now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-384: B411 I-18"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -81473,7 +81592,7 @@
   },
   {
    "key": "refusal.NOT_SCANNED",
-   "en": "This file could not be scanned before it opens, so the original was not opened. Its reason is stated beside it. Read the safe view meanwhile, or ask again once the scanner can read it.",
+   "en": "This file could not be scanned before it opens, so the original was not opened. Its reason is stated beside it. Show the safe view meanwhile, or ask again once the scanner can read it.",
    "protected": false,
    "source": "DEC-260",
    "note": "file-safety's translation, keyed by its code"
@@ -82579,7 +82698,7 @@
   },
   {
    "key": "refusal.SCAN_STALE",
-   "en": "This high-risk file was last found clean more than a week ago, and the scanner cannot check it again now, so the original was not opened. Read the safe view, or ask for a deeper check.",
+   "en": "This high-risk file was last found clean more than a week ago, and the scanner cannot check it again now, so the original was not opened. Show the safe view, or ask for a deeper check.",
    "protected": false,
    "source": "DEC-260",
    "note": "file-safety's translation, keyed by its code"
@@ -111205,7 +111324,7 @@
   },
   {
    "key": "act.safeview.label.open-file",
-   "en": "Read the safe view",
+   "en": "Show the safe view on this page",
    "protected": true,
    "source": "registry.json"
   },
@@ -114009,7 +114128,7 @@
   },
   {
    "key": "act.acquire.does",
-   "en": "Has your team's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where.",
+   "en": "Has your team's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where. Progress and the result show on the page.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -114033,7 +114152,7 @@
   },
   {
    "key": "act.monitor.does",
-   "en": "Checks this address once, now, for a new version. A new version is kept beside the old. To keep checking, turn watching on.",
+   "en": "Checks this address once, now, for a new version. Offered only for an address your team is watching. A new version is kept beside the old.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -114099,7 +114218,7 @@
   },
   {
    "key": "act.safeview.does",
-   "en": "Shows a safe copy: each page as a picture, or a spreadsheet's figures as data. Nothing in it can run. Cite the original, not this.",
+   "en": "Shows the safe copy on this page, without downloading anything: each page as a picture, or a spreadsheet's figures as data. Nothing in it can run. Cite the original, not this.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

@@ -147,7 +147,7 @@ REWRITE.update({
 w('screen.held.setaside.why', 'Why set it aside?', False, "the reason field for heldsetaside")
 REWRITE.update({
   'screen.held.archive.filed': '{count} files held beside it',
-  'screen.held.ineligible': 'Not eligible for a batch: {reason}',
+  'screen.held.ineligible': 'Not included when you vouch for several at once: {reason}',
   'screen.held.waiting': "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
 })
 # help-records: the law's particulars (its name, windows, reasons and sections) are the place's data, as placeholders
@@ -1814,7 +1814,7 @@ REWRITE.update({'screen.proceeding.kind.help': proceeding_kind_help})  # DEC-319
 def w320(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-320' + (': ' + note if note else '')))
 w320('wizard.subject.none.summary', 'With no project to choose', False, 'screens-wizards R17: wizard.subject.none.project in a fold')
-w320('screen.document.cite.question.help', "Set to the question this document was captured for; this project's questions come first.", False, 'screens-inquiry R61')
+w320('screen.document.cite.question.help', "Set to the question this document was captured for; this project's questions come first. Questions with the same title are told apart by their project.", False, 'screens-inquiry R61')
 w320('screen.document.cite.none.summary', 'Captured for no question', False, 'R61: nothing preselected, the act says to choose')
 w320('screen.request.state.offices', 'offices are known', False, 'screens-action R20: the mockup state')
 w320('screen.request.state.nooffice', 'no office is known yet', False, 'R20: the mockup state')
@@ -1984,7 +1984,7 @@ W.append(dict(key='screen.explore.hop.unnamed', en='an unnamed item', protected=
 # (4) strip reading and the Find field
 W.append(dict(key='find.query.help', en='Leave it empty to browse everything.', protected=False, note='DEC-329: B303 (4): the help under the Find words field (today find.query.placeholder is passed as help); finder.mjs:70'))
 # (5) Acquire timeout; action kinds; the action page's question field
-W.append(dict(key='refusal.ACQUIRE_TIMED_OUT', en="Fetching the page took longer than 25 seconds, so your team's Civicsmith stopped and kept nothing. Try again; if the page is very large, save it yourself and add it as a file.", protected=False, note='DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED'))
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT', en="The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.", protected=False, note='DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED'))
 for _k, _cap, _low in [
     ('cpra_request', 'Records request', 'records request'),
     ('grand_jury', 'Grand jury referral', 'grand jury referral'),
@@ -2715,17 +2715,17 @@ W.append(dict(key='screen.question.tip077', en='It never changes afterwards, so 
 W.append(dict(key='screen.question.tip078', en='Read before you confirm.', protected=False, note='DEC-330: B306 A23/A37/A40/A41: question screen: explanation'))
 W.append(dict(key='screen.question.tip079', en='This lists what you can see that rests on the question; work you cannot see is not listed, and no other project is named.', protected=False, note='DEC-330: B306 A23/A37/A40/A41: question screen: explanation'))
 # --- DEC-330 (draw1)
-W.append(dict(key="screen.capture.a64.if_the_address_is_already_held_or_the_si", en="If the address is already held, or the site has changed since", protected=False, note='DEC-330: B306 A64: capture drawn word'))
+W.append(dict(key="screen.capture.a64.if_the_address_is_already_held_or_the_si", en="If the address is already held, or the page reads differently now", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.already_in_the_record_as", en="Already in the record as", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.the_site_still_gives_the_same_document", en="the site still gives the same document", protected=False, note='DEC-330: B306 A64: capture drawn word'))
-W.append(dict(key="screen.capture.a64.the_site_has_changed_since", en="The site has changed since", protected=False, note='DEC-330: B306 A64: capture drawn word'))
-W.append(dict(key="screen.capture.a64.your_team_holds_a_capture_from_14_septem", en='your team holds a capture from {date}, and the site now gives a different document', protected=False, note='DEC-330: B306 A64: capture drawn word'))
+W.append(dict(key="screen.capture.a64.the_site_has_changed_since", en="The page reads differently now", protected=False, note='DEC-330: B306 A64: capture drawn word'))
+W.append(dict(key="screen.capture.a64.your_team_holds_a_capture_from_14_septem", en='your team holds a capture from {date}, and the page the site gives now reads differently. A page with a clock, a counter or a live feed reads differently every time it is loaded, so for a capture made minutes ago this may mean nothing.', protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.capturing_it_again_keeps_the_new_copy_be", en="Capturing it again keeps the new copy beside the old one.", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un", en="Whoever cited the old one stays on it until they move.", protected=False, note='DEC-330: B306 A64: capture drawn word'))
 W.append(dict(key="screen.capture.a64.capture_the_new_copy", en="Capture the new copy", protected=False, note='DEC-330: B306 A64: capture drawn word'))
-W.append(dict(key="screen.document.a34.your_citations_leg_by_leg", en="Your citations, leg by leg", protected=False, note='DEC-330: B306 A34: document drawn word'))
+W.append(dict(key="screen.document.a34.your_citations_leg_by_leg", en="Your citations", protected=False, note='DEC-330: B306 A34: document drawn word'))
 W.append(dict(key="screen.document.a34.a_newer_copy_never_moves_a_citation_by_i", en="A newer copy never moves a citation by itself.", protected=False, note='DEC-330: B306 A34: document drawn word'))
-W.append(dict(key="screen.document.a34.each_reasoning_that_rests_on_this_docume", en="Each reasoning that rests on this document is asked about on its own.", protected=False, note='DEC-330: B306 A34: document drawn word'))
+W.append(dict(key="screen.document.a34.each_reasoning_that_rests_on_this_docume", en="Each question that rests on this document is asked about on its own.", protected=False, note='DEC-330: B306 A34: document drawn word'))
 W.append(dict(key="screen.document.a34.a_newer_copy_exists_captured_2_october", en='a newer copy exists, captured {date}', protected=False, note='DEC-330: B306 A34: document drawn word'))
 W.append(dict(key="screen.document.a34.section_3_reads_the_same_in_both", en='section {section} reads the same in both', protected=False, note='DEC-330: B306 A34: document drawn word; B325 2: {section} replaces the sample 3'))
 W.append(dict(key="screen.document.a34.not_checked_yet", en="not yet checked for a newer copy", protected=False, note='DEC-330: B306 A34: document drawn word'))
@@ -2941,16 +2941,16 @@ W.append(dict(key='screen.finder.route.apart', en='These three are counted apart
 W.append(dict(key='screen.finder.route.cross.heading', en='When a search crosses routes', protected=False, note='DEC-330: B306 A15: a folded note'))
 W.append(dict(key='screen.finder.route.cross', en='A search that joins a field and a passage with “or” is refused, because the routes answer apart and their answers cannot be added. Run each on its own.', protected=False, note='DEC-330: B306 A15: the refusal of a query that crosses seams'))
 W.append(dict(key='screen.finder.covered.heading', en='What this search covered', protected=False, note='DEC-330: B306 A15: the honesty panel'))
-W.append(dict(key='screen.finder.covered.levels', en='The record answers at four levels, and they are different facts. Finding nothing at one of them is not evidence of nothing at the next.', protected=False, note='DEC-330: B306 A15: the honesty panel'))
-W.append(dict(key='screen.finder.covered.rests', en='What anything rests on', protected=False, note='DEC-330: B306 A15: level 1 of 4'))
+W.append(dict(key='screen.finder.covered.levels', en='Search looks in four places, and each answers a different question. Finding nothing in one is not a sign that nothing is held in the next.', protected=False, note='DEC-330: B306 A15: the honesty panel'))
+W.append(dict(key='screen.finder.covered.rests', en='Findings and connections', protected=False, note='DEC-330: B306 A15: level 1 of 4'))
 W.append(dict(key='screen.finder.covered.rests.says', en='Findings and connections that match: {n}.', protected=False, note='DEC-330: B306 A15: level 1 of 4'))
-W.append(dict(key='screen.finder.covered.read', en='What has been read out of the documents', protected=False, note='DEC-330: B306 A15: level 2 of 4'))
+W.append(dict(key='screen.finder.covered.read', en='Passages read from the documents', protected=False, note='DEC-330: B306 A15: level 2 of 4'))
 W.append(dict(key='screen.finder.covered.read.says.other', en='Passages were read from {read} of the {n} documents searched. The other {rest} have not been read passage by passage yet, so their words were not searched.', protected=False, note='DEC-330: B306 A15: level 2 of 4: how much was read at passage grain'))
 W.append(dict(key='screen.finder.covered.read.says.one', en='Passages were read from {read} of the {n} documents searched. The other one has not been read passage by passage yet, so its words were not searched.', protected=False, note='DEC-330: the count of one (consistency read)'))
 W.append(dict(key='screen.finder.covered.docs.says.other', en='Searched the {n} documents you may read. {p} projects you can see only by name were not searched for you, and what they hold is not shown.', protected=False, note='DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see; B312 (retrieval R29, R89): counts the projects, never their documents'))
 W.append(dict(key='screen.finder.covered.docs.says.one', en='Searched the {n} documents you may read. 1 project you can see only by name was not searched for you, and what it holds is not shown.', protected=False, note='DEC-330: the count of one (consistency read)'))
-W.append(dict(key='screen.finder.covered.looked', en='Whether anybody looked', protected=False, note='DEC-330: B306 A15: level 4 of 4'))
-W.append(dict(key='screen.finder.covered.docs', en='The documents themselves', protected=False, note='DEC-330: B306 A15: level 3 of 4'))
+W.append(dict(key='screen.finder.covered.looked', en='Where nobody has looked yet', protected=False, note='DEC-330: B306 A15: level 4 of 4'))
+W.append(dict(key='screen.finder.covered.docs', en='Documents searched', protected=False, note='DEC-330: B306 A15: level 3 of 4'))
 W.append(dict(key='state.item.review.means', en="Captured into your team's record and waiting for a member to review it.", protected=False, note="DEC-330: B306 A11: the state chip's explanation and the Glossary"))
 W.append(dict(key='state.item.review.can', en='You can read it and its captured source, mark it reviewed, and revise it; every revision is kept.', protected=False, note="DEC-330: B306 A11: the state chip's explanation and the Glossary"))
 W.append(dict(key='state.item.review.cannot', en='You cannot publish it: only signed work is published.', protected=False, note="DEC-330: B306 A11: the state chip's explanation and the Glossary"))
@@ -6244,6 +6244,37 @@ W.append(dict(key='screen.watching.sweepdef.ref.machine1', en='The assistant can
 W.append(dict(key='screen.watching.sweepdef.ref.machine2', en='Only a member can, so nothing was changed.', protected=False, note='DEC-382: B406 C56: watching: refusal, a machine author. Sample names and counts are placeholders.'))
 W.append(dict(key='screen.watching.sweepdef.scope', en='Sites: {hosts} · The most it may fetch in one run: {budget}', protected=False, note='DEC-382: B406 C56: watching: scope and budget of the sweep shown before ratifying; sites and budget are placeholders. Sample names and counts are placeholders.'))
 W.append(dict(key='screen.watching.sweepdef.refd', en='When it is refused', protected=False, note='DEC-382: B406 C56: watching: summary of the refusals. Sample names and counts are placeholders.'))
+
+# --- DEC-384: B411 live walk, capture / held / inbox / doorbell / document / find
+REWRITE.update({
+  'screen.held.ineligible.alone': "Open it to vouch for it by itself. Vouching is your signature that this copy is what its source gave; it then enters the record.",
+  'screen.inbox.ladder.basis': "Unknown: nothing is known of who handed it in. Same knocker: it came with the same secret phrase as earlier material, which says nothing about who they are. Partly known: the team knows something about them, such as an occupation. Known to the team: members know who they are. Public: they are publicly named. This inbox shows only what a secret phrase can tell; anything more is kept with the source.",
+  'screen.doorbell.received': "Received on {at}. A member of the team will read it. Keep the reference and the date: they are all you have to ask about it, because this page does not know who you are.",
+  'screen.capture.address.existed': "Already in the record as {title}: your team holds exactly this document. Nothing new was saved.",
+  'screen.document.cite.question': 'Cite in which question',
+  'screen.finder.widen': 'Documents holding at least one of the words: {n}.',
+  'screen.open-file.safe.ready': 'The safe view is open below: each page as a picture, so nothing in it can run.',
+  'screen.open-file.note.line': '{tool}: {result}',
+})
+def w411(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-384: B411 ' + note))
+w411('screen.capture.address.working.head', 'While it is being fetched', 'A1: progress while capturing')
+w411('screen.capture.address.working', "Fetching the page. This can take up to 25 seconds, longer if you chose to keep it as a visitor saw it. Keep this page open; the result appears here.", 'A1: progress while capturing; the code shows it from Capture until the result, beside the button')
+w411('screen.capture.address.untitled', 'A {kind} from {site}', 'I-03: a capture is named by its title, or failing that by its site and kind; never the file part of its address')
+w411('screen.capture.address.existed.open', 'Open it', 'I-04: the door to the document already held')
+w411('screen.doorbell.reference', 'Your reference: {reference}', 'I-20: the receipt gives something to keep')
+w411('screen.doorbell.after.head', 'After you hand it over', 'I-20')
+w411('screen.document.cite.option', '{question} ({project})', 'I-11, A6: a question in the list is told apart by its project')
+w411('screen.document.cite.choose', 'Choose a question', 'I-11, A6: the list never starts blank')
+w411('screen.document.unwatched.head', "If this address isn't being watched", 'I-35')
+w411('screen.document.unwatched', "This address isn't being watched, so there is nothing to check yet. Watch it, and each new version found is kept beside this one.", 'I-35: shown instead of Check for a new version now while the address is not watched')
+w411('screen.finder.noresult.partial', 'No document holds all of the words “{q}” together.', 'I-14: shown instead of Nothing your team holds matches when some documents hold some of the words')
+w411('screen.finder.partial.head', 'When some documents hold only some of the words', 'I-14')
+w411('screen.open-file.tool.clamav', 'Built-in scanner', 'I-18: the scanner is named for what it is, never clamav')
+w411('screen.open-file.result.not_scanned', 'Not scanned yet', 'I-18: the scanner state in plain words')
+w411('screen.open-file.result.clean', 'Clean: nothing found', 'I-18')
+w411('screen.open-file.result.found', 'Something was found', 'I-18')
+w411('screen.open-file.result.failed', 'Could not be scanned just now', 'I-18')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

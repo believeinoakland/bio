@@ -2158,7 +2158,7 @@
     },
     {
      "op": "safeview",
-     "label": "Read the safe view",
+     "label": "Show the safe view on this page",
      "status": "declared",
      "modules": [
       "file-safety",
