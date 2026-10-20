@@ -143,4 +143,4 @@ COMPLETE for FR-28 (screens-inquiry #15), with three open items for BOB (below).
 
 **Checks (from civicos-process, against /home/user/bio):** format 175 modules, 0 failures; words: no finding for screens-inquiry; coverage 120 of 122 live ids (R110, R119 unnamed); architecture 8 failures, all the `uses` above; ownership: only `build/requirements/screens-inquiry.md` outside paths (accepted by B16/B17, K4210). Not run: the `setup-words build --check` finding for my module (none seen) and journey-check.
 
-Size (session_01KSJQk5BpCQJRWiVABxqnfZ): test runs 16, module lines 11,090
+Size (session_01KSJQk5BpCQJRWiVABxqnfZ): test runs 16, module lines 5565
