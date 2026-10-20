@@ -34,3 +34,12 @@ Choices, for BOB's record: a sentence whose text is a code fragment (`out_of_sco
 ## J1 · COMPLETE
 
 T51-242 (words) done on job/T51/link-sweep at 1af3138760 (code, tests) and the record's completion section. Words check for link-sweep: 0 failures (was 15). Module tests 29/29 pass. Format, architecture, coverage, ownership: 0 failures. setup-words --check: the expected stale-rows note for link-sweep.checks.is_missing only. Other modules' repo-wide findings (run.mjs words 1161, coverage 24; cross-module words 60) name no link-sweep line. Deferred: none. Waiting on BOB (J1).
+
+## J2 · REPORT
+
+Entries 1-4 (R13 sweepSet, R14 sweepRatify, R15 DECLARED_OPS for sweeps, sweepset, sweepratify) are built and pushed on job/T51/link-sweep, with tests (sweep-write.test.mjs, declared-ops.test.mjs; seam.test.mjs updated for the new row and ops). Three things are BOB's:
+
+1. monitoring R77's `sweepHost().write` is not on tranche/T51 nor on job/T51/monitoring yet (checked just now). My arms call `host.write({bundle, mutate, author, viewer, log})` as R77 states it (mutate edits the parsed object in place and returns it; log is the Session Log sentence). I ran my 39 tests against a throwaway stand-in of `write` kept outside the repo (all pass); they must be re-run against monitoring's real one. I will merge tranche/T51 after monitoring merges. Please tell me when it has, or say if the `write` shape differs.
+2. modules.json: `link-sweep` does not use `test-support`, so `node checks/architecture.mjs` fails on declared-ops.test.mjs ("imports bio-plane/test/declared-ops.mjs of test-support, which link-sweep does not declare in uses"). B2 says no edge to add; money and others have it. Please add `test-support` to link-sweep's uses.
+3. plane (not mine): `bio-plane/src/plane/store.mjs:863` calls `linkSweepOps(linkSweepOf(ctx), url)` without the body; `sweepset` and `sweepratify` read the POST body, so that line needs `, body` as every neighbour has. Until plane does so the two ops get an empty body.
+Also for the record: the new row MACHINE_CANNOT_SET_SWEEP took C-18.24 (monitoring's two new rows should take C-18.22 and C-18.23; renumber if they differ). Its translation is read by localize('link-sweep.checks.machine_cannot_set_sweep') since refusal.* rows do not exist in rows.mjs yet.
