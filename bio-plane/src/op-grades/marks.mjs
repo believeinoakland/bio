@@ -17,13 +17,18 @@
  * rungless registered act of the registry as it stands there. Left out: the five acts T50 grades in `./t50.mjs` (`watchitem`,
  * `secondlook`, `secondlookclear`, `projectstakeset`, `actionstake`, which are `reversible`, and `actioninquiry`, which is
  * `undetermined`), and `planopen`, `wizarddraft` and `membertie`, which R47 grades `reversible`. `notewrite` is the one entry
- * no kit names: DEC-300 (5) weighs it Reversible, so its source is that ruling and not the kit's default. */
+ * no kit names: DEC-300 (5) weighs it Reversible, so its source is that ruling and not the kit's default.
+ *
+ * (R46; T51 fix round) Re-taken at `MARKS_KIT_COMMIT` `7c51f69a9f`, the design as `tranche/T51` holds it: the registry lists 27
+ * more rungless acts than at `7be06eb4cb` (the new screens' reads and the bias, case-details, rerun and task acts), each added
+ * with the kit's weight or the default; no earlier entry changed weight and none is dropped. An op that its owner later
+ * declares a rung (`registerDeclaredOps`, R49) has a rung, and the shell draws that: the entry is then unread. */
 
-/* the commit the kit and the registry are read at: the design's last merge into `tranche/T50` (`7be06eb4cb`, K3750, R46),
-   which moved both files on from `fa3c8b7e8e` (PR #39, K3366; K3321 (B) before it) */
+/* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`7c51f69a9f`, R46, re-taken in the
+   fix round, T51 FR-03), which moved both files on from `7be06eb4cb` (the design's last merge into `tranche/T50`, K3750) */
 import { localize } from "../setup-words/index.mjs";
 
-export const MARKS_KIT_COMMIT = "7be06eb4cb";
+export const MARKS_KIT_COMMIT = "7c51f69a9f";
 
 const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
@@ -44,9 +49,15 @@ const ROWS = [
   ["archivelist", "Reversible", "kit"],
   ["ask", "Reasoned", "default"],
   ["authoritychain", "Reversible", "kit"],
+  ["biasdebt", "Reversible", "kit"],
+  ["biasinhale", "Reversible", "kit"],
+  ["biasmanifest", "Reversible", "kit"],
   ["bootstrap", "Irreversible", "kit"],
   ["captureprogressions", "Reversible", "kit"],
   ["capturerequest", "Reversible", "kit"],
+  ["casedetails", "Reversible", "kit"],
+  ["casedetailspublic", "Reversible", "kit"],
+  ["casedetailsset", "Reversible", "kit"],
   ["claim", "Signed", "kit"],
   ["committedagainstpaid", "Reversible", "kit"],
   ["connect", "Reversible", "kit"],
@@ -60,6 +71,8 @@ const ROWS = [
   ["exploreapprove", "Reasoned", "kit"],
   ["explorepreset", "Reversible", "kit"],
   ["exploreverify", "Reversible", "kit"],
+  ["export", "Reasoned", "default"],
+  ["exportlog", "Reasoned", "default"],
   ["findin", "Reversible", "kit"],
   ["founderhandleset", "Reasoned", "kit"],
   ["frontier", "Reversible", "kit"],
@@ -76,6 +89,7 @@ const ROWS = [
   ["hashcopy", "Reasoned", "default"],
   ["heldcaptures", "Reversible", "kit"],
   ["hostingaccessset", "Reasoned", "kit"],
+  ["importregrade", "Reversible", "kit"],
   ["infolevelset", "Reasoned", "default"],
   ["installalongside", "Reasoned", "kit"],
   ["installremove", "Reversible", "kit"],
@@ -88,13 +102,20 @@ const ROWS = [
   ["joinlinkenable", "Reasoned", "default"],
   ["joinlinkinvite", "Reversible", "kit"],
   ["knock", "Reasoned", "kit"],
+  ["knockerconsent", "Terminal", "kit"],
+  ["knocksof", "Reversible", "kit"],
+  ["leadread", "Reversible", "kit"],
   ["linkopen", "Reasoned", "default"],
   ["login", "Reversible", "kit"],
   ["memberadd", "Reasoned", "kit"],
   ["membercaps", "Reasoned", "kit"],
   ["memberlanguageset", "Reversible", "kit"],
+  ["memberpairingset", "Reasoned", "default"],
   ["memberset", "Reasoned", "kit"],
   ["monitor", "Reversible", "kit"],
+  ["monitoring", "Reversible", "kit"],
+  ["monitorpause", "Reversible", "kit"],
+  ["monitorslate", "Reversible", "kit"],
   ["notedelete", "Reasoned", "default"],
   ["noterevise", "Reasoned", "default"],
   ["noteturn", "Reasoned", "default"],
@@ -106,6 +127,7 @@ const ROWS = [
   ["optionstartpreview", "Reversible", "kit"],
   ["passwordreset", "Reasoned", "kit"],
   ["passwordresetlink", "Reasoned", "kit"],
+  ["pdfstructure", "Reasoned", "kit"],
   ["placewanted", "Reasoned", "default"],
   ["procedureguides", "Reversible", "kit"],
   ["profilesset", "Reasoned", "kit"],
@@ -124,6 +146,7 @@ const ROWS = [
   ["projectrequestwithdraw", "Reversible", "kit"],
   ["projectsigninset", "Reasoned", "kit"],
   ["promote", "Reasoned", "kit"],
+  ["provenanceroute", "Reversible", "kit"],
   ["pubfloorclear", "Reasoned", "default"],
   ["pubfloorset", "Reasoned", "default"],
   ["publishedcase", "Reversible", "kit"],
@@ -138,13 +161,18 @@ const ROWS = [
   ["recorddatedfact", "Reasoned", "kit"],
   ["recover", "Reasoned", "kit"],
   ["recoverycodesissue", "Reversible", "kit"],
+  ["reevaluations", "Reversible", "kit"],
   ["reminderanswer", "Reasoned", "kit"],
   ["reminderset", "Reversible", "kit"],
+  ["rerunpair", "Reversible", "kit"],
+  ["rerunread", "Reversible", "kit"],
+  ["rerunstart", "Reversible", "kit"],
   ["reviewexport", "Reasoned", "default"],
   ["reviewgrant", "Reasoned", "kit"],
   ["reviewrevoke", "Terminal", "kit"],
   ["revisioncompare", "Reasoned", "default"],
   ["ruleanswer", "Reversible", "kit"],
+  ["runtime", "Reasoned", "default"],
   ["safeview", "Reversible", "kit"],
   ["search", "Reversible", "kit"],
   ["securitymap", "Reversible", "kit"],
@@ -153,6 +181,7 @@ const ROWS = [
   ["securitytooltest", "Reversible", "kit"],
   ["select", "Reversible", "kit"],
   ["selectionrelease", "Reversible", "kit"],
+  ["selftest", "Reversible", "kit"],
   ["setpassword", "Reasoned", "kit"],
   ["signeradd", "Reasoned", "default"],
   ["signerregisterown", "Signed", "kit"],
@@ -160,11 +189,14 @@ const ROWS = [
   ["signerset", "Reasoned", "default"],
   ["signout", "Reversible", "kit"],
   ["signouteverywhere", "Reasoned", "kit"],
+  ["standardinforce", "Reversible", "kit"],
   ["standingquestionend", "Reversible", "kit"],
   ["standingquestionset", "Reversible", "kit"],
   ["startfrom", "Reversible", "kit"],
   ["subscriptiondisconnect", "Terminal", "kit"],
   ["subscriptionsignin", "Reasoned", "default"],
+  ["sweeps", "Reversible", "kit"],
+  ["taskdecide", "Reasoned", "kit"],
   ["themeread", "Reversible", "kit"],
   ["translationdraft", "Reversible", "kit"],
   ["translationgrant", "Reasoned", "default"],
