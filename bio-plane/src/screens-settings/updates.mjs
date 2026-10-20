@@ -7,7 +7,10 @@
    since the installer runs only with the hosting account's consent); every administrator has Not now (`updatelater`)
    and, under a disclosure, Skip this version (`updateskip`, reasoned). A failed read is drawn failed, never as nothing
    to install. For a member who does not administer it reads nothing and says the screen is administrators'. Every
-   function is self-contained (interface-shell R21). */
+   function is self-contained (interface-shell R21).
+   T51 FR-25 (R68, R73; C82, T-08; DEC-376, DEC-384): "How your copy is doing": the check (`selftest`), what each part runs (`bootstrap`'s
+   `memberVersions`) and what running costs (`runtime`), each drawn from its own answer when the administrator asks; and a release no
+   member recorded is drawn without a claim about setup unless it is the release installed at setup. */
 
 export const updates = {
   id: "updates",
@@ -16,7 +19,8 @@ export const updates = {
     // `updatenotice` is refused to anyone who does not administer (instance-setup R89), so it is not asked; they are told whose
     // screen it is, by the administrators' handles (the roster a member reads)
     if (!(view.me && view.me.administer === true)) return { roster: { op: "memberlist" } };
-    return { notice: { op: "updatenotice" } };
+    // the copy's own facts, `installed_at` among them, are an administrator's (instance-setup R95): the day it was set up tells the setup release from a later one
+    return { notice: { op: "updatenotice" }, boot: { op: "bootstrap" } };
   },
 
   render(cs, view) {
@@ -44,17 +48,64 @@ export const updates = {
       if (id === "admin") return me.member === "admin" && me.handle ? me.handle : null;
       return id;
     };
+    // R68: the three reports of the copy. Each is asked by its own act and drawn from the answer it gave; a part is named as the answer names it
+    // (record data), and a number is the answer's own. A sentence the design has no word for is not drawn (the job REPORTs it)
+    const H = "screen.updates.health.";
+    const icon = (k) => (typeof cs.icon === "function" ? cs.icon(k) : "");
+    const num = (x) => (typeof x === "number" && Number.isFinite(x) ? String(Math.round(x * 100) / 100) : "");
+    const data1 = (x) => `<span class="mk-data">${E(String(x))}</span>`;
+    const healthOf = () => {
+      let hb = `<div>${cs.act("selftest", { label: H + "check" })}</div>`;
+      const hv = ui.health || null;
+      if (hv) {
+        const rows = [cs.row(icon("accepted"), W(H + "store"))];
+        if (hv.captures === "not configured") rows.push(cs.row(icon("undetermined"), W(H + "captures.off")));
+        hb += cs.sheet(rows.join(""));
+      }
+      hb += `<p class="mk-note">${W(H + "check.note")} ${W(H + "check.next")}</p>`;
+      hb += `<div>${cs.act("bootstrap", { label: H + "parts.act" })}</div>`;
+      const pv = ui.parts || null;
+      if (pv) {
+        const rows = Object.entries(pv).filter(([, r]) => r && typeof r === "object").map(([part, r]) => (r.state === "SERVING"
+          ? cs.row(icon("accepted"), `${data1(part)} · ${data1(r.version)}`)
+          : r.state === "SILENT" ? cs.row(icon("refused"), `${data1(part)} · ${W(H + "part.silent")}`)
+            : cs.row(icon("undetermined"), `${data1(part)} · ${data1(r.state)}`)));
+        hb += cs.sheet(rows.join("")) + `<p class="mk-note">${W(H + "parts.note")} ${W(H + "parts.next")}</p>`;
+      }
+      hb += `<div>${cs.act("runtime", { label: H + "runtime.act" })}</div>`;
+      const rv = ui.runtime || null;
+      if (rv) {
+        const metrics = rv.measured && Array.isArray(rv.measured.metrics) ? rv.measured.metrics : [];
+        const rows = metrics.map((m) => cs.row(icon("status"), data1(m.metric), "", `${data1(num(m.peak) + " " + m.unit)} ${data1(num(m.mean) + " " + m.unit)} ${data1(num(m.samples))}`));
+        hb += cs.sheet(rows.join("") + cs.row(icon("status"), W(H + "runtime.limits")) + cs.row(icon("status"), W(H + "runtime.cpu"))) + `<p class="mk-note">${W(H + "runtime.note")}</p>`;
+      }
+      return hb;
+    };
+
     const secure = (r) => (r.security === true ? ` <span class="cs-risk" data-risk="raised" tabindex="0" data-level="1" data-tip="${W("updates.ready.security_says")}">${W("updates.ready.security")}</span>` : "");
+
+    // the day the copy was set up (bootstrap's `installed_at`): a release installed that day, with no member behind it, is the setup release (R73)
+    const setupAt = data.boot && data.boot.state === "ok" && data.boot.value && typeof data.boot.value.installed_at === "string" && data.boot.value.installed_at ? data.boot.value.installed_at : null;
+    const isSetup = (iso) => setupAt !== null && typeof iso === "string" && iso.slice(0, 10) === setupAt.slice(0, 10);
 
     out.push(cs.state(data.notice, (v) => {
       let h = "";
       const run = v.running;
       if (run && run.version) {
         const by = who(run.allowed_by);
-        const rows = [cs.row("", by ? W("updates.running.release", { version: run.version, date: D(run.installed_at), who: by }) : W("updates.running.release_setup", { version: run.version, date: D(run.installed_at) }))];
+        // a member by their handle; no member behind it: the setup release says it was set up, a later one only its own date (R73)
+        const line = by ? W("updates.running.release", { version: run.version, date: D(run.installed_at), who: by })
+          : isSetup(run.installed_at) ? W("updates.running.release_setup", { version: run.version, date: D(run.installed_at) })
+            : W("updates.running.release_noactor", { version: run.version, date: D(run.installed_at) });
+        const rows = [cs.row("", line)];
+        // the one set-up date, apart from any release, unless the release's own line already says it
+        if (setupAt && !(!by && isSetup(run.installed_at))) rows.push(cs.row("", W("updates.running.setup_on", { date: D(setupAt) })));
         if (v.last_check && v.last_check.at) rows.push(cs.row("", W("updates.running.checked", { when: D(v.last_check.at) }), "", W("updates.running.checked_note")));
         h += cs.sec("updates.running.head", cs.sheet(rows.join("")));
       }
+
+      // how the copy is doing (R68): the check, what each part runs, what running costs, each from its own answer
+      h += cs.sec("screen.updates.health.head", healthOf(), { help: "screen.updates.health.help" });
 
       // the release ready, and the choice
       const r = v.ready;
@@ -91,7 +142,9 @@ export const updates = {
       if (earlier.length) h += cs.sec("updates.earlier.head", cs.sheet(earlier.map((e) => cs.row("", e.skipped_at
         // a skip is a member's act: the founder with no handle yet is `member.founder.unnamed`, never `admin`
         ? W("updates.earlier.skipped", { version: e.version, date: D(e.skipped_at), who: who(e.skipped_by) || T(String(e.skipped_by || "").replace(/^member:/, "") === "admin" ? "member.founder.unnamed" : "settings.set.system"), reason: e.reason || "" })
-        : who(e.allowed_by) ? W("updates.earlier.installed", { version: e.version, date: D(e.installed_at), who: who(e.allowed_by) }) : W("updates.earlier.installed_setup", { version: e.version, date: D(e.installed_at) }))).join("")));
+        : who(e.allowed_by) ? W("updates.earlier.installed", { version: e.version, date: D(e.installed_at), who: who(e.allowed_by) })
+          : isSetup(e.installed_at) ? W("updates.earlier.installed_setup", { version: e.version, date: D(e.installed_at) })
+            : W("updates.earlier.installed_noactor", { version: e.version, date: D(e.installed_at) }))).join("")));
       return h;
     }));
     return out.join("");
@@ -105,6 +158,19 @@ export const updates = {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         if (a && typeof a.address === "string" && /^https:\/\//.test(a.address)) cs.set("address", a.address);
       } },
+    // the copy's own check: a read, drawn from its answer; a problem is the answer refused, and drawn in its fold beside the act (R68)
+    { op: "selftest", rereads: [],
+      send() { return {}; },
+      done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; cs.set("health", { ok: !!(a && a.ok !== false), captures: a && a.captures }); },
+      refusals: { "500": (r, cs) => `<details class="mk-details" open><summary>${cs.w("screen.updates.health.refused.head")}</summary><div class="cs-gap" data-gap="refused"><span>${cs.w("screen.updates.health.refused.store")} ${cs.w("screen.updates.health.refused.next")}</span></div></details>` } },
+    // what each part of the copy runs: `bootstrap` asked for the members' own builds (instance-setup R17)
+    { op: "bootstrap", rereads: [],
+      send() { return { query: { members: "1" } }; },
+      done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; cs.set("parts", a && a.memberVersions && typeof a.memberVersions === "object" ? a.memberVersions : {}); } },
+    // what running costs: the instance's measurements (instance-setup R37)
+    { op: "runtime", rereads: [],
+      send() { return {}; },
+      done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; cs.set("runtime", a && typeof a === "object" ? a : {}); } },
     { op: "updatelater", rereads: ["notice"],
       send(view, el) { return { body: { version: el.dataset.version } }; } },
     // the administrator's own reason, one line of 1 to 1,000 characters, every administrator will see it

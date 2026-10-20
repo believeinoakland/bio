@@ -13,7 +13,10 @@
    T50 (R43; U3; DEC-291, DEC-323): the screen leads with how things stand under its mark; the counts fold; the catalogue of
    outside-tool kinds is drawn only inside the fold "Add another checker"; a period is named by its first and last day, both
    included, and may end today (`to` the end of the present hour then). A member who does not administer reads only the
-   administrators (`memberlist`) to be told whose screen it is. */
+   administrators (`memberlist`) to be told whose screen it is.
+   T51 FR-25 (R74, R77; T-14, K4213; DEC-384): a credential field is labelled by `file-scanner.credential.<field>` for the four names the
+   catalogue lists (`client_id`, `client_secret`, `api_key`, `api_secret`), the field sent staying the catalogue's own; and a scanner
+   that holds no signatures is said so, by the key and words `scanstatus` answers (`no_signatures`), never drawn as "waiting". */
 
 export const security = {
   id: "security",
@@ -90,6 +93,17 @@ export const security = {
       if (b.part_scanner === true) {
         const sc = data.scan && data.scan.state === "ok" ? data.scan.value : null;
         if (sc && (Number(sc.queued || 0) > 0 || Number(sc.held || 0) > 0)) h += `<p data-state="queue">${W(S + "queue", { queued: Number(sc.queued || 0), held: Number(sc.held || 0) })}</p>`;
+        // R77 (file-safety R46): a scanner that holds no signatures, said by the key `scanstatus` answers and its fills, else by the answer's own words
+        const ns = sc && sc.no_signatures && typeof sc.no_signatures === "object" ? sc.no_signatures : null;
+        if (ns) {
+          // the key's word where the list holds it and every fill is answered; else the answer's own words (the shell draws a key the list lacks as the key)
+          const said1 = (key, words, fills) => { const t = typeof key === "string" ? String(W(key, fills)) : ""; return t && t !== E(key) && !/\{\w+\}/.test(t) ? t : typeof words === "string" ? E(words) : ""; };
+          const status = /^REFUSED:[^:]*:(\d{3})$/.exec(String(ns.reason || ""));
+          const first = said1(ns.key, ns.words, ns.since ? { date: D(ns.since) } : {});
+          const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
+          if (first) h += `<p data-state="nosignatures">${first}</p>`;
+          if (second) h += `<p data-state="nosignatures-reason">${second}</p>`;
+        }
       }
       return h;
     })));
@@ -123,7 +137,9 @@ export const security = {
         if (t.template) f += cs.field(p + "-host", S + "host", { autocomplete: "off" });
         // a field named by the catalogue's own label (record data, a word's fill, so escaped and never read as a key)
         for (const c of Array.isArray(t.config) ? t.config : []) if (c && c.name) f += cs.field(`${p}-c-${c.name}`, c.required ? S + "field" : S + "field.optional", { fills: { label: c.label || c.name }, autocomplete: "off" });
-        for (const k of Array.isArray(t.credentials) ? t.credentials : []) f += cs.field(`${p}-k-${k}`, S + "field", { type: "password", fills: { label: k }, autocomplete: "off" });
+        // R74: the label of a credential field is its word where the design holds one (the four names); any other is its own name
+        const credLabel = (k) => { if (["client_id", "client_secret", "api_key", "api_secret"].indexOf(k) < 0) return k; try { return T("file-scanner.credential." + k); } catch (e) { return k; } };
+        for (const k of Array.isArray(t.credentials) ? t.credentials : []) f += cs.field(`${p}-k-${k}`, S + "field", { type: "password", fills: { label: credLabel(k) }, autocomplete: "off" });
         if (h.sample_sharing === "vendor_internal_research") f += `<input type="checkbox" id="${p}-keep"><label for="${p}-keep">${W(S + "keep")}</label>`;
         if (h.on_own === true) f += `<input type="checkbox" id="${p}-every"><label for="${p}-every">${W(S + "every")}</label>`;
         return f + add + "</div>";
