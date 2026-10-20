@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6095,
+  "screen": 6135,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1027,
+  "act": 1029,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -229,8 +229,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17073,
-  "protected": 1021
+  "total": 17115,
+  "protected": 1022
  },
  "words": [
   {
@@ -68620,6 +68620,286 @@
    "note": "DEC-376: B398 C73 (action-plans optionadd, optiondispose, scenarioset): the plan screen, the forms under Options and Scenarios; an explanation shown on hover or tap; translate in the same plain register, \"team\" never \"group\""
   },
   {
+   "key": "screen.start-send.contact.label",
+   "en": "The team's contact for this action (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C74 (actions optionstart): the choice label, step 1 of Start"
+  },
+  {
+   "key": "screen.start-send.contact.help1",
+   "en": "The member who answers for this action.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C74 (actions optionstart): the choice's help, first sentence"
+  },
+  {
+   "key": "screen.start-send.contact.help2",
+   "en": "Their name shows on the action.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C74 (actions optionstart): the choice's help, second sentence"
+  },
+  {
+   "key": "screen.start-send.contact.help3",
+   "en": "It gives them no extra rights.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C74 (actions optionstart): the choice's help, third sentence"
+  },
+  {
+   "key": "screen.start-send.contact.refused.summary",
+   "en": "When the contact is not a member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C74 (actions optionstart): the refusal's disclosure summary"
+  },
+  {
+   "key": "screen.start-send.contact.refused.body1",
+   "en": "The contact must be a member of your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C74 (actions optionstart): the refusal, first sentence"
+  },
+  {
+   "key": "screen.start-send.contact.refused.body2",
+   "en": "Choose one of the members listed, or leave it empty, then start the action again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C74 (actions optionstart): the refusal, what to do next"
+  },
+  {
+   "key": "screen.start-send.exhibits.heading",
+   "en": "The exhibits, against the venue's standard",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section heading, in Start and send and in Brief counsel; the venue is the court or office the filing goes to"
+  },
+  {
+   "key": "screen.start-send.exhibits.intro1",
+   "en": "Each exhibit shows its capture grade, A to D, which says how well the capture can be checked, and how that grade stands against what this venue accepts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section intro"
+  },
+  {
+   "key": "screen.start-send.exhibits.intro2",
+   "en": "A flagged exhibit never stops the filing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section intro"
+  },
+  {
+   "key": "screen.start-send.exhibits.intro3",
+   "en": "It shows where to expect a challenge.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): section intro"
+  },
+  {
+   "key": "screen.start-send.exhibits.accepted",
+   "en": "Within the grades this venue accepts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, after its grade"
+  },
+  {
+   "key": "screen.start-send.exhibits.contestable1",
+   "en": "This venue admits this grade only as contestable.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, first sentence"
+  },
+  {
+   "key": "screen.start-send.exhibits.contestable2",
+   "en": "Expect it to be challenged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, second sentence"
+  },
+  {
+   "key": "screen.start-send.exhibits.below1",
+   "en": "Below every grade this venue accepts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, first sentence"
+  },
+  {
+   "key": "screen.start-send.exhibits.below2",
+   "en": "Add a better capture of the same record if you can.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit's reading, what to do next"
+  },
+  {
+   "key": "screen.start-send.exhibits.undetermined",
+   "en": "Civicsmith cannot say how this exhibit stands against the venue's standard yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): an exhibit whose grade or the venue's standard cannot be read"
+  },
+  {
+   "key": "screen.start-send.exhibits.refused.summary",
+   "en": "When the venue's standard is not stated",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): disclosure summary"
+  },
+  {
+   "key": "screen.start-send.exhibits.refused.body1",
+   "en": "Your team's places do not state what evidence this venue accepts for this kind of action, so no exhibit is graded against it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): a gap line"
+  },
+  {
+   "key": "screen.start-send.exhibits.refused.body2",
+   "en": "The grades still show.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): a gap line"
+  },
+  {
+   "key": "screen.start-send.exhibits.refused.body3",
+   "en": "Check the venue's own rules.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C76 (filings filingprepare, counselpacket): a gap line, what to do next"
+  },
+  {
+   "key": "screen.start-send.template.heading",
+   "en": "Keep this filing as your team's template",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): section heading"
+  },
+  {
+   "key": "screen.start-send.template.note1",
+   "en": "This keeps the text you approved as the first draft of a template.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): section note"
+  },
+  {
+   "key": "screen.start-send.template.note2",
+   "en": "A filing must be approved first, and it can be sent or not.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): section note"
+  },
+  {
+   "key": "screen.start-send.template.note3",
+   "en": "The template is filed under this action's kind.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): section note"
+  },
+  {
+   "key": "screen.start-send.template.name.help1",
+   "en": "One line, up to 200 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): name field help"
+  },
+  {
+   "key": "screen.start-send.template.name.help2",
+   "en": "Another template of your team's cannot use the same name.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): name field help"
+  },
+  {
+   "key": "screen.start-send.template.use.label",
+   "en": "What it is for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): choice label"
+  },
+  {
+   "key": "screen.start-send.template.use.help1",
+   "en": "A filing template is offered when a member prepares a filing of this kind.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): choice help"
+  },
+  {
+   "key": "screen.start-send.template.use.help2",
+   "en": "A brief template is offered when a member briefs counsel.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): choice help"
+  },
+  {
+   "key": "screen.start-send.template.use.brief",
+   "en": "A brief for counsel",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): choice option"
+  },
+  {
+   "key": "screen.start-send.template.notes.label",
+   "en": "Notes for the team (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): field label"
+  },
+  {
+   "key": "screen.start-send.template.notes.help",
+   "en": "Anything the team should know before it approves this template, such as when to use it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): field help"
+  },
+  {
+   "key": "screen.start-send.template.refused.summary",
+   "en": "When the template is refused",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): disclosure summary"
+  },
+  {
+   "key": "screen.start-send.template.refused.unapproved1",
+   "en": "The filing is not approved yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): refusal"
+  },
+  {
+   "key": "screen.start-send.template.refused.unapproved2",
+   "en": "Approve the text first, then keep it as a template.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): refusal, what to do next"
+  },
+  {
+   "key": "screen.start-send.template.refused.taken1",
+   "en": "Another template of your team already has this name.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): refusal"
+  },
+  {
+   "key": "screen.start-send.template.refused.taken2",
+   "en": "Choose a different name.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): refusal, what to do next"
+  },
+  {
+   "key": "screen.start-send.template.refused.tier1",
+   "en": "A filing for this kind of action is never kept as a template, because it needs counsel first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): refusal"
+  },
+  {
+   "key": "screen.start-send.template.refused.tier2",
+   "en": "Keep it as a brief instead.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-375: B398 C75 (filings templatesave): refusal, what to do next"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -110115,6 +110395,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.templatesave.label.start-send",
+   "en": "Keep as a template",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_actionstake.label.start-send",
    "en": "Save this action's stake",
    "protected": true,
@@ -112874,6 +113160,12 @@
    "key": "act.filingapprove.does",
    "en": "Approves this exact text for sending. Changing it afterwards needs approving again.",
    "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.templatesave.does",
+   "en": "Keeps the text you approved as the first draft of a template for your team. Nothing is offered to members until the team approves it.",
+   "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
