@@ -389,6 +389,8 @@ const ACT_HELP = {
   reviewrevoke: 'Stops sharing the review copy at once.',
   reviewcomment: 'Comments on the draft, for the case\'s owner to read.',
   publishpreflight: 'Checks the case is ready to publish and lists anything that would stop it.',
+  reattest: 'Asks a trusted time-stamp service, and an outside archive, to confirm a document again. It shows the document existed by now, not when it was captured.',
+  captureaccount: 'Adds your signed account of when and how you captured a document. Only the member who captured it can add one, and it cannot be removed.',
   publishtensions: 'Shows what must be disclosed in the case, such as members\' ties that concern it.',
   caseratify: 'Signs this edition, its findings and their evidence with your key, and publishes it now. Readers can check each signature without the team.',
   publish: 'Publishes the signed edition for anyone to read. It can never be unpublished; corrections come as a new edition.',
