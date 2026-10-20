@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01LedUpF3AAa5y9xN9UujA4d · depth 2 · COMPLETE · handled B5
+**Status** · session_01D6KgPVrvb8G2TEKd3zrgrR · depth 2 · COMPLETE · handled B6
 
 ## J1 · COMPLETE
 
@@ -151,3 +151,29 @@ COMPLETE for B4 (K4206) and B5 (CHANGE K4226). Session session_01LedUpF3AAa5y9xN
 - I installed the missing `node_modules` for the lockfile directories (`agent-runner`, `bio-plane/src/journey-check`, `file-scanner`, `sheet-worker`, `site`) before the test run.
 
 Size (session_01LedUpF3AAa5y9xN9UujA4d): test runs 3, module lines 3789
+
+## J6 · COMPLETE
+
+**COMPLETE** for B6 (K4234). Pushed at 9caf8a5ce6 on `job/T51/capture` (merged `tranche/T51` at ead39e0ca2 first; fast-forward).
+
+**Entries applied**
+1. **K4234 · `acquireOp` forwards the trace.** `acquireOp` (`bio-plane/src/capture/ops.mjs`) takes the door's `trace` and sends it to the store's `acquire` as the header `x-civicsmith-trace`, only when it is a printable string of at most 200 characters (the shape `signin-door` R3 mints; `ask.mjs`'s `doorHeaders` rule). `captureOp`'s `acquire` arm passes `h.trace` through. No query or body change; the request's URL and body are as before.
+2. **Test**: `bio-plane/test/m/capture/trace.test.mjs`, two tests naming R99. (a) A given trace reaches the store's acquire as the header, and is in neither the query nor the body. (b) Control: with no trace, `null`, an empty string, a string with a space, a 201-character string or a non-string, the store's acquire carries no trace header. Before the change, test (a) fails and (b) passes; after, both pass.
+
+**Decisions for BOB to check**
+- **Header, not query or body.** B6 says "query or body, as plane R55 carries it". R55 carries the trace in the `x-civicsmith-trace` header and says "in no body or address", so I used the header. If the object must read it from the query instead, say so and I will change it.
+- **Requirement line for BOB to place** (new R99, next free id; capture.md has R98 as its last):
+> **R99** (T51; K4234; plane R55) `op=acquire`'s arm hands the door's `trace` to the store's acquire as the header `x-civicsmith-trace`, so the object holds that acquire's timings under it (plane #44): only a printable string of at most 200 characters, never in the query or the body; none handed, no header. Test: `trace.test.mjs` (a given trace reaches the store; with none or an unprintable one, no header).
+- **Dependency, not my module (PLANE #44).** `captureOp` reads `h.trace`, but `bio-plane/src/plane/door.mjs` (line ~92) hands `captureOp` only `{json, storeSilent, storeRefusal, doAnswer, storageAbsent, requiredArgument, cls, member, sessMember, storeName, key, viewer, readAcquired}` and no `trace`. Until PLANE #44 adds `trace` to that handoff, the header is never sent in production. I have not changed `door.mjs`.
+
+**Deferred**: none.
+
+**Found in other modules (not touched; for BOB)**: `checks/run.mjs` shows the usual reds in other modules, notably the `op-grades` testcopy findings (t36 and t47, t48 lines 34 and 83, which quote "capture's digest" in test titles). None is in capture's files.
+
+**Tests and checks**
+- `node --test test/m/capture/ test/cap13-reuse-pages.test.mjs test/d57selflink.test.mjs` (bio-plane): 213 tests, 213 pass, 0 fail (211 before; +2 from `trace.test.mjs`).
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `checks/architecture.mjs /home/user/bio capture`: 0 failures. `checks/coverage.mjs /home/user/bio capture`: 51 of 51 live ids named by a test, 0 failures. `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 1 file changed by capture, 0 failures (`ops.mjs` and the new test file are both capture's paths).
+- `checks/words.mjs /home/user/bio capture`: 0 failures; `unkeyed 6` (the design's list, accepted by name, as B3 records; no new sentences in this change).
+- `checks/run.mjs /home/user/bio`: capture's files show 0 findings.
+
+Size (session_01D6KgPVrvb8G2TEKd3zrgrR): test runs 4, module lines 3797
