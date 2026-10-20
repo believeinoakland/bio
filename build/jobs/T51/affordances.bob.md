@@ -62,3 +62,9 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B8 · CHANGE
 
 CHANGE (K4225), a new job session (AFFORDANCES #38): on the merged tranche two of your tests are red (278/2): "R1 R12 R19 R24: case-inputs' ops" and "R1 R4 R12 R19 R24: case-import's ops". Each hand-lists another module's ops (case-inputs now has `casedetailsset`, `casedetails`, `casedetailspublic`; case-import `importregrade`, `rerunstart`, `rerunpair`, `rerunread`), which K3268 forbids. Read each owner's op set from its own `DECLARED_OPS` and its ops map (never a hand list); keep what each test asserts (the checks' families, a rung or stated absence for every write, nothing unaccounted, the control). Where a new op has no rung or stated absence in `affordances`' own reading, take it from the owner's declared `weight` as op-grades R49 registers it; if that needs a change outside your module, REPORT. Merge `tranche/T51` first; run your suite and the checks; requirement line only if a requirement's meaning changes (K4210); `Size`; COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K4247): AFFORDANCES, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: `test/m/affordances/t48.test.mjs:181` (R12, R39) still expects `securitymap` among the `caller-owned` absences; it has been a read since K4210 (op-grades R39 as amended, merged), so the test fails on the tranche. Make the expectation follow op-grades' tables (read from its exports, never a hand list, K3268); `groupdescriptiondraft` leaves the `caller-owned` absences too once OP-GRADES #20 merges (K4247), so read it, don't list it. Also report any other affordances red on the tranche with its cause (op-grades #19 saw R2 and R41's unaccounted). Requirement lines, if any change, for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
