@@ -1,7 +1,7 @@
 /* Test screens for the shell's own tests: real registry ids, each act the registry's for its screen, drawn with every
    part of the kit (reads in their four states, acts of each weight, references, marks, dates, rows with picks and the
    hold strip, fields, the dock). Every function refers only to its parameters, as R21's contract asks. */
-import { fitSend as fit } from "./harness.mjs";
+import { fitSend as fit, declaredFit } from "./harness.mjs";
 export const FIXTURE_WORDS = Object.freeze([
   ["screen.home.t.queue", "fx t queue", false],
   ["screen.home.t.queue.holds", "fx t queue holds", false],
@@ -38,7 +38,8 @@ export const HOME = {
       + cs.field("home-title", "screen.home.t.title", { rec: true })
       + cs.act("promote", { label: "act.promote.label.home", tone: "primary" });
   },
-  acts: [{ op: "promote", send(view, el, cs) { const t = cs.value("home-title"); return t ? { body: { title: t } } : { refuse: "shell.reason.needed" }; },
+  /* the body is what the owner declares (read through the collector, K3268), the typed title carried as `meta` */
+  acts: [{ op: "promote", send: new Function("view", "el", "cs", `const t = cs.value("home-title"); return t ? { body: Object.assign(${JSON.stringify(declaredFit("promote"))}, { meta: { title: t } }) } : { refuse: "shell.reason.needed" };`),
     done(view, answer, cs) { if (answer && answer.project) cs.go("project", answer.project); } }],
 };
 
