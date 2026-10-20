@@ -14,6 +14,7 @@ import { OWNERS, assembleDeclaredOps } from "../../../src/plane/declarations.mjs
 import { DECLARED_OPS as PLANE_OPS } from "../../../src/plane/declared.mjs";
 import { gatedOp } from "../../../src/plane/door.mjs";
 import { declaredFields, OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
+import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { opsServedBy, servedThroughDoor } from "./maps.mjs";
 
 const ROOT = resolve(import.meta.dirname, "../../../..");
@@ -89,9 +90,12 @@ test("R71 every op an owner declares is reachable: in the route map (by its door
   const { ops } = await declaredOpsOf(ROOT);
   const unrouted = Object.keys(ops).filter((op) => !keys.has(OP_ALIASES[op] ?? op));
   const unreachable = [];
+  const publicReads = new Set(publicReadOf(x.ctx).publicReads().map((r) => r.name));
   const store1 = { fetch: async () => new Response("ROUTE_MAP") };
   for (const op of unrouted) {
     if (Object.hasOwn(PLANE_OPS, op)) continue;   /* R72: the door's ask arm and the draft path, no route */
+    if (Object.hasOwn(OWNERS["control-plane"], op)) continue;   /* control-plane R112: the door's own map serves it (its tests ask it) */
+    if (publicReads.has(op)) continue;   /* a public read a module registered at start: asked as `op=publicread&name=` (t51 R17) */
     let arm = null;
     try {
       arm = await gatedOp({ req: new Request(`http://w/${op}`, { method: "GET" }), url: new URL(`http://w/${op}`),

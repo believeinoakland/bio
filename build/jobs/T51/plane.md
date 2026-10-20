@@ -177,3 +177,14 @@ Accepted reds (B12), 11 of 283 with the nine disagreeing owner rows skipped loca
 ## J11 · COMPLETE
 
 COMPLETE (PLANE #44; B15): pushed. `gatedOp` hands `trace` to captureOp; the object reads capture's header `x-civicsmith-trace` (Store.fetch sets the in-process `trace` for a POST acquire and strips a caller's own, because store-door's HANDED list does not carry it: you may prefer store-door to hand it on); `acquiretimings` answers {ok, stageTimes}. R73's test runs the whole hop (door -> header -> object's timings under the trace -> read, while running and after). Checks: format, architecture, coverage 0 failures. Suite (seven owner rows still disagreeing skipped locally): 272 of 283, the accepted eleven. R73's requirement text is yours to write.
+
+## Record: CHANGE B16 (K4254) · PLANE #45
+- (3) R68: `declarations.mjs` imports and lists `wizard-scripts`, `queue` and `control-plane` (`owner-ops.mjs`), in `modules.json` order. `declarations.test.mjs` R68 passes.
+- (4) R71: the test now counts as reachable an op the control-plane door's own map serves (`OWNERS["control-plane"]`: `subscriptionsignin`) and a public read a module registered at start (`publicReadOf(ctx).publicReads()`: `casedetailspublic`; t51 R17 asks it). The two had a route, the door's own, which the test did not know. R71 passes.
+- (2) R5: `sweep.test.mjs` expects link-sweep's map to hold `sweeps`, `sweepset`, `sweepratify` and finds monitoring's last op from `monitoringOps` (monitoring has more ops after `addressfrequencyset`). The route map already spread the whole map. Passes.
+- (1) R24, not plane's: `screen.contradiction.purpose` is absent from `docs/development/ux-substrate/screens/words.json`. The registry (wizard-scripts, generated from the design) holds the screen's purpose; the design's `build_words.mjs` writes `screen.<id>.purpose` from `SCREEN_HELP` in `mock-refs.js`, which has no `contradiction` entry. The design's to add. The test stays unchanged and red until then.
+- Suite: `node --test bio-plane/test/m/plane/`: 280 tests, 279 pass, 1 fail (R24 above). t46-e2e and t47-e2e: 7 of 7 pass. The plane boots on the tranche tip.
+- Checks: format 0 failures; architecture 0; coverage 73 of 73; ownership 0.
+- For BOB (requirement lines): R68 names `wizard-scripts`, `queue` and `control-plane` among the owners assembled. R71: an op reached through the control-plane door's own map or registered as a public read counts as reachable. R73's text is still yours to write (earlier entry).
+- Size (session_01CLRkcMHppRTA6yFfn5t1Zg): test runs 8, module lines 8 new (declarations 6; tests 4 changed lines)
+
