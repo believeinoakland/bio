@@ -85,3 +85,15 @@ B11 applied (pushed; tranche/T51 merged in): DEC-382's six owed acts (citeimport
 ## J11 · COMPLETE
 
 B12 applied (pushed; tranche/T51 merged in). OWED_BY_FIX_ROUND (test/m/op-declarations/browser.mjs) is now derived from the registry's own owed rows: every owed act that is no op, no browser act (R76) and no installer route, so no hand list; an act leaves it when it becomes an op. t50's R73 gap check reads it (the gaps are the browser acts plus that list). op-declarations tests 242, pass 242, fail 0; architecture, coverage, words (all modules), ownership, format: 0 failures. Size (session_01Wn8nVUduH4GbFBXsW5fYy7): test runs 17, module lines 3452
+
+## J12 · REPORT
+
+Found in another module (citation), not worked here (never change another module).
+
+`citation`'s `DECLARED_OPS.citeimported` (bio-plane/src/citation/index.mjs, line ~1134, T51 FR-35) is a mutating op with no `needs`, so `registerDeclaredOps` refuses it: `op-declarations: citeimported: NEEDS_MISSING (R80)`. R80 requires `needs` on a mutating op that has no hand row, and `citeimported` has none (it is declared-only). Reproduce: `registerDeclaredOps` over every owner's `DECLARED_OPS` (the collector `declaredOpsOf`, test-support R16) throws on this row.
+
+Effect today: the plane cannot register every owner's declarations at start-up, and no test can register all of them. My tests register only case-import's and member-roster's rows (`test/m/op-declarations/register-owners.mjs`), so this does not block op-declarations' suite (242 tests pass).
+
+Proposed fix for citation's job (the act is a member's own contribution; its sibling member acts declare `needs: "contribute"`): add `needs` to `citeimported` (likely `"contribute"`, to be confirmed against citation R-lines and NEEDS), keeping `classes`, `machineClasses`, `mutating` and `stamps` as declared. BOB to route it to citation.
+
+Other owners' rows were not checked beyond the first refusal; registration stops at the first.
