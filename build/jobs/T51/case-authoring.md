@@ -123,3 +123,11 @@ COMPLETE (T51-161). Words findings fixed (zero in case-authoring), R77 sign-step
 - `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `node checks/architecture.mjs /home/user/bio case-authoring`: 0 failures. `node checks/coverage.mjs /home/user/bio case-authoring`: 53 of 53 live ids named by a test, 0 failures. `node checks/run.mjs /home/user/bio`: architecture 0, channels 0, words 0 findings for case-authoring files, coverage and words failures only in other modules. `node checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`: run again on the final commit (see the COMPLETE body).
 
 **Size (session_01UiW51kYAYDBQ6nmNeZEATc): test runs 14, module lines 2854** (`bio-plane/src/case-authoring/*.mjs`, all lines).
+
+## J6 · REPORT
+
+REPORT (FR-18; findings in other modules, none blocks this job).
+1. screens-publish, src/screens-publish/ceremony.mjs lines 100 and 105: the ceremony tells the case with no finding by the code NO_TARGET. The plane now answers PUBLISH_NO_FINDING (case-authoring R80, DEC-384), so the screen's "Add a finding" gate (its entry 24, L16) must read that code and the word refusal.PUBLISH_NO_FINDING.
+2. review, REVIEW_DRAFT_FIELDS (src/review/index.mjs:88) is its own list of what a draft keeps; its entry C3 should read case-authoring's exported DRAFT_FIELDS. Its #gates may pass `draft` to publishCase instead of the draft's parameters (R78 reads them).
+3. Hand rows that can go once an owner declares them: op-declarations OPS rows publish, publishtensions, publishpreflight (for publish also its NEEDS row and stamps: add `needs: "publish"` and `stamps: ["viewer","author"]` to my declaration if you want the rows removed); op-grades RUNGS.publish and the NON_ACTS reasons of the two reads. All three agree with my declaration now (registerDeclaredOps of both modules accepts them).
+4. Reds that were already there and are unchanged (same counts with my change stashed): review 5, screens-publish 10, interface-shell 18, op-declarations 1 (R73), op-grades 2 (R42, R46); checks/run.mjs coverage fails in 7 other modules and words testcopy in op-grades t36/t47/t48.
