@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, ADMIN, MEMBER } from "./harness.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 
 const caps = ["contribute", "administer", "create_projects", "publish"];
@@ -16,10 +16,12 @@ const account = { id: "account", words: [], reads: () => ({}), acts: [act("membe
 const project = { id: "project", words: [], reads: () => ({}), acts: [act("projectowneradd")], render: (cs) => cs.act("projectowneradd", { label: "act.projectowneradd.label.project" }) };
 const reasonBox = (p) => p.root().querySelector(".mk-slot textarea");
 
-test("R107 the weight marks are read by key", () => {
-  assert.equal(word("weight.reasoned.name"), "Asks for a reason");
-  assert.equal(word("weight.terminal.name"), "Ends something");
-  assert.equal(word("weight.signed.name"), "You sign this");
+test("R107 the weight marks are read by key: a marked act draws the name its key holds", async () => {
+  for (const k of ["weight.reasoned.name", "weight.terminal.name", "weight.signed.name"]) assert.ok(hasWord(k), k);
+  const p = await boot({ screens: [members], path: "/app/members", plane: { whoami: ok(WHO) } });
+  const mark = p.root().querySelector('button[data-act="memberadd"] .w');
+  assert.ok(mark, "the mark is drawn");
+  assert.equal(mark.textContent, word("weight.reasoned.name"));
 });
 
 for (const [screen, ops, path] of [[members, ["memberadd", "memberset", "expertiseconfirm", "membercaps"], "/app/members"], [project, ["projectowneradd"], "/app/project/P1"]]) {

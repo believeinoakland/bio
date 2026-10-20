@@ -1,4 +1,4 @@
-/* interface-shell R10, R13, R19, R27 (T51 fix round; K4194 B15, K4195 B16): a redraw keeps what the member did (a chosen file, ticked
+/* interface-shell R109 (R10, R13, R19, R27; T51 fix round; K4194 B15, K4195 B16): a redraw keeps what the member did (a chosen file, ticked
    rows) and what they typed where the screen drew nothing new, and never restores typed text over a value the screen drew from a
    read that arrived since. */
 import test from "node:test";
@@ -39,7 +39,7 @@ const TEXT = {
   acts: [],
 };
 
-test("R10 K4194 B15 a file chosen before the screen's reads arrived is still chosen after the redraw they cause (control: no file chosen draws none)", async () => {
+test("R109 R10 K4194 B15 a file chosen before the screen's reads arrived is still chosen after the redraw they cause (control: no file chosen draws none)", async () => {
   const g = gate();
   const p = await boot({ screens: [FILE], plane: LATE(g, { items: [1] }) });
   const input = p.doc.getElementById("pic");
@@ -57,7 +57,7 @@ test("R10 K4194 B15 a file chosen before the screen's reads arrived is still cho
   assert.equal(q.doc.getElementById("pic").files.length, 0, "control: nothing chosen, nothing kept");
 });
 
-test("R19 K4194 I-08 four rows ticked across a redraw stay picked (control: the redraw changes no pick)", async () => {
+test("R109 R19 K4194 I-08 four rows ticked across a redraw stay picked (control: the redraw changes no pick)", async () => {
   const g = gate();
   const p = await boot({ screens: [ROWS], plane: LATE(g, { items: [1] }) });
   const pick = (id) => p.click(p.doc.getElementById("pick-r-" + id));
@@ -70,7 +70,7 @@ test("R19 K4194 I-08 four rows ticked across a redraw stay picked (control: the 
   assert.deepEqual(["a", "b", "c", "d"].map((id) => p.doc.getElementById("pick-r-" + id).checked), [true, false, true, true], "control: unticking one changes only it");
 });
 
-test("K4195 B16 a value the screen drew from a read that arrived after the first draw is shown, not the empty snapshot of before it", async () => {
+test("R109 K4195 B16 a value the screen drew from a read that arrived after the first draw is shown, not the empty snapshot of before it", async () => {
   const g = gate();
   const p = await boot({ screens: [TEXT], plane: LATE(g, { title: "From the read" }) });
   assert.equal(p.doc.getElementById("title").value, "");
@@ -78,7 +78,7 @@ test("K4195 B16 a value the screen drew from a read that arrived after the first
   assert.equal(p.doc.getElementById("title").value, "From the read");
 });
 
-test("K4195 B16 text typed before the read survives where the read gave none; typed over a value the read gave, the read's value is what is drawn (control: an unrelated redraw keeps typing)", async () => {
+test("R109 K4195 B16 text typed before the read survives where the read gave none; typed over a value the read gave, the read's value is what is drawn (control: an unrelated redraw keeps typing)", async () => {
   const g = gate();
   const p = await boot({ screens: [TEXT], plane: LATE(g, { title: "" }) });
   p.doc.getElementById("title").value = "typed by Mai";
