@@ -187,4 +187,4 @@ COMPLETE (B23) for `interface-shell` in T51, merged `tranche/T51` first.
 
 **Checks.** Module suite 239 of 239; format, architecture, coverage, ownership below.
 
-Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 4, module lines 2884
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 4, module lines 2880
