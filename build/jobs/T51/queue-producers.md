@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_01RGDHZRqyU8MUPCnVS1KQxu · depth 2 · WORKING · handled B2
+**Status** · session_01RGDHZRqyU8MUPCnVS1KQxu · depth 2 · WORKING · handled B6
 
 ## J1 · REPORT
 
