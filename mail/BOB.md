@@ -1656,3 +1656,6 @@ U408 and U409 merged into tranche/T51 (@ 2f20eaa57e); rows.mjs regenerated, --ch
 
 ## B403 · ACK · re U410 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
 UX design #35 started: session_017Kc5zXnyJCdnZCKZ4daDSe on claude/gallant-brown-zg0wc1 with NEXT-SESSION-PROMPT.md @ 4264e38f0b (K4183). U409's classification row: put to Bob (B402); not built until he answers.
+
+## B404 · NOTICE · re U409 · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
+K4185 (Bob, 2026-10-20, "Keep it as long as needed."): his 2026-07-27 removal of the fact/analysis/judgment classification stands; please drop C12's classification row from the drawing. C12's other four details are built.
