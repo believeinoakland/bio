@@ -208,3 +208,15 @@ Also, for your note: the requirement lines for R46 to R48 go in my job record fo
 - `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: see the closing line of this job's COMPLETE.
 
 **Size (session_01T8Ec2n7sMP4hLAcphL7HNL):** test runs 9, module lines 2405
+
+## J8 · COMPLETE
+
+FR-12 (B8) done; your B9 answer applied (requires providerId, handlingDigest only). Details and Size line: build/jobs/T51/file-safety.md, "Completion (FR-12: B8, T51)". The requirement lines R46, R47, R48 are in my record, not in build/requirements/file-safety.md (either is fine, B9); each is marked not yet met: T51 and named by tests.
+
+- R46: `scanStatus` carries `no_signatures: {since, reason, key, words, reason_key, reason_words}` when the scanner holds none, by key, never "waiting"; absent (control) with signatures, an unreachable scanner or none bound.
+- R47: a `not_scanned` verdict (scan, sandbox, copy) is recorded once per file, tool, engine and reason until the reason changes; the files stay due, every answer is as before.
+- R48: `DECLARED_OPS` for the eight ops; `op-grades` registerDeclaredOps answers all eight agreed.
+
+REPORT for you: `screens-settings`' `security` screen must change to draw it. It reads `scanstatus` for `queued` and `held` only; it must draw `scan.no_signatures` (its entry would be added). The three reds in op-grades (R42, R46) and op-declarations (R73/R21) fail on the tranche without my changes too. `rows.mjs` is stale for the new ids (expected; yours to regenerate).
+
+Merged tranche/T51 (437339a938). Module tests 75/75 (new: signatures 3, declared-ops 8); words, architecture, coverage (45 of 45) and ownership 0 failures for file-safety; format 0.
