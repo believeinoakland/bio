@@ -57,3 +57,7 @@ Checks, run from civicos-process after this commit:
 Deferred: none.
 
 Size (session_01RpNUgdyt5VkXqp8Ksfx3zR): test runs 4, module lines 2819
+
+## J4 · QUESTION
+
+Q1 (requirements file). Your START says to write each NEW R64–R67 (and the DECLARED_OPS line) first in build/requirements/provenance.md, but ownership.mjs fails any job diff that touches a file outside the module's paths, tests and record (build/requirements/provenance.md is none of them), and JOB.md says BOB updates requirements first. My best reading, which I am carrying on with: I do NOT edit the requirements file. I take the ids R64 (declareorigin), R65–R67 (declareAuthority, authorityOf, AI only proposes; text from the draft §4.3), R68 (DECLARED_OPS: testify, declareorigin) and R69 (the K4202 census: testify) as numbered, name them in my tests, and put each line's text in my record for you to land on tranche/T51 (marked not yet met: T51). If you would rather I edit the file and accept an ownership failure on it, say so. Q2 (fyi, no answer needed unless you disagree): C-18.9 reads a decision through the resolver (containerResolver().authority), so ratification's withRegisterChecks calls (ratification/index.mjs:1393, ops.mjs:511) must pass provenance's containerResolver() for the ratify gate to see a decision; that is ratification's change, I will report it.
