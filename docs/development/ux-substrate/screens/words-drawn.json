@@ -33572,7 +33572,7 @@
   },
   {
    "key": "screen.watching.nr.ref.https",
-   "en": "Every place must be a public address that starts with https.",
+   "en": "Every place must be a public address that starts with https://.",
    "protected": false,
    "note": "DEC-382: B406 C56: watching: refusal, a locator that is not public https. Sample names and counts are placeholders."
   },
