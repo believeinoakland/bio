@@ -4819,6 +4819,24 @@
      ]
     },
     {
+     "op": "reattest",
+     "label": "Ask for the confirmation again",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "captureaccount",
+     "label": "Add your signed account",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "op-declarations"
+     ]
+    },
+    {
      "op": "caseratify",
      "label": "Sign and publish now",
      "status": "declared",
