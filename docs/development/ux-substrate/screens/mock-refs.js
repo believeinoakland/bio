@@ -464,6 +464,7 @@ const SCREEN_HELP = {
   'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
   document: 'One document as captured: its words by page, its copy\'s grade, its versions beside each other, the links it carries, the people and organizations it names, and what cites it. Cite from here.',
   project: 'A project: its questions, their strength against the project\'s bar, its members and its stage. Open a question or a plan from here.',
+  contradiction: 'Two passages in your team\'s record that disagree: see both as written, and settle it by saying how they differ or that one is wrong, taking it up as a question, or concluding it.',
   question: 'One question: what supports it and what cuts against it, its strength against the bar, and what would change the answer.',
   answers: 'Ask in plain words, with the assistant, or find and count without it. Answers come only from what your team holds, and show where they looked.',
   assistant: 'A question with the assistant beside it. It answers only from what your team holds and never concludes, signs or sends.',
