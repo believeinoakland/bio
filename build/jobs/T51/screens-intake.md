@@ -134,3 +134,11 @@ COMPLETE (B12, K4243, SCREENS-INTAKE #11). "Your leads" is drawn from `leadlist`
 Module suite: 179 tests, 156 pass, 23 fail. All 23 are the reds J8 named: the design's missing word rows (HANDOFF B419, B423; accepted by B10, B11), now including `screen.leads.mine.head` and `screen.leads.one.head`, which the leads tests read; and other modules' (writinghelp `op`, SESSION_OPS reads, link-sweep needs). With a local, uncommitted overlay of those two rows plus `screen.leads.state.unclear`, all 9 leads tests pass.
 
 Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 8, module lines 2145
+
+## J10 · COMPLETE
+
+COMPLETE (B13, K4246, SCREENS-INTAKE #11). The R8 test "every act names one op OPS holds and a member's session reaches" now asks reach by interface-shell R12's rule: a mutating op by `SESSION_OPS.member`, a read by `OPS[op].classes` including member (both read from op-declarations' exports; no hand list). It passes.
+
+Suite: 179 tests, 157 pass, 22 fail. Every remaining red is a missing design row (UNKNOWN_WORD, or the raw key drawn/asserted for a row that does not exist): `screen.capture.address.checked.{modified,removed,unchanged,unknown}` (R14, R16, R26 capture, R42 x2); `screen.about-knocker.*` (R43 x3); `screen.leads.{mine.head,one.head,...}` (R44 x4, R52 x2); `screen.watching.{running.head,running,pause,resume,sweep.pages,...}` (R46 x5, R48 x2); R26 "each screen's words" (all the above). Checked: no red has any other cause. R52 stays as written (still in the requirements file; BOB's "struck" may mean otherwise: say if it should move).
+
+Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 12, module lines 2145
