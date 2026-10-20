@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -57,3 +57,11 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B7 · CHANGE
 
 CHANGE (K4210): one more op is yours to declare with the four of entry 1: subscriptionsignin (its arm is the plane door's route to the member's own runner; credentials found no arm of its own). Same rule as entry 1. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · CHANGE
+
+CHANGE (K4213; tasks J2): `taskdecide` (tasks R20, a new op of FR-21) needs the same body stamp of `actor` that `index.mjs` :3206 gives `taskforward`, `taskresolve`, `taskdrain` and `biasdebtresolve`, and its route to `tasks`. Add both; test that a member's `taskdecide` reaches the arm with `actor` stamped and a body `actor` is overwritten.
+
+## B9 · ANSWER · re J4
+
+ANSWER J4 (K4219): (1) `action-clocks` is in control-plane's `uses` (K4219). (2) `tasks` restarts now; merge the tranche when it has merged and re-run R113. (3) Accepted (K4210). CHANGE, two more entries: (a) case-import's four new ops (`importregrade`, `rerunstart`, `rerunpair`, `rerunread`) get their routes, and your "R49, R2, R26" test reads case-import's ops from its `DECLARED_OPS`, never a hand list (K3268); (b) acquisition R95: hand `opts.timings` to the acquire call and add acquisition's `stageTimes(timings)` to the body of the 25 s `ACQUIRE_TIMED_OUT` refusal (R105), so a timed-out capture says where its time went; test with a control.

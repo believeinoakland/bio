@@ -327,7 +327,16 @@ export class Members {
   /* R68: a member's cover, handle, role and status, or null; never a credential, key or expertise. */
   memberFacts(memberId) {
     const m = this.#one(`SELECT cover, handle, role, status FROM members WHERE member_id=?`, memberId);
-    return m ? { cover: m.cover, handle: m.handle ?? null, role: m.role, status: m.status } : null;
+    if (m) return { cover: m.cover, handle: m.handle ?? null, role: m.role, status: m.status };
+    return this.#founderMember(memberId);
+  }
+
+  /* R76 (T51; C80): the founder has no members row, so once the instance is claimed (R94) she is answered as the member her
+     roster row (R147) says she is: no cover, the handle she holds or null, an administrator, active. Null for any other id
+     and while the instance is not claimed; a members row holding the id `admin` is read as it is and never replaced. */
+  #founderMember(memberId) {
+    if (memberId !== Members.ROOT_ADMIN || !this.#claimed()) return null;
+    return { cover: null, handle: this.founderHandle(), role: "admin", status: "active" };
   }
 
   /** R152 (T50; N1124, K3624): the instant `memberId`'s status last changed, an ISO string, or null when none is recorded
@@ -548,9 +557,15 @@ export class Members {
     /* END DEC-49 REGION is-expertise-labelled */
   }
 
+  /* R76: the member an expertise act is about: a members row, else the founder once the instance is claimed. */
+  #expertiseSubject(memberId) {
+    const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
+    return m || (this.#founderMember(memberId) ? { member_id: Members.ROOT_ADMIN, status: "active" } : null);
+  }
+
   /** The member's own statement about themselves. */
   expertiseDeclare({ memberId, label } = {}) {
-    const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
+    const m = this.#expertiseSubject(memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = Members.#normLabel(label);
@@ -573,14 +588,16 @@ export class Members {
     if (!this.isAdministrator(by))
       return notAnAdmin(by, localize("member-roster.index.confirming_or_withdrawing_a_members_declared", "confirming or withdrawing a member's declared expertise"),
         { remedy: word("membership.remedy.active_administrator_group_confirm") });   /* R151 */
-    const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
+    const m = this.#expertiseSubject(memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     const lab = Members.#normLabel(label);
     const cur = this.#expertiseState(memberId, lab);
     /* An administrator cannot introduce a label. Confirming something never
        declared would make this an assignment rather than a confirmation, and the
        whole point of 1.3 is that the two statements have two different authors. */
-    if (cur === null)
+    /* R79 (DEC-376): a withdrawal took the declaration back with the confirmation, so a withdrawn label is confirmed only
+       after the member declares it again. */
+    if (cur === null || (cur === "withdrawn" && !withdraw))
       return { ok: false, reason: "NOT_DECLARED", label: lab,
                detail: localize("member-roster.index.this_member_has_not_declared", "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation.") };
     if (!withdraw && cur === "confirmed") return { ok: false, reason: "ALREADY_CONFIRMED", label: lab };
@@ -593,10 +610,33 @@ export class Members {
              confirmed: !withdraw, by };
   }
 
+  /** R79 (T51; DEC-386, DEC-376; `op=expertisewithdraw`): an administrator withdraws a confirmed expertise with a reason.
+   *  The one `withdrawn` entry takes back the confirmation and the declaration together (the label then reads neither
+   *  declared nor confirmed), and the earlier entries stay in its history (R19). */
+  expertiseWithdraw({ memberId, label, reason, by } = {}) {
+    if (!this.isAdministrator(by))
+      return notAnAdmin(by, localize("member-roster.index.withdrawing_a_members_confirmed_expertise", "withdrawing a member's confirmed expertise"));   /* R28 */
+    if (!this.#expertiseSubject(memberId)) return noSuchMember(memberId);   /* R49 */
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: localize("member-roster.index.a_withdrawal_is_recorded_with_a", "a withdrawal is recorded with a reason") };
+    const lab = Members.#normLabel(label);
+    const cur = this.#expertiseState(memberId, lab);
+    if (cur === null)
+      return { ok: false, reason: "NOT_DECLARED", label: lab,
+               detail: localize("member-roster.index.this_member_has_not_declared", "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation.") };
+    if (cur !== "confirmed") return { ok: false, reason: "NOT_CONFIRMED", label: lab, state: cur };
+    this.sql.exec(
+      `INSERT INTO member_expertise (member_id,label,event,actor,created,reason) VALUES (?,?,'withdrawn',?,?,?)`,
+      memberId, lab, by, new Date().toISOString(), why);
+    return { ok: true, memberId, label: lab, state: "withdrawn", confirmed: false, by, reason: why };
+  }
+
   /** The roster view: current state per label, with the history behind it. */
   expertiseList({ memberId } = {}) {
     const rows = this.#rows(
-      `SELECT seq, label, event, actor, created FROM member_expertise WHERE member_id=? ORDER BY seq`,
+      `SELECT seq, label, event, actor, created, reason FROM member_expertise WHERE member_id=? ORDER BY seq`,
       memberId);
     const cur = new Map();
     for (const r of rows) cur.set(r.label, r);
@@ -607,7 +647,7 @@ export class Members {
         /* Both are surfaced so an interface can show WHICH of the two claims it
            is looking at, which is the entire function of the distinction. */
         history: rows.filter((h) => h.label === r.label)
-          .map((h) => ({ event: h.event, actor: h.actor, at: h.created })),
+          .map((h) => ({ event: h.event, actor: h.actor, at: h.created, ...(h.reason ? { reason: h.reason } : {}) })),   /* R79 */
       })).sort((a, b) => a.label.localeCompare(b.label)),
       gates: "nothing" };
   }
@@ -1772,14 +1812,80 @@ export class Members {
       const lab = Members.#normLabel(label);
       if (!lab) return Members.#noLabel("a check request is addressed by a label, such as 'CPA'");
       /* each member's latest entry for the label (R19's log), the member active */
-      return this.#rows(
+      const holders = this.#rows(
         `SELECT x.member_id, m.handle, x.event FROM member_expertise x JOIN members m ON m.member_id = x.member_id
           WHERE x.label=? AND m.status='active'
             AND x.seq = (SELECT MAX(y.seq) FROM member_expertise y WHERE y.member_id = x.member_id AND y.label = x.label)
           ORDER BY x.member_id`, lab)
         .filter((r) => r.event === "declared" || r.event === "confirmed")
         .map((r) => ({ memberId: r.member_id, handle: r.handle ?? null, state: r.event }));
+      /* R76: the founder, once the instance is claimed, holds an expertise as a member does; she has no members row to join */
+      const hasRow = !!this.#one(`SELECT 1 AS x FROM members WHERE member_id=?`, Members.ROOT_ADMIN);
+      const founder = this.#founderMember(Members.ROOT_ADMIN) && !hasRow
+        ? this.#one(`SELECT event FROM member_expertise WHERE member_id=? AND label=? ORDER BY seq DESC LIMIT 1`, Members.ROOT_ADMIN, lab) : null;
+      if (founder && (founder.event === "declared" || founder.event === "confirmed")) {
+        holders.push({ memberId: Members.ROOT_ADMIN, handle: this.founderHandle(), state: founder.event });
+        holders.sort((a, b) => (a.memberId < b.memberId ? -1 : a.memberId > b.memberId ? 1 : 0));
+      }
+      return holders;
     } catch { return []; }
+  }
+
+  /* ---- R77, R78 (T51; K4169; UC-046): the decisions the record owes an administrator, read ---- */
+
+  /* The published bound of both reads: the first 50 rows, `truncated` (not enumerable, so an empty answer is the plain
+     `[]`) true exactly when a row past the 50th was found. */
+  static OWED_LIMIT = 50;
+
+  static #bounded(found) {
+    const rows = found.slice(0, Members.OWED_LIMIT);
+    Object.defineProperty(rows, "truncated", { value: found.length > Members.OWED_LIMIT, enumerable: false });
+    return rows;
+  }
+
+  /** R77: each `proposed` member `by` may endorse and has not (an active administrator's list, R23), oldest proposal
+   *  first, `[{memberId, handle, proposed_by, proposed_at, have, awaiting}]`; `[]` for any other caller and when a read
+   *  fails. Writes nothing; never throws. */
+  endorsementsOwed(args = {}) {
+    const { by = null } = isObj(args) ? args : {};
+    try {
+      const admins = this.activeAdmins();
+      if (typeof by !== "string" || !by || !admins.includes(by)) return [];
+      const found = [];
+      for (const r of this.#rows(`SELECT member_id, handle, invited_by, created FROM members WHERE status='proposed'
+                                   ORDER BY created, member_id`)) {
+        const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, r.member_id)
+          .map((v) => v.voter).filter((v) => admins.includes(v)).sort();
+        if (have.includes(by) || r.invited_by === by) continue;
+        found.push({ memberId: r.member_id, handle: r.handle ?? null, proposed_by: Members.#statusBy(r.invited_by),
+                     proposed_at: r.created, have, awaiting: admins.filter((a) => !have.includes(a)).sort() });
+        if (found.length > Members.OWED_LIMIT) break;
+      }
+      return Members.#bounded(found);
+    } catch { return Members.#bounded([]); }
+  }
+
+  /** R78: each (active member, label) whose latest entry is `declared`, to an active administrator `by`, oldest
+   *  declaration first, `[{memberId, handle, label, declared_at}]`; `[]` for any other caller and when a read fails.
+   *  Writes nothing; never throws. */
+  expertiseAwaitingConfirmation(args = {}) {
+    const { by = null } = isObj(args) ? args : {};
+    try {
+      if (typeof by !== "string" || !by || !this.activeAdmins().includes(by)) return [];
+      const latest = `x.event='declared' AND x.seq = (SELECT MAX(y.seq) FROM member_expertise y WHERE y.member_id = x.member_id AND y.label = x.label)`;
+      const found = this.#rows(
+        `SELECT x.member_id, m.handle, x.label, x.created, x.seq FROM member_expertise x JOIN members m ON m.member_id = x.member_id
+          WHERE m.status='active' AND ${latest} ORDER BY x.created, x.member_id, x.label LIMIT ?`, Members.OWED_LIMIT + 1);
+      /* R76: the founder, once the instance is claimed, has no members row to join */
+      if (this.#founderMember(Members.ROOT_ADMIN) && !this.#one(`SELECT 1 AS x FROM members WHERE member_id=?`, Members.ROOT_ADMIN))
+        found.push(...this.#rows(
+          `SELECT x.member_id, NULL AS handle, x.label, x.created, x.seq FROM member_expertise x
+            WHERE x.member_id=? AND ${latest} ORDER BY x.created, x.label LIMIT ?`, Members.ROOT_ADMIN, Members.OWED_LIMIT + 1)
+          .map((r) => ({ ...r, handle: this.founderHandle() })));
+      const key = (r) => [r.created, r.member_id, r.label];
+      found.sort((a, b) => { const x = key(a), y = key(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; });
+      return Members.#bounded(found.map((r) => ({ memberId: r.member_id, handle: r.handle ?? null, label: r.label, declared_at: r.created })));
+    } catch { return Members.#bounded([]); }
   }
 
 
@@ -1966,6 +2072,9 @@ export function membersOps(m, url, body, env) {
         adminremovalsopen: () => m.adminRemovalsOpen({ by: url.searchParams.get("by") }),
         expertisedeclare: () => m.expertiseDeclare(body || {}),
         expertiseconfirm: () => m.expertiseConfirm(body || {}),
+        /* R79 (DEC-386): the withdrawal of a confirmed expertise, its own act; `by` the stamp from the query, read after the
+           body so a body's copy never wins. */
+        expertisewithdraw: () => m.expertiseWithdraw({ ...(body || {}), by: url.searchParams.get("by") }),
         expertiselist: () => m.expertiseList({ memberId: url.searchParams.get("memberId") }),
         adminresign: () => m.adminResign({ by: url.searchParams.get("by") }),
         hostingaccessset: () => m.hostingAccessSet({ ...(body || {}), by: url.searchParams.get("by") }),
@@ -1999,3 +2108,54 @@ export function membersOps(m, url, body, env) {
         lookedat: () => m.lookedAt({ by: url.searchParams.get("by") }),
   };
 }
+
+/* R80, R81 (T51; K4168, K4202; op-declarations R80, R81; op-grades R49, R50): the ops this module serves that a screen sends,
+   and `expertisewithdraw`, which this tranche adds, each declared beside the ops map. `classes`, `machineClasses`, `mutating`,
+   `weight` and `description` are copied from the op's rows in `op-declarations` and `op-grades` (`expertisewithdraw`'s from the
+   design, DEC-386: reasoned, its words `act.owed_expertisewithdraw.does`); `fields` is read from the op's arm. Four readings:
+   `expertisedeclare`'s `memberId` is stamped into the body by the control plane (the declaring member), so a caller sends the
+   label alone; `expertiseconfirm` accepts `withdraw` (R79 keeps it); `handlecheck`'s invitee must send her `invite` (a
+   member's own check rides her session's `viewer` stamp, and no screen sends one); `memberadd` refuses an `expertise`
+   (R9), so it does not accept one. */
+export const DECLARED_OPS = Object.freeze({
+  adminendorse: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.adminendorse", "section 4.7 governance — the subject is a proposed administrator, not a bundle"),
+    fields: { accepts: ["memberId"], requires: ["memberId"] } },
+  adminremove: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned", description: localize("member-roster.declared.adminremove", "section 4.7 governance — the subject is an administrator's standing, not a bundle"), refusal: "NO_REASON",
+    fields: { accepts: ["memberId", "reason"], requires: ["memberId", "reason"] } },
+  courtnoticeset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "substrate", description: localize("member-roster.declared.courtnoticeset", "the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object"),
+    fields: { accepts: ["choice"], requires: ["choice"] } },
+  enroll: { classes: null, mutating: true, weight: "credential", description: localize("member-roster.declared.enroll", "an invitee becoming a member"),
+    fields: { accepts: ["invite", "handle", "password"], requires: ["invite", "handle", "password"] } },
+  expertiseconfirm: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.expertiseconfirm", "administrator act on a declaration, class-gated"),
+    fields: { accepts: ["memberId", "label", "withdraw"], requires: ["memberId", "label"] } },
+  expertisedeclare: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.expertisedeclare", "a member's own declaration, not a corpus act"),
+    fields: { accepts: ["label"], requires: ["label"] } },
+  expertisewithdraw: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned", description: "act.owed_expertisewithdraw.does", refusal: "NO_REASON", stamps: ["viewer", "by"], needs: null,
+    fields: { accepts: ["memberId", "label", "reason"], requires: ["memberId", "label", "reason"] } },
+  founderhandleset: { classes: ["admin"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("member-roster.declared.founderhandleset", "member-directed: the founder's own handle, the one she signs in and is known by, chosen once and never changed (`HANDLE_FIXED`); writes no record and moves no bundle"),
+    fields: { accepts: ["handle"], requires: ["handle"] } },
+  groupdescriptionset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "substrate", description: localize("member-roster.declared.groupdescriptionset", "the group's description of itself — the subject is the group's identity, not a bundle; an administrator's"),
+    fields: { accepts: ["kinds", "otherKind", "focus", "purpose", "visibility"], requires: ["kinds"] } },
+  handlecheck: { classes: null, mutating: false, weight: "read", description: localize("member-roster.declared.handlecheck", "read: whether a handle is free, taken or not allowed, never who holds it"),
+    fields: { accepts: ["invite", "handle"], requires: ["invite"] } },
+  hostingaccessset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.hostingaccessset", "operator record of who holds hosting access — the subject is the instance's operators, not a bundle"),
+    fields: { accepts: ["holders", "note"], requires: ["holders"] } },
+  invitelook: { classes: null, mutating: false, weight: "read", description: localize("member-roster.declared.invitelook", "read: what a live invitation offers the invitee (the cover, the role, the capabilities and the declared expertise), never the member's id"),
+    fields: { accepts: ["invite"], requires: ["invite"] } },
+  invitewithdraw: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.invitewithdraw", "roster governance: an administrator's withdrawal of an invitation; the subject is who may join, not a bundle"),
+    fields: { accepts: ["memberId"], requires: ["memberId"] } },
+  joinlinkenable: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.joinlinkenable", "roster governance: the join link, an administrator's; the subject is who may join, not a bundle"),
+    fields: { accepts: ["capabilities", "dailyCap", "expiresInDays"], requires: ["dailyCap"] } },
+  joinlinkinvite: { classes: null, mutating: true, weight: "credential", description: localize("member-roster.declared.joinlinkinvite", "a person holding the join link asks to be invited under a cover name (membership R104)"),
+    fields: { accepts: ["link", "cover"], requires: ["link", "cover"] } },
+  memberadd: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.memberadd", "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)"),
+    fields: { accepts: ["memberId", "cover", "role", "capabilities", "expiresInDays"], requires: ["memberId", "cover"] } },
+  membercaps: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.membercaps", "roster governance — the subject is a member's capabilities, not a bundle (4.9)"),
+    fields: { accepts: ["memberId", "capabilities"], requires: ["memberId", "capabilities"] } },
+  memberpairingset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.memberpairingset", "a member's published cover-and-handle pairing — the subject is how a member is shown, not a bundle"),
+    fields: { accepts: ["memberId", "published"], requires: ["memberId"] } },
+  memberset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.memberset", "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)"),
+    fields: { accepts: ["memberId", "status"], requires: ["memberId", "status"] } },
+  websitekeycreate: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true, weight: "credential", description: localize("member-roster.declared.websitekeycreate", "roster governance: the website's key, an administrator's; the subject is who may join, not a bundle"),
+    fields: { accepts: ["capabilities", "dailyCap", "expiresInDays"], requires: ["dailyCap"] } },
+});

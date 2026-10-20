@@ -51,7 +51,9 @@
 | FR-11 | 2 | `capture-sources` (45, 3) | sonnet | 2 | C20; K4168 | Before `plane` (index 45 < 169) and `screens-intake`; `plane` spreads your new ops map and its assembly reads your declaration. The controls are drawn (DEC-381) and built by `screens-intake`. |
 | FR-43 | 2 | `acquisition` (46, 3) | sonnet | 2 | L4 (K4194): part 1 the per-stage milliseconds, part 2 the fix the live timings name (BOB sends them by CHANGE) | Index 46: before `capture` (47) and `screens-intake` (162); part 2 waits for the live timings. |
 | FR-12 | 2 | `file-safety` (49, 3) | sonnet | 2 | FR-SCAN (K4182); L25 (K4194) | After `file-scanner`. |
+| FR-65 | 2 | `reading-pipeline` (52, 4) | sonnet | 1 | L6 (K4194), re-placed from FR-41 `text-chain` (its J3; K4210, K4214) | Index 52: before every module that reads a capture. FR-41 `text-chain` has no entries left. |
 | FR-13 | 2 | `connections` (59, 5) | sonnet | 2 | C28; C29; K4168 | Before `screens-inquiry` (index 59 < 164). |
+| FR-64 | 2 | `people` (67, 5) | sonnet | 1 | I-32 (DEC-384; screens-investigate J6; K4214): claims and candidates for organizations | Before `screens-investigate` (165). |
 | FR-44 | 2 | `inquiry-grammar` (75, 6) | sonnet | 1 | L9 (K4194) | Index 75: before `inquiry` (78), `citation` (81) and `screens-inquiry` (164). |
 | FR-45 | 2 | `inquiry` (78, 6) | sonnet | 1 | L9 (K4194) | Index 78: after `inquiry-grammar` (FR-44); before `screens-inquiry` (164), whose entry 35 shows the named finding. |
 | FR-35 | 2 | `citation` (81, 6) | sonnet | 3 | C50 (K4189); K4168 | After `inquiry-grammar` (75) and `accepted-work` (76); before `screens-inquiry` (81 < 164) and `screens-publish` (81 < 166), which draw the controls when UX-DESIGN's drawing (HANDOFF B406) merges. |
