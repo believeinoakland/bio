@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01Wn8nVUduH4GbFBXsW5fYy7 · depth 2 · COMPLETE · handled B11
+**Status** · session_01Wn8nVUduH4GbFBXsW5fYy7 · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -81,3 +81,7 @@ Size (session_01Wn8nVUduH4GbFBXsW5fYy7): test runs 12, module lines 3452
 ## J10 · COMPLETE
 
 B11 applied (pushed; tranche/T51 merged in): DEC-382's six owed acts (citeimported, withdrawimported, namedrequests, namedrequestset, sweepset, sweepratify) are in OWED_BY_FIX_ROUND. op-declarations tests 242, pass 242, fail 0; architecture, coverage (op-declarations ids all named), words, ownership: 0 failures. R80 and R81 lines are still BOB's to add (J9). Size (session_01Wn8nVUduH4GbFBXsW5fYy7): test runs 14, module lines 3452
+
+## J11 · COMPLETE
+
+B12 applied (pushed; tranche/T51 merged in). OWED_BY_FIX_ROUND (test/m/op-declarations/browser.mjs) is now derived from the registry's own owed rows: every owed act that is no op, no browser act (R76) and no installer route, so no hand list; an act leaves it when it becomes an op. t50's R73 gap check reads it (the gaps are the browser acts plus that list). op-declarations tests 242, pass 242, fail 0; architecture, coverage, words (all modules), ownership, format: 0 failures. Size (session_01Wn8nVUduH4GbFBXsW5fYy7): test runs 17, module lines 3452
