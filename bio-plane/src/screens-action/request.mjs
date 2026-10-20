@@ -100,8 +100,8 @@ export const request = Object.freeze({
       if (offices !== null && !offices.length && !asked) return head + noOffice("");
       if (view.data.names && view.data.names.state !== "ok" && view.data.names.state !== "empty") return head + cs.state("names");
       if (!names.length && !asked) return head + noOffice("");
-      const subjectPick = cs.choice("req-subject", "screen.person.keeper.subject.label", [{ value: "", text: "" }].concat(names), { value: String(view.ui.subject || "") })
-        + '<p class="mk-note">' + cs.w("screen.person.keeper.subject.help.a") + " " + cs.w("screen.person.keeper.subject.help.b") + "</p>"
+      const subjectPick = cs.choice("req-subject", "screen.request.subject.label", [{ value: "", text: "" }].concat(names), { value: String(view.ui.subject || "") })
+        + '<p class="mk-note">' + cs.w("screen.request.subject.help") + "</p>"
         + '<div class="mk-acts">' + cs.act("addresseesuggest", {}) + "</div>";
       const askStep = cs.sec("screen.request.step.office", subjectPick);
       if (offices === null) return head + askStep;

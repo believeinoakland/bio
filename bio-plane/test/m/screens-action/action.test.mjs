@@ -244,7 +244,7 @@ test("R23, R26: where a reply's date has passed with none recorded, 'Open a ques
   said(p, "action.noreply.says");
   said(p, "action.noreply.question.help");
   assert.ok(button(p, "actioninquiry").textContent.includes(W("action.noreply.question")));
-  assert.equal(main(p).querySelector("details"), null, "at once, not behind a fold");
+  assert.equal(p.doc.getElementById("action-question").closest("details"), null, "at once, not behind a fold");
   const field = p.doc.getElementById("action-question");
   assert.equal(field.value, "", "control: nothing is filled from the action into the question");
   assert.equal(field.getAttribute("maxlength"), "500");

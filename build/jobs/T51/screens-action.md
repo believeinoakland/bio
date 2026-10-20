@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01V64zP5L8ynT5RnQ7fmq8S3 · depth 2 · COMPLETE · handled B14
+**Status** · session_015aeBb5LHgEaQ6wS441ymgk · depth 2 · COMPLETE · handled B17
 
 ## J1 · REPORT
 
@@ -86,3 +86,37 @@ COMPLETE (#8, re B13, B14). Item 1: `WRITE_HELP` sends `op` from `data-forop`, `
 Checks: module suite 196 of 196; coverage 54 of 54; words 0; ownership 0 (3 files: send-steps.mjs and two test files, plus my record); format 0 and architecture 0 over the tree. Over the whole tree coverage shows 4 failures and words 33, none in my module.
 Deferred: none. Found in other modules: none. The missing design keys of #7 J6 (1)-(6) stay with UX-DESIGN's HANDOFF B424; not drawn.
 Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 3, module lines 3290
+
+## J10 · COMPLETE · re B16
+
+COMPLETE (SCREENS-ACTION #9, T51-122, re B15, B16). tranche/T51 merged at bf9d42d498; module suite 209 of 209; format, architecture, ownership (22 files), words 0; coverage 54 of 54. Nothing is held for a missing row.
+
+**Entries applied.**
+(1) The reply form (R38) is the design's: `What came back` / `A reply came`; how it came (medium, the five tokens email, letter, portal, person, other, B16 b); who it came from; what it is recorded from (your account, or the reply itself); the reply's document; a fold `Where this reply stands` (kind of reply, `It follows`, what the office decided, exemptions, the date it says it will answer by and its law); a fold `If the reply quotes a fee` (amount, currency `USD`, what it is for, which sending it answers, which earlier quote it revises). Stage and outcome are the vocabulary's tokens by `screen.action.reply.stage.<t>` and `.outcome.<t>`; the family's `none` is the empty choice and sends nothing (B16 b). `follows` is the earlier entry's ordinal (a sent entry as `screen.action.reply.follows.request`, a received one of a known kind as `.reply`). The per-project document read is `heldcaptures` with `project` (capture R77): a row whose `capture.sha256` is filed is offered by `screen.docket.capture.option` (title, collected day) and goes as `artifact_sha`, never with an account. The reply form is now drawn only for a member who may record a reply (R27: it drew its fields to a reader before) and the documents are read only then.
+(2) `screen.reminder.on` is the sentence beside a reminder this page set (R52).
+(3) `screen.request.subject.label` and `.help` on `request` (R39).
+(4) Matter (R45, R50, R51, R6): the design's rows for the project with no determination (`nodet`, `unavailable`), recording (`record.this`, `act`, `f.role`, `f.body`, `f.findings`, `f.rule`, `f.did`, `f.compare.*`, `f.determination`, `f.outcome.*`, `f.cause`), revising (`revise`, `replaces`), the consequence kinds and units (`kind.*`, `unit.*`, `f.describe`, `unknown`), addressing (`f.part`, `f.partwas`, `f.addressed`, `f.notaddressed`, `way.cannot`), a success (`f.when`), attaching (`f.purpose` and its five options), the three readings (`reading.*`), `pause`, and the stage names without digits: `advance` now fills `{stage}` with the stage's name. The reason fields sit behind the folds the design draws. Flaws of my own module fixed on the way: `f.did`, `f.rule` and `f.cause` replaced three labels that were another row's sentence; the addressed/not addressed choice drew the tokens `addressed` and `not_addressed` as words.
+(5) Plan (R44): the add-option form's kinds (`option.kind.*`), `option.directed.press`, `option.role`, `option.date`, `option.tier.*`, `option.enforce` and `.enforce.none`; the decide row (`dispose.done`, `.blocked`, `.open`; on the picked rows `dispose.them.choose`, `.decline`, `.blocked`); `dispose.date`; the phase (`phase.head`, `.options`, `.when`, `.when.after`, `.which`, `.none`). The buttons `Mark done` and `Mark blocked` had been the lowercase state words; fixed.
+(6) Send steps (R47, R48, R49, R42): `contact.none`, `template.name.label`, `template.use.filing` (the option had been another help sentence), `exhibits.captured` and `exhibits.nograde`. B16 a: a refusal `CONTRADICTED_HELD` draws `A sentence the record contradicts` for each sentence (the sentence, `pointer.record.contradicted`, the reason `release.why`, a tick `act.release.label.start-send`); the next "Approve this text" carries `release: [{ord, reason}]` for the ticked ones; a tick with no reason is refused in place (`shell.reason.needed`); `release.done` is said once the approval lands (the member who pressed it, the page's day, the reason). No `release` op is registered on `start-send`.
+
+**Tests.** `reply-t51.test.mjs` (3), the release (2) and the row assertions in `send-t51`, `plan-t51` (3), `matter-t51` (6); updated where they quoted a stand-in key: `plan`, `matter`, `request-fix`, `action-fix`, `action`. `contract.test.mjs` R1–R6 now carves `release` out of `start-send` (B16 a); that is the only equality I changed.
+Checks: format 0, architecture 0, coverage 54 of 54, ownership 0 (22 files), words 0; `setup-words/build.mjs --check` clean.
+
+**Deferred, with why.**
+1. "Reasons asked only where U420 says" (`determine` only when it replaces one, `consequencerecord` only when the member assesses): the shell asks a Reasoned op's reason on every press, and a screen can only name a `reasonField` (own words, refused when blank) or take the shell's box; there is no way to say "ask on this press only". Until interface-shell offers one (for instance a spec function `asksReason(view, el, cs)`), `determine` and `consequencerecord` still open the shell's box on every press; my forms draw the design's field (`Your reason` behind the fold) and the reason box also asks. (Report below.)
+2. A named person as a consequence's affected kind: `consequences` takes `person` only with `{entity, named_in}` (a document passage); the form has no field for either, so `A named person` is not offered.
+3. "The event it was part of" is the design's choice of the project's events; no read lists them, so it stays a one-line field. The sentence under `What it replaces` ("Noncompliant against lease §7.2, recorded by Dev…") has no template in the table: not drawn.
+4. The design's minutes form on a reply to a public comment (`screen.action.minutes.*`, 15 keys, actions R108) is not drawn: no requirement here binds it. BOB to add one if wanted.
+5. A received entry with no recorded kind is not offered under `It follows` (the design's `The {kind}, {date}` has no word for a reply of no kind).
+
+**Found in other modules (for BOB).**
+- interface-shell: (a) `cs.choice` draws no `help` (the option is accepted and dropped; the old reply form passed it on four choices and none showed); this module now draws a choice's help as notes after it, which the kit could do (as `cs.field` does). (b) A way to ask a Reasoned act's reason on some presses only (deferred 1).
+- wizard-scripts / the design's registry: the screen `start-send` lists the act `release`; B16 says it rides `filingapprove`, so that row should go (and `act.release.does`, the vouching sentence, does not describe it); until then my contract test carves it out.
+- Requirement lines for BOB: R38 amended: "...medium (email, letter, portal, person, other), the reply's document (a held capture of the project, `heldcaptures` with `project`, as `artifact_sha`, never with an account), what it follows (an earlier entry's ordinal), a quote's currency, what it answers and what it revises; a received reply's stage and outcome by the vocabulary's tokens, the design's 'none' sending nothing; the form drawn only to a member who may record a reply." R42 amended: "...and a contradicted sentence (`CONTRADICTED_HELD`) is drawn with a reason and a tick, and the approval resent carries `release: [{ord, reason}]` for the ticked ones; a tick with no reason is refused in place; the approval landing says who released what." R44/R45/R50/R51: the rows named above are the design's (R19). R52: the sentence is `screen.reminder.on`.
+
+Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 11, module lines 4473
+
+## J11 · COMPLETE · re B17
+
+COMPLETE (re B17). tranche/T51 merged (U424, DEC-389). Already as DEC-389 says: the release rides `filingapprove` (no `release` act on start-send; `act.release.label.start-send` is the drawn tick's row); stage/outcome `none` omit the field. New: a sent entry's stage keys `screen.action.sent.stage.*` are drawn under "It follows" (an appeal, fee-waiver request or court filing reads as `The {kind}, {date}`; the request stays "The request"). Suite 210 of 210; format, architecture, ownership, words 0; coverage 54 of 54. My earlier deferrals stand; the registry's `release` carve-out in contract.test is now inert.
+Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 13, module lines 4476

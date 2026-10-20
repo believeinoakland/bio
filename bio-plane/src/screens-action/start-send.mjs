@@ -60,11 +60,11 @@ export const startSend = Object.freeze({
       const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : {};
       const st = view.data.stake && view.data.stake.state === "ok" && view.data.stake.value ? view.data.stake.value : {};
       const counsel = held.tier === 3 || a.risk_tier === 3 || st.governing_tier === 3;
-      const uses = (counsel ? [] : [["file", "screen.start-send.template.use.help1"]]).concat([["brief", "screen.start-send.template.use.brief"]]);
+      const uses = (counsel ? [] : [["file", "screen.start-send.template.use.filing"]]).concat([["brief", "screen.start-send.template.use.brief"]]);
       const help = view.reachable ? cs.act("writinghelp", { data: { field: "notes", id: "template-notes", forop: "templatesave" } }) : "";
       return cs.sec("screen.start-send.template.heading", '<p class="mk-note">' + cs.w("screen.start-send.template.note1") + " " + cs.w("screen.start-send.template.note2") + " "
         + cs.w("screen.start-send.template.note3") + "</p>"
-        + cs.field("template-name", "screen.start-send.template.heading", { max: 200, help: ["screen.start-send.template.name.help1", "screen.start-send.template.name.help2"] })
+        + cs.field("template-name", "screen.start-send.template.name.label", { max: 200, help: ["screen.start-send.template.name.help1", "screen.start-send.template.name.help2"] })
         + cs.choice("template-use", "screen.start-send.template.use.label", uses, { value: counsel ? "brief" : "file" })
         + '<p class="mk-small">' + cs.w("screen.start-send.template.use.help2") + "</p>"
         + cs.field("template-notes", "screen.start-send.template.notes.label", { area: true, rec: true, help: "screen.start-send.template.notes.help" })
@@ -132,7 +132,7 @@ export const startSend = Object.freeze({
       const kinds = P.kindsOf(cs, view, true);
       // R47: the team's contact for the action, optional: no one first, then the active members the roster lists by handle
       const roster = view.data.roster && view.data.roster.state === "ok" && view.data.roster.value && Array.isArray(view.data.roster.value.members) ? view.data.roster.value.members : [];
-      const contacts = [{ value: "", key: "screen.start-send.noaddressee" }].concat(roster.filter(function (m) {
+      const contacts = [{ value: "", key: "screen.start-send.contact.none" }].concat(roster.filter(function (m) {
         return m && m.status === "active" && typeof m.member_id === "string" && typeof m.handle === "string" && m.handle.trim();
       }).map(function (m) { return { value: m.member_id, text: m.handle }; }));
       const form = cs.choice("start-kind", "screen.start-send.kind", kinds, { value: view.ui.kind || "records_request" })

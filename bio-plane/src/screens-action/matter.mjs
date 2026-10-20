@@ -120,28 +120,30 @@ export const matter = Object.freeze({
       const stdOpts = k.standards.map(function (s) { return { value: s.standard, text: s.standard }; }).concat(items.filter(function (it) {
         return !k.standards.some(function (s) { return s.standard === it.id; });
       }).map(function (it) { return { value: it.id, text: it.cite || it.id }; }));
-      const std = stdOpts.length ? cs.choice("mt-d-std", "screen.matter.the_rule_it_is_measured_against", stdOpts, { value: first ? first.standard : stdOpts[0].value })
-        : cs.field("mt-d-std", "screen.matter.the_rule_it_is_measured_against");
+      const std = stdOpts.length ? cs.choice("mt-d-std", "screen.matter.f.rule", stdOpts, { value: first ? first.standard : stdOpts[0].value })
+        : cs.field("mt-d-std", "screen.matter.f.rule");
       const found = P.findings(cs, view, k);
-      const why = rev ? cs.sec("screen.matter.record_the_revised_determination", P.note(cs, "screen.matter.the_earlier_determination_stays_readable_with_a") + P.note(cs, "screen.matter.it_is_not_edited")
-      ) : "";
-      const acts = cs.sec("act.determine.label.matter", P.note(cs, "screen.matter.whether_the_act_met_the_rule_with")
+      // DEC-387 (B424): a revision names what it replaces; the reason it replaces it is the one the shell asks (`determine` is Reasoned)
+      const why = rev ? cs.sec("screen.matter.revise", P.note(cs, "screen.matter.a_new_determination_that_replaces_the_earlier"))
+        + cs.sec("screen.matter.replaces", P.note(cs, "screen.matter.the_earlier_determination_stays_readable_with_a") + P.note(cs, "screen.matter.it_is_not_edited")) : "";
+      const acts = cs.sec("screen.matter.act", P.note(cs, "screen.matter.whether_the_act_met_the_rule_with")
         + cs.field("mt-d-event", "screen.matter.the_event_it_was_part_of", { value: act.event || "" })
-        + cs.field("mt-d-role", "screen.members.col.role", { value: actor.role || "" }) + cs.field("mt-d-body", "screen.matter.an_office_or_body", { value: actor.body || "" })
+        + cs.field("mt-d-role", "screen.matter.f.role", { value: actor.role || "" }) + cs.field("mt-d-body", "screen.matter.f.body", { value: actor.body || "" })
         + cs.field("mt-d-evidence", "screen.matter.the_evidence_that_the_act_happened", { area: true }));
       const rests = cs.sec("screen.actionnew.rests", found + P.note(cs, "screen.matter.a_determination_rests_on_findings_your_team"));
       const rule = cs.sec("screen.matter.the_rule_it_is_measured_against", std
         + cs.field("mt-d-req", "screen.matter.what_the_rule_requires", { rec: true, area: true, value: row.requires || "" }) + P.help(cs, view, "mt-d-req", "determine", "requires")
-        + cs.field("mt-d-did", "screen.matter.did", { rec: true, area: true, value: row.did || "", fills: { did: "" } }) + P.help(cs, view, "mt-d-did", "determine", "did")
-        + cs.choice("mt-d-rd", "screen.matter.how_the_two_compare", [P.opt("aligns"), P.opt("diverges"), ["open", "screen.plan.state.open"]], { value: "diverges" })
-        + cs.checks("mt-d-out", "screen.matter.against_this_rule_the_act_is", [["compliant", "screen.matter.outcome.compliant", first && first.outcome === "compliant"],
-          ["noncompliant", "screen.matter.outcome.noncompliant", first ? first.outcome === "noncompliant" : false], ["unclear", "screen.matter.outcome.unclear", first && first.outcome === "unclear"]], { radio: true })
+        + cs.field("mt-d-did", "screen.matter.f.did", { rec: true, area: true, value: row.did || "" }) + P.help(cs, view, "mt-d-did", "determine", "did")
+        + cs.choice("mt-d-rd", "screen.matter.how_the_two_compare", [["aligns", "screen.matter.f.compare.matches"], ["diverges", "screen.matter.f.compare.differs"], ["open", "screen.matter.f.compare.open"]], { value: "diverges" }));
+      const verdict = cs.sec("screen.matter.f.determination", cs.checks("mt-d-out", "screen.matter.against_this_rule_the_act_is", [["compliant", "screen.matter.f.outcome.compliant", first && first.outcome === "compliant"],
+          ["noncompliant", "screen.matter.f.outcome.noncompliant", first ? first.outcome === "noncompliant" : false], ["unclear", "screen.matter.f.outcome.unclear", first && first.outcome === "unclear"]], { radio: true })
         + P.note(cs, "screen.matter.each_rule_gets_its_own_outcome") + P.note(cs, "screen.matter.they_are_never_combined_into_one_verdict")
+        + '<details class="mk-details"><summary>' + cs.w("screen.matter.if_you_choose_unclear") + "</summary>"
         + cs.field("mt-d-q", "screen.matter.the_question_that_would_settle_it", { rec: true }) + P.help(cs, view, "mt-d-q", "determine", "question")
-        + P.note(cs, "screen.matter.the_question_is_opened_in_this_project"));
-      const cause = cs.sec("screen.matter.why_it_happened_optional", cs.field("mt-d-cause", "screen.matter.why_it_happened_optional", { rec: true, area: true }) + P.help(cs, view, "mt-d-cause", "determine", "cause")
+        + P.note(cs, "screen.matter.the_question_is_opened_in_this_project") + "</details>");
+      const cause = cs.sec("screen.matter.why_it_happened_optional", cs.field("mt-d-cause", "screen.matter.f.cause", { rec: true, area: true }) + P.help(cs, view, "mt-d-cause", "determine", "cause")
         + P.note(cs, "screen.matter.say_a_cause_only_if_evidence_you") + P.note(cs, "screen.matter.otherwise_leave_it_empty_and_the_determination"));
-      return why + acts + rests + rule + cause + '<div class="mk-acts">' + cs.act("determine", { tone: "primary", label: rev ? "screen.matter.record_the_revised_determination" : undefined }) + "</div>"
+      return why + acts + rests + rule + verdict + cause + '<div class="mk-acts">' + cs.act("determine", { tone: "primary", label: rev ? "screen.matter.record_the_revised_determination" : "screen.matter.record.this" }) + "</div>"
         + '<p class="mk-small muted">' + cs.w("screen.matter.this_cannot_be_edited_afterward") + " " + cs.w("screen.matter.a_mistake_is_put_right_by_recording") + "</p>";
     },
     // R45: the published findings the project's cases hold, picked; each case's latest edition read once; a plain field when none can be read
@@ -156,25 +158,28 @@ export const matter = Object.freeze({
         const fs = pc.state === "ok" && pc.value && Array.isArray(pc.value.findings) ? pc.value.findings : [];
         fs.forEach(function (f) { if (f && f.bundle_id) opts.push({ value: f.bundle_id, text: f.title || f.bundle_id, on: !!(k.d && Array.isArray(k.d.findings) && k.d.findings.some(function (x) { return (x.finding || x.id) === f.bundle_id; })) }); });
       });
-      return opts.length ? cs.checks("mt-d-findings", "screen.published.findings", opts) : cs.field("mt-d-findings", "screen.published.findings", { area: true });
+      return opts.length ? cs.checks("mt-d-findings", "screen.matter.f.findings", opts) : cs.field("mt-d-findings", "screen.matter.f.findings", { area: true });
     },
     // R50: what the breach did, recorded
     consForm: function (cs, view, k) {
       const P = view.parts;
       const ql = P.later(cs, view, "questions", "projectquestions", { project: k.project, limit: "200" }, "");
       const qs = ql.state === "ok" && ql.value && Array.isArray(ql.value.items) ? ql.value.items : [];
-      const kinds = [["class", "screen.matter.people_as_a_class"], ["fund", "screen.people.today.kind.fund"], ["program", "screen.people.today.kind.program"], P.opt("service"),
-        ["body", "screen.matter.an_office_or_body"], ["other", "screen.timeline.evkind.other"]];
-      const units = [["money", "connection.kind.money.name"], P.opt("benefits"), P.opt("services"), ["time", "screen.ceremony.when.time"], ["count", "screen.calculation.kind.count"]];
+      // DEC-387 (B424): the kinds and units by the matter's own keys (`kind.*`, `unit.*`); a named person (`person`) takes a document's
+      // passage naming them, which this form has no field for, so it is not offered (REPORT)
+      const kinds = [["class", "screen.matter.kind.class"], ["fund", "screen.matter.kind.fund"], ["program", "screen.matter.kind.program"], ["service", "screen.matter.kind.service"],
+        ["body", "screen.matter.kind.office"], ["other", "screen.matter.kind.other"]];
+      const units = [["money", "screen.matter.unit.money"], ["benefits", "screen.matter.unit.benefits"], ["services", "screen.matter.unit.services"], ["time", "screen.matter.unit.time"], ["count", "screen.matter.unit.count"]];
       return cs.sec("act.consequencerecord.label.matter", P.note(cs, "screen.matter.each_part_says_what_was_done_and")
         + cs.choice("mt-c-std", "screen.matter.the_rule_it_breached", k.nc.map(function (s) { return { value: s.standard, text: s.standard }; }))
         + cs.choice("mt-c-kind", "screen.matter.who_or_what_was_affected", kinds)
-        + cs.field("mt-c-desc", "screen.matter.who_or_what_was_affected", { rec: true }) + P.help(cs, view, "mt-c-desc", "consequencerecord", "affected")
+        + cs.field("mt-c-desc", "screen.matter.f.describe", { rec: true }) + P.help(cs, view, "mt-c-desc", "consequencerecord", "affected")
         + cs.choice("mt-c-unit", "screen.matter.what_it_is_measured_in", units)
         + cs.field("mt-c-amt", "screen.matter.amount_or_the_lowest_and_highest_it") + cs.field("mt-c-from", "screen.explore.from", { type: "date" }) + cs.field("mt-c-to", "screen.request.to", { type: "date" })
-        + cs.checks("mt-c-basis", "entity.naming.basis", [["computed", "screen.matter.worked_out_from_figures_in_the_record", true], ["assessed", "screen.matter.my_own_assessment_with_my_reason"], ["unknown", "question-explorer.known"]], { radio: true })
-        + cs.field("mt-c-rat", "screen.matter.if_you_assess_it_yourself", { rec: true, area: true }) + P.help(cs, view, "mt-c-rat", "consequencerecord", "rationale")
-        + P.note(cs, "screen.matter.name_what_the_assessment_rests_on") + P.note(cs, "screen.matter.a_part_you_assess_is_shown_as")
+        + cs.checks("mt-c-basis", "entity.naming.basis", [["computed", "screen.matter.worked_out_from_figures_in_the_record", true], ["assessed", "screen.matter.my_own_assessment_with_my_reason"], ["unknown", "screen.matter.unknown"]], { radio: true })
+        + '<details class="mk-details"><summary>' + cs.w("screen.matter.if_you_assess_it_yourself") + "</summary>"
+        + cs.field("mt-c-rat", "shell.reason", { rec: true, area: true }) + P.help(cs, view, "mt-c-rat", "consequencerecord", "rationale")
+        + P.note(cs, "screen.matter.name_what_the_assessment_rests_on") + P.note(cs, "screen.matter.a_part_you_assess_is_shown_as") + "</details>"
         + cs.choice("mt-c-cause", "screen.matter.the_question_showing_the_harm_follows_from", [{ value: "", text: "" }].concat(qs.map(function (q) { return { value: q.inquiry, text: q.title || q.inquiry }; })))
         + P.note(cs, "screen.matter.without_a_concluded_question_the_part_is") + P.note(cs, "screen.matter.zero_is_recorded_as_no_harm_claimed")
         + '<div class="mk-acts">' + cs.act("consequencerecord", { tone: "primary" }) + "</div>");
@@ -193,10 +198,10 @@ export const matter = Object.freeze({
     addressedForm: function (cs, view, k) {
       const P = view.parts;
       return cs.sec("act.addressedrecord.label.matter", P.note(cs, "screen.matter.one_part_at_a_time_with_evidence")
-        + cs.choice("mt-a-part", "screen.matter.consequences", k.parts.map(function (p) { return { value: p.id, text: p.affected && (p.affected.name || p.affected.description) || p.id }; }))
-        + cs.checks("mt-a-state", "act.addressedrecord.label.matter", [{ value: "addressed", text: "addressed", on: true }, { value: "not_addressed", text: "not_addressed" }], { radio: true })
+        + cs.choice("mt-a-part", "screen.matter.f.part", k.parts.map(function (p) { return { value: p.id, text: p.affected && (p.affected.name || p.affected.description) || p.id }; }))
+        + cs.checks("mt-a-state", "screen.matter.f.partwas", [["addressed", "screen.matter.f.addressed", true], ["not_addressed", "screen.matter.f.notaddressed"]], { radio: true })
         + cs.checks("mt-a-words", "screen.matter.in_what_way_addressed_only", [["remedied", "label.harmaddressed.remedied"], ["mitigated", "label.harmaddressed.mitigated"], ["compensated", "label.harmaddressed.compensated"],
-          ["acknowledged", "label.harmaddressed.acknowledged"], ["cannot_be_undone", "label.harmaddressed.cannot_be_undone"]])
+          ["acknowledged", "label.harmaddressed.acknowledged"], ["cannot_be_undone", "screen.matter.way.cannot"]])
         + cs.field("mt-a-ev", "screen.published.evidence", { area: true })
         + cs.field("mt-a-why", "shell.reason", { rec: true, area: true }) + P.help(cs, view, "mt-a-why", "addressedrecord", "reason")
         + P.note(cs, "screen.matter.there_is_no_percentage_of_redress") + P.note(cs, "screen.matter.part_of_a_remedy_does_not_end")
@@ -207,11 +212,12 @@ export const matter = Object.freeze({
       const P = view.parts;
       return cs.sec("act.successrecord.label.matter", P.note(cs, "screen.matter.a_change_the_matter_brought_about_in")
         + cs.field("mt-s-st", "screen.case-editor.changed.label", { rec: true, area: true }) + P.help(cs, view, "mt-s-st", "successrecord", "statement")
-        + cs.field("mt-s-on", "screen.ceremony.when.date", { type: "date" }) + cs.field("mt-s-ev", "screen.published.evidence", { area: true })
+        + cs.field("mt-s-on", "screen.matter.f.when", { type: "date" }) + cs.field("mt-s-ev", "screen.published.evidence", { area: true })
         + cs.field("mt-s-seq", "screen.matter.the_order_of_events_optional", { rec: true, area: true }) + P.help(cs, view, "mt-s-seq", "successrecord", "sequence")
         + P.note(cs, "screen.matter.the_order_of_events_is_shown_as")
-        + cs.field("mt-s-cause", "screen.matter.if_you_say_why_it_happened", { rec: true, area: true }) + P.help(cs, view, "mt-s-cause", "successrecord", "cause")
-        + P.note(cs, "screen.matter.your_team_s_own_act_cannot_be")
+        + '<details class="mk-details"><summary>' + cs.w("screen.matter.if_you_say_why_it_happened") + "</summary>"
+        + cs.field("mt-s-cause", "screen.matter.f.cause", { rec: true, area: true }) + P.help(cs, view, "mt-s-cause", "successrecord", "cause")
+        + P.note(cs, "screen.matter.your_team_s_own_act_cannot_be") + "</details>"
         + '<div class="mk-acts">' + cs.act("successrecord", { tone: "primary" }) + "</div>");
     },
     // R51: an action attached to the stage the escalation stands at
@@ -220,11 +226,13 @@ export const matter = Object.freeze({
       const al = P.later(cs, view, "actions", "actions", { determination: k.det, limit: "200" }, "");
       const items = al.state === "ok" && al.value && Array.isArray(al.value.items) ? al.value.items : [];
       const seven = k.stage === 7;
-      const purposes = ["official_request", "oversight_request", "audit_request", "testimony", "enforcing_legislation"];
+      const purposes = [["official_request", "screen.matter.f.purpose.official"], ["oversight_request", "screen.matter.f.purpose.oversight"], ["audit_request", "screen.matter.f.purpose.audit"],
+        ["testimony", "screen.matter.f.purpose.testimony"], ["enforcing_legislation", "screen.matter.f.purpose.legislation"]];
       return cs.sec("act.escalationattach.label.matter", cs.choice("mt-t-act", "home.area.action", items.map(function (a) { return { value: a.id, text: a.title || a.id }; }))
         + cs.field("mt-t-why", "screen.matter.your_reason_for_attaching_it", { rec: true }) + P.help(cs, view, "mt-t-why", "escalationattach", "reason")
-        + (seven ? cs.choice("mt-t-purpose", "screen.matter.at_stage_7_political_accountability", purposes.map(function (p) { return P.opt(p); }))
-          + cs.checks("mt-t-std", "screen.matter.the_rule_it_seeks_enforced", k.nc.map(function (s) { return { value: s.standard, text: s.standard, on: true }; })) : "")
+        + (seven ? '<details class="mk-details" open><summary>' + cs.w("screen.matter.at_stage_7_political_accountability") + "</summary>"
+          + cs.choice("mt-t-purpose", "screen.matter.f.purpose", purposes)
+          + cs.checks("mt-t-std", "screen.matter.the_rule_it_seeks_enforced", k.nc.map(function (s) { return { value: s.standard, text: s.standard, on: true }; })) + "</details>" : "")
         + P.note(cs, "screen.matter.only_a_breach_action_that_rests_on")
         + '<div class="mk-acts">' + cs.act("escalationattach", { tone: "primary" }) + "</div>");
     },
@@ -239,7 +247,7 @@ export const matter = Object.freeze({
     },
     suspendForm: function (cs, view, k) {
       const P = view.parts;
-      return cs.sec("act.escalationsuspend.label.matter", cs.field("mt-p-why", "screen.matter.why_you_are_suspending_it", { rec: true }) + P.help(cs, view, "mt-p-why", "escalationsuspend", "reason")
+      return cs.sec("screen.matter.pause", cs.field("mt-p-why", "screen.matter.why_you_are_suspending_it", { rec: true }) + P.help(cs, view, "mt-p-why", "escalationsuspend", "reason")
         + '<div class="mk-acts">' + cs.act("escalationsuspend", {}) + "</div>"
         + P.note(cs, "screen.matter.a_suspended_escalation_proposes_no_stage") + P.note(cs, "screen.matter.it_is_not_ended_and_any_deadline"));
     },
@@ -259,17 +267,17 @@ export const matter = Object.freeze({
         const corr = r.state === "ok" && r.value && Array.isArray(r.value.correspondence) ? r.value.correspondence : [];
         corr.forEach(function (c) { if (c.direction === "received") opts.push({ value: a.action + "|" + c.ord, text: [c.party, c.at].filter(Boolean).join(", ") || a.action }); });
       });
-      return cs.sec("act.escalationevaluate.label.matter", cs.choice("mt-e-resp", "screen.matter.the_response_you_are_reading", [["none", "screen.matter.no_response_by_the_deadline"]].concat(opts))
-        + cs.choice("mt-e-read", "question.conclude.own.field", [["complied", "screen.action.resolution.complied"], P.opt("partial"), ["denied", "screen.action.resolution.denied"], ["none", "screen.matter.no_response_by_the_deadline"]])
+      return cs.sec("act.escalationevaluate.label.matter", cs.choice("mt-e-resp", "screen.matter.the_response_you_are_reading", [["none", "screen.matter.reading.none"]].concat(opts))
+        + cs.choice("mt-e-read", "question.conclude.own.field", [["complied", "screen.matter.reading.complied"], ["partial", "screen.matter.reading.partial"], ["denied", "screen.matter.reading.denied"], ["none", "screen.matter.no_response_by_the_deadline"]])
         + cs.field("mt-e-why", "shell.reason", { rec: true }) + P.help(cs, view, "mt-e-why", "escalationevaluate", "reason")
         + P.note(cs, "screen.matter.a_reading_of_complied_does_not_end") + P.note(cs, "screen.matter.it_ends_only_when_compliance_is_restored")
         + '<div class="mk-acts">' + cs.act("escalationevaluate", { tone: "primary" }) + "</div>");
     },
     // R45 (b): no determination yet: the acts that need one, each saying why
     unavailable: function (cs, view) {
-      return cs.sheet(cs.row("", "<b>" + cs.w("act.escalationopen.label.matter") + "</b>", "", cs.w("screen.matter.needs_a_recorded_determination_that_the_act"))
+      return cs.sec("screen.matter.unavailable", cs.sheet(cs.row("", "<b>" + cs.w("act.escalationopen.label.matter") + "</b>", "", cs.w("screen.matter.needs_a_recorded_determination_that_the_act"))
         + cs.row("", "<b>" + cs.w("screen.matter.saying_what_the_breach_did") + "</b>", "", cs.w("screen.matter.needs_the_same_determination"))
-        + cs.row("", "<b>" + cs.w("screen.matter.attaching_an_action_holding_at_a_stage") + "</b>", "", cs.w("screen.matter.needs_an_escalation_which_needs_the_same")));
+        + cs.row("", "<b>" + cs.w("screen.matter.attaching_an_action_holding_at_a_stage") + "</b>", "", cs.w("screen.matter.needs_an_escalation_which_needs_the_same"))));
     },
     // the chosen form, under the choice of what to do
     doing: function (cs, view, k, first) {
@@ -295,7 +303,7 @@ export const matter = Object.freeze({
     if (P.isProject(view)) return cs.state("determinations", function (l) {
       const k = P.ctx(view);
       const live = Array.isArray(l.items) ? l.items : [];
-      const head = P.readOnly(cs, "screen.matter.name") + cs.title(null);
+      const head = P.readOnly(cs, "screen.matter.name") + cs.title(null) + (live.length ? "" : '<p class="mk-sub">' + cs.w("screen.matter.nodet") + "</p>");
       const links = live.length ? cs.sheet(live.map(function (x) {
         return cs.row("", '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(x.id) + '" data-nav>' + cs.esc((x.act && (x.act.event || x.act.id)) || x.id) + "</a>", "", "");
       }).join("")) : "";
@@ -321,7 +329,7 @@ export const matter = Object.freeze({
 
       // R6: the consequences: who or what, the measure and how it is known.
       const cn = view.data.consequences;
-      const cons = cn && cn.state === "empty" ? "" : cs.sec("screen.matter.consequences", cs.state("consequences", function (c) {
+      const cons = cn && cn.state === "empty" ? "" : cs.sec("screen.matter.what_the_breach_did", cs.state("consequences", function (c) {
         return cs.sheet(c.parts.map(function (p) {
           return cs.row(P.affected(cs, p), P.measure(cs, p), '<span class="meta">' + cs.w("screen.matter.known." + (["computed", "assessed"].includes(p.state) ? p.state : "undetermined"))
             + (p.label ? " · " + cs.esc(p.label) : "") + "</span>", "");
@@ -348,7 +356,7 @@ export const matter = Object.freeze({
           const open = x.state === "open";
           const stopped = x.state === "stopped_pursuing";
           const to = prop ? Number(prop.to || prop.stage) : stage + 1;
-          const acts = open ? cs.act("escalationadvance", { label: "screen.matter.advance", fills: { n: String(to) }, data: { to: String(to) } })
+          const acts = open ? cs.act("escalationadvance", { label: "screen.matter.advance", fills: { stage: { html: cs.w("screen.matter.stage." + (to >= 1 && to <= 7 ? to : 1)) } }, data: { to: String(to) } })
             + cs.act("escalationend", {}) + cs.act("escalationstoppursuing", {})
             : stopped ? cs.act("escalationreopen", {}) : "";
           const exit = x.exit ? '<ul class="mk-list"><li>' + cs.w("screen.matter.exit.compliance") + " · " + cs.esc(typeof x.exit.compliance === "object" && x.exit.compliance ? x.exit.compliance.says || x.exit.compliance.state || "" : String(x.exit.compliance || ""))

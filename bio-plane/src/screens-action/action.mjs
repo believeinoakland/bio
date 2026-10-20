@@ -62,17 +62,30 @@ export const action = Object.freeze({
     // R38: a word the design holds (`cs.w` answers the escaped key for one it does not); a field or option with none is not drawn
     // and is reported to BOB as a missing key (K3366), never worded here.
     has: function (cs, key) { return cs.w(key) !== cs.esc(key); },
-    // R38: the vocabulary's reply stages (received ones) and outcomes, each as a choice option: the design's words where a key
-    // holds them, else the vocabulary's own token as record data.
+    // R38: the vocabulary's reply stages (received ones) and outcomes, each as a choice option: the design's words by the key family
+    // `screen.action.reply.stage.<token>` / `.outcome.<token>` where one holds them, else the vocabulary's own token as record data;
+    // the family's `none` ("Not stated", "Not decided") is the empty choice, which sends nothing (B16).
     replyChoices: function (cs, view, which) {
       const v = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies : {};
-      const WORDS = { fee_waiver_decision: "screen.action.decision.on.a.fee.waiver", extension_notice: "screen.action.notice.of.an.extension",
-        appeal_decision: "screen.action.decision.on.an.appeal", none_exists: "screen.action.no.such.records.exist" };
+      const fam = "screen.action.reply." + which + ".";
       const list = which === "stage" ? (v.correspondence_stages && Array.isArray(v.correspondence_stages.received) ? v.correspondence_stages.received : [])
         : (Array.isArray(v.correspondence_outcomes) ? v.correspondence_outcomes : []);
-      return [{ value: "", text: "" }].concat(list.filter(function (t) { return typeof t === "string" && t; }).map(function (t) {
-        return WORDS[t] && cs.w(WORDS[t]) !== cs.esc(WORDS[t]) ? { value: t, key: WORDS[t] } : { value: t, text: t };
+      return [{ value: "", key: fam + "none" }].concat(list.filter(function (t) { return typeof t === "string" && t && t !== "none"; }).map(function (t) {
+        return cs.w(fam + t) !== cs.esc(fam + t) ? { value: t, key: fam + t } : { value: t, text: t };
       }));
+    },
+    // R38 (B16 b): how a reply came, by the design's tokens (`actions` R13 takes free text of at most 500 characters)
+    mediums: function () { return ["email", "letter", "portal", "person", "other"]; },
+    // R38: the earlier entries a reply may follow (`follows`) or a quote answer or revise: each by its place in the correspondence
+    // (the ordinal `actions` declares), a sent entry as the request sent on its day, a received one as its kind of reply on its day
+    // (an entry with no kind has no word to be offered under).
+    entriesOf: function (cs, corr) {
+      return corr.map(function (c, i) {
+        const ord = typeof c.ord === "number" ? c.ord : i;
+        const fam = c.direction === "sent" ? "screen.action.sent.stage." : "screen.action.reply.stage.";
+        const kind = typeof c.stage === "string" && cs.w(fam + c.stage) !== cs.esc(fam + c.stage) ? String(cs.w(fam + c.stage)).toLowerCase() : "";
+        return { ord: ord, c: c, kind: kind };
+      });
     },
     // The states an action may move to from where it stands (actions' state edges).
     moves: function (from) {
@@ -163,7 +176,7 @@ export const action = Object.freeze({
         const remind = c.date && st === "pending" && cs.can("actioncorrespond")
           ? cs.field("remind-" + i, "screen.action.remindon", { type: "date" }) + cs.act("reminderset", { data: { entry: String(i) } }) : "";
         // R52: the reminder this page set, beside its entry: its day, by key (the answer never reads "nothing happened")
-        const set = view.ui.reminded && view.ui.reminded[i] ? ' · <span data-reminder="' + i + '">' + cs.w("screen.action.remindon") + " " + cs.date(view.ui.reminded[i]) + "</span>" : "";
+        const set = view.ui.reminded && view.ui.reminded[i] ? ' · <span data-reminder="' + i + '">' + cs.w("screen.reminder.on", { date: { html: cs.date(view.ui.reminded[i]) } }) + "</span>" : "";
         return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + set + "</span>", "", remind);
       }).join("")));
       // R37: a sent action with no clock entry has no due date to open: the door to the deadline page is drawn for it, which holds
@@ -201,22 +214,60 @@ export const action = Object.freeze({
       // reply, what the office decided and the exemptions it cites, the date it says it will answer by and the law that comes
       // from, and a quoted fee. Each field and option reads the design's key; one the design holds no key for is not drawn (R19).
       const laws = a.governing_laws && Array.isArray(a.governing_laws.laws) ? a.governing_laws.laws : [];
-      const KEYS = { dir: "screen.action.replies", dayHelp: "screen.action.a.real.calendar.day" };
-      const maybe = function (fn, key) { return P.has(cs, key) ? fn(key) : ""; };
       const stageOpts = P.replyChoices(cs, view, "stage"), outcomeOpts = P.replyChoices(cs, view, "outcome");
-      const replyForm = cs.choice("reply-dir", KEYS.dir, [["received", "screen.action.received"], ["no_response", "screen.action.no.reply.came.by.the.date"]], { value: "received" })
-        + cs.field("reply-at", "screen.action.the.day.it.came.or.the", { type: "date", help: KEYS.dayHelp })
+      // R38 (B15 (1)): the reply's document is picked from the project's held captures (`heldcaptures`, capture R77, scoped by
+      // `project`): each by its title and the day it was collected, the digest its capture is filed under as the value
+      const held = a.project && cs.can("actioncorrespond") ? P.later(cs, view, "held", "heldcaptures", { project: a.project, limit: "500" }, "") : null;
+      const heldRows = held && held.state === "ok" && held.value && Array.isArray(held.value.held) ? held.value.held : [];
+      const docOpts = heldRows.filter(function (r) { return r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256; }).map(function (r) {
+        return { value: r.capture.sha256, key: "screen.docket.capture.option", fills: { title: r.title || r.bundle_id || "", date: { html: r.collected_since ? cs.date(r.collected_since) : "" } } };
+      });
+      const earlier = P.entriesOf(cs, corr);
+      const pre = [{ value: "", key: "screen.action.reply.follows.none" }];
+      const followsOpts = pre.concat(earlier.filter(function (x) { return x.c.direction === "sent" || x.kind; }).map(function (x) {
+        // a sent entry is "the request" unless its stage is another kind of sending (a fee-waiver request, an appeal, a court filing)
+        return x.c.direction === "sent" && (!x.kind || x.c.stage === "request") ? { value: String(x.ord), key: "screen.action.reply.follows.request", fills: { date: { html: cs.date(x.c.at) } } }
+          : { value: String(x.ord), key: "screen.action.reply.follows.reply", fills: { kind: { html: x.kind }, date: { html: cs.date(x.c.at) } } };
+      }));
+      const answersOpts = [{ value: "", text: "" }].concat(earlier.filter(function (x) { return x.c.direction === "sent"; }).map(function (x) {
+        return { value: String(x.ord), key: "screen.action.reply.follows.request", fills: { date: { html: cs.date(x.c.at) } } };
+      }));
+      const revisesOpts = [{ value: "", text: "" }].concat(earlier.filter(function (x) { return x.c.direction !== "sent" && x.c.quote_amount !== undefined && x.c.quote_amount !== null && x.c.quote_amount !== ""; }).map(function (x) {
+        return { value: String(x.ord), text: String(x.c.quote_amount) + (x.c.quote_currency ? " " + String(x.c.quote_currency) : "") };
+      }));
+      const mediumOpts = [{ value: "", text: "" }].concat(P.mediums().map(function (t) { return { value: t, key: "screen.action.reply.medium." + t }; }));
+      const fold = function (summaryKey, inner) { return '<details class="mk-details"><summary>' + cs.w(summaryKey) + "</summary>" + inner + "</details>"; };
+      const noteOf = function (key) { return '<p class="mk-small">' + cs.w(key) + "</p>"; };
+      // the kit's choice draws no help of its own: a choice's help sentences follow it as notes
+      const pick = function (id, labelKey, options, o) {
+        const help = o && o.help ? [].concat(o.help) : [];
+        return cs.choice(id, labelKey, options, o && o.value !== undefined ? { value: o.value } : {}) + help.map(noteOf).join("");
+      };
+      const replyForm = pick("reply-dir", "screen.action.what.came.back", [["received", "screen.action.a.reply.came"], ["no_response", "screen.action.no.reply.came.by.the.date"]],
+        { value: "received", help: ["screen.action.record.a.silence.with.its.date", "screen.action.it.is.not.the.same.as"] })
+        + cs.field("reply-at", "screen.action.the.day.it.came.or.the", { type: "date", help: "screen.action.a.real.calendar.day" })
+        + pick("reply-medium", "screen.action.how.it.came", mediumOpts)
         + cs.field("reply-party", "screen.action.who.it.came.from", { help: "screen.action.the.office.or.person.who.answered" })
-        + cs.field("reply-account", "screen.action.your.account.of.the.reply", { area: true, help: "screen.action.in.your.own.words.up.to" })
-        + (stageOpts.length > 1 ? cs.choice("reply-stage", "screen.action.what.kind.of.reply", stageOpts, { help: "screen.action.a.silence.has.no.kind" }) : "")
-        + (outcomeOpts.length > 1 ? cs.choice("reply-outcome", "screen.action.what.the.office.decided", outcomeOpts, { help: "screen.action.only.on.a.reply" }) : "")
-        + cs.field("reply-exemptions", "screen.action.the.exemptions.the.office.cites", { rec: true, help: "screen.action.the.exemptions.or.reasons.for.withholding" })
-        + cs.field("reply-dueby", "screen.action.the.office.says.it.will.answer", { type: "date", help: "screen.action.a.date.the.office.itself.stated" })
-        + (laws.length ? cs.choice("reply-duecite", "screen.action.the.law.that.date.comes.from", [{ value: "", text: "" }].concat(laws.map(function (l) { return { value: String(l.citation || ""), text: String(l.citation || "") }; })),
-          { help: "screen.action.only.a.law.this.action.goes" }) : "")
-        + cs.field("reply-fee-basis", "screen.action.what.the.fee.is.for", { help: "screen.action.optional.in.the.office.s.words" })
-        + maybe(function (k) { return cs.field("reply-fee", k, { help: "screen.action.put.a.waiver.in.as.a" }); }, "screen.action.the.amount.quoted")
-        + maybe(function (k) { return cs.field("reply-fee-cur", k); }, "screen.action.currency");
+        + pick("reply-held", "screen.action.what.you.record.it.from", [["account", "screen.action.your.account.of.it"], ["document", "screen.action.the.reply.itself.a.document.you"]],
+          { value: "account", help: ["screen.action.either.the.reply.itself.or.your", "screen.action.a.silence.has.neither.because.there"] })
+        + cs.field("reply-account", "screen.action.your.account.of.the.reply", { area: true, rec: true, help: "screen.action.in.your.own.words.up.to" })
+        + (docOpts.length ? pick("reply-doc", "screen.action.the.document.that.holds.the.reply", [{ value: "", text: "" }].concat(docOpts),
+          { help: ["screen.action.only.when.you.record.the.reply", "screen.action.add.the.document.first.under.add"] })
+          : held && held.state === "failed" ? cs.state(held) : noteOf("screen.action.add.the.document.first.under.add"))
+        + fold("screen.action.where.this.reply.stands.in.the", noteOf("screen.action.say.what.kind.of.reply.it") + noteOf("screen.action.the.request.s.timeline.then.follows")
+          + pick("reply-stage", "screen.action.what.kind.of.reply", stageOpts, { help: ["screen.action.a.sending.has.its.own.kinds", "screen.action.a.silence.has.no.kind"] })
+          + pick("reply-follows", "screen.action.it.follows", followsOpts, { help: ["screen.action.the.earlier.entry.this.answers.so", "screen.action.an.appeal.must.follow.the.decision"] })
+          + pick("reply-outcome", "screen.action.what.the.office.decided", outcomeOpts, { help: ["screen.action.only.on.a.reply", "screen.action.a.denial.a.decision.on.a"] })
+          + cs.field("reply-exemptions", "screen.action.the.exemptions.the.office.cites", { rec: true, help: "screen.action.the.exemptions.or.reasons.for.withholding" })
+          + cs.field("reply-dueby", "screen.action.the.office.says.it.will.answer", { type: "date", help: ["screen.action.a.date.the.office.itself.stated", "screen.action.civicsmith.works.out.no.date.for", "screen.action.give.the.law.with.it"] })
+          + (laws.length ? pick("reply-duecite", "screen.action.the.law.that.date.comes.from", [{ value: "", text: "" }].concat(laws.map(function (l) { return { value: String(l.citation || ""), text: String(l.citation || "") }; })),
+            { help: "screen.action.only.a.law.this.action.goes" }) : ""))
+        + fold("screen.action.if.the.reply.quotes.a.fee", noteOf("screen.action.a.fee.quote.is.kept.as")
+          + cs.field("reply-fee", "screen.action.the.amount.quoted", { help: "screen.action.put.a.waiver.in.as.a" })
+          + pick("reply-fee-cur", "screen.action.currency", [{ value: "USD", key: "screen.action.reply.currency.usd" }])
+          + cs.field("reply-fee-basis", "screen.action.what.the.fee.is.for", { help: "screen.action.optional.in.the.office.s.words" })
+          + pick("reply-fee-answers", "screen.action.it.answers.this.sending", answersOpts, { help: "screen.action.the.earlier.sending.the.quote.responds" })
+          + (revisesOpts.length > 1 ? pick("reply-fee-revises", "screen.action.it.revises.this.quote", revisesOpts, { help: "screen.action.only.when.the.office.changes.a" }) : ""));
       const replies = cs.sec("screen.action.replies", (received.length ? cs.sheet(received.map(function (c) {
         const e = entries.find(function (x) { return x.ord === c.ord; }) || {};
         const pr = e.pressure ? cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(e.pressure.kind) ? e.pressure.kind : "other")) : "";
@@ -226,7 +277,8 @@ export const action = Object.freeze({
         return cs.row(cs.date(c.at), cs.w(c.direction === "no_response" ? "screen.action.noresponse" : "screen.action.received")
           + (c.party ? " · " + cs.esc(c.party) : "") + (c.medium ? " · " + cs.esc(c.medium) : "") + (pr ? '<span class="meta">' + pr + "</span>" : ""), "", mark);
       }).join("")) : "")
-        + replyForm + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>");
+        // R27: the form belongs to the act: a member who may not record a reply is shown no field of it
+        + (cs.can("actioncorrespond") ? replyForm + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>" : ""));
 
       // R12, R31 (3): the pressure marks and records on this action, each with where it arrived, who made it and whether a hold
       // is placed (a legal one as `screen.action.legalmark`), paged by `after`; none drawn at zero; the profile's fact on a legal
@@ -382,16 +434,18 @@ export const action = Object.freeze({
         // a silence takes its day alone from the member; `actions` records it as a named account (DEC-13: it requires an account
         // or a capture, and a silence has no bytes), so the account is the design's own sentence for it, read by key
         if (dir === "no_response") { q.account = String(cs.w("screen.action.no.reply.came.by.the.date")); return { query: q, raw: "" }; }
-        const account = val("reply-account");
-        if (!account) return { refuse: "screen.action.reply.account.needed" };
-        q.account = account;
+        // "never both": the reply itself (a document the project holds) or the member's own account of it
+        const fromDoc = val("reply-held") === "document";
+        const doc = val("reply-doc"), account = val("reply-account");
+        if (fromDoc) { if (!doc) return { refuse: "screen.action.a.reply.needs.either.the.document" }; q.artifact_sha = doc; }
+        else { if (!account) return { refuse: "screen.action.reply.account.needed" }; q.account = account; }
         const put = function (name, id) { const v = val(id); if (v) q[name] = v; };
-        put("party", "reply-party"); put("stage", "reply-stage"); put("outcome", "reply-outcome"); put("exemptions", "reply-exemptions");
-        put("due_cite", "reply-duecite");
+        put("medium", "reply-medium"); put("party", "reply-party"); put("stage", "reply-stage"); put("follows", "reply-follows"); put("outcome", "reply-outcome");
+        put("exemptions", "reply-exemptions"); put("due_cite", "reply-duecite");
         const dueBy = val("reply-dueby");
         if (dueBy) { if (!/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) return { refuse: "screen.action.reply.at.needed" }; q.due_by = dueBy; }
         const fee = val("reply-fee");
-        if (fee) { q.quote_amount = fee; put("quote_currency", "reply-fee-cur"); put("quote_basis", "reply-fee-basis"); }
+        if (fee) { q.quote_amount = fee; put("quote_currency", "reply-fee-cur"); put("quote_basis", "reply-fee-basis"); put("quote_answers", "reply-fee-answers"); put("quote_revises", "reply-fee-revises"); }
         return { query: q, raw: "" };
       },
     },

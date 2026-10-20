@@ -165,19 +165,20 @@ export const plan = Object.freeze({
       const sf = view.parts.sfx(k);
       const others = [];
       for (let j = 0; j < count; j++) if (j !== k) others.push({ value: "p" + (j + 1), key: "screen.plan.phase.unnamed", fills: { n: String(j + 1) } });
-      const leads = [{ value: "", text: "" }].concat(others);
+      const leads = [{ value: "", key: "screen.plan.phase.none" }].concat(others);
       const after = [["", "screen.plan.none.this.one.starts.first"]].concat(others);
-      return (count > 1 ? "<h3>" + cs.w("screen.plan.phase.unnamed", { n: String(k + 1) }) + "</h3>" : "")
+      return cs.sec("screen.plan.phase.head", (count > 1 ? "<h3>" + cs.w("screen.plan.phase.unnamed", { n: String(k + 1) }) + "</h3>" : "")
         + cs.field("plan-scen-pname" + sf, "screen.plan.name.of.the.phase")
-        + cs.checks("plan-scen-options" + sf, "screen.plan.scenario.options", items)
-        + cs.choice("plan-scen-start" + sf, "screen.plan.each.phase.starts.after.something.else", [["plan_start", "screen.plan.at.the.start.of.the.plan"],
-          ["after", "screen.plan.each.phase.starts.after.something.else"], ["met", "screen.plan.when.another.phase.s.checkpoint.is"],
+        + cs.checks("plan-scen-options" + sf, "screen.plan.phase.options", items)
+        + cs.choice("plan-scen-start" + sf, "screen.plan.phase.when", [["plan_start", "screen.plan.at.the.start.of.the.plan"],
+          ["after", "screen.plan.phase.when.after"], ["met", "screen.plan.when.another.phase.s.checkpoint.is"],
           ["not_met", "screen.plan.when.another.phase.s.checkpoint.is.2"]], { value: "plan_start" })
-        + cs.choice("plan-scen-after" + sf, "screen.plan.no.phase.can.start.after.itself", after, { value: "" })
+        + '<p class="mk-small">' + cs.w("screen.plan.each.phase.starts.after.something.else") + " " + cs.w("screen.plan.no.phase.can.start.after.itself") + "</p>"
+        + cs.choice("plan-scen-after" + sf, "screen.plan.phase.which", after, { value: "" })
         + cs.field("plan-scen-days" + sf, "screen.plan.check.back.after.days", { type: "number", help: "screen.plan.the.checkpoint.then.waits.for.a" })
         + cs.field("plan-scen-cond" + sf, "screen.plan.what.the.checkpoint.tests", { help: "screen.plan.in.words.up.to.500.characters" })
         + cs.choice("plan-scen-met" + sf, "screen.plan.if.the.checkpoint.is.met.go", leads, { value: "" })
-        + cs.choice("plan-scen-not" + sf, "screen.plan.if.it.is.not.met.go", leads, { value: "" });
+        + cs.choice("plan-scen-not" + sf, "screen.plan.if.it.is.not.met.go", leads, { value: "" }));
     },
     subjectKeys: function (o) {
       return (Array.isArray(o.subjects) ? o.subjects : []).map(function (x) {
@@ -298,17 +299,18 @@ export const plan = Object.freeze({
             + (!started && o.disposition !== "chosen" ? cs.act("optiondispose", { label: "screen.plan.choose", data: { option: o.id, disposition: "chosen" } }) : "")
             + (!started && o.disposition !== "declined" ? cs.act("optiondispose", { label: "screen.plan.decline", data: { option: o.id, disposition: "declined" } }) : "")
             // R44 (c): done, blocked, or back to undecided
-            + (!started && o.disposition !== "done" ? cs.act("optiondispose", { label: "screen.plan.disposition.done", data: { option: o.id, disposition: "done" } }) : "")
-            + (!started && o.disposition !== "blocked" ? cs.act("optiondispose", { label: "screen.plan.disposition.blocked", data: { option: o.id, disposition: "blocked" } }) : "")
-            + (!started && o.disposition && o.disposition !== "open" ? cs.act("optiondispose", { label: "screen.plan.return.them.to.undecided", data: { option: o.id, disposition: "open" } }) : "")
+            + (!started && o.disposition !== "done" ? cs.act("optiondispose", { label: "screen.plan.dispose.done", data: { option: o.id, disposition: "done" } }) : "")
+            + (!started && o.disposition !== "blocked" ? cs.act("optiondispose", { label: "screen.plan.dispose.blocked", data: { option: o.id, disposition: "blocked" } }) : "")
+            + (!started && o.disposition && o.disposition !== "open" ? cs.act("optiondispose", { label: "screen.plan.dispose.open", data: { option: o.id, disposition: "open" } }) : "")
             + (!started && o.disposition === "chosen" ? cs.act("optionstartpreview", { label: "act.optionstartpreview.label.plan", tone: "primary", data: { option: o.id } }) : "");
         },
         hold: function () {
-          return cs.act("optiondispose", { label: "screen.plan.choose", data: { disposition: "chosen" } })
-            + cs.act("optiondispose", { label: "screen.plan.decline", data: { disposition: "declined" } })
-            + cs.act("optiondispose", { label: "screen.plan.disposition.done", data: { disposition: "done" } })
-            + cs.act("optiondispose", { label: "screen.plan.disposition.blocked", data: { disposition: "blocked" } })
-            + cs.act("optiondispose", { label: "screen.plan.return.them.to.undecided", data: { disposition: "open" } });
+          // DEC-387 (B424): on the picked rows the acts read "Choose them", "Decline them", "Mark done", "Mark them blocked"
+          return cs.act("optiondispose", { label: "screen.plan.dispose.them.choose", data: { disposition: "chosen" } })
+            + cs.act("optiondispose", { label: "screen.plan.dispose.them.decline", data: { disposition: "declined" } })
+            + cs.act("optiondispose", { label: "screen.plan.dispose.done", data: { disposition: "done" } })
+            + cs.act("optiondispose", { label: "screen.plan.dispose.them.blocked", data: { disposition: "blocked" } })
+            + cs.act("optiondispose", { label: "screen.plan.dispose.open", data: { disposition: "open" } });
         },
       });
       const subjectChoice = function (id) {
@@ -318,14 +320,14 @@ export const plan = Object.freeze({
         }));
       };
       const catChoice = function (id) {
-        return cs.choice(id, "screen.plan.option.category", CATS.map(function (c) { return [c, "screen.plan.category." + c]; }));
+        return cs.choice(id, "screen.plan.option.category", CATS.map(function (c) { return [c, "screen.plan.option.kind." + c]; }));
       };
       // R44 (a): who it is directed to, the dates that bind it, the tier, the seeking-enforcement mark with the requirement it seeks
       const nDates = Math.max(1, Math.min(20, Number(view.ui.optdates) || 1));
       const dateLines = [];
-      for (let i = 0; i < nDates; i++) dateLines.push(cs.field("plan-opt-date-" + i, "screen.plan.col.ends", { type: "date" })
+      for (let i = 0; i < nDates; i++) dateLines.push(cs.field("plan-opt-date-" + i, "screen.plan.option.date", { type: "date" })
         + cs.field("plan-opt-basis-" + i, "screen.plan.because.the.law.order.or.commitment", { help: "screen.plan.one.line.up.to.500.characters" }));
-      const enfChoices = [{ value: "", text: "" }].concat(subjects.filter(function (s) { return s.subject && s.subject.kind === "outcome"; }).map(function (s, i) {
+      const enfChoices = [{ value: "", key: "screen.plan.option.enforce.none" }].concat(subjects.filter(function (s) { return s.subject && s.subject.kind === "outcome"; }).map(function (s, i) {
         const t = titles.ofKey(s.key);
         return t ? { value: s.key, text: t } : { value: s.key, key: "screen.plan.matter.n", fills: { n: String(subjects.indexOf(s) + 1) } };
       })).concat(lists ? lists.determinations.items.flatMap(function (d) { return (Array.isArray(d.outcomes) ? d.outcomes : []).map(function (o) { return o.standard; }); })
@@ -336,14 +338,14 @@ export const plan = Object.freeze({
         + cs.field("plan-opt-detail", "screen.plan.option.detail", { area: true, rec: true })
         + (view.reachable ? '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "detail", id: "plan-opt-detail", forop: "optionadd" } }) + "</div>" : "")
         + cs.choice("plan-opt-adk", "screen.plan.who.it.is.directed.to", [["none", "screen.plan.no.one.in.particular"], ["office", "screen.actionnew.to.named"],
-          ["press", "screen.plan.category.journalistic"], ["organisation", "screen.people.add.kind.organization"], ["audience", "screen.plan.an.audience.described.in.words"]], { value: "none" })
-        + cs.field("plan-opt-arole", "screen.members.col.role") + cs.field("plan-opt-abody", "screen.plan.the.body.or.organization")
+          ["press", "screen.plan.option.directed.press"], ["organisation", "screen.people.add.kind.organization"], ["audience", "screen.plan.an.audience.described.in.words"]], { value: "none" })
+        + cs.field("plan-opt-arole", "screen.plan.option.role") + cs.field("plan-opt-abody", "screen.plan.the.body.or.organization")
         + cs.field("plan-opt-adesc", "screen.plan.an.audience.described.in.words", { area: true })
         + cs.sec("screen.plan.dates.that.bind.it", dateLines.join("")
           + cs.choice("plan-opt-datecount", "screen.plan.add.another.date", Array.from({ length: 20 }, function (_, i) { return { value: String(i + 1), text: String(i + 1) }; }), { redraw: "optdates", value: "1" }),
           { help: ["screen.plan.a.date.set.by.law.an", "screen.plan.every.date.says.where.it.comes", "screen.plan.help.adds.a.line.for.one.more"] })
-        + cs.choice("plan-opt-tier", "screen.plan.how.careful.to.be.legal.options", [["", "risk.tier.undetermined"], ["1", "risk.tier.1"], ["2", "risk.tier.2"], ["3", "risk.tier.3"]], { value: "" })
-        + cs.checks("plan-opt-lobbying", "screen.plan.this.option.asks.someone.to.enforce", [["lobbying", "screen.plan.this.option.asks.someone.to.enforce"]])
+        + cs.choice("plan-opt-tier", "screen.plan.how.careful.to.be.legal.options", [["", "screen.plan.option.tier.none"], ["1", "screen.plan.option.tier.1"], ["2", "screen.plan.option.tier.2"], ["3", "screen.plan.option.tier.3"]], { value: "" })
+        + cs.checks("plan-opt-lobbying", "screen.plan.option.enforce", [["lobbying", "screen.plan.this.option.asks.someone.to.enforce"]])
         + cs.choice("plan-opt-enforces", "screen.plan.the.requirement.it.seeks", enfChoices, { value: "" })
         + '<div class="mk-acts">' + cs.act("optionadd", { label: "act.optionadd.label.plan" }) + "</div>" : "";
 
@@ -402,7 +404,7 @@ export const plan = Object.freeze({
       const dated = [];
       options.forEach(function (o, i) { (Array.isArray(o.dates) ? o.dates : []).forEach(function (d) { if (d && d.date) dated.push({ value: o.id + "|" + d.date, text: (o.summary ? o.summary : cs.w("screen.plan.option.unnamed", { n: String(i + 1) })) + " · " + cs.date(d.date) }); }); });
       const remind = open && dated.length ? cs.sec("screen.plan.remind.me.as.a.date.comes",
-        cs.choice("plan-rem-date", "screen.plan.col.ends", [{ value: "", text: "" }].concat(dated), { value: "" })
+        cs.choice("plan-rem-date", "screen.plan.dispose.date", [{ value: "", text: "" }].concat(dated), { value: "" })
         + cs.field("plan-rem-on", "screen.action.remindon", { type: "date", help: "screen.plan.a.day.before.the.date.in" }),
         { help: ["screen.plan.only.when.you.choose.an.option", "screen.plan.pick.one.of.its.dates.and"] }) : "";
       const optionsIn = (options.length ? optionRows + remind : "") + addOption + (offers.length ? cs.sheet(offers.join("")) : "") + tray;
