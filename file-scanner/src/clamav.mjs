@@ -8,10 +8,7 @@
  * replaces `current.json`, so a failed run leaves the last good set. */
 import { SCAN_BATCH_MAX, SIGNATURES_MAX_AGE_MS } from './limits.mjs';
 import { normaliseTarget, knownStore, sizeTarget, targetStream, writeObject, deleteObject, readJson } from './store.mjs';
-import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
-export const MIRROR_HOST = 'database.clamav.net';
-export const DATABASES = Object.freeze(['main.cvd', 'daily.cvd', 'bytecode.cvd']);
 export const CURRENT = 'clamav/current.json';
 export const STATE = 'clamav/state.json';
 
@@ -126,7 +123,17 @@ async function putStream(bucket, key, response) {
   return writeObject(bucket, key, body);
 }
 
-/** One mirror run: `{ok, versions, published, error?}`. Reaches only ClamAV's database host (R12). */
+/** What the signature updater (the image's `freshclam`, R34) answered to a run, whole: its refusal keeps its reason. */
+async function askUpdater(deps, path, init) {
+  try {
+    const r = await deps.updater(path, init);
+    const body = await r.json().catch(() => null);
+    return body && typeof body === 'object' ? body : { ok: false, code: 'UPDATER_UNAVAILABLE' };
+  } catch { return { ok: false, code: 'UPDATER_UNAVAILABLE' }; }
+}
+
+/** One mirror run: `{ok, versions, published, error?}`. The databases come from ClamAV's own updater, `freshclam`, run
+ *  in the signature-updater instance of the image under its own identity (R6, R34); the Worker opens no connection. */
 export async function runMirror(deps) {
   const now = deps.now();
   const previous = await readJson(deps.bucket, CURRENT);
@@ -135,19 +142,21 @@ export async function runMirror(deps) {
   const files = {};
   let error = null;
   try {
-    for (const db of DATABASES) {
-      const prev = previous && previous.files[db];
-      const headers = { 'user-agent': localize('file-scanner.clamav.file_scanner_v1_signature_mirror', 'file-scanner/{v1} (signature mirror; as cvdupdate)', { v1: String(deps.version || 'unknown') }) };
-      if (prev && prev.last_modified) headers['if-modified-since'] = prev.last_modified;
-      let r;
-      try { r = await deps.fetch(`https://${MIRROR_HOST}/${db}`, { headers }); } catch { throw new Error(`UNREACHABLE:${db}`); }
-      if (r.status === 304 && prev) { files[db] = prev; continue; }
-      if (r.status !== 200 || !r.body) throw new Error(`REFUSED:${db}:${r.status}`);
-      const key = `clamav/sets/${run}/${db}`;
-      await putStream(deps.bucket, key, r);
-      staged.push(key);
-      files[db] = { key, last_modified: r.headers.get('last-modified') || null };
+    const got = await askUpdater(deps, `/update/${run}`, { method: 'POST' });
+    if (!got.ok || !Array.isArray(got.files)) {
+      throw new Error(got.code === 'MIRROR_REFUSED' ? `MIRROR_REFUSED:${String(got.detail || 'no reason given').slice(0, 300)}` : 'UPDATER_UNAVAILABLE');
     }
+    try {
+      for (const name of got.files) {
+        let r;
+        try { r = await deps.updater(`/update/${run}/${name}`); } catch { throw new Error(`UPDATER_UNAVAILABLE:${name}`); }
+        if (r.status !== 200 || !r.body) throw new Error(`UPDATER_UNAVAILABLE:${name}`);
+        const key = `clamav/sets/${run}/${name}`;
+        await putStream(deps.bucket, key, r);
+        staged.push(key);
+        files[name] = { key, last_modified: null };
+      }
+    } finally { await askUpdater(deps, `/update/${run}`, { method: 'DELETE' }); }
     // Each new file's digital signature, verified by the image's sigtool before the set replaces the last good one.
     const fresh = Object.entries(files).filter(([, f]) => staged.includes(f.key));
     if (fresh.length) {

@@ -1,6 +1,6 @@
 # BOB to file-safety (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -69,3 +69,29 @@ ANSWER (K4125) to J5. Not Bob's: a detail between two jobs. The word table does 
 ## B7 · CHANGE
 
 CHANGE (K4128): file-scanner exports `EICAR_FOUND` on the tranche (`file-scanner/src/providers/routes.mjs`). Merge tranche/T51, import it at `fixture.mjs`:127 and `tools.test.mjs`:193 in place of `word("file-scanner.routes.the_eicar_test_file_answered")`, re-run your tests and `checks/words.mjs` (0 for file-safety), and post COMPLETE.
+
+## B8 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-12 · file-safety** when the round opens): the fix round of T51 (K4165, K4168; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/file-safety.md` (read whole). Each `NEW … R<n>` below is a requirement line to write first, in the file's style (an outcome, an id first on its line, marked *(not yet met: T51)*): the number given is the next free one at planning; if another line has taken it, take the next. Test names carry the id.
+Why this job: FR-SCAN's second half (K4182); and, from the live walk (K4194), L25.
+Merge order: module index 49, layer 3. After `file-scanner`.
+Wave 1 is merged on `tranche/T51` before you start (test-support's helper, op-declarations' and op-grades' assembly, interface-shell's guard, bundler's check): merge the tranche first and read their new requirement lines for the shapes you use.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **FR-SCAN (K4182)** · Security states what is true instead of 'waiting': when the scanner has no signatures, the safety state answers 'no signatures since <date>' and the refusal's reason, read by key. Report to BOB if `screens-settings`' `security` screen must change to draw it (its entry would then be added). Requirement: NEW `file-safety` R46 (next free id; the file ends at R45, and R38 is `findingKind`): with no signatures the state names the date it has had none since and why, never 'waiting'. Test: A scanner stub reporting no signatures since a date and a refusal: the state carries both by key; with signatures obtained it carries neither (control).
+2. **L25 (K4194; live walk)** · `not_scanned` is recorded as a note on every attempt and every opening, so the notes grow without bound while no scan can run (I-18 rows): `scanBatch` writes a note per verdict (`file-safety/index.mjs:952`) each five minutes for each of the 27 due files (the file stays due: `#due` ignores `not_scanned` notes, `:918-925`), and each opening of a copy writes a "copy" note carrying `not_scanned` (`:1467-1469`), so a copy opened four times shows four rows and the Calendar copy 11. Record a `not_scanned` verdict once for a file and reason until the reason changes. (The raw word `not_scanned` the "Opening a file" screen draws is UX-DESIGN's.) Requirement: NEW `file-safety` R47 (amends R46). Test: a scanner stub answering `not_scanned` for the same reason on three passes and two openings leaves one note per file; control: a changed reason, or a real verdict, writes a new note.
+
+3. **K4202 (the census)** · Declare in your `DECLARED_OPS` every op of yours the screens send (the census, `build/plan/pass-T51/owners.tsv`, rows marked `job` with you as owner): `deepercheck`, `openoriginal`, `openwithwarning`, `releasescanhold`, `safeview`, `securitytooladd`, `securitytoolremove`, `securitytooltest`. An op another entry here already declares counts once. The rule is the pass's (`build/plan/fix-round-T51-pass.md` §3, read whole): `classes`, `machineClasses`, `mutating`, `weight` and `description` copied from the op's existing rows in `op-declarations` and `op-grades`, never chosen; `fields.accepts` every field your arm reads from `url` and `body` (stamps such as `viewer` and the shell's `reason` excluded unless your arm reads its own `reason`), `fields.requires` each field it refuses without; where the rows disagree or the arm leaves anything to judge, a QUESTION to BOB. Requirement: one NEW R line (next free id) in your record for BOB. Test: `declared-ops.test.mjs` calling test-support's `declaredOpHolds` for each op (only its requires; without each; a field outside accepts).
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure (`python3 build/plan/reading-sets.py` takes no module argument and prints every module; its figure for yours is 861 KB, an upper bound that counts every used module's whole public part and all tests): your firm set (requirements, code, this START) is about 201 KB and, with the public parts of the services your entries touch, about 223 KB against the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B9 · ANSWER · re J7
+
+ANSWER J7 (K4210): your reading is accepted: requires providerId, handlingDigest only; credentials and config in accepts (a condition on the chosen service is not declarable). Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
