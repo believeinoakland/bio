@@ -8,7 +8,7 @@
    prefixes) is record-grammar's. */
 import { parseFrontmatter, createSha256, normalizeType, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 /* C-68.1 (K794, K796, K850): the capability complaint is acquisition's, minted at its one region (`evidenceStorageAbsent`). */
-import { evidenceStorageAbsent, ARCHIVE_CHECKS, FOR_MAX, stageTimes } from "../acquisition/index.mjs";
+import { evidenceStorageAbsent, ARCHIVE_CHECKS, FOR_MAX } from "../acquisition/index.mjs";
 /* K617, K624 (2): who may call an op is `admission`'s — the namespace gates, the credential's resolution, the admission
    in its order, the bearer fences, the reader of a public op's caller and the mint's secrets — called here in R28's
    order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
@@ -98,6 +98,9 @@ const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "
                                            "rerunstart", "rerunpair"]);
 const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase", "importregrade", "rerunread"]);
 const CASE_CHECKER_PUBLIC_READS = Object.freeze(["casechecker", "casefilespec"]);
+/* R49 (T51; K4230; case-inputs R24; public-read R18): case-inputs' credential-free public read `casedetailspublic`, registered at
+   the plane's start, routed by its own name through public-read's door read exactly as the case-checker reads are */
+const CASE_INPUTS_PUBLIC_READS = Object.freeze(["casedetailspublic"]);
 
 /* R50 (DEC-120, DEC-121; N528; op-declarations R15; K1402): `wizard-scripts`' ops, routed through its own map by the
    general forward. Every act is stamped `author`, the one key its map reads every identity from (the
@@ -975,8 +978,8 @@ export function makeFetch(hooks = {}) {
          public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
          credential and none of the caller's stamps; the read is handed only the parameters it declared. Asked as
          `op=publicread&name=<name>`, the same read is the public hook's (plane's, through `publicReadDoorOp`). */
-      /* R49 (case-checker R15): case-checker's two public reads, by the same door read. */
-      if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op))
+      /* R49 (case-checker R15): case-checker's two public reads, by the same door read; R49 (T51, K4230): case-inputs' one. */
+      if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op) || CASE_INPUTS_PUBLIC_READS.includes(op))
         return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country });
@@ -2261,22 +2264,33 @@ export function makeFetch(hooks = {}) {
     /* R105 (T50; T51: N1234, DEC-329 (5); K3770): THE DOOR ANSWERS `acquire` WITHIN A BOUND, 25 seconds: past it the answer
        is the refusal `ACQUIRE_TIMED_OUT`, its `detail` read by `word("refusal.ACQUIRE_TIMED_OUT")` as R99 reads
        `AGENT_WORKER_UNBOUND`'s (no sentence of this module's), never a silent stop. The handler is not cancelled: a capture it goes on to file stands, and the member's next look finds it. */
-    /* R115 (T51; K4222; acquisition R95): the object `acquire` keeps current as its stages run, handed to it through the plane's
-       hook; a call the door stops waiting for is answered with the times read from it at that moment, through `stageTimes`. */
+    /* R115 (T51; K4222; acquisition R95; K4234 (B13)): the object `acquire` keeps current as its stages run, handed to it through the
+       plane's hook. The object is not the door's, so the stages are kept by the object under the request's trace: a session's
+       `acquire` is minted one here and handed to the hook as `trace`. A call the door stops waiting for is answered with the stage
+       times the object answers for that trace on its store-internal read `acquiretimings`, `{}` when the request has none or the
+       object answers none. */
     const timings = op === "acquire" ? {} : null;
+    const acquireTrace = op === "acquire" && viaSession ? mintTrace() : undefined;
+    const acquireStages = async () => {
+      if (!acquireTrace) return {};
+      const asked = await doAnswer(stub.fetch(new Request(`http://do/acquiretimings?trace=${encodeURIComponent(acquireTrace)}`)));
+      const times = asked.answered ? asked.result?.stageTimes : null;
+      return times && typeof times === "object" && !Array.isArray(times) ? times : {};
+    };
     const bounded = (work) => {
       if (op !== "acquire") return work;
       let timer;
       const late = new Promise((resolve) => { timer = setTimeout(() => resolve("late"), hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS); });
-      return Promise.race([work, late]).then((got) => {
+      return Promise.race([work, late]).then(async (got) => {
         clearTimeout(timer);
         return got === "late" ? json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op,
                                        store: storeName, tokenClass: cls, detail: word("refusal.ACQUIRE_TIMED_OUT"),
-                                       timings: stageTimes(timings) }, 504) : got;
+                                       timings: await acquireStages() }, 504) : got;
       }, (e) => { clearTimeout(timer); throw e; });
     };
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
-      sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, trace, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
+      sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
+      trace: trace ?? acquireTrace,   /* K4234: `acquire`'s trace, the key its stages are kept under */
       grantMember: aiCred?.grant ? aiCred.principal : undefined, timings })) : undefined;   /* R53 (K1684): an ask's grant's member; R115: `acquire`'s timings */
     if (armed && op === "acquire") {
       const res = await promoteAcquired(armed);

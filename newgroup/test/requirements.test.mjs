@@ -10,16 +10,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import worker, * as installer from "../src/index.mjs";
-import { CFG, planeLimits } from "../src/index.mjs";
+import { CFG, planeLimits, reportsBuilds } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO, SECURITY_TOOLS, LEFT_OUT,
   BEFORE_CLOUDFLARE_CONTROL, ALLOWED, STYLESHEET, ASSET_PREFIX, UPDATE_KEEPS } from "../src/ui.mjs";
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
 import { leftOutNotice, partsLeftOut } from "../src/images.mjs";
-import { RELEASE_VERSION, RELEASE_BINARY, RELEASE_CONTAINERS } from "../src/release.mjs";
+import { RELEASE_VERSION, RELEASE_PACKED, RELEASE_FACTS, RELEASE_CONTAINERS } from "../src/release.mjs";
 import { RELEASE_SOURCE, RELEASE_BYTES } from "./release-text.mjs";
-import { resolveVersion, checkSignedAsset, embedRelease, releaseContainers, binaryLiteral } from "../scripts/embed-release.mjs";
+import { resolveVersion, checkSignedAsset, embedRelease, releaseContainers, packedLiteral } from "../scripts/embed-release.mjs";
 import vm from "node:vm";
+import * as esbuild from "esbuild";
+import { bundleText } from "../scripts/build.mjs";
+import { gunzipSync } from "node:zlib";
 import { word, hasWord } from "../src/words.mjs";
 import { WAIT_BOUND_MINUTES } from "../src/steps/api.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
@@ -380,7 +383,9 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
     restoreSigners();                                 /* the built-in is signed by the shipped keys */
     const own = seen(await run({ slug: "fleet-unreachable", rel: null, builtInFleet: true }));
     assert.ok(own.acct.has("pdf-worker-fleet-unreachable") && own.acct.has("agent-worker-fleet-unreachable"));
-    assert.match(own.page.label("fleet"), like("installer.fleet.partial.some", { names: /.*pdf-worker.*/ }));
+    /* The embedded release's statement names all the fleet, and its tag serves every member: none is left out (R17). */
+    for (const member of MEMBERS) assert.ok(own.acct.has(`${member}-fleet-unreachable`), `built-in: ${member} installed`);
+    assert.ok(own.page.label("fleet").startsWith(headOf("installer.fleet.done.other", { n: MEMBERS.length })), "built-in: all installed, none left out");
     const bare = seen(await run({ slug: "fleet-tagless", rel: null }));
     for (const member of MEMBERS) assert.ok(!bare.acct.has(`${member}-fleet-tagless`), member);
     assert.match(bare.page.label("fleet"), like("installer.fleet.partial.none", { list: new RegExp("[\\s\\S]*" + like("installer.fleet.left.item", { member: "pdf-worker", why: like("installer.fleet.why.http", { status: 404 }) }).source + "[\\s\\S]*") }));
@@ -1438,15 +1443,17 @@ test("R47 the install binds OWN_HOSTS, the copy's own host names (its workers.de
 
 test.todo("R48 the installer's README publishes the stewards' contact address, what they may do, and the plain guide to what a group holds and who could compel it (not yet met: T46; the address is Bob's to name, K2799, and was not named by L11's START, so this part is carried to T47)");
 
-/* The bundle with the embedded plane release (its RELEASE_BINARY literal, evaluated and checked to be that release) cut out:
+/* The bundle with the embedded plane release (its RELEASE_PACKED literal, evaluated and checked to be that release) cut out:
    the installer's own code. From 0.83.0 the plane itself reads the name (ai-runs R78); that is the release's text. */
-const ownBundle = () => {
-  const b = readFileSync(new URL("../dist/newgroup.bundled.mjs", import.meta.url), "utf8");
-  const i = b.indexOf("RELEASE_BINARY = ");
-  const j = i + "RELEASE_BINARY = ".length, q = b[j];
+/* Built here, in memory, as `npm run build` builds it, so the test reads the source as it stands and not the committed artifact. */
+const ownBundle = async () => {
+  const b = await bundleText(esbuild);
+  await esbuild.stop();                          /* N1254: the build's child process must not outlive the suite */
+  const i = b.indexOf("RELEASE_PACKED = ");
+  const j = i + "RELEASE_PACKED = ".length, q = b[j];
   let k = j + 1;
   while (k < b.length) { if (b[k] === "\\") { k += 2; continue; } if (b[k] === q) break; k++; }
-  assert.equal(vm.runInNewContext(b.slice(j, k + 1)), RELEASE_BINARY, "only the embedded release is cut out");
+  assert.equal(vm.runInNewContext(b.slice(j, k + 1)), RELEASE_PACKED, "only the embedded release is cut out");
   return b.slice(0, j) + b.slice(k + 1);
 };
 
@@ -1477,10 +1484,10 @@ test("R49 the installer never writes, reads or names CIVICSMITH_TEST_INSTANCE: n
   assert.ok(files.includes("index.mjs") && files.includes("ui.mjs") && files.includes("images.mjs"));
   for (const f of files) {
     const text0 = readFileSync(new URL(f, src), "utf8");
-    const own = f === "release.mjs" ? text0.split("\n").filter((l) => !l.startsWith("export const RELEASE_BINARY = ")).join("\n") : text0;
+    const own = f === "release.mjs" ? text0.split("\n").filter((l) => !l.startsWith("export const RELEASE_PACKED = ")).join("\n") : text0;
     assert.equal(own.includes(NAME), false, f);
   }
-  assert.equal(ownBundle().includes(NAME), false, "the bundle, the embedded release aside");
+  assert.equal((await ownBundle()).includes(NAME), false, "the bundle, the embedded release aside");
   /* The reading finds the name where it is: a control. */
   assert.ok(`{ "${NAME}": 1 }`.includes(NAME));
 });
@@ -1539,7 +1546,8 @@ test("R26 checkSignedAsset returns null only for the signed release of that vers
   const written = readFileSync(out, "utf8");
   assert.match(written, /^\/\* GENERATED by scripts\/embed-release\.mjs\. Do not edit\. \*\/\n/);
   const mod = await import(out + "?v=1");
-  assert.deepEqual([mod.RELEASE_VERSION, mod.RELEASE_BINARY, mod.RELEASE_CONTAINERS], ["1.2.3", src, []]);
+  assert.deepEqual([mod.RELEASE_VERSION, gunzipSync(Buffer.from(mod.RELEASE_PACKED, "base64")).toString(), mod.RELEASE_CONTAINERS], ["1.2.3", src, []]);
+  assert.deepEqual([mod.RELEASE_FACTS.capable, mod.RELEASE_FACTS.limits.ok], [reportsBuilds(src), planeLimits(src).ok], "the facts the installer reads from the release's text are read at the embed");
   const leaky = "export default {}; // published-admin-value";
   writeFileSync(join(dir, "release", "bio-plane.bundled.mjs"), leaky);
   writeFileSync(join(dir, "release", "RELEASE.json"), JSON.stringify({ ...good, sha256: await sha(leaky), sig: await SIGNER.sign(leaky) }));
@@ -1553,19 +1561,20 @@ test("R26 checkSignedAsset returns null only for the signed release of that vers
   restoreSigners();
   assert.equal(await checkSignedAsset({ manifest, bytes: real, version: manifest.version }), null);
   assert.deepEqual([RELEASE_VERSION, createHash("sha256").update(RELEASE_BYTES).digest("hex")], [manifest.version, manifest.sha256]);
-  assert.ok(Buffer.from(RELEASE_BINARY, "latin1").equals(real), "the embedded binary string is the release asset, byte for byte");
+  assert.ok(Buffer.from(RELEASE_BYTES).equals(real), "the embedded release, expanded, is the release asset, byte for byte");
+  assert.deepEqual(RELEASE_FACTS, JSON.parse(JSON.stringify({ limits: planeLimits(real), capable: reportsBuilds(real) })), "and its facts are the ones its bytes state");
 });
 
-test("R26 the embed writes the plane as a binary string, one character per byte, in printable ASCII: every byte value comes back as itself, the same bytes always give the same text, and the engine can hold it one byte a character", () => {
+test("R26 the embed writes the plane packed, the base64 of its gzip, in printable ASCII: every byte value comes back as itself, the same bytes always give the same text, and the packed text is a fraction of the release", () => {
   const all = Uint8Array.from({ length: 256 * 3 }, (_, i) => i % 256);
-  const lit = binaryLiteral(all);
-  assert.match(lit, /^"[\x20-\x7e]*"$/, "printable ASCII only");
-  const back = vm.runInNewContext(lit);
-  assert.equal(back.length, all.length, "one character per byte");
-  assert.deepEqual([...back].map((c) => c.charCodeAt(0)), [...all], "each byte is itself");
-  assert.ok([...back].every((c) => c.charCodeAt(0) < 256), "no character above 255, so the string is held one byte each");
-  assert.equal(binaryLiteral(all), lit, "reproducible");
-  assert.equal(vm.runInNewContext(binaryLiteral(new TextEncoder().encode('é€"\\ \u2028 </script>'))).length, new TextEncoder().encode('é€"\\ \u2028 </script>').length, "text's UTF-8 bytes are kept as bytes");
+  const lit = packedLiteral(all);
+  assert.match(lit, /^"[A-Za-z0-9+/]*={0,2}"$/, "printable ASCII only");
+  const back = gunzipSync(Buffer.from(vm.runInNewContext(lit), "base64"));
+  assert.deepEqual([...back], [...all], "each byte is itself");
+  assert.equal(packedLiteral(all), lit, "reproducible");
+  const text = new TextEncoder().encode('é€"\\ \u2028 </script>');
+  assert.deepEqual([...gunzipSync(Buffer.from(vm.runInNewContext(packedLiteral(text)), "base64"))], [...text], "text's UTF-8 bytes are kept as bytes");
+  assert.ok(RELEASE_PACKED.length < RELEASE_BYTES.length / 2, "the packed release is under half the size of the release");
 });
 
 /* ------------------------------------------------------------------------------------------------ invariants */
