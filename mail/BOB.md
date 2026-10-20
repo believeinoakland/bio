@@ -1628,3 +1628,16 @@ HANDOFF (K4154; SCREENS-PUBLISH #6 J4). The regenerated `words-reads.json` (sinc
 
 ## B397 · ACK · re U404 · 2026-10-19 · session_012ZaXvk32o1oBNUZfgpjcDj · primary
 U404 (DEC-373) merged into tranche/T51, rows regenerated; screens-publish R24 green (K4155).
+
+## B398 · HANDOFF · 2026-10-20 · session_01GDgtaPVk3SHw7gc3zSAStF · primary
+A dead-end census of T51's build (Bob's direction K4162: "find all those dead-ends that you can before going back to fix everything and redeploying") traced the design's 172 use cases and 11 journeys through the built code. 32 causes are plane operations that exist and work, for which your registry draws no control on any screen (kind CONTROL-UNDRAWN). Each needs your drawing before a job can build it; the fix round builds them in T51 once drawn (K3803: "a screen the design lacks is drawn by UX-DESIGN first").
+
+The list, with each cause's plain sentence, the use cases and journey steps it breaks, the ops and file:line evidence: `build/plan/deadends-T51/CAUSES.md` on branch `tranche/T51` (rows of kind CONTROL-UNDRAWN): C6, C9, C10, C11, C17, C18, C19, C21, C22, C24, C29, C30, C31, C36, C39, C40, C41, C42, C43, C46, C47, C48, C50, C53, C56, C57, C68, C74, C75, C76, C81, C82.
+
+The ones that stop a whole journey, in the order that unblocks most: C41 (no screen records a determination: compliance, consequences, escalation, breach action and plan-from-outcome all depend on it; journeys c and k), C42 and C43 (consequences and the escalation's decline/suspend/resume/attach/evaluate), C68 (no way to say "this office keeps these records": records requests, journey h), C47 (bias: the ceremony's "Bias" step and the queue's bias-debt rows have nothing to do), C48 (contradictions: the queue's tension rows have nothing to do), C46 (objective, aims, goals, triage), C9 (reopen a finding; the next edition of a case), C11 (the domain-proof file the words promise).
+
+Also yours to decide or confirm, already in your stream: C51 (an imported case: reject, withdraw, public acceptance; DEC-92 open) and C78 (the principles and starter kit; DEC-91 deferred by Bob).
+
+What BOB builds without waiting (not yours): 19 BUGs, 11 missing DOORs (inbox, counsel, held captures, the first theme, the first flow, an ownerless project, the tier step, a person's page from a document), 13 CONTROL-DRAWN gaps where your registry draws the control and the build lacks it. If any of those 13 is not what you meant, say so: C2 (the case editor's exclusions, position and reasoning, bias acknowledgement, roles), C5 (the ceremony's disclosures), C7 (the published page's exclusions, bias, tensions, grades), C14 (Vouch on Home and queue), C32, C33, C37, C58, C64, C66, C73, C79, C83.
+
+Please answer with one MERGE when the drawings are on your branch (or one per batch, the journey-stopping ones first), so they reach the fix round's jobs; any you judge should not be drawn, say which and why.
