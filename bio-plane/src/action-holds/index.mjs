@@ -219,9 +219,10 @@ export class ActionHolds {
     const n = positionOf(ord);
     const entry = Number.isInteger(n) ? ledger[n] : undefined;
     /* DEC-49 REGION is-pressure-entry */
+    /* R21 (T51; K4206; P8): an absent `ord` is refused naming it; a position no entry stands at is the same code without it. */
     if (!entry || typeof entry !== "object")
       return refuse("PRESSURE_NO_ENTRY", localize("action-holds.index.no_correspondence_entry_stands_at", "no correspondence entry stands at that position. Nothing was written."),
-        { target, ord: ord ?? null, entries: ledger.length });
+        { target, ord: ord ?? null, entries: ledger.length, ...(given(ord) ? {} : { field: "ord" }) });
     /* END DEC-49 REGION is-pressure-entry */
     const notReceived = this.#pressureRefusal({ who, mark, direction: entry.direction });
     if (notReceived) return { ...notReceived, target, ord: n };
@@ -1078,4 +1079,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["target","ord","project","case","reason"], requires: ["reason",["target","project","case"]] } },
   holdnoticesent: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("action-holds.declared.holdnoticesent", "a member records that she sent the hold notice for a hold in place, held as the bytes sent or her account; it records no recipient and no one's compliance (action-holds R11)"),
     fields: { accepts: ["place","at","medium","artifact_sha","account"], requires: ["place","at",["account","artifact_sha"]] } },
+  actionpressure: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: "act.actionpressure.does",
+    fields: { accepts: ["target","ord","pressure","pressure_kind","pressure_note"], requires: ["target","ord",["pressure","pressure_kind"]] } },
+  pressurerecord: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: "act.pressurerecord.does",
+    fields: { accepts: ["project","pressure","pressure_kind","pressure_note","artifact_sha","account","at"], requires: ["project","at",["account","artifact_sha"],["pressure","pressure_kind"]] } },
 });
