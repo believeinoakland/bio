@@ -104,3 +104,21 @@ REPORT (FR-26, found in other modules and in the design; none blocks my COMPLETE
 10. The whole-draw reset of a `cs.choice` to its seeded value after any redraw (a chosen audience returns to "The team" after the first act) is the kit's (R90), not this module's.
 
 The reds this module's own record names for the missing rows (they pass with the rows present, shown by a local overlay of exactly the rows listed above): every test that draws a key of item 7 (R42 ×2, R43 ×3, R44 ×7, R46 ×6, R48 ×2, R26 ×2, R14 "NOT_MONITORED…", R16 "Check it now").
+
+## J8 · COMPLETE
+
+COMPLETE (FR-26, SCREENS-INTAKE #10). All ten entries applied: 1 (R42), 2 (R43), 3 (R44), 4 (R45), 5 (R46), 6 (R47), 7 (R48, built now as the START says the drawing is merged), 8 (R49), 9 (R50; I-34 not built, as the START says), 10 (R51). Pushed on `job/T51/screens-intake` (merged `tranche/T51` @ ed9d7a119b). The new and amended requirement lines are in `build/requirements/screens-intake.md` (R42–R51, each marked not yet met: T51), not in the record; the ownership check lists that one file, accepted at the merge (K4210).
+
+**Exported for `screens-inquiry`:** `checkOutcome(cs, answer, title)`, a named export of `bio-plane/src/screens-intake/index.mjs` (defined in `capture.mjs`), answering the HTML of the sentence for the check's `status` and `note`; also carried in `capture`'s `parts`. It reads `screen.capture.address.checked.{modified,removed,unchanged,unknown}`.
+
+**New screens** registered in `SCREENS` (eight now): `about-knocker`, `leads`, `watching`. The inbox gains `knocksof` and the door to the source.
+
+**Tests and checks** (clean tree, no overlay): module tests 177, pass 149, fail 28. The 28 are, by name:
+- *Accepted red until the design's rows land (B10, B11; HANDOFF B419, B423):* every test that draws a key of REPORT item 8: R42 ×2, R43 "nothing known / recording what became known / what became known and how", R44 ×7, R46 ×6 (the list, pause and resume, the non-administrator, the sweeps, an empty list, what is due: the last two also red for item 2), R48 ×2, R26 ×2 (each screen's keys are words; the capture screen's keys), R14 "NOT_MONITORED…", R16 "Check it now". With exactly those rows added by a local overlay (not committed) every one of them passes.
+- *Another module's, REPORT items 1–3:* R3 ×2 (`writinghelp` declaration omits `op`), R8 "every registry act is drawn / a member's session reaches" and the tests above that also need `knocksof`, `leadread`, `monitoring`, `monitorslate` in `SESSION_OPS`.
+With the rows and those four reads present (both overlays) the module is 175 pass, 2 fail (the `writinghelp` pair only).
+`format` 0 failures; `architecture screens-intake` 0 findings; `coverage screens-intake` 50 of 50 ids named; `ownership` one file (the requirements file, above); `checks/run.mjs`: words shows only `missingkey` for the keys of REPORT item 8 (6 literal keys in my tests), no `inline`, `copy` or `marker` for my files (I fixed a `testcopy` of mine). Existing tests changed for behaviour R49/R50 amend are listed in my record.
+
+**Not done, by the START or by an owner:** I-34 (progress while a timestamp is made; the act is unidentified). The `interface-shell` and other reds in REPORT (J7). Entry 7's `writinghelp` is under the request's description only.
+
+Size (session_0135JUZBcFJA8xpZHnkjPVFw): test runs 48, module lines 2155
