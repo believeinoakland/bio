@@ -21,6 +21,11 @@ export const HOSTING_KEYS = Object.freeze(["screen.hosting.heading", "screen.hos
   "screen.hosting.s4", "screen.hosting.s5", "screen.hosting.guide"]);
 export const HELP_KEYS = Object.freeze(["screen.forgot.help.heading", "screen.forgot.help.s1", "screen.forgot.help.s2"]);
 
+/* R26: the team's website file (DEC-374, C11), as the design's `domainFile` draws it; `shell.copy` is the copy act's label */
+export const DOMAINFILE = Object.freeze(["summary", "what", "download", "steps", "step1", "step2", "step3", "step4", "step5", "daily",
+  "refused.summary", "refused.malformed", "refused.absent", "refused.mismatched", "refused.undetermined", "refused.notadmin"]
+  .map((k) => "screen.domainfile." + k));
+
 const labels = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, `act.${op}.does`]);
 
 /** Per screen, every key it reads (interface-shell R5, R21). */
@@ -71,13 +76,15 @@ export const READS = Object.freeze({
     "setup.member.heading", "setup.member.sub", "setup.member.home",
     "setup.codes.once", "setup.codes.copy", "setup.codes.save", "setup.claimed.heading", "setup.claimed.sub", "refusal.ALREADY_CLAIMED",
     "setup.skip", "setup.skip_does", "setup.admin.invite", "setup.admin.invite_does",
+    /* R26: the website file; R30: who recorded the hosting account, when it was the setup or the system */
+    ...DOMAINFILE, "shell.copy", "screen.group.hosting.now.setup", "screen.group.hosting.now.system",
     ...labels("setup", ["recoverycodesissue", "groupnameset", "groupdomainset", "profilesset", "placewanted", "officesseed", "entitycreate",
       "aikeepaway", "groupkeyset", "ailimitset", "courtnoticeset", "hostingaccessset"]),
     ...["claim", "groupkeyswitch", "memberadd", "securitytooladd"].map((op) => `act.${op}.does`)]),
   join: Object.freeze([...STATES, "screen.join.name", "screen.join.purpose",
     ...["invited", "invited.as", "link", "link.what", "cover", "cover.help", "cover.empty", "dead", "dead.what", "language",
       "language.help", "handle", "handle.help", "handle.taken", "handle.empty", "codes.after", "joined", "joined.nosignin", "home",
-      "member", "member.go"].map((k) => "screen.join." + k),
+      "member", "member.go", "invite.reread"].map((k) => "screen.join." + k),
     ...PASSWORDS, ...CODES, "screen.entry.group", "screen.entry.signin",
     "handle.free", "handle.taken", "handle.characters", "handle.fixed", "handle.refused.paused", "refusal.JOIN_LINK_DAILY_CAP", "join.cap.says",
     "refusal.PASSWORD_TOO_SHORT", ...labels("join", ["invitelook", "memberlanguageset", "handlecheck", "enroll", "joinlinkinvite"])]),
