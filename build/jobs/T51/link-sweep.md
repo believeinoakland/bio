@@ -62,3 +62,31 @@ Tests and checks (run after the last change, process repo pulled):
 - `checks/run.mjs` full run not repeated this restart; the per-check runs above cover format, architecture, coverage, words and ownership for this module.
 
 Size (session_01Th8FDaUxr9PkjaKXvKcKvP): test runs 2, module lines 1230
+
+## J4 · COMPLETE
+
+B6 (CHANGE, K4230) applied on job/T51/link-sweep at cf794caf96 (tranche/T51 merged first, 11c04574b5).
+
+**Entries applied.** `needs` added to the two mutating rows of `DECLARED_OPS` (bio-plane/src/link-sweep/index.mjs): `sweepset` and `sweepratify`, each `needs: "contribute"`.
+
+**Choice and why.** `contribute`. A member's act on a team's sweeps is a member's own bundle-directed write that fetches nothing, the same shape as monitoring's `namedrequestset`, which declares `needs: "contribute"`. The owner-only ratify is refused by the arm (R3, R14: SWEEP_RATIFY_NOT_AN_OWNER), not by a capability. A stop by any writer is also `contribute`. `administer` is not a working capability in op-capabilities (it moves only by the roster's own mechanism), so it was not an option.
+
+**Requirement line.** R15 amended in build/requirements/link-sweep.md (K4230): every mutating row declares its `needs`; `contribute` for both.
+
+**Test.** declared-ops.test.mjs, "R15 link-sweep declares a need on every mutating op it serves ...": the shape check (no mutating row without `needs`, checked on this module's own rows; op-declarations is not imported), pins `contribute` on both, and a control names a mutating row with no need and passes a read. Written first and seen failing (sweepset and sweepratify listed as missing `needs`), then the two rows edited.
+
+**Deferred.** None.
+
+**Found in another module.** None in this job.
+
+**Tests and checks** (after the last change):
+- `node --test test/m/link-sweep/` (bio-plane): tests 40, pass 40, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio link-sweep`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio link-sweep`: 15 of 15 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio link-sweep`: 0 failures.
+- `node checks/run.mjs /home/user/bio` (saved output, grep for `link-sweep`: none): format 0 failures, architecture 1 failure, channels 0, coverage 4 failures, words 27 failures, all in other modules (run exit 1 from those).
+- `node bio-plane/src/setup-words/build.mjs --check`: "words-unreviewed.json is stale or absent". This job changed no sentence a member reads, so it is not from this change; no refusal names link-sweep.
+- `node checks/ownership.mjs /home/user/bio link-sweep tranche/T51 job/T51/link-sweep`: 1 failure, `build/requirements/link-sweep.md` outside link-sweep's paths, tests and job record. Per B3 that listing of the one requirements file is accepted at merge.
+
+**Size (session_011Wj2qq9nxhTBq6sjHBwEG7):** test runs 3, module lines 1230.
