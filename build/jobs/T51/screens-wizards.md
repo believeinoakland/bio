@@ -35,3 +35,10 @@ Size (session_01M31mHwuWGwKStqD3B57zBx): test runs 13, module lines 888
 ## J2 · COMPLETE · re B3
 
 CHANGE B3 processed: tranche/T51 merged, suite against the real providers 59 pass, 0 fail (templatebyhandle is now declared). words 0 in the module, format, architecture, coverage 19/19, ownership 0 failures; setup-words --check shows only the expected stale-rows note (an op-declarations row). Pushed. Nothing still fails.
+
+## J3 · QUESTION
+
+Best reading, recorded as screens-wizards R20/R21 (not yet met), carrying on with it:
+1. Question and document steps with none held open the MOST RECENT (list `last_updated`) at once, no choice asked (the entry says "with two questions it opens the most recent"). That amends R17's choice for those two kinds (project still asks). Tell me if a choice should stay for several.
+2. With none: the step's own `wizard.<id>.step<n>.none.what/.why/.door` where the library has them (only the welcome's step 4 has). Every other question/document step has no `none` words and the design has no generic `wizard.subject.none.question/.document`: those steps draw their own words with Next and navigate nowhere. Design gap to report to the design stream, not mine to fill.
+3. The door "Open a question": project choice, then `project` on the chosen project with `promote` rung (act.promote.label.project is "Open a question"); the guide presses nothing.
