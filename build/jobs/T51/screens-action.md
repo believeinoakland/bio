@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01V64zP5L8ynT5RnQ7fmq8S3 · depth 2 · WORKING · handled B12
+**Status** · session_01V64zP5L8ynT5RnQ7fmq8S3 · depth 2 · WAITING ON BOB (J8) · handled B12
 
 ## J1 · REPORT
 
