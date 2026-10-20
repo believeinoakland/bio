@@ -5,6 +5,8 @@
    explanations' timings (R14) are read exactly. */
 import { interfacePage, NONCE_SLOT } from "../../../src/interface-shell/index.mjs";
 import { webcrypto } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { declaredOpsOf } from "../../declared-ops.mjs";
 import { documentOf, Event, textNodes } from "./dom.mjs";
 
 export { textNodes, Event };
@@ -30,12 +32,15 @@ export const pending = Object.freeze({ pending: true });
    A field the op does not accept, or a required one missing, throws `FieldMismatch` in the page's `fetch` (the shell shows
    "no answer") and fails the test that pressed the act: the next `settle()` (every `click` and `boot` ends in one) rethrows it.
    An op with no owner declaration is let through and counted. The owners' rows are the collector's (`test-support`'s
-   `declaredOpsOf`, R16): `collectOwnerRows` is its one seam here, never a second copy of the collection; until `test-support`
-   merges it answers none, and a test passes fixture rows as `boot({declared})`. */
+   `declaredOpsOf`, R16): `collectOwnerRows` is its one seam here, never a second copy of the collection; a test passes
+   fixture rows as `boot({declared})`. */
 export class FieldMismatch extends Error {
   constructor(message, detail) { super(message); this.name = "FieldMismatch"; Object.assign(this, detail); }
 }
-export function collectOwnerRows() { return {}; }
+const COLLECTED = await declaredOpsOf(fileURLToPath(new URL("../../../../", import.meta.url)));
+/* the owners' rows, `{op: declaration}`, as `test-support`'s one collector finds them; an op it lists as a duplicate fails (`declared.test.mjs`) */
+export const collectedDuplicates = () => COLLECTED.duplicates.slice();
+export function collectOwnerRows() { return COLLECTED.ops; }
 const isRow = (r) => !!(r && typeof r === "object" && r.fields && typeof r.fields === "object");
 const flat = (list) => (Array.isArray(list) ? list : []).flatMap((x) => (Array.isArray(x) ? x : [x]));
 /* the field names a request carries: its query (less the marks the shell adds) and a JSON object body */

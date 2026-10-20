@@ -4,7 +4,7 @@
    op with no declaration through and counts it, and prints `declared N of M ops` over every act of the nine screen modules. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boot, FieldMismatch, fieldMismatches, collectOwnerRows, undeclaredOps } from "./harness.mjs";
+import { boot, FieldMismatch, fieldMismatches, collectOwnerRows, collectedDuplicates, undeclaredOps } from "./harness.mjs";
 import { browserActs } from "../../../src/interface-shell/index.mjs";
 
 /* a stand-in screen on a real registry id whose one act, `promote` (it runs on press), sends the body its button carries */
@@ -96,4 +96,9 @@ test("R104 declared N of M ops: every act of every screen module's SCREENS is en
   const some = [...ops.keys()][0];
   const withRow = [...ops.keys()].filter((op) => op === some || (rows[op] && rows[op].fields));
   assert.equal(withRow.length, declaredOps.length + (declaredOps.includes(some) ? 0 : 1));
+});
+
+test("R104 the owners' rows are the collector's, and an op it lists as declared by two modules fails", () => {
+  assert.deepEqual(collectedDuplicates(), [], "no op is declared by two owners");
+  assert.equal(typeof collectOwnerRows(), "object");
 });

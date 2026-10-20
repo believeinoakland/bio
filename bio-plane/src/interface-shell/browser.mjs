@@ -1251,7 +1251,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       el.removeAttribute("data-level");
     }
   }
-  let MENU = false;
+  let MENU = false, DRAWN = {};
   const focusKey = (el) => (!el || !el.getAttribute ? null : el.id ? "#" + el.id
     : ["data-shell", "data-ai", "data-table", "data-id", "data-col", "data-theme-to", "data-areas", "data-i"].map((a) => (el.getAttribute(a) !== null ? "[" + a + '="' + el.getAttribute(a) + '"]' : "")).join("") || null);
   function draw() {
@@ -1262,6 +1262,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     for (const el of root.querySelectorAll("input, textarea, select")) if (el.id && el.type !== "file") values[el.id] = el.type === "checkbox" || el.type === "radio" ? { checked: el.checked } : { value: el.value };
     /* R35: what was typed is kept while the screen cannot be reached, and comes back with it */
     if (MAIN && MAIN.unavail === "unreachable" && Object.keys(values).length) MAIN.stash = Object.assign({}, MAIN.stash || {}, values);
+    /* K4194 (B15): a file input cannot be given its file again, so the node itself is carried into the new tree */
+    const chosen = {};
+    for (const el of root.querySelectorAll("input")) if (el.id && el.type === "file" && el.files && el.files.length) chosen[el.id] = el;
     const fk = focusKey(doc.activeElement);
     /* R93: a redraw in place leaves the main column where it was scrolled to */
     const before = doc.getElementById("cs-main"), top = before ? before.scrollTop : 0;
@@ -1271,12 +1274,22 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R59: the guide's marks in the title row of a working screen that is drawn */
     if (!UNREACHED && !ENTRY_PAGE && (MAIN ? !MAIN.unavail && frameOf(MAIN.spec.id) === "working" : D.places.includes(ROUTE.screen))) placeMarks(root, marksHtml());
     absorb(root);
+    for (const [id, old] of Object.entries(chosen)) {
+      const fresh = doc.getElementById(id);
+      if (fresh && fresh !== old && fresh.type === "file" && fresh.parentNode) { fresh.parentNode.insertBefore(old, fresh); fresh.parentNode.removeChild(fresh); }
+    }
+    /* K4195 (B16): what the member typed is put back only into a field the new draw left empty, or drew as the previous draw did;
+       a value the screen drew since (from a read that arrived) is never written over. `DRAWN` is what each field held as drawn. */
     const restore = (id, v) => {
       const el = doc.getElementById(id);
       if (!el || el.getAttribute("data-shell") === "pick") return;
-      if ("checked" in v) el.checked = v.checked; else el.value = v.value;
+      if ("checked" in v) { if (el.checked === !!DRAWN[id]) el.checked = v.checked; }
+      else if (el.value === "" || el.value === (DRAWN[id] === undefined ? "" : DRAWN[id])) el.value = v.value;
     };
+    const asDrawn = {};
+    for (const el of root.querySelectorAll("input, textarea, select")) if (el.id && el.type !== "file") asDrawn[el.id] = el.type === "checkbox" || el.type === "radio" ? !!el.checked : el.value;
     for (const [id, v] of Object.entries(values)) restore(id, v);
+    DRAWN = asDrawn;
     for (const inst of [MAIN, DOCKI, GUIDEI]) {
       if (!inst) continue;
       if (inst.pending) { for (const [id, v] of Object.entries(inst.pending)) restore(id, v); inst.pending = null; }
