@@ -6749,6 +6749,9 @@ W.append(dict(key='screen.action.sent.stage.court_filing', en='Court filing', pr
 W.append(dict(key='screen.updates.health.runtime.unit.ms', en='milliseconds', protected=False, note='DEC-389: B430 (4): runtime unit ms (instance-setup R34), filling {unit}'))
 W.append(dict(key='screen.updates.health.runtime.unit.bytes', en='bytes', protected=False, note='DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit'))
 
+# DEC-390: B432 (K4252)
+W.append(dict(key='store-door.declared.groupdescriptiondraft', en="Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.", protected=False, note='DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

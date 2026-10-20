@@ -143,6 +143,7 @@
   "ai-accounts": 7,
   "intent": 51,
   "case-inputs": 27,
+  "store-door": 4,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -188,7 +189,6 @@
   "queue-producers": 89,
   "case-checker": 59,
   "membership": 10,
-  "store-door": 3,
   "case-import": 32,
   "ai-runs": 37,
   "inquiry": 20,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 17899,
+  "total": 17900,
   "protected": 1061
  },
  "words": [
@@ -73947,6 +73947,13 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit"
+  },
+  {
+   "key": "store-door.declared.groupdescriptiondraft",
+   "en": "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
