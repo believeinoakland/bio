@@ -115,3 +115,8 @@ Checks: format 0, architecture 0, coverage 54 of 54, ownership 0 (22 files), wor
 - Requirement lines for BOB: R38 amended: "...medium (email, letter, portal, person, other), the reply's document (a held capture of the project, `heldcaptures` with `project`, as `artifact_sha`, never with an account), what it follows (an earlier entry's ordinal), a quote's currency, what it answers and what it revises; a received reply's stage and outcome by the vocabulary's tokens, the design's 'none' sending nothing; the form drawn only to a member who may record a reply." R42 amended: "...and a contradicted sentence (`CONTRADICTED_HELD`) is drawn with a reason and a tick, and the approval resent carries `release: [{ord, reason}]` for the ticked ones; a tick with no reason is refused in place; the approval landing says who released what." R44/R45/R50/R51: the rows named above are the design's (R19). R52: the sentence is `screen.reminder.on`.
 
 Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 11, module lines 4473
+
+## J11 · COMPLETE · re B17
+
+COMPLETE (re B17). tranche/T51 merged (U424, DEC-389). Already as DEC-389 says: the release rides `filingapprove` (no `release` act on start-send; `act.release.label.start-send` is the drawn tick's row); stage/outcome `none` omit the field. New: a sent entry's stage keys `screen.action.sent.stage.*` are drawn under "It follows" (an appeal, fee-waiver request or court filing reads as `The {kind}, {date}`; the request stays "The request"). Suite 210 of 210; format, architecture, ownership, words 0; coverage 54 of 54. My earlier deferrals stand; the registry's `release` carve-out in contract.test is now inert.
+Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 13, module lines 4476
