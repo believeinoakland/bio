@@ -165,13 +165,12 @@ test("R75 controls: a member who is not an owner is drawn no stand-down and no c
   assert.ok(!actsIn(main(m)).includes("projectownerremove"), "no owner act");
   assert.equal(checks(m).length, 0);
   assert.equal(m.byOp("projectownerarith").length, 0, "and the table is not read for her");
-  /* the last owner: standing down is not possible at this size; the act is not offered, and the reason is her refusal's words */
-  const p = await opened({ projectparticipants: SOLE, projectownerarith: arith(1) });
-  const c = checks(p);
-  assert.equal(c[2].getAttribute("data-holds"), "no");
-  assert.ok(says(c[2], "refusal.LAST_OWNER"));
-  assert.equal(c[1].getAttribute("data-holds"), "no", "and no other owner is named");
-  assert.equal(stateE(p).querySelectorAll('button[data-act="projectownerremove"]').length, 0);
+  /* the last owner: standing down is not possible at this size, so (fix round 2, C90) the entry act is not drawn at all, and the row
+     says to add another owner first; no panel opens and nothing is read for it */
+  const p = await open(at, { plane: { projectparticipants: SOLE, projectownerarith: arith(1) } });
+  assert.ok(!actsIn(main(p)).includes("projectownerremove"), "no stand-down act for the only owner");
+  assert.equal(main(p).querySelectorAll('[data-state-e]').length, 0, "no panel with a vote that could never carry");
+  assert.ok(says(main(p).querySelector('[data-standdown="sole"]'), "refusal.LAST_OWNER"));
   assert.equal(p.byOp("projectownerremove").length, 0);
   /* a table that cannot be read is drawn failed, never as a table of zeros */
   const f = await opened({ projectparticipants: TWO, projectownerarith: refusedIn("SOME_REFUSAL", "Could not read it.") });

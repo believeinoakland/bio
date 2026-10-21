@@ -121,3 +121,21 @@ Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku,
 ## B16 · CHANGE
 
 CHANGE (K4253), replaces B15's commit: the design moved again (U424, DEC-389, merged into the tranche at 742a6c8d1c): re-take at `09fbb247eb`, not 18f78e4422. Merge `tranche/T51` first. Known differences to report: `person` gains `linewithdraw` (screens-investigate), `docket` gains `writinghelp` (screens-publish), `start-send` loses `release` (screens-action).
+
+## B17 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/wizard-scripts tranche/T51 && git branch -m job/T51/wizard-scripts stale/wizard-scripts-local && git checkout -b job/T51/wizard-scripts origin/job/T51/wizard-scripts`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · WIZARD-SCRIPTS #21 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1, added by K4311)
+
+Mail with `--module wizard-scripts`; record `build/jobs/T51/wizard-scripts.md`. Model claude-haiku-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `wizard-scripts`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your entry** (mechanical): re-take the screen registry (R41) from the design commit `0310c4953d` (DEC-394, merged into `tranche/T51` by K4311): regenerate `screen-registry.mjs` (and the other data files if their sources changed) with `node bio-plane/src/wizard-scripts/build-data.mjs`, after pointing its registry source at that commit as earlier re-takes did (see the file's header: K4196, K4197, K4204). Name the screens and acts added (casedrafts on case-editor, ceremony, review-copy; heldcaptures on project; capturerequests and the owed capturecredential acts on capture; resolvetestify and the owed contradictionflag on document). Tests: your suite and `--check` clean; the users' suites `impact.mjs` names, at most two at once.
+
+Read in full (never in part): wizard-scripts R38, R41, R45 and `build-data.mjs`'s header; the tests naming R41. Other tests are run, not read.
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/wizard-scripts/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio wizard-scripts tranche/T51 job/T51/wizard-scripts`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).

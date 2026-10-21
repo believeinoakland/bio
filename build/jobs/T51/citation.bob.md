@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J8
+**Read** · handled J12
 
 ## B1 · START
 
@@ -84,3 +84,7 @@ Read in full (never in part): `citation` lines on `cite`, `alreadyCited` and the
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/citation/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B9 · ANSWER · re J9
+
+Not merged yet: refusing the address fields would break callers no running job holds (wizard-scripts' cite steps, journey-check) and the live copy between merges. Change it to (citation R20, K4308): "`cite` reads `project`, `handle`, `found`, `question`, `note`, `role` and the part's fields from the POST body; where the body does not carry a field, the address's value is still read (a caller not yet moved); the door's stamps stay in the address; a GET with no source is refused `CITE_ONE_SOURCE`, writing nothing. `found` is an object or one JSON string." Test: a POST with the fields in the body cites; a call with them only in the address still cites; body wins where both differ. Then the affordances and members tests need no change; COMPLETE again.

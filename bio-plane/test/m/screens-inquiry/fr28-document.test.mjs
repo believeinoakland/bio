@@ -115,8 +115,8 @@ test("R86 control: a version the record holds no document for is a date alone", 
 test("R92 Watch for changes sends the frequency chosen; the page says it is watched only after the answer; the guard accepts it", async () => {
   const p = await openWith(at, withMd(UNWATCHED, { plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }) } }));
   const f = p.doc.getElementById("document-watch-freq");
-  assert.deepEqual(f.querySelectorAll("option").map((o) => o.getAttribute("value")), ["", "daily", "weekly", "monthly", "hourly", "per_meeting"], "the frequencies the plane takes, none chosen");
-  assert.equal(f.value, "", "none is preselected");
+  assert.deepEqual(f.querySelectorAll("option").map((o) => o.getAttribute("value")), ["daily", "weekly", "monthly", "hourly", "per_meeting"], "the frequencies the plane takes, the first shown and chosen (C35)");
+  assert.equal(f.value, "daily", "what is shown is chosen");
   fill(p, { "document-watch-freq": "weekly" });
   assert.ok(!says(main(p), "screen.document.monitorset.done"), "nothing is said before the answer");
   await press(p, "monitorset");
@@ -126,6 +126,7 @@ test("R92 Watch for changes sends the frequency chosen; the page says it is watc
 
 test("R92 control: none chosen sends nothing and refuses in place, naming the missing frequency; a refused answer says nothing of watching", async () => {
   const p = await openWith(at, withMd(UNWATCHED, { plane: { monitorset: refusedIn("SOME_UNHELD_CODE", "Say how often.") } }));
+  fill(p, { "document-watch-freq": "" });
   const slot = await press(p, "monitorset");
   assert.equal(p.byOp("monitorset").length, 0);
   assert.ok(says(slot, "capture.fieldneeded", { field: word("screen.capture.address.freq") }));

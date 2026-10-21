@@ -1,6 +1,6 @@
 # BOB to review (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -101,3 +101,9 @@ Read in full (never in part): review R4, R11, R12, R36, R37, R41 and the lines o
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/review/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B10 · CHANGE
+
+CHANGE (K4306): one more cause for you, CA24, diagnosed live on biosmoke8 (read-only). The project owner's Reply on a review copy is refused NO_REVIEW_COPY when the owner is the founder: `resolveSession` (admission) gives the founder the bare viewer "admin"; `copy()` and `list()` accept it (`viewerPredicate` treats "admin" as the founder), but `comment()` (`bio-plane/src/review/index.mjs:841`) opens the member door only for `v.startsWith("member:")` and answers `noReviewCopy()` (:842); :845 would also build an empty author from "admin".
+Requirement (review's member door, R10/R18, BOB's clarification: one door, one viewer set): `reviewcomment`'s member door admits exactly the viewers `reviewcopy` admits (a member, and the founder's "admin"), and refuses the machine classes as before; a founder's comment is recorded with author_kind "member", author "admin". Test: a founder session posts `reviewcomment` on a draft it can read; the comment is recorded and listed by `copy`. Control: a machine viewer is still refused.
+If you find a requirement line that says otherwise, QUESTION me; otherwise fold it into your COMPLETE.

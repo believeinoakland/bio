@@ -1,6 +1,6 @@
 # strength (T51)
 
-**Status** · session_01WkkQhSa7yYkmopteVFH7CB · depth 2 · COMPLETE · handled B12
+**Status** · session_01GoYzWEmtdrTTKn5jDCjkaM · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -181,3 +181,23 @@ Checks (process repository; bio at d74988a9b4):
 - `checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`: 0 failures (3 files, all strength's).
 
 Size (session_01WkkQhSa7yYkmopteVFH7CB): test runs 6, module lines 2987
+
+## J12 · COMPLETE
+
+B13 (fix round 2, C38) applied on job/T51/strength, commit 23f64dbabe (tranche/T51 merged first; my local branch was behind origin, so I reset it to origin's per B13 before starting).
+
+**C38 met (strength's part; requirement R43, new).** Source: `src/strength/index.mjs` `#legsOf`, now `#liveLegs`. The projected basis (`leg-earning.basisFor`) keeps a leg whose citation the question has withdrawn, so every strength read counted it: `strengthOf`, `inquiryStrength`, the cache, `gradingFacts`, `testimonyCorroboration`, each sub-inquiry the walk reads, and the live `partitionIndependence` (which refused a grouping that did not place it). `#legsOf` now reads the question's own bundle.md references, as `connections.edgeSevered` reads them (first entry naming the target; no entry or an unreadable document is live), and leaves out a leg whose entry is `severed`. A bounded read cut short that loses a leg is read again whole, so the bound counts live legs. The counting module is strength, not inquiry or basis-versions, so no QUESTION. A stored version's legs are left as written (a version is a past reading; `conclude` already filters severed at write time).
+
+Requirement line: written myself in `build/requirements/strength.md`, **R43** (new), marked *(not yet met: T51)*; no other line changed.
+
+Tests: new `test/m/strength/severed.test.mjs` (names R43, R6, R1, R11, R12), written first and seen failing (4 of 4 red without the change). Each has its control: the same leg live counts (the weakest member, population 2), is graded, must be placed in a grouping (`NOT_TOTAL`), and appears in the grading facts. A question resting only on a withdrawn citation reads unrated and names nothing. No new sentence: words unaffected.
+
+Deferred: nothing. Found outside this module: nothing new. Standing reports unchanged (J1/J4/J8: `program.mjs`, the plane bundle, rule 11 unkeyed).
+
+Tests and checks:
+- `node --test --test-force-exit bio-plane/test/m/strength/`: 177 pass, 0 fail (173 before, +4).
+- Suites of the 15 modules that import strength (action-plans, answer-envelope, case-authoring, case-catalogue, case-checker, case-disclosures, case-grammar, case-import, conformance, consequences, filings, ratification, reevaluation, review, run-productions): all pass, 0 fail.
+- `checks/run.mjs`: architecture 0 failures; channels 0; words 0 failures (testcopy 0); coverage 10 failures, none in strength (`checks/coverage.mjs strength`: 43 of 43 live ids named).
+- `checks/ownership.mjs strength tranche/T51 job/T51/strength`: 1 failure, `build/requirements/strength.md` (accepted at merge per B7/B8).
+
+Size (session_01GoYzWEmtdrTTKn5jDCjkaM): test runs 5, module lines 3010

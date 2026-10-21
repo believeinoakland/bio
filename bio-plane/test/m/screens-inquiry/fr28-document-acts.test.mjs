@@ -75,7 +75,9 @@ test("R98 the route check sends the bundle and reads the answer back: not shown,
   const p = await open(at, { plane: { provenanceroute: ok({ ok: true, bundleId: D, appended: true, route: { finding: "LOOKED_INDETERMINATE" } }) } });
   assert.ok(says(main(p), "screen.document.route.standing") && says(main(p), "screen.document.route.says"));
   await press(p, "provenanceroute");
-  assert.deepEqual(p.byOp("provenanceroute")[0].body, { bundleId: D });
+  /* C32: the arm reads `bundleId` from the query, so it is sent there and in no body */
+  assert.equal(p.byOp("provenanceroute")[0].query.bundleId, D);
+  assert.ok(!p.byOp("provenanceroute")[0].body || !("bundleId" in p.byOp("provenanceroute")[0].body));
   assert.ok(says(main(p), "screen.document.route.notshown") && !says(main(p), "screen.document.route.standing"));
   const q = await open(at, { plane: { provenanceroute: ok({ ok: true, bundleId: D, appended: false, route: { finding: "PRESENT" } }) } });
   await press(q, "provenanceroute");

@@ -1,4 +1,4 @@
-/* screens-entry R6 (and R8–R11, R14–R20, R22, R23, R26, R30): `setup`, "Set up your team's Civicsmith", in the setup frame at
+/* screens-entry R6 (and R8–R11, R14–R20, R22, R23, R26, R30, R33): `setup`, "Set up your team's Civicsmith", in the setup frame at
    `/app/setup` (the shell forwards `/#boot=` here and hands the one-time password as `view.fragment.boot`, taken from
    the address on load). Drawn as the design draws it (R22, DEC-279): numbered parts that open and close (`.cs-part`),
    each with its name, one line of what it is for and its state; choices (`.cs-choice`) that open only what they need;
@@ -40,6 +40,8 @@ export const setup = {
       groupkey: { op: "groupkeystate" },
       court: { op: "courtnotice" },
       hosting: { op: "hostingaccess" },
+      // R33: the scanner's true state (signatures held or not); drawn only while the scanner part is built in
+      scan: { op: "scanstatus" },
       members: { op: "memberlist" },
       catalogue: { op: "securitytoolcatalogue" },
       tools: { op: "securitytools", empty: (v) => !(v && Array.isArray(v.tools) && v.tools.length) },
@@ -300,9 +302,25 @@ export const setup = {
       + pick("su-court", S + "court.legend", [{ value: "tell", key: S + "court.tell" }, { value: "dont", key: S + "court.dont" }], court.choice || null)
       + `<div class="mk-acts">${cs.act("courtnoticeset")}</div>`));
 
+    // R33: what is true of the scanner. Signatures held: the checked sentence. None: since when and why, in the words the
+    // answer's keys carry (else its own words), never the scanner's code. Unread, unreachable or not answered: nothing is
+    // claimed that is not known.
+    const scannerState = () => {
+      const sc = ok(data.scan);
+      if (!sc) return "";
+      const ns = sc.no_signatures && typeof sc.no_signatures === "object" ? sc.no_signatures : null;
+      if (!ns) return sc.scanner && (sc.scanner.unreachable === true || sc.scanner.bound === false) ? "" : `<p class="mk-note" data-state="scanner">${W(S + "security.scanner")}</p>`;
+      // the key's word where the list holds it and every fill is answered; else the answer's own words
+      const said1 = (key, words, fills) => { const t = typeof key === "string" ? String(W(key, fills)) : ""; return t && t !== E(key) && !/\{\w+\}/.test(t) ? t : typeof words === "string" ? E(words) : ""; };
+      const status = /^REFUSED:[^:]*:(\d{3})$/.exec(String(ns.reason || ""));
+      const first = said1(ns.key, ns.words, ns.since ? { date: { html: cs.date(ns.since) } } : {});
+      const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
+      return (first ? `<p class="mk-note" data-state="nosignatures">${first}</p>` : "") + (second ? `<p class="mk-note" data-state="nosignatures-reason">${second}</p>` : "");
+    };
+
     // 7 Security: each offered tool with the fields its entry names; the scanner's sentence only while one runs
     out.push(part(7, "security", S + "security", S + "part.security.why", states.security,
-      (boot.part_scanner === true ? `<p class="mk-note">${W(S + "security.scanner")}</p>` : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
+      (boot.part_scanner === true ? scannerState() : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
       + (ui.tool ? `<p data-state="tool">${W(ui.tool.passed ? S + "security.passed" : S + "security.failed", { tool: ui.tool.name })}</p>` : "")
       + tools.map((t) => nameOf(t)).filter(Boolean).map((n) => `<p>${W(S + "security.held", { tool: n })}</p>`).join("")
       // R12: an empty catalogue draws nothing (a failed read is still drawn as failed)

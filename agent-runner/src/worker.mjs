@@ -18,6 +18,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import { Container, ContainerProxy } from '@cloudflare/containers';
 import member from '../fleet-member.json' with { type: 'json' };
+import pkg from '../package.json' with { type: 'json' };
 import { SIGNIN_HOLD_MS, WAITING_HEADER, TRACE_HEADER } from './waits.mjs';
 import { says } from './says.mjs';
 
@@ -178,11 +179,15 @@ export class AgentRunner extends Container {
 }
 
 // R42: the second Durable Object class `agent-worker` binds as `REMOTE` (its R35), with no container. Until R36 is built
-// it answers every request, `GET /remote/version` included, 503 REMOTE_UNAVAILABLE, so the release deploys as a whole and
-// `agent-worker` R110 answers ASSISTANT_REMOTE_NOT_READY. It reads no body, touches no storage and holds no credential (R8).
+// it answers `GET /remote/version` 200 in R5's shape (C92: the part is present and not ready, never absent, so
+// `agent-worker` R110 still answers ASSISTANT_REMOTE_NOT_READY, its check record naming no passed check) and every other
+// request, WebSocket upgrade included, 503 REMOTE_UNAVAILABLE. It reads no body, touches no storage and holds no credential (R8).
 export class RemoteSession extends DurableObject {
-  async fetch() {
-    return new Response(UNAVAILABLE, { status: 503, headers: { 'content-type': 'application/json' } });
+  async fetch(request) {
+    const json = { 'content-type': 'application/json' };
+    if (request.method === 'GET' && new URL(request.url).pathname === '/remote/version')
+      return new Response(JSON.stringify({ ok: true, name: member.name, version: pkg.version, capabilities: [] }), { status: 200, headers: json });
+    return new Response(UNAVAILABLE, { status: 503, headers: json });
   }
 }
 

@@ -1,6 +1,6 @@
 # BOB to monitoring (T51)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -78,3 +78,7 @@ Read in full (never in part): monitoring R1 to R10, R74 and the lines on the bas
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/monitoring/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B7 · ANSWER · re J3
+
+(c). The walk's "changed" comes from capture's heldat (R96), which the CAUSE-CAPTURE-T51 job holds; the determined digest on the baseline is capture's side too. Monitoring's R5 raw fallback stays as written (it is a requirement, and changing it would reach following, scheduler and the screens for a MINOR cause the heldat fix already clears). Monitoring has nothing to change for C26: COMPLETE stating so, with your suite's count and the Size line. (K4305)

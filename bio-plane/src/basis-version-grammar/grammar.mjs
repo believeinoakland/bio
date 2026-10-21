@@ -394,7 +394,9 @@ export function basisVersionFindings(fm, findings) {
       }
 
       const g = typeof leg.ground === 'string' ? leg.ground.trim() : '';
-      if (!g) { unlabelled++; continue; }
+      /* R3 (T51 fix round 2, C1; `inquiry-grammar` R68): a leg that cuts against is no reason FOR the conclusion, so the
+         totality counts the legs that support only; one that names a ground is judged as any ground a leg names. */
+      if (!g) { if (leg.role !== 'cuts_against') unlabelled++; continue; }
       if (!GROUND_LABEL_RE.test(g)) {
         push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_legs_li_version_8', 'basis_version_legs[{li}] (version \'{name}\').ground \'{g}\' is not a ground label', { li: String(li), name: String(name), g: String(g.slice(0, 60)) }));
         continue;
