@@ -226,10 +226,10 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
      *  whole unless `indexed: false`; fetched `direct` by this instance unless `receipt: false` (a Grade B capture,
      *  provenance R13, R24); registered at `snapshots/<name>` (a `.png` name makes it a photo to the real case-carriage,
      *  its bytes put in the evidence store). Answers the capture's sha. */
-    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true, name = "c0.txt" } = {}) {
+    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true, name = "c0.txt", title = `Document ${id}` } = {}) {
       const c = { path: `snapshots/${name}`, text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
-        files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
+        files: [{ path: "bundle.md", text: infoMd(id, title) }, { path: c.path, text: c.text },
                 { path: "data/provenance.json", text: JSON.stringify({ documents: [{ ...provDoc(c), ...extra }] }) }],
         meta: { object_type: "information" },
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
@@ -398,8 +398,8 @@ export function importsStandIn() {
   return s;
 }
 
-export function infoMd(id) {
-  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
+export function infoMd(id, title = `Document ${id}`) {
+  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: ${JSON.stringify(title)}`,
           "current_state: collected", "prior_state: null", `created: "${T0}"`,
           `last_updated: "${T0}"`, "references: []", "state_history: []", "criticality: supporting",
           "---", "", "## Summary", "", "A document.", ""].join("\n");
@@ -439,4 +439,12 @@ export function provDoc(c) {
                bytes: Buffer.byteLength(c.text) },
     origin: { kind: "named_request" },
   };
+}
+
+/** `case-grammar` R12's reader against the rows written: every field but `title` identical, and `title`, where that
+ *  reader returns it, the same. (T51 fix round 4, C47: the reader answers `title` once case-grammar's R12 is met; until
+ *  then it answers none, and this compares the rest.) Answers `{read, written, titles}`. */
+export function sameRowsButTitle(read, written) {
+  const bare = (rows) => rows.map(({ title, ...r }) => r);
+  return { read: bare(read), written: bare(written), titles: read.every((r, i) => !("title" in r) || r.title === written[i].title) };
 }

@@ -11,7 +11,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, V, sha } from "./fixture.mjs";
+import { world, V, sha, sameRowsButTitle } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS, PHOTO_WORDS, PHOTO_STATES,
          photoRead } from "../../../src/case-disclosures/index.mjs";
 import { OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
@@ -270,18 +270,20 @@ test("R7: a photo R6 answers with obscured is written with its original's finger
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: p, text_sha: held.text_sha, origin: `https://example.org/${DOC}`,
       archived_copy: w.cd.captureFacts(p).co_archive, included: false, rests_under: "load_bearing",
-      obscured: rowOf(OB(COPY)) },
+      title: `Document ${DOC}`, obscured: rowOf(OB(COPY)) },
     { ref: DOC2, kind: "document", sha: d, text_sha: reached.materials[1].held.text_sha, origin: null,
-      archived_copy: null, included: true, rests_under: "load_bearing", obscured: null },
+      archived_copy: null, included: true, rests_under: "load_bearing", title: `Document ${DOC2}`, obscured: null },
     { ref: DOC3, kind: "document", sha: n, text_sha: reached.materials[2].held.text_sha, origin: null,
-      archived_copy: null, included: false, rests_under: "load_bearing", obscured: rowOf(PUB(COPY2)) }]);
+      archived_copy: null, included: false, rests_under: "load_bearing", title: `Document ${DOC3}`, obscured: rowOf(PUB(COPY2)) }]);
   const kinds = (ref) => out.materials.attestations.filter((a) => a.ref === ref).map((a) => a.by_kind);
   const own = (ref) => kinds(ref).filter((k) => k !== "co_attestation");
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");
   /* case-grammar R12, R31: `obscured` written flat and read back as {copy, label, marked, kind} (T40; T47) */
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`,
     ...materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }), "---", ""].join("\n"));
-  assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
+  const back = sameRowsButTitle(materialsOf(fm).materials, out.materials.rows);
+  assert.deepEqual(back.read, back.written);
+  assert.ok(back.titles);
 });
 
 test("R29: photosOf answers the ceremony's Photos step over R6's materials — one entry per document whose capture is a photo, in materials order, with who took it, the members relying on it and their roles, its state, marks (with their withdrawals), copy, refused cover and words (photo.refused.unchecked for an unchecked photo, photo.refused.format for a refused cover marked or not, OBSCURED_LABEL for a marked copy, PUBLISHED_LABEL for a copy with nothing to obscure, else null) — and unchecked counts the photos with no standing mark, each blocking signing; it reuses R6's read and writes nothing", () => {

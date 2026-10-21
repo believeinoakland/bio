@@ -9,7 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, V, sha } from "./fixture.mjs";
+import { world, V, sha, sameRowsButTitle } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, DOCUMENT_WORDS, DOCUMENT_STATES, documentRead } from "../../../src/case-disclosures/index.mjs";
 import { COPY_CLEANED_LABEL, OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { CLEAN_REFUSALS as DOC_CLEAN_REFUSALS } from "../../../src/doc-clean/index.mjs";
@@ -252,9 +252,9 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: a, text_sha: held.text_sha, origin: `https://example.org/${DOC}`,
       archived_copy: w.cd.captureFacts(a).co_archive, included: false, rests_under: "load_bearing",
-      obscured: R22(COPY) },
+      title: `Document ${DOC}`, obscured: R22(COPY) },
     { ref: DOC2, kind: "document", sha: d, text_sha: reached.materials[1].held.text_sha, origin: null,
-      archived_copy: null, included: true, rests_under: "load_bearing", obscured: null }]);
+      archived_copy: null, included: true, rests_under: "load_bearing", title: `Document ${DOC2}`, obscured: null }]);
   assert.equal(out.materials.rows[0].archived_copy, "https://archive.example/web/a");
   const own = (ref) => out.materials.attestations.filter((x) => x.ref === ref && x.by_kind !== "co_attestation").map((x) => x.by_kind);
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");
@@ -262,7 +262,9 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
     ...materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }), "---", ""].join("\n"));
   /* case-grammar R12 (T40; K2537), R31 (T47): a row without `obscured_marked` reads `marked` by its label, so a member
      document's copy reads back marked: true, and its `kind` back as written; R7 writes it as {copy, label, kind} */
-  assert.deepEqual(materialsOf(fm).materials, out.materials.rows.map((r) => (r.obscured ? { ...r, obscured: { ...r.obscured, marked: true } } : r)));
+  const back = sameRowsButTitle(materialsOf(fm).materials, out.materials.rows.map((r) => (r.obscured ? { ...r, obscured: { ...r.obscured, marked: true } } : r)));
+  assert.deepEqual(back.read, back.written);
+  assert.ok(back.titles);
 });
 
 test("R6, R7 over the real case-carriage (its R15, R16): a member document (no receipt fetched it) is pending and refused DOCUMENT_COPY_PENDING until copyBatch derives its copy, then travels as its cleaned copy labelled COPY_CLEANED_LABEL; one doc-clean refuses is DOCUMENT_NOT_CLEANABLE with doc-clean's code; one with nothing to clean travels whole; a document this copy fetched is public and travels whole, never queued", async () => {
