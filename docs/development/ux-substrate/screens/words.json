@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6951,
+  "screen": 6961,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1106,
+  "act": 1107,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,8 +231,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18130,
-  "protected": 1068
+  "total": 18141,
+  "protected": 1069
  },
  "words": [
   {
@@ -39832,10 +39832,10 @@
   },
   {
    "key": "screen.request.nooffice.admin",
-   "en": "An administrator can add the office under Settings, Places and offices.",
+   "en": "If you know which office holds them, name it yourself below.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-309: screens-action R20"
+   "note": "DEC-309: screens-action R20; DEC-402 (Bob, DEC-401): a member names the office"
   },
   {
    "key": "screen.help-records.notheld",
@@ -75473,6 +75473,76 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)"
+  },
+  {
+   "key": "screen.request.nameoffice.head",
+   "en": "Name the office yourself",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: the fold under the dead end"
+  },
+  {
+   "key": "screen.request.nameoffice.note",
+   "en": "The office is saved for your team's next request, marked as named by a member until an administrator confirms it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: what naming does"
+  },
+  {
+   "key": "screen.request.nameoffice.name",
+   "en": "The agency and office",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: field"
+  },
+  {
+   "key": "screen.request.nameoffice.name.help",
+   "en": "As the agency names the office that answers records requests.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: help"
+  },
+  {
+   "key": "screen.request.nameoffice.where",
+   "en": "Where requests go",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: field"
+  },
+  {
+   "key": "screen.request.nameoffice.where.help",
+   "en": "Its mailing address, email address or online portal, as the agency publishes it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: help"
+  },
+  {
+   "key": "screen.request.nameoffice.law",
+   "en": "The law it goes under",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: field"
+  },
+  {
+   "key": "screen.request.nameoffice.law.help",
+   "en": "The law sets the due date. Choose the one this office answers under.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: help"
+  },
+  {
+   "key": "screen.request.nameoffice.use.help",
+   "en": "Saves the office for your team, marked as named by you, and chooses it for this request.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: the button's explanation"
+  },
+  {
+   "key": "screen.request.nameoffice.mark",
+   "en": "Named by a member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-402: the mark on an office a member named, until an administrator confirms it"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -117218,6 +117288,12 @@
   {
    "key": "act.filingrecordsent.label.request",
    "en": "I have sent it",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.entitycreate.label.request",
+   "en": "Use this office",
    "protected": true,
    "source": "registry.json"
   },

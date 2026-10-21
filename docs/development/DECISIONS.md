@@ -6187,3 +6187,33 @@ decided: 2026-10-21 · the design session (P17)
 the design: `screen.contradiction.flagged.by` "{member} said these two contradict, {date}"; `act.heldcaptures.here.project` "List this project's documents"; `screen.document.testify.how` "How you know".
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-400").
 owed: none.
+
+### DEC-401 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B441 item 2, K4304: a records request to a federal office; DEC-394 put it to Bob)
+for: Bob
+question: How does a member file a records request with an office that is not among the team's places (a federal body such as HUD)?
+why it is Bob's: it decides who may add an office to the team's record (doctrine: who may do what).
+provisional: none.
+alternative: B, Civicsmith comes with federal offices built in; C, only administrators add offices, a member asks from inside the request.
+recommendation: A.
+reversal cost: low (an office a member named stays marked until an administrator confirms it).
+response: "Federal Offices: A for now, but B should be added as time and tokens allow."
+decided: 2026-10-21 · Bob
+the design: A now: when no listed office fits, the member names the office inside the request (agency and office, where requests go, the law picked from the laws Civicsmith knows); the office is saved for the team's next request and marked "named by a member" until an administrator confirms or corrects it under Places and offices. B later, as time and tokens allow: federal records offices built in, from the government's own list, each with the Freedom of Information Act's rules.
+reasoning recorded in: this entry; `question-federal-office.html` (https://claude.ai/artifact/FcRtETPqMVjaqocMQHQLTX).
+owed: the drawing of A on `request` (the next DEC); BOB: B placed in a later tranche's plan when time and tokens allow.
+
+### DEC-402 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (Bob's DEC-401: federal offices A)
+for: design
+question: How is Bob's A drawn on the request screen?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `request`'s dead end now reads "If you know which office holds them, name it yourself below." and opens "Name the office yourself": the agency and office, where requests go, the law it goes under (which sets the due date), and "Use this office" (`entitycreate`, now on `request`'s acts), which saves the office for the team, marked "Named by a member" until an administrator confirms it, and chooses it for this request. BOB owes: `entitycreate` admitted to a member from `request` for an office, with the mark, and the administrator's confirm on Places and offices.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-402").
+owed: BOB: as above; B (federal offices built in) placed when time and tokens allow.
