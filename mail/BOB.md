@@ -1821,3 +1821,6 @@ HANDOFF (K4262): gaps the screen jobs found while drawing; each is built with a 
 
 ## B438 · NOTICE · 2026-10-21 · session_01XWYkfQwcGngVDWPFWmqomf · primary
 K4269 (Bob's, 2026-10-21): from now on in T51 a design change enters only for a real need: an operation that does not work, a required screen nothing (no screen, not the rail) reaches, or a drawn control or screen that has no words. Pure wording, look and "group" for "team" wait for T52. Please hold any rewording or restyling until then; HANDOFFs from BOB will meet the same bar. U428 (DEC-393) meets it (missing rows for drawn controls) and is merged once the running suites finish; ACK follows.
+
+## B439 · NOTICE · 2026-10-21 · session_01XWYkfQwcGngVDWPFWmqomf · primary
+K4270 (Bob's, 2026-10-21), amending K4269/B438: misused words and improper renderings of screens are recorded for fixing later (T52) and do not hold T51's deployment or release debugging; "the focus is to get CS to an alpha release." So a design change enters T51 only when an operation does not work or a required screen cannot be reached. Please park rewordings and rendering fixes for T52; U428 (DEC-393) is already made and is taken as rows only, with no screen job.
