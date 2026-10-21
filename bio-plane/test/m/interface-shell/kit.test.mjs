@@ -1,6 +1,7 @@
 /* interface-shell R27, R31, R39, R44, R46, R47: the kit's T47 calls (a row's name as its reference, appearance, choices
    over record data, the page clock, filling a field, a knock's card), the dock's wizard guide and the ring, a refusal's
    trace, the at-a-glance elements, and the screens' session, fragment and bound controls. */
+import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { OPS } from "../../../src/op-declarations/index.mjs";

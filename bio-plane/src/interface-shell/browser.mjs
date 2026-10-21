@@ -1954,7 +1954,16 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     for (const inst of [MAIN, DOCKI, GUIDEI]) if (inst) inst.acts.forEach((d, i) => { const h = REFUSED.get(d.key); const s = h ? slotOf(inst.key + ":" + i) : null; if (s) s.innerHTML = h; });
   }
   const refusalHtml = (words) => '<span class="cs-gap" data-gap="refused" role="alert">' + I("refused") + "<span>" + words + "</span></span>";
-  function press(btn) {
+  /* R119 (K4410): the fills an act's `ready` answered, handed to its send when the act runs */
+  const READY_FILLS = new Map();
+  async function readyFirst(inst, d, btn, ai) {
+    let r = null;
+    try { r = await d.spec.ready(inst.view, btn, kit(inst)); } catch { r = null; }
+    if (r && typeof r === "object" && r.refuse) return refuseBeside(ai, w(r.refuse, r.fills));
+    if (r && typeof r === "object" && r.fills) READY_FILLS.set(d.key, r.fills); else READY_FILLS.delete(d.key);
+    return press(btn, true);
+  }
+  function press(btn, readied) {
     const ai = btn.getAttribute("data-ai");
     const [k, i] = String(ai).split(":");
     const inst = instOf(k);
@@ -1963,6 +1972,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R74: a second press while the request is out, or on a locked act, does nothing */
     const st = ACTSTATE.get(d.key);
     if (st && (st.busy || st.lock)) return;
+    /* R119: an act's `ready` runs on the press before any reason box opens; nothing is drawn or asked before it answers */
+    if (d.spec.ready && !readied) return readyFirst(inst, d, btn, ai);
     activity();
     sound("click");
     /* R68 (fix round 3, C78): the press closes the explanation, and the redrawn button under the still pointer does not open it again
@@ -2025,6 +2036,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   async function run(inst, d, btn, ai, extra) {
     let req;
+    /* R119: the fills the act's `ready` answered reach its send, once */
+    extra.fills = READY_FILLS.get(d.key);
+    READY_FILLS.delete(d.key);
     if (d.table) extra.picked = (inst.ui["pick:" + d.table] || []).slice();
     /* R100: a browser act does its work in `send` and sends no request: no header, no op door, no read; its `done` and
        `rereads` do not run. The button answers the press as any act's does (R74), a refusal drawn in its slot (R13). */
