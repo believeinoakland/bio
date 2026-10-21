@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2574,
+  "refusal": 2576,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6931,
+  "screen": 6946,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 11,
   "duty": 6,
   "published": 9,
-  "shell": 173,
+  "shell": 174,
   "settings": 4,
   "entity": 33,
   "find": 43,
@@ -96,14 +96,14 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1103,
+  "act": 1105,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
   "time": 4,
   "size": 4,
   "reference": 1,
-  "form": 3,
+  "form": 5,
   "unavailable": 2,
   "page": 2,
   "person": 1,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18102,
+  "total": 18124,
   "protected": 1068
  },
  "words": [
@@ -75293,6 +75293,146 @@
    "note": "DEC-396: B444 item 12: refusal when saying two documents contradict"
   },
   {
+   "key": "refusal.ACQUIRE_TIMED_OUT.held",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT.undetermined",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B446: a timed-out capture whose kept state cannot be told"
+  },
+  {
+   "key": "form.choose.search",
+   "en": "Search your documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B447 (screens-investigate C95): the document picker's search box label"
+  },
+  {
+   "key": "form.choose.search.none",
+   "en": "No document matches. Try other words, or add the document first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B447: the document picker's search found nothing"
+  },
+  {
+   "key": "act.inboxresolve.label.inbox.putback",
+   "en": "Put it back",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B448 a: the button on a discarded knock (inboxresolve to new)"
+  },
+  {
+   "key": "act.inboxresolve.putback.does",
+   "en": "Returns material you discarded to the inbox as new, so it can be read and placed again. The discard and its reason stay on the record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B448 a: what Put it back does"
+  },
+  {
+   "key": "screen.inbox.putback.done",
+   "en": "Put back in the inbox as new. The discard and its reason stay on the record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B448 a, B450: the sentence after Put it back"
+  },
+  {
+   "key": "screen.document.retire.refused.illegal",
+   "en": "This copy cannot be retired: it is not vouched for yet, or it is already retired. Nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B448 b"
+  },
+  {
+   "key": "screen.document.retire.refused.cited",
+   "en": "This copy is cited by {questions}. Remove those citations first, then retire it. Nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B448 b: {questions} the citing questions"
+  },
+  {
+   "key": "screen.group.hosting.now.date",
+   "en": "Recorded on {date}:",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C88): who holds the hosting account, recorded with no recorder named"
+  },
+  {
+   "key": "screen.group.export.count.tables.one",
+   "en": "1 table",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C85)"
+  },
+  {
+   "key": "screen.group.export.count.tables.other",
+   "en": "{n} tables",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C85)"
+  },
+  {
+   "key": "screen.security.nosignatures.next",
+   "en": "An administrator can check that your team's Civicsmith is allowed to reach the signature service. The scanner tries again daily.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C83): Security, when the scanner holds no signatures"
+  },
+  {
+   "key": "screen.group.domain.checked",
+   "en": "Checked {date} at {time}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C86)"
+  },
+  {
+   "key": "shell.field.needed",
+   "en": "Fill in {field} first. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C87): the shell's neutral refusal for an empty required field"
+  },
+  {
+   "key": "screen.review-copy.links.shared",
+   "en": "shared {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C49): a live review link's row"
+  },
+  {
+   "key": "screen.review-copy.links.comments.one",
+   "en": "1 comment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C49)"
+  },
+  {
+   "key": "screen.review-copy.links.comments.other",
+   "en": "{n} comments",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C49)"
+  },
+  {
+   "key": "screen.case-editor.links.live.one",
+   "en": "1 review link is live.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C49): the singular of screen.case-editor.links.live"
+  },
+  {
+   "key": "screen.ceremony.links.live.one",
+   "en": "1 review link is live.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-398: B450 (C49): the singular of screen.ceremony.links.live"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -114352,10 +114492,22 @@
    "source": "registry.json"
   },
   {
+   "key": "screen.leads.purpose",
+   "en": "Write down something you were told, record who looked into it and what they found, and share it with a project.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.watching.name",
    "en": "Watched addresses",
    "protected": false,
    "source": "registry.json"
+  },
+  {
+   "key": "screen.watching.purpose",
+   "en": "Every address your team watches: what is due to be checked, pausing the watching, and the sweeps that look through a site.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
   },
   {
    "key": "act.bootstrap.label.install",

@@ -9,4 +9,4 @@ export const GRAPH_SHARED = Object.freeze([
 ]);
 
 /** R34: the keys `PARTS.docChoice` draws, listed by each screen that offers a document choice. */
-export const FORM_SHARED = Object.freeze(["form.choose.document", "form.choose.document.help", "form.choose.passage", "screen.held.untitled"]);
+export const FORM_SHARED = Object.freeze(["shell.search", "form.choose.document", "form.choose.document.help", "form.choose.passage", "screen.held.untitled"]);

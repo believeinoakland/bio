@@ -23,7 +23,7 @@ const FOUND = ok({ ok: true, scope: { form: "project", project: "PROJ-1", captur
 const PROJECT_DOC = ok({ "bundle.md": '---\nobject_type: project\ntitle: "The Coliseum lease"\nobjective: "The Coliseum lease"\ncurrent_state: forming\n---\n\n## Session Log\n' });
 const PQ = ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: "Is the city repairing reported potholes within seven days?" }], cursor: null });
 const ZONE = ok({ ok: true, count: 1, facts: [{ path: "profile.time_zone", fact: { profile: "p1", fact: "time_zone" }, status: "confirmed", governs: { value: "America/Los_Angeles", origin: "profile" } }] });
-const PLANE = { search: QUESTIONS, projectquestions: PQ, factstatus: ZONE, findin: FOUND, image: PROJECT_DOC };
+const PLANE = { memberlist: ok({ members: [{ member_id: "u-mai", handle: "Mai", status: "active" }] }), search: QUESTIONS, projectquestions: PQ, factstatus: ZONE, findin: FOUND, image: PROJECT_DOC };
 const R = "looking";
 const ALL_KINDS = { "findin-kind-people": true, "findin-kind-money": true, "findin-kind-dates": true, "findin-kind-requirements": true, "findin-kind-events": true, "findin-term": "closed" };
 const shown = async (plane = {}) => {

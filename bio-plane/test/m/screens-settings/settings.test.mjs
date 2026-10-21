@@ -1,14 +1,18 @@
 /* Settings, the index (R17), and Recovery codes (R20), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, ancestor, day, has, lacks, open, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, env, refuse, recoveryTable } from "./fixtures.mjs";
+import { acts, all, ancestor, day, has, lacks, open as openPlain, said, textOf, SCREENS } from "./kit.mjs";
+import { ADMIN, MEMBER, READER, env, refuse, recoveryTable } from "./fixtures.mjs";
 
+/* The doors to `watching` and `leads` are drawn where the shell knows the ops those screens (another module's) act on; this stand-in names them,
+   as the composed page does (interface-shell R12). */
+const stub = (id, op) => ({ id, reads: () => ({}), render: () => "", acts: [{ op, send: () => null }], words: [], parts: {} });
+const open = (id, o) => openPlain(id, { ...o, screens: [...SCREENS, stub("watching", "monitoring"), stub("leads", "lead")] });
 const links = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"]).map((e) => e.attrs["data-screen"]);
 
 test("R17 settings: \"Yours\" then, to a session that administers, \"The group's\", each a reference to its screen; a member is drawn only their own", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
-  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias"]);
+  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias", "watching", "leads"]);
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(l.attrs.href, "/app/" + id);
@@ -19,7 +23,7 @@ test("R17 settings: \"Yours\" then, to a session that administers, \"The group's
   assert.ok(t.indexOf(said("screen.settings.groups")) < t.indexOf(said("screen.settings.everyone")), "then the section for every member");
   // control: a member who does not administer is drawn no group section
   const m = await open("settings", { me: MEMBER, table: {} });
-  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery", "bias"]);
+  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery", "bias", "watching", "leads"]);
   lacks(m, "screen.settings.groups"); has(m, "screen.settings.everyone");
   assert.ok(!a.html.includes('href="/"'), "no link opens the setup page");
 });
@@ -94,4 +98,20 @@ test("R42 recovery draws screen.recovery.onlyyou once, above the act that issues
     assert.equal(m.text.split(said("screen.recovery.onlyyou")).length, 2, "once");
     assert.ok(m.text.indexOf(said("screen.recovery.onlyyou")) < m.text.indexOf(said("act.recoverycodesissue.label.recovery")), "above the act");
   }
+});
+
+test("R17 C91: the doors to the watched addresses and the leads are drawn from Settings to an administrator and to a member who may use them, under 'For every member'; a session that may not write a lead is drawn no door to the leads (control)", async () => {
+  for (const me of [ADMIN, MEMBER]) {
+    const o = await open("settings", { me, table: {} });
+    const w = all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "watching")[0], l = all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "leads")[0];
+    assert.ok(w && l, me.handle);
+    assert.deepEqual([w.attrs.href, textOf(w)], ["/app/watching", said("screen.watching.name")]);
+    assert.deepEqual([l.attrs.href, textOf(l)], ["/app/leads", said("screen.leads.name")]);
+    const list = ancestor(w, (e) => /\bmk-links\b/.test(e.attrs.class || ""));
+    assert.ok(list && ancestor(l, (e) => e === list), "in one list");
+    assert.ok(o.text.indexOf(said("screen.settings.everyone")) < o.text.indexOf(said("screen.watching.name")), "under For every member");
+  }
+  // control: a reader holds no capability to write a lead: watching, which anyone reads, is drawn, the leads not
+  const r = await open("settings", { me: READER, table: {} });
+  assert.deepEqual(links(r).filter((id) => id === "watching" || id === "leads"), ["watching"]);
 });

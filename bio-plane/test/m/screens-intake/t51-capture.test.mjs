@@ -2,7 +2,7 @@
  * address on the real served page. A sentence is asserted by its key (R26), never by its English. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, text, main, btn, fill, press, ok, refused, word, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
+import { open as openPage, untitled, dayOf, text, main, btn, fill, press, ok, refused, word, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
 import { pending } from "../interface-shell/harness.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
@@ -53,7 +53,7 @@ test("R49 existed: true with a visible document links it and files nothing", asy
   assert.equal(p.byOp("allocid").length, 0);
   assert.equal(p.byOp("promote").length, 0);
   assert.ok(main(p).querySelector('a[href*="INFO-2026-0042-held"]'), "a link to the document that holds the bytes");
-  assert.ok(says(p, "screen.capture.address.existed", { title: word("screen.capture.address.untitled", { kind: word("document.kind.pdf"), site: "www.example.gov" }) }));
+  assert.ok(says(p, "screen.capture.address.existed", { title: untitled() }));
 });
 
 test("R49 existed: true with no document the viewer sees files a new one and links it", async () => {
@@ -64,7 +64,7 @@ test("R49 existed: true with no document the viewer sees files a new one and lin
   assert.equal(p.byOp("promote").length, 1, "promoted for the viewer");
   const id = p.byOp("promote")[0].body.bundleId;
   assert.ok(main(p).querySelector(`a[href*="${id}"]`), "and linked");
-  assert.ok(says(p, "screen.capture.address.done", { title: word("screen.capture.address.untitled", { kind: word("document.kind.pdf"), site: "www.example.gov" }) }));
+  assert.ok(says(p, "screen.capture.address.done", { title: untitled() }));
 });
 
 test("R49 control: existed: false promotes as before and looks nothing up by digest", async () => {
@@ -99,10 +99,10 @@ test("R50 (A2) the result is a status line directly under the act row", async ()
   const acts = btn(p, "acquire").closest(".mk-acts");
   const next = acts.nextElementSibling;
   assert.equal(next.getAttribute("role"), "status");
-  assert.ok(next.textContent.includes(word("screen.capture.address.done", { title: word("screen.capture.address.untitled", { kind: word("document.kind.pdf"), site: "www.example.gov" }) })));
+  assert.ok(next.textContent.includes(word("screen.capture.address.done", { title: untitled() })));
 });
 
-test("R50 (I-03) a document is named by its title; without one by its kind and site, never the file part of its address", async () => {
+test("R50 (I-03) R54 a document is named by its title; without one by its host and the day, never the file part of its address", async () => {
   const t = await open("/app/capture/address", { plane: { ...CAPTURED, acquire: ok({ ok: true, document: DOC, reading: { title: "Housing notice 2026-118" } }) } });
   fill(t, { "ci-address": ADDRESS });
   await press(t, "acquire");
@@ -112,7 +112,7 @@ test("R50 (I-03) a document is named by its title; without one by its kind and s
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   await p.settle();
-  assert.ok(says(p, "screen.capture.address.untitled", { kind: word("document.kind.pdf"), site: "www.example.gov" }));
+  assert.ok(says(p, "document.untitled.web", { site: "www.example.gov", date: dayOf(Date.now()) }));
   assert.ok(!text(p).includes("street-maintenance-2026"), "no part of the address");
 });
 

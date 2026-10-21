@@ -63,6 +63,8 @@ const receiptRow = (r) => ({ ...r, reputation: typeof r.reputation === "string" 
                              uploads: uploadsOf(r.uploads) });
 /* A digest as the register keys it: a `sha256:` prefix and case ignored (R5). */
 const bareSha = (v) => (typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null);
+/* SQLite's order over text with nulls first, so a grade read in code ranks receipts as the statement it replaced did. */
+const cmp = (a, b) => (a === b ? 0 : a == null ? -1 : b == null ? 1 : a < b ? -1 : 1);
 
 /* D-15: the bundle gate compiled over a QUALIFIED column (the legacy store's `#bundleGate`), for reads that join a
    row carrying a bundle id to the viewer predicate (membership R43) over record-core's `bundles` (its R37). */
@@ -507,7 +509,7 @@ class Provenance {
   containerResolver() {
     return {
       holds: (a) => { const h = this.registerHolds({ sha: a }); return h.registered === true || h.acquired === true; },
-      gradeVia: (a, index) => this.#unpacked(`zip:${a}!${index}`, 0),
+      gradeVia: (a, index) => this.#unpacked(`zip:${a}!${index}`, 0, new Map()),
       archiveOrigin: (a) => {
         const home = this.homeOf(a);
         const f = home ? this.#record.readFile(home.bundleId, "data/provenance.json") : null;
@@ -995,20 +997,61 @@ class Provenance {
    *  R59: when the receipts name more than one route, each route answers and the strongest answer stands (`#strongest`);
    *  a file cut out of an archive answers its archive's answer (`#unpacked`). */
   captureGrade(captureSha) {
-    return this.#grade(bareSha(captureSha), 0);
+    return this.#grade(bareSha(captureSha), 0, new Map());
+  }
+
+  /** `captureGrades(captureShas) → [answer, …]`, one answer per digest asked, in order, each exactly what
+   *  `captureGrade` answers for that digest. The register rows and receipts of every capture asked, and of the
+   *  archives their answers walk through, are read in one statement per level of archive nesting (none when no
+   *  digest is cut out of an archive), so a list of captures costs one read, not one per capture. A digest the
+   *  record does not hold answers as `captureGrade` answers it; a value that is not a list answers `[]`. Writes
+   *  nothing. */
+  captureGrades(captureShas) {
+    if (!Array.isArray(captureShas)) return [];
+    const asked = captureShas.map(bareSha);
+    const facts = new Map();
+    let next = asked;
+    for (let level = 0; level <= ARCHIVE_DEPTH_MAX && next.length; level++) {
+      this.#loadFacts(next, facts);
+      next = [...new Set([...facts.values()].flatMap((f) => f.locs).filter((l) => l.via === UNPACKED_VIA)
+        .map((l) => UNPACKED_LOCATOR.exec(typeof l.retrieval_locator === "string" ? l.retrieval_locator : ""))
+        .filter((m) => m).map((m) => m[1].toLowerCase()))].filter((a) => !facts.has(a));
+    }
+    return asked.map((s) => this.#grade(s, 0, facts));
+  }
+
+  /* R24–R27, R51, R59, R63: what one grade reads of the record, `facts` filling as digests are read: the capture's
+     register `authored` flag (null when unregistered) and its receipts. One statement for any number of digests. */
+  #loadFacts(shas, facts) {
+    const want = [...new Set(shas.filter((s) => typeof s === "string" && !facts.has(s)))];
+    if (!want.length) return;
+    for (const s of want) facts.set(s, { authored: null, locs: [] });
+    const json = JSON.stringify(want);
+    for (const r of this.#rows(`SELECT 'r' AS k, capture_sha, authored, NULL AS via, NULL AS retrieval_locator, NULL AS address,
+                                       NULL AS address_norm, NULL AS first_retrieved
+                                  FROM register WHERE capture_sha IN (SELECT value FROM json_each(?))
+                                UNION ALL
+                                SELECT 'l', capture_sha, NULL, via, retrieval_locator, address, address_norm, first_retrieved
+                                  FROM captured_locators WHERE capture_sha IN (SELECT value FROM json_each(?))`, json, json)) {
+      const f = facts.get(r.capture_sha);
+      if (r.k === "r") f.authored ??= r.authored;
+      else f.locs.push({ via: r.via, retrieval_locator: r.retrieval_locator, address: r.address,
+                         address_norm: r.address_norm, first_retrieved: r.first_retrieved });
+    }
   }
 
   /* One capture's answer; `depth` is how many archives a file's answer has already been read through (R59). */
-  #grade(s, depth) {
-    const reg = s ? this.#one(`SELECT authored FROM register WHERE capture_sha = ?`, s) : null;
+  #grade(s, depth, facts) {
+    if (s && !facts.has(s)) this.#loadFacts([s], facts);
+    const f = s ? facts.get(s) : { authored: null, locs: [] };
+    const reg = f.authored === null ? null : { authored: f.authored };
     /* R27: a member's authored observation earns no capture letter: the axis measures the act of reading a
        document in, which did not happen. Its grade is testimony, which nothing raises. */
     if (reg && Number(reg.authored) === 1)
       return { grade: null, route: "authored", determined: false, basis: "CAPTURE_AXIS_AUTHORED",
                testimony: TESTIMONY_GRADE,
                why: word("provenance.why.member_words_read", { testimony_grade: String(TESTIMONY_GRADE) }) };
-    const vias = s ? this.#rows(`SELECT DISTINCT via FROM captured_locators WHERE capture_sha = ? ORDER BY via`, s)
-      .map((r) => r.via) : [];
+    const vias = [...new Set(f.locs.map((l) => l.via))].sort(cmp);
     /* R26 · D-709: no recorded route at all: stated, never guessed. A leg on it keeps its author's letter, under the
        ceiling, and that letter is the author's account, not a measurement. */
     if (!vias.length)
@@ -1028,20 +1071,19 @@ class Provenance {
     /* R59 · N688 (K1852 (1)): a file cut out of an archive the record holds: one answer per receipt, each its
        archive's, in the receipts' locator order so that between two equal archives the answer is always the same. */
     if (vias.includes(UNPACKED_VIA))
-      for (const r of this.#rows(`SELECT DISTINCT retrieval_locator FROM captured_locators
-                                   WHERE capture_sha = ? AND via = ? ORDER BY retrieval_locator`, s, UNPACKED_VIA))
-        answers.push(this.#unpacked(r.retrieval_locator, depth));
+      for (const loc of [...new Set(f.locs.filter((l) => l.via === UNPACKED_VIA).map((l) => l.retrieval_locator))].sort(cmp))
+        answers.push(this.#unpacked(loc, depth, facts));
     /* R51 · N364 (K509 (3)): received through the doorbell, not fetched. A fetched route, when one was also
        recorded, is measured and answers first; with none, the bytes earn no fetched letter: a leg on them keeps its
        author's letter under the ceiling, stated as authored. What the receipt DOES prove is existence: the record
        held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
        the knock's receipt), so the earliest such receipt is named. */
     if (vias.includes(DOORBELL_VIA))
-      answers.push(this.#received(s, DOORBELL_VIA, word("provenance.handed_group_through")));
+      answers.push(this.#received(f, DOORBELL_VIA, word("provenance.handed_group_through")));
     /* R63 · K2425 (4): a file a member holds, brought in by her upload: received, not fetched, graded exactly as the
        doorbell's material (R51), its existence at the upload's instant proven by the receipt the upload wrote. */
     if (vias.includes(UPLOAD_VIA))
-      answers.push(this.#received(s, UPLOAD_VIA, word("provenance.brought_member_holds")));
+      answers.push(this.#received(f, UPLOAD_VIA, word("provenance.brought_member_holds")));
     if (answers.length) return this.#strongest(answers);
     /* R26: a route no ruling grades is NAMED, and the grade is undetermined. It answers only when no ruled route
        does (R59: it never outranks a ruled one). */
@@ -1052,9 +1094,9 @@ class Provenance {
 
   /* R51, R63: the answer of material RECEIVED by route `via` (`doorbell` or `upload`), never fetched: no letter, the
      member's authored letter under the ceiling, and the earliest such receipt named as the proof of existence. */
-  #received(s, via, how) {
-    const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
-                          WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`, s, via);
+  #received(f, via, how) {
+    const r = f.locs.filter((l) => l.via === via)
+      .sort((x, y) => cmp(x.first_retrieved, y.first_retrieved) || cmp(x.address_norm, y.address_norm))[0];
     return { grade: null, route: via, determined: false, basis: RECEIVED_NOT_FETCHED, ceiling: EARNED_CAPTURE_CEILING,
              received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
              why: word("provenance.why.bytes_fetched_address", { how: String(how), earned_capture_ceiling: String(EARNED_CAPTURE_CEILING), first_retrieved: String(r.first_retrieved), address: String(r.address) }) };
@@ -1078,7 +1120,7 @@ class Provenance {
      first), and that archive's own route and basis. An archive that is itself unpacked is read the same way, through
      at most `ARCHIVE_DEPTH_MAX` archives (`ooxml` R30); past that, or with a locator not of that form, the answer is
      undetermined and says why. */
-  #unpacked(locator, depth) {
+  #unpacked(locator, depth, facts) {
     const unresolved = (why) => ({ grade: null, route: "unpacked", determined: false, basis: UNPACKED_UNRESOLVED, why });
     const m = UNPACKED_LOCATOR.exec(typeof locator === "string" ? locator : "");
     const index = m ? Number(m[2]) : NaN;
@@ -1090,7 +1132,7 @@ class Provenance {
     if (depth + 1 > ARCHIVE_DEPTH_MAX)
       return unresolved(word("provenance.bytes_cut_archives", { archive_depth_max: String(ARCHIVE_DEPTH_MAX) }));
     const archiveSha = m[1].toLowerCase();
-    const a = this.#grade(archiveSha, depth + 1);
+    const a = this.#grade(archiveSha, depth + 1, facts);
     if (a.basis === UNPACKED_UNRESOLVED) return unresolved(a.why);
     const { route, basis, why, archive: inner, ...rest } = a;
     const archive = route === "unpacked"

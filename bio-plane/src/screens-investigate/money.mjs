@@ -9,6 +9,7 @@
 
 import { PARTS } from "./parts.mjs";
 import { GRAPH_SHARED, FORM_SHARED } from "./graphwords.mjs";
+import { rereading } from "./rereads.mjs";
 
 const S = "screen.money.";
 
@@ -16,7 +17,7 @@ function reads(view) {
   const S = "screen.money.";
   const id = String(view.subject || "").split("/")[0];
   return /^MSR-/.test(id)
-    ? { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, contracts: { op: "peopledirectory", query: { show: "contracts", limit: "200" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
+    ? { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, contracts: { op: "peopledirectory", query: { show: "contracts", limit: "200" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
     : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] } };
 }
 
@@ -51,14 +52,14 @@ function render(cs, view) {
   const t = view.data.trail;
   const set = t && t.state === "ok" ? t.value.set || {} : null;
   if (set && /^PROJ-/.test(String(set.concerns || ""))) P.later(cs, view, "project", "image", { query: { id: set.concerns } });
-  out.push(cs.title(set ? set.label || id : id, { thing: { kind: "record", facts: set ? [cs.w(S + "startedby", { by: String(set.by || "").replace(/^member:/, "") })] : [] } }));
+  out.push(cs.title(set ? set.label || id : id, { thing: { kind: "record", facts: set ? [cs.w(S + "startedby", { by: P.who(cs, set.by) })] : [] } }));
   out.push(`<div class="mk-acts">${cs.act("recordfact", { label: S + "read", tone: "primary" })}${cs.act("createset", { label: "act.createset.label.money" })}${cs.act("committedagainstpaid", { label: "act.committedagainstpaid.label.money" })}</div>`);
   if (ui.proposeRefusal) out.push(P.said(cs, ui.proposeRefusal));
   /* the rows: every fact the trail holds, included or left out, and those read here not yet in it */
   const entries = t && t.state === "ok"
     ? (t.value.inclusions || []).map((x) => ({ key: x.fact_id, state: "included", reason: x.reason, trail: x.trail }))
       .concat((t.value.exclusions || []).map((x) => ({ key: x.fact_id, state: "excluded", reason: x.reason, trail: null })))
-      .concat((t.value.proposals || []).map((x) => ({ key: x.fact_id, state: "proposed", reason: x.label, trail: x.trail })))
+      .concat((t.value.proposals || []).map((x) => ({ key: x.fact_id, state: "proposed", reason: x.label, by: x.by, trail: x.trail })))
     : [];
   const fact = (e) => P.later(cs, view, "fact:" + e.key, "money", { query: { id: e.key } });
   const party = (p) => (!p ? null : p.as_written || p.entity || p.fund || p.account || null);
@@ -91,7 +92,7 @@ function render(cs, view) {
     const src = f.source && f.source.capture_sha ? P.refOf(cs, f.source.capture_sha, f.citation || cs.w(S + "source"), [f.as_read || ""], "capture") : "";
     const grade = f.grade && /^[A-D]$/.test(f.grade.reading || "") ? cs.grade("capture", f.grade.reading) : cs.mark("gap", "unrated");
     const inTrail = e.state === "included" ? cs.w(S + "included", { reason: e.reason || "" }) : e.state === "excluded" ? cs.w(S + "excluded", { reason: e.reason || "" })
-      : e.state === "proposed" ? cs.w(S + "proposed") : cs.w(S + "notyet");
+      : e.state === "proposed" ? cs.w(/^member:/.test(String(e.by || "")) ? S + "proposed.member" : S + "proposed") : cs.w(S + "notyet");
     return [cs.esc(cs.w(S + "kind." + String(f.kind || "other").replace(/ /g, "_"))),
       party(f.from) ? P.refOf(cs, (f.from && (f.from.entity || f.from.fund)) || "", party(f.from), []) : gap(e, "from", (tr.from && tr.from.says) || cs.w(S + "notstated")),
       party(f.to) ? P.refOf(cs, (f.to && (f.to.entity || f.to.fund)) || "", party(f.to), []) : gap(e, "to", (tr.to && tr.to.says) || cs.w(S + "notstated")),
@@ -109,7 +110,7 @@ function render(cs, view) {
     const auth = ui.auth && ui.auth[e.key];
     const rec = ui.rec && ui.rec[e.key];
     const note = ui.note && ui.note[e.key];
-    return (f && f.as_read ? `<p class="mk-small">${cs.w(S + "asread", { as_read: f.as_read, by: String(f.by || "").replace(/^member:/, "") })}</p>` : "") + help
+    return (f && f.as_read ? `<p class="mk-small">${cs.w(S + "asread", { as_read: f.as_read, by: P.who(cs, f.by) })}</p>` : "") + help
       + (rec ? `<p class="mk-small">${cs.w(rec.consistent ? S + "rec.same" : S + "rec.differs", { dims: (rec.differs || []).map((x) => x.dimension).join(", ") })}</p>` : "")
       + (auth ? `<p class="mk-small">${auth.chains && auth.chains.length ? auth.chains.map((c) => cs.w(S + "auth.chain", { n: String((c.hops || []).length), event: c.event_id || "" })).join("; ") : cs.w(S + "auth.none")}</p>` : "")
       + (note ? `<p class="mk-small">${cs.esc(note)}</p>` : "")
@@ -164,7 +165,7 @@ function render(cs, view) {
     + ch("mf-basis", S + "f.basis", ["undetermined", "budgetary", "cash", "modified_accrual", "accrual"])
     + cs.field("mf-from-date", S + "f.periodfrom", { type: "date" }) + cs.field("mf-to-date", S + "f.periodto", { type: "date" }) + cs.field("mf-fiscal", S + "f.fiscal", {})
     + cs.field("mf-payer", S + "f.payer", {}) + cs.field("mf-payee", S + "f.payee", {})
-    + P.docChoice(cs, view, "mf-doc")
+    + P.docChoice(cs, view, "mf-doc", { project: set && typeof set.concerns === "string" ? set.concerns : "" })
     + contractChoice + cs.field("mf-label", S + "label", {})
     + cs.field("mf-expertise", S + "f.expertise", { help: S + "f.expertise.help" })
     + cs.field("mf-address", S + "f.address", { help: S + "f.address.help" })
@@ -173,7 +174,7 @@ function render(cs, view) {
 }
 
 /* every act names its trail and fact; a hold-strip act receives the picked keys (`extra.picked`) */
-const acts = [
+const acts = rereading([
   { op: "recordfact", label: "act.recordfact.label.money",
     send(view, el, cs) {
       const amount = String(cs.value("mf-amount") || "").trim(), as_read = String(cs.value("mf-asread") || "").trim();
@@ -312,13 +313,13 @@ const acts = [
       if (!inquiry || !statement) return { refuse: "screen.money.f.nohunch" };
       return { body: { inquiry, kind: "flow", statement, about: [String(el.dataset.fact || "")] } };
     } },
-];
+], ["trail", "project", "contracts", "questions", "vocab"], ["acquire"]);
 
 const MONEY_KEYS = [
   "screen.money.graph", "screen.money.graph.holds", "screen.money.notrail", "screen.money.label", "screen.money.label.help",
   "screen.money.startedby", "screen.money.read", "screen.money.readother", "screen.money.readfor", "screen.money.event", "screen.money.source",
   "screen.money.notstated", "screen.money.didnotmove", "screen.money.moved.why", "screen.money.period", "screen.money.period.why",
-  "screen.money.range", "screen.money.amount", "screen.money.stage", "screen.money.included", "screen.money.excluded", "screen.money.proposed",
+  "screen.money.range", "screen.money.amount", "screen.money.stage", "screen.money.included", "screen.money.excluded", "screen.money.proposed", "screen.money.proposed.member",
   "screen.money.notyet", "screen.money.gap.open", "screen.money.col.from", "screen.money.col.to", "screen.money.col.moved", "screen.money.col.basis",
   "screen.money.col.period", "screen.money.gap.from", "screen.money.gap.to", "screen.money.gap.moved", "screen.money.gap.basis",
   "screen.money.gap.period", "screen.money.evidence.from", "screen.money.evidence.to", "screen.money.evidence.moved", "screen.money.evidence.basis",

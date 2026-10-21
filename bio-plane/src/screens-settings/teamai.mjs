@@ -45,7 +45,7 @@ export const teamai = {
       const id = String(by || "").replace(/^member:/, "");
       if (id === "admin") return founderName();
       const r = roster.find((m) => m.member_id === id);
-      return r && r.handle ? r.handle : id === me.member && me.handle ? me.handle : id;
+      return r && r.handle ? r.handle : id === me.member && me.handle ? me.handle : cs.memberName(id);
     };
     const okv = (o) => (o && o.state === "ok" && o.value && o.value.ok !== false ? o.value : null);
     const amountOf = (a, u) => (u === "usd" ? "$" + Number(a).toFixed(2) : Number(a).toLocaleString("en"));

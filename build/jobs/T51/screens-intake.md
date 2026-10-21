@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_01VMaZFp9WEEsWKQj2NDgzHf · depth 2 · COMPLETE · handled B14
+**Status** · session_016TLvaypBQx6X3AHUVwEdcN · depth 2 · COMPLETE · handled B21
 
 ## Record
 
@@ -175,3 +175,92 @@ Checks (from civicos-process, product /home/user/bio): format 0 failures; archit
 Deferred: none. Other-module findings and one stale generated bundle are in my REPORT.
 
 Size (session_01VMaZFp9WEEsWKQj2NDgzHf): test runs 4, module lines 2163
+
+## Fix round 2 (SCREENS-INTAKE #13, START B16 / CHANGE B15; model sonnet, medium)
+
+**Entries applied:** R49 (C9, C10), R50 (C11), R53 (met by the code already on the branch; its tests are `open-file.test.mjs`), R54 (C25), and the causes C14, C23, C28 (the part the plane allows), C29, C45, C78, C90, C91, DEC-394 (3b) and (3c), CAUSE-CAPTURE-T51 J2 (draw `render_pending` and a pending attestation, `capture.file_name`, pickers).
+
+- **C9 / C10 (R49)** `capture.mjs` `doneAcquire`, `doneUpload`, parts `homeOf` and `refusedHtml`. `existed: true` asks `heldat` by digest (no `check`) through `homeOf`; a document the viewer sees is linked and nothing is written. `acquire` already carries the question as `for`, and acquisition R47 records the ask (`recordCapturedFor`) also when `existed` is true, so the screen sends no second record. None that shows: the address arm promotes (as before); the file arm promotes when the answer carries the document, else writes nothing (see report 1). `CAPTURE_HELD_BY_ANOTHER_BUNDLE` names the holder and links it (title read from its bundle, `shell.card.document` where unreadable) when the promotion's refusal carries `holder`; without it, the sentence alone.
+- **C11 (R50)** `failedAcquire` clears `working`; `acquire` re-reads only `open`; every other act of `capture` names the reads it changed (`rereads`).
+- **C14 (R77, R88)** `capture` reads `heldcaptures` once with `fields: "picker"` (`state: held_and_vouched`, limit 200); no act re-reads it. `held` reads its two lists (held, set aside) once each; `heldcaptures` and `release` re-read only `held`. `todos.mjs`, `grouprules.mjs` and `money.mjs` are other modules' files (screens-daily, screens-settings, screens-investigate): their wave-2 jobs hold C14's rest.
+- **C23 (R4)** `held`: opened for a project (`/app/held/<PROJ-…>`) both lists read `heldcaptures` with that `project`; a row's project name opens that filter and the filter has a way back (`screen.held.name`); each held row says `state.item.review.name`. The squeezed "Open the file" control is CSS (C81, `cause-shell-t51`).
+- **C25 (R54)** `titleOf`: reading title, else the document's stated title, else its file name (`capture.file_name`, an upload's `name_stated` or its own name), else `document.untitled.web` (host and day); `screen.held.untitled` where there is no host. R50's kind-and-site sentence is replaced (its keys leave the screen's list). An upload uses the same function.
+- **C29 (R3)** the testimony's result links the document (`cs.ref`), named by the first of the member's own words; no id, no link, and no blank.
+- **C45 (R25)** "For which question" names the question by its title (the one read for the routed question, else the search hit's), else `shell.card.question`.
+- **C78 (R47)** the explanation of "Show the stored logins" is the next thing under that button, before the list.
+- **C90 (R46)** "Pause the watching" / "Resume" only for `view.me.administer === true`; the state is said to all.
+- **C91 (R44, R46)** `capture` draws doors to `/app/watching` and `/app/leads` (`screen.watching.name`, `screen.leads.name`) when `cs.can("capturerequest")` (a member or administrator who may act on the record).
+- **C28 (R7, R32)** the knock's detail shows its fingerprint under `screen.document.fingerprint`. The rest of C28 is not the screen's (reports 2 and QUESTION).
+- **J2** `render_pending.note` and a pending attestation's note are drawn in the plane's own words under the result; the finishing of a render continuation is "Finish it" (R31), the capture session being in `opencaptures`.
+- **DEC-394 (3b)** met by R47 (supply, list, withdraw on `capture`; keys `act.owed_capturecredential….label.capture` as they are); tests `t51-credentials.test.mjs`. **(3c)** new, below.
+
+**Requirement lines for BOB to fold** (none written in the requirements file by me):
+- **R55** (DEC-394 3c; `capture-requests` R23; amends R47) `capture`'s address tab lists the member's own capture requests (`capturerequests`, the one read that also serves R47) under `screen.capture.later.head` with `.about`, each with its address, the day asked and its state: `requested` or `draining` as `screen.capture.later.waiting`, `captured` as `.captured`, `refused` as `.turned`; a request another member asked, an `expired` one and an empty list are not drawn. Test: `t51-fix2.test.mjs` "R55".
+- **R56** (C91; amends R44, R46) `capture` draws a door to `watching` and to `leads` (`screen.watching.name`, `screen.leads.name`) for a viewer who may act on the record; none otherwise. Test: "C91".
+- **R4 amended** (C23) `held` opened with a project subject reads that project's captures; a row names its state by `state.item.review.name`; a project name opens the filter.
+- **R7/R32 amended** (C28) a knock's detail shows its fingerprint (`screen.document.fingerprint`).
+- **R3 amended** (C29) the testimony's result links the document. **R25 amended** (C45) the question is named by its title. **R47 amended** (C78) the note under "Show the stored logins". **R46 amended** (C90) pause and resume are an administrator's. **R50 amended** (C11) a refusal clears the working note at once and stays drawn. **R40 note**: `bundleFor` still reads `heldcaptures` in full (it needs the source address, which the picker does not give).
+
+**Tests changed because a requirement was amended** (not weakened): the R50 untitled sentence (kind and site) is R54's host and day in `capture.test.mjs` (R33 control, the slug of the bundle id), `t51-capture.test.mjs`, `t51-check.test.mjs`; the testimony's sentence now links (`capture.test.mjs` R3); `common.test.mjs` R8 (an act may name the reads it changed); `t51-credentials.test.mjs` R47 (the paywall request is now in the member's "requests for later", so the control is about the login section); `t51-watching.test.mjs` R46 (the pause is an administrator's; the refusal test is for an administrator who has lost standing).
+
+**Words I needed and did not find (QUESTION):** see the QUESTION. Drawn from existing keys: doors, the other-home link, the filter's way back.
+
+**Reports (other modules, P9):**
+1. `capture` R86: `captureupload` answers `existed: true` with no `document` even when the record holds only a receipt and no home (the interrupted upload of C10), so the screen cannot file one for the viewer; it files when the answer carries the document and links a visible holder. Proposed: answer the document (as a new upload's) when `holds.registered` is not true.
+2. `doorbell`: a knock stores no file name or type and no read gives its bytes before the pull, so C28's name, type and safe view cannot be drawn; "put back" (`inboxresolve` to `new`, `doorbell` R3) is served but has no word for its button.
+3. `capture` R77: a held row does not say its capture has no object under its fingerprint (parts-only past 32 MiB); the screen cannot withhold vouch or OCR from it. Proposed: a field on `capture` (`whole: false`).
+4. `capture` R40/`bundleFor`: `heldat` by address would give the copy's document at the cost of one look instead of a 1000-row list; R40 names the list.
+5. The Held list needs each row's grade, so it cannot use the picker read: it reads two full lists of 50.
+6. `screens-inquiry` suite on `tranche/T51` already has three reds (R10 document and entry 25 acts, R5 R14–R16 acts: `contradictionflag` in the registry); same on an untouched checkout of the tranche.
+7. Coverage reds in the process checks are other modules' (agent-harness, agent-runner, control-plane, installer-steps, journey-check, screens-inquiry R123–R125).
+
+**Checks:** `node checks/run.mjs`: format 0, architecture 0, words 0 (screens-intake), coverage: screens-intake not listed among its 6 failures; ownership: 14 files, 0 failures.
+**Suites:** screens-intake 201 of 201; screens-inquiry 410 of 413 (the three are on the tranche untouched); control-plane 324 of 324.
+
+**Size (session_016TLvaypBQx6X3AHUVwEdcN):** test runs 9, module lines 2233
+
+## J14 · QUESTION
+
+QUESTION (fix round 2; no answer is needed to finish what is done): words and two decisions for C28 and C10, my best reading first.
+
+1. C28, the inbox. The plane stores no file name or type for a knock and gives no read of its bytes before the pull, so the screen can draw the fingerprint (done, `screen.document.fingerprint`) but not name, type or a safe-view door; that is a doorbell change (REPORT 2 in my record). "Put it back" (`inboxresolve` to `new`, doorbell R3) is served by the plane; the screen has no word for its button, and `act.inboxresolve.label.inbox` ("Discard with a reason") and its explanation would mislead. Keys I need written: the button and its explanation for putting a discarded knock back (suggested `act.inboxresolve.label.inbox.putback` with its explanation), and the sentence after it is done. I will draw it when they exist.
+2. C9: the other-home refusal has no `{holder}` in `refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE`; I draw its sentence and then a link to the holder named by its title, built only from existing keys. If you want the holder inside the sentence, the key needs a `{holder}` fill.
+3. C23, Held's project filter has no label word; I opened it from the project name in each row (a link to `/app/held/<project>`) with `screen.held.name` as the way back. A drawn "All projects / Project" choice would need its keys.
+4. C10: `captureupload` answers `existed: true` without a document, so the screen can link a visible holder but cannot file a document for the viewer when none shows (REPORT 1). Do you want `capture` R86 to answer the document in that case (my proposal), or is the link enough?
+
+## J15 · COMPLETE
+
+COMPLETE (T51 fix round 2, B15 and B16). Causes met: C9 and C10 (R49: a visible holder is linked and nothing written; `for` rides on acquire so the plane records the ask; the other-home refusal names and links the holder; the file arm files only when the answer carries the document, REPORT 1), C11 (R50 `failed` hook), C14 my part (R77/R88: one picker read on capture, acts re-read only what they changed; Held reads its two lists once), C23 Held (R4: project filter, one state word), C25 (R54: title, file name, host and day), C29, C45, C78, C90, C91, C28 the fingerprint (the rest is the plane's and needs words: QUESTION J14), DEC-394 (3b) (R47 as built, tested) and (3c) (R55 new), J2 (render_pending, pending attestation, file_name, pickers). Requirement lines for you to fold are in my record (R55, R56 and the amendments of R3, R4, R7/R32, R25, R46, R47, R50). Suites: screens-intake 201 of 201; control-plane 324 of 324; screens-inquiry 410 of 413 (the three reds are on an untouched tranche/T51 too: registry acts, `contradictionflag`). Checks: format, architecture, words 0 findings for my files; coverage lists none of mine (the six reds are other modules'); ownership 14 files, 0 failures. Reported to you (details in my record): capture R86 existed answer carries no document; doorbell stores no name or type and no pre-pull read; capture R77 has no field for a capture with no object under its fingerprint (so vouch and OCR cannot be withheld); bundleFor could use heldat; Held needs the full read for grades. Not mine: todos.mjs, grouprules.mjs, money.mjs (C14's rest, wave 2 jobs of screens-daily, screens-settings, screens-investigate). Tests I changed because requirements were amended (R54, C29, C90, R8's act re-reads) are listed in the record.
+Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 9, module lines 2233
+
+## B17 CHANGE applied (CONTROL-PLANE #43, K4326)
+
+`acquire`'s `ACQUIRE_TIMED_OUT` is drawn by what the 504 says it `kept`: `held` and `undetermined` by `refusal.ACQUIRE_TIMED_OUT.held` / `.undetermined`, anything else by the base `refusal.ACQUIRE_TIMED_OUT`. Those two keys are not yet in the word table, so the screen falls back to the base words until they are (its test asserts the keyed word once `hasWord` holds it; the keys are not in the screen's word list yet, because the words check refuses a listed key the table lacks: add them to `SCREEN_KEYS.capture` when the rows exist). Also from the merge: the registry now lists `capturerequests` on `capture` (DEC-394 3c): "Show my requests for later" (`act.capturerequests.label.capture`) is drawn and re-reads the list. screens-intake 202 of 202; format, architecture, words 0.
+
+## J16 · COMPLETE
+
+COMPLETE (B17 applied): ACQUIRE_TIMED_OUT drawn by kept (held/undetermined keys fall back to the base words until the rows exist; add them to SCREEN_KEYS.capture then); the merged registry's capturerequests act is drawn. screens-intake 202 of 202; format, architecture, words 0; ownership 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 5, module lines 2245
+
+## B18 ANSWER applied
+
+Put-back (C28): a discarded knock offers `inboxresolve` to `new` (the shell asks the reason) labelled `act.inboxresolve.label.inbox.putback`, drawn only once that row exists in the word table (until then no raw key is drawn; the test branches on `hasWord` and must be re-read when the row lands, the done sentence's key was not named so none is drawn). Link-enough for C10 and the Held filter accepted. Waiting for CAPTURE #41 and DOORBELL #5 (name, type; `whole: false` withholding of vouch and OCR): a CHANGE then. screens-intake 203 of 203; format, architecture, words 0; ownership 0.
+
+## J17 · COMPLETE
+
+COMPLETE (B17 and B18 applied): put-back of a discarded knock drawn once act.inboxresolve.label.inbox.putback exists (no raw key before); B17 as J16. Waiting for CAPTURE #41 and DOORBELL #5 (CHANGE then). screens-intake 203 of 203; format, architecture, words 0; ownership 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 3, module lines 2250
+
+## B19 CHANGE applied (CAPTURE #41)
+
+Held: a row answering `whole: false` is marked refused and its document is dropped from what `release` selects (`sendRelease`); with none left `screen.held.none` is said. No sentence says why (no word row exists for it): the design stream is asked for one. OCR is offered on the document page (screens-inquiry), not here. The upload's `existed: true` with `document` is filed for the viewer as built (tests "R49 (C10)"). screens-intake 204 of 204; format, architecture, words 0.
+
+## J18 · COMPLETE
+
+COMPLETE (B19 applied): vouch withheld on whole:false (row marked refused, never selected for release; no sentence exists for why: keys asked of design, please add a word row); the existed upload with document is filed as built. OCR is screens-inquiry's. screens-intake 204 of 204; format, architecture, words 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 3, module lines 2255
+
+## B20, B21 CHANGE applied
+
+B20: a knock's detail draws the sender's stated `file_name` and `media_type` as stated (no label word exists for them: drawn as data; a label pair is asked of design). B21: put-back is drawn with its keys (`act.inboxresolve.label.inbox.putback`, `screen.inbox.putback.done`), with a reason field (`shell.reason`) the screen sends, since a screen-supplied reason is what makes the act run own; the timed-out keys (`.held`, `.undetermined`) are now in the screen's word list. Still without a word: why a parts-only held row is not vouched for. screens-intake 204 of 204; format, architecture, words 0.
+
+## J19 · COMPLETE
+
+COMPLETE (B20, B21 applied): knock shows the sender's stated file name and type (as data; no label words exist, asked of design); put-back drawn with its DEC-398 keys and a reason field (shell.reason); timed-out held/undetermined keys listed and used. Still no word for why a parts-only row is not vouched for. screens-intake 204 of 204; format, architecture, words 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 5, module lines 2262

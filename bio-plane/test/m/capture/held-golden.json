@@ -24,7 +24,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-02T00:00:00Z",
-    "bytes": 1000
+    "bytes": 1000,
+    "whole": null
    },
    {
     "bundle_id": "INFO-028",
@@ -50,7 +51,8 @@
     },
     "actor": "member:m2",
     "retrieved": null,
-    "bytes": 1028
+    "bytes": 1028,
+    "whole": null
    },
    {
     "bundle_id": "INFO-001",
@@ -76,7 +78,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-02T00:00:00Z",
-    "bytes": 1001
+    "bytes": 1001,
+    "whole": null
    },
    {
     "bundle_id": "INFO-002",
@@ -100,7 +103,8 @@
     },
     "actor": null,
     "retrieved": "2026-01-03T00:00:00Z",
-    "bytes": 1002
+    "bytes": 1002,
+    "whole": null
    },
    {
     "bundle_id": "INFO-027",
@@ -126,7 +130,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-28T00:00:00Z",
-    "bytes": 1027
+    "bytes": 1027,
+    "whole": null
    },
    {
     "bundle_id": "INFO-030",
@@ -150,7 +155,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-03T00:00:00Z",
-    "bytes": 1030
+    "bytes": 1030,
+    "whole": null
    },
    {
     "bundle_id": "INFO-032",
@@ -180,7 +186,8 @@
     },
     "actor": null,
     "retrieved": "2026-01-05T00:00:00Z",
-    "bytes": 1032
+    "bytes": 1032,
+    "whole": null
    },
    {
     "bundle_id": "INFO-033",
@@ -206,7 +213,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-06T00:00:00Z",
-    "bytes": 1033
+    "bytes": 1033,
+    "whole": null
    },
    {
     "bundle_id": "INFO-003",
@@ -232,7 +240,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
-    "bytes": 1003
+    "bytes": 1003,
+    "whole": null
    },
    {
     "bundle_id": "INFO-006",
@@ -256,7 +265,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
-    "bytes": 1006
+    "bytes": 1006,
+    "whole": null
    },
    {
     "bundle_id": "INFO-031",
@@ -282,7 +292,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
-    "bytes": 1031
+    "bytes": 1031,
+    "whole": null
    },
    {
     "bundle_id": "INFO-034",
@@ -306,7 +317,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
-    "bytes": 1034
+    "bytes": 1034,
+    "whole": null
    },
    {
     "bundle_id": "INFO-008",
@@ -336,7 +348,8 @@
     },
     "actor": null,
     "retrieved": "2026-01-09T00:00:00Z",
-    "bytes": 1008
+    "bytes": 1008,
+    "whole": null
    },
    {
     "bundle_id": "INFO-036",
@@ -360,7 +373,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-09T00:00:00Z",
-    "bytes": 1036
+    "bytes": 1036,
+    "whole": null
    },
    {
     "bundle_id": "INFO-009",
@@ -386,7 +400,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
-    "bytes": 1009
+    "bytes": 1009,
+    "whole": null
    },
    {
     "bundle_id": "INFO-007",
@@ -408,7 +423,8 @@
     },
     "actor": "m1",
     "retrieved": null,
-    "bytes": 1007
+    "bytes": 1007,
+    "whole": null
    },
    {
     "bundle_id": "INFO-010",
@@ -432,7 +448,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-11T00:00:00Z",
-    "bytes": 1010
+    "bytes": 1010,
+    "whole": null
    },
    {
     "bundle_id": "INFO-038",
@@ -456,7 +473,8 @@
     },
     "actor": null,
     "retrieved": "2026-01-11T00:00:00Z",
-    "bytes": 1038
+    "bytes": 1038,
+    "whole": null
    },
    {
     "bundle_id": "INFO-012",
@@ -480,7 +498,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-13T00:00:00Z",
-    "bytes": 1012
+    "bytes": 1012,
+    "whole": null
    },
    {
     "bundle_id": "INFO-013",
@@ -506,7 +525,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-14T00:00:00Z",
-    "bytes": 1013
+    "bytes": 1013,
+    "whole": null
    },
    {
     "bundle_id": "INFO-014",
@@ -526,7 +546,8 @@
     },
     "actor": null,
     "retrieved": null,
-    "bytes": 1014
+    "bytes": 1014,
+    "whole": null
    },
    {
     "bundle_id": "INFO-039",
@@ -552,7 +573,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-12T00:00:00Z",
-    "bytes": 1039
+    "bytes": 1039,
+    "whole": null
    },
    {
     "bundle_id": "INFO-016",
@@ -582,7 +604,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-17T00:00:00Z",
-    "bytes": 1016
+    "bytes": 1016,
+    "whole": null
    },
    {
     "bundle_id": "INFO-018",
@@ -606,7 +629,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-19T00:00:00Z",
-    "bytes": 1018
+    "bytes": 1018,
+    "whole": null
    },
    {
     "bundle_id": "INFO-020",
@@ -636,7 +660,8 @@
     },
     "actor": null,
     "retrieved": "2026-01-21T00:00:00Z",
-    "bytes": 1020
+    "bytes": 1020,
+    "whole": null
    },
    {
     "bundle_id": "INFO-021",
@@ -658,7 +683,8 @@
     },
     "actor": "m1",
     "retrieved": null,
-    "bytes": 1021
+    "bytes": 1021,
+    "whole": null
    },
    {
     "bundle_id": "INFO-019",
@@ -684,7 +710,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-20T00:00:00Z",
-    "bytes": 1019
+    "bytes": 1019,
+    "whole": null
    },
    {
     "bundle_id": "INFO-022",
@@ -708,7 +735,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-23T00:00:00Z",
-    "bytes": 1022
+    "bytes": 1022,
+    "whole": null
    },
    {
     "bundle_id": "INFO-024",
@@ -732,7 +760,8 @@
     },
     "actor": "member:m2",
     "retrieved": "2026-01-25T00:00:00Z",
-    "bytes": 1024
+    "bytes": 1024,
+    "whole": null
    },
    {
     "bundle_id": "INFO-025",
@@ -758,7 +787,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-26T00:00:00Z",
-    "bytes": 1025
+    "bytes": 1025,
+    "whole": null
    }
   ],
   "state": "held",
@@ -794,6 +824,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1000,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -821,6 +852,7 @@
     "actor": "member:m2",
     "retrieved": null,
     "bytes": 1028,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -848,6 +880,7 @@
     "actor": "m1",
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1001,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -874,6 +907,7 @@
     "actor": null,
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1029,
+    "whole": null,
     "standing": "verified",
     "vouched": {
      "by": "m2",
@@ -903,6 +937,7 @@
     "actor": null,
     "retrieved": "2026-01-03T00:00:00Z",
     "bytes": 1002,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -930,6 +965,7 @@
     "actor": "m1",
     "retrieved": "2026-01-28T00:00:00Z",
     "bytes": 1027,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -955,6 +991,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-03T00:00:00Z",
     "bytes": 1030,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -986,6 +1023,7 @@
     "actor": null,
     "retrieved": "2026-01-05T00:00:00Z",
     "bytes": 1032,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1012,6 +1050,7 @@
     "actor": null,
     "retrieved": "2026-01-06T00:00:00Z",
     "bytes": 1005,
+    "whole": null,
     "standing": "verified",
     "vouched": {
      "by": "m2",
@@ -1043,6 +1082,7 @@
     "actor": "m1",
     "retrieved": "2026-01-06T00:00:00Z",
     "bytes": 1033,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1070,6 +1110,7 @@
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
     "bytes": 1003,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1095,6 +1136,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
     "bytes": 1006,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1122,6 +1164,7 @@
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
     "bytes": 1031,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1147,6 +1190,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
     "bytes": 1034,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1178,6 +1222,7 @@
     "actor": null,
     "retrieved": "2026-01-09T00:00:00Z",
     "bytes": 1008,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1203,6 +1248,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-09T00:00:00Z",
     "bytes": 1036,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1230,6 +1276,7 @@
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
     "bytes": 1009,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1253,6 +1300,7 @@
     "actor": "m1",
     "retrieved": null,
     "bytes": 1007,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1278,6 +1326,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-11T00:00:00Z",
     "bytes": 1010,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1300,6 +1349,7 @@
     "actor": null,
     "retrieved": null,
     "bytes": 1035,
+    "whole": null,
     "standing": "verified",
     "vouched": {
      "by": "m2",
@@ -1329,6 +1379,7 @@
     "actor": null,
     "retrieved": "2026-01-11T00:00:00Z",
     "bytes": 1038,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1354,6 +1405,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-13T00:00:00Z",
     "bytes": 1012,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1381,6 +1433,7 @@
     "actor": "m1",
     "retrieved": "2026-01-14T00:00:00Z",
     "bytes": 1013,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1407,6 +1460,7 @@
     "actor": null,
     "retrieved": "2026-01-12T00:00:00Z",
     "bytes": 1011,
+    "whole": null,
     "standing": "verified",
     "vouched": {
      "by": "m2",
@@ -1432,6 +1486,7 @@
     "actor": null,
     "retrieved": null,
     "bytes": 1014,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1459,6 +1514,7 @@
     "actor": "m1",
     "retrieved": "2026-01-12T00:00:00Z",
     "bytes": 1039,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1490,6 +1546,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-17T00:00:00Z",
     "bytes": 1016,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1516,6 +1573,7 @@
     "actor": null,
     "retrieved": "2026-01-18T00:00:00Z",
     "bytes": 1017,
+    "whole": null,
     "standing": "verified",
     "vouched": {
      "by": "m2",
@@ -1545,6 +1603,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-19T00:00:00Z",
     "bytes": 1018,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1576,6 +1635,7 @@
     "actor": null,
     "retrieved": "2026-01-21T00:00:00Z",
     "bytes": 1020,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1599,6 +1659,7 @@
     "actor": "m1",
     "retrieved": null,
     "bytes": 1021,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1626,6 +1687,7 @@
     "actor": "m1",
     "retrieved": "2026-01-20T00:00:00Z",
     "bytes": 1019,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1651,6 +1713,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-23T00:00:00Z",
     "bytes": 1022,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1676,6 +1739,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-25T00:00:00Z",
     "bytes": 1024,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1703,6 +1767,7 @@
     "actor": "m1",
     "retrieved": "2026-01-26T00:00:00Z",
     "bytes": 1025,
+    "whole": null,
     "standing": "collected"
    },
    {
@@ -1729,6 +1794,7 @@
     "actor": null,
     "retrieved": "2026-01-24T00:00:00Z",
     "bytes": 1023,
+    "whole": null,
     "standing": "verified",
     "vouched": {
      "by": "m2",
@@ -1775,6 +1841,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-05T00:00:00Z",
     "bytes": 1004,
+    "whole": null,
     "set_aside": {
      "reason": "wrong page",
      "author": "m1",
@@ -1806,6 +1873,7 @@
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
     "bytes": 1037,
+    "whole": null,
     "set_aside": {
      "reason": "wrong page",
      "author": "m1",
@@ -1837,6 +1905,7 @@
     "actor": "m1",
     "retrieved": "2026-01-16T00:00:00Z",
     "bytes": 1015,
+    "whole": null,
     "set_aside": {
      "reason": "wrong page",
      "author": "m1",
@@ -1866,6 +1935,7 @@
     "actor": null,
     "retrieved": "2026-01-27T00:00:00Z",
     "bytes": 1026,
+    "whole": null,
     "set_aside": {
      "reason": "wrong page",
      "author": "m1",
@@ -1907,7 +1977,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-06T00:00:00Z",
-    "bytes": 1033
+    "bytes": 1033,
+    "whole": null
    },
    {
     "bundle_id": "INFO-009",
@@ -1933,7 +2004,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
-    "bytes": 1009
+    "bytes": 1009,
+    "whole": null
    },
    {
     "bundle_id": "INFO-027",
@@ -1959,7 +2031,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-28T00:00:00Z",
-    "bytes": 1027
+    "bytes": 1027,
+    "whole": null
    },
    {
     "bundle_id": "INFO-003",
@@ -1985,7 +2058,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
-    "bytes": 1003
+    "bytes": 1003,
+    "whole": null
    },
    {
     "bundle_id": "INFO-039",
@@ -2011,7 +2085,8 @@
     },
     "actor": "m1",
     "retrieved": "2026-01-12T00:00:00Z",
-    "bytes": 1039
+    "bytes": 1039,
+    "whole": null
    },
    {
     "bundle_id": "INFO-021",
@@ -2033,7 +2108,8 @@
     },
     "actor": "m1",
     "retrieved": null,
-    "bytes": 1021
+    "bytes": 1021,
+    "whole": null
    }
   ],
   "state": "held",

@@ -47,7 +47,7 @@ import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
 import { T51_NON_ACTS } from "./t51.mjs";
 /* R49, R50 (T51 fix round; K4168): the owners' op declarations, taken into the tables above (`registerDeclaredOps`). */
 import { createDeclaredOps } from "./declared.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -154,6 +154,8 @@ export const JUSTIFICATION_REFUSALS = [
      a lead's reason for being set aside (one of three, never blank), an explanation of how the sides differ, the
      reason a side is wrong, and the question a taken-up conflict asks. */
   "DISMISSAL_REASON_UNKNOWN", "CLARIFY_NO_EXPLANATION", "WRONG_SIDE_NO_REASON", "TAKE_UP_NO_QUESTION",
+  /* K4323 (contradiction R61): the member's own flag of two documents, refused without the reason it is kept for (C-93.42). */
+  "FLAG_NO_REASON",
   /* N364 (R1): the source acts' account is their evidence (sources R2, R6, R7), refused absent as C-121.3. */
   "NO_EVIDENCE",
   /* K727 (T18): action-plans' one reason rule (its R4), the member's account in its word for it, at the plan's acts that
@@ -437,6 +439,9 @@ const RUNGS_DATA = {
   contradictiondismiss: "reasoned", // DISMISSAL_REASON_UNKNOWN (contradiction R31: a lead is set aside for a stated reason)
   contradictionclarify: "reasoned", // CLARIFY_NO_EXPLANATION, WRONG_SIDE_NO_REASON (contradiction R32, R33)
   contradictiontakeup:  "reasoned", // TAKE_UP_NO_QUESTION (contradiction R35: the member's own question)
+  /* K4323 (fix round 2; DEC-394 (3e); contradiction R61): a member's own flag of two documents as contradicting says why, refused
+     FLAG_NO_REASON (C-93.42); the candidate it records is settled as any (R31–R36) and nothing it writes is erased. */
+  contradictionflag:    "reasoned", // FLAG_NO_REASON (contradiction R61: the member's reason for the flag)
   contradictionresolve: "reasoned", // NO_CONCLUSION (contradiction R36, through basis-versions' conclude)
   resolutiondefect:     "reasoned", // NO_REASON (entities R38: a defect is reported with why)
   /* N364 (R1), on R3's rule: a member's act on a source's history, each asking its evidence (R1's "or evidence",
@@ -994,6 +999,10 @@ const NON_ACTS_DATA = {
   contradictiondismiss: "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
   contradictionclarify: "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
   contradictiontakeup: "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
+  /* K4323 (R51): the owner's declared word. Its id is contradiction's own, which the design's words.json does not key (it keys the
+     owed act as `act.owed_contradictionflag.does`, another sentence), so `word` would refuse it; `localize` answers the row the list
+     holds for that id, whatever English is given here, so a word changed there changes this reason with it. */
+  contradictionflag: localize("contradiction.declared.contradictionflag", "document-directed: keyed by a passage in each of two documents the member may see, reached from either document; sets them side by side as a contradiction for the project to settle, with the member's reason, and changes neither document"),
   contradictionrecommend: "run-directed: a run's recommendation of the respects in which a candidate's sides may differ, keyed by (run, candidate); the run is the subject and no bundle state offers it",
   resolutiondefect: "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
   contradictioncandidates: "read: the contradictions shown on an inquiry, a passage, an entity, a bundle, a project or one candidate, each with its sides, label, weight and state; writes nothing",

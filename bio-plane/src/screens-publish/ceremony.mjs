@@ -22,6 +22,8 @@ export const CEREMONY = Object.freeze({
     return {
       project: { op: "image", query: { id: s[0] } },
       copy: { op: "reviewcopy", query: { draft: s[1] || "" }, subject: true },
+      // C49: the project's drafts, for "Which draft" and the live review links on any of them
+      drafts: { op: "casedrafts", query: { project: s[0] }, empty: function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; } },
       group: { op: "groupidentity" },
     };
   },
@@ -59,6 +61,13 @@ export const CEREMONY = Object.freeze({
     const c = copy && copy.case ? copy.case : {};
     const out = [cs.title(P.titleOf2(cs, copy, c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null), { thing: "case" }),
       P.noCase(cs, copy)];
+    // C49 (DEC-394, DEC-395): "Which draft" among the project's drafts, and how many review links are live on any of them; a list that
+    // could not be read is drawn failed, never as one draft, and the ceremony goes on without it
+    const dR = view.data.drafts;
+    const all = dR && dR.state === "ok" && Array.isArray(dR.value.drafts) ? dR.value.drafts : [];
+    const list = P.draftCopies(cs, view, all, draft, copyR);
+    out.push(dR && dR.state !== "ok" && dR.state !== "empty" ? cs.state(dR, function () { return ""; })
+      : P.draftChooser(cs, view, "ceremony", list, draft, projectTitle) + P.liveNote(cs, view, "ceremony", list));
     if (!copy) { out.push(cs.state(copyR, function () { return ""; })); return out.join(""); }
     // R50: the requests name the draft and the project, and add only what the member attested in this step (`P.attested`)
     const args = Object.assign(P.caseArgs(copy, draft), ui.attestedBody || {});
@@ -107,7 +116,7 @@ export const CEREMONY = Object.freeze({
 
     // R71: an edition already public is named with its link; the draft that is itself published offers nothing to prepare
     if (pubLatest > 0) {
-      out.push('<p role="status" data-published="' + pubLatest + '">' + cs.w("signing.ceremony.signednow", { edition: String(pubLatest) }) + "</p>"
+      out.push('<p role="status" data-published="' + pubLatest + '">' + cs.w("screen.ceremony.published.edition", { n: String(pubLatest) }) + "</p>"
         + '<a href="/app/published/' + encodeURIComponent(caseId + "/" + pubLatest) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a>");
       if (ownPublished) return out.join("");
     } else if (pubGone) out.push(cs.state(pubR, function () { return ""; }));
@@ -329,7 +338,7 @@ export const CEREMONY = Object.freeze({
                 return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id, edition: String(x.edition === undefined ? "" : x.edition), case: x.id }) + "</li>";
               }).join("") + "</ul></details><p>" + (evidence > 0 ? cs.w("screen.ceremony.signs.count", { n: String(list.length),
                 findings: String(list.filter(function (x) { return x.kind === "finding"; }).length), evidence: String(evidence) })
-                : cs.w("screen.ceremony.signs.linesabout")) + "</p>"
+                : cs.w("screen.ceremony.signs.count.findings", { n: String(list.length), findings: String(list.filter(function (x) { return x.kind === "finding"; }).length) })) + "</p>"
               + (named === 1 ? '<p class="mk-note" data-unpublished="1">' + cs.w("screen.published.rests.on.the.council.minutes.one") + "</p>"
                 : named > 1 ? '<p class="mk-note" data-unpublished="' + named + '">' + cs.w("screen.published.rests.on.the.council.minutes", { count: String(named) }) + "</p>" : "");
           })
@@ -367,6 +376,15 @@ export const CEREMONY = Object.freeze({
   },
 
   acts: [
+    {
+      // C49: "Which draft": the project's drafts read once more, and the ceremony opened on the one chosen (`pickDraft`).
+      op: "casedrafts", label: "act.casedrafts.label.ceremony",
+      send: function (view, el, cs) {
+        view.ui.pickDraft = String(cs.value("drafts-ceremony") || "");
+        return { query: { project: String(view.subject || "").split("/")[0] } };
+      },
+      done: function (view, answer, cs) { return view.parts.pickDraft(view, answer, cs, "ceremony"); },
+    },
     {
       // R3: "Check again": the checks read once more.
       op: "publishpreflight", label: "act.publishpreflight.label.ceremony",

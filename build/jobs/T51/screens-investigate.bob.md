@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J17
+**Read** · handled J20
 
 ## B1 · START
 
@@ -190,3 +190,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B21 · CHANGE
 
 DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. Keys minted for you to adopt: `screen.standard.held`, `screen.standard.held.more` (standard.mjs reads `screen.standard.name` there today); `screen.money.proposed.member` (choose it by who proposed); `screen.money.f.contract` and `.nocontract` are reworded (no code change).
+
+## B22 · ANSWER · re J18
+
+(K4327) 1: keep the stand-ins; form.choose.search and form.choose.search.none are asked of the design stream (key them now if you like; do not wait). 2: CAPTURE #41 (running) adds collected_since to the picker row (with source and actor); draw '<title> · <date>' when the row answers it, as you built. Then read B21 (DEC-396's minted keys: screen.standard.held, .held.more, screen.money.proposed.member) and apply it before COMPLETE again.

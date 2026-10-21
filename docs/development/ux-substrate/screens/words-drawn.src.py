@@ -6967,6 +6967,30 @@ REWRITE.update({
   'screen.money.f.nocontract': 'Choose the contract.',   # DEC-396: B444 item 8
 })
 
+# DEC-397: B446 (K4326), B447 (K4327)
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT.held', en="The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.", protected=False, note='DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept'))
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT.undetermined', en="The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.", protected=False, note='DEC-397: B446: a timed-out capture whose kept state cannot be told'))
+W.append(dict(key='form.choose.search', en='Search your documents', protected=False, note='DEC-397: B447 (screens-investigate C95): the document picker\'s search box label'))
+W.append(dict(key='form.choose.search.none', en='No document matches. Try other words, or add the document first.', protected=False, note='DEC-397: B447: the document picker\'s search found nothing'))
+
+# DEC-398: B448 (K4328), B450 (K4331)
+W.append(dict(key='act.inboxresolve.label.inbox.putback', en='Put it back', protected=False, note='DEC-398: B448 a: the button on a discarded knock (inboxresolve to new)'))
+W.append(dict(key='act.inboxresolve.putback.does', en='Returns material you discarded to the inbox as new, so it can be read and placed again. The discard and its reason stay on the record.', protected=False, note='DEC-398: B448 a: what Put it back does'))
+W.append(dict(key='screen.inbox.putback.done', en='Put back in the inbox as new. The discard and its reason stay on the record.', protected=False, note='DEC-398: B448 a, B450: the sentence after Put it back'))
+W.append(dict(key='screen.document.retire.refused.illegal', en='This copy cannot be retired: it is not vouched for yet, or it is already retired. Nothing was recorded.', protected=False, note='DEC-398: B448 b'))
+W.append(dict(key='screen.document.retire.refused.cited', en='This copy is cited by {questions}. Remove those citations first, then retire it. Nothing was recorded.', protected=False, note='DEC-398: B448 b: {questions} the citing questions'))
+W.append(dict(key='screen.group.hosting.now.date', en='Recorded on {date}:', protected=False, note='DEC-398: B450 (C88): who holds the hosting account, recorded with no recorder named'))
+W.append(dict(key='screen.group.export.count.tables.one', en='1 table', protected=False, note='DEC-398: B450 (C85)'))
+W.append(dict(key='screen.group.export.count.tables.other', en='{n} tables', protected=False, note='DEC-398: B450 (C85)'))
+W.append(dict(key='screen.security.nosignatures.next', en="An administrator can check that your team's Civicsmith is allowed to reach the signature service. The scanner tries again daily.", protected=False, note='DEC-398: B450 (C83): Security, when the scanner holds no signatures'))
+W.append(dict(key='screen.group.domain.checked', en='Checked {date} at {time}.', protected=False, note='DEC-398: B450 (C86)'))
+W.append(dict(key='shell.field.needed', en='Fill in {field} first. Nothing was sent.', protected=False, note="DEC-398: B450 (C87): the shell's neutral refusal for an empty required field"))
+W.append(dict(key='screen.review-copy.links.shared', en='shared {date}', protected=False, note="DEC-398: B450 (C49): a live review link's row"))
+W.append(dict(key='screen.review-copy.links.comments.one', en='1 comment', protected=False, note='DEC-398: B450 (C49)'))
+W.append(dict(key='screen.review-copy.links.comments.other', en='{n} comments', protected=False, note='DEC-398: B450 (C49)'))
+W.append(dict(key='screen.case-editor.links.live.one', en='1 review link is live.', protected=False, note='DEC-398: B450 (C49): the singular of screen.case-editor.links.live'))
+W.append(dict(key='screen.ceremony.links.live.one', en='1 review link is live.', protected=False, note='DEC-398: B450 (C49): the singular of screen.ceremony.links.live'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

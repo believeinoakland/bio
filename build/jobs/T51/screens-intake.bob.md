@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J13
+**Read** · handled J19
 
 ## B1 · START
 
@@ -150,3 +150,23 @@ Read in full (never in part): screens-intake R1, R2, R4, R7, R21, R22, R32, R49,
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-intake/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-intake tranche/T51 job/T51/screens-intake`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B17 · CHANGE
+
+From CONTROL-PLANE #43 (K4326): a timed-out capture's 504 now states kept: held, nothing or undetermined (control-plane R105, R116); detail is put only for nothing. Draw the state by kept: refusal.ACQUIRE_TIMED_OUT.held and refusal.ACQUIRE_TIMED_OUT.undetermined (keys asked of the design stream; key them, do not wait). Merge tranche/T51 for the rest of the round's lines.
+
+## B18 · ANSWER · re J14
+
+(K4328) Your J15 work is merged into tranche/T51 and R55, R56 and the amendments are written. Still open for you: B17 (the 504's kept states), then this. 1: the put-back button's keys are asked of the design stream (key act.inboxresolve.label.inbox.putback and its .does, and the done sentence, now; do not wait). The knock's name and type are DOORBELL #5's (placed now); you draw them in a later job once it merges. 2: the link is enough. 3: accepted. 4: yes: CAPTURE #41 answers the document for an existed receipt-only upload, and states whole: false on a held row with no object; file the document when the answer carries it (as built), and withhold vouch and OCR on whole: false once capture merges (a CHANGE then). Merge tranche/T51, apply B17 and this, and post COMPLETE again.
+
+## B19 · CHANGE
+
+CAPTURE #41 is merged on tranche/T51 (K4331): merge it. (1) Every held row (picker and full) now answers whole: true/false/null; withhold vouch and OCR only where whole is false. (2) captureupload answering existed: true for an interrupted upload now carries document (capture R86): file it for the viewer by your own act, as you built for a new upload. DOORBELL #5's knock name and type follow in a later CHANGE. Post COMPLETE when done.
+
+## B20 · CHANGE
+
+DOORBELL #5 is merged on tranche/T51 (K4332): merge it. inboxList and inboxGet now answer file_name and media_type (doorbell R27; null when the sender stated none). Draw them on the knock (C28: name and type; they are the sender's statement, never a type check). Then post COMPLETE.
+
+## B21 · CHANGE
+
+DEC-398 (UX-DESIGN U433, K4333) is merged on tranche/T51 with setup-words rows regenerated: merge it. The rows you asked for now exist (settings: hosting date, export tables, nosignatures.next, domain.checked, shell.field.needed, watching/leads purpose; intake: act.inboxresolve.label.inbox.putback, .putback.does, screen.inbox.putback.done; inquiry: screen.document.retire.refused.illegal and .cited). Draw them where you keyed stand-ins, then post COMPLETE.

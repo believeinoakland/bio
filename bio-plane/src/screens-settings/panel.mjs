@@ -27,7 +27,7 @@ export function aiPanel(cs, view, o) {
   const T = (k, f) => String(W(k, f)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
   const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "suggestions"];
   const p = o.owner === "group" ? "aig" : "aio";
-  const name = (by) => (o.names ? o.names(by) : String(by || "").replace(/^member:/, ""));
+  const name = (by) => (o.names ? o.names(by) : cs.memberName(String(by || "").replace(/^member:/, "")));
   const scopeKey = (s) => s === "overall" ? S + "scope.overall" : s === "per_member" ? S + "scope.per_member" : "ai.use." + s + ".name";
   const scopeName = (s) => T(scopeKey(s));
   const unitName = (u) => T(S + "unit." + u);

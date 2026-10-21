@@ -174,7 +174,7 @@ export const findIn = Object.freeze({
           const count = (Array.isArray(it.recorded) ? it.recorded.length : 0) + (ack ? ack.n : 0);
           // R39, R48 (5): a passage keeps its acts after a fact is recorded from it and says how many facts it has; an already-cited
           // passage says so. Its cite act stays beside who recorded it: it is cited into the question chosen, not recorded again.
-          const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : "")
+          const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: cs.memberName(rec.by || rec.member || rec.who) }) : "")
             + (op ? recordAct(op, ki, ii, it) : "");
           return cs.row(cs.mark("origin", "search"), '<span class="rec">' + cs.w("screen.find-in.quote", { words: String(it.words || it.as_read || "") }) + "</span>"
             + '<span class="meta">' + where + "</span>" + sheet + aliased

@@ -45,9 +45,12 @@ test("R3 an event whose order is undetermined is drawn so, with the evidence tha
 test("R3 createevent from a passage; addparticipant; relate \"Link events\" and \"Cite which came first\"; recorddatedfact (a day or a month); each read again after", async () => {
   const p = await open(at, { plane: { createevent: ok({ ok: true, event_id: "EVT-2026-0050", attestation_ids: [9] }), addparticipant: ok({ ok: true }), relate: ok({ ok: true }), recorddatedfact: ok({ ok: true }) } });
   fill(p, { "tl-doc": SHA, "tl-kind": "vote" });
+  const reads = p.byOp("timeline").length;
   await press(p, "createevent", { reason: "the minutes record the vote" });
-  assert.deepEqual(p.byOp("createevent")[0].body, { kind: "vote", attestations: [{ captureSha: SHA, extent: { kind: "document" } }], concerns: [ENT], reason: "the minutes record the vote" });
-  assert.equal(p.byOp("timeline").at(-1).query.set, ENT + ",EVT-2026-0050", "the new event joins the set and the timeline is read again");
+  assert.deepEqual(p.byOp("createevent")[0].body, { kind: "vote", attestations: [{ captureSha: SHA, extent: { kind: "document" } }], reason: "the minutes record the vote" }, "C54: attested by the passage chosen, tied to no person the page guessed");
+  assert.ok(p.byOp("timeline").length > reads, "the timeline is read again");
+  assert.equal(p.byOp("timeline").at(-1).query.set, ENT, "by the set the project's document names, and by its captures (events R53), not by a list the page kept");
+  assert.equal(p.byOp("timeline").at(-1).query.captures, SHA + "," + SHA2);
   fill(p, { "tl-doc": SHA, "tl-event": "EVT-2026-0001", "tl-who": ORG, "tl-role": "voted", "tl-vote": "yes" });
   await press(p, "addparticipant", { reason: "the roll call" });
   assert.deepEqual(p.byOp("addparticipant")[0].body, { eventId: "EVT-2026-0001", entityId: ORG, role: "voted", attestation: { captureSha: SHA, extent: { kind: "document" } }, voteValue: "yes", reason: "the roll call" });

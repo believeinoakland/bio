@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (18102 design words, 1068 protected; SHA-256
-   99b4d464e60714a76da8c220d283976d949390c81f0d5d230206778fed8e3bbd) followed by 7132 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (18124 design words, 1068 protected; SHA-256
+   3bf4992d9e8fe5d7670f5d761bbec6bdecae69a57d9383f68e1c8f593822c42e) followed by 7136 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "99b4d464e6";
+export const WORDS_COMMIT = "3bf4992d9e";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10832,6 +10832,26 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.FLAG_NO_PASSAGE","Each side of a contradiction names a passage: a document and the part of it. One is missing, is not held here, or is not one you can see; the answer says which. Choose it again. Nothing was written.","DEC-396: B444 item 12: refusal when saying two documents contradict",null,false,"design"],
   ["refusal.FLAG_SAME_DOCUMENT","A contradiction is between two documents, and both passages are in the same one. Choose a passage in a different document. Nothing was written.","DEC-396: B444 item 12: refusal when saying two documents contradict",null,false,"design"],
   ["refusal.FLAG_NO_REASON","Saying two documents contradict is a kept decision, and a kept decision says why. Write how they disagree, in your own words. Nothing was written.","DEC-396: B444 item 12: refusal when saying two documents contradict",null,false,"design"],
+  ["refusal.ACQUIRE_TIMED_OUT.held","The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.","DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept",null,false,"design"],
+  ["refusal.ACQUIRE_TIMED_OUT.undetermined","The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.","DEC-397: B446: a timed-out capture whose kept state cannot be told",null,false,"design"],
+  ["form.choose.search","Search your documents","DEC-397: B447 (screens-investigate C95): the document picker's search box label",null,false,"design"],
+  ["form.choose.search.none","No document matches. Try other words, or add the document first.","DEC-397: B447: the document picker's search found nothing",null,false,"design"],
+  ["act.inboxresolve.label.inbox.putback","Put it back","DEC-398: B448 a: the button on a discarded knock (inboxresolve to new)","Discards material handed in, with a reason.",false,"design"],
+  ["act.inboxresolve.putback.does","Returns material you discarded to the inbox as new, so it can be read and placed again. The discard and its reason stay on the record.","DEC-398: B448 a: what Put it back does",null,false,"design"],
+  ["screen.inbox.putback.done","Put back in the inbox as new. The discard and its reason stay on the record.","DEC-398: B448 a, B450: the sentence after Put it back",null,false,"design"],
+  ["screen.document.retire.refused.illegal","This copy cannot be retired: it is not vouched for yet, or it is already retired. Nothing was recorded.","DEC-398: B448 b",null,false,"design"],
+  ["screen.document.retire.refused.cited","This copy is cited by {questions}. Remove those citations first, then retire it. Nothing was recorded.","DEC-398: B448 b: {questions} the citing questions",null,false,"design"],
+  ["screen.group.hosting.now.date","Recorded on {date}:","DEC-398: B450 (C88): who holds the hosting account, recorded with no recorder named",null,false,"design"],
+  ["screen.group.export.count.tables.one","1 table","DEC-398: B450 (C85)",null,false,"design"],
+  ["screen.group.export.count.tables.other","{n} tables","DEC-398: B450 (C85)",null,false,"design"],
+  ["screen.security.nosignatures.next","An administrator can check that your team's Civicsmith is allowed to reach the signature service. The scanner tries again daily.","DEC-398: B450 (C83): Security, when the scanner holds no signatures",null,false,"design"],
+  ["screen.group.domain.checked","Checked {date} at {time}.","DEC-398: B450 (C86)",null,false,"design"],
+  ["shell.field.needed","Fill in {field} first. Nothing was sent.","DEC-398: B450 (C87): the shell's neutral refusal for an empty required field",null,false,"design"],
+  ["screen.review-copy.links.shared","shared {date}","DEC-398: B450 (C49): a live review link's row",null,false,"design"],
+  ["screen.review-copy.links.comments.one","1 comment","DEC-398: B450 (C49)",null,false,"design"],
+  ["screen.review-copy.links.comments.other","{n} comments","DEC-398: B450 (C49)",null,false,"design"],
+  ["screen.case-editor.links.live.one","1 review link is live.","DEC-398: B450 (C49): the singular of screen.case-editor.links.live",null,false,"design"],
+  ["screen.ceremony.links.live.one","1 review link is live.","DEC-398: B450 (C49): the singular of screen.ceremony.links.live",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -16734,7 +16754,9 @@ export const WORD_ROWS = Object.freeze([
   ["screen.doorbell.purpose","Hand material to the team. You need no account; the page says what will happen to what you send.",null,null,false,"design"],
   ["screen.about-knocker.name","A source",null,null,false,"design"],
   ["screen.leads.name","Leads",null,null,false,"design"],
+  ["screen.leads.purpose","Write down something you were told, record who looked into it and what they found, and share it with a project.",null,null,false,"design"],
   ["screen.watching.name","Watched addresses",null,null,false,"design"],
+  ["screen.watching.purpose","Every address your team watches: what is due to be checked, pausing the watching, and the sweeps that look through a site.",null,null,false,"design"],
   ["act.bootstrap.label.install","Continue to Cloudflare",null,"Takes you to Cloudflare's own page to allow this installer into your account, then sets up your team's Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.",true,"design"],
   ["act.owed_installupdate.label.install","Update it",null,"Takes you to the update page for the Civicsmith already in this account, set to the newest release. Its records, members and settings are kept, and nothing changes until you allow it on Cloudflare's page.",true,"design"],
   ["act.owed_installalongside.label.install","Install alongside it",null,"Installs a second Civicsmith in this same account, for another team, under its own short name and address. The one already here is not touched, and neither can read the other's records.",true,"design"],
@@ -20832,6 +20854,7 @@ export const WORD_ROWS = Object.freeze([
   ["control-plane.declared.accountpropose","case-directed: keyed by a case, reached from its account; the system's draft of the account, labeled machine work, never the published account until a member writes it",null,null,false,"code"],
   ["control-plane.declared.captureupload","upload-directed: a member's bytes held as a capture under their digest, in her own name, with its receipt; reached from the upload, never beside a bundle",null,null,false,"code"],
   ["control-plane.declared.clockpropose","action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it",null,null,false,"code"],
+  ["control-plane.declared.interfacewords","read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing",null,null,false,"code"],
   ["control-plane.declared.subscriptionsignin","credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle",null,null,false,"code"],
   ["control-plane.draft.draft_over_limit","the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.",null,null,false,"code"],
   ["corpus-export.declared.export","writes an export manifest of what is already there",null,null,false,"code"],
@@ -21239,10 +21262,13 @@ export const WORD_ROWS = Object.freeze([
   ["doorbell.checks.changing_a_knocks_status_records","Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.",null,null,false,"code"],
   ["doorbell.checks.this_teams_inbox_read_your","This team's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this team has set its Civicsmith up rather than a judgement about what you sent — a team that has configured evidence storage can keep far more — and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the team's members how to get the whole of it to them. The team can see how often its doorbell turns people away.",null,null,false,"code"],
   ["doorbell.checks.your_material_was_not_received","Your material was not received. This team's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly — the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The team can see how often its doorbell turns people away.",null,null,false,"code"],
+  ["doorbell.declared.doorbelltally","read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing",null,null,false,"code"],
+  ["doorbell.declared.inboxget","read: one knock in the inbox, keyed by knock id; writes nothing",null,null,false,"code"],
   ["doorbell.declared.inboxpull","knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle",null,null,false,"code"],
   ["doorbell.declared.inboxresolve","inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)",null,null,false,"code"],
   ["doorbell.declared.knock","an unauthenticated request to be let in",null,null,false,"code"],
   ["doorbell.declared.knocksof","read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing",null,null,false,"code"],
+  ["doorbell.declared.pulledknocks","read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing",null,null,false,"code"],
   ["doorbell.door.inline_storage_needs_evidence","this team's inbox stores knocks inline; large material needs its evidence storage configured",null,null,false,"code"],
   ["doorbell.index.argument_must_be_one_of","{argument} must be one of {shape}; {stringify} is not",null,null,false,"code"],
   ["doorbell.index.bytes_not_held_digest","the knock's bytes could not be held under their own digest, so nothing was written",null,null,false,"code"],

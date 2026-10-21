@@ -54,7 +54,7 @@ function render(cs, view) {
       .concat((t.skipped || []).map((s) => `<li>${cs.w(S + "step.skipped", { date: cs.date(s.day), why: s.why || "", source: srcOf(s.day) })}</li>`))
       .concat([`<li>${p.date ? cs.w(S + "step.due", { date: cs.date(p.date), zone: t.zone || "" }) : cs.mark("gap", "undetermined", { reason: p.undetermined && p.undetermined.why ? p.undetermined.why : cs.w(S + "nodate") })}</li>`]);
     const machine = p.label && p.label.machine_work;
-    return `<div class="mk-msg" data-proposal="${cs.esc(p.key)}">${machine ? cs.mark("origin", "machine") : ""} <b>${cs.w(S + "proposal", { by: String(p.proposed_by || "").replace(/^(member|class):/, "") })}</b>`
+    return `<div class="mk-msg" data-proposal="${cs.esc(p.key)}">${machine ? cs.mark("origin", "machine") : ""} <b>${cs.w(S + "proposal", { by: view.parts.who(cs, p.proposed_by) })}</b>`
       + `<ol class="mk-list">${steps.join("")}</ol>`
       + cs.act("clockadopt", { label: "act.clockadopt.label.due-date", tone: "primary", data: { proposal: p.key } }) + "</div>";
   };

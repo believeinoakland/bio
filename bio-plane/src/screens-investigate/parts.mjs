@@ -72,18 +72,34 @@ export const PARTS = Object.freeze({
     const n = Number(String(page || "").trim());
     return { captureSha: s, extent: Number.isInteger(n) && n > 0 ? { kind: "pdf-page", page: n - 1 } : { kind: "document" } };
   },
-  /** R34: "Which document": a choice among the documents `heldcaptures` answers (`view.data.docs`), by title, each value the
-   *  capture's digest (`capture.sha256`, capture R77), never typed. With none, the choice's empty state is drawn and nothing is
-   *  sent. The passage on the document is the whole document until the page lets a member select its words. */
+  /** R34, R52, C95: "Which document": a choice among the documents `heldcaptures` answers (`view.data.docs`, the picker read, capture R77),
+   *  by title and the date it was collected, each value the capture's digest (`capture.sha256`), never typed. The documents of `o.project`
+   *  (the project the screen is about, when it has one) come first, the owner's order within each group; a search box (drawn when there
+   *  are two or more documents) narrows the choice by title on the page, reading nothing more. With none, the choice's empty state is
+   *  drawn and nothing is sent. The passage on the document is the whole document until the page lets a member select its words. The
+   *  digests shown are kept in `view.ui["docshown:" + id]` for the passage picker of the same choice. */
   docChoice(cs, view, id, o) {
     const d = view.data && view.data.docs;
     o = o || {};
     if (d && d.state === "failed") return cs.state("docs", view, () => "");
-    const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
-    const options = rows.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256)
-      .map((r) => ({ value: r.capture.sha256, text: r.title || cs.w("screen.held.untitled").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e])) }));
-    if (d && d.state !== "loading" && !options.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
-    return cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
+    const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
+    const held = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
+    const rows = held.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256);
+    const here = typeof o.project === "string" ? o.project : "";
+    const ordered = here ? rows.filter((r) => r.project === here).concat(rows.filter((r) => r.project !== here)) : rows;
+    const titleOf = (r) => (typeof r.title === "string" && r.title ? r.title : plain(cs.w("screen.held.untitled")));
+    const asked = String((view.ui && view.ui["docq:" + id]) || "").trim();
+    const shown = asked ? ordered.filter((r) => titleOf(r).toLowerCase().includes(asked.toLowerCase())) : ordered;
+    const options = shown.map((r) => {
+      const day = typeof r.collected_since === "string" && r.collected_since ? plain(cs.date(r.collected_since, { year: true })) : "";
+      return { value: r.capture.sha256, text: day ? titleOf(r) + " · " + day : titleOf(r) };
+    });
+    if (view.ui) view.ui["docshown:" + id] = shown.map((r) => r.capture.sha256);
+    if (d && d.state !== "loading" && !rows.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+    const search = rows.length > 1
+      ? cs.field(id + "-q", "shell.search", { value: asked, typing: (cs2, view2, value) => { cs2.set("docq:" + id, String(value || "").trim()); } }) : "";
+    if (d && d.state !== "loading" && !options.length) return search + `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+    return search + cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
       + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
   },
   /** R34, C59: the passage the member chose: the chosen document's digest and, when she selected words in `wordsId`'s picker, the extent of
@@ -104,13 +120,22 @@ export const PARTS = Object.freeze({
   passagePick(cs, view, docId, wordsId, later) {
     const d = view.data && view.data.docs;
     const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
-    const shas = rows.map((r) => r && r.capture && r.capture.sha256).filter((x) => typeof x === "string" && x);
+    const shown = view.ui && view.ui["docshown:" + docId];
+    const shas = Array.isArray(shown) ? shown : rows.map((r) => r && r.capture && r.capture.sha256).filter((x) => typeof x === "string" && x);
     if (!shas.length) return "";
     const made = view.ui["choice:" + docId];
     const sha = shas.includes(made) ? made : shas[0];
     const rd = later(cs, view, "words:" + sha, "reading", { query: { sha256: sha } });
     return cs.state(rd, (v) => cs.words(wordsId, { units: (Array.isArray(v && v.text_units) ? v.text_units : []).filter((u) => u && String(u.text || "").trim()).slice(0, 500)
       .map((u) => ({ extent: JSON.stringify(u.extent && typeof u.extent === "object" ? u.extent : { kind: "document" }), text: String(u.text) })) }));
+  },
+  /** R111, C94: who a stamp names, by handle: a member's id (`member:<id>` or the bare id) through the kit's `memberName`, the founder included and a
+   *  member with no handle the kit's word, never the id; a class or machine (`class:legal_lookup`) is no member and keeps its own name. Text. */
+  who(cs, by) {
+    const s = String(by == null ? "" : by).trim();
+    if (!s) return "";
+    if (/^(class|machine|agent):/.test(s)) return s.replace(/^(class|machine|agent):/, "");
+    return cs.memberName(s.replace(/^member:/, ""));
   },
   /** A record id drawn as a reference to its screen (interface-shell R16): a person or organisation the record follows
    *  opens `person`, a document, capture, question or project its own; anything else carries its card only. */
@@ -251,7 +276,7 @@ export const PARTS = Object.freeze({
       const letter = s.grade && /^[A-D]$/.test(s.grade.assertion || "") ? cs.grade("connection", s.grade.assertion) : "";
       /* R35, R17: a step a member backed with a passage shows who attached it and when beside its citation, */
       const by = s.kind === "step_source" && s.attached_by
-        ? ` <span class="mk-small" data-attached="${cs.esc(s.id)}">${cs.w(o.words.attached, { by: String(s.attached_by).replace(/^member:/, ""), date: cs.date(s.at || "") })}</span>` : "";
+        ? ` <span class="mk-small" data-attached="${cs.esc(s.id)}">${cs.w(o.words.attached, { by: cs.memberName(String(s.attached_by).replace(/^member:/, "")), date: cs.date(s.at || "") })}</span>` : "";
       return cs.row(letter, `<b>${cs.esc(label(s.from))}</b> → <i>${cs.esc(s.word || s.kind)}</i> → <b>${cs.esc(label(s.to))}</b>`
         + (c === "lead" ? ` <b>${cs.w(s.label === "hunch" || s.class === "hunch" ? o.words.hunch : o.words.declared)}</b>` : ""),
         (ev ? ev : c === "lead" ? "" : cs.mark("gap", "undetermined", { reason: cs.w(o.words.nosource) })) + by);

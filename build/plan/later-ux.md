@@ -45,3 +45,8 @@
 - queue · "What you answered" lists only queue's own receipts (R59): an expertise confirm or other derived to-do answered elsewhere is not shown back · S-34, C72 (K4307) · 2026-10-21
 - queue, every list · a member with no handle is named by her id (queue-producers R46's fallback); a word such as "A member" would serve · QUEUE-PRODUCERS #21 J8 · 2026-10-21
 - money (investigate) · a figure a member proposed is labelled "proposed by the machine; not included" (`screen.money.proposed`); a member-proposal row is owed · SCREENS-INVESTIGATE #11 J15 · 2026-10-21
+- Matter pickers and the action kinds · adopt DEC-396's minted `screen.matter.pick.choose`, `.pick.none`, `screen.matter.routes.none` in screens-action (wording; merged modules) · DEC-396, K4325 · 2026-10-21
+- Document page · `heldsetaside` drawn on document as well as Held (SCREENS-INQUIRY J17, C33) · K4328 · 2026-10-21
+- Document pickers · adopt DEC-397's `form.choose.search` and `.none` in screens-investigate (stand-ins `shell.search`, `state.empty` today; wording, merged module) · K4330 · 2026-10-21
+- Inbox · a safe view of a knock's bytes before the pull (DOORBELL #5's record: member read through file-safety's scan; needs a drawing first) · K4332 · 2026-10-21
+- Drafts · adopt DEC-398's `screen.review-copy.links.shared`, `.comments.one/.other`, `links.live.one` in screens-publish (wording, merged module) · K4333 · 2026-10-21

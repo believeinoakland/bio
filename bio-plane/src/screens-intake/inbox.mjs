@@ -94,11 +94,17 @@ function renderInbox(cs, view) {
         { help: ["screen.inbox.knocker.help1", "screen.inbox.knocker.help2"] });
     const door = typeof k.capture_sha === "string" && k.capture_sha && src
       ? cs.row(cs.icon("person"), cs.w("screen.inbox.source.line"), cs.ref("source", k.capture_sha, plain(cs.w("screen.about-knocker.name")), [cs.w("screen.inbox.source.line")])) : "";
-    return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${ladder(at)}`
+    /* C28 (R7, R32): the knock's fingerprint, labelled, shown before the member decides what to do with it */
+    const print = typeof k.sha256 === "string" && k.sha256 ? `<p class="mk-small"><span class="meta">${cs.w("screen.document.fingerprint")}</span> <span class="mk-data">${cs.esc(k.sha256)}</span></p>` : "";
+    /* C28 (doorbell R27, B20): what the sender stated of the file, drawn as stated (never a type check) */
+    const stated = [k.file_name, k.media_type].filter((x) => typeof x === "string" && x).map((x) => `<span class="mk-data">${cs.esc(x)}</span>`).join(" · ");
+    return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${stated ? `<p class="mk-small">${stated}</p>` : ""}${print}${ladder(at)}`
       + (k.status === "new" ? `<div class="mk-acts">${cs.act("inboxpull", { tone: "primary" })}</div>`
         /* R32 (1): discarding asks why first (`inbox.discard.why`), the words sent as `reason` */
         + cs.field("cx-why", "inbox.discard.why", { area: true, rec: true, value: L.why || "" })
-        + `<div class="mk-acts">${cs.act("inboxresolve")}</div>` : "")
+        + `<div class="mk-acts">${cs.act("inboxresolve")}</div>`
+        /* C28 (B18): a discarded knock can be put back (`inboxresolve` to `new`, doorbell R3); DEC-398 gave its keys */
+        : k.status === "discarded" ? cs.field("cx-back", "shell.reason", { area: true, rec: true, value: L.back || "" }) + `<div class="mk-acts">${cs.act("inboxresolve", { label: "act.inboxresolve.label.inbox.putback", data: { status: "new" } })}</div>` : "")
       + link + (door ? cs.sheet(door) : "") + knocker + reference + "</section>";
   });
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.inbox.sub")}</p></div>`
@@ -108,6 +114,7 @@ function renderInbox(cs, view) {
         L.holder && L.holder.id ? { holder: { html: cs.ref("document", L.holder.id, L.holder.title || cs.w("shell.card.document").replace(/<[^>]*>/g, ""), []) } } : undefined)
       : L.pulled ? said(L.pulled === "existed" ? "screen.inbox.existed" : "screen.inbox.pulled") : "")
     + (L.discarded ? said("screen.inbox.discarded") : "")
+    + (L.putback ? said("screen.inbox.putback.done") : "")
     + (L.linked ? said("screen.inbox.link.done") : "")
     + list;
 }
@@ -139,11 +146,18 @@ async function donePull(view, answer, cs) {
 /* R7: "Discard with a reason" (`inboxresolve` to `discarded`): a reasoned act, so the shell asks the reason first and
  * sends it as `reason` (setup-page R11's rule); `RESOLVE_NO_REASON` drawn by its words, the knock left as it was. */
 function sendDiscard(view, el, cs) {
+  /* put back: the shell asks the reason (reasonField) and the knock returns to `new` */
+  if (el && el.dataset && el.dataset.status === "new") {
+    const back = String(cs.value("cx-back") || "").trim();
+    return back ? { body: { knockId: view.subject, status: "new", reason: back } } : { refuse: "refusal.RESOLVE_NO_REASON" };
+  }
   const why = String(cs.value("cx-why") || "").trim();
   if (!why) return { refuse: "refusal.RESOLVE_NO_REASON" };
   return { body: { knockId: view.subject, status: "discarded", reason: why } };
 }
 function doneDiscard(view, answer, cs) {
+  if (answer && answer.status === "new") { cs.set("discarded", false); cs.set("pulled", false); cs.set("putback", true); return; }
+  cs.set("putback", false);
   cs.set("discarded", true);
   cs.set("pulled", false);
 }
