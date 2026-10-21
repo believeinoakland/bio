@@ -17,6 +17,8 @@
 - Status: listed / watch / lapsed / retired, with the reason; health (available, degraded, down).
 - Terms that bind the team's use that matter to civic work, in plain words, once at connection (e.g. a provider's rules on political content, legal or public-benefit advice, disclosure of AI use).
 - Position in the owner's ordered list.
+- **The six privacy checks [Bob, 2026-10-21, AIR42]:** every entry's answer to each (met / not met / unconfirmed, with source and date); the member choosing sees all six, all required by default, and can mark any of them not required at their discretion; entries failing a required check are not offered to them; their choice is recorded. Also shown, never required: whether the terms permit this use; breach commitments.
+- **Origin setting [Bob, 2026-10-21, AIR43]:** models from Chinese developers hidden by default; the member can change the setting.
 
 ## C. Flows the UX must cover
 1. **Guided connection for every provider and plan; never leave the user to sort it out unsupported** [AIR30, Bob]: where to sign up, what to choose, what to copy or approve, how to confirm it works; including provider sign-in flows and the reference-instead-of-hold option for tokens [AIR32]; where a plan requires a member-controlled runtime, guidance for setting it up [AIR37].
