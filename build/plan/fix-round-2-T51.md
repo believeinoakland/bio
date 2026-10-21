@@ -1,6 +1,6 @@
 # Fix round 2 of T51: the plan
 
-**Status** · Drafted 2026-10-21 by a planning worker for BOB #239; not in force until BOB reviews it. Bob's direction: find all the problems, fix them all in one round, redeploy, re-walk what changed. Source: `build/plan/walk-T51-build/CAUSES.md` (96 causes, read whole), `build/modules.json`, the cause-job rule (mechanics §6, §6a; P8) on `prep/cause-job-K4273`. The START bodies are `build/plan/starts-T51-F2/<job>.txt` (one per job).
+**Status** · Drafted 2026-10-21 by a planning worker for BOB #239; reviewed and in force (K4303), with BOB's changes marked K4303. Bob's direction: find all the problems, fix them all in one round, redeploy, re-walk what changed. Source: `build/plan/walk-T51-build/CAUSES.md` (96 causes, read whole), `build/modules.json`, the cause-job rule (mechanics §6, §6a; P8) on `prep/cause-job-K4273`. The START bodies are `build/plan/starts-T51-F2/<job>.txt` (one per job).
 
 ## 1. The round in numbers
 
@@ -31,7 +31,7 @@ Cause jobs (hold several modules, one cause or one area each): `cause-conclude-t
 | monitoring | sonnet | 1 | 12 | monitoring | C26* |
 | queue-producers | sonnet | 1 | 13 | queue-producers | C69 C94* |
 | queue | sonnet | 1 | 14 | queue | C66* C72* |
-| cause-assistant-t51 | sonnet | 1 | 15 | agent-runner, instance-setup | C92 C93 |
+| people | sonnet | 1 | 15 | people | C7* |
 | cause-shell-t51 | sonnet | 1 | 16 | interface-assets, op-grades, interface-shell | C24 C76 C77 C78* C79* C80 C81 C94* C11* C15* |
 | screens-daily | sonnet | 1 | 17 | screens-daily | C4 C22 C23* C35* C70 C71 C73 C74 C75 C79* C96 |
 | screens-inquiry | sonnet | 1 | 18 | screens-inquiry | C16 C17 C20 C27 C30 C32 C34 C35* C36 C37 C41 C43 C44 C58 C62* C63* C90* |
@@ -46,9 +46,10 @@ Cause jobs (hold several modules, one cause or one area each): `cause-conclude-t
 | screens-publish | sonnet | 2 | 7 | screens-publish | C2* C3* C46* C47 C48 C50 C51 C52* C66* C67* |
 | screens-action-2 | haiku | 2 | 8 | screens-action | C94* |
 | control-plane | sonnet | 2 | 9 | control-plane | C15* C52* C12* |
+| cause-assistant-t51 | sonnet | 2 | 10 | agent-runner, instance-setup | C92 C93 |
 
-**Wave 1** merge order: cause-ocr-t51 > cause-capture-t51 > cause-reading-t51 > retrieval > citation > cause-conclude-t51 > strength > public-read > case-disclosures > case-authoring > review > monitoring > queue-producers > queue > cause-assistant-t51 > cause-shell-t51 > screens-daily > screens-inquiry > screens-investigate > cause-action-t51.
-**Wave 2** merge order: screens-entry > screens-settings > screens-intake > screens-daily-2 > screens-inquiry-2 > screens-investigate-2 > screens-publish > screens-action-2 > control-plane. Wave 2 starts when wave 1 is merged. Reserve: a wave 3 of follow-up jobs for halves a job finds in a module it does not hold (QUESTION, P9): the ones to watch are C5 (which of three modules), C8 (money's propose act), C54 (a read of a project's events), C38 (which module counts the severed leg), C42, C60, C93.
+**Wave 1** merge order: cause-ocr-t51 > cause-capture-t51 > cause-reading-t51 > retrieval > citation > cause-conclude-t51 > strength > public-read > case-disclosures > case-authoring > review > monitoring > queue-producers > queue > people > cause-shell-t51 > screens-daily > screens-inquiry > screens-investigate > cause-action-t51.
+**Wave 2** merge order: screens-entry > screens-settings > screens-intake > screens-daily-2 > screens-inquiry-2 > screens-investigate-2 > screens-publish > screens-action-2 > control-plane > cause-assistant-t51. Wave 2 starts when wave 1 is merged. Reserve: a wave 3 of follow-up jobs for halves a job finds in a module it does not hold (QUESTION, P9): the ones to watch are C5 (which of three modules), C8 (money's propose act), C54 (a read of a project's events), C38 (which module counts the severed leg), C42, C60, C93.
 
 **BLOCKERs in wave 1.** C1 `cause-conclude-t51`; C2 `public-read` (the plane serves the claim; the screen's preference for the signed claim follows in `screens-publish`, wave 2, and the BLOCKER is met at the source in wave 1); C3 `case-authoring` (the pre-flight list; the ceremony draws Retry from it with no change, which `screens-publish` proves in wave 2); C4 `screens-daily`; C5 `cause-capture-t51`; C6 `cause-action-t51` (Matter's pickers) with `screens-investigate` (the event the picker offers); C7 and C8 `screens-investigate`.
 
@@ -66,7 +67,7 @@ Cause jobs (hold several modules, one cause or one area each): `cause-conclude-t
 | RC-6 | screens-publish, new lines | (a) preparing an edition and signing it are separate steps; only signing says it cannot be taken back; (b) a reopened ceremony shows "Published: edition N" with its link; (c) the Sign step loads a key file and reuses a key the device holds. | wording/weight: BOB's. Not changed: the default of "keep this key" (open point 6) |
 | RC-7 | screens-daily, new; interface-shell R21 | Queue and Home keep and show once the invitation `adminendorse` answers (as Settings does). Shell R21 now clears every password after any successful act: amend to "after an act that sent one". | wording: BOB's |
 | RC-8 | interface-shell, new | A kit helper `memberName(id)` names a member by handle, the founder included; no screen draws a member id. | new helper, no meaning change: BOB's |
-| RC-9 | screens-investigate R58 | An organisation's page draws only the acts the plane serves for an organisation; the facts form is for a person. | clarifies; if R53/R58 promise organisation facts the job asks (C7) |
+| RC-9 | ~~screens-investigate R58~~ people R9 | **BOB (K4303):** RC-9 as drafted contradicts R53 (K4194: an organisation's page offers Name, Address, Contact); R53 stands and `people` R9 records those three kinds for an organisation. New job `people` (wave 1); cause-assistant-t51 moves to wave 2. | BOB's (ruled capability placed) |
 | RC-10 | control-plane, new | `interfacewords` is served with a long cache header keyed by the release version, compressed. | wording: BOB's |
 
 New member-facing sentences (C83's scanner state, C9's holder link, C71's reasons, C60, C7, C57, C28, C42, C40, C47, C48, C50, C17's "read N of M") are word rows the design stream writes first: each job lists the keys it needs and posts one QUESTION; BOB sends them to the design lane in one batch. Jobs do not wait for it.
