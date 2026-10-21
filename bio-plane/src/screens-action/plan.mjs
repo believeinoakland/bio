@@ -158,6 +158,26 @@ export const plan = Object.freeze({
       }
       return L[key];
     },
+    // C63: a check drawn by the key of its sentence, with the option or phase it names called by its place in the list; "" where the
+    // check's data does not carry what its sentence needs (the plan's own sentence is drawn)
+    checkSays: function (cs, P, c, options, scenarios) {
+      const at = options.findIndex(function (x) { return x.id === c.option; });
+      const opt = at >= 0 ? P.optName(cs, options[at], at) : "";
+      const sc = (Array.isArray(scenarios) ? scenarios : []).find(function (x) { return String(x.scenario) === String(c.scenario); });
+      const phs = sc && Array.isArray(sc.phases) ? sc.phases : [];
+      const pi = phs.findIndex(function (x) { return x.id === c.phase; });
+      const ph = pi >= 0 ? P.phName(cs, phs[pi], pi) : "";
+      if (c.state === "undetermined") return "";
+      if (c.check === "date_past" && opt) {
+        const d = (Array.isArray(options[at].dates) ? options[at].dates : []).find(function (x) { return x && x.date === c.date; });
+        return d && typeof d.basis === "string" ? cs.w("action-plans.says.regulated_date_passed", { id: { html: opt }, date: { html: cs.date(c.date) }, basis: d.basis }) : "";
+      }
+      if (c.check === "subjects_not_live" && opt) return cs.w("action-plans.says.matter_serves_longer", { id: { html: opt } });
+      if (c.check === "outward_on_hypothesis" && opt) return cs.w("action-plans.says.addresses_someone_outside", { id: { html: opt } });
+      if (c.check === "enforces_superseded" && opt) return cs.w("action-plans.says.requirement_seeks_enforced", { id: { html: opt } });
+      if (c.check === "no_hostile_branch" && ph) return cs.w("action-plans.index.phase_id_addresses_someone_outside", { id: { html: ph } });
+      return "";
+    },
     // R53: an option with no summary is named by its place in the list, a phase with no name by its place in its scenario;
     // never by an id.
     optName: function (cs, o, i) {
@@ -237,7 +257,9 @@ export const plan = Object.freeze({
                 return "<p>" + cs.w("action-plans.says.phase_checkpoint_leads", { id: { html: nm }, miss: cs.w("screen.plan.judged." + (m === "met" ? "met" : "not_met")) }) + "</p>";
               }).join("");
             }
-            return "<p>" + cs.esc(c.says || c.check || "") + "</p>";
+            // C63: the other checks name an option or a phase by its place in the list, never by its id ("opt-1", "p1")
+            const said = P.checkSays(cs, P, c, options, p.scenarios);
+            return "<p>" + (said || cs.esc(c.says || c.check || "")) + "</p>";
           }).join("") + "</div>"
         : "";
 
