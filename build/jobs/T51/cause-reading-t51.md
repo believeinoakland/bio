@@ -23,3 +23,7 @@
 - `checks/ownership.mjs text-chain,reading-pipeline origin/tranche/T51 job/T51/cause-reading-t51` (from `prep/cause-job-K4273`): 4 files, 1 listing: `build/requirements/reading-pipeline.md` (accepted, K4210).
 
 Size (session_01SLQwf64sdkoxwxHo2cwjnj): test runs 9, module lines 3799
+
+## J1 · COMPLETE
+
+C19 met: reading-pipeline R32 as amended by K4303 (main/article region; header, footer, aside and their roles dropped outside it; nav always). text-chain unchanged (visibleTextOfHtml is in reading-pipeline). reading-pipeline 143/143, text-chain 130/130, extraction+events 283/283, content+2 legacy 144/144; architecture and words 0; ownership lists only the accepted requirements file. Two observations in my record (R8 counts role=main; a re-read renumbers old pages). Size (session_01SLQwf64sdkoxwxHo2cwjnj): test runs 9, module lines 3799.
