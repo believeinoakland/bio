@@ -99,7 +99,7 @@ test("R29, R16: a peek and then governedFetch for one visit book one grant, one 
 });
 
 test("R29, R6: control — two plain governedFetch calls book two grants spaced as R6 spaces them", async () => {
-  const w = world({ random: 0 });                                       // j = 0.6: a 3000 ms gap, within R30's maxWaitMs
+  const w = world({ random: 0.5 });
   const waits = [];
   const go = () => governedFetch(`https://${HOST}/page`, { fetch: async () => ok(), governor: inProcess(w.g), now: () => w.clock.t,
                                                            sleep: async (ms) => { waits.push(ms); w.step(ms); } });
@@ -107,5 +107,5 @@ test("R29, R6: control — two plain governedFetch calls book two grants spaced 
   await go();
   assert.equal(w.row(HOST).granted, 2);
   assert.equal(w.row(HOST).tokens, 1);
-  assert.deepEqual(waits, [Math.round(5_000 * 0.6)]);                  // the second visit waits out R6's whole gap
+  assert.deepEqual(waits, [Math.round(5_000 * 1.05)]);                 // the second visit waits out R6's whole gap
 });

@@ -307,8 +307,8 @@ export function governorOverStub(stub) {
   return { admit: (q) => ask("governoradmit", q), report: (q) => ask("governorreport", q) };
 }
 
-/** R30: the longest wait inside a request that `governedFetch` sleeps, R6's gap included; a longer one is refused. */
-export const MAX_WAIT_MS = 3000;
+/** R30: the longest wait inside a request that `governedFetch` sleeps, R6's gap included (8 s: the whole gap at the default appetite, max 7.5 s); a longer one is refused. */
+export const MAX_WAIT_MS = 8000;
 
 /** R15–R17, R30. Every governed outbound fetch asks for admission first, waits the jittered gap the governor names,
  *  fetches with the agent the caller supplied, and reports the outcome back so the host's capacity is learned rather

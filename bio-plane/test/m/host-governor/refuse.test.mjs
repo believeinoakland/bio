@@ -78,7 +78,7 @@ test("R30: governorAdmit with maxWaitMs refuses a longer wait as R5 does and adm
 });
 
 test("R30 control: an admitted fetch waits wait_ms as R16 says, within maxWaitMs; an unrefused status changes nothing", async () => {
-  const w = realWorld({ random: 0 });                                   // j = 0.6: a 3000 ms gap, at the cap
+  const w = realWorld({ random: 0.5 });                                // a 5250 ms gap, within the 8 s default
   const host = "paced.example";
   w.g.governorAdmit({ host });
   const slept = [];
@@ -88,7 +88,22 @@ test("R30 control: an admitted fetch waits wait_ms as R16 says, within maxWaitMs
   assert.equal(out.res, ok);
   assert.equal(out.retry_in_ms, undefined, "an unrefused status carries no retry_in_ms");
   assert.equal(slept.length, 1);
-  assert.ok(slept[0] > 0 && slept[0] <= 3_000, `slept ${slept[0]}`);
+  assert.ok(slept[0] > 5_000 && slept[0] <= 8_000, `slept ${slept[0]}`);
   assert.equal(w.row(host).cooloff_until, 0);
   assert.equal(w.row(host).refusals, 0);
+});
+
+test("R30: at the default appetite a second request to one host waits R6's whole gap (within 8 s) and succeeds; none is refused", async () => {
+  for (const random of [0, 0.5, 0.999]) {
+    const w = realWorld({ random });
+    const slept = [];
+    const ok = { status: 200, headers: { get: () => null } };
+    const go = () => governedFetch("http://quick.example/x", { governor: inProcess(w.g), fetch: async () => ok,
+                                                               sleep: (ms) => { slept.push(ms); return Promise.resolve(); } });
+    const a = await go(), b = await go();
+    assert.equal(a.res, ok);
+    assert.equal(b.res, ok, `random ${random}: the second is fetched, not refused`);
+    assert.equal(slept.length, 1);
+    assert.ok(slept[0] <= 8_000 && slept[0] <= 7_500);
+  }
 });
