@@ -259,3 +259,14 @@ COMPLETE (re B29): DEC-398 merged; the six stand-ins are replaced by the rows.
 - C91 `screen.watching.purpose` and `screen.leads.purpose` drawn under their doors.
 Tests updated to assert the new keys. Module suite 231 of 231; format, architecture, words 0 failures; ownership 0 failures. Deferred: none. The list of copies keeps its three bare figures (unchanged, outside the cause).
 Size (session_01LsvhfCo9erwiifxJZrNarX): test runs 48, module lines 5230
+
+## J19 · COMPLETE · re B30
+
+COMPLETE (re B30, fix round 2 cause 1, C89): the shell's success codes are adopted on both acts.
+- `adminendorse` and `memberadd` name `successCodes: ["CONSENSUS_REQUIRED"]` and a `refusals.CONSENSUS_REQUIRED` function that fills `refusal.CONSENSUS_REQUIRED`'s `awaiting` with the members' handles (`cs.memberName`), not the raw list. The screen's own request for `memberadd` (and its `data-shown="proposed"` block, `ui.proposed`) is dropped; the shell draws the sentence beside the act as done and runs the act's `rereads` (roster, recovery).
+- The shell reads the members' handles only when a screen first asks for a name, so the Members screen asks `cs.memberName` for each administrator once the roster is drawn (so the sentence names them by handle, not "A member of your team" at the first press). After `memberadd` is answered the invitation fields are emptied (the next invitation asks again), which leaves the button drawn for the shell's sentence to stand beside.
+- Tests (seen failing first on the old source, then passing): `R2 C89` for `memberadd` rewritten to the shell's done style (no refusal alert; one request; who must still endorse by handle; roster re-read; controls: another refusal is still a refusal, a plain invitation unchanged); new `R2 C89` for `adminendorse` (done, by handle, roster re-read; control: `NOT_AN_ADMIN` is a refusal with an alert and no done sentence).
+- Ran: screens-settings suite 232 of 232; screens-inquiry (user of this module) 447 of 447; format, architecture, coverage (76 of 76), ownership: 0 failures. Reds also on the tranche tip, not mine: `setup-words build.mjs --check` (rows.mjs stale at `capture.declared.captureaccounts`) and journey-check 92 of 115 failing identically with my change stashed.
+- Requirement line for BOB to write: R2's amendment (K4335) is now met through interface-shell R112 (`successCodes` + `refusals` on `memberadd` and `adminendorse`); the screen draws no sentence of its own for a recorded proposal.
+- Deferred: none. Found in another module: none.
+Size (session_01W2VnBgWTLPm5Mn4jDuivo9): test runs 8, module lines 5200
