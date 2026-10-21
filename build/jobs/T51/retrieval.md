@@ -168,3 +168,17 @@ C21 has no requirement id in build/requirements/retrieval.md. I built to this pr
 **For BOB (not edited here).** Mark R93 met in `build/requirements/retrieval.md` (drop `(not yet met: T51)`). The `list` row shape in R63's text gains `project`; R93 is the requirement for it. The `op-declarations` t50 red and the check reds above are other modules' and need their owners.
 
 Size (session_01LrQ9js5UiMGt6HCSH7ugeW): test runs 7, module lines 3002
+
+## J10 · COMPLETE
+
+R93 met (C16 P3, SCREENS-INQUIRY #19's finding (a)): each row `list` (`listBundles`) answers carries the bundle's `project` (the empty text for a project-less bundle), read in the same statement. Change: `bio-plane/src/retrieval/index.mjs` `listBundles` (one SELECT column). Test first, seen failing: `roster.test.mjs` `R93: each row listBundles answers carries the bundle's project …`; controls: a project-less bundle answers "", and a viewer who may not see the project gets neither the question nor the project's name. The R63 row key list gains `project` (same change, not a weakening). Requirement text unchanged here: R93 still reads "(not yet met: T51)" in build/requirements/retrieval.md; please mark it met.
+
+Tests: `bio-plane/test/m/retrieval/`: 179 of 179 pass. List-consumer suites (provenance-routes table, store-door pull, control-plane doorbell/inbox-door/t50-door, op-declarations t35/t51): 84 of 85 pass; the one red is op-declarations t50 `R73, R21` (undeclared registry acts), which fails identically at the parent commit 6dcc00f622, so it predates this change. mk6-bundle-names-no-author: 1 of 1 pass. Impact names 79 modules and 1,225 test files; I ran the retrieval and list-consumer suites, not all of them.
+
+Checks: ownership retrieval 0 failures; format 0 failures; architecture 2 failures and words 5 failures and coverage 8 modules, none in retrieval (screens-inquiry, op-grades, agent-harness, agent-runner, control-plane, entities, installer-steps, journey-check, op-grades, screens-publish).
+
+Found in other modules: none caused by this change. Named, not fixed: the op-declarations t50 red and the check reds above.
+
+Deferred: none.
+
+Size (session_01LrQ9js5UiMGt6HCSH7ugeW): test runs 7, module lines 3002
