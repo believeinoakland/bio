@@ -61,3 +61,13 @@ test("B3 (money R28) moneysets, a read its owner declares beside moneyset, has a
   assert.equal(m.NON_ACTS.moneyset, NON_ACTS.moneyset);
   assert.ok(NON_ACTS.moneyset.startsWith("read: one money set"));
 });
+
+test("B5 (action-clocks R26) remindersfor is a read: a NON_ACTS read reason that agrees with its owner's declaration, no rung, no ground, phone true; control: clocksrunning is unchanged", async () => {
+  assert.ok(NON_ACTS.remindersfor.startsWith("read: ") && NON_ACTS.remindersfor.includes("writes nothing"));
+  assert.equal(RUNGS.remindersfor, undefined);
+  assert.equal(RUNG_ABSENT.remindersfor, undefined);
+  assert.equal(phoneOf("remindersfor"), true);
+  const m = await registered();
+  assert.equal(m.NON_ACTS.remindersfor, NON_ACTS.remindersfor);
+  assert.ok(NON_ACTS.clocksrunning.startsWith("read: the clocks a member has running"));
+});

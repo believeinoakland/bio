@@ -18,6 +18,7 @@ export const T51_NON_ACTS = {
   bundlehistory: "read: a bundle's revisions and states, newest first (`promotion` R58); writes nothing",
   checkpointsdue: "read: the plan checkpoints due, answered to a viewer who sees the plan (`action-plans` R17); writes nothing",
   clocksrunning: "read: the clocks a member has running, counted (`action-clocks` R24); writes nothing",
+  remindersfor: "read: an action's reminders, each with its entry, its day, who set it and its state; writes nothing (action-clocks R26)",   // fix round 3, B5
   entityidonly: "read: entities by id, with no further fields (`entities` R57); writes nothing",
   entitysimilar: "read: entities similar to a name, checked before another is added (`entities` R60); writes nothing",
   heldat: "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record",
