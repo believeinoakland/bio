@@ -35,3 +35,28 @@
 - `setup-words/build.mjs --check`: stale-rows note only, expected: `rows.mjs` lacks the new `intent.index.*` ids. No refusal naming intent.
 
 Size (session_01Xq24r8vyf2nW2HRS4PznTs): test runs 2, module lines 2235
+
+## J2 · COMPLETE · re B2
+
+CHANGE B2 (K4259) done. Commit on `job/T51/intent`; only intent's files touched.
+
+**Entry applied (1).** The reason a condition was set is stored with it and `progress` answers it.
+- `doc.mjs`: `conditionLines` writes `set_reason` beside `set_by` and `set_at`; `conditionOf` reads it back (null when absent). Front-matter-safe: a quote, backslash or any white-space run (a line break too) becomes one space (`oneLine`); the Session Log keeps the words whole. Not cut, however long.
+- `index.mjs`: `setCondition` passes the trimmed reason in; `progress` answers `set_reason` beside `set_by` and `set_at`. A removal drops the whole block, so a removed condition answers none and leaves nothing behind. A condition set before this change answers `set_reason: null`.
+- Tests (`reasons.test.mjs`, written first and seen failing): a set, a replacement and a removal (and a re-set after it); a reason holding quotes, backslash, line breaks, `#` and 5,000 characters; the control, a condition planted without a reason, answers `set_reason: null` with its `set_by` and `set_at`. `invariants.test.mjs`: the stored key list gains `set_reason` (R19's check that no progress figure is stored is unchanged).
+
+**Requirement lines for BOB (not edited, they are not mine).**
+- R2: "Success ... carrying the condition (or its removal), its reason, author and time" already says this; add: "the reason is stored with the condition as `set_reason`, on one line (a quote, backslash or line break becomes a space; the Session Log keeps the words whole)."
+- R3/R4: `progress` answers `set_reason` beside `set_by` and `set_at`; `null` for a condition set before it was stored; no `set_reason` key when there is no condition.
+- Or as a NEW R, next free id R36, in R30's neighbourhood: "R36 (K4259) The reason a condition was set is stored with it (`set_reason`) and `progress` answers it beside `set_by` and `set_at`; null for a condition set before this."
+No new member-facing sentence, so no new word id.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/intent/*.test.mjs`: tests 94, pass 94, fail 0.
+- Users of intent (investigation, actions, monitoring, queue-producers, store-door): all pass except store-door R17 (1 fail, same on the untouched tip). scheduler 7, affordances 33, answer-envelope 16, control-plane 13, plane 39 fail, each the same count with my change stashed, so not caused by it (they look environmental or other modules'; for BOB).
+- `checks/run.mjs`: format 0; architecture 0; channels 0; coverage 6 failures in other modules (agent-harness R17; agent-runner R37 R38 R40; installer-steps R26 R31; journey-check R19; screens-inquiry R110 R119; screens-intake R53), intent `35 of 35 ... 0 failures`; words 1 failure, `testcopy op-grades t37.test.mjs:32`, none in intent.
+- `checks/ownership.mjs /home/user/bio intent tranche/T51 job/T51/intent`: 0 failures.
+
+**Deferred:** nothing. **Found in other modules:** only the failures above (not changed).
+
+Size (session_01XcNgiqYHy6Zizx3gVoR4W1): test runs 5, module lines 2265
