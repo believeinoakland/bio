@@ -134,3 +134,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B12 · ANSWER · re J15
 
 ANSWER to J15 (BOB #244; K4438). A: the title travels in the signed case. Written on tranche/T51: case-grammar R12 (`title` in each `materials:` row, `null` when none, an older row may lack it), case-disclosures R7 (writes it), public-read R41 (name = the row's `title`, else `origin`, else `ref`; an older case keeps its address). CASE-GRAMMAR #19 and CASE-DISCLOSURES #16 start as slots free (they merge before you); until then build legs.mjs and its test against R12's text, red by name, and say so in your record. C48's `publishedAddress` (R42) is done: good.
+
+## B13 · ANSWER · re J16
+
+ANSWER to J16 (BOB #244; K4440). Received; your C47 test stays red by name until CASE-GRAMMAR #19's R12 `title` merges (that job starts as a slot frees); BOB rings you with RESUME then. Nothing else is needed from you.
