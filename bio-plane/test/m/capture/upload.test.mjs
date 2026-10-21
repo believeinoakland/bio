@@ -164,6 +164,8 @@ test("R86 (acquisition R16): an upload holds the bytes under their digest, write
 test("R86 (provenance R15): bytes the record already holds answer existed with the held digest and no document; the receipt is written as a second sighting with this uploader's own statement; no actor and no within", async () => {
   const { c, rows, prov } = setup();
   const first = await c.uploadCapture({ ...ok, by: "m1" });
+  /* the first upload was filed: the register names a home for it (R86, T51 fix round 2: a receipt alone is not a home) */
+  prov.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: true, acquired: true });
   let called = 0;
   const again = await c.uploadCapture({ ...ok, statement: "forwarded to me by a colleague", by: "m2", at: "2026-10-10T08:00:00Z",
                                         within: () => { called++; return { ok: true }; } });
@@ -180,7 +182,8 @@ test("R86 (provenance R15): bytes the record already holds answer existed with t
   assert.equal((await h.c.uploadCapture({ ...ok, bytes })).existed, true, "registered");
   const g = setup();
   g.c.provenance = provenance(g.s, { acquired: [sha(bytes)] });
-  assert.equal((await g.c.uploadCapture({ ...ok, bytes })).existed, true, "acquired");
+  const ga = await g.c.uploadCapture({ ...ok, bytes });
+  assert.deepEqual([ga.existed, ga.document?.capture?.sha256], [true, sha(bytes)], "acquired alone: existed, and the document as a new upload's (R86, T51 fix round 2)");
   /* negative control: bytes nowhere held are new */
   assert.equal((await setup().c.uploadCapture({ ...ok, bytes })).existed, false);
   /* a receipt that cannot be written: RECEIPT_NOT_WRITTEN, and nothing written */
