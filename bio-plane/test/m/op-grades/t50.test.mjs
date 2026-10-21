@@ -97,10 +97,18 @@ test("R46: MARKS equals the kit's WEIGHT at that commit for every rungless regis
     .map(([, k, v]) => [k, Number(v)]));
   const WNAME = ["", "Reversible", "Reasoned", "Terminal", "Signed", "Irreversible"];
   for (const op of Object.keys(MARKS)) {
-    if (op === "notewrite" || op === "versionnotice") continue;
+    if (op === "notewrite" || MARK_SOURCES[op].startsWith("K4259, a ruling")) continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
   }
+  /* fix round 2, C76: a read carries no mark above Reversible, so `bootstrap` ("Show what each part runs", which the kit weighs
+     Irreversible) and the eight other reads whose kit weight said more take the read's mark by the same ruling */
+  const byRuling = Object.keys(MARKS).filter((op) => MARK_SOURCES[op].startsWith("K4259, a ruling"));
+  assert.ok(byRuling.length >= 10 && byRuling.every((op) => MARKS[op] === "Reversible"), "every op the read ruling sets is Reversible");
+  assert.ok(KIT_WEIGHT.bootstrap > 1 && MARKS.bootstrap === "Reversible" && byRuling.includes("bootstrap"), "bootstrap: the kit's weight over-ruled for a read");
+  /* control: an act (not a read) keeps the kit's weight above Reversible */
+  assert.equal(MARKS.memberadd, "Reasoned");
+  assert.equal(MARKS.claim, "Signed");
   /* versionnotice is a read (op-declarations, mutating false) and asks no reason: its mark is a read's, by a ruling (K4259) */
   assert.equal(MARKS.versionnotice, "Reversible");
   assert.equal(KIT_WEIGHT.versionnotice, undefined, "the kit does not name versionnotice: the ruling sets it");
