@@ -128,3 +128,7 @@ B8 applied: tranche/T51 (U420 DEC-387, U422 DEC-388) merged; no code change. R10
 **Tests and checks.** `node --test bio-plane/test/m/screens-entry/`: tests 93, pass 93, fail 0. format 0 failures; architecture (screens-entry) 0; coverage 28 of 28 live ids named, 0; words (screens-entry) 0; ownership 0. `checks/run.mjs`: no line names screens-entry; its other failures are other modules' (screens-intake R53 uncovered; op-grades t37.test.mjs:32 testcopy).
 
 Size (session_01G5kaQEiscMUfxNCvhoTCB3): test runs 4, module lines 1135
+
+## J7 · COMPLETE
+
+B9 applied: join names memberlanguageset in its acts and draws the language choice as the design does (data-act on the choice's field, no button; enroll still sends the language once after login). R31 written by me in build/requirements/screens-entry.md (K4210; the ownership check lists that one file, accepted at merge). Test R31 seen failing, with control. Module tests 93/93 (R10 green since B8); format, architecture, coverage (28 of 28), words 0 failures. Nothing deferred; nothing undrawn for lack of a drawing. Details in build/jobs/T51/screens-entry.md.
