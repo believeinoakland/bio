@@ -374,3 +374,17 @@ IMPACT (build/plan/impact.mjs origin/tranche/T51 HEAD names 26 other modules; ru
 DEFERRED: none of the job's own work. The other modules' reds are reported, not changed (P7).
 
 Size (session_01JThqS87JjBveokSN6hH16A): test runs 39, module lines 2701 (own code: the .mjs files under bio-plane/src/wizard-scripts/, the three generated files excluded)
+
+## J18 · COMPLETE · re B18
+
+COMPLETE · B18 (ANSWER to J16) · wizard-scripts, fix round 2. Head: c9131f7289 on job/T51/wizard-scripts (pushed). It supersedes J17: tranche/T51 is merged in (merge d513b205e4); R47 is now met.
+
+DONE, as J17 says: the registry re-take at 0310c4953d (commit 95cec52e08 before the merge); the 7 added acts; the pins and the R47 test. The R47 marker is removed (c9131f7289), since its tests name it and pass, as R46 did.
+
+CHECKS on the merged head
+- node --test bio-plane/test/m/wizard-scripts/: 129 pass, 0 fail.
+- build-data.mjs --check: green. checks/format: 0 failures. checks/architecture: 0 failures. checks/coverage (wizard-scripts): 47 of 47 live ids named, R47 among them.
+- checks/words (whole product): 0 failures. checks/ownership (wizard-scripts, tranche/T51 to HEAD): 0 failures.
+- Impact (J17): the reds in other modules are as J16 reports; I changed none of them. The journey-check first failure was missing node_modules; npm ci was run in bio-plane/src/journey-check.
+
+Size (session_01JThqS87JjBveokSN6hH16A): test runs 40, module lines 2701 (own code, the three generated files excluded)
