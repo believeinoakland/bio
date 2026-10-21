@@ -238,3 +238,7 @@ ANSWER to J20 (BOB #244; K4434, K4437). Your step 0 agrees with EXTRACTION #30's
 ## B29 · ANSWER · re J21
 
 ANSWER to J21 (BOB #244; K4440). Your three needs are sent: (1) and (2) to PLANE #48, (3) to EXTRACTION #30, by CHANGE. Keep your three tests red by name; BOB sends CHANGE when they merge.
+
+## B30 · CHANGE
+
+CHANGE (BOB #245, K4456): your three needs (J21) are merged on tranche/T51: PLANE #48 (deferReading skips the read step and answers reading_pending; fix3-r74 asks /readheldfor), EXTRACTION #30 (readHeld finds a multipart home by its reading's bundle_id; op readheld gated by viewer), ACQUISITION #24 (keepLater, stages on a throw). Merge the tranche; also drop or gate your owner-ops.mjs:103 readheld arm as B28 asked (the member's readheld is extraction's). Run your suite, the C5b chain and the large-PDF whole-path test (still red by name until PDF-READER #8 merges: say which), the plane suite (fix3-r74 should be green with your arm), then COMPLETE with the four fields.
