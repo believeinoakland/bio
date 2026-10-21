@@ -175,7 +175,9 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
       const row = declared[op];
       if (!isRow(row)) undeclared.set(op, (undeclared.get(op) || 0) + 1);
       else {
-        const bad = fieldMismatches(req, row);
+        /* R118 (K4409): `screen`, the id of the screen an act is drawn on, is the shell's field, which the door reads (control-plane R119),
+           not an owner's: an owner's `accepts` need not name it */
+        const bad = fieldMismatches(req, row).filter((b) => !(b.kind === "unknown" && b.field === "screen"));
         if (bad.length) {
           const screen = (/^\/app\/([^/]+)/.exec(location.pathname) || [])[1] || "home";
           const err = new FieldMismatch(`${screen}: ${op} ` + bad.map((b) => (b.kind === "unknown" ? `sent ${b.field}, which the op does not accept` : `is missing the required ${b.field}`)).join("; "), { screen, op, mismatches: bad });
