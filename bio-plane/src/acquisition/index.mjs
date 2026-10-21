@@ -16,6 +16,10 @@
  * T50 (N1117, N1094): a member's `for` is recorded with the capture (R47), the member who parks a session is recorded with it
  * and listed by `openCaptures` (R19, R46), and every member-facing sentence is read by key from setup-words (plan rule 6).
  *
+ * T51 fix round 2 (the walk's C5, C12, C13, C25): a capture held in parts is also kept whole under its own digest (`keepWhole`, R10),
+ * co-attestation is waited for only briefly and recorded when it ends (R20), the render is a continuation the member finishes
+ * (R5, R6, R12), and the document records the file name its source gave it (R16).
+ *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";

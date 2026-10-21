@@ -14,3 +14,45 @@ All six causes are built and tested (C5 C12 C13 C14 C25 C26); suites green so fa
 6. capture R96 (C26). Other bytes are `changed` only when both the copy and what the site serves earned a determined evidentiary digest over the same handler; otherwise `undetermined` ("cannot tell"), `looked_at` still given. New acquisition helper `servedSubstance`. Two existing R96 tests changed accordingly. `monitoring` records the baseline (its own job).
 
 Words: no new design row needed by me; every sentence I added is written once with `localize` (keys `acquisition.index.keep_*`, `capture_not_kept`, `attestation_pending`, `render_pending_note`, `render_pending_files`; `capture.index.heldat_*`). `sources`: nothing in it reads a stored document, so it has no part in C5; unchanged.
+
+## Record (cause-capture-t51, fix round 2 of T51; wave 1)
+
+Holds `acquisition`, `capture`, `sources`. Tranche tip merged first (`9ff79d0b77`). Every test written first and seen failing, at the module's interface, with its control; the tests are `bio-plane/test/m/acquisition/fix2-t51.test.mjs` and `bio-plane/test/m/capture/fix2-t51.test.mjs`.
+
+### Causes met
+
+| cause | requirement ids | what | test |
+|---|---|---|---|
+| C5 (BLOCKER) | acquisition R10, R11; capture R86 | The whole fingerprint was never an object (R10 stored the parts only), so every reader that asks the evidence store for a capture by its digest (OCR, `op=capture`, the vouch box) found nothing: the acquisition half failed. `keepWhole` keeps a multipart capture whole up to `MULTIPART_KEEP_MAX` (32 MiB) under its own digest, parts read back one at a time and hashed; any failure is `CAPTURE_NOT_KEPT` (502, in words) with no receipt and no document; an upload the same (`UPLOAD_NOT_STORED`). `existed` is still `registerHolds` alone. `sources` has no part in it (nothing in it reads a stored document). | `fix2-t51` acquisition (3 tests), capture (1) |
+| C12 | acquisition R20; capture R68 | The attestation is requested once the document is kept and waited for `ATTEST_WAIT_MS` (3 s); past it the document is answered with a `pending` attempt and the outcome is recorded when it ends (`recordLateAttestations`, new, appended as late attestations). The capture-request arm waits. | acquisition (2), capture (1) |
+| C13 | acquisition R5, R6, R12 | The render is waited for `RENDER_WAIT_MS` (10 s); past it the served page is filed with `render_pending {session, since, note}` and a capture session `rs_…` that `openCaptures` lists; `continue` finishes it (pending / the pair as a second document / re-render if the object restarted); the render is paid for once, when it returns. | acquisition (2) |
+| C14 | capture R77, R88 | A page's reads are batched (`#pageFacts`, `membersOf`, `openedAmong`); a capture its own register document profiles as not `zip` is not asked of the archive listing; `fields: "picker"` is the cheap read; `heldcaptures` declares `fields`. | capture (3: golden-list control, read count, picker) |
+| C25 | acquisition R16 | The title is the reading's (`reading-pipeline`), not acquisition's; acquisition's part: `capture.file_name`, the source's own file name. | acquisition (1) |
+| C26 | capture R96 | Other bytes are `changed` only when both sides earned a determined evidentiary digest over the same handler (`servedSubstance`, acquisition); else `undetermined`. | capture (2) |
+
+### Tests changed (the requirement they proved moved)
+
+- acquire R10: "the whole is never stored under its own hash" is now "kept whole" (C5).
+- acquire R20/R28: the "register cannot be asked" scenario uses a capture past `MULTIPART_KEEP_MAX` (only parts are held).
+- t50 R48: the in-parts count test uses a body past the bound (five distinct parts, a store with no checksum); a within-bound case is added. `readThrough` keeps the first object read and the last two (the first part is asked again for the ZIP magic): this is a flaw in my module found by the five-part case (a part was read three times), fixed.
+- t51 R96: two tests expected `changed` from a copy with no determined digest; they now expect `undetermined` and still prove the look was made. The `changed` cases are in `fix2-t51`.
+- acquisition fixture bucket: reports `checksums` as R2 does for an object put with `sha256` (`checksums = false` stands for a store that gives none).
+
+### Deferred, and why
+
+- Captures already filed parts-only (INFO-2026-0042 on biosmoke8) are not repaired: they are held as before. Capture them again (existing bytes answer `existed`, the receipt is a second sighting, and the whole is written) or BOB names a one-time repair act.
+- Past `MULTIPART_KEEP_MAX` a capture is still parts-only. A document with no object under its fingerprint must not offer OCR or vouch (a screen's rule, `screens-intake`); a streamed serve of parts needs `record-core`'s evidence store, not held here.
+- The late record is written by the object after it has answered; if the object is evicted first the attempt stays `pending` in the document and `reattest` (R68) is the member's way to ask again.
+
+### Found in other modules (REPORT to BOB)
+
+See `J2` in the mailbox: `reading-pipeline.bytesOf` (prefer the whole, and its 20 MiB bound), `provenance.captureGrade` (one read a call; a batch form), `control-plane` (promote a continuation's `document`; the 504 sentence), `screens-intake` (draw `render_pending`, `file_name`, `fields: "picker"`).
+
+### Words
+
+No sentence of mine needs a design row: each is written once with `localize` (acquisition keys `index.keep_part_missing`, `keep_part_differs`, `keep_parts_do_not_add_up`, `keep_store_refused`, `capture_not_kept`, `attestation_pending`, `render_pending_note`, `render_pending_files`; capture keys `index.heldat_baseline_no_digest`, `heldat_served_too_large`, `heldat_other_handler`, `heldat_served_no_digest`, `heldat_same_substance`, `heldat_changed_substance`). They are builders' diagnostics: the screens draw their own keyed words from `pending`, `render_pending`, `changed.state`.
+
+### Generated artifacts made stale (I wrote none; BOB regenerates at the layer close, manifest §14)
+
+- `bio-plane/src/setup-words/rows.mjs` (setup-words): my new `localize` keys are not in it (`node bio-plane/src/setup-words/build.mjs --check` names `acquisition.index.attestation_pending` first); regenerate with `node bio-plane/src/setup-words/build.mjs`.
+- `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` (inputs `acquisition/index.mjs`, `checks.mjs`, `keyed.mjs`, `unpack.mjs`, `capture/checks.mjs`, `ops.mjs`, `words.mjs`) and `bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json` (the plane's source): `npm run build` in each directory.

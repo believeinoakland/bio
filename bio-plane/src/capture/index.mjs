@@ -27,6 +27,10 @@
  * `captureGradeOf` reads one capture's grade (`op=capturegrade`). R73 passes `openCaptures` through with this store. Plan
  * rule 6 (N1116): the member-facing sentences are read by key through `words.mjs`; this file holds keys, not English.
  *
+ * T51 fix round 2 (the walk's C5, C12, C14, C26). An upload held in parts is kept whole too (R86); `recordLateAttestations` records an
+ * attestation that ended after its capture was answered (R68); a page of held rows is read for the whole page at once and `fields:
+ * "picker"` is the cheap read for a list to choose among (R77, R88); `heldAt` judges change on the determined substance digest (R96).
+ *
  * T51 (T51-21). R77's rows also answer `actor`, `retrieved` and `bytes`; R88's `held_and_vouched` lists the viewer's
  * vouched documents beside the held ones (`standing`, `vouched`); R96 `heldAt` (`op=heldat`) says whether the record
  * already holds an address or a digest and whether the source has since changed. The basis sentences of R88's vouched
