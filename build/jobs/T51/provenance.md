@@ -107,3 +107,11 @@ Applied: the read op `origins {bundleId}` (requirement R70, new; R53 and R68 ame
 Tests (written first, seen failing): `ops.test.mjs` R70 (two tests: two declarations read back in order, writes nothing; each refusal, the unseen-as-absent control, the member-reads control); `declared-ops.test.mjs` `declaredOpHolds` for `origins`; R53 and the declared-ops list updated to state the new truth (eight ops; three declared ops).
 Flaw in another module (for BOB): `bio-plane/test/m/op-grades/t37.test.mjs:32` is a words `testcopy` (a sentence copied from a `translation-directed` description); it is op-grades', not changed here.
 Stale generated artifact: setup-words' `rows.mjs` lacks `provenance.declared.origins` (expected; BOB regenerates at the layer close).
+
+## J6 · COMPLETE
+
+CHANGE B5 (K4259) applied on job/T51/provenance. Requirement lines for you (already written in build/requirements/provenance.md, the one file outside my paths, as accepted at B4; ownership.mjs lists only that file):
+- NEW R70: the op `origins {bundleId}` lists a document's declared origins `{seq, system, by, at}` oldest first (standing one last), `origins: []` when none; gated by sight; refusals NO_BUNDLE, NO_SUCH_BUNDLE (absent and unseen alike), ORIGIN_NOT_A_DOCUMENT; writes nothing.
+- R53 amended (eight ops) and R68 amended (`origins` in DECLARED_OPS: read, mutating false, stamps viewer, needs null, accepts/requires bundleId).
+Tests: provenance suite 152 pass, 0 fail (ops.test.mjs R70 x2, declared-ops.test.mjs). Checks: format 0, architecture 0, coverage 55 of 55, words 0 in provenance, ownership 1 failure = requirements file (accepted, B4). run.mjs: one testcopy, in op-grades t37.test.mjs:32 (not mine; report to op-grades' owner). setup-words rows.mjs stale for provenance.declared.origins (expected, BOB regenerates).
+Size (session_01SJghwe9gJrhumMZWa29ifY): test runs 3, module lines 2850
