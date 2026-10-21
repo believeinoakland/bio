@@ -15,3 +15,30 @@
 - objective · `PENDING_WORDS` all held, the list can go; aspirations' parties and flows are still typed lists, pickers could serve them · screens-inquiry J13 · 2026-10-21
 - bias (settings) · `screen.bias.adoptfor.label` read by `bias.mjs:141` has no row (screens-settings R39 red, accepted by name until T52) · CAUSE-TESTS-T51 J1 · 2026-10-21
 - every screen · the mark and the asking agree (K4199): an act marked "Asks for a reason" asks before it runs, on-press acts' marks lowered; the reason box per press, `triage`'s and `contradictionoptin`'s optional reasons (K4254, K4259) · moved from T51's second pass by K4281 · 2026-10-21
+
+- Vouch rows · say "photo" for web pages and name a knock by raw id · setup-team S-04 · 2026-10-21
+- Status row · "archive fallback may fetch a replay" · S-05 · 2026-10-21
+- Stage needs · internal words ("held question", "leg in its basis", "ratified case edition"); Forming has none · S-08 · 2026-10-21
+- Home · "Yours: sparky" does not say administrator · S-11 · 2026-10-21
+- Join page · promises a guided start · S-14 · 2026-10-21
+- Home, Queue · "held captures", "Inbox items" for a new member · S-16 · 2026-10-21
+- Add an administrator · warning says a vote takes it back (impossible at two); long confirm route · S-22 · 2026-10-21
+- Settings · "Read what is due" prints a prompt for an AI · S-28 · 2026-10-21
+- Queue · raw word keys `screen.action.kind.records_petition` etc. in the kind list · S-31 · 2026-10-21
+- Queue · "Mute a kind" mutes "this item only" · S-35 · 2026-10-21
+- Security · ICAP, RFC 5424, Splunk HEC… on "Add another checker" · S-42 · 2026-10-21
+- Capture, document · "upload:<hash>" source line; "Added by The team's founder" · FC-10 · 2026-10-21
+- Find · "What this search covered" uses level words and code names · FC-16 · 2026-10-21
+- Doorbell · small points · FC-21 · 2026-10-21
+- Refusals · missing rows: C-2.8 grouping sentence; "no explanation… CITED" (C33's job writes against the key; the sentence is the design's) · FC-25, E49 · 2026-10-21
+- Action, Plan · raw ids, "dependency", role said twice, "(from read)", "opt-1" · CA9, CA23, CA44, CA45, CA50, CA57, CA67, CA69 · 2026-10-21
+- Sign step · raw strings ("bio-ratify-case…") and a "device window" that does not exist · CA35 · 2026-10-21
+- Question · strength says "rests on nothing established" without what would make it count · E12 · 2026-10-21
+- Question, Document · "The team's founder" for the acting member; "What would change it" twice · E14, E23 · 2026-10-21
+- Timeline · "Undetermined, because its owner does not settle its validity" · E34 · 2026-10-21
+- Plan · checks print "p1", "not_met" · E57 (C63 maps the codes; the sentences are the design's) · 2026-10-21
+- Assistant · "a reason this panel has no words for yet": add the row for the 503 UNAVAILABLE refusal · E59 (C92 makes the panel reachable) · 2026-10-21
+- Reader's copy · heading in capitals (internal words) · CA21 · 2026-10-21
+- Capture · the 504 sentence "kept nothing" is untrue when the bytes were kept (`control-plane` draws what was kept, C12; the sentence is the design's) · FC-04 · 2026-10-21
+- Timeline, Standard, Money · events without description/date/participants at creation; progressions typed as bar-separated lines (C55, DESIGN, the operation completes through "Add who took part" and "Record a dated fact") · E34, E35 · 2026-10-21
+- Welcome wizard · six side-trip steps point at nothing · S-15; Close form · first large block on a new project · S-09; inactive member told "password does not match" (oracle or help: Bob's policy) · S-18 · 2026-10-21
