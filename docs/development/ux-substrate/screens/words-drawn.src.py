@@ -6955,7 +6955,7 @@ W.append(dict(key='screen.start-send.kind.consent_decree_motion', en='motion und
 W.append(dict(key='screen.start-send.kind.constitutional_claim', en='constitutional claim', protected=False, note='DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps'))
 W.append(dict(key='screen.standard.held', en='Standards the team holds', protected=False, note="DEC-396: B444 item 8: heading of the list of held standards on a project's Standard screen"))
 W.append(dict(key='screen.standard.held.more', en='More standards are held than are shown.', protected=False, note='DEC-396: B444 item 8: under the held standards list when it is cut'))
-W.append(dict(key='shell.member.unknown', en='A member without a handle', protected=False, note="DEC-396: B444 item 9: the shell's name for a member id that has no handle"))
+W.append(dict(key='shell.member.unknown', en='A member of your team', protected=False, note="DEC-396: B444 item 9: the shell's name for a member id that has no handle"))
 W.append(dict(key='screen.money.proposed.member', en='proposed by a member; not included', protected=False, note='DEC-396: B444 item 10: money trail: label of a figure a member proposed to the trail, beside the machine one'))
 W.append(dict(key='screen.ceremony.signs.count.findings', en='One confirmation signs all {n}: the edition and its {findings} findings.', protected=False, note='DEC-396: B444 item 11: Sign step, under the list of what is signed, when no evidence is signed with the case'))
 W.append(dict(key='screen.ceremony.published.edition', en='Published: edition {n}', protected=False, note='DEC-396: B444 item 11: a reopened ceremony whose edition is already public'))
