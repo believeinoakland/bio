@@ -297,27 +297,46 @@ test("R48: a held capture never opened is decided (ARCHIVE_NOT_HELD, then NOT_AN
   }
 });
 
-test("R48: the same decision on a capture held in parts reads each part once (one head of the whole key, then a head and, for a store with no stored checksum, a read of each part): at most 1 + 2 a part, five for two, never a part twice; its answer is what it was", async () => {
-  const big = "x".repeat(9 * 1024 * 1024);
-  const cases = [["a ZIP archive in two parts", makeZip([{ name: "big", data: big, method: 0 }, { name: "b", data: "b" }]), true],
-                 ["an office file in two parts", docx(big), false]];
+test("R48: the same decision on a capture held in parts reads each part once (one head of the whole key, then a head and, for a store with no stored checksum, a read of each part): at most 1 + 2 a part, never a part twice; its answer is what it was. A capture within MULTIPART_KEEP_MAX is held whole too (C5) and costs what a whole one costs", async () => {
+  /* varied bytes, so the parts are distinct objects (identical parts share one digest and one object) */
+  const big = Buffer.from(Array.from({ length: 33 * 1024 }, (_, i) => String.fromCharCode(33 + (i * 7919) % 90).repeat(1024)).join(""));
+  const cases = [["a ZIP archive in parts", makeZip([{ name: "big", data: big, method: 0 }, { name: "b", data: "b" }]), true],
+                 ["an office file in parts", docx(big), false]];
   for (const [what, bytes, isZip] of cases) {
     const w = world();
+    w.b.checksums = false;   // a store that gives no stored checksum: each part is read to be verified
     const url = "https://f.example/big";
     const c = await run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/octet-stream" } }) }, { locator: url });
-    assert.equal(c.body.document.parts.length, 2, `${what}: held in parts`);
+    const n = c.body.document.parts.length;
+    assert.ok(n > 4, `${what}: held in ${n} parts, past the bound the whole is kept to`);
+    assert.equal(w.held(sha(bytes)), false, `${what}: past MULTIPART_KEEP_MAX only the parts are held`);
     w.rows("INSERT INTO bundles (bundle_id, object_type, group_id, current_state, created, last_updated, bundle_sha) VALUES ('INFO-BIG','information','g','collected','T','T','x')");
     w.prov.homes[sha(bytes)] = "INFO-BIG";
     w.prov.named[sha(bytes)] = c.body.document.parts.map((x) => ({ sha256: x.sha256, bytes: x.bytes }));
     w.rows("DELETE FROM archive_entries");   // an archive acquire opened is read as never opened
     w.b.calls.length = 0;
     const r = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: ADMIN });
-    assert.equal(reads(w), 5, `${what}: ${JSON.stringify(w.b.calls.map((x) => x[0]))}`);
-    assert.ok(reads(w) <= 1 + 2 * c.body.document.parts.length, `${what}: held to R48's bound for a capture in parts, one head of the whole key and at most two reads per part`);
+    assert.ok(reads(w) <= 1 + 2 * n, `${what}: held to R48's bound for a capture in parts, one head of the whole key and at most two reads per part (${reads(w)} of ${1 + 2 * n})`);
     const perKey = {};
     for (const x of w.b.calls) perKey[`${x[0]} ${x[1]}`] = (perKey[`${x[0]} ${x[1]}`] || 0) + 1;
-    assert.ok(Object.values(perKey).every((n) => n === 1), `${what}: no object is read twice`);
+    assert.ok(Object.values(perKey).every((k) => k === 1), `${what}: no object is read twice`);
     if (isZip) assert.deepEqual([r.ok, r.archive.opened, r.archive.refused, r.archive.entries], [true, false, null, 2], what);
+    else assert.deepEqual([r.ok, r.reason], [false, "NOT_AN_ARCHIVE"], what);
+  }
+  /* within the bound the capture is held whole as well (C5), and its decision costs what a whole one costs: a head, and a read of the bytes */
+  const small = "x".repeat(9 * 1024 * 1024);
+  for (const [what, bytes, isZip] of [["a ZIP archive kept whole", makeZip([{ name: "big", data: small, method: 0 }, { name: "b", data: "b" }]), true],
+                                      ["an office file kept whole", docx(small), false]]) {
+    const w = world();
+    const url = "https://f.example/mid";
+    const c = await run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/octet-stream" } }) }, { locator: url });
+    assert.equal(c.body.document.parts.length, 2, `${what}: arrived in two parts`);
+    assert.equal(w.held(sha(bytes)), true, `${what}: and is held whole`);
+    w.rows("DELETE FROM archive_entries");
+    w.b.calls.length = 0;
+    const r = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: ADMIN });
+    assert.ok(reads(w) <= 1 + 2 * 2, `${what}: ${reads(w)} reads`);
+    if (isZip) assert.deepEqual([r.ok, r.archive.refused, r.archive.entries], [true, null, 2], what);
     else assert.deepEqual([r.ok, r.reason], [false, "NOT_AN_ARCHIVE"], what);
   }
 });

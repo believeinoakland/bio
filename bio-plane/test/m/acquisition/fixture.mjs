@@ -40,17 +40,22 @@ export function storage() {
   return s;
 }
 
-/* An evidence bucket stand-in (the R2 binding's shape), recording every call. */
+/* An evidence bucket stand-in (the R2 binding's shape), recording every call. As R2 does, an object put with a `sha256` is
+   reported by `head` and `get` with the checksum it was verified by (`checksums.sha256`, bytes), unless a test sets
+   `checksums = false` to stand for a store that gives none. */
 export function bucket() {
-  const held = new Map(), calls = [];
-  const obj = (k) => { const b = held.get(k); return { key: k, size: b.length, body: b,
-    arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
+  const held = new Map(), sums = new Map(), calls = [];
+  const obj = (k, b) => { const sum = b.checksums !== false && sums.get(k); return { key: k, size: held.get(k).length, body: held.get(k),
+    ...(sum && b.checksums !== false ? { checksums: { sha256: sum } } : {}),
+    arrayBuffer: async () => held.get(k).buffer.slice(held.get(k).byteOffset, held.get(k).byteOffset + held.get(k).length) }; };
   return {
-    calls, held, failPut: false,
-    async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k) : null; },
-    async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes)); return { key: k }; },
-    async delete(k) { calls.push(["delete", k]); held.delete(k); },
+    calls, held, failPut: false, checksums: true,
+    async head(k) { calls.push(["head", k]); if (!held.has(k)) return null; const o = obj(k, this); return { key: k, size: o.size, ...(o.checksums ? { checksums: o.checksums } : {}) }; },
+    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k, this) : null; },
+    async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes));
+      if (opts && typeof opts.sha256 === "string" && /^[0-9a-f]{64}$/.test(opts.sha256)) sums.set(k, Uint8Array.from(Buffer.from(opts.sha256, "hex")).buffer); else sums.delete(k);
+      return { key: k }; },
+    async delete(k) { calls.push(["delete", k]); held.delete(k); sums.delete(k); },
   };
 }
 
@@ -128,7 +133,7 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
   const state = { outcomes: [], reach: new Map(), sessions: new Map(), day: null, render: { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 },
                   slots: new Map(), admits: [], spends: [], validators: new Map(), actors: [], events: [], limits: new Map(),
                   assets: new Map(), siteRecords: [], links: [], emitted: [], sessionSaves: [], sessionDrops: [],
-                  captured: [], clockMs: null, recordFails: false };
+                  captured: [], late: [], clockMs: null, recordFails: false };
   const today = (at) => (at || stamp()).slice(0, 10);
   const dayOf = (at) => { const d = today(at); if (state.day !== d) { state.day = d; state.render = { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 }; } return state.render; };
   return {
@@ -209,6 +214,8 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
       return v && (v.etag || v.lastModified) ? { etag: v.etag, lastModified: v.lastModified } : null; },
     /* capture R69 */
     recordCaptureActor(a) { state.actors.push(a); return { recorded: true }; },
+    /* capture R68 (T51; C12): a co-attestation that ended after the capture was answered, recorded when it ends */
+    recordLateAttestations(a) { state.late.push({ ...a, recordedAt: Date.now() }); return { recorded: true }; },
     /* capture R15: one event per (kind, capture). */
     async taskEnqueue(e) {
       if (!state.events.some((x) => x.kind === e.kind && x.captureSha === e.captureSha)) state.events.push(e);

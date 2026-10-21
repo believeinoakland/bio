@@ -1,0 +1,2046 @@
+{
+ "held": {
+  "ok": true,
+  "held": [
+   {
+    "bundle_id": "INFO-000",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/other-0",
+     "via": "archive.org",
+     "retrieved": "2026-01-02T00:00:00Z"
+    },
+    "collected_since": "2026-01-01T00:00:00Z",
+    "age_days": 69,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a000000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-02T00:00:00Z",
+    "bytes": 1000
+   },
+   {
+    "bundle_id": "INFO-028",
+    "title": "title INFO-028",
+    "project": null,
+    "source": null,
+    "collected_since": "2026-01-01T00:00:00Z",
+    "age_days": 69,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-3",
+       "title": "Question INQ-3",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": null,
+    "bytes": 1028
+   },
+   {
+    "bundle_id": "INFO-001",
+    "title": "title INFO-001",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-1",
+     "via": "direct",
+     "retrieved": "2026-01-02T00:00:00Z"
+    },
+    "collected_since": "2026-01-02T00:00:00Z",
+    "age_days": 68,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-02T00:00:00Z",
+    "bytes": 1001
+   },
+   {
+    "bundle_id": "INFO-002",
+    "title": "title INFO-002",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-2",
+     "via": "direct",
+     "retrieved": "2026-01-03T00:00:00Z"
+    },
+    "collected_since": "2026-01-03T00:00:00Z",
+    "age_days": 67,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-03T00:00:00Z",
+    "bytes": 1002
+   },
+   {
+    "bundle_id": "INFO-027",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-27",
+     "via": "direct",
+     "retrieved": "2026-01-28T00:00:00Z"
+    },
+    "collected_since": "2026-01-03T00:00:00Z",
+    "age_days": 67,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002700000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-28T00:00:00Z",
+    "bytes": 1027
+   },
+   {
+    "bundle_id": "INFO-030",
+    "title": "title INFO-030",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h2.example/doc-30",
+     "via": "direct",
+     "retrieved": "2026-01-03T00:00:00Z"
+    },
+    "collected_since": "2026-01-03T00:00:00Z",
+    "age_days": 67,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-03T00:00:00Z",
+    "bytes": 1030
+   },
+   {
+    "bundle_id": "INFO-032",
+    "title": "title INFO-032",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-32",
+     "via": "direct",
+     "retrieved": "2026-01-05T00:00:00Z"
+    },
+    "collected_since": "2026-01-05T00:00:00Z",
+    "age_days": 65,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-2",
+       "title": "Question INQ-2",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-05T00:00:00Z",
+    "bytes": 1032
+   },
+   {
+    "bundle_id": "INFO-033",
+    "title": "title INFO-033",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h1.example/doc-33",
+     "via": "direct",
+     "retrieved": "2026-01-06T00:00:00Z"
+    },
+    "collected_since": "2026-01-06T00:00:00Z",
+    "age_days": 64,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-06T00:00:00Z",
+    "bytes": 1033
+   },
+   {
+    "bundle_id": "INFO-003",
+    "title": "title INFO-003",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-3",
+     "via": "direct",
+     "retrieved": "2026-01-04T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-04T00:00:00Z",
+    "bytes": 1003
+   },
+   {
+    "bundle_id": "INFO-006",
+    "title": "title INFO-006",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h2.example/doc-6",
+     "via": "direct",
+     "retrieved": "2026-01-07T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000600000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-07T00:00:00Z",
+    "bytes": 1006
+   },
+   {
+    "bundle_id": "INFO-031",
+    "title": "title INFO-031",
+    "project": null,
+    "source": {
+     "address": "https://h3.example/doc-31",
+     "via": "direct",
+     "retrieved": "2026-01-04T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-04T00:00:00Z",
+    "bytes": 1031
+   },
+   {
+    "bundle_id": "INFO-034",
+    "title": "title INFO-034",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-34",
+     "via": "direct",
+     "retrieved": "2026-01-07T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003400000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-07T00:00:00Z",
+    "bytes": 1034
+   },
+   {
+    "bundle_id": "INFO-008",
+    "title": "title INFO-008",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-8",
+     "via": "direct",
+     "retrieved": "2026-01-09T00:00:00Z"
+    },
+    "collected_since": "2026-01-09T00:00:00Z",
+    "age_days": 61,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-3",
+       "title": "Question INQ-3",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-09T00:00:00Z",
+    "bytes": 1008
+   },
+   {
+    "bundle_id": "INFO-036",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/doc-36",
+     "via": "direct",
+     "retrieved": "2026-01-09T00:00:00Z"
+    },
+    "collected_since": "2026-01-09T00:00:00Z",
+    "age_days": 61,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a003600000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-09T00:00:00Z",
+    "bytes": 1036
+   },
+   {
+    "bundle_id": "INFO-009",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h1.example/doc-9",
+     "via": "direct",
+     "retrieved": "2026-01-10T00:00:00Z"
+    },
+    "collected_since": "2026-01-10T00:00:00Z",
+    "age_days": 60,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-10T00:00:00Z",
+    "bytes": 1009
+   },
+   {
+    "bundle_id": "INFO-007",
+    "title": "title INFO-007",
+    "project": null,
+    "source": null,
+    "collected_since": "2026-01-11T00:00:00Z",
+    "age_days": 59,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000700000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": null,
+    "bytes": 1007
+   },
+   {
+    "bundle_id": "INFO-010",
+    "title": "title INFO-010",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-10",
+     "via": "direct",
+     "retrieved": "2026-01-11T00:00:00Z"
+    },
+    "collected_since": "2026-01-11T00:00:00Z",
+    "age_days": 59,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-11T00:00:00Z",
+    "bytes": 1010
+   },
+   {
+    "bundle_id": "INFO-038",
+    "title": "title INFO-038",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-38",
+     "via": "direct",
+     "retrieved": "2026-01-11T00:00:00Z"
+    },
+    "collected_since": "2026-01-11T00:00:00Z",
+    "age_days": 59,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-11T00:00:00Z",
+    "bytes": 1038
+   },
+   {
+    "bundle_id": "INFO-012",
+    "title": "title INFO-012",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/doc-12",
+     "via": "direct",
+     "retrieved": "2026-01-13T00:00:00Z"
+    },
+    "collected_since": "2026-01-13T00:00:00Z",
+    "age_days": 57,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a001200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-13T00:00:00Z",
+    "bytes": 1012
+   },
+   {
+    "bundle_id": "INFO-013",
+    "title": "title INFO-013",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-13",
+     "via": "direct",
+     "retrieved": "2026-01-14T00:00:00Z"
+    },
+    "collected_since": "2026-01-14T00:00:00Z",
+    "age_days": 56,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-14T00:00:00Z",
+    "bytes": 1013
+   },
+   {
+    "bundle_id": "INFO-014",
+    "title": "title INFO-014",
+    "project": null,
+    "source": null,
+    "collected_since": "2026-01-15T00:00:00Z",
+    "age_days": 55,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001400000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": null,
+    "bytes": 1014
+   },
+   {
+    "bundle_id": "INFO-039",
+    "title": "title INFO-039",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-39",
+     "via": "direct",
+     "retrieved": "2026-01-12T00:00:00Z"
+    },
+    "collected_since": "2026-01-15T00:00:00Z",
+    "age_days": 55,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-12T00:00:00Z",
+    "bytes": 1039
+   },
+   {
+    "bundle_id": "INFO-016",
+    "title": "title INFO-016",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-16",
+     "via": "direct",
+     "retrieved": "2026-01-17T00:00:00Z"
+    },
+    "collected_since": "2026-01-17T00:00:00Z",
+    "age_days": 53,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-1",
+       "title": "Question INQ-1",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001600000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-17T00:00:00Z",
+    "bytes": 1016
+   },
+   {
+    "bundle_id": "INFO-018",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h2.example/doc-18",
+     "via": "direct",
+     "retrieved": "2026-01-19T00:00:00Z"
+    },
+    "collected_since": "2026-01-19T00:00:00Z",
+    "age_days": 51,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-19T00:00:00Z",
+    "bytes": 1018
+   },
+   {
+    "bundle_id": "INFO-020",
+    "title": "title INFO-020",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-20",
+     "via": "direct",
+     "retrieved": "2026-01-21T00:00:00Z"
+    },
+    "collected_since": "2026-01-21T00:00:00Z",
+    "age_days": 49,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-0",
+       "title": "Question INQ-0",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-21T00:00:00Z",
+    "bytes": 1020
+   },
+   {
+    "bundle_id": "INFO-021",
+    "title": "title INFO-021",
+    "project": "PROJ-1",
+    "source": null,
+    "collected_since": "2026-01-22T00:00:00Z",
+    "age_days": 48,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": null,
+    "bytes": 1021
+   },
+   {
+    "bundle_id": "INFO-019",
+    "title": "title INFO-019",
+    "project": null,
+    "source": {
+     "address": "https://h3.example/doc-19",
+     "via": "direct",
+     "retrieved": "2026-01-20T00:00:00Z"
+    },
+    "collected_since": "2026-01-23T00:00:00Z",
+    "age_days": 47,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-20T00:00:00Z",
+    "bytes": 1019
+   },
+   {
+    "bundle_id": "INFO-022",
+    "title": "title INFO-022",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-22",
+     "via": "direct",
+     "retrieved": "2026-01-23T00:00:00Z"
+    },
+    "collected_since": "2026-01-23T00:00:00Z",
+    "age_days": 47,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-23T00:00:00Z",
+    "bytes": 1022
+   },
+   {
+    "bundle_id": "INFO-024",
+    "title": "title INFO-024",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/doc-24",
+     "via": "direct",
+     "retrieved": "2026-01-25T00:00:00Z"
+    },
+    "collected_since": "2026-01-25T00:00:00Z",
+    "age_days": 45,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a002400000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-25T00:00:00Z",
+    "bytes": 1024
+   },
+   {
+    "bundle_id": "INFO-025",
+    "title": "title INFO-025",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-25",
+     "via": "direct",
+     "retrieved": "2026-01-26T00:00:00Z"
+    },
+    "collected_since": "2026-01-26T00:00:00Z",
+    "age_days": 44,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002500000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-26T00:00:00Z",
+    "bytes": 1025
+   }
+  ],
+  "state": "held",
+  "sort": "age",
+  "dir": "desc",
+  "limit": 1000,
+  "truncated": false,
+  "next": null
+ },
+ "vouched": {
+  "ok": true,
+  "held": [
+   {
+    "bundle_id": "INFO-000",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/other-0",
+     "via": "archive.org",
+     "retrieved": "2026-01-02T00:00:00Z"
+    },
+    "collected_since": "2026-01-01T00:00:00Z",
+    "age_days": 69,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a000000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-02T00:00:00Z",
+    "bytes": 1000,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-028",
+    "title": "title INFO-028",
+    "project": null,
+    "source": null,
+    "collected_since": "2026-01-01T00:00:00Z",
+    "age_days": 69,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-3",
+       "title": "Question INQ-3",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": null,
+    "bytes": 1028,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-001",
+    "title": "title INFO-001",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-1",
+     "via": "direct",
+     "retrieved": "2026-01-02T00:00:00Z"
+    },
+    "collected_since": "2026-01-02T00:00:00Z",
+    "age_days": 68,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-02T00:00:00Z",
+    "bytes": 1001,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-029",
+    "title": "title INFO-029",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-29",
+     "via": "direct",
+     "retrieved": "2026-01-02T00:00:00Z"
+    },
+    "collected_since": "2026-01-02T00:00:00Z",
+    "age_days": 68,
+    "eligible": null,
+    "eligibility_basis": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-02T00:00:00Z",
+    "bytes": 1029,
+    "standing": "verified",
+    "vouched": {
+     "by": "m2",
+     "at": "2026-02-03T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-002",
+    "title": "title INFO-002",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-2",
+     "via": "direct",
+     "retrieved": "2026-01-03T00:00:00Z"
+    },
+    "collected_since": "2026-01-03T00:00:00Z",
+    "age_days": 67,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-03T00:00:00Z",
+    "bytes": 1002,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-027",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-27",
+     "via": "direct",
+     "retrieved": "2026-01-28T00:00:00Z"
+    },
+    "collected_since": "2026-01-03T00:00:00Z",
+    "age_days": 67,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002700000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-28T00:00:00Z",
+    "bytes": 1027,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-030",
+    "title": "title INFO-030",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h2.example/doc-30",
+     "via": "direct",
+     "retrieved": "2026-01-03T00:00:00Z"
+    },
+    "collected_since": "2026-01-03T00:00:00Z",
+    "age_days": 67,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-03T00:00:00Z",
+    "bytes": 1030,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-032",
+    "title": "title INFO-032",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-32",
+     "via": "direct",
+     "retrieved": "2026-01-05T00:00:00Z"
+    },
+    "collected_since": "2026-01-05T00:00:00Z",
+    "age_days": 65,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-2",
+       "title": "Question INQ-2",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-05T00:00:00Z",
+    "bytes": 1032,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-005",
+    "title": "title INFO-005",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-5",
+     "via": "direct",
+     "retrieved": "2026-01-06T00:00:00Z"
+    },
+    "collected_since": "2026-01-06T00:00:00Z",
+    "age_days": 64,
+    "eligible": null,
+    "eligibility_basis": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000500000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-06T00:00:00Z",
+    "bytes": 1005,
+    "standing": "verified",
+    "vouched": {
+     "by": "m2",
+     "at": "2026-02-06T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-033",
+    "title": "title INFO-033",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h1.example/doc-33",
+     "via": "direct",
+     "retrieved": "2026-01-06T00:00:00Z"
+    },
+    "collected_since": "2026-01-06T00:00:00Z",
+    "age_days": 64,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-06T00:00:00Z",
+    "bytes": 1033,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-003",
+    "title": "title INFO-003",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-3",
+     "via": "direct",
+     "retrieved": "2026-01-04T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-04T00:00:00Z",
+    "bytes": 1003,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-006",
+    "title": "title INFO-006",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h2.example/doc-6",
+     "via": "direct",
+     "retrieved": "2026-01-07T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000600000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-07T00:00:00Z",
+    "bytes": 1006,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-031",
+    "title": "title INFO-031",
+    "project": null,
+    "source": {
+     "address": "https://h3.example/doc-31",
+     "via": "direct",
+     "retrieved": "2026-01-04T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-04T00:00:00Z",
+    "bytes": 1031,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-034",
+    "title": "title INFO-034",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-34",
+     "via": "direct",
+     "retrieved": "2026-01-07T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003400000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-07T00:00:00Z",
+    "bytes": 1034,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-008",
+    "title": "title INFO-008",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-8",
+     "via": "direct",
+     "retrieved": "2026-01-09T00:00:00Z"
+    },
+    "collected_since": "2026-01-09T00:00:00Z",
+    "age_days": 61,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-3",
+       "title": "Question INQ-3",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-09T00:00:00Z",
+    "bytes": 1008,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-036",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/doc-36",
+     "via": "direct",
+     "retrieved": "2026-01-09T00:00:00Z"
+    },
+    "collected_since": "2026-01-09T00:00:00Z",
+    "age_days": 61,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a003600000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-09T00:00:00Z",
+    "bytes": 1036,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-009",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h1.example/doc-9",
+     "via": "direct",
+     "retrieved": "2026-01-10T00:00:00Z"
+    },
+    "collected_since": "2026-01-10T00:00:00Z",
+    "age_days": 60,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-10T00:00:00Z",
+    "bytes": 1009,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-007",
+    "title": "title INFO-007",
+    "project": null,
+    "source": null,
+    "collected_since": "2026-01-11T00:00:00Z",
+    "age_days": 59,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000700000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": null,
+    "bytes": 1007,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-010",
+    "title": "title INFO-010",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-10",
+     "via": "direct",
+     "retrieved": "2026-01-11T00:00:00Z"
+    },
+    "collected_since": "2026-01-11T00:00:00Z",
+    "age_days": 59,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-11T00:00:00Z",
+    "bytes": 1010,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-035",
+    "title": "title INFO-035",
+    "project": null,
+    "source": null,
+    "collected_since": "2026-01-11T00:00:00Z",
+    "age_days": 59,
+    "eligible": null,
+    "eligibility_basis": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003500000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": null,
+    "bytes": 1035,
+    "standing": "verified",
+    "vouched": {
+     "by": "m2",
+     "at": "2026-02-09T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-038",
+    "title": "title INFO-038",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-38",
+     "via": "direct",
+     "retrieved": "2026-01-11T00:00:00Z"
+    },
+    "collected_since": "2026-01-11T00:00:00Z",
+    "age_days": 59,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-11T00:00:00Z",
+    "bytes": 1038,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-012",
+    "title": "title INFO-012",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/doc-12",
+     "via": "direct",
+     "retrieved": "2026-01-13T00:00:00Z"
+    },
+    "collected_since": "2026-01-13T00:00:00Z",
+    "age_days": 57,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a001200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-13T00:00:00Z",
+    "bytes": 1012,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-013",
+    "title": "title INFO-013",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-13",
+     "via": "direct",
+     "retrieved": "2026-01-14T00:00:00Z"
+    },
+    "collected_since": "2026-01-14T00:00:00Z",
+    "age_days": 56,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-14T00:00:00Z",
+    "bytes": 1013,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-011",
+    "title": "title INFO-011",
+    "project": null,
+    "source": {
+     "address": "https://h3.example/doc-11",
+     "via": "direct",
+     "retrieved": "2026-01-12T00:00:00Z"
+    },
+    "collected_since": "2026-01-15T00:00:00Z",
+    "age_days": 55,
+    "eligible": null,
+    "eligibility_basis": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-12T00:00:00Z",
+    "bytes": 1011,
+    "standing": "verified",
+    "vouched": {
+     "by": "m2",
+     "at": "2026-02-03T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-014",
+    "title": "title INFO-014",
+    "project": null,
+    "source": null,
+    "collected_since": "2026-01-15T00:00:00Z",
+    "age_days": 55,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001400000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": null,
+    "bytes": 1014,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-039",
+    "title": "title INFO-039",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-39",
+     "via": "direct",
+     "retrieved": "2026-01-12T00:00:00Z"
+    },
+    "collected_since": "2026-01-15T00:00:00Z",
+    "age_days": 55,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-12T00:00:00Z",
+    "bytes": 1039,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-016",
+    "title": "title INFO-016",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-16",
+     "via": "direct",
+     "retrieved": "2026-01-17T00:00:00Z"
+    },
+    "collected_since": "2026-01-17T00:00:00Z",
+    "age_days": 53,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-1",
+       "title": "Question INQ-1",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001600000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-17T00:00:00Z",
+    "bytes": 1016,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-017",
+    "title": "title INFO-017",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-17",
+     "via": "direct",
+     "retrieved": "2026-01-18T00:00:00Z"
+    },
+    "collected_since": "2026-01-18T00:00:00Z",
+    "age_days": 52,
+    "eligible": null,
+    "eligibility_basis": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001700000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-18T00:00:00Z",
+    "bytes": 1017,
+    "standing": "verified",
+    "vouched": {
+     "by": "m2",
+     "at": "2026-02-09T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-018",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h2.example/doc-18",
+     "via": "direct",
+     "retrieved": "2026-01-19T00:00:00Z"
+    },
+    "collected_since": "2026-01-19T00:00:00Z",
+    "age_days": 51,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001800000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-19T00:00:00Z",
+    "bytes": 1018,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-020",
+    "title": "title INFO-020",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-20",
+     "via": "direct",
+     "retrieved": "2026-01-21T00:00:00Z"
+    },
+    "collected_since": "2026-01-21T00:00:00Z",
+    "age_days": 49,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-0",
+       "title": "Question INQ-0",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002000000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-21T00:00:00Z",
+    "bytes": 1020,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-021",
+    "title": "title INFO-021",
+    "project": "PROJ-1",
+    "source": null,
+    "collected_since": "2026-01-22T00:00:00Z",
+    "age_days": 48,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": null,
+    "bytes": 1021,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-019",
+    "title": "title INFO-019",
+    "project": null,
+    "source": {
+     "address": "https://h3.example/doc-19",
+     "via": "direct",
+     "retrieved": "2026-01-20T00:00:00Z"
+    },
+    "collected_since": "2026-01-23T00:00:00Z",
+    "age_days": 47,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-20T00:00:00Z",
+    "bytes": 1019,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-022",
+    "title": "title INFO-022",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-22",
+     "via": "direct",
+     "retrieved": "2026-01-23T00:00:00Z"
+    },
+    "collected_since": "2026-01-23T00:00:00Z",
+    "age_days": 47,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002200000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-23T00:00:00Z",
+    "bytes": 1022,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-024",
+    "title": "title INFO-024",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h0.example/doc-24",
+     "via": "direct",
+     "retrieved": "2026-01-25T00:00:00Z"
+    },
+    "collected_since": "2026-01-25T00:00:00Z",
+    "age_days": 45,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": "Captured for a question you may not see."
+    },
+    "capture": {
+     "sha256": "a002400000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-25T00:00:00Z",
+    "bytes": 1024,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-025",
+    "title": "title INFO-025",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-25",
+     "via": "direct",
+     "retrieved": "2026-01-26T00:00:00Z"
+    },
+    "collected_since": "2026-01-26T00:00:00Z",
+    "age_days": 44,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002500000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-26T00:00:00Z",
+    "bytes": 1025,
+    "standing": "collected"
+   },
+   {
+    "bundle_id": "INFO-023",
+    "title": "title INFO-023",
+    "project": null,
+    "source": {
+     "address": "https://h3.example/doc-23",
+     "via": "direct",
+     "retrieved": "2026-01-24T00:00:00Z"
+    },
+    "collected_since": "2026-01-27T00:00:00Z",
+    "age_days": 43,
+    "eligible": null,
+    "eligibility_basis": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-24T00:00:00Z",
+    "bytes": 1023,
+    "standing": "verified",
+    "vouched": {
+     "by": "m2",
+     "at": "2026-02-06T00:00:00Z"
+    }
+   }
+  ],
+  "state": "held_and_vouched",
+  "sort": "age",
+  "dir": "desc",
+  "limit": 1000,
+  "truncated": false,
+  "next": null
+ },
+ "aside": {
+  "ok": true,
+  "held": [
+   {
+    "bundle_id": "INFO-004",
+    "title": "title INFO-004",
+    "project": null,
+    "source": {
+     "address": "https://h0.example/doc-4",
+     "via": "direct",
+     "retrieved": "2026-01-05T00:00:00Z"
+    },
+    "collected_since": "2026-01-05T00:00:00Z",
+    "age_days": 65,
+    "eligible": true,
+    "captured_for": {
+     "questions": [
+      {
+       "question": "INQ-4",
+       "title": "Question INQ-4",
+       "asker": "m1"
+      }
+     ],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000400000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "member:m2",
+    "retrieved": "2026-01-05T00:00:00Z",
+    "bytes": 1004,
+    "set_aside": {
+     "reason": "wrong page",
+     "author": "m1",
+     "at": "2026-02-20T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-037",
+    "title": "title INFO-037",
+    "project": null,
+    "source": {
+     "address": "https://h1.example/doc-37",
+     "via": "direct",
+     "retrieved": "2026-01-10T00:00:00Z"
+    },
+    "collected_since": "2026-01-10T00:00:00Z",
+    "age_days": 60,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003700000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-10T00:00:00Z",
+    "bytes": 1037,
+    "set_aside": {
+     "reason": "wrong page",
+     "author": "m1",
+     "at": "2026-02-20T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-015",
+    "title": "title INFO-015",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-15",
+     "via": "direct",
+     "retrieved": "2026-01-16T00:00:00Z"
+    },
+    "collected_since": "2026-01-19T00:00:00Z",
+    "age_days": 51,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a001500000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-16T00:00:00Z",
+    "bytes": 1015,
+    "set_aside": {
+     "reason": "wrong page",
+     "author": "m1",
+     "at": "2026-02-20T00:00:00Z"
+    }
+   },
+   {
+    "bundle_id": "INFO-026",
+    "title": "title INFO-026",
+    "project": null,
+    "source": {
+     "address": "https://h2.example/doc-26",
+     "via": "direct",
+     "retrieved": "2026-01-27T00:00:00Z"
+    },
+    "collected_since": "2026-01-27T00:00:00Z",
+    "age_days": 43,
+    "eligible": true,
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002600000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": null,
+    "retrieved": "2026-01-27T00:00:00Z",
+    "bytes": 1026,
+    "set_aside": {
+     "reason": "wrong page",
+     "author": "m1",
+     "at": "2026-02-20T00:00:00Z"
+    }
+   }
+  ],
+  "state": "set_aside",
+  "sort": "age",
+  "dir": "desc",
+  "limit": 1000,
+  "truncated": false,
+  "next": null
+ },
+ "mine": {
+  "ok": true,
+  "held": [
+   {
+    "bundle_id": "INFO-033",
+    "title": "title INFO-033",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h1.example/doc-33",
+     "via": "direct",
+     "retrieved": "2026-01-06T00:00:00Z"
+    },
+    "collected_since": "2026-01-06T00:00:00Z",
+    "age_days": 64,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-06T00:00:00Z",
+    "bytes": 1033
+   },
+   {
+    "bundle_id": "INFO-009",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h1.example/doc-9",
+     "via": "direct",
+     "retrieved": "2026-01-10T00:00:00Z"
+    },
+    "collected_since": "2026-01-10T00:00:00Z",
+    "age_days": 60,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-10T00:00:00Z",
+    "bytes": 1009
+   },
+   {
+    "bundle_id": "INFO-027",
+    "title": null,
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-27",
+     "via": "direct",
+     "retrieved": "2026-01-28T00:00:00Z"
+    },
+    "collected_since": "2026-01-03T00:00:00Z",
+    "age_days": 67,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002700000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-28T00:00:00Z",
+    "bytes": 1027
+   },
+   {
+    "bundle_id": "INFO-003",
+    "title": "title INFO-003",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-3",
+     "via": "direct",
+     "retrieved": "2026-01-04T00:00:00Z"
+    },
+    "collected_since": "2026-01-07T00:00:00Z",
+    "age_days": 63,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a000300000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-04T00:00:00Z",
+    "bytes": 1003
+   },
+   {
+    "bundle_id": "INFO-039",
+    "title": "title INFO-039",
+    "project": "PROJ-1",
+    "source": {
+     "address": "https://h3.example/doc-39",
+     "via": "direct",
+     "retrieved": "2026-01-12T00:00:00Z"
+    },
+    "collected_since": "2026-01-15T00:00:00Z",
+    "age_days": 55,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a003900000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": "2026-01-12T00:00:00Z",
+    "bytes": 1039
+   },
+   {
+    "bundle_id": "INFO-021",
+    "title": "title INFO-021",
+    "project": "PROJ-1",
+    "source": null,
+    "collected_since": "2026-01-22T00:00:00Z",
+    "age_days": 48,
+    "eligible": false,
+    "class": "crucial",
+    "reason": "r",
+    "captured_for": {
+     "questions": [],
+     "withheld": null
+    },
+    "capture": {
+     "sha256": "a002100000000000000000000000000000000000000000000000000000000000",
+     "grade": null
+    },
+    "actor": "m1",
+    "retrieved": null,
+    "bytes": 1021
+   }
+  ],
+  "state": "held",
+  "sort": "source",
+  "dir": "asc",
+  "limit": 7,
+  "truncated": false,
+  "next": null
+ }
+}

@@ -411,8 +411,10 @@ test("R96 (T51; A64): check with no validators asks unconditionally and hashes t
     assert.equal(u.changed.state, "unchanged");
     assert.equal(seenHeaders(net)[0]["if-none-match"], undefined, "no validators recorded: unconditional");
     answer = "the story, corrected";
+    /* T51 (C26): other bytes are a change only when both sides earned a determined substance digest (fix2-t51.test.mjs holds the
+       changed and unchanged-by-substance cases); this copy recorded none, so the look says it cannot tell, and still looked */
     const c = await f.c.heldAt({ sha256: sha(same), check: true, viewer: ADMIN, member: "member:m1" });
-    assert.deepEqual([c.changed.state, c.changed.served_sha256, typeof c.changed.looked_at], ["changed", sha(answer), "string"]);
+    assert.deepEqual([c.changed.state, c.changed.served_sha256, typeof c.changed.looked_at], ["undetermined", undefined, "string"]);
     assert.equal(c.copy.sha256, sha(same), "relative to the copy alone");
     assert.deepEqual(everything(f.rows, ["source_reachability"]), before, "nothing filed: the new bytes are not held");
     assert.equal((await f.c.heldAt({ address: ADDR, viewer: ADMIN })).versions, 1, "versionchain's view of the address is unchanged");
@@ -522,7 +524,11 @@ test("R96 (T51; A64): a copy that is no plain fetch (a rendered capture, an arch
     provDoc(f, "D-plain", [{ capture: { sha256: H("f5"), method: "fetched" } }]);
     net.restore();
     const net2 = network({ "https://pl.example/x": () => new Response("different") });
-    try { assert.equal((await f.c.heldAt({ sha256: H("f5"), check: true, viewer: ADMIN, member: "member:m1" })).changed.state, "changed"); }
+    try {
+      const looked = await f.c.heldAt({ sha256: H("f5"), check: true, viewer: ADMIN, member: "member:m1" });
+      assert.deepEqual([net2.seen.length, typeof looked.changed.looked_at], [1, "string"], "it looked (C26: this copy recorded no determined digest, so what it saw reads undetermined, not changed)");
+      assert.equal(looked.changed.state, "undetermined");
+    }
     finally { net2.restore(); }
   } finally { net.restore(); }
 });

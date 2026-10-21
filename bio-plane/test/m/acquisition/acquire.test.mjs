@@ -11,7 +11,7 @@ import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
-         civicsmithUserAgent, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
+         civicsmithUserAgent, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
@@ -349,7 +349,10 @@ test("R10: hashed as it arrives, stored in parts of 8 MiB; each refusal named; e
   assert.deepEqual(mp.body.document.parts.map((p) => p.bytes), [8 * 1024 * 1024, 10], "parts of 8 MiB, whatever the chunking");
   assert.deepEqual(mp.body.document.parts.map((p) => p.file), ["snapshots/big.part000", "snapshots/big.part001"]);
   assert.ok(w.b.calls.filter((c) => c[0] === "put").every((c) => c[2] && c[2].sha256), "each part stored with its checksum");
-  assert.equal(w.held(sha(big)), false, "the whole is never stored under its own hash");
+  /* T51 (C5): a multipart capture is also kept whole, under its own digest, so every reader finds it as it finds a single part;
+     the parts stay named and held (provenance R7 reads a capture past MULTIPART_KEEP_MAX by them). */
+  assert.equal(w.held(sha(big)), true, "the whole is kept under its own hash (fix2-t51.test.mjs holds the rest of it)");
+  assert.equal(sha(w.bytesOf(sha(big))), sha(big));
   assert.deepEqual(outcome("https://a.example/big"), ["success"]);
   /* over 256 MiB: TOO_LARGE, the stream cancelled */
   let cancelled = false, sent = 0;
@@ -703,9 +706,9 @@ test("R20 R28: every capture asks attestation's attest for a timestamp and, wher
   const arch = await run(a, wayback([{ ts: "20250101000000", body: "a" }]), { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin" });
   assert.equal(arch.status, 200);
   assert.ok(arch.net.attest.length >= 1 && arch.net.attest.every((x) => x.init.method === "POST"), "timestamps only");
-  /* a capture in parts: no object under the whole's hash, so attest asks the register, and this plane's receipt lets it proceed */
+  /* a capture in parts: no object under the whole's hash (past MULTIPART_KEEP_MAX the whole is not kept, C5), so attest asks the register, and this plane's receipt lets it proceed */
   const mp = world();
-  const big = new Uint8Array(8 * 1024 * 1024 + 1).fill(3);
+  const big = new Uint8Array(MULTIPART_KEEP_MAX + 1).fill(3);
   const m = await run(mp, { "https://a.example/big": () => new Response(big) }, { locator: "https://a.example/big" });
   assert.deepEqual([m.status, mp.prov.holds.includes(sha(big))], [200, true]);
   assert.ok(m.body.document.attestation_attempts.every((x) => x.attempted === true), "asked, on the receipt's strength");
