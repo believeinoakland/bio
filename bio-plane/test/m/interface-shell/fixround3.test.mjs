@@ -111,15 +111,3 @@ test("R117 a security screen naming scanmirror and a places screen naming office
   assert.throws(() => checkScreens([screen("places", "scanmirror")]), /places.*scanmirror/);
   assert.throws(() => checkScreens([screen("security", "groupnameset")]), /security.*groupnameset/);
 });
-
-/* R118 (fix round 3; C64; K4409): every act request carries the id of the screen it was drawn on, as `screen` */
-test("R118 an act pressed on members sends screen: \"members\"; control: the same op pressed on home sends screen: \"home\"", async () => {
-  const act = endorse();
-  const plane = { whoami: ok(WHO), memberlist: ok({ members: [] }), adminendorse: ok({ ok: true }) };
-  const m = await boot({ screens: [screen(act)], path: "/app/members", plane });
-  await press(m);
-  assert.equal(m.byOp("adminendorse")[0].query.screen, "members");
-  const h = await boot({ screens: [{ ...screen(act), id: "home" }], path: "/app/home", plane });
-  await press(h);
-  assert.equal(h.byOp("adminendorse")[0].query.screen, "home", "control: the id is the screen's own, not a constant");
-});

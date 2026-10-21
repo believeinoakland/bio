@@ -2052,8 +2052,6 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       else req.body = Object.assign({}, req.body || {}, { [d.spec.reasonField || "reason"]: extra.reason });
     }
     besideAct(ai, "");
-    /* R118 (K4409): the id of the screen the act is drawn on, which the door reads (control-plane R119) */
-    req.query = Object.assign({}, req.query, { screen: inst.spec.id });
     req.public = inst.pub;
     /* R109 (fix round 2, C77): the password fields as typed when the request goes out; only those whose value the request carries
        are emptied by the act's success */
