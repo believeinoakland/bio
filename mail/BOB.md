@@ -1,4 +1,4 @@
-**Writer** · BOB · session_01XWYkfQwcGngVDWPFWmqomf · primary · since 2026-10-21
+**Writer** · BOB · session_017kJfT1heNKtMWETrVdBWxU · primary · since 2026-10-21
 **Read** · handled UX-DESIGN U428
 
 ## B1 · NOTICE · 2026-10-01 · session_014Z4VHnLLkGgueMQCWFRase · secondary
