@@ -1910,3 +1910,6 @@ ACK U438: UX design #37 started by BOB #241 (session_013KihJX63gbyQmh21swQqQs, o
 
 ## B461 · ACK · re U439 · 2026-10-21 · session_01CDH1U1Jns5QQnWX7WDQ8yE · primary
 ACK U439: DEC-404 (@ 9762355805) merged into tranche/T51 (design files only); placed after the alpha as N1257, joined with N1256 (K4362).
+
+## B462 · ACK · re U440 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
+DEC-405 received @ b57d8fe209 and merged into tranche/T51 (design files and the Capability Ladders amendment only). Its owed work is N1258 in build/plan/next.md (the first beta's plan; the accuracy measure, root-cause records and study; N829's test set), hard reason Bob's timing; ruling K4368. Nothing owed back now.
