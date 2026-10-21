@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_01FQVnGoBMzsSJMQVV911nYM · depth 2 · COMPLETE · handled B10
+**Status** · session_01EBabhfYdEqcho6FTvR1wrp · depth 2 · COMPLETE · handled B11
 
 ## J1 · QUESTION
 
@@ -173,3 +173,29 @@ Deferred: none. Found in other modules: none new.
 Tests and checks: `node --test --test-force-exit bio-plane/test/m/queue/`: 206 pass, 0 fail. `checks/run.mjs`: no failure names queue (the 10 coverage failures are other modules' ids: screens-inquiry R123–R125, screens-intake R54, screens-publish R70–R72, and others); words 0 failures; channels 0. `checks/ownership.mjs … queue tranche/T51 job/T51/queue`: 0 failures.
 
 Size (session_01FQVnGoBMzsSJMQVV911nYM): test runs 2, module lines 0
+
+## J10 · COMPLETE
+
+QUEUE #32 (session_01EBabhfYdEqcho6FTvR1wrp), depth 2. B11 (fix round 4, wave 1, #15): P9's provider part, queue R93. Tranche merged at start and again before this entry (wave-1 providers merged before me are read in the second merge; no scripted double stands in for one).
+
+**Cause P9 / P10 / C14, provider part: `op=queue` with `count: true`** (`bio-plane/src/queue/index.mjs` `queueFeed`, `queueOps`, `queueAnswer`; `door.mjs` `queueFeedOp`). It answers `{ok, member, count}`: the open items the list would hold, after the mutes and the projects' decisions and before the limit's cut, so it equals the length of the same viewer's uncut list (`limit: 500` on any fixture under 500). No item, block or decoration is built or sent. The query's "true" and "1" read as the other flags do. The route passes `count` on; the door passes it to the store (and still no `now`); the decoration passes the answer through, as it does the muted list.
+
+**The four fields**
+1. Root cause: known. The frame's bell and sidebar have only the list to get a number from (`op=queue`, 10.6 KB for the smoke member, 117 KB for the walker's), and read it for themselves and the screen again. Provider fix: the number alone. What it does not do, said plainly: the feed is still assembled in the store (the count needs the mint, the mutes and the projects' decisions), so the saving is the answer's size and decoration and the second list read, not the store's assembly time; L13's per-feed times (R91) name what makes that dear.
+2. Why the tests missed it: no requirement asked the frame's number of the queue, so the frame read the list (class b: reads counted, not time or size). Test-gap fix: `count.test.mjs` holds the count against the list; the users' read-set tests (control-plane, screens-daily, cause-shell-4) assert one `queue` list and the frame on `count`.
+3. Failing-first (R93, `bio-plane/test/m/queue/count.test.mjs`, 4 tests), seen red before the change: `count: true` answered the full list (no `count`), the limit and mute case answered `undefined`, the route, door and decoration test failed on the decorated list, and the control (no `count`: list as before, no `count` key) passed in both states. Green after: 4 of 4. Tests: (a) count equals the uncut list's length for a member, for the query's "true" and "1", and for a machine credential, with no `items` key; (b) a `limit` of 2 does not cut it, a mute lowers it as it lowers the list, another member's count is not moved by it (R30); (c) the route, the door's pass-through (with `now` still not passed) and `queueAnswer` carry it; (d) control: `count` absent, false, "false", "0", null or "" reads the list as before, with every block, and no `count`.
+4. Platform check: N for the change (pure code), with P for the baseline. Read-only probe of the smoke copy, member, 1280 px, `/app` (probe.mjs, no proxy): two `op=queue` reads per page load, 1023 ms and 1022 ms (each 10,676 / 10,564 bytes), in parallel with 15 other reads; `bootstrap` 1491 ms, `projectlist` 1491 ms. R93 is not deployed (no mid-round deploy), so its own time is first measured at the redeploy: expect the same store time, a few hundred bytes, no second list.
+
+**Requirement ids met**: R93 (marked met in `build/requirements/queue.md`: the line now states the count's definition, the door and the decoration; ownership lists that one file, accepted at the merge by B4). No other line proposed.
+
+**Tests and checks** (from `/home/user/bio` after the second merge)
+- `node --test --test-force-exit bio-plane/test/m/queue/`: 210 pass, 0 fail (206 before; 4 new).
+- Impact (`impact.mjs origin/tranche/T51 HEAD`: queue, store-door, control-plane, plane; 90 test files): every file passes but five, which fail identically on the tranche tip without my change, so not mine: `plane/disclosures.test.mjs`, `plane/release.test.mjs`, `plane/roster.test.mjs`, `plane/store.test.mjs`, `store-door/declared-ops.test.mjs`.
+- `checks/run.mjs`: format 0, architecture 0, channels 0; coverage 15 failures and words 3, none naming queue (coverage: acquisition R99, agent-harness R17, agent-runner R37 R38, citation R21, control-plane R120–R122, installer-steps R26 R31, interface-shell R120, journey-check R19, jurisdictions R96 R97, money R29, pdf-reader R40 R41, public-read R42, screens-daily R95, screens-inquiry R129, screens-publish R80: unmerged providers' and users' ids; words: op-grades inline strings). `coverage.mjs … queue`: 54 of 54, 0 failures. `words.mjs … queue`: 0 failures.
+- `checks/ownership.mjs /home/user/bio queue tranche/T51 job/T51/queue`: 1 failure, `build/requirements/queue.md` outside queue's paths, tests and job record: the one requirement file B4 accepts at the merge.
+
+**Questions**: none open. **Reported to BOB**: nothing new in another module. Users of R93 for BOB's order: control-plane's frame read (`bootstrap` once; `Server-Timing`), screens-daily's bell and sidebar (C70's numbers equal the items), cause-shell-4's shared frame reads; each reads `op=queue&count=true` for the number and `op=queue` only on the Queue screen. Hand rows that can go: none.
+
+Commit `b2776a6fbe` on `job/T51/queue` (the change is `b6d3a06377`).
+
+Size (session_01EBabhfYdEqcho6FTvR1wrp): test runs 12, module lines 3391

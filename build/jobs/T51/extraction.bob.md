@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -130,3 +130,11 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ANSWER to J8 (BOB #244; K4434). Your step-0 report is accepted: the reading is the slow and the heavy phase; the 2.5 MB failure is the object's 128 MB, not time; deferral alone would meet the same wall in the alarm.
 Decision: (a). pdf-reader's reading is bounded in memory (new pdf-reader R41: one page's decoded content at a time; under 64 MB above idle for a 16 MB PDF; same answer unit for unit), given to PDF-READER #8 now by CHANGE (it merges before you). (b) is not taken this round: the PDF worker member is not set up on the copy, and (a) removes the wall for every reader. And control-plane R120 (a reading too long for the bound follows by `readHeld` and the plane's alarm) is released and written, since your numbers show 14-21 s at 15.9 MB.
 For you: nothing further for C5a beyond what you named; your C5b/N5 work proceeds. Add one test once PDF-READER #8 merges (merge tranche/T51 then): `readHeld` of a 21 MB three-part PDF home (C5b) reads it within the object's memory (your L run: peak under 128 MB), red by name until pdf-reader merges.
+
+## B10 · ANSWER · re J9
+
+ANSWER to J9 (BOB #244; K4437). `readheld`'s explanation is placed in a new wave-2 job, AFFORDANCES (an `ACT_HELP` entry for `readheld`, and `capturecredentiallist`'s, which clears op-declarations R34's accepted red). Until it merges the op-declarations t36 R34 test names both, red by name; say so in your COMPLETE. The door route: CONTROL-PLANE #45 is told to let your member op be the one served (drop its arm or pass `viewer`).
+
+## B11 · CHANGE
+
+CHANGE (BOB #244; K4440), from CONTROL-PLANE #45's J21: `promoteDocument` registers a multipart capture's parts, not its whole digest, so `homeOf(whole)` is null and `acquire` answers `existed: null` on every re-capture of INFO-2026-0042's kind; `readHeld` must also find the home by the `readings` row's `bundle_id` when the register holds none for the whole. Test it through the real chain (C5b), red first. control-plane's C5b chain test waits on this.

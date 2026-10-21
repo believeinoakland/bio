@@ -1,6 +1,6 @@
 # host-governor (T51)
 
-**Status** · session_012JfPrhVAyX8eCRnPmwMWYQ · depth 2 · COMPLETE · handled B1
+**Status** · session_01E5aZgMS5PZNR6n1pGjwdGB · depth 2 · COMPLETE · handled B4
 
 ## Completion (fix round 3, wave 1)
 
@@ -17,3 +17,54 @@ Size (session_012JfPrhVAyX8eCRnPmwMWYQ): test runs 14, module lines 447
 ## J1 · COMPLETE
 
 C13 (my part, P4b) met: R29. governorAdmit({host, peek:true}) answers as R1-R6 would and writes nothing (no state for an unmet host, no token/grant/refusal/cool-off change); only peek===true peeks; governedFetch unchanged. New peek.test.mjs (8 tests, seen failing first, controls). host-governor 47/0. Direct users: acquisition 185/0, capture 228/0, capture-requests 129/0, network-notices 75/0, monitoring 168/0, machinery-producers 35/0, instance-setup 217/0, plane 279/1 (plane R24 screen-words, not my diff, red on tranche tip). Checks: coverage host-governor clean, architecture 0, words 0, ownership 0; format 1 on tranche tip (rulings.md K4349), not mine. For BOB: acquisition must pass peek:true at acquisition/index.mjs:912 (R97) or the double booking stands. Size (session_012JfPrhVAyX8eCRnPmwMWYQ): test runs 14, module lines 447
+
+## J2 · QUESTION
+
+STEP 0 REPORT, N-slow-refuse (R-FOUR (1)): root cause NOT in host-governor as hypothesised; asking BOB's release and one decision.
+
+WHAT I MEASURED (local, real clock, real HostGovernor on SQLite, real `governedFetch`, two stub HTTP hosts, 127.0.0.1):
+- host answering 403: request 1 fetched, 521 ms, `{res: 403}`; requests 2 and 3: 0 ms, `{refusedByGovernor, reason: cooling_off, retry_in_ms: 29999, last_refusal_status: 403}`.
+- host answering 429 + `Retry-After: 60`: request 1 3 ms `{res: 429}`; requests 2 and 3: 0 ms, `retry_in_ms: 60000` then `59999`.
+So today a cooling host is refused at once and `governedFetch` never sleeps out a cool-off or a Retry-After. The only sleep in the module is `host-governor/index.mjs:325` `if (waitMs > 0) await sleep(waitMs)`, R6's jittered gap: at the default appetite 12/min it is at most 7.5 s (gap 5 s x j<1.5), at appetite a/min at most 90 s / a. It is not bounded by any `maxWaitMs` (the name R30 uses; it does not exist in the code), so a low `GOVERNOR_APPETITE_PER_MIN` or a host configured low would hold one request for up to a minute or more. On first contact with a host `last_grant_at` is 0 and the wait is 0, so this sleep cannot make a FIRST capture of api.github.com/zen, timeanddate.com or random.org take 60 s.
+- Plain GETs of the three sites from this container, no proxy, 2026-10-21: api.github.com/zen 403 in 0.07 s; timeanddate.com 403 in 0.24 s; random.org 200 in 0.39 s. The sites refuse fast; the time is spent in our path, not theirs.
+- Where the path goes after a refusing answer: `acquisition/index.mjs:1033` governed fetch; a non-ok status returns at `:1110-1112` `answer(502, SOURCE_REFUSED)` straight after `noteOutcome` (`recordSourceOutcome`). Before the fetch the only timed stage that can wait is `addressReputation`, bounded at 5 s (`REPUTATION_TIMEOUT_MS`, :1572). Nothing on that path sleeps 60 s by my reading.
+- I could not read the smoke copy's `governorstate` (it needs a signed-in browser session; plain read of the home page answered 200 in 4.4 s). That row would show whether the instance carries a low `GOVERNOR_APPETITE_PER_MIN` or a configured appetite for these hosts.
+
+READING, stated as a reading and not a proof: the 60.5 s is not a governor cool-off sleep. Candidates, in the order I would test: (a) R6's wait_ms with a low appetite binding or per-host appetite on the smoke copy (the walker's three sites may each have been visited before, spending the burst, then waiting the gap); (b) a stage outside this module before or after the fetch (the door's capture path, `capture-requests` retry, or the object not answering: the same STORE_DID_NOT_ANSWER family as C5a's 36.8 s). The door phase clock BOB has planned for C5a (`timings.door`) would name it; mine cannot.
+
+WHAT I WILL DO WITHOUT WAITING (R30 is mine whatever the cause): `governedFetch` caps its R6 wait at `maxWaitMs` and, over it, refuses as R5 refuses (`retry_in_ms`, nothing fetched); admit stays at once for cooling hosts; tests with the two stub hosts, red first. Proposed `maxWaitMs`: 3000 ms (R30's 3 s bound), a `governedFetch` option with that default, so a refused host returns within 3 s.
+
+QUESTIONS FOR BOB (smallest things):
+1. Release: may I write the R30 fix above (cap at `maxWaitMs`, default 3000)? It is correct by R30 whatever step 0 finds, but it may not be the whole of N-slow-refuse.
+2. R30 says a refused host "is refused to the caller": today the FIRST request to a 403/429 host returns `{res}` with that status (the page's own answer, 3 ms to 521 ms) and only LATER requests return `{refusedByGovernor}`. I read R30 as: the first returns the status quickly (caller sees 403/429, R9 records the cool-off with `retry_in_ms` available through the record), the second is `refusedByGovernor` with `retry_in_ms`. Please say if the first must also carry `retry_in_ms` (then `governedFetch` would return `{res, retry_in_ms}` additionally after a 403/429).
+3. The cause needs a stage clock I cannot read from here. Is the smoke `governorstate` read (signed-in, read-only) wanted from me, or does BOB's C5a door clock cover it? Until then the walker's 60.5 s stays UNEXPLAINED by my module and the cause stays open under R-FOUR (1); acquisition (seam owner) carries the whole-path test.
+
+## J3 · QUESTION
+
+QUESTION (replaces none; J2 is answered). R30 is written and green in my module; one consequence lands in `plane`, which is not mine.
+
+LIVE-CHECK done (B3 item 3): signed-in, read-only `op=governorstate` on biosmoke8, 39 hosts, no appetite configured anywhere for api.github.com, www.timeanddate.com, www.random.org (appetite null: default 12/min). Each of the three has granted 1, refusals 1, last_refusal_status 403, refused_total 0, and cooloff_until = last_grant_at + ~30.03 s: the governed fetch and its report took ~30 ms after the admission, wait_ms was 0. So candidate (a) is REFUTED: the governor was not the 60 s. The time is before the admission or after the report, in acquisition's or the door's path: cause stays with acquisition (R95 stages) and control-plane (R121 door clock). (Only web.archive.org carries appetite 24.)
+
+WHAT I BUILT (job/T51/host-governor, committed): `governorAdmit({host, maxWaitMs})` refuses a wait over `maxWaitMs` as R5 refuses (reason `appetite`, `retry_in_ms` = the wait, no token, no grant); `governedFetch` passes `maxWaitMs` (default `MAX_WAIT_MS` 3000), never sleeps over it, and returns `{res, retry_in_ms}` for a 403/429/503 (the cool-off R9 recorded). New `refuse.test.mjs` (5 tests, red first). Two existing exact-shape assertions updated for R30 (admit now carries `maxWaitMs: 3000`) and one control moved to a 3000 ms gap.
+
+THE CONSEQUENCE (needs your decision): at the default appetite R6's gap is 3.0 to 7.5 s, so a SECOND capture of the same host within ~4 s now comes back `HOST_COOLING_OFF` / reason `appetite` / "retry in about 5s" instead of waiting 4 to 5 s. It breaks `plane/test/m/plane/t36.test.mjs:299` (R29: two `acquire`s of agendas.example.org back to back; second now answered 429 retry_in_ms 4224). Red only with my change (plane otherwise has the same 4 reds as the tranche tip). Users: acquisition 194/1 (1 red on tip: C-48 table test), capture 240/0, capture-requests 129/0, network-notices 75/0, monitoring 168/0, machinery-producers 35/0, instance-setup 217/0.
+Options: (A) keep 3000 as R30 says; the plane job (wave 0, after me) changes t36's second acquire (another host, or waits out the gap); a member capturing two documents from one site in quick succession sees "retry in about 5 s". (B) set `MAX_WAIT_MS` to 8000: R6's whole gap at the default appetite (max 7.5 s) is still waited, pacing never refuses, only a long wait (low appetite, 60 s) is refused; R30's "under 3 s" holds for refused and cooling hosts, not for paced ones. Recommendation: B for members' sake, with R30's wording "at most `maxWaitMs`" kept and the constant 8000; but A is what R30's text says literally. Tell me A or B; I will change the constant/test and re-run before COMPLETE. Carrying on with the record and checks meanwhile.
+
+## Completion (fix round 4, wave 0)
+
+**N-slow-refuse** (R30, RC-R8; K4429, K4437).
+1. **Root cause.** Not in host-governor (step 0, J2, accepted B3). Local, real clock, two stub hosts: 403 host first request 521 ms, then refused at once (`retry_in_ms` 29999); 429 + `Retry-After: 60` host 3 ms, then refused at once (60000). The module's only sleep is `index.mjs` `governedFetch` `await sleep(waitMs)` (R6's gap, at most 7.5 s at the default appetite; uncapped before this job). LIVE-CHECK (P), signed-in read-only `op=governorstate` on biosmoke8, 2026-10-21 ~22:00 UTC, 39 hosts: api.github.com, www.timeanddate.com, www.random.org have appetite null (default 12/min), granted 1, refusals 1, status 403, refused_total 0, `cooloff_until` = `last_grant_at` + ~30.03 s, so the fetch and its report took ~30 ms and wait_ms was 0: candidate (a) refuted. Plain GET (no proxy) of the three: 403 in 0.07 s, 403 in 0.24 s, 200 in 0.39 s. The walker's 60.5 s is before the admission or after the report, in acquisition's or the door's path; carried by acquisition (R95) and control-plane (R121), BOB's release B3/B4.
+2. **Test-gap fix.** `refuse.test.mjs`: real stub hosts (403; 429 + Retry-After 60) through the real governor on the real clock, entered by `governedFetch`; nothing before tested a refusing host.
+3. **Failing-first (R30).** Red before the fix (first request had no `retry_in_ms`; `maxWaitMs` unknown; a 60 s wait slept out), green after: each stub host answers in under 3 s with `retry_in_ms` (30000 / 60000 band), the second request is refused at once with nothing fetched and the cool-off recorded; a wait over `maxWaitMs` is refused as R5 refuses with no token or grant; at the default appetite a second request waits R6's whole gap (<= 7.5 s) and succeeds. Controls: an admitted fetch waits `wait_ms`; an unrefused status carries no `retry_in_ms`.
+4. **Platform check: F (two stub hosts) + P (above).** No L: the module has no platform-limited behaviour of its own.
+
+- **Entries applied.** `governorAdmit({host, maxWaitMs})` refuses a longer wait as R5 (reason `appetite`, `retry_in_ms` = the wait, `refused_total` +1, no token, no grant); `governedFetch` option `maxWaitMs` (default `MAX_WAIT_MS` 8000, B4), passes it to admit, never sleeps over it, refuses a governor's over-long wait it did not itself refuse, and returns `{res, retry_in_ms}` after a 403/429/503 (the cool-off R9 recorded). `maxWaitMs` is declared in `governorAdmit`'s doc comment (a store route, not a census op, K4208). Existing tests: `governor.test.mjs` R15/R16 expect `maxWaitMs: 8000` in the admit call (R30 amends R15).
+- **Deferred.** None. **Found in another module.** None.
+- **Runs.** host-governor 57/0. Users: capture 240/0, capture-requests 129/0, network-notices 75/0, monitoring 168/0, plane t36 14/0 (R29 stays green under 8000); plane 278/5 and acquisition 194/1: the same reds as the tranche tip (compared with the tip's host-governor), not mine. Checks: format 0, architecture 0, coverage host-governor 30 of 30, ownership 0; `checks/run.mjs`: 15 coverage and 3 inline-words failures in other modules (op-grades, screens-*), none in host-governor files.
+- **Requirement ids met:** R30 (and R4, R9, R15, R16 as amended). **Questions:** J2 and J3 both answered (B3, B4); none open.
+
+Size (session_01E5aZgMS5PZNR6n1pGjwdGB): test runs 22, module lines 464
+
+## J4 · COMPLETE
+
+COMPLETE: host-governor N-slow-refuse (R30, K4437 option B). governedFetch maxWaitMs default 8000 never slept over, over-long wait refused as R5; governorAdmit({host,maxWaitMs}); first 403/429/503 returns {res, retry_in_ms}; refused/cooling hosts answer at once. Four fields in my record. Root cause outside the governor (LIVE-CHECK P: three sites granted 1, report ~30 ms after grant, wait_ms 0); acquisition R95 and control-plane R121 name the stage. Tests: host-governor 57/0 (refuse.test.mjs, red first, controls); users capture 240, capture-requests 129, network-notices 75, monitoring 168, plane t36 14/0; plane 278/5 and acquisition 194/1 are the tranche tip's reds. Checks format/architecture/coverage/ownership 0. No question open. Size (session_01E5aZgMS5PZNR6n1pGjwdGB): test runs 22, module lines 464

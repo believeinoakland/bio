@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01RNKFMerseiVz1hP5LfR1JD · depth 2 · COMPLETE · handled B7
+**Status** · session_01RnSLEohe5ooQjmP6bd8UAC · depth 2 · COMPLETE · handled B11
 
 ## J1 · REPORT
 
@@ -153,3 +153,51 @@ Tests and checks:
 - Environment: `file-scanner`, `bio-plane/src/journey-check`, `sheet-worker`, `agent-runner`, `site` have a lockfile and no `node_modules` here (K4113); none is an input to extraction's or control-plane's suite, so I did not install them.
 
 Size (session_01RNKFMerseiVz1hP5LfR1JD): test runs 6, module lines 3354
+
+## J8 · QUESTION
+
+STEP-0 REPORT for C5a/P8 (extraction's part: the reading of the 2.5 / 8.8 / 15.9 MB PDFs). No fix code written; I ask you to release or redirect the fix.
+
+Measured on the real govinfo files (BUDGET-2025-BUD 2.39 MiB/188 pages, BUDGET-2025-PER 8.39 MiB/295 pages, BUDGET-2024-APP 15.19 MiB/1354 pages), the reading being tier 1 (`pdf` format entry = `extractPdfStructure`, pure JS, in the plane's object; the PDF_WORKER member is not used for these in the walker's copy: "no pdf-worker member is set up" / tier 1 only).
+
+L (workerd 2026-07-22 under miniflare, the module bundled as a Worker, idle workerd RSS 85 MB; local workerd does not enforce the 128 MB, so the peak is compared to it):
+- 2.39 MiB: 1.57 s in the isolate, workerd RSS peak 221 MB (+136 over idle)
+- 8.39 MiB: 2.32 s, peak 403 MB (+318)
+- 15.19 MiB: 14.40 s, peak 471 MB (+386)
+Node, whole `Extraction.read` (reading + text units, the fixture's baseline heap included): 1.5 s / 3.4 s / 20.7 s wall (CPU-bound, cpu = wall); heap + array buffers peak 176 / 329 / 508 MB; RSS peak 328 / 523 / 967 MB. Pages read 188 / 295 / 1354; units 17 / 65 / 58.
+
+Reading it: (1) the reading IS the slow and heavy phase: CPU time 1.5 s, 3.4 s, 14-21 s, so at 15.9 MB it alone is over half the door's 25 s, and the 8.8 MB capture fails at 25-36 s only if acquire (fetch + parts + keep) takes the rest; (2) the cause of the 502 `STORE_DID_NOT_ANSWER` at 2.5 MB (3 of 3) is memory, not time: the reading needs about +136 MB over the idle isolate, past the object's 128 MB, so the object is reset mid-read, which also loses the in-memory stage holder (`timings: {}`) and silences the same object's other calls: hypothesis H, now measured for the memory half; (3) because the memory is what fails, RC-R1's deferral (reading after the answer, by `readHeld` and the plane's alarm) does NOT by itself fix it: the alarm runs the same read in the same object and meets the same 128 MB. Every PDF over about 2 MB would still reset the object, only later.
+
+What would work (the module and what it needs; I write none of it before your release):
+ (a) pdf-reader (`extractPdfStructure`) bounded in memory: it brute-force scans every object and every ObjStm and keeps all page content streams decoded; a page-by-page reader that drops each page's decoded stream after reading it would hold the peak near one page's worth. That is `pdf-reader`'s module (wave 0 #1, merged before me), not mine.
+ (b) the read of a PDF over a size bound (say 2 MB, RC-R1's own figure) goes to the PDF_WORKER fleet member (tier 2, its own isolate and limits) and the object only stores its answer; `reading-pipeline.read` is `reading-pipeline`'s (cause-reading-3 in wave 1), the object's alarm is `plane`'s.
+ (c) extraction, mine: `readHeld` and `readheld` already read what the pipeline reads; once (a) or (b) lands there is nothing further to change in extraction for C5a. Until then `readHeld` of a 21 MB PDF (C5b) meets the same wall: its reading by tier 1 would need about +400 MB.
+Please decide: which of (a) or (b), and which job; or hold C5a's fix for the redeploy's phase clock (K4428). My C5b/N5 work (below) is independent of this and proceeds.
+
+## J9 · QUESTION
+
+QUESTION (replaces nothing; J8 is the C5a step-0 report). One cross-module thing `op=readheld` (N5, RC-R3) needs, found by running the impacted suites:
+
+`bio-plane/test/m/op-declarations/t36.test.mjs` (R34, affordances R48) now lists `readheld` among the member ops that have "no text and no ground": every op in SESSION_OPS.member must have an explanation in affordances' `ACT_HELP` or be named in `ACT_HELP_ABSENT`. `readheld` is a member op because extraction declares it (`DECLARED_OPS.readheld`, classes admin and member, `needs: null`, weight undetermined), which RC-R3 requires so a screen can offer it. The same test already fails on the tranche tip for `capturecredentiallist`, so it is red there, not caused by me; mine adds `readheld` to its list.
+Smallest thing I need: `affordances` (or whoever BOB names) adds `readheld` to `ACT_HELP` (a sentence such as the press "Read it now" does: the document's record holds it unread, the press reads it) or to `ACT_HELP_ABSENT`. I cannot write another module's file. Until it is written, that one test names `readheld` as well as `capturecredentiallist`.
+
+Also for your information (no answer needed): the op's door route. `control-plane/owner-ops.mjs:103` already maps a store-internal `readheld` to `readHeld({sha, storeName})`; extraction now also exports `extractionOps().readheld` (the member's op: gated by the `viewer` stamp, refused as an absent record, NO_SHA without a digest), spread earlier in `plane/store.mjs:777` and so overridden by the control-plane arm unless control-plane's job drops its arm or passes `viewer` through it. control-plane (wave 0 #6) owns that; I list it in my COMPLETE.
+
+## J10 · COMPLETE
+
+COMPLETE (EXTRACTION #30, fix round 4, wave 0). Commits on job/T51/extraction up to 8ba962b9c2 (tranche/T51 merged at the end). One test is red by name, as B9 ordered, until PDF-READER #8's code merges: `c5b-memory.test.mjs`. It is the only open item.
+
+Entries applied: R80 as amended (RC-R3): `readHeld` replaces a failed reading once; `op=readheld`; B11 (K4440) home found by the held reading's bundle.
+
+C5b (1) Root cause: `readHeld` answered READING_HELD for any readings row (extraction/index.mjs readHeld), a failed one too; the failed reading is `reading-pipeline/index.mjs:1373` bytesOf over 20 MiB with no whole; plus (K4440) a multipart capture is registered by its parts so `homeOf(whole)` is null: readHeld now falls back to the bundle of the readings row. Now `#wantedTheWhole`: found false, its document has `parts`, and its basis is one of reading-pipeline's three want-of-whole sentences (over the size, a part not held, parts not adding up); a reading with text, and a failed reading made from the whole (single capture, or parts with another basis), are not replaced; the replacement is in the same transaction and only if the stored reading is still the one examined, so a second call changes nothing and a replacement that fails again is not read a third time. (2) Test gap: readHeld's tests built a home with no reading. Fix: `r80-failed.test.mjs` builds the failed reading by the real chain (`read` over a 3-part, 21,036,491-byte document with no whole held, then the promote projection, then the whole held). (3) Failing-first, seen red then green: "R80 R45 (C5b) a home promoted with a reading that failed for want of the whole is read by readHeld once..." (red: read false READING_HELD; green: reading has the units, history keeps the failed reading); controls (text not replaced; failed from whole not read again, single and in parts; no whole object; no home) green before and after; the K4440 test (register names nothing for the whole) red before the fallback, green after. The door half (second `acquire` of the address then `op=reading` has text) is control-plane's seam test. (4) L: the memory of the reading. `c5b-memory.test.mjs` (a 20 MB, 1300-page synthetic three-part PDF through the real chain, child process --expose-gc): the read, found and pages assertions pass; the memory assertion is RED BY NAME: 889 MB above idle against the object's 128 MB, until pdf-reader R41 (PDF-READER #8) is on tranche/T51 (not yet at my last merge, 22:1x UTC). P (read-only, smoke copy): INFO-2026-0042-a-pdf-from-www-oaklandca-gov (capture sha 7b7db7d3...) `op=reading` found:false (no reading row now, the copy differs from the walker's 12:xx state); INFO-2026-0080-member-photo-rewalk-jpg (sha f021bf80...) found:false, the N5 premise (stored unread).
+
+N5 (1) Root cause: certain, no door for a record already stored unread. Now `extractionOps().readheld` (the member's act, body or address `sha`; NO_SHA without a digest; `viewer` stamp gates it: a viewer who may not see the home's bundle, or none, is answered `{ok:true, read:false, why:"NO_HOME"}` exactly as for a digest with no home, writing nothing) and `DECLARED_OPS.readheld` (classes admin, member; mutating; needs null; weight undetermined; fields accepts/requires `sha`). (2) The old-data case is now a fixture: a home the register names, whole held, no readings row. (3) "R80 (N5): op=readheld by a member who may see the document reads a record stored unread; a second press changes nothing" red (no arm), green; controls green; `declared-ops.test.mjs` readheld arm green. (4) P: INFO-2026-0080 stored unread (above); the press is walked at the re-walk.
+
+C5a (extraction's part): J8, accepted in B9. Numbers, L (workerd 2026-07-22 under miniflare, tier 1 of the real govinfo files, idle RSS 85 MB): 2.39 MiB 1.6 s peak 221 MB; 8.39 MiB 2.3 s 403 MB; 15.19 MiB 14.4 s 471 MB. Node whole read: 1.5/3.4/20.7 s. Nothing further in extraction.
+
+Requirement ids met: R80 (as amended), R79 (readheld declared), plus all R-ids named as before; coverage 56 of 56.
+Suites: extraction 218 tests, 217 pass, 1 fail (the named red). Also run: reading-pipeline 380/380; op-declarations+op-grades+conformance 513, 1 fail (t36 R34, below); plane 283, 2 fail; control-plane 356, 2 fail. Checks: format, architecture, coverage, ownership 0 failures; checks/run.mjs 0 findings for extraction (one sentence moved to key `extraction.index.readheld_no_sha`).
+Reds not mine / expected: (a) op-declarations t36 R34 names `readheld` and `capturecredentiallist`: B10, cleared by AFFORDANCES; (b) control-plane `r117-held.test.mjs` "R117 (the door's map)" now answers 403 CLASS_FORBIDDEN where it expects 400 UNKNOWN_OP, since `readheld` is a real op: CONTROL-PLANE #45 updates that test and drops its arm `owner-ops.mjs:103` or passes `viewer` (otherwise that arm overrides mine in plane/store.mjs and is ungated); (c) red on the tranche tip too: plane `release.test.mjs` (screen.objective.purpose), plane `roster.test.mjs` (project-roster R5/R9/R45), control-plane `t47-e2e.test.mjs` (R81 Home).
+Words rows to regenerate at the layer close: extraction.declared.readheld, extraction.index.readheld_no_sha (setup-words --check reports rows.mjs stale on them; expected).
+QUESTIONs: J8 answered B9, J9 answered B10; none open. Proposed requirement lines: none beyond RC-R3 (K4440's home-by-reading's-bundle is stated by the tests; add to R80 if you want it written).
+Size (session_01RnSLEohe5ooQjmP6bd8UAC): test runs 24, module lines 3409

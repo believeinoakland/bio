@@ -4,7 +4,7 @@
    requirement states it (writes nothing) and counts the grants it books. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, sha, text, page, HTML } from "./fixture.mjs";
+import { world, run, sha, text, page, HTML, network } from "./fixture.mjs";
 import { RENDER_DEFAULTS } from "../../../src/render.mjs";
 import { HostGovernor } from "../../../src/host-governor/index.mjs";
 import { ACQUISITION_CHECKS } from "../../../src/acquisition/checks.mjs";
@@ -112,13 +112,12 @@ const withPutFromParts = (w, answer) => {
   return calls;
 };
 
-test("R96 (C5 e): a capture too large for memory keeps its parts, and after the answer the store is asked to make the whole from them with `putFromParts`, once, each part named once in order, none read back, outside the answer's time", async () => {
+test("R96 (C5 e): a capture too large for memory keeps its parts, and the store is asked to make the whole from them with `putFromParts`, once, each part named once in order, none read back, awaited within the bound", async () => {
   const w = world();
   const calls = withPutFromParts(w, async () => { await sleep(400); return { ok: true, size: 0 }; });
-  const waited = [];
   const big = varied(32 * MIB + 1, 5);
   const t0 = Date.now();
-  const r = await run(w, { "https://a.example/huge.pdf": octet(big) }, { locator: "https://a.example/huge.pdf" }, { waitUntil: (p) => waited.push(p), settle: false });
+  const r = await run(w, { "https://a.example/huge.pdf": octet(big) }, { locator: "https://a.example/huge.pdf" }, { settle: false });
   const answeredAt = Date.now();
   assert.equal(r.status, 200);
   assert.equal(r.body.parts, 5);
@@ -126,9 +125,8 @@ test("R96 (C5 e): a capture too large for memory keeps its parts, and after the 
   assert.equal(calls.length, 1, "asked once");
   assert.equal(calls[0].digest, sha(big));
   assert.deepEqual(calls[0].partDigests, r.body.document.parts.map((p) => p.sha256), "each part named once, in order");
-  assert.ok(answeredAt - calls[0].at < 400 && !("keep" in r.body.timings.stages), "the answer did not wait for it: no keep stage");
-  assert.equal(waited.length, 1, "handed to the caller's waitUntil, so it outlives the answer");
-  await waited[0];
+  assert.ok(answeredAt - calls[0].at >= 380 && r.body.timings.stages.keep >= 380, "R96 (C5c): the answer awaited it, as stage keep");
+  assert.equal(r.body.keep_pending, undefined, "kept within the bound: no keep_pending");
   await r.settled();
   assert.deepEqual(w.b.calls.filter((c) => c[0] === "get"), [], "no part is read back by this module");
   assert.equal(w.b.calls.filter((c) => c[0] === "put" && c[1] === wholeKey(w, big)).length, 0, "the whole is not put by this module: the store makes it");
@@ -152,13 +150,52 @@ test("R96 (C5 e) controls: a capture within memory is put whole by this module a
   for (const answer of [async () => ({ ok: false, reason: "OBJECT_TOO_LARGE" }), async () => { throw new Error("store down"); }]) {
     const f = world();
     const c = withPutFromParts(f, answer);
-    const waited = [];
-    const fr = await run(f, { "https://a.example/huge": octet(big) }, { locator: "https://a.example/huge" }, { waitUntil: (p) => waited.push(p) });
+    const fr = await run(f, { "https://a.example/huge": octet(big) }, { locator: "https://a.example/huge" });
     assert.equal(fr.status, 200, "the capture is kept either way");
-    await Promise.all(waited);
     assert.equal(c.length, 1);
     assert.deepEqual(f.prov.receipts.map((x) => x.captureSha), [sha(big)]);
   }
+});
+
+/* R96 (fix round 4, C5c): a keep that will not end within the bound is registered with the store handed in and the answer says so */
+test("R96 (C5c): a keep that outlasts what is left of the bound is handed to keepLater and the answer says keep_pending; control: one that ends in time registers nothing", async () => {
+  const big = varied(32 * MIB + 1, 8);
+  const w = world();
+  const calls = withPutFromParts(w, async () => { await sleep(1500); return { ok: true }; });
+  const registered = [];
+  w.store.keepLater = async (k) => { registered.push(k); return { ok: true }; };
+  const t0 = Date.now();
+  const r = await run(w, { "https://a.example/slow": octet(big) }, { locator: "https://a.example/slow" }, { boundMs: 5600 });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.keep_pending, true);
+  assert.ok(Date.now() - t0 < 1500 + 3000, "answered without waiting out the keep");
+  assert.equal(registered.length, 1);
+  assert.equal(registered[0].sha, sha(big));
+  assert.equal(registered[0].parts.length, 5);
+  assert.ok(registered[0].parts.every((d) => /^[0-9a-f]{64}$/.test(d)), "parts are digests");
+  assert.equal(calls.length, 1);
+  const f = world();
+  withPutFromParts(f, async () => ({ ok: true }));
+  const fr2 = [];
+  f.store.keepLater = async (k) => { fr2.push(k); return { ok: true }; };
+  const ok = await run(f, { "https://a.example/fast": octet(big) }, { locator: "https://a.example/fast" });
+  assert.equal(ok.body.keep_pending, undefined);
+  assert.deepEqual(fr2, []);
+});
+
+/* R96 (C5c) with the real record-core putFromParts over a bucket with R2's multipart upload: the whole is held and readable once the answer is given */
+test("R96 (C5c): with record-core's real putFromParts, a 40 MB capture in parts answers with the whole held under its digest and no part read back by this module", async () => {
+  const w = world();
+  const uploads = new Map();
+  w.b.createMultipartUpload = async (key) => { const id = uploads.size; const parts = []; uploads.set(id, parts);
+    return { uploadPart: async (n, bytes) => { parts[n - 1] = new Uint8Array(bytes); return { partNumber: n }; },
+             complete: async () => { const all = Buffer.concat(parts); w.b.held.set(key, new Uint8Array(all)); }, abort: async () => {} }; };
+  const big = varied(40 * MIB, 3);
+  const r = await run(w, { "https://a.example/forty.pdf": octet(big) }, { locator: "https://a.example/forty.pdf" });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.keep_pending, undefined);
+  assert.equal(sha(w.bytesOf(sha(big))), sha(big), "the whole is held under its digest");
+  assert.equal(r.body.parts, 5);
 });
 
 /* ---------- C12: no fixed wait for the trusted timestamp ---------- */
@@ -294,4 +331,118 @@ test("R98 (C25) controls: a plain-text capture and a binary capture answer title
   const rr = await run(rw, { [PAGE]: () => page(HTML("<div id=app></div>")) }, { locator: PAGE, render: true });
   assert.equal(rr.body.document.capture.method, "rendered");
   assert.equal(rr.body.document.title, "As rendered");
+});
+
+/* ---------- C25 (fix round 4): a PDF is named by its own Title entry (pdf-reader R40's pdfTitle) ---------- */
+const pdfWith = (info) => new TextEncoder().encode(`%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>\nendobj\n4 0 obj\n<< ${info} >>\nendobj\ntrailer\n<< /Root 1 0 R /Info 4 0 R /Size 5 >>\n%%EOF\n`);
+const pdfRes = (b) => () => new Response(b, { headers: { "content-type": "application/pdf" } });
+
+test("R98 (fix round 4, C25): a PDF with a Title entry answers it as `document.title`, one with none answers null; control: an HTML page's title is read as before", async () => {
+  const w = world();
+  const titled = await run(w, { "https://www.irs.example/f1040es.pdf": pdfRes(pdfWith("/Title (2026 Form 1040-ES) /Producer (x)")) }, { locator: "https://www.irs.example/f1040es.pdf" });
+  assert.equal(titled.status, 200);
+  assert.equal(titled.body.document.title, "2026 Form 1040-ES");
+  const bare = await run(world(), { "https://www.irs.example/none.pdf": pdfRes(pdfWith("/Producer (x)")) }, { locator: "https://www.irs.example/none.pdf" });
+  assert.equal(bare.body.document.title, null);
+  assert.equal("reading" in bare.body, false, "R8: still no reading");
+  const html = await run(world(), { "https://a.example/n": () => page("<title>Notice 2026-118</title>") }, { locator: "https://a.example/n" });
+  assert.equal(html.body.document.title, "Notice 2026-118");
+});
+
+/* ---------- N-slow-refuse (fix round 4): a refused host is answered at once, through the whole path, with the real governor ---------- */
+test("R9 R95 (N-slow-refuse; host-governor R30): through the real governedFetch, a host answering 403 and one answering 429 with Retry-After: 60 are each refused in words within 3 s with timings, nothing kept, and a second acquire of the cooling host is refused at once with retry_in_ms and no fetch; control: an unrefused fetch is unchanged", async () => {
+  const w = world();
+  const g = new HostGovernor({ sql: w.s.sql, core: w.core }); g.migrate();
+  w.store.governor = g;
+  const routes = {
+    "https://no.example/a": () => new Response("no", { status: 403 }),
+    "https://slow.example/a": () => new Response("slow down", { status: 429, headers: { "retry-after": "60" } }),
+    "https://ok.example/a": () => page(HTML("<p>fine</p>")),
+  };
+  for (const [url, wantStatus] of [["https://no.example/a", 403], ["https://slow.example/a", 429]]) {
+    const t0 = Date.now();
+    const r = await run(w, routes, { locator: url });
+    assert.ok(Date.now() - t0 < 3000, `${url} answered within 3 s (${Date.now() - t0} ms)`);
+    assert.equal(r.body.ok, false);
+    assert.equal(r.body.reason, "SOURCE_REFUSED");
+    assert.equal(r.body.status, wantStatus);
+    assert.ok(Number.isInteger(r.body.retry_in_ms) && r.body.retry_in_ms > 0, "retry_in_ms is stated");
+    assert.ok(r.body.timings && r.body.timings.stages.fetch >= 0);
+    assert.equal(w.held(sha("no")), false, "nothing kept");
+  }
+  const again = await run(w, routes, { locator: "https://slow.example/a" });
+  assert.equal(again.body.reason, "HOST_COOLING_OFF");
+  assert.ok(again.body.retry_in_ms > 0);
+  assert.equal(again.net.seen.length, 0, "the cooling host is not fetched again");
+  const fine = await run(w, routes, { locator: "https://ok.example/a" });
+  assert.equal(fine.status, 200);
+});
+
+/* ---------- C13b (fix round 4): a continuation with no live render starts the render afresh. The renderer here is a scripted double
+   (no real render runs in this module's tests; capture-sources runs the same case with the real one). ---------- */
+const neverRenderer = () => { const calls = []; return { calls, RENDERER: { fetch: async (u, init) => { calls.push(JSON.parse(init.body)); return new Promise(() => {}); } } }; };
+const answeringRenderer = () => { const calls = []; return { calls, RENDERER: { fetch: async (u, init) => { const q = JSON.parse(init.body); calls.push(q); return new Response(JSON.stringify(R_ANSWER(q.url))); } } }; };
+const SHELL = HTML("<div id=app></div>");
+const RENDERED_PAGE = HTML("<p>rendered</p>");
+const R_ANSWER = (url) => ({ ok: true, html: RENDERED_PAGE, elapsed_ms: 12, engine: "Chrome", engine_version: "1", viewport: { width: 1280, height: 800 },
+  dpr: 1, locale: "en-US", timezone: "UTC", navigated_to: url, status: 200, requests: [], scripts: [], wait: { asked: RENDER_DEFAULTS.wait, fired: "networkidle" } });
+
+test("R99 R12 R5 (C13b): the render's run never settles (the request that began it ended): finishing the capture after the live bound starts the render afresh and files the visitor copy, closing the session; control: before the bound it still answers pending and keeps the session", async () => {
+  const PG = "https://r.example/never";
+  const w = world({ env: neverRenderer() });
+  const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
+  const sid = first.body.document.render_pending.session;
+  const early = await run(w, {}, { continue: sid }, { renderWaitMs: 10, renderStaleMs: 60000 });
+  assert.equal(early.body.render.state, "pending", "control: within the live bound it is pending");
+  assert.ok(w.store.state.sessions.has(sid), "and the session is kept");
+  /* the renderer now answers; the lost run is not waited for any longer */
+  w.core.settings = w.core.settings;
+  const env2 = answeringRenderer();
+  w.store.env.RENDERER = env2.RENDERER;
+  await sleep(70);
+  const done = await run(w, { [PG]: () => page(SHELL) }, { continue: sid }, { renderStaleMs: 50 });
+  assert.equal(done.status, 200);
+  assert.equal(done.body.document.capture.method, "rendered", "the second document is the visitor copy");
+  assert.equal(done.body.document.capture.sha256, sha(RENDERED_PAGE));
+  assert.equal(env2.calls.length, 1, "rendered afresh, once");
+  assert.equal(w.store.state.sessions.has(sid), false, "the session is closed");
+  assert.notEqual(done.body.note && done.body.continued, true);
+});
+
+test("R99 R12 R5 (C13b): the object restarted (the render table is gone): finishing the capture renders afresh and files the visitor copy; a render that does not come back is refused in words and closes the session", async () => {
+  const PG = "https://r.example/restarted";
+  const w = world({ env: neverRenderer() });
+  const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
+  const sid = first.body.document.render_pending.session;
+  const fresh = await import("../../../src/acquisition/index.mjs?restart=c13b");   // a new module instance: an empty render table
+  w.store.env.RENDERER = answeringRenderer().RENDERER;
+  const net = network({ [PG]: () => page(SHELL) });
+  const done = await fresh.acquire(w.store, { continue: sid }, { cls: "member", member: true, sessMember: "m1", storeName: "bio" });
+  net.restore();
+  assert.equal(done.status, 200);
+  assert.equal(done.body.document.capture.method, "rendered");
+  assert.equal(w.store.state.sessions.has(sid), false);
+  /* a render begun afresh that never comes back is final: refused in words, the session closed, never "already in the record" */
+  const w2 = world({ env: neverRenderer() });
+  const f2 = await run(w2, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
+  const sid2 = f2.body.document.render_pending.session;
+  const fresh2 = await import("../../../src/acquisition/index.mjs?restart=c13b2");
+  const net2 = network({ [PG]: () => page(SHELL) });
+  const bad = await fresh2.acquire(w2.store, { continue: sid2 }, { cls: "member", member: true, sessMember: "m1", storeName: "bio", renderWaitMs: 30 });
+  net2.restore();
+  assert.deepEqual([bad.status, bad.body.reason], [502, "RENDER_FAILED"]);
+  assert.equal(typeof bad.body.detail, "string");
+  assert.equal(bad.body.continued, undefined);
+  assert.equal(w2.store.state.sessions.has(sid2), false, "the session is closed");
+});
+
+test("R98 R15 (C25): an undetermined capture's queue event keeps `subject` the locator and carries the document's `title` when it has one; control: none when it has none", async () => {
+  const w = world();
+  await run(w, { "https://a.example/t": () => page("<title>Notice 2026-118</title>") }, { locator: "https://a.example/t" });
+  const ev = w.store.state.events.find((e) => e.kind === "authority-undetermined");
+  assert.equal(ev.subject, "https://a.example/t");
+  assert.equal(ev.title, "Notice 2026-118");
+  const n = world();
+  await run(n, { "https://a.example/n": () => text("plain") }, { locator: "https://a.example/n" });
+  assert.equal("title" in n.store.state.events.find((e) => e.kind === "authority-undetermined"), false);
 });

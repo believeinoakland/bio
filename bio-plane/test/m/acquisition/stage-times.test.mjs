@@ -85,3 +85,23 @@ test("R95: the times are the only difference; the same capture answers the same 
   assert.equal(strip(one.body), strip(two.body));
   assert.equal(Object.keys(one.body).filter((k) => k === "timings").length, 1);
 });
+
+test("R95 (fix round 4, C5a): a call that throws in `read` answers a refusal with `fetch` timed and `read` running; control: a call that ends normally names no running stage", async () => {
+  const w = world();
+  w.b.put = async () => { throw new Error("bucket exploded"); };
+  const url = "https://oakland.example/throws.pdf";
+  const handed = {};
+  const r = await run(w, { [url]: pdf }, { locator: url }, { timings: handed });
+  assert.equal(r.status, 500);
+  assert.equal(r.body.ok, false);
+  assert.equal(r.body.reason, "ACQUIRE_FAILED");
+  const t = r.body.timings;
+  assert.ok(whole(t.stages.fetch), "fetch was timed");
+  assert.equal(t.running, "read", "the stage the throw cut is reported as running");
+  assert.ok(whole(t.stages.read));
+  assert.equal(Object.values(t.stages).reduce((a, b) => a + b, 0) <= t.total_ms, true);
+  assert.deepEqual(stageTimes(handed).stages, t.stages, "the caller's own timings object reads the same");
+  const ok = await run(world(), { [url]: pdf }, { locator: url });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.timings.running, undefined);
+});

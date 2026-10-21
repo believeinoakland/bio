@@ -1,6 +1,6 @@
 # BOB to queue-producers (T51)
 
-**Read** · handled J11
+**Read** · handled J13
 
 ## B1 · START
 
@@ -102,3 +102,35 @@ Read in full (never in part): queue-producers R52, R53 and the lines on the noti
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, use a stand-in (the key with a plain `localize` default, named in your record as a stand-in) until the design's rows land, and carry on; never block on them and never invent the final sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/queue-producers/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B10 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/queue-producers tranche/T51 && git branch -m job/T51/queue-producers stale/queue-producers-local && git checkout -b job/T51/queue-producers origin/job/T51/queue-producers`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · QUEUE-PRODUCERS #23 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #244 is depth 1; fix round 4, wave 1; K4429)
+
+Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md`. Model claude-haiku-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `queue-producers`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51, planned whole in `build/plan/fix-round-4-T51.md` (K4429): read its section 0 and your causes' section 2 entries. Rows below are verbatim from `build/plan/walk-T51-rewalk3/A.md`, `B.md`, `build/plan/lane-performance/HANDOFF.md`. Merge `tranche/T51` first. Wave 1 (16 providers, independent) merges in the plan's table order; you are #14. Wave 0 is on `tranche/T51`; a wave-1 provider merged before you is read when you merge again before COMPLETE, until then a scripted double, said in the record.
+
+Requirement lines: none (propose a line in COMPLETE) (`build/plan/fix-round-4-reqs.md`), **written by BOB on tranche/T51 before your wave**; propose any further line in COMPLETE (BOB writes `build/requirements/`).
+
+**Rules (plan section 0; K4426-K4428).** R-FOUR: each cause has four fields, which BOB checks before the one redeploy: (1) root cause with file:line, or "root cause unknown": step 0 is a diagnosis posted as a QUESTION to BOB before any fix, BOB releases the fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test of the walker's row on the same entry path (press the act, never call the done function), seen red then green; (4) the platform check: L (local workerd/miniflare, real limits: 128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound, service binding, real-size file), P (read-only probe of the smoke copy), F (fixture from the live record or site) or N; numbers in the record; LIVE-CHECKs are read-only reads of https://biosmoke8.believeinoakland.workers.dev without the proxy, as `build/plan/walk-T51-build/BRIEF.md` says; no mid-round deploy; a check you cannot run is said so and the cause stays open. R-SEAM: for a cause spanning modules the seam owner (S) is the last-merged job on the path press -> stored result; its test is the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape; providers test the same case at their interface; a seam test needing an unmerged provider is written first and stays red by name. R-NOTMET: no "not met", "deferred", "not proved", REPORT or open QUESTION at COMPLETE; name the smallest thing you need and ask BOB now. R-OLD: a fix to stored data is "new data only" or has a repair entry. R-ONE: one owning job per cause; the walker's row names the first test.
+
+**Your causes** (your part; the walker's row verbatim; the four fields):
+
+1. **C69**: Owner: the sentence when the first reading was undetermined; merge identical stored NOTICED items once at the next wake (repair entry). One module: no seam; the test enters by the act.
+   > | C69 | CA60 | 1280 | admin | the newer copy above produced Queue items | FIXED (new items) / STILL (old pairs) | my own newer-copy made ONE "NOTICED: A newer version of A page from httpbin.org ... may change a passage ..." item. The two identical NOTICED items already stored under "Walk T51 conclusions-action" (made by the old code) are still there, not merged. Queue loads in 4.3 s (85 items); another load 14.5 s | shots/B/queue-mine-1280.png |
+   > | (C69 aside) | - | 1280 | admin | read the new NOTICED item | NEW (MINOR) | "A newer capture of what this reference points to was read as. Nothing about the reference has changed ..." the word after "read as" is missing (the older items say "read as undetermined") | shots/B/queue-mine-1280.png |
+   (1) CERTAIN: the sentence is built from the reference's stated state, absent for a capture read after its first (older items said "undetermined").
+   (2) Fixtures always state it. Fix: a fixture of a newer copy of a page whose first reading was undetermined.
+   (3) ONE item reading "read as undetermined". Old data: the two identical NOTICED items already stored: a repair entry (queue-producers merges identical stored items once, at its next wake), not NR.
+   (4) N.
+
+Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`.
+COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B11 · ANSWER · re J12
+
+ANSWER to J12 (BOB #244; K4440). Decision 1: no repair this round; C69's fix is new data only (R-OLD): say so in COMPLETE; the re-walk scores the old pair apart and a read of the two stored notices is taken there; if they lack the keys, the repair is reevaluation's next entry. Decision 2: keep the existing fill; the short fill row ("undetermined") goes to the design's word batch; name the key in COMPLETE. Complete now.

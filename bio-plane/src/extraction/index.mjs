@@ -37,7 +37,7 @@ import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsT
          readingFromWire, decodeView, textCountsOf, textWordsFor, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
          compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, tier4Pages,
          AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE } from "../reading-pipeline/index.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP, TRANSCRIBE_WORDS };
 
@@ -625,30 +625,45 @@ export class Extraction {
   /* ---- reading a held home (R80) ---- */
 
   /** R80 (T51 fix round 3, C5; K4356, K4358; amends R20, R27; provenance R4; control-plane R117): an in-process act the
-   *  door calls, not an op. A home the register names (`provenance.homeOf`) that has no `readings` row is read once the
-   *  evidence store holds the object under the digest, whole: the stored document is read as R1 and `read` do, and the
-   *  reading written for that bundle by R19's writer, in one transaction with the history and the index, as a composed
-   *  reading of this instance. Otherwise nothing is written and the answer is `{ok: true, read: false, why}`, `why` a
-   *  stable code: `NO_HOME` (the register names none, or the digest is no digest), `READING_HELD` (a reading, a failed
-   *  one too, is already held) or `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no
-   *  register row and no promotion, and replaces no reading: a reading that lands while the bytes are read stands (the
-   *  row is looked at again inside the write). A reading that finds nothing is a failed reading, recorded (R45). */
-  async readHeld({ sha = null, storeName = "bio", env = null } = {}) {
+   *  door calls, and (fix round 4, N5; K4429) `op=readheld`. A home the register names (`provenance.homeOf`) that has no
+   *  `readings` row is read once the evidence store holds the object under the digest, whole: the stored document is read
+   *  as R1 and `read` do, and the reading written for that bundle by R19's writer, in one transaction with the history and
+   *  the index, as a composed reading of this instance. Otherwise nothing is written and the answer is
+   *  `{ok: true, read: false, why}`, `why` a stable code: `NO_HOME` (neither the register nor a reading held for the digest names a home bundle, the digest is no digest, or
+   *  `viewer` is given and may not see the home bundle: an absent record), `READING_HELD` (a reading is already held) or
+   *  `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no register row and no
+   *  promotion, and replaces no reading but one (fix round 4, C5b; K4429): a failed reading that failed for want of the
+   *  whole bytes (`#wantedTheWhole`: a capture of several parts the reader could not assemble) is replaced, in the same
+   *  transaction, when the stored reading is still the one examined. A reading with text, and a failed reading made from
+   *  the whole bytes, are never replaced, so a second call changes nothing. `viewer` is the door's stamp for the member's
+   *  op; a caller that gives none (the door's own call after a capture) is not a viewer and is not gated. A reading that
+   *  finds nothing is a failed reading, recorded (R45). */
+  async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined } = {}) {
     const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
-    const home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
+    let home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
       ? this.#provenance.homeOf(digest) : null;
+    /* (fix round 4, C5b; K4440) a multipart capture is registered by its parts, not its whole digest, so the register may
+       name no home for the whole; the bundle of the reading already held for it is its home. */
+    if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest)) {
+      const mine = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, digest);
+      home = mine && typeof mine.bundle_id === "string" && mine.bundle_id ? { bundleId: mine.bundle_id } : null;
+    }
     const left = (why) => ({ ok: true, read: false, why });
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
-    if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return left("READING_HELD");
+    if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
+    const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
+    const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
+    if (held && !this.#wantedTheWhole(safeJson(held.reading), document)) return left("READING_HELD");
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     let whole = null;
     try { whole = ev ? (typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest)) : null; } catch { whole = null; }
     if (!whole) return left("NO_WHOLE_OBJECT");
-    const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
     const out = await this.read(document, { storeName, env });
     const prof = document.profile && typeof document.profile === "object" ? document.profile : null;
     const wrote = this.core.transact(() => {
-      if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return null;
+      const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
+      if (now && (!held || now.reading !== held.reading)) return null;
+      if (!now && held) return null;
       return this.writeReading({ bundleId: home.bundleId, captureSha: digest, reading: out.reading,
         textUnits: Array.isArray(out.text_units) ? out.text_units : null,
         textUnitsOverBound: out.text_units_over_bound, textUnitsSkipped: out.text_units_skipped,
@@ -658,6 +673,24 @@ export class Extraction {
     if (!wrote) return left("READING_HELD");
     await wrote.afterRead;
     return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true };
+  }
+
+  /** R80 (fix round 4, C5b): whether a stored reading is a failed one that failed for want of the whole bytes: it found
+   *  nothing, its document is a capture of several parts, and its basis is one of the three reasons
+   *  `reading-pipeline.bytesOf` gives when it could not assemble the parts (over the reader's size, a part not held, the
+   *  parts not adding up). A reading made from the whole bytes states none of them, so it is not read again. */
+  #wantedTheWhole(reading, document) {
+    if (!reading || reading.found !== false || typeof reading.basis !== "string") return false;
+    if (Array.isArray(reading.entities) && reading.entities.length) return false;
+    const parts = document && Array.isArray(document.parts) ? document.parts : null;
+    if (!parts) return false;
+    const total = parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
+    const reasons = [word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(parts.length),
+                                                                          multipart_read_max: String(pipeline.MULTIPART_READ_MAX) }),
+                     word("reading-pipeline.why.parts_held_add")];
+    for (let i = 1; i <= parts.length; i++)
+      reasons.push(word("reading-pipeline.why.part_held_evidence", { index_of: String(i), parts: String(parts.length) }));
+    return reasons.includes(reading.basis);
   }
 
   /* ---- writing (R19–R24) ---- */
@@ -1919,6 +1952,13 @@ export function extractionOps(x, url, body, env) {
     pdfstructure: () => x.pdfStructure({ sha: q("sha256"), ocr: url.searchParams.has("ocr") ? q("ocr") : null,
       cls: q("cls"), session: q("session") === "1", caps: (q("caps") || "").split(",").filter(Boolean),
       viewer: q("viewer"), author: q("author"), storeName: q("store") || "bio", env }),
+    /* R80 (fix round 4, N5; K4429): the member's act, `sha` in the address or the body; an op that names no viewer is gated
+       as a viewer who may see nothing, never as the door's own call. */
+    readheld: () => {
+      const sha = q("sha") ?? (body && body.sha);
+      if (typeof sha !== "string" || !sha) return noSha(localize("extraction.index.readheld_no_sha", "a read of a held document is about one captured document, named by its fingerprint"));
+      return x.readHeld({ sha, viewer: q("viewer") ?? "", storeName: q("store") || "bio", env });
+    },
     /* R71: the control plane's stamps in the query; `by` is its author stamp. */
     pagetranscribe: () => x.pageTranscribe({ captureSha: q("sha256"), project: q("project") || null, cls: q("cls"),
       session: q("session") === "1", caps: (q("caps") || "").split(",").filter(Boolean), viewer: q("viewer"),
@@ -1932,6 +1972,8 @@ export function extractionOps(x, url, body, env) {
 export const DECLARED_OPS = Object.freeze({
   pagetranscribe: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("extraction.declared.pagetranscribe", "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle"),
     fields: { accepts: ["sha256","project"], requires: ["sha256"] } },
+  readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "undetermined", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
+    fields: { accepts: ["sha"], requires: ["sha"] } },
   pdfstructure: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.pdfstructure.label.document",
     fields: { accepts: ["sha256","ocr"], requires: ["sha256"] } },
 });

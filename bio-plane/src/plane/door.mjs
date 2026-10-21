@@ -56,7 +56,7 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
 
 /* The admitted ops whose handler is a module's door; undefined for control-plane's generic forward. */
 export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights,
-                                sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null, timings = null }) {
+                                sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null, timings = null, deferReading = null }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
      as its viewer and identity, and `class:ai/<tokenId>` as its author (control-plane R17, as its generic forward stamps
@@ -92,7 +92,15 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
     const c = await captureOp(op, req, url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
       requiredArgument, cls, member: viaSession, sessMember, storeName, key: (s) => captureKey(storeName, s), viewer,
       timings, trace,   /* control-plane R115: `acquire`'s stage timings; capture R99: the door's `trace`, sent to the object as a header so it holds them under it (plane R73) */
-      readAcquired: (answer, st) => acquireReadingOp(answer, st, { json, storeSilent, storeRefusal, doAnswer, storeName }) });
+      readAcquired: (answer, st) => {
+        /* R75 (K4440; control-plane R120): the door asks of the document just filed whether its reading will not fit the bound; if so the read
+           step is skipped and the document answered with `reading_pending: true`, the reading following by `readHeld` and the object's alarm.
+           A hook that throws defers nothing: the kept capture is read as it always was. */
+        let deferred = false;
+        try { deferred = typeof deferReading === "function" && deferReading(answer && answer.document) === true; } catch { deferred = false; }
+        return deferred ? { body: { ...answer, reading_pending: true } }
+                        : acquireReadingOp(answer, st, { json, storeSilent, storeRefusal, doAnswer, storeName });
+      } });
     if (c) return c;
   }
   if (EXTRACTION_OPS.includes(op)) return extractionOp(op, url, env, store, { json, storeSilent, storeRefusal, doAnswer,

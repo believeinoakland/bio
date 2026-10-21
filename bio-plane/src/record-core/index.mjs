@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R86).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R88).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -1860,7 +1860,9 @@ export class RecordCore {
 
   /** R38: the instance's evidence bucket, addressed by digest; the object key of a digest is fixed
    *  here (the prefix R39's `evidencePrefix` gives, then the digest). `put` hands the bucket the digest, so it verifies the bytes.
-   *  Null when no bucket is bound. */
+   *  R88 (fix round 4, P10 (c); K4447): `get(digest, {range: {offset, length}})` asks the bucket for those bytes alone (R2's
+   *  `range` option), so a look at the head of a large object transfers the head and not the object; with no range the bucket
+   *  is asked as before and answers the whole. Null when no bucket is bound. */
   evidenceStore() {
     const bucket = this.#evidence;
     if (!bucket) return null;
@@ -1868,7 +1870,10 @@ export class RecordCore {
     const key = (digest) => `${prefix ?? ""}${String(digest)}`;
     const store = {
       head: (digest) => bucket.head(key(digest)),
-      get: (digest) => bucket.get(key(digest)),
+      get: (digest, options) => {
+        const range = rangeOf(options);
+        return range ? bucket.get(key(digest), { range }) : bucket.get(key(digest));
+      },
       put: (digest, bytes) => bucket.put(key(digest), bytes, { sha256: String(digest) }),
     };
     /* R87: offered only by a bucket that has R2's multipart upload, so a caller feature-detects it */
@@ -1881,6 +1886,17 @@ export class RecordCore {
 /* ---- the evidence store's whole object from parts (R87) ---- */
 
 const DIGEST = /^[0-9a-f]{64}$/;
+
+/** R88: the range a `get` asks of the bucket, `{offset, length}` copied as whole numbers (offset from 0, length at least 1),
+ *  or null when the options name none (the whole object is read, as R38 states). A range that is named but is not such a pair
+ *  would otherwise read the whole object, which R88 never does, so it is the caller's defect: a TypeError, the bucket unasked. */
+function rangeOf(options) {
+  if (options === undefined || options === null || options.range === undefined) return null;
+  const r = options.range;
+  if (!r || typeof r !== "object" || !Number.isSafeInteger(r.offset) || r.offset < 0 || !Number.isSafeInteger(r.length) || r.length < 1)
+    throw new TypeError("get: a range is {offset, length}, whole numbers, the offset from 0 and the length at least 1 (R88)");
+  return { offset: r.offset, length: r.length };
+}
 
 /** R87 (fix round 3, C5; K4363): the object under `digest`, made by the bucket's own multipart upload from the parts it holds
  *  under `partDigests`, each read in order and handed on as one upload part, so one part is in memory at a time. The upload

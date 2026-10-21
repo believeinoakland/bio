@@ -1,6 +1,6 @@
 # BOB to entities (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -82,3 +82,34 @@ ANSWER J6 (K4364). Merge tranche/T51 first (R63, R64 amended). (1) Catalogue row
 ## B8 · CHANGE
 
 op-grades (CAUSE-SHELL-3, merged into tranche/T51, K4384) publishes officeconfirm with this NON_ACTS sentence; the plane refuses a registration whose declared description differs (DECLARED_OP_DISAGREES). Declare officeconfirm's description in your DECLARED_OPS word for word: "office-directed: an administrator confirms an office a member named; clears the mark and records who confirmed it and when, and changes no name, alias or note (entities R64)" (through localize with your own key, as your other descriptions are). If your op's behaviour differs from that sentence, tell me the difference instead. Merge tranche/T51 first (op-grades R52/R53, the shell's ADMIN_ACTS).
+
+## B9 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/entities tranche/T51 && git branch -m job/T51/entities stale/entities-local && git checkout -b job/T51/entities origin/job/T51/entities`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · ENTITIES #19 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #244 is depth 1; fix round 4, wave 1; K4429)
+
+Mail with `--module entities`; record `build/jobs/T51/entities.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `entities`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51, planned whole in `build/plan/fix-round-4-T51.md` (K4429): read its section 0 and your causes' section 2 entries. Rows below are verbatim from `build/plan/walk-T51-rewalk3/A.md`, `B.md`, `build/plan/lane-performance/HANDOFF.md`. Merge `tranche/T51` first. Wave 1 (16 providers, independent) merges in the plan's table order; you are #6. Wave 0 is on `tranche/T51`; a wave-1 provider merged before you is read when you merge again before COMPLETE, until then a scripted double, said in the record.
+
+Requirement lines: none (propose a line in COMPLETE) (`build/plan/fix-round-4-reqs.md`), **written by BOB on tranche/T51 before your wave**; propose any further line in COMPLETE (BOB writes `build/requirements/`).
+
+**Rules (plan section 0; K4426-K4428).** R-FOUR: each cause has four fields, which BOB checks before the one redeploy: (1) root cause with file:line, or "root cause unknown": step 0 is a diagnosis posted as a QUESTION to BOB before any fix, BOB releases the fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test of the walker's row on the same entry path (press the act, never call the done function), seen red then green; (4) the platform check: L (local workerd/miniflare, real limits: 128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound, service binding, real-size file), P (read-only probe of the smoke copy), F (fixture from the live record or site) or N; numbers in the record; LIVE-CHECKs are read-only reads of https://biosmoke8.believeinoakland.workers.dev without the proxy, as `build/plan/walk-T51-build/BRIEF.md` says; no mid-round deploy; a check you cannot run is said so and the cause stays open. R-SEAM: for a cause spanning modules the seam owner (S) is the last-merged job on the path press -> stored result; its test is the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape; providers test the same case at their interface; a seam test needing an unmerged provider is written first and stays red by name. R-NOTMET: no "not met", "deferred", "not proved", REPORT or open QUESTION at COMPLETE; name the smallest thing you need and ask BOB now. R-OLD: a fix to stored data is "new data only" or has a repair entry. R-ONE: one owning job per cause; the walker's row names the first test.
+
+**Your causes** (your part; the walker's row verbatim; the four fields):
+
+1. **C64-more**: Provider: `entitycreate` looks first and returns the existing office of the same name. Seam: screens-action.
+   > | C64 (name) | CA51 | 1280 | member (walker), invited by me into my project | Request records > subject "Office of the City Clerk" > "No office is known to hold such records yet" > "Name the office yourself" (agency and office, where requests go, reason) | FIXED | the form is drawn; the press answered in 0.7 to 1.1 s; the office is chosen at once and marked "Named by a member" (the member can go straight on to "What you want"). MINOR: the "agency and office" line is one box split at its first comma, so a name without a comma draws twice ("Office of Government Information Services, Office of Government Information Services"); and naming the same office again makes another entry rather than finding the first | shots/B/member-request-nooffice-1280.png, member-request-named-1280.png |
+   (1) CERTAIN (`screens-action/request.mjs:204` splits one box at the comma; `entitycreate` creates without looking).
+   (2) No test names an office without a comma or twice. Fix: both cases.
+   (3) A name with no comma draws once; naming the same office twice returns the first entry.
+   (4) N.
+
+Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio entities tranche/T51 job/T51/entities`.
+COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B10 · ANSWER · re J9
+
+ANSWER to J9 (BOB #245). Your default: look-first is the default for a non-administrator member's office, no new field. The actions test t33 'R9 R47 actionCreate fills an office arm's entity id...' is a stale test under your change; BOB fixes it at your merge, test file only (K4297 (2)): its twin is registered with a machine's stamp. Do not touch actions. Finish, name the actions test in COMPLETE as the one expected red, and post COMPLETE.

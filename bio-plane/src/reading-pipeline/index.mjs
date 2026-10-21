@@ -1002,6 +1002,27 @@ const isFurnitureBlock = (name, attrs, markup, after) => {
   return !p.long && p.text !== "" && NOTICE_TEXT.some((re) => re.test(p.text));
 };
 const moreFurniture = (name, attrs, markup, after) => isFurnitureByAttribute(name, attrs) || isFurnitureBlock(name, attrs, markup, after);
+/* Fix round 4 (C19; K4429; RC-R11): furniture by name. A block that is no landmark but names itself furniture by a word
+   of its `class` or `id` (split at `-`, `_` and camel-case humps) and holds no sentence of body prose goes, when the
+   page has a region: a `main` element, else an `article`, else an element whose `role` is `main`. A sentence is a run of
+   three or more words ending in a full stop, `!` or `?`, outside a heading, a label, a link and a control. */
+const NAME_WORDS = new Set(["footer", "contact", "search", "breadcrumb", "breadcrumbs", "share", "social", "sidebar", "related", "explore", "promo", "promos", "gallery", "carousel"]);
+const nameWords = (t) => t.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase().split(/[\s_-]+/).filter(Boolean);
+const isNamedFurniture = (attrs) => classTokens(attrs).some((t) => nameWords(t).some((w) => NAME_WORDS.has(w)));
+const NON_PROSE = /<(a|h[1-6]|label|button|select|option|textarea|script|style)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?<\/\1\s*>/gi;
+const SENTENCE = /(?:[\p{L}\p{N}'’-]+\s+){2,}[\p{L}\p{N}'’-]+[.!?](?=\s|$)/u;
+const holdsProse = (inner) => SENTENCE.test(decodeReferences(inner.replace(NON_PROSE, " ").replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, " ")).replace(/\s+/g, " "));
+const hasRegion = (markup) => contentsOf(markup, "main") !== null || contentsOf(markup, "article") !== null
+  || new RegExp(`<[A-Za-z][A-Za-z0-9:-]*(?:"[^"]*"|'[^']*'|[^'">])*?\\srole\\s*=\\s*["']?main\\b`, "i").test(markup);
+const namedFurniture = (markup) => {
+  if (!hasRegion(markup)) return () => false;
+  return (name, attrs, whole, after) => {
+    const n = name.toLowerCase();
+    if (NEVER_BY_ATTRIBUTE.has(n) || roleOf(attrs) === "main" || VOID_TAG.has(n) || attrs.endsWith("/") || !isNamedFurniture(attrs)) return false;
+    const e = endOfElement(whole, n, after);
+    return e !== null && !holdsProse(whole.slice(after, e.inner));
+  };
+};
 const SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
 const dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
   const href = attrOf(attrs, "href");
@@ -1020,8 +1041,9 @@ export function visibleTextOfHtml(html) {
     .replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
     .replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ")
     .replace(/<![^>]*>|<\?[^>]*>/g, " "), isNavigation);
+  const named = namedFurniture(live);
   const region = dropElements(contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture),
-                              moreFurniture);
+                              (name, attrs, whole, after) => moreFurniture(name, attrs, whole, after) || named(name, attrs, whole, after));
   const dropped = dropSkipLinks(region)
     .replace(/\s+/g, " ");   /* the source's own line breaks and blank lines are no paragraph break in a page */
   const bare = dropped

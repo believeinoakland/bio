@@ -1,6 +1,6 @@
 # BOB to review (T51)
 
-**Read** · handled J9
+**Read** · handled J10
 
 ## B1 · START
 
@@ -131,3 +131,31 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B12 · ANSWER · re J8
 
 ANSWER J8 (K4363). Merge tranche/T51 first (R19, R43 new; case-authoring R83 amended). Your reading stands: case-authoring exports draftEditions({caseId, draft}) -> {prepared, published: {edition, address}|null} (CASE-AUTHORING #35 is told now); call it per row, test against a scripted double until it merges. Also build R43 (new): sharedDraftsByProject({projectIds, viewer}) -> {[projectId]: {count, newest}}, one read for many projects, exact under R8's identity binding (a grant dead once its edition is published is not counted); the door hands it to project-roster (control-plane R118, wave 2). C46's plane half inside your module as you say: accepted.
+
+## B13 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/review tranche/T51 && git branch -m job/T51/review stale/review-local && git checkout -b job/T51/review origin/job/T51/review`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · REVIEW #22 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #244 is depth 1; fix round 4, wave 1; K4429)
+
+Mail with `--module review`; record `build/jobs/T51/review.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `review`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51, planned whole in `build/plan/fix-round-4-T51.md` (K4429): read its section 0 and your causes' section 2 entries. Rows below are verbatim from `build/plan/walk-T51-rewalk3/A.md`, `B.md`, `build/plan/lane-performance/HANDOFF.md`. Merge `tranche/T51` first. Wave 1 (16 providers, independent) merges in the plan's table order; you are #12. Wave 0 is on `tranche/T51`; a wave-1 provider merged before you is read when you merge again before COMPLETE, until then a scripted double, said in the record.
+
+Requirement lines: none (propose a line in COMPLETE) (`build/plan/fix-round-4-reqs.md`), **written by BOB on tranche/T51 before your wave**; propose any further line in COMPLETE (BOB writes `build/requirements/`).
+
+**Rules (plan section 0; K4426-K4428).** R-FOUR: each cause has four fields, which BOB checks before the one redeploy: (1) root cause with file:line, or "root cause unknown": step 0 is a diagnosis posted as a QUESTION to BOB before any fix, BOB releases the fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test of the walker's row on the same entry path (press the act, never call the done function), seen red then green; (4) the platform check: L (local workerd/miniflare, real limits: 128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound, service binding, real-size file), P (read-only probe of the smoke copy), F (fixture from the live record or site) or N; numbers in the record; LIVE-CHECKs are read-only reads of https://biosmoke8.believeinoakland.workers.dev without the proxy, as `build/plan/walk-T51-build/BRIEF.md` says; no mid-round deploy; a check you cannot run is said so and the cause stays open. R-SEAM: for a cause spanning modules the seam owner (S) is the last-merged job on the path press -> stored result; its test is the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape; providers test the same case at their interface; a seam test needing an unmerged provider is written first and stays red by name. R-NOTMET: no "not met", "deferred", "not proved", REPORT or open QUESTION at COMPLETE; name the smallest thing you need and ask BOB now. R-OLD: a fix to stored data is "new data only" or has a repair entry. R-ONE: one owning job per cause; the walker's row names the first test.
+
+**Your causes** (your part; the walker's row verbatim; the four fields):
+
+1. **C46**: Provider: `findingWords` (`review/index.mjs:286-306`) reads a conclusion from conclusion records/stance too. Seam owner: screens-publish (S).
+   > | C46 | CA16 | 1280 | admin | case editor "Findings and their roles" for a CONCLUDED question | STILL (MAJOR, new form) | the `## Question ... ## Conclusion` headings are gone, but the finding reads "Finding 1 · <question title> Not concluded yet" although the question page says CONCLUDED ("Federal agencies must disclose requested records unless one of nine exemptions applies."); "The passages this case cites" still lists the raw id "INQ-2026-0020-what-does-the-federal-freedom-of-informa" (not the title). Editor first draw 3.3 s | shots/B/editor-1280.png, editor-prepared-1280.png |
+   > | C46 | CA21 | 1280, 390 | outsider (link) | opened the review link, as a reader | STILL (MAJOR) | no headings, no log, no ids; but the finding is "<question> Not concluded yet" (the conclusion exists). Opens in 4.9 s (1280) and 6.7 s (390), 3 reads. At 390 the page fits (main 390 px) | shots/B/reader-1280.png, reader-390.png |
+   (1) CERTAIN (survivors B1). `review/index.mjs:286-306` `findingWords` takes the conclusion only from a front-matter string `conclusion`/`statement` or a body `## Conclusion`; a question concluded by a project keeps it as conclusion records/stance (`basis-versions/index.mjs:636` `fm.conclusions`, :666-706; `investigation/index.mjs:1304` `stance.claim`), and `publication/worker.mjs:705` reads `case_words.claim` first. `basis-versions/conclude.mjs:260` writes the string form only for a direct `conclude`. The raw id is `screens-publish/case-editor.mjs` (cites list).
+   (2) Fixtures put a string `conclusion` in front matter (class d). Fix: the fixture is a question concluded by the real `conclude` and by a project adoption.
+   (3) Both conclusions: editor row, review copy and outside reader show the sentence, no `## `, no "Not concluded yet"; the cites list shows the title.
+   (4) N.
+
+Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`.
+COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
