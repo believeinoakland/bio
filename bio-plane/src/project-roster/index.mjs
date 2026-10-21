@@ -844,13 +844,14 @@ export class ProjectRoster {
    *  R38 (T51; N1184, DEC-340): each row's `mine`, `{in, owner}` (the viewer's own stamp only: `in` joined to it, `owner`
    *  holding its owner flag, membership R54, R65) and `scope` (R23's, `none`, `own` or `counsel_matter`).
    *
-   *  R42 (fix round 3; C14): each row's `question_count` and `shared_drafts` `{count, newest}` (`#drawFacts`), null on a
-   *  row seen only at an administrator's EXISTENCE (R39).
+   *  R42 (fix round 3; C14): each row's `question_count` (`#questionCounts`) and `shared_drafts` `{count, newest}` from
+   *  the `sharedDraftsOf` reader the caller hands in (`null` on every row when none is), both null on a row seen only
+   *  at an administrator's EXISTENCE (R39).
    *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked = {}) {
-    const { viewer = null, limit = null, after = null } = asked && typeof asked === "object" ? asked : {};
+    const { viewer = null, limit = null, after = null, sharedDraftsOf = null } = asked && typeof asked === "object" ? asked : {};
     const gate = viewerPredicate(viewer);
     /* R36: `after` is a project id, read only when a non-empty string; anything else starts from the first. */
     const cursor = typeof after === "string" && after !== "" ? after : null;
@@ -881,8 +882,10 @@ export class ProjectRoster {
     const open = new Set(rescue.map((r) => r.id));
     const page = both.filter((r) => !open.has(r.id));
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
-    /* R42 (fix round 3; C14, P2.2): each project's question count and shared drafts, for the page in two statements. */
-    const { questions, shared } = this.#drawFacts(page.map((r) => r.id), gate);
+    /* R42 (fix round 3; C14, P2.2): each project's question count, for the page in two statements, and its shared drafts,
+       from the reader the caller handed in, asked once for the page. */
+    const questions = this.#questionCounts(page.map((r) => r.id), gate);
+    const shared = this.#sharedDrafts(sharedDraftsOf, page.map((r) => r.id), viewer);
     /* R34 (T50; N1118): the viewer's own state in each project as membership records it; null for a non-participant. */
     const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
     const own = new Map(me && page.length ? this.#rows(
@@ -905,7 +908,7 @@ export class ProjectRoster {
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
       members: members.get(r.id) ?? [], activity: activity.get(r.id) ?? Array(ProjectRoster.ACTIVITY_WEEKS).fill(0),
       lastChange: lastChange.get(r.id) ?? null, ...(admin ? { rescue_open: false } : {}),
-      question_count: questions.get(r.id) ?? 0, shared_drafts: shared.get(r.id) ?? { count: 0, newest: null } });
+      question_count: questions.get(r.id) ?? 0, shared_drafts: shared === null ? null : shared.get(r.id) ?? { count: 0, newest: null } });
     return { ok: true, projects, count: projects.length, limit: cap, truncated,
              next: truncated ? projects[projects.length - 1].id : null };
   }
@@ -932,27 +935,20 @@ export class ProjectRoster {
     return out;
   }
 
-  /** R42 (fix round 3; C14, P2.2): FOR THE LISTED PROJECTS (`ids`, already those the viewer sees at FULL), each one's
-   *  `questions` (a Map project -> count) and `shared` (a Map project -> `{count, newest}`), the number of statements
-   *  independent of how many projects there are.
-   *    QUESTIONS  the inquiries the project draws on, by basis-versions R41's own test (its document holds a `cites`
-   *               reference to the inquiry not marked `severed`), restated here over record-core's read contract (R37:
-   *               `files.content` of `bundle.md`, `bundles.object_type`), since that module is a later one; a target counts
-   *               when the record holds it as an inquiry and the viewer's sight (`gate`, membership R43, the rule R50
-   *               applies) admits it, distinct targets once. One statement reads the documents, one the targets.
-   *    SHARED     the project's case drafts (`review`'s `case_drafts`) with at least one grant (`review_grants`) not
-   *               revoked and not lapsed at the server's instant (review R34: dead from its `until` on), one statement;
-   *               `newest` the latest `issued_at` among those grants. The viewer who sees the project sees its drafts
-   *               (review R9). Review's identity-bound liveness (its R8) is not restated here.
-   *  A store without those tables, an unreadable document or a failing statement reads as nothing: zero and null. Writes
-   *  nothing; never throws. */
-  #drawFacts(ids, gate) {
-    const questions = new Map(), shared = new Map();
-    if (!ids.length) return { questions, shared };
-    const list = `(${ids.map(() => "?").join(",")})`;
+  /** R42 (fix round 3; C14, P2.2): THE QUESTION COUNT of each of `ids` (already those the viewer sees at FULL), a Map project
+   *  -> count, in two statements however many projects there are: the inquiries the project draws on, by basis-versions
+   *  R41's own test (its document holds a `cites` reference to the inquiry not marked `severed`), restated here over
+   *  record-core's read contract (R37: `files.content` of `bundle.md`, `bundles.object_type`), since that module is a
+   *  later one. A target counts when the record holds it as an inquiry and the viewer's sight (`gate`, membership R43, the
+   *  rule R50 applies) admits it; distinct targets once. A store without the table, an unreadable document or a failing
+   *  statement reads as none. Writes nothing; never throws. */
+  #questionCounts(ids, gate) {
+    const counts = new Map();
+    if (!ids.length) return counts;
     try {
       const cited = new Map();
-      for (const d of this.#rows(`SELECT bundle_id AS project, content FROM files WHERE path='bundle.md' AND bundle_id IN ${list}`, ...ids)) {
+      for (const d of this.#rows(`SELECT bundle_id AS project, content FROM files WHERE path='bundle.md' AND bundle_id IN (${
+        ids.map(() => "?").join(",")})`, ...ids)) {
         let fm = {};
         try { fm = typeof d.content === "string" ? parseFrontmatter(d.content).data || {} : {}; } catch { fm = {}; }
         const live = [...new Set((Array.isArray(fm.references) ? fm.references : [])
@@ -961,29 +957,33 @@ export class ProjectRoster {
         if (live.length) cited.set(d.project, live);
       }
       const targets = [...new Set([...cited.values()].flat())];
-      if (targets.length) {
-        const seen = new Set(this.#rows(
-          `SELECT b.bundle_id AS bundle_id FROM bundles b WHERE b.bundle_id IN (SELECT value FROM json_each(?))
-              AND b.object_type IN (SELECT value FROM json_each(?)) AND (${gate.sql})`,
-          JSON.stringify(targets), ProjectRoster.INQUIRY_TYPES, ...gate.args).map((r) => r.bundle_id));
-        for (const [project, live] of cited) questions.set(project, live.filter((t) => seen.has(t)).length);
-      }
-    } catch { questions.clear(); }
-    try {
-      const at = new Date(this.#now()).toISOString();
-      const drafts = new Map();
-      for (const g of this.#rows(
-        `SELECT d.project_id AS project, d.draft_id AS draft, g.issued_at AS issued
-           FROM case_drafts d JOIN review_grants g ON g.draft_id = d.draft_id
-          WHERE d.project_id IN ${list} AND g.revoked_at IS NULL AND (g.until IS NULL OR julianday(g.until) > julianday(?))`,
-        ...ids, at)) {
-        const e = shared.get(g.project) ?? { count: 0, newest: null };
-        if (!drafts.has(g.draft)) { drafts.set(g.draft, true); e.count += 1; }
-        if (e.newest === null || Date.parse(g.issued) > Date.parse(e.newest)) e.newest = g.issued;
-        shared.set(g.project, e);
-      }
-    } catch { shared.clear(); }
-    return { questions, shared };
+      if (!targets.length) return counts;
+      const seen = new Set(this.#rows(
+        `SELECT b.bundle_id AS bundle_id FROM bundles b WHERE b.bundle_id IN (SELECT value FROM json_each(?))
+            AND b.object_type IN (SELECT value FROM json_each(?)) AND (${gate.sql})`,
+        JSON.stringify(targets), ProjectRoster.INQUIRY_TYPES, ...gate.args).map((r) => r.bundle_id));
+      for (const [project, live] of cited) counts.set(project, live.filter((t) => seen.has(t)).length);
+    } catch { counts.clear(); }
+    return counts;
+  }
+
+  /** R42: THE SHARED DRAFTS of each of `ids`, a Map project -> `{count, newest}`, from `reader`, the one the caller hands
+   *  in (`review` R43's `sharedDraftsByProject({projectIds, viewer})`, wired by the door, control-plane R118), asked once
+   *  for the whole page. `null` (not a Map) when no reader was handed in or it failed, so every row answers `null`. An
+   *  entry the reader leaves out, or cannot be read as `{count, newest}`, is `{count: 0, newest: null}`. Never throws. */
+  #sharedDrafts(reader, ids, viewer) {
+    if (typeof reader !== "function") return null;
+    const out = new Map();
+    if (!ids.length) return out;
+    let got = null;
+    try { got = reader({ projectIds: ids, viewer }); } catch { return null; }
+    if (!got || typeof got !== "object") return null;
+    for (const id of ids) {
+      const e = Object.hasOwn(got, id) ? got[id] : null;
+      out.set(id, e && Number.isInteger(e.count) && e.count > 0
+        ? { count: e.count, newest: typeof e.newest === "string" ? e.newest : null } : { count: 0, newest: null });
+    }
+    return out;
   }
 
   /* Every stored `object_type` spelling of an inquiry, the declared one and its legacy aliases (basis-versions' own). */
@@ -1415,7 +1415,8 @@ export function projectRosterOps(r, url, body, env) {
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
     /* T47 (R26–R28): the projects the stamped viewer sees at FULL, with each one's recorded stage, opener, members and
        activity; the instant is the server's, never a query's. */
-    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after") }),
+    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after"),
+      sharedDraftsOf: env && typeof env.sharedDraftsOf === "function" ? env.sharedDraftsOf : null }),
     /* T51 (R35): the stamped viewer's own invitations. */
     projectinvitations: () => r.projectInvitations({ viewer: q("viewer"), limit: q("limit"), after: q("after") }),
     projectparticipants: () => r.projectParticipants({ projectId: q("projectId"), by: q("by") }),

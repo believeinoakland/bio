@@ -39,12 +39,8 @@ export function world() {
     current_state TEXT)`);
   /* record-core R37's `manifest` read contract (bundle_id, author, created, rowid), for R27's opener. */
   db.exec(`CREATE TABLE manifest (bundle_id TEXT NOT NULL, snap_key TEXT NOT NULL, author TEXT, created TEXT NOT NULL)`);
-  /* record-core R37's `files` read contract (bundle_id, path, content), for R42's question count, and the two tables of
-     `review` that R42's shared drafts are read from (a stated read contract, K4356): a test writes them directly. */
+  /* record-core R37's `files` read contract (bundle_id, path, content), for R42's question count. */
   db.exec(`CREATE TABLE files (bundle_id TEXT NOT NULL, path TEXT NOT NULL, content TEXT, PRIMARY KEY (bundle_id, path))`);
-  db.exec(`CREATE TABLE case_drafts (draft_id TEXT PRIMARY KEY, project_id TEXT NOT NULL)`);
-  db.exec(`CREATE TABLE review_grants (grant_id TEXT PRIMARY KEY, draft_id TEXT NOT NULL, issued_at TEXT NOT NULL,
-    revoked_at TEXT, until TEXT)`);
   const declared = [];
   /* record-core's settings (its R25), for R24's active profiles: `jurisdiction_profiles` a test sets directly. */
   const settings = { jurisdiction_profiles: ["test-port-ellery"] };
@@ -90,12 +86,6 @@ export function world() {
         return `  - rel: cites\n    target: ${t}${status ? `\n    status: ${status}` : ""}`; }).join("\n");
       db.prepare(`INSERT OR REPLACE INTO files (bundle_id, path, content) VALUES (?, 'bundle.md', ?)`)
         .run(id, `---\n${refs ? `references:\n${refs}\n` : ""}---\nbody`);
-    },
-    /* R42: a draft of `project`, and a grant on it: issued at `at`, ending at `until` (null: until revoked), `revoked`. */
-    draft(draftId, project) { db.prepare(`INSERT INTO case_drafts (draft_id, project_id) VALUES (?,?)`).run(draftId, project); },
-    grant(grantId, draftId, at, { until = null, revoked = null } = {}) {
-      db.prepare(`INSERT INTO review_grants (grant_id, draft_id, issued_at, revoked_at, until) VALUES (?,?,?,?,?)`)
-        .run(grantId, draftId, at, revoked, until);
     },
     /* A manifest entry of `id` written by `author` at `created` (record-core R37), in the order recorded. */
     entry(id, author, created = new Date().toISOString()) {
