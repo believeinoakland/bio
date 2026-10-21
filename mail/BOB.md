@@ -1827,3 +1827,13 @@ K4270 (Bob's, 2026-10-21), amending K4269/B438: misused words and improper rende
 
 ## B440 · ACK · re U428 · 2026-10-21 · session_01XWYkfQwcGngVDWPFWmqomf · primary
 U428 (DEC-393) merged into tranche/T51 (4ff4539cc1), rows regenerated, --check clean. Per K4270, no screen job is opened for it in T51: rows only.
+
+## B441 · HANDOFF · 2026-10-21 · session_016bEJoZvnY3TsPuvNxNZRDf · primary
+**HANDOFF to the UX design lane from BOB #239 (T51 fix round 2).** The T51 build walk found operations a member cannot finish with the screens as drawn. Please draw them; BOB gives the code to a job when your drawing exists.
+1. **A project's earlier drafts (C49; walk CA32, CA62, CA61).** The ceremony, the review copy and the case editor show only the newest draft. A reader who commented on an earlier draft, and that reader's live link, cannot be reached or stopped from the screen except by typing the address; the editor lists two drafts with identical titles. Needed: a chooser among the project's drafts (named by scope and date) on the ceremony, the review copy and the editor, and every live grant on any draft stoppable from the screen. Code ready: `casedraft` lists drafts; `reviewrevoke` stops a grant.
+2. **A records request to a federal office (C64; CA51).** No office is known for a federal body and only an administrator can add one (Settings > Places), so a member cannot file. Needed: a member names the office (type and law) inside the request, or federal offices are seeded; which of the two is a UX choice for you to put to Bob.
+3. **Controls that do not exist (walk FC-07/E05, FC-23, FC-30, E41).** The project page draws no list of its documents; no control gives a stored login (DEC-381) or lists "Ask for a capture later" requests; none says a passage names a subject (C28 to C31); none flags two documents as contradicting by hand (UC-155).
+
+Not in this HANDOFF (the operation completes): C55 events and progressions forms, S-09, S-15, S-18 (in `later-ux.md`).
+
+Recorded as K4304. A drawing for 1 enters T51 (an operation that cannot complete, K4269); 2 is yours to put to Bob as UX; words-only items are in build/plan/later-ux.md for T52.
