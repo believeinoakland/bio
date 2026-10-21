@@ -3054,6 +3054,585 @@ function extractMetadata(doc) {
 }
 
 /* ------------------------------------------------------------------ *
+ * C25 (R40) — THE TITLE ALONE, READ WITHOUT READING THE FILE
+ * ------------------------------------------------------------------ *
+ *
+ * `extractPdfStructure` reads every page (355 ms for 33 pages, a second and
+ * more for a 16 MB budget volume) and a caller that only wants the document's
+ * name must not pay that. So `pdfTitle` opens nothing a page needs: it goes to
+ * the end of the file for `startxref`, follows the cross-reference sections
+ * (a table or a stream, `/Prev` and a hybrid `/XRefStm` included) to the three
+ * objects it asks for, the `/Info` dictionary, the catalog and its `/Metadata`
+ * stream, and reads each at its own offset: an object a few hundred bytes long,
+ * or one object stream or XMP packet inflated to a stated bound. The cost is
+ * the xref's, not the file's, which is what keeps it inside 100 ms at 16 MB.
+ *
+ * WHICH TITLE. `/Info /Title`, decoded exactly as R39 decodes it
+ * (`decodePdfTextStrict`); when that is absent, blank or undecodable, the XMP
+ * `dc:title` of the catalog's own `/Metadata` stream (`x-default`, else the
+ * first language alternative), and nothing else: a logo's XMP inside the file
+ * is not the document's, a heading is not a title, and a file name is the
+ * caller's fallback, not this module's. The answer is uncleaned. An encrypted
+ * file answers null (its strings are ciphertext, R9).
+ *
+ * A FILE WITH NO USABLE XREF IS NOT REFUSED, only read the way R8 reads it: the
+ * last `trailer` (or the last cross-reference stream's own dictionary) names the
+ * entries, and an object is the last `N G obj` in the file. Objects inside an
+ * object stream are then reached only through a cross-reference stream's index,
+ * because finding them without one would mean inflating every object stream,
+ * which is the cost this exists to avoid; such a file answers null rather than
+ * take the time. Nothing here throws: any failure is null.
+ *
+ * ZLIB IS INFLATED HERE, SYNCHRONOUSLY, because the answer is a value and not a
+ * promise and the platform's `DecompressionStream` is asynchronous. The decoder
+ * is RFC 1951 (puff's own structure), checks no Adler sum, and never writes
+ * past `max`, so a stream that inflates to gigabytes is cut, not followed. */
+
+const LEN_BASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+const LEN_EXTRA = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+const DIST_BASE = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
+  8193, 12289, 16385, 24577];
+const DIST_EXTRA = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+const CODE_LENGTH_ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+
+/** A canonical Huffman table from code lengths (RFC 1951 §3.2.2), or null when
+ *  the lengths over-subscribe the code space. */
+function huffman(lengths) {
+  const count = new Int32Array(16);
+  for (const l of lengths) count[l]++;
+  let left = 1;
+  for (let len = 1; len <= 15; len++) {
+    left = left * 2 - count[len];
+    if (left < 0) return null;
+  }
+  const offs = new Int32Array(16);
+  for (let len = 1; len < 15; len++) offs[len + 1] = offs[len] + count[len];
+  const symbol = new Int32Array(lengths.length);
+  lengths.forEach((l, s) => { if (l) symbol[offs[l]++] = s; });
+  return { count, symbol };
+}
+
+let FIXED_TABLES = null;
+function fixedTables() {
+  if (!FIXED_TABLES) {
+    const l = new Array(288).fill(8);
+    for (let i = 144; i < 256; i++) l[i] = 9;
+    for (let i = 256; i < 280; i++) l[i] = 7;
+    FIXED_TABLES = { lit: huffman(l), dist: huffman(new Array(30).fill(5)) };
+  }
+  return FIXED_TABLES;
+}
+
+/** zlib (RFC 1950) or raw deflate bytes to `{ data, full }` (`full` false when
+ *  the output was cut at `max`), or null when the stream is not valid deflate. */
+function inflateSync(src, max) {
+  const zlibHead = src.length >= 2 && (src[0] & 0x0f) === 8 && ((src[0] << 8) | src[1]) % 31 === 0;
+  let pos = zlibHead ? 2 : 0, bitBuf = 0, bitCnt = 0;
+  let out = new Uint8Array(Math.min(max, Math.max(1024, src.length * 4))), o = 0;
+  const STOP = { stop: true };
+  const bits = (n) => {
+    while (bitCnt < n) {
+      if (pos >= src.length) throw new Error("eof");
+      bitBuf |= src[pos++] << bitCnt; bitCnt += 8;
+    }
+    const v = bitBuf & ((1 << n) - 1);
+    bitBuf >>>= n; bitCnt -= n;
+    return v;
+  };
+  const decode = (h) => {
+    let code = 0, first = 0, index = 0;
+    for (let len = 1; len <= 15; len++) {
+      code |= bits(1);
+      const c = h.count[len];
+      if (code - c < first) return h.symbol[index + (code - first)];
+      index += c; first = (first + c) << 1; code <<= 1;
+    }
+    throw new Error("bad code");
+  };
+  const room = (n) => {
+    if (o + n <= out.length) return;
+    if (o + n > max) { if (o < max) { /* fill to the bound */ } throw STOP; }
+    let size = out.length;
+    while (size < o + n) size *= 2;
+    const bigger = new Uint8Array(Math.min(size, max));
+    bigger.set(out.subarray(0, o));
+    out = bigger;
+  };
+  try {
+    for (let last = 0; !last;) {
+      last = bits(1);
+      const type = bits(2);
+      if (type === 0) {
+        bitBuf = 0; bitCnt = 0;
+        if (pos + 4 > src.length) throw new Error("eof");
+        const len = src[pos] | (src[pos + 1] << 8);
+        if ((len ^ 0xffff) !== (src[pos + 2] | (src[pos + 3] << 8))) throw new Error("stored length");
+        pos += 4;
+        if (pos + len > src.length) throw new Error("eof");
+        const take = Math.min(len, max - o);
+        room(take);
+        out.set(src.subarray(pos, pos + take), o); o += take; pos += len;
+        if (take < len) throw STOP;
+        continue;
+      }
+      if (type === 3) throw new Error("block type");
+      let lit, dist;
+      if (type === 1) ({ lit, dist } = fixedTables());
+      else {
+        const nlen = bits(5) + 257, ndist = bits(5) + 1, ncode = bits(4) + 4;
+        if (nlen > 286 || ndist > 30) throw new Error("counts");
+        const cl = new Array(19).fill(0);
+        for (let i = 0; i < ncode; i++) cl[CODE_LENGTH_ORDER[i]] = bits(3);
+        const clh = huffman(cl);
+        if (!clh) throw new Error("code lengths");
+        const lens = [];
+        while (lens.length < nlen + ndist) {
+          const sym = decode(clh);
+          if (sym < 16) lens.push(sym);
+          else {
+            let rep, val = 0;
+            if (sym === 16) { if (!lens.length) throw new Error("repeat"); val = lens[lens.length - 1]; rep = 3 + bits(2); }
+            else if (sym === 17) rep = 3 + bits(3);
+            else rep = 11 + bits(7);
+            if (lens.length + rep > nlen + ndist) throw new Error("repeat");
+            for (let i = 0; i < rep; i++) lens.push(val);
+          }
+        }
+        if (lens[256] === 0) throw new Error("no end of block");
+        lit = huffman(lens.slice(0, nlen)); dist = huffman(lens.slice(nlen));
+        if (!lit || !dist) throw new Error("tables");
+      }
+      for (;;) {
+        const sym = decode(lit);
+        if (sym < 256) { room(1); out[o++] = sym; continue; }
+        if (sym === 256) break;
+        const li = sym - 257;
+        if (li >= 29) throw new Error("length symbol");
+        const len = LEN_BASE[li] + bits(LEN_EXTRA[li]);
+        const ds = decode(dist);
+        if (ds >= 30) throw new Error("distance symbol");
+        const d = DIST_BASE[ds] + bits(DIST_EXTRA[ds]);
+        if (d > o) throw new Error("distance");
+        const take = Math.min(len, max - o);
+        room(take);
+        for (let i = 0; i < take; i++, o++) out[o] = out[o - d];
+        if (take < len) throw STOP;
+      }
+    }
+  } catch (e) {
+    if (e === STOP) return { data: out.subarray(0, o), full: false };
+    return null;
+  }
+  return { data: out.subarray(0, o), full: true };
+}
+
+const OBJ_WINDOW = 4096;               // the first look at an object; grown only while its dictionary is unfinished
+const OBJ_WINDOW_MAX = 4 * 1024 * 1024; // an object's dictionary is never read past this
+const STREAM_MAX = 8 * 1024 * 1024;     // a cross-reference or object stream, inflated, is never larger
+const XMP_MAX = 2 * 1024 * 1024;        // nor is an XMP packet read past this
+const XREF_CHAIN_MAX = 64;
+
+/** The first index of ASCII `needle` in `b` at or after `from`, hopping on its first byte; -1 for none. */
+function firstAscii(b, needle, from = 0) {
+  const c0 = needle.charCodeAt(0);
+  for (let i = b.indexOf(c0, from); i !== -1; i = b.indexOf(c0, i + 1)) {
+    let k = 1;
+    while (k < needle.length && b[i + k] === needle.charCodeAt(k)) k++;
+    if (k === needle.length) return i;
+  }
+  return -1;
+}
+/** The last index of ASCII `needle` in `b` starting at or before `from`; -1 for none. */
+function lastAscii(b, needle, from = b.length - needle.length) {
+  const c0 = needle.charCodeAt(0);
+  for (let i = from < 0 ? -1 : b.lastIndexOf(c0, from); i !== -1; i = i > 0 ? b.lastIndexOf(c0, i - 1) : -1) {
+    let k = 1;
+    while (k < needle.length && b[i + k] === needle.charCodeAt(k)) k++;
+    if (k === needle.length) return i;
+  }
+  return -1;
+}
+const skipWsBytes = (b, p) => { while (p < b.length && isWhitespace(b[p])) p++; return p; };
+const startsAscii = (b, p, s) => { for (let k = 0; k < s.length; k++) if (b[p + k] !== s.charCodeAt(k)) return false; return true; };
+
+/** One file read through its cross-reference sections. See the block above. */
+class XrefReader {
+  constructor(bytes) {
+    this.b = bytes;
+    this.objs = new Map();
+    this.packs = new Map();
+    this.busy = new Set();
+    this._secs = null;
+  }
+
+  /** The offset `startxref` states, or null. */
+  startxref() {
+    const b = this.b;
+    const s = binaryString(b.subarray(Math.max(0, b.length - 2048)));
+    const i = s.lastIndexOf("startxref");
+    const m = i < 0 ? null : /^startxref\s+(\d+)/.exec(s.slice(i, i + 40));
+    const off = m ? Number(m[1]) : null;
+    return off != null && off < b.length ? off : null;
+  }
+
+  /** Every cross-reference section, newest first: `{ trailer, prev, xrefStm, find(n) }`. */
+  sections() {
+    if (this._secs) return this._secs;
+    const secs = (this._secs = []);
+    const seen = new Set();
+    let off = this.startxref();
+    while (off != null && secs.length < XREF_CHAIN_MAX && !seen.has(off)) {
+      seen.add(off);
+      let sec = null;
+      try { sec = this.readSection(off); } catch { sec = null; }
+      if (!sec) break;
+      secs.push(sec);
+      if (Number.isInteger(sec.xrefStm) && !seen.has(sec.xrefStm)) {
+        seen.add(sec.xrefStm);
+        let hy = null;
+        try { hy = this.readSection(sec.xrefStm); } catch { hy = null; }
+        if (hy) secs.push(hy);
+      }
+      off = Number.isInteger(sec.prev) ? sec.prev : null;
+    }
+    if (!secs.some((s) => s.trailer.Root)) this.lenient(secs);
+    return secs;
+  }
+
+  /** No usable xref: the last `trailer`, and the last cross-reference stream's own dictionary. */
+  lenient(secs) {
+    const b = this.b;
+    const t = lastAscii(b, "trailer");
+    if (t >= 0) {
+      const r = parseValueSafe(binaryString(b.subarray(t + 7, t + 7 + OBJ_WINDOW)), 0);
+      if (r && r.value && r.value.t === "dict") secs.push({ trailer: r.value.map, prev: null, xrefStm: null, find: () => null });
+    }
+    const x = lastAscii(b, "/XRef");
+    if (x >= 0) {
+      const start = this.objectStartBefore(x);
+      let sec = null;
+      try { sec = start == null ? null : this.readXrefStream(start); } catch { sec = null; }
+      if (sec) secs.push(sec);
+    }
+  }
+
+  /** The offset of the `N G obj` that opens the object holding position `pos`, or null. */
+  objectStartBefore(pos) {
+    const b = this.b;
+    for (let at = lastAscii(b, "obj", pos); at >= 0 && at > pos - 8192; at = lastAscii(b, "obj", at - 1)) {
+      const s = binaryString(b.subarray(Math.max(0, at - 24), at + 3));
+      const m = /(\d+)\s+(\d+)\s+obj$/.exec(s);
+      if (m && b[at - 1] !== 0x64 /* d: endobj */) return at + 3 - m[0].length;
+    }
+    return null;
+  }
+
+  readSection(off) {
+    const p = skipWsBytes(this.b, off);
+    if (startsAscii(this.b, p, "xref")) return this.readTable(p);
+    return this.readXrefStream(p);
+  }
+
+  /** A classic table: its subsections by header, entries 20 bytes each, then the trailer. */
+  readTable(p) {
+    const b = this.b;
+    const subs = [];
+    p = skipWsBytes(b, p + 4);
+    for (let guard = 0; guard < 100000; guard++) {
+      const m = /^(\d+)\s+(\d+)[ \t]*(?:\r\n|\r|\n)?/.exec(binaryString(b.subarray(p, p + 48)));
+      if (!m) break;
+      const start = Number(m[1]), count = Number(m[2]);
+      const at = p + m[0].length;
+      if (count > (b.length - at) / 19) return null;
+      subs.push({ start, count, at });
+      p = skipWsBytes(b, at + count * 20);
+    }
+    if (!startsAscii(b, p, "trailer")) {
+      const t = firstAscii(b, "trailer", p);
+      if (t < 0 || t - p > 64) return null;
+      p = t;
+    }
+    const r = parseValueSafe(binaryString(b.subarray(p + 7, p + 7 + OBJ_WINDOW)), 0);
+    if (!r || !r.value || r.value.t !== "dict") return null;
+    const trailer = r.value.map;
+    const entry = (n) => {
+      for (const s of subs) {
+        if (n < s.start || n >= s.start + s.count) continue;
+        const e = /^(\d{10}) (\d{5}) ([nf])/.exec(binaryString(b.subarray(s.at + (n - s.start) * 20, s.at + (n - s.start) * 20 + 20)));
+        if (!e) return null;
+        return e[3] === "n" ? { type: 1, off: Number(e[1]) } : { type: 0 };
+      }
+      return null;
+    };
+    return { trailer, prev: typeof trailer.Prev === "number" ? trailer.Prev : null,
+      xrefStm: typeof trailer.XRefStm === "number" ? trailer.XRefStm : null, find: entry };
+  }
+
+  /** A cross-reference stream: its dictionary is the trailer, its rows the entries. */
+  readXrefStream(p) {
+    const o = this.parseAt(p, null);
+    if (!o || o.value.t !== "stream") return null;
+    const dict = o.value.dict;
+    const type = dict.Type;
+    if (!type || type.t !== "name" || type.v !== "XRef") return null;
+    const w = this.deref(dict.W);
+    if (!w || w.t !== "arr" || w.items.length !== 3 || !w.items.every((x) => Number.isInteger(x) && x >= 0 && x <= 8)) return null;
+    const widths = w.items;
+    const cols = widths[0] + widths[1] + widths[2];
+    if (!cols) return null;
+    const size = this.num(dict.Size);
+    const idx = this.deref(dict.Index);
+    const ranges = [];
+    if (idx && idx.t === "arr") {
+      for (let i = 0; i + 1 < idx.items.length; i += 2) {
+        if (!Number.isInteger(idx.items[i]) || !Number.isInteger(idx.items[i + 1]) || idx.items[i + 1] < 0) return null;
+        ranges.push([idx.items[i], idx.items[i + 1]]);
+      }
+    } else if (Number.isInteger(size)) ranges.push([0, size]);
+    else return null;
+    const got = this.streamData(o.value, STREAM_MAX);
+    if (!got || !got.full) return null;
+    const data = got.data;
+    const field = (at, n) => { let v = 0; for (let k = 0; k < n; k++) v = v * 256 + data[at + k]; return v; };
+    const entry = (n) => {
+      let row = 0;
+      for (const [start, count] of ranges) {
+        if (n >= start && n < start + count) {
+          const at = (row + (n - start)) * cols;
+          if (at + cols > data.length) return null;
+          const t = widths[0] ? field(at, widths[0]) : 1;
+          const a = field(at + widths[0], widths[1]), c = field(at + widths[0] + widths[1], widths[2]);
+          return t === 1 ? { type: 1, off: a } : t === 2 ? { type: 2, stm: a, idx: c } : { type: 0 };
+        }
+        row += count;
+      }
+      return null;
+    };
+    return { trailer: dict, prev: this.num(dict.Prev) ?? null, xrefStm: null, find: entry };
+  }
+
+  /** The newest section's entry for object `n`, or null when no section names it. */
+  lookup(n) {
+    for (const sec of this.sections()) {
+      const e = sec.find(n);
+      if (e) return e;
+    }
+    return null;
+  }
+
+  /** The object at `off` (which must open `N G obj`, N being `n` when given): `{ num, value }`, a stream's `start` absolute. */
+  parseAt(off, n) {
+    const b = this.b;
+    if (!Number.isInteger(off) || off < 0 || off >= b.length) return null;
+    for (let size = OBJ_WINDOW; ; size *= 8) {
+      const end = Math.min(b.length, off + size);
+      const s = binaryString(b.subarray(off, end));
+      const m = /^\s*(\d+)\s+(\d+)\s+obj\b/.exec(s);
+      if (!m || (n != null && Number(m[1]) !== n)) return null;
+      const r = parseValueSafe(s, m[0].length);
+      if (!r || !r.value) return null;
+      if (r.pos >= s.length && end < b.length && size < OBJ_WINDOW_MAX) continue; // the dictionary ran past the window
+      const value = r.value.t === "stream" ? { ...r.value, start: off + r.value.start } : r.value;
+      return { num: Number(m[1]), value };
+    }
+  }
+
+  /** The last top-level `N G obj` of object `n` anywhere in the file (a later definition wins), or null. */
+  scanTop(n) {
+    const b = this.b;
+    for (let j = b.lastIndexOf(0x6a); j >= 2; j = j > 0 ? b.lastIndexOf(0x6a, j - 1) : -1) {
+      if (b[j - 1] !== 0x62 || b[j - 2] !== 0x6f) continue; // "obj"
+      const s = binaryString(b.subarray(Math.max(0, j - 30), j + 1));
+      const m = /(?:^|\s)(\d+)\s+(\d+)\s+obj$/.exec(s);
+      if (!m || Number(m[1]) !== n) continue;
+      const at = j + 1 - (m[0].length - (/^\s/.test(m[0]) ? 1 : 0));
+      const o = this.parseAt(at, n);
+      if (o) return o.value;
+    }
+    return null;
+  }
+
+  /** Object `n`'s value through the xref, falling to a scan for one the xref cannot place; null for none. */
+  get(n) {
+    if (!Number.isInteger(n)) return null;
+    if (this.objs.has(n)) return this.objs.get(n);
+    if (this.busy.has(n)) return null;
+    this.busy.add(n);
+    let v = null;
+    try {
+      const e = this.lookup(n);
+      if (e && e.type === 1) v = this.parseAt(e.off, n)?.value ?? this.scanTop(n);
+      else if (e && e.type === 2) v = this.packed(e.stm, e.idx, n);
+      else if (!e) v = this.scanTop(n);
+    } catch { v = null; }
+    this.busy.delete(n);
+    this.objs.set(n, v);
+    return v;
+  }
+
+  /** Object `n` out of object stream `stm`. */
+  packed(stm, idx, n) {
+    let pack = this.packs.get(stm);
+    if (!pack) {
+      pack = { inner: null, pairs: [], first: 0 };
+      const so = this.get(stm);
+      const got = so && so.t === "stream" ? this.streamData(so, STREAM_MAX) : null;
+      const first = so && so.t === "stream" ? this.num(so.dict.First) : null;
+      const count = so && so.t === "stream" ? this.num(so.dict.N) : null;
+      if (got && Number.isInteger(first) && Number.isInteger(count) && first >= 0 && count >= 0 && count <= 1e6) {
+        const inner = binaryString(got.data);
+        const nums = inner.slice(0, first).trim().split(/\s+/).map(Number);
+        pack = { inner, first, pairs: nums };
+      }
+      this.packs.set(stm, pack);
+    }
+    if (pack.inner == null) return null;
+    let at = -1;
+    if (pack.pairs[idx * 2] === n) at = idx * 2;
+    else for (let i = 0; i + 1 < pack.pairs.length; i += 2) if (pack.pairs[i] === n) { at = i; break; }
+    if (at < 0 || !Number.isFinite(pack.pairs[at + 1])) return null;
+    const r = parseValueSafe(pack.inner, pack.first + pack.pairs[at + 1]);
+    return r ? r.value : null;
+  }
+
+  /** `v` with indirect references followed (64 hops), or null. */
+  deref(v) {
+    for (let hops = 0; v && v.t === "ref"; hops++) {
+      if (hops >= 64) return null;
+      v = this.get(v.n);
+    }
+    return v ?? null;
+  }
+  dict(v) {
+    v = this.deref(v);
+    return v ? (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null) : null;
+  }
+  num(v) {
+    v = this.deref(v);
+    return typeof v === "number" ? v : null;
+  }
+
+  /** A stream's raw bytes: by `/Length` when `endstream` follows it, else up to the next `endstream`. */
+  rawStream(st) {
+    const b = this.b, start = st.start;
+    if (!Number.isInteger(start) || start < 0 || start > b.length) return null;
+    const len = this.num(st.dict.Length);
+    if (Number.isInteger(len) && len >= 0 && start + len <= b.length && startsAscii(b, skipWsBytes(b, start + len), "endstream")) {
+      return b.subarray(start, start + len);
+    }
+    const e = firstAscii(b, "endstream", start);
+    if (e < 0) return null;
+    let end = e;
+    if (b[end - 1] === 0x0a) end--;
+    if (b[end - 1] === 0x0d) end--;
+    return b.subarray(start, Math.max(start, end));
+  }
+
+  /** A stream's decoded bytes `{ data, full }` (Flate only, PNG-predicted as `/DecodeParms` says), cut at `max`; null otherwise. */
+  streamData(st, max) {
+    const raw = this.rawStream(st);
+    if (!raw) return null;
+    const f = this.deref(st.dict.Filter);
+    const names = f == null ? [] : f.t === "name" ? [f.v] :
+      f.t === "arr" ? f.items.map((x) => { const d = this.deref(x); return d && d.t === "name" ? d.v : null; }) : [null];
+    if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    let data = raw, full = true;
+    if (!names.length && raw.length > max) { data = raw.subarray(0, max); full = false; }
+    for (let i = 0; i < names.length; i++) {
+      const r = inflateSync(data, max);
+      if (!r) return null;
+      data = r.data; full = full && r.full;
+    }
+    let parms = this.deref(st.dict.DecodeParms) || this.deref(st.dict.DP);
+    if (parms && parms.t === "arr") parms = this.deref(parms.items[parms.items.length - 1]);
+    if (parms && parms.t === "dict") {
+      const predictor = this.num(parms.map.Predictor);
+      if (predictor && predictor >= 2) {
+        data = unpredict(data, { predictor, colors: this.num(parms.map.Colors) ?? 1, columns: this.num(parms.map.Columns) ?? 1,
+          bpc: this.num(parms.map.BitsPerComponent) ?? 8 });
+      }
+    }
+    return { data, full };
+  }
+
+  /** The first trailer entry named `key` in section order (newest first), or undefined. */
+  trailerValue(key) {
+    for (const sec of this.sections()) if (sec.trailer[key] !== undefined) return sec.trailer[key];
+    return undefined;
+  }
+}
+
+const XML_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+
+/** XML text with its character references decoded, or null when one is not a character. */
+function xmlText(raw) {
+  let bad = false;
+  const out = raw.replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[A-Za-z]+);/g, (all, ref) => {
+    let cp;
+    if (ref[0] === "#") cp = ref[1] === "x" ? parseInt(ref.slice(2), 16) : parseInt(ref.slice(1), 10);
+    else if (ref in XML_ENTITIES) return XML_ENTITIES[ref];
+    else { bad = true; return ""; }
+    if (!(cp >= 0x20 || cp === 0x09 || cp === 0x0a || cp === 0x0d) || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff)) { bad = true; return ""; }
+    return String.fromCodePoint(cp);
+  });
+  return bad ? null : out;
+}
+
+/** The `dc:title` an XMP packet states: its `x-default` alternative, else its first. */
+function xmpTitle(packetBytes) {
+  let text;
+  try {
+    const bom = packetBytes[0] === 0xfe && packetBytes[1] === 0xff ? "utf-16be" : packetBytes[0] === 0xff && packetBytes[1] === 0xfe ? "utf-16le" : "utf-8";
+    text = new TextDecoder(bom, { fatal: true }).decode(packetBytes);
+  } catch { return null; }
+  const ns = /xmlns:([A-Za-z_][\w.-]*)\s*=\s*["']http:\/\/purl\.org\/dc\/elements\/1\.1\/["']/.exec(text);
+  const p = ns ? ns[1] : "dc";
+  const block = new RegExp(`<${p}:title(?:\\s[^>]*)?>([\\s\\S]*?)</${p}:title\\s*>`).exec(text);
+  if (!block) return null;
+  let first = null;
+  for (const li of block[1].matchAll(/<[\w.-]+:li\b([^>]*)>([\s\S]*?)<\/[\w.-]+:li\s*>/g)) {
+    if (li[1].trim().endsWith("/")) continue;
+    const inner = li[2].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, (_, c) => c.replace(/&/g, "&amp;").replace(/</g, "&lt;"));
+    if (/</.test(inner)) continue;
+    const t = xmlText(inner);
+    if (t == null || !t.trim().length) continue;
+    if (/xml:lang\s*=\s*["']x-default["']/.test(li[1])) return t;
+    if (first == null) first = t;
+  }
+  return first;
+}
+
+/** R40: the document's title, from its Info `Title` and, failing that, the catalog's XMP `dc:title`; null for none.
+ *  Reads no page, and never throws. See the block above. */
+export function pdfTitle(bytes) {
+  try {
+    if (!(bytes instanceof Uint8Array)) return null;
+    if (!/%PDF-\d+\.\d+/.test(binaryString(bytes.subarray(0, 1024)))) return null;
+    const f = new XrefReader(bytes);
+    if (f.trailerValue("Encrypt") !== undefined) return null;
+    /* R10's choice: the newest trailer's /Info, an earlier one when it dangles. */
+    for (const sec of f.sections()) {
+      const ref = sec.trailer.Info;
+      const info = ref && ref.t === "ref" ? f.dict(ref) : null;
+      if (!info) continue;
+      const t = f.deref(info.Title);
+      if (t && t.t === "str") {
+        const text = decodePdfTextStrict(t.raw);
+        if (text !== null && text.trim().length) return text;
+      }
+      break;
+    }
+    const root = f.dict(f.trailerValue("Root"));
+    const meta = root ? f.deref(root.Metadata) : null;
+    if (!meta || meta.t !== "stream") return null;
+    const got = f.streamData(meta, XMP_MAX);
+    return got ? xmpTitle(got.data) : null;
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
 
