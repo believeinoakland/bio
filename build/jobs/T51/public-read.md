@@ -169,3 +169,14 @@ C47 / R41 (my part): legs.mjs now names an entry by the row's `title`, else `ori
 Suites: public-read 242 pass before the C47 test, 1 red now by the above. Checks: ownership 0, format 0, architecture 0; coverage and words findings are other modules' (installer-steps, interface-shell, pdf-reader, queue, screens-*, op-grades t33/t51), none public-read.
 
 Need: ring me (RESUME) once case-grammar's R12 `title` is on tranche/T51; I merge, rerun the suite and checks, and COMPLETE with the Size line.
+
+## J17 · COMPLETE
+
+COMPLETE (B14 RESUME applied; replaces my REPORT J16). Merged tranche/T51 (case-grammar #19 in).
+
+C47 (R41): (1) legs.mjs:53 names an entry by the row's `title`, else `origin`, else `ref`; the place is the passage's signed extent, unchanged. (2) tests used a scripted entry with no title; evidence-names.test.mjs now signs a titled row through the real case-document writer (`caseDoc`), with controls (null, absent, blank title keep the address). (3) "R41 (1), C47 ...": RED (name was the address), red again after my edit until case-grammar's reader kept `title`, GREEN after the merge. (4) N. Said plainly: case-disclosures (the writer of `title`, #16) has not merged yet (no `title` in its materials.mjs), so the test hands a row with `title` to the real case-document writer and reader; the full path from a capture is the seam owner's (screens-publish) once #16 merges. "Paragraph 4" wording and the "Relied on ·" dot are screens-publish R80's.
+
+C48 (R42): (1) PublicRead.publishedAddress, index.mjs; case-authoring:1702 and ceremony.mjs:134 compose their own and are to use it (their jobs). (2) the address was never asserted against the route; the oracle is the shell's route form. (3) published-address.test.mjs, red ("not a function") then green, with the edition 2 control. (4) N.
+
+Requirement ids met: R41, R42. Suites: public-read 243 pass 0 fail. Downstream (impact): plane 5 fail and control-plane 1 fail are identical on origin/tranche/T51 (278/5 and 355/1 there too: route-map R5/R9, R24 release words, Home R81), not mine. Checks: ownership 0, format 0, architecture 0; coverage/words findings are other modules'. QUESTIONS: J15 answered (B12), none open.
+Size (session_01RJ9Po6vVrCTxSZ695UZtwZ): test runs 9, module lines 2800
