@@ -211,3 +211,21 @@ Tests and checks:
 - `node checks/ownership.mjs /home/user/bio affordances tranche/T51 job/T51/affordances`: 3 files (act-help.mjs, t36.test.mjs, this record), 0 failures.
 
 Size (session_01Wou66QFMgiLpLmx2dvGc3B): test runs 6, module lines 2777
+
+## J17 · BLOCKED
+
+Cause 1 (every op this round adds is accounted for) is not met from this module's paths, and I have not changed code to fake it. I made no edit in this round; the branch carries only the merge of `origin/tranche/T51` (dcba1b0ad7).
+
+**Measured on the tranche tip:** `node --test bio-plane/test/m/affordances/*.test.mjs`: 274 tests, 273 pass, 1 fail: `t33.test.mjs:189` (R12, R24). The 32 plane-runtime reds of J9 are gone on this tip. A direct call of `unaccounted` with the five ops (`moneysets` read, `remindersfor` read, `scanmirror`, `officeconfirm`, `captureseenin` mutating) answers: unpublished `captureseenin, moneysets, officeconfirm, remindersfor, scanmirror`; unranked `captureseenin, officeconfirm, scanmirror`. The test's failing assertion is the first (`moneysets`).
+
+**Why this is not affordances' to publish:**
+- `moneysets` (money R28) and `remindersfor` (action-clocks R26) are reads. A read is accounted for only by a `NON_ACTS` row, which `op-grades` owns (R4, K1974). No row in `op-grades` names either op. The pattern is `op-grades` R48 (`holdsdue` and two others).
+- `scanmirror` (file-safety R49, an administrator act), `officeconfirm` (entities R64) and `captureseenin` (capture R101) are mutating. Each needs a rung or a stated absence in `op-grades` (unranked), and publication: a `NON_ACTS` row, or an `ACTS` / `CAPTURE_ACTS` row here. An act row here needs a requirement line naming its facts and predicate, which BOB writes. Entities R64 and capture R101 are not yet met, so their ops are not on the tranche table.
+- Naming the ops in a list here would be the hand-list K3268 forbids and the copy R4 forbids. I wrote no new test: the only honest one would fail on the owners' rows.
+
+**Requested of BOB (owners, not this job):**
+1. `op-grades`: `NON_ACTS` rows with a "read: …" reason for `moneysets` and `remindersfor`.
+2. `op-grades`: a `NON_ACTS` row (or rung and absence, as BOB rules) for `scanmirror` now. For `officeconfirm` and `captureseenin`, the same when their jobs merge. Whether `captureseenin` is a `CAPTURE_ACTS` row instead is BOB's call, with a requirement line for it.
+3. Once those land on the tranche, `t33.test.mjs:189` should go green with no change here. Send a CHANGE and I will add a control for the five (the existing "one left out is seen" control already holds).
+
+**Entries not applied:** cause 1 (blocked, owners' rows). **Checks:** not re-run; no affordances file changed this round, so format, architecture, coverage, words and ownership stand as at J16.
