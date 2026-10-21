@@ -47,3 +47,7 @@ Grade rows owed in op-grades this round (K4370), besides moneysets (B3): capture
 ## B5 · CHANGE
 
 action-clocks R26 merged (K4372): op=remindersfor (a read). Its op-grades row when you next merge tranche/T51.
+
+## B6 · CHANGE
+
+op-grades rows owed this round (K4379; affordances' unaccounted() needs them, affordances/t33.test.mjs:189): NON_ACTS rows with a 'read: …' reason for moneysets (money R28) and remindersfor (action-clocks R26), as R48 did for holdsdue; for the mutating scanmirror (file-safety R49, administrator; refused within 15 min), officeconfirm (entities R64, weight reversible) and captureseenin (capture R101, member, reversible reference), a rung each by its weight and its NON_ACTS publication row (not CAPTURE_ACTS). moneysets, remindersfor and scanmirror are on the tranche now; officeconfirm and captureseenin from their requirement lines, tested when they merge. These replace the separate grade-row notes of B3, B4, B5.
