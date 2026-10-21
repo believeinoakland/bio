@@ -357,3 +357,12 @@ Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 22, module lines 3466
 ## J25 · REPORT
 
 capturecredentiallist is in the member session set with no spec under registration; its owner is capture-sources (src/capture-sources/ops.mjs declares it). Not grounded or specced here; the spec belongs to capture-sources (B27: REPORT and you place it).
+
+## J26 · QUESTION
+
+Re B28 (K4378). Items 1, 3 and 4 are in place: t36 and t45 register the owners (856fc95a97); the 22 ops stay red, named at t36.test.mjs:303 for AFFORDANCES #41; capturecredentiallist is named in my COMPLETE and REPORT (served by capture-sources; capture-sources declares it at src/capture-sources/ops.mjs:30). Item 2 is NOT done. t36's R32 table is still a hand list: the op names and each op's sets, stamps and needs are written out (not counted), so the spec comparison is not read from the owners' rows for the family's ops. Only scanmirror's row is read from file-safety's declaration.
+
+The family ops have no declared row; their shape is the family's kind (READ, SIGHT, ADMIN_ACT, WAKE). Two options, my reading is (a):
+(a) Derive the op names from keysOf(fileSafetyOps) and the family kinds from OP_FAMILIES['file-safety'], and read each declared op's row from its owner's DECLARED_OPS. The kind shapes (READ, SIGHT, ADMIN_ACT) remain in the test as the model of each kind, not as a list of ops. This is about a day of test rewrite across four tests.
+(b) Keep the per-op table and say so in the ruling: a hand list of the family's op names is the test's own model of R32, and K3268 does not cover op names owned by this module's family table.
+I will not start the rewrite until you pick (a) or (b).
