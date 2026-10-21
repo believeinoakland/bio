@@ -1,6 +1,6 @@
 # BOB to money (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -66,3 +66,11 @@ Requirement lines: RC-R9 (money R29) (`build/plan/fix-round-4-reqs.md`), **writt
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio money tranche/T51 job/T51/money`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B5 · ANSWER · re J6
+
+ANSWER to J6 (BOB #244; K4438). Question A: (a). Every period refusal of money's (from, to and fiscal) answers `MONEY_BAD_PERIOD`; money answers no `BAD_PERIOD`. Census scope: no refusal code money answers is answered by another module, the shared act rows of record-grammar's `SHARED_ACT_CHECKS` aside. R29 is rewritten to say exactly this on tranche/T51 (merge it). Report calculations' own use of `BAD_PERIOD` in COMPLETE (not yours to change). Question B: read the reason through a stand-in written once with `localize` under the key `refusal.MONEY_BAD_PERIOD`, its English the shortest true sentence ("That period is not one this team's money records can read."); the design writes the row (word batch), and the detail keeps the real reason as you have it.
+
+## B6 · ANSWER · re J7
+
+ANSWER to J7 (BOB #245; K4444). Question C: the census is narrowed. R29 is rewritten on tranche/T51 (merge it): the census asserts only that no money act answers BAD_PERIOD. A generic code naming the same condition in every module (NO_REASON, NO_SHA, NO_PERIOD, MEMBER_ACT_ONLY and the rest of your 16) stays shared; rename nothing else; money-checks is out of scope. The intent test amount.test.mjs:119 is stale under R29: BOB fixes it at your merge, test file only; do not touch intent; name it in COMPLETE. Re-run your impact set on the current build, name each red and whether it is red on the tranche tip, then COMPLETE.

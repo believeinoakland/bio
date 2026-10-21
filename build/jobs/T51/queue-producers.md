@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_01QHswMjuJkugiUqGLjnDCa5 · depth 2 · COMPLETE · handled B9
+**Status** · session_01XcQxCDGtXj11iuy1HP8Y8Z · depth 2 · COMPLETE · handled B11
 
 ## J1 · REPORT
 
@@ -206,3 +206,50 @@ Size (session_01QHswMjuJkugiUqGLjnDCa5): test runs 7, module lines 3633
 ## J11 · COMPLETE
 
 COMPLETE (B9, C69, R52): one newer-capture item per (holder, target, newer version); 151/151 module tests; details and proposed R52 clause in J10 of the record. Found: door acts take one notice id, so a sibling notice of the same version reappears after adopt/keep (see record).
+
+## J12 · QUESTION
+
+Fix round 4, cause C69 (queue-producers, wave 1, #14). The fix is committed and pushed (60da3f642a on job/T51/queue-producers, merged with tranche/T51). Two things need BOB's decision before COMPLETE; the rest of the job is done.
+
+**C69, the four fields.**
+1. Root cause, certain: `bio-plane/src/queue-producers/index.mjs:1511` builds the sentence with `fillWord("grade", n.grade)`. A capture read after its first carries no grade (reevaluation's grade-not-carried, `reevaluation/index.mjs:2819`), so the word is blank and the sentence reads "was read as. Nothing about the reference...". Fix: `n.grade ?? "undetermined"`, the same fallback reevaluation's own text uses (`reevaluation/index.mjs:2379`).
+2. Test gap: every fixture grades its notice, so the blank was never built. The new test grades none.
+3. Failing-first: `test/m/queue-producers/noticed.test.mjs`, "R52 (C69): a newer capture no one has graded reads as undetermined, and its two notices are one item". Red before the fix (sentence reads "was read as."), green after.
+4. N (pure code).
+
+Suites: queue-producers all 152 tests pass. queue + store-door 258/259: `store-door/declared-ops.test.mjs` R17 (op-grades, `groupdescriptiondraft`) red. control-plane 355/356: `t47-e2e` R81 red. plane 278/283. The three reds (store-door R17, control-plane R81, plane's five route-map tests) are the same on origin/tranche/T51 (checked in a worktree of the tip); none is in a file I changed. Checks: ownership 1 file, 0 failures; format 0; architecture 0; coverage: no failure for queue-producers; words: 3 failures, all in op-grades (not mine). Impact: 5 modules, 113 test files.
+
+**Decision 1 (repair for the old pair).** Read-time R52 already merges notices with the same holder, target and newer version, so the two stored NOTICED items should merge when both carry `newer_capture` or `newer_bundle`. If they still show twice on the smoke copy, their stored records lack both keys, and this module puts each such notice on its own. queue-producers is a read-only producer (its reader's role forbids writes), so it cannot merge stored rows at a wake. Recommendation: first, a read of the two stored notices on the smoke copy (LIVE-CHECK, read only). If they share holder, target and newer version, no repair is needed and C69 closes. If they lack the keys, the repair belongs to reevaluation, which owns the notices; I will not write it here. Which do you want?
+
+**Decision 2 (word).** The grade fill for `undetermined` is `queue.fill.grade.undetermined` = "undetermined: the record lacks what it needs to tell" (`setup-words/rows.mjs:7213`). Inside the sentence it reads "was read as undetermined: the record lacks what it needs to tell." The sentence is right in shape but the fill carries a clause. Recommendation: a short fill row for the sentence (e.g. "undetermined"). I have not edited rows.
+
+Waiting on BOB (J4) for these two answers. Nothing else is open.
+
+## J13 · COMPLETE
+
+COMPLETE, fix round 4, queue-producers (T51), cause C69. Commit 60da3f642a on job/T51/queue-producers (tranche/T51 merged in). Answers: J12 answered by B11 (K4440): no repair this round; the fix is new data only (R-OLD); the re-walk scores the old pair apart, and if the two stored notices lack the version keys, the repair is reevaluation's next entry. Keep the existing fill; the short fill row goes to the design's word batch.
+
+**C69 (queue-producers owns the sentence; one module, no seam; the test enters by the act: `read` of the reference's notices).**
+1. Root cause, certain (file:line): `bio-plane/src/queue-producers/index.mjs:1511` builds the detail with `fillWord("grade", n.grade)`. A capture read after its first carries no grade (reevaluation grade-not-carried, `reevaluation/index.mjs:2819`), so the word is blank: "was read as. Nothing about the reference has changed". Fix: `fillWord("grade", n.grade ?? "undetermined")`, the fallback reevaluation's own text uses (`reevaluation/index.mjs:2379`). Key used: `queue.fill.grade.undetermined` (its English row, `setup-words/rows.mjs:7213`, is "undetermined: the record lacks what it needs to tell"; kept per BOB's answer, for the design's word batch).
+2. Test-gap: every fixture grades its notice, so the blank was never built. Fixture now grades none (test below); the control "one item per matter" stays in `noticed.test.mjs`.
+3. Failing-first: `bio-plane/test/m/queue-producers/noticed.test.mjs`, "R52 (C69): a newer capture no one has graded reads as undetermined, and its two notices are one item". Red before the fix ("was read as. Nothing about..."), green after. Control: "R52: control: the same newer version on another holder, or another target, is another matter" and the untouched-notice control pass in the same file.
+4. Platform check: N (pure code).
+
+**Requirement ids met:** R52 (the new test names it; the row's second line, the sentence, is R43's fill rule and passes with it).
+
+**Suite counts:**
+- queue-producers, all files: 152 of 152 pass.
+- queue + store-door: 258 of 259. Red: store-door `declared-ops.test.mjs` R17 (op-grades, `groupdescriptiondraft`). Same red on origin/tranche/T51 (checked in a worktree of the tip). Not mine; named, not fixed.
+- control-plane: 355 of 356. Red: `t47-e2e.test.mjs` R81. Same red on the tip. Named, not fixed.
+- plane: 278 of 283. Reds: R18/R5 (case-disclosures / case-carriage ops routing), R24, R5/R9/R45, R5 and R9 route-map tests. Identical set on the tip. Named, not fixed.
+
+**Checks** (`/home/user/civicos-process/checks/`):
+- ownership (queue-producers, tranche/T51): 1 file changed, 0 failures.
+- run.mjs: format 0 failures; architecture 0 failures; coverage: no failure for queue-producers (15 failures elsewhere: acquisition, agent-harness, agent-runner, citation, control-plane, installer-steps, interface-shell, journey-check, money, pdf-reader, public-read, queue, screens-daily, screens-inquiry, screens-publish; none mine); channels 0; words: 3 failures, all op-grades (`t33.mjs:214`, `t51.mjs:41`, `t51.mjs:45`), none mine.
+- impact (tranche/T51 → HEAD): queue-producers 24/24, queue 29/31, store-door 6/6, control-plane 14/66, plane 40/43; 5 modules, 113 test files; each user's reds are the tip's reds above.
+
+**Open QUESTIONs:** none (J12 answered by B11).
+
+**Deferred:** nothing deferred in my module. The old NOTICED pair: not repaired (BOB's answer); the re-walk reads the two stored notices.
+
+Size (session_01XcQxCDGtXj11iuy1HP8Y8Z): test runs 10, module lines 3630 (`bio-plane/src/queue-producers/`: index.mjs, proposals.mjs, words.mjs)

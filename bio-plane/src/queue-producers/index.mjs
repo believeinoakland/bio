@@ -1508,7 +1508,8 @@ export class QueueProducers {
           if (!n.grade && !n.affects)
             return { detail: say("queue.newer-capture-affects-reference.detail.unseen"), detail_key: "queue.newer-capture-affects-reference.detail.unseen" };
           const affects = fillWord("affects", n.affects);
-          return { detail: joined(say("queue.newer-capture-affects-reference.detail", { grade: fillWord("grade", n.grade) }),
+          /* C69: a capture read after its first carries no grade (reevaluation's grade-not-carried); it reads as undetermined, as reevaluation's own text does */
+          return { detail: joined(say("queue.newer-capture-affects-reference.detail", { grade: fillWord("grade", n.grade ?? "undetermined") }),
                                   affects ? say("queue.newer-capture-affects-reference.detail.affects", { affects }) : ""),
                    detail_key: "queue.newer-capture-affects-reference.detail" };
         })(),

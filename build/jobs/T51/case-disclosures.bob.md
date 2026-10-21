@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -60,3 +60,18 @@ Read in full (never in part): case-disclosures' lines on the pre-flight, `co_att
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, use a stand-in (the key with a plain `localize` default, named in your record as a stand-in) until the design's rows land, and carry on; never block on them and never invent the final sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/case-disclosures/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-disclosures tranche/T51 job/T51/case-disclosures`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B5 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/case-disclosures tranche/T51 && git branch -m job/T51/case-disclosures stale/case-disclosures-local && git checkout -b job/T51/case-disclosures origin/job/T51/case-disclosures`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CASE-DISCLOSURES #16 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, wave 1; K4438)
+
+Mail with `--module case-disclosures`; record `build/jobs/T51/case-disclosures.md`. Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for diagnosis. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the module job (P8, mechanics §6) for `case-disclosures`. Your diff touches only that module's paths and tests and your record. This is fix round 4 of T51 (`build/plan/fix-round-4-T51.md`; Bob's K4426: understood, tested, fixed, then deployed). Merge `tranche/T51` first. Your causes come from the whole suite run at 753ea4db8a, diagnosed in `build/plan/suite-reds-753ea4db8a.md` (read your rows whole):
+You are the module job (P8, mechanics §6) for `case-disclosures`. Your diff touches only that module's paths and tests and your record. Fix round 4 of T51 (`build/plan/fix-round-4-T51.md`; Bob's K4426). Merge `tranche/T51` first; CASE-GRAMMAR (R12's `title`) merges before you: until then test against R12's text and say so.
+
+**C47 (provider; seam owner screens-publish).** The walker's row (B CA36/38): the published EVIDENCE names "https://www.foia.gov/faq.html" and "Capture B, Capture B", never the document's title. (1) Root cause, certain: `materials.mjs:69` (`materialRows`) writes `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}` with no title. (2) Missed: no test follows a real chain to the signed row's name. (3) **R7 amended (written by BOB, K4438): each `materials:` row carries `title`**, the document's title as its capture holds it (the capture's own `title`, as acquisition R98 now states it for pages and PDFs), `null` when none or for an observation; nothing about a person is added (R26). Test: CASE-2026-4783's chain (or a fixture built through the real ops: capture, cite, prepare) yields rows with the documents' titles; control: an observation's row has `title: null`. Red first. (4) N. New cases only (R-OLD): a signed case is never rewritten.
+
+Every requirement you meet is named by a test seen failing first, with a negative control. R-NOTMET and R-OLD as the plan's §0 states. Run your suite, then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean. COMPLETE lists the four fields with the red-then-green evidence and `Size (<session id>): test runs <n>, module lines <n>`.

@@ -167,3 +167,39 @@ test("R34 (K4363): a PDF reads the Title its structure reader states beside its 
   assert.equal(Object.hasOwn(none, "title"), true);
   assert.equal(none.title, null);
 });
+
+/* R32 (fix round 4, C19; K4429; RC-R11): furniture by name, over the walker's page (nps.gov's Grand Canyon, saved as served). */
+const grca = () => saved("nps-gov-grca-index.htm");
+const withMain = (inner) => `<html><body><main><h1>Notice 2026-118</h1><p>The council adopted the shelter repair standard on 3 March 2025.</p>${inner}</main></body></html>`;
+
+test("R32 (fix round 4, C19; K4429): the saved nps.gov Grand Canyon page yields no unit for 'Explore Grand Canyon', 'Park footer', 'Contact Info', 'Mailing Address:' or 'Search', its body passages are unchanged, and two readings are identical", async () => {
+  const page = grca(), out = await readAs(page), a = out.text_units.map((u) => u.text);
+  for (const f of ["Explore Grand Canyon", "Park footer", "Contact Info", "Mailing Address:", "Search"]) {
+    assert.ok(page.includes(f), `the saved page holds ${f}`);
+    assert.ok(!a.includes(f), `no unit is ${f}`);
+  }
+  assert.ok(!a.some((t) => t.includes("Explore subjects")), "the subject gallery goes");
+  for (const c of ["What pass should you pick?", "Know before you go!", "A special use permit is required for certain filming"])
+    assert.ok(a.some((t) => t.includes(c)), `a unit still holds ${c}`);
+  assert.deepEqual(a, (await readAs(page)).text_units.map((u) => u.text));
+  assert.deepEqual(out.text_units.map((u) => u.extent.para), a.map((_, i) => i));
+});
+
+test("R32 (fix round 4, C19; K4429): a block named furniture by a token of its class or id (split at - _ and camel humps) and holding no prose goes, beside a main, an article or a role=main region", async () => {
+  for (const f of ['<div class="ParkFooter"><h2>Park footer</h2><p>PO Box 129</p></div>', '<div id="contact-info"><h3>Contact Info</h3></div>',
+    '<div class="breadcrumb"><span>Home</span><span>Parks</span></div>',
+    '<div class="Sidebar"><h3>Related pages</h3></div>', '<div class="ContentPromos"><h2>Explore Grand Canyon</h2></div>',
+    '<div class="site-search"><h3>Search</h3></div>', '<div class="CarouselGallery"><h2>Explore subjects and stories related to this park</h2></div>'])
+    assert.deepEqual(await words(withMain(f)), NOTICE.slice(0, 2), f);
+  const roleMain = `<html><body><div role="main"><p>The council adopted the shelter repair standard on 3 March 2025.</p></div><div class="page-footer"><h3>Contact Info</h3></div></body></html>`;
+  assert.deepEqual(await words(roleMain), ["The council adopted the shelter repair standard on 3 March 2025."]);
+});
+
+test("R32 (fix round 4, C19; K4429) (control): a named block holding a sentence of prose is kept; a page with no main, article or role=main region is read as before; names that are not tokens are kept", async () => {
+  const prose = "Our offices are closed on holidays, so please call ahead.";
+  assert.deepEqual(await words(withMain(`<div class="footer-note"><p>${prose}</p></div>`)), [...NOTICE.slice(0, 2), prose]);
+  assert.deepEqual(await words(withMain(`<div class="sidebar"><h3>Heading</h3><div class="share-x"><p>x</p></div><p>${prose}</p></div>`)), [...NOTICE.slice(0, 2), "Heading", prose]);
+  assert.deepEqual(await words("<html><body><p>One.</p><div class=\"footer\"><h3>Contact Info</h3></div></body></html>"), ["One.", "Contact Info"]);
+  assert.deepEqual(await words(withMain('<div class="footnotes-x"><h3>Kept heading</h3></div><div class="researcher"><h3>Also kept</h3></div>')),
+    [...NOTICE.slice(0, 2), "Kept heading", "Also kept"]);
+});
