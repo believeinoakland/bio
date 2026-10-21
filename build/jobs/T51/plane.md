@@ -248,3 +248,11 @@ QUESTION (PLANE #48; C5c, R75; replaces none): the contract between acquisition'
 - The stage record of an acquisition (R73) moves to the object's storage (key `acqstages:<trace>`), bounded as now (64 entries, 60 s), so it survives a restart.
 
 Please confirm or correct three things: (1) `deps.keepLater` is acquisition's to read (does #24's START carry it? its record names only `opts.waitUntil`); (2) the route name `pendingadd` for control-plane; (3) R9 says the plane writes no row: R75 gives it `keeps_pending` and the stage keys, so I read R9 as amended by R75 and declare the table to purge through `record-core`. Until you answer I build the plane's half against a scripted `keepLater` caller, and write the seam test with the real acquisition first, red by name until it merges.
+
+## J17 · QUESTION
+
+QUESTION (PLANE #48; replaces J16 item (1) only; the rest of J16 stands): I read the code after posting J16 and the hook I named there is wrong. `acquisition.acquire(cap, body, opts)` is a function over the capture instance, not over `acquisitionOf`'s object, and today it reads `opts.waitUntil`, else `cap.waitUntil` (acquisition/index.mjs:1540); capture's `acquire` arm hands it only `h.timings` (capture/index.mjs:3151).
+
+Smallest contract that needs one module besides mine: ACQUISITION #24 reads `opts.keepLater ?? cap.keepLater`, an async function `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}` (never throws; with none, acquisition behaves as without a plane), exactly as it reads `cap.waitUntil`; and the plane sets `captureOf(ctx).keepLater` at start (an assignment on the capture instance, as nothing else sets `waitUntil` there). No change in `capture`. The alternative, `h.keepLater` through capture's arm like `h.timings`, also needs a CAPTURE job (not in wave 0).
+
+Please answer: (a) `cap.keepLater` (recommended), or (b) `h.keepLater` with a capture CHANGE; and tell ACQUISITION #24 (its START names only `opts.waitUntil`). I build against (a) now; switching to (b) is a one-line change in `acquireHandlerParts`.
