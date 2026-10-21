@@ -133,7 +133,7 @@ COMPLETE for fix round 2 · review (BOB's B9). Branch job/T51/review. `tranche/T
 
 **Tests and checks**
 - `node --test --test-force-exit bio-plane/test/m/review/`: tests 76, pass 76, fail 0 (was 73; three new in `walk.test.mjs`).
-- Users: screens-publish 338/338, notice-producers + case-authoring 181 (179 pass, 0 fail), plane + publication 324/324, control-plane 429 of 431 (R24 word test above, 1 fail, unrelated; 1 other not run as passing in my filter).
+- Users: screens-publish 338/338, notice-producers + case-authoring 181 (179 pass, 0 fail), plane + publication 324/324, control-plane 431 tests, 429 pass, 1 fail (the R24 word test above, unrelated), 1 skipped.
 - `node checks/run.mjs /home/user/bio`: format 1 failure (rulings.md, BOB's); architecture 0 failures; coverage no review line; words 0 failures. ownership: 1 failure, `build/requirements/review.md`, accepted at the merge (B5/B6).
 
-Size (session_01LZnjV7jBk2LxdqJLqKD4W4): test runs 12, module lines 1519
+Size (session_01LZnjV7jBk2LxdqJLqKD4W4): test runs 12, module lines 1513
