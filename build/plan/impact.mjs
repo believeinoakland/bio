@@ -34,7 +34,7 @@ for (const f of tree) {
   let inScope = false;
   for (const m of mods) {
     if ((m.paths || []).some((p) => under(f, p))) inScope = true;
-    if ((m.tests || []).some((p) => under(f, p))) { inScope = true; testsOf.get(m.id).push(f); }
+    if ((m.tests || []).some((p) => under(f, p))) { inScope = true; if (/\.test\.(mjs|js)$/.test(f)) testsOf.get(m.id).push(f); } // a helper under tests is in the graph, never listed as a test (K4357)
   }
   if (inScope) jsFiles.add(f);
 }

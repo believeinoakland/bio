@@ -52,3 +52,9 @@
 - Drafts · adopt DEC-398's `screen.review-copy.links.shared`, `.comments.one/.other`, `links.live.one` in screens-publish (wording, merged module) · K4333 · 2026-10-21
 - Held, Inbox · adopt DEC-399's `screen.held.vouch.partsonly` and `screen.inbox.knock.name`/`.type` in screens-intake (wording; merged module) · K4336 · 2026-10-21
 - Contradiction, Project, Document · adopt DEC-400's `screen.contradiction.flagged.by`, `act.heldcaptures.here.project`, `screen.document.testify.how` in screens-inquiry (wording; merged module) · K4338 · 2026-10-21
+- Held, Doorbell and observation rows · "Refused / Open it to vouch for it by itself" on rows never refused (re-walk A FC-20, I-09) · K4357 · 2026-10-21
+- Find, Held · two words for one state ("Awaiting review", "held until you vouch") (re-walk A FC-18) · K4357 · 2026-10-21
+- Document · "Read N of M words" counts words returned, not words right; no warning when many are misread (needs the reader's confidence and a drawing) (re-walk A FC-13) · K4357 · 2026-10-21
+- Document · the cited-copy refusal names the question but offers no door to remove its citations (re-walk B FC-24, C33) · K4357 · 2026-10-21
+- Money · the period sentence says "A follow names the days it covers" (re-walk B E36) · K4357 · 2026-10-21
+- Vouch for this copy · marked "Asks for a reason" and asks nothing: joins the K4199 line (re-walk B C76, CA31, E09) · K4357 · 2026-10-21
