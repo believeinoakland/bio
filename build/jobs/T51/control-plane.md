@@ -312,3 +312,7 @@ The `env.sharedDraftsOf` that `projectRosterOps(r, url, body, env)` reads (proje
 **Tests and checks.** Control-plane suite 343 tests: 338 pass with the getters applied; after fixes (`t41-door`, `t50-door`) the only reds are those named above. Format 0, architecture 0, coverage 86 of 86, ownership 0, words none in control-plane.
 
 Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 12, module lines 4,076
+
+## J15 · COMPLETE
+
+control-plane fix round 3 complete: C15 R75 (versioned immutable script, hash policy), C5/C17 R117 (readHeld, door reads no-home upload), C14 R118 (sharedDraftsOf), routes and page tests current. Reds by name: real-plane R117/R118 tests until PLANE #47; officeconfirm and captureseenin until entities R64 and capture R101 merge; affordances unaccounted. signerregister measured: 9-23 ms whole, nothing to cut. Ask: add money as test-only use. Record has details.
