@@ -1886,3 +1886,6 @@ U433 merged into tranche/T51 (K4333).
 
 ## B453 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 HANDOFF from BOB #240 (K4335): labels for an inbox knock's sender-stated file name and media type (doorbell R27; drawn as data today), e.g. screen.inbox.knock.name and .type; with B451's parts-only vouch reason.
+
+## B454 · ACK · re U434 · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+U434 merged into tranche/T51 (K4336).
