@@ -176,11 +176,11 @@ export const ABOUT_KNOCKER_SCREEN = Object.freeze({
   render: renderAbout,
   parts: Object.freeze({ sourceIdOf, consentBody }),
   acts: Object.freeze([
-    Object.freeze({ op: "sourcedisclose", label: "act.sourcedisclose.label.about-knocker", send: sendDisclose, done: doneDisclose, reasonField: "evidence" }),
-    Object.freeze({ op: "sourceconsent", label: "act.sourceconsent.label.about-knocker", send: sendConsent, done: doneConsent, reasonField: "evidence" }),
-    Object.freeze({ op: "sourceconsentwithdraw", label: "act.sourceconsentwithdraw.label.about-knocker", send: sendWithdraw, done: doneWithdraw }),
-    Object.freeze({ op: "sourcepersonlink", label: "act.sourcepersonlink.label.about-knocker", send: sendPersonLink, done: doneLink, reasonField: "evidence",
+    Object.freeze({ op: "sourcedisclose", rereads: Object.freeze(["src"]), label: "act.sourcedisclose.label.about-knocker", send: sendDisclose, done: doneDisclose, reasonField: "evidence" }),
+    Object.freeze({ op: "sourceconsent", rereads: Object.freeze(["src"]), label: "act.sourceconsent.label.about-knocker", send: sendConsent, done: doneConsent, reasonField: "evidence" }),
+    Object.freeze({ op: "sourceconsentwithdraw", rereads: Object.freeze(["src"]), label: "act.sourceconsentwithdraw.label.about-knocker", send: sendWithdraw, done: doneWithdraw }),
+    Object.freeze({ op: "sourcepersonlink", rereads: Object.freeze(["src"]), label: "act.sourcepersonlink.label.about-knocker", send: sendPersonLink, done: doneLink, reasonField: "evidence",
                     refusals: Object.freeze({ NOT_A_PERSON: function (refusal, cs) { return cs.w("screen.about-knocker.person.refused.org") + " " + cs.w("screen.about-knocker.person.refused.org.next"); } }) }),
-    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.about-knocker", send: sendHelp, done: doneHelp, reasonField: "told" }),
+    Object.freeze({ op: "writinghelp", rereads: Object.freeze([]), label: "act.writinghelp.label.about-knocker", send: sendHelp, done: doneHelp, reasonField: "told" }),
   ]),
 });

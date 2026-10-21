@@ -252,7 +252,7 @@ export const HELD_SCREEN = Object.freeze({
   acts: Object.freeze([
     Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh, rereads: Object.freeze(["held"]) }),
     Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, rereads: Object.freeze(["held"]), reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
-    Object.freeze({ op: "heldsetaside", label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
-    Object.freeze({ op: "heldrestore", label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),
+    Object.freeze({ op: "heldsetaside", rereads: Object.freeze(["held", "aside"]), label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
+    Object.freeze({ op: "heldrestore", rereads: Object.freeze(["held", "aside"]), label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),
   ]),
 });

@@ -119,10 +119,10 @@ export const LEADS_SCREEN = Object.freeze({
   reads: leadsReads,
   render: renderLeads,
   acts: Object.freeze([
-    Object.freeze({ op: "lead", label: "act.lead.label.leads", send: sendLead, done: doneLead, reasonField: "words" }),
-    Object.freeze({ op: "leadread", label: "act.leadread.label.leads", send: sendRead, done: doneRead }),
-    Object.freeze({ op: "leadlook", label: "act.leadlook.label.leads", send: sendLook, done: doneChanged, reasonField: "detail" }),
-    Object.freeze({ op: "leadshare", label: "act.leadshare.label.leads", send: sendShare, done: doneChanged, reasonField: "reason" }),
-    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.leads", send: sendHelp, done: doneHelp, reasonField: "told" }),
+    Object.freeze({ op: "lead", rereads: Object.freeze(["list"]), label: "act.lead.label.leads", send: sendLead, done: doneLead, reasonField: "words" }),
+    Object.freeze({ op: "leadread", rereads: Object.freeze([]), label: "act.leadread.label.leads", send: sendRead, done: doneRead }),
+    Object.freeze({ op: "leadlook", rereads: Object.freeze(["list"]), label: "act.leadlook.label.leads", send: sendLook, done: doneChanged, reasonField: "detail" }),
+    Object.freeze({ op: "leadshare", rereads: Object.freeze(["list"]), label: "act.leadshare.label.leads", send: sendShare, done: doneChanged, reasonField: "reason" }),
+    Object.freeze({ op: "writinghelp", rereads: Object.freeze([]), label: "act.writinghelp.label.leads", send: sendHelp, done: doneHelp, reasonField: "told" }),
   ]),
 });

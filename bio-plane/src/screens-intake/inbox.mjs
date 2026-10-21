@@ -200,10 +200,10 @@ export const INBOX_SCREEN = Object.freeze({
   reads: inboxReads,
   render: renderInbox,
   acts: Object.freeze([
-    Object.freeze({ op: "inboxpull", label: "act.inboxpull.label.inbox", send: sendPull, done: donePull }),
-    Object.freeze({ op: "inboxresolve", label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard, reasonField: "reason",
+    Object.freeze({ op: "inboxpull", rereads: Object.freeze(["list", "knock"]), label: "act.inboxpull.label.inbox", send: sendPull, done: donePull }),
+    Object.freeze({ op: "inboxresolve", rereads: Object.freeze(["list", "knock"]), label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard, reasonField: "reason",
                     refusals: Object.freeze({ RESOLVE_NO_REASON: "refusal.RESOLVE_NO_REASON" }) }),
-    Object.freeze({ op: "sourcelink", label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink, reasonField: "evidence" }),
-    Object.freeze({ op: "knocksof", label: "act.knocksof.label.inbox", send: sendKnocksOf, done: doneKnocksOf }),
+    Object.freeze({ op: "sourcelink", rereads: Object.freeze([]), label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink, reasonField: "evidence" }),
+    Object.freeze({ op: "knocksof", rereads: Object.freeze([]), label: "act.knocksof.label.inbox", send: sendKnocksOf, done: doneKnocksOf }),
   ]),
 });
