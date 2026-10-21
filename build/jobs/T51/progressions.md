@@ -56,3 +56,23 @@ Tests and checks:
 - setup-words --check: rows.mjs stale, expected; it names progressions.checks.not_a_disposition_detail and progressions.index.set_none_named. No refusal naming this module.
 
 Size (session_01DtreWyrLe5DTkd3njA9rev): test runs 5, module lines 2188.
+
+## J4 · COMPLETE
+
+COMPLETE for B4 (K4259, entry 1). Branch job/T51/progressions at 61c1f19294, pushed.
+
+Entry applied: `op=progressions`, a read listing the progression definitions: `listProgressions({limit, after, viewer})` in src/progressions/index.mjs, routed in `progressionOps` (`limit` and `after` from the query or the body, as `instances` takes them). Each item is `{progression_key, label, current_version, stage_count, stages}`, the stages being R5's current-version stages in order (`stage_key, stage_no, label, after_stage, cardinality, within_interval, required`). Key order; `limit` 1-200 (default 50), `truncated` by reading one past, `next` the last key, passed back as `after`. No declarer, basis or bundle is answered. An empty store answers an empty list, no error. Writes nothing, never throws (`PROGRESSIONS_UNREADABLE` only on a storage fault). `DECLARED_OPS.progressions`: classes admin/member/probe, `mutating: false`, `weight: "read"`, accepts `limit`, `after`, requires none; its description is `localize("progressions.declared.progressions", ...)` since no design row exists for it.
+
+Requirement line for BOB (next free id; R47 stands, and its list of six declared ops gains this seventh):
+- **R48** (T51; K4259) `listProgressions({limit?, after?, viewer})` (`op=progressions`) answers the progression definitions held: `{ok, count, items, limit, truncated, next?}`, an item `{progression_key, label, current_version, stage_count, stages}` taken as R5 reads the current version, in key order. `limit` 1-200 (default 50), `truncated` by reading one past, `next` the last key (to pass as `after`). It names no declarer, basis or bundle, writes nothing and never throws. A store with no definition answers an empty list. Test: three definitions, one revised, listed in key order with the current version and stages; control: each item equals `op=progression` by key at its current version, and that read (and the earlier version's) is unchanged. Also: R47 gains `progressions` in its declared ops (no required field; accepts `limit`, `after`).
+
+Tests (written first, seen failing: `progressionOps(...).progressions is not a function`): bio-plane/test/m/progressions/list.test.mjs (4 tests naming R48: the list with versions and stages, the control against `progression` by key and its version 1, paging and the 1-200 bound, the empty store / body arm / nothing written / no declarer or basis) and one in declared-ops.test.mjs (R48, `declaredOpHolds` for the new row). `node --test bio-plane/test/m/progressions/*.test.mjs`: 90 pass, 0 fail. Users of the module are untouched by an additive op and I did not re-run theirs.
+
+Checks (process repo, against /home/user/bio): format 175 modules, 175 requirements files, 0 failures; architecture progressions 21 product files, 80 imports, 0 failures; coverage progressions 47 of 47 live ids named, 0 failures; ownership progressions tranche/T51 job/T51/progressions 4 files changed (all in its paths), 0 failures; run.mjs: no line names progressions (words, testcopy, coverage).
+
+Deferred: none. Found elsewhere, for BOB (not mine to change):
+- The door does not know `progressions` yet: `op-declarations` (its class/mutating table beside `captureprogressions`, index.mjs:1182), `op-grades` (marks.mjs:64, the weight row), `store-door`'s dispatch field hints (dispatch.mjs:111) and `affordances`' act-help list (act-help.mjs:151) each name the existing progression ops and need the seventh. Until they do, the door will not route it.
+- Stale generated artifact: `bio-plane/src/setup-words/rows.mjs` (setup-words') is stale for my two new ids, `progressions.declared.progressions` and `progressions.index.the_progressions_could_not_be` (`build.mjs --check`); regenerate at the layer close. The screen draws the stage and flow labels as the member declared them, so no word row is needed for the list itself.
+- `build/requirements/progressions.md` Status line and R47's marker are yours to update with R48.
+
+Size (session_01C8PvCDQYKHJx8qBYQNU9ak): test runs 5, module lines 2228 (index.mjs 1729, schema.mjs 323, checks.mjs 176).
