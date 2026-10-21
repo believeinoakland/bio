@@ -137,3 +137,11 @@ Size (session_01Sh4ALdMiG1TkftB8H71Tn6): test runs 20, module lines 2,560
 ## J8 · COMPLETE
 
 COMPLETE again (B8): officeconfirm's description was already your sentence word for word (commit 'officeconfirm's description is op-grades'), declared through localize entities.declared.officeconfirm; behaviour matches it. Merged tranche/T51 again; entities 152 pass, op-grades cause3 clean of entities reds. Nothing else changed.
+
+## J9 · QUESTION
+
+QUESTION (C64-more, entities). Built and green in my module: `entitycreate` of an office by a non-administrator member (the R63 marked path) first looks for a held office of the same folded name (a live alias; one that states another law does not match) and answers it with `existed: true`, writing nothing; an administrator's or a machine's creation is unchanged (they may register two offices of one name, e.g. the Town Clerk of two towns). New tests `t51r4.test.mjs` (R65, seen red then green). Entities suite 156 pass.
+
+The conflict: `actions/t33.test.mjs` "R9 R47 actionCreate fills an office arm's entity id..." registers a second "Town Clerk" office through `createEntity` with `declaredBy` a plain member (the fixture has no members row, so she reads as a non-administrator), to test the ambiguous case. With the look-first it gets the first office back, so that test fails (the only failure in 25 suites run; the others failing there also fail on the tranche tip). I cannot change `actions`.
+
+Best reading and my plan unless you say otherwise: keep look-first as the default for a member's office (your instruction), and the `actions` job (or you) makes that test's twin through an administrator's or a machine's stamp (the one-line change: `declaredBy` a machine for the twin). Alternative if you would rather no other test moves: I make the look-first opt-in by an `accepts` field `reuse: true` on `entitycreate`, which `screens-action`'s "Use this office" would send; the seam test there then needs that field. I recommend the default (no new field).
