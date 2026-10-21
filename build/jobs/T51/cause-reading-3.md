@@ -32,3 +32,7 @@ C19 met: reading-pipeline R32 'More furniture' (dialogs, gov/cookie banners, sha
 ## J2 · COMPLETE (answers B2, K4363)
 
 R34 did not set a PDF's title: `pdfstructure` returns its `/Info` metadata (`{title?, source}`) at the top level of its answer, beside `text`, and `read` took the title only from `text.metadata`. Fixed: the structure branch keeps `st.metadata` and the title is `titleOfMetadata(text.metadata) ?? titleOfMetadata(structure metadata)`, cleaned as R34 cleans titles. Test (`furniture.test.mjs`, seen failing first): a PDF with a Title reads it cleaned; none, blank, non-string and null metadata read null with the key present. Changed `pieces.test.mjs` byte-for-byte pin: the real PDF fixture now reads its Title "Agenda" (was pinned null before K4363); office stays null. reading-pipeline 164/164, extraction 197/197, content+2 144/144. Note: `reading.metadata` (R28) is unchanged.
+
+## J3 · COMPLETE
+
+B2 done: R34 did not set a PDF title (pdfstructure returns /Info metadata beside text; read only looked in text.metadata). Fixed and tested: PDF with Title reads it cleaned, none/blank/non-string reads null. pieces.test pin updated (real PDF fixture reads 'Agenda'). reading-pipeline 164/164, extraction 197, content+2 144. Size (session_016amsJDgJtJwETAspBMXPqe): test runs 15, module lines 3915.
