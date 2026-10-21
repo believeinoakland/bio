@@ -2,6 +2,26 @@
 
 **Status** · session_01KtdpCqCw2mUhYyt4JEEPkX · depth 2 · WORKING · handled B8
 
+## Record (BUNDLER #25, B9: R25 test)
+
+**Entries applied (B9, CHANGE: bundler R25 red at `bundler.test.mjs`)**
+- **Cause:** since 9055bb0502 (agent-runner FR-14, now R42) agent-runner's `wrangler.jsonc` declares migration `v2` (`RemoteSession`, a class with no binding of its own). `workerPart` reports it correctly; the test's expectation for agent-runner stated only `v1`.
+- **Test (`bundler.test.mjs`, R25 · the repository's own fleet):** agent-runner's binding list still stated by hand (`AGENT_RUNNER`), its migrations now read from the member's own `wrangler.jsonc` (`new_sqlite_classes` per tag, in order) rather than a hand list (K3268). agent-worker's and file-scanner's assertions unchanged. The test title says so.
+- **No source change, no requirement line change.**
+
+**Deferred / not done**
+- Nothing deferred.
+
+**Tests and checks** (from `/home/user/bio/bio-plane` and the process repository; `node_modules` installed by `npm ci --ignore-scripts` in `file-scanner`, `bio-plane/src/journey-check`, `sheet-worker`, `agent-runner`, `site`, which lacked them)
+- `node --test --test-force-exit test/m/bundler/*.test.mjs`: 135 pass, 0 fail (the R25 over-the-fleet test was the red one; now green).
+- `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words 0 failures; coverage shows other modules' ids only (agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19). `coverage.mjs bundler`: 40 of 40 live ids named, 0 failures.
+- `ownership.mjs bundler tranche/T51 job/T51/bundler`: 1 file changed by bundler, 0 failures. `format.mjs`: 0 failures. `architecture.mjs bundler`: 0 failures.
+
+**Reports (not my module)**
+1. agent-runner's live R37, R38 and R40 are named by no test (`checks/run.mjs`). Not bundler's; for BOB to route to agent-runner's job.
+
+Size (session_01KtdpCqCw2mUhYyt4JEEPkX): test runs 4, module lines 4369
+
 ## Record (BUNDLER #24, B8: FR-02)
 
 **Entries applied (FR-02 · bundler; K4176 (2), K4180 as amended by K4186)**
