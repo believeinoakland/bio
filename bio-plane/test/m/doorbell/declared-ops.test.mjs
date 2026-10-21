@@ -51,3 +51,19 @@ test("R26 doorbell declares inboxresolve: its requires alone raise no refusal na
   await declaredOpHolds({ op: "inboxresolve", declaration: DECLARED_OPS["inboxresolve"], call: mk("inboxresolve", {"viewer":"member:m1"}, null, null, (fields, env) => (withKnock(fields, env))),
     refusedNaming: named({"knockId":["NO_SUCH_KNOCK"],"status":["BAD_STATUS"],"reason":["RESOLVE_NO_REASON"]}, true), values: {"status":"discarded","reason":"not usable"}, same: sameOk });
 });
+
+/* the reads (K4208: every census op the module owns is declared): no field is required but the one that keys the read */
+test("R26 doorbell declares inboxget: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "inboxget", declaration: DECLARED_OPS["inboxget"], call: mk("inboxget", {}, null, null, (fields, env) => (withKnock(fields, env))),
+    refusedNaming: named({"id":["NO_SUCH_KNOCK"]}, true), same: sameOk });
+});
+
+test("R26 doorbell declares doorbelltally: it accepts no field, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "doorbelltally", declaration: DECLARED_OPS["doorbelltally"], call: mk("doorbelltally", {"viewer":"member:m1"}),
+    refusedNaming: named({}), same: sameOk });
+});
+
+test("R26 doorbell declares pulledknocks: its requires alone raise no refusal naming a field, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "pulledknocks", declaration: DECLARED_OPS["pulledknocks"], call: mk("pulledknocks", {}),
+    refusedNaming: named({}), same: sameOk });
+});
