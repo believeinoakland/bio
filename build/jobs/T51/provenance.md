@@ -100,3 +100,10 @@ Requirement lines: R64–R69 new, R53 (seven ops), R41 (`authority_decisions`) a
 - `setup-words/build.mjs --check`: the stale-rows note only (BOB regenerates `rows.mjs`); new ids: `provenance.checks.*` (5), `provenance.index.*` (5), `provenance.declared.testify`, `provenance.declared.declareorigin`.
 
 Size (session_01QcdtgzU4W4MpK8weg47ZqT): test runs 12, module lines 2987
+
+## Work log · CHANGE B5 (K4259), session_01SJghwe9gJrhumMZWa29ifY (restart; started at B5)
+
+Applied: the read op `origins {bundleId}` (requirement R70, new; R53 and R68 amended in `build/requirements/provenance.md`, the one file outside my paths, accepted per B4 as in J5). `provenanceOps` serves `origins` through the new `originsOf({bundleId, viewer})`: every declaration `{seq, system, by, at}` in `seq` order, `origins: []` when none; refusals `NO_BUNDLE`, `NO_SUCH_BUNDLE` (absent and unseen alike, nothing of an unseen document read out), `ORIGIN_NOT_A_DOCUMENT`. `DECLARED_OPS.origins`: classes admin, member; mutating false; weight `read`; stamps `viewer`; needs null; accepts and requires `bundleId`.
+Tests (written first, seen failing): `ops.test.mjs` R70 (two tests: two declarations read back in order, writes nothing; each refusal, the unseen-as-absent control, the member-reads control); `declared-ops.test.mjs` `declaredOpHolds` for `origins`; R53 and the declared-ops list updated to state the new truth (eight ops; three declared ops).
+Flaw in another module (for BOB): `bio-plane/test/m/op-grades/t37.test.mjs:32` is a words `testcopy` (a sentence copied from a `translation-directed` description); it is op-grades', not changed here.
+Stale generated artifact: setup-words' `rows.mjs` lacks `provenance.declared.origins` (expected; BOB regenerates at the layer close).
