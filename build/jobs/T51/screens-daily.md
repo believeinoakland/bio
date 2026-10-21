@@ -318,4 +318,4 @@ Merged `tranche/T51` first. Each cause: one test written first and seen failing 
 - `node --test --test-force-exit bio-plane/test/m/screens-daily/`: 252 tests, 252 pass (10 new in `fix2.test.mjs`).
 - `node checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs … screens-daily`: 0 failures. `coverage.mjs … screens-daily`: 80 of 80 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: 0 failures. `setup-words/build.mjs --check`: matches.
 
-Size (session_01MP6KcJiwxsSfyUV8mCYLuL): test runs 9, module lines 4093
+Size (session_01MP6KcJiwxsSfyUV8mCYLuL): test runs 9, module lines 4069
