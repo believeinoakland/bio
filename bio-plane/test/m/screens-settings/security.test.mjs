@@ -192,19 +192,23 @@ test("R74 each credential field of a provider is labelled by its word (file-scan
   assert.deepEqual(r.sent[0].body.credentials, { client_id: "ID-1", client_secret: "SECRET-1", api_key: "KEY-1", api_secret: "SECRET-2", odd_token: "T-1" });
 });
 
-test("R77 a scanner that holds no signatures is said so by the key and words scanstatus answers, with the reason; absent, nothing is drawn (control)", async () => {
+test("R77 a scanner that holds no signatures is said so by the keys scanstatus answers, with the day and the reason; absent, nothing is drawn (control)", async () => {
   const sc = (extra) => securityTable({ scanstatus: env({ ok: true, scanner: { bound: true, version: "1" }, renderer: { bound: true, version: "1" }, queued: 0, overdue: 0, held: 0, tools: [], ...extra }) });
-  const ns = { since: "2026-10-12T03:00:00Z", reason: "REFUSED:main.cvd:403", key: "file-safety.index.no_signatures_since", words: "The file scanner has had no signatures since 2026-10-12.", reason_key: "file-safety.index.signatures_refused", reason_words: "The signature service refused the download (status 403)." };
+  const ns = { since: "2026-10-12T03:00:00Z", reason: "REFUSED:main.cvd:403", key: "file-safety.index.no_signatures_since", words: "plane words one", reason_key: "file-safety.index.signatures_refused", reason_words: "plane words two" };
   const a = await open("security", { me: ADMIN, table: sc({ no_signatures: ns }) });
   const first = all(a.tree, (e) => e.attrs["data-state"] === "nosignatures")[0], second = all(a.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0];
-  assert.equal(textOf(first), ns.words, "the answer's words, the key being no word of the list yet");
-  assert.equal(textOf(second), ns.reason_words);
+  assert.equal(textOf(first), said("file-safety.index.no_signatures_since", { date: day("2026-10-12T03:00:00Z") }), "the key's word, its date filled");
+  assert.equal(textOf(second), said("file-safety.index.signatures_refused", { status: "403" }), "its reason in words, the refusal's code filled");
   assert.ok(!/waiting/i.test(textOf(first) + textOf(second)));
-  // never signatures obtained, no date: the other keys, the answer's words
-  const none2 = { since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", words: "sentinel words one", reason_key: "file-safety.index.signatures_not_fetched", reason_words: "sentinel words two" };
-  const b = await open("security", { me: ADMIN, table: sc({ no_signatures: none2 }) });
-  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), none2.words);
-  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), none2.reason_words);
+  // never signatures obtained, no date; an attempt that did not finish: the other keys
+  const b = await open("security", { me: ADMIN, table: sc({ no_signatures: { since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", words: "x", reason_key: "file-safety.index.signatures_not_fetched", reason_words: "y" } }) });
+  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), said("file-safety.index.no_signatures"));
+  assert.equal(textOf(all(b.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), said("file-safety.index.signatures_not_fetched"));
+  const c = await open("security", { me: ADMIN, table: sc({ no_signatures: { since: "2026-10-12T03:00:00Z", reason: "FAILED", key: "file-safety.index.no_signatures_since", words: "x", reason_key: "file-safety.index.signatures_failed", reason_words: "y" } }) });
+  assert.equal(textOf(all(c.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), said("file-safety.index.signatures_failed"));
+  // a key the list does not hold yet is the answer's own words
+  const d = await open("security", { me: ADMIN, table: sc({ no_signatures: { ...ns, key: "file-safety.index.no_such_row", words: "the plane's own words" } }) });
+  assert.equal(textOf(all(d.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), "the plane's own words");
   // control: signatures held (no_signatures absent): nothing drawn
   const none = await open("security", { me: ADMIN, table: sc({}) });
   assert.equal(all(none.tree, (e) => /^nosignatures/.test(e.attrs["data-state"] || "")).length, 0);
@@ -218,8 +222,8 @@ test("R15, R77 C83: files are said to be checked only while signatures are held;
   const none = await open("security", { me: ADMIN, table: scan({ signatures_age_ms: null, no_signatures: ns }) });
   lacks(none, "screen.security.files.on");
   assert.equal(all(none.tree, (e) => e.attrs["data-state"] === "files").length, 0, "no checked sentence");
-  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), ns.words, "since when");
-  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), ns.reason_words, "why, in words");
+  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), said("file-safety.index.no_signatures_since", { date: day("2026-10-15T03:00:00Z") }), "since when");
+  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), said("file-safety.index.signatures_refused", { status: "403" }), "why, in words, and what an administrator can do");
   // a scanner that did not answer, or none bound, claims nothing either
   for (const sc of [{ scanner: { bound: true, version: null, unreachable: true }, signatures_age_ms: null }, { scanner: { bound: false, version: null }, signatures_age_ms: null }]) {
     const o = await open("security", { me: ADMIN, table: scan(sc) });
