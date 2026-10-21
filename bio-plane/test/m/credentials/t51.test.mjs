@@ -42,8 +42,8 @@ test("R81 a founder's own key is registered like any member's once the instance 
   assert.equal(before.row(`SELECT COUNT(*) AS n FROM signers`).n, 0, "the refusal writes nothing");
   const w = await keyed();
   const r = w.c.signerRegisterOwn({ keyB64: "AAAAfounderkey", comment: "founder's laptop", by: "admin" });
-  assert.deepEqual({ ...r, detail: null }, { ok: true, keyB64: "AAAAfounderkey", memberId: "admin", status: "active", origin: "self",
-    registered_by: "admin", existed: false, notified: ["admin", "second"], detail: null });
+  assert.deepEqual({ ...r, detail: null, timings: null }, { ok: true, keyB64: "AAAAfounderkey", memberId: "admin", status: "active", origin: "self",
+    registered_by: "admin", existed: false, notified: ["admin", "second"], detail: null, timings: null });
   const l = w.c.signerList().signers.find((s) => s.key_b64 === "AAAAfounderkey");
   assert.deepEqual([l.member_id, l.origin, l.registered_by, l.status, l.attests, l.attests_why], ["admin", "self", "admin", "active", true, null]);
   assert.ok(w.c.attestingKeys().some((k) => k.key_b64 === "AAAAfounderkey" && k.member_id === "admin"));

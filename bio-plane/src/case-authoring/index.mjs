@@ -313,11 +313,13 @@ export class CaseAuthoring {
 
   /* R77 (T51; DEC-340): the sign step's minutes comparisons, read once from the same case and pins through
      `case-inputs.minutesComparisonsOn` (its R19), each row with its `minutesLine`; a source unreadable, or the case not
-     yet known, is `{undetermined: true}` and no rows, never `[]`. It carries no sentence of its own. */
+     yet known, or the door unbound, throwing or answering anything but its rows, is `{undetermined: true}` and no rows,
+     never `[]` and never a row filled in (fix round 3, K4332, K4356). It carries no sentence of its own. */
   #minutesStep(at, viewer) {
     if (!at) return { undetermined: true };
-    const r = this.inputs.minutesComparisonsOn({ case: at.case, members: at.members, viewer });
-    if (!r.ok) return { undetermined: true };
+    let r = null;
+    try { r = this.inputs.minutesComparisonsOn({ case: at.case, members: at.members, viewer }); } catch { r = null; }
+    if (!r || r.ok !== true || !Array.isArray(r.rows)) return { undetermined: true };
     return r.rows.map((row) => ({ ...row, ...minutesLine(row) }));
   }
 
@@ -1553,6 +1555,7 @@ export class CaseAuthoring {
     const who = str(a.author);
     const auth = who && !isMachineIdentity(who) ? this.#authority(a.project ?? null, a.viewer ?? null, who) : null;
     let judged = null, partition = null, tensions = null, rests = null, accountRead = null, capturesRead = null;
+    let stoodAt = null;
     /* R34: IT WRITES NOTHING. These reads reach the two writes `case-disclosures` makes inside its caller's transaction
        (its R23: a source id's minting, and a member document's copy queued by `case-carriage.documentCopy`, its R16;
        T39, N806), so they run inside a transaction this pre-flight rolls back, as the act's own run above does. */
@@ -1563,6 +1566,8 @@ export class CaseAuthoring {
                     : typeof a.targets === "string" && a.targets.trim() ? a.targets.split(",") : a.target ? [a.target] : [];
           const members = [...new Set(set.map((x) => str(x)).filter(Boolean))];
           judged = members.length ? this.#judgeMembers(members, auth.proj, a.viewer ?? null, auth.gate) : null;
+          /* R83: the case identity the call stands at, told without the act so a refused call states it too. */
+          stoodAt = this.#caseStood(members, a.caseId, a.newCase, judged);
           if (judged && judged.ok !== false) {
             partition = this.#rolesOf(judged.prepared, a.roles ?? null, members);
             if (partition.ok !== false) found.push(...this.#barJudged(auth.proj, partition.loadBearing).shortfalls);
@@ -1652,8 +1657,52 @@ export class CaseAuthoring {
     /* R42 says so whenever the project has a notice: whatever reference R41 would write. */
     const steps = this.#preflightSteps(a, answer, seen, ratify, notice, rests && capturesRead ? { ...rests, captures: capturesRead } : rests, account);
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
-    return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
+    /* R83 (fix round 3, C48, C50; K4356): what the record holds prepared and published for the case the call stands at;
+       the act's own run is rolled back, so a minted case (which the record does not hold) states neither. */
+    const editions = this.draftEditions({ caseId: answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt });
+    return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps, editions };
   }
+
+  /* R83 (R7, R9): the case identity a call stands at, told from the record without the act: the one named, else the one
+     published case the members serve, else the case their unsigned preparation names; `newCase` stands at none. */
+  #caseStood(members, caseId, newCase, judged) {
+    if (newCase) return null;
+    if (str(caseId)) return str(caseId);
+    const served = this.#caseOfMembers(members, null);
+    if (served) return served;
+    const named = judged && judged.ok !== false ? [...new Set(judged.prepared.map((p) => p.preparedIn).filter(Boolean))] : [];
+    return named.length === 1 ? named[0] : null;
+  }
+
+  /** R83 (K4363): `draftEditions({caseId, draft})` answers `{prepared, published}` for the case identity a draft stands at,
+   *  as the record holds them (publication R40's `case_documents` and `published_cases`), the one read the pre-flight and
+   *  `review` R19's draft rows share: `prepared` the edition number of the unsigned preparation, else null; `published`
+   *  `{edition, address}` for the latest ratified edition, else null. `caseId` is the case the draft's identity names; with
+   *  none, the case the draft's own preparation produced (publication R40: a document names the draft that made it,
+   *  `draft` an id or a row), else neither is stated. Reads only and never throws. The address is the case page's,
+   *  `/app/published/<case>/<edition>`, as the screens link it. */
+  draftEditions({ caseId = null, draft = null } = {}) {
+    try {
+      let id = str(caseId);
+      if (!id && draft) {
+        const row = typeof draft === "object" ? draft : null;
+        id = str(row && (row.case_id ?? row.caseId));
+        if (!id) {
+          const made = this.#one(`SELECT case_id FROM case_documents WHERE draft_id=? ORDER BY edition DESC LIMIT 1`,
+                                 str(row ? row.draft_id : draft));
+          id = made ? made.case_id : "";
+        }
+      }
+      if (!id) return { prepared: null, published: null };
+      const prep = this.#one(`SELECT edition FROM case_documents WHERE case_id=? AND sig_armored IS NULL
+                              ORDER BY edition DESC LIMIT 1`, id);
+      const pub = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, id);
+      const published = pub && pub.m != null ? Number(pub.m) : null;
+      return { prepared: prep ? Number(prep.edition) : null,
+               published: published === null ? null : { edition: published, address: `/app/published/${id}/${published}` } };
+    } catch { return { prepared: null, published: null }; }
+  }
+
 
   /* R34: ratification R18 over the text op=publish would store, with `signer` the act's author, folded into
      `{reached, refusals, why?}`. With no pre-flight offered, that is stated, never read as none. */
@@ -1683,7 +1732,11 @@ export class CaseAuthoring {
       if (!rows.has(c.capture)) {
         const actors = this.capture.captureAccountsOf(c.capture).actors || [];
         const first = actors.find((x) => typeof x.actor === "string" && /^member:./.test(x.actor) && !isMachineIdentity(x.actor));
-        rows.set(c.capture, { capture: c.capture, by: first ? first.actor.replace(/^member:/, "") : null, findings: [] });
+        /* C40 (K4365): the facts the capture row already carries, so the screen can say which proof exists late and which is
+           missing (case-disclosures R2). */
+        rows.set(c.capture, { capture: c.capture, by: first ? first.actor.replace(/^member:/, "") : null, findings: [],
+                              timestamp_at: c.timestamp_at ?? null, co_archive: c.co_archive ?? null, missing: c.missing ?? [],
+                              late: !!c.late, timestamp_late: !!c.timestamp_late, late_words: c.late_words ?? null });
       }
       const row = rows.get(c.capture);
       if (!row.findings.includes(c.member)) row.findings.push(c.member);

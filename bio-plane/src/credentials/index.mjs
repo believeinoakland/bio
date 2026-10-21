@@ -894,9 +894,16 @@ export class Credentials {
     }
     /* END DEC-49 REGION is-machine-register-key */
     if (!Credentials.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });   /* R6's BAD_KEY, from its one site */
-    const bar = this.#signerMemberBar(by);
+    /* C51 (fix round 3; K4356): the answer of a registration carries `timings: {total_ms, stages}`, the whole milliseconds
+       each stage that ran took: `standing` (the member's bar), `lookup` (whether the key is held), `write` (the new row,
+       absent when the key is already the member's) and `notify` (membership's list of administrators). The arm makes no
+       more than five store calls, whatever the size of the team or of the roster. */
+    const t0 = performance.now();
+    const stages = {};
+    const timed = (stage, fn) => { const t = performance.now(); try { return fn(); } finally { stages[stage] = Math.floor(performance.now() - t); } };
+    const bar = timed("standing", () => this.#signerMemberBar(by));
     if (bar) return bar;
-    const held = this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64);
+    const held = timed("lookup", () => this.#one(`SELECT member_id, status, origin, registered_by FROM signers WHERE key_b64=?`, keyB64));
     /* DEC-49 REGION is-signer-key-held */
     if (held && held.member_id !== by) {
       const row = CREDENTIALS_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
@@ -913,18 +920,20 @@ export class Credentials {
                detail: localize("credentials.index.this_key_of_yours", "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written.") };
     }
     /* END DEC-49 REGION is-signer-key-revoked */
-    if (!held) {
+    if (!held) timed("write", () => {
       const now = Credentials.#instant();   /* R21: a new key's status_at is its registration's instant */
       this.sql.exec(
         `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by,status_at)
          VALUES (?,?,?,'active',?,?,'self',?,?)`, keyB64, by, comment ?? null, now, by, by, now);
-    }
+    });
+    const notified = timed("notify", () => this.membership.activeAdmins());
     return { ok: true, keyB64, memberId: by, status: "active",
              origin: held ? (held.origin === "self" ? "self" : "admin") : "self",
              registered_by: held ? Credentials.#statusBy(held.registered_by) : by, existed: !!held,
-             notified: this.membership.activeAdmins(),
+             notified,
              detail: held ? localize("credentials.index.this_key_is_already", "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key.")
-                          : localize("credentials.index.registered_to_you_and", "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.") };
+                          : localize("credentials.index.registered_to_you_and", "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key."),
+             timings: { total_ms: Math.max(Math.floor(performance.now() - t0), Object.values(stages).reduce((x, y) => x + y, 0)), stages } };
   }
 
   /* R10: a member revokes their own key, never refused for a key they hold, whatever its state or theirs (revoking

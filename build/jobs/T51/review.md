@@ -1,6 +1,36 @@
 # review (T51)
 
-**Status** · session_01LZnjV7jBk2LxdqJLqKD4W4 · depth 2 · COMPLETE · handled B10
+**Status** · session_01FnocwFJGM3fMnossXJZ36Q · depth 2 · COMPLETE · handled B12
+
+## Completion record (fix round 3, B11 START, K4356; REVIEW #21)
+
+COMPLETE for fix round 3. Branch job/T51/review, with `tranche/T51` merged at K4366 (d5cc9f2926).
+
+**Causes met**
+- **C46\* (my part, `findingWords`; R41, R12)**: a finding's `statement` is the front matter's `conclusion` or `statement`, else the text of the body's `## Conclusion` section, else (words not laid out in sections: no `## ` heading) the words themselves; a file laid out in sections whose Conclusion holds nothing has `statement: null`, never its headings or the session log. `falsifier` is the front matter's, else the `## What Would Falsify This` section's text, else null. Each present finding also answers `concluded` (boolean) and `not_concluded` (the "Not concluded yet" state when there are no words, else null), and `title` (the bundle's title, else null) so the screen draws the question's title where it drew the id: this is C46's plane half, wholly inside `review`. The two section headings are read from `record-grammar`'s `HEADINGS.inquiry`, not written a second time. Tests (`walk.test.mjs`, seen failing first): concluded finding (front matter words, empty-section body and log) answers its words and no `## `; Conclusion-section words and falsifier from the body; empty conclusion answers the not-concluded state at both doors, never a heading; no `## ` in any statement or falsifier; `title`. Controls: a finding with words has `not_concluded: null`; a file with no headings answers its words unchanged.
+- **R19 `editions` (C48, C50)**: each row of `casedrafts` carries `editions {prepared, published}` from `caseAuthoring.draftEditions({caseId: <the draft's case identity>, draft: <row>})`, nulls when it cannot answer (never a throw). **Tested against a scripted double** (`ca.editions` in `fixture.mjs`), because case-authoring's R83 is not yet on `tranche/T51` (BOB's B12 told me to). I read its job branch's `draftEditions({caseId, draft})` (4f7ea76cae): the call and the answer shape agree with my double; to be re-run against the real one when it is merged (CHANGE, if BOB wants it).
+- **R43 (new, B12)**: `sharedDraftsByProject({projectIds, viewer}) -> {[project]: {count, newest}}`, one set-based read for many projects (sight in one query per chunk of 200 projects, grants and top editions in one query each, no read per project): drafts with at least one live grant under R8 (a grant not revoked, not lapsed, its draft still at the case identity it was bound to, so a grant whose edition is since published is not counted), counted once per draft, `newest` the newest live grant's issue instant by instant order; a project the viewer may not see, or that does not exist, `{0, null}`; empty list `{}`. Writes nothing. Tests (`lists.test.mjs`): three-plus projects with counts and newest, the fence, the revoked/lapsed/published controls, empty list.
+- B10 / CA24 and the rest of the earlier rounds: unchanged and still green.
+
+**Stand-in word (named per B11)**: `review.index.not_concluded_yet`, "Not concluded yet" (a `localize` default), until the design's row lands. No other new sentence.
+
+**Existing tests changed (they pinned the old shape)**: `copy.test.mjs` R12 and `zone-concluded.test.mjs` R36 now include `title`, `concluded` (and `not_concluded`) in the finding's shape; `doors.test.mjs` R19's key list gains `editions`; `walk.test.mjs`'s R41 control (a finding with only a `## Question` section) now answers the not-concluded state instead of the section text.
+
+**Deferred**: none.
+
+**Proposed requirement lines (BOB writes `build/requirements/`)**
+- R41 (amend): "...else the text of the body's `## Conclusion` section, else, for words with no `## ` heading, the words; a file laid out in sections whose Conclusion is empty has no statement: `statement: null`, `concluded: false` and `not_concluded` a plain state sentence (stand-in key `review.index.not_concluded_yet`); `falsifier` is the front matter's, else the body's `## What Would Falsify This` section; never a heading, at either door."
+- R12 (amend): "a present finding also answers `title`, the bundle's title (null when none), so a screen draws the question's title and never its id."
+- R19 and R43 as written; R43's `Uses` side: `project-roster` R42 (control-plane R118) is to call `sharedDraftsByProject` once per list.
+
+**Found in other modules**: none. Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `release/bio-plane.bundled.mjs` embed `review/index.mjs`; regenerate with the bundle command (manifest §14).
+
+**Tests and checks**
+- `node --test --test-force-exit bio-plane/test/m/review/`: tests 83, pass 83, fail 0.
+- Users (`build/plan/impact.mjs origin/tranche/T51 HEAD`): notice-producers 130/130, queue 206/206, op-declarations 233/233, control-plane 340/340, plane 279/280 (R24 `screen.objective.purpose` held by the words list: a word-table test of screens, not mine), store-door 52/53 (R17 `groupdescriptiondraft` declared as a read: not mine). Both reds name nothing of `review`.
+- `node checks/run.mjs`: format 0 failures; architecture 0 failures; words 0 failures (inline 0); coverage: no review failure (the 15 failures are other modules' not-yet-met ids). ownership: 8 files changed by review, 0 failures.
+
+Size (session_01FnocwFJGM3fMnossXJZ36Q): test runs 12, module lines 1610
 
 ## Completion record (T51-84)
 
@@ -145,3 +175,22 @@ Fix round 2 review complete on job/T51/review. C46 (R41): a finding's statement 
 ## J7 · COMPLETE
 
 B10 (CA24) is already met by my J6: comment()'s member door now admits exactly the viewers copy() admits (member:<id>, that spelling carrying a project, and the founder's bare 'admin'), refuses machine classes, unrecognised and absent viewers as before. A founder's comment is recorded author_kind member, author 'admin', and listed by copy (walk.test.mjs, R18: owner on two drafts in each spelling; control: machine, stranger, empty, absent viewers refused NO_REVIEW_COPY). No requirement line says otherwise; R18 amended accordingly. No new change; branch job/T51/review unchanged since J6.
+
+## J8 · QUESTION
+
+QUESTION (best reading below; I carry on with C46 meanwhile).
+
+R19's new sentence: each draft of `casedrafts` carries `editions {prepared, published}` "as case-authoring R83 states them". case-authoring has not merged R83 (its branch has nothing yet), and R83 names no function I can call; `published.address` (the case's public address) is built nowhere in the code I hold.
+
+Best reading: case-authoring exports one read, `draftEditions({caseId, draft})` -> `{prepared: <edition number>|null, published: {edition, address}|null}`, the same code its pre-flight uses for R83's `editions`; review's `list` calls it once per draft row (stands at the draft's case identity) and adds the result as `editions`; I test against a scripted double of that call until case-authoring merges, then against the real one. If the case-authoring job exports it under another name or shape, tell me the name and I follow it. If you prefer review to derive it itself from `case_documents` (unsigned row with the draft_id = prepared) and `published_cases`, say so, but the address would then need a stated source from you.
+
+Also, C46's plane half (a question's title where the id is drawn): inside my module, each present finding will also answer `title` (the bundle's title, else null) so screens-publish can draw it; no other module needed.
+
+## J9 · COMPLETE
+
+COMPLETE fix round 3 (review), branch job/T51/review pushed; record has the full Completion record.
+Met: C46* my part (findingWords: front-matter words, else the Conclusion section, else headingless words; empty conclusion -> statement null, concluded false, not_concluded stand-in key review.index.not_concluded_yet; falsifier from front matter or its section; title on each present finding = the plane half, inside review); R19 editions on casedrafts rows; R43 sharedDraftsByProject (set-based, exact under R8).
+NOTE: R19 `editions` was tested against a scripted double of case-authoring.draftEditions({caseId, draft}) (not yet on tranche/T51; its job-branch code agrees with my call). Send CHANGE after case-authoring merges if you want it re-run on the real one.
+Suites: review 83/83; users: notice-producers, queue, op-declarations, control-plane all green; plane 279/280 (R24 words) and store-door 52/53 (R17 groupdescriptiondraft) are not review's. format, architecture, words 0 failures; coverage none for review; ownership 0.
+Proposed lines for you: R41 and R12 amendments (statement/falsifier/not_concluded/title), wording in my record. Bundles under bio-plane/dist and release are stale until regenerated.
+Size (session_01FnocwFJGM3fMnossXJZ36Q): test runs 12, module lines 1610

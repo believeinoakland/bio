@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_014VPFaRWHG8FznaELunDUKF · depth 2 · COMPLETE · handled B8
+**Status** · session_01QHswMjuJkugiUqGLjnDCa5 · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -184,3 +184,25 @@ COMPLETE (B8 START, fix round 2, wave 1). Branch job/T51/queue-producers @ ed4a7
 - `checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 1 failure, `build/rulings.md:4298` (not mine). `checks/architecture.mjs`: 26 product files, 106 relative imports; 0 failures. `checks/coverage.mjs`: 39 of 39 live ids named; 0 failures. `checks/words.mjs`: 0 failures. `checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`: 4 files changed; 0 failures.
 
 Size (session_014VPFaRWHG8FznaELunDUKF): test runs 9, module lines 3618
+
+## J10 · COMPLETE
+
+COMPLETE (B9 START, fix round 3, wave 1). Branch job/T51/queue-producers, tranche/T51 merged at the start (providers of wave 1 not needed: reevaluation's `notices` is read as scripted in the tests).
+
+**Cause met**
+- **C69** (re-walk B CA60; R52): `#findingsNewerCapture` answered one `newer-capture-affects-reference` item per reevaluation notice, so two notices of one newer capture on one holder and target (different `ord`, a reference pinned twice) drew twice. It now answers one item per (holder, target, newer version), standing where the first stood, the least notice id surviving, `basis.notices` naming every notice it stands for. A notice whose newer version the viewer cannot see (`newer_capture` and `newer_bundle` both blank) has no version to key on and stays its own matter. The identical-looking pairs of "Who issued a document", "A full export" and the signing-key notices are other producers' items and are untouched (R52's equal-item rule stands).
+
+**Proposed requirement line for BOB (R52 gains a clause, or a new id):** `newer-capture-affects-reference` is one item for each (holder, target, newer version) its notices share: the survivor is the item with the least notice id, its basis naming every notice (`basis.notices`); a notice whose newer version the viewer cannot see is its own matter. The tests name R52.
+
+**Found, for BOB (P9):** the door acts (`versionadopt`, `versionkeep`) take one notice id, so adopting or keeping on the surviving item closes that notice only; the other notice of the same version stays open and appears as its own item on the next read, until reevaluation closes sibling notices of one version together (or `queue` carries `basis.notices` to the act). Deferred: this, not mine to change. `build/rulings.md:4346` (K4349) fails `checks/format.mjs`: BOB's file, also red on the tranche tip.
+
+**Tests and checks**
+- `node --test --test-force-exit bio-plane/test/m/queue-producers/`: 151 tests, 151 pass, 0 fail (147 before, 4 new in `noticed.test.mjs`, the first seen failing: 2 !== 1).
+- Users (`impact.mjs`): `queue` 206/206; `control-plane` 340/340; `store-door` 52/53 and `plane` 279/280, the one failure of each (R17 op-grades; R24 screen words) also fails on the tranche tip, not mine.
+- `checks/run.mjs`: format 1 failure (rulings.md, above); architecture 0; words 0; coverage: queue-producers not among the 16 failures (other modules' ids); ownership 0 failures.
+
+Size (session_01QHswMjuJkugiUqGLjnDCa5): test runs 7, module lines 3633
+
+## J11 · COMPLETE
+
+COMPLETE (B9, C69, R52): one newer-capture item per (holder, target, newer version); 151/151 module tests; details and proposed R52 clause in J10 of the record. Found: door acts take one notice id, so a sibling notice of the same version reappears after adopt/keep (see record).

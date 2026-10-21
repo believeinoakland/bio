@@ -139,7 +139,7 @@ test("R19: the list of a project's drafts, fenced exactly as R9, bounded, writin
   assert.deepEqual([l.ok, l.kind, l.project, l.count, l.total, l.limit, l.truncated], [true, "review-drafts", P, 5, 5, REVIEW_LIST_MAX, false]);
   assert.deepEqual(l.drafts.map((d) => d.draft_id), ids, "in creation order");
   const [d0, d1, d2, d3, d4] = l.drafts;
-  assert.deepEqual(Object.keys(d0).sort(), ["case", "created_at", "created_by", "draft_id", "read", "statement_by", "updated_at", "updated_by"]);
+  assert.deepEqual(Object.keys(d0).sort(), ["case", "created_at", "created_by", "draft_id", "editions", "read", "statement_by", "updated_at", "updated_by"]);
   assert.deepEqual([d0.created_by, d0.updated_by, d0.statement_by, d0.read], ["ann", "bea", "ann", `op=reviewcopy&draft=${ids[0]}`]);
   assert.deepEqual([d0.case.case_id, d0.case.edition], [null, null]);
   assert.equal(d0.case.identity, word("review.index.derived_case_identity"));

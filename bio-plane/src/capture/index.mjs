@@ -44,7 +44,7 @@ import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profilesAsText, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho, CAPTURE_MAX, keepWhole, servedSubstance, PROFILE_TEXT_MAX } from "../acquisition/index.mjs";
+         firstHopWho, CAPTURE_MAX, keepWhole, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
    module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
@@ -99,6 +99,8 @@ const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 const UPLOAD_PART = 8 * 1024 * 1024;
 /** R94: the longest question id `recordCapturedFor` records, in characters (`acquisition` R47's bound). */
 export const CAPTURED_FOR_QUESTION_MAX = 200;
+/** R100: the longest project id `recordSeenIn` records, in characters. */
+export const SEEN_IN_PROJECT_MAX = 200;
 /** R86: the longest statement of origin, and the longest stated file name, in characters. */
 export const UPLOAD_STATEMENT_MAX = 2000;
 export const UPLOAD_NAME_MAX = 300;
@@ -848,6 +850,25 @@ export class Capture {
     } catch { return { recorded: false }; }
   }
 
+  /** R100 (T51 fix round 3; C9; Intake Doctrine section 8): that a member filed a held document in a project as a reference,
+   *  once for each (capture digest, project), at the first instant, in the table `seen_in`. It makes no second home: the
+   *  document keeps the one home `provenance` records (its R2), and `heldCaptures` (R77) lists it beside the project's own.
+   *  `{recorded: false}`, writing nothing, for a digest that is not 64 lowercase hex, a `project` that is not a non-blank
+   *  string of at most `SEEN_IN_PROJECT_MAX` characters, or a `by` that is not a member's stamp (absent, blank, naming no
+   *  member, or a machine identity). It decides nothing about the project's existence or the viewer's sight of it. Never
+   *  throws. */
+  recordSeenIn(args) {
+    try {
+      const { captureSha, project, by, at = null } = args ?? {};
+      if (typeof captureSha !== "string" || !HEX64.test(captureSha)) return { recorded: false };
+      if (typeof project !== "string" || !project.trim() || [...project].length > SEEN_IN_PROJECT_MAX) return { recorded: false };
+      if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by)) return { recorded: false };
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO seen_in (capture_sha, project, by, at) VALUES (?, ?, ?, ?)`,
+                                    captureSha, project, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond()));
+      return { recorded: true };
+    } catch { return { recorded: false }; }
+  }
+
   /** R69 (DEC-81 item 3(c)): a capture's actor appends a signed account of when and how they captured it. Refused
    *  `NOT_THE_CAPTURING_ACTOR` (C-118.5) for anyone this module did not record as capturing it (and for a capture it
    *  recorded no actor for), `ACCOUNT_NO_TEXT` (C-118.6), and `SIG_<reason>` unless `signature` verifies
@@ -1328,9 +1349,10 @@ export class Capture {
   /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside (R88: set aside, for
      the `set_aside` list), seen by the viewer, and passing the `member` and `project` filters; with their arguments. One
      builder for the list and for asking whether one document (an archive's, R77's grouping) is a row of it. */
-  #heldWhere({ viewer, who, project, aside = false, vouched = false }) {
+  #heldWhere({ viewer, who, project, bundleId = null, aside = false, vouched = false }) {
     const sight = this.#sightOf(viewer);
     const hasProject = project != null && project !== "";
+    const hasBundle = bundleId != null && bundleId !== "";
     /* R88 (T51): `held_and_vouched` adds the documents at `verified`, whose held acts are not asked (R79 never sets a
        vouched document aside). */
     const standing = vouched ? `((b.current_state = 'collected' AND ${Capture.#NOT_SET_ASIDE}) OR b.current_state = '${VOUCHED_STATE}')`
@@ -1340,8 +1362,10 @@ export class Capture {
             AND ${who ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
                                   WHERE r.bundle_id = b.bundle_id
                                     AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
-            AND ${hasProject ? "b.project = ?" : "1=1"}`,
-      args: [...sight.args, ...(who ? [who] : []), ...(hasProject ? [String(project)] : [])],
+            AND ${hasProject ? `(b.project = ? OR EXISTS (SELECT 1 FROM register r JOIN seen_in si ON si.capture_sha = r.capture_sha
+                                                         WHERE r.bundle_id = b.bundle_id AND si.project = ?))` : "1=1"}
+            AND ${hasBundle ? "b.bundle_id = ?" : "1=1"}`,
+      args: [...sight.args, ...(who ? [who] : []), ...(hasProject ? [String(project), String(project)] : []), ...(hasBundle ? [String(bundleId)] : [])],
     };
   }
 
@@ -1362,8 +1386,8 @@ export class Capture {
    *  R91 (T49; N1080): the examination of each document the page shows and the archive grouping of each row are asked
    *  together, once each, under one wait of `HELD_PAGE_WAIT_MS`; an answer not given in time reads undetermined
    *  (`#pageAnswers`). Nothing else in the answer changes. */
-  async heldCaptures({ member = null, project = null, sort = null, dir = null, limit = null, after = null, viewer = undefined,
-                       now = null, state = null, fields = null } = {}) {
+  async heldCaptures({ member = null, project = null, bundle_id: bundleId = null, sort = null, dir = null, limit = null, after = null,
+                       viewer = undefined, now = null, state = null, fields = null } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
     if (!HELD_SORTS.includes(by)) return Capture.#badArgument("heldcaptures", "sort", HELD_SORTS.join(" | "), by);
     const way = dir == null || dir === "" ? (by === "age" ? "desc" : "asc") : dir;
@@ -1385,7 +1409,7 @@ export class Capture {
                                                     : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
     const asc = by === "age" ? way === "desc" : way === "asc";
     const who = typeof member === "string" && member ? memberIdOf(member) : null;
-    const where = this.#heldWhere({ viewer, who, project, aside, vouched });
+    const where = this.#heldWhere({ viewer, who, project, bundleId, aside, vouched });
     const window = (key, n) => this.#rows(
       `SELECT * FROM (SELECT bundle_id, title, project, since, standing, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
          SELECT b.bundle_id, b.title, b.project, b.current_state AS standing, ${Capture.#SINCE} AS since, ${Capture.#SOURCE("address")} AS src_address,
@@ -1424,8 +1448,13 @@ export class Capture {
     /* R77 (T51; C14): what the page's rows need of the store is read for the whole page at once, never for each row in turn. */
     const facts = this.#pageFacts(page.map((r) => r.bundle_id), { aside, vouched, picker: shape === "picker" });
     /* R77 (T51 fix round 2; C10): whether the evidence store holds an object under each row's fingerprint. */
-    const wholes = await this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha));
-    const wholeOf = (bundleId) => { const s = facts.first.get(bundleId)?.capture_sha; return s ? wholes.get(s) ?? null : null; };
+    /* R77 (T51 fix round 3; C14): the picker row answers it from the size the register recorded and asks the store nothing. */
+    const wholes = shape === "picker" ? new Map() : await this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha));
+    const wholeOf = shape === "picker"
+      ? (id) => Capture.#wholeBySize(facts.first.get(id))
+      : (id) => { const s = facts.first.get(id)?.capture_sha; return s ? wholes.get(s) ?? null : null; };
+    /* R77 (T51 fix round 3; C9): a document listed because it was seen in the asked project, not because it lives there. */
+    const alsoHere = (r) => (project != null && project !== "" && (r.project || "") !== String(project) ? { also_here: { home: r.project || null } } : {});
     if (shape === "picker") {
       /* R77 (T51 fix round 2): and the three a screen's to-do reads of a row: `source`, `collected_since` and `actor`, as the full row gives them. */
       const rows = page.map((r) => ({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
@@ -1434,7 +1463,7 @@ export class Capture {
                                       capture: facts.first.has(r.bundle_id) ? { sha256: facts.first.get(r.bundle_id).capture_sha } : null,
                                       actor: this.#captureFacts(facts.first.get(r.bundle_id) ?? null, facts).actor,
                                       whole: wholeOf(r.bundle_id),
-                                      standing: r.standing === VOUCHED_STATE ? VOUCHED_STATE : "collected" }));
+                                      standing: r.standing === VOUCHED_STATE ? VOUCHED_STATE : "collected", ...alsoHere(r) }));
       return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
                next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
     }
@@ -1461,11 +1490,21 @@ export class Capture {
                   ...this.#captureFacts(reg, facts),
                   format: reg ? facts.formats.get(reg.capture_sha) ?? null : null,
                   whole: wholeOf(r.bundle_id),
+                  ...alsoHere(r),
                   ...(aside ? { set_aside: facts.setAside.get(r.bundle_id) ?? null } : {}),
                   ...(vouched ? this.#standingOf(r.bundle_id, r.standing, facts.history.get(r.bundle_id) ?? null) : {}) });
     }
     return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+  }
+
+  /* R77 (T51 fix round 3; C14): whether the copy is held whole, from the size the register recorded when the capture was kept
+     (`reg` is the register's first capture of the document): true when that size is one the store keeps whole (up to
+     `MULTIPART_KEEP_MAX`, `acquisition` R10), false past it, where the capture is held in its parts alone; null when the register
+     records no capture or no size. No read of the evidence store. */
+  static #wholeBySize(reg) {
+    const size = reg && (typeof reg.bytes === "number" || typeof reg.bytes === "bigint") ? Number(reg.bytes) : NaN;
+    return Number.isSafeInteger(size) && size >= 0 ? size <= MULTIPART_KEEP_MAX : null;
   }
 
   /* R77 (T51 fix round 2; C10): for the page's capture digests, a Map from digest to whether the evidence store holds an
@@ -3041,7 +3080,7 @@ export function captureOps(c, url, body, env, h = {}) {
     /* R96 (T51): `check` is the only act that reaches outside, and only from a member session (the stamp `by`). */
     heldat: () => c.heldAt({ address: q("address"), sha256: q("sha256"), check: q("check") === "1" || q("check") === "true",
                               viewer: q("viewer") ?? "", member: q("by") }),
-    heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), sort: q("sort"), dir: q("dir"), ...page,
+    heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), bundle_id: q("bundle_id"), sort: q("sort"), dir: q("dir"), ...page,
                                          state: q("state"), fields: q("fields"), viewer: q("viewer") ?? "" }),
     heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
                                      viewer: q("viewer") ?? "" }),
@@ -3077,7 +3116,7 @@ export const DECLARED_OPS = Object.freeze({
   archivelist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.archivelist", "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing"),
     fields: { accepts: ["archive","archiveSha","state","limit","after"], requires: [["archive","archiveSha"]] } },
   heldcaptures: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.heldcaptures", "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing"),
-    fields: { accepts: ["member","project","sort","dir","limit","after","state","fields"], requires: [] } },
+    fields: { accepts: ["member","project","bundle_id","sort","dir","limit","after","state","fields"], requires: [] } },
   heldsetaside: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldsetaside", "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted"),
     fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
   reattest: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: localize("capture.declared.reattest", "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight"),
