@@ -218,3 +218,12 @@ Size (session_01VMaZFp9WEEsWKQj2NDgzHf): test runs 4, module lines 2163
 **Suites:** screens-intake 201 of 201; screens-inquiry 410 of 413 (the three are on the tranche untouched); control-plane 324 of 324.
 
 **Size (session_016TLvaypBQx6X3AHUVwEdcN):** test runs 9, module lines 2233
+
+## J14 · QUESTION
+
+QUESTION (fix round 2; no answer is needed to finish what is done): words and two decisions for C28 and C10, my best reading first.
+
+1. C28, the inbox. The plane stores no file name or type for a knock and gives no read of its bytes before the pull, so the screen can draw the fingerprint (done, `screen.document.fingerprint`) but not name, type or a safe-view door; that is a doorbell change (REPORT 2 in my record). "Put it back" (`inboxresolve` to `new`, doorbell R3) is served by the plane; the screen has no word for its button, and `act.inboxresolve.label.inbox` ("Discard with a reason") and its explanation would mislead. Keys I need written: the button and its explanation for putting a discarded knock back (suggested `act.inboxresolve.label.inbox.putback` with its explanation), and the sentence after it is done. I will draw it when they exist.
+2. C9: the other-home refusal has no `{holder}` in `refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE`; I draw its sentence and then a link to the holder named by its title, built only from existing keys. If you want the holder inside the sentence, the key needs a `{holder}` fill.
+3. C23, Held's project filter has no label word; I opened it from the project name in each row (a link to `/app/held/<project>`) with `screen.held.name` as the way back. A drawn "All projects / Project" choice would need its keys.
+4. C10: `captureupload` answers `existed: true` without a document, so the screen can link a visible holder but cannot file a document for the viewer when none shows (REPORT 1). Do you want `capture` R86 to answer the document in that case (my proposal), or is the link enough?
