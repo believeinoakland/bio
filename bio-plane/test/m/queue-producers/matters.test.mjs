@@ -19,7 +19,7 @@ const notice = (id) => ({ id, class: "FINDING", kind: "interest-check-noticed", 
 const withAction = (items) => world({ actionProducers: { actionItems: () => ({ items, facts: {} }) } });
 const idsOf = (r, kind) => r.items.filter((i) => i.kind === kind).map((i) => i.id);
 
-test("R8 (C69): one action's deadline whose facts stand in four statuses is one to do, not four", () => {
+test("R8, R52 (C69): one action's deadline whose facts stand in four statuses is one to do, not four", () => {
   const w = withAction([fact("ACT-1", "p/a/hours", "unconfirmed"), fact("ACT-1", "p/a/holidays", "disputed"),
     fact("ACT-1", "p/a/time_zone", "unconfirmed"), fact("ACT-1", "p/a/hours", "disputed")]);
   const r = w.read("alice");
@@ -30,13 +30,13 @@ test("R8 (C69): one action's deadline whose facts stand in four statuses is one 
   assert.deepEqual(got[0].basis.paths.sort(), ["p/a/holidays", "p/a/hours", "p/a/time_zone"], "so are the facts, once each");
 });
 
-test("R8 (C69): which of the repeats stands is the same at every read, whatever order the provider answered them in", () => {
+test("R8, R52 (C69): which of the repeats stands is the same at every read, whatever order the provider answered them in", () => {
   const items = [fact("ACT-1", "p/a/hours", "unconfirmed"), fact("ACT-1", "p/a/holidays", "disputed")];
   const a = withAction(items).read("alice"), b = withAction([...items].reverse()).read("alice");
   assert.deepEqual(idsOf(a, "local-fact-due"), idsOf(b, "local-fact-due"));
 });
 
-test("R8 (C69): two equal notices are one item; control: two different matters are two, and two items that differ only in their id but say the same thing about the same subject are one", () => {
+test("R8, R52 (C69): two equal notices are one item; control: two different matters are two, and two items that differ only in their id but say the same thing about the same subject are one", () => {
   const same = withAction([notice("FINDING::interest-check-noticed::1"), notice("FINDING::interest-check-noticed::1")]).read("alice");
   assert.deepEqual(idsOf(same, "interest-check-noticed"), ["FINDING::interest-check-noticed::1"], "the same id twice");
   const twin = withAction([notice("FINDING::interest-check-noticed::1"), notice("FINDING::interest-check-noticed::2")]).read("alice");
@@ -45,14 +45,14 @@ test("R8 (C69): two equal notices are one item; control: two different matters a
   assert.equal(idsOf(withAction([notice("FINDING::interest-check-noticed::1"), other]).read("alice"), "interest-check-noticed").length, 2, "another subject is another matter");
 });
 
-test("R8 (C69): control: two actions' deadlines are two matters, two items; a fact of one action never absorbs another's", () => {
+test("R8, R52 (C69): control: two actions' deadlines are two matters, two items; a fact of one action never absorbs another's", () => {
   const w = withAction([fact("ACT-1", "p/a/hours", "unconfirmed"), fact("ACT-2", "p/b/hours", "unconfirmed"), fact("ACT-2", "p/b/holidays", "disputed")]);
   const got = w.read("alice").items.filter((i) => i.kind === "local-fact-due");
   assert.deepEqual(got.map((i) => i.subject.id).sort(), ["ACT-1", "ACT-2"]);
   assert.equal(got.find((i) => i.subject.id === "ACT-1").basis.statuses.length, 1);
 });
 
-test("R8 (C69): a repeated item names each repeat only once in the answer, and the other items and their order are as before", () => {
+test("R8, R52 (C69): a repeated item names each repeat only once in the answer, and the other items and their order are as before", () => {
   const w = withAction([fact("ACT-1", "p/a/hours", "unconfirmed"), notice("N-1"), fact("ACT-1", "p/a/holidays", "disputed"), notice("N-2")]);
   w.bundle("INF-1");
   const r = w.read("alice");

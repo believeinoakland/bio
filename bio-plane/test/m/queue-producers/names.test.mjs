@@ -14,7 +14,7 @@ const claim = (w, handle = null) => {
 };
 const kind = (r, k) => r.items.filter((i) => i.kind === k);
 
-test("R14 (C94): a key the founder registered names her by her handle; with no handle held, by member.founder.unnamed's word; never admin", () => {
+test("R14, R53 (C94): a key the founder registered names her by her handle; with no handle held, by member.founder.unnamed's word; never admin", () => {
   const w = world();
   w.member("ada", { role: "admin", handle: "ada" });
   claim(w, "sparky");
@@ -31,7 +31,7 @@ test("R14 (C94): a key the founder registered names her by her handle; with no h
   assert.doesNotMatch(none.summary, /\badmin\b/i);
 });
 
-test("R14 (C94): control: an ordinary member's handle is named as itself, and one with no handle keeps R46's fallback, her id", () => {
+test("R14, R53 (C94): control: an ordinary member's handle is named as itself, and one with no handle keeps R46's fallback, her id", () => {
   const w = world();
   w.member("ada", { role: "admin", handle: "ada" }); w.member("m-q81xz02", { handle: null }); w.member("bo", { handle: "bobby" });
   w.signer("KEY-1", "bo", { comment: "c" }); w.signer("KEY-2", "m-q81xz02", { comment: "c" });
@@ -40,7 +40,7 @@ test("R14 (C94): control: an ordinary member's handle is named as itself, and on
   assert.equal(by["KEY-2"].summary, word("queue.signer-self-registered.summary.comment", { member: "m-q81xz02", comment: "c" }));
 });
 
-test("R33 (C94): a wizard version the founder submitted names her by her handle, or by the founder word, never admin", () => {
+test("R33, R53 (C94): a wizard version the founder submitted names her by her handle, or by the founder word, never admin", () => {
   const sub = (author) => ({ script: "WIZ-a", version: 1, owner: "olga", name: "File", author, submitted_at: iso(NOW - 1000), project: null });
   const page = (entries) => ({ ok: true, cursor: null, truncated: false, entries });
   const w = world({ wizardScripts: { submittedFor: () => page([sub("admin")]) } });
@@ -55,7 +55,7 @@ test("R33 (C94): a wizard version the founder submitted names her by her handle,
     word("queue.wizard-approval-requested.summary", { author: word("member.founder.unnamed"), name: "File" }));
 });
 
-test("R48 (C94): an expertise the founder declared names her by the founder word while she holds no handle, never admin; by her handle once she holds one; control: a member with no handle keeps her id", () => {
+test("R48, R53 (C94): an expertise the founder declared names her by the founder word while she holds no handle, never admin; by her handle once she holds one; control: a member with no handle keeps her id", () => {
   const draw = (setup) => {
     const w = world();
     w.member("ada", { role: "admin", handle: "ada" });
