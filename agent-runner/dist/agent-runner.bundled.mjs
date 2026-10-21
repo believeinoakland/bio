@@ -1508,7 +1508,7 @@ var fleet_member_default = {
   },
   image: {
     repository: "docker.io/civicsmith/agent-runner",
-    digest: "sha256:78b09547d8a2e9962f7d1ee373e5f9d80c0e730a8fc97613b3599a92c81bbb63",
+    digest: "sha256:d6694d2c50094ad13d0690a65d6795f92ad7e7d7bc3ad204dfa67f96edabad78",
     source_sha256: "23cf9ef6f8dac820f3e3148ea21963455adc74ad6ce70a97009ff61f2cf33a1c",
     platform: "linux/amd64",
     port: 8080,

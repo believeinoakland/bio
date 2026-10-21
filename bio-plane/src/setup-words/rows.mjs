@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18130 design words, 1068 protected; SHA-256
-   1709a4a9043d932ffec7a0bbaf91351c5aacae744d05915172dffd503b801d1f) followed by 7136 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   1709a4a9043d932ffec7a0bbaf91351c5aacae744d05915172dffd503b801d1f) followed by 7140 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19518,7 +19518,10 @@ export const WORD_ROWS = Object.freeze([
   ["capture.declared.acquire","substrate: the fetch layer (M2')",null,null,false,"code"],
   ["capture.declared.archivelist","read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing",null,null,false,"code"],
   ["capture.declared.captureaccount","self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested",null,null,false,"code"],
+  ["capture.declared.captureaccounts","read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing",null,null,false,"code"],
+  ["capture.declared.capturegrade","read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing",null,null,false,"code"],
   ["capture.declared.gradenote","read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing",null,null,false,"code"],
+  ["capture.declared.heldat","read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record",null,null,false,"code"],
   ["capture.declared.heldcaptures","read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing",null,null,false,"code"],
   ["capture.declared.heldrestore","held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record",null,null,false,"code"],
   ["capture.declared.heldsetaside","held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted",null,null,false,"code"],
@@ -21387,6 +21390,7 @@ export const WORD_ROWS = Object.freeze([
   ["entities.declared.entitycreate","registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)",null,null,false,"code"],
   ["entities.declared.relationdeclare","registry write, keyed by entity pair",null,null,false,"code"],
   ["entities.declared.resolutiondefect","registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",null,null,false,"code"],
+  ["entities.declared.resolutions","read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha",null,null,false,"code"],
   ["entities.declared.resolve","recogniser write, keyed by capture sha",null,null,false,"code"],
   ["entities.declared.resolvetestify","recogniser testimony, keyed by capture sha",null,null,false,"code"],
   ["entities.index.a_declared_relation_carries_a","a declared relation carries a justification, like a pattern statement (safeguard 4)",null,null,false,"code"],

@@ -2913,7 +2913,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.money.f.sha", "The document", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.sha.help", "The document's fingerprint, as its page shows it; the figure cites the passage.", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.page", "Page (optional)", "adopted from screens-investigate's own rows", null, false, "design"],
-  ["screen.money.f.contract", "The contract, for committed against paid (a record id)", "adopted from screens-investigate's own rows", null, false, "design"],
+  ["screen.money.f.contract", "The contract, for committed against paid", "adopted from screens-investigate's own rows; DEC-259: reworded", null, false, "design"],
   ["screen.money.f.expertise", "The expertise asked for", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.expertise.help", "Members who declared this expertise are asked; the one who read the figure is not.", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.address", "The city's own address for the document", "adopted from screens-investigate's own rows", null, false, "design"],
@@ -2922,7 +2922,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.money.f.question.help", "A hunch is kept beside a question, labeled as yours, and is never evidence.", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.hunch", "Your reading, as a hunch", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.empty", "Give the amount, how the source writes it, and the passage it comes from.", "adopted from screens-investigate's own rows", null, false, "design"],
-  ["screen.money.f.nocontract", "Name the contract by its record id.", "adopted from screens-investigate's own rows", null, false, "design"],
+  ["screen.money.f.nocontract", "Choose the contract.", "adopted from screens-investigate's own rows; DEC-259: reworded", null, false, "design"],
   ["screen.money.f.nopassage", "Name the passage that dates the movement.", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.noaddress", "Give the city's address for the document, starting https://.", "adopted from screens-investigate's own rows", null, false, "design"],
   ["screen.money.f.noexpertise", "Name the expertise to ask for.", "adopted from screens-investigate's own rows", null, false, "design"],
@@ -10747,6 +10747,115 @@ var WORD_ROWS = Object.freeze([
   ["screen.queue.check.open", "Open the check", "DEC-393: B437 2: queue, the button on a check-request row, as drawn in place", null, false, "design"],
   ["screen.queue.hint.promote", "Open a question from this", "DEC-393: B437 2: queue, the button of promote on a hint, as drawn in place", null, false, "design"],
   ["screen.queue.vouch.them", "Vouch for them", "DEC-393: B437 2: queue, the button of release on held captures, as drawn in place", null, false, "design"],
+  ["screen.capture.later.head", "Your requests for later", "DEC-394: B441 3: capture: section title over the list of Ask for a capture later requests", null, false, "design"],
+  ["screen.capture.later.about", "Each address you asked to have captured later, and where it stands.", "DEC-394: B441 3: capture: line under the section title", null, false, "design"],
+  ["screen.capture.later.waiting", "Waiting to be fetched", "DEC-394: B441 3: capture: state of a request not yet fetched", null, false, "design"],
+  ["screen.document.testify.head", "A name the record did not match", "DEC-394: B441 3: document: summary of the fold in People and organizations it names", null, false, "design"],
+  ["screen.document.testify.note1", "Some names this copy uses were matched to no subject.", "DEC-394: B441 3: document: note in the fold", null, false, "design"],
+  ["screen.document.testify.note2", "If you know who or what one is, say so and how you know.", "DEC-394: B441 3: document: note in the fold", null, false, "design"],
+  ["screen.document.testify.note3", "It is your word, graded D, the lowest grade, and it never lowers a stronger match.", "DEC-394: B441 3: document: note in the fold", null, false, "design"],
+  ["screen.document.testify.which.help", "The names this copy uses that the record matched to no subject.", "DEC-394: B441 3: document: help on Which name", null, false, "design"],
+  ["screen.document.testify.who", "Who or what it is", "DEC-394: B441 3: document: label of the subject choice", null, false, "design"],
+  ["screen.document.testify.how.help", "Say how you know, in your own words.", "DEC-394: B441 3: document: help on How you know", null, false, "design"],
+  ["screen.document.testify.how.help2", "It is kept beside the match.", "DEC-394: B441 3: document: help on How you know", null, false, "design"],
+  ["screen.document.testify.refused", "Say how you know this first. Nothing was recorded.", "DEC-394: B441 3: document: refusal when no basis is given, before: Nothing was recorded.", null, false, "design"],
+  ["screen.project.docs.about1", "Every document filed under this project.", "DEC-394: B441 3: project: line under The project's documents", null, false, "design"],
+  ["screen.project.docs.about2", "Open one to read it, cite a passage or retire it.", "DEC-394: B441 3: project: line under The project's documents", null, false, "design"],
+  ["screen.project.docs.none1", "Nothing is filed under this project yet.", "DEC-394: B441 3: project: empty state of the documents list", null, false, "design"],
+  ["screen.project.docs.none2", "Add a document and it appears here.", "DEC-394: B441 3: project: empty state of the documents list", null, false, "design"],
+  ["screen.project.docs.listhelp", "Shows every document filed under this project, the ones waiting for a vouch and the ones already vouched for.", "DEC-394: B441 3: project: tip on List this project's documents (the help of heldcaptures here)", null, false, "design"],
+  ["screen.case-editor.drafts.help", "The drafts of this project, each named by its scope and the date it was prepared.", "DEC-394: B441 1: the help of the Which draft chooser on case-editor", null, false, "design"],
+  ["screen.case-editor.drafts.choose", "Choosing one shows that draft.", "DEC-394: B441 1: the help of the Which draft chooser on case-editor", null, false, "design"],
+  ["screen.case-editor.drafts.newest", "newest", "DEC-394, DEC-395 (B443): the word after the newest draft's line in the chooser on case-editor", null, false, "design"],
+  ["screen.case-editor.drafts.item", "Scope: {scope} \xB7 prepared {date}", "DEC-394, DEC-395 (B443): one draft in the Which draft chooser on case-editor: {scope} the draft's scope, {date} the day it was prepared", null, false, "design"],
+  ["screen.case-editor.links.live", "{count} review links are live, {earlier} of them on an earlier draft.", "DEC-394: B441 1: the note naming live review links on case-editor", null, false, "design"],
+  ["screen.ceremony.drafts.help", "The drafts of this project, each named by its scope and the date it was prepared.", "DEC-394: B441 1: the help of the Which draft chooser on ceremony", null, false, "design"],
+  ["screen.ceremony.drafts.choose", "Choosing one shows that draft.", "DEC-394: B441 1: the help of the Which draft chooser on ceremony", null, false, "design"],
+  ["screen.ceremony.drafts.newest", "newest", "DEC-394, DEC-395 (B443): the word after the newest draft's line in the chooser on ceremony", null, false, "design"],
+  ["screen.ceremony.drafts.item", "Scope: {scope} \xB7 prepared {date}", "DEC-394, DEC-395 (B443): one draft in the Which draft chooser on ceremony: {scope} the draft's scope, {date} the day it was prepared", null, false, "design"],
+  ["screen.ceremony.links.live", "{count} review links are live, {earlier} of them on an earlier draft.", "DEC-394: B441 1: the note naming live review links on ceremony", null, false, "design"],
+  ["screen.review-copy.drafts.help", "The drafts of this project, each named by its scope and the date it was prepared.", "DEC-394: B441 1: the help of the Which draft chooser on review-copy", null, false, "design"],
+  ["screen.review-copy.drafts.choose", "Choosing one shows that draft.", "DEC-394: B441 1: the help of the Which draft chooser on review-copy", null, false, "design"],
+  ["screen.review-copy.drafts.newest", "newest", "DEC-394, DEC-395 (B443): the word after the newest draft's line in the chooser on review-copy", null, false, "design"],
+  ["screen.review-copy.drafts.item", "Scope: {scope} \xB7 prepared {date}", "DEC-394, DEC-395 (B443): one draft in the Which draft chooser on review-copy: {scope} the draft's scope, {date} the day it was prepared", null, false, "design"],
+  ["screen.review-copy.links.heading", "Every live review link", "DEC-394: B441 1: the section of live links on any draft", null, false, "design"],
+  ["screen.review-copy.links.note", "A link on an earlier draft keeps working until you stop it here.", "DEC-394: B441 1: note under the live links", null, false, "design"],
+  ["screen.review-copy.links.help", "Every review link still working on any draft of this project: who it was shared with, which draft, when, and how many comments that reader made.", "DEC-394: B441 1: help of the live links section", null, false, "design"],
+  ["screen.project.docs.head", "The project's documents", "DEC-394: B441 3: project: section title", null, false, "design"],
+  ["screen.document.testify.which", "Which name", "DEC-394: B441 3: document: label of the name choice", null, false, "design"],
+  ["screen.capture.later.captured", "Captured", "DEC-394: B441 3: capture: state of a request that was fetched", null, false, "design"],
+  ["screen.capture.later.turned", "Turned away", "DEC-394: B441 3: capture: state of a request its source refused", null, false, "design"],
+  ["screen.project.docs.kind.web", "Web page", "DEC-394: B441 3: project: kind of a document in the list", null, false, "design"],
+  ["screen.project.docs.kind.sheet", "Spreadsheet", "DEC-394: B441 3: project: kind of a document in the list", null, false, "design"],
+  ["screen.project.docs.kind.photo", "Photo", "DEC-394: B441 3: project: kind of a document in the list", null, false, "design"],
+  ["screen.project.docs.captured", "captured", "DEC-394: B441 3: project: before the date a document was captured", null, false, "design"],
+  ["screen.document.contradict.head", "This contradicts another document", "DEC-394: B441 3e: fold title on the document screen", null, false, "design"],
+  ["screen.document.contradict.note1", "If a passage here and a passage in another document cannot both be true, say so.", "DEC-394: B441 3e", null, false, "design"],
+  ["screen.document.contradict.note2", "The two are set side by side as a contradiction for your project to settle.", "DEC-394: B441 3e", null, false, "design"],
+  ["screen.document.contradict.here", "The passage here", "DEC-394: B441 3e: field", null, false, "design"],
+  ["screen.document.contradict.here.help", "Select the words on the page, or choose a passage you cited.", "DEC-394: B441 3e: help", null, false, "design"],
+  ["screen.document.contradict.other", "The other document and its passage", "DEC-394: B441 3e: field", null, false, "design"],
+  ["screen.document.contradict.other.help", "A document your team holds, and the passage in it.", "DEC-394: B441 3e: help", null, false, "design"],
+  ["screen.document.contradict.why", "How they disagree", "DEC-394: B441 3e: the reason field", null, false, "design"],
+  ["screen.document.contradict.why.help", "In your own words, up to 500 characters.", "DEC-394: B441 3e: help", null, false, "design"],
+  ["file-safety.index.no_signatures", "The file scanner has no signatures, so files are kept and shown but not scanned.", "DEC-396: B444 1: the line on setup step 7 (Security) and on Settings \u203A Security when the built-in file scanner holds no signatures and no date is known: what is true of the scanner", null, false, "design"],
+  ["file-safety.index.no_signatures_since", "The file scanner has had no signatures since {date}, so files are kept and shown but not scanned.", "DEC-396: B444 1: the same line when a date is known: {date} the day it first could not scan for want of signatures", null, false, "design"],
+  ["file-safety.index.signatures_refused", "The signature service refused the download (status {status}). The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.", "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings \u203A Security: {status} the three-digit answer of the service; says what the administrator can do", null, false, "design"],
+  ["file-safety.index.signatures_failed", "The last download of signatures did not finish. The scanner tries again daily; an administrator can check that your team's Civicsmith can reach the service.", "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings \u203A Security, when a download was tried and broke off; says what the administrator can do", null, false, "design"],
+  ["file-safety.index.signatures_not_fetched", "No download of signatures has finished yet. The scanner tries again daily; if this stays, an administrator can check that your team's Civicsmith can reach the service.", "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings \u203A Security, when no download has been tried or finished; says what the administrator can do", null, false, "design"],
+  ["screen.document.text.read", "Read {read} of {total} words", "DEC-396: B444 2 (C17): the document reading line; {read} words_read, {total} words_total (reading-pipeline R35)", null, false, "design"],
+  ["screen.project.opened.date", "Opened {date}", "DEC-396: B444 3: a project or question opened with no opener named", null, false, "design"],
+  ["screen.question.leg.paragraph", "Paragraph {n}", `DEC-396: B444 4: a web leg's place in its page, beside "Page N" for a paged document`, null, false, "design"],
+  ["screen.matter.pick.choose", "Choose one", "DEC-396: B444 6: the first, empty row of the matter's pickers (event, cause, way)", null, false, "design"],
+  ["screen.matter.pick.none", "None of these", "DEC-396: B444 6: the row of a matter picker when nothing listed fits", null, false, "design"],
+  ["screen.matter.routes.none", "No route is known for this matter yet.", "DEC-396: B444 6: the routes (procedure guides) list when it is empty", null, false, "design"],
+  ["screen.action.kind.records_petition", "Court petition to enforce a records request", "DEC-396: B444 item 7: the action page subtitle and the queue kind list: an action that asks a court to enforce a records request", null, false, "design"],
+  ["screen.action.kind.brown_act_demand", "Brown Act demand", "DEC-396: B444 item 7: the action page subtitle and the queue kind list: a demand to correct an action taken against the Brown Act", null, false, "design"],
+  ["screen.action.kind.assessment_challenge", "Challenge to a tax, assessment or fee", "DEC-396: B444 item 7: the action page subtitle and the queue kind list", null, false, "design"],
+  ["screen.action.kind.taxpayer_action", "Taxpayer action", "DEC-396: B444 item 7: the action page subtitle and the queue kind list", null, false, "design"],
+  ["screen.action.kind.consent_decree_motion", "Motion under a consent decree", "DEC-396: B444 item 7: the action page subtitle and the queue kind list", null, false, "design"],
+  ["screen.action.kind.constitutional_claim", "Constitutional claim", "DEC-396: B444 item 7: the action page subtitle and the queue kind list", null, false, "design"],
+  ["screen.start-send.kind.records_petition", "court petition to enforce a records request", "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps", null, false, "design"],
+  ["screen.start-send.kind.brown_act_demand", "Brown Act demand", "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps", null, false, "design"],
+  ["screen.start-send.kind.assessment_challenge", "challenge to a tax, assessment or fee", "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps", null, false, "design"],
+  ["screen.start-send.kind.taxpayer_action", "taxpayer action", "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps", null, false, "design"],
+  ["screen.start-send.kind.consent_decree_motion", "motion under a consent decree", "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps", null, false, "design"],
+  ["screen.start-send.kind.constitutional_claim", "constitutional claim", "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps", null, false, "design"],
+  ["screen.standard.held", "Standards the team holds", "DEC-396: B444 item 8: heading of the list of held standards on a project's Standard screen", null, false, "design"],
+  ["screen.standard.held.more", "More standards are held than are shown.", "DEC-396: B444 item 8: under the held standards list when it is cut", null, false, "design"],
+  ["shell.member.unknown", "A member of your team", "DEC-396: B444 item 9: the shell's name for a member id that has no handle", null, false, "design"],
+  ["screen.money.proposed.member", "proposed by a member; not included", "DEC-396: B444 item 10: money trail: label of a figure a member proposed to the trail, beside the machine one", null, false, "design"],
+  ["screen.ceremony.signs.count.findings", "One confirmation signs all {n}: the edition and its {findings} findings.", "DEC-396: B444 item 11: Sign step, under the list of what is signed, when no evidence is signed with the case", null, false, "design"],
+  ["screen.ceremony.published.edition", "Published: edition {n}", "DEC-396: B444 item 11: a reopened ceremony whose edition is already public", null, false, "design"],
+  ["refusal.FLAG_NO_PASSAGE", "Each side of a contradiction names a passage: a document and the part of it. One is missing, is not held here, or is not one you can see; the answer says which. Choose it again. Nothing was written.", "DEC-396: B444 item 12: refusal when saying two documents contradict", null, false, "design"],
+  ["refusal.FLAG_SAME_DOCUMENT", "A contradiction is between two documents, and both passages are in the same one. Choose a passage in a different document. Nothing was written.", "DEC-396: B444 item 12: refusal when saying two documents contradict", null, false, "design"],
+  ["refusal.FLAG_NO_REASON", "Saying two documents contradict is a kept decision, and a kept decision says why. Write how they disagree, in your own words. Nothing was written.", "DEC-396: B444 item 12: refusal when saying two documents contradict", null, false, "design"],
+  ["refusal.ACQUIRE_TIMED_OUT.held", "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.", "DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept", null, false, "design"],
+  ["refusal.ACQUIRE_TIMED_OUT.undetermined", "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.", "DEC-397: B446: a timed-out capture whose kept state cannot be told", null, false, "design"],
+  ["form.choose.search", "Search your documents", "DEC-397: B447 (screens-investigate C95): the document picker's search box label", null, false, "design"],
+  ["form.choose.search.none", "No document matches. Try other words, or add the document first.", "DEC-397: B447: the document picker's search found nothing", null, false, "design"],
+  ["act.inboxresolve.label.inbox.putback", "Put it back", "DEC-398: B448 a: the button on a discarded knock (inboxresolve to new)", "Discards material handed in, with a reason.", false, "design"],
+  ["act.inboxresolve.putback.does", "Returns material you discarded to the inbox as new, so it can be read and placed again. The discard and its reason stay on the record.", "DEC-398: B448 a: what Put it back does", null, false, "design"],
+  ["screen.inbox.putback.done", "Put back in the inbox as new. The discard and its reason stay on the record.", "DEC-398: B448 a, B450: the sentence after Put it back", null, false, "design"],
+  ["screen.document.retire.refused.illegal", "This copy cannot be retired: it is not vouched for yet, or it is already retired. Nothing was recorded.", "DEC-398: B448 b", null, false, "design"],
+  ["screen.document.retire.refused.cited", "This copy is cited by {questions}. Remove those citations first, then retire it. Nothing was recorded.", "DEC-398: B448 b: {questions} the citing questions", null, false, "design"],
+  ["screen.group.hosting.now.date", "Recorded on {date}:", "DEC-398: B450 (C88): who holds the hosting account, recorded with no recorder named", null, false, "design"],
+  ["screen.group.export.count.tables.one", "1 table", "DEC-398: B450 (C85)", null, false, "design"],
+  ["screen.group.export.count.tables.other", "{n} tables", "DEC-398: B450 (C85)", null, false, "design"],
+  ["screen.security.nosignatures.next", "An administrator can check that your team's Civicsmith is allowed to reach the signature service. The scanner tries again daily.", "DEC-398: B450 (C83): Security, when the scanner holds no signatures", null, false, "design"],
+  ["screen.group.domain.checked", "Checked {date} at {time}.", "DEC-398: B450 (C86)", null, false, "design"],
+  ["shell.field.needed", "Fill in {field} first. Nothing was sent.", "DEC-398: B450 (C87): the shell's neutral refusal for an empty required field", null, false, "design"],
+  ["screen.review-copy.links.shared", "shared {date}", "DEC-398: B450 (C49): a live review link's row", null, false, "design"],
+  ["screen.review-copy.links.comments.one", "1 comment", "DEC-398: B450 (C49)", null, false, "design"],
+  ["screen.review-copy.links.comments.other", "{n} comments", "DEC-398: B450 (C49)", null, false, "design"],
+  ["screen.case-editor.links.live.one", "1 review link is live.", "DEC-398: B450 (C49): the singular of screen.case-editor.links.live", null, false, "design"],
+  ["screen.ceremony.links.live.one", "1 review link is live.", "DEC-398: B450 (C49): the singular of screen.ceremony.links.live", null, false, "design"],
+  ["screen.held.vouch.partsonly", "Only parts of this copy were kept, not the whole of what its source gave, so it cannot be vouched for. Capture it again whole, or set it aside with a reason.", "DEC-399: B451 (capture R77 whole: false): why the vouch is withheld", null, false, "design"],
+  ["screen.inbox.knock.name", "File name, as the sender gave it", "DEC-399: B453 (doorbell R27): label beside a knock's sender-stated file name", null, false, "design"],
+  ["screen.inbox.knock.type", "Kind of file, as the sender gave it", "DEC-399: B453: label beside a knock's sender-stated media type", null, false, "design"],
+  ["screen.contradiction.flagged.by", "{member} said these two contradict, {date}", "DEC-400: B455: who flagged a contradiction by hand, and when", null, false, "design"],
+  ["act.heldcaptures.here.project", "List this project's documents", "DEC-400: B455: the project screen's documents act (heldcaptures with the project), as the registry labels it", "Shows captures waiting for a member to vouch for them before they count.", false, "design"],
+  ["screen.document.testify.how", "How you know", "DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)", null, false, "design"],
   ["refusal.GROUP_SLUG_MALFORMED", "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.", "setup, refusal by its code", null, false, "design"],
   ["refusal.GROUP_ALREADY_RECORDED", "Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.", "setup, refusal by its code", null, false, "design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN", "Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.", "setup, refusal by its code", null, false, "design"],
@@ -16649,7 +16758,9 @@ var WORD_ROWS = Object.freeze([
   ["screen.doorbell.purpose", "Hand material to the team. You need no account; the page says what will happen to what you send.", null, null, false, "design"],
   ["screen.about-knocker.name", "A source", null, null, false, "design"],
   ["screen.leads.name", "Leads", null, null, false, "design"],
+  ["screen.leads.purpose", "Write down something you were told, record who looked into it and what they found, and share it with a project.", null, null, false, "design"],
   ["screen.watching.name", "Watched addresses", null, null, false, "design"],
+  ["screen.watching.purpose", "Every address your team watches: what is due to be checked, pausing the watching, and the sweeps that look through a site.", null, null, false, "design"],
   ["act.bootstrap.label.install", "Continue to Cloudflare", null, "Takes you to Cloudflare's own page to allow this installer into your account, then sets up your team's Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.", true, "design"],
   ["act.owed_installupdate.label.install", "Update it", null, "Takes you to the update page for the Civicsmith already in this account, set to the newest release. Its records, members and settings are kept, and nothing changes until you allow it on Cloudflare's page.", true, "design"],
   ["act.owed_installalongside.label.install", "Install alongside it", null, "Installs a second Civicsmith in this same account, for another team, under its own short name and address. The one already here is not touched, and neither can read the other's records.", true, "design"],
@@ -16841,6 +16952,7 @@ var WORD_ROWS = Object.freeze([
   ["act.captureupload.label.capture", "Capture a file or photo", null, "Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.", true, "design"],
   ["act.testify.label.capture", "Record what you saw or heard", null, "Records what you saw or heard yourself as testimony: grade D, labeled as yours, never changed afterwards.", true, "design"],
   ["act.capturerequest.label.capture", "Ask for a capture later", null, "Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.", true, "design"],
+  ["act.capturerequests.label.capture", "Show my requests for later", null, "Lists the requests you asked for later, each with where it stands: waiting, being fetched, captured, turned away or expired. It changes nothing.", true, "design"],
   ["act.monitorset.label.capture", "Watch this address", null, "Turns watching on or off for this document's address, and sets how often it is checked. Each new version found is kept beside the old, and you are told.", true, "design"],
   ["act.monitor.label.capture", "Check it now", null, "Checks this address once, now, for a new version. Offered only for an address your team is watching. A new version is kept beside the old.", true, "design"],
   ["act.writinghelp.label.capture", "Help me write this", null, "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.", true, "design"],
@@ -16886,6 +16998,8 @@ var WORD_ROWS = Object.freeze([
   ["act.connectionassert.label.document", "Assert this connection", null, "Says, in your own words and under your name, that this document and another one your team holds are connected. It is kept apart from the connections the record derives and is not treated as established.", true, "design"],
   ["act.resolutiondefect.label.document", "Report this match as wrong", null, "Reports, with your reason, that the record matched a mention in this document to the wrong subject. The report is kept beside the match; the match itself is not changed.", true, "design"],
   ["act.owed_declareorigin.label.document", "Say where this document came from", null, "Records, with your name and the date, the system this document came from. A second declaration is added beside the first and never replaces it. The document itself does not change.", true, "design"],
+  ["act.resolvetestify.label.document", "Say who this name is", null, "Records from your own knowledge that this mention is them, with how you know. It is your word, grade D: never established on its own, and never lowering a stronger match.", true, "design"],
+  ["act.contradictionflag.label.document", "Say these two contradict", null, "Sets a passage here beside a passage in another document as a contradiction your project settles, with your reason. It changes neither document.", true, "design"],
   ["act.themeplace.label.document", "Place it in a theme", null, "Places this document or passage in a theme, with an optional note saying why. At a hunch, it confirms the hunch and keeps who proposed it.", true, "design"],
   ["act.themepropose.label.document", "Propose it for a theme", null, "Proposes this document or passage for a theme as a hunch: it shows apart and counts for nothing until another member places it.", true, "design"],
   ["act.themewithdraw.label.document", "Reject a hunch, with a reason", null, "Takes a placement out of a theme (the member who placed it, or an administrator) or rejects a hunch (any member). Your reason is required and stays on record.", true, "design"],
@@ -16930,6 +17044,7 @@ var WORD_ROWS = Object.freeze([
   ["act.owed_rerunread.label.project", "Compare with the original", null, "Shows this rerun beside the original: the two lenses' differences and the findings you paired. It changes nothing.", true, "design"],
   ["act.owed_rerunpair.label.project", "This answers the same claim", null, "States that one finding of this project answers the same claim as one of the original's, or withdraws that statement. It is your statement, kept in the history, and never changes either finding's strength.", true, "design"],
   ["act.owed_projectclose.label.project", "Close this project with a reason", null, "Closes this project now, whether or not its work has gone quiet, with the reason you choose and an optional note. What was still open at the close is kept beside the reason. An owner can reopen it.", true, "design"],
+  ["act.heldcaptures.label.project", "List this project's documents", null, "Shows captures waiting for a member to vouch for them before they count.", true, "design"],
   ["act.objectivecondition.label.objective", "Save this measure of success", null, "Sets, changes or removes how this project's success is measured, with your reason. The project then counts its own progress from its documents.", true, "design"],
   ["act.triage.label.objective", "Decide this proposal", null, "Decides one proposal for this objective: adopt it, open a question from it, defer it or dismiss it. Deferring or dismissing it records your reason.", true, "design"],
   ["act.aspirationdeclare.label.objective", "Declare this aspiration", null, "Records what a team, a project or a member holds itself to. A team's aspiration is declared by an administrator.", true, "design"],
@@ -17132,6 +17247,7 @@ var WORD_ROWS = Object.freeze([
   ["act.escalationevaluate.label.matter", "Record the government's response", null, "Records how you read the government's response at the response stage: complied, partly, denied or no response, with your reason.", true, "design"],
   ["act.writinghelp.label.matter", "Help me write this", null, "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.", true, "design"],
   ["act.casedraft.label.case-editor", "Prepare the draft", null, "Prepares the case's draft from the team's answers and their sources.", true, "design"],
+  ["act.casedrafts.label.case-editor", "Which draft", null, "Lists the project's drafts of the case, each named by its scope and the date it was prepared, the newest marked.", true, "design"],
   ["act.whatchangedpropose.label.case-editor", 'Draft "what changed"', null, 'Asks the assistant to draft "what changed" since the last edition, labeled as its draft.', true, "design"],
   ["act.statementack.label.case-editor", "Acknowledge what it leaves out", null, "Acknowledges what the case does not cover, so readers are told.", true, "design"],
   ["act.attribute.label.case-editor", "Name a person with the reason", null, "Names a person in the case with the reason it must, under the team's rules for naming people.", true, "design"],
@@ -17142,10 +17258,12 @@ var WORD_ROWS = Object.freeze([
   ["act.reinstate.label.case-editor", "Reinstate", null, "Puts a removed citation back on the question or the case.", true, "design"],
   ["act.owed_casedetailsset.label.case-editor", "Save this detail", null, "Records one of the case's four details: the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.", true, "design"],
   ["act.owed_casedetails.label.case-editor", "Details of this work", null, "Shows the four details of this case as they stand now, and who set each and when. None of them stops a case from being published.", true, "design"],
+  ["act.casedrafts.label.review-copy", "Which draft", null, "Lists the project's drafts of the case, each named by its scope and the date it was prepared, the newest marked.", true, "design"],
   ["act.reviewgrant.label.review-copy", "Share for review", null, "Shares the draft with named people outside the team until a date. You can stop sharing at any time.", true, "design"],
   ["act.reviewrevoke.label.review-copy", "Stop sharing", null, "Stops sharing the review copy at once.", true, "design"],
   ["act.reviewcomment.label.review-copy", "Comment", null, "Comments on the draft, for the case's owner to read.", true, "design"],
   ["act.owed_reviewexport.label.review-copy", "Save as a file", null, "Makes a file of this copy on your device, stamped on every page. A file can't be recalled, unlike a link, which your team can end.", true, "design"],
+  ["act.casedrafts.label.ceremony", "Which draft", null, "Lists the project's drafts of the case, each named by its scope and the date it was prepared, the newest marked.", true, "design"],
   ["act.publishpreflight.label.ceremony", "Check before publishing", null, "Checks the case is ready to publish and lists anything that would stop it.", true, "design"],
   ["act.publishtensions.label.ceremony", "See what must be disclosed", null, "Shows what must be disclosed in the case, such as members' ties that concern it.", true, "design"],
   ["act.reattest.label.ceremony", "Ask for the confirmation again", null, "Asks a trusted time-stamp service, and an outside archive, to confirm a document again. It shows the document existed by now, not when it was captured.", true, "design"],
@@ -17296,6 +17414,7 @@ var WORD_ROWS = Object.freeze([
   ["act.noterevise.does", "Changes your note. Notes are yours alone, so nothing else changes.", null, null, false, "design"],
   ["act.notedelete.does", "Deletes your note. If you turned it into something shared, that stays.", null, null, false, "design"],
   ["act.accountpropose.does", "Asks the assistant to draft the case's account in the order you chose, from the case's own findings and evidence. Its draft arrives labeled as machine work, with the sentences Civicsmith could not support marked; the account stays the one you write.", null, null, false, "design"],
+  ["act.casedrafts.does", "Lists the project's drafts of the case, each named by its scope and the date it was prepared, the newest marked.", null, null, false, "design"],
   ["act.accountdrafts.does", "Lists every draft the assistant made of this case's account, oldest first, each with how it was ordered and what Civicsmith marked.", null, null, false, "design"],
   ["act.writinghelp.does", "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.", null, null, false, "design"],
   ["act.translationdraft.does", "Asks the assistant to draft translations of Civicsmith's words, labeled as drafts for a speaker to check.", null, null, false, "design"],
@@ -17332,6 +17451,7 @@ var WORD_ROWS = Object.freeze([
   ["act.captureupload.does", "Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.", null, null, false, "design"],
   ["act.testify.does", "Records what you saw or heard yourself as testimony: grade D, labeled as yours, never changed afterwards.", null, null, false, "design"],
   ["act.capturerequest.does", "Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.", null, null, false, "design"],
+  ["act.capturerequests.does", "Lists the requests you asked for later, each with where it stands: waiting, being fetched, captured, turned away or expired. It changes nothing.", null, null, false, "design"],
   ["act.monitor.does", "Checks this address once, now, for a new version. Offered only for an address your team is watching. A new version is kept beside the old.", null, null, false, "design"],
   ["act.recoverycodesissue.does", "Gives you ten new one-time recovery codes for your own role, shown to you once, and spends every earlier unused one. Nobody else can see or use them.", null, null, false, "design"],
   ["act.monitorset.does", "Turns watching on or off for this document's address, and sets how often it is checked. Each new version found is kept beside the old, and you are told.", null, null, false, "design"],
@@ -17370,6 +17490,7 @@ var WORD_ROWS = Object.freeze([
   ["act.owed_capturecredentiallist.does", "Lists the sources your team has stored a login for, and who gave each, with the date. It never shows a username or a secret.", null, null, false, "design"],
   ["act.owed_capturecredentialwithdraw.does", "Destroys the stored login for this source. Requests to it are turned away for a login again until someone gives a new one.", null, null, false, "design"],
   ["act.owed_declareorigin.does", "Records, with your name and the date, the system this document came from. A second declaration is added beside the first and never replaces it. The document itself does not change.", null, null, false, "design"],
+  ["act.contradictionflag.does", "Sets a passage here beside a passage in another document as a contradiction your project settles, with your reason. It changes neither document.", null, null, false, "design"],
   ["act.owed_citeimported.does", "Rests one of your team's questions on a finding your team accepted from another team's case, at the edition shown. It carries the fact that they published it, and the grade the edition published, never higher.", null, null, false, "design"],
   ["act.owed_withdrawimported.does", "Takes another team's finding off this question's answer, with your reason. The history keeps it, and so does each version already frozen.", null, null, false, "design"],
   ["act.owed_namedrequests.does", "Lists the requests to gather something on a schedule that you may see, with where each is looked for, when it was last tried and when it is next due.", null, null, false, "design"],
@@ -18028,15 +18149,23 @@ var WORD_ROWS = Object.freeze([
   ["acquisition.index.a_sweep_origin_acquire_names", "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched", null, null, false, "code"],
   ["acquisition.index.an_archive_sourced_capture_names", "an archive-sourced capture names the document address, not a replay locator", null, null, false, "code"],
   ["acquisition.index.archive_org_is_a_backup", "archive.org is a backup source and this document has not been unreachable long enough to justify one", null, null, false, "code"],
+  ["acquisition.index.attestation_pending", "the timestamp and the co-archive were asked for after the document was kept, and had not answered when this capture was answered; their outcome is recorded when they do", null, null, false, "code"],
   ["acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt", null, null, false, "code"],
   ["acquisition.index.bio_plane_acquire_https_fetch", "bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt", null, null, false, "code"],
   ["acquisition.index.browser_is_bound_to_something", "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.", null, null, false, "code"],
+  ["acquisition.index.capture_not_kept", "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again", null, null, false, "code"],
   ["acquisition.index.first_party_https_fetch_of_the", "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment", null, null, false, "code"],
   ["acquisition.index.first_party_https_fetch_transport", "first-party https fetch, hashed at receipt, transport record on this document", null, null, false, "code"],
   ["acquisition.index.google_answered_status_at_the", "Google answered {status} at the OpenDocument export address {exportAddress}, which your team's Civicsmith composed from the {kind} id in {address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place \u2014 a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.", null, null, false, "code"],
   ["acquisition.index.hostnameof_is_one_of_your", "{hostnameOf} is one of your team's own hosts; nothing was fetched or filed", null, null, false, "code"],
+  ["acquisition.index.keep_part_differs", "part {n} of {parts} is not what was stored", null, null, false, "code"],
+  ["acquisition.index.keep_part_missing", "part {n} of {parts} was not there when it was read back", null, null, false, "code"],
+  ["acquisition.index.keep_parts_do_not_add_up", "the parts do not add up to the document that arrived", null, null, false, "code"],
+  ["acquisition.index.keep_store_refused", "the store would not take it ({detail})", null, null, false, "code"],
   ["acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts", null, null, false, "code"],
   ["acquisition.index.no_renderer_is_bound_to", "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.", null, null, false, "code"],
+  ["acquisition.index.render_pending_files", "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture", null, null, false, "code"],
+  ["acquisition.index.render_pending_note", "this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished", null, null, false, "code"],
   ["acquisition.index.render_stringify_is_not_a", "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.", null, null, false, "code"],
   ["acquisition.index.render_true_cannot_be_combined", "render: true cannot be combined with {conflict}.", null, null, false, "code"],
   ["acquisition.index.running_renders_are_running_in", "{running} renders are running in your team's Civicsmith, which runs at most {cap} at once; this render is waiting and nothing was fetched.", null, null, false, "code"],
@@ -19387,7 +19516,10 @@ var WORD_ROWS = Object.freeze([
   ["capture.declared.acquire", "substrate: the fetch layer (M2')", null, null, false, "code"],
   ["capture.declared.archivelist", "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing", null, null, false, "code"],
   ["capture.declared.captureaccount", "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested", null, null, false, "code"],
+  ["capture.declared.captureaccounts", "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing", null, null, false, "code"],
+  ["capture.declared.capturegrade", "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing", null, null, false, "code"],
   ["capture.declared.gradenote", "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing", null, null, false, "code"],
+  ["capture.declared.heldat", "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record", null, null, false, "code"],
   ["capture.declared.heldcaptures", "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing", null, null, false, "code"],
   ["capture.declared.heldrestore", "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record", null, null, false, "code"],
   ["capture.declared.heldsetaside", "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted", null, null, false, "code"],
@@ -19406,8 +19538,10 @@ var WORD_ROWS = Object.freeze([
   ["capture.index.file_no_bytes", "the file has no bytes; nothing was written", null, null, false, "code"],
   ["capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written", null, null, false, "code"],
   ["capture.index.held_acts_unreadable", "the set-asides recorded with this question could not be read", null, null, false, "code"],
+  ["capture.index.heldat_baseline_no_digest", "the bytes the site gives differ from this copy's, but this copy recorded no determined digest of its substance, so whether the page itself has changed cannot be told", null, null, false, "code"],
   ["capture.index.heldat_capture_unknown", "the record cannot say how this copy was captured, so a plain look at the site is not compared with it", null, null, false, "code"],
   ["capture.index.heldat_changed_document", "the site now gives a different document from this copy", null, null, false, "code"],
+  ["capture.index.heldat_changed_substance", "the substance of what the site now gives differs from this copy's", null, null, false, "code"],
   ["capture.index.heldat_export", "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it", null, null, false, "code"],
   ["capture.index.heldat_host_paced", "the host is being given time between requests, so the source was not looked at", null, null, false, "code"],
   ["capture.index.heldat_member_act", "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched", null, null, false, "code"],
@@ -19416,10 +19550,14 @@ var WORD_ROWS = Object.freeze([
   ["capture.index.heldat_no_public_address", "this copy has no public address to look at", null, null, false, "code"],
   ["capture.index.heldat_not_plain_fetch", "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it", null, null, false, "code"],
   ["capture.index.heldat_not_whole", "the document did not arrive whole, so the source was not looked at", null, null, false, "code"],
+  ["capture.index.heldat_other_handler", "the bytes the site gives differ from this copy's and are read as another kind of page than this copy was, so whether the page itself has changed cannot be told", null, null, false, "code"],
   ["capture.index.heldat_record_unreadable", "the record could not be read, so whether it holds this, and whether the source has changed, is not known", null, null, false, "code"],
   ["capture.index.heldat_rendered", "this copy is a rendered capture, which a plain look at the site cannot be compared with", null, null, false, "code"],
   ["capture.index.heldat_request_incomplete", "the request for the address did not complete, so the source was not looked at", null, null, false, "code"],
   ["capture.index.heldat_same_document", "the site still gives the same document as this copy", null, null, false, "code"],
+  ["capture.index.heldat_same_substance", "the site gives different bytes from this copy, but their substance is the same: only what the page rebuilds on every visit differs", null, null, false, "code"],
+  ["capture.index.heldat_served_no_digest", "the bytes the site gives differ from this copy's and earn no determined digest of their substance, so whether the page itself has changed cannot be told", null, null, false, "code"],
+  ["capture.index.heldat_served_too_large", "the bytes the site gives differ from this copy's, and are larger than this surface takes a digest of the substance within, so whether the page itself has changed cannot be told", null, null, false, "code"],
   ["capture.index.heldat_too_large", "the document at the address is larger than this surface compares, so it was not looked at whole", null, null, false, "code"],
   ["capture.index.kind_must_be_one_of", "kind must be one of: {TASK_KINDS}", null, null, false, "code"],
   ["capture.index.names_no_document", "name at least one document; nothing was written", null, null, false, "code"],
@@ -19845,6 +19983,7 @@ var WORD_ROWS = Object.freeze([
   ["case-disclosures.index.a_refusal", "a refusal", null, null, false, "code"],
   ["case-disclosures.index.account_not_checked", "the account could not be checked against what it cites ({why}), so whether each of its {length} sentence(s) stands is not known. Try again. Nothing was written.", null, null, false, "code"],
   ["case-disclosures.index.candidates_not_unresolved_conflict", "{candidates} is not an unresolved conflict on this case's findings at the bytes this act pins: it may have been resolved since, or it names nothing this case rests on. Read the list again (op=publishtensions). Nothing was published.", null, null, false, "code"],
+  ["case-disclosures.index.capture_lacking", "{capture} under {members}, lacking {missing}", null, null, false, "code"],
   ["case-disclosures.index.check_answered", "the check answered {reason}", null, null, false, "code"],
   ["case-disclosures.index.check_answered_nothing", "the check answered nothing it states", null, null, false, "code"],
   ["case-disclosures.index.each_signer_attests", "Each signer attests before the case is signed, or declares the tie first (op=membertie). Nothing was written.", null, null, false, "code"],
@@ -19867,6 +20006,8 @@ var WORD_ROWS = Object.freeze([
   ["case-disclosures.index.map_a_basis_stands_only", "{map}. A basis stands only on what the record holds. Read the list again. Nothing was written.", null, null, false, "code"],
   ["case-disclosures.index.map_gives_no_reason_publishing", "{map} gives no reason. Publishing a document as self-attested only is an attributed act with a stated reason (DEC-81 item 3 (b)). Nothing was written.", null, null, false, "code"],
   ["case-disclosures.index.map_needs_no_acknowledgement_map", "{map} needs no acknowledgement: {map_2}. Remove it from selfAttested. Nothing was written.", null, null, false, "code"],
+  ["case-disclosures.index.missing_co_archive", "the co-archive", null, null, false, "code"],
+  ["case-disclosures.index.missing_timestamp", "the trusted timestamp", null, null, false, "code"],
   ["case-disclosures.index.others_not_attested", "{count} other signer(s) have not attested. ", null, null, false, "code"],
   ["case-disclosures.index.peoplebases_ord_words_carries_a", "peopleBases[{ord}].words carries a person's address or phone number as the record holds it, and a case never publishes either (K1493). Say why the person is named without it.", null, null, false, "code"],
   ["case-disclosures.index.person_named_in_v1", "{person}, named in {v1}", null, null, false, "code"],
@@ -20644,11 +20785,16 @@ var WORD_ROWS = Object.freeze([
   ["content.notice.why_so_there_is_nothing", "{why}, so there is nothing to compare", null, null, false, "code"],
   ["content.notice.why_so_there_is_nothing_2", "{why}, so there is nothing to compare", null, null, false, "code"],
   ["contradiction.checks.disclosure_malformed", "What a response shares about you is your cover, an email address, or neither, and nothing else. The address must be one address. The part that is not one of these is named. Nothing was written.", null, null, false, "code"],
+  ["contradiction.checks.flag_no_passage", "Setting two documents side by side as a contradiction names a passage in each, as a document and the part of it. One of them is missing, is not held here, or is not one you can see; which of the two is named. Nothing was written.", null, null, false, "code"],
+  ["contradiction.checks.flag_no_reason", "Saying two documents contradict is a kept decision, and a kept decision says why. Give the reason in your own words. Nothing was written.", null, null, false, "code"],
+  ["contradiction.checks.flag_same_document", "A contradiction is between two documents, and both passages are in the same one. Name a passage in a different document. Nothing was written.", null, null, false, "code"],
   ["contradiction.declared.contradictionclarify", "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side", null, null, false, "code"],
   ["contradiction.declared.contradictiondismiss", "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted", null, null, false, "code"],
+  ["contradiction.declared.contradictionflag", "document-directed: keyed by a passage in each of two documents the member may see, reached from either document; sets them side by side as a contradiction for the project to settle, with the member's reason, and changes neither document", null, null, false, "code"],
   ["contradiction.declared.contradictionoptin", "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn", null, null, false, "code"],
   ["contradiction.declared.contradictionrespond", "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other", null, null, false, "code"],
   ["contradiction.declared.contradictiontakeup", "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side", null, null, false, "code"],
+  ["contradiction.flag_why", "a member set these two documents side by side as contradicting, with their reason", null, null, false, "code"],
   ["contradiction.index.acceptance_not_standing_detail", "recommendation '{id}' is not standing for this contradiction", null, null, false, "code"],
   ["contradiction.index.acceptance_value_differs_detail", "the recommendation accepted names {coordinate}, which this act does not record", null, null, false, "code"],
   ["contradiction.index.candidate_not_held_detail", "this question names a contradiction the record does not hold, or one whose side its author may not see", null, null, false, "code"],
@@ -20665,6 +20811,11 @@ var WORD_ROWS = Object.freeze([
   ["contradiction.index.dismissal_reason_detail", "a lead is dismissed for one of {reasons}", null, null, false, "code"],
   ["contradiction.index.document_not_text_detail", "the question's document is not held as text", null, null, false, "code"],
   ["contradiction.index.evidence_not_seen_detail", "evidence item {index} is not one you can see, or is a fact the record does not state", null, null, false, "code"],
+  ["contradiction.index.flag_no_passage_detail", "{name}: {why}", null, null, false, "code"],
+  ["contradiction.index.flag_no_reason_detail", "say in your own words how the two disagree: no reason was given", null, null, false, "code"],
+  ["contradiction.index.flag_passage_unheld", "no passage you can see is held there", null, null, false, "code"],
+  ["contradiction.index.flag_passage_unnamed", "name the capture and the extent in it", null, null, false, "code"],
+  ["contradiction.index.flag_same_document_detail", "both passages are in the same document", null, null, false, "code"],
   ["contradiction.index.judgement_by", "the machine, inside an investigative run, as labelled machine work (DEC-24)", null, null, false, "code"],
   ["contradiction.index.label_unknown_detail", "proposal {index} carries '{label}', which is not one of {labels}", null, null, false, "code"],
   ["contradiction.index.machine_refusal_detail", "saying what a contradiction turned out to be is a member's act; this one names no member", null, null, false, "code"],
@@ -20703,10 +20854,14 @@ var WORD_ROWS = Object.freeze([
   ["contradiction.index.words_malformed_detail", "{field} is {length} characters; at most {cap}", null, null, false, "code"],
   ["contradiction.index.wrong_side_no_reason_detail", "say why that side is wrong", null, null, false, "code"],
   ["contradiction.index.wrong_side_unnamed_detail", "name the side that is wrong: a or b", null, null, false, "code"],
+  ["contradiction.says.flag_already_held", "these two passages are already set side by side as a contradiction, and it stays as it is", null, null, false, "code"],
+  ["contradiction.says.flag_written", "these two passages are set side by side as a contradiction for your project to settle: a lead, not a finding. Neither document is changed", null, null, false, "code"],
+  ["contradiction.says.two_documents_flagged", "two documents a member set side by side as contradicting, with their reason: a proposal for the project to settle, never evidence. A chain through it is a lead", null, null, false, "code"],
   ["control-plane.declared.accountdrafts", "read: a case's drafts of its account, each labeled machine work; writes nothing", null, null, false, "code"],
   ["control-plane.declared.accountpropose", "case-directed: keyed by a case, reached from its account; the system's draft of the account, labeled machine work, never the published account until a member writes it", null, null, false, "code"],
   ["control-plane.declared.captureupload", "upload-directed: a member's bytes held as a capture under their digest, in her own name, with its receipt; reached from the upload, never beside a bundle", null, null, false, "code"],
   ["control-plane.declared.clockpropose", "action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it", null, null, false, "code"],
+  ["control-plane.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing", null, null, false, "code"],
   ["control-plane.declared.subscriptionsignin", "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle", null, null, false, "code"],
   ["control-plane.draft.draft_over_limit", "the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.", null, null, false, "code"],
   ["corpus-export.declared.export", "writes an export manifest of what is already there", null, null, false, "code"],
@@ -21114,10 +21269,13 @@ var WORD_ROWS = Object.freeze([
   ["doorbell.checks.changing_a_knocks_status_records", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.", null, null, false, "code"],
   ["doorbell.checks.this_teams_inbox_read_your", "This team's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this team has set its Civicsmith up rather than a judgement about what you sent \u2014 a team that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the team's members how to get the whole of it to them. The team can see how often its doorbell turns people away.", null, null, false, "code"],
   ["doorbell.checks.your_material_was_not_received", "Your material was not received. This team's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The team can see how often its doorbell turns people away.", null, null, false, "code"],
+  ["doorbell.declared.doorbelltally", "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing", null, null, false, "code"],
+  ["doorbell.declared.inboxget", "read: one knock in the inbox, keyed by knock id; writes nothing", null, null, false, "code"],
   ["doorbell.declared.inboxpull", "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle", null, null, false, "code"],
   ["doorbell.declared.inboxresolve", "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)", null, null, false, "code"],
   ["doorbell.declared.knock", "an unauthenticated request to be let in", null, null, false, "code"],
   ["doorbell.declared.knocksof", "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing", null, null, false, "code"],
+  ["doorbell.declared.pulledknocks", "read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing", null, null, false, "code"],
   ["doorbell.door.inline_storage_needs_evidence", "this team's inbox stores knocks inline; large material needs its evidence storage configured", null, null, false, "code"],
   ["doorbell.index.argument_must_be_one_of", "{argument} must be one of {shape}; {stringify} is not", null, null, false, "code"],
   ["doorbell.index.bytes_not_held_digest", "the knock's bytes could not be held under their own digest, so nothing was written", null, null, false, "code"],
@@ -21230,6 +21388,7 @@ var WORD_ROWS = Object.freeze([
   ["entities.declared.entitycreate", "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)", null, null, false, "code"],
   ["entities.declared.relationdeclare", "registry write, keyed by entity pair", null, null, false, "code"],
   ["entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution", null, null, false, "code"],
+  ["entities.declared.resolutions", "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha", null, null, false, "code"],
   ["entities.declared.resolve", "recogniser write, keyed by capture sha", null, null, false, "code"],
   ["entities.declared.resolvetestify", "recogniser testimony, keyed by capture sha", null, null, false, "code"],
   ["entities.index.a_declared_relation_carries_a", "a declared relation carries a justification, like a pattern statement (safeguard 4)", null, null, false, "code"],
@@ -21524,15 +21683,10 @@ var WORD_ROWS = Object.freeze([
   ["file-safety.declared.securitytooltest", "setting: the group's security tools, an administrator's act; moves no bundle", null, null, false, "code"],
   ["file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only.", null, null, false, "code"],
   ["file-safety.index.file_scanners_r19_refuses_the", "file-scanner's R19 refuses the tool's description.", null, null, false, "code"],
-  ["file-safety.index.no_signatures", "The file scanner has no signatures.", null, null, false, "code"],
-  ["file-safety.index.no_signatures_since", "The file scanner has had no signatures since {date}.", null, null, false, "code"],
   ["file-safety.index.no_tool_of_the_teams", "No tool of the team's has this id.", null, null, false, "code"],
   ["file-safety.index.reading_scanners_state", "reading the scanner's state", null, null, false, "code"],
   ["file-safety.index.reading_security_tools_offered", "reading the security tools offered", null, null, false, "code"],
   ["file-safety.index.reading_teams_security_tools", "reading the team's security tools", null, null, false, "code"],
-  ["file-safety.index.signatures_failed", "The last download of signatures did not finish.", null, null, false, "code"],
-  ["file-safety.index.signatures_not_fetched", "No download of signatures has finished yet.", null, null, false, "code"],
-  ["file-safety.index.signatures_refused", "The signature service refused the download (status {status}).", null, null, false, "code"],
   ["file-safety.index.the_text_could_not_be", "The text could not be read.", null, null, false, "code"],
   ["file-safety.index.warned_must_be_exactly", "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.", null, null, false, "code"],
   ["file-safety.index.your_teams_civicsmith_could_not", "Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.", null, null, false, "code"],
@@ -23402,11 +23556,13 @@ var WORD_ROWS = Object.freeze([
   ["ocr-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this frame", null, null, false, "code"],
   ["ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page", null, null, false, "code"],
   ["ocr-worker.contract.the_page_could_not", "the page could not be turned into pixels, and the renderer says why", null, null, false, "code"],
+  ["ocr-worker.contract.the_picture_is_too_unclear_to_read", "the picture is too unclear to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong", null, null, false, "code"],
   ["ocr-worker.contract.the_rendered_container_could_not", "the rendered container could not be read back to samples", null, null, false, "code"],
   ["ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete", null, null, false, "code"],
   ["ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", null, null, false, "code"],
   ["ocr-worker.member.the_engine_boxed_boxes_region", "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.", null, null, false, "code"],
   ["ocr-worker.member.the_picture_has_no_lines_of_text", "no line of text was found in this picture, so it was not given to the engine to read; there is nothing here this record could anchor.", null, null, false, "code"],
+  ["ocr-worker.member.the_picture_is_only_partly_legible", "the engine rated {confident} of the {words} words it read in this picture as read; the rest may be wrong or missing, so this reading is partial.", null, null, false, "code"],
   ["ocr-worker.member.the_route_route_hands_back", "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.", null, null, false, "code"],
   ["ocr-worker.member.this_member_transcribes_one_page", "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.", null, null, false, "code"],
   ["ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.", null, null, false, "code"],
@@ -23493,6 +23649,7 @@ var WORD_ROWS = Object.freeze([
   ["people.index.claim_joins_one_kind", "a claim joins two entities of one kind; {a} is a {kind_a} and {b} is a {kind_b}. Nothing was written", null, null, false, "code"],
   ["people.index.directory_follows", "the people and organisations the record follows, never the team's own members; each row counts the documents, questions and projects naming it among those you may see, and when the newest was added", null, null, false, "code"],
   ["people.index.evidence_names_cited_line", "the evidence names the cited line held by each record (lines: {a, b})", null, null, false, "code"],
+  ["people.index.org_fact_kinds", "{id} is an organisation, which takes a name, address or contact fact; a {kind} fact is a person's", null, null, false, "code"],
   ["people.index.read_names_member", "a read names the member reading; an absent viewer is neither an administrator nor the public", null, null, false, "code"],
   ["people.index.registered_no_claim_joins", "{id} is registered as {what}, which no identity claim joins (a person or an organisation)", null, null, false, "code"],
   ["people.index.said_grade_grade_because_because", "{said}, grade {grade}, because {because}", null, null, false, "code"],
@@ -57481,6 +57638,8 @@ var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
 var ODF_DIGEST_MAX = 8 * 1024 * 1024;
 var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 var CAPTURE_MAX = 256 * 1024 * 1024;
+var MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
+var LATE = Symbol("late");
 var EMPTY_SHA256 = createSha256().hex();
 
 // ../bio-plane/src/capture/ops.mjs
@@ -58097,6 +58256,7 @@ function mergeTier3Text(base, ocr, eligible, { kept: kept2 = [] } = {}) {
         ...b,
         text: already ? said2 : said2.length ? `${b.text}
 ${said2}` : b.text,
+        ...got.unread_words ? { unread_words: got.unread_words } : {},
         undetermined: [
           ...(Array.isArray(b.undetermined) ? b.undetermined : []).filter((u) => !discharged(u)),
           ...fromOcr
@@ -58104,7 +58264,12 @@ ${said2}` : b.text,
       });
     } else if (got) {
       filled.push(b.page);
-      pages.push({ page: b.page, text: said2, undetermined: fromOcr });
+      pages.push({
+        page: b.page,
+        text: said2,
+        undetermined: fromOcr,
+        ...got.unread_words ? { unread_words: got.unread_words } : {}
+      });
     } else {
       pages.push(b);
     }
@@ -58287,6 +58452,7 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
   const pages = Array.isArray(r.pages) ? r.pages : [];
   let anchorless = 0, kept2 = 0, floored = 0, undetermined2 = 0;
   const outPages = [];
+  const unreadOf = (before, after) => before.reduce((n, region, i) => n + (after[i] && after[i].text == null && typeof region.text === "string" ? wordsIn(region.text) : 0), 0);
   for (const p of pages) {
     const pageNo = p && Number.isInteger(p.page) ? p.page : null;
     if (pageNo == null) continue;
@@ -58303,9 +58469,11 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
     floored += f4.floored;
     undetermined2 += f4.undetermined;
     kept2 += f4.regions.filter((x) => x.text != null).length;
+    const unread = unreadOf(anchored, f4.regions);
     outPages.push({
       page: pageNo,
       regions: f4.regions,
+      ...unread ? { unread_words: unread } : {},
       text: f4.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
       undetermined: f4.regions.filter((x) => x.undetermined).map((x) => ({
         page: pageNo,
@@ -58334,7 +58502,12 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
     return { ok: false, why: word("reading-pipeline.why.ocr_member_provenance", { detail: String(chain.detail) }) };
   const text2 = {
     document: outPages.map((p) => p.text).filter(Boolean).join("\n"),
-    pages: outPages.map((p) => ({ page: p.page, text: p.text, undetermined: p.undetermined })),
+    pages: outPages.map((p) => ({
+      page: p.page,
+      text: p.text,
+      undetermined: p.undetermined,
+      ...p.unread_words ? { unread_words: p.unread_words } : {}
+    })),
     undetermined: outPages.flatMap((p) => p.undetermined),
     counts: { chars: outPages.reduce((n, p) => n + p.text.length, 0), undetermined: undetermined2 },
     regions: outPages.flatMap((p) => p.regions)
@@ -58590,23 +58763,27 @@ var sheetRangeOf = (u) => {
   const r = u.range;
   return r && r.kind === "sheet-range" && typeof r.sheet === "string" && r.sheet && typeof r.range === "string" && r.range ? { sheet: r.sheet, range: r.range } : { sheet: null, range: null };
 };
+function allUnitsOf(i2text) {
+  if (!i2text) return null;
+  const arm = (list3, kind, fields) => (Array.isArray(list3) ? list3 : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0 ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
+  return Array.isArray(i2text.pages) ? arm(
+    i2text.pages,
+    "pdf-page",
+    (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null })
+  ) : Array.isArray(i2text.paragraphs) ? arm(
+    i2text.paragraphs,
+    "doc-para",
+    (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null })
+  ) : Array.isArray(i2text.slides) ? arm(
+    i2text.slides,
+    "slide-shape",
+    (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
+  ) : Array.isArray(i2text.sheets) ? arm(i2text.sheets, "sheet-range", sheetRangeOf).filter((u) => u.extent.sheet !== null) : null;
+}
 function textUnitsFor(i2text) {
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
-    const arm = (list3, kind, fields) => (Array.isArray(list3) ? list3 : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0 ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
-    const units = Array.isArray(i2text.pages) ? arm(
-      i2text.pages,
-      "pdf-page",
-      (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null })
-    ) : Array.isArray(i2text.paragraphs) ? arm(
-      i2text.paragraphs,
-      "doc-para",
-      (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null })
-    ) : Array.isArray(i2text.slides) ? arm(
-      i2text.slides,
-      "slide-shape",
-      (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
-    ) : Array.isArray(i2text.sheets) ? arm(i2text.sheets, "sheet-range", sheetRangeOf).filter((u) => u.extent.sheet !== null) : null;
+    const units = allUnitsOf(i2text);
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, dropped = 0;
     const kept2 = [], runs = [];
     let run = null;
@@ -58638,6 +58815,15 @@ function textUnitsFor(i2text) {
     textUnitsSkipped = runs.length ? runs : null;
   }
   return { textUnits, textUnitsOverBound, textUnitsSkipped };
+}
+var wordsIn = (s) => typeof s === "string" ? s.split(/\s+/).filter((w) => glyphCount(w) > 0).length : 0;
+function textWordsFor(i2text) {
+  const kept2 = textUnitsFor(i2text).textUnits;
+  if (!kept2) return null;
+  const all = allUnitsOf(i2text) || [];
+  const unread = (Array.isArray(i2text.pages) ? i2text.pages : []).reduce((n, p) => n + (p && Number.isInteger(p.unread_words) && p.unread_words > 0 ? p.unread_words : 0), 0);
+  const sum = (units) => units.reduce((n, u) => n + wordsIn(u.text), 0);
+  return { words_total: sum(all) + unread, words_read: sum(kept2) };
 }
 var HTML_ENTITIES = {
   amp: "&",
@@ -58693,30 +58879,45 @@ var attrOf = (attrs, name) => {
   const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(attrs);
   return m ? m[1] ?? m[2] ?? m[3] : null;
 };
-var isLandmark = (name, attrs) => name.toLowerCase() === "nav" || (attrOf(attrs, "role") ?? "").trim().split(/\s+/)[0].toLowerCase() === "navigation";
-function dropNavigation(markup) {
-  const open = new RegExp(`<([A-Za-z][A-Za-z0-9:-]*)(${TAG_ATTRS})>`, "g");
+var roleOf = (attrs) => (attrOf(attrs, "role") ?? "").trim().split(/\s+/)[0].toLowerCase();
+var isNavigation = (name, attrs) => name.toLowerCase() === "nav" || roleOf(attrs) === "navigation";
+var FURNITURE_NAME = /* @__PURE__ */ new Set(["header", "footer", "aside"]);
+var FURNITURE_ROLE = /* @__PURE__ */ new Set(["banner", "contentinfo", "complementary", "search"]);
+var isFurniture = (name, attrs) => FURNITURE_NAME.has(name.toLowerCase()) || FURNITURE_ROLE.has(roleOf(attrs));
+var openTag = () => new RegExp(`<([A-Za-z][A-Za-z0-9:-]*)(${TAG_ATTRS})>`, "g");
+function endOfElement(markup, name, after) {
+  const same = new RegExp(`<(/?)${name}(?=[\\s>/])(${TAG_ATTRS})>`, "gi");
+  same.lastIndex = after;
+  for (let depth = 1, t = same.exec(markup); t; t = same.exec(markup)) {
+    if (t[1]) depth--;
+    else if (!t[2].endsWith("/")) depth++;
+    if (depth === 0) return { inner: t.index, end: same.lastIndex };
+  }
+  return null;
+}
+function dropElements(markup, isDropped) {
+  const open = openTag();
   let out = "", from = 0;
   for (let m = open.exec(markup); m; m = open.exec(markup)) {
-    if (!isLandmark(m[1], m[2])) continue;
+    if (!isDropped(m[1], m[2])) continue;
     const name = m[1].toLowerCase(), after = m.index + m[0].length;
     let end2 = after;
-    if (!VOID_TAG.has(name) && !m[2].endsWith("/")) {
-      const same = new RegExp(`<(/?)${name}(?=[\\s>/])(${TAG_ATTRS})>`, "gi");
-      same.lastIndex = after;
-      for (let depth = 1, t = same.exec(markup); t; t = same.exec(markup)) {
-        if (t[1]) depth--;
-        else if (!t[2].endsWith("/")) depth++;
-        if (depth === 0) {
-          end2 = same.lastIndex;
-          break;
-        }
-      }
-    }
+    if (!VOID_TAG.has(name) && !m[2].endsWith("/")) end2 = endOfElement(markup, name, after)?.end ?? after;
     out += markup.slice(from, m.index) + " ";
     from = open.lastIndex = end2;
   }
   return out + markup.slice(from);
+}
+function contentsOf(markup, name) {
+  const open = openTag(), parts = [];
+  for (let m = open.exec(markup); m; m = open.exec(markup)) {
+    if (m[1].toLowerCase() !== name || m[2].endsWith("/")) continue;
+    const e = endOfElement(markup, name, open.lastIndex);
+    if (!e) continue;
+    parts.push(markup.slice(open.lastIndex, e.inner));
+    open.lastIndex = e.end;
+  }
+  return parts.length ? parts.join("<hr>") : null;
 }
 var SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
 var dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
@@ -58726,18 +58927,26 @@ var dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) 
 });
 var TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/g;
 function visibleTextOfHtml(html) {
-  const dropped = dropSkipLinks(dropNavigation(html.replace(/<!--[\s\S]*?(?:-->|$)/g, " ").replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ").replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ").replace(/<![^>]*>|<\?[^>]*>/g, " "))).replace(/\s+/g, " ");
+  const live = dropElements(html.replace(/<!--[\s\S]*?(?:-->|$)/g, " ").replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ").replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ").replace(/<![^>]*>|<\?[^>]*>/g, " "), isNavigation);
+  const region = contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture);
+  const dropped = dropSkipLinks(region).replace(/\s+/g, " ");
   const bare = dropped.replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n").replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n").replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
   return decodeReferences(bare).replace(TEMPLATE_TOKEN, " ");
 }
 var BLANK_LINE_RUN = /\r?\n[ \t\f\v\u00a0 ]*(?:\r?\n[ \t\f\v\u00a0 ]*)+/;
-function textUnitsOfText(text2, { html = false } = {}) {
-  if (typeof text2 !== "string" || !text2) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
+function paragraphsOfText(text2, html) {
   const visible = html ? visibleTextOfHtml(text2) : text2;
   const runs = visible.split(BLANK_LINE_RUN);
   const lines = !html && runs.length === 1 ? runs[0].split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length) : [];
   const paragraphs = (lines.length >= 2 ? lines : runs.map((p) => (html ? p.replace(/[ \t\f\v\u00a0 \r\n]+/g, " ") : p).trim()).filter((p) => p.length)).map((p, para) => ({ para, text: p }));
-  return textUnitsFor({ paragraphs });
+  return { paragraphs };
+}
+function textUnitsOfText(text2, { html = false } = {}) {
+  if (typeof text2 !== "string" || !text2) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
+  return textUnitsFor(paragraphsOfText(text2, html));
+}
+function textWordsOfText(text2, { html = false } = {}) {
+  return typeof text2 === "string" && text2 ? textWordsFor(paragraphsOfText(text2, html)) : null;
 }
 var TITLE_MAX_CHARS = 200;
 function cleanTitle(s) {
@@ -58981,6 +59190,8 @@ async function bytesOf(evidence, doc) {
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
   };
   if (!Array.isArray(doc.parts)) return { bytes: await whole(doc.capture.sha256) };
+  const held2 = typeof (doc.capture && doc.capture.sha256) === "string" ? await whole(doc.capture.sha256).catch(() => null) : null;
+  if (held2) return { bytes: held2 };
   const total = doc.parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
   if (total > MULTIPART_READ_MAX)
     return { bytes: null, why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(doc.parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
@@ -59084,6 +59295,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const container = fmt && fmt !== "undetermined" ? fmt : "text";
       reading.text_source = layerChainFor(null, { tier: null, container });
       reading.text_container = container;
+      Object.assign(reading, textWordsOfText(text2, { html: fmt === "html" }));
     }
   } else if (wireable) {
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
@@ -59182,6 +59394,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         }
       }
       reading = wired ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })].filter(Boolean).join(" \u2014 ")) };
+      if (textUnits) Object.assign(reading, textWordsFor(i2text));
       if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata);
       if (aiRead) reading.ai_transcription = aiRead;
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
@@ -59406,6 +59619,7 @@ function n26MigratedReading(reading, map, text2, { at: at8 = null } = {}) {
       Object.assign(next, textCountsOf(text2));
       break;
     }
+  if (Object.prototype.hasOwnProperty.call(reading, "words_total")) Object.assign(next, textWordsFor(text2));
   next.migrated = {
     ...reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {},
     n26: {
@@ -59462,6 +59676,7 @@ function n439MigratedReading(reading, map, text2, { at: at8 = null } = {}) {
       Object.assign(next, textCountsOf(text2));
       break;
     }
+  if (Object.prototype.hasOwnProperty.call(reading, "words_total")) Object.assign(next, textWordsFor(text2));
   next.migrated = {
     ...reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {},
     n439: {
@@ -60948,6 +61163,10 @@ var Extraction = class _Extraction {
           const n = textCountsOf(t3.i2text);
           if (n) Object.assign(reading, n);
         }
+        {
+          const n = textWordsFor(t3.i2text);
+          if (n) Object.assign(reading, n);
+        }
         Object.assign(reading, emittedFieldsOf(t3.i2text));
         keepUntested(reading, stored, null);
         structureChain = chain;
@@ -61248,6 +61467,10 @@ var Extraction = class _Extraction {
     });
     {
       const n = textCountsOf(t4.i2text);
+      if (n) Object.assign(reading, n);
+    }
+    {
+      const n = textWordsFor(t4.i2text);
       if (n) Object.assign(reading, n);
     }
     Object.assign(reading, emittedFieldsOf(t4.i2text));

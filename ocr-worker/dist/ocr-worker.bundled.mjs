@@ -106,11 +106,13 @@ var WORD_ROWS = Object.freeze([
   ["ocr-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this frame", null, null, false, "code"],
   ["ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page", null, null, false, "code"],
   ["ocr-worker.contract.the_page_could_not", "the page could not be turned into pixels, and the renderer says why", null, null, false, "code"],
+  ["ocr-worker.contract.the_picture_is_too_unclear_to_read", "the picture is too unclear to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong", null, null, false, "code"],
   ["ocr-worker.contract.the_rendered_container_could_not", "the rendered container could not be read back to samples", null, null, false, "code"],
   ["ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete", null, null, false, "code"],
   ["ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", null, null, false, "code"],
   ["ocr-worker.member.the_engine_boxed_boxes_region", "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.", null, null, false, "code"],
   ["ocr-worker.member.the_picture_has_no_lines_of_text", "no line of text was found in this picture, so it was not given to the engine to read; there is nothing here this record could anchor.", null, null, false, "code"],
+  ["ocr-worker.member.the_picture_is_only_partly_legible", "the engine rated {confident} of the {words} words it read in this picture as read; the rest may be wrong or missing, so this reading is partial.", null, null, false, "code"],
   ["ocr-worker.member.the_route_route_hands_back", "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.", null, null, false, "code"],
   ["ocr-worker.member.this_member_transcribes_one_page", "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.", null, null, false, "code"],
   ["ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.", null, null, false, "code"],
@@ -6156,7 +6158,7 @@ async function sha256Hex2(u8) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 var PREPARE_TILT_MAX = 10;
-var PREPARE_LINE_PX = 40;
+var PREPARE_LINE_PX = 20;
 var PREPARE_SCALE_MAX = 4;
 var PREPARE_TILT_FLOOR = 0.1;
 function smooth(g, w, h) {
@@ -6448,8 +6450,13 @@ var REFUSALS2 = {
   NOTHING_TRANSCRIBED: localize("ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page"),
   /* R23. A picture is a one-page document; this is not the renderer's refusal (R7 step 2) but the member's own,
      stated before any pixel is made, so the page asked for is named. */
-  NO_SUCH_PAGE: localize("ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist")
+  NO_SUCH_PAGE: localize("ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist"),
+  /* R25. The engine read the picture and rated almost none of it: the text is not returned, and the refusal says so. */
+  PICTURE_NOT_LEGIBLE: localize("ocr-worker.contract.the_picture_is_too_unclear_to_read", "the picture is too unclear to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong")
 };
+var LEGIBLE_CONFIDENCE = 0.6;
+var LEGIBLE_NOTE_BELOW = 0.8;
+var LEGIBLE_REFUSE_BELOW = 0.2;
 var PICTURE_MAX_EDGE = 4096;
 function isPicture(bytes) {
   const b = bytes;
@@ -6598,6 +6605,21 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
       });
     }
     const boxes2 = Number.isInteger(out.boxCount) ? out.boxCount : (out.regions || []).length;
+    let legibility = null;
+    if (picture && regions.length && Array.isArray(out.words) && out.words.length) {
+      const words = out.words.length;
+      const confident = out.words.filter((w) => typeof w.confidence === "number" && w.confidence >= LEGIBLE_CONFIDENCE).length;
+      legibility = { words, confident_words: confident, share: Math.round(confident / words * 100) / 100 };
+      if (legibility.share < LEGIBLE_REFUSE_BELOW)
+        return {
+          ok: false,
+          reason: "PICTURE_NOT_LEGIBLE",
+          detail: REFUSALS2.PICTURE_NOT_LEGIBLE,
+          page,
+          legibility,
+          why: REFUSALS2.PICTURE_NOT_LEGIBLE
+        };
+    }
     if (!regions.length)
       return {
         ok: false,
@@ -6627,7 +6649,8 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
         dpi: rendered.page_geometry ? rendered.page_geometry.dpi : null,
         pixels_sha256: rendered.pixels_sha256 || null
       },
-      confidence_floor: confidenceFloor
+      confidence_floor: confidenceFloor,
+      ...legibility ? { legibility } : {}
     };
   }
   async function transcribeRequest(bytes, pages, opts = {}) {
@@ -6652,6 +6675,8 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
       notes.push(localize("ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.", { unanchored: String(one.unanchored) }));
     if (one.unrated)
       notes.push(localize("ocr-worker.member.unrated_region_s_came_back", "{unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.", { unrated: String(one.unrated) }));
+    if (one.legibility && one.legibility.share < LEGIBLE_NOTE_BELOW)
+      notes.push(localize("ocr-worker.member.the_picture_is_only_partly_legible", "the engine rated {confident} of the {words} words it read in this picture as read; the rest may be wrong or missing, so this reading is partial.", { confident: String(one.legibility.confident_words), words: String(one.legibility.words) }));
     return {
       ok: true,
       engine: engine.name,
@@ -6666,6 +6691,7 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
       grain: one.grain,
       deferred,
       image: one.image,
+      ...one.legibility ? { legibility: one.legibility } : {},
       notes
     };
   }
@@ -9408,7 +9434,8 @@ async function transcribeFrame(rgba, width, height, { psm = null } = {}) {
       const c = typeof b.confidence === "number" && Number.isFinite(b.confidence) ? b.confidence : null;
       regions.push({ text, rect: [r.left, r.top, r.right, r.bottom], confidence: c });
     }
-    return { ok: true, regions, grain: REGION_GRAIN, boxCount: boxes2.length };
+    const words = (engine.getTextBoxes("word") || []).filter((b) => typeof b.text === "string" && b.text.trim().length).map((b) => ({ confidence: typeof b.confidence === "number" && Number.isFinite(b.confidence) ? b.confidence : null }));
+    return { ok: true, regions, grain: REGION_GRAIN, boxCount: boxes2.length, words };
   } catch (e) {
     return {
       ok: false,

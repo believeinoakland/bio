@@ -9644,56 +9644,77 @@
       "en": "substrate: the fetch layer (M2')",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3089
+      "line": 3101
     },
     {
       "id": "capture.declared.archivelist",
       "en": "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3076
+      "line": 3077
     },
     {
       "id": "capture.declared.captureaccount",
       "en": "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3094
+      "line": 3106
+    },
+    {
+      "id": "capture.declared.captureaccounts",
+      "en": "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 3096
+    },
+    {
+      "id": "capture.declared.capturegrade",
+      "en": "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 3092
     },
     {
       "id": "capture.declared.gradenote",
       "en": "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3074
+      "line": 3075
+    },
+    {
+      "id": "capture.declared.heldat",
+      "en": "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 3089
     },
     {
       "id": "capture.declared.heldcaptures",
       "en": "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3078
+      "line": 3079
     },
     {
       "id": "capture.declared.heldrestore",
       "en": "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3084
+      "line": 3085
     },
     {
       "id": "capture.declared.heldsetaside",
       "en": "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3080
+      "line": 3081
     },
     {
       "id": "capture.declared.reattest",
       "en": "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3082
+      "line": 3083
     },
     {
       "id": "capture.grammar.field_v1_is_not_one",
@@ -9749,21 +9770,21 @@
       "en": "at most {PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1870
+      "line": 1871
     },
     {
       "id": "capture.index.contained_in_a_chrome_region",
       "en": "contained in a chrome region and recurred on {n} distinct pages of {host}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2376
+      "line": 2377
     },
     {
       "id": "capture.index.contained_in_a_chrome_region_2",
       "en": "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2377
+      "line": 2378
     },
     {
       "id": "capture.index.file_bytes_unreadable",
@@ -9791,7 +9812,7 @@
       "en": "the set-asides recorded with this question could not be read",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1988
+      "line": 1989
     },
     {
       "id": "capture.index.heldat_baseline_no_digest",
@@ -9945,21 +9966,21 @@
       "en": "kind must be one of: {TASK_KINDS}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2786
+      "line": 2787
     },
     {
       "id": "capture.index.names_no_document",
       "en": "name at least one document; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1867
+      "line": 1868
     },
     {
       "id": "capture.index.not_set_aside",
       "en": "these documents are not set aside; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1948
+      "line": 1949
     },
     {
       "id": "capture.index.op_op_needs_argument_in",
@@ -9980,7 +10001,7 @@
       "en": "outcome must be one of: {SOURCE_OUTCOMES}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2915
+      "line": 2916
     },
     {
       "id": "capture.index.reattest_needs_sha",
@@ -10008,7 +10029,7 @@
       "en": "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2612
+      "line": 2613
     },
     {
       "id": "capture.index.say_so_the_file_cannot",
@@ -10022,7 +10043,7 @@
       "en": "a capture sha256 identifies the event; a record does not exist yet at capture time",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2788
+      "line": 2789
     },
     {
       "id": "capture.index.signature_not_verified",
@@ -22706,56 +22727,63 @@
       "en": "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2082
+      "line": 2096
     },
     {
       "id": "entities.declared.entityalias",
       "en": "registry write, keyed by entity",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2080
+      "line": 2094
     },
     {
       "id": "entities.declared.entitybyalias",
       "en": "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2094
+      "line": 2108
     },
     {
       "id": "entities.declared.entitycreate",
       "en": "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2078
+      "line": 2092
     },
     {
       "id": "entities.declared.relationdeclare",
       "en": "registry write, keyed by entity pair",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2084
+      "line": 2098
     },
     {
       "id": "entities.declared.resolutiondefect",
       "en": "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2090
+      "line": 2104
+    },
+    {
+      "id": "entities.declared.resolutions",
+      "en": "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha",
+      "module": "entities",
+      "file": "bio-plane/src/entities/index.mjs",
+      "line": 2112
     },
     {
       "id": "entities.declared.resolve",
       "en": "recogniser write, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2086
+      "line": 2100
     },
     {
       "id": "entities.declared.resolvetestify",
       "en": "recogniser testimony, keyed by capture sha",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2088
+      "line": 2102
     },
     {
       "id": "entities.index.a_declared_relation_carries_a",
@@ -22825,14 +22853,14 @@
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1847
+      "line": 1861
     },
     {
       "id": "entities.index.a_kind_is_named_one_4",
       "en": "a kind is named: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1850
+      "line": 1864
     },
     {
       "id": "entities.index.a_machine_holds_an_identifier",
@@ -22979,7 +23007,7 @@
       "en": "at most {NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; {length} were named. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1861
+      "line": 1875
     },
     {
       "id": "entities.index.bad_nothing_was_written",
@@ -23007,7 +23035,7 @@
       "en": "EXPLAIN QUERY PLAN {sql}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1932
+      "line": 1946
     },
     {
       "id": "entities.index.grade_d_is_recorded",
@@ -23070,7 +23098,7 @@
       "en": "; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1823
+      "line": 1837
     },
     {
       "id": "entities.index.scheme_identifier_the_reference_v1",
@@ -23098,7 +23126,7 @@
       "en": "space must be one of {map}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1996
+      "line": 2010
     },
     {
       "id": "entities.index.testimony_asserted_by_v1_on",
@@ -23126,7 +23154,7 @@
       "en": "; that name reaches {reaches} of the {corpus} references this reader can see at this source",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1825
+      "line": 1839
     },
     {
       "id": "entities.index.the_documents_naming_a_subject",
@@ -23161,7 +23189,7 @@
       "en": "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1742
+      "line": 1756
     },
     {
       "id": "entities.index.the_name_matches_nothing_new",
@@ -23266,21 +23294,21 @@
       "en": "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1853
+      "line": 1867
     },
     {
       "id": "entities.index.these_are_candidates_not_resolutions",
       "en": "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name — as the reference the source assigned, as that reference's key, or as the name the reading recorded — offered for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name merely sits inside a longer string and it would mint nothing. A document that carries this subject in words the reading recorded in none of those three, or under a spelling none of its registered names reaches, is still not here, and its absence says nothing about whether it exists.{v1}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1773
+      "line": 1787
     },
     {
       "id": "entities.index.these_are_candidates_not_resolutions_2",
       "en": "these are CANDIDATES, not resolutions, for every registered subject of these kinds, looked for only in the named captured documents you can see; each is what the name lookup for that one subject would offer were these documents all there is, and nothing is established or graded by asking{v1}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1912
+      "line": 1926
     },
     {
       "id": "entities.index.this_captured_document_s_reading",
@@ -23301,14 +23329,14 @@
       "en": "this document's reading {where} '{srcText}', which carries every word of this subject's name '{alias}'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1821
+      "line": 1835
     },
     {
       "id": "entities.index.this_document_s_reading_is",
       "en": "this document's reading {where} '{srcText}', which is this subject's name '{alias}'",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1820
+      "line": 1834
     },
     {
       "id": "entities.index.this_entity_held_that_identifier",
@@ -23343,28 +23371,28 @@
       "en": " THIS IS THE FIRST {cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, so a count taken from this list is a floor and never a total.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1773
+      "line": 1787
     },
     {
       "id": "entities.index.this_is_the_first_namingin_floor",
       "en": ". THIS IS THE FIRST {cap} AND NOT ALL OF THEM, so a count taken from it is a floor.",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 1912
+      "line": 1926
     },
     {
       "id": "entities.index.v1_has_the_shape_of",
       "en": "{v1} has the shape of no form of the {label}{v2}",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2004
+      "line": 2018
     },
     {
       "id": "entities.index.v1_names_no_captured_document",
       "en": "{v1} names no captured document this record holds that you can see",
       "module": "entities",
       "file": "bio-plane/src/entities/index.mjs",
-      "line": 2016
+      "line": 2030
     },
     {
       "id": "escalation.checks.reading_what_the_government_answered",
