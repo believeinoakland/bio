@@ -353,3 +353,7 @@ Tests and checks at 856fc95a97:
 - checks/run.mjs: format 0, architecture 0, words 0 (handlist 0), coverage for this module 82 of 82 ids; ownership: 4 files between tranche/T51 and HEAD, 0 failures.
 
 Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 22, module lines 3466
+
+## J25 · REPORT
+
+capturecredentiallist is in the member session set with no spec under registration; its owner is capture-sources (src/capture-sources/ops.mjs declares it). Not grounded or specced here; the spec belongs to capture-sources (B27: REPORT and you place it).
