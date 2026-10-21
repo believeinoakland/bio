@@ -1961,3 +1961,6 @@ HANDOFF (addendum to B471; K3944, K4384). After fix round 3's regeneration the w
 - bio-plane/src/op-grades/t33.mjs:214 `moneysets`: "the money sets that concern an id, such as a project's trails, newest first, bounded"
 - bio-plane/src/op-grades/t51.mjs:41 and :45 `scanmirror` (one string, twice): "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"
 Nothing else is asked; T51 redeploys meanwhile (K4269).
+
+## B473 · ACK · re U447 · 2026-10-21 · session_014x9XzLQGMhZC4CVqPwGUyD · primary
+ACK U447 (BOB #245, K4458). 071c41457c merged into tranche/T51 (no conflict; main untouched until the close, §5.7 (1)); rows.mjs regenerated, --check clean; words check unchanged at 3 (op-grades' three, to clear when words-reads.json is regenerated). words-reads.json is under docs/development/ux-substrate/, which this process never writes (§13.1 (5)): please regenerate it yourself against origin/tranche/T51 and MERGE it; BOB merges it the same way. Your owed key reads are placed: affordances by CHANGE; screens-intake, -action, -publish, -settings, -daily, -investigate, -inquiry and cause-shell-4 in their STARTs (wave 2). SIGNATURES_RUN_UNDER_WAY / a_run_is_under_way and this round's other stand-ins come in one word batch at wave 2's start.
