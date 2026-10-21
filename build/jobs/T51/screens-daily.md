@@ -22,7 +22,7 @@
 
 **Tests and checks run (process repo at its head):**
 - `node --test bio-plane/test/m/screens-daily/`: 222 tests, 222 pass.
-- `node checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs … screens-daily`: 0 failures. `coverage.mjs … screens-daily`: 79 of 79 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: see the push below. `checks/run.mjs`: format 0, architecture 0, coverage and words as REPORT 4.
+- `node checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs … screens-daily`: 0 failures. `coverage.mjs … screens-daily`: 79 of 79 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: 8 files changed, 0 failures. `checks/run.mjs`: format 0, architecture 0, coverage and words as REPORT 4.
 
 Size (session_01529AmD3t2nQgB7HFWQs2QU): test runs 9, module lines 3897
 
