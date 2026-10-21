@@ -416,8 +416,8 @@ const rowOf = (op) => ({ op, mutating: isMutating(op), gated: isGated(op) });
 /* R24: an op decorates with a rung or a stated absence, never both and never neither */
 const ranked = (op) => { const d = A.decorate({ id: op, label: "x" }, null); return (d.rung === null) !== (d.rung_absence === null); };
 /* R12 over derived rows: with the registries' own classification of each op nothing is unaccounted; and the negative controls, run
-   over the real ops: carried by no row or as an ungated read a named op reads stale, an op no registry names is reported
-   unpublished (gated) and unranked (mutating), and a made-up op, `unnamed`, is both. */
+   over the real ops: carried by no row a named op reads stale (K4279: a NON_ACT carried ungated, an owner's declared read, does not),
+   an op no registry names is reported unpublished (gated) and unranked (mutating), and a made-up op, `unnamed`, is both. */
 function totality(ops, unnamed) {
   assert.ok(ops.length > 0, "the owners' maps hold ops");
   const table = ops.map(rowOf);
@@ -427,7 +427,7 @@ function totality(ops, unnamed) {
   const bare = A.unaccounted([]).stale;
   assert.deepEqual(ops.filter((op) => (Object.hasOwn(NON_ACTS, op) || isMutating(op)) && !bare.includes(op)), []);
   for (const op of ops) {
-    if (Object.hasOwn(NON_ACTS, op)) assert.ok(A.unaccounted([{ op, mutating: isMutating(op), gated: false }]).stale.includes(op), op);
+    if (Object.hasOwn(NON_ACTS, op)) assert.ok(!A.unaccounted([{ op, mutating: isMutating(op), gated: false }]).stale.includes(op), op);
     if (isMutating(op)) assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   }
   for (const op of ops.filter((o) => !isGated(o))) assert.deepEqual(A.unaccounted([{ op, mutating: false, gated: true }]).unpublished, [op], op);
