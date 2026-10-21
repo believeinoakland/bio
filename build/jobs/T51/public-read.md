@@ -140,3 +140,7 @@ Ringing BOB failed (its session is archived); the pushed J12 is the message (mec
 **Applied CHANGE B10 (K4369).** `publishedList` and `publishedEditions` now name signers by handle too: `attestor_member`, `delivered_by.member`, and in `publishedEditions` the `completeness` writer, publisher and readers; the same `membership.memberFacts` and fallbacks, as-signed blocks untouched. Test (`evidence-names.test.mjs`, "the public list and a finding's editions…", with the founder control); `convert-deliverer`, `published`, `sampling` updated to handles.
 Tests: public-read 239 pass, 0 fail. Downstream (ratification, publication, network-notices, filings, plane, control-plane, screens-publish, screens-inquiry, review): 1996 tests, 1995 pass; only `plane/release.test.mjs:74` R24 fails, inherited and not mine. Checks: architecture 0, words 0, ownership 0 failures.
 Size (session_01LwWDy5JCBriNttXnEF6fAW): test runs 12, module lines 3860
+
+## J14 · COMPLETE
+
+COMPLETE (B10): publishedList and publishedEditions name signers by handle; details in J13.
