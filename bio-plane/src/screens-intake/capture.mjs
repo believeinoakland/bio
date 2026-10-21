@@ -303,6 +303,7 @@ function renderCapture(cs, view) {
       + a64
       + credSec
       + laterSec
+      + (cs.can("capturerequests") ? `<div class="mk-acts">${cs.act("capturerequests")}</div>` : "")
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
         { address: U.requested.address }) : "")
       + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
@@ -678,7 +679,12 @@ export const CAPTURE_SCREEN = Object.freeze({
   parts: Object.freeze({ bundleFor, checkOutcome, filedFor, forOf, homeOf, projectOf, promoteDocument, refusalHtml, refusedHtml, titleOf }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
-                    refusals: Object.freeze({ BAD_LOCATOR: "refusal.BAD_LOCATOR", SOURCE_REFUSED: "refusal.SOURCE_REFUSED",
+                    refusals: Object.freeze({ /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */
+                                              ACQUIRE_TIMED_OUT: function (refusal, cs) {
+                                                const key = refusal && (refusal.kept === "held" || refusal.kept === "undetermined") ? "refusal.ACQUIRE_TIMED_OUT." + refusal.kept : "refusal.ACQUIRE_TIMED_OUT";
+                                                return cs.w(cs.w(key) !== key ? key : "refusal.ACQUIRE_TIMED_OUT");
+                                              },
+                                              BAD_LOCATOR: "refusal.BAD_LOCATOR", SOURCE_REFUSED: "refusal.SOURCE_REFUSED",
                                               /* R29: `BAD_FOR` (not a question of the project's) beside the field, in the fold the design draws it in, open
                                                  whenever drawn, titled `capture.forquestion.refused.summary`; nothing was captured */
                                               BAD_FOR: function (refusal, cs) { return `<details class="mk-details" open><summary>${cs.w("capture.forquestion.refused.summary")}</summary>${cs.w("refusal.BAD_FOR")}</details>`; },
@@ -693,6 +699,7 @@ export const CAPTURE_SCREEN = Object.freeze({
     Object.freeze({ op: "capturecredentialsupply", label: "act.owed_capturecredentialsupply.label.capture", send: sendCredentialSupply, done: doneCredentialSupply, rereads: Object.freeze(["later"]), refusals: CRED_REFUSALS }),
     Object.freeze({ op: "capturerequestretry", label: "act.capturerequestretry.label.capture", send: sendCredentialRetry, done: doneCredentialRetry, rereads: Object.freeze(["later"]),
                     refusals: Object.freeze({ CAPTURE_REQUEST_NOT_RETRYABLE: function (refusal, cs) { return cs.w("screen.capture.cred.ref.notretry"); } }) }),
+    Object.freeze({ op: "capturerequests", label: "act.capturerequests.label.capture", send: () => ({ query: { limit: 50 } }), rereads: Object.freeze(["later"]) }),
     Object.freeze({ op: "capturecredentiallist", label: "act.owed_capturecredentiallist.label.capture", send: sendCredentialList, done: doneCredentialList, rereads: Object.freeze([]) }),
     Object.freeze({ op: "capturecredentialwithdraw", label: "act.owed_capturecredentialwithdraw.label.capture", send: sendCredentialWithdraw, done: doneCredentialWithdraw, rereads: Object.freeze([]) }),
     Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, rereads: Object.freeze([]), reasonField: "words" }),
