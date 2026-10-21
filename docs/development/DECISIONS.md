@@ -6293,3 +6293,18 @@ decided: 2026-10-21 · the design session (P17)
 the design: a new screen `registers`, "Public registers" (rail Add; journeys 10, 12, 14), reached from Add's capture screen and from Watched addresses: "Registers your team holds" (source, when brought in, rows, next check; an empty line); "Bring in a register" (the known registers, or another by its address; kept whole as a capture with its source and date, read in the background, the team told in the queue when it is ready); "Search the registers" (person or organization, amounts, dates, register; "Cite this row"); "Watched filers, licenses and dockets" (watch by number, "Stop watching", told once in the queue on change); "Alerts from outside services" (CourtListener for federal dockets with the team's own sealed key; a county court such as Alameda's re-checked when a member asks); "Ask across the registers", drawn paused as "Comes after the alpha" (plain-words asking, proposed matches to subjects, proposed watches); "What these registers never do" (a watch is of a named filer, license or docket, never a search for a person; no home address or phone number kept, neither ever published; the FEC's donor-data limit). Acts all owed to DEC-406: registerimport, registerlist, registersearch, registerrowcite, registerwatch, registerwatchstop, alertconnect; paused: registerask, registermatch, registerwatchpropose. 67 keys `screen.registers.*`.
 reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-refs.js`, `screens/words-drawn.src.py` (rows noted "DEC-407").
 owed: BOB: the ops above (names are proposals; BOB's own names replace them) with DEC-406's requirements.
+
+### DEC-408 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob, on DEC-407's guardrail line)
+for: Bob
+question: May a home address or phone number be kept at all, and where?
+why it is Bob's: doctrine on personal facts (K1485, K1493).
+provisional: DEC-407 drew "An import never keeps a home address or a phone number, and neither is ever published."
+alternative: none put.
+recommendation: none put (Bob's own clarification).
+reversal cost: low.
+response: "I believe the proper limitations are that a home address or phone number can be kept by a member in their notes - but is never published."
+decided: 2026-10-21 · Bob
+the design: consistent with K1485 and K1493, which stand: an import never bulk-copies home addresses or phone numbers (K1485); a member may keep one in their own notes; it is never published (K1493), and it is removed on a lawful demand the place's profile lists (California Gov. Code 7928.215: an official's home address or phone number, within 48 hours; K1493). `registers`' line now reads "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published." (key screen.registers.never.keep).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: BOB: the publication filter's test that a home address or phone number in a member's note never reaches a published surface, with N1259.
