@@ -305,3 +305,7 @@ What I need: tell me (RESUME or CHANGE) when ACQUISITION #24 is merged on tranch
 
 ## Record: CHANGE B24 (K4442) · PLANE #48
 - `test/m/plane/fixture.mjs` `storage()`: `transactionSync` is now a savepoint around the callback, released on success, rolled back and rethrown on a throw (nests), as workerd's. Plane suite after: 297 tests, 293 pass, the same four reds as before (readheldfor, the two seam tests, R24); no new red. No test outside `m/plane/` imports the fixture. Waiting for the CHANGE that says ACQUISITION #24 is merged.
+
+## COMPLETE (PLANE #48; B25, K4448): final
+Tranche merged (acquisition #24 on it). `node --test --test-force-exit bio-plane/test/m/plane/`: tests 297, pass 295, fail 2: `fix3-r74` "readheldfor arm" (needs CONTROL-PLANE #45's arm, merges after this job; green with its branch merged) and R24 (the design's `screen.objective.purpose`, accepted). `fix4-seam` 2 of 2 green with the real merged acquisition. `migrate-released.test.mjs`: pass 1, fail 0. B24 applied (above). format 0, architecture 0, ownership 0 failures. Open questions: none.
+Size (session_01PBzWna63QzDA6ZtwyhmSwV): test runs 24, module lines 2822
