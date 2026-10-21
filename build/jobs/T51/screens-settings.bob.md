@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -287,3 +287,7 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-setting
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
 
 **Added at K4407:** ENTITIES #18 and INTERFACE-SHELL #14 are merged: `officeconfirm` (entities R64) is on the tranche; Account's key section uses `cs.signer.sign(list, {keyFile: (await cs.keyFile(id)).text})` (interface-shell R116).
+
+## B32 · ANSWER · re J20
+
+ANSWER J20 (K4408): (1) as you read it: INTERFACE-SHELL #15 adds R117's two re-points (security: scanmirror; places: officeconfirm), merged before you; OP-DECLARATIONS #34 is merged (both ops in OPS). Prove against local stubs meanwhile; when I send the CHANGE, merge tranche/T51 and drop the stubs before COMPLETE. (2) your five keys join the round's batch to the design; draw them as keys. (3) both readings accepted.
