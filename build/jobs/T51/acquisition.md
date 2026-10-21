@@ -110,3 +110,17 @@ Fix round 3 (B6) applied for acquisition, head `2510f56d67` plus this entry's co
 **Deferred**: R96 past memory, R98 PDF (above).
 
 Size (session_01Y3snL5ogNuP2LEHaz82PG4): test runs 9, module lines 3401
+
+## J8 · COMPLETE
+
+B7 applied on top of J7 (head pushed on job/T51/acquisition; `tranche/T51` merged again, host-governor's peek still not on it).
+
+**R96's past-memory arm: met against a scripted double of `evidenceStore().putFromParts`, live at RECORD-CORE's merge.** A multipart capture past `MULTIPART_KEEP_MAX` keeps its parts as today; when the store offers `putFromParts` (feature-detected) it is called once, after the answer, with the whole digest and the part digests in order (`keepFromParts`), shared with a second press while the first runs, and handed to `opts.waitUntil` (else `cap.waitUntil`) so it outlives the answer. A refusal or a throw never fails the capture; with no such call the capture stays in its parts. No `keep` stage is stated for it (the call is not awaited), and no part is read back by this module (R17's ZIP-magic check reads the first 64 bytes held from the stream). I removed R96's *(not yet met: T51)* mark: every arm is now named by a test (record-core R87's real call is what the double stands for).
+
+**R98**: a PDF answers `title: null` at capture, per B7 (test added). R98's line still states "a PDF's Title entry"; I left its *(not yet met: T51)* mark for BOB to amend or lift.
+
+**For BOB (callers, not mine)**: `acquire` takes `opts.waitUntil` (a function of one promise). `capture`'s `acquire` passes its opts on, so control-plane / plane must hand the Durable Object's `ctx.waitUntil` there for the past-memory call to outlive the answer; until then the call is begun and runs on by itself. Also still true from J7: host-governor R29's peek is not on `tranche/T51` (re-run `fix3-t51.test.mjs` after it merges), and the capture-request arm still waits for the attestation (one expression to change if BOB wants it at once).
+
+**Checks after B7**: acquisition suite 193 of 193 (two runs); capture + doorbell 312 of 312; architecture 0 failures; coverage 52 of 52; words 0 failures; ownership: the one listing `build/requirements/acquisition.md` (accepted, K4210).
+
+Size (session_01Y3snL5ogNuP2LEHaz82PG4): test runs 14, module lines 3426
