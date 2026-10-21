@@ -1604,7 +1604,7 @@ w309('size.kb', '{n} KB', False, 'screens-intake R35, DEC-299 (8)')
 w309('size.mb', '{n} MB', False, 'screens-intake R35, DEC-299 (8)')
 w309('size.gb', '{n} GB', False, 'screens-intake R35: a file over 1 GB')
 w309('project.rescue.title.nodate', 'Every owner of this project is gone', False, 'screens-inquiry R54: owner_since not held')
-w309('screen.request.nooffice.admin', 'An administrator can add the office under Settings, Places and offices.', False, 'screens-action R20')
+w309('screen.request.nooffice.admin', 'If you know which office holds them, name it yourself below.', False, 'screens-action R20; DEC-402 (Bob, DEC-401): a member names the office')
 w309('screen.help-records.notheld', "Your team's Civicsmith doesn't hold records help for this place yet, so none is shown here. The law's own text is the place to look.", False, 'screens-action R22')
 w309('project.notmember', "You aren't in this project. Ask to join, and its owners decide.", False, 'interface-shell R85: projectrequest on project')
 # acts and queue (affordances R64, queue-producers R41-R42, queue R55)
@@ -7000,6 +7000,18 @@ W.append(dict(key='screen.inbox.knock.type', en='Kind of file, as the sender gav
 W.append(dict(key='screen.contradiction.flagged.by', en='{member} said these two contradict, {date}', protected=False, note='DEC-400: B455: who flagged a contradiction by hand, and when'))
 W.append(dict(key='act.heldcaptures.here.project', en="List this project's documents", protected=False, note='DEC-400: B455: the project screen\'s documents act (heldcaptures with the project), as the registry labels it'))
 W.append(dict(key='screen.document.testify.how', en='How you know', protected=False, note='DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)'))
+
+# DEC-402: Bob's DEC-401 (federal offices: A), drawn on request
+W.append(dict(key='screen.request.nameoffice.head', en='Name the office yourself', protected=False, note='DEC-402: the fold under the dead end'))
+W.append(dict(key='screen.request.nameoffice.note', en="The office is saved for your team's next request, marked as named by a member until an administrator confirms it.", protected=False, note='DEC-402: what naming does'))
+W.append(dict(key='screen.request.nameoffice.name', en='The agency and office', protected=False, note='DEC-402: field'))
+W.append(dict(key='screen.request.nameoffice.name.help', en='As the agency names the office that answers records requests.', protected=False, note='DEC-402: help'))
+W.append(dict(key='screen.request.nameoffice.where', en='Where requests go', protected=False, note='DEC-402: field'))
+W.append(dict(key='screen.request.nameoffice.where.help', en='Its mailing address, email address or online portal, as the agency publishes it.', protected=False, note='DEC-402: help'))
+W.append(dict(key='screen.request.nameoffice.law', en='The law it goes under', protected=False, note='DEC-402: field'))
+W.append(dict(key='screen.request.nameoffice.law.help', en='The law sets the due date. Choose the one this office answers under.', protected=False, note='DEC-402: help'))
+W.append(dict(key='screen.request.nameoffice.use.help', en='Saves the office for your team, marked as named by you, and chooses it for this request.', protected=False, note="DEC-402: the button's explanation"))
+W.append(dict(key='screen.request.nameoffice.mark', en='Named by a member', protected=False, note='DEC-402: the mark on an office a member named, until an administrator confirms it'))
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
