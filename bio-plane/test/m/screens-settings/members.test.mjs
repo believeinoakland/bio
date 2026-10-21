@@ -589,10 +589,11 @@ test("R2 C89: inviting a third administrator is a proposal the plane records: it
   const r = await a.press("memberadd", {});
   assert.equal(a.p.requests.filter((x) => x.op === "memberadd").length, 1, "one request for the proposal");
   assert.deepEqual(r.sent.find((x) => x.op === "memberadd").body, { memberId: "lee", cover: "Lee from 62nd", capabilities: ["contribute"], role: "admin" });
-  assert.equal(a.refused, null, "not drawn as a refusal");
-  const note = all(a.tree, (e) => e.attrs["data-shown"] === "proposed")[0];
-  assert.ok(note, "drawn as done");
-  assert.equal(squash(textOf(note)), said("refusal.CONSENSUS_REQUIRED", { awaiting: said("member.founder.unnamed") + ", lu" }));
+  const done1 = all(a.tree, (e) => e.attrs["data-state"] === "done" && e.attrs.role === "status")[0];
+  assert.ok(done1, "drawn as done, in the shell's done style");
+  assert.ok(!all(a.tree, (e) => e.attrs.role === "alert").length, "not drawn as a refusal");
+  assert.equal(squash(textOf(done1)), said("refusal.CONSENSUS_REQUIRED", { awaiting: said("member.founder.unnamed") + ", lu" }), "who must still endorse, by handle");
+  assert.ok(!all(a.tree, (e) => e.attrs["data-shown"] === "proposed").length, "the screen draws no sentence of its own for it");
   assert.ok(a.p.requests.filter((x) => x.op === "memberlist").length > before, "the roster is read again");
   assert.ok(a.text.includes("Lee from 62nd") || rowOf(a.tree, "lee"), "the proposed member is in the roster");
   // control: any other refusal is drawn as one
@@ -606,6 +607,29 @@ test("R2 C89: inviting a third administrator is a proposal the plane records: it
   const c = await open("members", { me: ADMIN, table: membersTable() });
   const plain = await c.press("memberadd", { values: { "mi-id": "kay", "mi-cover": "Kay", "mi-caps-0": true } });
   assert.deepEqual(plain.sent[0].body, { memberId: "kay", cover: "Kay", capabilities: ["contribute"] });
+});
+
+test("R2 C89: endorsing a proposed administrator while others must still endorse is done, with who must still endorse by handle, and the roster is read again; control: a real refusal of the act is still a refusal", async () => {
+  let listed = 0;
+  const table = membersTable({
+    memberlist: () => (++listed, env({ members: [FOUNDER_ROW, ...ROSTER] })),
+    adminendorse: (q, b) => refuse("CONSENSUS_REQUIRED", { memberId: b.memberId, proposed: true, have: ["rosa"], awaiting: ["admin", "lu"] }),
+  });
+  const a = await open("members", { me: ADMIN, table });
+  const before = a.p.requests.filter((r) => r.op === "memberlist").length;
+  const r = await a.press("adminendorse", { data: { member: "kim" } });
+  assert.deepEqual(r.sent.find((x) => x.op === "adminendorse").body, { memberId: "kim" });
+  assert.ok(!all(a.tree, (e) => e.attrs.role === "alert").length, "not drawn as a refusal");
+  const note = all(a.tree, (e) => e.attrs["data-state"] === "done" && e.attrs.role === "status")[0];
+  assert.ok(note, "drawn as done");
+  assert.equal(squash(textOf(note)), said("refusal.CONSENSUS_REQUIRED", { awaiting: said("member.founder.unnamed") + ", lu" }));
+  assert.ok(a.p.requests.filter((x) => x.op === "memberlist").length > before, "the roster is read again");
+  // control: any other refusal of the act is a refusal
+  const b = await open("members", { me: ADMIN, table: membersTable({ adminendorse: { ok: false, status: 403, code: "NOT_AN_ADMIN" } }) });
+  await b.press("adminendorse", { data: { member: "kim" } });
+  assert.ok(b.refused && b.refused.key === "refusal.NOT_AN_ADMIN", JSON.stringify(b.refused));
+  assert.ok(all(b.tree, (e) => e.attrs.role === "alert").length, "drawn as a refusal");
+  assert.ok(!all(b.tree, (e) => e.attrs["data-state"] === "done" && e.attrs.role === "status").length, "no done sentence beside a refusal");
 });
 
 test("R56 C90: the vote to remove an administrator is not drawn where the plane cannot carry it (two administrators); with three, or with the count unread, it is (control)", async () => {
