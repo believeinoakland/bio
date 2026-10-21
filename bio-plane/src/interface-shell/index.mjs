@@ -212,6 +212,8 @@ export function checkScreens(screens) {
     /* R87: the shell asks a Reasoned act's reason, or sends the member's own words in the act's `reasonField`; a screen that
        names a `reasonField` that is no field's name supplies neither, so it is never served */
     for (const a of s.acts) if (a && a.reasonField !== undefined && !(typeof a.reasonField === "string" && a.reasonField)) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names a reasonField that is no field's name, so it would send without a reason`);
+    /* R112: the codes an act names as its success are a list of codes */
+    for (const a of s.acts) if (a && a.successCodes !== undefined && !(Array.isArray(a.successCodes) && a.successCodes.every((c) => typeof c === "string" && c))) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names successCodes that are not a list of codes`);
     if (s.words !== undefined && !Array.isArray(s.words)) throw new Error(`interface-shell: screen ${id}'s words is not a list`);
     if (s.ABSENT_CODES !== undefined && !(Array.isArray(s.ABSENT_CODES) && s.ABSENT_CODES.every((c) => typeof c === "string"))) throw new Error(`interface-shell: screen ${id}'s ABSENT_CODES is not a list of codes`);
   }

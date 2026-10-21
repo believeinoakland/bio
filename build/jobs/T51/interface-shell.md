@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01PJfJCZsnNnrrxo4GRZ1ehd · depth 2 · COMPLETE · handled B26
+**Status** · session_018xL836aY5gPSaoL972peEg · depth 2 · COMPLETE · handled B28
 
 ## J1 · BLOCKED
 
@@ -222,3 +222,27 @@ COMPLETE (after B26, K4259) for `interface-shell` in T51. Pushed at ea97f9fd32.
 **Tests and checks.** `node --test bio-plane/test/m/interface-shell/`: 244 tests, 244 pass. Screen suites run: screens-inquiry 372/0, screens-intake 179/0, screens-daily 207/0, screens-settings 209/0, screens-action 210/0, screens-publish 176/1 fail (not mine), screens-investigate 174/2 fail (one mine, above). `checks/run.mjs`: format 0, architecture 0, words 1 failure (op-grades' test copy, not this module), coverage 6 failures (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry R110 R119, screens-intake R53; none interface-shell). Ownership: 0 failures.
 
 Size (session_01PJfJCZsnNnrrxo4GRZ1ehd): test runs 8, module lines 2892
+
+## J17 · COMPLETE
+
+COMPLETE for `interface-shell` in T51 (fix round 2, wave 3, START B27, cause 1; `tranche/T51` merged first).
+
+**Entry applied (an answer that is a success, drawn as one).** An act may name `successCodes: [CODE, ...]`. An answer that is a refusal in form (`ok: false` with that code, at the top level or in `result`, status below 500) is then the act's success: `done(view, answer, cs)` is handed the answer's fields, the act's named `rereads` run, `failed` is not called, no refusal tone sounds, and the code's own sentence (R13's words: the act's `refusals` key, else `refusal.<code>`, else the translation, with its fields filled) is drawn beside the act as `<span class="cs-state" data-state="done" role="status">`: polite, not an alert, kept by the act's key so the re-read's redraw draws it again, and ended by the act's next press or by leaving the screen, as a refusal is. A code the act does not name, a server error and no answer are refusals as ever. `checkScreens` throws, naming the screen and the act, for `successCodes` that are not a list of non-empty strings. The button follows R74 as after any success of that act: `adminendorse` and `memberadd` have no weight (credential ground), so, as after a plain success, no `data-done` (the test compares the two). No new word and no new style (`cs-state` is the design's).
+
+**Requirement line for BOB (new R112; ownership bars me from the file):** *R112 (fix round 2, K4334; SCREENS-SETTINGS #13; amends R13, R21) **An act may name the answers that are its success.** An act's `successCodes` is a list of answer codes: an answer `ok: false` with one of them (status below 500) is drawn as done, not as a refusal: the code's own sentence (R13's words) beside the act in the done style (`role="status"`), `done` is handed the answer's fields, the act's `rereads` run, `failed` is not called and no refusal tone sounds. A code not listed, a server error and no answer are refusals (R13). A `successCodes` that is not a list of codes makes `interfacePage` throw naming the screen and the act. Test: `adminendorse`'s recorded-and-pending answer (`CONSENSUS_REQUIRED`) is drawn as done, hands `done` its fields and re-reads. Control: the same code on an act that does not name it, a real refusal of the same act, a 503 and no answer are refusals.* Status line: `Last changed T51 (fix round 2, K4334: R112 new, an act's successCodes)`.
+
+**To report when merged (screens-settings adoption, a later CHANGE):** `adminendorse` and `memberadd` (an administrator beyond the second) answer `CONSENSUS_REQUIRED`; screens-settings names `successCodes: ["CONSENSUS_REQUIRED"]` on both and drops its own request. Their `refusal.CONSENSUS_REQUIRED` row ("Your endorsement is recorded... Still to endorse: {awaiting}.") is the sentence; the answer's `awaiting` is a list, so it is filled as the list's text (`rosa,mai`): a screen that wants handles with spaces gives the act a `refusals` function for the code. The same shape applies to any other success-coded refusal an owner declares.
+
+**Tests and checks.** Tests (`fixround3.test.mjs`, seen failing before the change): both answer shapes, the controls (not named, real refusal of the same act, 503, no answer, an ordinary success, the next press), the malformed list. `node --test --test-force-exit bio-plane/test/m/interface-shell/`: 268 tests, 268 pass. Users (`impact.mjs origin/tranche/T51 HEAD`): screens-wizards 75/0, screens-entry 96/0, screens-daily 252/0, screens-investigate 211/0, screens-publish 212/0, screens-action 223/0, control-plane 340/0; reds also on the tranche tip with the tranche's own shell (compared by name), none mine: screens-settings R39, screens-inquiry 3 (R5…, R10, R10 entry 25), screens-intake R7 (C28), plane R24. `checks`: format 0, architecture 0, coverage 108 of 108, words 0 (interface-shell), ownership 0.
+
+Size (session_018xL836aY5gPSaoL972peEg): test runs 9, module lines 3004
+
+## J18 · COMPLETE
+
+COMPLETE (B28, K4337, C66) for `interface-shell` in T51, `tranche/T51` merged first.
+
+The frame's own `queue` read (`browser.mjs`, the masthead/rail count) asked `limit: 500`, which the walk saw refused 400; it now asks 200, the limit screens-inquiry's dashproject uses. Test (R7, seen failing: it asked 500): the frame's background queue reads carry `limit` 200; control: a screen's own queue read keeps its limit. The R7 count is unchanged (a list of at most 200 items; the sum of the three kinds is counted from what is read). Requirement line, if BOB wants it written: R7 — the frame's queue read asks `limit` 200.
+
+Module suite 269 of 269; format, architecture, coverage (108 of 108), words 0 failures. The J17 line for R112 stands.
+
+Size (session_018xL836aY5gPSaoL972peEg): test runs 12, module lines 3004
