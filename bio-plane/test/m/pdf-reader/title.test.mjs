@@ -107,11 +107,11 @@ test("R40: XMP inflates whichever block type the producer used (stored, fixed Hu
 test("R40: a hybrid-reference file (a table whose trailer names an /XRefStm) reaches the objects the stream indexes", () => {
   const packedPart = indexed({ 1: CATALOG, 2: PAGES, 91: "<< /Title (Hybrid) >>" }, { xref: "stream", packed: [91], trailer: "/Root 1 0 R" });
   const text = Buffer.from(packedPart).toString("latin1");
-  const xrefStmAt = text.indexOf("901 0 obj");
+  const xrefStmAt = text.indexOf("990 0 obj");
   // a table that lists only objects 1 and 2, then points at the stream for the rest
   const t1 = text.indexOf("1 0 obj"), t2 = text.indexOf("2 0 obj");
   const tail = `xref\n0 1\n0000000000 65535 f \n1 1\n${String(t1).padStart(10, "0")} 00000 n \n2 1\n${String(t2).padStart(10, "0")} 00000 n \n`
-    + `trailer\n<< /Size 902 /Root 1 0 R /Info 91 0 R /XRefStm ${xrefStmAt} >>\nstartxref\n`;
+    + `trailer\n<< /Size 991 /Root 1 0 R /Info 91 0 R /XRefStm ${xrefStmAt} >>\nstartxref\n`;
   const body = text.slice(0, text.lastIndexOf("startxref"));
   const at = body.length;
   const hybrid = bytesOf(body + tail.replace(/\\n/g, "\n") + at + "\n%%EOF\n");

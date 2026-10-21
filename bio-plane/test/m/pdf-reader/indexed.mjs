@@ -31,12 +31,12 @@ const body = (b) => (typeof b === "string" ? { text: b } : b);
  *  file's bytes, which this revision is appended to (its startxref becomes /Prev).
  *  `level`: the zlib level of the streams this writes (0 stores). */
 export function indexed(objs, { xref = "table", packed = [], trailer = "/Root 1 0 R", prev = null, level = 6,
-  header = "%PDF-1.7\n", objStmNum = 900, xrefNum = 901, predictor = true, junkAfter = "" } = {}) {
+  header = "%PDF-1.7\n", objStmNum = 900, xrefNum = 990, predictor = true, junkAfter = "" } = {}) {
   const parts = prev ? [prev] : [bytesOf(header)];
   let pos = prev ? prev.length : parts[0].length;
   const add = (b) => { parts.push(b); pos += b.length; };
   const entries = new Map(); // num -> {type:1, off} | {type:2, stm, idx}
-  const loose = Object.keys(objs).map(Number).filter((n) => !packed.includes(n));
+  const loose = Object.keys(objs).map(Number).filter((n) => !packed.flat().includes(n));
   for (const n of loose) {
     entries.set(n, { type: 1, off: pos });
     const b = objs[n];
@@ -46,15 +46,18 @@ export function indexed(objs, { xref = "table", packed = [], trailer = "/Root 1 
       add(bytesOf(`${n} 0 obj\n<< ${b.dict ?? ""} /Length ${data.length} >>\nstream\n`)); add(data); add(bytesOf("\nendstream\nendobj\n"));
     }
   }
-  if (packed.length) {
+  /* `packed` is one object stream's numbers, or a list of lists for several (numbered objStmNum, objStmNum + 1, ...) */
+  const groups = packed.length && Array.isArray(packed[0]) ? packed : packed.length ? [packed] : [];
+  groups.forEach((group, g) => {
+    const stmNum = objStmNum + g;
     let head = "", bodies = "";
-    packed.forEach((n, i) => { head += `${n} ${bodies.length} `; bodies += objs[n] + "\n"; entries.set(n, { type: 2, stm: objStmNum, idx: i }); });
+    group.forEach((n, i) => { head += `${n} ${bodies.length} `; bodies += objs[n] + "\n"; entries.set(n, { type: 2, stm: stmNum, idx: i }); });
     const raw = bytesOf(head + bodies);
     const data = new Uint8Array(deflateSync(raw, { level }));
-    entries.set(objStmNum, { type: 1, off: pos });
-    add(bytesOf(`${objStmNum} 0 obj\n<< /Type /ObjStm /N ${packed.length} /First ${head.length} /Filter /FlateDecode /Length ${data.length} >>\nstream\n`));
+    entries.set(stmNum, { type: 1, off: pos });
+    add(bytesOf(`${stmNum} 0 obj\n<< /Type /ObjStm /N ${group.length} /First ${head.length} /Filter /FlateDecode /Length ${data.length} >>\nstream\n`));
     add(data); add(bytesOf("\nendstream\nendobj\n"));
-  }
+  });
   const size = Math.max(...entries.keys(), prev ? 0 : 0, xrefNum) + 1;
   const xrefAt = pos;
   if (xref === "table") {
