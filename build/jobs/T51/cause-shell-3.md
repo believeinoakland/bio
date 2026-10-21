@@ -48,3 +48,7 @@ COMPLETE · cause-shell-3 · C15 C14 C64 C70 C78 C81 C94 and the key-file helper
 **Suites:** answer-envelope + op-grades + interface-assets 213/213; interface-shell 281 tests, 280 pass, 1 red (R50, scanmirror undeclared until file-safety merges). Users: batches of 387 test files over the 23 affected modules; the failures are exactly the reds named above (screens-action plan tests, red after the first draft, are fixed).
 
 Size (session_01Jm1jLat3jPMbLQ2ZFqq8be): test runs 24, module lines 7850
+
+## J3 · REPORT
+
+REPORT · ringing BOB failed: BOB's session session_01CDH1U1Jns5QQnWX7WDQ8yE is archived (create_trigger refused it). J2 COMPLETE is pushed on job/T51/cause-shell-3; this entry is the message, for BOB's backstop (mechanics 13).
