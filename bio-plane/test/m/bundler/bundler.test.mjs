@@ -858,13 +858,14 @@ test("R25 (K4094): workerPart states a member's own Durable Objects and migratio
   assert.deepEqual(lacks({ migrations: {} }), ["migrations"]);
 });
 
-test("R25 (K4094): over the repository's own fleet, each member's Worker part states the Durable Objects its configuration owns: agent-worker its two, agent-runner its one, file-scanner its two", () => {
+test("R25 (K4094): over the repository's own fleet, each member's Worker part states the Durable Objects its configuration owns: agent-worker its two, agent-runner its one binding and every migration it declares, file-scanner its two", () => {
   const cfgOf = (name) => parseJsonc(readFileSync(join(discoverMembers().find((m) => m.name === name).abs, "wrangler.jsonc"), "utf8"));
   assert.deepEqual(workerPart(cfgOf("agent-worker")).part.descriptor.durable_objects, {
     bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }],
     migrations: [{ tag: "v1", classes: ["SegmentDriver"] }, { tag: "v2", classes: ["CheckRecord"] }] });
-  assert.deepEqual(workerPart(cfgOf("agent-runner")).part.descriptor.durable_objects,
-    { bindings: [{ name: "AGENT_RUNNER", class_name: "AgentRunner" }], migrations: [{ tag: "v1", classes: ["AgentRunner"] }] });
+  const runner = workerPart(cfgOf("agent-runner")).part.descriptor.durable_objects;
+  assert.deepEqual(runner.bindings, [{ name: "AGENT_RUNNER", class_name: "AgentRunner" }]);
+  assert.deepEqual(runner.migrations, cfgOf("agent-runner").migrations.map((m) => ({ tag: m.tag, classes: m.new_sqlite_classes })));
   assert.deepEqual(workerPart(cfgOf("file-scanner")).part.descriptor.durable_objects.bindings,
     [{ name: "SCANNER", class_name: "FileScanner" }, { name: "RENDERER", class_name: "SafeViewRenderer" }]);
 });
