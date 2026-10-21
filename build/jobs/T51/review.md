@@ -219,3 +219,7 @@ NOTE: R19 `editions` was tested against a scripted double of case-authoring.draf
 Suites: review 83/83; users: notice-producers, queue, op-declarations, control-plane all green; plane 279/280 (R24 words) and store-door 52/53 (R17 groupdescriptiondraft) are not review's. format, architecture, words 0 failures; coverage none for review; ownership 0.
 Proposed lines for you: R41 and R12 amendments (statement/falsifier/not_concluded/title), wording in my record. Bundles under bio-plane/dist and release are stale until regenerated.
 Size (session_01FnocwFJGM3fMnossXJZ36Q): test runs 12, module lines 1610
+
+## J10 · COMPLETE
+
+COMPLETE for fix round 4 (C46, my part). Root cause: #finding read a finding's words only from the question's own bytes; a project's conclusion is its own record (inquiry_moved false), so the finding read 'Not concluded yet'. Fix: the project's recorded claim and falsifier (ratification caseConclusionFor) come first. Failing-first test conclusions.test.mjs through the real conclude (red 'Not concluded yet', then green); platform check N; review suite 86/86; users' reds identical on the tranche tip; checks and ownership clean for review. Proposed R41 amendment and the stale bundles are in my record (build/jobs/T51/review.md). No QUESTION open.
