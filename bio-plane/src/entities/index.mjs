@@ -32,7 +32,7 @@ import { MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { registerOwner, BOUNDS, DECLARED_LABEL, LOWEST_GRADE } from "../connection-grammar/index.mjs";
 import { validAt, compare as compareTimes, reasonText } from "../civil-time/index.mjs";
 import { checkContentExtent, canonicalExtent, describeExtent, CONTENT_EXTENT_DOCUMENT_ONLY } from "../content/index.mjs";
-import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDEX, SECTOR_COLUMN, FORUM_KIND_COLUMN, MATCHED_BY_COLUMN, MATCHED_BY, OFFICE_MARK_COLUMNS } from "./schema.mjs";
+import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDEX, SECTOR_COLUMN, FORUM_KIND_COLUMN, MATCHED_BY_COLUMN, MATCHED_BY, OFFICE_MARK_COLUMNS, CONTACT_KINDS } from "./schema.mjs";
 import { IDSPACE_CHECKS, ENTITY_CHECKS, idspaceRefusal } from "./checks.mjs";
 
 export { IDSPACE_CHECKS, ENTITY_CHECKS, ENTITIES_SCHEMA };
@@ -225,6 +225,14 @@ const forumKindNotForKind = (kind) => ({ ok: false, reason: "FORUM_KIND_NOT_FOR_
   detail: localize("entities.index.a_forum_kind_is_held", "a forum kind is held only by an entity of kind {FORUM_ENTITY_KINDS}; a {kind} carries none. Nothing was written.", { FORUM_ENTITY_KINDS: String(FORUM_ENTITY_KINDS.join(" or ")), kind: String(kind) }) });
 const unknownForumKind = (value) => ({ ok: false, reason: "UNKNOWN_FORUM_KIND", forum_kind: typeof value === "string" ? value.slice(0, 80) : null,
   forum_kinds: [...FORUM_KINDS], detail: localize("entities.index.a_forum_kind_is_one", "a forum kind is one of {FORUM_KINDS}. Nothing was written.", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }) });
+
+/* R63 (K4364; DEC-402): the two office-only fields' refusals, each answered before an id is allocated and writing nothing. */
+const officeFieldNotForKind = (kind) => ({ ok: false, reason: "OFFICE_FIELD_NOT_FOR_KIND", kind,
+  detail: localize("entities.index.where_requests_go_and_the", "where requests go and the law they go under are held only by an office; a {kind} carries neither. Nothing was written.", { kind: String(kind) }) });
+const badContact = (value) => ({ ok: false, reason: "BAD_CONTACT", contact_kinds: [...CONTACT_KINDS],
+  detail: localize("entities.index.where_requests_go_is_a", "where requests go is an address, an email address or an online portal, with its value: {kind, value}, the kind one of {CONTACT_KINDS}. Nothing was written.", { kind: "kind", value: "value", CONTACT_KINDS: String(CONTACT_KINDS.join(", ")) }) });
+const contactOf = (v) => (v && typeof v === "object" && !Array.isArray(v) && CONTACT_KINDS.includes(v.kind) && typeof v.value === "string" && v.value.trim()
+  ? { kind: v.kind, value: v.value.trim().slice(0, 500) } : null);
 
 /* R43: civil-time's validity value, judged as that module reads it: an object stating `from` and `to` (null is "not
    stated") and a precision of its four, whose bounds civil-time can read (a probe that refuses or throws is not one). */
@@ -523,13 +531,13 @@ export class Entities {
    *  in the SAME transaction, so an entity is never nameless-but-for-its-id even for an instant. It carries the
    *  declarer's note (DEC-88): who or what it is and why it is registered. R4: `declaredBy` is the control plane's
    *  stamp. */
-  createEntity({ kind, label, note = null, aliases = [], declaredBy = null, sector, proceeding, forum_kind } = {}) {
-    return this.#create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind: forum_kind, basis: null });
+  createEntity({ kind, label, note = null, aliases = [], declaredBy = null, sector, proceeding, forum_kind, contact, law } = {}) {
+    return this.#create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind: forum_kind, contact, law, basis: null });
   }
 
   /* R1, R42, R45, R46: the one creation path; `basis` is R46's `{captureSha, extent}` for a registration read from a
      capture, else null. Every refusal is answered before an id is allocated. */
-  #create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind, basis }) {
+  #create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind, contact, law, basis }) {
     const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
     if (!k) return { ok: false, reason: "NO_KIND", detail: localize("entities.index.an_entity_needs_a_kind", "an entity needs a kind: one of {ENTITY_KINDS}", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
     if (!ENTITY_KINDS.includes(k))
@@ -565,6 +573,21 @@ export class Entities {
     if (hasForumKind && !FORUM_ENTITY_KINDS.includes(k)) return forumKindNotForKind(k);
     if (hasForumKind && !FORUM_KINDS.includes(forumKind)) return unknownForumKind(forumKind);
     const fk = hasForumKind ? forumKind : null;
+    /* R63 (K4364; DEC-402): where requests to an office go, and the law they go under (one of the active profiles' records
+       laws, held as its citation); only an office holds them, and absent, none is held. */
+    const hasContact = contact !== undefined && contact !== null, hasLaw = law !== undefined && law !== null;
+    if ((hasContact || hasLaw) && k !== "office") return officeFieldNotForKind(k);
+    const ct = hasContact ? contactOf(contact) : null;
+    if (hasContact && !ct) return badContact(contact);
+    let lawKey = null;
+    if (hasLaw) {
+      const t = typeof law === "string" ? law.trim() : "";
+      const laws = (Array.isArray(this.view().records_laws) ? this.view().records_laws : []).filter((l) => l && typeof l.citation === "string");
+      const hit = t ? laws.find((l) => l.citation === t) || laws.find((l) => l.name === t) : null;
+      if (!hit) return { ok: false, reason: "UNKNOWN_LAW", law: typeof law === "string" ? law.slice(0, 120) : null, laws: laws.map((l) => l.citation),
+        detail: localize("entities.index.the_law_requests_go_under", "the law requests go under is one your team's active jurisdiction profiles name{v1}. Nothing was written.", { v1: String(laws.length ? `: ${laws.map((l) => `${l.name} (${l.citation})`).join("; ")}` : "; they name none") }) };
+      lawKey = hit.citation;
+    }
     /* R45: the facet, judged whole before anything is allocated. */
     let facet = null;
     if (isProceeding) {
@@ -582,8 +605,8 @@ export class Entities {
     const marked = k === "office" ? (by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
     return this.#record.transact(() => {
       const { id } = this.#record.allocId("ENT", at.slice(0, 4));
-      this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at,sector,forum_kind,named_by_member) VALUES (?,?,?,?,?,?,?,?,?)`,
-                     id, k, name, note.slice(0, 2000), by, at, sec, fk, marked);
+      this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at,sector,forum_kind,named_by_member,contact_kind,contact_value,law) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                     id, k, name, note.slice(0, 2000), by, at, sec, fk, marked, ct ? ct.kind : null, ct ? ct.value : null, lawKey);
       const seen = new Set();
       const put = (alias, canonical) => {
         const norm = normAlias(alias);
@@ -666,7 +689,7 @@ export class Entities {
   readEntity({ entityId, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an entity is read by its id (op=entity&id=ENT-...)");
-    const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, confirmed_at FROM entities WHERE entity_id=?`, entityId);
+    const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, confirmed_at, contact_kind, contact_value, law FROM entities WHERE entity_id=?`, entityId);
     if (!e) return { ok: true, found: false, entity_id: entityId, entity: null };
     return { ok: true, found: true, entity: this.#entityView(e, this.#redactor(viewer)) };
   }
@@ -677,7 +700,7 @@ export class Entities {
     const norm = normAlias(alias);
     if (!norm) return { ok: true, alias: typeof alias === "string" ? alias : null, count: 0, entities: [] };
     const hits = this.#rows(
-      `SELECT DISTINCT e.entity_id, e.kind, e.label, e.note, e.declared_by, e.at, e.sector, e.forum_kind, e.named_by_member, e.confirmed_by, e.confirmed_at
+      `SELECT DISTINCT e.entity_id, e.kind, e.label, e.note, e.declared_by, e.at, e.sector, e.forum_kind, e.named_by_member, e.confirmed_by, e.confirmed_at, e.contact_kind, e.contact_value, e.law
          FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
         WHERE a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`, norm);
     const keep = this.#redactor(viewer);
@@ -730,14 +753,15 @@ export class Entities {
       const empty = { ok: true, kind: k, entities: [], count: 0, limit: cap, truncated: false, next: null };
       if (viewerPredicate(viewer).scope === "DENY") return empty;
       const isOrg = ORGANISATION_KINDS.includes(k);
-      const rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by FROM entities
+      const rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, contact_kind, contact_value, law FROM entities
                                 WHERE kind=? AND entity_id > ?${forums.length ? ` AND forum_kind IN (${forums.map(() => "?").join(",")})` : ""}
                                 ORDER BY entity_id LIMIT ?`, k, from, ...forums, cap + 1);
       const truncated = rows.length > cap;
       const page = truncated ? rows.slice(0, cap) : rows;
       const entities = page.map((e) => ({ entity_id: e.entity_id, kind: e.kind, label: e.label, note: e.note,
         ...(isOrg ? { sector: e.sector || SECTOR_UNDETERMINED, forum_kind: e.forum_kind ?? null } : {}),
-        ...(k === "office" ? { named_by_member: !!e.named_by_member, confirmed_by: e.confirmed_by ?? null } : {}),
+        ...(k === "office" ? { named_by_member: !!e.named_by_member, confirmed_by: e.confirmed_by ?? null,
+                               contact: Entities.#contactView(e), law: e.law ?? null } : {}),
         declared_by: e.declared_by, at: e.at }));
       return { ...empty, entities, count: entities.length, truncated,
                next: truncated ? entities[entities.length - 1].entity_id : null };
@@ -967,14 +991,24 @@ export class Entities {
     const who = by == null ? null : String(by);
     if (!who || !this.#administers(who))
       return notAnAdmin(who, localize("entities.index.confirming_an_office_a_member", "confirming an office a member named"));
-    if (e.kind !== "office")
-      return { ok: false, reason: "NOT_AN_OFFICE", entity_id: entityId, kind: e.kind,
+    /* DEC-49 REGION is-confirmed-an-office — R64 (K4364): this module's own row (C-91.10). */
+    if (e.kind !== "office") {
+      const row = ENTITY_CHECKS.CONFIRM_NOT_AN_OFFICE;
+      return { ok: false, reason: "CONFIRM_NOT_AN_OFFICE", code: "CONFIRM_NOT_AN_OFFICE", check: row.check, translation: row.translation,
+               entity_id: entityId, kind: e.kind,
                detail: localize("entities.index.only_an_office_a_member", "only an office a member named is confirmed, and this subject is a {kind}. Nothing was changed.", { kind: String(e.kind) }) };
+    }
+    /* END DEC-49 REGION is-confirmed-an-office */
     if (e.confirmed_by && !e.named_by_member)
       return { ok: true, already: true, entity_id: entityId, named_by_member: false, confirmed_by: e.confirmed_by, at: e.confirmed_at };
-    if (!e.named_by_member)
-      return { ok: false, reason: "NOT_NAMED_BY_A_MEMBER", entity_id: entityId,
+    /* DEC-49 REGION is-named-by-a-member — R64 (K4364): this module's own row (C-91.11). */
+    if (!e.named_by_member) {
+      const row = ENTITY_CHECKS.NOT_NAMED_BY_A_MEMBER;
+      return { ok: false, reason: "NOT_NAMED_BY_A_MEMBER", code: "NOT_NAMED_BY_A_MEMBER", check: row.check, translation: row.translation,
+               entity_id: entityId,
                detail: localize("entities.index.this_office_was_not_named", "this office was not named by a member, so there is nothing to confirm. Nothing was changed.") };
+    }
+    /* END DEC-49 REGION is-named-by-a-member */
     const at = this.#now();
     this.#sql.exec(`UPDATE entities SET named_by_member=0, confirmed_by=?, confirmed_at=? WHERE entity_id=?`, who, at, entityId);
     return { ok: true, entity_id: entityId, named_by_member: false, confirmed_by: who, at };
@@ -1355,6 +1389,8 @@ export class Entities {
              named_by_member: e.kind === "office" ? !!e.named_by_member : null,
              confirmed_by: e.kind === "office" ? e.confirmed_by ?? null : null,
              confirmed_at: e.kind === "office" ? e.confirmed_at ?? null : null,
+             contact: e.kind === "office" ? Entities.#contactView(e) : null,
+             law: e.kind === "office" ? e.law ?? null : null,
              sector_history: sec.rows.map((h) => ({ sector: h.sector, prior: h.prior, note: h.note, by: h.set_by, at: h.at })),
              identifiers: ids.rows.map(identifierView),
              proceeding: e.kind === "proceeding" ? this.proceedingOf(e.entity_id) : null,
@@ -1362,6 +1398,9 @@ export class Entities {
              limit: ENTITY_COLLECTION_LIMIT, relations_limit: ENTITY_RELATIONS_LIMIT, aliases_truncated: al.truncated, relations_truncated: rel.truncated,
              defects_truncated: def.truncated, sector_history_truncated: sec.truncated, identifiers_truncated: ids.truncated };
   }
+
+  /* R63: where requests to an office go, `{kind, value}`, or null when not stated. */
+  static #contactView(e) { return e.contact_kind ? { kind: e.contact_kind, value: e.contact_value } : null; }
 
   /* R38, R32: one report as it is read, `by` withheld where its document sits out of the viewer's sight. */
   static #defectView(d, keep) {
@@ -2136,7 +2175,7 @@ export function entitiesOps(e, url, body) {
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
   entitycreate: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.entitycreate", "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)"),
-    fields: { accepts: ["kind","label","note","aliases","sector","proceeding","forum_kind"], requires: ["kind","label","note"] } },
+    fields: { accepts: ["kind","label","note","aliases","sector","proceeding","forum_kind","contact","law"], requires: ["kind","label","note"] } },
   entityalias: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("entities.declared.entityalias", "registry write, keyed by entity"),
     fields: { accepts: ["entityId","alias"], requires: ["entityId","alias"] } },
   aliaswithdraw: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.aliaswithdraw", "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn"),

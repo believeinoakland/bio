@@ -173,8 +173,8 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   const got = e.readEntity({ entityId: a });
   assert.equal(got.found, true);
   const ent = got.entity;
-  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "confirmed_at", "confirmed_by", "declared_by", "defect_count", "defects",
-    "defects_truncated", "entity_id", "forum_kind", "identifiers", "identifiers_truncated", "kind", "label", "limit", "named_by_member", "note", "proceeding",
+  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "confirmed_at", "confirmed_by", "contact", "declared_by", "defect_count", "defects",
+    "defects_truncated", "entity_id", "forum_kind", "identifiers", "identifiers_truncated", "kind", "label", "law", "limit", "named_by_member", "note", "proceeding",
     "relations", "relations_limit", "relations_truncated", "sector", "sector_history", "sector_history_truncated"]);
   assert.deepEqual([ent.sector, ent.sector_history, ent.identifiers, ent.proceeding, ent.forum_kind], [null, [], [], null, null], "an office: no sector, no identifier, no facet, no forum kind");
   assert.deepEqual(ent.aliases.map((x) => [x.alias, x.canonical]), [["Zed", true], ["alpha", false]]);

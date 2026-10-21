@@ -4,10 +4,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
-import { entitiesOps, DECLARED_OPS } from "../../../src/entities/index.mjs";
+import { entitiesOps, DECLARED_OPS, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 
 const NOTE = "a subject the test registers";
+const PE = ["test-port-ellery"];
+const LAW = "Test Stat. § 1.100";
 const VIEWER = "member:ann";
 /* an instance with an administrator (`ada`), an ordinary member (`bea`) and a second ordinary member (`cy`) */
 function team() {
@@ -63,6 +65,45 @@ test("R63 control: an office an administrator creates, or a machine registers, c
   assert.equal("named_by_member" in listed(w, "body").entities[0], false);
 });
 
+test("R63 (K4364, DEC-402) an office also holds where requests go (contact: address, email or portal) and the law they go under (a records law of the active profiles), read back by readEntity and entitiesOfKind; null when not stated; an unknown law or a bad contact is refused in words", () => {
+  const w = world({ profiles: PE });
+  w.st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('bea', 'bea', 'member', 'active', '2026-01-01', '2026-01-01')`);
+  const make = (extra, label = "Records Office") => op(w, "entitycreate", { body: { kind: "office", label, note: NOTE, declaredBy: "bea", ...extra } });
+  const contact = { kind: "portal", value: "https://records.example.org/requests" };
+  const made = make({ contact, law: LAW });
+  assert.equal(made.ok, true, JSON.stringify(made));
+  const read = w.e.readEntity({ entityId: made.entity_id }).entity;
+  assert.deepEqual([read.contact, read.law, read.named_by_member], [contact, LAW, true]);
+  const item = listed(w).entities[0];
+  assert.deepEqual([item.contact, item.law], [contact, LAW]);
+  /* the law may be named by the law's name as well; it is held as its citation */
+  const byName = make({ law: "Freedom of Records Act (test)" }, "Second Office");
+  assert.equal(w.e.readEntity({ entityId: byName.entity_id }).entity.law, LAW);
+  /* an office that states neither answers null for each */
+  const bare = make({}, "Third Office");
+  const b = w.e.readEntity({ entityId: bare.entity_id }).entity;
+  assert.deepEqual([b.contact, b.law], [null, null]);
+  assert.deepEqual(listed(w).entities.filter((i) => i.entity_id === bare.entity_id).map((i) => [i.contact, i.law]), [[null, null]]);
+  /* refusals, each before an id is allocated and writing nothing */
+  const before = snapshot(w);
+  const unknown = make({ law: "No Such Act" }, "Fourth Office");
+  assert.deepEqual([unknown.ok, unknown.reason], [false, "UNKNOWN_LAW"]);
+  assert.ok(unknown.laws.includes(LAW) && typeof unknown.detail === "string");
+  for (const bad of [{ kind: "carrier-pigeon", value: "x" }, { kind: "email", value: "  " }, { kind: "email" }, "a@b.c", []]) {
+    const r = make({ contact: bad }, "Fifth Office");
+    assert.deepEqual([r.ok, r.reason], [false, "BAD_CONTACT"], JSON.stringify(bad));
+  }
+  for (const [kind, field] of [["person", { law: LAW }], ["body", { contact }]]) {
+    const r = op(w, "entitycreate", { body: { kind, label: "Not An Office", note: NOTE, declaredBy: "bea", ...field } });
+    assert.deepEqual([r.ok, r.reason], [false, "OFFICE_FIELD_NOT_FOR_KIND"], kind);
+  }
+  assert.deepEqual(snapshot(w), before);
+  /* control: no profile gives a law, so a team with none refuses any law and still registers an office without one */
+  const none = world();
+  assert.equal(none.e.createEntity({ kind: "office", label: "O", note: NOTE, law: LAW }).reason, "UNKNOWN_LAW");
+  assert.equal(none.e.createEntity({ kind: "office", label: "O", note: NOTE }).ok, true);
+});
+
 /* ---------------------------------------------------------------- R64 */
 
 test("R64 an administrator's confirm clears the mark and records herself and when; the name, alias and note of the office are unchanged", () => {
@@ -103,17 +144,20 @@ test("R64 the refusals come in order and each writes nothing: NO_ENTITY, NO_SUCH
   assert.equal(reason({ entityId: "", by: "ada" }), "NO_ENTITY");
   assert.equal(reason({ entityId: "ENT-2026-9999", by: "bea" }), "NO_SUCH_ENTITY", "before the caller is asked");
   assert.equal(reason({ entityId: person, by: "bea" }), "NOT_AN_ADMIN", "before the kind is asked");
-  assert.equal(reason({ entityId: person, by: "ada" }), "NOT_AN_OFFICE");
+  assert.equal(reason({ entityId: person, by: "ada" }), "CONFIRM_NOT_AN_OFFICE");
   assert.equal(reason({ entityId: own, by: "ada" }), "NOT_NAMED_BY_A_MEMBER", "control: an administrator's own office");
   assert.deepEqual(snapshot(w), before);
-  /* each refusal has a sentence of its own */
-  const details = new Set(["NOT_AN_OFFICE", "NOT_NAMED_BY_A_MEMBER"].map((c) => {
-    const r = op(w, "officeconfirm", { body: { entityId: c === "NOT_AN_OFFICE" ? person : own, by: "ada" } });
-    assert.equal(r.reason, c);
-    assert.ok(typeof r.detail === "string" && r.detail.length > 0);
-    return r.detail;
-  }));
-  assert.equal(details.size, 2);
+  /* each refusal has a row and a sentence of its own (K4364): CONFIRM_NOT_AN_OFFICE keeps clear of duties' NOT_AN_OFFICE */
+  const rows = [["CONFIRM_NOT_AN_OFFICE", person, "C-91.10"], ["NOT_NAMED_BY_A_MEMBER", own, "C-91.11"]].map(([c, id, check]) => {
+    const r = op(w, "officeconfirm", { body: { entityId: id, by: "ada" } });
+    assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, c, c, check]);
+    assert.equal(r.translation, ENTITY_CHECKS[c].translation);
+    assert.ok(typeof r.translation === "string" && r.translation.length > 0 && typeof r.detail === "string" && r.detail.length > 0);
+    assert.match(ENTITY_CHECKS[c].where, /^src\/entities\/index\.mjs confirmOffice > is-/);
+    return r.translation;
+  });
+  assert.equal(new Set(rows).size, 2);
+  assert.equal(ENTITY_CHECKS.NOT_AN_OFFICE, undefined, "duties' code is not minted here");
   /* control: the named office is still confirmable after every refusal */
   assert.equal(op(w, "officeconfirm", { body: { entityId: named, by: "ada" } }).ok, true);
 });

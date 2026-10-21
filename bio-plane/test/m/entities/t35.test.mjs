@@ -82,7 +82,7 @@ test("R51 every recognised viewer sees every entity of the kind, in entity_id or
     assert.deepEqual(r.entities.map((e) => e.entity_id), want, viewer);
   }
   const offices = w.e.entitiesOfKind({ kind: " Office ", viewer: "member:ann" }).entities;
-  for (const e of offices) assert.deepEqual(Object.keys(e), ["entity_id", "kind", "label", "note", "named_by_member", "confirmed_by", "declared_by", "at"], "no sector for an office, the mark R63 gives it");
+  for (const e of offices) assert.deepEqual(Object.keys(e), ["entity_id", "kind", "label", "note", "named_by_member", "confirmed_by", "contact", "law", "declared_by", "at"], "no sector for an office, the mark R63 gives it");
   const by = Object.fromEntries(offices.map((e) => [e.entity_id, e]));
   assert.deepEqual([by[w.clerk].label, by[w.clerk].note, by[w.clerk].declared_by, by[w.clerk].kind],
                    ["Harbour Clerk", "the office that keeps the minutes", "member:ann", "office"]);

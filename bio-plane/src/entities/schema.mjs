@@ -191,7 +191,11 @@ export const FORUM_KIND_COLUMN = Object.freeze(["entities", "forum_kind"]);
    office registered before the mark (it reads unmarked). A store written before it lacks the columns. */
 export const OFFICE_MARK_COLUMNS = Object.freeze([
   ["entities", "named_by_member", "INTEGER"], ["entities", "confirmed_by", "TEXT"], ["entities", "confirmed_at", "TEXT"],
+  /* R63 (K4364; DEC-402): where requests to an office go and the law they go under, NULL when not stated. */
+  ["entities", "contact_kind", "TEXT"], ["entities", "contact_value", "TEXT"], ["entities", "law", "TEXT"],
 ]);
+/* R63 (K4364): the three ways an office's contact is stated. */
+export const CONTACT_KINDS = Object.freeze(["address", "email", "portal"]);
 
 /* R8: the columns a store written before K106 lacks. */
 export const WITHDRAWAL_COLUMNS = Object.freeze([
