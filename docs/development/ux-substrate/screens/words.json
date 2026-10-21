@@ -73985,7 +73985,7 @@
   },
   {
    "key": "screen.objective.whose-it-is",
-   "en": "Whose it is",
+   "en": "Who holds it",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 1: field label: label of the choice, in the declare-an-aspiration form, of who holds the aspiration"
@@ -74076,7 +74076,7 @@
   },
   {
    "key": "screen.objective.put-it-off",
-   "en": "Put it off",
+   "en": "Defer it",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 1: option: option of What to do with it: defer the proposal, with a reason"
@@ -74160,7 +74160,7 @@
   },
   {
    "key": "screen.contradiction.what.shows.it",
-   "en": "What shows it",
+   "en": "What in the record shows it",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 item 2: the label over the ticks naming what in the record shows the difference"
@@ -74195,7 +74195,7 @@
   },
   {
    "key": "screen.contradiction.dismiss.it",
-   "en": "Dismiss it",
+   "en": "Dismiss this lead",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 item 2: the section heading for dismissing a lead"
@@ -74209,7 +74209,7 @@
   },
   {
    "key": "screen.contradiction.ask.it.around",
-   "en": "Ask it around",
+   "en": "Which passage the question is about",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 item 2: the label of the choice of which passage the new question is asked around"
@@ -74244,14 +74244,14 @@
   },
   {
    "key": "screen.contradiction.ask.for",
-   "en": "Ask for",
+   "en": "Which project asks",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 item 2: the label of the choice of which of your projects asks to resolve a conflict with a record you cannot see"
   },
   {
    "key": "screen.contradiction.the.projects",
-   "en": "The projects",
+   "en": "The projects that asked",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 item 2: the section heading over the projects now named to each other, once every project has asked"
@@ -74419,14 +74419,14 @@
   },
   {
    "key": "screen.document.checked.words_and_address",
-   "en": "Checked: the words against the original file, and the address against the site",
+   "en": "Checked: the words against the original file, and the web address against the site",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 document, record of this copy: what the member checked when the copy was put into use; the code passes nothing."
   },
   {
    "key": "screen.document.checked.issuer",
-   "en": "Checked: the issuer is the department's own site",
+   "en": "Checked: the department's own site published it",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 document, record of this copy: what the member checked when the grade changed; the code passes nothing."
@@ -74461,7 +74461,7 @@
   },
   {
    "key": "screen.question.hunch.history.withdraw",
-   "en": "Took this hunch back",
+   "en": "Withdrew this hunch",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 question, hunch history line: act word for taking the hunch back; the code passes nothing."
@@ -74475,7 +74475,7 @@
   },
   {
    "key": "screen.question.reeval.cause.deferred",
-   "en": "{document} was set aside for later, and this question rests on it.",
+   "en": "{document} was deferred, and this question rests on it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the target was deferred. Placeholder {document}, the title of the target."
@@ -74496,21 +74496,21 @@
   },
   {
    "key": "screen.question.reeval.cause.corrected",
-   "en": "A side that this question rests on was named wrongly in {document}, and it has been corrected.",
+   "en": "Something this question rests on was named wrongly in {document}, and it has been corrected.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a side the question rests on was corrected. Placeholder {document}, the title of the target."
   },
   {
    "key": "screen.question.reeval.cause.source",
-   "en": "The source behind {document} moved to another level of reliability.",
+   "en": "The grade of the source behind {document} changed.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the source behind a capture moved a rung. Placeholder {document}, the title of the target."
   },
   {
    "key": "screen.question.reeval.cause.attribution",
-   "en": "The credit level of an observation in {document} changed.",
+   "en": "The grade of an observation in {document} changed, because of who it is credited to.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the credit level of an observation changed. Placeholder {document}, the title of the target."
@@ -74538,7 +74538,7 @@
   },
   {
    "key": "screen.question.reeval.cause.cited_case_moved",
-   "en": "A case cited in {document} moved.",
+   "en": "The status of a case cited in {document} changed.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a cited case moved. Placeholder {document}, the title of the target."
@@ -74594,14 +74594,14 @@
   },
   {
    "key": "screen.project.cmp_their_reading",
-   "en": "Their reading: {text}",
+   "en": "Their grades: {text}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 project, rerun comparison, on each of their findings: how the original read it. Placeholder {text}, the two grades."
   },
   {
    "key": "screen.project.cmp_our_reading",
-   "en": "Our reading: {text}",
+   "en": "Our grades: {text}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-391: B435 project, rerun comparison, on each of our findings paired with theirs: how this project reads it. Placeholder {text}, the two grades."
@@ -113214,7 +113214,7 @@
   },
   {
    "key": "screen.contradiction.purpose",
-   "en": "Two passages in your team's record that disagree: see both as written, and settle it by saying how they differ or that one is wrong, taking it up as a question, or concluding it.",
+   "en": "Two passages in your team's record that are in tension: see both as written, then settle it by saying how they differ or that one is wrong, take it up as a question, conclude it, or dismiss it as a lead.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
