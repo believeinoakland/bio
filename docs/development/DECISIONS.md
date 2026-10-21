@@ -6142,3 +6142,18 @@ decided: 2026-10-21 · the design session (P17)
 the design: `refusal.ACQUIRE_TIMED_OUT.held` (what was received is kept and held to check), `refusal.ACQUIRE_TIMED_OUT.undetermined` (it cannot tell; look in Held captures before trying again), both beside `refusal.ACQUIRE_TIMED_OUT`'s 25 seconds; `form.choose.search` "Search your documents", `form.choose.search.none`.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-397").
 owed: none.
+
+### DEC-398 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B448, K4328, and B450, K4331)
+for: design
+question: Which rows do B448's and B450's keys need?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: a discarded knock's "Put it back" (`act.inboxresolve.label.inbox.putback`, `act.inboxresolve.putback.does`, `screen.inbox.putback.done`); a copy that cannot be retired (`screen.document.retire.refused.illegal`, `.cited` with {questions}); Settings (`screen.group.hosting.now.date`, `screen.group.export.count.tables.one|other`, `screen.security.nosignatures.next`, `screen.group.domain.checked`), `shell.field.needed`; the purposes of `watching` and `leads` (SCREEN_HELP); a live review link's `shared {date}` and comment counts, and `links.live.one` on the editor and ceremony. Parked for T52: `heldsetaside` on `document`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-398"), `screens/mock-refs.js`, `screens/parked-T52.md`.
+owed: none.
