@@ -512,7 +512,7 @@ test("R12: op=projectstage, an ungated read, is named in no registry, and a tabl
    each with a `NEEDS` row, as it gates `contradictionpairs` (R12). */
 test("R1 R12 R24: N345's ops — contradiction's op map, with resolutiondefect and publishtensions from their owners': "
    + "contradictionresolve is an act and never a non-act too, each write decorates with a rung or a stated absence, each read "
-   + "is gated — and with the control plane's rows nothing is unaccounted; carried ungated, a read would read stale", () => {
+   + "is gated — and with the control plane's rows nothing is unaccounted; carried ungated, a read is not stale (K4279)", () => {
   const m = MAPS();
   assert.ok(m.entities.includes("resolutiondefect"));
   assert.ok(m.caseAuthoring.includes("publishtensions"));
@@ -523,8 +523,9 @@ test("R1 R12 R24: N345's ops — contradiction's op map, with resolutiondefect a
   for (const op of ops.filter(isMutating)) assert.ok(ranked(op), `R24: ${op}`);
   assert.deepEqual(ops.filter((op) => !isGated(op)), []);
   totality(ops, "contradictionunnamed");
-  /* carried ungated, a read op-grades R5 names would read stale: the control plane gates each */
-  assert.ok(A.unaccounted([{ op: "publishtensions", mutating: false, gated: false }]).stale.includes("publishtensions"));
+  /* K4279 (R12): an owner's declared read carried ungated is not stale; carried by no row it is (op-grades R5) */
+  assert.ok(!A.unaccounted([{ op: "publishtensions", mutating: false, gated: false }]).stale.includes("publishtensions"));
+  assert.ok(A.unaccounted([]).stale.includes("publishtensions"));
 });
 
 /* K516: contradiction's measures (its R39, R40) are in-process and no op, so no registry names them. */
@@ -585,7 +586,9 @@ test("R1 R4 R12 R24 R51: actionhold and actionholdrelease — action-holds' op m
     ...["actionholdpreview", "projectholds"].map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.ok(A.unaccounted([{ op: "projectholds", mutating: false, gated: false }]).stale.includes("projectholds"));
+  /* K4279 (R12): an owner's declared read carried ungated is not stale; carried by no row it is */
+  assert.ok(!A.unaccounted([{ op: "projectholds", mutating: false, gated: false }]).stale.includes("projectholds"));
+  assert.ok(A.unaccounted([]).stale.includes("projectholds"));
 });
 
 /* K921, K922 (3), T21: the ops of `filing-templates` and `local-facts`, read from their op maps, graded in op-grades (its
@@ -680,7 +683,7 @@ const T23_READS = ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noti
 const T23_PUBLIC = ["activitymethod", "noticespublic", "groupkeyspublic"];
 test("R1 R12 R24: T23's ops — case-inputs' and escalation's op maps hold theirs, each write decorates with a rung "
    + "or a stated absence, none is an act — and with the control plane's rows for them nothing is unaccounted; an "
-   + "ungated read and an op left out are each seen", () => {
+   + "ungated read is not stale (K4279) and an op left out is seen", () => {
   const url = new URL("http://x/");
   const ca = Object.keys(caseInputsOps({}, url, {})), esc = Object.keys(escalationOps({}, url, {}));
   for (const op of ["whatchangedpropose", "whatchangeddrafts"]) assert.ok(!Object.keys(caseAuthoringOps({}, url, {})).includes(op), op);
@@ -702,8 +705,9 @@ test("R1 R12 R24: T23's ops — case-inputs' and escalation's op maps hold their
   /* negative controls: carried by no row (the real table before op-declarations' merge), each reads stale; a read
      carried ungated reads stale; a new op the catalogue leaves out reads unpublished and unranked */
   assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  /* K4279 (R12): a read carried ungated is not stale, a NON_ACT's owner-declared read */
   for (const op of [...T23_READS, ...T23_PUBLIC])
-    assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+    assert.ok(!A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = A.unaccounted([...table, { op: "noticeunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["noticeunnamed"], ["noticeunnamed"]]);
 });
@@ -748,9 +752,9 @@ test("R1 R12 R19 R24: case-inputs' ops — its op map holds every op it declares
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => [...WRITES, ...READS, ...served].includes(op)), []);
-  /* negative controls: an op carried ungated reads stale where a NON_ACTS row names it; carried by no row, each reads stale */
+  /* negative controls (K4279, R12): an op a NON_ACTS row names is not stale carried ungated; carried by no row, each reads stale */
   for (const op of [...WRITES, ...READS, ...served].filter((o) => Object.hasOwn(NON_ACTS, o)))
-    assert.ok(A.unaccounted([{ op, mutating: mutates(op), gated: false }]).stale.includes(op), op);
+    assert.ok(!A.unaccounted([{ op, mutating: mutates(op), gated: false }]).stale.includes(op), op);
   assert.deepEqual([...WRITES, ...READS, ...served].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
   const out = A.unaccounted([...table, { op: "inputsunnamed", mutating: true, gated: true }]);
   assert.deepEqual([out.unpublished, out.unranked], [["inputsunnamed"], ["inputsunnamed"]]);
@@ -910,11 +914,12 @@ test("R1 R4 R12 R19 R24: case-import's ops — its op map holds every op it decl
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
-  /* negative controls: carried by no row, each reads stale; a read carried ungated reads stale; an op left out reads
+  /* negative controls: carried by no row, each reads stale; a read carried ungated is not stale (K4279); an op left out reads
      unpublished and unranked */
   assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  /* K4279 (R12): a read carried ungated is not stale, a NON_ACT's owner-declared read */
   for (const op of [...IMPORT_READS, ...IMPORT_PUBLIC])
-    assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+    assert.ok(!A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = A.unaccounted([...table, { op: "importunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["importunnamed"], ["importunnamed"]]);
 });
