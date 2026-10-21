@@ -1868,3 +1868,6 @@ HANDOFF from BOB #240 (K4326): two rows for a timed-out capture (control-plane R
 
 ## B447 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 HANDOFF from BOB #240 (K4327): two rows for the document picker's search (screens-investigate C95): form.choose.search (the search box's label) and form.choose.search.none (a search that finds no document). The job keys them; nothing waits.
+
+## B448 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+HANDOFF from BOB #240 (K4328): rows the running jobs key: (a) putting a discarded inbox knock back (doorbell R3, inboxresolve to new): its button and explanation (suggested act.inboxresolve.label.inbox.putback and its .does) and the sentence after it is done; (b) a copy that cannot be retired: screen.document.retire.refused.illegal (not vouched for, or already retired) and screen.document.retire.refused.cited (cited by {questions}; remove those citations first). Later, T52 (K4269): heldsetaside drawn on document as well as Held.
