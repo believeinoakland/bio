@@ -246,7 +246,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   let GROUP = null, TODO = null, QUEUE_COUNTS = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, KEEP_LATER = false, BOOT = null, BOOT_READ = false;
   const screenOf = (id) => SCREENS.find((s) => s.id === id) || null;
   /* R111 (fix round 2, C94): the members as `memberlist` names them, id to handle, so a screen names a member by handle and never by
-     id; read once the session is known and again when a screen opens after two minutes (background reads, R33) */
+     id; read when a screen first asks for a name not held, then at most every two minutes (a background read, R33) */
   const MEMBERS = new Map();
   let MEMBERS_AT = 0;
   const noteMember = (id, handle) => { if (typeof id === "string" && id && typeof handle === "string" && handle.trim()) MEMBERS.set(id, handle.trim()); };
@@ -436,6 +436,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           for (const h of MEMBERS.values()) if (h === key) return h;
           if (ME && key === ME.handle) return key;
         }
+        /* the roster is read only when a screen first needs a name it does not hold (a screen that names no member sends no read),
+           and again after two minutes; the screen redraws when it answers */
+        if (ME && Date.now() - MEMBERS_AT > 120000) loadMembers();
         return textOf(w(key === "admin" ? "member.founder.unnamed" : "shell.card.member"));
       },
       can: (op) => can(op, inst),
@@ -1458,7 +1461,6 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   function show(id, subject) {
     const spec = ROUTE.malformed ? null : screenOf(id);
-    if (ME && S && Date.now() - MEMBERS_AT > 120000) loadMembers();
     MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m", null, subject !== undefined ? null : ROUTE.project) : null;
     if (ME && S && frameOf(id) === "working") startVersion();
     DOCKI = !MAIN || frameOf(MAIN.spec.id) === "working" ? (REACHABLE && screenOf("assistant") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null) : null;
@@ -1493,7 +1495,6 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       loadWords().then(() => { wordsRetry = !wordsRead; });
       loadFrame();
       loadReach();
-      loadMembers();
       return "ok";
     }
     if (unreachable(who)) {
