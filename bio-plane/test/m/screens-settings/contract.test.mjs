@@ -11,7 +11,7 @@ import { OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREENS, SCREEN_WORDS, KEYS } from "../../../src/screens-settings/index.mjs";
 import { open, said, day } from "./kit.mjs";
-import { interfacePage, checkScreens } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, interfaceScriptHash, checkScreens, RE_POINTS } from "../../../src/interface-shell/index.mjs";
 import { ADMIN, MEMBER, membersTable, teamaiTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable, grouprulesTable, biasTable } from "./fixtures.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -26,7 +26,8 @@ test("the screens are the registry's, each listing exactly its registry acts, an
   for (const s of SCREENS) {
     const r = reg.find((x) => x.id === s.id);
     assert.ok(r, `${s.id} is a registry screen`);
-    const want = new Set(r.acts.map((a) => (/^owed:/.test(a.op) ? a.op.slice(5).split(" ")[0] : a.op)));
+    // the registry's acts, and the re-points the shell names for the screen until the registry lists them (interface-shell R21, R73)
+    const want = new Set([...r.acts.map((a) => (/^owed:/.test(a.op) ? a.op.slice(5).split(" ")[0] : a.op)), ...(RE_POINTS[s.id] || [])]);
     assert.deepEqual(new Set(s.acts.map((a) => a.op)), want, `${s.id}'s acts`);
     assert.equal(s.acts.length, want.size, `${s.id} lists each act once`);
   }
@@ -46,8 +47,11 @@ test("every act names an op OPS holds (owed:infolevelset's op among them, op-dec
 
 test("the shell serves the screens: interfacePage passes its R21 check, and the page runs each screen from its own source (self-contained), drawing it", async () => {
   assert.equal(checkScreens(SCREENS), true);
-  const html = interfacePage(SCREENS);
-  for (const s of SCREENS) for (const a of s.acts) assert.ok(html.includes(a.op), `${s.id}'s ${a.op} is in the page`);
+  // the shell and its screens are one external, versioned script (interface-shell R1, R2): the page names it by its hash, the screens are in it
+  const html = interfacePage(SCREENS), script = interfaceScript(SCREENS);
+  assert.ok(html.includes(`integrity="${interfaceScriptHash(SCREENS)}"`), "the page names its script by its hash");
+  assert.ok(!/<script[^>]*nonce=/.test(html), "no inline script, no nonce");
+  for (const s of SCREENS) for (const a of s.acts) assert.ok(script.includes(a.op), `${s.id}'s ${a.op} is in the script`);
   const tables = { settings: {}, members: membersTable(), teamai: teamaiTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN), group: groupTable(), "group-identity": identityTable(),
     places: placesTable(), recovery: recoveryTable(), security: securityTable(), translations: translationsTable(), updates: updatesTable(), glossary: {}, grouprules: grouprulesTable(), bias: biasTable() };
   for (const s of SCREENS) {

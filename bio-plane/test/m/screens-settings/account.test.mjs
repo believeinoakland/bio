@@ -1,12 +1,15 @@
 /* Settings › Your account at the module's interface (R3, R8, R10). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { generateKeyPairSync } from "node:crypto";
 import { acts, all, day, has, lacks, open, panelOf, rowOf, said, textOf, WORDS, registryOps } from "./kit.mjs";
 import { ADMIN, MEMBER, READER, FOUNDER_ROW, accountTable, refuse, env } from "./fixtures.mjs";
 import { SCREENS } from "../../../src/screens-settings/index.mjs";
 import { hasWord, WORD_ROWS } from "../../../src/setup-words/index.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
+// the kit's load-key-file helper answering that no file is chosen (interface-shell D3)
+const NO_FILE = async () => ({ ok: false, word: "shell.keyfile.none" });
 
 test("R3 the reads: whoami, memberlanguage, the member's own expertiselist, signerlist", async () => {
   const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
@@ -149,7 +152,7 @@ test("R22 Register your signing key: made by the kit's signer in this browser (c
   assert.ok(!JSON.stringify(r.sent).includes("PRIVATE"), "nothing but the public line");
   // declined: nothing is sent
   const spec = a.s.acts.find((x) => x.op === "signerregisterown");
-  assert.deepEqual(await spec.send({ ui: {} }, {}, { value: () => false, signer: { register: async () => ({ ok: false, declined: true }) } }), { refuse: "screen.account.key.declined" });
+  assert.deepEqual(await spec.send({ ui: {} }, {}, { value: () => false, keyFile: NO_FILE, signer: { register: async () => ({ ok: false, declined: true }) } }), { refuse: "screen.account.key.declined" });
 });
 
 /* R57 (T51; K3807; DEC-330 C1, A74, A11; DEC-336 (7), (8)): the key made on the page's terms, a key registered for the member, the glossary */
@@ -167,7 +170,7 @@ test("R57 (1) Make your signing key: the tick, the optional passphrase field (a 
   assert.equal(textOf(reg).startsWith(said("act.signerregisterown.label.account")), true, "Register your signing key");
   // the kit is asked with what the member typed, deferring the file
   let asked = null, pending = null;
-  const kit = { value: (id) => ({ "ma-keep": false, "ma-pass": "a typed passphrase" }[id]), now: () => Date.parse("2026-10-18T10:00:00Z"), signer: { register: async (o) => { asked = o; return { ok: true, kept: false, keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIFreshKey0000000000000000000000000000001", line: LINE, file: "BIOKEY1.FILE" }; } } };
+  const kit = { value: (id) => ({ "ma-keep": false, "ma-pass": "a typed passphrase" }[id]), keyFile: NO_FILE, now: () => Date.parse("2026-10-18T10:00:00Z"), signer: { register: async (o) => { asked = o; return { ok: true, kept: false, keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIFreshKey0000000000000000000000000000001", line: LINE, file: "BIOKEY1.FILE" }; } } };
   const view = { ui: {} };
   const sent = await regSpec().send(view, {}, kit);
   assert.deepEqual(asked, { keep: false, passphrase: "a typed passphrase", defer: true });
@@ -175,7 +178,7 @@ test("R57 (1) Make your signing key: the tick, the optional passphrase field (a 
   pending = view.ui.madePending;
   assert.equal(pending.file, "BIOKEY1.FILE", "the file is held for the sitting");
   // control: a member who stops sends nothing
-  assert.deepEqual(await regSpec().send({ ui: {} }, {}, { value: () => "", signer: { register: async () => ({ ok: false, declined: true }) } }), { refuse: "screen.account.key.declined" });
+  assert.deepEqual(await regSpec().send({ ui: {} }, {}, { value: () => "", keyFile: NO_FILE, signer: { register: async () => ({ ok: false, declined: true }) } }), { refuse: "screen.account.key.declined" });
 });
 
 test("R57 (2) after it is made: its tail and day, the public line as data, Copy the public line, and Save the key file only for a key that made a file (never for one kept on the device); nothing of it in any request or storage", async () => {
@@ -288,4 +291,62 @@ test("R67 control: a member the pairings do not hold (the founder, who has no co
   assert.ok(!ops(a).includes("memberpairingset"));
   const f = await open("account", { me: MEMBER, table: accountTable(MEMBER, { memberpairings: refuse("NOT_SERVED") }) });
   assert.ok(!ops(f).includes("memberpairingset"), "no choice is drawn from a read that failed");
+});
+
+/* ---- T51 fix round 3: C51 (R22, R57; interface-shell R116) ---- */
+
+/** A real Ed25519 key as the kit's unprotected key file (`BIOKEY-RAW1.`), and the public key line's base64 the kit would answer for it. */
+function keyFile() {
+  const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+  const seed = privateKey.export({ format: "der", type: "pkcs8" }).subarray(-32), pub = publicKey.export({ format: "der", type: "spki" }).subarray(-32);
+  const u32 = (n) => Buffer.from([0, 0, 0, n]);
+  return { text: "BIOKEY-RAW1.bio-ratify." + seed.toString("base64"), keyB64: Buffer.concat([u32(11), Buffer.from("ssh-ed25519"), u32(32), pub]).toString("base64") };
+}
+const chooseFile = (o, content) => { o.b.doc.getElementById("ma-keyfile").files = [{ name: "bio-signing-key.txt", size: content.length, text: async () => content }]; };
+const untilRequest = async (o, op) => { for (let i = 0; i < 400 && !o.b.requests.some((r) => r.op === op); i++) { await new Promise((r) => setTimeout(r, 10)); await o.b.settle(10); } };
+
+test("R22 R57 C51: the key section offers the member's key file, and a file chosen is read by the kit, handed to the signer (the dialog asks only the passphrase) and the key it holds is the one registered; nothing of the file is stored or sent", async () => {
+  const f = keyFile();
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  const box = a.b.doc.getElementById("ma-keyfile");
+  assert.equal(box.getAttribute("type"), "file", "the key file is chosen in a file box");
+  has(a, "shell.signer.loadfile");
+  chooseFile(a, f.text);
+  const btn = a.b.doc.getElementById("cs-main").querySelectorAll('button[data-act="signerregisterown"]')[0];
+  a.b.fire(btn, "click");
+  await a.b.settle(80);
+  const yes = a.b.doc.querySelector('[data-shell="dialog-yes"]');
+  assert.ok(yes, "the kit's sign dialog is drawn");
+  assert.equal(a.b.doc.getElementById("cs-key-file"), null, "no file box in the dialog: the screen handed the text over");
+  a.b.fire(yes, "click");
+  await untilRequest(a, "signerregisterown");
+  const sent = a.b.requests.find((r) => r.op === "signerregisterown");
+  assert.ok(sent, "the key is registered");
+  assert.equal(sent.body.keyB64, f.keyB64, "the key the file holds, not a new one");
+  assert.equal(a.b.idb.get("civicsmith-signer").get("keys").size, 0, "no second key is kept on this device");
+  await a.b.settle(80); a.redraw();
+  assert.ok(keyHeading(a, "screen.account.key.made.heading"), "Your key is made");
+  assert.equal(all(a.tree, (e) => e.tag === "button" && textOf(e) === said("screen.account.key.savefile")).length, 0, "no file is offered: she holds it");
+  assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("BIOKEY")), "the file is kept nowhere");
+  assert.ok(!JSON.stringify(a.b.requests).includes("BIOKEY"), "nor sent");
+});
+
+test("R22 R57 C51: an unreadable or empty key file is refused in the kit's word (the dialog's own, while the list lacks it) before anything is asked of the device; no file chosen makes the key as before (control)", async () => {
+  const kit = (kf, known = []) => ({ w: (k) => (known.includes(k) ? "T:" + k : k), value: () => "", keyFile: kf, signer: { sign: async () => { throw new Error("signed"); }, register: async () => ({ ok: false, declined: true }) } });
+  for (const word of ["shell.keyfile.unreadable", "shell.keyfile.empty"]) {
+    assert.deepEqual(await regSpec().send({ ui: {} }, {}, kit(async () => ({ ok: false, word }), [word])), { refuse: word }, word + ": the helper's own word once the list holds it");
+    assert.deepEqual(await regSpec().send({ ui: {} }, {}, kit(async () => ({ ok: false, word }))), { refuse: "shell.signer.notkey" }, word + ": never drawn as a key the list lacks");
+  }
+  // control: nothing chosen: the kit's register is asked, as before
+  let registered = 0;
+  const none = { ...kit(NO_FILE), signer: { sign: async () => { throw new Error("signed"); }, register: async () => { registered += 1; return { ok: false, declined: true }; } } };
+  assert.deepEqual(await regSpec().send({ ui: {} }, {}, none), { refuse: "screen.account.key.declined" });
+  assert.equal(registered, 1);
+  // the page: an empty file chosen sends nothing and no dialog is drawn
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  chooseFile(a, "   ");
+  const r = await a.press("signerregisterown");
+  assert.deepEqual(r.sent, []);
+  assert.equal(a.b.doc.querySelector('[data-shell="dialog-yes"]'), null, "no dialog");
+  assert.ok(a.refused, "refused beside the act");
 });

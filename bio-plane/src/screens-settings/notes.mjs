@@ -52,7 +52,7 @@ export const notes = {
         const rev = cs.act("noterevise", { data: { note: id } });
         if (rev) p.push(`<div>${textField("mn-r" + id, "note:" + id, n.text)}${rev}</div>`);
         const turn = cs.act("noteturn", { data: { note: id } });
-        if (turn) p.push(`<div><fieldset><legend>${W(S + "turn.into")}</legend>${["observation", "hunch", "question"].map((k, i) => `<input type="radio" id="mn-${k}${id}" name="mn-into${id}"${i === 0 ? " checked" : ""}><label for="mn-${k}${id}">${W(S + "turn." + k)}</label>`).join("")}</fieldset>
+        if (turn) p.push(`<div><fieldset><legend>${W(S + "turn.into")}</legend>${["observation", "hunch", "question"].map((k, i) => `<label for="mn-${k}${id}"><input type="radio" id="mn-${k}${id}" name="mn-into${id}"${i === 0 ? " checked" : ""}>${W(S + "turn." + k)}</label>`).join("")}</fieldset>
 ${cs.field("mn-made" + id, S + "turn.made", { help: S + "turn.made.help" })}
 ${cs.field("mn-inq" + id, S + "turn.inquiry", { help: S + "turn.inquiry.help" })}
 ${cs.choice("mn-kind" + id, S + "turn.kind", ["cause", "identity", "relation", "flow", "other"].map((k) => [k, S + "turn.kind." + k]))}

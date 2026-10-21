@@ -188,7 +188,7 @@ export const connect = {
             if (ui.starting) start = start.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"');
             if (ui.exchanging) code = code.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"') + `<span class="mk-small" role="status" data-state="working">${W("shell.working")}</span>`;
             if (start || code) {
-              const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
+              const open = ui.signinAddress ? `<div class="mk-links" data-shown="signin"><a class="cs-ref" href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></div>` : "";
               h += `<h3>${W(S + "signin.heading")}</h3><ol class="mk-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}${cs.field("mc-code" + (ui.gen || 0), S + "signin.code", { type: "password", help: S + "signin.whole", autocomplete: "off" })}<p class="mk-note">${W(S + "signin.help")}</p>${code}`;
               // the password asked again (DEC-249; the registry's `reauth`): the shell asks it when an act is answered REAUTH_DUE; here it can be
               // given beforehand. The field is cleared by the shell after the act (interface-shell R21)

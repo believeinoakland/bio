@@ -43,7 +43,7 @@ export const translations = {
     const langs = cs.state(data.languages, (v) => {
       const L = Array.isArray(v.languages) ? v.languages.filter((t) => String(t).split("-")[0].toLowerCase() !== "en") : [];
       some = L.length > 0;
-      return L.length ? `<ul class="mk-list" data-list="languages">${L.map((t) => `<li><a href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(nameOf(t))}</a></li>`).join("")}</ul>` : `<p data-state="nolanguages">${W(S + "languages.none")}</p>`;
+      return L.length ? `<div class="mk-links" data-list="languages">${L.map((t) => `<a class="cs-ref" href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(nameOf(t))}</a>`).join("")}</div>` : `<p data-state="nolanguages">${W(S + "languages.none")}</p>`;
     });
     if (langs) out.push(cs.sec(S + "languages.heading", langs));
     if (!lang) { if (some) out.push(`<p>${W(S + "choose")}</p>`); return out.join(""); }
@@ -53,7 +53,7 @@ export const translations = {
 
     // a grant for the language: an administrator's act
     const grant = admin ? cs.act("translationgrant", { data: { revoke: "" } }) : "";
-    if (grant) out.push(cs.sec(S + "grant.heading", `${cs.field("tr-member", S + "grant.member", { fills: { language: nameOf(lang) }, autocomplete: "off" })}<input type="checkbox" id="tr-revoke"><label for="tr-revoke">${W(S + "grant.revoke")}</label>${grant}`));
+    if (grant) out.push(cs.sec(S + "grant.heading", `${cs.field("tr-member", S + "grant.member", { fills: { language: nameOf(lang) }, autocomplete: "off" })}<label for="tr-revoke"><input type="checkbox" id="tr-revoke">${W(S + "grant.revoke")}</label>${grant}`));
 
     // the words, each a row with its acts in its panel; a row shows its English and its meaning, never its key
     out.push(cs.sec(S + "words.heading", cs.state(data.words, (v) => {
@@ -74,7 +74,7 @@ export const translations = {
           const drafts = Array.isArray(x.drafts) ? x.drafts : [];
           const p = [];
           // the stored drafts, labeled machine work, each one to keep as drafted or corrected
-          if (drafts.length) p.push(`<fieldset><legend>${W(S + "drafts")}</legend>${drafts.map((d, i) => `<input type="radio" id="${fid}-d${i}" name="${fid}-d" data-draft="${E(d.id)}"><label for="${fid}-d${i}"><span class="mk-tag">${W(S + "draft.label", { handle: d.asked_by_name || cs.memberName(String(d.asked_by || "").replace(/^member:/, "")) })}</span> <span class="rec">${E(d.text)}</span></label>`).join("")}</fieldset>`);
+          if (drafts.length) p.push(`<fieldset><legend>${W(S + "drafts")}</legend>${drafts.map((d, i) => `<label for="${fid}-d${i}"><input type="radio" id="${fid}-d${i}" name="${fid}-d" data-draft="${E(d.id)}"><span class="mk-tag">${W(S + "draft.label", { handle: d.asked_by_name || cs.memberName(String(d.asked_by || "").replace(/^member:/, "")) })}</span> <span class="rec">${E(d.text)}</span></label>`).join("")}</fieldset>`);
           const adopt = cs.act("translationadopt", { data: { key: k } });
           if (adopt) p.push(`${cs.field(fid, S + "text.field", { help: drafts.length ? S + "text.help.draft" : S + "text.help", rec: true, max: 2000, value: x.text || "", autocomplete: "off" })}${adopt}`);
           if (x.state === "awaiting" && x.protected) {

@@ -29,7 +29,7 @@ export const recovery = {
     const st = data.step && data.step.state === "ok" ? data.step.value : null;
     if (st && st.met === false) {
       const lead = st.administrators === 1 ? W("screen.members.recovery.one") : W("screen.members.recovery.many", { administrators: st.administrators });
-      out.push(`<div class="mk-msg" data-note="step">${lead ? `<p>${lead}</p>` : ""}${st.administrators < 2 ? `<p><a href="/app/members#members-invite" data-nav>${W("screen.members.recovery.add")}</a></p>` : ""}</div>`);
+      out.push(`<div class="mk-msg" data-note="step">${lead ? `<p>${lead}</p>` : ""}${st.administrators < 2 ? `<div class="mk-links"><a class="cs-ref" href="/app/members#members-invite" data-nav>${W("screen.members.recovery.add")}</a></div>` : ""}</div>`);
     }
 
     // the member's own codes: how many are left, and when issued

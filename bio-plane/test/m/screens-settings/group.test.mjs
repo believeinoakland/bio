@@ -454,3 +454,33 @@ test("R40 R75 C94: who set the stake and who recorded the hosting account are na
   has(b, "screen.group.hosting.now", { by: said("shell.card.member"), date: day("2026-10-04") });
   assert.ok(!b.text.includes("m-9"));
 });
+
+/* ---- T51 fix round 3: C85 (R66), the counts of the copies ---- */
+
+const copyRows = (o) => all(o.tree, (e) => /cs-row/.test(e.attrs.class || "") && all(e, (x) => /mk-data/.test(x.attrs.class || "")).length >= 4).map((e) => squash(textOf(e)));
+
+test("R66 C85: each count of a copy in the list is drawn with its label (records, files, tables), one or many, a zero as any other; the copy just taken says its tables after a comma", async () => {
+  const log = (rows) => groupTable({ exportlog: env({ ok: true, exports: rows, limit: 200, truncated: false }) });
+  const a = await open("group", { me: FOUNDER, table: log(EXPORTS) });
+  await a.press("exportlog", {});
+  const [first, second] = copyRows(a);
+  assert.ok(first.includes([said("queue.export-performed.records.other", { n: "38" }), said("queue.export-performed.files.other", { n: "112" }), said("screen.group.export.count.tables.other", { n: "14" })].join(" · ")), first);
+  assert.ok(second.includes([said("queue.export-performed.records.other", { n: "31" }), said("queue.export-performed.files.other", { n: "87" }), said("screen.group.export.count.tables.other", { n: "14" })].join(" · ")), second);
+  // one of each takes the singular word; none takes the plural with a zero, drawn the same way
+  const one = await open("group", { me: FOUNDER, table: log([{ seq: 3, at: "2026-10-19T00:00:00Z", scope: "working-corpus", bundles: 1, files: 1, note: null, tables: 1, rows: 1, format: "json" }, { seq: 4, at: "2026-10-20T00:00:00Z", scope: "working-corpus", bundles: 0, files: 0, note: null, tables: 0, rows: 0, format: "json" }]) });
+  await one.press("exportlog", {});
+  const rows = copyRows(one);
+  assert.ok(rows[0].includes([said("queue.export-performed.records.one"), said("queue.export-performed.files.one"), said("screen.group.export.count.tables.one")].join(" · ")), rows[0]);
+  assert.ok(rows[1].includes([said("queue.export-performed.records.other", { n: "0" }), said("queue.export-performed.files.other", { n: "0" }), said("screen.group.export.count.tables.other", { n: "0" })].join(" · ")), rows[1]);
+  // the copy just taken: the sentence's records and files, then a comma, then its tables
+  const taken = await open("group", { me: FOUNDER, table: groupTable({ export: () => env(MANIFEST) }) });
+  await taken.press("export", { values: { "gr-exnote": "" } });
+  const said1 = squash(textOf(all(taken.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
+  const sentence = said("queue.export-performed.summary", { date: day("2026-10-20"), records: said("queue.export-performed.records.other", { n: "40" }), files: said("queue.export-performed.files.other", { n: "120" }) });
+  assert.ok(said1.includes(sentence + ", " + said("screen.group.export.count.tables.other", { n: "15" })), said1);
+  // control: one table says the singular
+  const single = await open("group", { me: FOUNDER, table: groupTable({ export: () => env({ ...MANIFEST, counts: { bundles: 1, files: 1, tables: 1, rows: 1 } }) }) });
+  await single.press("export", { values: { "gr-exnote": "" } });
+  const said2 = squash(textOf(all(single.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
+  assert.ok(said2.includes(", " + said("screen.group.export.count.tables.one")) && said2.includes(said("queue.export-performed.records.one")), said2);
+});

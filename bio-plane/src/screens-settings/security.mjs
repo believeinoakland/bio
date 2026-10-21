@@ -16,7 +16,10 @@
    administrators (`memberlist`) to be told whose screen it is.
    T51 FR-25 (R74, R77; T-14, K4213; DEC-384): a credential field is labelled by `file-scanner.credential.<field>` for the four names the
    catalogue lists (`client_id`, `client_secret`, `api_key`, `api_secret`), the field sent staying the catalogue's own; and a scanner
-   that holds no signatures is said so, by the key and words `scanstatus` answers (`no_signatures`), never drawn as "waiting". */
+   that holds no signatures is said so, by the key and words `scanstatus` answers (`no_signatures`), never drawn as "waiting".
+   T51 fix round 3 (C83, C84; file-safety R46, R49): the administrator's step is said once, in the reason line's own sentence, and on its own
+   only where no reason line is drawn; a button asks the scanner to check for new signatures now (`scanmirror`), draws that a run was started and
+   reads the state again, a refusal beside it in file-safety's words. */
 
 export const security = {
   id: "security",
@@ -104,9 +107,15 @@ export const security = {
           const first = said1(ns.key, ns.words, ns.since ? { date: D(ns.since) } : {});
           const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
           if (first) h += `<p data-state="nosignatures">${first}</p>`;
+          // the administrator's step is said once (C83): file-safety's reason lines carry it in their own sentence, so it is drawn on its own
+          // only where no reason line is drawn
           if (second) h += `<p data-state="nosignatures-reason">${second}</p>`;
-          h += `<p data-state="nosignatures-next">${W(S + "nosignatures.next")}</p>`;
+          else h += `<p data-state="nosignatures-next">${W(S + "nosignatures.next")}</p>`;
         }
+        // C84: the button that checks for new signatures now (`scanmirror`, file-safety R49), beside the scanner's state. The design holds no row for its
+        // label or for "started" yet, so the nearest rows stand in (REPORTED, QUESTION J20): "Check it now", and "Working…" while the run asked for goes on
+        const mirror = cs.act("scanmirror", { label: "act.monitor.label.capture" });
+        if (mirror) h += `<div data-form="mirror">${mirror}${ui.mirror ? `<p data-state="mirror">${W("shell.working")}</p>` : ""}</div>`;
       }
       return h;
     })));
@@ -143,8 +152,8 @@ export const security = {
         // R74: the label of a credential field is its word where the design holds one (the four names); any other is its own name
         const credLabel = (k) => { if (["client_id", "client_secret", "api_key", "api_secret"].indexOf(k) < 0) return k; try { return T("file-scanner.credential." + k); } catch (e) { return k; } };
         for (const k of Array.isArray(t.credentials) ? t.credentials : []) f += cs.field(`${p}-k-${k}`, S + "field", { type: "password", fills: { label: credLabel(k) }, autocomplete: "off" });
-        if (h.sample_sharing === "vendor_internal_research") f += `<input type="checkbox" id="${p}-keep"><label for="${p}-keep">${W(S + "keep")}</label>`;
-        if (h.on_own === true) f += `<input type="checkbox" id="${p}-every"><label for="${p}-every">${W(S + "every")}</label>`;
+        if (h.sample_sharing === "vendor_internal_research") f += `<label for="${p}-keep"><input type="checkbox" id="${p}-keep">${W(S + "keep")}</label>`;
+        if (h.on_own === true) f += `<label for="${p}-every"><input type="checkbox" id="${p}-every">${W(S + "every")}</label>`;
         return f + add + "</div>";
       },
     }), { empty: S + "catalogue.none" }))}</details>`);
@@ -201,5 +210,13 @@ export const security = {
       done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; cs.set("tested", { on: !!(r && r.passed === true), detail: r ? r.detail || "" : "" }); } },
     { op: "securitytoolremove", rereads: ["tools", "events"],
       send(view, el) { return { body: { toolId: el.dataset.tool } }; } },
+    // C84 (file-safety R49): asks the scanner to start a signature run and answers at once; the state is read again, and a refusal (not an
+    // administrator, no scanner, a run asked for under 15 minutes ago) is drawn beside the act in file-safety's own words
+    { op: "scanmirror", rereads: ["scan"],
+      send(view, el, cs) { cs.set("mirror", null); return { body: {} }; },
+      done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        cs.set("mirror", a && a.ok === true && a.state === "started" ? { state: "started" } : null);
+      } },
   ],
 };

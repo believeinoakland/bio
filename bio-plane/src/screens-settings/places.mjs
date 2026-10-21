@@ -12,7 +12,10 @@
    active non-test profile, the screen draws that no profile is held for it, what it therefore offers nothing of, and the field to name
    the place again (`placewanted`), and none of the sections a profile fills (offices, courts, where else to go, the places' choice
    unless some are offered to choose); nothing is filled in from another profile. With a profile active it draws as before. Either
-   way the reference to `grouprules` follows, with the sentence that a member may draft a rule and another confirm it. */
+   way the reference to `grouprules` follows, with the sentence that a member may draft a rule and another confirm it.
+   T51 fix round 3 (C64; entities R63, R64; DEC-401, DEC-402): an office a member named and no administrator has confirmed is marked
+   (`named_by_member: true`, `screen.request.nameoffice.mark`) and offers the administrator's confirm (`officeconfirm`); the contact and the
+   law an office states are drawn with it. */
 
 export const places = {
   id: "places",
@@ -45,12 +48,12 @@ export const places = {
     const named = admin && data.place && data.place.state === "ok" && data.place.value && data.place.value.name ? String(data.place.value.name) : null;
     const noProfile = !!(named && prof && Array.isArray(prof.profiles) && !prof.profiles.some((p) => p && p.test !== true));
     // the reference to the team's own rules (R61), under both states, to every member: any member drafts, another confirms
-    const rulesRef = cs.sec("screen.grouprules.name", `<p class="mk-note">${W(S + "rules.note")}</p><p><a class="cs-ref" href="/app/grouprules" data-nav data-screen="grouprules">${W("screen.grouprules.name")}</a></p>`);
+    const rulesRef = cs.sec("screen.grouprules.name", `<p class="mk-note">${W(S + "rules.note")}</p><div class="mk-links"><a class="cs-ref" href="/app/grouprules" data-nav data-screen="grouprules">${W("screen.grouprules.name")}</a></div>`);
     if (noProfile) {
       const pw = cs.act("placewanted");
       out.push(cs.sec(S + "noprofile.heading", `<p data-state="noprofile">${W(S + "noprofile.says", { state: named })}</p><p>${W(S + "noprofile.offers")}</p><p class="mk-note">${W(S + "noprofile.still")} ${W(S + "noprofile.asks")}</p>${pw ? `${cs.field("pl-want", S + "noprofile.want", { help: S + "noprofile.want.help", max: 200, value: named, autocomplete: "off" })}${pw}` : ""}`, { fills: { state: named } }));
       // a profile a team could choose is still offered to choose (the act is `profilesset`'s)
-      if ((prof.choices || []).length && admin) out.push(cs.sec(S + "profiles.heading", cs.state(data.profiles, (v) => `<div><fieldset><legend>${W(S + "profiles.field")}</legend>${v.choices.map((p) => `<input type="checkbox" id="pl-p-${E(p.id)}" data-profile="${E(p.id)}"><label for="pl-p-${E(p.id)}">${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</label>`).join("")}</fieldset><p class="mk-msg" data-warning="profiles">${W(S + "profiles.warning")}</p>${cs.act("profilesset")}</div>`)));
+      if ((prof.choices || []).length && admin) out.push(cs.sec(S + "profiles.heading", cs.state(data.profiles, (v) => `<div><fieldset><legend>${W(S + "profiles.field")}</legend>${v.choices.map((p) => `<label for="pl-p-${E(p.id)}"><input type="checkbox" id="pl-p-${E(p.id)}" data-profile="${E(p.id)}">${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</label>`).join("")}</fieldset><p class="mk-msg" data-warning="profiles">${W(S + "profiles.warning")}</p>${cs.act("profilesset")}</div>`)));
       out.push(rulesRef);
       return out.join("");
     }
@@ -64,7 +67,7 @@ export const places = {
       if (set) {
         const choices = Array.isArray(v.choices) ? v.choices : [];
         const on = new Set(act.map((p) => p.id));
-        h += `<div><fieldset><legend>${W(S + "profiles.field")}</legend>${choices.map((p) => `<input type="checkbox" id="pl-p-${E(p.id)}" data-profile="${E(p.id)}"${on.has(p.id) ? " checked" : ""}><label for="pl-p-${E(p.id)}">${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</label>`).join("")}</fieldset><p class="mk-msg" data-warning="profiles">${W(S + "profiles.warning")}</p>${set}</div>`;
+        h += `<div><fieldset><legend>${W(S + "profiles.field")}</legend>${choices.map((p) => `<label for="pl-p-${E(p.id)}"><input type="checkbox" id="pl-p-${E(p.id)}" data-profile="${E(p.id)}"${on.has(p.id) ? " checked" : ""}>${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</label>`).join("")}</fieldset><p class="mk-msg" data-warning="profiles">${W(S + "profiles.warning")}</p>${set}</div>`;
       }
       return h;
     })));
@@ -85,7 +88,7 @@ export const places = {
       const ptr = route ? route.pointer : null;
       if (!ptr || typeof ptr !== "object" || !Array.isArray(ptr.pointers)) return cs.state({ state: "failed" }, () => "");
       const n = ptr.pointers.length;
-      return (n >= 1 ? `<p data-state="elsewhere">${W("places.elsewhere.says", { n })}</p>` : "") + `<p><a class="cs-ref" href="/app/elsewhere" data-nav data-screen="elsewhere">${W("places.elsewhere.open")}</a></p>`;
+      return (n >= 1 ? `<p data-state="elsewhere">${W("places.elsewhere.says", { n })}</p>` : "") + `<div class="mk-links"><a class="cs-ref" href="/app/elsewhere" data-nav data-screen="elsewhere">${W("places.elsewhere.open")}</a></div>`;
     })));
 
     // the offices, every page read; a page that did not answer is said, never taken as the end
@@ -106,7 +109,13 @@ export const places = {
           k.set("moreNext", r.next || null);
         });
       }
-      let h = pages.length ? `<ul class="mk-list" data-list="offices">${pages.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${W(byMember(o) ? S + "offices.bygroup" : S + "offices.seeded")}</li>`).join("")}</ul>` : "";
+      // C64 (entities R63, R64): an office a member named, not yet confirmed (`named_by_member: true`), carries the mark and, to an administrator,
+      // the confirm; its contact and the law it goes under are drawn where the office states them (`null` when it states neither). Any other
+      // office is marked by its origin as before.
+      const confirm = (o) => (o.named_by_member === true ? cs.act("officeconfirm", { label: "shell.confirm", data: { office: String(o.entity_id) } }) : "");
+      const contact = (o) => (o.contact && typeof o.contact === "object" && o.contact.value ? ` · <span class="mk-small">${W("screen.request.nameoffice.where")}: <span class="rec">${E(o.contact.value)}</span></span>` : "");
+      const law = (o) => (typeof o.law === "string" && o.law ? ` · <span class="mk-small">${W("screen.request.nameoffice.law")}: <span class="rec">${E(o.law)}</span></span>` : "");
+      let h = (pages.length ? `<ul class="mk-list" data-list="offices">${pages.map((o) => `<li data-office="${E(o.entity_id)}"><span class="rec">${E(o.label)}</span> · ${o.named_by_member === true ? `<span class="mk-tag" data-mark="named-by-member">${W("screen.request.nameoffice.mark")}</span>` : W(byMember(o) ? S + "offices.bygroup" : S + "offices.seeded")}${contact(o)}${law(o)}${confirm(o) ? " " + confirm(o) : ""}</li>`).join("")}</ul>` : "");
       if (next && !ui.moreFailed) h += `<p class="cs-state" data-state="loading">${W("state.loading")}</p>`;
       if (ui.moreFailed) h += `<p class="cs-state" data-state="failed">${W(S + "offices.rest")}</p>`;
       return h;
@@ -155,6 +164,15 @@ export const places = {
         cs.set("seeded", { seeded: (a && a.seeded || []).length, already: (a && a.already || []).length, unseeded: (a && a.unseeded || []).length });
       } },
     // the administrator's own note on the office is its reason (interface-shell R11's `reasonField`; DEC-88)
+    // C64 (entities R64): an administrator confirms an office a member named; `entityId` is the office's id. The mark clears when the offices are read
+    // again from the first page, and a repeat (`already: true`) reads the same: both are as done as each other
+    { op: "officeconfirm", rereads: ["offices"],
+      send(view, el, cs) {
+        const id = String(el.dataset.office || "");
+        if (!id) return null;
+        view.ui.more = []; view.ui.moreNext = undefined; view.ui.moreFailed = false;
+        return { body: { entityId: id } };
+      } },
     // a court (R46) is the same act with `forum_kind`; the owner requires a note on every entity, and the court's form asks the name alone,
     // so the court's own name is its note
     { op: "entitycreate", rereads: ["offices", "courts"], reasonField: "note",

@@ -12,7 +12,10 @@
    roster, `memberlist`, names who); and a reference to the glossary beside connect, ties and notes. The key file and the passphrase live in
    page memory for the sitting and are never drawn again, stored or sent (R10).
    T51 FR-25 (R67; C81; DEC-376): "Your cover name": the cover the team knows the member by and the handle her work shows, and the choice
-   whether the two are published together (`memberpairingset`), read from `memberpairings` and read again after the act. */
+   whether the two are published together (`memberpairingset`), read from `memberpairings` and read again after the act.
+   T51 fix round 3 (C51; K4398; interface-shell R116): the key section offers "Your key file" beside the key to make: a file chosen is read by the
+   kit's `cs.keyFile`, handed to `cs.signer.sign(statements, {keyFile})`, and the key it holds is registered, so no second key is made for one
+   member on one device. */
 
 export const account = {
   id: "account",
@@ -119,7 +122,9 @@ export const account = {
 
     // making the key (R57 (1)): kept on this device if ticked, else a key file made under the passphrase typed here (optional)
     const reg = cs.act("signerregisterown");
-    if (reg) out.push(cs.sec(S + "key.make.heading", `<p class="mk-note">${W(S + "key.help")}</p><input type="checkbox" id="ma-keep"><label for="ma-keep">${W("signing.ceremony.keepkey")}</label>${cs.field("ma-pass", S + "key.passphrase", { type: "password", help: S + "key.passphrase.help", autocomplete: "new-password" })}${reg}`));
+    // C51: a member who already has a key file (made earlier, here or on another device) chooses it instead of making another: the kit reads it
+    // (`cs.keyFile`) and the key it holds is the one registered; with no file chosen the key is made as before
+    if (reg) out.push(cs.sec(S + "key.make.heading", `<p class="mk-note">${W(S + "key.help")}</p><label for="ma-keep"><input type="checkbox" id="ma-keep">${W("signing.ceremony.keepkey")}</label>${cs.field("ma-pass", S + "key.passphrase", { type: "password", help: S + "key.passphrase.help", autocomplete: "new-password" })}${cs.field("ma-keyfile", "shell.signer.loadfile", { type: "file", help: "shell.signer.load" })}${reg}`));
 
     // after it is made (R57 (2)): its tail and day, the public line as data, and two acts of their own; the file lives in page memory only
     const made = ui.made || null;
@@ -131,7 +136,7 @@ export const account = {
 
     // elsewhere in the member's settings
     // the glossary is reached from here too (R57 (4)): its name, with its purpose beneath, as the design's link list draws it (R59)
-    out.push(cs.sec(S + "elsewhere.heading", `<p><a href="/app/connect">${W("screen.connect.name")}</a></p><p><a href="/app/ties" data-nav data-screen="ties">${W("screen.ties.name")}</a></p><p><a href="/app/notes">${W("screen.notes.name")}</a></p><p><a class="cs-ref" href="/app/glossary" data-nav data-screen="glossary">${W("screen.glossary.name")}</a> <span class="mk-small">${W("screen.glossary.purpose")}</span></p>`));
+    out.push(cs.sec(S + "elsewhere.heading", `<div class="mk-links"><a class="cs-ref" href="/app/connect">${W("screen.connect.name")}</a><a class="cs-ref" href="/app/ties" data-nav data-screen="ties">${W("screen.ties.name")}</a><a class="cs-ref" href="/app/notes">${W("screen.notes.name")}</a><a class="cs-ref" href="/app/glossary" data-nav data-screen="glossary">${W("screen.glossary.name")}</a><span class="mk-small">${W("screen.glossary.purpose")}</span></div>`));
     return out.join("");
   },
 
@@ -157,9 +162,22 @@ export const account = {
     // <label>` sent as credentials R9 takes it; a member who declines sends nothing
     { op: "signerregisterown", rereads: ["signers"],
       async send(view, el, cs) {
-        const keep = cs.value("ma-keep") === true;
-        // the passphrase is typed here (optional): with it, or the empty string, the kit opens no dialog; the file is held for the sitting (R57; interface-shell R97)
-        const r = await cs.signer.register({ keep, passphrase: String(cs.value("ma-pass") || ""), defer: true });
+        // C51 (interface-shell R116): a key file chosen is handed to the signer as the text the kit read, which asks only its passphrase; the key it
+        // holds is the key registered, and nothing is signed for anyone (the one statement shown is the registration itself). An unreadable or empty
+        // file is refused in the kit's word; no file chosen is the key made as before.
+        const kf = await cs.keyFile("ma-keyfile");
+        // the kit's word for a file it could not read; until the list holds it, the sign dialog's own "that isn't a signing key file"
+        if (!kf.ok && kf.word !== "shell.keyfile.none") return { refuse: cs.w(kf.word) === kf.word ? "shell.signer.notkey" : kf.word };
+        let r;
+        if (kf.ok) {
+          const plain = (k) => String(cs.w(k)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+          const me = view.me || {};
+          r = await cs.signer.sign([{ label: plain("act.signerregisterown.label.account"), bytes: "bio-register-key " + String(me.handle || me.member || "") + "\n", namespace: "bio-register-key" }], { keyFile: kf.text });
+        } else {
+          const keep = cs.value("ma-keep") === true;
+          // the passphrase is typed here (optional): with it, or the empty string, the kit opens no dialog; the file is held for the sitting (R57; interface-shell R97)
+          r = await cs.signer.register({ keep, passphrase: String(cs.value("ma-pass") || ""), defer: true });
+        }
         if (!r || r.ok === false) return { refuse: "screen.account.key.declined" };
         const parts = String(r.line || "").trim().split(/\s+/);
         if (parts[0] !== "ssh-ed25519" || !/^AAAA[A-Za-z0-9+/=]+$/.test(parts[1] || "")) return { refuse: "screen.account.key.declined" };

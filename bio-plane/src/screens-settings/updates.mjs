@@ -138,7 +138,7 @@ export const updates = {
         if (holds) {
           const go = cs.act("updatestart", { label: "updates.act.update", tone: "primary", outward: true, data: { version: r.version } });
           // the installer's page, opened in a new browsing context once the act answers (no opener, no referrer)
-          const open = ui.address ? `<p data-shown="update"><a href="${E(ui.address)}" target="_blank" rel="noopener noreferrer">${W("updates.act.update")}</a></p>` : "";
+          const open = ui.address ? `<div class="mk-links" data-shown="update"><a class="cs-ref" href="${E(ui.address)}" target="_blank" rel="noopener noreferrer">${W("updates.act.update")}</a></div>` : "";
           body += `<div>${go}${later}</div>${open}`;
         } else {
           // any other administrator: the address to pass to whoever holds the hosting account

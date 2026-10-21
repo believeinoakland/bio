@@ -50,11 +50,11 @@ export const identity = {
       // a field holding the assistant's draft says so beside its label, and as untested where its answer says so (R11)
       const draftOf = (field) => (dr && dr[field] ? { draft: S + "draft.label", draftFills: { handle: dr[field].askedBy } } : {});
       const untested = (field) => (dr && dr[field] && dr[field].untested ? ` <span class="mk-tag">${W("ai.label.untested")}</span>` : "");
-      let h = `<fieldset><legend>${W(S + "kinds.field")}</legend>${KINDS.map((k) => `<input type="checkbox" id="gi-k-${k}"${(d.kinds || []).indexOf(k) >= 0 ? " checked" : ""}><label for="gi-k-${k}">${W(S + "kind." + k)}</label>`).join("")}</fieldset>
+      let h = `<fieldset><legend>${W(S + "kinds.field")}</legend>${KINDS.map((k) => `<label for="gi-k-${k}"><input type="checkbox" id="gi-k-${k}"${(d.kinds || []).indexOf(k) >= 0 ? " checked" : ""}>${W(S + "kind." + k)}</label>`).join("")}</fieldset>
 ${cs.field("gi-other", S + "other.field", { rec: true, max: 120, value: d.otherKind || "", autocomplete: "off" })}
 ${cs.field("gi-focus", S + "focus.field", { area: true, rec: true, max: 1000, value: d.focus || "", ...draftOf("focus") })}${untested("focus")}
 ${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000, value: d.purpose || "", ...draftOf("purpose") })}${untested("purpose")}
-<fieldset><legend>${W(S + "visibility.field")}</legend>${["members", "public"].map((x) => `<input type="radio" id="gi-v-${x}" name="gi-v"${(d.visibility === "public" ? "public" : "members") === x ? " checked" : ""}><label for="gi-v-${x}">${W(S + "visibility.choice." + x)}</label>`).join("")}</fieldset>${set}`;
+<fieldset><legend>${W(S + "visibility.field")}</legend>${["members", "public"].map((x) => `<label for="gi-v-${x}"><input type="radio" id="gi-v-${x}" name="gi-v"${(d.visibility === "public" ? "public" : "members") === x ? " checked" : ""}>${W(S + "visibility.choice." + x)}</label>`).join("")}</fieldset>${set}`;
       // the assistant's draft, only while it is reachable, from the administrator's own answers
       const ask = view.reachable ? cs.act("groupdescriptiondraft") : "";
       if (ask) h += `<div data-form="draft"><p>${W(S + "ask.intro")}</p>${["what", "who", "why"].map((q) => cs.field("gi-q-" + q, S + "ask.q." + q, { area: true, rec: true, max: 1000 })).join("")}${ask}</div>`;

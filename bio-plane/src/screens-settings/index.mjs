@@ -48,7 +48,7 @@ const WORDS = {
     ...["ask", "draft", "run", "enquire", "read", "transcribe", "account", "suggestions"].map((u) => `ai.use.${u}.inline`),
     ...LABELS("teamai", ["groupkeyset", "groupkeyswitch", "accountusesset", "ailimitset", "groupkeyremove", "aikeepaway"])],
   account: [...STATES, "screen.account.name", ...own("screen.account."), "handle.fixed", "level.prompt.name", "level.pause.name", "signing.ceremony.keepkey",
-    "screen.connect.name", "screen.notes.name", "screen.ties.name", "screen.glossary.name", "screen.glossary.purpose", "member.founder.unnamed", "screen.members.signer.held.nodate",
+    "screen.connect.name", "screen.notes.name", "screen.ties.name", "screen.glossary.name", "screen.glossary.purpose", "member.founder.unnamed", "screen.members.signer.held.nodate", "shell.signer.loadfile", "shell.signer.load", "shell.signer.notkey",
     ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "infolevelset", "signout", "signouteverywhere", "memberpairingset"])],
   connect: [...STATES, "screen.connect.name", ...own("screen.connect."), "member.founder.unnamed", ...PANEL, "ai.whopays", "mark.outward.means", "screen.setup.state.needed", "shell.working",
     ...["ask", "draft", "run", "enquire", "read", "transcribe", "account", "suggestions", "standing"].flatMap((u) => [`ai.use.${u}.name`, `ai.use.${u}.means`]),
@@ -58,12 +58,12 @@ const WORDS = {
     ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "reauth", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
   notes: [...STATES, "screen.notes.name", ...own("screen.notes."), "ai.label.untested",
     ...LABELS("notes", ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"])],
-  settings: [...STATES, ...own("screen.settings."), "screen.settings.everyone", "screen.watching.name", "screen.leads.name", "screen.watching.purpose", "screen.leads.purpose", ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias"]
+  settings: [...STATES, ...own("screen.settings."), "screen.settings.everyone", "screen.watching.name", "screen.leads.name", "screen.watching.purpose", "screen.leads.purpose", ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias", "grouprules"]
     .flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`])],
   group: [...STATES, "screen.group.name", ...own("screen.group."), "settings.set.setup", "settings.set.system", "settings.set.line.setup", "settings.set.line.system", "term.hostingaccount.means", "term.bar.team.means", "member.founder.unnamed",
     ...["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"].map((z) => `label.timezones.${z}`), "stake.group.title", "stake.group.help", "stake.group.label", "stake.group.save", "stake.set", "stake.none", "stake.history", "stake.unreadable", "ai.label.untested",  "screen.group-identity.draft.label",
     ...own("screen.domainfile."), "shell.copy", "shell.save", "screen.group.hosting.now.date", "screen.group.export.count.tables.one", "screen.group.export.count.tables.other", "screen.group.domain.checked", "queue.export-performed.summary", "queue.export-performed.records.one", "queue.export-performed.records.other", "queue.export-performed.files.one", "queue.export-performed.files.other", "shell.card.member", ...LABELS("group", ["groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "strengthbarset", "declaredstakeset", "writinghelp", "factconfirm", "export", "exportlog"])],
-  places: [...STATES, "screen.places.name", ...own("screen.places."), "screen.grouprules.name", "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", "court.add", "court.add.name", "court.add.help", "shell.field.needed", "shell.card.member", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
+  places: [...STATES, "screen.places.name", ...own("screen.places."), "screen.grouprules.name", "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", "court.add", "court.add.name", "court.add.help", "shell.field.needed", "shell.card.member", "shell.confirm", "screen.request.nameoffice.mark", "screen.request.nameoffice.where", "screen.request.nameoffice.law", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
   recovery: [...STATES, "screen.recovery.name", ...own("screen.recovery."), "screen.members.recovery.one", "screen.members.recovery.many", "screen.members.recovery.add", "member.founder.unnamed",
     ...LABELS("recovery", ["recoverycodesissue"])],
   "group-identity": [...STATES, "screen.group-identity.name", ...own("screen.group-identity."), "ai.label.untested", "shell.field.needed",
@@ -73,6 +73,7 @@ const WORDS = {
     ...own("file-scanner.credential."),
     // the scanner's state when it holds no signatures, under file-safety's keys (DEC-396; R77): the date and the reason each fill their own
     "file-safety.index.no_signatures", "file-safety.index.no_signatures_since", "file-safety.index.signatures_refused", "file-safety.index.signatures_failed", "file-safety.index.signatures_not_fetched", "screen.security.nosignatures.next",
+    "act.monitor.label.capture", "shell.working",
     ...LABELS("security", ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"])],
   updates: [...STATES, "screen.updates.name", ...own("screen.updates."), "refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "settings.set.system",
     "updates.running.release_setup", "updates.earlier.installed_setup", "updates.running.head", "updates.running.release", "updates.running.checked",
