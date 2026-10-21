@@ -45,8 +45,11 @@ const mk = (op, setup, stamps = ANN) => async (given) => {
   if (real.project !== undefined) real.project = op === "cite" || op === "drawquestion" || op === "sever" || op === "reinstate" ? w.p : real.project;
   if (real.handle !== undefined) real.handle = w.handle;
   if (real.inquiry !== undefined) real.inquiry = Q;
-  const q = new URLSearchParams({ ...stamps, ...Object.fromEntries(Object.entries(real).map(([k, v]) => [k, String(v)])) });
-  return citationOps(w.cit, new URL(`http://x/?${q}`))[op]();
+  /* C31: `cite` is a write, so its fields travel in the body; the other ops' stay in the address */
+  const fields = Object.fromEntries(Object.entries(real).map(([k, v]) => [k, String(v)]));
+  const inBody = op === "cite";
+  const q = new URLSearchParams({ ...stamps, ...(inBody ? {} : fields) });
+  return citationOps(w.cit, new URL(`http://x/?${q}`), inBody ? fields : null)[op]();
 };
 
 test("R18 citation declares citeimported: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {

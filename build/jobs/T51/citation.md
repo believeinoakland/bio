@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_0153H53S2RwjRhNVSVQfv5k8 · depth 2 · COMPLETE · handled B7
+**Status** · session_01T23tysCBff1C94XfhB4Qo3 · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -162,3 +162,41 @@ Tests and checks:
 - `node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`: 0 files changed by citation beyond the merge, 0 failures.
 
 Size (session_0153H53S2RwjRhNVSVQfv5k8): test runs 2, module lines 1688
+
+## J9 · QUESTION
+
+QUESTION (no answer needed to proceed; I carried on on this reading). Replaces nothing.
+
+C31 needs a requirement line in `build/requirements/citation.md` that is not written. My reading, for R1/R19 or a new R20: "`cite` is a write, so its arm reads `project`, `handle`, `found`, `question`, `note`, `role` and the part's fields (`extent_*`, `content_id`) from the POST body only; the door's stamps stay in the address. A GET reaches the act with none of them and is refused as any call naming no source is (`CITE_ONE_SOURCE`), writing nothing, whatever its address carries. `found` is an object or one JSON string." The declared fields (R19) are unchanged. The tests name R1 and R19; if you write a new id, tell me and I name it.
+
+Words: I invented no sentence. A GET's refusal is the existing `CITE_ONE_SOURCE` row ("this call names neither a selection nor a passage found by search…"), which is true but does not say "use a POST". If you want a dedicated refusal (for example `CITE_NEEDS_POST`), the design stream writes its row in `words.json` first; I add the code when it exists.
+
+## J10 · REPORT
+
+REPORT. My change (cite reads its fields from the POST body, `citationOps(c, url, body)`) breaks tests and callers of other modules, which I did not touch (P9). Each passed on tranche/T51 and fails with my change:
+- `bio-plane/test/m/affordances/plane.test.mjs` (affordances): lines 170, 171, 360, 406, 930 send `op=cite` as a GET with `project`, `handle`, `note` in the address; they need a POST with those fields in the body.
+- `bio-plane/test/members.test.mjs` (membership): line 266 sends `POST op=cite&project=…&handle=…` with body `{}`; the fields must move into the body.
+Callers in source that send `cite` fields in the address (found by grep, to move to a body): `screens-inquiry/document.mjs:917` and `question.mjs` (wave 2 screens-inquiry, C31's other half), `screens-daily/finder.mjs` (`cs.act("cite", { data: { handle } })`, lines 256, 296 in finder-states.mjs, 334-341) and `screens-daily/find-in.mjs:59, 329`. Also the wizard-scripts library's `cite` steps and `journey-check/investigation.mjs:195-199` if they send the fields as a query. Suites that pass unchanged: control-plane envelope (16) and stamps (6), interface-shell frame (21) and t51 (29).
+Merge order matters: citation lands before affordances, membership and the screens, so their jobs must send the body when they merge.
+
+## J11 · COMPLETE
+
+CITATION #17 · fix round 2 · C31 met (citation's part).
+
+- `citationOps(c, url, body)`: `cite` reads `project`, `handle`, `found` (object or one JSON string), `question`, `note`, `role` and the part (`extent_*`, `content_id`) from the POST body only; the stamps (`viewer`, `owner`, `author`, `identity`) stay in the address. A GET reaches the door with a null body, so no field reaches the act and it refuses `CITE_ONE_SOURCE` writing nothing, even with every field in the address. Weight is read from nowhere (R7). DECLARED_OPS unchanged (the same fields are accepted).
+- Test: `cite-post.test.mjs` (R1, R19, R7), written first, seen failing 5 of 5 on tranche/T51's code, now passing. Control: the same fields as a body cite; a GET with all fields writes nothing and the document is byte-identical. `invariants.test.mjs` and `declared-ops.test.mjs` send `cite`'s fields as a body.
+- Suites: `node --test --test-force-exit bio-plane/test/m/citation/`: 127 pass, 0 fail. Format failure 1 is `build/rulings.md:4298` (K4301, BOB's file). architecture 0, coverage citation 19 of 19, words 0, ownership 0 failures.
+- Reported to BOB: the QUESTION (requirement line and a dedicated refusal row) and the REPORT (other modules' tests and callers to move to a body).
+- Not done by me: the passage's "already cited" mark is screens' half (wave 2).
+Deferred: none.
+
+Size (session_01T23tysCBff1C94XfhB4Qo3): test runs 9, module lines 1698
+
+## J12 · COMPLETE
+
+Applied B9 (R20, K4308). `cite` reads each field from the POST body, and from the address where the body lacks it; the body wins where both are sent (the part's `extent_*`/`content_id` merge the same way); the stamps stay in the address; a call naming no source is refused CITE_ONE_SOURCE, writing nothing. `found` is an object or one JSON string.
+- Tests: `cite-post.test.mjs` names R20, R1, R19, R7: body cites; address-only still cites; body wins; no source refused with the document unchanged (control: a handle cites).
+- Suites: citation 127 pass, 0 fail; affordances `plane.test.mjs` 31 pass and `members.test.mjs` 1 pass, both unchanged and green again. coverage citation 20 of 20, words 0, architecture 0, ownership 0 failures.
+Deferred: none. Other modules: the REPORT J10 is withdrawn for the two tests; the screens still move to a body as C31's other half.
+
+Size (session_01T23tysCBff1C94XfhB4Qo3): test runs 11, module lines 1704
