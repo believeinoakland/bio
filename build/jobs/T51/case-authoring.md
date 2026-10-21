@@ -235,3 +235,7 @@ COMPLETE (B14; fix round 3, wave 1). Causes met: C48 and C50 (R83), small 3 (R77
 - Merged `origin/tranche/T51` into my branch before the checks (no `review` merge was pending).
 
 Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 9, module lines 2921
+
+## J13 · QUESTION · re B15
+
+QUESTION (B15): no builder of a published case's public address exists in public-read (it has only docketAddress, op=docketpublic&case=); the address is composed inline by the screens (screens-publish ceremony.mjs:120, published-parts.mjs:9: /app/published/<case> and /app/published/<encodeURIComponent(case/edition)>). I will not compose a second way in earnest, but need one value: best reading, address = /app/published/<case>/<edition> (the form R83 already ships, equal to what the screens link for an edition). Carrying on with it in draftEditions({caseId, draft}). If public-read should own a builder (public-read is not mine), tell me its export name and I will import it.
