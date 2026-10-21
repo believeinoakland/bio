@@ -50,12 +50,14 @@ test("C64 scanmirror is graded under the ground substrate and officeconfirm Reas
   assert.ok(NON_ACTS.entitycreate);
 });
 
-test("B3 (money R28) moneysets is a read beside moneyset: a NON_ACTS read reason that agrees with its owner's declaration, no rung, no ground; control: moneyset is unchanged", async () => {
-  assert.ok(NON_ACTS.moneysets.startsWith("read: ") && NON_ACTS.moneysets.endsWith("writes nothing"));
-  assert.equal(RUNGS.moneysets, undefined);
-  assert.equal(RUNG_ABSENT.moneysets, undefined);
-  assert.equal(phoneOf("moneysets"), true);
-  assert.ok(NON_ACTS.moneyset.startsWith("read: one money set"));
+test("B3 (money R28) moneysets, a read its owner declares beside moneyset, has a hand row that agrees with the owner's declaration (R49, R50; registration refuses a disagreement): a NON_ACTS read reason, no rung, no ground; control: moneyset's hand row is unchanged", async () => {
+  assert.ok(NON_ACTS.moneysets.startsWith("read: "));
   const m = await registered();
-  assert.equal(m.NON_ACTS.moneysets, NON_ACTS.moneysets, "the owner's row agrees (registration refuses a disagreement)");
+  assert.equal(m.NON_ACTS.moneysets, NON_ACTS.moneysets);
+  assert.ok(m.NON_ACTS.moneysets.startsWith("read: ") && m.NON_ACTS.moneysets.endsWith("writes nothing"));
+  assert.equal(m.RUNGS.moneysets, undefined);
+  assert.equal(m.RUNG_ABSENT.moneysets, undefined);
+  assert.equal(m.phoneOf("moneysets"), true);
+  assert.equal(m.NON_ACTS.moneyset, NON_ACTS.moneyset);
+  assert.ok(NON_ACTS.moneyset.startsWith("read: one money set"));
 });
