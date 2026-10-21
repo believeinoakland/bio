@@ -113,3 +113,14 @@ Deferred: nothing.
 Reading note: I read the requirements (both parts), the layers file, `conclude.mjs`, the used parts of `index.mjs` (the view, parties, `#present`, `takeUp`, `resolve`, `recommend`) and the tests that name R25 and R36 by the lines above; I did not read the rest of the 3,025-line `index.mjs` whole this session (J2 read it whole; B5 touches two functions).
 
 Size (session_013jXJxCPCzxTuPTQfUj7NTP): test runs 9, module lines 3673 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/, all files).
+
+## J7 · QUESTION
+
+QUESTION (R61, `contradictionflag`; words). Nothing blocks me; I carry on and COMPLETE on this reading.
+
+The sentences a member would read from this op have no word-table row, so I wrote none as English in a drawn place and kept each as a module sentence by `localize` (the words rule, K3949). The keys I need the design stream to write, if BOB agrees they are theirs:
+1. `refusal.FLAG_NO_PASSAGE`, `refusal.FLAG_SAME_DOCUMENT`, `refusal.FLAG_NO_REASON`: the three new refusals' translations (C-93.40, C-93.41, C-93.42). Today they are `localize('contradiction.checks.flag_no_passage' | 'flag_same_document' | 'flag_no_reason', en)`. If the design writes the three rows I convert them to `word('refusal.<CODE>')` in one small change, as the sibling refusals are.
+2. `act.contradictionflag.label.document`: the drawn button's label once the op reaches `main` (the design drew it as `act.owed_contradictionflag.label.document`, "Say these two contradict"). It is the registry's and screens-inquiry's, not mine; named here so it is not lost.
+The `says` sentences the op answers with (written, already held) are plane answers, `localize`d with ids `contradiction.says.flag_written` and `contradiction.says.flag_already_held`; I judge no member reads them as drawn text, so I list them for the design's unkeyed list rather than ask for rows.
+
+My best reading of R61's open points (each recorded in my COMPLETE): the two passages are `{capture, extent}` (the capture's sha and the extent in it, `content` R1's), each a content row already held and seen; the candidate is key `FLAG` (no pairing key), label `world` (so a lead), the member's own act and never machine work.
