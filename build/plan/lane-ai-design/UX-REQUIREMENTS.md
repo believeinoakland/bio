@@ -9,7 +9,7 @@
 
 ## B. What each provider/plan/type must be able to show
 - Plan scope: one person / team / application / unconfirmed; and the restrictions the provider places on it.
-- For a member's **personal subscription** [Bob, 2026-10-21, AIR41]: offered at the member level only, never as a project's or team's account; the provider's stated restrictions shown in plain words with source and date at connection (and again when they change); the member's choice to use it recorded; nothing more is asked of them.
+- For a member's **personal subscription** [Bob, 2026-10-21, AIR41]: offered at the member level only, never as a project's or team's account; the provider's stated restrictions shown in plain words with source and date at connection (and again when they change); the member's choice to use it recorded; nothing more is asked of them; where the team or a project requires a privacy or origin check, a personal subscription whose AI fails it is not usable for that work, and the member is told why [Bob, 2026-10-21].
 - Evidence: grade (Reproduced / Reported / Stated), source, date, "last confirmed", and any pending effective date of a changed term.
 - Price basis and a cost estimate for typical work; free-tier status.
 - Privacy summary (training, retention, human review, location) and, for a free tier that reads or trains on content, the plain warning with an **acceptance step** that is recorded.
