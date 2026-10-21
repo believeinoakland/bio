@@ -149,3 +149,7 @@ B9 applied: join names memberlanguageset in its acts and draws the language choi
 - `checks/format.mjs`: 1 failure, `build/rulings.md:4298` (not mine). `architecture.mjs screens-entry`: 0. `coverage.mjs screens-entry`: 30 of 30 ids named, 0. `words.mjs screens-entry`: 0 (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, unkeyed 0). `ownership.mjs screens-entry tranche/T51 job/T51/screens-entry`: 0 failures.
 
 Size (session_0174THkG52z2ZaHHouaMb9q7): test runs 7, module lines 1158
+
+## J8 · QUESTION
+
+C83 (R33): the true scanner state is drawn on Setup step 7 (since when, why, from scanstatus's own keys), but 'what the administrator can do' has no word row. words.json holds nothing that says it, and I wrote none. Needed: one row, for Setup step 7 and for screens-settings' Security page, such as 'Ask whoever installed your team's Civicsmith to check why the scanner cannot download its signatures; files wait, unscanned, until it can.' Best reading: the design lane adds it; I will then draw it under the no-signature lines in setup.mjs (scannerState). Nothing else waits on this: I carry on and post COMPLETE.
