@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_01FQVnGoBMzsSJMQVV911nYM · depth 2 · WAITING ON BOB (J8) · handled B10
+**Status** · session_01FQVnGoBMzsSJMQVV911nYM · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
