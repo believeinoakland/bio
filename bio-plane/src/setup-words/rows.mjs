@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (18141 design words, 1069 protected; SHA-256
-   21fa01c6df89845a6f011f421a45be8e233e35e151faabfeaea71df1f1616300) followed by 7140 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (18163 design words, 1069 protected; SHA-256
+   db2c8cc3d603b8d274ae84c5cc3cf5af12c910f0ed8fbca2275f4a6018969cbb) followed by 7140 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "21fa01c6df";
+export const WORDS_COMMIT = "db2c8cc3d6";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10868,6 +10868,28 @@ export const WORD_ROWS = Object.freeze([
   ["screen.request.nameoffice.law.help","The law sets the due date. Choose the one this office answers under.","DEC-402: help",null,false,"design"],
   ["screen.request.nameoffice.use.help","Saves the office for your team, marked as named by you, and chooses it for this request.","DEC-402: the button's explanation",null,false,"design"],
   ["screen.request.nameoffice.mark","Named by a member","DEC-402: the mark on an office a member named, until an administrator confirms it",null,false,"design"],
+  ["screen.capture.logins.head","Logins for sites","DEC-403: B458 1: section on capture",null,false,"design"],
+  ["screen.capture.logins.about1","Some sites show their records only after a login.","DEC-403: B458 1: what the section is for",null,false,"design"],
+  ["screen.capture.logins.about2","A login stored here is used when your team's Civicsmith captures from that site.","DEC-403: B458 1",null,false,"design"],
+  ["screen.capture.logins.about3","The secret is sealed and never shown again, to you or to anyone.","DEC-403: B458 1",null,false,"design"],
+  ["screen.capture.logins.row","{kind} · {scope} · given by {member}, {date}","DEC-403: B458 1: a stored login's line under its site",null,false,"design"],
+  ["screen.capture.logins.none.head","When none is stored","DEC-403: B458 1: fold",null,false,"design"],
+  ["screen.capture.logins.none","No login is stored yet. Give one below when a site asks for it.","DEC-403: B458 1: the empty list",null,false,"design"],
+  ["screen.capture.logins.give","Give a login for a site","DEC-403: B458 1: fold",null,false,"design"],
+  ["screen.capture.logins.site","The site","DEC-403: B458 1: field (host)",null,false,"design"],
+  ["screen.capture.logins.site.help","Its address, such as records.example-city.gov. The login is used for that site only.","DEC-403: B458 1: help",null,false,"design"],
+  ["screen.capture.logins.kind","What the site asks for","DEC-403: B458 1: field (kind)",null,false,"design"],
+  ["screen.capture.logins.kind.login","A username and password","DEC-403: B458 1: kind login",null,false,"design"],
+  ["screen.capture.logins.kind.user-agent","A browser name the site requires","DEC-403: B458 1: kind user-agent",null,false,"design"],
+  ["screen.capture.logins.kind.other","Something else","DEC-403: B458 1: kind other",null,false,"design"],
+  ["screen.capture.logins.scope","Who may use it","DEC-403: B458 1: field (scope)",null,false,"design"],
+  ["screen.capture.logins.scope.help","Who can capture with it. Nobody ever sees the secret.","DEC-403: B458 1: help",null,false,"design"],
+  ["screen.capture.logins.scope.member","Only me","DEC-403: B458 1: scope member",null,false,"design"],
+  ["screen.capture.logins.scope.project","This project","DEC-403: B458 1: scope project",null,false,"design"],
+  ["screen.capture.logins.scope.group","The whole team","DEC-403: B458 1: scope group",null,false,"design"],
+  ["screen.capture.logins.name","Username for this site","DEC-403: B458 1: field",null,false,"design"],
+  ["screen.capture.logins.secret","Password or secret for this site","DEC-403: B458 1: field",null,false,"design"],
+  ["screen.capture.logins.store","Store this login","DEC-403: B458 1: the button giving a login ahead of any refused request (capturecredentialsupply, no request to retry)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
