@@ -982,7 +982,7 @@ export class Entities {
    *  (R63): the mark is cleared, who confirmed it and when are kept, and nothing else of the office changes. Refusals, in
    *  order, each writing nothing: `NO_ENTITY` (R37), `NO_SUCH_ENTITY` (R36), `NOT_AN_ADMIN` (membership's, a machine class
    *  included), `NOT_AN_OFFICE`, `NOT_NAMED_BY_A_MEMBER`; a repeat answers `already: true`, whoever repeats it. `by` is the
-   *  control plane's stamp (R4). */
+   *  control plane's stamp (R4); `viewer` is the stamp too and is not asked (the registry is the group's). */
   confirmOffice({ entityId, by = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity(localize("entities.index.an_office_is_confirmed_by", "an office a member named is confirmed by its entity id"));
@@ -2146,8 +2146,9 @@ export function entitiesOps(e, url, body) {
     /* R11, R12: the recogniser and the member's grade-D testimony, the request's body as given. */
     resolve: () => e.resolve(body || {}),
     resolvetestify: () => e.testify(body || {}),
-    /* R64 (T51 fix round 3): an administrator confirms an office a member named; `by` is the control plane's stamp (R4). */
-    officeconfirm: () => e.confirmOffice(body || {}),
+    /* R64 (T51 fix round 3): an administrator confirms an office a member named; `by` and `viewer` are the control plane's stamps
+       in the address (R4, `OP_STAMPS`), never read from the body. */
+    officeconfirm: () => e.confirmOffice({ entityId: (body || {}).entityId, by: q("by"), viewer: q("viewer") }),
     /* R43 (T33-25): a scheme identifier held on an entity, its `by` the control plane's stamp (R4). */
     entityidentify: () => e.addIdentifier(body || {}),
     entity: () => e.readEntity({ entityId: q("id"), viewer: q("viewer") }),
@@ -2189,8 +2190,9 @@ export const DECLARED_OPS = Object.freeze({
   resolutiondefect: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution"),
     fields: { accepts: ["captureSha","ref","entityId","reason","source"], requires: ["captureSha","ref","entityId","reason"] } },
   /* R62 (T51 fix round 3; C64; DEC-401, DEC-402): the administrator's confirm of an office a member named (R64). A member reaches the
-     arm and is refused `NOT_AN_ADMIN` by it, as at memberAdd; `by` is the control plane's stamp, not an accept. */
-  officeconfirm: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("entities.declared.officeconfirm", "registry write, keyed by entity: an administrator confirms an office a member named from a request, clearing its mark"),
+     arm and is refused `NOT_AN_ADMIN` by it, as at memberAdd (so `needs` is null, as for the other administrators' acts); `by` and
+     `viewer` are the control plane's stamps in the address, not accepts. */
+  officeconfirm: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, stamps: ["viewer","by"], needs: null, weight: "reversible", description: localize("entities.declared.officeconfirm", "registry write, keyed by entity: an administrator confirms an office a member named from a request, clearing its mark"),
     fields: { accepts: ["entityId"], requires: ["entityId"] } },
   /* R62 (T51; K4243; op-declarations R80, op-grades R49): a read, so its class and mutating are the hand row's. `alias` is what the
      arm reads; a call without it answers `count: 0`, not a refusal, so no field is required. */

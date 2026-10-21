@@ -26,6 +26,8 @@ const op = (w, name, { query = {}, body = null } = {}) => {
 /* what a member's "Use this office" sends from the request screen, as the door stamps it (`declaredBy` the member) */
 const nameOffice = (w, by, label = "Office of Information Policy") =>
   op(w, "entitycreate", { body: { kind: "office", label, note: "the office that holds the department's records", declaredBy: by } });
+/* the confirm as the door runs it: `by` and `viewer` stamped in the address, the office in the body */
+const confirm = (w, entityId, by, extraBody = {}) => op(w, "officeconfirm", { query: { ...(by == null ? {} : { by }), viewer: by == null ? "" : `member:${by}` }, body: { entityId, ...extraBody } });
 const listed = (w, kind = "office") => op(w, "entitieskind", { query: { kind, viewer: VIEWER } });
 const snapshot = (w) => ["entities", "entity_aliases"].map((t) => w.rows(`SELECT * FROM ${t} ORDER BY 1, 2`));
 
@@ -110,7 +112,7 @@ test("R64 an administrator's confirm clears the mark and records herself and whe
   const w = team();
   const id = nameOffice(w, "bea").entity_id;
   const before = w.e.readEntity({ entityId: id }).entity;
-  const done = op(w, "officeconfirm", { body: { entityId: id, by: "ada", viewer: "member:ada" } });
+  const done = confirm(w, id, "ada");
   assert.equal(done.ok, true, JSON.stringify(done));
   assert.deepEqual([done.entity_id, done.named_by_member, done.confirmed_by, typeof done.at, done.already], [id, false, "ada", "string", undefined]);
   const after = w.e.readEntity({ entityId: id }).entity;
@@ -125,11 +127,16 @@ test("R64 a member's confirm is refused NOT_AN_ADMIN and the mark stays; a machi
   const id = nameOffice(w, "bea").entity_id;
   const before = snapshot(w);
   for (const by of ["cy", "bea", MACHINE, null, undefined, "nobody"]) {
-    const r = op(w, "officeconfirm", { body: { entityId: id, by } });
+    const r = confirm(w, id, by);
     assert.deepEqual([r.ok, r.reason, r.code], [false, "NOT_AN_ADMIN", "NOT_AN_ADMIN"], String(by));
     assert.equal(typeof r.detail, "string");
   }
   assert.deepEqual(snapshot(w), before);
+  assert.equal(w.e.readEntity({ entityId: id }).entity.named_by_member, true);
+  /* a `by` a caller puts in the body is never read: the stamp is the address's (R4) */
+  const spoof = confirm(w, id, "bea", { by: "ada" });
+  assert.equal(spoof.reason, "NOT_AN_ADMIN");
+  assert.equal(op(w, "officeconfirm", { body: { entityId: id, by: "ada" } }).reason, "NOT_AN_ADMIN", "no stamp at all");
   assert.equal(w.e.readEntity({ entityId: id }).entity.named_by_member, true);
 });
 
@@ -139,17 +146,17 @@ test("R64 the refusals come in order and each writes nothing: NO_ENTITY, NO_SUCH
   const own = nameOffice(w, "ada", "Clerk of the Board").entity_id;
   const person = op(w, "entitycreate", { body: { kind: "person", label: "Pat Quill", note: NOTE, declaredBy: "bea" } }).entity_id;
   const before = snapshot(w);
-  const reason = (body) => op(w, "officeconfirm", { body }).reason;
-  assert.equal(reason({ by: "bea" }), "NO_ENTITY", "named by no id, first of all");
-  assert.equal(reason({ entityId: "", by: "ada" }), "NO_ENTITY");
-  assert.equal(reason({ entityId: "ENT-2026-9999", by: "bea" }), "NO_SUCH_ENTITY", "before the caller is asked");
-  assert.equal(reason({ entityId: person, by: "bea" }), "NOT_AN_ADMIN", "before the kind is asked");
-  assert.equal(reason({ entityId: person, by: "ada" }), "CONFIRM_NOT_AN_OFFICE");
-  assert.equal(reason({ entityId: own, by: "ada" }), "NOT_NAMED_BY_A_MEMBER", "control: an administrator's own office");
+  const reason = (entityId, by) => confirm(w, entityId, by).reason;
+  assert.equal(reason(undefined, "bea"), "NO_ENTITY", "named by no id, first of all");
+  assert.equal(reason("", "ada"), "NO_ENTITY");
+  assert.equal(reason("ENT-2026-9999", "bea"), "NO_SUCH_ENTITY", "before the caller is asked");
+  assert.equal(reason(person, "bea"), "NOT_AN_ADMIN", "before the kind is asked");
+  assert.equal(reason(person, "ada"), "CONFIRM_NOT_AN_OFFICE");
+  assert.equal(reason(own, "ada"), "NOT_NAMED_BY_A_MEMBER", "control: an administrator's own office");
   assert.deepEqual(snapshot(w), before);
   /* each refusal has a row and a sentence of its own (K4364): CONFIRM_NOT_AN_OFFICE keeps clear of duties' NOT_AN_OFFICE */
   const rows = [["CONFIRM_NOT_AN_OFFICE", person, "C-91.10"], ["NOT_NAMED_BY_A_MEMBER", own, "C-91.11"]].map(([c, id, check]) => {
-    const r = op(w, "officeconfirm", { body: { entityId: id, by: "ada" } });
+    const r = confirm(w, id, "ada");
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, c, c, check]);
     assert.equal(r.translation, ENTITY_CHECKS[c].translation);
     assert.ok(typeof r.translation === "string" && r.translation.length > 0 && typeof r.detail === "string" && r.detail.length > 0);
@@ -159,20 +166,20 @@ test("R64 the refusals come in order and each writes nothing: NO_ENTITY, NO_SUCH
   assert.equal(new Set(rows).size, 2);
   assert.equal(ENTITY_CHECKS.NOT_AN_OFFICE, undefined, "duties' code is not minted here");
   /* control: the named office is still confirmable after every refusal */
-  assert.equal(op(w, "officeconfirm", { body: { entityId: named, by: "ada" } }).ok, true);
+  assert.equal(confirm(w, named, "ada").ok, true);
 });
 
 test("R64 a repeat answers already: true and writes nothing; an office an administrator once confirmed is not NOT_NAMED_BY_A_MEMBER", () => {
   const w = team();
   const id = nameOffice(w, "bea").entity_id;
-  const first = op(w, "officeconfirm", { body: { entityId: id, by: "ada" } });
+  const first = confirm(w, id, "ada");
   const before = snapshot(w);
-  const again = op(w, "officeconfirm", { body: { entityId: id, by: "ada" } });
+  const again = confirm(w, id, "ada");
   assert.deepEqual([again.ok, again.already, again.entity_id, again.named_by_member, again.confirmed_by, again.at], [true, true, id, false, "ada", first.at]);
   assert.deepEqual(snapshot(w), before);
   /* another administrator repeating it changes nothing either, and does not take the confirmation */
   w.st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('dee', 'dee', 'admin', 'active', '2026-01-01', '2026-01-01')`);
-  const other = op(w, "officeconfirm", { body: { entityId: id, by: "dee" } });
+  const other = confirm(w, id, "dee");
   assert.deepEqual([other.ok, other.already, other.confirmed_by], [true, true, "ada"]);
   assert.deepEqual(snapshot(w), before);
 });
@@ -184,14 +191,15 @@ test("R62 entities declares officeconfirm: its requires alone raise no refusal n
   const call = async (given) => {
     const w = team();
     const office = nameOffice(w, "bea").entity_id;
-    const fields = { ...given, ...("entityId" in given ? { entityId: office } : {}), by: "ada" };
-    const q = new URLSearchParams({ op: "officeconfirm", ...Object.fromEntries(Object.entries(given).map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)])) });
+    const fields = { ...given, ...("entityId" in given ? { entityId: office } : {}) };
+    const q = new URLSearchParams({ op: "officeconfirm", by: "ada", viewer: "member:ada", ...Object.fromEntries(Object.entries(given).map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)])) });
     return entitiesOps(w.e, new URL("http://x/?" + q), fields).officeconfirm();
   };
   const named = (answer, field) => !!answer && answer.ok === false && answer.code === "NO_ENTITY" && field === "entityId";
   const d = DECLARED_OPS.officeconfirm;
   assert.deepEqual([d.mutating, d.fields.accepts, d.fields.requires], [true, ["entityId"], ["entityId"]]);
   assert.ok(d.classes.includes("admin") && d.classes.includes("member"), "the module itself refuses a member (NOT_AN_ADMIN)");
+  assert.deepEqual([d.stamps, d.needs, d.machineClasses], [["viewer", "by"], null, []], "the stamps are the address's; an administrator's act needs no capability; no machine");
   await declaredOpHolds({ op: "officeconfirm", declaration: d, call, refusedNaming: named, values: {}, same: sameCode });
 });
 

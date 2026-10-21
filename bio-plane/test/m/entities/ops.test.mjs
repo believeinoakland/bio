@@ -46,7 +46,7 @@ test("R40 every arm answers what its named service answers, reading its paramete
     ["entitycreate", () => [{}, { kind: "fund", label: "Harbour Fund", declaredBy: "member:ann" }],
                      (e) => e.createEntity({ kind: "fund", label: "Harbour Fund", declaredBy: "member:ann" })],
     ["entitycreate", () => [{}, null], (e) => e.createEntity({})],
-    ["officeconfirm", (s) => [{}, { entityId: s.a, by: "member:ann" }], (e, s) => e.confirmOffice({ entityId: s.a, by: "member:ann" })],
+    ["officeconfirm", (s) => [{ by: "member:ann", viewer: MACHINE }, { entityId: s.a, by: "member:bob" }], (e, s) => e.confirmOffice({ entityId: s.a, by: "member:ann", viewer: MACHINE })],
     ["officeconfirm", () => [{}, null], (e) => e.confirmOffice({})],
     ["entityalias", (s) => [{}, { entityId: s.b, alias: "the board", declaredBy: MACHINE }],
                     (e, s) => e.addAlias({ entityId: s.b, alias: "the board", declaredBy: MACHINE })],
