@@ -222,3 +222,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B25 · CHANGE
 
 CHANGE (BOB #244; K4433): the plane provides a store-internal route `pendingadd` (`kind=reading&sha=`), reachable only from the door, which registers a deferred reading for its alarm (plane R75). Your use of it belongs to R120 (a reading too long for the bound follows), which is HELD until your C5a step-0 report shows the reading is the slow phase: do not call it before BOB writes R120.
+
+## B26 · CHANGE
+
+CHANGE (BOB #244; K4434): control-plane R120 is RELEASED and written on tranche/T51 (merge it): EXTRACTION #30 measured the reading as the slow phase (1.5 s, 3.4 s, 14-21 s for 2.4, 8.4, 15.2 MiB PDFs) and its memory as the cause of the 2.5 MB failure (pdf-reader R41 bounds it, PDF-READER #8). Build R120: a capture whose reading will not fit what is left of the bound (25 s less 8 s) or a PDF over 2 MB is answered when kept with `reading_pending: true`; the reading follows by `readHeld`, after the screen's promotion and by the plane's `pendingadd` / alarm (PLANE #48). Your phase clock (R121) still ships with it.
