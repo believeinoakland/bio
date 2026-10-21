@@ -162,3 +162,7 @@ From CONTROL-PLANE #43 (K4326): a timed-out capture's 504 now states kept: held,
 ## B19 · CHANGE
 
 CAPTURE #41 is merged on tranche/T51 (K4331): merge it. (1) Every held row (picker and full) now answers whole: true/false/null; withhold vouch and OCR only where whole is false. (2) captureupload answering existed: true for an interrupted upload now carries document (capture R86): file it for the viewer by your own act, as you built for a new upload. DOORBELL #5's knock name and type follow in a later CHANGE. Post COMPLETE when done.
+
+## B20 · CHANGE
+
+DOORBELL #5 is merged on tranche/T51 (K4332): merge it. inboxList and inboxGet now answer file_name and media_type (doorbell R27; null when the sender stated none). Draw them on the knock (C28: name and type; they are the sender's statement, never a type check). Then post COMPLETE.
