@@ -114,3 +114,32 @@ My recommendation: (1) the codes that are a shared act row in `record-grammar`'s
 Until the answer, COMPLETE stays open. The census test is red by name, not silent.
 
 Impact: 90 modules, 10,485 tests run on the earlier build (before the all-period change): 10,456 pass, 17 fail. The failures are in screens, plane, affordances, words, and tasks modules, plus the intent test above. I have not yet confirmed which of the 17 are on the tranche tip. I will re-run on the current build and name them.
+
+## J8 · COMPLETE
+
+COMPLETE, cause C8-words (money R29). Head: b6a11c41ff on job/T51/money (pushed). Merged tranche/T51 at 1b032f9d00.
+
+**The cause, four fields**
+1. Root cause (certain): `bio-plane/src/money/index.mjs` refused an unmapped fiscal key with `BAD_PERIOD`, the code `following` also answers, so the translation keyed by code hid money's reason (the fiscal key and the body). Per B5, every period refusal of money (from, to, fiscal) now goes through one `badPeriod` helper and answers `MONEY_BAD_PERIOD`; money answers no `BAD_PERIOD`. The stand-in sentence is `localize("refusal.MONEY_BAD_PERIOD", "That period is not one this team's money records can read.")`, the detail keeps the real reason.
+2. Test gap: each module tested only its own code, so no test saw two modules answering one code. Added `bio-plane/test/m/money/refusal-census.test.mjs`: no money act answers `BAD_PERIOD` (the census narrowed per B6, K4444), with a control that the census sees `MONEY_BAD_PERIOD` on money alone.
+3. Failing-first: `refusal-codes.test.mjs` (R29 titles). Red before: `{fiscal:"FY2025-26", body:"Port Ellery Harbour District"}` and `{fiscal:"FY1999-00X", body:"Nobody"}` both answered `BAD_PERIOD`. Green after: both answer `MONEY_BAD_PERIOD`, the detail names the key and body. Controls: a first day after a last day is refused (now `MONEY_BAD_PERIOD`, per B5); a valid fiscal key (`FY2013-14`) is accepted and writes a fact. The census was red first, with sixteen clashing codes (the broader reading, J7); it is green on the narrowed reading.
+4. Platform: N (pure code).
+
+**Requirement met:** R29 (money). R1 stands; R1's `BAD_PERIOD` remains following's and civil-time's.
+
+**Suites**
+- money: 92 of 92 pass (`bio-plane/test/m/money/*.test.mjs`).
+- checks: format (175 modules, 0 failures); architecture (money, 0 failures); coverage (money, 29 of 29 ids named); ownership (money, 0 failures, 5 files).
+- `checks/run.mjs` on the repo: the three words failures and the coverage/architecture reds are in other modules' files (op-grades t33, t51; case-authoring, acquisition, agent-harness, agent-runner, control-plane, installer-steps, interface-shell, journey-check, pdf-reader, public-read, screens-daily, screens-inquiry, screens-publish). None is in money's files.
+- impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 90 modules, 1,327 test files, run on the current build: 10,486 tests, 10,454 pass, 20 fail.
+
+**Each red from the impact run**
+- **Caused by my change (intent):** `bio-plane/test/m/intent/amount.test.mjs:119` (`R31 R4 a total summable refuses…`) expects `BAD_PERIOD` from money. Per B6, BOB fixes this at the merge (test file only). I have not touched intent.
+- **Not money's, not yet confirmed on the tranche tip:** `journey-check/pseudo.test.mjs` (R29 (a)-(c), six tests, words); `filings/packet.test.mjs` (R30 and R9, claim deadline and calendar); `plane/store.test.mjs` (R9, the plane's route); `agent-worker/test/requirements.test.mjs` (a file-level failure, 60 s). I tried to run these on a tranche-tip worktree to compare, and that command was refused by the permission check, so I have not run them on the tip. I'm not claiming they are pre-existing. BOB or a tip run can settle each.
+- Calculations: `calculations/index.mjs:167` is a comment still citing money R1's `BAD_PERIOD`. It is stale, not a code path. Report for calculations to update.
+
+**Reported to BOB:** REPORT (intent test, J7); QUESTION C (census clash, answered by B6); the stand-in key `refusal.MONEY_BAD_PERIOD` awaits the design's row (words batch).
+
+**Open:** none held by me. The intent test and the tip check for the four red files are BOB's to settle at the merge. No QUESTION is open.
+
+**Size (session_016NRUKZLwLKyy8zbRsvcjbP): test runs 8, module lines 1482** (money's `bio-plane/src/money/*.mjs`, held code only).
