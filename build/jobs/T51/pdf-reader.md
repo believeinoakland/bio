@@ -62,3 +62,17 @@ Size (session_01BSwp2Ci83HFnS5Q5bkRxry): test runs 22, module lines 4156
 ## J1 · COMPLETE
 
 T51-7 done: R39 met (metadata {title?, source:'/Info'} in extractPdfStructure; title_undecodable note; null with no readable /Info or encrypted). pdf-reader tests 86/0; users' tests green except pdf-worker/test/structure.test.mjs R7+R10 (2 checks), red only because pdf-worker/dist/pdf-worker.bundled.mjs is stale (manifest §14): BOB regenerates at the layer close. checks/run: format, architecture, ownership 0 failures; pdf-reader coverage 39/39. Record: build/jobs/T51/pdf-reader.md.
+
+## J2 · COMPLETE
+
+COMPLETE · PDF-READER #8 · fix round 4, wave 0: C25 (R40) and CHANGE B3 (R41). Branch job/T51/pdf-reader @ 588c7a0ef0, tranche/T51 merged (to 5dda7075ea). Whole record: `build/jobs/T51/pdf-reader.md`, section "Completion (fix round 4, wave 0)"; the four fields of each are there.
+
+**C25 / R40.** `pdfTitle(bytes) → string | null` in `bio-plane/src/pdfstructure.mjs`: Info `/Title` (R39's decoding), else the catalog's XMP `dc:title`; no page read; null for none, encrypted, not-a-PDF; never throws. Real IRS file: "2026 Form 1040-ES". In workerd: 1.5 ms (IRS 331 KB), 4.9 / 8.2 / 8.3 ms (2.5 / 8.8 / 15.9 MB govinfo volumes); `extractPdfStructure` unchanged for the title. Tests: `title.test.mjs`, 15, red first (missing export), six mutations each turn one red.
+
+**R41.** The reading holds an object only as a place until asked, one page's glyphs at a time, shared markers, bounded font and object-stream caches, large Flate streams decoded once at exact size and proved by their checksum. The answer is unchanged unit for unit: 20 of 20 answer hashes equal (16 repository PDFs + the 4 real files), the 3 govinfo digests pinned in the test, 3,100 differential-fuzz copies equal. With the V8 heap held to idle + 56 MB the three real files are read with heap + array buffers 40.0 / 51.5 / 51.4 MB above idle (BUD / PER / APP); the tranche tip's reader: 76.7 MB, and PER and APP die in that heap. workerd with a V8 heap limit: reads in 28 / 40 / 56 MB (tip: 56 / 128 / 96). `memory.test.mjs`, 12 tests, ~50 s, the real files fetched once into BIO_FIXTURE_CACHE and checked against pinned SHA-256s.
+
+**Said plainly.** (1) Local-workerd process RSS growth with no limit is 110 / 197 / 136 MB (tip: 131 / 231 / 181): it does not fall under 64 MB; R41's own measure (heap + array buffers) does, and the heap-limited workerd run does. (2) CPU: BUD +23%, PER +34%, APP −14% wall in Node (numbers in the record). (3) extraction's `c5b-memory.test.mjs` stays red with this branch (411 MB above idle): `extractPdfStructure` on that file is 88 MB unconstrained / 43 MB heap-held; the rest is above it (textchain `glyphCount`, `flatten`, collection). (4) acquisition's `fix3-t51.test.mjs:324` (binary capture title null) now fails because its fixture is a PDF with a Title: theirs to change.
+
+**Stale generated artifacts (manifest §14):** agent-worker, ocr-worker, pdf-worker bundles and bio-plane/dist/bio-plane.bundled.mjs. **Reds also on the tranche tip:** acquisition R29 R31, file-safety R24, doc-clean R4 (measure.test.mjs).
+
+Checks: format 0, architecture 0, ownership 0, coverage pdf-reader 41 of 41; suite 112/112 + `pdfstructure.test.mjs` 172/0; users (doc-clean, extraction, acquisition, file-safety, format-registry, reading-pipeline, content, capture, pdf-pixels, pdf-worker, ocr-worker): only the reds above. No question is open. Size (session_01BSwp2Ci83HFnS5Q5bkRxry): test runs 22, module lines 4156.
