@@ -129,6 +129,7 @@ const ACT_HELP = {
   captureupload: 'Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.',
   testify: 'Records what you saw or heard yourself as testimony: grade D, labeled as yours, never changed afterwards.',
   capturerequest: 'Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.',
+  capturerequests: 'Lists the requests you asked for later, each with where it stands: waiting, being fetched, captured, turned away or expired. It changes nothing.',
   monitor: 'Checks this address once, now, for a new version. Offered only for an address your team is watching. A new version is kept beside the old.',
   recoverycodesissue: 'Gives you ten new one-time recovery codes for your own role, shown to you once, and spends every earlier unused one. Nobody else can see or use them.',
   monitorset: 'Turns watching on or off for this document\'s address, and sets how often it is checked. Each new version found is kept beside the old, and you are told.',
