@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01Rhp6na81MpPN6AKxgGZrBC · depth 2 · COMPLETE · handled B19
+**Status** · session_012aJfMWZGFkW8VcAjPvgTSg · depth 2 · COMPLETE · handled B21
 
 ## J1 · QUESTION
 
@@ -239,3 +239,48 @@ COMPLETE (SCREENS-PUBLISH #13, fix round 2, wave 2). Branch job/T51/screens-publ
 **Requirement lines for BOB**: (R6, R37 amend) a finding's claim and falsifier are drawn from the signed `case_words`, else `body.conclusion` / `body.falsifies`, else the authored words, a leading heading being no words. (R1 amend) the statement box is labelled `review.statement.title`; a never-prepared edition is no failed read. (R40 amend) the saved file draws a finding by its `statement`. (R13 amend) the Sign step counts signed evidence only when there is some, and says the documents the case rests on that are not published with it. (R2 amend) a session that may not share is drawn no share boxes. (R42 amend) a sign step not reached draws no minutes line. R70 (amend): the confirmation wording is interface-shell's `here`; the ceremony draws the Ties button with `here: "ceremony"`, keeps no gate beside a prepared edition, reads a prepared edition from `casedocument`, and says in the Sign step alone that publishing is permanent. R71 (amend): reads `publishedcase` by `caseId` and draws `signing.ceremony.signednow` with the link; a draft whose own edition is public offers nothing to prepare. R72 (amend): the held or loaded key is the one registered.
 
 Size (session_01Rhp6na81MpPN6AKxgGZrBC): test runs 19, module lines 3257
+
+## J17 · COMPLETE
+
+COMPLETE · SCREENS-PUBLISH #14 · T51 fix round 2 (B20, B21). Merged `tranche/T51` (tip 8edc73eb8e) before the last run.
+
+**Entries applied**
+
+- **C49** (DEC-394 (1), DEC-395). The case editor, the review copy and the ceremony each offer "Which draft" (`casedrafts`, `act.casedrafts.label.<screen>`): a choice among the project's drafts, newest first, each `screen.<screen>.drafts.item` (scope and the day prepared, both record data) and the newest followed by `.drafts.newest`, the one the screen shows chosen, `.drafts.help` and `.drafts.choose` under it. The registry's act follows the choice (the shell's `cs.choice` with `acts`); pressing it reads `casedrafts` once and opens the same screen on the draft chosen (`<project>/<draft>`); the draft already shown, or one the plane no longer lists, stays. This clears common.test R10 (`casedrafts` on the editor).
+  - **Live links.** The review copy draws `screen.review-copy.links.heading` (+ `.help`, `.note`): every live review link on any draft, each with its reader, the draft it is on (`drafts.item`), what it lets the reader do (the roster's own sentence), and "Stop sharing" (`reviewrevoke`, the grant). A stopped or lapsed grant is no live link; after the act every draft is read again. The case editor and the ceremony draw `screen.<screen>.links.live` (`{count}`, `{earlier}`) as a reference to the review copy.
+  - **Chooser details.** One read of `reviewcopy` per draft other than the one shown (`casedrafts` carries no scope; the copy carries `authored.scope`, `grants` with `live`, `comments`); the chosen draft's read is reused. The chooser waits for every draft's scope (drawn loading, never guessed); a draft with no stated scope is named by `case.draft.untitled`, never an id. The ceremony opened on a draft now also reads `casedrafts`; if that read fails it is drawn failed and the ceremony goes on.
+- **B21 (DEC-396 (11))**: `screen.ceremony.signs.count.findings` ({n}, {findings}) is the Sign step's count line when no evidence is signed with the case (it takes the place of `signs.linesabout`, as the evidence-count sentence already did); `screen.ceremony.published.edition` ({n}) is the reopened ceremony's "Published: edition N" (R71's own sentence; it takes the place of `signing.ceremony.signednow` there, which a just-signed edition keeps). Tests fix2 R71 (three assertions) moved to the key.
+
+**My readings (say if one is wrong)**
+
+1. The chooser and the second list are drawn only where there is a choice: **two drafts or more**. With one draft the screen is as before (the editor's one row, the review copy's roster) and no extra read is made. The live-links list is drawn only with two or more drafts and some live link (with one, the roster is the list).
+2. `screen.<screen>.links.live` is drawn only when **some live link sits on an earlier draft than the newest** (`earlier` > 0), not whenever `count` > 0: the sentence would otherwise read "… 0 of them on an earlier draft" (R20: no count at zero).
+3. "The day it was prepared" is the draft's `created_at` (its `updated_at` where none is stated), as `cs.date` draws it.
+4. The editor's list of drafts (a row each, identical titles) is replaced by the chooser when there are two or more; one draft keeps its row.
+
+**Words owed to the design (K3366; none written here)**
+
+(a) The live-link rows: DEC-394 names "when" (shared) and "how many comments that reader made"; no key holds "shared {date}" or "{n} comments", so a row draws the reader, the draft line and the end-of-sharing sentence only. (b) `screen.<screen>.links.live` reads "{count} review links are live": with one link, "1 review links are live" (a singular/plural pair is owed, as `…rests.on.the.council.minutes.one`). (c) The chooser field's label has no key of its own; it uses the act's, `act.casedrafts.label.<screen>` ("Which draft"), as does its following button. (d) `screen.ceremony.signs.linesabout` is no longer drawn on the ceremony (the count line replaced it); the row stays in `words.json`.
+
+**Requirement lines proposed for BOB (R73; amends R1, R2, R3)**
+
+- **R73** (fix round 2, C49; DEC-394 (1), DEC-395; `review` R19; amends R1, R2, R3) **A project's earlier drafts.** `case-editor`, `review-copy` and `ceremony` each offer, where the project has two drafts or more, "Which draft" (`casedrafts`): each draft named by `screen.<screen>.drafts.item` (its scope, from its review copy, and the day it was prepared), newest first and marked `.drafts.newest`, the one shown chosen; choosing another opens the screen on it. `review-copy` draws `screen.review-copy.links.heading` where two drafts or more exist and some link is live: every live review link on any draft (a grant `review` answers live, or one neither stopped nor lapsed), each with its reader, its draft and "Stop sharing" (`reviewrevoke`); `case-editor` and `ceremony` draw `screen.<screen>.links.live` (`{count}`, `{earlier}`, a reference to `review-copy`) when some live link sits on a draft earlier than the newest. Test: two drafts, one live grant on each and one stopped, draw the chooser with both drafts by scope and date, the two live links each with its draft and "Stop sharing", and the count note; the chooser opens the draft chosen. Control: one draft draws no chooser and no extra read; a stopped grant is not listed; a list of drafts that fails is drawn failed.
+- **R13 amend**: with no evidence signed with the case, the Sign step's count line is `screen.ceremony.signs.count.findings`. **R71 amend**: the reopened ceremony's line is `screen.ceremony.published.edition`.
+
+**Tests** (each seen failing first: 12 of drafts.test.mjs's 16 red before the code, the 4 controls green; red-then-green on the changed code)
+
+- New `bio-plane/test/m/screens-publish/drafts.test.mjs`, 16 tests (R1, R2, R3, R13, R71, C49): the chooser on each of the three screens (options, order, marks, chosen, act, help), choosing an earlier draft opens it and choosing the one shown stays, one draft draws no chooser and no extra read, the chooser waits for an unread scope, every live link on any draft with its draft and its own Stop sharing, stopping one on an earlier draft sends `reviewrevoke` with that grant and the list is read again without it, one draft draws no second list, the editor's and ceremony's note (and none when nothing sits on an earlier draft), a failed drafts list drawn failed with the ceremony kept, the Sign step's count line and "Published: edition N".
+- `node --test --test-force-exit bio-plane/test/m/screens-publish/`: tests 212, pass 210, fail 0, todo 2 (R35's press, K3717; baseline at start 196 tests, 193 pass, 1 fail = common.test R10, now green).
+- Users by `build/plan/impact.mjs origin/tranche/T51 HEAD`: control-plane 58 files, tests 308, pass 308, fail 0; plane 11 files, tests 85, pass 84, fail 1, the one `test/m/plane/r42-entry.mjs`, an entry that loads a `cloudflare:` module and cannot run under plain node (also at the tranche tip; named, not mine).
+
+**Checks** (from the process repository)
+
+- `checks/format.mjs`: 175 modules, 175 requirements files; 0 failures.
+- `checks/architecture.mjs bio screens-publish`: 32 product files, 83 relative imports; 0 failures.
+- `checks/coverage.mjs bio screens-publish`: 72 of 72 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs bio screens-publish`: 9256 string literals read; 0 failures (inline 0, unkeyed 0).
+- `checks/ownership.mjs bio screens-publish tranche/T51`: 8 files changed by screens-publish; 0 failures.
+
+**Deferred**: nothing. **Found in other modules**: nothing new. **Declared census ops**: this module owns none (its screens send ops other modules own; the harness compared every request with its owner's declaration, R104, all accepted, `casedrafts` with `{query: {project}}`).
+
+Size (session_012aJfMWZGFkW8VcAjPvgTSg): test runs 11, module lines 3410

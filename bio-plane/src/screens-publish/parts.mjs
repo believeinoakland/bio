@@ -283,6 +283,113 @@ export const PARTS = Object.freeze({
     return copy && !c.case_id ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
   },
 
+  /* C49 (DEC-394, DEC-395): the project's drafts as `casedrafts` lists them (oldest first), each with the review copy it answers: the one
+     the screen shows reuses its own read (`chosenR`), every other draft is read once (`copy:<draft>`, page memory, read again after an
+     act). Each entry is `{draft, r}`, `r` in R10's four states. */
+  draftCopies: function (cs, view, drafts, chosenId, chosenR) {
+    return drafts.map(function (x) {
+      return { draft: x, r: x.draft_id === chosenId && chosenR ? chosenR : view.parts.later(cs, view, "copy:" + x.draft_id, "reviewcopy", { query: { draft: x.draft_id } }) };
+    });
+  },
+
+  /* C49: the review links still working on a draft's copy: the plane's own `live`, else a grant that is neither stopped nor lapsed. */
+  liveGrants: function (cs, copy) {
+    return (copy && Array.isArray(copy.grants) ? copy.grants : []).filter(function (g) {
+      if (!g || typeof g !== "object") return false;
+      if (g.live === true) return true;
+      if (g.live === false || g.revoked_at || g.revokedAt) return false;
+      return !(typeof g.until === "string" && g.until && Date.parse(g.until) <= cs.now());
+    });
+  },
+
+  /* C49 (DEC-395): one draft named by its scope and the day it was prepared (`screen.<screen>.drafts.item`, both record data), as plain
+     text. The scope is the draft's own (its copy's `authored.scope`); a draft that states none is named as an untitled draft of the
+     project, never by an id. */
+  draftLine: function (cs, view, screen, e, projectTitle) {
+    const P = view.parts, v = e.r.state === "ok" && e.r.value && typeof e.r.value === "object" ? e.r.value : null;
+    const said = v && v.authored && typeof v.authored.scope === "string" ? v.authored.scope.trim() : "";
+    const when = e.draft.created_at || e.draft.updated_at || "";
+    return P.plain(cs.w("screen." + screen + ".drafts.item", { scope: said || P.plain(cs.w("case.draft.untitled", { project: projectTitle })), date: { html: when ? cs.date(when) : "" } }));
+  },
+
+  /* C49 (DEC-394): "Which draft": a chooser among the project's drafts, the newest first and marked, the one shown chosen, drawn only
+     where there is a choice (two drafts or more) and once every draft's scope is read (a scope is never guessed). The registry's act
+     `casedrafts` follows the choice (`pickDraft`). */
+  draftChooser: function (cs, view, screen, list, chosenId, projectTitle) {
+    const P = view.parts;
+    if (list.length < 2) return "";
+    const waiting = list.find(function (e) { return e.r.state === "loading"; });
+    if (waiting) return cs.state(waiting.r, function () { return ""; });
+    const newest = list[list.length - 1].draft.draft_id, acts = {};
+    const options = list.slice().reverse().map(function (e) {
+      acts[e.draft.draft_id] = "casedrafts";
+      return { value: e.draft.draft_id, text: P.draftLine(cs, view, screen, e, projectTitle) + (e.draft.draft_id === newest ? " · " + P.plain(cs.w("screen." + screen + ".drafts.newest")) : "") };
+    });
+    return '<div data-drafts-chooser>' + cs.choice("drafts-" + screen, "act.casedrafts.label." + screen, options, { value: chosenId, acts: acts })
+      + '<p class="mk-small">' + cs.w("screen." + screen + ".drafts.help") + " " + cs.w("screen." + screen + ".drafts.choose") + "</p>" + P.said(view, "casedrafts") + "</div>";
+  },
+
+  /* C49: "Which draft" pressed: the draft chosen is opened in the same screen, its address `<project>/<draft>`; the one already shown,
+     or one the plane no longer lists, stays. */
+  pickDraft: function (view, answer, cs, screen) {
+    const P = view.parts;
+    if (P.refused(cs, view, "casedrafts", answer)) return { stay: true };
+    const r = P.value(answer) || {}, pick = view.ui.pickDraft;
+    const here = view.ui.draft ? view.ui.draft.draft_id : view.ui.draftId || "";
+    if (!pick || pick === here || !(Array.isArray(r.drafts) && r.drafts.some(function (x) { return x && x.draft_id === pick; }))) { P.forget(view); return { stay: true }; }
+    cs.go(screen, String(view.subject || "").split("/")[0] + "/" + pick);
+  },
+
+  /* C49 (DEC-394, DEC-395): beneath the chooser, how many review links are live and how many sit on an earlier draft than the newest, as
+     a way to the review copy, where each is stopped. Not drawn where none sits on an earlier draft (no count at zero, R20). */
+  liveNote: function (cs, view, screen, list) {
+    const P = view.parts;
+    if (list.length < 2) return "";
+    const newest = list[list.length - 1].draft.draft_id;
+    let count = 0, earlier = 0;
+    list.forEach(function (e) {
+      if (e.r.state !== "ok") return;
+      const n = P.liveGrants(cs, e.r.value).length;
+      count += n;
+      if (e.draft.draft_id !== newest) earlier += n;
+    });
+    return earlier ? '<p class="mk-small" data-live-links>' + cs.ref("review-copy", String(view.subject || "").split("/")[0],
+      P.plain(cs.w("screen." + screen + ".links.live", { count: String(count), earlier: String(earlier) })), []) + "</p>" : "";
+  },
+
+  /* R2, R18, R27: what one grant lets its reader do, as the roster says it: until the end day in the team's zone, ended, or until the
+     member stops it. `{says, state}`, state `until`, `ended` or `open`. */
+  grantLine: function (cs, view, g, edition, held) {
+    const P = view.parts;
+    const until = typeof g.until === "string" && g.until ? g.until : "";
+    const zone = typeof g.zone === "string" && g.zone ? g.zone : held;
+    const ended = until && Date.parse(until) <= cs.now();
+    const day = until ? P.localDay(until, zone) || until : "";
+    const says = !until ? cs.w("screen.review-copy.reads.stop", { edition: edition })
+      : ended ? cs.w("screen.review-copy.reads.ended", { edition: edition, until: { html: cs.date(day) } })
+        : P.untilIn(cs, view, until, zone) || cs.w("screen.review-copy.reads.until", { until: { html: cs.date(day) } });
+    return { says: says, state: ended ? "ended" : until ? "until" : "open" };
+  },
+
+  /* C49 (DEC-394): "Every live review link": the links still working on any draft of the project, each with the draft it is on (by its
+     scope and date), what it lets the reader do, and "Stop sharing". Drawn where the project has several drafts and some link is live:
+     with one draft the roster is the list. */
+  liveLinks: function (cs, view, screen, list, projectTitle) {
+    const P = view.parts;
+    if (list.length < 2) return "";
+    const rows = [];
+    list.slice().reverse().forEach(function (e) {
+      if (e.r.state !== "ok") return;
+      const copy = e.r.value, c = copy.case || {}, held = P.copyZone(copy).zone;
+      P.liveGrants(cs, copy).forEach(function (g) {
+        const line = P.grantLine(cs, view, g, String(c.edition || ""), held);
+        rows.push(cs.row("", "<b>" + cs.esc(g.recipient || "") + '</b><span class="meta mk-data">' + cs.esc(P.draftLine(cs, view, screen, e, projectTitle)) + "</span>",
+          '<span class="meta">' + line.says + "</span>", cs.act("reviewrevoke", { data: { grant: g.grant_id || g.grantId || "" } })));
+      });
+    });
+    return rows.length ? cs.sec("screen.review-copy.links.heading", cs.sheet(rows.join("")) + '<p class="mk-note">' + cs.w("screen.review-copy.links.note") + "</p>", { help: "screen.review-copy.links.help" }) : "";
+  },
+
   /* the findings a review copy names (a draft that names none cannot be published, R66) */
   findingsOf: function (copy) { return (copy && Array.isArray(copy.findings) ? copy.findings : []).map(function (f) { return f.target; }).filter(Boolean); },
 
