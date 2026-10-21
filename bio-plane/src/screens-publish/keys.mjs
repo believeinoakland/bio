@@ -47,6 +47,7 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
     "act.owed_casedetails.label.case-editor", "act.owed_casedetailsset.label.case-editor", "screen.panel.limit.remove", "screen.person.fact.notstated", "screen.case-editor.details.first", "screen.case-editor.details.rel.same", "screen.case-editor.details.rel.other", "screen.case-editor.details.intro1", "screen.case-editor.details.intro2", "screen.case-editor.details.outward1", "screen.case-editor.details.outward2", "screen.case-editor.details.area.bodyhint", "screen.case-editor.details.area.addbody", "screen.case-editor.details.area.words", "screen.case-editor.details.list.add", "screen.case-editor.details.contact.legend", "screen.case-editor.details.contact.doorbell", "screen.case-editor.details.contact.words", "screen.case-editor.details.contact.help", "screen.case-editor.details.contact.nomember1", "screen.case-editor.details.contact.nomember2", "screen.case-editor.details.rel.link", "screen.case-editor.details.rel.linkhelp", "screen.case-editor.details.rel.choose", "screen.case-editor.details.rel.words", "screen.case-editor.details.ties.legend", "screen.case-editor.details.ties.intro", "screen.case-editor.details.ties.public", "screen.case-editor.details.ties.none", "screen.case-editor.details.ties.some", "screen.case-editor.details.ties.with", "screen.case-editor.details.ties.how", "screen.case-editor.details.ties.stake", "screen.case-editor.details.refused.summary", "screen.case-editor.details.refused.owner1", "screen.case-editor.details.refused.body", "screen.case-editor.details.refused.body2", "screen.case-editor.details.refused.malformed1", "screen.case-editor.details.refused.malformed2", "screen.case-editor.details.refused.nocase1", "screen.case-editor.details.refused.nocase2",
     "act.owed_casedetails.does", "act.owed_casedetailsset.does",
+    "act.casedrafts.label.case-editor", "act.casedrafts.does", "screen.case-editor.drafts.help", "screen.case-editor.drafts.choose", "screen.case-editor.drafts.newest", "screen.case-editor.drafts.item", "screen.case-editor.links.live",
   ]),
   "review-copy": Object.freeze([
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.review-copy.name", "screen.review-copy.purpose",
@@ -70,6 +71,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.review_copy.this.browser.did.not.accept", "screen.review_copy.nothing.left.this.page", "shell.save", "mark.scale.capture.name",
     "mark.scale.connection.name", "screen.case-editor.scope.label", "review.statement.title", "screen.case-editor.leavesout", "screen.published.findings",
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
+    "act.casedrafts.label.review-copy", "act.casedrafts.does", "screen.review-copy.drafts.help", "screen.review-copy.drafts.choose", "screen.review-copy.drafts.newest", "screen.review-copy.drafts.item", "screen.review-copy.links.heading", "screen.review-copy.links.note", "screen.review-copy.links.help", "case.draft.untitled",
   ]),
   ceremony: Object.freeze([
     "refusal.NOT_THE_PROJECT_OWNER", "refusal.PROJECT_ACT_NOT_THE_OWNER",
@@ -127,6 +129,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.case-editor.write_it_fresh_each_time_the",
     "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
     "act.owed_casedetails.label.case-editor", "act.owed_casedetails.label.ceremony", "act.owed_casedetails.does", "screen.person.fact.notstated", "screen.ceremony.details.ceremony.notstated1", "screen.ceremony.details.ceremony.notstated2", "screen.case-editor.details.area.bodyhint", "screen.case-editor.details.contact.legend", "screen.case-editor.details.rel.link", "screen.case-editor.details.ties.legend",
+    "act.casedrafts.label.ceremony", "act.casedrafts.does", "screen.ceremony.drafts.help", "screen.ceremony.drafts.choose", "screen.ceremony.drafts.newest", "screen.ceremony.drafts.item", "screen.ceremony.links.live", "case.draft.untitled", "screen.ceremony.signs.count.findings", "screen.ceremony.published.edition",
   ]),
   published: Object.freeze([
     "refusal.NO_SUCH_CASE",

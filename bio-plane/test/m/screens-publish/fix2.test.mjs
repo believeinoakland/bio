@@ -160,18 +160,18 @@ const FIRST_EDITION = COPY({ case: { case_id: C, edition: 1, identity: "The Coli
 
 test("R71 C50 a draft whose edition is published draws that edition and its link and offers no prepare for it; a draft never published draws no such line (control)", async () => {
   const p = await open(CER, { plane: { reviewcopy: ok(FIRST_EDITION), ...PUBLISHED_ONCE(1) } });
-  assert.ok(drew(p, "signing.ceremony.signednow", { edition: "1" }), "edition 1 is public");
+  assert.ok(drew(p, "screen.ceremony.published.edition", { n: "1" }), "edition 1 is public");
   const link = main(p).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`);
   assert.ok(link && drewIn(link, "screen.ceremony.publicpage"), "its link");
   assert.ok(!ops(p).includes("publish") && !ops(p).includes("caseratify"), "no prepare for edition 1");
   const q = await open(CER, { plane: { reviewcopy: ok(FIRST_EDITION), publishedcase: refusedIn("NOT_PUBLISHED") } });
-  assert.ok(!drew(q, "signing.ceremony.signednow", { edition: "1" }) && !main(q).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`));
+  assert.ok(!drew(q, "screen.ceremony.published.edition", { n: "1" }) && !main(q).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`));
   assert.ok(ops(q).includes("publish"), "control: an unpublished draft is unchanged");
 });
 
 test("R71 C50 an earlier edition is published and the draft stands at the next: the earlier one is named with its link and the next edition is offered as such (control)", async () => {
   const p = await open(CER, { plane: PUBLISHED_ONCE(1) });
-  assert.ok(drew(p, "signing.ceremony.signednow", { edition: "1" }) && main(p).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`));
+  assert.ok(drew(p, "screen.ceremony.published.edition", { n: "1" }) && main(p).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`));
   assert.ok(ops(p).includes("publish"), "edition 2 is still prepared as the new edition");
   assert.ok(drew(p, "screen.ceremony.heading", { case: "The Coliseum lease", edition: "2" }));
 });

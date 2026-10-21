@@ -1,7 +1,8 @@
 /* The review copy (registry screen `review-copy`; R2; DEC-100): Projects › <project> › Review copy. The draft's named
  * outside readers, each with what they may read and until when; sharing with a new reader, whose link is shown once and
  * kept nowhere; stopping a share; the readers' comments and the member's replies. Its subject is the project, or
- * `<project>/<draft>` for one draft (the newest otherwise). Every function is self-contained (interface-shell R21 (1)). */
+ * `<project>/<draft>` for one draft (the newest otherwise). C49: a chooser among the project's drafts, and every live review link on any
+ * draft, each stoppable here. Every function is self-contained (interface-shell R21 (1)). */
 import { PARTS } from "./parts.mjs";
 import { REVIEW_COPY_FILE } from "./review-copy-file.mjs";
 
@@ -46,6 +47,10 @@ export const REVIEW_COPY = Object.freeze({
       return out.join("");
     }
     out.push(P.noCase(cs, held));
+    // C49 (DEC-394, DEC-395): "Which draft", among the project's drafts; every other draft's copy is read once for its scope and links
+    const projectTitle = P.titleOf(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null, String(view.subject || "").split("/")[0]);
+    const list = P.draftCopies(cs, view, drafts, chosen.draft_id, copy);
+    out.push(P.draftChooser(cs, view, "review-copy", list, chosen.draft_id, projectTitle));
 
     // The named readers: each a row with what they may read and until when, and "Stop sharing" (R2, R18).
     out.push(P.sec(cs, "screen.review-copy.readers", cs.state(copy, function (v) {
@@ -55,14 +60,8 @@ export const REVIEW_COPY = Object.freeze({
       const held = P.copyZone(v).zone;
       return cs.sheet(grants.map(function (g) {
         const id = g.grant_id || g.grantId || "";
-        const until = typeof g.until === "string" && g.until ? g.until : "";
-        const zone = typeof g.zone === "string" && g.zone ? g.zone : held;
-        const ended = until && Date.parse(until) <= cs.now();
-        const day = until ? P.localDay(until, zone) || until : "";
-        const says = !until ? cs.w("screen.review-copy.reads.stop", { edition: String(c.edition || "") })
-          : ended ? cs.w("screen.review-copy.reads.ended", { edition: String(c.edition || ""), until: { html: cs.date(day) } })
-            : P.untilIn(cs, view, until, zone) || cs.w("screen.review-copy.reads.until", { until: { html: cs.date(day) } });
-        return cs.row("", "<b>" + cs.esc(g.recipient || "") + "</b>", '<span class="meta" data-grant-until="' + (ended ? "ended" : until ? "until" : "open") + '">' + says + "</span>",
+        const line = P.grantLine(cs, view, g, String(c.edition || ""), held);
+        return cs.row("", "<b>" + cs.esc(g.recipient || "") + "</b>", '<span class="meta" data-grant-until="' + line.state + '">' + line.says + "</span>",
           cs.act("reviewrevoke", { data: { grant: id } }));
       }).join(""));
     })) + P.said(view, "reviewrevoke"));
@@ -78,6 +77,9 @@ export const REVIEW_COPY = Object.freeze({
         + cs.w("screen.review-copy.link.for", { who: view.ui.link.who }) + " <b>" + cs.w("screen.review-copy.noemail") + "</b></p><p class=\"muted\">"
         + cs.w("screen.review-copy.link.once") + "</p></div>" : ""))
       : file ? '<div class="mk-acts">' + file + "</div>" : "");
+
+    // C49 (DEC-394): every live review link on any draft of the project, each with the draft it is on and "Stop sharing"
+    out.push(P.liveLinks(cs, view, "review-copy", list, projectTitle));
 
     // R40 (A81): "Save as a file": the warning, what the file carries, the one box, and the file handed over to save
     if (view.ui.export) {
@@ -116,6 +118,15 @@ export const REVIEW_COPY = Object.freeze({
   closed: function (cs, view) { view.ui.link = null; view.ui.export = false; view.ui.exported = null; },
 
   acts: [
+    {
+      // C49: "Which draft": the project's drafts read once more, and the screen opened on the one chosen (`pickDraft`).
+      op: "casedrafts", label: "act.casedrafts.label.review-copy",
+      send: function (view, el, cs) {
+        view.ui.pickDraft = String(cs.value("drafts-review-copy") || "");
+        return { query: { project: String(view.subject || "").split("/")[0] } };
+      },
+      done: function (view, answer, cs) { return view.parts.pickDraft(view, answer, cs, "review-copy"); },
+    },
     {
       // R2: a named reader, their role and an end date; the answer's secret drawn once as the reader's link, never kept.
       op: "reviewgrant", label: "act.reviewgrant.label.review-copy", outward: true,
