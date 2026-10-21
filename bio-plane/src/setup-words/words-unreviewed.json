@@ -13494,49 +13494,49 @@
       "en": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 2173
+      "line": 2182
     },
     {
       "id": "case-import.declared.importregrade",
       "en": "read: one imported case read under a lens (as the source published it, with the source's bias removed, or under this team's own), each finding that moved with the statement that moved it; writes nothing",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 2191
+      "line": 2200
     },
     {
       "id": "case-import.declared.rerunpair",
       "en": "project-directed: a member of a re-run's project states that one of its findings answers the same claim as an imported finding, or takes that statement back; appended, never rewritten",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 2197
+      "line": 2206
     },
     {
       "id": "case-import.declared.rerunread",
       "en": "read: a project's re-runs of imported editions, the source's findings beside the project's paired findings, and the difference between the two lenses; writes nothing",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 2200
+      "line": 2209
     },
     {
       "id": "case-import.declared.rerunstart",
       "en": "project-directed: an owner declares one of the team's projects a re-run of an imported edition's work, keyed by project and import; writes this module's rows and moves no bundle",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 2194
+      "line": 2203
     },
     {
       "id": "case-import.index.acceptance_withdrawn_meanwhile",
       "en": "the acceptance was withdrawn meanwhile",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1516
+      "line": 1525
     },
     {
       "id": "case-import.index.bytes_match_no_missing",
       "en": "the bytes match no material this imported edition records as missing",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1377
+      "line": 1386
     },
     {
       "id": "case-import.index.case_file_lacks_input",
@@ -13564,7 +13564,7 @@
       "en": "each missing entry of a finding recreated in part is stated in the member's words, in order",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1475
+      "line": 1484
     },
     {
       "id": "case-import.index.edition_edition_of_this_case",
@@ -13585,7 +13585,7 @@
       "en": "this edition holds no finding to accept",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1449
+      "line": 1458
     },
     {
       "id": "case-import.index.edition_imported_meanwhile",
@@ -13599,42 +13599,42 @@
       "en": "the SHA-256 of the entry's JSON is not its digest",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1756
+      "line": 1765
     },
     {
       "id": "case-import.index.entry_not_a_docket_entry",
       "en": "the entry is not a docket entry of this team's case at its number",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1759
+      "line": 1768
     },
     {
       "id": "case-import.index.entry_one_names_previous",
       "en": "entry 1 names a previous entry",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1776
+      "line": 1785
     },
     {
       "id": "case-import.index.entry_seq_is_held_with",
       "en": "entry {seq} is held with digest {held_digest}; this one has {digest}; the held entry stands",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1752
+      "line": 1761
     },
     {
       "id": "case-import.index.finding_named_is_not_this_edition",
       "en": "the finding named is not one of this edition's",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1562
+      "line": 1571
     },
     {
       "id": "case-import.index.finding_named_not_this_edition",
       "en": "a finding named is not one of this edition's",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1465
+      "line": 1474
     },
     {
       "id": "case-import.index.import_is_a_members_act",
@@ -13676,7 +13676,7 @@
       "en": "no acceptance of this edition is in force",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1510
+      "line": 1519
     },
     {
       "id": "case-import.index.no_edition_answers_here",
@@ -13690,21 +13690,21 @@
       "en": "no finding of this edition can be accepted until each missing entry of a finding recreated in part is stated in the member's words, in order",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1453
+      "line": 1462
     },
     {
       "id": "case-import.index.no_finding_is_named",
       "en": "no finding is named",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1465
+      "line": 1474
     },
     {
       "id": "case-import.index.no_finding_recreated",
       "en": "no finding of this edition recreated, wholly or in part",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1456
+      "line": 1465
     },
     {
       "id": "case-import.index.no_member_named_acting",
@@ -13725,14 +13725,14 @@
       "en": "no open flag answers by that id",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1587
+      "line": 1596
     },
     {
       "id": "case-import.index.no_watch_in_force",
       "en": "no watch of this import is in force",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1678
+      "line": 1687
     },
     {
       "id": "case-import.index.nothing_in_lens_touches",
@@ -13753,7 +13753,7 @@
       "en": "only a finding that recreated, wholly or in part, is accepted",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1471
+      "line": 1480
     },
     {
       "id": "case-import.index.own_finding_is_finding_of_project",
@@ -13788,7 +13788,7 @@
       "en": "previous is not the digest of the held entry {v1}",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1779
+      "line": 1788
     },
     {
       "id": "case-import.index.project_is_already_declared_edition",
@@ -13809,7 +13809,7 @@
       "en": "the publisher's address is the public https address of their copy, with no query and no fragment",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1653
+      "line": 1662
     },
     {
       "id": "case-import.index.rerun_is_a_members_act",
@@ -13844,56 +13844,56 @@
       "en": "the read could not be recorded: {String}",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1855
+      "line": 1864
     },
     {
       "id": "case-import.index.the_reason_for_withdrawing_is",
       "en": "the reason for withdrawing is 1 to {WORDS_MAX} characters",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1508
+      "line": 1517
     },
     {
       "id": "case-import.index.the_signature_does_not_verify",
       "en": "the signature does not verify over the entry's statement ({reason})",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1770
+      "line": 1779
     },
     {
       "id": "case-import.index.watch_changed_meanwhile",
       "en": "the watch changed meanwhile",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1816
+      "line": 1825
     },
     {
       "id": "case-import.index.watch_ended_meanwhile",
       "en": "the watch ended meanwhile",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1681
+      "line": 1690
     },
     {
       "id": "case-import.index.watch_names_another_address",
       "en": "the watch in force names another docket address",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1798
+      "line": 1807
     },
     {
       "id": "case-import.index.what_is_1_to_words",
       "en": "{what} is 1 to {WORDS_MAX} characters",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1543
+      "line": 1552
     },
     {
       "id": "case-import.index.what_was_checked_and_the",
       "en": "what was checked and the reason are each 1 to {WORDS_MAX} characters",
       "module": "case-import",
       "file": "bio-plane/src/case-import/index.mjs",
-      "line": 1417
+      "line": 1426
     },
     {
       "id": "case-inputs.checks.this_edition_of_the_case",
@@ -18408,147 +18408,147 @@
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3017
+      "line": 3024
     },
     {
       "id": "contradiction.declared.contradictiondismiss",
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3015
+      "line": 3022
     },
     {
       "id": "contradiction.declared.contradictionoptin",
       "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3021
+      "line": 3028
     },
     {
       "id": "contradiction.declared.contradictionrespond",
       "en": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3023
+      "line": 3030
     },
     {
       "id": "contradiction.declared.contradictiontakeup",
       "en": "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 3019
+      "line": 3026
     },
     {
       "id": "contradiction.index.acceptance_not_standing_detail",
       "en": "recommendation '{id}' is not standing for this contradiction",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2142
+      "line": 2145
     },
     {
       "id": "contradiction.index.acceptance_value_differs_detail",
       "en": "the recommendation accepted names {coordinate}, which this act does not record",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2147
+      "line": 2150
     },
     {
       "id": "contradiction.index.candidate_not_held_detail",
       "en": "this question names a contradiction the record does not hold, or one whose side its author may not see",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2593
+      "line": 2600
     },
     {
       "id": "contradiction.index.candidate_unreadable",
       "en": "the candidate could not be read ({e})",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 1869
+      "line": 1872
     },
     {
       "id": "contradiction.index.candidates_no_subject_detail",
       "en": "name exactly one of inquiry, content, entity, a record (bundle), project or candidate",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 1587
+      "line": 1590
     },
     {
       "id": "contradiction.index.clarify_choice_detail",
       "en": "the answers here are {choices}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2242
+      "line": 2245
     },
     {
       "id": "contradiction.index.clarify_coordinate_detail",
       "en": "name at least one of {vocab}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2253
+      "line": 2256
     },
     {
       "id": "contradiction.index.clarify_no_explanation_detail",
       "en": "explain in your own words how the two differ",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2263
+      "line": 2266
     },
     {
       "id": "contradiction.index.clarify_not_a_tension_detail",
       "en": "a lead is dismissed or taken up, never clarified",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2237
+      "line": 2240
     },
     {
       "id": "contradiction.index.closed_by_detail",
       "en": "this contradiction was {state} by {author}, and it stays as they left it",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2098
+      "line": 2101
     },
     {
       "id": "contradiction.index.closed_detail",
       "en": "this contradiction was {state}, and it stays as they left it",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2100
+      "line": 2103
     },
     {
       "id": "contradiction.index.disclosure_malformed_detail",
       "en": "the part of the disclosure that is not one of cover or email: {part}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2859
+      "line": 2866
     },
     {
       "id": "contradiction.index.disclosure_not_yours_detail",
       "en": "a response may share only your own cover or your own email address",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2868
+      "line": 2875
     },
     {
       "id": "contradiction.index.dismissal_reason_detail",
       "en": "a lead is dismissed for one of {reasons}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2188
+      "line": 2191
     },
     {
       "id": "contradiction.index.document_not_text_detail",
       "en": "the question's document is not held as text",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2467
+      "line": 2470
     },
     {
       "id": "contradiction.index.evidence_not_seen_detail",
       "en": "evidence item {index} is not one you can see, or is a fact the record does not state",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2217
+      "line": 2220
     },
     {
       "id": "contradiction.index.judgement_by",
@@ -18569,14 +18569,14 @@
       "en": "saying what a contradiction turned out to be is a member's act; this one names no member",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2065
+      "line": 2068
     },
     {
       "id": "contradiction.index.no_candidate_detail",
       "en": "name the candidate this act is about by its id",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2074
+      "line": 2077
     },
     {
       "id": "contradiction.index.no_proposals_detail",
@@ -18590,7 +18590,7 @@
       "en": "machine work records who proposed it; the plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2553
+      "line": 2560
     },
     {
       "id": "contradiction.index.no_reason_detail",
@@ -18604,63 +18604,63 @@
       "en": "no run named '{run}' is open in this store",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2560
+      "line": 2567
     },
     {
       "id": "contradiction.index.no_run_named_detail",
       "en": "pass run=<the run whose work this is>: machine work names the run it came from",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2561
+      "line": 2568
     },
     {
       "id": "contradiction.index.no_such_detail",
       "en": "no contradiction you can see answers to that id",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 1863
+      "line": 1866
     },
     {
       "id": "contradiction.index.no_such_project_detail",
       "en": "no contradiction you can see answers to that id for this project",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2946
+      "line": 2953
     },
     {
       "id": "contradiction.index.no_wrong_side_detail",
       "en": "two projects' conclusions have no wrong side",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2298
+      "line": 2301
     },
     {
       "id": "contradiction.index.no_wrong_side_or_double_speak_detail",
       "en": "two projects' conclusions have no wrong side and no double-speak",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2455
+      "line": 2458
     },
     {
       "id": "contradiction.index.not_a_contradiction_inquiry_detail",
       "en": "no question you can see answers to that id as one taken up from a contradiction",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2451
+      "line": 2454
     },
     {
       "id": "contradiction.index.not_a_party_detail",
       "en": "the project named does not rest on the side of this conflict you can see",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2799
+      "line": 2806
     },
     {
       "id": "contradiction.index.not_a_project_conflict_detail",
       "en": "a lead is not a conflict the record holds between projects",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2804
+      "line": 2811
     },
     {
       "id": "contradiction.index.pair_not_formed_cut_detail",
@@ -18688,133 +18688,133 @@
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 1974
+      "line": 1977
     },
     {
       "id": "contradiction.index.recommend_coordinate_detail",
       "en": "recommendation {index} names '{coordinate}'",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2511
+      "line": 2518
     },
     {
       "id": "contradiction.index.recommend_no_coordinates_detail",
       "en": "name at least one respect in which the sides may differ",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2501
+      "line": 2508
     },
     {
       "id": "contradiction.index.recommend_no_reason_detail",
       "en": "recommendation {index} carries no reason",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2519
+      "line": 2526
     },
     {
       "id": "contradiction.index.recommend_not_standing_detail",
       "en": "that contradiction is not open to recommendation",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2527
+      "line": 2534
     },
     {
       "id": "contradiction.index.record_cannot_be_dismissed_detail",
       "en": "this is a conflict the record holds; it closes only by a resolution",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2182
+      "line": 2185
     },
     {
       "id": "contradiction.index.resolution_recorded",
       "en": "- {when} · {who} · resolution recorded as {kind} (contradiction {candidate})",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2473
+      "line": 2476
     },
     {
       "id": "contradiction.index.response_before_opt_in_detail",
       "en": "this project has not asked to resolve it yet",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2909
+      "line": 2916
     },
     {
       "id": "contradiction.index.response_no_text_detail",
       "en": "a response says something in the responder's own words",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2914
+      "line": 2921
     },
     {
       "id": "contradiction.index.run_not_running_detail",
       "en": "the run '{run}' has ended; its work is read against the conditions it was formed under",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2571
+      "line": 2578
     },
     {
       "id": "contradiction.index.side_no_longer_held",
       "en": "a side of this contradiction is no longer held",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2396
+      "line": 2399
     },
     {
       "id": "contradiction.index.take_up_no_frame_detail",
       "en": "choose the side the question is asked around: a or b",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2388
+      "line": 2391
     },
     {
       "id": "contradiction.index.take_up_no_question_detail",
       "en": "word the question, or accept the default shown with the candidate",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2383
+      "line": 2386
     },
     {
       "id": "contradiction.index.taken_up_detail",
       "en": "this contradiction was taken up as {inquiry}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2106
+      "line": 2109
     },
     {
       "id": "contradiction.index.tensions_too_many_detail",
       "en": "{count} referents were asked about; at most {max} are read at once",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 1740
+      "line": 1743
     },
     {
       "id": "contradiction.index.vocabulary_not_held",
       "en": "(the vocabulary is not held here)",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2254
+      "line": 2257
     },
     {
       "id": "contradiction.index.words_malformed_detail",
       "en": "{field} is {length} characters; at most {cap}",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2085
+      "line": 2088
     },
     {
       "id": "contradiction.index.wrong_side_no_reason_detail",
       "en": "say why that side is wrong",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2296
+      "line": 2299
     },
     {
       "id": "contradiction.index.wrong_side_unnamed_detail",
       "en": "name the side that is wrong: a or b",
       "module": "contradiction",
       "file": "bio-plane/src/contradiction/index.mjs",
-      "line": 2292
+      "line": 2295
     },
     {
       "id": "control-plane.declared.accountdrafts",
@@ -31946,56 +31946,56 @@
       "en": "aspiration-directed: a dead end appended to an aspiration's pursuit record, keyed by aspiration id",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1738
+      "line": 1739
     },
     {
       "id": "intent.declared.aspirationretire",
       "en": "aspiration-directed: a member retires an aspiration with what pursuing it taught, keyed by aspiration id",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1740
+      "line": 1741
     },
     {
       "id": "intent.declared.goalclose",
       "en": "goal-directed: a member closes a goal with its reason, keyed by goal id",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1732
+      "line": 1733
     },
     {
       "id": "intent.declared.goaldeclare",
       "en": "goal-directed: a member declares a goal, keyed by the new goal; acts on no existing bundle's state",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1728
+      "line": 1729
     },
     {
       "id": "intent.declared.goallink",
       "en": "goal-directed: the author's dated claim that a project's objective serves a goal, keyed by (goal, project)",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1730
+      "line": 1731
     },
     {
       "id": "intent.declared.objectivecondition",
       "en": "objective-directed: sets, replaces or removes a project's satisfaction condition, keyed by project, with the author's reason for measuring progress this way, now required (intent R2, R30; DEC-88: `reasoned`); a new revision of the project's document",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1726
+      "line": 1727
     },
     {
       "id": "intent.declared.triage",
       "en": "proposal-directed: a member adopts, opens a question from, defers or dismisses one proposal, keyed by proposal key",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1742
+      "line": 1743
     },
     {
       "id": "intent.index.a_departure_from_the_teams",
       "en": "a departure from the team's aspiration records why. Nothing was written.",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 964
+      "line": 965
     },
     {
       "id": "intent.index.a_members_aspiration_is_declared",
@@ -32009,7 +32009,7 @@
       "en": "a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written.",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 963
+      "line": 964
     },
     {
       "id": "intent.index.aspiration_scope_named",
@@ -32044,14 +32044,14 @@
       "en": "a project departs only from an aspiration the whole team holds; a project's or a member's own is not held by other projects. Nothing was written.",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 961
+      "line": 962
     },
     {
       "id": "intent.index.setting_an_assistant_to_work",
       "en": "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 1501
+      "line": 1502
     },
     {
       "id": "intent.index.setting_changing_or_removing_an",
@@ -38008,14 +38008,14 @@
       "en": "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2696
+      "line": 2698
     },
     {
       "id": "op-declarations.index.an_alias_of_a_declared",
       "en": "An alias of a declared op (R21): its op's explanation serves it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2648
+      "line": 2650
     },
     {
       "id": "op-declarations.index.money_detectors_run_sweep",
@@ -38051,6 +38051,13 @@
       "module": "op-grades",
       "file": "bio-plane/src/op-grades/marks.mjs",
       "line": 41
+    },
+    {
+      "id": "op-grades.marks.k4259_read_mark",
+      "en": "K4259, a ruling: a read asks no reason, so it takes a read's mark, Reversible, not the kit's default",
+      "module": "op-grades",
+      "file": "bio-plane/src/op-grades/marks.mjs",
+      "line": 43
     },
     {
       "id": "op-grades.t48.what_the_record_joins_a",
@@ -39107,7 +39114,14 @@
       "en": "document-directed: records a standing marker that a document's route cannot be shown, keyed by bundleId; moves no state and no byte. Session reach since REC-155 (§4.10); whether a surface offers it beside a document is NOT decided, so no act row is published",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/ops.mjs",
-      "line": 28
+      "line": 31
+    },
+    {
+      "id": "provenance-routes.declared.provenanceroutes",
+      "en": "read: the documents whose standing route marker says the route cannot be shown, paged, with the census and why an empty page is empty; with bundleId, that one document's standing route, never absent (NEVER_LOOKED when nobody looked); writes nothing",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/ops.mjs",
+      "line": 33
     },
     {
       "id": "provenance-routes.index.a_fetched_address_locator",
@@ -39163,14 +39177,14 @@
       "en": "{neverAssessed} of {documentsVisible} captured documents have NEVER been assessed — NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding that their routes can be shown. This roster is complete over what was assessed and says nothing about the rest",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 960
+      "line": 976
     },
     {
       "id": "provenance-routes.index.no_document_of_that_name",
       "en": "no document of that name is in the record, or none this viewer may see — the two answer identically here, as they do on every read addressed to a record (REC-25/D-15).",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 665
+      "line": 681
     },
     {
       "id": "provenance-routes.index.nobody_looked_at_this_level",
@@ -39212,21 +39226,21 @@
       "en": "recorded: every document in this register can show its route",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 739
+      "line": 755
     },
     {
       "id": "provenance-routes.index.recorded_this_documents_route",
       "en": "recorded: this document's route cannot be shown from the evidence held. Its state has NOT moved and no byte of it was touched",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 738
+      "line": 754
     },
     {
       "id": "provenance-routes.index.recording_that_a_route_cannot",
       "en": "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 656
+      "line": 672
     },
     {
       "id": "provenance-routes.index.setting_attestation_sha256_sha",
@@ -39324,7 +39338,7 @@
       "en": "this assessment found exactly what the last one found, so nothing was appended: the record adds when something changed rather than repeating itself",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 736
+      "line": 752
     },
     {
       "id": "provenance-routes.index.this_document_stays_where_the",
@@ -39352,7 +39366,7 @@
       "en": "this record is a {String}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 669
+      "line": 685
     },
     {
       "id": "provenance-routes.index.we_looked_and_could_not",
@@ -39401,7 +39415,7 @@
       "en": "'{who}' is a machine credential. Recording that a route cannot be shown is a named member's act: the record must show which person assessed the evidence and found it did not support a route, and a credential's class is nobody's name.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 655
+      "line": 671
     },
     {
       "id": "provenance.checks.deciding_who_issued_a",
@@ -42722,6 +42736,20 @@
       "line": 101
     },
     {
+      "id": "record-core.checks.allocid_prefix_required",
+      "en": "A part of your team's Civicsmith asked for an id without naming the kind of object it is for, so nothing was allocated. {BUILD_FAULT}",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/checks.mjs",
+      "line": 199
+    },
+    {
+      "id": "record-core.checks.allocid_year_required",
+      "en": "A part of your team's Civicsmith asked for an id without a year, so nothing was allocated. {BUILD_FAULT}",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/checks.mjs",
+      "line": 203
+    },
+    {
       "id": "record-core.checks.the_setting_was_not_changed",
       "en": "The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply.",
       "module": "record-core",
@@ -42729,11 +42757,18 @@
       "line": 193
     },
     {
+      "id": "record-core.declared.allocid",
+      "en": "substrate: id allocation",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 1922
+    },
+    {
       "id": "record-core.index.a_counts_registration_names_its",
       "en": "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1004
+      "line": 1020
     },
     {
       "id": "record-core.index.a_draft_of_a_new",
@@ -42747,98 +42782,112 @@
       "en": "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1222
+      "line": 1238
     },
     {
       "id": "record-core.index.a_lease_is_taken_under",
       "en": "a lease is taken under a named actor — a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 633
+      "line": 649
     },
     {
       "id": "record-core.index.a_mint_seed_names_its",
       "en": "a mint seed names its module and a list of [prefix, table, column] sources, each three non-empty strings; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 616
+      "line": 632
     },
     {
       "id": "record-core.index.a_setting_is_recorded_under",
       "en": "a setting is recorded under a name, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1824
+      "line": 1840
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with",
       "en": "a setting is recorded with who set it, and no one was named; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1826
+      "line": 1842
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with_2",
       "en": "a setting is recorded with a value, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1828
+      "line": 1844
     },
     {
       "id": "record-core.index.a_settings_value_is_stored",
       "en": "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1831
+      "line": 1847
     },
     {
       "id": "record-core.index.a_statistics_source_names_its",
       "en": "a statistics source names its module and is a function; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1086
+      "line": 1102
     },
     {
       "id": "record-core.index.a_store_gate_names_its",
       "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1675
+      "line": 1691
     },
     {
       "id": "record-core.index.a_store_gate_names_its_2",
       "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1674
+      "line": 1690
+    },
+    {
+      "id": "record-core.index.allocid_needs_a_prefix",
+      "en": "op=allocid needs a prefix, the kind of object the id is for. Nothing was allocated.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 524
+    },
+    {
+      "id": "record-core.index.allocid_needs_a_year",
+      "en": "op=allocid needs a year, the year the id is for. Nothing was allocated.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 530
     },
     {
       "id": "record-core.index.an_expunge_is_a_members",
       "en": "an expunge is a member's act, named by that member; a machine or absent actor removes nothing.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1751
+      "line": 1767
     },
     {
       "id": "record-core.index.an_expunge_names_one_of",
       "en": "an expunge names one of the grounds unlawful, confidential, court_order (with the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1747
+      "line": 1763
     },
     {
       "id": "record-core.index.an_opaque_id_to_record",
       "en": "an opaque id to record is a non-empty string; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 564
+      "line": 580
     },
     {
       "id": "record-core.index.an_what_names_its_module",
       "en": "an {what} names its module{v1} and is a function; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1168
+      "line": 1184
     },
     {
       "id": "record-core.index.applied_of_count_item_s",
@@ -42859,21 +42908,21 @@
       "en": "{gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid allocates only a prefix whose objects every caller may see. Nothing was allocated.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 524
+      "line": 540
     },
     {
       "id": "record-core.index.id_is_already_in_the",
       "en": "{id} is already in the opaque-id ledger, or the ledger could not confirm it free; an id is recorded once and never handed out again. Nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 567
+      "line": 583
     },
     {
       "id": "record-core.index.id_was_not_recorded_an",
       "en": "{id} was not recorded: an opaque id is recorded inside the transaction of the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 566
+      "line": 582
     },
     {
       "id": "record-core.index.item_i_is_not_an",
@@ -42887,49 +42936,49 @@
       "en": "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1835
+      "line": 1851
     },
     {
       "id": "record-core.index.module_has_already_registered_its",
       "en": "{module} has already registered its mint seed; the first still stands.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 618
+      "line": 634
     },
     {
       "id": "record-core.index.module_has_already_registered_its_2",
       "en": "{module} has already registered its figures; nothing more was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1014
+      "line": 1030
     },
     {
       "id": "record-core.index.module_has_already_registered_its_3",
       "en": "{module} has already registered its {what}; the first still runs.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1172
+      "line": 1188
     },
     {
       "id": "record-core.index.module_has_already_registered_its_4",
       "en": "{module} has already registered its grammar; the first still stands.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1226
+      "line": 1242
     },
     {
       "id": "record-core.index.module_s_check_on_table",
       "en": "{module}'s check on {table} did not answer a pass or a refusal{v1}. Nothing was written.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1717
+      "line": 1733
     },
     {
       "id": "record-core.index.no_row_of_name_matches",
       "en": "no row of {name} matches the key; nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1754
+      "line": 1770
     },
     {
       "id": "record-core.index.op_act_acts_on_at",
@@ -42957,105 +43006,105 @@
       "en": "read-only: a record whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a record with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 931
+      "line": 947
     },
     {
       "id": "record-core.index.string_is_not_a_table",
       "en": "{String} is not a table {String_2} declared expunge: tombstone; nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1749
+      "line": 1765
     },
     {
       "id": "record-core.index.table_is_already_declared_by",
       "en": "{table} is already declared by {declaredBy}, and a table is declared once; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1439
+      "line": 1455
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and",
       "en": "{table} is derived-rebuildable and names no rebuild; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1432
+      "line": 1448
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and_2",
       "en": "{table} is derived-rebuildable and names no key columns; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1435
+      "line": 1451
     },
     {
       "id": "record-core.index.table_is_module_s_table",
       "en": "{table} is {module}'s table; {String} does not write it. Nothing was written.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1694
+      "line": 1710
     },
     {
       "id": "record-core.index.table_names_no_cls_class",
       "en": "{table} names no {cls} class; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1426
+      "line": 1442
     },
     {
       "id": "record-core.index.table_s_checks_are_already",
       "en": "{table}'s checks are already registered by {module}; the first still runs.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1678
+      "line": 1694
     },
     {
       "id": "record-core.index.table_s_cls_class_is",
       "en": "{table}'s {cls} class is one of {allowed}; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1428
+      "line": 1444
     },
     {
       "id": "record-core.index.table_was_not_declared_a",
       "en": "{table} was not declared: a table's name, and every column or table its declaration names, is a plain identifier; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1423
+      "line": 1439
     },
     {
       "id": "record-core.index.the_audits_answer_key_key",
       "en": "the audit's answer key {key} is already held by {keyHeldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1171
+      "line": 1187
     },
     {
       "id": "record-core.index.the_check_id_is_already",
       "en": "the check {id} is already claimed by {heldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1227
+      "line": 1243
     },
     {
       "id": "record-core.index.the_figure_key_is_already",
       "en": "the figure {key} is already reported by {heldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1015
+      "line": 1031
     },
     {
       "id": "record-core.index.the_grammar_claims_part_of",
       "en": "the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1221
+      "line": 1237
     },
     {
       "id": "record-core.index.the_instances_figures_are_already",
       "en": "the instance's figures are already supplied by {module}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1089
+      "line": 1105
     },
     {
       "id": "record-core.index.your_teams_civicsmith_could_not",

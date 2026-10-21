@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (17997 design words, 1061 protected; SHA-256
-   e76b85546e41d8a2db0b4c5863ab14361a3efa684fd795bc79ca5fb188c9db2c) followed by 7097 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   e76b85546e41d8a2db0b4c5863ab14361a3efa684fd795bc79ca5fb188c9db2c) followed by 7104 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23441,6 +23441,7 @@ export const WORD_ROWS = Object.freeze([
   ["op-declarations.index.src_control_plane_ops_mjs","src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",null,null,false,"code"],
   ["op-declarations.index.src_control_plane_ops_mjs_2","src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION OF ANY ROLE REACHES IT.'",null,null,false,"code"],
   ["op-grades.marks.dec_300_5_over_the","DEC-300 (5), over the kit at {MARKS_KIT_COMMIT}: the act weighs Reversible, so no mark is drawn for it",null,null,false,"code"],
+  ["op-grades.marks.k4259_read_mark","K4259, a ruling: a read asks no reason, so it takes a read's mark, Reversible, not the kit's default",null,null,false,"code"],
   ["op-grades.t48.what_the_record_joins_a","what the record joins a centre to, two rings out: the nodes and steps the connection graph draws on Explore connections, a person's Connections and the money trail (explore R21)",null,null,false,"code"],
   ["pdf-pixels.imagecrop.the_document_is_encrypted_streams","the document is encrypted; streams are ciphertext to this reader",null,null,false,"code"],
   ["pdf-pixels.imagecrop.the_extent_names_a_page","the extent names a page and no rectangle, so it names no one image to crop",null,null,false,"code"],
@@ -23592,6 +23593,7 @@ export const WORD_ROWS = Object.freeze([
   ["promotion.text.text_session_log_entry","{text}\n## Session Log\n\n{entry}",null,null,false,"code"],
   ["provenance-routes.checks.only_a_captured_document_travelled","Only a captured document travelled a route to get here, and this is not one. Questions, projects and actions were written in the record rather than fetched from anywhere, so there is no route to show or to doubt.",null,null,false,"code"],
   ["provenance-routes.declared.provenanceroute","document-directed: records a standing marker that a document's route cannot be shown, keyed by bundleId; moves no state and no byte. Session reach since REC-155 (§4.10); whether a surface offers it beside a document is NOT decided, so no act row is published",null,null,false,"code"],
+  ["provenance-routes.declared.provenanceroutes","read: the documents whose standing route marker says the route cannot be shown, paged, with the census and why an empty page is empty; with bundleId, that one document's standing route, never absent (NEVER_LOOKED when nobody looked); writes nothing",null,null,false,"code"],
   ["provenance-routes.index.a_fetched_address_locator","a fetched address (`locator`)",null,null,false,"code"],
   ["provenance-routes.index.a_named_custodian_custody","a named custodian (`custody.holder`)",null,null,false,"code"],
   ["provenance-routes.index.data_provenance_json_is_not","data/provenance.json is not valid JSON",null,null,false,"code"],
@@ -24108,7 +24110,10 @@ export const WORD_ROWS = Object.freeze([
   ["record-core.checks.a_part_of_your_teams_7","A part of your team's Civicsmith tried to supply its figures when another part already supplies them, so the second was refused and the first still stands. {BUILD_FAULT}",null,null,false,"code"],
   ["record-core.checks.a_part_of_your_teams_8","A part of your team's Civicsmith tried to supply its figures without naming itself or without a function to count them, so nothing was registered. {BUILD_FAULT}",null,null,false,"code"],
   ["record-core.checks.a_part_of_your_teams_9","A part of your team's Civicsmith tried to reserve an identifier without giving one, so nothing was reserved. {BUILD_FAULT}",null,null,false,"code"],
+  ["record-core.checks.allocid_prefix_required","A part of your team's Civicsmith asked for an id without naming the kind of object it is for, so nothing was allocated. {BUILD_FAULT}",null,null,false,"code"],
+  ["record-core.checks.allocid_year_required","A part of your team's Civicsmith asked for an id without a year, so nothing was allocated. {BUILD_FAULT}",null,null,false,"code"],
   ["record-core.checks.the_setting_was_not_changed","The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply.",null,null,false,"code"],
+  ["record-core.declared.allocid","substrate: id allocation",null,null,false,"code"],
   ["record-core.index.a_counts_registration_names_its","a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.",null,null,false,"code"],
   ["record-core.index.a_draft_of_a_new","a draft of a new edition's statement of what changed",null,null,false,"code"],
   ["record-core.index.a_grammar_names_its_module","a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",null,null,false,"code"],
@@ -24121,6 +24126,8 @@ export const WORD_ROWS = Object.freeze([
   ["record-core.index.a_statistics_source_names_its","a statistics source names its module and is a function; nothing was registered.",null,null,false,"code"],
   ["record-core.index.a_store_gate_names_its","a store gate names its module, a table that module declared and a check to run; nothing was registered.",null,null,false,"code"],
   ["record-core.index.a_store_gate_names_its_2","a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).",null,null,false,"code"],
+  ["record-core.index.allocid_needs_a_prefix","op=allocid needs a prefix, the kind of object the id is for. Nothing was allocated.",null,null,false,"code"],
+  ["record-core.index.allocid_needs_a_year","op=allocid needs a year, the year the id is for. Nothing was allocated.",null,null,false,"code"],
   ["record-core.index.an_expunge_is_a_members","an expunge is a member's act, named by that member; a machine or absent actor removes nothing.",null,null,false,"code"],
   ["record-core.index.an_expunge_names_one_of","an expunge names one of the grounds unlawful, confidential, court_order (with the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed.",null,null,false,"code"],
   ["record-core.index.an_opaque_id_to_record","an opaque id to record is a non-empty string; nothing was recorded.",null,null,false,"code"],
