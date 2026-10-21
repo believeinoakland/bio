@@ -477,6 +477,9 @@ test("R48 (P10 c): a 4 MB held capture that does not begin with the ZIP magic an
     assert.deepEqual([r.ok, r.reason, r.code], [false, "NOT_AN_ARCHIVE", "NOT_AN_ARCHIVE"]);
     assert.equal(whole, 0, "the whole bytes were not hashed or profiled");
     assert.ok(reads(w) <= ARCHIVE_CHECK_READS);
+    /* R88: the bucket was asked for the opening bytes alone, never the whole object */
+    const gets = w.b.calls.filter((c) => c[0] === "get");
+    assert.ok(gets.length >= 1 && gets.every((c) => c[2] && c[2].range && c[2].range.offset === 0 && c[2].range.length === 1024), "every get is the first 1024 bytes");
     const zip = makeZip([{ name: "a", data: "a" }, { name: "b", data: "b" }]);
     const z = world();
     await hold(z, zip);
