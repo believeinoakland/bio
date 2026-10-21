@@ -2,7 +2,7 @@
  * resuming (state read back), what is due, and the sweeps. Each act sends the fields its owner declares. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, text, main, btn, press, ok, refused, word, says, saysIn, rawKeys } from "./page.mjs";
+import { open as openPage, text, main, btn, press, ok, refused, word, says, saysIn, rawKeys, ADMIN } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 const MEMBERS = ok({ members: [{ member_id: "rosa", handle: "Rosa-h" }, { member_id: "dev", handle: "Dev-h" }] });
@@ -41,7 +41,7 @@ test("R46 an empty list is not drawn (no zero counts, no empty section); the lis
 
 test("R46 pausing and resuming: the act sends paused true or false, and the state is read back; the watching runs, then is paused by whom and when", async () => {
   let paused = { paused: false };
-  const p = await open({ monitoring: () => LIST(paused), monitorpause: (req) => { paused = req.body.paused ? { paused: true, by: "member:rosa", at: "2026-10-08T14:05:00Z" } : { paused: false }; return ok({ ok: true, ...paused }); } });
+  const p = await open({ monitoring: () => LIST(paused), monitorpause: (req) => { paused = req.body.paused ? { paused: true, by: "member:rosa", at: "2026-10-08T14:05:00Z" } : { paused: false }; return ok({ ok: true, ...paused }); } }, { me: ADMIN });
   assert.ok(says(p, "screen.watching.running"));
   assert.equal(btn(p, "monitorpause").textContent.includes(word("screen.watching.pause")), true);
   await press(p, "monitorpause", { reason: "Maintenance." });
@@ -54,8 +54,8 @@ test("R46 pausing and resuming: the act sends paused true or false, and the stat
   assert.ok(says(p, "screen.watching.running"), "resumed, read back");
 });
 
-test("R46 a member who is not an administrator is refused in the owner's words and nothing changes", async () => {
-  const p = await open({ monitorpause: refused("NOT_AN_ADMIN", "builder detail", 403) });
+test("R46 a pause the plane refuses (the viewer is no longer an administrator) is refused in the owner's words and nothing changes", async () => {
+  const p = await open({ monitorpause: refused("NOT_AN_ADMIN", "builder detail", 403) }, { me: ADMIN });
   const r = await press(p, "monitorpause", { reason: "x" });
   assert.ok(saysIn(r.slot(), "refusal.NOT_AN_ADMIN"));
   assert.ok(says(p, "screen.watching.running"));

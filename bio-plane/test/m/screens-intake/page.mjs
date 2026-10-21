@@ -72,3 +72,8 @@ export const rawKeys = (p) => (text(p).match(/\b(screen|act|mark|shell|state|ref
    `word(key, vars)`; `saysIn(el, key, vars)` the same for one element (an act's refusal slot, a row). */
 export const says = (p, key, vars) => text(p).includes(word(key, vars));
 export const saysIn = (el, key, vars) => el.textContent.includes(word(key, vars));
+
+/* R54: a document with no title, no file name is named by its host and the day it was captured (`document.untitled.web`) */
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+export const dayOf = (iso) => { const d = new Date(iso); return word("date.daymonthyear", { day: String(d.getUTCDate()), month: word(`date.month.${MONTHS[d.getUTCMonth()]}`), year: String(d.getUTCFullYear()) }); };
+export const untitled = (site = "www.example.gov") => word("document.untitled.web", { site, date: dayOf(Date.now()) });

@@ -62,7 +62,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.a64.capture_the_new_copy", "state.loading", "screen.capture.a64.captured_by", "screen.capture.a64.nothing_added",
     "screen.capture.a64.undetermined",
     /* R45, R50 (T51 fix round; DEC-375, DEC-384) */
-    "screen.capture.address.working", "screen.capture.address.working.head", "screen.capture.address.untitled", "screen.capture.address.existed.open",
+    "screen.capture.address.working", "screen.capture.address.working.head", "screen.capture.address.existed.open",
     "screen.capture.render.keep.site", "screen.capture.render.keep.visitor", "screen.capture.render.keep.explain1", "screen.capture.render.keep.explain2",
     "screen.capture.archive.summary", "screen.capture.archive.explain1", "screen.capture.archive.explain2", "screen.watching.sweepdef.match",
     "screen.capture.cred.head", "screen.capture.cred.turned", "screen.capture.cred.why1", "screen.capture.cred.why2", "screen.capture.cred.user",
@@ -71,8 +71,9 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.cred.ref.own2", "screen.capture.cred.ref.notretry", "screen.capture.cred.stored", "screen.capture.cred.notshown",
     "screen.capture.cred.list", "screen.capture.cred.listnote1", "screen.capture.cred.listnote2", "screen.capture.cred.tip1", "screen.capture.cred.tip2",
     "act.owed_capturecredentialsupply.label.capture", "act.owed_capturecredentiallist.label.capture", "act.owed_capturecredentialwithdraw.label.capture",
-    "act.capturerequestretry.label.capture", "document.kind.pdf", "document.kind.docx", "document.kind.xlsx", "document.kind.pptx", "document.kind.odt", "document.kind.ods", "document.kind.odp",
-    "document.kind.csv", "document.kind.jpeg", "document.kind.png", "document.kind.html", "document.kind.zip", "document.kind.text", "document.kind.undetermined",
+    "act.capturerequestretry.label.capture",
+    "screen.watching.name", "screen.leads.name", "shell.card.question", "shell.card.document", "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE",
+    "screen.capture.later.head", "screen.capture.later.about", "screen.capture.later.waiting", "screen.capture.later.captured", "screen.capture.later.turned",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",
@@ -91,7 +92,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.setaside", "screen.held.setasidecount", "screen.held.sub", "screen.held.thumb",
     "screen.held.untitled", "screen.held.vouchbad", "screen.held.vouchmissing", "screen.held.waiting",
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
-    "screen.capture.openit", "screen.capture.openit.help",
+    "screen.capture.openit", "screen.capture.openit.help", "state.item.review.name", "screen.held.name",
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",
@@ -200,7 +201,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.inbox.resolved", "screen.inbox.same", "screen.inbox.status.discarded",
     "screen.inbox.status.new", "screen.inbox.status.pulled", "screen.inbox.sub", "state.loading",
     "inbox.discard.why", "reference.label", "screen.inbox.alreadyheld", "screen.inbox.alreadyheld.other",
-    "screen.inbox.same.date", "shell.card.document", "act.knocksof.label.inbox", "screen.inbox.knocker.heading", "screen.inbox.knocker.same1", "screen.inbox.knocker.same2",
+    "screen.inbox.same.date", "shell.card.document", "screen.document.fingerprint", "act.knocksof.label.inbox", "screen.inbox.knocker.heading", "screen.inbox.knocker.same1", "screen.inbox.knocker.same2",
     "screen.inbox.knocker.help1", "screen.inbox.knocker.help2", "screen.inbox.source.line", "screen.about-knocker.name", "size.kb", "size.mb", "size.small",
   ]),
 });

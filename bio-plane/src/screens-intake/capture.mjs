@@ -13,10 +13,12 @@ function captureReads(view) {
   const tab = at < 0 ? s : s.slice(0, at), id = at < 0 ? "" : s.slice(at + 1);
   if (tab === "file" || tab === "saw") return {};
   return { open: { op: "opencaptures", query: {}, empty: (v) => !v || !Array.isArray(v.captures) || !v.captures.length },
-           held: { op: "heldcaptures", query: { limit: 200, state: "held_and_vouched" } },
+           /* C14 (capture R77, R88): the cheap picker read, once for the screen: a title and a digest per document, no examination */
+           held: { op: "heldcaptures", query: { limit: 200, state: "held_and_vouched", fields: "picker" } },
            members: { op: "memberlist" },
-           /* R47 (C20): the member's team's requests a source turned away for a login */
-           refused: { op: "capturerequests", query: { state: "refused", limit: 50 }, empty: (v) => !v || !Array.isArray(v.requests) || !v.requests.length },
+           /* R47, R55 (C20; DEC-394 3c): the one read of the capture requests serves the team's requests a source turned away for a
+              login and the member's own "requests for later" */
+           later: { op: "capturerequests", query: { limit: 50 }, empty: (v) => !v || !Array.isArray(v.requests) || !v.requests.length },
            ...(/^INQ-[A-Za-z0-9-]+$/.test(id) ? { questions: { op: "search", query: { q: "type:inquiry", limit: "200" },
              empty: (v) => !v || !Array.isArray(v.hits) || !v.hits.length } } : {}) };
 }
@@ -55,35 +57,23 @@ async function projectOf(cs, id) {
   return { id: project, title: (pm && field(pm, "title")) || project, question };
 }
 
-/* R33 (N1139; DEC-325): a document is titled from its own title: the reading's `title` when it is not null; else what the
- * answer's document states; else, for an address that gives only a host, `document.untitled.web` (`{site}` the host,
- * `{date}` the day captured), never a slug or an address; else R50's `screen.capture.address.untitled` (`{kind}` from the document's
- * format, `{site}` the address's host), never the address's file part. Plain text, at most 200 characters. */
+/* R54 (C25; amends R33, R50): one rule for a document's name, the same for a web page, a PDF and an upload: its own title (the
+ * reading's `title`, else what the answer's document states), else its file name (an upload's own, or the name its source states,
+ * `capture.file_name`; never the file part of an address), else its host and the day captured (`document.untitled.web`, never the
+ * host alone). With no host either, `screen.held.untitled`. Plain text, at most 200 characters. */
 function titleOf(cs, o) {
   const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
-  const read = o.reading && typeof o.reading.title === "string" ? o.reading.title.replace(/\s+/g, " ").trim() : "";
-  if (read) return read.slice(0, 200);
-  const address = String(o.address || "");
-  const stated = o.doc && typeof o.doc.title === "string" ? o.doc.title.trim() : "";
-  if (stated) return stated.slice(0, 200);
-  let host = "", hostOnly = false;
-  try { const u = new URL(address); host = u.hostname; hostOnly = u.pathname.replace(/\/+$/, "") === ""; } catch (e) { host = ""; }
-  if (host && hostOnly) {
-    const day = new Date(cs.now ? cs.now() : Date.now()).toISOString().split(".")[0] + "Z";
-    return plain(cs.w("document.untitled.web", { site: host, date: { html: cs.date(day) } })).slice(0, 200);
-  }
-  /* R50 (DEC-384 I-03): a document with no title is "A {kind} from {site}", never the file part of its address. `kind` is the
-     document's own format (`document.kind.*`), else what its declared media type names, else "file". */
-  const prof = o.doc && o.doc.profile && o.doc.profile.format && typeof o.doc.profile.format.format === "string" ? o.doc.profile.format.format : "";
-  const media = String((o.doc && o.doc.capture && o.doc.capture.content_type) || (o.doc && o.doc.profile && o.doc.profile.source_content_type) || "").toLowerCase().split(";")[0].trim();
-  const BY_MEDIA = { "application/pdf": "pdf", "text/html": "html", "application/xhtml+xml": "html", "text/plain": "text", "text/csv": "csv",
-    "image/jpeg": "jpeg", "image/png": "png", "application/zip": "zip",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx", "application/vnd.oasis.opendocument.text": "odt",
-    "application/vnd.oasis.opendocument.spreadsheet": "ods", "application/vnd.oasis.opendocument.presentation": "odp" };
-  const kinds = ["pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "jpeg", "png", "html", "zip", "text"];
-  const kind = kinds.includes(prof) ? prof : BY_MEDIA[media] || "undetermined";
-  return plain(cs.w("screen.capture.address.untitled", { kind: plain(cs.w("document.kind." + kind)), site: host || "" })).slice(0, 200);
+  const clean = (t) => (typeof t === "string" ? t.replace(/\s+/g, " ").trim() : "");
+  const doc = o.doc && typeof o.doc === "object" ? o.doc : {};
+  const own = clean(o.reading && o.reading.title) || clean(doc.title);
+  if (own) return own.slice(0, 200);
+  const file = clean(o.fileName) || clean(doc.capture && doc.capture.file_name) || clean(doc.name_stated && doc.name_stated.text);
+  if (file) return file.slice(0, 200);
+  let host = "";
+  try { host = new URL(String(o.address || "")).hostname; } catch (e) { host = ""; }
+  if (!host) return plain(cs.w("screen.held.untitled")).slice(0, 200);
+  const day = new Date(cs.now ? cs.now() : Date.now()).toISOString().split(".")[0] + "Z";
+  return plain(cs.w("document.untitled.web", { site: host, date: { html: cs.date(day) } })).slice(0, 200);
 }
 
 /* R13, DEC-342: a refusal in words, beside the act or the address that met it: `refusal.<CODE>` when the table holds the code,
@@ -202,8 +192,12 @@ function renderCapture(cs, view) {
        questions the member may see (`cs.choice` over record data); the routed one stays chosen though the list omits it */
     const D = view.data || {};
     const qs = D.questions && D.questions.state === "ok" && D.questions.value && Array.isArray(D.questions.value.hits) ? D.questions.value.hits : [];
-    const routed = at.id && /^INQ-/.test(at.id) && !qs.some((h) => String(h.bundle_id) === at.id) ? [{ value: at.id, text: at.id }] : [];
-    const forq = /^INQ-/.test(at.id) ? cs.choice("ci-for", "capture.forquestion", routed.concat(qs.map((h) => ({ value: String(h.bundle_id), text: String(h.title || h.bundle_id) }))), { value: at.id })
+    /* C45: a question is named by its title (the one the page read for the routed question, else the search hit's), never by its id;
+       one whose title cannot be read is the word for a question */
+    const qWord = plainText(cs.w("shell.card.question")).replace(/<[^>]*>/g, "");
+    const routedTitle = U.forq && U.forq.state === "ok" && U.forq.value && U.forq.value.question ? U.forq.value.question : "";
+    const routed = at.id && /^INQ-/.test(at.id) && !qs.some((h) => String(h.bundle_id) === at.id) ? [{ value: at.id, text: routedTitle || qWord }] : [];
+    const forq = /^INQ-/.test(at.id) ? cs.choice("ci-for", "capture.forquestion", routed.concat(qs.map((h) => ({ value: String(h.bundle_id), text: String(h.title || (String(h.bundle_id) === at.id && routedTitle) || qWord) }))), { value: at.id })
       + `<p class="mk-small muted">${cs.w("capture.forquestion.help")}</p>` : "";
     /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
        primary, else the address; drawn only when one is answered (R17), a read that failed drawn failed */
@@ -255,12 +249,14 @@ function renderCapture(cs, view) {
     const result = (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
-        : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title }) + made(got)) : "")
+        : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title }) + made(got)
+          /* a render still being made and an attestation not yet answered, in the plane's own notes; the capture is kept */
+          + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("")) : "")
       + refusedPromotion("address");
     /* R47 (C20; DEC-381): "A source that asked for a login": each request a source turned away for a login, a username and a secret
        field (the secret is typed into a password field, sent once and never drawn back), the login given and the request tried
        again, a retry by itself, the stored logins and their withdrawal. No secret, length or digest is ever drawn. */
-    const R = D.refused;
+    const R = D.later;
     const turned = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) ? R.value.requests.filter((r) => r && r.source_reason === "login" && r.state === "refused") : [];
     const stored = (Array.isArray(U.logins) ? U.logins : []).filter((e) => e && !e.withdrawn_at);
     const who = (m) => { const id = String(m || "").replace(/^member:/, ""); const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
@@ -277,12 +273,24 @@ function renderCapture(cs, view) {
         + turned.map((r) => `<div class="mk-acts">${cs.act("capturecredentialsupply", { tone: "primary", data: { request: r.request, host: r.host } })}${cs.act("capturerequestretry", { label: "screen.capture.cred.retry", data: { request: r.request } })}</div>`).join("")
         + `<p class="mk-small muted">${cs.w("screen.capture.cred.only1")} ${cs.w("screen.capture.cred.only2")}</p>` : "")
       + credNote
+      /* C78: the explanation of "Show the stored logins" sits directly under that button, before the list it explains */
+      + `<div class="mk-acts">${cs.act("capturecredentiallist")}</div>`
+      + (Array.isArray(U.logins) ? `<p class="mk-small muted">${cs.w("screen.capture.cred.listnote1")} ${cs.w("screen.capture.cred.listnote2")}</p>` : "")
       + stored.map((e) => cs.sheet(cs.row(cs.icon("accepted"), `${cs.w("screen.capture.cred.stored", { source: { html: `<span class="mk-data">${cs.esc(e.host || "")}</span>` } })}<span class="meta">${cs.w("screen.capture.cred.notshown")}</span>`,
           cs.act("capturecredentialwithdraw", { tone: "quiet", data: { credential: e.credential } }), (who(e.supplied_by) && e.supplied_at ? cs.w("screen.capture.cred.givenby", { name: { html: who(e.supplied_by) }, date: { html: cs.date(e.supplied_at) } })
-            : [who(e.supplied_by), e.supplied_at ? cs.date(e.supplied_at) : ""].filter(Boolean).join(" · "))))).join("")
-      + `<div class="mk-acts">${cs.act("capturecredentiallist")}</div>`
-      + (Array.isArray(U.logins) ? `<p class="mk-small muted">${cs.w("screen.capture.cred.listnote1")} ${cs.w("screen.capture.cred.listnote2")}</p>` : ""),
+            : [who(e.supplied_by), e.supplied_at ? cs.date(e.supplied_at) : ""].filter(Boolean).join(" · "))))).join(""),
       { help: ["screen.capture.cred.tip1", "screen.capture.cred.tip2"] });
+    /* R55 (DEC-394 3c): "Your requests for later": the member's own capture requests (`capturerequests`, the one read that also serves
+       R47), each with where it stands: waiting to be fetched, captured, or turned away by its source. None to list draws no section. */
+    const meId = view.me && view.me.member ? String(view.me.member) : "";
+    const mineLater = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) && meId
+      ? R.value.requests.filter((r) => r && String(r.principal_plane || "").replace(/^member:/, "") === meId && ["requested", "draining", "captured", "refused"].includes(r.state)) : [];
+    const laterSec = !mineLater.length ? "" : cs.sec("screen.capture.later.head", `<p class="mk-small">${cs.w("screen.capture.later.about")}</p>`
+      + cs.sheet(mineLater.map((r) => {
+        const st = r.state === "captured" ? "captured" : r.state === "refused" ? "turned" : "waiting";
+        return cs.row(cs.icon(st === "captured" ? "accepted" : st === "turned" ? "refused" : "clock"), `<b class="mk-data">${cs.esc(r.address || r.host || "")}</b>`, "",
+          [cs.w("screen.capture.later." + st), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" · "));
+      }).join("")));
     body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
       + forq
       + keep
@@ -294,6 +302,7 @@ function renderCapture(cs, view) {
       + unfinished
       + a64
       + credSec
+      + laterSec
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
         { address: U.requested.address }) : "")
       + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
@@ -329,12 +338,15 @@ function renderCapture(cs, view) {
       + cs.field("ci-when", "screen.capture.saw.when", { help: "screen.capture.saw.whenhelp", value: U.when || "" })
       + `<p class="mk-small muted">${cs.w("photo.reminder")}</p>`
       + `<div class="mk-acts">${cs.act("testify", { tone: "primary" })}</div>`
-      + (U.testified ? said("screen.capture.saw.done", { id: U.testified }) : "")
+      + (U.testified ? said("screen.capture.saw.done", { id: { html: U.testified.id ? cs.ref("document", U.testified.id, U.testified.text || plainText(cs.w("shell.card.document")).replace(/<[^>]*>/g, ""), []) : cs.esc(U.testified.text || "") } }) : "")
       + `<p class="mk-note">${cs.w("screen.capture.saw.after")}</p>`;
   }
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`
     + forqNote
     + `<nav class="mk-tabs2" role="tablist" aria-label="${cs.w("screen.capture.tabs")}">${tabs}</nav>`
+    /* C91 (R44, R46): the doors to the watched addresses and to leads, for a member or an administrator who may act on the record */
+    + (cs.can("capturerequest") ? `<div class="mk-acts"><a class="cs-btn" data-tone="quiet" href="/app/watching" data-nav>${cs.w("screen.watching.name")}</a>`
+      + `<a class="cs-btn" data-tone="quiet" href="/app/leads" data-nav>${cs.w("screen.leads.name")}</a></div>` : "")
     + `<div data-tab="${tab}">${body}</div>`;
 }
 
@@ -377,39 +389,75 @@ async function sendAcquire(view, el, cs) {
   return null;
 }
 
+/* R50 (C11): a refused or unanswered `acquire` ends the press at once: the working note it raised is cleared, and the refusal the shell
+ * draws beside the act is not lost to the redraw that clearing it causes (interface-shell R21). */
+function failedAcquire(view, answer, cs) { cs.set("working", false); }
+
 /* R1 (N747; control-plane R58): an answer that carries `promoted` (an archive the door already promoted) is not
  * promoted again; any other new document is promoted here as an information bundle at `collected` (`promoteDocument`,
  * R23's files included), filed under the project the subject names (R22). A refusal of either step is drawn on the tab. */
 async function doneAcquire(view, answer, cs) {
   const a = answer || {}, doc = a.document || {};
   const address = String((view.ui && view.ui.address) || "");
-  /* R33: the document is titled from its own title (`reading.title`), see `titleOf` */
+  /* R54: the document is named by its own title, else its file name, else its host and the day (`titleOf`) */
   const fin = view.ui && view.ui.finishing;
   const title = fin && fin.session && fin.title ? fin.title : view.parts.titleOf(cs, { reading: a.reading, doc, address });
   const sha = doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "";
+  /* a render still being made (`render_pending`) and an attestation that had not answered (`attestation_attempts[].pending`) are said
+     as they stand, in the plane's own notes: the capture is kept either way */
+  const rp = doc.render_pending && typeof doc.render_pending === "object" ? doc.render_pending : a.render_pending && typeof a.render_pending === "object" ? a.render_pending : null;
+  const later = (Array.isArray(doc.attestation_attempts) ? doc.attestation_attempts : []).find((x) => x && x.pending === true && typeof x.note === "string" && x.note);
+  const pend = { renderNote: rp && typeof rp.note === "string" ? rp.note : "", attestNote: later ? later.note : "" };
   cs.set("working", false);
   cs.set("promoteRefused", null);
   /* R31: a continuation (`continued`) files nothing new: its supporting files join the capture it resumed */
-  if (a.continued) { cs.set("captured", { title, address, bundleId: null, sha }); cs.set("finishing", null); return; }
+  if (a.continued) { cs.set("captured", { title, address, bundleId: null, sha, ...pend }); cs.set("finishing", null); return; }
   if (Array.isArray(a.promoted)) {
     cs.set("captured", { archive: true, filed: a.promoted.length, notPromoted: Array.isArray(a.not_promoted) ? a.not_promoted.length : 0, title, address,
                          bundleId: typeof a.bundleId === "string" ? a.bundleId : null });
     return;
   }
-  /* R49 (L3; K4194): `existed: true` says the object store held the bytes, not that a document the viewer can see does. The
-     record is asked (`heldat`, no `check`: nothing is fetched) for the document that holds the sha as this viewer sees it: one
-     that shows is linked and nothing is written; none that shows is promoted for the viewer below, as a new capture is. */
+  /* R49 (L3; K4194; C9): `existed: true` says the object store held the bytes, not that a document the viewer can see does. The
+     record is asked (`heldat`, no `check`: nothing is fetched) for the document that holds the sha as this viewer sees it: one that
+     shows is linked and no document is written (the question chosen was sent as `for`, so the plane has recorded the capture as made
+     for it, acquisition R47); none that shows is promoted for the viewer below, as a new capture is. */
   if (a.existed === true) {
-    const held = sha ? await cs.call("heldat", { query: { sha256: sha } }) : null;
-    const h = held && held.result && typeof held.result === "object" ? held.result : held;
-    const doc0 = h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" && h.copy.document ? h.copy.document : "";
-    if (doc0) { cs.set("captured", { existed: true, title, address, bundleId: doc0, sha }); return; }
+    const home = await view.parts.homeOf(cs, sha);
+    if (home) { cs.set("captured", { existed: true, title, address, bundleId: home, sha, ...pend }); return; }
   }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
-  if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", html: view.parts.refusalHtml(cs, made.refused) }); return; }
-  cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha });
+  if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
+  cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha, ...pend });
+}
+
+/* R49 (C9, C10): the document the viewer may see that holds these bytes, asked of the record by the capture's digest (`heldat`, no
+ * `check`: nothing is fetched). "" when the record shows none, the digest is not one, or the read is refused. */
+async function homeOf(cs, sha) {
+  if (typeof sha !== "string" || !sha) return "";
+  const held = await cs.call("heldat", { query: { sha256: sha } });
+  const h = held && held.result && typeof held.result === "object" ? held.result : held;
+  return h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy.document : "";
+}
+
+/* R49 (C9): a promotion's refusal in words (`refusalHtml`). Bytes that have another home (`CAPTURE_HELD_BY_ANOTHER_BUNDLE`, provenance
+ * R2) name the holder and link it where the plane names it (the holder's title, read from its bundle; `shell.card.document` where it
+ * cannot be read), and say so without a name or link where it does not. */
+async function refusedHtml(view, cs, r) {
+  const html = view.parts.refusalHtml(cs, r);
+  const holder = r && typeof r.holder === "string" ? r.holder : "";
+  if (!holder || String(r.code || r.reason || "") !== "CAPTURE_HELD_BY_ANOTHER_BUNDLE") return html;
+  const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  let title = "";
+  try {
+    const got = await cs.call("image", { query: { id: holder } });
+    const x = got && typeof got.result === "object" && got.result ? got.result : got;
+    const front = x && typeof x["bundle.md"] === "string" ? x["bundle.md"].split(/\n---\s*\n/)[0] : "";
+    const m = /^title:\s*(.*?)\s*$/m.exec(front || "");
+    title = m ? m[1].replace(/^["']|["']$/g, "") : "";
+  } catch (e) { title = ""; }
+  return `${html} ${cs.ref("document", holder, title || plain(cs.w("shell.card.document")).replace(/<[^>]*>/g, ""), [])}`;
 }
 
 /* R14 (capture-requests R56): "Ask for this later" is the member's own request: `capturerequest` with the address and no
@@ -516,17 +564,24 @@ async function doneUpload(view, answer, cs) {
   const name = typeof sent.name === "string" ? sent.name : "";
   cs.set("promoteRefused", null);
   cs.set("uploaded", null);
-  if (a.existed === true) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
-  const doc = a.document && typeof a.document === "object" ? a.document : {};
+  const doc = a.document && typeof a.document === "object" ? a.document : null;
+  const sha = typeof (a.capture && a.capture.sha256) === "string" ? a.capture.sha256 : doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "";
+  /* R49 (C10): bytes the store holds. The record is asked for the document the viewer sees that holds them: one that shows is linked
+     and none is written. None that shows is promoted for the viewer when the answer carries the document to file; without it nothing
+     is written (the plane answers `existed` with no document when it has already registered a home). */
+  if (a.existed === true) {
+    const home = await view.parts.homeOf(cs, sha);
+    if (home) { cs.set("uploaded", { name, existed: true, bundleId: home, title: name, sha }); return; }
+    if (!doc) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
+  }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "file", html: "" }); return; }
-  /* R33: an upload is titled by its file's name, or by the reading's title when the answer carries one and the file is a page */
+  /* R54: an upload is named by its file's name, or by the reading's title when the answer carries one and the file is a page */
   const isPage = /html/i.test(String(sent.type || "")) || /\.html?$/i.test(name);
-  const read = isPage && a.reading && typeof a.reading.title === "string" ? a.reading.title.replace(/\s+/g, " ").trim().slice(0, 200) : "";
-  const title = read || name || String(doc.locator || "");
-  const made = await view.parts.promoteDocument(cs, { doc, title, locator: String(doc.locator || ""), project: filed.id });
-  if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", html: view.parts.refusalHtml(cs, made.refused) }); return; }
-  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha: doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "" });
+  const title = view.parts.titleOf(cs, { reading: isPage ? a.reading : null, doc: {}, address: "", fileName: name || String((doc && doc.name_stated && doc.name_stated.text) || "") });
+  const made = await view.parts.promoteDocument(cs, { doc: doc || {}, title, locator: String((doc && doc.locator) || ""), project: filed.id });
+  if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
+  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha });
 }
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */
@@ -541,9 +596,11 @@ function sendTestify(view, el, cs) {
   return { body: { words: `${words}\n\n${plain(cs.w("screen.capture.saw.wherein", { where }))}`, observedAt: new Date(at).toISOString().split(".")[0] + "Z" } };
 }
 function doneTestify(view, answer, cs) {
+  /* C29: the result links the document made, named by the first of the member's own words (never the record number) */
+  const told = String(cs.value("ci-words") || "").replace(/\s+/g, " ").trim();
   cs.set("draft", null);
   /* provenance testify answers `{ok, bundle_id, bundle_sha, capture_sha, …}` (K3171) */
-  cs.set("testified", (answer && typeof answer.bundle_id === "string" && answer.bundle_id) || "");
+  cs.set("testified", { id: (answer && typeof answer.bundle_id === "string" && answer.bundle_id) || "", text: Array.from(told).length > 80 ? Array.from(told).slice(0, 79).join("") + "\u2026" : told });
 }
 
 /* R3, R10: help wording the member's own account (`writinghelp`, DEC-153 (2)), drawn only while the assistant is
@@ -618,27 +675,27 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, filedFor, forOf, projectOf, promoteDocument, refusalHtml, titleOf }),
+  parts: Object.freeze({ bundleFor, checkOutcome, filedFor, forOf, homeOf, projectOf, promoteDocument, refusalHtml, refusedHtml, titleOf }),
   acts: Object.freeze([
-    Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire,
+    Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     refusals: Object.freeze({ BAD_LOCATOR: "refusal.BAD_LOCATOR", SOURCE_REFUSED: "refusal.SOURCE_REFUSED",
                                               /* R29: `BAD_FOR` (not a question of the project's) beside the field, in the fold the design draws it in, open
                                                  whenever drawn, titled `capture.forquestion.refused.summary`; nothing was captured */
                                               BAD_FOR: function (refusal, cs) { return `<details class="mk-details" open><summary>${cs.w("capture.forquestion.refused.summary")}</summary>${cs.w("refusal.BAD_FOR")}</details>`; },
                                               FETCH_FAILED: "refusal.FETCH_FAILED", EMPTY: "refusal.EMPTY", TOO_LARGE: "refusal.TOO_LARGE" }) }),
-    Object.freeze({ op: "capturerequest", label: "act.capturerequest.label.capture", send: sendCaptureRequest, done: doneCaptureRequest }),
-    Object.freeze({ op: "monitorset", label: "act.monitorset.label.capture", send: sendMonitorSet, done: doneMonitorSet }),
-    Object.freeze({ op: "monitor", label: "act.monitor.label.capture", send: sendMonitor, done: doneMonitor }),
-    Object.freeze({ op: "captureupload", label: "act.captureupload.label.capture", send: sendUpload, done: doneUpload, reasonField: "statement",
+    Object.freeze({ op: "capturerequest", label: "act.capturerequest.label.capture", send: sendCaptureRequest, done: doneCaptureRequest, rereads: Object.freeze(["later"]) }),
+    Object.freeze({ op: "monitorset", label: "act.monitorset.label.capture", send: sendMonitorSet, done: doneMonitorSet, rereads: Object.freeze([]) }),
+    Object.freeze({ op: "monitor", label: "act.monitor.label.capture", send: sendMonitor, done: doneMonitor, rereads: Object.freeze([]) }),
+    Object.freeze({ op: "captureupload", label: "act.captureupload.label.capture", send: sendUpload, done: doneUpload, rereads: Object.freeze([]), reasonField: "statement",
                     refusals: Object.freeze({ UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE",
                                               MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" }) }),
-    Object.freeze({ op: "capturecredentialsupply", label: "act.owed_capturecredentialsupply.label.capture", send: sendCredentialSupply, done: doneCredentialSupply, refusals: CRED_REFUSALS }),
-    Object.freeze({ op: "capturerequestretry", label: "act.capturerequestretry.label.capture", send: sendCredentialRetry, done: doneCredentialRetry,
+    Object.freeze({ op: "capturecredentialsupply", label: "act.owed_capturecredentialsupply.label.capture", send: sendCredentialSupply, done: doneCredentialSupply, rereads: Object.freeze(["later"]), refusals: CRED_REFUSALS }),
+    Object.freeze({ op: "capturerequestretry", label: "act.capturerequestretry.label.capture", send: sendCredentialRetry, done: doneCredentialRetry, rereads: Object.freeze(["later"]),
                     refusals: Object.freeze({ CAPTURE_REQUEST_NOT_RETRYABLE: function (refusal, cs) { return cs.w("screen.capture.cred.ref.notretry"); } }) }),
-    Object.freeze({ op: "capturecredentiallist", label: "act.owed_capturecredentiallist.label.capture", send: sendCredentialList, done: doneCredentialList }),
-    Object.freeze({ op: "capturecredentialwithdraw", label: "act.owed_capturecredentialwithdraw.label.capture", send: sendCredentialWithdraw, done: doneCredentialWithdraw }),
-    Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, reasonField: "words" }),
-    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, reasonField: "told" }),
+    Object.freeze({ op: "capturecredentiallist", label: "act.owed_capturecredentiallist.label.capture", send: sendCredentialList, done: doneCredentialList, rereads: Object.freeze([]) }),
+    Object.freeze({ op: "capturecredentialwithdraw", label: "act.owed_capturecredentialwithdraw.label.capture", send: sendCredentialWithdraw, done: doneCredentialWithdraw, rereads: Object.freeze([]) }),
+    Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, rereads: Object.freeze([]), reasonField: "words" }),
+    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, rereads: Object.freeze([]), reasonField: "told" }),
   ]),
 });
