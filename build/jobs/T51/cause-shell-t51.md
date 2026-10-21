@@ -55,3 +55,7 @@ COMPLETE: C24 C76 C77 C78 C79 C80 C81 C94 C11 C15 (shell parts as stated) met; B
 ## J4 · COMPLETE
 
 B4 (K4319, C48; R90, R11): an act drawn with a here word confirms with that word in the confirmation dialog, in place of `act.<op>.does`; with none, `.does`. Test `fixround2.test.mjs` (publish on `ceremony`), seen failing first. interface-shell 263 tests, 262 pass, 1 fail (R23, same on the tranche). Ownership unchanged (shell files and tests only).
+
+## J5 · COMPLETE
+
+COMPLETE (B4): the here word now explains the act in the confirmation dialog (R90, R11); test seen failing first; shell 263 tests, 262 pass, R23 fails on the tranche too. Record J4.
