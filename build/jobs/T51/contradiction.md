@@ -1,6 +1,6 @@
 # contradiction (T51)
 
-**Status** · session_01T62aFG5soSvnzwrENfMxyz · depth 2 · COMPLETE · handled B4
+**Status** · session_013jXJxCPCzxTuPTQfUj7NTP · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -78,3 +78,38 @@ Tests: node --test bio-plane/test/m/contradiction/: 127 pass, 0 fail, 8 todo. Us
 Checks (process repo pulled): format 0 failures; architecture 1 failure, the member-roster import above (0 once uses has it); coverage: contradiction all ids named, the 4 failures are other modules'; words: contradiction 0 failures; ownership: 0 failures.
 
 Size (session_01T62aFG5soSvnzwrENfMxyz): test runs 7, module lines 3649 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/, all files).
+
+## J6 · COMPLETE
+
+CHANGE B5 (K4259) applied. Code and tests in one commit on job/T51/contradiction (tranche/T51 merged after, no conflict; suite re-run: 129 pass). This is CONTRADICTION #13 (session_013jXJxCPCzxTuPTQfUj7NTP), restarted after #12's J5; B4 was already applied by J5 and modules.json already lists member-roster and setup-words.
+
+Entries
+1. R25: `#present` now carries `taken_up: {member, at, words}` when the state is `taken_up` or `resolved` and the view holds a `take_up` act (the act's author, instant and question). Under R25's own sight: `#present` is only reached for a viewer who sees both sides, so nothing is added for anyone else. An open candidate, and one resolved by an act alone (never taken up), carry no `taken_up` key.
+2. R36: `resolve` named no version, so basis-versions refused every first resolve `NO_CLAIM`. When `version` is empty (absent, null or blank) it now passes `reading: conclusion` (basis-versions R51's one-act path) and sends no `version`; its `BAD_READING` (12 to 500 characters, an empty conclusion included) is relayed whole and nothing lands. A named version is passed as before and sends no reading (a version it does not carry is still `NO_CLAIM`).
+
+Requirement lines for BOB (not written into the file, as B5 says):
+- R25 (amend, Each candidate): "and, once it is `taken_up` or `resolved` by an inquiry's take-up, `taken_up: {member, at, words}`, the member who took it up, the instant and the question as worded, from its `take_up` act; absent otherwise."
+- R36 (amend, What it writes): "With no `version`, the conclusion is the member's own reading, passed to `conclude` as `reading` (`basis-versions` R51), so a freshly taken-up question is concluded in this one act; `conclude`'s `BAD_READING` (12 to 500 characters) reaches the member. With a `version`, the named accepted version's claim is adopted as before."
+- R60: `contradictionresolve`'s `conclusion` is refused naming it by `BAD_READING` when absent, not by the grammar's C-2.8; declaration unchanged.
+
+Tests (written first, seen failing without the change: 9 fail with the stricter stand-in and the new tests; 0 fail with it)
+- acts.test.mjs "R36 (T51, B5)": take up, then resolve with no version succeeds and `conclude` is called with `reading` = the conclusion, `version` ""; blank version same; "too short", 501 characters, "" and null each `BAD_READING`, the head and the act count unmoved; control: a version it does not carry is `NO_CLAIM` and sends no reading; control: a named accepted version adopts, reading undefined, whatever the conclusion's length.
+- present.test.mjs "R25 (T51, B5)": `taken_up` equals `{member, at: up.act.at, words}` after take-up, read by a second member through `{candidate}` and `{inquiry}`, kept after the question is resolved; controls: an open candidate and one resolved by `one_wrong` carry no key; an unsighted viewer is answered nothing.
+- fixture.mjs: the `basis-versions` stand-in gains `strictConclude` (off by default): with it on it answers R16's no-project arms and R51's `reading` path as the real one does (`NO_CONCLUSION`, `BAD_READING`, `NO_CLAIM` for a version not accepted). Default off keeps the stand-in the affordances tests were written against (they import this fixture). It was the stand-in's leniency that hid the defect. declared-ops.test.mjs resolve env uses it, so `conclusion` is named by `BAD_READING`; three existing tests' short conclusions ("two fees", "both", "both stand") are lengthened to 12 or more characters.
+- No sentence is new: `taken_up` is data, `BAD_READING` is basis-versions' own refusal; no words id added, none copied.
+
+Checks (process repo pulled)
+- node checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; words: contradiction 0 failures (the 1 failure on the run is another module's testcopy); coverage: contradiction 60 of 60 ids named, 0 failures (6 failures are other modules'); channels 0.
+- node checks/ownership.mjs /home/user/bio contradiction tranche/T51 job/T51/contradiction: 0 failures.
+Tests: node --test bio-plane/test/m/contradiction/: 129 pass, 0 fail, 8 todo (127 before + 2). Users: ai-runs 134, skills 133, reevaluation 150, case-tensions 24, ratification 251, case-disclosures 100, case-authoring 208, conformance 120, queue 206, screens-inquiry 372: all pass, 0 fail.
+
+Found in other modules (not changed)
+- affordances: node --test bio-plane/test/m/affordances/ has 33 failures at tranche/T51's tip as it stands, before and after my change (e.g. "R13 NO_TARGET" taking 20 s, "R14 declared_type..."); not contradiction's.
+- setup-words: `build.mjs --check` reports words-unreviewed.json stale; my change adds no word, so it is not mine.
+No generated artifact made stale beyond the plane bundle (the plane's source includes contradiction): bio-plane/dist/bio-plane.bundled.mjs and its manifest.
+
+Deferred: nothing.
+
+Reading note: I read the requirements (both parts), the layers file, `conclude.mjs`, the used parts of `index.mjs` (the view, parties, `#present`, `takeUp`, `resolve`, `recommend`) and the tests that name R25 and R36 by the lines above; I did not read the rest of the 3,025-line `index.mjs` whole this session (J2 read it whole; B5 touches two functions).
+
+Size (session_013jXJxCPCzxTuPTQfUj7NTP): test runs 9, module lines 3673 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/, all files).
