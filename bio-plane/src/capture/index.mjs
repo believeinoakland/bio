@@ -3197,7 +3197,7 @@ export const DECLARED_OPS = Object.freeze({
      fields are accepted, and both are required (an absent one is the required-argument refusal naming it). It is a corpus write,
      so it needs `contribute` (op-declarations R80: a mutating op with no hand row names its capability); the project fence is
      membership's `projectAuthority`, asked in `fileSeenIn`. */
-  captureseenin: { classes: ["admin","member","probe"], mutating: true, stamps: ["by","viewer"], needs: "contribute", weight: "reversible", description: localize("capture.declared.captureseenin", "held-directed: a member files a held document in a project as a reference, keyed by capture sha and project, so the project lists it beside its own; the document keeps its one home and nothing moves, and the reference is recorded once"),
+  captureseenin: { classes: ["admin","member","probe"], mutating: true, stamps: ["by","viewer"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureseenin", "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)"),
     fields: { accepts: ["captureSha","project"], requires: ["captureSha","project"] } },
   /* K4206 (T51 FR-52; R98): `text` is read, and an empty one is C-118.6 by its row's words (R69), so it is accepted and not
      required; a missing captureSha names itself (R98), a missing signature is refused naming the signature. The instant is
