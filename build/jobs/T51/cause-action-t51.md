@@ -50,3 +50,7 @@ COMPLETE. Causes met: C6 (screens-action R45), C53 (R1, R44 c), C62 and C63 (my 
 
 C6's event picker now asks `timeline` with the project's capture shas (`captures`, events R53 as amended, K4310) alongside the references of the project's document as `set` when it has any; it waits for the documents read before asking, so one call is made. `matter-t51.test.mjs` "R45 (C6)" asserts both queries and the captures-only case. `screens-action` 220 pass. Whether EVENTS #10 has merged: I could not tell from the tranche tip (merged `origin/tranche/T51` at B2); the test uses the scripted plane, so re-run after EVENTS merges if you want it proven against the real answer.
 Size (session_01HXzP2YgzLf6LWSpraLDFPx): test runs 36, module lines 8770
+
+## J3 · COMPLETE
+
+CHANGE B2 applied: Matter's event picker reads timeline by the project's capture shas (plus the document's references as set); tranche/T51 merged; screens-action 220 pass. Built against a scripted plane: if EVENTS #10 has not merged, CHANGE me again when it has.
