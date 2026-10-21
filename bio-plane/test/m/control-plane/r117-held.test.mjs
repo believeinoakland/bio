@@ -66,6 +66,21 @@ test("R117 (acquire): an `acquire` answered `existed: true` with a document asks
   }
 });
 
+test("R117 (C5b, a capture of several parts): an `acquire` answered `existed: null` (the register names no row for the whole) with a document of parts asks `readHeld` for its digest, once, and relays the answer as it was; a single part answered `existed: false` and a continuation ask none", async () => {
+  const parted = { ok: true, existed: null, existed_undetermined: "captured in 5 parts", document: { ...doc(), parts: [{ sha256: "e".repeat(64), bytes: 8 }, { sha256: "f".repeat(64), bytes: 1 }] }, parts: 2, note: "n" };
+  const w = world({ answer: (c) => (c.route === "readheld" ? ok({ ok: true, read: true, bundle_id: "INFO-1", found: true }) : null) });
+  const r = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: acquiring(parted), body: { locator: "https://example.org/a" } });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual([r.json.ok, r.json.existed, r.json.note, r.json.parts], [true, null, "n", 2], "the answer is relayed as it was");
+  assert.equal(asked(w.env, "readheld").length, 1);
+  assert.equal(asked(w.env, "readheld")[0].params.sha, SHA);
+  for (const [label, answer] of [["one part, new", { ok: true, existed: false, document: doc() }], ["one part, undetermined without parts", { ok: true, existed: null, document: doc() }]]) {
+    const c = world({ answer: (x) => (x.route === "readheld" ? ok({ ok: true, read: true }) : null) });
+    await call(c.env, { op: "acquire", token: c.S.ann, method: "POST", hooks: acquiring(answer), body: { locator: "https://example.org/a" } });
+    assert.equal(asked(c.env, "readheld").length, 0, `${label}: not asked`);
+  }
+});
+
 test("R117 (acquire, controls): a refusal or a silence of `readHeld`, and a throw, leave the kept capture's answer exactly as it was (a kept capture never becomes a failed one)", async () => {
   const held = { ok: true, existed: true, document: doc(), note: "n" };
   for (const [label, answer] of [["refused", () => bare({ ok: false, reason: "UNKNOWN_ROUTE" }, 404)], ["silent", () => new Response("<html>boom</html>", { status: 500 })],

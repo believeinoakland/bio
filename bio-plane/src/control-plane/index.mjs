@@ -2422,10 +2422,13 @@ export function makeFetch(hooks = {}) {
     }
     /* R117: an `acquire` answered `existed: true` (the record already holds the bytes) is asked of `readHeld` as an upload is; the
        answer is relayed as it was (it carries its own reading already: acquire reads what it files). */
+    /* R117 (fix round 4, C5b; extraction R80): a capture of several parts the record cannot say it holds (`existed: null`, acquisition R11:
+       the register names no row for the whole) is asked as well, for the record that holds it may hold a reading that failed for want of
+       the whole, which `readHeld` replaces once the whole is held. */
     async function readHeldAfterAcquire(res) {
       let b = null;
       try { b = await res.clone().json(); } catch { return; }
-      if (b && b.ok === true && b.existed === true) await readHeld(shaOf(b));
+      if (b && b.ok === true && (b.existed === true || (b.existed === null && Array.isArray(b.document?.parts)))) await readHeld(shaOf(b));
     }
     /* R71 (N820; steps R9): A MEMBER'S CAPTURE MAY CARRY `step`, the step it is a product of. Once the capture has landed
        (its answer `ok`, naming the capture's digest), the door asks the store's internal route `capturestepproduct` to
