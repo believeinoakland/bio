@@ -877,14 +877,17 @@ const decodeReferences = (s) => s.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6}
 const BLOCK_TAG = "address|article|aside|blockquote|body|caption|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form"
   + "|h[1-6]|header|hr|html|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul";
 
-/* R32 (T51; K4194; fix round 2, K4303): a captured page's reading is its evidentiary region, never its furniture.
-   An element `nav`, or any element whose `role` is `navigation`, goes with its contents, counted by its own name so a
-   nested one of the same name does not end it early; an element with no end tag is not guessed at (its tag goes, its
-   words stay). When the page has a `main` element (else an `article` element), only its contents give passages
-   (subresources R8's body regions); with neither, an element `header`, `footer` or `aside`, and any element whose
-   `role` is `banner`, `contentinfo`, `complementary` or `search`, goes the same way: inside a main or an article they
-   are kept. A skip link (an `a` whose `href` begins `#` and whose text begins "Skip to") goes. An unresolved template
-   token goes. A page with no landmark keeps all its text. */
+/* R32 (T51; K4194; fix round 2, K4303; fix round 3, K4356): a captured page's reading is its evidentiary region, never
+   its furniture. An element `nav`, or any element whose `role` is `navigation`, goes with its contents, counted by its
+   own name so a nested one of the same name does not end it early; an element with no end tag is not guessed at (its
+   tag goes, its words stay). When the page has a `main` element (else an `article` element), only its contents give
+   passages (subresources R8's body regions); with neither, an element `header`, `footer` or `aside`, and any element
+   whose `role` is `banner`, `contentinfo`, `complementary` or `search`, goes the same way: inside a main or an article
+   they are kept. Fix round 3: the rest of the furniture goes wherever it sits, inside the region as well (`moreFurniture`):
+   a dialog, a government-site banner or cookie or consent notice, a share bar (each by its role, class or id), a block
+   of only controls or only links, and a notice that only says to skip ahead or that the reader is leaving the site. A
+   skip link (an `a` whose `href` begins `#` and whose text begins "Skip to") goes. An unresolved template token goes. A
+   page with none of this keeps all its text. */
 const TAG_ATTRS = "(?:\"[^\"]*\"|'[^']*'|[^'\">])*";
 const VOID_TAG = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
 const attrOf = (attrs, name) => {
@@ -913,7 +916,7 @@ function dropElements(markup, isDropped) {
   const open = openTag();
   let out = "", from = 0;
   for (let m = open.exec(markup); m; m = open.exec(markup)) {
-    if (!isDropped(m[1], m[2])) continue;
+    if (!isDropped(m[1], m[2], markup, open.lastIndex)) continue;
     const name = m[1].toLowerCase(), after = m.index + m[0].length;
     let end = after;   /* a void or self-closing tag, or one never closed, is only itself */
     if (!VOID_TAG.has(name) && !m[2].endsWith("/")) end = endOfElement(markup, name, after)?.end ?? after;
@@ -935,6 +938,70 @@ function contentsOf(markup, name) {
   }
   return parts.length ? parts.join("<hr>") : null;
 }
+/* Fix round 3: the furniture that goes wherever it sits. By name and attribute (`html`, `head`, `body`, `main` and
+   `article` are never dropped by their class: a page's own class names are no judgement of the page). */
+const NEVER_BY_ATTRIBUTE = new Set(["html", "head", "body", "main", "article"]);
+const wordsOfToken = (t) => t.toLowerCase().split(/[-_]+/).filter(Boolean);
+const classTokens = (attrs) => (attrOf(attrs, "class") ?? "").split(/\s+/).filter(Boolean).concat(attrOf(attrs, "id") ?? []);
+const isDialogToken = (t) => /^(?:modal|modal-dialog|dialog)$/i.test(t);
+const isBannerToken = (t) => /(?:usa|gov|government|govt|official)[-_]?banner/i.test(t)
+  || wordsOfToken(t).some((w) => w === "cookie" || w === "cookies" || w === "consent" || w === "gdpr" || w === "ccpa");
+const isShareToken = (t) => wordsOfToken(t).some((w) => w === "share" || w === "shares" || w === "sharing" || w === "sharer")
+  || /^(?:addthis|sharethis|a2a)/i.test(t)
+  || /^social(?:[-_](?:share|sharing|links|media|icons|buttons|bar|nav|follow|networks|menu))?$/i.test(t);
+const DIALOG_ROLE = new Set(["dialog", "alertdialog"]);
+const isFurnitureByAttribute = (name, attrs) => {
+  const n = name.toLowerCase();
+  if (NEVER_BY_ATTRIBUTE.has(n)) return false;
+  if (n === "dialog" || DIALOG_ROLE.has(roleOf(attrs)) || (attrOf(attrs, "aria-modal") ?? "").trim().toLowerCase() === "true") return true;
+  return classTokens(attrs).some((t) => isDialogToken(t) || isBannerToken(t) || isShareToken(t));
+};
+/* A block of only controls or only links, or a short notice that only says to skip ahead or that the reader is leaving
+   the site, is told by walking the element's own contents from its start tag, stopping at once when it cannot be one. */
+const BLOCK_CANDIDATE = new Set(["div", "section", "ul", "ol", "li", "p", "form", "fieldset", "menu", "dl", "dd", "dt",
+  "span", "figure"]);
+/* A heading, a caption or a quotation is a notice's candidate only: a heading that is a link is the page's own words. */
+const NOTICE_CANDIDATE = new Set([...BLOCK_CANDIDATE, "h1", "h2", "h3", "h4", "h5", "h6", "figcaption", "blockquote"]);
+const CONTROL_TAG = new Set(["button", "select", "textarea", "option", "optgroup", "label", "datalist", "output"]);
+/* A link that wraps a heading or a paragraph is a card, the page's own words under a link, not a menu entry. */
+const CARD_PART = new Set(["p", "h1", "h2", "h3", "h4", "h5", "h6", "div", "ul", "ol", "li", "section", "article", "figure", "blockquote", "table"]);
+const NOTICE_TEXT_MAX = 400;
+const NOTICE_TEXT = [/^skip (?:to|ahead|navigation|the|past)\b/i, /^jump to\b/i, /^exiting\s+[\w.-]+\.[a-z]{2,}\b/i,
+  /^you (?:are|'re) (?:now )?(?:leaving|exiting)\b/i, /^you (?:are|'re) about to (?:leave|exit)\b/i, /^leaving (?:this|the|our)\b.*\b(?:site|website)\b/i];
+const tagWalk = () => new RegExp(`<(/?)([A-Za-z][A-Za-z0-9:-]*)(?=[\\s>/])(${TAG_ATTRS})>`, "g");
+function probeBlock(markup, name, after) {
+  const walk = tagWalk(), own = name.toLowerCase();
+  walk.lastIndex = after;
+  let depth = 1, at = after, inLink = 0, inControl = 0, inCard = 0, loose = false, seen = false, said = "";
+  for (let t = walk.exec(markup); t; t = walk.exec(markup)) {
+    const seg = decodeReferences(markup.slice(at, t.index).replace(/\s+/g, " "));
+    at = walk.lastIndex;
+    if (glyphCount(seg) > 0) {
+      said += seg;
+      if ((!inLink && !inControl) || inCard) loose = true;
+      if (loose && said.length > NOTICE_TEXT_MAX) return null;
+    }
+    const tag = t[2].toLowerCase(), closing = t[1] === "/", selfClosed = t[3].endsWith("/");
+    if (tag === own) {
+      if (closing) depth--; else if (!selfClosed) depth++;
+      if (depth === 0) return { loose, seen, text: said.replace(/\s+/g, " ").trim(), long: said.length > NOTICE_TEXT_MAX };
+    }
+    if (inLink && CARD_PART.has(tag)) inCard = Math.max(0, inCard + (closing ? -1 : selfClosed ? 0 : 1));
+    if (tag === "a") { inLink = Math.max(0, inLink + (closing ? -1 : selfClosed ? 0 : 1)); if (!closing) seen = true; }
+    else if (tag === "input") { if (!closing) seen = true; }
+    else if (CONTROL_TAG.has(tag)) { inControl = Math.max(0, inControl + (closing ? -1 : selfClosed ? 0 : 1)); if (!closing && tag !== "label") seen = true; }
+  }
+  return null;   /* never closed: not guessed at */
+}
+const isFurnitureBlock = (name, attrs, markup, after) => {
+  const n = name.toLowerCase();
+  if (!NOTICE_CANDIDATE.has(n) || attrs.endsWith("/")) return false;
+  const p = probeBlock(markup, name, after);
+  if (!p) return false;
+  if (!p.loose && p.seen && BLOCK_CANDIDATE.has(n)) return true;
+  return !p.long && p.text !== "" && NOTICE_TEXT.some((re) => re.test(p.text));
+};
+const moreFurniture = (name, attrs, markup, after) => isFurnitureByAttribute(name, attrs) || isFurnitureBlock(name, attrs, markup, after);
 const SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
 const dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
   const href = attrOf(attrs, "href");
@@ -944,7 +1011,7 @@ const dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner
 const TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/g;
 
 /* The page's visible text: comments, `head`, `script`, `style` and `template` contents are dropped (an unclosed one
-   drops to the end), then navigation, then the page's main or article contents or else its other furniture, as above, every tag is removed (a block tag ends its paragraph, `br` its line),
+   drops to the end), then navigation, then the page's main or article contents or else its landmark furniture, then the rest of the furniture wherever it sits, as above, every tag is removed (a block tag ends its paragraph, `br` its line),
    and character references are decoded, so a decoded `&lt;` is text, never a tag. Template tokens go last, so one
    written as references goes too. */
 export function visibleTextOfHtml(html) {
@@ -953,7 +1020,8 @@ export function visibleTextOfHtml(html) {
     .replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
     .replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ")
     .replace(/<![^>]*>|<\?[^>]*>/g, " "), isNavigation);
-  const region = contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture);
+  const region = dropElements(contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture),
+                              moreFurniture);
   const dropped = dropSkipLinks(region)
     .replace(/\s+/g, " ");   /* the source's own line breaks and blank lines are no paragraph break in a page */
   const bare = dropped

@@ -384,8 +384,8 @@ test("R32 (T51; K4194; L6) (control): a page with no landmarks keeps all its tex
   const plainPage = "<html><body><h1>Title words</h1><p>First.</p><div>Second.</div></body></html>";
   assert.deepEqual(shape(await html(plainPage)).map((u) => u[4]), ["Title words", "First.", "Second."]);
   assert.deepEqual(shape(await html('<div role="main">Main words.</div><div role="status">Status words.</div>')).map((u) => u[4]), ["Main words.", "Status words."]);
-  assert.deepEqual(shape(await html('<p><a href="#top">Back to top</a></p><p><a href="/page">Skip to content</a></p><p>See #1 and {1, 2} and {two words} and [OK].</p>')).map((u) => u[4]),
-    ["Back to top", "Skip to content", "See #1 and {1, 2} and {two words} and [OK]."]);
+  assert.deepEqual(shape(await html('<p>Go <a href="#top">Back to top</a> now.</p><p>Go <a href="/page">Skip to content</a> now.</p><p>See #1 and {1, 2} and {two words} and [OK].</p>')).map((u) => u[4]),
+    ["Go Back to top now.", "Go Skip to content now.", "See #1 and {1, 2} and {two words} and [OK]."]);
   /* text read as text that is not HTML is never touched */
   assert.deepEqual(shape(await plain("{1}\n\n<nav>Menu</nav>")).map((u) => u[4]), ["{1}", "<nav>Menu</nav>"]);
   assert.deepEqual(shape(await html(PAGE)).length, 5, "R32's first page reads as before");
