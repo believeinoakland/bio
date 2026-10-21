@@ -37,18 +37,26 @@ test("R68 provenance declares declareorigin: its requires alone raise no refusal
     values: { bundleId: B, system: "The clerk's agenda system" }, same: sameOk });
 });
 
-test("R68, R69: the module declares those two ops and no other, each with the fields its arm reads", () => {
-  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["declareorigin", "testify"]);
+test("R70 provenance declares origins: its requires alone raise no refusal naming a field, the missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "origins", declaration: DECLARED_OPS["origins"], call: mk("origins", { viewer: V("ruth") }),
+    refusedNaming: named({ bundleId: ["NO_BUNDLE"] }),
+    values: { bundleId: B }, same: sameOk });
+});
+
+test("R68, R69, R70: the module declares those three ops and no other, each with the fields its arm reads", () => {
+  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["declareorigin", "origins", "testify"]);
   assert.deepEqual(DECLARED_OPS.testify.fields, { accepts: ["words", "observedAt", "title"], requires: ["words", "observedAt"] });
   assert.deepEqual(DECLARED_OPS.declareorigin.fields, { accepts: ["bundleId", "system"], requires: ["bundleId", "system"] });
+  assert.deepEqual(DECLARED_OPS.origins.fields, { accepts: ["bundleId"], requires: ["bundleId"] });
   for (const [op, d] of Object.entries(DECLARED_OPS)) {
     assert.equal(typeof d.description, "string", op);
     assert.ok(d.description.length > 20, op);
-    assert.equal(d.mutating, true, op);
+    assert.equal(d.mutating, op !== "origins", op);
     assert.ok(Array.isArray(d.classes) && d.classes.length > 0, op);
   }
   assert.equal(DECLARED_OPS.testify.weight, "reasoned");
   assert.equal(DECLARED_OPS.declareorigin.weight, "reversible");
+  assert.equal(DECLARED_OPS.origins.weight, "read");
 });
 
 test("R69 control: a body naming an author, under any spelling, is no field of testify but a claim it refuses by name", async () => {
