@@ -322,3 +322,7 @@ control-plane fix round 3 complete: C15 R75 (versioned immutable script, hash po
 Merged `tranche/T51` (plane R74): the real-plane tests of R117 and R118 and `plane/fix3-r74` pass; `captureseenin` routes. Control-plane suite 356 tests, 354 pass, 2 red and not mine: `officeconfirm` (entities R64, not merged) and affordances' unaccounted (R2, R41, as at baseline).
 
 Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 14, module lines 4,103
+
+## J16 · COMPLETE · re B20
+
+Re B20: merged tranche, real-plane R117/R118 and plane/fix3-r74 pass. Suite 354 of 356; red and not mine: officeconfirm (entities R64 unmerged), affordances unaccounted.
