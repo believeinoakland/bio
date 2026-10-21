@@ -40,7 +40,8 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
-import { acquireHandlerParts, acquireTimingsOps, traceStamped } from "./acquire-timings.mjs";
+import { acquireHandlerParts, acquireTimingsOps, traceStamped, ACQUIRE_STAGES_DDL } from "./acquire-timings.mjs";
+import { pendingOf, pendingOps } from "./pending.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
@@ -404,6 +405,13 @@ export class Store extends DurableObject {
        actions R95), once each. following's watch reader is registered with it when following is built (below). */
     planWorkOf(ctx, { actionHolds, aiRuns: aiRunsOf(ctx, env) });
     const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
+    /* R75 (T51 fix round 4; C5c; K4429; acquisition R96, control-plane R120): what a request left pending, finished by this object's
+       own alarm. `keeps_pending` and `acquire_stages` are the plane's two operational tables, declared to purge as a whole-store
+       clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
+       door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
+    const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio" });
+    recordOf(ctx).declarePurge("plane", ["keeps_pending", "acquire_stages"]);
+    capture.keepLater = (a) => pending.keepLater(a);
     /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
        the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
        `env` of its own and reads capture's at each use, the instance above. */
@@ -469,6 +477,7 @@ export class Store extends DurableObject {
        build it. R30 (K2571; scheduler R26): question-explorer handed the same way, for its `question-explore` consumer;
        the scheduler never builds it. */
     schedulerOf(ctx, env, { fileSafety, questionExplorer });
+    schedulerOf(ctx, env).register("plane", pending.consumer());   /* R75: `pending-work`, before the scheduler's start so its alarm is re-derived at a restart (scheduler R11) */
     /* R3: the migration pass, then scheduler's start. */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
@@ -639,6 +648,8 @@ export class Store extends DurableObject {
     planWorkOf(this.ctx).migrate();
     wizardScriptsOf(this.ctx).migrate();   /* R19: its tables, in the modules' order (first in layer 11) */
     translationsOf(this.ctx).migrate();   /* R61: its seven tables, in the modules' order (before instance-setup; idempotent) */
+    pendingOf(this.ctx).migrate();   /* R75: `keeps_pending` and the stage record's table, the plane's own */
+    this.sql.exec(ACQUIRE_STAGES_DDL);
 
     addColumns();   /* REC-143: the second pass */
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill */
@@ -766,6 +777,8 @@ export class Store extends DurableObject {
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       /* R73 (K4231, K4234): `acquiretimings`, acquisition's stage times of a call still running (its R95), at acquisition's place with the co-archive pair; `acquire` below is handed the timings object it fills, held under the door's `trace`. */
       ...acquireTimingsOps(ctx, url),
+      /* R75: the door's deferred reading (control-plane R120), registered for the alarm; store-internal, no caller's own */
+      ...pendingOps(pendingOf(ctx), url),
       ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */
