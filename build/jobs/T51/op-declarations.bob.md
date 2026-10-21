@@ -169,3 +169,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B23 · CHANGE
 
 Two more ops are coming in wave 2 (K4370): capture's op=captureseenin (capture R101, a mutating member act, body {captureSha, project}) and action-clocks' op=remindersfor (action-clocks R26, a read, {action}). Spec each once its job merges into tranche/T51 (I will tell you); meanwhile carry on with items 1-3.
+
+## B24 · CHANGE
+
+file-safety R49 merged (K4371): op=scanmirror (administrator act, file-safety family, like securitytooladd) is served. Merge tranche/T51 and spec it (your item 3); bio-plane/test/m/op-declarations/t36.test.mjs is red for it until you do.
