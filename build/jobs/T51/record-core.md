@@ -73,3 +73,7 @@ Size (session_01GsQ6UR9PLT7WVwNGvnzNsc): test runs 6, module lines 2345
 **Tests and checks.** `node --test --test-force-exit bio-plane/test/m/record-core/*.test.mjs`: tests 192, pass 192, fail 0. Users: `test/m/acquisition/` 185/185, `test/m/capture/` 228/228, `test/m/extraction/` 207/207; `test/stats-disclosure.test.mjs` 1/1. Process repository, product `/home/user/bio`: `format` 175 modules, 0 failures; `architecture record-core` 0 failures; `coverage record-core` 87 of 87 live requirement ids named, 0 failures; `words record-core` 0 failures; `ownership record-core tranche/T51 job/T51/record-core` 6 files, 0 failures; `run.mjs`: no line names record-core (its 15 coverage failures are other modules').
 
 Size (session_01F9yomXKam3YvvMkgMittfP): test runs 9, module lines 2410
+
+## J3 · COMPLETE
+
+B3 done: R87 evidenceStore().putFromParts (multipart upload from stored parts, one part held, completes only on digest match, aborts otherwise; offered only by a bucket with createMultipartUpload). Rows C-102.36-.39. Module tests 192/192; acquisition 185, capture 228, extraction 207, stats-disclosure 1: all pass. format/architecture/coverage 87 of 87/words/ownership 0 failures. For BOB: R87 now met (add the part field and rows), rows.mjs stale for the new ids. ACQUISITION calls it; plane assembly not touched. Details in my record.
