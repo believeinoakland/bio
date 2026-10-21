@@ -68,3 +68,13 @@ Size (session_01Bvmjz46Mg98xC62DtqtJas): test runs 12, module lines 3040
 ## J5 · REPORT
 
 Correction to J4: after merging tranche/T51 the acquisition suite showed 1 red (reputation.test.mjs R44, a body comparison that differed only in the new timings key, a timing flake). Fixed by setting timings aside by name; 177 of 177 pass on 3 consecutive runs. Merge the pushed head, not the one J4 named.
+
+## J6 · QUESTION
+
+Two things in fix round 3 need a call in a module I do not hold. I carry on with everything else.
+
+**1. C5 (e), the multipart upload past memory.** `record-core`'s `evidenceStore()` offers `head`, `get` and `put(digest, bytes)` only (record-core/index.mjs, `evidenceStore`). There is no multipart upload. A further difficulty: the whole's digest is the object key and is known only when the stream ends, while R2's `createMultipartUpload(key)` needs the key at the start, and the Workers binding has no rename or server-side copy. So the call I need cannot be a plain "multipart put under the digest". My best reading of what would serve R96: a store call that makes the whole object under `digest` from part objects the store already holds (`evidenceStore().assemble(digest, [partDigest...])`, answering `{ok}` or a refusal naming the store's own object bound), so no byte is read back through the Worker. BOB and record-core settle the form. Until it exists I build (a) only: parts kept in memory up to `MULTIPART_KEEP_MAX` (32 MiB) and the whole put once; a capture past it stays held in parts only, as today, and R96's past-memory arm is not met by me. I will write no test for it and say so in my COMPLETE.
+
+**2. C25, a PDF's Title entry (R98).** HTML (`<title>`, else first heading) I build in `acquisition/title.mjs`, cleaned by reading-pipeline R34's rule. For a PDF the only reader of `/Info /Title` is pdf-reader's `extractPdfStructure` (R39, `metadata.title`), which reads every page: 355 ms for a 33-page 276 KB agenda, so seconds for a 16 MiB PDF inside the 25 s bound. I need a cheap Info-only export from pdf-reader (for example `pdfTitleOf(bytes)`, R39's decoding with no text read), reached through `format-registry` (acquisition's existing edge) or a new `acquisition uses pdf-reader` edge (BOB's, modules.json). Until then a PDF answers `title: null` (a stand-in, named in my record), so screens fall back to the file name as today.
+
+No other blocker. Wave 1's host-governor peek (R29) is not on `tranche/T51` yet; I test C13 against a scripted double of `governorAdmit({host, peek: true})` and re-run against the real one when I merge it.
