@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01G3X5QPGSsvGq7xCMfaNpTz · depth 2 · WAITING ON BOB (J32) · handled B34
+**Status** · session_01G3X5QPGSsvGq7xCMfaNpTz · depth 2 · WAITING ON BOB (J31) · handled B34
 
 ## J1 · QUESTION
 
