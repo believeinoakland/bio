@@ -317,6 +317,19 @@ export const PARTS = Object.freeze({
     return m;
   },
 
+  /** R34, C95: the questions a choice offers, from the read `view.data[name]` (`list` of inquiries): the questions the project cites first, then the
+   *  rest in the owner's order; `value` is the first cited one that the read holds (the question the page was opened for: a list never starts on
+   *  an arbitrary question), none when the project cites none (then `value` is undefined and no option is drawn chosen). `{options, value}`. */
+  asked(view, name, cited) {
+    const d = view.data && view.data[name];
+    const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.bundles) ? d.value.bundles : [];
+    const mine = (Array.isArray(cited) ? cited : []).filter((x) => typeof x === "string" && x);
+    const all = rows.filter((b) => b && b.bundle_id).map((b) => ({ value: b.bundle_id, text: b.title || b.bundle_id }));
+    const options = all.filter((o) => mine.includes(o.value)).concat(all.filter((o) => !mine.includes(o.value)));
+    const pre = options.find((o) => mine.includes(o.value));
+    return { options, value: pre ? pre.value : undefined };
+  },
+
   /** R23: the options of a choice among record data, from a read the screen made (`view.data[name]`): the rows `pick(v)`
    *  lists, each `{value, text}` by `map(row)`; none while the read has not answered (the choice is then empty). */
   options(view, name, pick, map) {

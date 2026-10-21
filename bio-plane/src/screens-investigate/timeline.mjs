@@ -157,7 +157,7 @@ function render(cs, view) {
     + cs.field("tl-date", S + "date", { help: S + "date.help" })
     + cs.choice("tl-datekind", S + "datekind", ["meeting", "adopted", "effective", "signed", "issued", "published", "received"].map((k) => [k, S + "datekind." + k]), {})
     + cs.act("recorddatedfact", { label: "act.recorddatedfact.label.timeline" })
-    + cs.choice("tl-question", S + "question", qChoice, {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
+    + cs.choice("tl-question", S + "question", qChoice, qChoice.length ? { value: qChoice[0].value } : {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.timeline" })
     + cs.act("findin", { label: "act.findin.label.timeline" })));
   if (view.ui.said) out.push(`<p class="mk-note">${cs.w(view.ui.said)}</p>`);

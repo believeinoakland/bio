@@ -80,3 +80,35 @@ test("R34 C59 each document's words are their own selection: words picked on one
   await press(p, "createevent", { reason: "the minutes record it" });
   assert.deepEqual(p.byOp("createevent")[1].body.attestations, [{ captureSha: SHA, extent: { kind: "pdf-page", page: 1 } }]);
 });
+
+/* C95 (R34, parts): the question choice leads with the question the page was opened for, chosen; with none, none is chosen */
+const QS = { ok: true, bundles: [{ bundle_id: "INQ-2026-0009-other", title: "Another team question" }, { bundle_id: "INQ-2026-0001-seven-days", title: "Is the city repairing reported potholes within seven days?" }] };
+const optionsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.hasAttribute("selected")]);
+
+test("R34 C95 money: the question the project cites is first and chosen; control: a project citing none has none chosen", async () => {
+  const p = await open(PATHS.money, { plane: { list: ok(QS) } });
+  assert.deepEqual(optionsOf(p, "mf-question"), [["INQ-2026-0001-seven-days", true], ["INQ-2026-0009-other", false]]);
+  const none = await open(PATHS.money, { plane: { list: ok(QS), image: (r) => ok(r.query.id === P ? { "bundle.md": ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"", "---", ""].join("\n") } : null) } });
+  assert.deepEqual(optionsOf(none, "mf-question").map(([, sel]) => sel), [false, false], "none chosen when the project cites none");
+});
+
+test("R34 C95 timeline: the cited question is the chosen one; control: none cited, none offered", async () => {
+  const p = await open(PATHS.timeline, { plane: { list: ok(QS) } });
+  assert.deepEqual(optionsOf(p, "tl-question"), [["INQ-2026-0001-seven-days", true]]);
+  const none = await open(PATHS.timeline, { plane: { list: ok(QS), image: (r) => ok(r.query.id === P ? { "bundle.md": ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"", "---", ""].join("\n") } : null) } });
+  assert.deepEqual(optionsOf(none, "tl-question"), [], "none cited, none offered, none chosen");
+});
+
+/* C14 (R34, R52; shell R113): the picker reads when the screen opens, once, with `fields=picker`; choosing, searching and acts that file no
+ * document read nothing of it again, and a document's reading is read once however often it is chosen */
+for (const [name, path, doc, words] of SCREENS.filter((x) => !x[4])) {
+  test(`R34 C14 ${name}: one picker read when the screen opens (fields picker, held and vouched); choosing and choosing back reads no document list again, and each reading once`, async () => {
+    const p = await open(path);
+    assert.equal(p.byOp("heldcaptures").length, 1, "one read of the documents at open");
+    assert.equal(p.byOp("heldcaptures")[0].query.fields, "picker");
+    assert.equal(p.byOp("heldcaptures")[0].query.state, "held_and_vouched");
+    for (const sha of [SHA2, SHA, SHA2]) { fill(p, { [doc]: sha }); p.fire(p.doc.getElementById(doc), "change"); await p.settle(); }
+    assert.equal(p.byOp("heldcaptures").length, 1, "control: a picker already opened is not read twice");
+    assert.deepEqual(p.byOp("reading").map((r) => r.query.sha256).sort(), [SHA, SHA2].sort(), "each document's reading once");
+  });
+}

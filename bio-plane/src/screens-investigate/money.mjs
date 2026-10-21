@@ -18,7 +18,7 @@ function reads(view) {
   const S = "screen.money.";
   const id = String(view.subject || "").split("/")[0];
   return /^MSR-/.test(id)
-    ? { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, contracts: { op: "peopledirectory", query: { show: "contracts", limit: "200" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
+    ? { docs: { op: "heldcaptures", after: ["acquire"], query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, contracts: { op: "peopledirectory", query: { show: "contracts", limit: "200" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
     : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
       /* C8, R4: the project's trails (money R28), the owner's order (newest first) kept; the last of 500 is the owner's cut */
       trails: { op: "moneysets", query: { concerns: id, purpose: "trail", limit: "500" }, empty: (v) => !v || !Array.isArray(v.sets) || !v.sets.length } };
@@ -162,6 +162,10 @@ function render(cs, view) {
     : contractRows.length ? cs.choice("mf-contract", S + "f.contract", contractRows.map((r) => ({ value: r.entity, text: r.name || "" })), {})
       : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
   /* the forms the acts read: a figure from a passage; the contract for committed against paid; the member's own words */
+  /* C95, R34: the project's cited question first and chosen, as the page was opened for it; none cited, none chosen */
+  const pimg = view.ui && view.ui.later && view.ui.later.project;
+  const pdoc = pimg && pimg.state === "ok" && pimg.value && typeof pimg.value["bundle.md"] === "string" ? P.front(pimg.value["bundle.md"]) : null;
+  const asked = P.asked(view, "questions", pdoc ? pdoc.refs.filter((r) => /^INQ-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target) : []);
   const ch = (fid, key, list) => cs.choice(fid, key, list.map((x) => [x, key + "." + x]), {});
   out.push(cs.sec(S + "form.head", (ui.readFor ? `<p class="mk-small">${cs.w(S + "readfor", { fact: ui.readFor })}</p>` : "")
     + cs.field("mf-amount", S + "f.amount", { help: S + "f.amount.help" }) + cs.field("mf-asread", S + "f.asread", { rec: true })
@@ -176,7 +180,7 @@ function render(cs, view) {
     + contractChoice + cs.field("mf-label", S + "label", {})
     + cs.field("mf-expertise", S + "f.expertise", { help: S + "f.expertise.help" })
     + cs.field("mf-address", S + "f.address", { help: S + "f.address.help" })
-    + cs.choice("mf-question", S + "f.question", view.parts.options(view, "questions", (v) => v.bundles, (b) => ({ value: b.bundle_id, text: b.title || b.bundle_id })), { help: S + "f.question.help" }) + cs.field("mf-hunch", S + "f.hunch", { area: true, rec: true })));
+    + cs.choice("mf-question", S + "f.question", asked.options, Object.assign({ help: S + "f.question.help" }, asked.value ? { value: asked.value } : {})) + cs.field("mf-hunch", S + "f.hunch", { area: true, rec: true })));
   return out.join("");
 }
 
@@ -297,7 +301,8 @@ const acts = rereading([
       const n = Object.assign({}, view.ui.note || {}); n[view.ui.noteFor] = (r && r.note) || cs.w("screen.money.note.none"); cs.set("note", n);
       return { stay: true };
     } },
-  { op: "acquire", label: "act.acquire.label.money",
+  /* R113: it files a copy, so only the read of the documents (`after: ["acquire"]`) is read again */
+  { op: "acquire", label: "act.acquire.label.money", rereads: [],
     send(view, el, cs) {
       const locator = String(cs.value("mf-address") || "").trim();
       if (!/^https:\/\//.test(locator)) return { refuse: "screen.money.f.noaddress" };
@@ -320,7 +325,7 @@ const acts = rereading([
       if (!inquiry || !statement) return { refuse: "screen.money.f.nohunch" };
       return { body: { inquiry, kind: "flow", statement, about: [String(el.dataset.fact || "")] } };
     } },
-], ["trail", "project", "trails", "contracts", "questions", "vocab"], ["acquire"]);
+], ["trail", "project", "trails", "contracts", "questions", "vocab"], []);
 
 const MONEY_KEYS = [
   "screen.money.graph", "screen.money.graph.holds", "screen.money.notrail", "screen.money.label", "screen.money.label.help",
