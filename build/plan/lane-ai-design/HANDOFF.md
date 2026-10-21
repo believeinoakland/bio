@@ -156,3 +156,6 @@ Recorded verbatim in `REQUIREMENTS.md` §16. A project owner's ticked check bind
 
 ## A34 · 2026-10-21 · Bob: required checks bind personal subscriptions too
 Bob: "Yes" to the team's and a project's required privacy and origin checks binding every account used for that work, a member's personal subscription included. Recorded in `REQUIREMENTS.md` §16, `AI-PROVIDER-REQUIREMENTS.md` §2.3, `UX-REQUIREMENTS.md` §B. No question is now open with Bob in `AI-PROVIDER-REQUIREMENTS.md` §10. Remaining lane work: propose the first live tests in `TESTS.md` (OpenRouter host checks once its adapter exists; gateway-held key check; a first cheap screening run on sample accounts), each needing Bob's agreement; then hand over.
+
+## A35 · 2026-10-21 · First live tests proposed: `TESTS.md`
+Three proposals, none run: **L1** gateway-held key (in Civicsmith's own Cloudflare account; Bob enters a capped provider key himself; proves the Worker cannot read a key AI Gateway holds; cents); **L2** OpenRouter served-host reporting and pinned-request refusal (after OpenRouter support is built; about $5 of credit); **L3** first Gate 1 screening run (after the suite exists; cost estimate first, ceiling set by Bob). Each needs Bob's agreement.
