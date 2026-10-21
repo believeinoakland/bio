@@ -155,3 +155,13 @@ T51-102 queue-producers, B7 (K4245) applied. Branch job/T51/queue-producers @ 1a
 - R48 (amends the line): "... It also carries `fills.who`, the declarer's handle as member-roster answers it (its R78), absent when she holds none; `subject` still names her id."
 
 Size (session_01PLhNRyfycvsdh5hgzEqhcL): test runs 7, module lines 3577
+
+## J8 · QUESTION
+
+QUESTION (C69, C94; fix round 2). Best reading below; I carry on with it and it is applied.
+
+1. Requirement lines are not written for either cause. Proposed, for you to fold: **R8 amended / new R52 "One item per matter"** (C69): `feedItems` answers one item for each matter: a fact of an action's deadline, in whatever status and however many of its facts are due, is one `local-fact-due` to do for that action (action-producers R7 raises one per fact and status; the survivor is the item with the least id, its basis naming every `statuses` and `paths`); any other item equal to an earlier one in class, kind, subject, summary, detail and basis is that item again; a different subject or basis is a different matter. **R53 "Members are named by handle"** (C94): a sentence names the founder by the handle she holds, else by `member.founder.unnamed`'s word, never `admin`; another member by her handle (R46's fallback to her id stands). My tests name R8, R14, R33, R48 until R52/R53 exist.
+
+2. C94 and "never an id" for a member who has no handle: R46 says "her handle, else her id", and no word key exists for such a member (interface-shell R111 names none), so I changed only the founder (the defect: `admin` shown) and left a handle-less ordinary member named by her id, as R46 states. If you want no id at all, the design stream needs a row (suggested `member.unnamed`, "A member") and R46's wording changes; say so and I use it.
+
+3. C69's second half, "two identical NOTICED items": NOTICED items come from `notice-producers`, which `queue` reads beside this module; this module cannot collapse them. The rule above holds for every item this module answers (machinery, action included). If the live duplicate is in notice-producers' own answer, its job (or queue's merge) needs the same rule: one item per matter.
