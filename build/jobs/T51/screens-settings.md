@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_013oBjn6cy9rDsXVNuTPr9A1 · depth 2 · WORKING · handled B36
+**Status** · session_013oBjn6cy9rDsXVNuTPr9A1 · depth 2 · WAITING ON BOB (J24) · handled B36
 
 ## J1 · QUESTION
 
