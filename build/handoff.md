@@ -1,37 +1,43 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #244 (`session_01MKZyizwZLi17bkfBRQnhFb`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-21 ~22:15 UTC, at 41 % of its window. **T51 is OPEN** on `tranche/T51`; **fix round 4 is running** (21 job sessions). Read `build/rulings-active.md` whole (§1 has Bob's K4426, K4428 and the conventions K4427, new today), then **K4420 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-4-T51.md` whole (in force; its section 3 table is the job list and merge order) and `build/plan/fix-round-3-survivors.md` §3.
+**Status** · Replaced whole at each handoff. Written by BOB #245 (`session_014x9XzLQGMhZC4CVqPwGUyD`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-21 ~23:50 UTC, at 50 % of its window. **T51 is OPEN** on `tranche/T51`; **fix round 4 is running** (13 job sessions). Read `build/rulings-active.md` whole, then **K4441 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-4-T51.md` whole (section 3's table: the jobs; K4453 corrects its C13 seam owner to acquisition).
+
+## Bob's direction today (in force)
+
+- "the focus is on getting an alpha-level release deployed as efficiently as possible" (Bob, 2026-10-21, this session). Applied (K4459, K4460): before starting or keeping a job, ask whether a member's operation fails without it; a red test alone is not that; wording waits for T52 (K4269).
 
 ## What happened this session
 
-- Round 3's regeneration, checks, scanner image (run 39661881205) and redeploy to biosmoke8 (753ea4db8a, run 39662704568) done (K4422-K4424); the re-walk (`walk-T51-rewalk3/`) found 29 rows still open, the performance lane P7-P10 (K4425).
-- **Bob asked why fixes did not hold.** A worker classified the 29 survivors (K4427): 13 proven only off-live, 5 wrong fixes, 3 seams no one owned, 3 old data, 1 never assigned; BOB's merge rulings had dropped the jobs' "not proved" lines. **Bob ruled K4426** (understood, tested, fixed, then deployed: four fields per defect) and **K4428** (live-only fixes are confirmed in the next deployment, with every confidence first; a deployment may carry logging so the following one fixes). BOB's five conventions (K4427) are in rulings-active §1: walker's case first; one owner per cause; an **Open** list in every merge ruling; measure live first; no NR for a row found STILL.
-- Fix round 4 planned (K4429), requirement lines written (K4430, K4434, K4437, K4438), STARTs in `build/plan/starts-T51-F4/`.
-- **C5a/P8 measured, three ways** (K4434, K4437): a PDF's reading in the plane's object needs +136/+318/+386 MB for 2.4/8.4/15.2 MiB, past the object's 128 MB: pdf-reader **R41** (one page at a time) and control-plane **R120** (answer when kept, reading follows) are the fix. N-slow-refuse's 60 s is in neither host-governor nor acquisition by measurement: open, named by the redeploy's clocks (R121, acquisition R95).
-- Bob's AI-lane words recorded (K4421; the lane writes on `lane/ai-design`, read there). Suite reds at 753ea4db8a diagnosed and placed (K4435). `prep/words-arms-K4208` would add 885 findings: left out of T51's close; the process close branch is **`prep/T51-close-v2`** (stale-test, cause-job, jobbranch; 158 process tests green). `prep/T51-close` (with K4208) is superseded, not to be merged.
+- 23 fix-round-4 jobs merged and archived (K4441-K4462): host-governor, file-scanner, file-safety, cause-reading-3 #2, citation, filing-templates, review, queue-producers, entities, jurisdictions, case-authoring, queue, capture, case-grammar, case-disclosures, public-read, record-core (new, R88 ranged get), money, acquisition (three passes, with the C13 seam tests), plane, capture-sources, extraction, pdf-reader, control-plane. Stale tests fixed by BOB (test files only): actions t33, case-authoring R55, intent, filings packet (R96's fallout), acquisition fix3-t51, capture R102 titles.
+- DEC-412 (U447) merged into the tranche; rows regenerated (K4458); ACK B473 (the design regenerates `words-reads.json`).
+- Bob's AI-lane words A26-A37 recorded (K4443; personal subscription only its owner's).
+- Stopped as not needed for alpha: ACQUISITION #25 and FILE-SAFETY #16 (wording re-keys → N1261, T52; K4459); RATIFICATION #30 (P10 (d) measured, matters only past ~30k candidates → N1262; K4460).
 
-## Running
+## Running (13)
 
-Wave 0: PDF-READER #8, HOST-GOVERNOR #12, ACQUISITION #24, EXTRACTION #30, PLANE #48, CONTROL-PLANE #45. Wave 1: FILE-SCANNER #11, CAPTURE #45, FILE-SAFETY #15, CAUSE-READING-3 #2, ENTITIES #19, MONEY #7, CITATION #18, JURISDICTIONS #16, FILING-TEMPLATES #15, CASE-AUTHORING #36, REVIEW #22, PUBLIC-READ #28, QUEUE-PRODUCERS #23, QUEUE #32, JOURNEY-CHECK #11 (addresses in the plan's Jobs line). Every question so far is answered. Backstop `trig_01YWkp2KDqXX2fbeu898yEDi` (22:26Z); WATCH #244 `trig_01JGnkMuayFDoEjq9XkcMPaw` (23:06Z). Lanes: PERFORMANCE answered (re-measure after the redeploy), JOURNEYS past W4, INVESTIGATION-DESIGN past H43, AI-DESIGN past A25 on `lane/ai-design`. Channel: UX-DESIGN read through U446; B471 (round 3's word batch) and B472 (three op-grades `unkeyed` strings) unread by it.
+- **Priority, the blocker:** CAUSE-READING-3 #3 (`session_01SYgD5xwRehhbmdooREW3Fp`; reading-pipeline + text-chain): the large-PDF reading still peaks 888 MB above idle (pdf-reader's parse is fixed; the rest is text-chain's per-page work). Step 0 measures and reports as a QUESTION; target < 64 MB above idle, units unchanged; if the output cannot fit, BOB decides the reading's home (K4461).
+- **OP-GRADES #24** (`session_01Q1BcrfRKSNQeK7397e6hvF`, haiku): the plane fails to start (`DECLARED_OP_DISAGREES: officeconfirm`) until it merges; control-plane's `t51-large-pdfs` and every plane-booting seam test wait on it. Merge it the moment it completes.
+- AFFORDANCES #42, JOURNEY-CHECK #11 (local arm), CAUSE-SHELL-4 #1, SCREENS-SETTINGS #16, -INTAKE #15, -DAILY #18, -INQUIRY #20, -INVESTIGATE #14, -PUBLISH #16, -ACTION #13 (all started 23:44; K4462). At cause-shell-4's merge: CHANGE to each running screens job (merge the tranche).
+- Extraction's `c5b-memory` and control-plane's R120 `t51-large-pdfs`, R122 `t51-bootstrap` are accepted red by name until cause-reading-3, op-grades, cause-shell-4 merge; then BOB re-runs them.
+- Backstop `trig_01Jggb6P1YTTpBjhpDWisVvv` (23:51Z); WATCH #245 `trig_01TRKPWA6K7k1fL3F1m1RiMP` (00:30Z). Lanes: PERFORMANCE P10, JOURNEYS W4, INVESTIGATION-DESIGN H43, AI-DESIGN A37 (read through). Channel: UX-DESIGN read through U447; it has read B473.
 
 ## Do next, in order
 
-1. **Take over** (§5.1): archive BOB #244 once idle (row `BOB-final`, T51); delete its backstop and WATCH #244; arm yours. Install `node_modules` (K4113).
-2. **Start, as slots free** (K4215: at most 20 job sessions): CASE-GRAMMAR #19 and CASE-DISCLOSURES #16 (STARTs written, numbered; branch with `mail jobbranch`, post START, `create_session` sonnet, `mail addjob`); CAPTURE-SOURCES and CAUSE-SHELL-4 once ACQUISITION #24 and CONTROL-PLANE #45 merge (number their STARTs first). Wave 2 (seven screens jobs plus AFFORDANCES, haiku) once wave 1 is merged.
-3. **Merge each job as it completes** (§5.5) in the plan's order; each merge ruling ends with its **Open** list (K4427 (3)); a cause closes only on its four fields (K4426), the step-0 causes only after their report.
-4. Send UX-DESIGN one word batch at wave 2's start: B471's rows plus this round's stand-ins named in COMPLETEs (money `refusal.MONEY_BAD_PERIOD`, citation's two repairs, file-safety's run-under-way rows, affordances' `readheld`/`capturecredentiallist`, the federal request's help).
-5. After the last merge: regenerate (manifest order), checks, the whole suite, then K4426's check of every cause by BOB; one redeploy (K4428), the scanner image if `container/` changed; targeted re-walk scoring old and new records apart; the performance re-measure; one final pass; T51's close (design MERGE first, `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`).
+1. **Take over** (§5.1): archive BOB #245 once idle (row `BOB-final`, T51); delete its backstop and WATCH; arm yours; `node_modules` (K4113).
+2. **Merge each job as it completes** (§5.5), each ruling ending with its **Open** list (K4427 (3)); before merging a provider whose validation tightens, run its impact set's suites (K4452). Archive each at its merge, row written.
+3. **One word batch to UX-DESIGN** only for stand-ins a member would otherwise not understand (K4269); readable stand-ins wait for T52.
+4. **After the last merge:** regenerate (manifest order), checks, the whole suite, then K4426's check of every cause by BOB; **one redeploy** (K4296's route, K4428), the scanner image only if `container/` changed (it did not this round so far); targeted re-walk scoring old and new records apart; the performance re-measure with `Server-Timing`; one final pass; T51's close (design MERGE first, `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`).
 
 ## Accepted reds, by name, until the act named
 
-Promotion `row-census`; acquisition `checks.test.mjs` R29 R31 (the design's `refusal.CAPTURE_NOT_KEPT`); op-declarations t36 R34 (`capturecredentiallist`, `readheld`: AFFORDANCES, wave 2); store-door R17; plane R24 (T52); journey-check R17 (T52 words); the six held coverage ids (K4417); words' three op-grades findings (B472). Everything else red is a running job's.
+Promotion `row-census`; acquisition `checks.test.mjs` R29 R31 and file-safety R24 (N1261, T52); op-declarations t36 R34 (AFFORDANCES #42); store-door R17; plane R24; journey-check R17; the held coverage ids (K4417); words' three op-grades findings (OP-GRADES #24 / the design's `words-reads.json`); extraction `c5b-memory`, control-plane R120 `t51-large-pdfs` and R122 `t51-bootstrap` (above); agent-worker R45 and the other stale bundles (regenerated after the last merge).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - `main` moves only by T51's close PR (§5.7 (3)), the design stream's MERGE first (§5.7 (1), K1177); no refusal recorded. The process repository's `main` by PR at the close (K4275).
-- Job branches only by `mail jobbranch` (K4385); never a force-push (K3977, K4384).
+- Job branches only by `mail jobbranch` (from `/home/user/cp-close`, the `prep/T51-close-v2` worktree of the process repository; K4385); never a force-push (K3977, K4384).
 - Deploys to biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296's approval covers the T51 build; not refused at K4423); none until round 4 is merged and checked (K4426, K4428).
 
 ## Open with Bob
 
-Nothing. (Told: the 21st job session for a few minutes, K4436; the reading-pipeline furniture change RC-R11 goes in the round's report.)
+Nothing.
