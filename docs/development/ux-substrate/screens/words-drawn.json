@@ -36971,6 +36971,312 @@
    "en": "Vouch for them",
    "protected": false,
    "note": "DEC-393: B437 2: queue, the button of release on held captures, as drawn in place"
+  },
+  {
+   "key": "screen.capture.later.head",
+   "en": "Your requests for later",
+   "protected": false,
+   "note": "DEC-394: B441 3: capture: section title over the list of Ask for a capture later requests"
+  },
+  {
+   "key": "screen.capture.later.about",
+   "en": "Each address you asked to have captured later, and where it stands.",
+   "protected": false,
+   "note": "DEC-394: B441 3: capture: line under the section title"
+  },
+  {
+   "key": "screen.capture.later.waiting",
+   "en": "Waiting to be fetched",
+   "protected": false,
+   "note": "DEC-394: B441 3: capture: state of a request not yet fetched"
+  },
+  {
+   "key": "screen.document.testify.head",
+   "en": "A name the record did not match",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: summary of the fold in People and organizations it names"
+  },
+  {
+   "key": "screen.document.testify.note1",
+   "en": "Some names this copy uses were matched to no subject.",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: note in the fold"
+  },
+  {
+   "key": "screen.document.testify.note2",
+   "en": "If you know who or what one is, say so and how you know.",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: note in the fold"
+  },
+  {
+   "key": "screen.document.testify.note3",
+   "en": "It is your word, graded D, the lowest grade, and it never lowers a stronger match.",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: note in the fold"
+  },
+  {
+   "key": "screen.document.testify.which.help",
+   "en": "The names this copy uses that the record matched to no subject.",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: help on Which name"
+  },
+  {
+   "key": "screen.document.testify.who",
+   "en": "Who or what it is",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: label of the subject choice"
+  },
+  {
+   "key": "screen.document.testify.how.help",
+   "en": "Say how you know, in your own words.",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: help on How you know"
+  },
+  {
+   "key": "screen.document.testify.how.help2",
+   "en": "It is kept beside the match.",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: help on How you know"
+  },
+  {
+   "key": "screen.document.testify.refused",
+   "en": "Say how you know this first. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: refusal when no basis is given, before: Nothing was recorded."
+  },
+  {
+   "key": "screen.project.docs.about1",
+   "en": "Every document filed under this project.",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: line under The project's documents"
+  },
+  {
+   "key": "screen.project.docs.about2",
+   "en": "Open one to read it, cite a passage or retire it.",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: line under The project's documents"
+  },
+  {
+   "key": "screen.project.docs.none1",
+   "en": "Nothing is filed under this project yet.",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: empty state of the documents list"
+  },
+  {
+   "key": "screen.project.docs.none2",
+   "en": "Add a document and it appears here.",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: empty state of the documents list"
+  },
+  {
+   "key": "screen.project.docs.listhelp",
+   "en": "Shows every document filed under this project, the ones waiting for a vouch and the ones already vouched for.",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: tip on List this project's documents (the help of heldcaptures here)"
+  },
+  {
+   "key": "screen.case-editor.drafts.help",
+   "en": "The drafts of this project, each named by its scope and the date it was prepared.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.drafts.choose",
+   "en": "Choosing one shows that draft.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.drafts.newest",
+   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "protected": false,
+   "note": "DEC-394: B441 1: the newest draft in the chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.drafts.earlier",
+   "en": "Scope: the 2024 lease amendment",
+   "protected": false,
+   "note": "DEC-394: B441 1: the earlier draft in the chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.links.live",
+   "en": "2 review links are live, one of them on an earlier draft.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the note naming live review links on case-editor"
+  },
+  {
+   "key": "screen.ceremony.drafts.help",
+   "en": "The drafts of this project, each named by its scope and the date it was prepared.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.drafts.choose",
+   "en": "Choosing one shows that draft.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.drafts.newest",
+   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "protected": false,
+   "note": "DEC-394: B441 1: the newest draft in the chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.drafts.earlier",
+   "en": "Scope: the 2024 lease amendment",
+   "protected": false,
+   "note": "DEC-394: B441 1: the earlier draft in the chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.links.live",
+   "en": "2 review links are live, one of them on an earlier draft.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the note naming live review links on ceremony"
+  },
+  {
+   "key": "screen.review-copy.drafts.help",
+   "en": "The drafts of this project, each named by its scope and the date it was prepared.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.drafts.choose",
+   "en": "Choosing one shows that draft.",
+   "protected": false,
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.drafts.newest",
+   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "protected": false,
+   "note": "DEC-394: B441 1: the newest draft in the chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.drafts.earlier",
+   "en": "Scope: the 2024 lease amendment",
+   "protected": false,
+   "note": "DEC-394: B441 1: the earlier draft in the chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.links.heading",
+   "en": "Every live review link",
+   "protected": false,
+   "note": "DEC-394: B441 1: the section of live links on any draft"
+  },
+  {
+   "key": "screen.review-copy.links.note",
+   "en": "A link on an earlier draft keeps working until you stop it here.",
+   "protected": false,
+   "note": "DEC-394: B441 1: note under the live links"
+  },
+  {
+   "key": "screen.review-copy.links.help",
+   "en": "Every review link still working on any draft of this project: who it was shared with, which draft, when, and how many comments that reader made.",
+   "protected": false,
+   "note": "DEC-394: B441 1: help of the live links section"
+  },
+  {
+   "key": "screen.project.docs.head",
+   "en": "The project's documents",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: section title"
+  },
+  {
+   "key": "screen.document.testify.which",
+   "en": "Which name",
+   "protected": false,
+   "note": "DEC-394: B441 3: document: label of the name choice"
+  },
+  {
+   "key": "screen.capture.later.captured",
+   "en": "Captured",
+   "protected": false,
+   "note": "DEC-394: B441 3: capture: state of a request that was fetched"
+  },
+  {
+   "key": "screen.capture.later.turned",
+   "en": "Turned away",
+   "protected": false,
+   "note": "DEC-394: B441 3: capture: state of a request its source refused"
+  },
+  {
+   "key": "screen.project.docs.kind.web",
+   "en": "Web page",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: kind of a document in the list"
+  },
+  {
+   "key": "screen.project.docs.kind.sheet",
+   "en": "Spreadsheet",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: kind of a document in the list"
+  },
+  {
+   "key": "screen.project.docs.kind.photo",
+   "en": "Photo",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: kind of a document in the list"
+  },
+  {
+   "key": "screen.project.docs.captured",
+   "en": "captured",
+   "protected": false,
+   "note": "DEC-394: B441 3: project: before the date a document was captured"
+  },
+  {
+   "key": "screen.document.contradict.head",
+   "en": "This contradicts another document",
+   "protected": false,
+   "note": "DEC-394: B441 3e: fold title on the document screen"
+  },
+  {
+   "key": "screen.document.contradict.note1",
+   "en": "If a passage here and a passage in another document cannot both be true, say so.",
+   "protected": false,
+   "note": "DEC-394: B441 3e"
+  },
+  {
+   "key": "screen.document.contradict.note2",
+   "en": "The two are set side by side as a contradiction for your project to settle.",
+   "protected": false,
+   "note": "DEC-394: B441 3e"
+  },
+  {
+   "key": "screen.document.contradict.here",
+   "en": "The passage here",
+   "protected": false,
+   "note": "DEC-394: B441 3e: field"
+  },
+  {
+   "key": "screen.document.contradict.here.help",
+   "en": "Select the words on the page, or choose a passage you cited.",
+   "protected": false,
+   "note": "DEC-394: B441 3e: help"
+  },
+  {
+   "key": "screen.document.contradict.other",
+   "en": "The other document and its passage",
+   "protected": false,
+   "note": "DEC-394: B441 3e: field"
+  },
+  {
+   "key": "screen.document.contradict.other.help",
+   "en": "A document your team holds, and the passage in it.",
+   "protected": false,
+   "note": "DEC-394: B441 3e: help"
+  },
+  {
+   "key": "screen.document.contradict.why",
+   "en": "How they disagree",
+   "protected": false,
+   "note": "DEC-394: B441 3e: the reason field"
+  },
+  {
+   "key": "screen.document.contradict.why.help",
+   "en": "In your own words, up to 500 characters.",
+   "protected": false,
+   "note": "DEC-394: B441 3e: help"
   }
  ],
  "rewrite": {
