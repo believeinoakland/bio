@@ -192,6 +192,16 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.32', where: at("setSetting", "is-setting-refused"),
     translation: localize('record-core.checks.the_setting_was_not_changed', 'The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply.'),
   }),
+  /* New (T51, R86; B2, K4259): `allocid` names the prefix and the year an id is for; a call that names neither allocates
+     nothing. The two take the next free numbers of C-102, after C-102.33. */
+  ALLOCID_PREFIX_REQUIRED: Object.freeze({
+    check: 'C-102.34', where: at("allocIdOp", "is-allocid-input-present"),
+    translation: localize('record-core.checks.allocid_prefix_required', 'A part of your team\'s Civicsmith asked for an id without naming the kind of object it is for, so nothing was allocated. {BUILD_FAULT}', { BUILD_FAULT: String(BUILD_FAULT) }),
+  }),
+  ALLOCID_YEAR_REQUIRED: Object.freeze({
+    check: 'C-102.35', where: at("allocIdOp", "is-allocid-input-present"),
+    translation: localize('record-core.checks.allocid_year_required', 'A part of your team\'s Civicsmith asked for an id without a year, so nothing was allocated. {BUILD_FAULT}', { BUILD_FAULT: String(BUILD_FAULT) }),
+  }),
 });
 
 /* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection), MOVED from the catalogue
