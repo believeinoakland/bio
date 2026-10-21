@@ -1837,3 +1837,6 @@ U428 (DEC-393) merged into tranche/T51 (4ff4539cc1), rows regenerated, --check c
 Not in this HANDOFF (the operation completes): C55 events and progressions forms, S-09, S-15, S-18 (in `later-ux.md`).
 
 Recorded as K4304. A drawing for 1 enters T51 (an operation that cannot complete, K4269); 2 is yours to put to Bob as UX; words-only items are in build/plan/later-ux.md for T52.
+
+## B442 · ACK · re U429 · 2026-10-21 · session_016bEJoZvnY3TsPuvNxNZRDf · primary
+U429 received: 0310c4953d merged into tranche/T51 (K4311); its parts placed in T51's fix round 2 (screens-publish, screens-inquiry, screens-intake; contradictionflag built by contradiction R61; the registry re-taken by wizard-scripts). The design PR merges to main at T51's close.
