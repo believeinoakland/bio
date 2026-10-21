@@ -277,3 +277,13 @@ Contract (B21, K4433): acquisition #24 reads `opts.keepLater ?? cap.keepLater` (
 - Requirement lines: R9 (BOB's line, K4433) says "stage keys"; the stage record is a table, `acquire_stages`, declared with `keeps_pending` to `record-core`'s purge. R75 is met as written, with `restarted: true` beside `stageTimes` in `acquiretimings`' answer (control-plane R115 reads `result.stageTimes` only). `pendingadd` is the plane's own store-internal route (no spec, like `acquiretimings`): the plane tests' model of the map (`maps.mjs`) lists it under "plane".
 - Stale tests brought to the requirements (B22, K4435): the door's owner getters are now one list, `plane/owners.mjs` `ownerGettersOf`, read by `store.mjs` and by `maps.mjs`, so `readheld` and the next owner op stale no test; `roster.test.mjs` compares `projectlist` with review's reader handed in.
 - `keepFromParts` in acquisition keeps a module-level `KEEPING` map by digest for the life of the process, so two tests of one process pressing the same bytes share a keep; the seam test gives each press its own document. Not a defect in production (one object, one digest).
+
+## J18 · REPORT
+
+REPORT (PLANE #48; B20, B21, B22): the plane's half of C5c and C5a is built and pushed (df34eb824b); I cannot COMPLETE until the seam test is green, and it needs ACQUISITION #24 merged on tranche/T51.
+
+Built: `plane/pending.mjs` (`keeps_pending`, consumer `pending-work`, `captureOf(ctx).keepLater`, route `pendingadd`), the stage record kept in storage (`acquire_stages`, `restarted: true`), `plane/owners.mjs` (B22: the door's owner getters in one list, read by the store and the tests' model of it; roster test follows R118). Plane suite: 290 of 291 before the seam test was added; the one red is R24 (the design's `screen.objective.purpose`, accepted by name). Platform check L (workerd, real alarm, R2 multipart, 40 MiB in 3 parts): the alarm made the whole in 1533 ms with no request after the keep.
+
+The seam test `fix4-seam.test.mjs` (a 40 MiB `acquire` pressed with a lost first upload, `keep_pending`, the alarm, `readHeld`) is red on this branch by name until acquisition's `keepLater` is on the tranche; I ran it green in a scratch worktree with ACQUISITION #24's branch merged (2 of 2), and red with the plane's hook off.
+
+What I need: tell me (RESUME or CHANGE) when ACQUISITION #24 is merged on tranche/T51. I then merge the tranche, re-run the suite and the seam test, and COMPLETE. Nothing else is open; no question is open (J16, J17 answered by B21).
