@@ -236,3 +236,25 @@ test("R4 C8 the figure's proposal to a trail (moneysetpropose) is an op a member
   assert.ok(SESSION_OPS.member.has("moneysetinclude"), "as the act it leads to is");
   assert.ok(!SESSION_OPS.member.has("no-such-op"));
 });
+
+/* ---------------------------------------------------------------- DEC-396 keys (B21) */
+
+test("R8 C61 the project's list of held standards is headed by its own key and says when it is cut; control: a whole list says nothing of a cut", async () => {
+  const items = [{ id: STD, cite: "Administrative Instruction 9.1, §2", kind: "policy", issuer: "Public Works" }];
+  const cut = await open("/app/standard/" + P, { plane: { standards: ok({ ok: true, items, truncated: true }) } });
+  const sec = main(cut).querySelector("[data-held-standards]");
+  assert.equal(sec.querySelector("h2").textContent, word("screen.standard.held"));
+  drew(sec, "screen.standard.held.more");
+  const whole = await open("/app/standard/" + P, { plane: { standards: ok({ ok: true, items, truncated: false }) } });
+  assert.equal(main(whole).querySelector("[data-held-more]"), null);
+});
+
+test("R4 C8 a figure a member proposed to the trail is drawn by the member-proposal key; control: a machine's proposal keeps the other", async () => {
+  const prop = (by) => TRAIL({ proposals: [{ proposal_id: 1, fact_id: M1, method: "m", by, at: "2026-10-21T09:00:00Z", label: "proposed", trail: { from: { stated: true }, to: { stated: true }, moved: { state: "undetermined" }, gaps: [] } }], inclusions: [], exclusions: [] });
+  const row = (p) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${M1}"]`));
+  const mem = await open(PATHS.money, { plane: { moneyset: ok(prop("member:mai")) } });
+  drew(row(mem), "screen.money.proposed.member");
+  const bot = await open(PATHS.money, { plane: { moneyset: ok(prop("class:daemon")) } });
+  drew(row(bot), "screen.money.proposed");
+  assert.ok(!row(bot).textContent.includes(word("screen.money.proposed.member")));
+});

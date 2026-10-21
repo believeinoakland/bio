@@ -59,7 +59,7 @@ function render(cs, view) {
   const entries = t && t.state === "ok"
     ? (t.value.inclusions || []).map((x) => ({ key: x.fact_id, state: "included", reason: x.reason, trail: x.trail }))
       .concat((t.value.exclusions || []).map((x) => ({ key: x.fact_id, state: "excluded", reason: x.reason, trail: null })))
-      .concat((t.value.proposals || []).map((x) => ({ key: x.fact_id, state: "proposed", reason: x.label, trail: x.trail })))
+      .concat((t.value.proposals || []).map((x) => ({ key: x.fact_id, state: "proposed", reason: x.label, by: x.by, trail: x.trail })))
     : [];
   const fact = (e) => P.later(cs, view, "fact:" + e.key, "money", { query: { id: e.key } });
   const party = (p) => (!p ? null : p.as_written || p.entity || p.fund || p.account || null);
@@ -92,7 +92,7 @@ function render(cs, view) {
     const src = f.source && f.source.capture_sha ? P.refOf(cs, f.source.capture_sha, f.citation || cs.w(S + "source"), [f.as_read || ""], "capture") : "";
     const grade = f.grade && /^[A-D]$/.test(f.grade.reading || "") ? cs.grade("capture", f.grade.reading) : cs.mark("gap", "unrated");
     const inTrail = e.state === "included" ? cs.w(S + "included", { reason: e.reason || "" }) : e.state === "excluded" ? cs.w(S + "excluded", { reason: e.reason || "" })
-      : e.state === "proposed" ? cs.w(S + "proposed") : cs.w(S + "notyet");
+      : e.state === "proposed" ? cs.w(/^member:/.test(String(e.by || "")) ? S + "proposed.member" : S + "proposed") : cs.w(S + "notyet");
     return [cs.esc(cs.w(S + "kind." + String(f.kind || "other").replace(/ /g, "_"))),
       party(f.from) ? P.refOf(cs, (f.from && (f.from.entity || f.from.fund)) || "", party(f.from), []) : gap(e, "from", (tr.from && tr.from.says) || cs.w(S + "notstated")),
       party(f.to) ? P.refOf(cs, (f.to && (f.to.entity || f.to.fund)) || "", party(f.to), []) : gap(e, "to", (tr.to && tr.to.says) || cs.w(S + "notstated")),
@@ -319,7 +319,7 @@ const MONEY_KEYS = [
   "screen.money.graph", "screen.money.graph.holds", "screen.money.notrail", "screen.money.label", "screen.money.label.help",
   "screen.money.startedby", "screen.money.read", "screen.money.readother", "screen.money.readfor", "screen.money.event", "screen.money.source",
   "screen.money.notstated", "screen.money.didnotmove", "screen.money.moved.why", "screen.money.period", "screen.money.period.why",
-  "screen.money.range", "screen.money.amount", "screen.money.stage", "screen.money.included", "screen.money.excluded", "screen.money.proposed",
+  "screen.money.range", "screen.money.amount", "screen.money.stage", "screen.money.included", "screen.money.excluded", "screen.money.proposed", "screen.money.proposed.member",
   "screen.money.notyet", "screen.money.gap.open", "screen.money.col.from", "screen.money.col.to", "screen.money.col.moved", "screen.money.col.basis",
   "screen.money.col.period", "screen.money.gap.from", "screen.money.gap.to", "screen.money.gap.moved", "screen.money.gap.basis",
   "screen.money.gap.period", "screen.money.evidence.from", "screen.money.evidence.to", "screen.money.evidence.moved", "screen.money.evidence.basis",

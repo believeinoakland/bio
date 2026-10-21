@@ -107,11 +107,12 @@ function render(cs, view) {
       + `<details class="mk-details"><summary>${cs.w(S + "inforce.refused.summary")}</summary><p>${cs.w(S + "inforce.refused.body")} ${cs.w(S + "inforce.refused.body2")}</p></details>`, { help: S + "inforce.help" }));
   }
   /* C61: the standards the record holds, on the project's screen, each a door to its page (keeping the project in the path) */
-  if (/^PROJ-/.test(id)) out.push(`<div data-held-standards>` + cs.sec(S + "name", cs.state("held", view, (v) => {
+  if (/^PROJ-/.test(id)) out.push(`<div data-held-standards>` + cs.sec(S + "held", cs.state("held", view, (v) => {
     const items = (Array.isArray(v.items) ? v.items : []).filter((x) => x && /^STD-/.test(String(x.id)));
-    return items.length ? cs.sheet(items.map((x) => cs.row("", `<a class="cs-ref" data-standard-door data-nav href="/app/standard/${encodeURIComponent(x.id)}/${encodeURIComponent(id)}">${cs.esc(x.cite || x.id)}</a>`,
+    return (items.length ? cs.sheet(items.map((x) => cs.row("", `<a class="cs-ref" data-standard-door data-nav href="/app/standard/${encodeURIComponent(x.id)}/${encodeURIComponent(id)}">${cs.esc(x.cite || x.id)}</a>`,
       `<span class="mk-small">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"].includes(x.kind) ? x.kind : "standard")), issuer: x.issuer || "" })}</span>`)).join(""))
-      : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+      : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`)
+      + (v.truncated ? `<p class="mk-small" data-held-more>${cs.w(S + "held.more")}</p>` : "");
   })) + `</div>`);
   /* R19: the project's proposals under their state, each labelled with who proposed it, why, and what became of it */
   if (/^PROJ-/.test(id)) out.push(cs.sec(S + "proposals", `<div class="mk-acts">${["open", "adopted", "all"].map((k) =>
@@ -178,7 +179,7 @@ const acts = rereading([
 ], ["standard", "relations", "laws", "project", "proposals", "held"]);
 
 const STANDARD_KEYS = [
-  "screen.standard.sub", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",
+  "screen.standard.sub", "screen.standard.held", "screen.standard.held.more", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",
   "screen.standard.kind.court", "screen.standard.kind.policy", "screen.standard.kind.commitment", "screen.standard.kind.standard",
   "screen.standard.inforce.since", "screen.standard.inforce.span", "screen.standard.inforce.none", "screen.standard.words", "screen.standard.laws",
   "screen.standard.rel.implements", "screen.standard.rel.refers_to", "screen.standard.rel.amends", "screen.standard.rel.repeals",

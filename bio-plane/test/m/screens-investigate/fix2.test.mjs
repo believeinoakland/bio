@@ -81,7 +81,7 @@ test("R4 C8 a figure read in for a trail is proposed to that trail (the money pr
   const again = await open(money, { plane });
   const row = rowOf(again, NEWFACT);
   assert.ok(row, "after a reload the figure is drawn from the trail's proposals");
-  drew(row, "screen.money.proposed");
+  drew(row, "screen.money.proposed.member");
   await again.click(row.querySelector('[data-shell="row"]'));
   await press(again, "include", { within: rowOf(again, NEWFACT).nextElementSibling, reason: "the transfer we ask about" });
   assert.deepEqual(again.byOp("include")[0].body, { setId: MSR, factId: NEWFACT, reason: "the transfer we ask about" });
