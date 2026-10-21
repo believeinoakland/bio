@@ -78,3 +78,16 @@ Questions:
 (c) If instead you mean heldAt only, then monitoring has nothing to change for C26: say so and I will COMPLETE with that stated.
 
 I carry on with nothing else (this is my only cause).
+
+## J4 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 2 (B6, answered by B7, K4305; session session_01PtKqTwtHQrKyKtULMgWvUo). tranche/T51 merged in, no rebase.
+
+**C26: nothing to change in monitoring.** BOB's ANSWER (B7, option c): the walk's "changed" comes from `capture`'s `heldat` (R96), held by cause-capture-t51, and the determined digest on the baseline is capture's side too. Monitoring's R5 raw fallback stays as written. No code, test or requirement of monitoring changed in this job.
+
+**Deferred:** none. **Found in another module:** nothing new (the heldAt raw comparison in `capture/index.mjs` is the cause BOB assigned to cause-capture-t51).
+
+**Tests run:** `node --test --test-force-exit bio-plane/test/m/monitoring/`: tests 168, pass 168, fail 0 (after merging tranche/T51).
+**Checks run:** `checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`: 1 file changed by monitoring (this record), 0 failures. No other check was run: no module file changed.
+
+Size (session_01PtKqTwtHQrKyKtULMgWvUo): test runs 1, module lines 0 changed (module unchanged at 3078 non-blank, non-comment lines in `src/monitoring/*.mjs`).
