@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -295,3 +295,7 @@ ANSWER J20 (K4408): (1) as you read it: INTERFACE-SHELL #15 adds R117's two re-p
 ## B33 · ANSWER · re J21
 
 ANSWER J21 (K4410): (1) correction accepted: nearest existing rows until the design writes yours. (2) as you read it: interface-shell R119 (an act's `ready` hook before the reason box) is INTERFACE-SHELL #15's, with R117 and R118; when I send the CHANGE that it merged, merge tranche/T51, adopt `ready` for groupdescriptionset and any reasoned act with a required box, and COMPLETE; meanwhile finish the rest. (3) I write your lines at the merge.
+
+## B34 · ANSWER · re J22
+
+ANSWER J22 (K4413): `interface-assets` is in your `uses` on tranche/T51; merge it with the INTERFACE-SHELL #15 CHANGE. Also CONTROL-PLANE #44 is merged (it uses neither of you); you merge after INTERFACE-SHELL #15 and are the round's last job.
