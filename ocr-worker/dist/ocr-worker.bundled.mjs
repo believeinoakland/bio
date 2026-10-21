@@ -110,6 +110,7 @@ var WORD_ROWS = Object.freeze([
   ["ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete", null, null, false, "code"],
   ["ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", null, null, false, "code"],
   ["ocr-worker.member.the_engine_boxed_boxes_region", "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.", null, null, false, "code"],
+  ["ocr-worker.member.the_picture_has_no_lines_of_text", "no line of text was found in this picture, so it was not given to the engine to read; there is nothing here this record could anchor.", null, null, false, "code"],
   ["ocr-worker.member.the_route_route_hands_back", "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.", null, null, false, "code"],
   ["ocr-worker.member.this_member_transcribes_one_page", "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.", null, null, false, "code"],
   ["ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.", null, null, false, "code"],
@@ -6154,8 +6155,196 @@ async function sha256Hex2(u8) {
   const d = await crypto.subtle.digest("SHA-256", u8);
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false } = {}) {
+var PREPARE_TILT_MAX = 10;
+var PREPARE_LINE_PX = 40;
+var PREPARE_SCALE_MAX = 4;
+var PREPARE_TILT_FLOOR = 0.1;
+function smooth(g, w, h) {
+  const t = new Uint16Array(w * h), out = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const l = g[y * w + Math.max(0, x - 1)], c = g[y * w + x], r = g[y * w + Math.min(w - 1, x + 1)];
+    t[y * w + x] = l + 2 * c + r;
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    out[y * w + x] = t[Math.max(0, y - 1) * w + x] + 2 * t[y * w + x] + t[Math.min(h - 1, y + 1) * w + x] + 8 >> 4;
+  }
+  return out;
+}
+function levelLight(g, w, h) {
+  const cell = Math.max(12, Math.min(64, Math.round(Math.max(w, h) / 60)));
+  const cw = Math.ceil(w / cell), ch = Math.ceil(h / cell);
+  let bg = new Float32Array(cw * ch);
+  const hist = new Uint32Array(256);
+  for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+    hist.fill(0);
+    const x1 = Math.min(w, (cx + 1) * cell), y1 = Math.min(h, (cy + 1) * cell);
+    let n = 0;
+    for (let y = cy * cell; y < y1; y++) for (let x = cx * cell; x < x1; x++) {
+      hist[g[y * w + x]]++;
+      n++;
+    }
+    let need = n >> 1, sum = 0, cnt = 0;
+    for (let v = 255; v >= 0 && cnt < n - need; v--) {
+      const take = Math.min(hist[v], n - need - cnt);
+      sum += take * v;
+      cnt += take;
+    }
+    bg[cy * cw + cx] = Math.max(1, sum / Math.max(1, cnt));
+  }
+  for (let pass = 0; pass < 2; pass++) {
+    const nx = new Float32Array(bg.length);
+    for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+      let s = 0, c = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const y = cy + dy, x = cx + dx;
+        if (y >= 0 && y < ch && x >= 0 && x < cw) {
+          s += bg[y * cw + x];
+          c++;
+        }
+      }
+      nx[cy * cw + cx] = s / c;
+    }
+    bg = nx;
+  }
+  const half = cell / 2;
+  const at = (x, y) => {
+    const fx = Math.min(cw - 1, Math.max(0, (x - half) / cell)), fy = Math.min(ch - 1, Math.max(0, (y - half) / cell));
+    const x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(cw - 1, x0 + 1), y1 = Math.min(ch - 1, y0 + 1);
+    const tx = fx - x0, ty = fy - y0;
+    return (bg[y0 * cw + x0] * (1 - tx) + bg[y0 * cw + x1] * tx) * (1 - ty) + (bg[y1 * cw + x0] * (1 - tx) + bg[y1 * cw + x1] * tx) * ty;
+  };
+  const ratio = new Uint8Array(w * h), rh = new Uint32Array(256);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const r = Math.min(255, Math.round(255 * g[y * w + x] / at(x + 0.5, y + 0.5)));
+    ratio[y * w + x] = r;
+    rh[r]++;
+  }
+  let acc = 0, lo = 0;
+  const target = Math.max(1, Math.round(w * h * 5e-3));
+  while (lo < 255 && (acc += rh[lo]) < target) lo++;
+  const hi = 235;
+  const span = Math.max(32, hi - lo);
+  for (let i = 0; i < g.length; i++) g[i] = Math.max(0, Math.min(255, Math.round((ratio[i] - lo) * 255 / span)));
+  return g;
+}
+function skewOf(g, w, h) {
+  const xs = [], ys = [];
+  const step = Math.max(1, Math.ceil(Math.sqrt(w * h / 4e5)));
+  for (let y = 0; y < h; y += 1) for (let x = y % step; x < w; x += step) if (g[y * w + x] < 96) {
+    xs.push(x);
+    ys.push(y);
+  }
+  if (xs.length < 200) return 0;
+  const cx = w / 2, cy = h / 2, n = xs.length;
+  const bins = new Uint32Array(w + h + 8);
+  const score = (deg) => {
+    const t = deg * Math.PI / 180, s = Math.sin(t), c = Math.cos(t);
+    bins.fill(0);
+    const off = w + h >> 1;
+    for (let i = 0; i < n; i++) bins[Math.round((ys[i] - cy) * c - (xs[i] - cx) * s + off)]++;
+    let sq = 0;
+    for (let i = 0; i < bins.length; i++) sq += bins[i] * bins[i];
+    return sq;
+  };
+  let best = 0, bs = -1;
+  for (let a = -PREPARE_TILT_MAX; a <= PREPARE_TILT_MAX + 1e-9; a += 0.25) {
+    const v = score(a);
+    if (v > bs) {
+      bs = v;
+      best = a;
+    }
+  }
+  const centre = best;
+  for (let a = centre - 0.25; a <= centre + 0.25 + 1e-9; a += 0.05) {
+    const v = score(a);
+    if (v > bs) {
+      bs = v;
+      best = a;
+    }
+  }
+  return Math.round(best * 100) / 100;
+}
+function textLines(g, w, h) {
+  const rows = new Uint32Array(h);
+  for (let y = 0; y < h; y++) {
+    let c = 0;
+    for (let x = 0; x < w; x++) if (g[y * w + x] < 96) c++;
+    rows[y] = c;
+  }
+  const floor = Math.max(2, Math.round(w * 4e-3));
+  const runs = [];
+  let start = -1, gap = 0;
+  for (let y = 0; y <= h; y++) {
+    const ink = y < h && rows[y] >= floor;
+    if (ink) {
+      if (start < 0) start = y;
+      gap = 0;
+    } else if (start >= 0) {
+      gap++;
+      if (gap > 1 || y === h) {
+        runs.push(y - gap - start + 1);
+        start = -1;
+        gap = 0;
+      }
+    }
+  }
+  const real = runs.filter((r) => r >= 4).sort((a, b) => a - b);
+  return { lines: real.length, median: real.length ? real[real.length >> 1] : 0 };
+}
+function resample(g, w, h, deg, s) {
+  const t = deg * Math.PI / 180, cs = Math.cos(t), sn = Math.sin(t);
+  const bw = Math.abs(w * cs) + Math.abs(h * sn), bh = Math.abs(w * sn) + Math.abs(h * cs);
+  const W2 = Math.max(1, Math.round(bw * s)), H = Math.max(1, Math.round(bh * s));
+  const out = new Uint8Array(W2 * H);
+  const cxs = w / 2, cys = h / 2, cxo = W2 / 2, cyo = H / 2;
+  const wt = (d) => {
+    const a = Math.abs(d);
+    return a < 1 ? 1.5 * a * a * a - 2.5 * a * a + 1 : a < 2 ? -0.5 * a * a * a + 2.5 * a * a - 4 * a + 2 : 0;
+  };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W2; x++) {
+    const dx = (x + 0.5 - cxo) / s, dy = (y + 0.5 - cyo) / s;
+    const sx = dx * cs - dy * sn + cxs - 0.5, sy = dx * sn + dy * cs + cys - 0.5;
+    if (sx < -1 || sy < -1 || sx > w || sy > h) {
+      out[y * W2 + x] = 255;
+      continue;
+    }
+    const x0 = Math.floor(sx), y0 = Math.floor(sy);
+    let acc = 0, wsum = 0;
+    for (let j = -1; j <= 2; j++) {
+      const yy = Math.min(h - 1, Math.max(0, y0 + j)), wy = wt(sy - (y0 + j));
+      for (let i = -1; i <= 2; i++) {
+        const xx = Math.min(w - 1, Math.max(0, x0 + i)), wx = wt(sx - (x0 + i));
+        acc += g[yy * w + xx] * wx * wy;
+        wsum += wx * wy;
+      }
+    }
+    out[y * W2 + x] = Math.max(0, Math.min(255, Math.round(acc / wsum)));
+  }
+  return { samples: out, width: W2, height: H };
+}
+function preparePicture({ samples: samples2, width: w, height: h }, maxEdge) {
+  const g = levelLight(smooth(samples2, w, h), w, h);
+  const deskew = skewOf(g, w, h);
+  const turn = Math.abs(deskew) < PREPARE_TILT_FLOOR ? 0 : deskew;
+  let cur = turn ? resample(g, w, h, turn, 1) : { samples: g, width: w, height: h };
+  const { lines, median } = textLines(cur.samples, cur.width, cur.height);
+  if (lines < 2 || median > cur.height / 4)
+    return { samples: samples2, width: w, height: h, comps: 1, prepared: { text_found: false, tilt_deg: 0, scale: 1, line_px: 0 } };
+  let scale = median < PREPARE_LINE_PX ? Math.min(PREPARE_SCALE_MAX, PREPARE_LINE_PX / median) : 1;
+  scale = Math.min(scale, maxEdge / Math.max(cur.width, cur.height));
+  scale = scale < 1.05 ? 1 : Math.round(scale * 100) / 100;
+  if (scale !== 1) cur = resample(g, w, h, turn, scale);
+  return {
+    samples: cur.samples,
+    width: cur.width,
+    height: cur.height,
+    comps: 1,
+    prepared: { text_found: true, tilt_deg: turn ? -turn : 0, scale, line_px: median }
+  };
+}
+async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false, prepare = false } = {}) {
   if (!Number.isInteger(maxEdge) || maxEdge < 1) throw new TypeError("renderPictureToPixels: maxEdge must be a positive integer");
+  if (prepare) grey = true;
   const b = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
   const format = b && sniff(b);
   if (!format) return refuse3("NOT_A_PICTURE");
@@ -6178,7 +6367,7 @@ async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false }
     } catch (e) {
       return jpegRefusal(e);
     }
-    return answer(red2.done(), { source: source2, orientation, k: k2 });
+    return answer(red2.done(), { source: source2, orientation, k: k2 }, prepare, maxEdge);
   }
   const hd = pngHeader(b);
   const source = { format, width: hd ? hd.width : null, height: hd ? hd.height : null, comps: hd ? hd.comps : null };
@@ -6195,9 +6384,11 @@ async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false }
   const red = reducer(pic.width, pic.height, pic.comps, { grey, orientation: 1, k });
   red.rows(pic.samples, 0, pic.height);
   pic.samples = null;
-  return answer(red.done(), { source, orientation: 1, k });
+  return answer(red.done(), { source, orientation: 1, k }, prepare, maxEdge);
 }
-async function answer(r, { source, orientation, k }) {
+async function answer(r, { source, orientation, k }, prepare, maxEdge) {
+  const prepared = prepare ? preparePicture(r, maxEdge) : null;
+  if (prepared) r = prepared;
   return {
     ok: true,
     page: 0,
@@ -6210,6 +6401,7 @@ async function answer(r, { source, orientation, k }) {
     orientation,
     reduced_by: k,
     source,
+    ...prepared ? { prepared: prepared.prepared } : {},
     pixels_sha256: await sha256Hex2(r.samples)
   };
 }
@@ -6292,7 +6484,7 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
     const picture = isPicture(bytes);
     if (picture && page !== 0)
       return { ok: false, reason: "NO_SUCH_PAGE", detail: REFUSALS2.NO_SUCH_PAGE, page, page_count: 1 };
-    const rendered = picture ? await renderPicture(bytes, page, { maxEdge: PICTURE_MAX_EDGE, grey: true }) : await render(bytes, page, { decodeDct: true });
+    const rendered = picture ? await renderPicture(bytes, page, { maxEdge: PICTURE_MAX_EDGE, grey: true, prepare: true }) : await render(bytes, page, { decodeDct: true });
     if (!rendered || !rendered.ok)
       return {
         ok: false,
@@ -6327,6 +6519,17 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
         frame_bytes: frame,
         bound_bytes: MAX_FRAME_BYTES,
         why: localize("ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", { width: String(rendered.width), height: String(rendered.height), frame: String(frame), MAX_FRAME_BYTES: String(MAX_FRAME_BYTES) })
+      };
+    if (rendered.prepared && rendered.prepared.text_found === false)
+      return {
+        ok: false,
+        reason: "NOTHING_TRANSCRIBED",
+        detail: REFUSALS2.NOTHING_TRANSCRIBED,
+        page,
+        boxes: 0,
+        blank: 0,
+        unanchored: 0,
+        why: localize("ocr-worker.member.the_picture_has_no_lines_of_text", "no line of text was found in this picture, so it was not given to the engine to read; there is nothing here this record could anchor.")
       };
     const samples2 = await pngToSamples(rendered.bytes);
     if (!samples2.ok)
