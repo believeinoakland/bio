@@ -54,3 +54,8 @@ COMPLETE (round 4, B3 START; BOB's B4 answer applied). C19 met: reading-pipeline
 (4) F: the saved page. Numbers: 87214-byte page read in single-digit ms per read; units 35 -> 25.
 Requirement met: reading-pipeline R32. Suites: reading-pipeline 167/167, text-chain 130/130 (unchanged), users: extraction 207/207, screens-inquiry 471/471, retrieval-browse 51/51, acquisition 194/195 (the one failure, the R29 R31 translation-table test, fails identically on tranche/T51; not mine). checks/run.mjs: format 0, architecture 0; coverage and words failures are in other modules' files (same on the tip). ownership: only my record was flagged before this entry. QUESTIONs: J4, answered B4; none open. Nothing for another module.
 Size (session_01UF9B3un1kmYypbACDBFPct): test runs 10, module lines 1625
+
+## J6 · REPORT
+
+REPORT correcting J5: the grca page now reads 16 units (was 35), not 25. Held modules' own code: reading-pipeline 1952 lines + text-chain (textchain.mjs) 1983 = 3935.
+Size (session_01UF9B3un1kmYypbACDBFPct): test runs 10, module lines 3935
