@@ -676,6 +676,15 @@
      "modules": [
       "file-safety"
      ]
+    },
+    {
+     "op": "scanmirror",
+     "label": "Check for new signatures now",
+     "status": "declared",
+     "onTranche": "origin/tranche/T51",
+     "modules": [
+      "file-safety"
+     ]
     }
    ],
    "journeys": [
@@ -1022,6 +1031,15 @@
      "modules": [
       "entities",
       "op-declarations"
+     ]
+    },
+    {
+     "op": "officeconfirm",
+     "label": "Confirm this office",
+     "status": "declared",
+     "onTranche": "origin/tranche/T51",
+     "modules": [
+      "entities"
      ]
     }
    ],
