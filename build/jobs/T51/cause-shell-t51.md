@@ -47,3 +47,7 @@ Fix round 2, wave 1: C24, C76, C77, C78 (shell part), C79 (shell part), C80, C81
 **Checks:** format 1 failure (`build/rulings.md:4298`, BOB's); architecture 0, coverage 0 (shell 108/108, op-grades 51/51, assets 11/11); words 0 for my files; ownership (list form) 0 failures over 13 files.
 
 Size (session_013bNQKD9Hm7fy4unt8sjgMn): test runs 14, module lines 3224
+
+## J3 · COMPLETE
+
+COMPLETE: C24 C76 C77 C78 C79 C80 C81 C94 C11 C15 (shell parts as stated) met; B2 (C66 limit 500) not reproducible, queue/tasks accept it; details, counts and Size in the record (J2). Requirement lines R9 R11 R13 R60 R68 R108 and op-grades R42 met as B3 wrote them.
