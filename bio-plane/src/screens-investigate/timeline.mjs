@@ -145,7 +145,7 @@ function render(cs, view) {
   /* R49: the first expected flow is defined from the project's own timeline, not only from inside a flow's page */
   if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
-    P.docChoice(cs, view, "tl-doc", { project: id })
+    P.docChoice(cs, view, "tl-doc", { project: id, passage: false, drive: true }) + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
     + kindChoice
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
@@ -157,7 +157,7 @@ function render(cs, view) {
     + cs.field("tl-date", S + "date", { help: S + "date.help" })
     + cs.choice("tl-datekind", S + "datekind", ["meeting", "adopted", "effective", "signed", "issued", "published", "received"].map((k) => [k, S + "datekind." + k]), {})
     + cs.act("recorddatedfact", { label: "act.recorddatedfact.label.timeline" })
-    + cs.choice("tl-question", S + "question", qChoice, {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
+    + cs.choice("tl-question", S + "question", qChoice, qChoice.length ? { value: qChoice[0].value } : {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.timeline" })
     + cs.act("findin", { label: "act.findin.label.timeline" })));
   if (view.ui.said) out.push(`<p class="mk-note">${cs.w(view.ui.said)}</p>`);
@@ -167,7 +167,7 @@ function render(cs, view) {
 const acts = rereading([
   { op: "createevent", label: "act.createevent.label.timeline",
     send(view, el, cs) {
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!at) return { refuse: "screen.timeline.passage.empty" };
       /* C54: the event is attested by the passage chosen; the timeline finds it again by that capture, so it is tied to no person the page guessed */
       return { body: { kind: String(cs.value("tl-kind") || "other"), attestations: [at] } };
@@ -176,7 +176,7 @@ const acts = rereading([
   { op: "addparticipant", label: "act.addparticipant.label.timeline",
     send(view, el, cs) {
       const eventId = String(cs.value("tl-event") || ""), entityId = String(cs.value("tl-who") || "").trim();
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!eventId || !entityId || !at) return { refuse: "screen.timeline.who.empty" };
       const role = String(cs.value("tl-role") || "actor");
       const vote = String(cs.value("tl-vote") || "").trim();
@@ -187,7 +187,7 @@ const acts = rereading([
   { op: "relate", label: "act.relate.label.timeline",
     send(view, el, cs) {
       const from = String(el.dataset.event || cs.value("tl-event") || ""), to = String(cs.value("tl-to") || "");
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!from || !to || from === to || !at) return { refuse: "screen.timeline.relate.empty" };
       /* "Cite which came first": the member's chosen event came first, so `precedes` runs from it */
       if (el.dataset.kind === "precedes") return { body: { from, to, kind: "precedes", attestation: at } };
@@ -197,7 +197,7 @@ const acts = rereading([
   /* an exact date from a passage, a day or a month ("YYYY-MM", month known) */
   { op: "recorddatedfact", label: "act.recorddatedfact.label.timeline",
     send(view, el, cs) {
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       const v = String(cs.value("tl-date") || "").trim();
       if (!at || !/^\d{4}-\d{2}(-\d{2})?$/.test(v)) return { refuse: "screen.timeline.date.empty" };
       return { body: { captureSha: at.captureSha, extent: at.extent, kind: String(cs.value("tl-datekind") || "adopted"),
