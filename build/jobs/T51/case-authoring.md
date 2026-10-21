@@ -213,3 +213,25 @@ QUESTION (B12, C3 and C67): two requirement lines are not written; my best readi
 ## J11 · COMPLETE
 
 COMPLETE (B12, B13; fix round 2, wave 1). C3 (R82 as amended): the pre-flight's step three lists `not_co_attested` and `self_attested` whenever the roster and roles are judged, whether or not `op=publish` refused; the refusal stays in `first`; an unjudgeable roster states it and lists none. C67 (my part, R16 as amended): a case carries an edge to a finding only when it is a member; documents as before. Tests written first and seen red: fixround2.test.mjs (R82 x4, R16 x2). case-authoring 214/214; users review 73/73, case-check 34/34, screens-publish 179 pass 0 fail, plane 279/280 (R24 words test in release.test.mjs is red on tranche/T51 itself). architecture, coverage 54/54, words and ownership: 0 failures; format fails only on build/rulings.md:4298 (K4301, not mine). Nothing deferred. For screens-publish (wave 2): the ceremony can draw Retry and the reason box from step three's `not_co_attested` with no change of shape; its C67 half (no minutes line when none relied on) is theirs. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2889.
+
+## J12 · COMPLETE
+
+COMPLETE (B14; fix round 3, wave 1). Causes met: C48 and C50 (R83), small 3 (R77 as amended).
+
+**C48, C50 (R83).** `publishPreflight` now answers `editions: {prepared, published}` at the top of its answer, for the case identity the call stands at (R7, R9): the case it names, else the one published case its members serve, else the one their unsigned preparation names (`#caseStood`); `newCase` stands at none. `prepared` is the edition number of the unsigned preparation the record holds (`case_documents`, unsigned), else null; `published` is `{edition, address}` for the latest ratified edition of the case, else null (`#editionsOf`). A refused pre-flight states them too; a minted case (the rolled-back run's id, which the record does not hold) states neither; a published edition is never stated as prepared. The second preparation of one draft already answered the same case, the same edition and `minted: false` (R7, R8, R13); a test now holds it. Reads only; the pre-flight still rolls back.
+- **Reading taken (address):** the public address is the case page the screens draw, `/app/published/<case>/<edition>` (screens-publish R6, R37). The requirement does not spell the form; BOB, tell me if it should be the `op=publishedcase&case=&edition=` read instead.
+- **For `review` (R19):** its job states the same two fields; this module's `#editionsOf` is a private method, so `review` reads the record itself (the same two tables, publication R40) or through whatever service BOB names; I export nothing new.
+
+**Small 3 (R77 as amended).** `#minutesStep` answers `minutes: {undetermined: true}` and no rows when the source answers undetermined, throws, answers no list or a malformed row (case-inputs R19 reads those), or the door is not bound on the instance; reached rows are unchanged. Reading taken: "not bound" is the door missing, not "no source registered", which case-inputs R19's own control answers `rows: []` (a reached, empty read); the existing test of that stays.
+
+**Tests (written first, seen failing).** `editions.test.mjs`: R83 x5 (never prepared and refused-first and newCase state none; prepared 1 on every later call and under another refusal; published edition 1 with its address and prepared null, then edition 2 prepared beside it; a second preparation same case/edition `minted: false`, one document; a draft named by the call reads prepared 1 after it was null). `minutes.test.mjs`: one R77 test (non-list, malformed row, door not bound each undetermined; control reached rows unchanged), red before the source change with `minutesComparisonsOn is not a function`.
+
+**Deferred.** None. **Found in other modules.** None new; `review` R19 owes the same fields (its job). The proposed lines: none; R83 and R77 are met as written.
+
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/case-authoring/`: 220 of 220 pass.
+- Users: `review` 76/76, `case-check` 34/34, `screens-publish` 210 pass, 0 fail (212 tests, 2 not run as pass).
+- `checks/run.mjs`: architecture 0 failures; coverage fails for 15 other modules (none case-authoring); words 0 failures; format 1 failure, `build/rulings.md:4346` (K4349, not mine, red on the tranche tip). `checks/ownership.mjs case-authoring tranche/T51 job/T51/case-authoring`: 4 files, 0 failures.
+- Merged `origin/tranche/T51` into my branch before the checks (no `review` merge was pending).
+
+Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 9, module lines 2921
