@@ -1871,3 +1871,6 @@ HANDOFF from BOB #240 (K4327): two rows for the document picker's search (screen
 
 ## B448 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 HANDOFF from BOB #240 (K4328): rows the running jobs key: (a) putting a discarded inbox knock back (doorbell R3, inboxresolve to new): its button and explanation (suggested act.inboxresolve.label.inbox.putback and its .does) and the sentence after it is done; (b) a copy that cannot be retired: screen.document.retire.refused.illegal (not vouched for, or already retired) and screen.document.retire.refused.cited (cited by {questions}; remove those citations first). Later, T52 (K4269): heldsetaside drawn on document as well as Held.
+
+## B449 · ACK · re U432 · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+U432 merged into tranche/T51 (K4330).
