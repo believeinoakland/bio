@@ -318,32 +318,71 @@ function b64bytes(s) {
   catch { return null; }
 }
 
+/* R8 (fix round 4, C13a, P7): the bodies are kept several at a time. Each trip to the evidence store costs about 0.27 s (measured on
+   the live copy), so a page of thirty-three sub-resources kept one after another cost 9.4 s of the render stage; KEEP_LANES of them
+   are in flight at once, and the answer is by request index, so the order asked is the order answered whichever body ends first. */
+export const KEEP_LANES = 8;
+
 export async function keepRenderBodies(answer, { put, sha256 }) {
   if (!answer || !Array.isArray(answer.requests)) return null;
-  let kept = 0, spent = 0;
-  const out = [];
-  for (const r of answer.requests) {
-    if (!r || typeof r !== "object" || !isStr(r.url) || r.outcome !== "completed") { out.push(null); continue; }
+  const out = new Array(answer.requests.length).fill(null);
+  /* what is to be kept, in the requests' order: a request that is not a completed load owes no digest (null), one whose bytes
+     cannot be kept is answered undetermined at once with its reason */
+  const owed = [];
+  answer.requests.forEach((r, i) => {
+    if (!r || typeof r !== "object" || !isStr(r.url) || r.outcome !== "completed") return;
     const claim = HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {};
     const undet = (why) => ({ sha256: "undetermined", digest_reason: why, ...claim });
     let bytes = null, as = null;
     if (typeof r.body_base64 === "string") {
       bytes = b64bytes(r.body_base64); as = "bytes";
-      if (!bytes) { out.push(undet(word("render.renderer_body_request"))); continue; }
+      if (!bytes) { out[i] = undet(word("render.renderer_body_request")); return; }
     } else if (typeof r.body_text === "string") {
       bytes = new TextEncoder().encode(r.body_text); as = "decoded_text";
     } else {
-      out.push(undet(word("render.renderer_deliver_response", { is_str: String(isStr(r.body_unavailable) ? ` (${String(r.body_unavailable).slice(0, 200)})` : ""), bytes: String(claim.renderer_sha256 ? "; the digest it reported is recorded as renderer_sha256, its claim, which nothing here can recompute" : "") })));
-      continue;
+      out[i] = undet(word("render.renderer_deliver_response", { is_str: String(isStr(r.body_unavailable) ? ` (${String(r.body_unavailable).slice(0, 200)})` : ""), bytes: String(claim.renderer_sha256 ? "; the digest it reported is recorded as renderer_sha256, its claim, which nothing here can recompute" : "") }));
+      return;
     }
-    if (bytes.length > SUBRESOURCE_MAX) { out.push(undet(word("render.body_bytes_byte", { bytes: String(bytes.length), subresource_max: String(SUBRESOURCE_MAX) }))); continue; }
-    if (kept >= SUBRESOURCE_CAP) { out.push(undet(word("render.past_body_per", { subresource_cap: String(SUBRESOURCE_CAP) }))); continue; }
-    if (spent + bytes.length > SUBRESOURCE_BUDGET) { out.push(undet(word("render.capture_byte_subresource", { subresource_budget: String(SUBRESOURCE_BUDGET) }))); continue; }
-    let digest = null;
-    try { digest = await sha256(bytes); await put(digest, bytes); }
-    catch (e) { out.push(undet(word("render.group_civicsmith_keep", { entry: String(String((e && e.message) || e).slice(0, 200)) }))); continue; }
-    kept++; spent += bytes.length;
-    out.push({ sha256: digest, bytes: bytes.length, body_as: as, kept: true, ...claim });
+    if (bytes.length > SUBRESOURCE_MAX) { out[i] = undet(word("render.body_bytes_byte", { bytes: String(bytes.length), subresource_max: String(SUBRESOURCE_MAX) })); return; }
+    owed.push({ i, bytes, as, claim, undet });
+  });
+  /* Each distinct body goes to the store once, however many requests asked for it. */
+  const stored = new Map();
+  const keepOne = (digest, bytes) => {
+    if (!stored.has(digest)) stored.set(digest, Promise.resolve().then(() => put(digest, bytes)));
+    return stored.get(digest);
+  };
+  const lane = async (queue, work) => {
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(KEEP_LANES, queue.length) }, async () => {
+      while (next < queue.length) await work(queue[next++]);
+    }));
+  };
+  /* The ceilings are held in the requests' order: a body is taken while the count and the budget allow it. A body whose store
+     failed is not kept, so the ones refused only for want of its place are reconsidered once the rest have ended. */
+  let kept = 0, spent = 0, waiting = owed;
+  for (;;) {
+    const take = [], over = [];
+    let k = kept, s = spent;
+    for (const c of waiting) {
+      if (k >= SUBRESOURCE_CAP) { over.push({ c, why: word("render.past_body_per", { subresource_cap: String(SUBRESOURCE_CAP) }) }); continue; }
+      if (s + c.bytes.length > SUBRESOURCE_BUDGET) { over.push({ c, why: word("render.capture_byte_subresource", { subresource_budget: String(SUBRESOURCE_BUDGET) }) }); continue; }
+      k++; s += c.bytes.length; take.push(c);
+    }
+    let failed = 0;
+    await lane(take, async (c) => {
+      try {
+        const digest = await sha256(c.bytes);
+        await keepOne(digest, c.bytes);
+        out[c.i] = { sha256: digest, bytes: c.bytes.length, body_as: c.as, kept: true, ...c.claim };
+        kept++; spent += c.bytes.length;
+      } catch (e) {
+        failed++;
+        out[c.i] = c.undet(word("render.group_civicsmith_keep", { entry: String(String((e && e.message) || e).slice(0, 200)) }));
+      }
+    });
+    if (!failed || !over.length) { for (const { c, why } of over) out[c.i] = c.undet(why); break; }
+    waiting = over.map((o) => o.c);
   }
   return out;
 }
