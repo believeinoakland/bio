@@ -2,13 +2,12 @@
  * and it hosts the two container classes, `FileScanner` (ClamAV) and `SafeViewRenderer`, each with no internet at all
  * (R12): the Worker hands them every byte they work on. The one exception is the `FileScanner` instance the daily mirror
  * (R6) starts, the signature updater: ClamAV's own `freshclam` runs in it and reaches ClamAV's database host (R34).
- * The Worker itself opens no connection to that host. Its scheduled trigger runs the daily mirror (R6). Its bindings:
+ * The Worker itself opens no connection to that host. Its scheduled trigger, every ten minutes, finishes an open mirror request, resumes a stopped run and otherwise mirrors once a day (R6). Its bindings:
  * `CAPTURES` (the group's bucket), `SCANNER` and `RENDERER` (the classes), and `SECURITY_VPC` (a Workers VPC binding,
  * absent unless the installer adds it for a tunnelled tool, R21). */
 import { Container, ContainerProxy } from '@cloudflare/containers';
 import member from '../fleet-member.json' with { type: 'json' };
-import { handle } from './handler.mjs';
-import { runMirror } from './clamav.mjs';
+import { handle, scheduled } from './handler.mjs';
 import { MEMBER_LIMITS_STATEMENT } from './limits.mjs';
 
 export { ContainerProxy };
@@ -67,6 +66,6 @@ export default {
     return handle(request, depsOf(env, ctx));
   },
   scheduled(event, env, ctx) {
-    ctx.waitUntil(runMirror(depsOf(env, ctx)));
+    ctx.waitUntil(scheduled(depsOf(env, ctx)));
   },
 };

@@ -3,14 +3,28 @@
  * one request's targets, scanned by one run that loads the set once.
  *
  * The mirror lives under `clamav/`: `clamav/current.json` names the set in use (each file's key, version, build time
- * and signature count), `clamav/state.json` the last attempt and its error, and the files themselves sit under
+ * and signature count), `clamav/state.json` the last attempt, its error and, while a run is under way, its stage,
+ * `clamav/request.json` an asynchronous request not yet finished, and the files themselves sit under
  * `clamav/sets/<run>/`. A run stages what changed, has the image verify each file's digital signature, and only then
- * replaces `current.json`, so a failed run leaves the last good set. */
+ * replaces `current.json`, so a failed run leaves the last good set. A run writes its state when it starts and at each
+ * stage, so the invocation the platform cuts after the answer leaves its start and its stage behind, and the
+ * scheduled trigger (`mirrorTick`) finishes what was left. */
 import { SCAN_BATCH_MAX, SIGNATURES_MAX_AGE_MS } from './limits.mjs';
 import { normaliseTarget, knownStore, sizeTarget, targetStream, writeObject, deleteObject, readJson } from './store.mjs';
 
 export const CURRENT = 'clamav/current.json';
 export const STATE = 'clamav/state.json';
+export const REQUEST = 'clamav/request.json';
+
+/** R6: `last_error` while a run is under way, with its `stage` (`seed`, `download`, `stage`, `verify`) in `state.json`. */
+export const RUN_STARTED = 'RUN_STARTED';
+/** R6: a run whose last stage is older than this has stopped, and the tick resumes it. */
+export const RUN_DEAD_MS = 15 * 60_000;
+/** R6: the moment an asynchronous run, begun in the invocation the platform keeps about 30 s past the answer, is left
+ *  to end before the tick finishes its open request. */
+export const DOOR_RUN_MS = 90_000;
+/** R6: with no request and no run under way, the scheduled trigger mirrors once in this time. */
+export const MIRROR_EVERY_MS = 23 * 60 * 60_000;
 
 const runId = (now) => `r${new Date(now).toISOString().replace(/[-:.TZ]/g, '')}${Math.random().toString(36).slice(2, 8)}`;
 const reply = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -145,21 +159,43 @@ async function seedUpdater(deps, run, previous) {
   return true;
 }
 
+const stateOf = (run) => (run.stage ? { last_attempt: run.attempt, last_error: RUN_STARTED, stage: run.stage, stage_at: run.stage_at }
+  : { last_attempt: run.attempt, last_error: run.error || null, stage: null, stage_at: null });
+
+/** R6: the run's state, written at its start and at each stage (and, with no `stage`, at its end). */
+async function writeState(deps, run, stage) {
+  if (stage) { run.stage = stage; run.stage_at = new Date(deps.now()).toISOString(); } else run.stage = null;
+  await writeObject(deps.bucket, STATE, JSON.stringify(stateOf(run)));
+}
+
+/** R6: the asynchronous door's first act: the request, then the run's start in `state.json`, both before the 202. */
+async function begin(deps) {
+  const run = { attempt: new Date(deps.now()).toISOString() };
+  await writeObject(deps.bucket, REQUEST, JSON.stringify({ requested_at: run.attempt }));
+  await writeState(deps, run, 'seed');
+  return run;
+}
+
 /** One mirror run: `{ok, versions, published, error?}`. The databases come from ClamAV's own updater, `freshclam`, run
- *  in the signature-updater instance of the image under its own identity (R6, R34); the Worker opens no connection. */
-export async function runMirror(deps) {
+ *  in the signature-updater instance of the image under its own identity (R6, R34); the Worker opens no connection.
+ *  `begun` is the state an asynchronous door already wrote. */
+export async function runMirror(deps, begun) {
   const now = deps.now();
+  const run0 = begun || { attempt: new Date(now).toISOString() };
   const previous = await readJson(deps.bucket, CURRENT);
   const run = runId(now);
   const staged = [];
   const files = {};
   let error = null;
   try {
+    if (!begun) await writeState(deps, run0, 'seed');
     if (previous && !(await seedUpdater(deps, run, previous))) await askUpdater(deps, `/update/${run}`, { method: 'DELETE' });
+    await writeState(deps, run0, 'download');
     const got = await askUpdater(deps, `/update/${run}`, { method: 'POST' });
     if (!got.ok || !Array.isArray(got.files)) {
       throw new Error(got.code === 'MIRROR_REFUSED' ? `MIRROR_REFUSED:${String(got.detail || 'no reason given').slice(0, 300)}` : 'UPDATER_UNAVAILABLE');
     }
+    await writeState(deps, run0, 'stage');
     try {
       // The updater names what it changed from the set it was handed; an answer without that list changed everything.
       const changed = new Set(Array.isArray(got.changed) ? got.changed : got.files);
@@ -176,6 +212,7 @@ export async function runMirror(deps) {
       }
     } finally { await askUpdater(deps, `/update/${run}`, { method: 'DELETE' }); }
     // Each new file's digital signature, verified by the image's sigtool before the set replaces the last good one.
+    await writeState(deps, run0, 'verify');
     const fresh = Object.entries(files).filter(([, f]) => staged.includes(f.key));
     if (fresh.length) {
       for (const [db, f] of fresh) {
@@ -200,23 +237,49 @@ export async function runMirror(deps) {
     // The previous set's files that the new one no longer names.
     const keep = new Set(Object.values(files).map((f) => f.key));
     for (const f of Object.values((previous && previous.files) || {})) if (!keep.has(f.key)) await deleteObject(deps.bucket, f.key);
-    await writeObject(deps.bucket, STATE, JSON.stringify({ last_attempt: new Date(now).toISOString(), last_error: null }));
+    await writeState(deps, run0, null);
+    await deleteObject(deps.bucket, REQUEST);
     return { ok: true, versions: signaturesOf(current), published: current.published };
   } catch (e) {
     error = String(e.message || e);
     for (const key of staged) await deleteObject(deps.bucket, key).catch(() => {});
-    await writeObject(deps.bucket, STATE, JSON.stringify({ last_attempt: new Date(now).toISOString(), last_error: error }));
+    run0.error = error;
+    await writeState(deps, run0, null);
+    await deleteObject(deps.bucket, REQUEST);
     const last = previous ? signaturesOf(previous) : null;
     return { ok: false, versions: last, published: previous ? previous.published : null, error };
   }
 }
 
-/** POST /mirror?async=1 (R6): the run is begun and left to end after the answer, its outcome landing in /version. */
+/** POST /mirror?async=1 (R6): the request and the run's start are written, then the run is begun and left to end after
+ *  the answer; if the platform cuts it, its state names the stage it reached and the scheduled trigger finishes it. */
 export async function mirrorAsync(deps) {
   if (!deps.bucket) return reply(503, { ok: false, code: 'R2_NOT_CONFIGURED' });
-  const run = runMirror(deps).catch(() => {});
+  const begun = await begin(deps);
+  const run = runMirror(deps, begun).catch(() => {});
   if (typeof deps.waitUntil === 'function') deps.waitUntil(run);
   return reply(202, { ok: true, started: true });
+}
+
+/** R6: the scheduled trigger, every ten minutes. It finishes an open request (once the door's own run has had its
+ *  moment), resumes a run whose last stage is older than 15 minutes, and otherwise mirrors once a day. Answers the
+ *  run's outcome, or `{skipped}` with the reason it did nothing. */
+export async function mirrorTick(deps) {
+  if (!deps.bucket) return { ok: false, skipped: 'R2_NOT_CONFIGURED' };
+  const now = deps.now();
+  const state = await readJson(deps.bucket, STATE);
+  const request = await readJson(deps.bucket, REQUEST);
+  const underWay = state && state.last_error === RUN_STARTED && state.stage;
+  const age = underWay ? now - Date.parse(state.stage_at) : null;
+  if (request) {
+    if (underWay && age < DOOR_RUN_MS) return { ok: true, skipped: 'RUN_ALIVE' };
+    return runMirror(deps);
+  }
+  if (underWay) return age < RUN_DEAD_MS ? { ok: true, skipped: 'RUN_ALIVE' } : runMirror(deps);
+  const current = state ? null : await readJson(deps.bucket, CURRENT);
+  const last = state ? Date.parse(state.last_attempt) : (current ? Date.parse(current.mirrored_at) : NaN);
+  if (Number.isFinite(last) && now - last < MIRROR_EVERY_MS) return { ok: true, skipped: 'RUN_WITHIN_DAY' };
+  return runMirror(deps);
 }
 
 /** POST /mirror (R6). */
@@ -231,5 +294,6 @@ export async function signatureState(bucket) {
   const state = bucket ? await readJson(bucket, STATE) : null;
   return { versions: signaturesOf(current), published: current ? current.published : null,
     mirrored_at: current ? current.mirrored_at : null, last_attempt: state ? state.last_attempt : null,
-    last_error: state ? state.last_error : null };
+    last_error: state ? state.last_error : null, stage: state && state.stage ? state.stage : null,
+    stage_at: state && state.stage_at ? state.stage_at : null };
 }

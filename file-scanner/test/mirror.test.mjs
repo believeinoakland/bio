@@ -2,7 +2,7 @@
 // checked by the image's own sigtool (a fake set is refused) or, for a set that verifies, by a stand-in for it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { handle } from '../src/handler.mjs';
+import { handle, scheduled } from '../src/handler.mjs';
 import { BOUNDS } from '../src/limits.mjs';
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS } from '../src/providers/catalogue.mjs';
 import { createHash } from 'node:crypto';
@@ -98,7 +98,7 @@ test('R6 a refused or unreachable updater fails the run, stated in /version (R8)
   const u = await mirrorRun(depsWith({ bucket, updater: async () => { throw new TypeError('down'); }, now: () => NOW + 1 }));
   assert.equal(u.error, 'UPDATER_UNAVAILABLE');
   const v = await version(depsWith({ bucket, now: () => NOW + 1 }));
-  assert.deepEqual(v.signatures, { versions: null, published: null, mirrored_at: null, last_attempt: new Date(NOW + 1).toISOString(), last_error: 'UPDATER_UNAVAILABLE' });
+  assert.deepEqual(v.signatures, { versions: null, published: null, mirrored_at: null, last_attempt: new Date(NOW + 1).toISOString(), last_error: 'UPDATER_UNAVAILABLE', stage: null, stage_at: null });
   const n = await handle(post('/mirror', {}), depsWith({ bucket: null }));
   assert.deepEqual([n.status, await n.json()], [503, { ok: false, code: 'R2_NOT_CONFIGURED' }]);
 });
@@ -325,4 +325,108 @@ test('R6 the image\'s updater runs freshclam in a directory holding the files it
     // A file name that is not a signature database is not taken.
     assert.notEqual((await image.fetch('/update/s2/passwd', { method: 'PUT', body: enc('x'), duplex: 'half' })).status, 200);
   } finally { delete process.env.FRESHCLAM; }
+});
+
+// ── R6 (fix round 4, C84): a run leaves a trace from its start; an open request is finished by the cron
+
+/** The platform's cut: once `cut()` is called, every call the invocation makes to the bucket, the updater or the image
+ *  hangs for good, as a cancelled invocation reaches no write (C84: `waitUntil` is cut about 30 s after the response). */
+function cutter() {
+  let cut = false;
+  const hang = () => new Promise(() => {});
+  const guard = (fn) => (...a) => (cut ? hang() : fn(...a));
+  const wrap = (deps) => {
+    const b = deps.bucket;
+    const bucket = { ...b, head: guard(b.head), get: guard(b.get), put: guard(b.put), delete: guard(b.delete), list: guard(b.list) };
+    return { ...deps, bucket, updater: guard(deps.updater), scanner: guard(deps.scanner) };
+  };
+  return { wrap, cut: () => { cut = true; } };
+}
+const settle = () => new Promise((res) => setTimeout(res, 20));
+const iso = (t) => new Date(t).toISOString();
+const MIN = 60_000;
+const at = (bucket, t, over = {}) => depsWith({ bucket, now: () => t, scanner: verifyingImage(), ...over });
+const sigs = async (bucket) => (await version(depsWith({ bucket }))).signatures;
+const requestOpen = (bucket) => bucket.objects.has('clamav/request.json');
+
+test('R6 C84 the walker\'s row: an async run the platform cuts after the response leaves its start and its stage in /version, and the next cron tick finishes it; a first run fetches whole', async () => {
+  const bucket = memoryBucket();
+  // The first run has no mirrored set to seed from: the download is the long one, and it outlasts the invocation.
+  const stuck = async (path, init = {}) => ((init.method || 'GET') === 'POST' ? new Promise(() => {}) : json({ ok: true }));
+  const platform = cutter();
+  const waits = [];
+  const deps = platform.wrap(at(bucket, NOW, { updater: stuck, waitUntil: (p) => waits.push(p) }));
+  const r = await handle(post('/mirror?async=1', {}), deps);
+  assert.deepEqual([r.status, await r.json()], [202, { ok: true, started: true }]);
+  await settle(); // five seconds of the invocation's life after the response
+  platform.cut();
+  const during = await sigs(bucket);
+  assert.deepEqual([during.last_attempt, during.last_error, during.stage, during.stage_at], [iso(NOW), 'RUN_STARTED', 'download', iso(NOW)], 'the cut run left its start and its stage');
+  assert.equal(during.versions, null);
+  assert.ok(requestOpen(bucket), 'and the request stays open for the cron');
+  // The next tick, ten minutes on, in a new invocation: it finishes the request, fetching the databases whole.
+  const remote = freshclamLike(goodFiles());
+  const out = await scheduled(at(bucket, NOW + 10 * MIN, { updater: remote }));
+  assert.equal(out.ok, true, out.error);
+  assert.deepEqual(remote.whole, ['main.cvd', 'daily.cvd', 'bytecode.cvd'], 'a first run with no mirrored set fetches whole');
+  const done = await sigs(bucket);
+  assert.deepEqual([done.versions.daily, done.last_error, done.stage, done.stage_at, done.last_attempt], [27788, null, null, null, iso(NOW + 10 * MIN)]);
+  assert.ok(!requestOpen(bucket), 'the finished request is closed');
+});
+
+test('R6 C84 the door itself leaves the trace: cut the moment the 202 is answered, /version already shows the run started and the request is open', async () => {
+  const bucket = memoryBucket();
+  const platform = cutter();
+  const deps = platform.wrap(at(bucket, NOW, { updater: updaterOf(goodFiles()), waitUntil: () => {} }));
+  const r = await handle(post('/mirror?async=1', {}), deps);
+  platform.cut();
+  assert.equal(r.status, 202);
+  const s = await sigs(bucket);
+  assert.deepEqual([s.last_attempt, s.last_error], [iso(NOW), 'RUN_STARTED']);
+  assert.ok(['seed', 'download'].includes(s.stage), `a stage is named (${s.stage})`);
+  assert.ok(requestOpen(bucket));
+});
+
+test('R6 C84 the tick: a run whose stage is alive is left alone; one stopped for 15 minutes is resumed; with no request and a run within the day it does nothing; a day on it runs once', async () => {
+  const bucket = memoryBucket();
+  const first = await scheduled(at(bucket, NOW, { updater: freshclamLike(goodFiles()) }));
+  assert.equal(first.ok, true, 'control: with nothing mirrored and nothing asked, the tick runs the day\'s mirror');
+  const idle = freshclamLike(goodFiles());
+  assert.equal((await scheduled(at(bucket, NOW + 10 * MIN, { updater: idle }))).skipped, 'RUN_WITHIN_DAY');
+  assert.deepEqual(idle.calls, [], 'a run within the day: nothing is asked of the updater');
+  assert.equal((await scheduled(at(bucket, NOW + 24 * 60 * MIN, { updater: freshclamLike(goodFiles()) }))).ok, true, 'a day on, it runs once');
+  // A run left started (no request), its stage alive then dead.
+  const t0 = NOW + 48 * 60 * MIN;
+  bucket.objects.set('clamav/state.json', enc(JSON.stringify({ last_attempt: iso(t0), last_error: 'RUN_STARTED', stage: 'download', stage_at: iso(t0) })));
+  const alive = freshclamLike(goodFiles());
+  assert.equal((await scheduled(at(bucket, t0 + 14 * MIN, { updater: alive }))).skipped, 'RUN_ALIVE');
+  assert.deepEqual(alive.calls, []);
+  assert.equal((await scheduled(at(bucket, t0 + 16 * MIN, { updater: freshclamLike(goodFiles()) }))).ok, true, 'stopped for over 15 minutes, it is resumed');
+  assert.equal((await sigs(bucket)).last_error, null);
+  // An open request: the door\'s own run is left its moment to end; later the tick finishes the request.
+  const t1 = t0 + 60 * MIN;
+  bucket.objects.set('clamav/request.json', enc(JSON.stringify({ requested_at: iso(t1) })));
+  bucket.objects.set('clamav/state.json', enc(JSON.stringify({ last_attempt: iso(t1), last_error: 'RUN_STARTED', stage: 'seed', stage_at: iso(t1) })));
+  const young = freshclamLike(goodFiles());
+  assert.equal((await scheduled(at(bucket, t1 + 60_000, { updater: young }))).skipped, 'RUN_ALIVE');
+  assert.equal((await scheduled(at(bucket, t1 + 5 * MIN, { updater: freshclamLike(goodFiles()) }))).ok, true, 'an open request is finished at the next tick');
+  assert.ok(!requestOpen(bucket));
+});
+
+test('R6 C84 control: a run that ends in its invocation clears RUN_STARTED and states its outcome as before, a refusal too; the request closes with it', async () => {
+  const bucket = memoryBucket();
+  const waits = [];
+  const refuse = { ok: false, code: 'MIRROR_REFUSED', detail: 'exit 1: ... 403' };
+  const deps = at(bucket, NOW, { updater: updaterOf({}, { refuse }), waitUntil: (p) => waits.push(p) });
+  assert.equal((await handle(post('/mirror?async=1', {}), deps)).status, 202);
+  await Promise.all(waits);
+  const s = await sigs(bucket);
+  assert.deepEqual([s.last_error, s.stage, s.stage_at, s.last_attempt], [`MIRROR_REFUSED:${refuse.detail}`, null, null, iso(NOW)]);
+  assert.ok(!requestOpen(bucket));
+  // The stored refusal of an earlier day is overwritten by the first new run (new data only).
+  bucket.objects.set('clamav/state.json', enc(JSON.stringify({ last_attempt: iso(NOW - 15 * 60 * MIN), last_error: 'REFUSED:main.cvd:403' })));
+  const w2 = [];
+  await handle(post('/mirror?async=1', {}), at(bucket, NOW + 1, { updater: updaterOf(goodFiles()), waitUntil: (p) => w2.push(p) }));
+  await Promise.all(w2);
+  assert.equal((await sigs(bucket)).last_error, null);
 });
