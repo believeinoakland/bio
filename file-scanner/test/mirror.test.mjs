@@ -166,7 +166,7 @@ test('R34 the image\'s updater runs ClamAV\'s own freshclam for the official hos
     try { return await (await image.fetch(`/update/${name}`, { method: 'POST' })).json(); } finally { delete process.env.FRESHCLAM; }
   };
   const got = await run(ok, 'u1');
-  assert.deepEqual(got, { ok: true, files: ['bytecode.cvd', 'daily.cvd', 'main.cvd'] });
+  assert.deepEqual(got, { ok: true, files: ['bytecode.cvd', 'daily.cvd', 'main.cvd'], changed: ['bytecode.cvd', 'daily.cvd', 'main.cvd'] }, 'with nothing handed over, all three are fetched');
   const conf = readFileSync(join(dir, 'seen.conf'), 'utf8');
   assert.deepEqual(conf.match(/^DatabaseMirror .*$/gm), ['DatabaseMirror database.clamav.net'], 'the official host alone');
   assert.ok(!/HTTPUserAgent|user-agent|cvdupdate/i.test(conf), 'freshclam states its own identity: none is set');
@@ -182,4 +182,147 @@ test('R34 the image\'s updater runs ClamAV\'s own freshclam for the official hos
   assert.equal(refused.code, 'MIRROR_REFUSED');
   assert.match(refused.detail, /^exit 58: .*403 Forbidden/);
   assert.equal((await image.fetch('/update/u2/main.cvd')).status, 404, 'a refused run keeps nothing');
+});
+
+/** A signature updater double that behaves as `freshclam` does in a directory it is handed: a file already there that
+ *  matches the official one is left alone; one there that differs is patched (a diff); one absent is fetched whole.
+ *  `whole` lists what was fetched whole, `patched` what was patched. */
+function freshclamLike(remote) {
+  const dirs = new Map(), whole = [], patched = [], calls = [];
+  const fn = async (path, init = {}) => {
+    const method = init.method || 'GET';
+    calls.push([method, path]);
+    const p = path.split('/').filter(Boolean);
+    if (p[0] !== 'update') return new Response('{}', { status: 404 });
+    if (method === 'PUT' && p.length === 3) {
+      if (!dirs.has(p[1])) dirs.set(p[1], new Map());
+      dirs.get(p[1]).set(p[2], new Uint8Array(await new Response(init.body).arrayBuffer()));
+      return json({ ok: true });
+    }
+    if (method === 'POST') {
+      const dir = dirs.get(p[1]) || new Map();
+      dirs.set(p[1], dir);
+      const changed = [];
+      for (const [name, f] of Object.entries(remote)) {
+        const held = dir.get(name);
+        if (held && Buffer.compare(Buffer.from(held), Buffer.from(f.bytes)) === 0) continue;
+        (held ? patched : whole).push(name);
+        changed.push(name);
+        dir.set(name, f.bytes);
+      }
+      return json({ ok: true, files: Object.keys(remote), changed });
+    }
+    if (method === 'DELETE') { dirs.delete(p[1]); return json({ ok: true }); }
+    const f = (dirs.get(p[1]) || new Map()).get(p[2]);
+    return f ? new Response(f, { status: 200, headers: { 'content-length': String(f.length) } }) : new Response('no', { status: 404 });
+  };
+  Object.assign(fn, { calls, whole, patched });
+  return fn;
+}
+
+test('R6 POST /mirror?async=1 answers 202 at once, before the run ends, and the run\'s outcome lands in /version signatures', async () => {
+  const bucket = memoryBucket();
+  let release;
+  const gate = new Promise((res) => { release = res; });
+  const inner = updaterOf(goodFiles());
+  const updater = async (path, init) => { await gate; return inner(path, init); };
+  const waits = [];
+  const deps = depsWith({ bucket, updater, scanner: verifyingImage(), waitUntil: (p) => waits.push(p) });
+  const r = await handle(post('/mirror?async=1', {}), deps);
+  assert.deepEqual([r.status, await r.json()], [202, { ok: true, started: true }], 'it answers while the updater is still waiting');
+  assert.equal(waits.length, 1, 'the run is handed to the platform to finish after the answer');
+  assert.equal((await version(deps)).signatures.versions, null, 'nothing has landed yet');
+  release();
+  await Promise.all(waits);
+  const v = (await version(deps)).signatures;
+  assert.deepEqual([v.versions.daily, v.last_error], [27788, null], 'the outcome is in /version');
+  // The outcome of a refused run lands there too, with its reason (R34).
+  const refuse = { ok: false, code: 'MIRROR_REFUSED', detail: 'exit 58: 403 Forbidden' };
+  const bad = [];
+  const b2 = memoryBucket();
+  const d2 = depsWith({ bucket: b2, updater: updaterOf({}, { refuse }), waitUntil: (p) => bad.push(p) });
+  assert.equal((await handle(post('/mirror?async=1', {}), d2)).status, 202);
+  await Promise.all(bad);
+  assert.equal((await version(d2)).signatures.last_error, `MIRROR_REFUSED:${refuse.detail}`);
+});
+
+test('R6 control: POST /mirror without async runs inside the request and answers its outcome; async without a bucket is refused as a plain run is', async () => {
+  const bucket = memoryBucket();
+  const waits = [];
+  const deps = depsWith({ bucket, updater: updaterOf(goodFiles()), scanner: verifyingImage(), waitUntil: (p) => waits.push(p) });
+  const r = await handle(post('/mirror', {}), deps);
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).ok, true);
+  assert.equal(waits.length, 0, 'nothing is deferred');
+  for (const q of ['/mirror?async=0', '/mirror?async=']) assert.equal((await handle(post(q, {}), deps)).status, 200, `${q} is a plain run`);
+  const n = await handle(post('/mirror?async=1', {}), depsWith({ bucket: null, waitUntil: (p) => waits.push(p) }));
+  assert.deepEqual([n.status, await n.json(), waits.length], [503, { ok: false, code: 'R2_NOT_CONFIGURED' }, 0]);
+});
+
+test('R6 a run begins with the updater\'s directory holding the mirrored set: it fetches only what changed, no database whole; control: with no mirrored set, all three whole', async () => {
+  const bucket = memoryBucket();
+  const first = freshclamLike(goodFiles());
+  const a = await mirrorRun(depsWith({ bucket, updater: first, scanner: verifyingImage() }));
+  assert.equal(a.ok, true, a.error);
+  assert.deepEqual(first.whole, ['main.cvd', 'daily.cvd', 'bytecode.cvd'], 'control: no set mirrored, the databases are fetched whole');
+  assert.deepEqual(first.calls.filter(([m]) => m === 'PUT'), [], 'control: nothing to seed with');
+  const oldMain = JSON.parse(new TextDecoder().decode(bucket.objects.get('clamav/current.json'))).files['main.cvd'].key;
+  // The next day only daily moved.
+  const next = freshclamLike({ ...goodFiles(), 'daily.cvd': { bytes: enc('signed|27789|07 Oct 2026 04:21 -0400') } });
+  const b = await mirrorRun(depsWith({ bucket, updater: next, scanner: verifyingImage(), now: () => NOW + 1000 }));
+  assert.equal(b.ok, true, b.error);
+  assert.deepEqual(next.whole, [], 'no database is fetched whole');
+  assert.deepEqual(next.patched, ['daily.cvd'], 'daily is brought up to date');
+  assert.deepEqual(next.calls.filter(([m]) => m === 'PUT').map(([, p]) => p.split('/').pop()).sort(), ['bytecode.cvd', 'daily.cvd', 'main.cvd'], 'the whole mirrored set was handed over');
+  assert.deepEqual(next.calls.filter(([m]) => m === 'GET').map(([, p]) => p.split('/').pop()), ['daily.cvd'], 'only what changed is brought back');
+  assert.equal(b.versions.daily, 27789);
+  assert.equal(JSON.parse(new TextDecoder().decode(bucket.objects.get('clamav/current.json'))).files['main.cvd'].key, oldMain, 'an unchanged file keeps its stored copy');
+  assert.ok(bucket.objects.has(oldMain), 'and it is not removed');
+  // A day on which nothing moved still leaves a complete, current set.
+  const same = freshclamLike({ ...goodFiles(), 'daily.cvd': { bytes: enc('signed|27789|07 Oct 2026 04:21 -0400') } });
+  const c = await mirrorRun(depsWith({ bucket, updater: same, scanner: verifyingImage(), now: () => NOW + 2000 }));
+  assert.deepEqual([c.ok, same.whole, same.patched, c.versions.daily], [true, [], [], 27789]);
+  assert.equal((await version(depsWith({ bucket }))).signatures.mirrored_at, new Date(NOW + 2000).toISOString());
+});
+
+test('R6 a seeded run that the updater refuses leaves the last good set; a seed the updater cannot take is dropped and the run goes on whole', async () => {
+  const bucket = memoryBucket();
+  await mirrorRun(depsWith({ bucket, updater: updaterOf(goodFiles()), scanner: verifyingImage() }));
+  const before = new TextDecoder().decode(bucket.objects.get('clamav/current.json'));
+  const refuse = { ok: false, code: 'MIRROR_REFUSED', detail: 'exit 58: 429 cool-down' };
+  const r = await mirrorRun(depsWith({ bucket, updater: updaterOf({}, { refuse }), now: () => NOW + 1 }));
+  assert.deepEqual([r.ok, r.error], [false, `MIRROR_REFUSED:${refuse.detail}`]);
+  assert.equal(new TextDecoder().decode(bucket.objects.get('clamav/current.json')), before);
+  // An updater that does not take the seed (PUT fails): the run falls back to fetching whole.
+  const noSeed = freshclamLike(goodFiles());
+  const wrapped = async (path, init = {}) => (init.method === 'PUT' ? new Response('no', { status: 500 }) : noSeed(path, init));
+  const w = await mirrorRun(depsWith({ bucket, updater: wrapped, scanner: verifyingImage(), now: () => NOW + 2 }));
+  assert.equal(w.ok, true, w.error);
+  assert.deepEqual(noSeed.whole, ['main.cvd', 'daily.cvd', 'bytecode.cvd']);
+});
+
+test('R6 the image\'s updater runs freshclam in a directory holding the files it was handed, and names the files that differ from them', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'fc-'));
+  // A stand-in for freshclam that finds the handed-over files in its data directory, leaves main and bytecode as they
+  // are (current) and brings daily up to date.
+  const tool = join(dir, 'freshclam-patching');
+  writeFileSync(tool, `#!/bin/sh\nfor a in "$@"; do case "$a" in --datadir=*) d="\${a#--datadir=}";; esac; done\nls "$d" > "${dir}/seen.ls"\nfor f in main daily bytecode; do [ -f "$d/$f.cvd" ] || echo "whole $f" >> "${dir}/whole"; done\necho patched > "$d/daily.cvd"\n[ -f "$d/main.cvd" ] || echo main > "$d/main.cvd"\n[ -f "$d/bytecode.cvd" ] || echo bytecode > "$d/bytecode.cvd"\n`, { mode: 0o755 });
+  const image = await scannerImage();
+  process.env.FRESHCLAM = tool;
+  try {
+    for (const f of ['main.cvd', 'daily.cvd', 'bytecode.cvd']) {
+      const put = await image.fetch(`/update/s1/${f}`, { method: 'PUT', body: enc(`old ${f}`), duplex: 'half' });
+      assert.equal(put.status, 200);
+    }
+    const got = await (await image.fetch('/update/s1', { method: 'POST' })).json();
+    assert.deepEqual(got, { ok: true, files: ['bytecode.cvd', 'daily.cvd', 'main.cvd'], changed: ['daily.cvd'] });
+    assert.match(readFileSync(join(dir, 'seen.ls'), 'utf8'), /main\.cvd/, 'the handed-over files were in place when freshclam ran');
+    assert.throws(() => readFileSync(join(dir, 'whole')), 'no database was missing, so none was fetched whole');
+    const fetched = await image.fetch('/update/s1/daily.cvd');
+    assert.equal(new TextDecoder().decode(await fetched.arrayBuffer()).trim(), 'patched');
+    assert.equal((await image.fetch('/update/s1/main.cvd', { method: 'GET' })).status, 200, 'an unchanged file can still be read');
+    await image.fetch('/update/s1', { method: 'DELETE' });
+    // A file name that is not a signature database is not taken.
+    assert.notEqual((await image.fetch('/update/s2/passwd', { method: 'PUT', body: enc('x'), duplex: 'half' })).status, 200);
+  } finally { delete process.env.FRESHCLAM; }
 });
