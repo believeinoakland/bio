@@ -27,3 +27,29 @@ Checks (run against /home/user/bio):
 Question for BOB: the 8 red affordances tests above that are not R12's own stale check (N345, T23, case-inputs, case-import, actionhold, wizard-scripts, publishat, op-declarations R12 R24) and the T41 R12 check. Several sit under R12 and may encode the old stale rule or the same root cause. Option (a): I fix those in this job within affordances' tests. Option (b): they are routed to BOB as a separate cause. Recommendation: (a) for the T41 R12 check and op-declarations R12 check, because they test the same rule I changed; (b) for the rest, which are red on baseline with other causes I have not traced.
 
 Size (session_01S5Mdnf3wPrY9uHbTspL17G): test runs 14, module lines 6409 (affordances.mjs, affordances/, op-grades/ src).
+
+## J2 · COMPLETE
+
+COMPLETE (re B4, K4282). The two R12 checks B4 names are brought to the new R12 text; everything else red on the baseline is left for BOB to trace, as the ANSWER directs.
+
+Entries applied (pushed on job/T51/cause-totality-T51):
+- affordances R12: `unaccounted` stale for NON_ACTS = keys with no row in the table at all (src/affordances.mjs). unpublished and the RUNGS / RUNG_ABSENT arms unchanged.
+- op-grades R5: hand NON_ACTS row `export` = corpus-export's declared sentence (src/op-grades/index.mjs). The test reads the sentence via declaredSentence("corpus-export", "export") (ladder.test.mjs, R5 K4279).
+- Tests brought to the new R12 rule: catalogue.test.mjs (totality helper), services.test.mjs (R12 stale test with control), t41.test.mjs and t33.test.mjs (reads carried ungated are not stale; a read with no row is).
+
+Deferred: none of the entries. Not fixed here (BOB's to trace, per B4): the 7 affordances tests below, red on the baseline too.
+
+Suites (summary lines, run against the current tree):
+- control-plane (test/m/control-plane/*.test.mjs): tests 324, pass 324, fail 0. #324 (totality.test.mjs) green.
+- op-grades (test/m/op-grades/*.test.mjs): tests 142, pass 141, fail 1. The one red is words.test.mjs R44 (37 !== 11), red on the baseline too.
+- affordances (test/m/affordances/*.test.mjs): tests 281, pass 274, fail 7. Baseline at HEAD~1: pass 271, fail 10. Red now, all also red on baseline: N345's ops; T23's ops; case-inputs' ops; case-import's ops; actionhold / actionholdrelease; wizard-scripts' ops; publishat / publishatmove / publishatcancel (R36).
+- t41 and t33 R12 checks: pass 16, fail 0.
+
+Checks (against /home/user/bio):
+- format: 175 modules, 175 requirements files; 0 failures.
+- architecture (cause-totality-T51): 0 failures.
+- coverage: affordances 54/54, op-grades 51/51 live ids named.
+- ownership, multi-module form (prep branch checks; affordances,op-grades tranche/T51 ...): 6 files, 0 failures.
+- checks/run.mjs: format 0, architecture 0, channels 0, words 0 (testcopy 0). coverage: 4 failures in modules not held here (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19), red before this job.
+
+Size (session_01S5Mdnf3wPrY9uHbTspL17G): test runs 17, module lines 6409 (affordances.mjs, affordances/, op-grades/ src). Test-run count is my tally of this session's runs, not a log.
