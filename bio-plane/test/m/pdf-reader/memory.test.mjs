@@ -12,6 +12,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { deflateSync } from "node:zlib";
 import { openPdf, extractPdfStructure } from "../../../src/pdfstructure.mjs";
 import { doc, bytesOf } from "./pdf.mjs";
 import { indexed } from "./indexed.mjs";
@@ -157,6 +158,30 @@ test("R41: an object stream the second decode cannot reproduce is kept as first 
   const d = await openPdf(file);
   assert.ok(!d.notes.includes("objstm_undecodable"));
   for (let i = 0; i < 3; i++) assert.equal(d.resolve({ t: "ref", n: 700 }).v, "hello world");
+});
+
+test("R41: a large Flate content stream is read the same whether it is proved by its checksum or needs the platform's recoveries", async () => {
+  /* about 700 KB of incompressible comment text, so the compressed stream is past the size that is decoded in one proved pass */
+  let seed = 12345;
+  const filler = Array.from({ length: 700 }, () => "% " + Array.from({ length: 64 }, () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) >>> 8).toString(16).padStart(6, "0")).join("")).join("\n");
+  const content = `BT /F1 12 Tf 1 0 0 1 10 700 Tm (proved text) Tj ET\n${filler}\nBT /F1 12 Tf 1 0 0 1 10 600 Tm (after the filler) Tj ET`;
+  const z = new Uint8Array(deflateSync(bytesOf(content)));
+  assert.ok(z.length > 128 * 1024, `compressed ${z.length}`);
+  const read = async (data) => extractPdfStructure(doc([{ content: { dict: "/Filter /FlateDecode", data } }]));
+  const plain = await read(z);
+  assert.equal(plain.text.document, "proved text\nafter the filler");
+  assert.ok(!plain.notes.some((n) => n.startsWith("flate_trailing")) && !plain.notes.includes("content_stream_undecodable"));
+  /* trailing bytes after the checksum: the platform decoder's recovery reads it and says so */
+  const trailing = await read(Uint8Array.from([...z, 10, 10, 10]));
+  assert.equal(trailing.text.document, "proved text\nafter the filler");
+  assert.deepEqual(trailing.notes.filter((n) => n.startsWith("flate_trailing")), ["flate_trailing_bytes:3"]);
+  /* raw deflate with no zlib header */
+  const rawDeflate = await read(z.subarray(2, z.length - 4));
+  assert.equal(rawDeflate.text.document, "proved text\nafter the filler");
+  /* a damaged stream is undecodable, named, and not read as blank */
+  const damaged = z.slice(); damaged[Math.floor(damaged.length / 2)] ^= 0xff;
+  const bad = await read(damaged);
+  assert.deepEqual(bad.text.pages[0].undetermined.map((m) => m.reason), ["content_stream_undecodable"]);
 });
 
 test("R41: the same marker said many times is one frozen marker; two pages do not share one; the document's list is the pages' own", async () => {

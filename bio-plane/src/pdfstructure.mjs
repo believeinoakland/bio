@@ -150,9 +150,11 @@ async function inflateWithTrailing(u8) {
 
 function adler32(u8) {
   let a = 1, b = 0;
-  for (let i = 0; i < u8.length; i++) {
-    a = (a + u8[i]) % 65521;
-    b = (b + a) % 65521;
+  for (let i = 0; i < u8.length;) {
+    /* 5552 bytes is the most that can be summed before the 32-bit sums can overflow */
+    const end = Math.min(u8.length, i + 5552);
+    for (; i < end; i++) { a += u8[i]; b += a; }
+    a %= 65521; b %= 65521;
   }
   return ((b << 16) | a) >>> 0;
 }
@@ -388,6 +390,8 @@ const OBJ_CACHE_COST = 1_200_000;
 const INNER_CACHE_BYTES = 16 * 1024 * 1024;
 const INNER_DECODE_MAX = 128 * 1024 * 1024;
 const INNER_CHECK_BYTES = 2 * 1024 * 1024;
+/** A Flate stream of at least this many compressed bytes is decoded by `inflateChecked` first (R41). */
+const LARGE_RAW_BYTES = 128 * 1024;
 
 /** JavaScript's `\s` for one byte read as one code unit (the first reader scanned a string with it). */
 const isJsSpaceByte = (c) => (c >= 0x09 && c <= 0x0d) || c === 0x20 || c === 0xa0;
@@ -640,6 +644,10 @@ export class PdfDoc {
       filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [null];
     if (names.length === 0) return raw; // unfiltered
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null; // not our phase-1 job
+    if (raw.length >= LARGE_RAW_BYTES) {
+      const exact = inflateChecked(raw, INNER_DECODE_MAX);
+      if (exact) return this._unpredicted(streamObj, exact);
+    }
     const inflated = await inflate(raw);
     if (!inflated) return null;
     let data = inflated.data;
@@ -669,8 +677,9 @@ export class PdfDoc {
     return data;
   }
 
-  /** `streamDecoded`, for a Flate or unfiltered stream, in one step and without notes: what R41's second reading of an
-   *  object stream uses. Null for anything `streamDecoded` would not decode, or that outgrows INNER_DECODE_MAX. */
+  /** `streamDecoded`, for a Flate or unfiltered stream the platform decodes without recovery, in one step and without
+   *  notes: what R41's second reading of an object stream uses. Null for any other, which `loadObjectStreams` then keeps
+   *  as first decoded. */
   _decodedSync(streamObj, expect) {
     try {
       const raw = this.streamRawBytes(streamObj);
@@ -681,9 +690,8 @@ export class PdfDoc {
         filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [null];
       if (names.length === 0) return raw;
       if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
-      const got = inflateSync(raw, INNER_DECODE_MAX, expect);
-      if (!got || !got.full) return null;
-      return this._unpredicted(streamObj, got.data);
+      const data = inflateChecked(raw, INNER_DECODE_MAX, expect);
+      return data ? this._unpredicted(streamObj, data) : null;
     } catch {
       return null;
     }
@@ -699,12 +707,13 @@ export class PdfDoc {
       data = st && st.t === "stream" ? this._decodedSync(st, this._innerLen.get(stm)) : null;
     }
     if (!data) return null;
-    this._inners.set(stm, data);
-    this._innerBytesHeld += data.length;
+    /* room is made before the new one is held, so a 19 MB stream is never held beside the 12 MB one it replaces */
     for (const [k, old] of this._inners) {
-      if (this._innerBytesHeld <= INNER_CACHE_BYTES || this._inners.size <= 1) break;
+      if (this._innerBytesHeld + data.length <= INNER_CACHE_BYTES || !this._inners.size) break;
       this._inners.delete(k); this._innerBytesHeld -= old.length;
     }
+    this._inners.set(stm, data);
+    this._innerBytesHeld += data.length;
     return data;
   }
 
@@ -724,7 +733,9 @@ export class PdfDoc {
          held at once. */
       let proof = null;
       {
-        const data = await this.streamDecoded(st);
+        let data = this._decodedSync(st);   // proved by its own checksum, or null
+        const checked = data !== null;
+        if (!checked) data = await this.streamDecoded(st);
         if (!data) { this.note("objstm_undecodable"); continue; }
         const n = numberVal(this.resolve(st.dict.N));
         const first = numberVal(this.resolve(st.dict.First));
@@ -748,9 +759,14 @@ export class PdfDoc {
         }
         if (added) {
           this._innerLen.set(stm, data.length);
-          /* Only a stream under INNER_CHECK_BYTES is checked: it is the same decoder whatever the size, and holding a
-             second copy of a 19 MB stream beside the first is what R41 cannot afford. */
-          if (data.length <= INNER_CHECK_BYTES) proof = { len: data.length, fp: fingerprint(data) };
+          /* A stream `inflateChecked` decoded is proved by its own checksum and is read again the same way. One the
+             platform's decoder read (with a recovery, or a short stream) is decoded again and the two compared, if it
+             is under INNER_CHECK_BYTES, and kept as first decoded if it is not: holding a second copy of a 19 MB
+             stream beside the first is what R41 cannot afford. */
+          if (!checked) {
+            if (data.length <= INNER_CHECK_BYTES) proof = { len: data.length, fp: fingerprint(data) };
+            else this._sticky.set(stm, data);
+          }
         }
       }
       /* The second decode must give these bytes, or the first is kept for this stream. */
@@ -3402,11 +3418,15 @@ function fixedTables() {
 /** zlib (RFC 1950) or raw deflate bytes to `{ data, full }` (`full` false when
  *  the output was cut at `max`), or null when the stream is not valid deflate.
  *  `expect`, when the decoded length is known, is the buffer made first, so the
- *  output is written once and never copied to grow. */
-function inflateSync(src, max, expect) {
+ *  output is written once and never copied to grow; `count` keeps no output and
+ *  answers only `len`, how long it is. `end` is where the stream's data ends
+ *  (for zlib, where its checksum begins). */
+function inflateSync(src, max, expect, count = false) {
   const zlibHead = src.length >= 2 && (src[0] & 0x0f) === 8 && ((src[0] << 8) | src[1]) % 31 === 0;
   let pos = zlibHead ? 2 : 0, bitBuf = 0, bitCnt = 0;
-  let out = new Uint8Array(Math.min(max, Number.isInteger(expect) && expect >= 0 ? expect : Math.max(1024, src.length * 4))), o = 0;
+  /* `count`: no output is kept, only its length; a 64 KiB ring holds the last 32 KiB that a match can reach. */
+  const M = count ? 0xffff : -1;
+  let out = new Uint8Array(count ? 65536 : Math.min(max, Number.isInteger(expect) && expect >= 0 ? expect : Math.max(1024, src.length * 4))), o = 0;
   const STOP = { stop: true };
   const bits = (n) => {
     while (bitCnt < n) {
@@ -3428,6 +3448,7 @@ function inflateSync(src, max, expect) {
     throw new Error("bad code");
   };
   const room = (n) => {
+    if (count) { if (o + n > max) throw STOP; return; }
     if (o + n <= out.length) return;
     if (o + n > max) { if (o < max) { /* fill to the bound */ } throw STOP; }
     let size = out.length;
@@ -3449,7 +3470,9 @@ function inflateSync(src, max, expect) {
         if (pos + len > src.length) throw new Error("eof");
         const take = Math.min(len, max - o);
         room(take);
-        out.set(src.subarray(pos, pos + take), o); o += take; pos += len;
+        if (count) for (let i = 0; i < take; i++) out[(o + i) & M] = src[pos + i];
+        else out.set(src.subarray(pos, pos + take), o);
+        o += take; pos += len;
         if (take < len) throw STOP;
         continue;
       }
@@ -3482,7 +3505,7 @@ function inflateSync(src, max, expect) {
       }
       for (;;) {
         const sym = decode(lit);
-        if (sym < 256) { room(1); out[o++] = sym; continue; }
+        if (sym < 256) { room(1); out[o++ & M] = sym; continue; }
         if (sym === 256) break;
         const li = sym - 257;
         if (li >= 29) throw new Error("length symbol");
@@ -3493,15 +3516,36 @@ function inflateSync(src, max, expect) {
         if (d > o) throw new Error("distance");
         const take = Math.min(len, max - o);
         room(take);
-        for (let i = 0; i < take; i++, o++) out[o] = out[o - d];
+        for (let i = 0; i < take; i++, o++) out[o & M] = out[(o - d) & M];
         if (take < len) throw STOP;
       }
     }
   } catch (e) {
-    if (e === STOP) return { data: out.subarray(0, o), full: false };
+    if (e === STOP) return { data: count ? null : out.subarray(0, o), len: o, full: false, end: pos };
     return null;
   }
-  return { data: out.subarray(0, o), full: true };
+  return { data: count ? null : out.subarray(0, o), len: o, full: true, end: pos };
+}
+
+/** A zlib stream (RFC 1950) inflated and PROVED: the output is made once at its exact size (a first pass counts it
+ *  without keeping it, unless `expect` already says), and is returned only when the stream ends where its checksum
+ *  begins and the checksum is the output's. That is every stream the platform's decoder reads without recovery, and
+ *  for those it is the same bytes (a correct decode with a matching Adler-32 is the one decode); null for anything
+ *  else (no zlib header, a preset dictionary, trailing bytes, a wrong or missing sum, damage, `max` outgrown), which
+ *  the caller gives to the platform's decoder and its recoveries. Large decodes made this way are held once, not
+ *  three times over as the stream machinery holds them (R41). */
+function inflateChecked(src, max, expect) {
+  if (!(src.length >= 6 && (src[0] & 0x0f) === 8 && ((src[0] << 8) | src[1]) % 31 === 0 && !(src[1] & 0x20))) return null;
+  let len = expect;
+  if (!Number.isInteger(len) || len < 0) {
+    const c = inflateSync(src, max, undefined, true);
+    if (!c || !c.full) return null;
+    len = c.len;
+  }
+  const r = inflateSync(src, max, len);
+  if (!r || !r.full || r.data.length !== len || r.end + 4 !== src.length) return null;
+  const want = ((src[r.end] << 24) | (src[r.end + 1] << 16) | (src[r.end + 2] << 8) | src[r.end + 3]) >>> 0;
+  return adler32(r.data) === want ? r.data : null;
 }
 
 const OBJ_WINDOW = 4096;               // the first look at an object; grown only while its dictionary is unfinished
