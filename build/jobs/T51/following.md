@@ -33,3 +33,12 @@ Checks (process repo, against /home/user/bio on `job/T51/following`):
 - `checks/run.mjs`: no finding names `following` (other modules' failures in REPORT)
 
 Size (session_01UBHjrsbnMdNqWryj6ZQxAG): test runs 2, module lines 2197
+
+## J3 · REPORT
+
+Findings outside this module's code (nothing here is changed by this job):
+
+1. `node checks/run.mjs /home/user/bio` (full run, after the commit): coverage reports 4 live ids named by no test, all in other modules. `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19. None is `following`. Not touched here.
+2. `node checks/run.mjs` also reports architecture and format as clean; words, channels and ownership report 0 failures.
+
+Nothing deferred. No flaw found in another module's code by this job.
