@@ -117,7 +117,7 @@ test("R113 (P2.1) loadReach makes no screen read: the assistant becoming reachab
 
 /* ---------- R96 / C70: the badge ---------- */
 const badge = (p) => (p.root().querySelector('.mk-hide-phone[data-kind="todo"]') || { textContent: "" }).textContent;
-test("R96 (C70) the number the masthead and the rail's Queue place draw is the queue's three kinds plus the count a screen reports with cs.band; control: with none reported it is unchanged", async () => {
+test("R114 R96 (C70) the number the masthead and the rail's Queue place draw is the queue's three kinds plus the count a screen reports with cs.band; control: with none reported it is unchanged", async () => {
   const band = { id: "members", words: [], reads: () => ({}), acts: [], render: (cs) => { cs.band(28); return "<p>x</p>"; } };
   const none = await boot({ screens: [SCREEN], path: "/app/members" });
   const base = none.root().querySelector('.cs-rail a .count').textContent;
@@ -165,7 +165,7 @@ test("R111 (C94) memberHref names a member by handle in the link, the founder in
 const KEYS = { id: "home", words: [], reads: () => ({}), acts: [],
   render: new Function("cs", "window.__cs = cs; return cs.field('kf', 'shell.signer.loadfile', { type: 'file' });") };
 const fileOf = (text, { fail = false } = {}) => ({ name: "k.txt", size: text.length, text: async () => { if (fail) throw new Error("denied"); return text; } });
-test("the key-file helper answers a chosen file's text and refuses an unchosen, unreadable or empty one in a word by key; control: it sends nothing and changes no screen", async () => {
+test("R115 the key-file helper answers a chosen file's text and refuses an unchosen, unreadable or empty one in a word by key; control: it sends nothing and changes no screen", async () => {
   const p = await boot({ screens: [KEYS] });
   const input = p.doc.getElementById("kf");
   const html = p.root().innerHTML;
