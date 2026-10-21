@@ -116,7 +116,7 @@ test("R36: draft takes the chosen concluded questions as targets, a first case n
   assert.deepEqual(before.concluded.map((c) => [c.inquiry, c.title, c.concluded_at, c.concluded_by]),
     [["INQ-1", "INQ-1", "2026-09-26T00:00:00Z", "ann"], ["INQ-2", "INQ-2", "2026-09-27T00:00:00Z", "bea"]]);
   assert.deepEqual(before.concluded[0].findings, [{ target: "INQ-1", present: true, object_type: "inquiry", state: "concluded",
-                                                    role: null, text: "finding of INQ-1", statement: "finding of INQ-1" }]);
+                                                    role: null, text: "finding of INQ-1", statement: "finding of INQ-1", falsifier: null }]);
   assert.equal(before.concluded_truncated, false);
   const d = w.r.act({ act: "draft", author: "ed", project: P, targets: ["INQ-1", "INQ-2"] });
   assert.deepEqual([d.ok, d.caseId, d.edition], [true, null, null]);

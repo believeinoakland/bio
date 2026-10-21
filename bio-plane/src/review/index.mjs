@@ -246,18 +246,37 @@ function draftTargets(params) {
        : params.target ? [params.target] : [];
 }
 
-/* R41 (L15): a finding file's words without its front matter (the lines between the opening and closing `---` fences):
-   `text` is what follows them and `statement` is the finding's own words, the same, or, where the file has none beyond
-   its front matter, the front matter's `conclusion` or `statement` when it holds one as a plain string. A file with no
-   front matter answers its words unchanged. */
+/* R41 (L15, C46): a finding is answered in its own words, never as the file. The team's Session Log (`## Session Log`
+   to the next `## ` heading, or the end) is the team's working record, with its record ids, hashes and members' reasons,
+   and never reaches a reader of the copy, whichever door: it is cut from every text answered. Text without such a
+   section is answered unchanged. */
+function withoutLog(text) {
+  const m = /^## Session Log[ \t]*\r?$/m.exec(text);
+  if (!m) return text;
+  const rest = text.slice(m.index + m[0].length);
+  const next = rest.search(/\n## /);
+  const before = text.slice(0, m.index).replace(/\s+$/, "");
+  const after = next < 0 ? "" : rest.slice(next + 1);
+  return before ? `${before}\n${after ? `\n${after}` : ""}` : after;
+}
+
+/* R41 (L15, C46): a finding file's words without its front matter (the lines between the opening and closing `---`
+   fences) and without the Session Log. `statement` is the finding's own words: the front matter's `conclusion` (what
+   `op=conclude` wrote there) or `statement` when it holds one as a plain string, first; else the text that follows the
+   front matter. `falsifier` is what would change it, the front matter's, else null. `text` is what follows the front
+   matter. A file with no front matter answers its words unchanged (less any Session Log). */
 function findingWords(content) {
   const raw = String(content ?? "");
   let parsed = null;
   try { parsed = parseFrontmatter(raw); } catch { parsed = null; }
-  if (!parsed || parsed.data === null || typeof parsed.data !== "object") return { text: raw, statement: raw };
-  const body = String(parsed.body ?? "").replace(/^(?:\r?\n)+/, "");
-  const own = ["conclusion", "statement"].map((k) => parsed.data[k]).find((v) => typeof v === "string" && v.trim());
-  return { text: body, statement: body.trim() ? body : own ? own.trim() : null };
+  if (!parsed || parsed.data === null || typeof parsed.data !== "object") {
+    const text = withoutLog(raw);
+    return { text, statement: text, falsifier: null };
+  }
+  const body = withoutLog(String(parsed.body ?? "").replace(/^(?:\r?\n)+/, ""));
+  const own = (k) => (typeof parsed.data[k] === "string" && parsed.data[k].trim() ? parsed.data[k].trim() : null);
+  return { text: body, statement: own("conclusion") ?? own("statement") ?? (body.trim() ? body : null),
+           falsifier: own("falsifier") };
 }
 
 /* R13: the dry run's own throw, so a rollback is told apart from a failure. */
@@ -348,7 +367,8 @@ export class Review {
     /* R41 (L15): a reader reads the finding's own words, never the file's front matter. */
     const words = md ? findingWords(md.content) : null;
     return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
-             text: words ? words.text : null, statement: words ? words.statement : null };
+             text: words ? words.text : null, statement: words ? words.statement : null,
+             falsifier: words ? words.falsifier : null };
   }
 
   /** R40 (L14): THE SHORT TITLE a screen draws as a draft's heading, beside the identity sentence it keeps for body text:
@@ -834,15 +854,26 @@ export class Review {
     });
   }
 
+  /** R18 (C52): THE MEMBER A COMMENTING VIEWER NAMES, whichever way the control plane spells it: `member:<id>`, that
+   *  spelling carrying a project (`member:<id>@<project>`, membership R149) and the founder's bare `admin`; the member's
+   *  id, never the spelling. A machine credential, an unrecognised spelling and an absent viewer name none (null): a
+   *  comment is a person's. */
+  #commenter(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope !== "participant") return null;
+    return gate.member ?? (String(gate.viewer ?? "").split("@")[0] || null);
+  }
+
   /** R18: a comment through R10's doors (`op=reviewcomment`). A recipient's is attributed to the grant, a member's to
    *  the member. */
   comment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
     const v = String(viewer ?? "");
-    const door = bySecret || v.startsWith("member:") ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
+    const member = this.#commenter(v);
+    const door = bySecret || member ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
     if (!door) return noReviewCopy();
     const { draft: d, grant } = door;
     const kind = grant ? "recipient" : "member";
-    const author = grant ? grant.grant_id : v.slice("member:".length);
+    const author = grant ? grant.grant_id : member;
     const body = String(text ?? "").trim();
     if (!body || body.length > REVIEW_TEXT_MAX)
       /* DEC-49 REGION is-review-comment-text */
