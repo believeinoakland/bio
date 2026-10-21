@@ -250,11 +250,39 @@ function render(cs, view) {
     /* nothing is preselected unless the capture was held for a question: then the first choice says to choose one, never a blank
        (R118); a cite with it unchosen is refused in place */
     const pick = cites.length
-      ? cs.choice("document-cite-question", "screen.document.cite.question", (preset ? [] : [{ value: "", key: "screen.document.cite.choose" }]).concat(cites), { value: preset })
+      ? cs.choice("document-cite-question", "screen.document.cite.question", (preset ? [] : [{ value: "", key: "screen.document.cite.choose" }]).concat(cites), { value: preset, redraw: "citeQuestion" })
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
     const pickHelp = cites.length ? `<p class="mk-small">${cs.w("screen.document.cite.question.help")}</p><p class="mk-small">${cs.w("document.read.cite.help")}</p>` : "";
+    /* R125 (C31): the question chosen (the choice redraws the page: `ui.citeQuestion`), else the one the copy was held for, else the one the last cite
+       went into; a passage is marked as cited by it when it holds a leg on this document at that passage. A leg's part is what `citation` writes from
+       `found.extent`, each field `f` as `extent_f` (its R1), so a passage's extent is matched field by field to the leg's. */
+    const chosenQ = String(ui.citeQuestion || preset || (ui.citeDone && ui.citeDone.question) || "");
+    const chosenImg = chosenQ ? later("qimg:" + chosenQ, "image", { id: chosenQ }) : null;
+    const chosenFront = chosenImg && chosenImg.state === "ok" && chosenImg.value && typeof chosenImg.value["bundle.md"] === "string" ? view.parts.front(chosenImg.value["bundle.md"]) : null;
+    const extentBag = (e) => {
+      const bag = {};
+      for (const [k, v] of Object.entries(e && typeof e === "object" ? e : {})) {
+        if (v === undefined || v === null) continue;
+        bag["extent_" + k] = Array.isArray(v) ? "[" + v.join(", ") + "]" : typeof v === "object" ? JSON.stringify(v) : String(v);
+      }
+      return bag;
+    };
+    const legAt = (leg, e) => {
+      const bag = extentBag(e);
+      const keys = Object.keys(bag).filter((k) => k !== "extent_kind");
+      if (!keys.length) return false;
+      if (leg.extent_kind !== undefined && leg.extent_kind !== "" && bag.extent_kind !== undefined && String(leg.extent_kind) !== bag.extent_kind) return false;
+      return keys.every((k) => String(leg[k] === undefined ? "" : leg[k]) === bag[k]);
+    };
+    const citedHere = (e) => !!chosenFront && (chosenFront.lists.basis || []).some((l) => l && String(l.target) === id && legAt(l, e));
+    const citedMark = (e) => {
+      if (!citedHere(e)) return "";
+      const named = askable.find((o) => o.value === chosenQ);
+      const qtitle = chosenFront.title ? String(chosenFront.title) : named ? named.title : "";
+      return `<span class="mk-small" data-passage-cited="${cs.esc(chosenQ)}"><b>${W("screen.finder.cite.cited")}</b> ${cs.ref("question", chosenQ, qtitle || T("state.undetermined", { reason: "" }), [qtitle])}</span>`;
+    };
     /* C30: what the last cite did, drawn beside the passages: cited, or already resting on a passage of this document (which one, and the
        question to narrow it on). The question's own legs on this document name the passage, at the record's page + 1 (R78). */
     const citeDoneHtml = () => {
@@ -310,7 +338,7 @@ function render(cs, view) {
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
       return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
-        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
+        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + citedMark(extent) + "</blockquote>"
         + (extent && cites.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + pickHelp + none + citeDoneHtml() + own("cite");
@@ -975,14 +1003,20 @@ const acts = [
       cs.set("citeNone", false);
       const role = cs.value("document-cite-role") === "cuts_against" ? "cuts_against" : "supports";
       view.ui.citing = question;
-      return { query: { project: question, role, found: el.dataset.found || "" } };
+      /* R125 (C31; citation R20): the citing object, the role and the passage found go in the body, none in the address; `found` as the object it is */
+      let found = el.dataset.found || "";
+      try { found = JSON.parse(found); } catch { /* sent as the string it is */ }
+      return { body: { project: question, role, found } };
     },
     /* C30 (R3, R49): the answer is read, never left silent: what was cited, or that the question already rests on a passage of this document
        (citation answers 200 with `cited: []` and `alreadyCited`); the page then names the passage and links the question, where it is narrowed */
     done(view, answer, cs) {
       const r = answer && answer.result !== undefined ? answer.result : answer;
       const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x) : []);
-      cs.set("citeDone", { question: String((r && r.inquiry) || view.ui.citing || ""), cited: list(r && r.cited), already: list(r && r.alreadyCited) });
+      const q = String((r && r.inquiry) || view.ui.citing || "");
+      /* the question's bundle is read again, so the passage cited is marked from its legs (R125) */
+      if (list(r && r.cited).length) cs.set("later", Object.assign({}, view.ui.later, { ["qimg:" + q]: null }));
+      cs.set("citeDone", { question: q, cited: list(r && r.cited), already: list(r && r.alreadyCited) });
     } },
   /* reasoned: the member's own acknowledgment is its reason (interface-shell R11, DEC-88), so no second one is asked */
   { op: "release", label: "act.release.label.document", reasonField: "acknowledgment",

@@ -1051,7 +1051,10 @@ function render(cs, view) {
 
 /** C41 (R35, R50, R117): a basis version the plane refused (`BASIS_VERSION_REFUSED`) is drawn by its findings, as `BASIS_REFUSED` is: the first
  *  finding by the word held for its code, else its own translation, else its detail, and the repairs it names; one with no finding is the
- *  code's own sentence. Self-contained (the page carries it by its text). */
+ *  code's own sentence. (Fix round 2, C41; basis-version-grammar R11) A finding that refuses a version because supporting legs have no
+ *  ground or part carries `legs`, the ids of every such leg: each is named by its document's title (`legNames`, put on the refusal by
+ *  `legNamesFailed` before it is drawn), a document with no title by the plain word `shell.card.document`, each name once, and no
+ *  sentence is composed. Self-contained (the page carries it by its text). */
 function versionRefusal(refusal, cs) {
   const list = refusal && Array.isArray(refusal.findings) ? refusal.findings : [];
   const f = list.find((x) => x && typeof x === "object" && (x.translation || x.detail || x.code));
@@ -1059,7 +1062,44 @@ function versionRefusal(refusal, cs) {
   const key = f.code ? "refusal." + String(f.code) : "";
   const said = key && cs.w(key) !== key ? cs.w(key) : cs.esc(String(f.translation || f.detail || ""));
   const repairs = Array.isArray(f.repairs) ? f.repairs.filter((x) => typeof x === "string" && x.trim()) : [];
-  return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + said + "</span>" + repairs.map((x) => ' <span data-repair="1">' + cs.esc(x) + "</span>").join("");
+  const ids = Array.isArray(f.legs) ? [...new Set(f.legs.map(String).filter(Boolean))] : [];
+  const titles = refusal && refusal.legNames && typeof refusal.legNames === "object" ? refusal.legNames : {};
+  const names = [...new Set(ids.map((id) => (typeof titles[id] === "string" && titles[id].trim() ? cs.esc(titles[id].trim()) : cs.w("shell.card.document"))))];
+  return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + said + "</span>" + repairs.map((x) => ' <span data-repair="1">' + cs.esc(x) + "</span>").join("")
+    + (names.length ? ' <span data-legs="1">' + names.join(", ") + "</span>" : "");
+}
+
+/** C41 (fix round 2): before a refused basis version is drawn, the legs its first finding names are put into titles: the reading's own
+ *  `target_title`, else the title of the document this page already read for the leg, else a read of the document (once each, at most 20).
+ *  The shell hands `answer` on to the refusal's words, so the titles travel as `legNames` (id to title, "" when the document states none).
+ *  Self-contained (the page carries it by its text). */
+async function legNamesFailed(view, answer, cs) {
+  const fields = answer && answer.fields && typeof answer.fields === "object" ? answer.fields : null;
+  const list = fields && Array.isArray(fields.findings) ? fields.findings : [];
+  const f = list.find((x) => x && typeof x === "object" && (x.translation || x.detail || x.code));
+  const ids = f && Array.isArray(f.legs) ? [...new Set(f.legs.map(String).filter(Boolean))].slice(0, 20) : [];
+  if (!ids.length) return;
+  const titleIn = (text) => {
+    const m = typeof text === "string" ? /^title:\s*(.*)$/m.exec(text.split(/\n---\s*\n/)[0] || "") : null;
+    let t = m ? m[1].trim() : "";
+    try { if (t.startsWith("\"")) t = JSON.parse(t); } catch { /* raw */ }
+    return t;
+  };
+  const versions = view.data && view.data.basis && view.data.basis.state === "ok" && view.data.basis.value && Array.isArray(view.data.basis.value.versions) ? view.data.basis.value.versions : [];
+  const names = {};
+  for (const id of ids) {
+    let t = "";
+    for (const v of versions) for (const l of Array.isArray(v && v.legs) ? v.legs : []) if (!t && l && String(l.target_id || l.target) === id && l.target_title) t = String(l.target_title);
+    const held = view.ui && view.ui.later ? view.ui.later["doc:" + id] : null;
+    if (!t && held && held.state === "ok" && held.value) t = titleIn(held.value["bundle.md"]);
+    if (!t && !held) {
+      const a = await cs.call("image", { query: { id } }).then((x) => x, () => null);
+      const r = a && a.result !== undefined ? a.result : a;
+      if (r && typeof r === "object") t = titleIn(r["bundle.md"]);
+    }
+    names[id] = t;
+  }
+  fields.legNames = names;
 }
 
 /** R2's, R12's, R23–R25's, R31's and R41's acts, each answering `{query, body}` for the shell to send, or running its own
@@ -1098,7 +1138,7 @@ const acts = [
   /* R110: rest the question on a finding the team accepted from another team's case, at the edition it accepted; whether the finding
      is accepted is the plane's to judge (`IMPORTED_NOT_ACCEPTED`, carried inside `BASIS_REFUSED`), and a leg already held is answered
      `alreadyCited`. With no finding or no role chosen, nothing is sent. */
-  { op: "citeimported", label: "act.owed_citeimported.label.question", rereads: ["inquiry", "basis", "strength"],
+  { op: "citeimported", label: "act.owed_citeimported.label.question", rereads: ["inquiry", "basis", "strength"], failed: legNamesFailed,
     refusals: { IMPORTED_NOT_ACCEPTED: "refusal.IMPORTED_NOT_ACCEPTED",
       BASIS_VERSION_REFUSED: versionRefusal,
       BASIS_REFUSED: function (refusal, cs) {
@@ -1125,7 +1165,7 @@ const acts = [
   /* R87: two steps of one act. "Narrow the question" on a cited passage reads `narrowcandidates` (target, the reading shown, the
      reading's ordinal for the leg) and lists the parts the record proposes; choosing one, with a name and a reason, sends `narrow`
      with the part as its `extent`. Listing writes nothing and sends no `narrow`. */
-  { op: "narrow", label: "act.narrow.label.question", reasonField: "description", rereads: ["inquiry", "basis", "strength"],
+  { op: "narrow", label: "act.narrow.label.question", reasonField: "description", rereads: ["inquiry", "basis", "strength"], failed: legNamesFailed,
     refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
       const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
       if (!f) throw new Error("no finding");
@@ -1155,7 +1195,7 @@ const acts = [
     done(view, answer, cs) { cs.set("narrowing", null); } },
   /* R35, R41: the reading she concludes on (the project's CURRENT), what would change it (required, or none stated), and
      her commentary (not evidence); sent by a member, never the assistant */
-  { op: "conclude", label: "act.conclude.label.question", reasonField: "reason",
+  { op: "conclude", label: "act.conclude.label.question", reasonField: "reason", failed: legNamesFailed,
     refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
       const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
       if (!f) throw new Error("no finding");
@@ -1364,7 +1404,7 @@ const acts = [
     send(view, el, cs) { cs.go("finder", el.dataset.q || ""); return null; } },
   /* R23, R24: what each passage carries, as a partition: "No" a part of its own; the passages that hold each other up one
      part together; each part's statement left empty. A restructure carries her reason (the shell's, NO_REASON) */
-  { op: "inquiryground", label: "act.inquiryground.label.question", rereads: ["inquiry", "strength", "basis"],
+  { op: "inquiryground", label: "act.inquiryground.label.question", rereads: ["inquiry", "strength", "basis"], failed: legNamesFailed,
     /* R117: a refusal that carries `findings[]` draws the first finding's own detail; one with none, the code's sentence */
     refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
       const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
@@ -1393,7 +1433,7 @@ const acts = [
     } },
   /* R25: the reading acts, each with the version; Stand on with the project; accept with the affirmation of every ground */
   ...["versionaccept", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "versionhide"].map((op) => ({
-    op, label: "act." + op + ".label.question", rereads: ["basis", "strength", "inquiry"],
+    op, label: "act." + op + ".label.question", rereads: ["basis", "strength", "inquiry"], failed: legNamesFailed,
     ...(op === "versionreject" ? { reasonField: "reason" } : {}),
     send(view, el, cs) {
       /* each function is served by its own text (interface-shell R21 (1)), so the op is read from the pressed control */

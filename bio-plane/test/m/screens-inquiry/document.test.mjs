@@ -165,8 +165,9 @@ test("R3 acts send what their owners take", async () => {
   await nextPage(p);
   fill(p, { "document-cite-question": Q, "document-cite-role": "cuts_against" });
   await press(p, "cite", { within: main(p).querySelectorAll("blockquote")[0].nextElementSibling });
-  const cite = p.byOp("cite")[0].query;
-  assert.deepEqual([cite.project, cite.role, JSON.parse(cite.found)], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, kind: "passage" }]);
+  /* R125 (C31): the fields are in the body, not the address */
+  const cite = p.byOp("cite")[0].body;
+  assert.deepEqual([cite.project, cite.role, typeof cite.found === "string" ? JSON.parse(cite.found) : cite.found], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, kind: "passage" }]);
   await press(p, "attest");
   await p.click(p.root().querySelector('[data-shell="confirm"]'));
   assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA });
