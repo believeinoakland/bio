@@ -6933,6 +6933,14 @@ W.append(dict(key='file-safety.index.signatures_refused', en="The signature serv
 W.append(dict(key='file-safety.index.signatures_failed', en="The last download of signatures did not finish. The scanner tries again daily; an administrator can check that your team's Civicsmith can reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when a download was tried and broke off; says what the administrator can do'))
 W.append(dict(key='file-safety.index.signatures_not_fetched', en="No download of signatures has finished yet. The scanner tries again daily; if this stays, an administrator can check that your team's Civicsmith can reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when no download has been tried or finished; says what the administrator can do'))
 
+# DEC-396: B444 items 2, 3, 4, 6: keys the job code does not yet look up, minted by the design for the jobs to adopt
+W.append(dict(key='screen.document.text.read', en='Read {read} of {total} words', protected=False, note='DEC-396: B444 2 (C17): the document reading line; {read} words_read, {total} words_total (reading-pipeline R35)'))
+W.append(dict(key='screen.project.opened.date', en='Opened {date}', protected=False, note='DEC-396: B444 3: a project or question opened with no opener named'))
+W.append(dict(key='screen.question.leg.paragraph', en='Paragraph {n}', protected=False, note='DEC-396: B444 4: a web leg\'s place in its page, beside "Page N" for a paged document'))
+W.append(dict(key='screen.matter.pick.choose', en='Choose one', protected=False, note='DEC-396: B444 6: the first, empty row of the matter\'s pickers (event, cause, way)'))
+W.append(dict(key='screen.matter.pick.none', en='None of these', protected=False, note='DEC-396: B444 6: the row of a matter picker when nothing listed fits'))
+W.append(dict(key='screen.matter.routes.none', en='No route is known for this matter yet.', protected=False, note='DEC-396: B444 6: the routes (procedure guides) list when it is empty'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

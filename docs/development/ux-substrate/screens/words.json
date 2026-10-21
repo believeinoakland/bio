@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6908,
+  "screen": 6914,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -114,7 +114,7 @@
   "timeline": 2,
   "caseimport": 4,
   "acquisition": 45,
-  "file-safety": 47,
+  "file-safety": 52,
   "extraction": 25,
   "events": 86,
   "entities": 22,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18070,
+  "total": 18081,
   "protected": 1068
  },
  "words": [
@@ -75067,6 +75067,83 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-394: B441 3e: help"
+  },
+  {
+   "key": "file-safety.index.no_signatures",
+   "en": "The file scanner has no signatures, so files are kept and shown but not scanned.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the line on setup step 7 (Security) and on Settings › Security when the built-in file scanner holds no signatures and no date is known: what is true of the scanner"
+  },
+  {
+   "key": "file-safety.index.no_signatures_since",
+   "en": "The file scanner has had no signatures since {date}, so files are kept and shown but not scanned.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the same line when a date is known: {date} the day it first could not scan for want of signatures"
+  },
+  {
+   "key": "file-safety.index.signatures_refused",
+   "en": "The signature service refused the download (status {status}). The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security: {status} the three-digit answer of the service; says what the administrator can do"
+  },
+  {
+   "key": "file-safety.index.signatures_failed",
+   "en": "The last download of signatures did not finish. The scanner tries again daily; an administrator can check that your team's Civicsmith can reach the service.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when a download was tried and broke off; says what the administrator can do"
+  },
+  {
+   "key": "file-safety.index.signatures_not_fetched",
+   "en": "No download of signatures has finished yet. The scanner tries again daily; if this stays, an administrator can check that your team's Civicsmith can reach the service.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when no download has been tried or finished; says what the administrator can do"
+  },
+  {
+   "key": "screen.document.text.read",
+   "en": "Read {read} of {total} words",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 2 (C17): the document reading line; {read} words_read, {total} words_total (reading-pipeline R35)"
+  },
+  {
+   "key": "screen.project.opened.date",
+   "en": "Opened {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 3: a project or question opened with no opener named"
+  },
+  {
+   "key": "screen.question.leg.paragraph",
+   "en": "Paragraph {n}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 4: a web leg's place in its page, beside \"Page N\" for a paged document"
+  },
+  {
+   "key": "screen.matter.pick.choose",
+   "en": "Choose one",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 6: the first, empty row of the matter's pickers (event, cause, way)"
+  },
+  {
+   "key": "screen.matter.pick.none",
+   "en": "None of these",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 6: the row of a matter picker when nothing listed fits"
+  },
+  {
+   "key": "screen.matter.routes.none",
+   "en": "No route is known for this matter yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 6: the routes (procedure guides) list when it is empty"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
