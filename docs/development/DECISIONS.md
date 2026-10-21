@@ -6112,3 +6112,18 @@ decided: 2026-10-21 · the design session (P17)
 the design: on `case-editor`, `ceremony` and `review-copy`, `screen.<screen>.drafts.item` "Scope: {scope} · prepared {date}" is each draft's line (it replaces `drafts.earlier`), and `drafts.newest` is the word "newest" after the newest draft's line; `screen.case-editor.links.live` and `screen.ceremony.links.live` read "{count} review links are live, {earlier} of them on an earlier draft." The drawing marks the chooser's options and the live links' scope lines as record data. No other DEC-394 row holds sample text.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 owed: none.
+
+### DEC-396 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B444, K4323: rows T51's fix round 2 jobs key and need written)
+for: design
+question: Which rows do B444's twelve items need, under which keys?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the file scanner's state: `file-safety.index.no_signatures`, `.no_signatures_since` ({date}), `.signatures_refused` ({status}), `.signatures_failed`, `.signatures_not_fetched`. (2)-(4), (6) keys minted where the code reads none yet: `screen.document.text.read` ({read}, {total}), `screen.project.opened.date` ({date}), `screen.question.leg.paragraph` ({n}), `screen.matter.pick.choose`, `.pick.none`, `screen.matter.routes.none`. (5) C58's words were all keyed already. (7) six action kinds `screen.action.kind.*` and `screen.start-send.kind.*` (records_petition, brown_act_demand, assessment_challenge, taxpayer_action, consent_decree_motion, constitutional_claim). (8) `screen.standard.held`, `.held.more`; `screen.money.f.contract` and `.nocontract` lose "(a record id)". (9) `shell.member.unknown` "A member of your team", as `shell.card.member`, so the two do not compete. (10) `screen.money.proposed.member`. (11) `screen.ceremony.signs.count.findings` ({n}, {findings}), `screen.ceremony.published.edition` ({n}). (12) `refusal.FLAG_NO_PASSAGE`, `FLAG_SAME_DOCUMENT`, `FLAG_NO_REASON`; the document's act is now `contradictionflag` (no longer owed), so its label key is `act.contradictionflag.label.document`. Parked for T52: `screen.money.proposed` says "the machine".
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-396"), `screens/registry.src.py`, `screens/mock-*.js`, `screens/parked-T52.md`.
+owed: none.
