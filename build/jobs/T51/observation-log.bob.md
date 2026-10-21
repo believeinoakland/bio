@@ -1,6 +1,6 @@
 # BOB to observation-log (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -34,3 +34,9 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 K3994, on your J2: (1) The four 'pass <param>=…' hints are refusal details, and a refusal's detail is a sentence a member can read wherever it travels (K3982): convert them by localize. (2) Where a words.json row holds the same sentence in the design's words (your item 3, all eight, and the condition sentences whose rows drop '(S-7)', '(D-104)'), the list wins (K3930, as provenance-routes' NEVER_LOOKED at K3984): read the row with word(key), its words replacing the code's; delete the duplicate code-side ids. Developer notes in member text go with it. (3) vocabulary.test.mjs R36: compare by equality with the product's own localize(id, en, vars) call (K3988), never a prefix and suffix. (2) changes member text, so name each changed sentence in your COMPLETE. Then re-run tests and checks and post COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K4240): OBSERVATION-LOG, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry: the design's leads screen draws "Your leads, every lead you can read", but this module has no read that lists them (`leadread` needs an id), so leads written in an earlier visit cannot be reached from the screen (SCREENS-INTAKE #10 J7 (4)). Add a read `leads` (`op=leads`): the leads the viewer may read (the same reach `leadread` applies), newest first, each with what `leadread` answers for its summary (id, title or first words, state, written at, by), at most a stated cap with `truncated`; declared in `DECLARED_OPS` (a read, no field required; accepts what the read takes, e.g. a cursor if you add one). Test at the interface with its reach controls (a lead the viewer may not read is absent). Requirement line for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678): your requirements, this entry, your code and the tests naming the ids it touches, whole. Words (K3930). Model sonnet, medium effort; workers sonnet medium, haiku low.

@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R47, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R47, R95–R96, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -15,6 +15,10 @@
  *
  * T50 (N1117, N1094): a member's `for` is recorded with the capture (R47), the member who parks a session is recorded with it
  * and listed by `openCaptures` (R19, R46), and every member-facing sentence is read by key from setup-words (plan rule 6).
+ *
+ * T51 fix round 2 (the walk's C5, C12, C13, C25): a capture held in parts is also kept whole under its own digest (`keepWhole`, R10),
+ * co-attestation is waited for only briefly and recorded when it ends (R20), the render is a continuation the member finishes
+ * (R5, R6, R12), and the document records the file name its source gave it (R16).
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
@@ -50,7 +54,7 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
-export { unpack, archiveList, memberOf, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
+export { unpack, archiveList, memberOf, membersOf, openedAmong, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
          UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
          ARCHIVE_CHECK_READS } from "./unpack.mjs";
 
@@ -149,6 +153,63 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
            basis: word("acquisition.basis.normalized_under_certain", { key: stackId.handler.key, version: stackId.handler.version }) };
 }
 
+/** R16 (T51; the walk's C25): the file name the source gives a document, for naming it when it has no title of its own: the
+ *  `Content-Disposition` header's (RFC 6266; the extended `filename*` of RFC 5987 before the plain `filename`), else the last
+ *  segment of the document's own address when that names a file (it ends in a dot and an extension). Decoded, a path taken
+ *  off it, white space trimmed, at most 200 characters; null when the source gives none, never made up from the host or the date.
+ *  Pure; never throws. */
+export const FILE_NAME_MAX = 200;
+export function fileNameOf(headers, address) {
+  const clean = (v) => {
+    if (typeof v !== "string") return null;
+    const last = v.replace(/\\/g, "/").split("/").pop().replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    return last && last.length <= FILE_NAME_MAX && last !== "." && last !== ".." ? last : null;
+  };
+  const decode = (v) => { try { return decodeURIComponent(v); } catch { return null; } };
+  try {
+    const cd = headers && typeof headers.get === "function" ? headers.get("content-disposition") : null;
+    if (typeof cd === "string") {
+      const ext = /filename\*\s*=\s*([^;]*)/i.exec(cd);
+      if (ext) {
+        const m = /^\s*([A-Za-z0-9._-]+)'[^']*'(.*)$/.exec(ext[1].trim());
+        const got = m ? (/^utf-?8$/i.test(m[1]) ? decode(m[2]) : null) : null;
+        const c = clean(got); if (c) return c;
+      }
+      const plain = /(?:^|;)\s*filename\s*=\s*("((?:[^"\\]|\\.)*)"|[^;]*)/i.exec(cd);
+      if (plain) { const c = clean(plain[2] !== undefined ? plain[2].replace(/\\(.)/g, "$1") : plain[1].trim()); if (c) return c; }
+    }
+    if (typeof address === "string") {
+      const seg = new URL(address).pathname.split("/").pop();
+      const c = clean(decode(seg));
+      if (c && /\.[A-Za-z0-9]{1,8}$/.test(c)) return c;
+    }
+  } catch { /* the source gave no name */ }
+  return null;
+}
+
+/** R17 (T51; the walk's C26): the digests of bytes this instance did not store, as `profileOf` would record them for a capture of
+ *  those bytes: the stack identified from the headers, the address and the content type, then `substanceDigests`, the one
+ *  function that decides whether a digest can be trusted to assert sameness. For a reader (`capture` R96's look at a site)
+ *  that compares the substance of what a site serves now with the digests a held copy recorded. Answers
+ *  `{sha256, handler, handler_version, digests}`, `digests` as R17 states them (`determined` only under a certain stack whose
+ *  normalised bytes hash to the capture's identity). The bytes are bounded as R17's are (`PROFILE_TEXT_MAX`, `ODF_DIGEST_MAX`);
+ *  past them the digests are undetermined. Never throws. */
+export async function servedSubstance({ bytes, headers = {}, locator = null, contentType = null, view = undefined } = {}) {
+  const undetermined = (basis, sha = null) => ({ sha256: sha, handler: null, handler_version: null,
+    digests: { determined: false, rendition: null, evidentiary: null, basis } });
+  try {
+    if (!(bytes instanceof Uint8Array)) return undetermined(word("acquisition.basis.document_read_text", { large: "non-textual" }));
+    const sha = await sha256Hex(bytes);
+    const asText = profilesAsText(contentType, bytes.length, false);
+    const profCtx = { headers, locator, content_type: contentType || null,
+                      text: asText ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "", ...(view ? { view } : {}) };
+    const stackId = identify(profCtx);
+    const digests = await substanceDigests(asText ? bytes : null, stackId, profCtx, sha, false,
+                                           asText || bytes.length > ODF_DIGEST_MAX ? null : bytes);
+    return { sha256: sha, handler: stackId.handler.key, handler_version: stackId.handler.version, digests };
+  } catch (e) { return undetermined(String(e && e.message || e).slice(0, 120)); }
+}
+
 /** R17: the combined view of the instance's active jurisdiction profiles (record-core's `jurisdiction_profiles`,
  *  jurisdictions.combine). An instance that has never set the setting passes no view, which is docprofile's own
  *  legacy fallback (its R6, K39), so an instance keeps recognising what it recognised; a setting that does not
@@ -216,12 +277,105 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
   };
 }
 
+/* R95 (T51; K4194): THE MILLISECONDS EACH STAGE OF `acquire` TOOK, by name, on every answer. The caller may hand in its own
+   `opts.timings` object, which `acquire` keeps current as the stages run, so a caller that stops waiting (the door's bound,
+   control-plane R105) reads what had run and what was running when it stopped, through `stageTimes`. Stages never nest;
+   `receipt`, `fetch`, `read` and the others add up over the hops or parts that repeat them. */
+const clockNow = () => performance.now();
+function openTimings(given) {
+  const t = given && typeof given === "object" && !Array.isArray(given) ? given : {};
+  t.start = clockNow(); t.end = null; t.stages = {}; t.running = null;
+  return t;
+}
+function stageBegin(t, name) { stageEnd(t); t.running = { name, since: clockNow() }; }
+function stageEnd(t) {
+  if (!t.running) return;
+  t.stages[t.running.name] = (t.stages[t.running.name] || 0) + (clockNow() - t.running.since);
+  t.running = null;
+}
+async function timed(t, name, work) {
+  stageBegin(t, name);
+  try { return await work(); } finally { stageEnd(t); }
+}
+/** R95: `{total_ms, stages: {<stage>: ms}}` of an `acquire`, read at any moment: whole milliseconds, every stage floored and
+ *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. */
+export function stageTimes(t) {
+  if (!t || typeof t !== "object" || !t.stages) return { total_ms: 0, stages: {} };
+  const now = clockNow(), stages = {};
+  for (const [k, v] of Object.entries(t.stages)) stages[k] = Math.floor(v);
+  if (t.running) stages[t.running.name] = Math.floor((t.stages[t.running.name] || 0) + (now - t.running.since));
+  return { total_ms: Math.ceil((t.end ?? now) - t.start), stages, ...(t.running ? { running: t.running.name } : {}) };
+}
+
 /* R47: the longest `for` (a question's id) a member may name. */
 export const FOR_MAX = 200;
 
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
 export const CAPTURE_MAX = 256 * 1024 * 1024;
+
+/* R10, R11 (T51; the walk's C5): a capture held in several parts is also kept WHOLE, under the whole document's own
+   fingerprint, up to this many bytes, so every reader that asks the evidence store for a capture by its digest (the reading,
+   OCR, the vouch box, `op=capture`) finds it as it finds a single part. Past it the capture is held in its parts alone, as
+   before (provenance R7 reads such a capture by its parts). CHOSEN, not measured: four parts, the most the object holds
+   in memory beside the part being read back; recorded by BOB. */
+export const MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
+
+/** R10 (C5): keep a multipart capture whole. The parts just stored are read back one at a time (each held, each its stated
+ *  size and digest), assembled, hashed against the digest the stream gave, and put under that digest with its checksum.
+ *  Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done) or
+ *  `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add up
+ *  to the digest, or a store that will not take the whole. Never throws. */
+export async function keepWhole(ev, { sha, parts, total }) {
+  if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
+  const fail = (why) => ({ ok: false, why });
+  try {
+    if (await ev.head(sha)) return { ok: true, kept: true };
+    const whole = new Uint8Array(total);
+    let at = 0;
+    for (const [i, p] of parts.entries()) {
+      const o = await ev.get(p.sha256);
+      if (!o) return fail(localize("acquisition.index.keep_part_missing", "part {n} of {parts} was not there when it was read back", { n: String(i + 1), parts: String(parts.length) }));
+      const b = new Uint8Array(await o.arrayBuffer());
+      if (b.length !== p.bytes || at + b.length > total || hex(await crypto.subtle.digest("SHA-256", b)) !== p.sha256)
+        return fail(localize("acquisition.index.keep_part_differs", "part {n} of {parts} is not what was stored", { n: String(i + 1), parts: String(parts.length) }));
+      whole.set(b, at); at += b.length;
+    }
+    if (at !== total || hex(await crypto.subtle.digest("SHA-256", whole)) !== sha)
+      return fail(localize("acquisition.index.keep_parts_do_not_add_up", "the parts do not add up to the document that arrived"));
+    await ev.put(sha, whole);
+    return { ok: true, kept: true };
+  } catch (e) {
+    return fail(localize("acquisition.index.keep_store_refused", "the store would not take it ({detail})", { detail: String(e && e.message || e).slice(0, 120) }));
+  }
+}
+/* R10 (C5): the refusal when a multipart capture cannot be kept whole; nothing is filed and the parts already stored are named by no
+   document, as TOO_LARGE's are. */
+const notKept = (parts, why) => ({ ok: false, reason: "CAPTURE_NOT_KEPT",
+  detail: localize("acquisition.index.capture_not_kept", "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again", { parts: String(parts), why: String(why) }) });
+
+/* R20, R5 (T51; the walk's C12, C13): the longest `acquire` waits, inside the door's bound, for the two slow stages that come after
+   the bytes are kept: the co-attestation (timestamp and co-archive; measured 9.6 to 21.5 s a page) and the render (3.3 to
+   17.5 s). Past its wait a stage goes on by itself and the document is answered kept, the stage pending: the attestation
+   is recorded against the capture when it ends (capture R68's `recordLateAttestations`), the render is finished by the
+   member's `continue` (R12's "Finish it"). A caller may hand its own wait as `opts.attestWaitMs` / `opts.renderWaitMs`. The
+   capture-request arm, which runs under no door's bound, waits for both. CHOSEN, not measured: together with the fetch and
+   the read they fit the door's 25 s with room; recorded by BOB. */
+export const ATTEST_WAIT_MS = 3000;
+export const RENDER_WAIT_MS = 10000;
+const LATE = Symbol("late");
+/** `{done: true, value}` when `p` settled within `ms`, else `{done: false}`; no wait at all for a non-finite `ms`. */
+async function within(p, ms) {
+  if (!Number.isFinite(ms)) return { done: true, value: await p };
+  let timer;
+  const late = new Promise((resolve) => { timer = setTimeout(() => resolve(LATE), Math.max(0, ms)); });
+  try { const v = await Promise.race([p, late]); return v === LATE ? { done: false } : { done: true, value: v }; }
+  finally { clearTimeout(timer); }
+}
+/* R5 (C13): the renders still running, by the capture session that will finish them. A render the object lost (restarted)
+   has no entry, and is rendered again when the member finishes the capture. */
+const PENDING_RENDERS = new Map();
+const PENDING_RENDER_TTL_MS = 3600000;
 
 /** R31: whether `address` is in a sweep's scope, as link-sweep R1 defines it: its normalised form equals a prefix, or
  *  continues one at a `/`. */
@@ -565,8 +719,19 @@ function ownHostRefused(locator, extra = {}) {
  *  (whether the caller is a member session), `sessMember` (that member), `storeName`, `ownHosts` (R42), `reputation` (a spec, null or a reader) and
  *  `fileScanner` (R44), and — only from the in-process drain, never from a request — `captureRequest` (the draining
  *  row's address, purpose, agent, render flag and the member's co-archive choice, K58). Answers `{status, body}`. */
-export async function acquire(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null,
-                                           ownHosts = null, reputation: reputationTool = undefined, fileScanner = null } = {}) {
+export async function acquire(cap, body0, opts = {}) {
+  const t = openTimings(opts && opts.timings);
+  let out;
+  try { out = await acquireRun(cap, body0, opts || {}, t); }
+  finally { stageEnd(t); t.end = clockNow(); }
+  /* R95: on every outcome, a refusal included, the answer carries the times of the stages that ran. */
+  return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
+    ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;
+}
+async function acquireRun(cap, body0, opts, t) {
+  const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
+          reputation: reputationTool = undefined, fileScanner = null, attestWaitMs = undefined, renderWaitMs = undefined,
+          renderResume = null } = opts || {};
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
@@ -707,7 +872,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      R42 (F16): no fetch goes to one of the group's own hosts, the render arm's included; refused before any request. */
   if (!archiveAsked && !session && onOwnHost(locator, own)) return answer(403, { ...ownHostRefused(locator), op });
   /* END DEC-49 REGION is-own-host */
-  if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own });
+  if (session && session.state && session.state.render_pending) return finishRender(cap, { session, opts, t });
+  if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t });
 
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
@@ -720,7 +886,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const renderAsked = Object.prototype.hasOwnProperty.call(body, "render") && body.render !== false;
   let renderer = null, renderReserved = 0, renderSlot = null;
   /* DEC-49 REGION is-render-admit */
-  if (renderAsked) {
+  if (renderAsked && renderResume) renderer = rendererFor(cap.env);   // R5 (C13): the render being finished was admitted, and paid for, when it began
+  if (renderAsked && !renderResume) {
     if (body.render !== true)
       return answer(400, { ok: false, reason: "RENDER_FLAG_MALFORMED", ...renderRow("RENDER_FLAG_MALFORMED"),
         op, detail: localize("acquisition.index.render_stringify_is_not_a", "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.", { stringify: String(JSON.stringify(body.render).slice(0, 40)) }) });
@@ -770,8 +937,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R44: the document's public address asked of the scanner before any fetch of it, on every arm that fetches one (a
      continuation fetches none and has returned above): the archive arm's `address`, the Drive link as given, else the
      locator. */
-  const reputation = await addressReputation(archiveAsked || (driveCapture ? driveCapture.address : locator),
-    reputationToolOf(cap, reputationTool), fileScannerOf(cap, fileScanner));
+  const reputation = await timed(t, "reputation", () => addressReputation(archiveAsked || (driveCapture ? driveCapture.address : locator),
+    reputationToolOf(cap, reputationTool), fileScannerOf(cap, fileScanner)));
 
   /* R3, R32: the memento, found through the archive's TimeGate or TimeMap; its raw bytes are answered unread, so the
      bytes this call files are the bytes the choice is made over (`chooseMemento`, below). */
@@ -779,12 +946,12 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   if (archiveAsked) {
     /* N510: the body's first bytes are read ahead, unconsumed; a memento with none is refused by selectCapture's own
        words over its row and the lookup goes on to the next candidate, so nothing of it reaches the store. */
-    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res, answer }) => {
+    const m = await timed(t, "archive", () => mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res, answer }) => {
       const p = await peekBody(res);
       if (p.failed) return { fail: archiveBroke(p.failed) };
       /* its row's digest is the empty-body digest, which selectCapture refuses by R29's own reason */
       return p.empty ? { row: mementoRow(answer, { sha256: EMPTY_SHA256, bytes: 0 }) } : { res: p.res };
-    } });
+    } }));
     if (!m.ok) return answer(m.status, m.payload);
     archiveMemento = m; locator = m.locator; archiveAddress = m.answer.original;
   }
@@ -813,8 +980,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const home = hostOf(locator);
     const byHand = !!sweepScope || !!own;
     for (let hop = 0; ; hop++) {
-      const g = await governedFetch(cap, url, crPurpose || "acquire", crAgent, { headers: conditional,
-        credential: byHand && hostOf(url) !== home ? null : crCredential, manual: byHand });
+      const g = await timed(t, "fetch", () => governedFetch(cap, url, crPurpose || "acquire", crAgent, { headers: conditional,
+        credential: byHand && hostOf(url) !== home ? null : crCredential, manual: byHand }));
       if (g.refusedByGovernor) {
         await noteOutcome("governed", null);
         return answer(429, { ok: false, reason: "HOST_COOLING_OFF",
@@ -934,6 +1101,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let driveHeadBytes = 0;
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
+  stageBegin(t, "read");
   for (;;) {
     /* R10: a body that breaks off mid-stream is a fetch that did not complete, answered by name, never a throw; the
        parts already stored are content-addressed and named by no document, as TOO_LARGE's are. */
@@ -980,6 +1148,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
                          detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
   }
   await flush();
+  stageEnd(t);
   let sha = whole.hex();
   /* R32: the memento is chosen over the bytes just received (an empty one was passed over before any byte was stored, N510). */
   if (archiveMemento) {
@@ -1024,7 +1193,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
 
   /* R6, D-64 — THE RENDER ARM, THE PAIR. From here on `sha`, `total` and `ct` name the RENDERED document, the
      bundle's primary; the shell survives as `shell` and `render.of`. */
-  let renderRecorded = null, shellRecorded = null, renderedAuth = null;
+  let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderDeferred = null;
   if (renderAsked) {
     const pageUrl = resolvedUrl || locator;
     let answerR = null, rbytes = null, rb = null;
@@ -1037,12 +1206,28 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         op, content_type: ct || null, bytes: total, multipart,
         detail: localize("acquisition.index.the_served_bytes_are_v1", "the served bytes are {v1}, not an HTML page; nothing was filed.", { v1: String(multipart ? localize("acquisition.index.too_large_to_be_a", "too large to be a single page") : `\`${ct || "(no content type)"}\``) }) });
     }
-    /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
-    /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
-    try { answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
-    catch (e) { answerR = { ok: false, error: String(e && e.message || e) }; }
-    try { cap.renderSpend({ ms: answerR && answerR.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
-    catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
+    /* R5 (T51; C13): THE RENDER IS A CONTINUATION OF THE FILED CAPTURE. It starts here and its cost is reported when it returns,
+       whenever that is; this call waits for it only up to `RENDER_WAIT_MS` (the capture-request arm, under no door's bound,
+       waits for it). Past the wait the served page is filed as it is, the render pending in a capture session the member
+       finishes (`continue`, R12), which completes the pair with the render once it has returned. A call that finishes a
+       render (`renderResume`) already holds its answer. */
+    if (renderResume) answerR = renderResume.answer;
+    else {
+      /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
+      /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
+      const run = (async () => {
+        let a;
+        try { a = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
+        catch (e) { a = { ok: false, error: String(e && e.message || e) }; }
+        try { cap.renderSpend({ ms: a && a.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
+        catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
+        return a;
+      })();
+      const got = await timed(t, "render", () => within(run, captureRequest ? Infinity : (renderWaitMs ?? RENDER_WAIT_MS)));
+      if (got.done) answerR = got.value; else renderDeferred = { run, pageUrl };
+    }
+    if (!renderDeferred) {
+    stageBegin(t, "render");
     const asked = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
@@ -1057,6 +1242,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const rsha = await sha256Hex(rbytes);
     const renderedExisted = !!(await ev.head(rsha));
     if (!renderedExisted) await ev.put(rsha, rbytes);
+    stageEnd(t);
     shellRecorded = { file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
                       method: localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"), ...(ct ? { content_type: ct } : {}), transport };
     renderRecorded = rb.render;
@@ -1067,16 +1253,25 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       catch { /* an unrecorded outcome is not a failed render */ }
     }
     sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;
+    }
+  }
+
+  /* R10 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, or refused in words with nothing filed. */
+  if (multipart && !renderRecorded) {
+    const kept = await timed(t, "read", () => keepWhole(ev, { sha, parts, total }));
+    if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
 
   /* R13, D-58: the acquisition receipt, UNCONDITIONALLY, for every filed capture: under the DOCUMENT address (the
      CDX original, the Drive link as given, or for a direct fetch the address it resolved to), `via`, and the
      retrieval locator. A failed receipt write does not fail the capture. */
+  stageBegin(t, "receipt");
   try {
     await cap.provenance?.recordReceipt?.({ address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
       addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator), captureSha: sha, retrieved,
       via, retrievalLocator: locator, reputation });
   } catch { /* an unfiled receipt is not a failed capture */ }
+  stageEnd(t);
   /* R16, capture R69: the member this capture's document names as its actor is recorded as one who captured these bytes. */
   const actor = member && typeof sessMember === "string" && sessMember ? sessMember : null;
   if (actor) {
@@ -1117,12 +1312,33 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     catch { /* an unqueued task is not a failed capture; C-18.9 still refuses it at or past verified */ }
   }
 
-  /* R19: supporting files, on request. */
+  /* R19: supporting files, on request. A page whose render is still pending is walked when the render is finished, over the
+     rendered document. */
   let subs = null, subsSkipped = sessionSkip, sessionId = null;
+  if (renderDeferred && body.subresources === true && !subsSkipped)
+    subsSkipped = { reason: "RENDER_PENDING", detail: localize("acquisition.index.render_pending_files", "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture") };
   if (body.subresources === true && !subsSkipped) {
-    const w = await walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
-                                             retrieved, resume: null, sessionId: null, own, openedBy: actor });
+    const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
+                                             retrieved, resume: null, sessionId: null, own, openedBy: actor }));
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
+  }
+
+  /* R5 (T51; C13): the render still running is parked as a capture session, which the member finishes (`continue`, R12); the
+     run is kept beside it so finishing it waits for the very render begun here. */
+  let renderPending = null;
+  if (renderDeferred) {
+    const sid = `rs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
+    const carried = {};
+    for (const k of ["subresources", "authority", "file", "coArchive"]) if (body[k] !== undefined) carried[k] = body[k];
+    try {
+      cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
+        state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } } });
+    } catch { /* the render still returns; the member captures again */ }
+    PENDING_RENDERS.set(sid, renderDeferred.run);
+    const forget = setTimeout(() => PENDING_RENDERS.delete(sid), PENDING_RENDER_TTL_MS);
+    if (forget && typeof forget.unref === "function") forget.unref();
+    renderPending = { session: sid, since: retrieved,
+      note: localize("acquisition.index.render_pending_note", "this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished") };
   }
 
   /* R17, CONSTRUCTS Step 1 (FW-3): THE PROFILE, docprofile read and never copied, over the bytes the record holds. */
@@ -1132,6 +1348,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      a member session's request included, so it is always `"fetch"`; `"member"` is only for bytes a member supplied by
      their own act outside the copy (an upload), which a caller of `profileOf` states. So a content type
      read only from a member's own capture (court-doctypes R2) never matches a fetch. */
+  stageBegin(t, "profile");
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
                                     retrieved, origin: "fetch", parts: renderRecorded ? null : parts });
   /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
@@ -1148,13 +1365,29 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     }
     driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
   }
+  stageEnd(t);
 
   /* R20, R43 (K60, K1888): co-attestation at every capture; the co-archive as the group's setting asks, unless the member
      chose for this capture (the body's `coArchive` from a member session, or the request's on the capture-request arm). */
   const memberChoice = captureRequest ? captureRequest.coArchive
     : (member && typeof sessMember === "string" && sessMember ? body.coArchive : undefined);
   const coArchive = typeof memberChoice === "boolean" ? { on: memberChoice, by: "member" } : { on: coArchiveStateOf(cap.core).on, by: "group" };
-  const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive });
+  /* R20 (T51; C12): the attestation is requested now that the document is kept, and waited for only up to `ATTEST_WAIT_MS`
+     (the capture-request arm waits for it): past the wait the document is answered with the attempt pending, and the attempt
+     is recorded against the capture when it ends (`recordLateAttestations`, capture R68), never failing or undoing it. */
+  const attestAsked = coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive });
+  const attested = await timed(t, "attest", () => within(attestAsked, captureRequest ? Infinity : (attestWaitMs ?? ATTEST_WAIT_MS)));
+  let attestations;
+  if (attested.done) attestations = attested.value;
+  else {
+    const asking = stampSecond();
+    attestations = [{ service: "attest", attempted: true, ok: false, pending: true, at: asking,
+      note: localize("acquisition.index.attestation_pending", "the timestamp and the co-archive were asked for after the document was kept, and had not answered when this capture was answered; their outcome is recorded when they do") }];
+    attestAsked.then(async (attempts) => {
+      try { if (typeof cap.recordLateAttestations === "function") await cap.recordLateAttestations({ captureSha: sha, attempts, by: actor }); }
+      catch { /* an unrecorded late attempt leaves this one pending; the capture stands */ }
+    }).catch(() => {});
+  }
 
   const document = {
     file: `snapshots/${name}`, locator, retrieved,
@@ -1193,6 +1426,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       actor,
       sha256: sha, encoding: "binary", bytes: total,
       ...(ct ? { content_type: ct } : {}),
+      /* R16 (T51; C25): the file name the source gave the document, when it gave one, so a document with no title of its own is named by it */
+      ...(fileNameOf(res.headers, resolvedUrl || locator) ? { file_name: fileNameOf(res.headers, resolvedUrl || locator) } : {}),
       ...(renderRecorded ? {} : { transport }),
       /* R23: that a supplied credential rode the fetch, whose and at which scope, never its secret. */
       ...(crCredential ? { credentialed: { credential: crCredential.credential ?? null, kind: crCredential.kind,
@@ -1212,6 +1447,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     /* R31 (K1126): only link-sweep and capture-requests' sweep arm set a sweep origin; a body's `matchedSweep` is ignored. */
     origin: captureRequest ? (crOrigin || { kind: "named_request" }) : { kind: "named_request" },
     attestation_attempts: attestations,
+    ...(renderPending ? { render_pending: renderPending } : {}),
   };
   /* R40 (K1852 (2)): an archive opens on capture, in the same call, `by` its caller and within every budget; the files it
      files are answered beside the document for the caller to promote after it. A refusal is stated there and never
@@ -1219,10 +1455,10 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let unpacked = null;
   if (profile && profile.format && profile.format.format === "zip") {
     try {
-      unpacked = await unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
+      unpacked = await timed(t, "unpack", () => unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
         parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
         address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
-        addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) });
+        addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) }));
     } catch (e) {
       const row = ARCHIVE_CHECKS.ARCHIVE_UNREADABLE;
       unpacked = { ok: false, reason: "ARCHIVE_UNREADABLE", code: "ARCHIVE_UNREADABLE", check: row.check, translation: row.translation,
@@ -1237,6 +1473,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     document,
     ...(forRecorded ? { for: forRecorded } : {}),
     ...(multipart ? { parts: parts.length } : {}),
+    ...(renderPending ? { render: { state: "pending", session: renderPending.session } } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
@@ -1500,18 +1737,47 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
   return { subs, skipped: null, sessionId: sid };
 }
 
+/** R5, R6, R12 (T51; C13): finish a capture whose render was still pending when it was filed. The render begun by the first call
+ *  is waited for (up to `RENDER_WAIT_MS` or the caller's `renderWaitMs`): still running, the capture is answered as it is, the
+ *  session kept; returned, the capture is run again with the render's own answer, which files the pair (the rendered document
+ *  the primary, the page as it was served beside it) without a second render, a second reservation or a second charge. A render
+ *  the object lost is rendered again, admitted and paid for as any render. The session is dropped once the pair is answered or
+ *  the render has failed (`RENDER_FAILED`, the page filed first standing). */
+async function finishRender(cap, { session, opts, t }) {
+  const { cls = null, storeName = "bio", renderWaitMs = undefined } = opts || {};
+  const rp = session.state.render_pending;
+  const running = PENDING_RENDERS.get(session.session);
+  let resume = null;
+  if (running) {
+    const got = await timed(t, "render", () => within(running, renderWaitMs ?? RENDER_WAIT_MS));
+    if (!got.done)
+      return { status: 200, body: { ok: true, existed: true,
+        continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
+                     note: word("acquisition.note.continuation_files_new") },
+        render: { state: "pending", session: session.session }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
+    resume = { answer: got.value };
+  }
+  const out = await acquireRun(cap, { ...(rp && rp.body && typeof rp.body === "object" ? rp.body : {}), locator: session.locator, render: true },
+                               { ...opts, renderResume: resume }, t);
+  if (out.status === 200 || (out.body && out.body.reason === "RENDER_FAILED")) {
+    try { cap.dropCaptureSession({ session: session.session }); } catch { /* harmless */ }
+    PENDING_RENDERS.delete(session.session);
+  }
+  return out;
+}
+
 /** R12: a continuation resumes the session's outstanding supporting files against the session's OWN primary, read
  *  back from the store by its digest; the primary is not fetched again, and nothing new is filed about it, so the
  *  answer carries no document: the first tick answered it. */
-async function continueCapture(cap, { body, session, cls, storeName, ev, own = null }) {
+async function continueCapture(cap, { body, session, cls, storeName, ev, own = null, t }) {
   const name = String(session.primaryFile || "snapshots/capture").replace(/^snapshots\//, "");
   let obj = null;
   try { obj = await ev.head(session.primarySha); } catch { obj = null; }
   const size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : 0;
-  const w = await walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
+  const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
     name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own,
     /* R19: a session parked again keeps the member who began it, whoever continues it */
-    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null });
+    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null }));
   return { status: 200, body: {
     ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },

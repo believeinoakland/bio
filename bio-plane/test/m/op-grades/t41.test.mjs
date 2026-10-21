@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
-import { reqText, between, ticked, readRows } from "./declared.mjs";
+import { reqText, between, ticked, readRows, declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ");
@@ -21,7 +21,7 @@ test("R29 R34: handlechange `caller-owned` as setpassword, its member-directed s
   assert.equal(gradeOf("handlechange"), gradeOf("setpassword"));
   assert.equal(NON_ACTS.handlechange, "member-directed: a handle is fixed at joining; this act refuses every change, "
     + "`HANDLE_FIXED`, and writes nothing");
-  assert.equal(NON_ACTS.handlecheck, "read: whether a handle is free, taken or not allowed, never who holds it");
+  assert.equal(NON_ACTS.handlecheck, declaredSentence("member-roster", "handlecheck"));
   assert.equal(gradeOf("handlecheck"), null, "a read takes no grade");
   assert.deepEqual(["handlechange", "handlecheck"].filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   assert.deepEqual(["handlechange", "handlecheck"].map(phoneOf), [true, true]);

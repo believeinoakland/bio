@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J11
+**Read** · handled J15
 
 ## B1 · START
 
@@ -103,3 +103,43 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B12 · ANSWER · re J11
 
 ANSWER J11 (K4213): declare all eight in `DECLARED_OPS` now (none waits). Descriptions are each op's `act.<op>.does` key: words.json holds all eight (`act.writinghelp.does`, `act.wizards.does`, `act.startfrom.does`, `act.wizarddraft.does`, `act.wizardrevise.does`, `act.wizardsubmit.does`, `act.wizardapprove.does`, `act.wizardretire.does`), so no `localize` and no new row. (1) `writinghelp` is declared by its owner like every op (K4168): accepts `field`, `told`, `draftHeld`, requires `field`, `told`; the door's route stays. (2) The testcopy in `op-grades` owners.test.mjs:118, and any hand description of op-grades that the agreement check finds disagreeing with your declared key, are op-grades' to fix: sent to its job as a CHANGE; your branch and op-grades' merge together, op-grades first, so the registration never disagrees on the tranche. Name in your COMPLETE every op for which op-grades' `registerDeclaredOps` answers `DECLARED_OP_DISAGREES` on your branch.
+
+## B13 · CHANGE
+
+CHANGE (K4227), a new job session (WIZARD-SCRIPTS #17, haiku): `DECLARED_OPS.writinghelp` (R46) omits `op`, which the arm requires (`writingHelpAt` answers `WRITING_HELP_REFUSED` without a non-empty `op`; R27's body is `{op, field, told, draftHeld}`), so the guard refuses every screen's request. Add `op` to `accepts` and `requires` (`requires: ["op", "told"]`), check the other seven rows the same way against their arms, and keep your declared-ops tests holding (with a control: a body without `op` is refused naming it). Amend R46's line (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B14 · CHANGE
+
+CHANGE (K4231), a new job session (WIZARD-SCRIPTS #18, haiku): `DECLARED_OPS.wizardrevise` requires `[version, steps]`, but the arm also takes `adopt` with no `steps` (a copy whose base changed), so the guard refuses screens-wizards' library tests "R1 wizards: a state pressed…" and "R1 a copy whose base changed…". Make it `requires: ["version", ["steps", "adopt"]]` and `accepts` `adopt`; recheck every row's alternatives against its arm's every path (not only the first); keep the declared-ops tests with a control for the adopt path. Write the wording for R46 in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4252): WIZARD-SCRIPTS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry (R41): re-take the screen registry, the front doors and the wizard library at the design commit now on `tranche/T51`, `18f78e4422` (DEC-387, DEC-388; merged by K4248): regenerate `screen-registry.mjs`, `front-doors.mjs` and `civicsmith-library.mjs` with `node bio-plane/src/wizard-scripts/build-data.mjs` (check `--check`), the pinned commit constant moved to it. The registry then carries B423's `linewithdraw` on `person` (SCREENS-INVESTIGATE's held act) and every other act DEC-387 added. Run your suite and interface-shell's `checkScreens` over the composed SCREENS (interface-shell's tests), and report every screen whose acts now differ from what its module draws (BOB sends each to its screen job). Requirement line: R41's commit, for BOB.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B16 · CHANGE
+
+CHANGE (K4253), replaces B15's commit: the design moved again (U424, DEC-389, merged into the tranche at 742a6c8d1c): re-take at `09fbb247eb`, not 18f78e4422. Merge `tranche/T51` first. Known differences to report: `person` gains `linewithdraw` (screens-investigate), `docket` gains `writinghelp` (screens-publish), `start-send` loses `release` (screens-action).
+
+## B17 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/wizard-scripts tranche/T51 && git branch -m job/T51/wizard-scripts stale/wizard-scripts-local && git checkout -b job/T51/wizard-scripts origin/job/T51/wizard-scripts`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · WIZARD-SCRIPTS #21 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1, added by K4311)
+
+Mail with `--module wizard-scripts`; record `build/jobs/T51/wizard-scripts.md`. Model claude-haiku-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `wizard-scripts`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your entry** (mechanical): re-take the screen registry (R41) from the design commit `0310c4953d` (DEC-394, merged into `tranche/T51` by K4311): regenerate `screen-registry.mjs` (and the other data files if their sources changed) with `node bio-plane/src/wizard-scripts/build-data.mjs`, after pointing its registry source at that commit as earlier re-takes did (see the file's header: K4196, K4197, K4204). Name the screens and acts added (casedrafts on case-editor, ceremony, review-copy; heldcaptures on project; capturerequests and the owed capturecredential acts on capture; resolvetestify and the owed contradictionflag on document). Tests: your suite and `--check` clean; the users' suites `impact.mjs` names, at most two at once.
+
+Read in full (never in part): wizard-scripts R38, R41, R45 and `build-data.mjs`'s header; the tests naming R41. Other tests are run, not read.
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/wizard-scripts/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio wizard-scripts tranche/T51 job/T51/wizard-scripts`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B18 · ANSWER · re J16
+
+R47 is written in build/requirements/wizard-scripts.md as you proposed (K4323), marked not yet met until your merge; merge tranche/T51 into your branch. The other modules' reds you list are placed by BOB (op-grades marks, screens-intake, screens-publish, screens-inquiry-2). Finish and post COMPLETE.

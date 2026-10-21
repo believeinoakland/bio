@@ -168,6 +168,45 @@ export function venueOf(fm, view) {
     return none(word("action-clocks.action_addressed_office"));
   } catch { return none(word("action-clocks.action_office_venue")); }
 }
+/** The level (`jurisdictions` R31: `federal`, `state`, `county`, `city`) of the office an action is addressed to: the level its addressee
+ *  states, else the level of the office the view lists for that role and body (`counterparties`, R24); null when neither says. */
+export function officeLevel(fm, view) {
+  try {
+    const cp = fm && typeof fm === "object" && fm.counterparty && typeof fm.counterparty === "object" ? fm.counterparty : null;
+    if (!cp || cp.state !== "named" || !(cp.kind === undefined || cp.kind === null || cp.kind === "office")) return null;
+    if (typeof cp.level === "string" && cp.level) return cp.level;
+    const role = typeof cp.role === "string" ? cp.role.trim() : "", body = typeof cp.body === "string" ? cp.body.trim() : null;
+    const c = (view && Array.isArray(view.counterparties) ? view.counterparties : []).find((x) => x && x.role === role && (body === null || x.body === body));
+    return c && typeof c.level === "string" && c.level ? c.level : null;
+  } catch { return null; }
+}
+/* The level a deadline is of: the one it states, else that of the records law (`records_laws`, with its level) whose citation its own
+   citation begins with ("5 U.S.C. § 552" for "5 U.S.C. § 552(a)(6)(A)(i)"); null when the profile ties it to none. */
+const deadlineLevel = (d, view) => {
+  if (typeof d.level === "string" && d.level) return d.level;
+  const cite = typeof d.citation === "string" ? d.citation.trim() : "";
+  const law = (view && Array.isArray(view.records_laws) ? view.records_laws : []).find((l) => l && typeof l.level === "string" && typeof l.citation === "string"
+    && cite !== "" && cite.startsWith(l.citation.replace(/\s+et seq\.?$/, "").trim()));
+  return law ? law.level : null;
+};
+/** R2 (K4227, T51 C68; screens-investigate R59): the deadlines the view states for an action of `kind`, each `{rule, label?, citation?}`
+ *  as the profile gives it: what `clockPropose` accepts as `rule`, in the view's order; `[]` when none applies or no view is held. A
+ *  `label` or `citation` the profile does not state is left out. With the action's document `fm`, those of the level of the office it
+ *  is addressed to come first, those the profile ties to another level last, the rest between, each group in the view's order: a
+ *  request to a federal office offers the federal law's deadline first, a state office's the state's. Pure; never throws. */
+export function deadlinesFor(view, kind, fm = null) {
+  try {
+    const level = officeLevel(fm, view);
+    const out = [];
+    for (const x of view && Array.isArray(view.deadlines) ? view.deadlines : []) {
+      if (!x || typeof x.rule !== "string" || !x.rule || x.applies_to !== kind) continue;
+      const of = level ? deadlineLevel(x, view) : null;
+      out.push({ at: out.length, rank: !of ? 1 : of === level ? 0 : 2,
+        d: { rule: x.rule, ...(typeof x.label === "string" && x.label ? { label: x.label } : {}), ...(typeof x.citation === "string" && x.citation ? { citation: x.citation } : {}) } });
+    }
+    return out.sort((a, b) => a.rank - b.rank || a.at - b.at).map((x) => x.d);
+  } catch { return []; }
+}
 /** R3 (T45; v0.2 rule 6): an overdue item is a question about a date, never a finding. */
 export const OVERDUE_SAYS = word("action-clocks.date_action_clock");
 
@@ -718,7 +757,7 @@ export class ActionClocks {
     const view = this.#view();
     const d = rule ? (view && Array.isArray(view.deadlines) ? view.deadlines : [])
       .find((x) => x && x.rule === rule && x.applies_to === fm.action_kind) : null;
-    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null,
+    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null, deadlines: deadlinesFor(view, fm.action_kind, fm),
       detail: rule ? localize("action-clocks.index.no_active_profile_states", "no active profile states a deadline '{rule}' for an action of kind '{kind}'", { rule: String(rule).slice(0, 60), kind: String(fm.action_kind) })
                    : localize("action-clocks.index.no_rule_was_named", "no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '{kind}'", { kind: String(fm.action_kind) }) };
     const sourced = typeof d.basis === "string" && d.basis.trim() && d.basis !== "UNMEASURED";

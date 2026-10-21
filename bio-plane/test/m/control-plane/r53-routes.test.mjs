@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { O, M, world, call, opCalls, aik, cred, hex64, refused, FORGED } from "./harness.mjs";
 const D = await import("../../../src/store-door/dispatch.mjs");
 const { record } = await import("./record.mjs");
+const { MACHINE_AUTHOR_PREFIX } = await import("../../../src/record-grammar/index.mjs");
 const { AI_GRANT_OPS, ACCOUNT_CHECKS } = await import("../../../src/credentials/index.mjs");
 const { ASK_PLANE_OPS } = await import("../../../../agent-worker/src/ops.mjs");
 
@@ -118,6 +119,13 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
         /* R54 (K1863 (7)): membership's administrator acts take `by` as a member id, the custodial acts' expression */
         const want = k === "by" && MEMBER_ID_BY.includes(op)
           ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`)
+          /* R49 (K4219): case-import's acts, the re-run acts among them, stamp `by` as the positional identity for a session */
+          : k === "by" && M.CASE_IMPORT_ACTIONS.includes(op) && c.session ? c.want.author
+          /* R17 (T51; op-declarations' declaration acts, the door's own `DECLARATION_ACTIONS`): a session's `author` is its member
+             id, and a caller holding no session is stamped as a machine, `token:<class>` by `MACHINE_AUTHOR_PREFIX`, not
+             `class:<class>` as the other acts are */
+          : k === "author" && O.DECLARATION_ACTIONS.includes(op)
+            ? (c.session ? c.want.proposer : `${MACHINE_AUTHOR_PREFIX}${c.name === "agent" ? "ai" : c.name}`)
           /* R68 (T37; admission R21): an admitted op's `source` is admission's `sourceOf` over the request, which states
              no connecting address here; a public op's is the window's fingerprint (`DOOR`) */
           : k === "source" && OPS[op].classes !== null ? "unstated" : c.want[k];

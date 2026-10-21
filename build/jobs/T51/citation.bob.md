@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J5
+**Read** · handled J12
 
 ## B1 · START
 
@@ -57,3 +57,34 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B5 · ANSWER · re J5
 
 ANSWER J5 (K4210): (1) cite: requires project and handle-or-found, role in accepts only: accepted. (2) owner as a door stamp: accepted. uses + test-support added on tranche/T51 (merge it). Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K4223), a new job session (CITATION #16): `DECLARED_OPS.citeimported` is mutating and has no `needs`, so op-declarations' `registerDeclaredOps` refuses it (`NEEDS_MISSING`, R80) and the plane cannot register every owner's declarations. Add `needs`: the capability the arm already requires of the member (read your arm and requirements; a member's own contribution is `contribute`, as its sibling acts declare), and the same check for `withdrawimported` and any other mutating row of yours. Test: register your `DECLARED_OPS` with op-declarations' `registerDeclaredOps` and expect no refusal, with a control. Your requirement line (K4210): amend R-line of the declaration in `build/requirements/citation.md`. Merge `tranche/T51` first; run your module's tests and the checks; record `Size`; COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (K4226): merged, but the architecture check fails on your `register.test.mjs`: it imports op-declarations (index 152), which is later than citation (81) in the order, so citation may not use it. Remove that import: keep the test that every mutating row of `DECLARED_OPS` declares `needs: "contribute"` (shape only), and drop the `registerDeclaredOps` calls; the registration of your rows is proven by op-declarations' own `register-owners.mjs` (OP-DECLARATIONS #29 adds citation there). R18's line names the shape test. Run `checks/architecture.mjs` over the whole product: 0. Merge `tranche/T51` first.
+
+## B8 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/citation tranche/T51 && git branch -m job/T51/citation stale/citation-local && git checkout -b job/T51/citation origin/job/T51/citation`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CITATION #17 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1)
+
+Mail with `--module citation`; record `build/jobs/T51/citation.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `citation`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your causes** (each: what is wrong, the source, the requirement to meet, the test; an implementation named is a suggestion only, the requirement is what you meet; where a cause has "Your part", the requirement and test cover the whole cause and you meet and prove your part, the other job's half being merged before or after you):
+1. **C31** (MINOR) The cite act is a GET that writes (a refresh or prefetch repeats it) and leaves no mark at the passage; the only trace is far down in "Your citations". **Your part: citation's part: the `cite` arm takes its fields from the body and refuses a GET without writing; declared fields updated.** Source: `screens-inquiry/document.mjs:917` (`query: {project, role, found}`); `citation`'s arm. Requirement: A write is not a GET: the `cite` arm reads its fields from a POST body (declared); the document marks a passage already cited in this question. Test: citation: `cite` with the fields in the body cites; as a GET it refuses without writing; screens (wave 2): the act sends a body and the passage carries the mark; control: an uncited passage has no mark.
+
+Read in full (never in part): `citation` lines on `cite`, `alreadyCited` and the declared fields (R14 and its neighbours); for each cause above, the code files named in its source, whole, and the tests that name the requirement ids you meet; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678). Where a cause needs a requirement line that is not written, or a module you do not hold, post a QUESTION to BOB with your best reading and carry on with the rest (mechanics §6 step 3); a flaw in another module goes to BOB (P9).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/citation/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B9 · ANSWER · re J9
+
+Not merged yet: refusing the address fields would break callers no running job holds (wizard-scripts' cite steps, journey-check) and the live copy between merges. Change it to (citation R20, K4308): "`cite` reads `project`, `handle`, `found`, `question`, `note`, `role` and the part's fields from the POST body; where the body does not carry a field, the address's value is still read (a caller not yet moved); the door's stamps stay in the address; a GET with no source is refused `CITE_ONE_SOURCE`, writing nothing. `found` is an object or one JSON string." Test: a POST with the fields in the body cites; a call with them only in the address still cites; body wins where both differ. Then the affordances and members tests need no change; COMPLETE again.

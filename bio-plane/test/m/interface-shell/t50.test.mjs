@@ -3,6 +3,7 @@
    pages, `cs.checks` over record data, more doors, explanations by the design's keys, a refusal in its own words, the look
    rows, the first load, a Reasoned act's reason, the public frame's cards, the phone layout. Every sentence is read through
    `setup-words`' `word` (R70); a test holds no English. */
+import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
@@ -11,13 +12,13 @@ import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
+import { fitSend, boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
 import { ALL, HOME, HELD, DOORBELL, PUBLISHED } from "./screens.fixture.mjs";
 
 const h = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const btn = (p, op) => p.root().querySelector(`button[data-act="${op}"]`);
 const gate = () => { let go; const p = new Promise((r) => { go = r; }); return { p, go }; };
-const stand = (id, ops, render, extra = {}) => ({ id, reads: () => ({}), acts: ops.map((op) => ({ op })), render, ...extra });
+const stand = (id, ops, render, extra = {}) => ({ id, reads: () => ({}), acts: ops.map((op) => ({ op, send: fitSend(op) })), render, ...extra });
 const audio = (p) => {
   const made = [];
   p.win.AudioContext = class { constructor() { this.destination = {}; this.currentTime = 0; }
@@ -94,7 +95,7 @@ test("R74 an act button answers the press: busy while the request is out, a seco
 
 test("R74 a Terminal, Signed, Irreversible or outward act is disabled after success and stays so until the screen is redrawn from a read", async () => {
   let hold = null;
-  const doc = { id: "document", reads: () => ({ x: { op: "image" } }), acts: [{ op: "retire" }, { op: "release", outward: true }], render: (cs) => cs.act("retire") + cs.act("release") };
+  const doc = { id: "document", reads: () => ({ x: { op: "image" } }), acts: [{ op: "retire", send: fitSend("retire") }, { op: "release", outward: true, send: fitSend("release") }], render: (cs) => cs.act("retire") + cs.act("release") };
   const p = await boot({ screens: [doc], path: "/app/document/x", plane: { image: async () => { if (hold) await hold.p; return ok({ title: "t" }); }, retire: ok({}), release: ok({}) } });
   hold = gate();
   await p.click(btn(p, "retire"));
@@ -290,16 +291,16 @@ const streamed = (p, lines, type = "application/x-ndjson") => async () => {
 };
 const ASKER = {
   id: "answers", reads: () => ({}),
-  acts: [{ op: "ask", reasonField: "q", send: (view, el, cs) => ({ body: { q: cs.value("q") }, onEvent: (ev) => { window.__seen = (window.__seen || []).concat([ev]); } }),
+  acts: [{ op: "ask", reasonField: "question", send: (view, el, cs) => ({ body: { question: cs.value("question") }, onEvent: (ev) => { window.__seen = (window.__seen || []).concat([ev]); } }),
     done(view, answer, cs) { window.__whole = answer.length; cs.set("n", String(answer.length)); } }],
-  render: (cs) => cs.field("q", "shell.reason") + cs.act("ask") + '<p id="n">' + String((window.__seen || []).length) + "</p>",
+  render: (cs) => cs.field("question", "shell.reason") + cs.act("ask") + '<p id="n">' + String((window.__seen || []).length) + "</p>",
 };
 
 test("R78 a streamed answer is handed on as it arrives: onEvent is called with each complete line at the instant it arrives, in order, the screen redrawn at each; the promise still answers the whole list, the answer the last; control: an ok:false last line is still a refusal beside the act, and a body that is not ndjson is read whole", async () => {
   const p = await boot({ screens: [ASKER], path: "/app/answers" });
   const real = p.win.fetch;
   p.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(p, [{ event: "a" }, { event: "b" }, { ok: true, answer: "c" }])() : real(url, init));
-  p.doc.getElementById("q").value = "why";
+  p.doc.getElementById("question").value = "why";
   await p.click(btn(p, "ask"));
   const seen = () => (p.win.__seen || []).length;
   assert.equal(seen(), 0);
@@ -314,20 +315,20 @@ test("R78 a streamed answer is handed on as it arrives: onEvent is called with e
   const q = await boot({ screens: [ASKER], path: "/app/answers" });
   const realQ = q.win.fetch;
   q.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(q, [{ event: "a" }, { ok: false, code: "ZZ_STOP", translation: "Stopped." }])() : realQ(url, init));
-  q.doc.getElementById("q").value = "why";
+  q.doc.getElementById("question").value = "why";
   await q.click(btn(q, "ask"));
   await q.clock.tick(2000); await q.clock.tick(2000); await q.settle();
   assert.equal(q.root().querySelector('[data-slot="m:0"] [data-gap="refused"]').textContent, "Stopped.");
-  assert.equal(q.doc.getElementById("q").value, "why", "the form keeps what was typed");
+  assert.equal(q.doc.getElementById("question").value, "why", "the form keeps what was typed");
   /* control: a body that is not ndjson is read whole */
   const r = await boot({ screens: [ASKER], path: "/app/answers", plane: { ask: ok({ answer: "whole" }) } });
-  r.doc.getElementById("q").value = "why";
+  r.doc.getElementById("question").value = "why";
   await r.click(btn(r, "ask"));
   assert.equal(r.byOp("ask").length, 1);
   assert.equal(r.win.__seen, undefined, "no event for an answer that is not streamed");
   /* the harness's whole-text ndjson answer still reaches done as the list */
   const t = await boot({ screens: [ASKER], path: "/app/answers", plane: { ask: ndjson([{ event: "x" }, { ok: true }]) } });
-  t.doc.getElementById("q").value = "why";
+  t.doc.getElementById("question").value = "why";
   await t.click(btn(t, "ask"));
   assert.equal(t.win.__whole, 2);
 });

@@ -8,7 +8,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
-import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
+import { REGISTERED } from "./register-owners.mjs";
+import { explained } from "./help.mjs";
+import { browserActs, OWED_BY_FIX_ROUND, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
@@ -119,12 +121,37 @@ test("R21, R2–R5: each alias equals its op in every table — the spec, both s
     assert.equal(Object.hasOwn(UNATTENDED_BY_DECISION, al), Object.hasOwn(UNATTENDED_BY_DECISION, op), al);
     assert.ok(!O.FAMILY_OPS.includes(al), `${al} is no family's op`);
   }
-  /* the aliases of the act lists' ops ride their lists: signerregister's, versionadopt's, strengthbar's, filingsent's */
+  /* the aliases of the act lists' ops ride their lists: signerregister's, versionadopt's, filingsent's */
   assert.ok(O.OWN_KEY_ACTIONS.includes("signerregisterown") && O.REEVALUATION_ACTIONS.includes("adoptversion"));
-  assert.ok(O.DECLARATION_ACTIONS.includes("strengthbarset") && O.FILINGS_ACTIONS.includes("filingrecordsent"));
+  assert.ok(O.FILINGS_ACTIONS.includes("filingrecordsent"));
   assert.ok(O.QUERY_AUTHOR_ACTIONS.includes("filingrecordsent") && O.ACTION_LAYER_ACTIONS.includes("filingrecordsent"));
   /* negative control */
   assert.notDeepEqual(plain({ ...OPS.createevent, mutating: false }), plain(OPS.eventcreate));
+});
+
+test("R21 (K4254): strengthbarset is no alias of strengthbar — strength declares it itself (`reasoned`, admin, member, probe, mutating), so the alias table holds 26 aliases, none of them strengthbarset, and the op is served by its owner's declaration (negative control: the aliases that remain are still aliases)", () => {
+  const owner = REGISTERED.strength?.strengthbarset;
+  assert.ok(owner, "strength declares no strengthbarset");
+  assert.ok(!Object.hasOwn(OP_ALIASES, "strengthbarset") && !Object.values(OP_ALIASES).includes("strengthbarset"));
+  assert.equal(Object.keys(OP_ALIASES).length, 26);
+  assert.deepEqual(plain(OPS.strengthbarset), { classes: [...owner.classes], mutating: owner.mutating });
+  assert.ok(Object.hasOwn(OPS, "strengthbar") && Object.hasOwn(OPS, "strengthbarset"), "both are ops");
+  assert.ok(both("strengthbarset"));
+  /* what the alias gave it, kept: the group's bar is gated and stamped as strengthbar is (publish capability; author, viewer and identity) */
+  assert.equal(NEEDS.strengthbarset, "publish");
+  assert.equal(NEEDS.strengthbarset, NEEDS.strengthbar);
+  assert.ok(O.DECLARATION_ACTIONS.includes("strengthbarset") && unfenced("strengthbarset"));
+  assert.deepEqual(stamps("strengthbarset"), ["author", "viewer"]);
+  assert.equal(OP_FAMILIES.strength.owner, "strength");
+  assert.ok(Object.hasOwn(OP_FAMILIES.strength.kinds, "strengthbarset"));
+  /* R34 (K4262, B20): affordances explains strengthbarset under its own name, so it is named under no ground; strengthbar, which no
+     screen sends and the design gives no text, takes the unexplained ground */
+  assert.ok(explained("strengthbarset") && !explained("strengthbar"));
+  const groundsOf = (op) => Object.entries(O.ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
+  assert.deepEqual(groundsOf("strengthbarset"), []);
+  assert.deepEqual(groundsOf("strengthbar"), ["unexplained"]);
+  /* negative control */
+  for (const al of ["createevent", "filingrecordsent", "adoptversion"]) assert.ok(Object.hasOwn(OP_ALIASES, al), al);
 });
 
 test("R21: each alias names the function its op's arm calls — driven through the owner's own map, the method called is the alias's name, case aside (negative control: another op's arm calls another method)", async () => {
@@ -140,8 +167,8 @@ test("R21: each alias names the function its op's arm calls — driven through t
   }
   assert.ok(checked >= 21, `${checked} aliases driven`);
   /* the four outside the families are the act lists' (their owners' arms read in J1: credentials' signerRegisterOwn and
-     signerRevokeOwn, reevaluation's adoptVersion and keepVersion, strength's strengthBarSet, filings' filingRecordSent) */
-  assert.deepEqual(Object.keys(OP_ALIASES).length - checked, 6);
+     signerRevokeOwn, reevaluation's adoptVersion and keepVersion, filings' filingRecordSent; strength's strengthBarSet is no alias since K4254, R21) */
+  assert.deepEqual(Object.keys(OP_ALIASES).length - checked, 5);
   /* negative control */
   const calls = await drive(eventsOps, "eventmerge");
   assert.ok(!calls.some(([k]) => String(k).toLowerCase() === "createevent"));
@@ -220,7 +247,9 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
   for (const op of INSTALLER_ROUTES) assert.ok(owed.includes(op) && !Object.hasOwn(OPS, op), `${op}: owed and declared, or not owed`);
   /* T51 (R76; DEC-330 owed, U348): the seven browser acts are owed rows too, read as a class of their own (b), no op */
   const BROWSER = browserActs(registry);
-  assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...OWED_T47, ...OWED_T48, ...OWED_T49, ...OWED_T50, ...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND, ...BROWSER].sort());
+  /* R80: an owed act an owner declares is read as served by its declaration (`register-owners.mjs`), an op like any other */
+  assert.deepEqual([...new Set(owed)].sort(), [...new Set([...STILL_OWED, ...OWED_T47, ...OWED_T48, ...OWED_T49, ...OWED_T50, ...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND, ...OWED_SERVED_BY_OWNERS, ...BROWSER])].sort());
+  for (const op of OWED_SERVED_BY_OWNERS) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: declared by its owner and not an op`);
   assert.ok(Object.hasOwn(OP_FAMILIES.membership.kinds, "founderhandleset") && SESSION_OPS.admin.has("founderhandleset")
             && !SESSION_OPS.member.has("founderhandleset"), "founderhandleset: not membership's founder-only op");
   for (const op of OWED_T48) assert.ok(both(op) && OP_FAMILIES["instance-setup"].kinds[op] === "admin", `${op}: not an instance-setup admin act`);

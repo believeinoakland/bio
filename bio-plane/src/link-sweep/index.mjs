@@ -30,6 +30,7 @@ import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
 import { LinkSweep, LINK_SWEEP_MODULE } from "./sweep.mjs";
 import { LINK_SWEEP_TABLES } from "./schema.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { LinkSweep, LINK_SWEEP_MODULE, linksOf, SWEEP_TICK_BATCH, SWEEP_RUNS_SHOWN, SWEEP_CONDITION_KINDS, SWEEP_ACTOR,
          SWEEP_PURPOSE, SWEEP_CONSUMER, ANOMALY_MIN_RUNS, ANOMALY_WINDOW, ANOMALY_FACTOR, ANOMALY_FLOOR, ANOMALY_DRY_MEDIAN,
@@ -68,12 +69,36 @@ export function linkSweepOf(host, deps) {
   return s;
 }
 
-/** The module's op (K3), as an entry of the plane's one op map, which the plane composes and control-plane's routes
- *  spread (`control-plane/dispatch.mjs`). `viewer` is the control plane's stamp, read from the query, so a caller's
- *  own copy never wins. R9: the sweeps the viewer may see. */
-export function linkSweepOps(s, url) {
+/** The module's ops (K3), as entries of the plane's one op map, which the plane composes and control-plane's routes
+ *  spread (`control-plane/dispatch.mjs`). `viewer` and `author` are the control plane's stamps, read from the query, so a
+ *  caller's own copy never wins; the body carries the fields. R9: the sweeps the viewer may see. R13, R14: a member's
+ *  doors to define and to ratify a sweep. */
+export function linkSweepOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
   return {
     sweeps: () => s.sweeps({ viewer: q("viewer"), now: q("now") }),
+    sweepset: () => s.sweepSet({ bundle: b.bundle ?? null, sweep: b.sweep ?? null, title: b.title, sources: b.sources, seeds: b.seeds,
+                                match: b.match, cadence: b.cadence, budget: b.budget, author: q("author"), viewer: q("viewer") }),
+    sweepratify: () => s.sweepRatify({ sweep: b.sweep ?? null, ratified: b.ratified, author: q("author"), viewer: q("viewer") }),
   };
 }
+
+/* R15 (T51; K4168, K4189; op-declarations R80, op-grades R49): the ops this module serves that the screens send or that this
+   tranche adds, declared by their owner beside the ops map: each row's class, weight and description are the op's existing
+   rows', its fields what the arm reads (the stamps `viewer` and `author` excluded). */
+/** R15: the ratify screen's words, written once here by key for `screens-intake`'s watching screen: ratifying sends the
+ *  team's fetches to the named hosts, within the scope and budget shown. */
+export const RATIFY_NOTICE = localize("link-sweep.ratify.notice", "Ratifying sends the team's fetches to the named hosts within the scope and budget shown, each filing at collected, never higher.");
+
+export const DECLARED_OPS = Object.freeze({
+  sweeps: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("link-sweep.declared.sweeps", "read: the link sweeps the viewer may see, each with its definition as quoted data, its ratification, its schedule and its last runs; writes nothing"),
+    fields: { accepts: ["now"], requires: [] } },
+  sweepset: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible",
+    description: localize("link-sweep.declared.sweepset", "a member defines a sweep or changes one: a team's named standing intent to watch listing pages, kept unratified until an owner ratifies it, and it fetches nothing"),
+    fields: { accepts: ["bundle","sweep","title","sources","seeds","match","cadence","budget"], requires: ["bundle","title","sources","seeds","match","cadence","budget"] } },
+  sweepratify: { classes: ["admin", "member"], machineClasses: [], mutating: true, needs: "contribute", weight: "reversible",
+    description: localize("link-sweep.declared.sweepratify", "a project owner ratifies a sweep, or any member who may write the bundle stops it; it fetches nothing itself, and ratifying lets the team's fetches run within the scope and budget shown"),
+    fields: { accepts: ["sweep","ratified"], requires: ["sweep","ratified"] } },
+});

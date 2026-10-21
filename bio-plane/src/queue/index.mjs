@@ -259,6 +259,14 @@ export class Queue {
    *  appended rather than inserted (REC-32). */
   static QUEUE_CLASSES = ["OBLIGATION", "FINDING", "CONDITION"];
 
+  /** R91 (T51; L13): a stopwatch for the feeds of one ask, in milliseconds (two decimals) off `performance.now()` where the
+   *  runtime has it, else the wall clock; never negative. It measures how long a read took and is no instant of the record,
+   *  so it is no part of R53's clock. */
+  static #stopwatch() {
+    const now = typeof performance !== "undefined" && typeof performance.now === "function" ? () => performance.now() : () => Date.now();
+    return { start: () => now(), since: (t0) => Math.max(0, Math.round((now() - t0) * 100) / 100) };
+  }
+
   /** R6's order: something a named person must do outranks something the record noticed, which outranks a fact about
    *  our own machinery, then stable on id so the feed does not shuffle. It is the order AMONG EQUALS of every sort R49
    *  names (K1038). */
@@ -392,7 +400,8 @@ export class Queue {
    *  costed against the alternative: teaching `refs` a `status` column would
    *  change a projection twelve readers and an export manifest build against,
    *  for a fact only the document can be authoritative about anyway (D-21). */
-  #queueAncestorEdges(nodeId) {
+  #queueAncestorEdges(nodeId, memo = null) {
+    if (memo && memo.edges.has(nodeId)) return memo.edges.get(nodeId);
     const up = new Map();
     const consider = (id, rel) =>
       up.set(id, (up.get(id) || false) || !this.#refEdgeSevered(id, nodeId, rel));
@@ -402,7 +411,9 @@ export class Queue {
     for (const r of this.#rows(
       `SELECT DISTINCT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, nodeId))
       consider(r.bundle_id, "cites");
-    return [...up.entries()].filter(([, live]) => live).map(([id]) => id).sort();
+    const out = [...up.entries()].filter(([, live]) => live).map(([id]) => id).sort();
+    if (memo) memo.edges.set(nodeId, out);
+    return out;
   }
 
   /** DEC-16's EVERY-ANCESTOR walk, bounded, viewer-gated, and honest about both
@@ -434,7 +445,20 @@ export class Queue {
    *
    *  An EMPTY set with no reasons is UNGROUPED, and that is a real answer: an
    *  item nothing rests on sits ungrouped and is never given an invented home. */
-  #queueAncestors(subjectIds, viewer) {
+  #queueAncestors(subjectIds, viewer, memo = null) {
+    /* R91 (T51; L13): within one ask nothing is written, so a set of subjects has one answer: asked again (by another item of
+       the same subject, or another producer) it is copied from the first, and the reads of a node's edges and of an
+       ancestor's row are made once however many subjects reach it. */
+    const mk = memo ? JSON.stringify([...new Set((subjectIds || []).filter((x) => typeof x === "string" && x))].sort()) : null;
+    if (memo && memo.homes.has(mk)) {
+      const h = memo.homes.get(mk);
+      return { ...h, reasons: [...h.reasons], ancestors: h.ancestors.map((a) => ({ ...a })) };
+    }
+    const r = this.#walkAncestors(subjectIds, viewer, memo);
+    if (memo) memo.homes.set(mk, { ...r, reasons: [...r.reasons], ancestors: r.ancestors.map((a) => ({ ...a })) });
+    return r;
+  }
+  #walkAncestors(subjectIds, viewer, memo) {
     const bound = Queue.QUEUE_ANCESTOR_DEPTH;
     /* D-15 through the ONE compilation point. Fail closed: an absent or
        unrecognised viewer compiles to the deny predicate, so a caller that
@@ -450,13 +474,18 @@ export class Queue {
       depth += 1;
       const next = [];
       for (const node of frontier) {
-        for (const up of this.#queueAncestorEdges(node)) {
+        for (const up of this.#queueAncestorEdges(node, memo)) {
           if (seen.has(up)) continue;
           seen.add(up);
           next.push(up);
-          const row = this.#one(
-            `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
-             WHERE b.bundle_id=? AND (${gate.sql})`, up, ...gate.args);
+          let row;
+          if (memo && memo.rows.has(up)) row = memo.rows.get(up);
+          else {
+            row = this.#one(
+              `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
+               WHERE b.bundle_id=? AND (${gate.sql})`, up, ...gate.args);
+            if (memo) memo.rows.set(up, row);
+          }
           if (!row) {
             /* Absent and invisible are indistinguishable TO THE CALLER (REC-25),
                but they are not the same fact and this producer must not report
@@ -497,7 +526,7 @@ export class Queue {
        lookup per remaining node, and the difference between an honest
        undetermined and a reflexive one. */
     if (frontier.length > 0
-        && frontier.some((n) => this.#queueAncestorEdges(n).some((u) => !seen.has(u))))
+        && frontier.some((n) => this.#queueAncestorEdges(n, memo).some((u) => !seen.has(u))))
       reasons.add("depth_bound");
     const ancestors = [...found.values()]
       .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -531,7 +560,7 @@ export class Queue {
    *
    *  Union order is ACTS order, preserved: a single-subject item's options are
    *  byte-for-byte op=affordances' `acts`. */
-  #queueOptions(subjectIds, viewer, identity = null) {
+  #queueOptions(subjectIds, viewer, identity = null, memo = null) {
     const byId = new Map();
     /* D-311: the two act stamps `op=affordances` now sends (`author`, `by`), recovered from what the
        queue already carries so an item's options stay byte-for-byte that answer. A session's are its
@@ -541,10 +570,14 @@ export class Queue {
     const member = this.#positionalMember(viewer, identity);
     const actor = member !== null ? member : (isMachineIdentity(viewer) ? String(viewer).trim() : null);
     for (const id of (subjectIds || []).slice(0, Queue.QUEUE_OPTION_SUBJECTS_MAX)) {
-      const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });
-      if (!facts || facts.ok !== true) continue;
-      for (const a of deriveActs(facts))
-        if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
+      /* R91 (L13): a subject's acts are derived once per ask, whoever asks for them. */
+      let acts = memo ? memo.acts.get(id) : undefined;
+      if (acts === undefined) {
+        const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });
+        acts = !facts || facts.ok !== true ? [] : deriveActs(facts).map((a) => ({ id: a.id, label: a.label, weight: a.weight }));
+        if (memo) memo.acts.set(id, acts);
+      }
+      for (const a of acts) if (!byId.has(a.id)) byId.set(a.id, { ...a });
     }
     return [...byId.values()];
   }
@@ -603,6 +636,12 @@ export class Queue {
    *  publication below. A list of field names rather than a list of kinds: the
    *  kinds change every wave and this pair has not changed since REC-7. */
   static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
+  /** R39, R59 (T51; tasks R21; K4213): the history entry that resolved a task: the last `resolved`, or `resolved_undecided`
+   *  (a task `taskresolve` put aside before anyone decided it; it carries no `resolved`), else null. */
+  static resolvingEntry(history) {
+    return [...(Array.isArray(history) ? history : [])].reverse()
+      .find((h) => h && (h.event === "resolved" || h.event === "resolved_undecided")) || null;
+  }
   /** R8: the task statuses an OBLIGATION is live in (N373). */
   static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
@@ -636,8 +675,20 @@ export class Queue {
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
-  /** The door R12 and R28 name for an OBLIGATION of `kind`: its entry above (a list copied), else `taskresolve`. */
-  static doorOf(kind) {
+  /** R12 (T51; C62, K4171): the door a producer declared on an item it minted, or null: `door` is an op name, or a non-empty
+   *  list of op names, the first the one the screen leads with. Anything else (blank, a list holding a non-name, a
+   *  non-string) declares nothing. A list is copied. */
+  static declaredDoor(door) {
+    if (typeof door === "string") return door.trim() ? door.trim() : null;
+    if (Array.isArray(door) && door.length > 0 && door.every((d) => typeof d === "string" && d.trim()))
+      return door.map((d) => d.trim());
+    return null;
+  }
+  /** The door R12 and R28 name for an OBLIGATION of `kind`: the door its producer declared on the item (`declared`, R12),
+   *  else its entry above (a list copied), else `taskresolve`. */
+  static doorOf(kind, declared) {
+    const own = Queue.declaredDoor(declared);
+    if (own !== null) return own;
     const d = Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOORS, kind) ? Queue.OBLIGATION_DOORS[kind] : null;
     return Array.isArray(d) ? [...d] : d || "taskresolve";
   }
@@ -777,7 +828,7 @@ export class Queue {
          resolved somewhere else will need its own answer here and will find this line when it does. */
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
-               instead: Queue.doorOf(item.kind),
+               instead: Queue.doorOf(item.kind, item.door),
                detail: localize("queue.index.a_to_do_is_something", "a to-do is something a named person must do for the record to proceed and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside is not a narrower version of that act, it is a different one.{v1}", { v1: String(Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOOR_DETAIL, item.kind)
                         ? Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "") }) };
     if (item.class === "CONDITION")
@@ -945,20 +996,37 @@ export class Queue {
     ["signing-keys", ["OBLIGATION"]], ["action", ["OBLIGATION", "FINDING", "CONDITION"]], ["attribution", ["OBLIGATION"]],
     ["docket", ["OBLIGATION", "FINDING"]], ["cited-cases", ["FINDING", "CONDITION"]], ["wizards", ["OBLIGATION", "FINDING"]],
     ["schedule", ["FINDING"]], ["places", ["CONDITION"]], ["projects", ["OBLIGATION"]],
-    ["notice-producers", ["OBLIGATION", "FINDING"]]]);
+    ["members", ["OBLIGATION"]], ["notice-producers", ["OBLIGATION", "FINDING"]]]);
 
   /** R60: one row `{feed, classes, answered, failed}` for each feed in QUEUE_FEEDS, then one for any other feed id the
    *  producers name. `facts` is `queue-producers`' (its R45: `failed` `[{feed, reason}]` and `absent` the feed ids no provider
    *  is composed for), `noticed` is R51's read. `answered` is true only when the feed's read returned and named no failure, and
    *  never when it is absent; `failed` is what the feed named: the reason codes of R45's entries, or `notice-producers`' failed
-   *  producers. A read that said nothing of failure names none. */
-  #feedRows(facts, noticed) {
+   *  producers. A read that said nothing of failure names none. A failure that names the read that refused (`read`) or its
+   *  `code` (queue-producers R50) carries them onto its row; a row with no such failure has neither key. */
+  #feedRows(facts, noticed, own = {}) {
+    /* R91 (T51; L13): `ms`, the milliseconds the feed's read took: this module's own measure for `tasks` and `notice-producers`,
+       `facts.ms[feed]` (queue-producers R45) for a producer's feed, and null where none is stated, never a made-up number. */
+    const stated = facts.ms && typeof facts.ms === "object" && !Array.isArray(facts.ms) ? facts.ms : {};
+    const msOf = (feed) => {
+      const v = Object.prototype.hasOwnProperty.call(own, feed) ? own[feed] : stated[feed];
+      return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
+    };
     const codes = new Map();
     const absent = new Set();
+    const named = new Map();
     const note = (feed, code) => { if (typeof feed === "string" && feed) codes.set(feed, [...(codes.get(feed) || []), code]); };
     for (const e of Array.isArray(facts.failed) ? facts.failed : [])
       if (typeof e === "string") note(e, "failed");
-      else if (e && typeof e === "object") note(e.feed, typeof e.reason === "string" && e.reason ? e.reason : "failed");
+      else if (e && typeof e === "object") {
+        note(e.feed, typeof e.reason === "string" && e.reason ? e.reason : "failed");
+        /* R60 (T51 fix round, B7): the read that refused and its code, as the producers name them (queue-producers R50), carried
+           onto the feed's row; the first failure that names either one. */
+        const why = {};
+        if (typeof e.read === "string" && e.read) why.read = e.read;
+        if (typeof e.code === "string" && e.code) why.code = e.code;
+        if (typeof e.feed === "string" && e.feed && Object.keys(why).length > 0 && !named.has(e.feed)) named.set(e.feed, why);
+      }
     for (const e of Array.isArray(facts.absent) ? facts.absent : []) {
       const feed = typeof e === "string" ? e : e && typeof e === "object" ? e.feed : null;
       if (typeof feed === "string" && feed) absent.add(feed);
@@ -966,12 +1034,13 @@ export class Queue {
     const known = new Set(Queue.QUEUE_FEEDS.map(([f]) => f));
     const rows = [...Queue.QUEUE_FEEDS, ...[...new Set([...codes.keys(), ...absent])].filter((f) => !known.has(f))
       .sort().map((f) => [f, [...Queue.QUEUE_CLASSES]])].map(([feed, classes]) => {
-      if (feed === "tasks") return { feed, classes: [...classes], answered: true, failed: [] };
+      if (feed === "tasks") return { feed, classes: [...classes], answered: true, failed: [], ms: msOf(feed) };
       if (feed === "notice-producers")
         return { feed, classes: [...classes], answered: noticed.failed.length === 0 && noticed.absent !== true,
-                 failed: [...noticed.failed] };
+                 failed: [...noticed.failed], ms: msOf(feed) };
       const failed = codes.get(feed) || [];
-      return { feed, classes: [...classes], answered: failed.length === 0 && !absent.has(feed), failed: [...failed] };
+      return { feed, classes: [...classes], answered: failed.length === 0 && !absent.has(feed), failed: [...failed], ms: msOf(feed),
+               ...(named.get(feed) || {}) };
     });
     return rows;
   }
@@ -1039,6 +1108,9 @@ export class Queue {
        the fallback to its viewer, byte-unchanged. */
     const identity = me ? `member:${me}` : null;
     const items = [];
+    /* R91 (L13): what this ask has already read, for its walks and its option derivations (nothing is written in an ask). */
+    const memo = { edges: new Map(), rows: new Map(), homes: new Map(), acts: new Map() };
+    const clock = Queue.#stopwatch();
     /* R56 (N1123): the title of the bundle a subject names, when the viewer may see it, else null; asked once per id, through
        the one gate (D-15), and never of a bundle this viewer may not see (R33). */
     const titleOf = this.#titleReader(viewer);
@@ -1058,6 +1130,7 @@ export class Queue {
        open one needs (it used to read every status and drop the resolved ones after the cap). */
     /* N410 (tasks R6's `assignees`): a member's read asks for their own and the unassigned tasks itself, so other
        members' live tasks never take a place theirs need; a machine credential (no member) reads every assignee. */
+    const tTasks = clock.start();
     for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES,
                                                 ...(me ? { assignees: [me, "unassigned"] } : {}) })) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
@@ -1070,7 +1143,7 @@ export class Queue {
          except the first, as a queue_state row keyed by (member, case) would —
          and a resolved event with two ancestors leaves a stale unresolved copy
          under the second. */
-      const homes = this.#queueAncestors([subject], viewer);
+      const homes = this.#queueAncestors([subject], viewer, memo);
       if (!this.#queueEventLive(row)) continue;
       const createdMs = Date.parse(row.created);
       items.push({
@@ -1090,26 +1163,33 @@ export class Queue {
               detail: localize("queue.index.the_task_row_carries_a", "the task row carries a created stamp this producer cannot read as an instant") },
         assignee: row.assignee,
         assignee_role: row.assignee_role,
-        options: this.#queueOptions([subject], viewer, identity),
+        ...(Queue.declaredDoor(row.door) !== null ? { door: Queue.declaredDoor(row.door) } : {}),
+        options: this.#queueOptions([subject], viewer, identity, memo),
       });
     }
+
+    const tasksMs = clock.since(tTasks);
 
     /* ------------------------------------------- the producers (queue-producers R8; N363)
        Every item that is not a task comes from the producers' one read, handed this module's R7 walk and R12
        options so there is one walk and one derivation; its `facts` are published below (R6, R15). Pushed above the
        mint, like every producer, so the mint validates what it mints. */
+    const tFeeds = clock.start();
     const produced = this.#feedItems({ member: me, viewer, now, identity,
-      homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
-      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });
+      homesOf: (subjects) => this.#queueAncestors(subjects, viewer, memo),
+      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity, memo) });
+    const feedsMs = clock.since(tFeeds);
     const facts = produced && produced.facts && typeof produced.facts === "object" ? produced.facts : {};
     items.push(...(produced && Array.isArray(produced.items) ? produced.items : []));
     /* R51 (T33-83): `notice-producers`' one read, beside them, handed the same walk and options, its items treated
        exactly as theirs (minted, homed, muted, decided and sorted below). It writes nothing and never throws (its R1),
        and a producer it names in `facts.failed` contributes no item; the answer states which (`notice_producers`). A
        closed gate is that module's alone to honour: nothing here re-judges what it raises. */
+    const tNotices = clock.start();
     const noticed = this.#noticeItems({ member: me, viewer, now, identity,
-      homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
-      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });
+      homesOf: (subjects) => this.#queueAncestors(subjects, viewer, memo),
+      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity, memo) });
+    const noticesMs = clock.since(tNotices);
     items.push(...noticed.items);
 
     /* THE MINT, and PL-15 SWEPT IT FOR THE CLASS RATHER THAN ADDING TO IT.
@@ -1426,7 +1506,7 @@ export class Queue {
     const disposedOut = dispAll.slice(0, dispCap);
     /* R60 (T51; DEC-330 A62): which feeds answered, and the per-class all-clear: a class is clear only when every feed that can
        raise it answered and the unsuppressed feed (before the limit's cut) holds no item of it. A muted item is not a failure. */
-    const feeds = this.#feedRows(facts, noticed);
+    const feeds = this.#feedRows(facts, noticed, { tasks: tasksMs, "notice-producers": noticesMs });
     const classesAnswered = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, feeds.filter((f) => f.classes.includes(c)).every((f) => f.answered)]));
     const allClear = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, classesAnswered[c] && !items.some((i) => i.class === c)]));
     return {
@@ -1449,7 +1529,7 @@ export class Queue {
       /* R60 (T51; DEC-330 A62): the feeds this answer was assembled from and whether each answered; a surface says "looked and
          found none" for a class exactly when `all_clear` holds for it, and names a failed feed by its id. Asking again is the
          retry: no state is kept between asks. */
-      feeds, all_answered: feeds.every((f) => f.answered), classes_answered: classesAnswered, all_clear: allClear,
+      feeds, feeds_ms: feedsMs, all_answered: feeds.every((f) => f.answered), classes_answered: classesAnswered, all_clear: allClear,
       classes_deferred: Queue.QUEUE_CLASSES_DEFERRED,
       ancestor_depth_bound: Queue.QUEUE_ANCESTOR_DEPTH,
       /* REC-21. What this member has chosen not to be told about, REPORTED
@@ -1614,7 +1694,7 @@ export class Queue {
     /* tasks R6: the tasks resolved since then on visible subjects, one past the bound so the cut is observed. */
     const rows = this.#tasks.resolvedTasks({ viewer, since, limit: cap + 1 });
     const tasks = rows.slice(0, cap).map((t) => {
-      const by = [...t.history].reverse().find((h) => h && h.event === "resolved");
+      const by = Queue.resolvingEntry(t.history);
       return { id: t.id, class: "OBLIGATION", kind: t.kind, refers_to: t.refers_to, summary: t.subject.text,
                resolved_by: by ? by.actor : null, resolved_at: t.resolved_at ?? (by ? by.at : null) };
     });
@@ -1732,7 +1812,7 @@ export class Queue {
     const rows = [];
     const resolved = this.#tasks.resolvedTasks({ viewer, since, limit: 1000 });
     for (const t of resolved) {
-      const by = [...(t.history || [])].reverse().find((h) => h && h.event === "resolved");
+      const by = Queue.resolvingEntry(t.history);
       const resolvedBy = by && typeof by.actor === "string" ? by.actor : null;
       if (member && t.assignee !== member && t.assignee !== "unassigned" && resolvedBy !== member) continue;
       rows.push({ act: "resolved", id: t.id, class: "OBLIGATION", kind: t.kind, title: titleOf(t.refers_to),
@@ -2163,21 +2243,46 @@ export class Queue {
     /* END DEC-49 REGION is-dispose-scope */
   }
 
+  /** R28 (T51; C62): the door the bridge names for an OBLIGATION key of `kind`: the door its producer declared on the caller's
+   *  live item with that id (`Queue.doorOf`'s first source), else the kind's hand list, else `taskresolve`. The caller's feed is
+   *  read once (and once for a whole set); nothing is written, and a feed that cannot be read names the hand list's door. */
+  #bridgeFeeds = null;
+  #bridgeDoor(id, kind, viewer, identity) {
+    if (typeof id !== "string" || !id.trim()) return Queue.doorOf(kind);
+    try {
+      const member = typeof identity === "string" && identity.startsWith("member:") && identity.slice(7).trim() ? identity.slice(7).trim() : null;
+      const ck = JSON.stringify([viewer ?? null, member]);
+      let feed = this.#bridgeFeeds ? this.#bridgeFeeds.get(ck) : undefined;
+      if (feed === undefined) {
+        feed = this.queueFeed({ member, viewer, limit: 500 });
+        if (this.#bridgeFeeds) this.#bridgeFeeds.set(ck, feed);
+      }
+      const it = feed && feed.ok === true && Array.isArray(feed.items) ? feed.items.find((i) => i && i.id === id.trim()) : null;
+      return Queue.doorOf(kind, it && it.kind === kind && it.class === "OBLIGATION" ? it.door : undefined);
+    } catch { return Queue.doorOf(kind); }
+  }
+
   proposeDispose({ progressionKey, stageKey, key, project, finding, kind,
                    to, state, reason, definitionVersion = null,
                    decidedBy = null, viewer = null, identity = null, items } = {}) {
     /* D-126: WITH `items`, the act takes a SET under the PER-ITEM weight (`#perItem`), each item decided by
        THIS method's single-key path. The decider (the control plane's stamp) and the viewer and identity
        (the URL's, spread after the body at the dispatch) are forced onto every item. */
-    if (items !== undefined)
-      return this.#perItem("proposedispose",
-        /* REC-211: `definitionVersion` is SHARED so a set over ONE progression names the version
-           once; `#perItem` spreads each item AFTER the shared fields, so a set spanning several
-           progressions still gives each item its own. It is not stamped like the decider, because
-           the decider is a fact about the actor and this is a fact about what the actor READ. */
-        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason,
-          definitionVersion },
-        { decidedBy, viewer, identity }, (b) => this.proposeDispose(b));
+    if (items !== undefined) {
+      /* R28 (T51; C62): a set's refusals read the caller's live feed for the door a producer declared, once for the whole set. */
+      const own = this.#bridgeFeeds === null;
+      if (own) this.#bridgeFeeds = new Map();
+      try {
+        return this.#perItem("proposedispose",
+          /* REC-211: `definitionVersion` is SHARED so a set over ONE progression names the version
+             once; `#perItem` spreads each item AFTER the shared fields, so a set spanning several
+             progressions still gives each item its own. It is not stamped like the decider, because
+             the decider is a fact about the actor and this is a fact about what the actor READ. */
+          { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason,
+            definitionVersion },
+          { decidedBy, viewer, identity }, (b) => this.proposeDispose(b));
+      } finally { if (own) this.#bridgeFeeds = null; }
+    }
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
     /* WHICH ACT THIS IS, decided by what the caller SENT and never by inspecting the id's shape.
@@ -2244,7 +2349,7 @@ export class Queue {
                check: row.check, translation: row.translation,
                class: keyClass, kind: keyKind,
                /* R28 (K607): the same per-kind door R12 publishes on the item. */
-               instead: keyClass === "CONDITION" ? "queuemute" : Queue.doorOf(keyKind),
+               instead: keyClass === "CONDITION" ? "queuemute" : this.#bridgeDoor(keyed, keyKind, viewer, identity),
                detail: localize("queue.index.this_names_v1_and_v2", "this names {v1}, and {v2} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its `disposition.instead`. Nothing was written. The rest of a selection is unaffected — under the per-item weight this item alone is kept, carrying this reason.", { v1: String(keyClass === "CONDITION" ? "a status item" : "a to-do"), v2: String(keyClass === "CONDITION" ? "a status item" : "a to-do") }) };
     }
     /* END DEC-49 REGION is-dispose-class */
@@ -2451,3 +2556,20 @@ export function queueAnswer(r, { gate } = {}) {
     items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),
   } };
 }
+
+/* R92 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops of this module the screens send, declared by their owner
+   beside the ops map: each row's classes, mutating, weight and description are the op's existing rows' (`op-declarations`,
+   `op-grades`), its fields are what the arm reads. `decidedBy` (the control plane's stamp on `proposedispose`), `viewer`,
+   `member` and `identity` are stamps, not fields. `queuemute` and `queuesnooze` also read an `at` (an instant), which only
+   in-plane callers and tests send. A SET (`items`, queue-states' set arm) names each item's identity in its own item, so `items`
+   satisfies the two identity groups; the disposition and the reason stay top-level, because the set shares them onto every item
+   (`#perItem`). */
+export const DECLARED_OPS = Object.freeze({
+  proposedispose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("queue.declared.proposedispose", "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle"),
+    fields: { accepts: ["items","key","progressionKey","stageKey","project","finding","kind","to","state","reason","definitionVersion"],
+              requires: [["project","key","progressionKey","items"],["finding","key","progressionKey","items"],["to","state"],"reason"] } },
+  queuemute: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuemute", "personal state, keyed (member, case) over the kinds named or (member, item) by the item's own id: a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)"),
+    fields: { accepts: ["case","kinds","item","unmute","at"], requires: [["item","case"]] } },
+  queuesnooze: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuesnooze", "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)"),
+    fields: { accepts: ["case","until","clear","at"], requires: ["case",["until","clear"]] } },
+});

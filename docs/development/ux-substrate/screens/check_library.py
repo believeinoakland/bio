@@ -23,7 +23,8 @@ MACHINE_REFUSALS = {'release', 'conclude', 'withdrawconclusion', 'reopen', 'publ
 MACHINE_DRAFTS = {'whatchangedpropose', 'escalationreasondraft'}  # wizard-scripts R13
 # Served through a door rather than declared as op=… in a requirement, as BOB states in B149 (T46's HANDOFF):
 SERVED_BY_DOOR = {'ask': 'the plane\'s ask door, agent-worker R54', 'subscriptionsignin': 'control-plane R65',
-                  'infolevelset': 'instance-setup R79 (T46)', 'projectaikeepaway': 'op-declarations R41 (BOB\'s B172: declared and served, T47)'}
+                  'infolevelset': 'instance-setup R79 (T46)', 'projectaikeepaway': 'op-declarations R41 (BOB\'s B172: declared and served, T47)',
+                  'linewithdraw': 'lines R8 (op linewithdraw, served by the lines module and listed open in op-declarations; its module row has no classes object the check reads)'}
 
 def op_universe(ref):
     try:

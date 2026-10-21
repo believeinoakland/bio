@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J6
+**Read** · handled J14
 
 ## B1 · START
 
@@ -107,3 +107,66 @@ ANSWER J6 (K4210): your ids R36-R54 stand; entries 17 and 19 under R5/R4 tests: 
 ## B11 · CHANGE
 
 CHANGE (K4213; filings J4): `filingapprove`'s declaration takes `resolutions: [{sentence, resolution, words?}]` (`sentence` the exact text of the pointed-out sentence; `resolution` `only_asks` with `words`, 1 to 500 characters on one line, or `breach_claim` without) and `release: [{ord, reason}]` (`ord` the sentence's number in the record check); an `index` is refused `ASSERTION_RESOLUTION_REFUSED`. Send that shape. A phrase is flagged only when the draft stated its `language` at preparation.
+
+## B12 · CHANGE
+
+CHANGE (K4224): action-holds and wizard-scripts are merged. Your test "R1–R6 (interface-shell R21, R38)" finds `writinghelp` missing from the plan screen's acts list: the registry (wizard-scripts, at the design commit) lists it, so the plan screen registers it as an act (the plan's fields offer writing help); register it, never drop it from the test. Merge `tranche/T51` first.
+
+## B13 · CHANGE
+
+CHANGE (K4236): SCREENS-ACTION #8, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip (#7 merged at K4236).
+1. `writinghelp` now accepts and requires `op` (wizard-scripts R27, R46; merged K4230). `WRITE_HELP` (`send-steps.mjs` ~397) sends only `field` and `told`, so the guard and the door refuse it on every screen of this module. Send `op`: the act the words are for (its `data-forop`), as screens-publish's case editor does. Test at the interface: the help request carries `op`, `field` and `told`; control: an act with no `data-forop` sends no help request.
+2. After FILINGS #25 merges (BOB sends a CHANGE): `filingread` answers the stored `exhibits` and `venue_standard`; the send steps draw the exhibits from it after a reload (your R-line for the send steps; #7 J6 (6)). Until then do 1, and post a QUESTION only if 2 needs more than the answer's two fields.
+The missing design keys of #7 J6 (1)–(6) went to UX-DESIGN as HANDOFF B424; do not draw them until it answers.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, the code it touches and the tests naming the ids it changes, whole. Words (K3930). Model sonnet, medium effort; workers sonnet medium, haiku low.
+
+## B14 · CHANGE
+
+CHANGE (K4240): FILINGS #25 is merged: filingread answers the stored exhibits and venue_standard (R59, R25). Merge tranche/T51 and do B13's item 2.
+
+## B15 · CHANGE
+
+CHANGE (K4248): SCREENS-ACTION, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours, B424 whole: (1) the reply form (medium, follows, the reply's document; stage, outcome and medium options by vocabulary token: BOB confirms the medium tokens by CHANGE; the document choice needs a per-project document read: name the read you use, or report it missing); (2) `screen.reminder.on`; (3) `screen.request.subject.*`; (4) the matter rows (`screen.matter.*`, stages named without digits, `.proposed`, `.advance` with the name, `.atstage`, `screen.plan.escalation`; reasons asked only where U420 says); (5) the plan's "Add another" and `screen.plan.option.*`, `.dispose.*`, `.phase.*`; (6) the send steps' rows and "A sentence the record contradicts" with its release button (BOB names the op by CHANGE; build the rest first).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B16 · CHANGE
+
+CHANGE (K4249), with B15: (a) releasing a contradicted sentence is not a `release` op (that is ratification's vouching): it rides the approve step's `filingapprove` as `release: [{ord, reason}]` (filings R34; your R42): each held sentence by its index with a non-blank reason; without it the approval is refused `CONTRADICTED_HELD` naming the unreleased ones. Draw the design's "A sentence the record contradicts" rows and button as gathering that entry, not as a separate act. (b) the reply form: `medium` is free text (at most 500 characters; actions R13): send the design's tokens (email, letter, portal, person, other) as the value; `stage` for a received reply is acknowledgement, fee_estimate, fee_waiver_decision, extension_notice, production, denial, appeal_decision, court_decision, and `outcome` granted, denied, partial, reversed, affirmed, none_stated, none_exists: the design's "none" for either means the field is omitted (outcome is required on the four decision stages and allowed only on received entries).
+
+## B17 · CHANGE
+
+CHANGE (K4253), with B15 and B16: the design folded B16's answers (U424, DEC-389, merged into the tranche at 742a6c8d1c; rows regenerated): "Release this sentence" and its reason field carry `filingapprove` with `release: [{ord, reason}]` (`release` is off start-send's acts; `act.release.label.start-send` stays a drawn row); `screen.action.reply.stage.none` / `.outcome.none` mean the field is omitted; a sent entry's stages have keys `screen.action.sent.stage.{request, fee_waiver_request, appeal, court_filing}`. Merge `tranche/T51` before you draw them.
+
+## B18 · CHANGE
+
+CHANGE (K4259): SCREENS-ACTION, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-sonnet-5-5, medium effort (one model up if it blocks on tests).
+Why: your J10 deferred the minutes fold for want of a requirement; R55 now binds it (K4258).
+Entries:
+1. R55 (new, K4258; `actions` R108; DEC-340): the minutes fold on a reply to a public comment (`screen.action.minutes.*`), your J10 deferral 4. The registry re-take found no difference on your screens (`start-send` lost `release`; your contract test's carve-out is inert: remove it).
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-action tranche/T51 job/T51/screens-action`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B19 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-action tranche/T51 && git branch -m job/T51/screens-action stale/screens-action-local && git checkout -b job/T51/screens-action origin/job/T51/screens-action`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-ACTION #11 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 2)
+
+Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `screens-action`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Another job holds this module's other causes at another time: cause-action-t51 (wave 1); never at the same time as you (P8). Do only your own causes. Wave 1 is merged on `tranche/T51` before you start: merge the tranche into your branch first and read the new requirement lines and public parts of the providers you use.
+
+**From K4310 (K4313):** CAUSE-ACTION-T51 J3 already reads Matter's event picker by the project's capture shas against a scripted plane; with EVENTS #10 merged, run `matter-t51.test.mjs` against the real `events` and fix what differs.
+
+**Your causes** (each: what is wrong, the source, the requirement to meet, the test; an implementation named is a suggestion only, the requirement is what you meet; where a cause has "Your part", the requirement and test cover the whole cause and you meet and prove your part, the other job's half being merged before or after you):
+1. **C94** (MINOR) A member id (`admin`, the founder) is shown where her handle belongs: "Answered by admin", "Agreed: admin", "added by admin", "declared by admin", "opened … by admin"; member link /app/members/admin against /app/members/sparky; "already on this project" refused as "No member has that handle". **Your part: screens-action's part: adopt `memberName` where an id is drawn ("opened by", "added by").** Source: `screens-daily/queue-states.mjs` `queue.answered.bymember` with `String(r.by)` (also :274-275); `queue-producers` `#memberName`; other sites per the findings (S-25, S-34, S-46, FC-06c, E28, E43). Requirement: One kit helper `memberName(id)` in `interface-shell` (provider) names a member by handle, the founder included; every screen uses it, none shows an id. Test: Shell: the helper names `admin` by its handle and an unknown id by a word; each screen: the sites above draw the handle (assert no id text); control: a member with no handle draws the fallback word.
+
+Read in full (never in part): the lines of screens-action naming a member in a drawn sentence; the shell helper's requirement line. Wording-only job. The first job of this module (`cause-action-t51`) is merged; read its record; for each cause above, the code files named in its source, whole, and the tests that name the requirement ids you meet; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678). Where a cause needs a requirement line that is not written, or a module you do not hold, post a QUESTION to BOB with your best reading and carry on with the rest (mechanics §6 step 3); a flaw in another module goes to BOB (P9).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-action/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action tranche/T51 job/T51/screens-action`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).

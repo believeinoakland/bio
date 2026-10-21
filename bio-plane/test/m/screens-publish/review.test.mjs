@@ -1,6 +1,9 @@
 /* screens-publish R2 (the review copy) and R17 (the review copy, from outside), on interface-shell's served page: the
  * named readers and their acts, the reader's link shown once and kept nowhere, the comments and replies; and the outside
  * reader's page, its secret only in a request's body. */
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, tipOf, drew, drewIn, day, clock, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
@@ -13,7 +16,7 @@ const withGrants = (grants) => ({ reviewcopy: ok(COPY({ grants })) });
 /* R27 (`review` R35): the zone the copy answer carries on each roster row; a zone of null is "none held". */
 const zoned = (zone) => ({ reviewcopy: ok(COPY({ zone, grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone }] })) });
 const PACIFIC = "Pacific Time, Los Angeles";
-const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
+const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
 
 test("R2 R18 each named reader is a row with what they may read and until when, drawn \"until <date>\" from the grant's own end in the group's zone (not the UTC day), offering \"Stop sharing\"", async () => {
   const p = await open(PATH);
@@ -81,9 +84,9 @@ test("R2 \"Share with a named reader\" takes a name, a role and an end date, is 
   const p = await open(PATH, { plane: zoned("America/Los_Angeles") });
   const b = main(p).querySelector('button[data-act="reviewgrant"]');
   assert.ok(tipOf(b).includes(word("mark.outward.means")), "mark.outward.means");
-  await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "", "rc-until": "2099-10-20" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Prof. N. Iyer", "rc-role": "", "rc-until": "2099-10-20" } });
   assert.equal(p.byOp("reviewgrant").length, 0);
-  await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "housing law", "rc-until": "" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Prof. N. Iyer", "rc-role": "housing law", "rc-until": "" } });
   assert.equal(p.byOp("reviewgrant").length, 0, "no end date: nothing shared");
   await share(p, "2099-10-20");
   assert.equal(last(p, "reviewgrant").body.draft, DR);
@@ -91,7 +94,7 @@ test("R2 \"Share with a named reader\" takes a name, a role and an end date, is 
 
 test("R2 R11 the grant's secret is shown once as the reader's link with \"Civicsmith sends no email\", and kept in no storage, address or later request", async () => {
   const p = await open(PATH, { plane: { ...zoned("America/Los_Angeles"), reviewgrant: ok({ grantId: "GRT-2", draftId: DR, recipient: "Ana", secret: GRANT_SECRET, secretIsShownOnce: true }) } });
-  await press(p, "reviewgrant", { values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
   const link = main(p).querySelector("[data-reader-link]");
   assert.ok(link);
   assert.match(link.textContent, new RegExp(`https://group\\.example/app/review#grant=${GRANT_SECRET}`));
@@ -107,7 +110,7 @@ test("R2 R11 the grant's secret is shown once as the reader's link with \"Civics
 
 test("R2 the readers' comments, each answered by \"Reply\" (reviewcomment with the draft and the member's words)", async () => {
   const p = await open(PATH);
-  assert.equal(last(p, "reviewcomments").query.case, C);
+  assert.equal(p.byOp("reviewcomments").length, 0, "R62: the comments come from the copy answer, not a read keyed on the case");
   assert.ok(text(p).includes("Finding 1 should say which schedule the council approved.") && drew(p, "screen.review-copy.from.reader", { who: "Prof. N. Iyer" }));
   await press(p, "reviewcomment", { values: { "rc-reply-0": "Thank you: it is schedule B." } });
   assert.equal(last(p, "reviewcomment").query.draft, DR);

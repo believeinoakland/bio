@@ -41,7 +41,7 @@ import { word, localize } from "../setup-words/index.mjs";
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
 /** The tables this module owns (R41): no other module declares, writes or reshapes them. */
-export const PROVENANCE_TABLES = ["register", "captured_locators", "origin_declarations"];
+export const PROVENANCE_TABLES = ["register", "captured_locators", "origin_declarations", "authority_decisions"];
 export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN, UNPACKED_METHOD, UPLOAD_ORIGIN,
          UPLOADED_METHOD } from "./register-checks.mjs";
 export { REGISTER_ENTRY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, TESTIMONY_CHECKS } from "./checks.mjs";
@@ -502,7 +502,8 @@ class Provenance {
   /** R42 · N688: the record's answers an `unpacked` document is judged against (`register-checks.mjs`'
    *  `checkContainer`), at the write, in the audit, and for a caller of `withRegisterChecks` that holds this module:
    *  whether the archive is held (R5), what entry `index` of it earns (R59, read through the archive from the top, as
-   *  a receipt `zip:<sha>!<index>` would be), and the origin of the archive's own document in its home's register. */
+   *  a receipt `zip:<sha>!<index>` would be), and the origin of the archive's own document in its home's register; and
+   *  (R66, C-18.9) the standing decision on a capture's content authority, which the arm reads before the document's own. */
   containerResolver() {
     return {
       holds: (a) => { const h = this.registerHolds({ sha: a }); return h.registered === true || h.acquired === true; },
@@ -514,6 +515,14 @@ class Provenance {
         const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
           .find((x) => isObj(x) && isObj(x.capture) && bareSha(x.capture.sha256) === a);
         return doc ? { found: true, origin: doc.origin } : { found: false };
+      },
+      /* R66: the standing decision a member made on the capture's content authority, or null where none has: C-18.9 reads
+         a document's authority state, issuer and basis from it before the document's own. */
+      authority: (a) => {
+        const sha = bareSha(a);
+        const home = sha ? this.homeOf(sha) : null;
+        const standing = home ? this.authorityOf(home.bundleId, sha) : null;
+        return standing && standing.history.some((e) => e.source === "decision") ? standing : null;
       },
     };
   }
@@ -1164,12 +1173,117 @@ class Provenance {
     return { ok: true, bundleId, system: sys, by: who, at, seq };
   }
 
+  /** R70 — every declaration of a document's origin, oldest first (`seq` order), the standing one (R30) the last: the
+   *  declared systems a screen lists. Gated by sight and refused as R64's are; writes nothing. */
+  originsOf({ bundleId = "", viewer = null } = {}) {
+    const id = typeof bundleId === "string" ? bundleId.trim() : "";
+    if (!id) return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
+    const info = this.#record.bundleInfo(id);
+    if (!info || !this.#membership.inSight(id, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: id,
+               detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    if (String(info.type).toLowerCase() !== "information")
+      return actRefusal("ORIGIN_NOT_A_DOCUMENT",
+        `this record is a ${String(info.type).slice(0, 40)}; only a document came from a system`, { bundleId: id });
+    return { ok: true, bundleId: id,
+             origins: this.#rows(`SELECT seq, system, by, at FROM origin_declarations WHERE bundle_id = ? ORDER BY seq`, id)
+               .map((r) => ({ seq: r.seq, system: r.system, by: r.by, at: r.at })) };
+  }
+
   /** R30 — the standing declaration (the latest), or null. A reader of a document's origin asks this before any
    *  system derived from its host. */
   originOf(bundleId) {
     const r = this.#one(`SELECT system, by, at FROM origin_declarations WHERE bundle_id = ? ORDER BY seq DESC LIMIT 1`,
                         String(bundleId ?? ""));
     return r ? { system: r.system, by: r.by, at: r.at } : null;
+  }
+
+  /* =====================================================================
+   * R65, R66, R67 · K4169 (C62; UC-046): A MEMBER'S DECISION ON A CAPTURED DOCUMENT'S CONTENT AUTHORITY. Who issued a
+   * document is a different fact from who served its bytes (AUTHORITY-AND-TRUST.md: authority is three-valued, and
+   * undetermined is a task), and a person's to decide: a machine or an assistant may propose an issuer and never
+   * decides one. Per document, dated, append-only, the latest standing, as the declared origin is (R29).
+   * ===================================================================== */
+
+  /** R65 — a member's decision: `determined` with the issuing party, or `undetermined_after_review` (the member looked and
+   *  could not tell; no issuer is invented), each with the basis. Nothing is written by a refusal. */
+  declareAuthority({ bundle = "", capture = "", outcome = "", authority = null, basis = "", by = null, viewer = null } = {}) {
+    const who = String(by ?? "").trim();
+    /* DEC-49 REGION is-authority-act
+       The door (C-103.8): a named member decides. */
+    if (!who || isMachineIdentity(who))
+      return actRefusal("AUTHORITY_NOT_A_MEMBER",
+        who ? localize("provenance.index.who_is_a_machine_credential",
+                       "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides", { who: String(who.slice(0, 60)) })
+            : localize("provenance.index.deciding_who_issued_a_document",
+                       "deciding who issued a document is a named member's act, and this call carries nobody"));
+    /* END DEC-49 REGION is-authority-act */
+    const bundleId = typeof bundle === "string" ? bundle.trim() : "";
+    const info = bundleId ? this.#record.bundleInfo(bundleId) : null;
+    if (!info || !this.#membership.inSight(bundleId, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: bundleId || null,
+               detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    const sha = bareSha(capture);
+    /* DEC-49 REGION is-authority-document
+       The document (C-103.9): a capture the register holds in this bundle. */
+    if (!sha || !this.#one(`SELECT capture_sha FROM register WHERE capture_sha = ? AND bundle_id = ?`, sha, bundleId))
+      return actRefusal("AUTHORITY_NOT_A_DOCUMENT",
+        localize("provenance.index.capture_is_not_a_document", "capture {capture} is not a document this record's register holds in {bundle}",
+                 { capture: String(sha ? `${sha.slice(0, 16)}…` : "(none)"), bundle: String(bundleId) }), { bundleId });
+    /* END DEC-49 REGION is-authority-document */
+    const oneLine = (v) => String(v ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
+    const why = oneLine(basis), issuer = oneLine(authority);
+    /* DEC-49 REGION is-authority-statement
+       The statement (C-103.10–C-103.12): how the member knows, the issuer when there is one, and which of the two outcomes. */
+    if (!why || why.length > 2000)
+      return actRefusal("AUTHORITY_NO_BASIS", localize("provenance.index.say_how_you_know_or", "say how you know, or what you tried, in at most 2000 characters"));
+    if (outcome === "determined" && (!issuer || issuer.length > 500))
+      return actRefusal("AUTHORITY_NO_ISSUER", localize("provenance.index.name_the_party_that_issued", "name the party that issued the document, in at most 500 characters"));
+    if (outcome !== "determined" && outcome !== "undetermined_after_review")
+      return actRefusal("AUTHORITY_OUTCOME_UNKNOWN", "the outcome is 'determined' or 'undetermined_after_review'");
+    /* END DEC-49 REGION is-authority-statement */
+    const at = secondOf(this.#now());
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS m FROM authority_decisions WHERE bundle_id = ? AND capture_sha = ?`,
+                           bundleId, sha).m || 0) + 1;
+    const named = outcome === "determined" ? issuer : null;
+    this.#sql.exec(`INSERT INTO authority_decisions (bundle_id, capture_sha, seq, outcome, authority, basis, by, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                   bundleId, sha, seq, outcome, named, why, who, at);
+    return { ok: true, bundle: bundleId, capture: sha, outcome, authority: named, basis: why, by: who, at, seq };
+  }
+
+  /** R66 — the document's standing content authority and its whole history, the register's acquisition-time value first
+   *  and the decisions after it; null for a capture with neither. Writes nothing; never throws. */
+  authorityOf(bundle, capture) {
+    const bundleId = typeof bundle === "string" ? bundle.trim() : "";
+    const sha = bareSha(capture);
+    if (!bundleId || !sha) return null;
+    const history = [];
+    const stated = this.#registerAuthority(bundleId, sha);
+    if (stated) history.push(stated);
+    for (const r of this.#rows(`SELECT seq, outcome, authority, basis, by, at FROM authority_decisions
+                                 WHERE bundle_id = ? AND capture_sha = ? ORDER BY seq`, bundleId, sha))
+      history.push({ source: "decision", outcome: r.outcome, authority_state: r.outcome === "determined" ? "determined" : "undetermined",
+                     authority: r.authority ?? null, basis: r.basis, by: r.by, at: r.at, seq: r.seq });
+    if (!history.length) return null;
+    const last = history[history.length - 1];
+    return { authority_state: last.authority_state, authority: last.authority, basis: last.basis, by: last.by, at: last.at,
+             reviewed: last.source === "decision" && last.outcome === "undetermined_after_review", history };
+  }
+
+  /* R66: the authority the bundle's own register states for the capture at acquisition (`authority_state`, `authority`,
+     `authority_basis`; a document from before the three-valued ruling carries an authority and no state, which reads
+     `determined`), or null where the register states none. */
+  #registerAuthority(bundleId, sha) {
+    const f = this.#record.readFile(bundleId, "data/provenance.json");
+    const reg = f && typeof f.text === "string" ? safeJson(f.text) : null;
+    const d = (Array.isArray(reg?.documents) ? reg.documents : []).find((x) => isObj(x) && isObj(x.capture) && bareSha(x.capture.sha256) === sha);
+    if (!d) return null;
+    const named = typeof d.authority === "string" && d.authority.trim() !== "";
+    const state = d.authority_state === "determined" || d.authority_state === "undetermined" ? d.authority_state : named ? "determined" : null;
+    if (!state) return null;
+    return { source: "register", authority_state: state, authority: state === "determined" && named ? d.authority : null,
+             basis: typeof d.authority_basis === "string" ? d.authority_basis : null, by: null,
+             at: typeof d.retrieved === "string" ? d.retrieved : null };
   }
 
   /** PL-10 / D-220 — EVERY VERSION AT AN ADDRESS, IN DATE ORDER, WITH ITS
@@ -1680,7 +1794,7 @@ export function provenanceOf(host, deps) {
     const promotion = d.promotion || promotionOf(host);
     p = new Provenance({ ...d, storage: d.storage || host.storage, record, membership, promotion });
     instances.set(host, p);
-    record.declarePurge("provenance", ["register", "origin_declarations", { name: "captured_locators", keys: [] }]);
+    record.declarePurge("provenance", ["register", "origin_declarations", "authority_decisions", { name: "captured_locators", keys: [] }]);
     p.joinPromotion();
     /* N92, record-core R59 (K130): the C-18 register arms (R42–R46) join the audit over the same image the catalogue
        reads, so the audit judges each bundle once, whole, and loses none of them. */

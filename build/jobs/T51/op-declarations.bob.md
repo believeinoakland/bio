@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J11
+**Read** · handled J19
 
 ## B1 · START
 
@@ -79,3 +79,69 @@ CHANGE: since your COMPLETE the design @ e6d16d8f53 (DEC-382, K4192) and op-grad
 ## B12 · CHANGE
 
 CHANGE (K4198): wizard-scripts (FR-46) is merged into tranche/T51: SCREEN_REGISTRY now holds the design at 1cc4a957f0 (83 screens, 554 acts, 45 owed). Your t50/R73 test 210 now fails: registryActGaps lists 37 owed ops with no declaration (taskdecide, capturecredential*, declareorigin, rerun*, projectclose, citeimported, withdrawimported, casedetails*, importregrade, namedrequests, namedrequestset, sweepset, sweepratify and the rest of DEC-374 to DEC-385). Merge the tranche branch; make OWED_BY_FIX_ROUND cover every owed act the registry draws whose owner declares it in this fix round, derived from the registry's own owed list rather than a growing hand list if you can (K3268: a test never hand-lists another module's ops); each leaves the list as its owner's declaration registers. Then COMPLETE again.
+
+## B13 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-68 · op-declarations**): the fix round of T51 (K4219; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-haiku-5-5.
+Your requirements: `build/requirements/op-declarations.md` (read whole). Write each NEW or amended requirement line yourself (K4210); the ownership listing of that one file is accepted at your merge.
+Why this job: case-import J5 (K4219): your `t28.test.mjs` "R14, R6" and "R16, R6" hand-list case-import's ops and fail on its four new ops (`importregrade`, `rerunstart`, `rerunpair`, `rerunread`, declared in its `DECLARED_OPS`, case-import R33).
+Merge order: module index 152; independent of the other wave-2 jobs.
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **K3268** · Every test of yours that lists another module's ops reads them from that module's `DECLARED_OPS` or ops map (test-support's `declaredOpsOf`), never a hand list; t28's two tests first. A declared op with no hand spec is served by its declaration (your R80). Test: green with case-import's four ops; control: an op absent from both is still refused.
+2. **R73 (R21)** · if `registryActGaps` is still red on `expertisewithdraw` after member-roster R79 (merged), make it read the declaration; say which in your COMPLETE.
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure: your requirements, these entries and the tests they name: well under the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B14 · CHANGE
+
+CHANGE (K4226), a new job session (OP-DECLARATIONS #29, haiku): citation's `DECLARED_OPS` now declares `needs` on every mutating row (merged), so `register-owners.mjs`'s header is no longer true: add citation to `REGISTERED` and register its rows; `member-roster` and `citation` are now in your `uses` (BOB's edit, the architecture check's finding). Better still: register every owner through test-support's collector `declaredOpsOf` if it now passes (add `test-support` to your uses is BOB's: REPORT if needed); if any owner still refuses, register the rest and name the refuser in a REPORT. Your suite, the whole-product architecture check (0 for you), `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B15 · CHANGE
+
+CHANGE (K4227), also for OP-DECLARATIONS #29: `standardinforce` (standards' read) is not in `SESSION_OPS.member` nor admin, so the shell's act gate draws no button for it (screens-investigate R51). Add it to both session sets, read from the owner's declared `classes` if standards declares it, else as a hand row beside its siblings; a test with a control.
+
+## B16 · CHANGE
+
+CHANGE (K4236): OP-DECLARATIONS #30 continues B14 and B15 from J14's plan. #29 stopped (BLOCKED, context: reading) before any change; its J14 holds the findings.
+Your branch now carries the tranche (merged at this CHANGE). Since J14: link-sweep is merged with `needs: "contribute"` on `sweepset` and `sweepratify` (K4230), so register every owner, link-sweep included; nothing is excluded. tasks declares `taskdecide`; your t23 and t33 reds come from owners your tests do not register.
+Reading (K3678, roles/JOB.md): read your requirements, `src/op-declarations/index.mjs`, `t23.test.mjs` and `t33.test.mjs` whole. The Read tool returns a long file in pages: read it in consecutive ranges (offset/limit) to the last line; that is reading it whole, not a scan. If you cannot finish a file, stop as JOB.md says.
+Then: B14 (`register-owners.mjs` registers every owner from test-support's `declaredOpsOf`; t23's R10 reads link-sweep's served list from its map, never a hand list; if the architecture check refuses the test's import of test-support, REPORT and BOB adds the edge), B15 (`standardinforce` into the member and admin session sets beside its siblings, with a control), the suite, the checks, COMPLETE with the requirement lines for BOB. Model: sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.
+
+## B17 · CHANGE
+
+CHANGE (K4237), with B16. `export` (mutating, classes `["admin"]`) is in neither session set, so a founder's session cannot take a copy (screens-settings, C30). Put `export` in `SESSION_OPS.admin` (the founder's session; a member's set stays without it), with a test and control (a member session's set lacks it). Requirement line for BOB in your COMPLETE.
+
+## B18 · CHANGE
+
+CHANGE (K4254): OP-DECLARATIONS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entries: (1) your R34 partition: `ACT_HELP_ABSENT` still names the 69 ops `affordances` now holds in `ACT_HELP` (its `T51_DESIGN_OPS`, exported, plus `accountdrafts`, `accountpropose`; AFFORDANCES #39, merged): drop them, and make your partition test read affordances' `ACT_HELP` (K3268), never a hand list. (2) R21: `strengthbarset` is no longer an alias of `strengthbar`: strength declares it itself (`reasoned`), and op-grades removed it from `OP_ALIASES`; take it out of your alias table and R21's list (26 aliases). Then OP-GRADES #21 reads the count from the table. Requirement lines for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B19 · RESUME
+
+RESUME (K4256): OP-DECLARATIONS #32 (sonnet), depth 2, replaces #31, which stopped at half its window while reading (J17; nothing edited). Its J17 lists what to read whole and the two entries of B18; follow it. Read `src/op-declarations/index.mjs` in parts by a reading worker (sonnet, medium) told the task (the `ACT_HELP_ABSENT` groups, `OP_ALIASES`, R21, R34) if it will not fit whole (mechanics §17 (3)); you then read every section the edit touches whole.
+
+## B20 · CHANGE
+
+CHANGE (K4262): OP-DECLARATIONS, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5, medium effort.
+Why: AFFORDANCES #40 (merged, K4262) now holds `strengthbarset`'s help under `strengthbarset` (in `T51_DESIGN_OPS`) and holds none for `strengthbar` (no screen sends it; the design gives it no text). Four of your tests now read red: R34 (strengthbarset must leave the unexplained ground), R75 (an op both explained and named), the R34 partition over `SESSION_OPS.member` and R47/R34 (N862) (`strengthbar` needs a ground).
+Entry: in `ACT_HELP_ABSENT`, `strengthbarset` leaves the unexplained ground; `strengthbar` takes the "no design text" ground the other undesigned ops use. Your suite green again; R21/R34 lines for BOB if their text changes.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B21 · CHANGE
+
+CHANGE (K4267): your container's copy of `job/T51/op-declarations` was cloned stale (behind origin, with one unpushed "starts" line), so `mail start` could not push. Do not reset and do not force anything. Take this route instead, which discards nothing (the stale commit stays on a local branch of its own):
+  cd /home/user/bio && git fetch origin job/T51/op-declarations tranche/T51 && git branch -m job/T51/op-declarations stale/op-declarations-local && git checkout -b job/T51/op-declarations origin/job/T51/op-declarations
+Then re-run `mail start` (your session and depth 2), `mail inbox`, and apply every CHANGE past your record's cursor as they say. If a step of this route is refused too, post BLOCKED naming the refused command and wait.

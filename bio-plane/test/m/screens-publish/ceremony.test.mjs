@@ -2,6 +2,9 @@
  * reads, the Photos step, the Ties step that prepares the edition, and signing inside the ceremony: when it becomes
  * public, one sitting of the member's key over every statement listed, signed and waiting or published, and the three
  * states that stop it (no key here, a phone, a member who is not an owner). */
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
@@ -23,8 +26,8 @@ test("R3 the steps in order, the current one marked; the reads: checks, disclosu
   const steps = main(p).querySelectorAll("[data-step]");
   assert.deepEqual(steps.map((s) => s.textContent), ["what", "strength", "leavesout", "people", "photos", "disclosures", "bias", "preview", "ties", "sign"].map((k) => word(`screen.ceremony.step.${k}`)));
   assert.equal(main(p).querySelector('[aria-current="step"]').getAttribute("data-step"), "photos", "an unchecked photo holds the ceremony at Photos");
-  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P, targets: ["FND-2026-0031"], caseId: C });
-  assert.deepEqual(last(p, "publishtensions").body, { project: P, targets: ["FND-2026-0031"] });
+  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P }, "R50: the draft and the project alone");
+  assert.deepEqual(last(p, "publishtensions").body, { project: P, draft: DR });
   assert.equal(last(p, "photomarks").query.capture, PHOTO);
   assert.equal(last(p, "publishschedule").query.case, C);
 });
@@ -118,7 +121,7 @@ test("R5 the Ties step's confirmation sends publish with tieAttested: true; no S
   const b = last(p, "publish").body;
   assert.equal(b.tieAttested, true);
   assert.equal(b.draft, DR);
-  assert.equal(b.caseId, C);
+  assert.deepEqual(Object.keys(b).sort(), ["draft", "project", "tieAttested"], "R50: only what was attested here; the findings, the case and the words are the draft's");
   assert.ok(ops(p).includes("caseratify"), "Sign offered once publish answered");
   const q = await open(PATH, { plane: { publish: pending } });
   tick(q, "ce-tie", "yes");

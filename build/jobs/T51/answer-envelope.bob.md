@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -41,3 +41,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio answer-envelope tranche/T51 job/T51/answer-envelope`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · CHANGE
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/answer-envelope tranche/T51 && git branch -m job/T51/answer-envelope stale/answer-envelope-local && git checkout -b job/T51/answer-envelope origin/job/T51/answer-envelope`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · ANSWER-ENVELOPE #15 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4291)
+
+Mail with `--module answer-envelope`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file, no requirement line. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+**Entry (K4291):** 16 tests of `bio-plane/test/m/answer-envelope/` (R2, R7: `CHECK_FAMILIES` is total, the list reads credentials', basis-versions', local-facts', filing-templates' families, and the rest) fail with `TypeError: op-declarations: adminendorse: registered after the first read (R81)`: the walk imports plane files that reach `bio-plane/src/plane/register.mjs` (plane R68) after a table was already read. Same cause, same fix as following's R1 (commit 8d76643e0c, read its diff whole first): the walk imports `register.mjs` first, before any other import, as the plane's own graph does. Keep every negative control.
+
+Read in full: answer-envelope R2 and R7 and the failing tests' file(s). Run `bio-plane/test/m/answer-envelope/` (0 fail) and `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the count and the `Size` line.

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
+import { combine } from "../../../../jurisdictions/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d", X = "ACTN-2026-0005-x";
@@ -51,4 +52,66 @@ test("R24 the op clocksrunning reads the viewer from the query and answers clock
   assert.deepEqual(op(`viewer=${M}`), w.c.clocksRunning({ viewer: M }));
   assert.equal(op(`viewer=${M}`).total, 1);
   assert.equal(op("", { viewer: M }).total, 0, "a viewer in the body is not the stamp");
+});
+
+/* R2 (K4227; screens-investigate R59): `NO_SUCH_RULE` also answers the deadlines the profile states for the action's kind. */
+const KINDS = (kind) => combine(["test-port-ellery"]).view.deadlines.filter((d) => d.applies_to === kind);
+const propose = (w, id, rule) => w.c.clockPropose({ target: id, rule, proposer: M, viewer: M });
+
+test("R2 NO_SUCH_RULE answers deadlines: the profile's deadlines for the action's kind, each rule with its citation, and the rest of the refusal unchanged", () => {
+  const w = world();
+  w.action(A, ["action_kind: bylaw_complaint"]);
+  const no = propose(w, A, "no_such");
+  assert.equal(no.reason, "NO_SUCH_RULE");
+  assert.deepEqual(no.deadlines, KINDS("bylaw_complaint").map((d) => ({ rule: d.rule, citation: d.citation })));
+  assert.equal(no.deadlines.length, 3, "the kind's own deadlines only, not the claim kind's nor another kind's");
+  assert.deepEqual([no.ok, no.target, no.rule, Object.keys(no).sort()], [false, A, "no_such", ["deadlines", "detail", "ok", "reason", "rule", "target"]]);
+  /* an absent rule is refused at the same place, with the same list. */
+  assert.deepEqual(propose(w, A, null).deadlines, no.deadlines);
+  /* every rule listed is one clockPropose accepts. */
+  for (const d of no.deadlines) assert.equal(propose(w, A, d.rule).ok, true);
+});
+
+test("R2 NO_SUCH_RULE answers an empty deadlines list when no deadline applies to the kind or no profile is active; a label the profile states is kept", () => {
+  const w = world();
+  w.action(B, ["action_kind: recognition_letter"]);
+  assert.deepEqual(propose(w, B, "records_answer").deadlines, [], "a kind with no deadline of its own");
+  const bare = world({ profiles: null });
+  bare.action(C);
+  assert.deepEqual(propose(bare, C, "records_answer").deadlines, [], "no active profile");
+  /* a deadline the view gives with a label carries it; one without carries none. */
+  assert.deepEqual(clocks.deadlinesFor({ deadlines: [{ rule: "a", applies_to: "k", citation: "c", label: "L" }, { rule: "b", applies_to: "k" }, { rule: "z", applies_to: "other", citation: "x" }] }, "k"),
+    [{ rule: "a", label: "L", citation: "c" }, { rule: "b" }]);
+  assert.deepEqual(clocks.deadlinesFor(null, "k"), []);
+});
+
+test("R2 control: a valid rule is unchanged by the deadlines list, the proposal carrying no deadlines field", () => {
+  const w = world();
+  w.action(D);
+  const p = propose(w, D, "records_answer");
+  assert.equal(p.ok, true);
+  assert.equal("deadlines" in p, false);
+  assert.deepEqual(Object.keys(p).sort(), ["evidence", "ok", "proposal", "says", "target", "weight"]);
+});
+
+/* C68: the deadlines an action's kind offers come in the order of the office's own level, not the view's */
+const LEVELLED = { records_laws: [{ level: "state", name: "State act", citation: "State Code § 7920.000 et seq." }, { level: "federal", name: "Federal act", citation: "Fed. Code § 552" }],
+  counterparties: [{ role: "Registrar", body: "State Registry", level: "state" }, { role: "Records Officer", body: "Federal Agency", level: "federal" }],
+  deadlines: [{ rule: "state_answer", applies_to: "records_request", citation: "State Code § 7922.535(a)" }, { rule: "local_answer", applies_to: "records_request", citation: "Local Code § 2.20.230" },
+    { rule: "federal_answer", applies_to: "records_request", citation: "Fed. Code § 552(a)(6)(A)(i)" }, { rule: "other", applies_to: "other_kind", citation: "Fed. Code § 1" }] };
+const to = (o) => ({ action_kind: "records_request", counterparty: { state: "named", kind: "office", ...o } });
+const rules = (fm) => clocks.deadlinesFor(LEVELLED, "records_request", fm).map((d) => d.rule);
+
+test("R2 (C68): a request to a federal office lists the federal law's deadline first, the others after in the view's order; control: a state office lists the state's first and the federal last", () => {
+  // the level is the office's own as the view lists it, or the one the addressee states
+  assert.deepEqual(rules(to({ role: "Records Officer", body: "Federal Agency" })), ["federal_answer", "state_answer", "local_answer"]);
+  assert.deepEqual(rules(to({ role: "Anyone", body: "Elsewhere", level: "federal" })), ["federal_answer", "state_answer", "local_answer"]);
+  assert.deepEqual(rules(to({ role: "Registrar", body: "State Registry" })), ["state_answer", "local_answer", "federal_answer"]);
+  // controls: an office of no known level, an addressee that is no office and no action keep the view's own order, and the list is the same set
+  for (const fm of [to({ role: "Unlisted", body: "Nowhere" }), { action_kind: "records_request", counterparty: { state: "undetermined", basis: "x" } }, null])
+    assert.deepEqual(rules(fm), ["state_answer", "local_answer", "federal_answer"]);
+  assert.equal(clocks.officeLevel(to({ role: "Records Officer", body: "Federal Agency" }), LEVELLED), "federal");
+  assert.equal(clocks.officeLevel(null, LEVELLED), null);
+  // only the kind's own deadlines, with their citations as before
+  assert.deepEqual(clocks.deadlinesFor(LEVELLED, "records_request", to({ role: "Records Officer", body: "Federal Agency" }))[0], { rule: "federal_answer", citation: "Fed. Code § 552(a)(6)(A)(i)" });
 });

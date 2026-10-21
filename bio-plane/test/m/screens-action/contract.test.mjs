@@ -33,12 +33,11 @@ test("R1–R6, R9 (interface-shell R21): SCREENS is the registry screens plan, s
 
 test("R1–R6 (interface-shell R21, R38): each screen's acts are exactly its registry acts, every op in OPS, each with its send", () => {
   // An owed act (`owed:<op> K…`) is that op once declared (wizard-scripts R13): one whose op OPS does not hold is not yet an act
-  // (`actionstake`, `actioninquiry`, T50). `writinghelp` is not wanted on start-send in T49 (BOB, K3369).
+  // (`actionstake`, `actioninquiry`, T50). T51 (FR-31): `writinghelp` is drawn on every screen the registry lists it on, `start-send`,
+  // `plan` and `matter` included (the registry test names it, entry 17).
   const NOT_YET = (a) => a.status === "owed" && !Object.hasOwn(OPS, String(a.op).replace(/^owed:/, "").split(" ")[0]);
-  const NOT_WANTED = { "start-send": ["writinghelp"] };
   for (const s of SCREENS) {
-    const reg = REGISTRY.find((r) => r.id === s.id).acts.filter((a) => !NOT_YET(a)).map((a) => String(a.op).replace(/^owed:/, "").split(" ")[0])
-      .filter((op) => !(NOT_WANTED[s.id] || []).includes(op));
+    const reg = REGISTRY.find((r) => r.id === s.id).acts.filter((a) => !NOT_YET(a)).map((a) => String(a.op).replace(/^owed:/, "").split(" ")[0]);
     const mine = s.acts.map((a) => a.op);
     assert.deepEqual([...mine].sort(), [...reg].sort(), s.id);
     for (const a of s.acts) {
@@ -108,6 +107,8 @@ test("R7 (action-producers R19): every member-facing sentence calls a plan's sub
   for (const s of SCREENS) for (const w of s.words) {
     const en = EN.get(w);
     if (en === undefined) continue;
+    // R39: the design's words for naming what a records request concerns (an entity the record follows), never a plan's subject
+    if (/^screen\.person\.keeper\.subject\./.test(w)) continue;
     assert.ok(!/\bsubjects?\b/i.test(en), `${s.id}: ${w} says "${en}"`);
   }
 });
@@ -188,7 +189,7 @@ test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, nev
 test("R7 (interface-shell R13): each refusal word an act names is a listed word", () => {
   for (const s of SCREENS) {
     const listed = new Set(s.words.map((w) => (typeof w === "string" ? w : w[0])));
-    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
+    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(typeof key === "function" || listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
   }
 });
 

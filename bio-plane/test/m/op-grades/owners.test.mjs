@@ -8,7 +8,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          aliased, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
-import { readRows, declaredSentence } from "./declared.mjs";
+import { readRows, declaredSentence, doesSentence, declaredAliases } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ");
@@ -40,8 +40,7 @@ test("R7: T23's ops — whatchangedpropose `undetermined`, noticepost `attested`
   assert.equal(RUNG_ABSENT.whatchangedpropose.ground, "undetermined");
   assert.equal(RUNGS.noticepost, "attested");
   assert.equal(RUNGS.noticepost, RUNGS.caseratify);
-  assert.equal(NON_ACTS.whatchangedpropose, "case-directed: keyed by a published case, reached from its next edition; a "
-    + "draft, never a statement until a member adopts it");
+  assert.equal(NON_ACTS.whatchangedpropose, declaredSentence("case-inputs", "whatchangedpropose"));
   assert.equal(NON_ACTS.noticepost, declaredSentence("network-notices", "noticepost"));
   for (const op of ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices"])
     assert.ok(isRead(op), op);
@@ -81,8 +80,7 @@ test("R9: the docket's ops — docketfile and docketdecline `reasoned` (DOCKET_N
 });
 
 /* ---- R10, R12 ------------------------------------------------------------------------------------------------------ */
-const IMPORT = "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the "
-  + "imported cases; writes this module's rows and moves no bundle";
+const IMPORT = declaredSentence("case-import", "import_directed");
 test("R10: case-import's and case-checker's ops — the four DEC-96 acts `reasoned` with both codes in the family, "
    + "caseimport and caseimportdocument `undetermined`, each import-directed; the reads and public reads apart; none a "
    + "machine refusal", () => {
@@ -112,13 +110,17 @@ test("R11 R47: wizard-scripts' ops — wizardretire `reasoned` (WIZARD_REASON_RE
     wizardeditorgrant: "credential", wizardeditorrevoke: "credential", wizardprogress: "observational" };
   assert.deepEqual(grades(W), W);
   assert.ok(JUSTIFICATION_REFUSALS.includes("WIZARD_REASON_REFUSED"));
-  for (const op of Object.keys(W).filter((op) => op !== "wizardprogress")) assert.equal(NON_ACTS[op],
+  /* the owner's declaration is the truth (K4168, B20): an op whose owner words it as `act.<op>.does` holds that sentence */
+  for (const op of Object.keys(W).filter((op) => op !== "wizardprogress")) assert.equal(NON_ACTS[op], doesSentence(op) ?? 
     "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes "
     + "this module's rows and moves no bundle", op);
   assert.equal(NON_ACTS.wizardprogress, "tally: unattributed, keyed by a script's version; names no member");
+  /* `wizards` is declared in its owner's words, which do not lead with "read: " (K4168): a read all the same, ungraded */
   const WIZARD_READS = readRows(NON_ACTS).filter((op) => op.startsWith("wizard") || op === "baseupdates");
-  assert.ok(WIZARD_READS.length >= 7);
+  assert.ok(WIZARD_READS.length >= 6);
   for (const op of WIZARD_READS) assert.ok(isRead(op), op);
+  assert.equal(NON_ACTS.wizards, doesSentence("wizards"));
+  assert.equal(gradeOf("wizards"), null);
   notMachine(Object.keys(W));
 });
 
@@ -249,13 +251,12 @@ test("R15: notewrite and noteturn `caller-owned` as reminderset, note-directed, 
 });
 
 /* ---- R16 ----------------------------------------------------------------------------------------------------------- */
-test("R16 R39: groupdescriptiondraft and writinghelp carry the draft sentence and are no machine refusal; writinghelp takes no "
-   + "rung, groupdescriptiondraft the `caller-owned` ground (R39, T48)", () => {
-  const D = "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the "
-    + "member's words only by the member's own act of keeping it";
-  for (const op of ["groupdescriptiondraft", "writinghelp"]) assert.equal(NON_ACTS[op], D, op);
+test("R16 R39: groupdescriptiondraft and writinghelp carry their owner's draft sentence and are no machine refusal; neither "
+   + "takes a rung or a ground, both being reads (R39, K4247)", () => {
+  assert.equal(NON_ACTS.groupdescriptiondraft, declaredSentence("store-door", "groupdescriptiondraft"));
+  assert.equal(NON_ACTS.writinghelp, doesSentence("writinghelp"));
   assert.equal(gradeOf("writinghelp"), null);
-  assert.equal(gradeOf("groupdescriptiondraft"), "caller-owned");
+  assert.equal(gradeOf("groupdescriptiondraft"), null, "a read carries no ground");
   notMachine(["groupdescriptiondraft", "writinghelp"]);
 });
 
@@ -268,7 +269,8 @@ const T34_WRITES = {
   groupkeyset: "credential", groupkeyremove: "credential", groupkeyswitch: "substrate",
   groupkeynoticeseen: "caller-owned", placewanted: "substrate", memberlanguageset: "caller-owned",
 };
-const T34_READS = readRows(T34_NON_ACTS);
+/* a read its owner words without the "read: " lead holds the owner's sentence (K4168): startfrom */
+const T34_READS = [...readRows(T34_NON_ACTS), ...Object.keys(T34_NON_ACTS).filter((op) => T34_NON_ACTS[op] === doesSentence(op))];
 const T34_PUBLIC = ["websiteinvite", "joinlinkinvite", "groupdescription", "courtnotice"];
 test("R17: every op T34 declares carries the grade read from its owner, each gated op its NON_ACTS reason, the public "
    + "ones none; checkrecord's CHECK_NO_REASON is in the family", () => {
@@ -279,7 +281,8 @@ test("R17: every op T34 declares carries the grade read from its owner, each gat
     ["courtnoticeset", "groupnameset"], ["placewanted", "officesseed"], ["websiteinvite", "knock"],
     ["groupkeynoticeseen", "disclosureshown"], ["memberlanguageset", "standingset"]])
     assert.equal(gradeOf(op), gradeOf(like), op);
-  for (const op of T34_READS) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
+  /* `startfrom` is declared in its owner's words, which do not lead with "read: " (K4168) */
+  for (const op of T34_READS) { assert.ok(op === "startfrom" ? NON_ACTS[op] === doesSentence(op) : isRead(op), op); assert.equal(gradeOf(op), null, op); }
   for (const op of T34_PUBLIC) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
   const gated = Object.keys(T34_WRITES).filter((op) => !T34_PUBLIC.includes(op));
   assert.deepEqual(Object.keys(T34_NON_ACTS).sort(), [...gated, ...T34_READS].sort());
@@ -288,10 +291,13 @@ test("R17: every op T34 declares carries the grade read from its owner, each gat
   notMachine([...Object.keys(T34_WRITES), ...T34_READS]);
 });
 
-test("R17: each of op-declarations R21's 27 aliases takes its op's very grade and reason through one frozen table — an "
-   + "alias never differs from its op", () => {
+test("R17: each of op-declarations R21's aliases takes its op's very grade and reason through one frozen table — an "
+   + "alias never differs from its op", async () => {
   assert.ok(Object.isFrozen(OP_ALIASES));
-  assert.equal(Object.keys(OP_ALIASES).length, 27);
+  /* the count is op-declarations' own alias table, read by path as the declared rows are (declared.mjs), never a written number (B27) */
+  const DECLARED_ALIASES = await declaredAliases();
+  assert.deepEqual(Object.keys(OP_ALIASES).sort(), Object.keys(DECLARED_ALIASES).sort());
+  assert.ok(Object.keys(OP_ALIASES).length > 0);
   /* K2054: `expunge` is no alias since K1901 (`personexpunge` is a declared op), so nothing grades it */
   assert.ok(!Object.hasOwn(OP_ALIASES, "expunge"));
   assert.deepEqual([RUNGS.expunge, RUNG_ABSENT.expunge, NON_ACTS.expunge], [undefined, undefined, undefined]);

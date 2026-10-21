@@ -2,8 +2,10 @@
    typed here (K3268, BOB K4069, K4076). This module uses nothing (P4): `op-declarations` merges after it, so no test imports
    a declaration of another module; what a requirement of this module states, in backticks or as plain words, is the
    contract, and the tables are the data under test. */
-import { readFileSync } from "node:fs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 /* ---- this module's own requirements ------------------------------------------------------------------------------- */
 const REQ_LINES = readFileSync(new URL("../../../../build/requirements/op-grades.md", import.meta.url), "utf8").split("\n");
@@ -69,3 +71,50 @@ export const readRows = (table) => Object.keys(table).filter((op) => table[op].s
  *  (`setup-words`, which this module uses) by its id, never copied here (P7, K3810). The id is composed, not typed: the
  *  words check judges a literal key against the design's list, and these ids are code-held until the design takes them. */
 export const declaredSentence = (module, op) => word(`${module}.declared.${op}`);
+
+/** The sentence an owner declared for `op` as its design key `act.<op>.does` (K4168: the owner's declaration is the truth, so
+ *  a hand row holds this sentence and the test reads it from the word table, never from a copy). The id is composed. */
+export const doesSentence = (op) => (hasWord(`act.${op}.does`) ? word(`act.${op}.does`) : null);
+
+/* ---- the owners' declarations (R49, R50) ------------------------------------------------------------------------- */
+/** Every module's `DECLARED_OPS`, found from `build/modules.json` with no module listed by hand, as `{ops, owners}` (an op's
+ *  row, and the module that declares it); a module declaring an op twice is `duplicates`. This is the same search as
+ *  test-support's `declaredOpsOf` (R16), kept here because this module uses nothing but `setup-words` (P4): only a test reads
+ *  other modules' files, by path, and only to hand their rows to `registerDeclaredOps`. */
+export async function collectDeclaredOps(root) {
+  const { modules } = JSON.parse(readFileSync(join(root, "build", "modules.json"), "utf8"));
+  const ops = {}, owners = {}, who = {};
+  const filesOf = (path) => {
+    const abs = join(root, path);
+    if (!statSync(abs).isDirectory()) return [abs];
+    return readdirSync(abs, { withFileTypes: true }).filter((e) => e.name !== "node_modules").flatMap((e) => (e.isDirectory() ? filesOf(join(path, e.name)) : /\.(mjs|js)$/.test(e.name) ? [join(abs, e.name)] : []));
+  };
+  for (const mod of modules) for (const path of mod.paths ?? []) for (const file of filesOf(path)) {
+    if (!/^export const DECLARED_OPS\b/m.test(readFileSync(file, "utf8"))) continue;
+    for (const [op, row] of Object.entries((await import(pathToFileURL(file).href)).DECLARED_OPS)) {
+      (who[op] ??= []).push(mod.id);
+      if (!(op in ops)) { ops[op] = row; owners[op] = mod.id; }
+    }
+  }
+  return { ops, owners, duplicates: Object.entries(who).filter(([, ids]) => ids.length > 1).map(([op, ids]) => ({ op, owners: ids })) };
+}
+
+/* ---- the registered instance (R42, R46; B27) --------------------------------------------------------------------------- */
+let registeredN = 0;
+/** A fresh instance of this module with every owner's `DECLARED_OPS` registered (R49, R50), so the rungless acts are the acts
+ *  no owner grades either: a grade an owner declares is read from the registered tables, never typed here. */
+export async function registeredOpGrades() {
+  const { ops, owners, duplicates } = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
+  if (duplicates.length) throw new Error(`an op declared twice: ${JSON.stringify(duplicates)}`);
+  const byOwner = {};
+  for (const [op, row] of Object.entries(ops)) (byOwner[owners[op]] ??= {})[op] = row;
+  const m = await import(`../../../src/op-grades/index.mjs?registered=${registeredN++}`);
+  m.registerDeclaredOps(byOwner);
+  return m;
+}
+
+/** op-declarations' alias table (R17, B27), read by path as the other modules' rows are: a test reads it, the module imports nothing. */
+export async function declaredAliases() {
+  const path = join(new URL("../../../../", import.meta.url).pathname, "bio-plane", "src", "op-declarations", "index.mjs");
+  return (await import(pathToFileURL(path).href)).OP_ALIASES;
+}

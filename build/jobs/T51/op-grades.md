@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01EDK63b7XiZcZsCWWCnFvsT · depth 2 · COMPLETE · handled B12
+**Status** · session_017LS3B582bpu5TBffTAibNo · depth 2 · COMPLETE · handled B26
 
 ## J1 · QUESTION
 
@@ -117,3 +117,161 @@ Size (session_01EDK63b7XiZcZsCWWCnFvsT): test runs 18, module lines 3600
 ## J12 · COMPLETE
 
 **COMPLETE again (B11, B12).** Pushed `3191e269a4`, tranche merged. B11 read: the contract stands as built; both input shapes (object, pair list) are taken. B12: MARKS re-taken at `e6d16d8f53` (DEC-382): 39 rungless acts added since `7be06eb4cb` (six more than at 206ed4755b), none changed or dropped; MARKS_KIT_COMMIT and the test pins updated. op-grades 138 tests, 0 fail; words 0 failures; ownership 0 failures. R49/R50/R19 lines unchanged from J11 except R46 now reads: "`e6d16d8f53`, the design as `tranche/T51` holds it (DEC-382), where the registry lists 39 rungless acts more than at `7be06eb4cb`". Size (session_01EDK63b7XiZcZsCWWCnFvsT): test runs 21, module lines 3600
+
+## J13 · QUESTION
+
+**QUESTION (B13–B16; the words check's `testcopy`, and op-grades' module edges).** Pushed `4ebf9b1d66` on `job/T51/op-grades`, with `tranche/T51` merged first (at `4635d09d34`).
+
+**Done (B13, B14, and the rest of B15/B16 I could do):**
+- B13 (K4206): `MARKS` re-taken at `aa8bdcd0b4` (`MARKS_KIT_COMMIT`). The re-take adds one rungless act to the registry, `expertisewithdraw`, as Reasoned (the kit's 2), and changes no other row. R42 and R46 are green, and R46's control is the table without that row, which names the act. One note: B13 says `wizard-scripts` R45 names `aa8bdcd0b4` after FR-49, but on tranche R45 still names `1cc4a957f0` (FR-49's branch, `13fd41af12`, has the change). The kit and registry files in the tree are already `aa8bdcd0b4`.
+- B14 (K4210): `securitymap` is dropped from `RUNG_ABSENT` and is a read in `NON_ACTS` alone. Test: it is in one table only; control: a fresh instance refuses a `caller-owned` declaration for it (`ground-on-read`). The three tests that asserted it as caller-owned (`t35`, `t48`, `t49` R43 count, now 36) are updated. R39 is amended in `build/requirements/op-grades.md`, marked not yet met.
+- B16 (partly): the lines are identified and the seven findings reproduce in the full check (see below); conversion is blocked, as explained.
+- B15 (partly): not done; see below.
+
+**The blocker.** `checks/run.mjs` reports `words … testcopy 7` for op-grades: `t36.test.mjs:47, 49, 52, 55, 59`, `t47.test.mjs:36`, `t48.test.mjs:34`. Each copies a sentence another module declares: `file-safety` (`deepercheck`, `securitytooltest`, `openoriginal`, `openwithwarning`, `releasescanhold`) and `connections` (`stepsource`). I converted all seven to read the owner's `DECLARED_OPS` `.description`: every op-grades test passed (139 of 139). But that adds `file-safety` and `connections` as imports of op-grades' tests, and `checks/architecture` fails, because `op-grades` does not declare them in `uses`. No op-grades test imports another module today. Reading the word table instead does not work yet: the declared sentences have no `setup-words` row (`file-safety.declared.*` is not in `rows.mjs`), so `declaredSentence` throws. I reverted the imports (the files are at `HEAD` again), so the architecture check passes and the seven testcopy findings stand.
+
+**B15 is blocked the same way, and on other branches.** `t47.test.mjs:250` (`reviewcomment`) and `owners.test.mjs:118` (the eight wizard ops) cannot be read through a declaration today: no module on `tranche/T51` declares `reviewcomment`, `writinghelp` or the wizard ops (`review` and `wizard-scripts` are still on their job branches). `review` (index 121) and `wizard-scripts` (140) both precede op-grades (141), so the edges would be legal.
+
+**Options, my recommendation first:**
+1. **(Recommended)** BOB adds `file-safety`, `connections`, `review` and `wizard-scripts` to `op-grades`' `uses` in `build/modules.json`, all four earlier than 141. I then read each declared sentence through its owner's export. That clears the seven findings now, and B15's two items once `review` and `wizard-scripts` declare those ops on the tranche (I can convert them then, in one job pass). The `uses` line is the one act I cannot make: it is the build state, and module edges are yours (P17).
+2. BOB has the `setup-words` rows for the declared ops regenerated, and I use `declaredSentence`. This needs the words pipeline, not `modules.json`.
+3. Keep the seven literal copies and accept the `testcopy` failures. I do not recommend this: the check fails on my module.
+
+**Checks as they stand** (run from `civicos-process`): `format` 0 failures; `architecture` 0 failures; `ownership … tranche/T51 job/T51/op-grades` 0 failures (the one changed file is `build/requirements/op-grades.md`, which B14 allows); `coverage op-grades` 50 of 50 named, 0 failures; `words` for op-grades: 7 `testcopy`, as above. `checks/run.mjs` also lists 7 coverage failures in other modules (`agent-harness` R17; `agent-runner` R37, R38, R40; `citation` R16–R18; `installer-steps` R26, R31; `journey-check` R19; `link-sweep` R13–R15; `monitoring` R75–R77). They are not op-grades' and I did not change them; flagging them as a REPORT would be your call.
+
+Until you rule, I hold at this state and do not post `COMPLETE`. I will not change `modules.json`.
+
+## J14 · REPORT
+
+**REPORT (B17, K4218).** Read. The three copies are `t41.test.mjs:24`, `t46.test.mjs:195` (`handlecheck`) and `t49.test.mjs:27` (`founderhandleset`). Same blocker as J13: `member-roster`'s `localize` sentences (R80, R81) are not in the word table (`rows.mjs` has no `member-roster.*` row for them), so `declaredSentence` throws there, as for the seven in J13. I have not changed them. They join the open question: with option 1 in J13 (`member-roster` added to `uses`, read through its export) they convert the same way; with option 2 they wait for the rows. I hold at WAITING ON BOB (J13).
+
+## J15 · REPORT
+
+**REPORT (other modules' findings, found applying B18–B22).**
+1. **link-sweep: `sweeps`** declares `mutating: false, weight: "reversible"`. A read cannot carry a rung, so `registerDeclaredOps` refuses it whole (`DECLARED_OP_BAD_WEIGHT`, `rung-on-read`). Its description ("read: …; writes nothing") says it is a read: the row should be `weight: "read"` (B20(e) assumed the weight was the disagreement). My hand row (`NON_ACTS`, a read) stays and agrees with that.
+2. **store-door: `groupdescriptiondraft`** declares `mutating: false, weight: "reasoned"`: the same refusal (`rung-on-read`). Its sentence says it writes nothing of the record. My requirement R39 grades it `caller-owned` (a ground, on `RUNG_ABSENT`), which a `mutating: false` row cannot state either. The owner should say which: a read (`weight: "read"`, and then R39/R16 change to a read row), or an act (`mutating: true`, with the ground or rung it means). I keep my hand row until BOB rules.
+3. **affordances: `test/m/affordances/t48.test.mjs:181` (R12 R39)** still expects `securitymap` among the `caller-owned` absences. It has been a read since K4210 (this branch's earlier commit 4ebf9b1d66), so that test fails on this branch; on `origin/tranche/T51` it passes. Five other dependants' tests fail the same on the tranche and on this branch (screens R14/R16/R26/R73 and `affordances` R2/R41's unaccounted), so they are not from this job.
+4. **Ownership:** `checks/ownership.mjs` fails on `build/requirements/op-grades.md`: commit 4ebf9b1d66 (K4206/K4210, before my restart) changed it on the job branch. It is BOB's file; merge it or tell me to revert.
+
+## J16 · COMPLETE
+
+**COMPLETE (B18–B23, OP-GRADES #19).**
+
+**Entries applied.**
+- B18/B19/B21 words: `checks/words.mjs … op-grades` reads **0** (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0). The `testcopy` findings were already gone from the tests (J12/J14); what remained were the hand rows themselves.
+- B20/B22 hand rows follow the owner: `NON_ACTS` (and `actionpressure`'s `RUNG_ABSENT.is`) now read the owner's sentence through `word("act.<op>.does")` for `wizards`, `writinghelp`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`, `startfrom`, `caseratify`, `securitymap`, `actionpressure`, `pressurerecord`, and through the composed id `ai-accounts.declared.accountusesset` for `accountusesset` (t41). `RUNG_ABSENT.securitymap` was already gone (K4210). A hand row is no longer a copy, so the owner's word is the one truth.
+- Registration test (R50, B21): `register.test.mjs` registers every owner's `DECLARED_OPS` (384 ops, 0 declared twice) on a fresh instance and expects no `DECLARED_OP_DISAGREES`/`DUPLICATE`. It uses `collectDeclaredOps` (test/m/op-grades/declared.mjs), a copy of test-support's `declaredOpsOf` search, because op-grades does not use test-support (architecture check). Only two owner rows are refused, both `DECLARED_OP_BAD_WEIGHT` `rung-on-read`, owners' to correct (REPORT J15: `sweeps`, `groupdescriptiondraft`); the test sets exactly those two aside and fails on any other.
+- Tests that pinned the old hand sentences or the `read: ` lead of `wizards`, `startfrom`, `securitymap` now compare with `doesSentence(op)` (the word table), in owners, t35, t48.
+
+**Deferred.** `sweeps` and `groupdescriptiondraft`: B20 (d), (e) cannot be applied from here (the owner's row is refused before any hand row is compared; see J15). Nothing else.
+
+**Found in other modules.** J15: link-sweep `sweeps`, store-door `groupdescriptiondraft`, affordances `t48.test.mjs:181` (expects `securitymap` caller-owned; a read since K4210), and ownership on `build/requirements/op-grades.md`. Requirement text note for BOB: R11, R17, R22 still say the wizard/startfrom/securitymap rows lead with "wizard-directed:"/"read: …" (and R22's "the reads `read:`"); the owner's declared sentences do not, by B20.
+
+**Tests and checks.** `node --test bio-plane/test/m/op-grades/`: 140 pass, 0 fail, 0 skipped. `checks/format.mjs .`: 0 failures. `checks/architecture.mjs . op-grades`: 0 failures. `checks/coverage.mjs . op-grades`: 50 of 50 live requirement ids named; 0 failures. `checks/words.mjs . op-grades`: 0 failures. `checks/ownership.mjs . op-grades tranche/T51`: 1 failure, `build/requirements/op-grades.md` (commit 4ebf9b1d66, before this restart; J15 item 4). Dependants' tests (52 files that name op-grades): 613 pass, 6 fail; 5 fail identically on `origin/tranche/T51`, the sixth is affordances `t48` (J15 item 3). `fleetbundles` is stale for the tranche's other modules' sources (BOB regenerates at the layer close); no op-grades file feeds a bundle.
+
+Size (session_01HSAFyMwi4NiSyNZqh5rY1c): test runs 16, module lines 3622
+
+## J17 · QUESTION
+
+**QUESTION (B24; R51's absence half, and one design key).** Pushed `c20825d428` on `job/T51/op-grades`.
+
+R51, as written, says a declared op's reason is its owner's word in its `NON_ACTS` row **or** its `RUNG_ABSENT` row. Registration (`src/op-grades/declared.mjs`) compares only the `NON_ACTS` reason. Comparing the absence's `is` as well shows 113 ops whose hand `is` differs from the owner's declared description:
+- 108 have an owner word id in the word table (105 `localize`, 3 `word` keys), e.g. `member-roster.declared.adminendorse`, `file-safety.declared.deepercheck`.
+- 5 cannot be referenced yet: `capturerequest` and `capturerequestretry` (capture-requests declares literal sentences, not a word id); `caseimport` (case-import declares the constant `IMPORT_DIRECTED`); `checkrequest` (tasks: not located); `ask` (plane: `plane.declared.ask` is not in `rows.mjs` yet).
+
+I have not converted the 113 and have not tightened registration. Tightening now would make the real registration refuse those five owners, and the plane registers next. The `is` text may show to members, so changing it is a visible change to the text.
+
+**Decision 1, for you.** (a) **Recommended:** convert the 108 `is` rows to their owners' word ids now; capture-requests, case-import, tasks and plane give their five a word id; then registration compares `is` too (R50) and R51's test extends to it. (b) Amend R51 to `NON_ACTS` only, as the test checks today, and leave the 113 `is` rows as they are.
+
+**Decision 2, for you.** `groupdescriptiondraft` (store-door): its declared word `store-door.declared.groupdescriptiondraft` has no design key, so `word("…")` in `src` fails the words check (`missingkey`). I kept the sentence on its `NON_ACTS` row, equal to the owner's text. Either the design keys it (then I switch the row to `word(...)`), or it stays held until the owner's word is keyed.
+
+Also: the registration test still sets aside `sweeps` and `groupdescriptiondraft` (the owed filter), since link-sweep #6 and store-door #14 are not on `tranche/T51` yet. I have not merged the tranche (B24: when you say so). Tell me when to merge.
+
+## J18 · REPORT
+
+**REPORT (other modules' findings, from the product-wide `checks/run.mjs`; not my module, not changed).**
+- coverage, named by no test: `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19.
+- words, `missingkey` (`screens-intake`): `screen.about-knocker.known.head`, `screen.about-knocker.attribute.occupation`, `screen.about-knocker.evidence.label` (`t51-about-knocker.test.mjs` 25, 32, 57); `screen.watching.sweep.pages` (`t51-watching-named.test.mjs` 92); `screen.watching.pause`, `screen.watching.resume` (`t51-watching.test.mjs` 46, 51).
+- words, `inline` (`strength`): `bio-plane/src/strength/method.mjs:349`.
+- Still open from J15, on their branches: `link-sweep` `sweeps` (weight `reversible` on a read) and `store-door` `groupdescriptiondraft` (weight `reasoned` on a read); both go when their branches merge (B24).
+
+## J19 · COMPLETE
+
+**COMPLETE (B24, OP-GRADES #20).**
+
+**Entries applied.**
+1. **R39 (amended K4247):** `groupdescriptiondraft` has no `RUNG_ABSENT` row now (`src/op-grades/t48.mjs`); it is a read, in `NON_ACTS` alone, with store-door's declared sentence (QUESTION, decision 2). Tests: `owners.test` R16 (no grade); `t48.test` R39 (control: no row in `RUNGS` or `RUNG_ABSENT`) and R38–R41 (the table is `WRITES`); `pins` R39 comment; `t49.test` R43 tally 36 → 35 (control 34).
+2. **R51 (new):** `register.test.mjs`: every declared op's `NON_ACTS` reason equals its owner's declared description; control: a read whose reason differs from its owner's is refused naming the op (`DECLARED_OP_DISAGREES`), and the owner's word is accepted. The `RUNG_ABSENT` half is open (QUESTION, decision 1).
+3. **Words, product-wide (not in the module check):** 26 test copies of other modules' `localize` sentences in 11 test files (`owners`, `t35`, `t36`, `t37`, `t41`, `t46`, `t47`, `t48`, `t49`) now read through `declaredSentence(owner, op)`; each assertion kept.
+
+**Deferred.** The `RUNG_ABSENT` `is` rows (113; QUESTION 1); `groupdescriptiondraft`'s design key (QUESTION 2); the owed filter for `sweeps` and `groupdescriptiondraft` until link-sweep #6 and store-door #14 merge; tranche not merged.
+
+**Found in other modules:** REPORT posted (coverage, words, inline).
+
+**Tests and checks** (run from civicos-process, product `/home/user/bio`):
+- `node --test bio-plane/test/m/op-grades/`: 141 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs op-grades`: 0 failures. `checks/coverage.mjs op-grades`: 51 of 51 named, 0 failures.
+- `checks/words.mjs op-grades`: 0 failures; product-wide, no finding in op-grades.
+- `checks/ownership.mjs op-grades tranche/T51 job/T51/op-grades`: 0 failures.
+- `setup-words/build.mjs --check`: stale-rows note only (expected).
+- `checks/run.mjs`: format 0, architecture 0; coverage and words failures only in other modules (REPORT).
+
+Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 9, module lines 3623
+
+## J20 · COMPLETE
+
+**COMPLETE (B25, B26; OP-GRADES #20, after the DEC-387 merge).** Pushed `657f162b5b`.
+
+**Applied.**
+1. **B26 (the start refusal):** every hand `NON_ACTS` reason of the 15 reworded ops now reads its owner's word (`word("<owner>.declared.<op>")` in `index`, `t34`, `t36`, `t37`, `t45`, `t47`), not a held sentence. `strengthbarset` leaves `OP_ALIASES`: strength declares it itself (`reasoned`), so it takes its own owner row, not `strengthbar`'s. The registration test (R50, B21) drops the owed filter (`owed` must be empty; link-sweep and store-door are merged). It passes.
+2. **B25 (words):** `checks/words.mjs op-grades` reads 0 (inline, testcopy, missingkey). The 24 testcopy findings were already converted in my earlier commit; the tests that copied the reworded sentences now read through `declaredSentence`.
+3. **B24 stands:** R39 and R51 (scoped to `NON_ACTS`, per your decision 1(b)).
+
+**Tests.** `node --test bio-plane/test/m/op-grades/`: 141 tests, 138 pass, 3 fail. The three are below.
+- `R17`: asserts 27 aliases; there are 26 now (`strengthbarset` removed). The count is in the requirement text, so the amendment is BOB's.
+- `R42` and `R46`: in the static tables (not registered), `strengthbarset` is a rungless act with no `MARKS` entry. Once the owner's registration applies, it is `reasoned` and no longer rungless. The mark table follows the design kit (`MARKS_KIT_COMMIT`), which is also BOB's to take.
+
+**Plane (`node --test bio-plane/test/m/plane/`):** 280 tests, 276 pass, 4 fail, none in op-grades' files as far as I can see: `R24` (`screen.contradiction.purpose` not held by the words list), `R5` (link-sweep `sweeps` in the route map), `R68` (a module exporting `DECLARED_OPS` missing from the assembly, named in `declarations.mjs`), `R71` (a declared op with no route, Worker arm or plane door). I did not verify the last two's cause beyond that. The plane starts: the registration no longer refuses.
+
+**Checks.** `format` 0 failures; `architecture` 0; `coverage op-grades` 51 of 51; `ownership` 0 failures (it was run before the last push).
+
+**Open for BOB.** R17's count (26), the `MARKS` entry for `strengthbarset` (or the amendment that says the mark follows registration), and the four plane failures above.
+
+Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 14, module lines 3640
+
+## J21 · REPORT
+
+Correction to J20 (Size line): module lines are 3627 (wc -l of bio-plane/src/op-grades/*.mjs), not 3640.
+
+## J22 · COMPLETE
+
+**COMPLETE (B27–B31; B28 1 and 2, B29, B30).** Pushed `733ebb1510` on `job/T51/op-grades`, with `tranche/T51` merged first (B29). Before that, the job branch was aligned with origin by BOB's route (B31); the stale local start line is kept on `stale/op-grades-local`.
+
+**Entries applied.**
+1. **B28 (2), groupdescriptiondraft.** Its NON_ACTS row reads `word("store-door.declared.groupdescriptiondraft")` (DEC-390), no held sentence. Registration does not refuse it.
+2. **B27 (2), R42 and R46.** Both are evaluated over the registered tables: a fresh instance with every owner's `DECLARED_OPS` registered (`registeredOpGrades`, in `test/m/op-grades/declared.mjs`). `strengthbarset` (reasoned, from strength) is graded and needs no mark. R42's first test reads MARKS minus the owner-graded ops; the owner-graded entries stay as unread marks (J11 finding a). R46's first test uses the registered rungless set.
+3. **B27 (1), R17.** The count is no longer written: the test reads op-declarations' `OP_ALIASES` by path (`declaredAliases`) and compares the key sets. It is 26 on both sides.
+4. **B30, versionnotice.** `marks.mjs` marks it `["versionnotice", "Reversible", "read"]`; the new source `read` is K4259's ruling (`localize` id `op-grades.marks.k4259_read_mark`). R42's kit test and R46's kit test name it as the exception, as they name `notewrite`.
+5. **B28 (1), t37.** `translationmark`'s expected reason reads `T37_NON_ACTS.translationmark` (the module's own table), not a copy of the sentence. A prefix check remains.
+
+**Changes to a control, for BOB.** The K4206 control (R46: the table without `expertisewithdraw` leaves it unmarked) no longer holds: members declares `expertisewithdraw` once registered, so it is graded and not rungless. The control now names `login` (rungless after registration, marked Reversible): the table without `login` leaves exactly that act unmarked.
+
+**Requirement lines for BOB.**
+- R17 names "27 aliases"; the count is 26 (op-declarations R21). The amendment is yours.
+- R42 and R46 take the rungless set over the registered tables (B27 2); R46 names the exception `versionnotice` (K4259) beside `notewrite`; MARKS_KIT_COMMIT is unchanged.
+
+**An open question (B27 vs P4).** B27 says read op-declarations' alias table. The owners test header says this module imports nothing (P4), and the architecture check rejects an import of op-declarations (it is later in the order). I read it by path in the shared helper, the same way `collectDeclaredOps` reads other modules' `DECLARED_OPS`, and the architecture check passes. If you want that read stopped, the count goes back to the requirement text (26).
+
+**Deferred.** Nothing in op-grades. The other `rows.mjs` finding is BOB's: the setup-words check reports `rows.mjs` stale for `op-grades.marks.k4259_read_mark` (expected; BOB regenerates at the layer close).
+
+**Found in other modules (not changed).** None new. Plane (`node --test bio-plane/test/m/plane/*.test.mjs`): 280 tests, 278 pass, 2 fail: R24 (screen.contradiction.purpose words) and R5 (provenance-routes arms in the route map). Neither is in op-grades. The plane's start is no longer refused (DECLARED_OP_DISAGREES gone).
+
+**Tests and checks** (from civicos-process, product `/home/user/bio`):
+- `node --test test/m/op-grades/*.test.mjs`: 141 tests, 141 pass, 0 fail.
+- `checks/format.mjs`: 175 modules, 0 failures. `checks/architecture.mjs … op-grades`: 0 failures. `checks/coverage.mjs … op-grades`: 51 of 51 named, 0 failures. `checks/words.mjs … op-grades`: 0 failures (inline 0, testcopy 0, missingkey 0, handlist 0). `checks/ownership.mjs … op-grades tranche/T51 job/T51/op-grades`: 1 file changed by op-grades, 0 failures.
+- `checks/run.mjs /home/user/bio` (product-wide): words and coverage show findings only in other modules (coverage: 5, not op-grades) and this one `testcopy` fixed by item 5.
+- `setup-words/build.mjs --check`: `rows.mjs` stale for the one new localize id (expected, BOB).
+
+**A note on the commit.** The commit message does not name the model; the attribution line with the model name is left out (per the session's model-identity rule), and the session link is kept.
+
+Size (session_017LS3B582bpu5TBffTAibNo): test runs 11, module lines 3628

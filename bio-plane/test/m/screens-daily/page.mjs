@@ -34,8 +34,8 @@ export function fill(p, values) {
     if (el.type === "checkbox" || el.type === "radio") el.checked = !!v; else el.value = v;
   }
 }
-/** Presses `op`'s `nth` button, answering a reasoned act's reason field with `reason` when the shell asks one. */
-export async function press(p, op, { nth = 0, values = {}, reason } = {}) {
+/** Presses `op`'s `nth` button, answering a reasoned act's reason field with `reason` when the shell asks one, and a terminal act's dialog with `confirm`. */
+export async function press(p, op, { nth = 0, values = {}, reason, confirm = false } = {}) {
   fill(p, values);
   const b = button(p, op, nth);
   if (!b) throw new Error(`no ${op} button`);
@@ -45,6 +45,7 @@ export async function press(p, op, { nth = 0, values = {}, reason } = {}) {
     const ta = p.doc.getElementById("cs-reason-" + ai.replace(":", "-"));
     if (ta) { ta.value = reason; await p.click(p.root().querySelector(`[data-shell="reason-send"][data-for="${ai}"]`)); }
   }
+  if (confirm) await p.click(p.root().querySelector(`[data-shell="confirm"][data-for="${b.getAttribute("data-ai")}"]`));
   await settle();
   return b;
 }

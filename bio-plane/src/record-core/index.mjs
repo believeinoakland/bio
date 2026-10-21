@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R84).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R86).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -514,6 +514,22 @@ export class RecordCore {
    *  prefix that merely begins with a gated one's letters (`PROJECTX`) keys a different scope. The
    *  refusal echoes only what the caller sent. */
   allocIdOp(prefix, year) {
+    /* R86 (T51; B2, K4259): an id is for a named prefix and year; a call that names neither allocates nothing. Absent
+       is no value at all (a query parameter not sent), so an empty or numeric value still reaches the gate (R4). */
+    /* DEC-49 REGION is-allocid-input-present */
+    if (prefix === undefined || prefix === null) {
+      const row = RECORD_CORE_CHECKS.ALLOCID_PREFIX_REQUIRED;
+      return { ok: false, reason: "ALLOCID_PREFIX_REQUIRED", code: "ALLOCID_PREFIX_REQUIRED", check: row.check,
+               translation: row.translation,
+               detail: localize("record-core.index.allocid_needs_a_prefix", "op=allocid needs a prefix, the kind of object the id is for. Nothing was allocated.") };
+    }
+    if (year === undefined || year === null) {
+      const row = RECORD_CORE_CHECKS.ALLOCID_YEAR_REQUIRED;
+      return { ok: false, reason: "ALLOCID_YEAR_REQUIRED", code: "ALLOCID_YEAR_REQUIRED", check: row.check,
+               translation: row.translation,
+               detail: localize("record-core.index.allocid_needs_a_year", "op=allocid needs a year, the year the id is for. Nothing was allocated.") };
+    }
+    /* END DEC-49 REGION is-allocid-input-present */
     const scope = `${prefix}-${year}`;
     const gated = RecordCore.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
     /* DEC-49 REGION is-allocid-prefix-gated */
@@ -1897,6 +1913,15 @@ export function recordCoreOps(record, url, body, { sight = null } = {}) {
     },
   };
 }
+
+/* R85 (T51; B2, K4259; op-declarations R80, op-grades R49): the op this module serves that the screens send, declared by
+   its owner beside the ops map: its class, weight and description are the op's existing rows', its fields what the arm
+   reads (R86: both are required, and a call without one is refused naming it). */
+export const DECLARED_OPS = Object.freeze({
+  allocid: { classes: ["admin", "member", "probe"], mutating: true, weight: "substrate", needs: "contribute",
+    description: localize("record-core.declared.allocid", "substrate: id allocation"),
+    fields: { accepts: ["prefix", "year"], requires: ["prefix", "year"] } },
+});
 
 /* R73: today's sweep, gated by the caller's sight. `visible(id)` asks, once per id the page names, whether the bundle
    passes `sight(viewer)`; references still resolve against the whole corpus (R19). An absent or unknown viewer, a sight

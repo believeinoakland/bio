@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_019Tn27tqyLrYtV6fEW46e5z · depth 2 · COMPLETE · handled B6
+**Status** · session_014WjdhuWBuYxto9rwEbpv6a · depth 2 · COMPLETE · handled B13
 
 ## Completion record (T51, B1 START)
 
@@ -96,3 +96,120 @@ Waiting: R77 (the sign step's minutes) needs case-inputs' minutesComparisonsOn a
 ## J5 · COMPLETE
 
 COMPLETE (T51-161). Words findings fixed (zero in case-authoring), R77 sign-step minutes added with minutes.test.mjs after merging tranche/T51 (case-inputs R19). Module tests 192/192, review+case-check 95/95; format, architecture, coverage 49/49, ownership 0 failures. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.
+
+## Completion record for B7 (START, the fix round: C1, C5, C6, K4168, L16, K4202), B8 and B9 (CHANGE)
+
+**Requirement lines.** Written by me in `build/requirements/case-authoring.md` (B8, B9), each marked *(not yet met: T51)*: **R78** (C1), **R79** (C5, C6), **R80** (L16), **R81** (the `DECLARED_OPS` line, which entries 3 and 5 share: the three ops are declared once). R3's first refusal now reads `PUBLISH_NO_FINDING` (was `NO_TARGET` until T51: R80). R78 adds one rule to the entry's text: `targets` and `target` are one field, and `caseId` and `newCase` are one, so a call that sends either of a pair keeps the draft's other out (a call's `target` and a draft's `targets` would otherwise both be read and the call's lost).
+
+**Entries applied.**
+1. **C1 (R78).** `#withDraft` (index.mjs) takes, for each of the new export `DRAFT_FIELDS` that the draft's `params` hold and the call does not send, the draft's value, when `draft` names a draft the review provider shows the viewer and that belongs to `project`; otherwise the call is left as sent and R9 refuses as before. It is applied in `publishCase`, `publishPreflight`, `tensionsToDisclose` and `calculationsAtPublication` (so the gather of R56 runs over the draft's targets). It writes nothing. `DRAFT_FIELDS` = `AUTHORED_FIELDS` and `ACT_FIELDS` less `viewer`, `author`, `project`, `draft` and `tieAttested`. The ops' `newCase` is now absent (not `false`) when neither query nor body sends it, so a draft's own `newCase` is not overruled by a default.
+2. **C5, C6 (R79).** The check found the pre-flight and the publication already judge `tensionsDisclosed` and `selfAttested` through the same `case-disclosures` functions (`tensionsJudged`, `selfAttestedJudged`), so they cannot differ, and an entry without a `reason` is `SELF_ATTESTED_NO_REASON` naming the capture and its place in both. The defect was the draft: the lists the ceremony keeps in a draft were never read (R78). The tests hold both (same refusals, `pre.first` equal to the act's answer; control with a reason).
+3. **K4168, K4202 (R81).** `DECLARED_OPS` beside `caseAuthoringOps` for `publish`, `publishpreflight` and `publishtensions`. Classes and `mutating` are the hand rows'; `weight` and `description`: `publish` `terminal` and `act.publish.does`; the two reads `read` and their `NON_ACTS` reasons copied (`localize` ids `case-authoring.declared.*`). `accepts` is built from `AUTHORED_FIELDS` and `ACT_FIELDS` (less the stamps), the same for all three; `requires`: `publish` the project, each of `targets`/`target`/`draft`, `roles`, `statement`, `subjectPosition`, `subjectJustification`, `excluded`, `scope`, `biasAcknowledgement` (each or `draft`) and `tieAttested`; `publishpreflight` the same but `tieAttested` (it reports the confirmation as `first` and never refuses for it); `publishtensions` the project alone. `registerDeclaredOps` of `op-declarations` and of `op-grades` accepts all three (checked: no disagreement; `op-grades` reports them as agreed).
+4. **L16 (R80).** The refusal for a case naming no finding is `PUBLISH_NO_FINDING` (`reason` and `code`, the same detail); `refusal.PUBLISH_NO_FINDING` exists in the word list (`hasWord` in the test). I kept the name BOB gave. `refusal.NO_TARGET` is untouched.
+
+**Decided, not asked (P17).** `publishtensions` declares only `project` as required: for no finding it answers `ok` with an empty list (R32), so declaring the finding required would state a refusal it does not make. If BOB wants the read to refuse for no finding, that is a requirement change to R32.
+
+**Deferred.** None.
+
+**Found in other modules (reported in the REPORT).**
+- `screens-publish` (`src/screens-publish/ceremony.mjs` 100 and 105) tells the case with no finding by `NO_TARGET`; the plane now answers `PUBLISH_NO_FINDING` (its entry 24, the "Add a finding" door, L16).
+- `review` (`REVIEW_DRAFT_FIELDS`, index.mjs 88) keeps its own list of what a draft keeps; its entry C3 reads `DRAFT_FIELDS` from here. `#gates` could pass `draft` instead of the draft's parameters.
+- Hand rows that can go once the owner declares them whole: `op-declarations` `OPS` rows `publish`, `publishtensions`, `publishpreflight` (the `NEEDS` row of `publish` and its stamps must then be declared too: add `needs: "publish"` and `stamps: ["viewer","author"]` to the declaration if BOB wants the rows removed); `op-grades` `RUNGS.publish` and the `NON_ACTS` reasons of the two reads (these agree now).
+- Reds unchanged by this job, in other modules and already there before it (same counts with my change stashed): `review` 5, `screens-publish` 10, `interface-shell` 18, `op-declarations` 1 (R73), `op-grades` 2 (R42, R46); `checks/run.mjs` coverage 7 modules and words `testcopy` 7 (op-grades), none in case-authoring.
+
+**Tests and checks.**
+- New tests, written first and seen failing (R78 with the merge off, R80 with the old code: 7 of 9 red): `bio-plane/test/m/case-authoring/fixround.test.mjs` (R78 x6, R79 x2, R80), `declared-ops.test.mjs` (R81 x4, through `declaredOpHolds`; a mutated `requires` is caught). `fences.test.mjs` R3 now reads `PUBLISH_NO_FINDING`.
+- `node --test bio-plane/test/m/case-authoring/`: 205 of 205 pass.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `node checks/architecture.mjs /home/user/bio case-authoring`: 0 failures. `node checks/coverage.mjs /home/user/bio case-authoring`: 53 of 53 live ids named by a test, 0 failures. `node checks/run.mjs /home/user/bio`: architecture 0, channels 0, words 0 findings for case-authoring files, coverage and words failures only in other modules. `node checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`: run again on the final commit (see the COMPLETE body).
+
+**Size (session_01UiW51kYAYDBQ6nmNeZEATc): test runs 14, module lines 2854** (`bio-plane/src/case-authoring/*.mjs`, all lines).
+
+## J6 · REPORT
+
+REPORT (FR-18; findings in other modules, none blocks this job).
+1. screens-publish, src/screens-publish/ceremony.mjs lines 100 and 105: the ceremony tells the case with no finding by the code NO_TARGET. The plane now answers PUBLISH_NO_FINDING (case-authoring R80, DEC-384), so the screen's "Add a finding" gate (its entry 24, L16) must read that code and the word refusal.PUBLISH_NO_FINDING.
+2. review, REVIEW_DRAFT_FIELDS (src/review/index.mjs:88) is its own list of what a draft keeps; its entry C3 should read case-authoring's exported DRAFT_FIELDS. Its #gates may pass `draft` to publishCase instead of the draft's parameters (R78 reads them).
+3. Hand rows that can go once an owner declares them: op-declarations OPS rows publish, publishtensions, publishpreflight (for publish also its NEEDS row and stamps: add `needs: "publish"` and `stamps: ["viewer","author"]` to my declaration if you want the rows removed); op-grades RUNGS.publish and the NON_ACTS reasons of the two reads. All three agree with my declaration now (registerDeclaredOps of both modules accepts them).
+4. Reds that were already there and are unchanged (same counts with my change stashed): review 5, screens-publish 10, interface-shell 18, op-declarations 1 (R73), op-grades 2 (R42, R46); checks/run.mjs coverage fails in 7 other modules and words testcopy in op-grades t36/t47/t48.
+
+## J7 · COMPLETE
+
+COMPLETE (FR-18, B7 with B8 and B9). C1: a draft named by `draft` supplies every authored field the call did not send (R78, DRAFT_FIELDS exported for review). C5/C6: the pre-flight and the publication judge the ceremony's lists through the same case-disclosures calls; the real defect was the unread draft (R79, tests hold both). K4168/K4202: DECLARED_OPS for publish, publishpreflight and publishtensions (R81; both registerDeclaredOps accept them). L16: PUBLISH_NO_FINDING with its own word (R80). Requirement lines R78-R81 are written in build/requirements/case-authoring.md (marked not yet met: T51); the ownership check lists that one file, accepted at the merge per B8/B9. Module tests 205/205; format 0, architecture 0, coverage 53/53, words 0 for my files. Decision for the record: publishtensions requires only the project (it answers an empty list for no finding). Record: build/jobs/T51/case-authoring.md, commit 8af3914b6b on job/T51/case-authoring. Size (session_01UiW51kYAYDBQ6nmNeZEATc): test runs 14, module lines 2854.
+
+## Completion record for B10 (CHANGE, K4240)
+
+**Entries applied.** `publishpreflight`'s step three, `not_co_attested`, now lists each capture the case rests on that is not co-attested as `{capture, by, findings}`, built by the private `#notCoAttested` from the case's own capture rows (one row per finding and capture, `disclosureBlocks`). `capture` keeps the id, so a reader that maps `.capture` keeps working. A capture no finding of the case rests on is not listed (it never enters the rows). Only the pre-flight changes; `publish` and its document are unchanged.
+
+**Decided, not asked (P17).**
+- `by` is the member `capture` records as capturing the bytes (its R69, `captureAccountsOf(...).actors`): the first member actor by time, with the `member:` tag dropped, the same spelling the capture module gives its own first actor (`memberIdOf`). A machine actor is not a member; with no member actor `by` is `null`. Where two members captured one capture, `by` is the earlier one; the other is not listed. (Rare in the record; BOB may prefer a list, which would change the shape the screen reads.)
+- `findings` are the finding ids (each finding's `target`, its bundle id) that rest on the capture in this case, in the case's member order, each once.
+- The `capture` module is read through a new lazy getter `capture` (`captureOf(host)`, the same instance case-disclosures reads), which is an edge already in this module's `uses` (`modules.json`); no new edge.
+- No requirement in `build/requirements/case-authoring.md` describes this list's shape (R34's step three names the exclusions, searched section, bias, tensions, self-attested documents and sources, not co-attestation). I did not write the line into the file, as B10 asks for it in this COMPLETE.
+
+**Requirement line for BOB** (next free id; proposed R82, amends R34; marked not yet met until BOB writes it in):
+> **R82** (T51; K4240; amends R34) The pre-flight's step three, `not_co_attested`, lists each capture the case rests on that is not co-attested, as `{capture, by, findings}`: `by` is the member the capture module records as capturing it (its R69, the first member actor by time, `member:` dropped), `null` when none, and `findings` the findings resting on it in this case, each once. A capture no finding rests on is not listed. Test: a pre-flight over a case resting on a non-co-attested capture answers that entry with its capturer and both findings; control: a capture no finding rests on is not listed, and a case over one finding names only that finding.
+
+**Readers.** I searched the repository for the key `not_co_attested`: its only reader outside this module is none. The literal occurs in `bio-plane/src/case-authoring/index.mjs` alone (the other hits are the generated bundles under `release/` and `bio-plane/dist/`, and the word tables). BOB's note says screens-publish reads the list; if it reads it by a path other than that literal, screens-publish's J9 should confirm it reads `{capture, by, findings}` and not the old string list. I did not change any screen (not this module's).
+
+**Deferred.** None.
+
+**Found in other modules (not mine, not changed).** `checks/run.mjs` on this tranche shows, for other modules only: coverage in `agent-harness` (R17), `agent-runner` (R37, R38, R40), `installer-steps` (R26, R31) and `journey-check` (R19); words `missingkey` in `screens-intake` (its `t51-about-knocker` and `t51-watching` tests); `testcopy` in `op-grades`; `inline strength` in `bio-plane/src/strength/method.mjs:349`. None names case-authoring.
+
+**Tests and checks.**
+- New: `bio-plane/test/m/case-authoring/co-attested-list.test.mjs`, three tests, seen failing before the change (the old string list), then passing: the entry with its capturer and both findings, and a co-attested capture not listed; the control (a capture no finding rests on is not listed; a case over Q2 alone names Q2 only); `by: null` with no member actor, and with a machine actor; the pre-flight writes nothing.
+- `node --test bio-plane/test/m/case-authoring/`: 208 of 208 pass.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `node checks/architecture.mjs /home/user/bio case-authoring`: 0 failures. `node checks/coverage.mjs /home/user/bio case-authoring`: 53 of 53 live ids named by a test, 0 failures. `node checks/words.mjs`: no finding in case-authoring. `node checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`: 1 file changed by case-authoring (the module's source; the new test file and this record are the job's own paths), 0 failures.
+- `node checks/run.mjs /home/user/bio`: no finding in case-authoring (the failures listed above are other modules').
+
+**Size (session_01SzRDd1oqEEzNixuCz5nhog): test runs 4, module lines 2876** (`bio-plane/src/case-authoring/*.mjs`, all lines).
+
+## J8 · COMPLETE
+
+COMPLETE (B10, K4240). `publishpreflight`'s step three now lists `not_co_attested` as `{capture, by, findings}`: `by` is the member the capture module records as capturing it (null when none), `findings` the findings the case rests on through that capture. Tests: `co-attested-list.test.mjs` (3, seen red then green); case-authoring 208/208. format, architecture, coverage 53/53, words, ownership: 0 failures for case-authoring; `run.mjs` shows failures only in other modules.
+Requirement line for BOB: proposed R82 (amends R34), in the record's B10 section. Decision for you (P17, recorded): `by` is the first member capturer by time; if two members captured one capture, the second is not listed.
+Readers: no reader of the key outside this module in the repository; screens-publish's J9 should confirm it reads the new shape.
+
+## Completion record for B11 (CHANGE, K4245)
+
+**Entries applied.** R82 is on the tranche as proposed (requirement file, written by BOB). Its coverage gap is closed: the three tests in `co-attested-list.test.mjs` now name R82 in their titles ("R82 (B10, K4240): ...", "R82 (B10, K4240) control: ..."). No test body changed. The branch now carries the tranche (merged, `db54d1e0d3`).
+
+**Tests and checks.** `node --test bio-plane/test/m/case-authoring/`: 208 of 208 pass. `checks/coverage.mjs` case-authoring: 54 of 54 live ids named, 0 failures. `checks/format.mjs`: 0 failures. `checks/architecture.mjs` case-authoring: 0 failures. `checks/ownership.mjs` case-authoring tranche/T51 job/T51/case-authoring: 0 failures.
+
+**Deferred.** None.
+
+**Size (session_01SzRDd1oqEEzNixuCz5nhog): test runs 5, module lines 2876** (`bio-plane/src/case-authoring/*.mjs`, all lines; this change changed no source).
+
+## J9 · COMPLETE
+
+COMPLETE (B11, K4245). R82 is named in the three co-attestation list tests' titles; no test body changed. Module tests 208/208; coverage 54/54; format, architecture, ownership 0 failures for case-authoring. Branch carries tranche/T51 (merged). Record: build/jobs/T51/case-authoring.md, section B11.
+
+## J10 · QUESTION
+
+QUESTION (B12, C3 and C67): two requirement lines are not written; my best reading is below and I carry on with it.
+
+1. C3 needs R82 amended. R82 as written lists the not-co-attested captures but says nothing of a refused publish. Proposed amendment (adds to R82, marked not yet met: T51): "Step three lists them, and its `self_attested` rows, whenever the captures the case rests on are known, whether or not `op=publish` refused: a refusal stays in `first` (and `CO_ATTESTATION_UNACKNOWLEDGED` among them), and the step still carries the list, so the ceremony can offer Retry and the reason box. When the captures cannot be known (a member refused, the roles not given), the step states that and lists none. Test: a pre-flight of a case whose publish is refused CO_ATTESTATION_UNACKNOWLEDGED lists the unacknowledged captures in step three, with `first` the refusal; control: a ready pre-flight lists none that is co-attested, and an unknown roster states it."
+
+2. C67 (my part) needs R16 amended. R16 says every non-severed `cites` edge of the project; the project cites the findings of all its drafts, so an earlier draft's question (not a member of this case) reaches the signed case. My reading, proposed: "an edge whose target is a finding (an inquiry) is carried only when that finding is a member of this case; edges to documents are carried as before." Test: a project citing Q (member) and Q2 (a finding of another draft, not a member): case_citations names Q only; control: with Q2 also a member both are named. If you want documents limited to those the members rest on, say so; that would change R16's existing test.
+
+## Completion record for B12 (START, fix round 2, wave 1: C3, C67), B13 (ANSWER)
+
+**Causes met.**
+- **C3 (R82 as amended, K4307).** `publishPreflight` now keeps the capture rows its independent reads already have (`D.disclosureBlocks` over `resting`, `facts` and the self-attested judgment, inside the rolled-back run) and step three carries `self_attested` and `not_co_attested` from them whenever the roster and roles are judged, whether or not `op=publish` refused (`capturesListed`, `#preflightSteps`). A refusal stays in `first`; a roster that cannot be judged (a member refused, no roles) states `not reached` and lists nothing, never `[]`. When `op=publish` reaches its rows, the lists are built from them as before, so the ready pre-flight's answer is byte-identical to the one before.
+- **C67 (my part; R16 as amended, K4307).** `#caseCitations(project, members)` carries an edge to a finding only when that finding is a member of the case; edges to documents are carried as before. An earlier draft's question no longer reaches the signed bytes.
+
+**Tests (written first, seen failing: three R82 and two R16 reds, then green).** `bio-plane/test/m/case-authoring/fixround2.test.mjs`: R82 x4 (the refused pre-flight lists the unacknowledged capture with `first` the refusal, a co-attested capture not listed; control: the list equals the ready pre-flight's and its `self_attested` row; another refusal first still lists, an unknown roster states it and lists none; writes nothing), R16 x2 (a project citing Q, Q2, Q3 and two documents: a case over Q3 cites Q3 and the documents only, neither earlier finding in the signed bytes; control: a member is cited, two members both).
+
+**Deferred.** None. The screen's half of C67 ("minutes … can't be read" with no minutes relied on) and the ceremony drawing Retry from `not_co_attested` are `screens-publish`'s (wave 2); no change to the answer's shape is needed for it.
+
+**Found in other modules (not mine, not changed).** `plane` `release.test.mjs` R24 (the surface-title words test) is red on `tranche/T51` itself (checked on a clean worktree of it: 5 of 6 pass). `checks/format.mjs` fails on `build/rulings.md:4298` (K4301 has no standing-list decision, §16). `checks/run.mjs` coverage fails for 10 modules, none case-authoring.
+
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/case-authoring/`: 214 of 214 pass.
+- Users: `review` 73/73, `case-check` 34/34, `screens-publish` 179 pass, 0 fail (181 tests, 2 not run as pass), `plane` 279 of 280 (the one red above, pre-existing).
+- `checks/architecture.mjs case-authoring`: 0 failures. `checks/coverage.mjs case-authoring`: 54 of 54 live ids named, 0 failures. `checks/words.mjs` (inside `run.mjs`): 0 failures. `checks/ownership.mjs case-authoring tranche/T51 job/T51/case-authoring`: 0 failures (3 files). `checks/format.mjs`: 1 failure, `build/rulings.md`, not this job's.
+
+**Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2889** (`bio-plane/src/case-authoring/*.mjs`, all lines).
+
+## J11 · COMPLETE
+
+COMPLETE (B12, B13; fix round 2, wave 1). C3 (R82 as amended): the pre-flight's step three lists `not_co_attested` and `self_attested` whenever the roster and roles are judged, whether or not `op=publish` refused; the refusal stays in `first`; an unjudgeable roster states it and lists none. C67 (my part, R16 as amended): a case carries an edge to a finding only when it is a member; documents as before. Tests written first and seen red: fixround2.test.mjs (R82 x4, R16 x2). case-authoring 214/214; users review 73/73, case-check 34/34, screens-publish 179 pass 0 fail, plane 279/280 (R24 words test in release.test.mjs is red on tranche/T51 itself). architecture, coverage 54/54, words and ownership: 0 failures; format fails only on build/rulings.md:4298 (K4301, not mine). Nothing deferred. For screens-publish (wave 2): the ceremony can draw Retry and the reason box from step three's `not_co_attested` with no change of shape; its C67 half (no minutes line when none relied on) is theirs. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2889.

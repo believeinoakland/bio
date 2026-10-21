@@ -158,12 +158,12 @@ test("R16: 'Change the law…' sends actionlaws with the law chosen from those t
   const p = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: ok({}), actionlawspropose: ok({}) });
   assert.ok(button(p, "actionlaws").textContent.includes(W("law.change")));
   assert.ok(button(p, "actionlawspropose").textContent.includes(W("law.propose")));
-  // the choice offers the laws of this action's kind the places name; the proposal offers those not yet chosen
+  // R54: one list offers the laws of this action's kind the places name, for both acts
   assert.deepEqual(p.doc.getElementById("law-pick").querySelectorAll("option").map((o) => o.value), ["Gov. Code § 7922.535(b)", "Mun. Code § 2.20.230"]);
-  assert.deepEqual(p.doc.getElementById("lawp-pick").querySelectorAll("option").map((o) => o.value), ["Mun. Code § 2.20.230"]);
+  assert.equal(p.doc.getElementById("lawp-pick"), null, "no second list");
   await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
   assert.deepEqual(last(p, "actionlaws").body, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] });
-  await press(p, "actionlawspropose", { values: { "lawp-pick": "Mun. Code § 2.20.230", "lawp-level": "city" } });
+  await press(p, "actionlawspropose", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
   assert.deepEqual(last(p, "actionlawspropose").body, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] });
   assert.equal(p.byOp("actionlaws").length, 1, "proposing sent no actionlaws");
   // a law already chosen keeps its level when it is chosen again
@@ -244,7 +244,7 @@ test("R23, R26: where a reply's date has passed with none recorded, 'Open a ques
   said(p, "action.noreply.says");
   said(p, "action.noreply.question.help");
   assert.ok(button(p, "actioninquiry").textContent.includes(W("action.noreply.question")));
-  assert.equal(main(p).querySelector("details"), null, "at once, not behind a fold");
+  assert.equal(p.doc.getElementById("action-question").closest("details"), null, "at once, not behind a fold");
   const field = p.doc.getElementById("action-question");
   assert.equal(field.value, "", "control: nothing is filled from the action into the question");
   assert.equal(field.getAttribute("maxlength"), "500");

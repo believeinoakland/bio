@@ -1,0 +1,26 @@
+# BOB to cause-tests-T51 (T51)
+
+**Read** · handled J2
+
+## B1 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/cause-tests-T51 tranche/T51 && git branch -m job/T51/cause-tests-T51 stale/cause-tests-local && git checkout -b job/T51/cause-tests-T51 origin/job/T51/cause-tests-T51`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CAUSE-TESTS-T51 #1 · tranche T51 · product believeinoakland/bio · depth 2 (K4275, K4276)
+
+You are a **cause job** (P8, mechanics §6a): you hold four modules, `control-plane`, `plane`, `screens-intake` and `screens-settings`, and, only if item 3's residual stays red, `op-grades`. P8's cause-job paragraph and §6a are on the process repository's branch `prep/cause-job-K4273` (not yet on its main, K4275): read them with `git -C /home/user/civicos-process fetch origin prep/cause-job-K4273 && git -C /home/user/civicos-process show origin/prep/cause-job-K4273:PROCESS-MECHANICS.md` (§6a) and `…:PROCESS-DESIGN.md` (P8). Run `mail` commands with `--module cause-tests-T51`; your record is `build/jobs/T51/cause-tests-T51.md`. Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113). Run at most two suites at once (K4272).
+
+**The cause:** six tests are wrong after recent merges, or wait a fixed time where they should wait for the event. The code is right in each (diagnosed by BOB's reading worker; reproduce each before fixing). Change **tests only**; if one turns out to need a code change, stop and ask BOB.
+
+1. control-plane `test/m/control-plane/r53-routes.test.mjs:119-125` (R53/R17/R29): it expects `class:admin` for every `author` op; ops in the door's `DECLARATION_ACTIONS` (today `strengthbarset`) are stamped `token:<cls>` (`control-plane/index.mjs` ~2000, `MACHINE_AUTHOR_PREFIX`), which R17 allows. Expect `token:<cls>` for those, read from the door's own table, never a hand list.
+2. control-plane `t46-e2e.test.mjs:204-209` (R75): after `release` it reads `heldcaptures` before the answer; wait on `finished.release > 0`, as line 173 does for `captureupload`.
+3. control-plane `test/m/control-plane/register-declared.mjs` (R2/R41 totality, test #324): it registers owners' `DECLARED_OPS` with op-declarations only; the plane (`src/plane/declarations.mjs`) also registers them with op-grades. Register with both, the plane's way. Then re-run: if `export` still shows as unpublished (it has `NEEDS` `{export: null}`, op-declarations R83, and is in op-grades' `RUNG_ABSENT` but neither `NON_ACTS` nor `ACTS`), ask BOB before touching op-grades.
+4. plane `split.test.mjs:72` (R5): its `provenanceroutes` query carries `bundleId=X-none`, which since provenance-routes R15 answers one document's route (`NO_SUCH_BUNDLE`). Test the list form without `bundleId`, and add the `bundleId` case against `provenanceRouteOf`.
+5. screens-intake `capture.test.mjs:489` (R22): it reads `p.byOp("promote")[0].body` after a fixed settle; wait (bounded) for the `promote` request.
+6. screens-settings `test/m/screens-settings/kit.mjs:167` (used at `account.test.mjs:248-252`, R57): `press(..., {wait:true})` gives up after a fixed number of polls; wait for the request itself, bounded by time.
+
+Read in full: these test files, the named source lines' functions, and each held module's requirement the test names. No sentence copied into a test (K3810). Then run each held module's suite (control-plane, plane, screens-intake, screens-settings) and `checks/run.mjs`. COMPLETE with the tests changed, the suites' counts, and the `Size` line. Not yours: plane R24's four missing `screen.<id>.purpose` rows (wording, T52, K4270).
+
+## B2 · ANSWER · re J1
+
+ANSWER (re J1; K4278). Not Bob's: it is a technical accounting question, BOB's (P17). Keep your register-declared.mjs change (the plane's way is right). Item 3 is taken out of your job: #324 stays red, accepted by name, and BOB traces whether the 22 "stale" names and `export` are affordances' `unaccounted` rule predating owners' declared reads, or owners' rows; it goes to its owner separately. screens-settings R39 (`screen.bias.adoptfor.label`) is recorded for T52 (K4270). Finish now: wait for your migrate-released run only if it is already near its end, else note it pending; then record COMPLETE with items 1, 2, 4, 5, 6 applied and item 3 partly (registration done, totality to BOB), the suites, checks and your Size line, set COMPLETE and post COMPLETE.

@@ -9,7 +9,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS,
          MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
 import * as T50 from "../../../src/op-grades/t50.mjs";
-import { reqText, between, ticked } from "./declared.mjs";
+import { reqText, between, ticked, registeredOpGrades } from "./declared.mjs";
 
 const root = (p) => fileURLToPath(new URL(`../../../../${p}`, import.meta.url));
 const gradeOf = (op) => (Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null);
@@ -75,9 +75,13 @@ test("R45 R3: the `undetermined` tally rises by one for actioninquiry, and R47's
 
 test("R46: MARKS_KIT_COMMIT is the design commit the tree holds, and MARKS holds the kit's weight for every rungless "
    + "registered act at that commit; the five R45 grades and actioninquiry hold no mark", () => {
-  assert.equal(MARKS_KIT_COMMIT, "e6d16d8f53");
+  assert.equal(MARKS_KIT_COMMIT, "aa8bdcd0b4");
   for (const op of [...REVERSIBLE, "actioninquiry", "planopen", "wizarddraft", "membertie", "declaretie"])
     assert.ok(!Object.hasOwn(MARKS, op), `${op} is graded, so it takes no mark`);
+  /* K4206: DEC-386's owed act, a rungless act of the registry at this commit, the kit's weight 2 (Reasoned); its row is the one
+     the previous table lacked, so without it the totality below names it */
+  assert.equal(MARKS.expertisewithdraw, "Reasoned", "expertisewithdraw: the kit's 2, DEC-386");
+  assert.equal(MARK_SOURCES.expertisewithdraw, `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`, "its source is the kit, not a ruling");
   /* controls: a graded op left in MARKS is seen; an op the kit does not name is Reasoned, not absent */
   assert.notDeepEqual(Object.keys({ ...MARKS, watchitem: "Reasoned" }).sort(), Object.keys(MARKS).sort());
   assert.equal(MARKS.claim, "Signed");
@@ -93,10 +97,22 @@ test("R46: MARKS equals the kit's WEIGHT at that commit for every rungless regis
     .map(([, k, v]) => [k, Number(v)]));
   const WNAME = ["", "Reversible", "Reasoned", "Terminal", "Signed", "Irreversible"];
   for (const op of Object.keys(MARKS)) {
-    if (op === "notewrite") continue;
+    if (op === "notewrite" || MARK_SOURCES[op].startsWith("K4259, a ruling")) continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
   }
+  /* fix round 2, C76: a read carries no mark above Reversible, so `bootstrap` ("Show what each part runs", which the kit weighs
+     Irreversible) and the eight other reads whose kit weight said more take the read's mark by the same ruling */
+  const byRuling = Object.keys(MARKS).filter((op) => MARK_SOURCES[op].startsWith("K4259, a ruling"));
+  assert.ok(byRuling.length >= 10 && byRuling.every((op) => MARKS[op] === "Reversible"), "every op the read ruling sets is Reversible");
+  assert.ok(KIT_WEIGHT.bootstrap > 1 && MARKS.bootstrap === "Reversible" && byRuling.includes("bootstrap"), "bootstrap: the kit's weight over-ruled for a read");
+  /* control: an act (not a read) keeps the kit's weight above Reversible */
+  assert.equal(MARKS.memberadd, "Reasoned");
+  assert.equal(MARKS.claim, "Signed");
+  /* versionnotice is a read (op-declarations, mutating false) and asks no reason: its mark is a read's, by a ruling (K4259) */
+  assert.equal(MARKS.versionnotice, "Reversible");
+  assert.equal(KIT_WEIGHT.versionnotice, undefined, "the kit does not name versionnotice: the ruling sets it");
+  assert.match(MARK_SOURCES.versionnotice, /^K4259, a ruling/);
   assert.equal(MARKS.notewrite, "Reversible");
   assert.match(MARK_SOURCES.notewrite, /^DEC-300 \(5\)/);
   assert.equal(KIT_WEIGHT.notewrite, undefined, "the kit names no notewrite: the ruling sets it");
@@ -105,13 +121,19 @@ test("R46: MARKS equals the kit's WEIGHT at that commit for every rungless regis
 });
 
 test("R46: every rungless registered act has an entry, and the registry's watchitem, secondlook, secondlookclear, "
-   + "projectstakeset, actionstake and actioninquiry hold no mark", () => {
+   + "projectstakeset, actionstake and actioninquiry hold no mark", async () => {
   const REGISTRY = JSON.parse(readFileSync(root("docs/development/ux-substrate/screens/registry.json"), "utf8"));
   const nameOf = (a) => (a.startsWith("owed:") ? a.slice(5).split(" ")[0] : a);
   const ops = [...new Set(REGISTRY.screens.flatMap((s) => s.acts.map((a) => nameOf(a.op))))];
-  const rungless = ops.filter((op) => !Object.hasOwn(RUNGS, op) && !(Object.hasOwn(RUNG_ABSENT, op)
-    && RUNG_ABSENT[op].ground === "undetermined"));
+  /* rungless over the registered tables (R49): an op its owner grades (strengthbarset, reasoned) needs no mark of its own */
+  const reg = await registeredOpGrades();
+  const rungless = ops.filter((op) => !Object.hasOwn(reg.RUNGS, op) && !(Object.hasOwn(reg.RUNG_ABSENT, op)
+    && reg.RUNG_ABSENT[op].ground === "undetermined"));
   for (const op of rungless) assert.ok(Object.hasOwn(MARKS, op), `${op} is rungless and has no mark`);
+  /* control: the table without `login` leaves exactly that act unmarked, so the check names it. (K4206's control named
+     expertisewithdraw; its owner grades it once registered, B27, so it is no longer rungless here.) */
+  const { login: _marked, ...WITHOUT_LOGIN } = MARKS;
+  assert.deepEqual(rungless.filter((op) => !Object.hasOwn(WITHOUT_LOGIN, op)), ["login"]);
   /* the writes T50 grades hold no mark: the five reversible ones have a rung, actioninquiry is undetermined */
   for (const op of WRITES) assert.ok(!Object.hasOwn(MARKS, op), op);
 });

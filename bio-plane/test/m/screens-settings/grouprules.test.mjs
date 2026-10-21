@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { ADMIN, MEMBER, GROUP_RULES, DOC_SHA, env, refuse, grouprulesTable } from "./fixtures.mjs";
+import { ADMIN, MEMBER, GROUP_RULES, DOC_SHA, VOUCHED_DOC, env, refuse, grouprulesTable } from "./fixtures.mjs";
 
 const item = (o, rule) => all(o.tree, (e) => e.tag === "li" && e.attrs["data-rule"] === rule)[0];
 const btn = (n, op) => acts(n).filter((b) => b.attrs["data-act"] === op);
@@ -105,7 +105,7 @@ test("R61 the draft form draws the design's fields: the kinds of action by their
   assert.deepEqual(kinds, [["claim", said("screen.grouprules.app.claim")], ["request_for_comment", said("screen.action.kind.request_for_comment")], ["public_comment", said("screen.action.kind.public_comment")], ["party_participation", said("screen.action.kind.party_participation")]]);
   assert.ok(a.p.requests.some((r) => r.op === "rulefields" && r.query.section === "deadlines"));
   const docs = all(all(a.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => o.attrs.value);
-  assert.deepEqual(docs, [DOC_SHA, "e".repeat(64)]);
+  assert.deepEqual(docs, [DOC_SHA, "e".repeat(64), VOUCHED_DOC.capture.sha256], "the held documents and, R70, the vouched one");
   // writing help: only under What it says, only while the assistant is reachable
   assert.equal(btn(a.tree, "writinghelp").length, 1);
   assert.ok(a.html.indexOf('data-act="writinghelp"') > a.html.indexOf('id="gr-statement"') && a.html.indexOf('data-act="writinghelp"') < a.html.indexOf('id="gr-bears"'));
@@ -160,4 +160,25 @@ test("R61 writinghelp under What it says fills the draft into that field, labell
   assert.equal(r.sent.find((x) => x.op === "writinghelp").body.field, "statement");
   assert.equal(a.b.doc.getElementById("gr-statement").value, "Speakers register by noon.");
   has(a, "screen.group-identity.draft.label", { handle: "dev" });
+});
+
+/* ---- T51 FR-25: L2 (R70) ---- */
+
+test("R70 the 'Which document' picker is read with state held_and_vouched: with one held and one vouched document it offers both, and a vouched one is chosen and drafted from; asked without that state it would list only the held (control)", async () => {
+  const held = { title: "Held rules", capture: { sha256: "1".repeat(64) } }, vouched = { title: "Vouched rules", capture: { sha256: "2".repeat(64) } };
+  // the owner's answer by the state asked (capture R77, R88): the documents at collected, and with held_and_vouched those a member vouched for too
+  const table = grouprulesTable({ heldcaptures: (q) => env({ ok: true, held: q.state === "held_and_vouched" ? [held, vouched] : [held] }) });
+  const a = await open("grouprules", { me: MEMBER, table });
+  const asked = a.p.requests.filter((r) => r.op === "heldcaptures");
+  assert.equal(asked.length, 1);
+  assert.equal(asked[0].query.state, "held_and_vouched");
+  const docs = all(all(a.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]);
+  assert.deepEqual(docs, [[held.capture.sha256, held.title], [vouched.capture.sha256, vouched.title]]);
+  // a vouched document can be drafted from: its sha is the one the draft names
+  const r = await a.press("ruledraft", { values: { ...FORM, "gr-doc": vouched.capture.sha256 }, choose: PICK });
+  const draft = r.sent.find((x) => x.op === "ruledraft");
+  assert.equal(draft.body.source.captureSha, vouched.capture.sha256);
+  // control: an owner that lists only the held documents (the state not asked) would leave the vouched one out
+  const only = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: (q) => env({ ok: true, held: q.state === "held_and_vouched" ? [held] : [] }) }) });
+  assert.deepEqual(all(all(only.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => o.attrs.value), [held.capture.sha256]);
 });

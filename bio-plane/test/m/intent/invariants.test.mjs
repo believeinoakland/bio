@@ -54,7 +54,7 @@ test("R19 progress is derived, never reported: no service accepts a progress fig
   assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...COND, relation: "member_of", progress: 90, satisfied: { share: 50, reached: 45 }, meeting: 3 },
                                    author: V("bob"), viewer: V("bob") }).ok, true);
   const oc = w.fm(w.P).objective_condition;
-  assert.deepEqual(Object.keys(oc).sort(), ["entity", "progression", "relation", "required_grade", "required_stages", "set_at", "set_by", "share"]);
+  assert.deepEqual(Object.keys(oc).sort(), ["entity", "progression", "relation", "required_grade", "required_stages", "set_at", "set_by", "set_reason", "share"]);
   const g = w.i.declareGoal({ statement: "s", bounds: "b", author: V("bob"), progress: 50, completion: 1 }).goal;
   assert.ok(!/progress|completion/.test(w.text(g)));
   /* reads write nothing */

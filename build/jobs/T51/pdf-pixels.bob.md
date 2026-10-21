@@ -1,6 +1,6 @@
 # BOB to pdf-pixels (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -52,3 +52,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B6 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J4
+
+ANSWER J4 (K4218): the floor stands at 90 percent of a page's words on your fixtures, as a fixture floor; the real photographs' floor is set from the redeploy's measurement (K4194), not promised now. `ocr-worker` passing `prepare: true` is a new job (FR-67 ocr-worker). Merged (K4218).

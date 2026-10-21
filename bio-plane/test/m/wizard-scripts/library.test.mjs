@@ -80,7 +80,7 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "1cc4a957f0", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "09fbb247eb", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
   assert.equal(wz.SCREEN_REGISTRY.length, 83, "R45: the file at the design commit named at the fix round of T51");
   REG_FILE.screens.forEach((f, i) => {
@@ -146,7 +146,7 @@ test("R13 (T37; K2171) the registry is re-taken from PR #14's merge onward: conn
 test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act is registered as its op, in the file's order, only once the member op table declares it; with no op table none is", () => {
   /* the acts the file still owes (R35, R38, R41): the installer's four routes, `founderhandleset`, members' `passwordresetlink` after
      memberadd, DEC-226's three update acts and the six T50 adds (K3674 among them); fifteen ops, `updatelater` on two screens */
-  assert.equal(OWED_OPS.length, 41, "R45: forty-one owed ops at 1cc4a957f0 (the earlier twenty-two among them)");
+  assert.equal(OWED_OPS.length, 42, "R45: forty-two owed ops at aa8bdcd0b4 (the earlier twenty-two among them; FR-49 adds expertisewithdraw)");
   for (const op of ["installupdate", "installalongside", "installremove", "installremoveconfirm", "founderhandleset", "passwordresetlink", "updatestart", "updatelater", "updateskip"])
     assert.ok(OWED_OPS.includes(op), op);
   const w = seeded({ register: false });

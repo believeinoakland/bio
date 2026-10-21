@@ -388,6 +388,17 @@ export async function dispatch(req, store) {
   }
 }
 
+/* R17 (T51 fix round; K4206; op-declarations R80, op-grades R49): the op this door's map serves that a screen sends and no
+   full declaration holds, declared beside the map. `groupdescriptiondraft` writes nothing: its handler drafts from `answers`
+   in the body, with `by` and `viewer` stamped from the query (R10). `assistant` is resolved by the door and never read from
+   the body, so it is declared nowhere. An absent or malformed `answers` is refused by name (GROUP_DRAFT_ANSWERS_MALFORMED,
+   instance-setup R65), so `answers` is both accepted and required. */
+export const DECLARED_OPS = Object.freeze({
+  groupdescriptiondraft: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer", "by"], weight: "read",
+    description: localize("store-door.declared.groupdescriptiondraft", "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it"),
+    fields: { accepts: ["answers"], requires: ["answers"] } },
+});
+
 /* N364, N13: the routes this module adds to plane's one map (plane R5), each passing R1's frame: queue's, tasks' and
    affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
    other module dispatches); the two own-key acts, credentials' since layer 2 (K757, K784), which credentials keeps out of

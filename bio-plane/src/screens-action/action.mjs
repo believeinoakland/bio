@@ -58,7 +58,52 @@ export const action = Object.freeze({
         return true;
       });
     },
-    who: function (by) { return String(by || "").replace(/^member:/, ""); },
+    // C94 (R56): a member is named by her handle, never by her id; an agent (`agent:…`) is not a member and is named as the plane names it
+    who: function (cs, by) { const id = String(by || "").replace(/^member:/, ""); return id && !/^agent:/.test(id) ? cs.memberName(id) : id; },
+    // R38: a word the design holds (`cs.w` answers the escaped key for one it does not); a field or option with none is not drawn
+    // and is reported to BOB as a missing key (K3366), never worded here.
+    has: function (cs, key) { return cs.w(key) !== cs.esc(key); },
+    // R38: the vocabulary's reply stages (received ones) and outcomes, each as a choice option: the design's words by the key family
+    // `screen.action.reply.stage.<token>` / `.outcome.<token>` where one holds them, else the vocabulary's own token as record data;
+    // the family's `none` ("Not stated", "Not decided") is the empty choice, which sends nothing (B16).
+    replyChoices: function (cs, view, which) {
+      const v = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies : {};
+      const fam = "screen.action.reply." + which + ".";
+      const list = which === "stage" ? (v.correspondence_stages && Array.isArray(v.correspondence_stages.received) ? v.correspondence_stages.received : [])
+        : (Array.isArray(v.correspondence_outcomes) ? v.correspondence_outcomes : []);
+      return [{ value: "", key: fam + "none" }].concat(list.filter(function (t) { return typeof t === "string" && t && t !== "none"; }).map(function (t) {
+        return cs.w(fam + t) !== cs.esc(fam + t) ? { value: t, key: fam + t } : { value: t, text: t };
+      }));
+    },
+    // R38 (B16 b): how a reply came, by the design's tokens (`actions` R13 takes free text of at most 500 characters)
+    mediums: function () { return ["email", "letter", "portal", "person", "other"]; },
+    // R38: the earlier entries a reply may follow (`follows`) or a quote answer or revise: each by its place in the correspondence
+    // (the ordinal `actions` declares), a sent entry as the request sent on its day, a received one as its kind of reply on its day
+    // (an entry with no kind has no word to be offered under).
+    entriesOf: function (cs, corr) {
+      return corr.map(function (c, i) {
+        const ord = typeof c.ord === "number" ? c.ord : i;
+        const fam = c.direction === "sent" ? "screen.action.sent.stage." : "screen.action.reply.stage.";
+        const kind = typeof c.stage === "string" && cs.w(fam + c.stage) !== cs.esc(fam + c.stage) ? String(cs.w(fam + c.stage)).toLowerCase() : "";
+        return { ord: ord, c: c, kind: kind };
+      });
+    },
+    // C66: the reply as recorded, line by line, each by the design's label for it; a part the entry does not carry is not drawn. The
+    // member's words and the office's are record data (escaped), the kind and the decision by the design's key where it holds one.
+    shownBack: function (cs, c) {
+      const has = function (v) { return typeof v === "string" ? v.trim() !== "" : v !== undefined && v !== null; };
+      const line = function (labelKey, value) { return '<span class="meta" data-recorded="' + labelKey.split(".").pop() + '">' + cs.w(labelKey) + ": " + value + "</span>"; };
+      const word = function (fam, token) { return cs.w(fam + token) !== cs.esc(fam + token) ? cs.w(fam + token) : cs.esc(token); };
+      const out = [];
+      if (has(c.account)) out.push(line("screen.action.reply.account", cs.esc(c.account)));
+      if (has(c.stage)) out.push(line("screen.action.what.kind.of.reply", word("screen.action.reply.stage.", c.stage)));
+      if (has(c.outcome)) out.push(line("screen.action.what.the.office.decided", word("screen.action.reply.outcome.", c.outcome)));
+      if (has(c.exemptions)) out.push(line("screen.action.the.exemptions.the.office.cites", cs.esc(c.exemptions)));
+      if (has(c.due_by)) out.push(line("screen.action.the.office.says.it.will.answer", cs.date(c.due_by) + (has(c.due_cite) ? " · " + cs.esc(c.due_cite) : "")));
+      if (has(c.quote_amount)) out.push(line("screen.action.the.amount.quoted", cs.esc(String(c.quote_amount)) + (has(c.quote_currency) ? " " + cs.esc(c.quote_currency) : "")
+        + (has(c.quote_basis) ? " · " + cs.esc(c.quote_basis) : "")));
+      return out.join("");
+    },
     // The states an action may move to from where it stands (actions' state edges).
     moves: function (from) {
       return { planned: ["active", "abandoned"], active: ["awaiting_response", "resolved", "abandoned"],
@@ -102,6 +147,11 @@ export const action = Object.freeze({
       return '<section class="cs-section"><h2 tabindex="0" data-level="2" data-tip="' + tip + '">' + cs.w(titleKey) + "</h2>" + inner + "</section>";
     };
     const aLink = function (screen, id, key) { return '<a class="cs-ref" href="/app/' + screen + "/" + encodeURIComponent(id) + '" data-nav>' + cs.w(key) + "</a>"; };
+    // a reference to another screen as its card: its name and its purpose (R37, R40, R43)
+    const door = function (screen, id) {
+      return '<div class="mk-links" data-list="' + screen + '"><a class="cs-ref" href="/app/' + screen + "/" + encodeURIComponent(id) + '" data-nav data-screen="' + screen + '">'
+        + cs.w("screen." + screen + ".name") + '</a><span class="mk-small" data-purpose="' + screen + '">' + cs.w("screen." + screen + ".purpose") + "</span></div>";
+    };
     return cs.state("action", function (a) {
       const office = a.addressee ? [a.addressee.role, a.addressee.body].filter(Boolean).join(", ") : "";
       const holder = a.addressee && a.addressee.holder_on_date && a.addressee.holder_on_date.holder ? a.addressee.holder_on_date.holder : "";
@@ -113,7 +163,7 @@ export const action = Object.freeze({
       // R28: the kind in its words, a profile's own kind by its label, never "Other"
       const kindName = P.kindWord(cs, typeof a.kind === "string" && a.kind ? a.kind : "other", false, voc.action_kind_labels);
       const sub = [kindName, office ? cs.w("screen.action.to", { office: office }) : "", holder ? cs.w("screen.request.holder", { holder: holder }) : "",
-        first ? cs.w("screen.action.sentby", { date: { html: cs.date(first.at) }, who: String(first.author || "").replace(/^member:/, "") }) : "",
+        first ? cs.w("screen.action.sentby", { date: { html: cs.date(first.at) }, who: P.who(cs, first.author) }) : "",
         cs.w("screen.plan.actionstate." + state)].filter(Boolean).join(" · ");
       const head = P.readOnly(cs, "screen.action.name") + cs.title(typeof a.title === "string" && a.title ? a.title : null) + '<p class="mk-sub">' + sub + "</p>"
         + (a.confidential ? '<p class="mk-note">' + cs.w("screen.action.confidential") + "</p>" : "");
@@ -127,6 +177,10 @@ export const action = Object.freeze({
 
       // R5: "Waiting on <office>'s reply" while one is owed; each due date with `mark.due`, a passed one as canon's
       // question, never "overdue" until a member determines it.
+      // R43: an action not yet sent (no sent entry, no sending recorded) draws the door to the send steps, where its text is
+      // prepared; a sent one does not
+      const unsent = !sent.length && step !== "sent";
+      const toSend = unsent ? door("start-send", view.subject) : "";
       const owed = a.reply_owed && a.reply_owed.owed;
       const wait = owed ? '<p class="cs-wait" role="status">' + cs.w("screen.action.waiting", { office: office || cs.w("screen.action.theoffice") }) + "</p>" : "";
       const today = P.today(cs);
@@ -138,8 +192,13 @@ export const action = Object.freeze({
         const due = c.date ? '<a href="/app/due-date/' + encodeURIComponent(view.subject + "~" + i) + '" data-nav>' + cs.due(String(c.date), st === "met" ? "met" : passed ? "passed" : "") + "</a>" : "";
         const remind = c.date && st === "pending" && cs.can("actioncorrespond")
           ? cs.field("remind-" + i, "screen.action.remindon", { type: "date" }) + cs.act("reminderset", { data: { entry: String(i) } }) : "";
-        return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + "</span>", "", remind);
+        // R52: the reminder this page set, beside its entry: its day, by key (the answer never reads "nothing happened")
+        const set = view.ui.reminded && view.ui.reminded[i] ? ' · <span data-reminder="' + i + '">' + cs.w("screen.reminder.on", { date: { html: cs.date(view.ui.reminded[i]) } }) + "</span>" : "";
+        return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + set + "</span>", "", remind);
       }).join("")));
+      // R37: a sent action with no clock entry has no due date to open: the door to the deadline page is drawn for it, which holds
+      // the proposal and "Confirm this due date"
+      const dueDoor = first && !clock.length ? door("due-date", view.subject) : "";
 
       // R23, R26: "Open a question from this" (`actioninquiry`): the member writes the question, one line; the action is where it
       // comes from, not evidence in it. In the drawing's state b (a reply's date passed with none recorded) the act sits in the
@@ -168,6 +227,78 @@ export const action = Object.freeze({
       const entries = Array.isArray(a.entries) ? a.entries : [];
       const received = corr.filter(function (c) { return c.direction !== "sent"; });
       const helpReply = view.reachable ? cs.act("writinghelp", { data: { field: "account", id: "reply-account", forop: "actioncorrespond" } }) : "";
+      // R38: the full reply form (DEC-376, C66): a reply or none, the day, who it came from, what it is recorded from, the kind of
+      // reply, what the office decided and the exemptions it cites, the date it says it will answer by and the law that comes
+      // from, and a quoted fee. Each field and option reads the design's key; one the design holds no key for is not drawn (R19).
+      const laws = a.governing_laws && Array.isArray(a.governing_laws.laws) ? a.governing_laws.laws : [];
+      const stageOpts = P.replyChoices(cs, view, "stage"), outcomeOpts = P.replyChoices(cs, view, "outcome");
+      // R38 (B15 (1)): the reply's document is picked from the project's held captures (`heldcaptures`, capture R77, scoped by
+      // `project`): each by its title and the day it was collected, the digest its capture is filed under as the value
+      const held = a.project && cs.can("actioncorrespond") ? P.later(cs, view, "held", "heldcaptures", { project: a.project, limit: "500" }, "") : null;
+      const heldRows = held && held.state === "ok" && held.value && Array.isArray(held.value.held) ? held.value.held : [];
+      const docOpts = heldRows.filter(function (r) { return r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256; }).map(function (r) {
+        return { value: r.capture.sha256, key: "screen.docket.capture.option", fills: { title: r.title || r.bundle_id || "", date: { html: r.collected_since ? cs.date(r.collected_since) : "" } } };
+      });
+      const earlier = P.entriesOf(cs, corr);
+      const pre = [{ value: "", key: "screen.action.reply.follows.none" }];
+      const followsOpts = pre.concat(earlier.filter(function (x) { return x.c.direction === "sent" || x.kind; }).map(function (x) {
+        // a sent entry is "the request" unless its stage is another kind of sending (a fee-waiver request, an appeal, a court filing)
+        return x.c.direction === "sent" && (!x.kind || x.c.stage === "request") ? { value: String(x.ord), key: "screen.action.reply.follows.request", fills: { date: { html: cs.date(x.c.at) } } }
+          : { value: String(x.ord), key: "screen.action.reply.follows.reply", fills: { kind: { html: x.kind }, date: { html: cs.date(x.c.at) } } };
+      }));
+      const answersOpts = [{ value: "", text: "" }].concat(earlier.filter(function (x) { return x.c.direction === "sent"; }).map(function (x) {
+        return { value: String(x.ord), key: "screen.action.reply.follows.request", fills: { date: { html: cs.date(x.c.at) } } };
+      }));
+      const revisesOpts = [{ value: "", text: "" }].concat(earlier.filter(function (x) { return x.c.direction !== "sent" && x.c.quote_amount !== undefined && x.c.quote_amount !== null && x.c.quote_amount !== ""; }).map(function (x) {
+        return { value: String(x.ord), text: String(x.c.quote_amount) + (x.c.quote_currency ? " " + String(x.c.quote_currency) : "") };
+      }));
+      const mediumOpts = [{ value: "", text: "" }].concat(P.mediums().map(function (t) { return { value: t, key: "screen.action.reply.medium." + t }; }));
+      const fold = function (summaryKey, inner) { return '<details class="mk-details"><summary>' + cs.w(summaryKey) + "</summary>" + inner + "</details>"; };
+      const noteOf = function (key) { return '<p class="mk-small">' + cs.w(key) + "</p>"; };
+      // the kit's choice draws no help of its own: a choice's help sentences follow it as notes
+      const pick = function (id, labelKey, options, o) {
+        const help = o && o.help ? [].concat(o.help) : [];
+        return cs.choice(id, labelKey, options, o && o.value !== undefined ? { value: o.value } : {}) + help.map(noteOf).join("");
+      };
+      const replyForm = pick("reply-dir", "screen.action.what.came.back", [["received", "screen.action.a.reply.came"], ["no_response", "screen.action.no.reply.came.by.the.date"]],
+        { value: "received", help: ["screen.action.record.a.silence.with.its.date", "screen.action.it.is.not.the.same.as"] })
+        + cs.field("reply-at", "screen.action.the.day.it.came.or.the", { type: "date", help: "screen.action.a.real.calendar.day" })
+        + pick("reply-medium", "screen.action.how.it.came", mediumOpts)
+        + cs.field("reply-party", "screen.action.who.it.came.from", { help: "screen.action.the.office.or.person.who.answered" })
+        + pick("reply-held", "screen.action.what.you.record.it.from", [["account", "screen.action.your.account.of.it"], ["document", "screen.action.the.reply.itself.a.document.you"]],
+          { value: "account", help: ["screen.action.either.the.reply.itself.or.your", "screen.action.a.silence.has.neither.because.there"] })
+        + cs.field("reply-account", "screen.action.your.account.of.the.reply", { area: true, rec: true, help: "screen.action.in.your.own.words.up.to" })
+        + (docOpts.length ? pick("reply-doc", "screen.action.the.document.that.holds.the.reply", [{ value: "", text: "" }].concat(docOpts),
+          { help: ["screen.action.only.when.you.record.the.reply", "screen.action.add.the.document.first.under.add"] })
+          : held && held.state === "failed" ? cs.state(held) : noteOf("screen.action.add.the.document.first.under.add"))
+        + fold("screen.action.where.this.reply.stands.in.the", noteOf("screen.action.say.what.kind.of.reply.it") + noteOf("screen.action.the.request.s.timeline.then.follows")
+          + pick("reply-stage", "screen.action.what.kind.of.reply", stageOpts, { help: ["screen.action.a.sending.has.its.own.kinds", "screen.action.a.silence.has.no.kind"] })
+          + pick("reply-follows", "screen.action.it.follows", followsOpts, { help: ["screen.action.the.earlier.entry.this.answers.so", "screen.action.an.appeal.must.follow.the.decision"] })
+          + pick("reply-outcome", "screen.action.what.the.office.decided", outcomeOpts, { help: ["screen.action.only.on.a.reply", "screen.action.a.denial.a.decision.on.a"] })
+          + cs.field("reply-exemptions", "screen.action.the.exemptions.the.office.cites", { rec: true, help: "screen.action.the.exemptions.or.reasons.for.withholding" })
+          + cs.field("reply-dueby", "screen.action.the.office.says.it.will.answer", { type: "date", help: ["screen.action.a.date.the.office.itself.stated", "screen.action.civicsmith.works.out.no.date.for", "screen.action.give.the.law.with.it"] })
+          + (laws.length ? pick("reply-duecite", "screen.action.the.law.that.date.comes.from", [{ value: "", text: "" }].concat(laws.map(function (l) { return { value: String(l.citation || ""), text: String(l.citation || "") }; })),
+            { help: "screen.action.only.a.law.this.action.goes" }) : ""))
+        + fold("screen.action.if.the.reply.quotes.a.fee", noteOf("screen.action.a.fee.quote.is.kept.as")
+          + cs.field("reply-fee", "screen.action.the.amount.quoted", { help: "screen.action.put.a.waiver.in.as.a" })
+          + pick("reply-fee-cur", "screen.action.currency", [{ value: "USD", key: "screen.action.reply.currency.usd" }])
+          + cs.field("reply-fee-basis", "screen.action.what.the.fee.is.for", { help: "screen.action.optional.in.the.office.s.words" })
+          + pick("reply-fee-answers", "screen.action.it.answers.this.sending", answersOpts, { help: "screen.action.the.earlier.sending.the.quote.responds" })
+          + (revisesOpts.length > 1 ? pick("reply-fee-revises", "screen.action.it.revises.this.quote", revisesOpts, { help: "screen.action.only.when.the.office.changes.a" }) : ""));
+      // R55 (actions R108): on a public comment, the reply can carry the minutes' passage: the meeting, its day, the document that holds
+      // the minutes (a held capture, as above) and the passage as the minutes write it. The words are located in the document's reading
+      // (`reading`, read once a document is chosen) and the passage sent is the extent of the unit that holds them; any other kind draws
+      // no fold.
+      const pickedDoc = view.ui.minutesDoc && docOpts.some(function (o) { return o.value === view.ui.minutesDoc; }) ? view.ui.minutesDoc : "";
+      const minRead = pickedDoc ? P.later(cs, view, "minread", "reading", { sha256: pickedDoc }, "") : null;
+      const minutesFold = a.kind === "public_comment" && cs.can("actioncorrespond")
+        ? fold("screen.action.minutes.heading", noteOf("screen.action.minutes.says") + '<p class="eyebrow">' + cs.w("screen.action.minutes.legend") + "</p>"
+          + cs.field("minutes-meeting", "screen.action.minutes.meeting.label", { help: "screen.action.minutes.meeting.help1" })
+          + cs.field("minutes-date", "screen.action.minutes.date.label", { type: "date", help: "screen.action.minutes.date.help1" })
+          + cs.choice("minutes-doc", "screen.action.minutes.doc.label", [{ value: "", text: "" }].concat(docOpts), { redraw: "minutesDoc" }) + noteOf("screen.action.minutes.doc.help1")
+          + (minRead && minRead.state === "failed" ? cs.state(minRead) : "")
+          + cs.field("minutes-passage", "screen.action.minutes.passage.label", { area: true, rec: true, help: "screen.action.minutes.passage.help1" })
+          + '<div class="mk-acts">' + cs.act("actioncorrespond", { label: "screen.action.minutes.record", tone: "primary" }) + "</div>") : "";
       const replies = cs.sec("screen.action.replies", (received.length ? cs.sheet(received.map(function (c) {
         const e = entries.find(function (x) { return x.ord === c.ord; }) || {};
         const pr = e.pressure ? cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(e.pressure.kind) ? e.pressure.kind : "other")) : "";
@@ -175,11 +306,16 @@ export const action = Object.freeze({
           ? cs.choice("pressure-kind-" + c.ord, "screen.action.pressure.kind", ["legal", "retaliation", "discrediting", "other"].map(function (k) { return [k, "screen.action.pressure." + k]; }))
             + cs.field("pressure-note-" + c.ord, "screen.action.pressure.note") + cs.act("actionpressure", { data: { ord: String(c.ord) } }) : "";
         return cs.row(cs.date(c.at), cs.w(c.direction === "no_response" ? "screen.action.noresponse" : "screen.action.received")
-          + (c.party ? " · " + cs.esc(c.party) : "") + (c.medium ? " · " + cs.esc(c.medium) : "") + (pr ? '<span class="meta">' + pr + "</span>" : ""), "", mark);
+          + (c.party ? " · " + cs.esc(c.party) : "") + (c.medium ? " · " + cs.esc(c.medium) : "") + (pr ? '<span class="meta">' + pr + "</span>" : "")
+          // C66: what was recorded with the reply, shown back as the record holds it: the words, the kind, the decision, the exemptions
+          // cited, the date the office said it would answer by, and a quoted fee
+          + P.shownBack(cs, c)
+          // R55: a recorded entry's minutes, said once beside it with the meeting and its day
+          + (e.minutes && e.minutes.meeting ? '<span class="meta" data-minutes="' + c.ord + '">' + cs.w("screen.action.minutes.says") + " · " + cs.esc(e.minutes.meeting)
+            + (e.minutes.date ? " · " + cs.date(e.minutes.date) : "") + "</span>" : ""), "", mark);
       }).join("")) : "")
-        + cs.field("reply-at", "screen.action.reply.at", { type: "date" })
-        + cs.field("reply-account", "screen.action.reply.account", { area: true, help: "screen.action.reply.account.help" })
-        + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>");
+        // R27: the form belongs to the act: a member who may not record a reply is shown no field of it
+        + (cs.can("actioncorrespond") ? replyForm + minutesFold + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>" : ""));
 
       // R12, R31 (3): the pressure marks and records on this action, each with where it arrived, who made it and whether a hold
       // is placed (a legal one as `screen.action.legalmark`), paged by `after`; none drawn at zero; the profile's fact on a legal
@@ -189,7 +325,7 @@ export const action = Object.freeze({
       const marks = function (items) {
         return cs.sheet(items.map(function (m) {
           const at = m.arrived && m.arrived.action ? cs.w("screen.action.pressuremark.reply", { ord: String(m.arrived.ord) }) : cs.w("screen.action.pressuremark.record");
-          const who = P.who(m.by);
+          const who = P.who(cs, m.by);
           const legal = m.kind === "legal";
           const hold = !legal ? "" : m.hold === "in_place" ? cs.w("screen.action.held") : m.hold === "released" ? "" : cs.w("screen.action.holdnone");
           return cs.row(cs.date(m.at), (legal ? cs.w("screen.action.legalmark", { member: who })
@@ -221,7 +357,7 @@ export const action = Object.freeze({
         const offered = Array.isArray(t.versions) ? t.versions : [];
         const not = Array.isArray(t.not_offered) ? t.not_offered : [];
         const rows = t.court_petition ? "" : offered.map(function (v) {
-          const by = typeof v.approved_by === "string" && v.approved_by ? P.who(v.approved_by) : "";
+          const by = typeof v.approved_by === "string" && v.approved_by ? P.who(cs, v.approved_by) : "";
           return cs.row("", cs.esc(v.name || v.template || ""), v.approved_at && by
             ? '<span class="meta">' + cs.w("screen.action.templates.approved", { member: by, date: { html: cs.date(v.approved_at) } }) + "</span>" : "", "");
         }).concat(not.map(function (n) {
@@ -240,7 +376,7 @@ export const action = Object.freeze({
       const guides = gd.state === "ok" && gd.value && Array.isArray(gd.value.guides) ? gd.value.guides : [];
       const guideRows = guides.map(function (g) {
         const from = g.origin === "group"
-          ? cs.w("screen.action.templates.approved", { member: P.who(g.approved_by), date: { html: g.approved_at ? cs.date(g.approved_at) : "" } }) : cs.w("screen.action.profilefact.from");
+          ? cs.w("screen.action.templates.approved", { member: P.who(cs, g.approved_by), date: { html: g.approved_at ? cs.date(g.approved_at) : "" } }) : cs.w("screen.action.profilefact.from");
         return (Array.isArray(g.items) ? g.items : []).map(function (it) {
           return cs.row("", cs.esc(it.route || "") + '<span class="meta">' + (it.expect ? cs.w("screen.action.guide.expect", { expectation: it.expect }) + " · " : "") + (it.citation ? cs.w("screen.action.guide.source", { citation: it.citation }) + " · " : "") + from + "</span>", "", "");
         }).join("");
@@ -250,7 +386,7 @@ export const action = Object.freeze({
       const guideAct = cs.can("actioncorrespond") ? cs.act("procedureguides", {}) : "";
       const guideSec = gd.state === "failed" ? tips("screen.action.guide.heading", cs.state({ state: "failed", refusal: gd.refusal }), "screen.action.guide.tip1", "screen.action.guide.tip2")
         : guideRows || guideAct ? tips("screen.action.guide.heading", '<p class="mk-small">' + cs.w("screen.action.profilefact.from") + " · " + cs.w("screen.action.guide.order") + " · " + cs.w("guide.procedure.legalinfo") + "</p>"
-          + (guideRows ? cs.sheet(guideRows) : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"
+          + (guideRows ? cs.sheet(guideRows) : gd.state === "ok" ? '<p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>" : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"
           + (guideAct ? '<div class="mk-acts">' + guideAct + "</div>" : ""), "screen.action.guide.tip1", "screen.action.guide.tip2") : "";
 
       // R16: the law it goes under: the laws a member stated (each by level and citation, with the window the group's places
@@ -272,20 +408,20 @@ export const action = Object.freeze({
       };
       const lawsStated = gl.state === "stated" && stated.length
         ? cs.sheet(stated.map(function (l) { return cs.row("", lawLine(l), "", ""); }).join(""))
-          + (gl.by && gl.at ? '<p class="mk-note">' + cs.w("law.stated", { who: P.who(gl.by), date: { html: cs.date(gl.at) } }) + "</p>" : "")
+          + (gl.by && gl.at ? '<p class="mk-note">' + cs.w("law.stated", { who: P.who(cs, gl.by), date: { html: cs.date(gl.at) } }) + "</p>" : "")
         : '<p class="mk-note">' + cs.w("law.undetermined") + "</p>";
       const lawProposals = a.governing_laws_proposals && Array.isArray(a.governing_laws_proposals.proposals) ? a.governing_laws_proposals.proposals : [];
       const lawProposed = lawProposals.length
         ? '<p class="eyebrow">' + cs.w("law.proposed") + "</p>" + cs.sheet(lawProposals.map(function (x) {
           return cs.row("", (Array.isArray(x.laws) ? x.laws : []).map(lawLine).join("<br>"),
-            '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("law.proposal.not", { who: P.who(x.by), date: { html: cs.date(x.at) } }) + "</span>", "");
+            '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("law.proposal.not", { who: P.who(cs, x.by), date: { html: cs.date(x.at) } }) + "</span>", "");
         }).join("")) : "";
-      const lawChange = offered.length
-        ? cs.choice("law-pick", "screen.request.law", optionsOf(offered)) + levels("law-level") + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + "</div>" : "";
-      const others = offered.filter(function (d) { return !stated.some(function (l) { return l.citation === d.citation; }); });
-      const lawPropose = others.length
-        ? cs.choice("lawp-pick", "screen.request.law", optionsOf(others)) + levels("lawp-level") + '<div class="mk-acts">' + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>" : "";
-      const lawSec = cs.sec("law.title", lawsStated + lawProposed + lawChange + lawPropose, { help: "law.help" });
+      // R54: "Change the law…" and "Propose another law…" share one list of laws, drawn once with both acts under it; with no laws
+      // offered neither act is drawn (E3, DEC-384)
+      const lawChoose = offered.length
+        ? cs.choice("law-pick", "law.pick", optionsOf(offered)) + levels("law-level")
+          + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>" : "";
+      const lawSec = cs.sec("law.title", lawsStated + lawProposed + lawChoose, { help: "law.help" });
 
       // R17: its risk: the tier in its own words, the latest revision, a revision with a reason, and the proposals apart.
       const tier = [1, 2, 3].includes(Number(a.risk_tier)) ? Number(a.risk_tier) : "undetermined";
@@ -297,12 +433,12 @@ export const action = Object.freeze({
       const shownPs = riskPs.filter(function (x) { return !x.machine_work || view.reachable; });
       const riskProposed = shownPs.length
         ? '<p class="eyebrow">' + cs.w("risk.proposed") + "</p>" + cs.sheet(shownPs.map(function (x) {
-          return cs.row("", cs.w("risk.proposal", { who: P.who(x.by), tier: String(x.tier), words: tierWords(x.tier) }),
+          return cs.row("", cs.w("risk.proposal", { who: P.who(cs, x.by), tier: String(x.tier), words: tierWords(x.tier) }),
             '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("risk.proposal.not") + "</span>", "");
         }).join("")) : "";
       const riskSec = cs.sec("risk.title",
         '<p class="mk-note">' + (tier === "undetermined" ? cs.w("risk.tier.undetermined") : cs.w("risk.tier", { tier: String(tier) }) + " · " + tierWords(tier)) + "</p>"
-        + (latest ? '<p class="mk-note">' + cs.w("risk.set", { who: P.who(latest.by), date: { html: cs.date(latest.at) }, reason: latest.reason, prior: tierWords(latest.prior) }) + "</p>" : "")
+        + (latest ? '<p class="mk-note">' + cs.w("risk.set", { who: P.who(cs, latest.by), date: { html: cs.date(latest.at) }, reason: latest.reason, prior: tierWords(latest.prior) }) + "</p>" : "")
         + riskProposed
         + cs.choice("risk-tier", "risk.title", [1, 2, 3].map(function (t) { return [String(t), "risk.tier." + t]; }))
         + '<div class="mk-acts">' + cs.act("actionrisktier", { label: "risk.revise" }) + "</div>", { help: "risk.help" });
@@ -315,20 +451,56 @@ export const action = Object.freeze({
       const scope = '<p class="mk-note">' + cs.w(a.confidential ? "screen.action.scope.confidential" : "screen.action.scope.open") + "</p>"
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
       const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + scope);
-      return head + pickup + wait + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + riskSec + manage;
+      // R40: the counsel packet's screen is opened from the action
+      return head + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + riskSec + door("counsel", view.subject) + manage;
     });
   },
 
   acts: [
     {
-      // R5: "Record a reply": the day it came and the member's account of it.
+      // R5, R38: "Record a reply": a reply or none; the day, who it came from, the member's account, the kind of reply, what the
+      // office decided, the exemptions, the date it says it will answer by and the law, and a quoted fee, as `actions` declares
+      // them (`actioncorrespond`). A silence takes its day alone.
       op: "actioncorrespond",
       send: function (view, el, cs) {
-        const at = String(cs.value("reply-at") || "").trim();
-        const account = String(cs.value("reply-account") || "").trim();
+        const val = function (id) { return String(cs.value(id) || "").trim(); };
+        const at = val("reply-at");
         if (!/^\d{4}-\d{2}-\d{2}$/.test(at)) return { refuse: "screen.action.reply.at.needed" };
-        if (!account) return { refuse: "screen.action.reply.account.needed" };
-        return { query: { target: view.subject, direction: "received", at: at, account: account }, raw: "" };
+        const dir = val("reply-dir") === "no_response" ? "no_response" : "received";
+        const q = { target: view.subject, direction: dir, at: at };
+        // a silence takes its day alone from the member; `actions` records it as a named account (DEC-13: it requires an account
+        // or a capture, and a silence has no bytes), so the account is the design's own sentence for it, read by key
+        if (dir === "no_response") { q.account = String(cs.w("screen.action.no.reply.came.by.the.date")); return { query: q, raw: "" }; }
+        // "never both": the reply itself (a document the project holds) or the member's own account of it
+        const fromDoc = val("reply-held") === "document";
+        const doc = val("reply-doc"), account = val("reply-account");
+        if (fromDoc) { if (!doc) return { refuse: "screen.action.a.reply.needs.either.the.document" }; q.artifact_sha = doc; }
+        else { if (!account) return { refuse: "screen.action.reply.account.needed" }; q.account = account; }
+        const put = function (name, id) { const v = val(id); if (v) q[name] = v; };
+        put("medium", "reply-medium"); put("party", "reply-party"); put("stage", "reply-stage"); put("follows", "reply-follows"); put("outcome", "reply-outcome");
+        put("exemptions", "reply-exemptions"); put("due_cite", "reply-duecite");
+        const dueBy = val("reply-dueby");
+        if (dueBy) { if (!/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) return { refuse: "screen.action.reply.at.needed" }; q.due_by = dueBy; }
+        const fee = val("reply-fee");
+        if (fee) { q.quote_amount = fee; put("quote_currency", "reply-fee-cur"); put("quote_basis", "reply-fee-basis"); put("quote_answers", "reply-fee-answers"); put("quote_revises", "reply-fee-revises"); }
+        // R55: the minutes' passage, on a public comment's reply: all four parts or none; the words are found in the chosen document's
+        // reading and the unit's extent is the passage (actions R108); a silence carries none
+        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
+        const parts = { "minutes-meeting": "screen.action.minutes.meeting.label", "minutes-date": "screen.action.minutes.date.label",
+          "minutes-doc": "screen.action.minutes.doc.label", "minutes-passage": "screen.action.minutes.passage.label" };
+        if (a.kind === "public_comment" && Object.keys(parts).some(function (id) { return val(id); })) {
+          const need = Object.keys(parts).find(function (id) { return !val(id); });
+          if (need) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w(parts[need]) } } };
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(val("minutes-date"))) return { refuse: "screen.action.reply.at.needed" };
+          const flat = function (s) { return String(s).replace(/\s+/g, " ").trim(); };
+          const words = flat(val("minutes-passage"));
+          const read = view.ui.later && view.ui.later.minread;
+          const units = read && read.state === "ok" && read.value && Array.isArray(read.value.text_units) ? read.value.text_units : [];
+          const unit = units.find(function (u) { return u && u.extent && typeof u.extent === "object" && flat(u.text || "").includes(words); });
+          if (!unit) return { refuse: "ai.progress.check.fail", fills: { passage: words } };
+          q.minutes = JSON.stringify({ meeting: val("minutes-meeting"), date: val("minutes-date"), passage: { captureSha: val("minutes-doc"), extent: unit.extent } });
+        }
+        return { query: q, raw: "" };
       },
     },
     {
@@ -358,10 +530,17 @@ export const action = Object.freeze({
       send: function (view, el, cs) {
         const on = String(cs.value("remind-" + el.dataset.entry) || "").trim();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(on)) return { refuse: "screen.action.remindon.needed" };
+        view.ui.remindSent = { entry: Number(el.dataset.entry), on: on };
         return { body: { target: view.subject, entry: Number(el.dataset.entry), on: on } };
       },
       rereads: [],
-      done: function (view, answer, cs) { cs.set("reminded", true); },
+      // R52: the day the member set, kept beside its entry (this page's memory, never the record's)
+      done: function (view, answer, cs) {
+        const r = view.ui.remindSent || {};
+        const set = Object.assign({}, view.ui.reminded || {});
+        if (r.on) set[r.entry] = r.on;
+        cs.set("reminded", set);
+      },
     },
     {
       // R16: "Change the law…": the law chosen among those the group's places name replaces the action's list (the act logs
@@ -385,9 +564,9 @@ export const action = Object.freeze({
         const pf = view.data.profiles;
         const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
         const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null, a.kind);
-        const c = offered.find(function (d) { return d.citation === cs.value("lawp-pick"); });
+        const c = offered.find(function (d) { return d.citation === cs.value("law-pick"); });
         if (!c) return null;
-        return { body: { target: view.subject, laws: [{ level: cs.value("lawp-level") || "state", citation: c.citation }] } };
+        return { body: { target: view.subject, laws: [{ level: cs.value("law-level") || "state", citation: c.citation }] } };
       },
       rereads: ["action"],
     },

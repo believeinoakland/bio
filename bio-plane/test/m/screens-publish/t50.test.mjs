@@ -3,11 +3,14 @@
  * answer; the confirmation's own explanation; a project's first case; publish with nothing prepared; the public page's
  * "Corrections and orders" and the public docket; the case editor's account; `publishedcase` read asynchronously. Each
  * sentence is asserted by its key (R24). */
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ADMIN } from "../interface-shell/harness.mjs";
 import { open, main, text, tipOf, drew, drewIn, day, word, hasWord, ops, press, fill, tick, last, ok, refused, refusedIn, pending, silent, plane, rawKeys,
-  PREFLIGHT, COPY, P, DR, C, E1, B1, GRANT_UNTIL } from "./fixtures.mjs";
+  PREFLIGHT, COPY, PUBLISHED_CASE, P, DR, C, E1, B1, GRANT_UNTIL } from "./fixtures.mjs";
 
 const PUBLIC = { session: null };
 const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -86,7 +89,7 @@ test("R27 with no zone held, an administrator is told to set it and a member to 
   const noZone = { reviewcopy: ok(COPY({ zone: null, grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone: null }] })) };
   const a = await open(`/app/review-copy/${P}`, { plane: { ...noZone, whoami: ok({ ...ADMIN, member: "rosa", handle: "rosa", capabilities: ["contribute", "create_projects", "publish"] }) } });
   fill(a, { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-20" });
-  await press(a, "reviewgrant");
+  await press(a, "reviewgrant", { reason: "so the reader can comment before publication" });
   const fold = main(a).querySelector('[data-fold="screen.review-copy.until.nozone.summary"]');
   assert.ok(fold && drewIn(fold, "screen.review-copy.until.nozone") && !drewIn(fold, "screen.review-copy.until.nozone.member"));
   assert.equal(a.byOp("reviewgrant").length, 0);
@@ -122,7 +125,7 @@ test("R28 the ceremony lists what stops the signing under its heading, each gate
 });
 
 test("R28 a draft naming no finding says ceremony.gate.notargets and no code; a ceremony with no gate draws no heading (control)", async () => {
-  const none = await open(PATH, { plane: { reviewcopy: ok(COPY({ findings: [] })), ...pre({ first: { ok: false, code: "NO_TARGET", translation: "pass targets" }, blockers: [] }) } });
+  const none = await open(PATH, { plane: { reviewcopy: ok(COPY({ findings: [] })), ...pre({ first: { ok: false, code: "PUBLISH_NO_FINDING", translation: "pass targets" }, blockers: [] }) } });
   assert.ok(drew(none, "ceremony.gate.notargets"));
   assert.ok(!text(none).includes("NO_TARGET") && !text(none).includes("pass targets"));
   assert.equal(main(none).querySelector("[data-blockers]").querySelectorAll("li").length, 1, "said once");
@@ -245,14 +248,14 @@ test("R32 a project with a draft draws the ceremony as R3 says (the newest draft
   assert.equal(main(p).querySelectorAll("[data-step]").length, 10);
   assert.equal(last(p, "reviewcopy").query.draft, DR);
   assert.ok(p.byOp("publishpreflight").length > 0 && !drew(p, "screen.ceremony.nothing"));
-  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P, targets: ["FND-2026-0031"], caseId: C });
+  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P });
   const bad = await open(`/app/ceremony/${P}`, { plane: { casedrafts: refusedIn("SOME_REFUSAL", "The plane refused this read.") } });
   assert.ok(main(bad).querySelector('[data-state="failed"]') && !drew(bad, "screen.ceremony.nothing"));
 });
 
 /* ---------- R33, R34: corrections and orders, the public docket ---------- */
 
-const withCorrections = (corrections) => ({ publishedcase: ok({ ...plane().publishedcase.json.result, corrections }) });
+const withCorrections = (corrections) => ({ publishedcase: ok({ ...PUBLISHED_CASE, corrections }) });
 const section = (p) => main(p).querySelectorAll("h2").find((h) => h.textContent === word("screen.published.corrections.heading")).closest("section");
 
 test("R33 R34 the page draws Corrections and orders after the timeline and before the people named: none, one and several since it was published, each with the docket sentence", async () => {
@@ -301,7 +304,7 @@ test("R34 \"its docket\" on the page opens docket-public; a member's docket in t
   assert.equal(p.location.pathname, `/app/docket-public/${C}`);
   assert.equal(last(p, "docketpublic").headers.Authorization, undefined);
   const member = await open(`/app/docket/${P}/${C}`);
-  assert.deepEqual(ops(member).sort(), ["docketfile", "docketpost"]);
+  assert.deepEqual(ops(member).sort(), ["casedraft", "docketfile", "docketpost"]);
   const absent = await open(`/app/docket-public/${C}`, { boot: PUBLIC, plane: { docketpublic: refused("NOT_PUBLISHED", "Nothing published.", 404) } });
   assert.ok(main(absent).querySelector("[data-state]"), "the refusal is drawn, not an empty page");
 });
@@ -333,22 +336,22 @@ test("R35 with the assistant: the three framings, the draft act, its draft as ma
   assert.ok(q.doc.getElementById("ce-account") && ops(q).includes("accountdrafts"), "the field and the earlier drafts remain");
 });
 
-test("R35 the draft act sends the framing chosen for the case; \"See its earlier drafts\" lists them; no act sends the machine draft unchanged as the account (control)", async () => {
-  const p = await open(`/app/case-editor/${P}`, { plane: { ...reach, accountpropose: ok({ ok: true, draft: ACCOUNT_DRAFT, next: {} }), accountdrafts: ok({ case: C, drafts: [ACCOUNT_DRAFT] }) } });
-  p.doc.getElementById("ce-framing").value = "by_rule";
-  await press(p, "accountpropose", { reason: "draft" });
-  assert.equal(last(p, "accountpropose").query.case, C);
-  assert.equal(last(p, "accountpropose").body.framing, "by_rule");
-  assert.ok(text(p).includes(ACCOUNT_DRAFT.text), "drawn once proposed");
+test("R35 \"See its earlier drafts\" lists them; no act sends the machine draft unchanged as the account (control)", async () => {
+  const p = await open(`/app/case-editor/${P}`, { plane: { ...reach, accountdrafts: ok({ case: C, drafts: [ACCOUNT_DRAFT] }) } });
+  assert.ok(text(p).includes(ACCOUNT_DRAFT.text), "the draft the plane holds is drawn as machine work");
   await press(p, "accountdrafts");
   assert.equal(last(p, "accountdrafts").query.case, C);
+  assert.equal(p.byOp("accountpropose").length, 0, "the screen sends nothing to accountpropose: asking the assistant for the draft is held with the assistant (K3717)");
   fill(p, { "ce-scope": "Rents.", "ce-account": "In March the council voted." });
   await press(p, "casedraft", { nth: 1, reason: "edit" });
   const body = last(p, "casedraft").body;
   assert.deepEqual(body.account, [{ text: "In March the council voted.", cites: [] }], "the member's own words");
   assert.ok(!JSON.stringify(body).includes(ACCOUNT_DRAFT.text), "the machine draft is never the account unchanged");
-  assert.equal(body.accountDraft, "ACD-1", "it names the assistant's draft it began as");
 });
+
+/* K3717 (BOB's ruling, B13): the press of "Draft the account with the assistant" is assistant work, held; `accountpropose` stores a draft an AI run made. */
+test.todo("R35 the draft act sends the framing chosen for the case (held: K3717)");
+test.todo("R35 accountpropose's refusals BAD_ACCOUNT_FRAMING and BAD_ACCOUNT_DRAFT are drawn by their words (held: K3717)");
 
 test("R35 the account's refusals are drawn by key, refusal.BAD_ACCOUNT in a fold headed by its summary", async () => {
   const p = await open(`/app/case-editor/${P}`, { plane: { casedraft: refusedIn("BAD_ACCOUNT", "") } });
@@ -356,12 +359,7 @@ test("R35 the account's refusals are drawn by key, refusal.BAD_ACCOUNT in a fold
   const { slot } = await press(p, "casedraft", { nth: 1, reason: "edit" });
   const fold = (slot() || main(p)).querySelector('[data-fold="screen.case-editor.account.refused.summary"]') || main(p).querySelector('[data-fold="screen.case-editor.account.refused.summary"]');
   assert.ok(fold && drewIn(fold, "screen.case-editor.account.refused.summary") && drewIn(fold, "refusal.BAD_ACCOUNT"));
-  const q = await open(`/app/case-editor/${P}`, { plane: { ...reach, accountpropose: refusedIn("BAD_ACCOUNT_FRAMING", "") } });
-  await press(q, "accountpropose", { reason: "draft" });
-  assert.ok(drew(q, "refusal.BAD_ACCOUNT_FRAMING"));
-  const d = await open(`/app/case-editor/${P}`, { plane: { ...reach, accountpropose: refusedIn("BAD_ACCOUNT_DRAFT", ""), accountdrafts: refusedIn("NO_SUCH_ACCOUNT_DRAFT", "") } });
-  await press(d, "accountpropose", { reason: "draft" });
-  assert.ok(drew(d, "refusal.BAD_ACCOUNT_DRAFT"));
+  const d = await open(`/app/case-editor/${P}`, { plane: { ...reach, accountdrafts: refusedIn("NO_SUCH_ACCOUNT_DRAFT", "") } });
   await press(d, "accountdrafts", { reason: "list" });
   assert.ok(drew(d, "refusal.NO_SUCH_ACCOUNT_DRAFT"));
 });
@@ -369,7 +367,7 @@ test("R35 the account's refusals are drawn by key, refusal.BAD_ACCOUNT in a fold
 /* ---------- R36: publishedcase read asynchronously ---------- */
 
 test("R36 over a plane that answers publishedcase after a delay, the page and its corrections line appear only with the answer, never as none; a rejected read is drawn failed", async () => {
-  const slow = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: delay(200, ok({ ...plane().publishedcase.json.result, corrections: { count: 1, last: { seq: 2, kind: "withdrawal", date: "2026-12-01" } } })) } });
+  const slow = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: delay(200, ok({ ...PUBLISHED_CASE, corrections: { count: 1, last: { seq: 2, kind: "withdrawal", date: "2026-12-01" } } })) } });
   assert.ok(!drew(slow, "screen.published.corrections.none") && !drew(slow, "screen.published.corrections.heading"), "nothing drawn from a read that has not answered");
   assert.ok(main(slow).querySelector('[data-state="loading"]'), "loading while it waits");
   await new Promise((r) => setTimeout(r, 300));
@@ -385,7 +383,7 @@ test("R36 over a plane that answers publishedcase after a delay, the page and it
 test("R36 \"Check a file you hold\" waits for the read by that hash: a slow answer is drawn once it arrives, and one that failed or was not answered is drawn failed, never as the fingerprint being absent or elsewhere", async () => {
   const pins = [E1, B1];
   const verify = (req) => ok(pins.includes(req.query.sha256) ? { published: true, sha256: req.query.sha256, matches: [{ bundle_id: "FND-2026-0031", published: "2026-11-19T14:00:00Z" }] } : { published: false, sha256: req.query.sha256, matches: [] });
-  const base = plane().publishedcase.json.result;
+  const base = PUBLISHED_CASE;
   const slowby = { verify, publishedcase: (req) => (req.query.sha256 ? delay(150, ok({ ...base, asked: "FND-2026-0031", findings: [{ ...base.findings[0], version_sha: B1 }] }))() : ok(base)) };
   const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: slowby });
   fill(p, { "pb-sha": B1 });

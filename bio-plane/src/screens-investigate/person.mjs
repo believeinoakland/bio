@@ -3,6 +3,7 @@
  * `samepersoncandidates`. Each position and fact is a reference to its source passage; a fact is removed for good only by
  * `personexpunge`, behind its consequence statement (op-grades R21), with the Irreversible weight, and at the phone width it
  * is read and not done (interface-shell R11).
+ * R50: an office's kept lines each withdrawn with a reason (`linewithdraw`).
  * R32: what the team says about them (other names, declared ties, the documents that may name them), every fact recorded
  * (those valid today, those whose validity is not settled, the withdrawn in a fold), and a sentence in place of an empty
  * graph. R38, R39: "Same person?" in the design's words, its two acts each explained. */
@@ -20,7 +21,7 @@ function reads(view) {
     people: { op: "peopledirectory", query: { limit: "200" } },
     entity: { op: "entity", query: { id }, subject: true, empty: (v) => !v || v.found === false },
     naming: { op: "readingname", query: { entity: id } },
-    docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
 }
 
@@ -32,8 +33,13 @@ function render(cs, view) {
   /* R41: a subject that is neither a person nor an organization (kinds `person`, `institution`, `body`, `movement`) has its own page */
   const other = !!(ent && !["person", "institution", "body", "movement"].includes(ent.kind));
   const at = P.today(cs), nonce = view.ui.pn || 0;
+  /* R53, R58: an organization (kinds `institution`, `body`, `movement`) has the person page's shape and its own words; `people` refuses
+     an entity that is no person (`NOT_A_PERSON`), which is drawn as no claims and no candidates, never as a failed read */
+  const orgPage = !!(ent && ["institution", "body", "movement"].includes(ent.kind));
+  const noPerson = (q) => (orgPage && q && q.state === "failed" && q.refusal && q.refusal.code === "NOT_A_PERSON" ? { state: "ok", value: {}, refusal: null } : q);
+  const sfx = orgPage ? ".org" : "";
   const pending = view.data.entity && view.data.entity.state !== "ok" ? view.data.entity : { state: "loading", value: null, refusal: null };
-  const d = ent && !other ? P.later(cs, view, "person", "person", { query: { id, at }, n: nonce }) : pending;
+  const d = ent && !other ? noPerson(P.later(cs, view, "person", "person", { query: { id, at }, n: nonce })) : pending;
   const p = d && d.state === "ok" ? d.value : null;
   const name = p && Array.isArray(p.names) && p.names.length ? p.names[0].name : (ent && ent.label) || id;
   const out = [cs.title(name, { thing: { kind: "person", facts: p ? (p.names || []).slice(1).map((n) => n.name) : [] } })];
@@ -50,7 +56,7 @@ function render(cs, view) {
   const handleOf = (by) => String(by || "").replace(/^member:/, "");
   /* each item cited, dated and graded: its passage a reference to the capture, its grade one mark */
   const cite = (c, label) => (c && (c.captureSha || c.capture_sha)
-    ? P.refOf(cs, c.captureSha || c.capture_sha, label || cs.w(S + "source"), [c.extent && c.extent.page !== undefined ? cs.w(S + "page", { page: String(Number(c.extent.page) + 1) }) : ""], "capture")
+    ? P.refOf(cs, c.captureSha || c.capture_sha, label || docTitle(c.captureSha || c.capture_sha) || cs.w(S + "source"), [c.extent && c.extent.page !== undefined ? cs.w(S + "page", { page: String(Number(c.extent.page) + 1) }) : ""], "capture")
     : cs.mark("gap", "undetermined", { reason: cs.w(S + "nocitation") }));
   const span = (v) => {
     if (!v) return "";
@@ -143,7 +149,7 @@ function render(cs, view) {
   out.push(cs.sec(S + "connections", cs.state(gq, (g) => (none(g)
     ? `<p class="cs-state" data-state="empty">${cs.w("person.graph.none")}</p>`
     : P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
-      words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached", withdraw: "screen.explore.withdraw" } })))));
+      words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached" } })))));
   /* R22: a section that holds nothing is not drawn (loading and failed are still drawn) */
   if (!p || (p.posts || []).length) out.push(cs.sec(S + "positions", cs.state(d, (v) => {
     const posts = v.posts || [];
@@ -181,19 +187,72 @@ function render(cs, view) {
   const factsInner = cs.state(d, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "")
     + (undetRows.length ? cs.sheet(undetRows.map(undetLine).join("")) : "")
     + (gone.length ? `<details class="mk-details"><summary>${cs.w(S + "facts.withdrawn", { n: String(gone.length) })}</summary>${cs.sheet(gone.map(goneLine).join(""))}</details>` : ""))
-    + cs.choice("person-fact-kind", S + "fact.kind", kinds.map((k) => [k, S + "kind." + k]), {})
+    + cs.choice("person-fact-kind", S + "fact.kind", (orgPage ? ["name", "address", "contact"] : kinds).map((k) => [k, S + "kind." + k]), {})
+    + (orgPage ? `<p class="mk-small">${cs.w(S + "kind.help.org")}</p>` : "")
     + cs.field("person-fact-value", S + "fact.value", { rec: true })
     + cs.field("person-fact-from", S + "fact.from", { type: "date" })
-    + P.docChoice(cs, view, "person-fact-doc")
+    + P.docChoice(cs, view, "person-fact-doc", { passage: false, drive: true }) + P.passagePick(cs, view, "person-fact-doc", "person-fact-passage", P.later)
     + cs.act("recordpersonfact", { label: "act.recordpersonfact.label.person" })
     + cs.field("person-follow", S + "follow.address", { help: S + "follow.help" })
     + cs.act("followregister", { label: "act.followregister.label.person" });
   out.push(cs.sec(S + "facts", factsInner));
 
+  /* R50 (DEC-374, C68): "Records its offices keep": which office of this organization keeps the records on a subject, or is
+     responsible for it (`recordline`, kind `custodian_of` or `responsible_for`); each statement standing, its source and dates, and
+     the form to record one. A records request about the subject is then offered the office (`actions`). Drawn only for an
+     organization with an office to name. */
+  if (orgPage) {
+    const K = S + "keeper.";
+    const offQ = P.later(cs, view, "offices", "entitieskind", { query: { kind: "office", limit: "200" } });
+    const postQ = P.later(cs, view, "postin", "linesof", { query: { entity: id, kinds: "post_in", direction: "to", limit: "200" }, n: nonce });
+    const subQ = P.later(cs, view, "subjects", "peopledirectory", { query: { show: "everything", limit: "200" } });
+    const inOrg = new Set((postQ.state === "ok" && postQ.value && Array.isArray(postQ.value.lines) ? postQ.value.lines : []).filter((l) => l && !l.withdrawn).map((l) => l.from));
+    const offices = (offQ.state === "ok" && offQ.value && Array.isArray(offQ.value.entities) ? offQ.value.entities : []).filter((e) => e && inOrg.has(e.entity_id) && e.label)
+      .map((e) => ({ value: e.entity_id, text: e.label }));
+    const subjects = (subQ.state === "ok" && subQ.value && Array.isArray(subQ.value.rows) ? subQ.value.rows : []).filter((r) => r && r.entity && r.name).map((r) => ({ value: r.entity, text: r.name }));
+    const subjectName = (x) => (subjects.find((o) => o.value === x) || {}).text || P.plain(cs, "connection.node.unnamed");
+    const kept = [];
+    let keptPending = false;
+    for (const o of offices) {
+      const kq = P.later(cs, view, "keeps:" + o.value, "linesof", { query: { entity: o.value, kinds: "custodian_of,responsible_for", direction: "from", limit: "200" }, n: nonce });
+      if (kq.state === "loading") keptPending = true;
+      if (kq.state === "ok" && kq.value && Array.isArray(kq.value.lines)) for (const l of kq.value.lines) if (l && !l.withdrawn && (l.kind === "custodian_of" || l.kind === "responsible_for")) kept.push({ office: o.text, line: l });
+    }
+    if (offices.length) {
+      const dated = (l) => (span(l.valid) || cs.mark("gap", "undetermined"));
+      const srcNow = view.ui["choice:kp-src"] === "own" ? "own" : "doc";
+      out.push(cs.sec(K + "heading", `<p>${cs.w(K + "intro.a")} ${cs.w(K + "intro.b")}</p>`
+        + (kept.length ? cs.sheet(kept.map((x) => cs.row(gradeOf({ assertion: x.line.assertion }), `${cs.esc(x.office)} ${x.line.kind === "custodian_of" ? cs.w(K + "line", { subject: cs.esc(subjectName(x.line.to)) }) : cs.w(K + "line.responsible", { subject: cs.esc(subjectName(x.line.to)) })} · ${dated(x.line)}`,
+          x.line.line_id ? cs.act("linewithdraw", { label: "act.linewithdraw.label.person", data: { line: x.line.line_id } }) : "",
+          cite(x.line.basis && x.line.basis.captureSha ? { captureSha: x.line.basis.captureSha, extent: x.line.basis.extent } : null))).join("")) : "")
+        + cs.choice("kp-office", K + "office.label", offices, {}) + `<p class="mk-small">${cs.w(K + "office.help")}</p>`
+        + cs.choice("kp-kind", K + "kind.label", [["custodian_of", K + "kind.keeps"], ["responsible_for", K + "kind.responsible"]], {}) + `<p class="mk-small">${cs.w(K + "kind.help.a")} ${cs.w(K + "kind.help.b")}</p>`
+        + cs.choice("kp-subject", K + "subject.label", subjects, {}) + `<p class="mk-small">${cs.w(K + "subject.help.a")} ${cs.w(K + "subject.help.b")}</p>`
+        + cs.choice("kp-src", K + "source.label", [["doc", K + "source.doc"], ["own", K + "source.own"]], { acts: {}, value: "doc" }) + `<p class="mk-small">${cs.w(K + "source.help.a")} ${cs.w(K + "source.help.b")}</p>`
+        + (srcNow === "doc" ? P.docChoice(cs, view, "kp-doc", { label: K + "doc.label", passage: false }) : cs.field("kp-statement", S + "claim.note", { area: true, rec: true }))
+        + cs.field("kp-from", K + "from.label", { type: "date" }) + cs.field("kp-to", K + "to.label", { type: "date" })
+        + `<p class="mk-small">${cs.w(K + "dates.note.a")} ${cs.w(K + "dates.note.b")}</p>`
+        + cs.act("recordline", { label: K + "button" })
+        + `<details class="mk-details"><summary>${cs.w(K + "refused.summary")}</summary>`
+        + `<p>${cs.w(K + "refused.nobasis.a")} ${cs.w(K + "refused.nobasis.b")}</p><p>${cs.w(K + "refused.self.a")} ${cs.w(K + "refused.self.b")}</p><p>${cs.w(K + "refused.dates.a")} ${cs.w(K + "refused.dates.b")}</p></details>`
+        + `<p class="mk-small">${cs.w(K + "withdraw.a")} ${cs.w(K + "withdraw.b")}</p>`));
+    }
+    void keptPending;
+  }
   /* R32 (1): what the team says about them: other names, ties a member declared, and the documents that may name them */
   if (ent) {
     const says = [aliasSec(), tiesSec("entity.relation.none"), namingSec()];
     says.push(`<div class="mk-acts">${cs.act("connect", { label: org ? "entity.connect.org" : "entity.connect" })}</div>`);
+    /* C60: what "Connect" found, said: no document names them yet (and why: a document names them once it is matched), else how many, each listed */
+    const cn = view.ui.connected;
+    if (cn) {
+      const heldRows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+      const titleOfBundle = (b) => { const r = heldRows.find((x) => x && x.bundle_id === b); return (r && r.title) || ""; };
+      says.push(cn.n
+        ? `<p class="mk-small" data-connected="${cs.esc(String(cn.n))}">${cs.w("screen.people.counts", { list: cs.w("screen.people.count." + (cn.n === 1 ? "document" : "documents"), { n: String(cn.n) }) })}</p>`
+          + (cn.ends.length ? cs.sheet(cn.ends.map((b) => `<span data-connected-doc="${cs.esc(b)}">${cs.row("", P.refOf(cs, b, titleOfBundle(b) || P.plain(cs, S + "source"), [], "document"), "")}</span>`).join("")) : "")
+        : `<p class="mk-small" data-connected="0">${cs.w("screen.people.counts.none")} ${cs.w("entity.naming.says")}</p>`);
+    }
     out.push(cs.sec(org ? "entity.says.title.org" : "entity.says.title", says.join(""), { help: org ? "entity.says.help.org" : "entity.says.help" }));
   }
 
@@ -205,16 +264,16 @@ function render(cs, view) {
   const claimRow = (c, i) => {
     const kind = ["same_as", "not_same_as", "unsure"].includes(c.kind) ? c.kind : "unsure";
     const otherId = c.a === id ? c.b : c.a;
-    const because = bases.includes(c.basis) ? cs.w(S + "same.because", { grade: cs.esc(c.grade || ""), basis: cs.w(S + "basis.row." + c.basis) }) : cs.esc(c.why || "");
+    const because = bases.includes(c.basis) ? cs.w(S + "same.because" + sfx, { grade: cs.esc(c.grade || ""), basis: cs.w(S + "basis.row." + c.basis) }) : cs.esc(c.why || "");
     return cs.row(cs.grade("subject", c.grade || ""),
-      `<b>${cs.w("label.identityclaimkinds." + kind)}</b> · ${P.refOf(cs, otherId, nameOf(otherId), [])} · ${because}`
+      `<b>${cs.w(orgPage ? S + "claim.kind." + kind + ".org" : "label.identityclaimkinds." + kind)}</b> · ${P.refOf(cs, otherId, nameOf(otherId), [])} · ${because}`
       + ` <span class="mk-small">${cs.w(S + "claim.by", { by: cs.esc(handleOf(c.by)), date: cs.date(c.at || "") })}</span>`
       + (c.why && bases.includes(c.basis) ? ` <span class="rec">${cs.esc(c.why)}</span>` : ""),
       `<details class="mk-details" open><summary>${cs.w("act.withdrawidentityclaim.label.person")}</summary><p class="mk-small">${cs.w("act.withdrawidentityclaim.does")}</p>`
         + cs.field("person-wd-reason-" + i, S + "claim.withdraw.reason", { area: true, rec: true })
         + cs.act("withdrawidentityclaim", { label: "act.withdrawidentityclaim.label.person", data: { claim: c.claim_id, field: "person-wd-reason-" + i } }) + "</details>");
   };
-  const cand = ent ? P.later(cs, view, "cand", "samepersoncandidates", { query: { id }, n: nonce }) : pending;
+  const cand = ent ? noPerson(P.later(cs, view, "cand", "samepersoncandidates", { query: { id }, n: nonce })) : pending;
   const fieldsWord = (c, state) => ["names", "identifiers", "posts", "life"].filter((k) => c.fields && c.fields[k] && c.fields[k].state === state).map((k) => P.plain(cs, S + "field." + k)).join(", ");
   const candList = cand && cand.state === "ok" && cand.value && Array.isArray(cand.value.candidates) ? cand.value.candidates : [];
   const candOptions = candList.map((c) => ({ value: c.entity_id, text: P.plain(cs, S + "claim.candidate", { record: nameOf(c.entity_id), agrees: fieldsWord(c, "agrees"), differs: fieldsWord(c, "differs") }) }));
@@ -223,7 +282,7 @@ function render(cs, view) {
   const claimForm = !(cand && cand.state === "loading") && !(cand && cand.state === "failed") && otherOptions.length
     ? `<details class="mk-details" open><summary>${cs.w("act.identityclaim.label.person")}</summary><p class="mk-small">${cs.w("act.identityclaim.does")}</p>`
       + cs.choice("person-claim-other", S + "claim.other", otherOptions, {})
-      + cs.choice("person-claim-kind", S + "claim.kind", ["same_as", "not_same_as", "unsure"].map((k) => [k, S + "claim.kind." + k]), {})
+      + cs.choice("person-claim-kind", S + "claim.kind", ["same_as", "not_same_as", "unsure"].map((k) => [k, orgPage ? (k === "unsure" ? S + "claim.kind.unsure.org" : S + "claim." + k + ".org") : S + "claim.kind." + k]), {})
       + cs.choice("person-claim-basis", S + "claim.basis", bases.map((b) => [b, "label.claimbases." + b]), { acts: {}, value: "testimony" })
       + `<p class="mk-small">${cs.w(S + "claim.basis.help")}</p>`
       + (basisNow !== "testimony" ? `<p class="mk-small">${cs.w(S + "claim.evidence")}</p>`
@@ -232,11 +291,11 @@ function render(cs, view) {
       + cs.act("identityclaim", { label: "act.identityclaim.label.person" })
       + (view.ui.claimEmpty ? `<details class="mk-details" open><summary>${cs.w(S + "claim.empty.summary")}</summary><p>${cs.w(S + "claim.empty")}</p></details>` : "")
       + "</details>" : "";
-  out.push(cs.sec(S + "same", (others.length ? cs.sheet(others.map((m) => cs.row("", P.refOf(cs, m, nameOf(m), []), `<span class="mk-small">${cs.w(S + "same.claimed")}</span>`)).join(""))
+  out.push(cs.sec(S + "same" + sfx, (others.length ? cs.sheet(others.map((m) => cs.row("", P.refOf(cs, m, nameOf(m), []), `<span class="mk-small">${cs.w(S + "same.claimed" + sfx)}</span>`)).join(""))
       : p && p.cluster && p.cluster.state === "undetermined" ? `${cs.mark("gap", "undetermined")} <span class="mk-small">${P.why(cs, p.cluster.why)}</span>` : "")
     + (claims.length ? cs.sheet(claims.map(claimRow).join("")) : "")
-    + cs.state(cand, (v) => ((v.candidates || []).length ? `<p class="mk-small">${cs.w(S + "candidates")}</p>` : ""))
-    + claimForm));
+    + cs.state(cand, (v) => ((v.candidates || []).length ? `<p class="mk-small">${cs.w(S + "candidates" + sfx)}</p>` : ""))
+    + claimForm, orgPage ? { help: S + "same.holds.org" } : {}));
   /* R1: removing a fact for good: the consequence statement (op-grades R21), filled with the day and the member, the
      law or order that requires it, and the Irreversible act (the shell's dialog; read only at the phone width) */
   if (removable.length) {
@@ -267,11 +326,37 @@ const acts = [
   { op: "recordpersonfact", label: "act.recordpersonfact.label.person",
     send(view, el, cs) {
       const value = String(cs.value("person-fact-value") || "").trim();
-      const citation = view.parts.chosen(cs, "person-fact-doc");
+      const citation = view.parts.chosen(cs, "person-fact-doc", "person-fact-passage");
       if (!value || !citation) return { refuse: "screen.person.fact.empty" };
       const from = String(cs.value("person-fact-from") || "").trim();
       return { body: { person: String(view.subject || ""), kind: String(cs.value("person-fact-kind") || "name"), value,
         valid: { from: from || null, to: null }, citation } };
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
+  /* R50: an office of the organization keeps the records on a subject (or is responsible for it), from a document or the member's own word */
+  { op: "recordline", label: "act.recordline.label.person",
+    refusals: {
+      NO_BASIS: function (r, cs) { return cs ? cs.w("screen.person.keeper.refused.nobasis.a") + " " + cs.w("screen.person.keeper.refused.nobasis.b") : ""; },
+      SELF_LINE: function (r, cs) { return cs ? cs.w("screen.person.keeper.refused.self.a") + " " + cs.w("screen.person.keeper.refused.self.b") : ""; },
+      BOUNDS_REVERSED: function (r, cs) { return cs ? cs.w("screen.person.keeper.refused.dates.a") + " " + cs.w("screen.person.keeper.refused.dates.b") : ""; },
+    },
+    send(view, el, cs) {
+      const from = String(cs.value("kp-office") || "").trim(), to = String(cs.value("kp-subject") || "").trim();
+      if (!from || !to) return { refuse: "screen.person.keeper.subject.help.a" };
+      const own = view.ui["choice:kp-src"] === "own";
+      const statement = String(cs.value("kp-statement") || "").trim();
+      const basis = own ? (statement ? { statement } : null) : view.parts.chosen(cs, "kp-doc");
+      if (!basis) return { refuse: "screen.person.keeper.refused.nobasis.b" };
+      const f = String(cs.value("kp-from") || "").trim(), t = String(cs.value("kp-to") || "").trim();
+      const kind = String(cs.value("kp-kind") || "custodian_of") === "responsible_for" ? "responsible_for" : "custodian_of";
+      return { body: Object.assign({ kind, from, to, basis }, f || t ? { valid: { from: f || null, to: t || null, precision: "day", zone: "UTC" } } : {}) };
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
+  /* R50, B14: a statement recorded by mistake is withdrawn with a reason (the shell asks it, `lines` R8); the lines are read again */
+  { op: "linewithdraw", label: "act.linewithdraw.label.person",
+    send(view, el) {
+      const lineId = String((el && el.dataset && el.dataset.line) || "").trim();
+      return lineId ? { body: { lineId } } : null;
     },
     done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "identityclaim", label: "act.identityclaim.label.person", reasonField: "note",
@@ -353,7 +438,13 @@ const acts = [
     done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "connect", label: "entity.connect",
     send(view) { return { body: { entityId: String(view.subject || "") } }; },
-    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const ends = [];
+      for (const c of r && Array.isArray(r.connections) ? r.connections : []) for (const b of [c.a_bundle_id, c.b_bundle_id]) if (typeof b === "string" && b && !ends.includes(b)) ends.push(b);
+      view.ui.connected = r && r.ok !== false ? { n: Number(r.documents) || 0, ends } : null;
+      cs.set("pn", (view.ui.pn || 0) + 1);
+    } },
   /* the assistant's draft of the words of a tie's why or of the basis, labeled and kept only by the member's own act */
   { op: "writinghelp", label: "act.writinghelp.label.person", reasonField: "told", rereads: [],
     send(view, el, cs) {
@@ -401,10 +492,18 @@ const PERSON_KEYS = [
   "screen.people.today.kind.fund", "screen.people.today.kind.program",
   ...["source", "office", "ordinance", "parcel", "contract", "fund", "program", "place", "proceeding"].map((k) => "find.row.kind." + k),
   "state.undetermined",
+  /* R50: Records its offices keep */
+  ...["heading", "intro.a", "intro.b", "line", "office.help", "kind.label", "kind.help.a", "kind.help.b", "kind.keeps", "kind.responsible", "subject.help.a", "subject.help.b",
+    "subject.label", "source.help.a", "source.help.b", "source.own", "source.doc", "doc.label", "dates.note.a", "dates.note.b", "button", "refused.summary", "refused.nobasis.a",
+    "refused.nobasis.b", "refused.self.a", "refused.self.b", "refused.dates.a", "refused.dates.b", "withdraw.a", "withdraw.b",
+    "office.label", "source.label", "from.label", "to.label", "line.responsible"].map((k) => "screen.person.keeper." + k),
+  /* R53, R58: an organization's page */
+  "screen.person.kind.help.org", "screen.person.same.org", "screen.person.same.holds.org", "screen.person.same.claimed.org", "screen.person.same.because.org", "screen.person.candidates.org",
+  "screen.person.claim.same_as.org", "screen.person.claim.not_same_as.org", "screen.person.claim.kind.same_as.org", "screen.person.claim.kind.not_same_as.org", "screen.person.claim.kind.unsure.org",
 ];
 
 const words = ["screen.person.name", "screen.person.purpose",
-  ...["explore", "recordpersonfact", "identityclaim", "withdrawidentityclaim", "followregister", "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]
+  ...["explore", "recordpersonfact", "recordline", "linewithdraw", "identityclaim", "withdrawidentityclaim", "followregister", "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]
     .flatMap((op) => ["act." + op + ".label.person", "act." + op + ".does"]),
   "act.owed_aliaswithdraw.label.person", "act.owed_aliaswithdraw.does",
   "act.personexpunge.label.person", "act.personexpunge.does",

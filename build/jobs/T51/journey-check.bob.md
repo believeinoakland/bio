@@ -1,6 +1,6 @@
 # BOB to journey-check (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -93,3 +93,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio journey-check tranche/T51 job/T51/journey-check`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B10 · CHANGE
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/journey-check tranche/T51 && git branch -m job/T51/journey-check stale/journey-check-local && git checkout -b job/T51/journey-check origin/job/T51/journey-check`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · JOURNEY-CHECK #10 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4295)
+
+Mail with `--module journey-check`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file, no requirement line. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. **Never run `journey.test.mjs` or `live.test.mjs`** (the walks, K4149, K4111): run only `pseudo.test.mjs` and the other non-walk files.
+
+**Entry (K4295):** R29 (b), (c)'s five tests in `bio-plane/test/m/journey-check/pseudo.test.mjs` (`setup`, `security`, `places`, `elsewhere`, Home; from about :120) throw `interface-shell: screen members's act names expertisewithdraw, which OPS does not hold` (`checkScreens`, interface-shell `index.mjs:205`). The code is correct: screens-settings' `members.mjs:144` draws `expertisewithdraw`, member-roster's own declared op (`member-roster/index.mjs:2133`); commit 46d15594e2 added the owners' registration only to `bio-plane/test/m/screens-settings/register.mjs`. Register the owners' declared ops in `pseudo.test.mjs` the same way the screens' tests do, before the screens are checked (import that registration, or test-support's `registerDeclared`, whichever the screens' own suites use; read `register.mjs` whole first). Keep every control.
+
+Read in full: journey-check R29 and `pseudo.test.mjs`. Run `pseudo.test.mjs` and `group.test.mjs` alone (`group.test.mjs` R17 stays red: "group" for "team" is T52, K4269, never touched here), then `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the counts and the `Size` line.

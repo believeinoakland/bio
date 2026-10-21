@@ -1683,12 +1683,13 @@ export function explainRefusal(arg) {
  * sets: publication over the ops a capability gates (`gated`: the op has a `NEEDS` row, so a session reaches it and
  * a surface could offer it; a row without the key counts as gated), rungs over every mutating op. `unpublished`: a
  * gated op in none of the four registries. `unranked`: a mutating op with neither a rung nor a stated absence.
- * `stale`: a key of `RUNGS` or `RUNG_ABSENT` the table does not carry as mutating, or of `NON_ACTS` it does not carry
- * as gated. An alias of a published act is published (R51). All three empty is the totality; each list is sorted, so
+ * `stale`: a key of `RUNGS` or `RUNG_ABSENT` the table does not carry as mutating, or of `NON_ACTS` the table does not
+ * carry at all (K4279: an owner-declared read the door serves is not stale). An alias of a published act is published (R51). All three empty is the totality; each list is sorted, so
  * an answer names the ops. */
 export function unaccounted(opTable) {
   const rows = Array.isArray(opTable) ? opTable.filter((r) => r && typeof r.op === "string") : [];
   const all = new Set(rows.filter((r) => r.gated !== false).map((r) => r.op));
+  const carried = new Set(rows.map((r) => r.op));
   const mutating = new Set(rows.filter((r) => r.mutating === true).map((r) => r.op));
   const published = new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
   /* T45 (R51): an alias answers as its op (`op-grades` R17, op-declarations R21), so an alias of a published act is
@@ -1704,7 +1705,8 @@ export function unaccounted(opTable) {
        read the door declares `ownread`; any other absence ground still wants the mutating row. */
     ...Object.keys(RUNG_ABSENT).filter((op) => !mutating.has(op)
       && !(RUNG_ABSENT[op]?.ground === "caller-owned" && all.has(op))),
-    ...Object.keys(NON_ACTS).filter((op) => !all.has(op)),
+    /* K4279 (R12): a NON_ACT is stale only when the table has no row for it at all; an owner-declared read the door serves is not. */
+    ...Object.keys(NON_ACTS).filter((op) => !carried.has(op)),
   ])];
   return { unpublished: unpublished.sort(), unranked: unranked.sort(), stale: stale.sort() };
 }

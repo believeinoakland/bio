@@ -1,0 +1,9 @@
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/ocr-worker tranche/T51 && git branch -m job/T51/ocr-worker stale/ocr-worker-local && git checkout -b job/T51/ocr-worker origin/job/T51/ocr-worker`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · OCR-WORKER #9 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4292)
+
+Mail with `--module ocr-worker`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file, no requirement line. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+**Entry (K4292):** R23's jpeg and png tests (`ocr-worker/test/ocr-worker.test.mjs` around :947-:965: "the image is the picture renderer's own frame, by the renderer's digest" and "every region is anchored in the frame that was read") are red since 10d4c730b1 (FR-67, L26), which made `src/member.mjs:100` render pictures with `prepare: true` (levelled, deskewed, enlarged). The wire frame is correctly the prepared picture, but the test's own `direct` frame (`renderPictureToPixels(bytes, 0, {maxEdge, grey: true})`, :947) omits `prepare: true`, so it computes the unprepared frame (1800x420 against 1809x459). Bring the `direct` call to the options the member uses, as the R24 tests already do.
+
+Read in full: ocr-worker R23 and R24 and the test around :930-:980. From `ocr-worker/`, run `node --test --test-force-exit test/` (0 fail), then `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the count and the `Size` line.

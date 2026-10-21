@@ -176,7 +176,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const caps = Array.isArray(ME.capabilities) ? ME.capabilities : [];
     if (need !== undefined && need !== null && !caps.includes(need)) return false;
     const set = ME.tokenClass === "admin" ? SESSION.admin : SESSION.member;
-    if (!set.has(op)) return false;
+    /* K4237: a read is served to any session whose class its op lists; `SESSION_OPS` gates mutating ops alone */
+    const rc = D.readClasses[op];
+    if (!set.has(op) && !(rc === null || (Array.isArray(rc) && rc.includes(ME.tokenClass)))) return false;
     if (ADMIN.has(op) && ME.administer !== true) return false;
     return true;
   }
@@ -237,8 +239,24 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const phone = () => !!(mq && mq.matches);
 
   /* ---------- the frame's reads ---------- */
+  /* R60 (fix round 2, C80): the team's name as `groupidentity` answered (`GROUP_KNOWN` once it has answered), else the last one this
+     device was shown (public information, kept under `cs-group` like the other device conveniences), else nothing */
+  const GROUP_KEY = "cs-group";
+  let GROUP_KNOWN = false, LAST_GROUP = (() => { const v = local.get(GROUP_KEY); return typeof v === "string" && v.trim() ? v : null; })();
   let GROUP = null, TODO = null, QUEUE_COUNTS = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, KEEP_LATER = false, BOOT = null, BOOT_READ = false;
   const screenOf = (id) => SCREENS.find((s) => s.id === id) || null;
+  /* R111 (fix round 2, C94): the members as `memberlist` names them, id to handle, so a screen names a member by handle and never by
+     id; read when a screen first asks for a name not held, then at most every two minutes (a background read, R33) */
+  const MEMBERS = new Map();
+  let MEMBERS_AT = 0;
+  const noteMember = (id, handle) => { if (typeof id === "string" && id && typeof handle === "string" && handle.trim()) MEMBERS.set(id, handle.trim()); };
+  async function loadMembers() {
+    MEMBERS_AT = Date.now();
+    const a = await call("memberlist", { background: true });
+    if (!ME || a.kind !== "ok" || !a.value || !Array.isArray(a.value.members)) return;
+    for (const m of a.value.members) if (m && typeof m === "object") noteMember(String(m.member_id ?? m.member ?? m.id ?? ""), m.handle);
+    draw();
+  }
 
   /* ---------- screen instances: reads, states, acts ---------- */
   let MAIN = null, DOCKI = null, GUIDEI = null, ROUTE = null, RING = null, UNREACHED = false;
@@ -406,6 +424,23 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       w, esc, date,
       get me() { return ME; },
       get reachable() { return REACHABLE; },
+      /* R111: the handle of the member an id (or a stamp, `{member_id|member|id|by|handle}`) names, the founder included; an id with no
+         handle known, or none, a plain word by key (the founder's own when it is her id), never the id. Text, for a screen to place
+         through `cs.w` fills or `cs.esc`. */
+      memberName(id) {
+        const raw = id && typeof id === "object" ? (id.member_id ?? id.member ?? id.id ?? id.by ?? id.handle) : id;
+        const key = String(raw == null ? "" : raw).trim();
+        if (key) {
+          if (MEMBERS.has(key)) return MEMBERS.get(key);
+          if (ME && key === ME.member && typeof ME.handle === "string" && ME.handle) return ME.handle;
+          for (const h of MEMBERS.values()) if (h === key) return h;
+          if (ME && key === ME.handle) return key;
+        }
+        /* the roster is read only when a screen first needs a name it does not hold (a screen that names no member sends no read),
+           and again after two minutes; the screen redraws when it answers */
+        if (ME && Date.now() - MEMBERS_AT > 120000) loadMembers();
+        return textOf(w(key === "admin" ? "member.founder.unnamed" : "shell.card.member"));
+      },
       can: (op) => can(op, inst),
       level: () => LEVEL,
       setLevel: (v) => setLevel(v),
@@ -529,7 +564,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const key = inst.key + "|" + op + "|" + JSON.stringify(o.data || {});
         /* R107: an act drawn with no weight but carrying the Reasoned mark, and listed in `D.markAsks`, asks its reason before it runs */
         const asks = weight === "none" && D.marks[op] === "reasoned" && D.markAsks.includes(op) && !inst.pub && !browser;
-        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser, asks }) - 1;
+        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser, asks, here: hereKey && has(hereKey) ? hereKey : null }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
         /* R64 (`op-grades` R42): an act drawn with no weight carries the design kit's mark, as a mark and its explanation
            only; its friction stays R11's (it runs on press). R77 (U2c; DEC-295): only an act above Reversible draws dots and a
@@ -556,11 +591,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       ref(kind, id, label, facts) {
         const screen = D.refScreens[kind];
         const target = screen && screenOf(screen) && id !== undefined && id !== null && id !== "" ? hrefOf(screen, id) : null;
-        /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`) is the item's
-           own facts alone */
+        /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`, `objective`, ...) is the
+           item's own facts alone, nothing if it has none (R106) */
         const lead = kw("shell.card." + kind);
-        const someFact = (facts || []).some((f) => f !== null && f !== undefined && f !== "");
-        const card = (lead || (kind !== "theme" && !someFact) ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
+        const card = (lead ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
           .map((f) => '<span class="why">' + soft(f) + "</span>").join("")) + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
           ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"
@@ -630,14 +664,17 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
            `o.value` seeds the draw only until the member chooses */
         const redraw = typeof o.redraw === "string" && o.redraw ? o.redraw : "";
         const values = (options || []).map(valueOf);
+        /* R90 (K4245): a choice the member made is kept in page memory, so a whole-draw redraw (every read loading again, the choice
+           gone from the tree for a moment) draws it again as chosen; `o.value` seeds it only until the member chooses */
+        const made = Object.hasOwn(inst.ui, "choice:" + id) ? values.find((v) => String(v) === String(inst.ui["choice:" + id])) : undefined;
         const chosen = drives ? (values.includes(inst.ui["choice:" + id]) ? inst.ui["choice:" + id] : values.includes(o.value) ? o.value : values[0])
-          : redraw && Object.hasOwn(inst.ui, redraw) ? inst.ui[redraw] : o.value;
+          : redraw && Object.hasOwn(inst.ui, redraw) ? inst.ui[redraw] : made !== undefined ? made : o.value;
         if (drives) inst.ui["choice:" + id] = chosen;
         const opt = (x) => {
           const [v, t] = Array.isArray(x) ? [x[0], w(x[1], x[2])] : x && typeof x === "object" ? [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text)] : [x, esc(x)];
           return '<option value="' + esc(v) + '"' + (chosen === v ? " selected" : "") + ">" + t + "</option>";
         };
-        const field = '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input"' + (drives ? ' data-shell="choice" data-choice="' + esc(id) + '"' : redraw ? ' data-shell="choice" data-redraw="' + esc(redraw) + '"' : "") + ">"
+        const field = '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input"' + (drives ? ' data-shell="choice" data-choice="' + esc(id) + '"' : redraw ? ' data-shell="choice" data-redraw="' + esc(redraw) + '"' : ' data-keep="' + esc(id) + '"') + ">"
           + (options || []).map(opt).join("") + "</select></div>";
         return drives && Object.hasOwn(o.acts, chosen) ? field + cs.act(o.acts[chosen], o.act || {}) : field;
       },
@@ -976,11 +1013,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const steps = [];
     const p = D.paths[route.screen] || null;
     if (p) {
-      let proj = null;
-      try { proj = inst && inst.spec.place ? (inst.spec.place(inst.view) || {}).project : null; } catch { proj = null; }
+      let proj = null, last = null, projKey = null;
+      /* R110: `place` answers `{project, last}`; `last` (data: the one the member is on) is the final crumb's `{name}` where the path holds the design's `.crumb` word, else the screen's own name stays */
+      try { const pl = inst && inst.spec.place ? inst.spec.place(inst.view) || {} : {}; proj = pl.project; last = typeof pl.last === "string" && pl.last ? pl.last : null; projKey = typeof pl.projectKey === "string" && has(pl.projectKey) ? pl.projectKey : null; } catch { proj = null; last = null; projKey = null; }
       p.forEach((step, i) => {
-        if (step === "@project") { if (proj && proj.title) steps.push({ label: soft(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
+        if (step === "@project") { if (proj && proj.title) steps.push({ label: projKey ? w(projKey, { name: String(proj.title) }) : soft(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
         else if (i === 0 && D.places.includes(step)) steps.push({ label: w("rail." + step + ".name"), href: placeHref(step) });
+        else if (i === p.length - 1 && /\.crumb$/.test(step)) steps.push({ label: last ? w(step, { name: last }) : w(step.replace(/\.crumb$/, ".name")) });
         else steps.push({ label: w(step) });
       });
       if (route.screen === "project" && !(proj && proj.title)) steps.push({ label: w("screen.project.name") });
@@ -1113,8 +1152,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      menu. At the phone width it shows icons only, each label kept as the control's accessible name. */
   function mastHtml() {
     const narrow = phone();
-    /* R60: the group's display name, else "Your team", never its slug */
-    const name = GROUP ? esc(GROUP) : w("shell.group.unnamed");
+    /* R60: the group's display name; answered with none, "Your team", never its slug; not yet answered, the last name this device
+       was shown, else nothing (C80: no placeholder is drawn while the read is out) */
+    const shown = GROUP || (GROUP_KNOWN ? null : LAST_GROUP);
+    const haveName = shown || GROUP_KNOWN;
+    const name = shown ? esc(shown) : GROUP_KNOWN ? w("shell.group.unnamed") : "";
     /* R76 (U2b; DEC-292 D9, D17): the explanations button names itself and its setting */
     const level = w("shell.level.button." + (LEVEL === "pause" ? "pause" : "prompt"));
     const handle = handleOf();
@@ -1133,7 +1175,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const groupHref = screenOf("group-identity") ? hrefOf("group-identity") : "/app";
     const waiting = QUEUE_COUNTS ? w("shell.queue.waiting", { n: String(QUEUE_COUNTS.todo + QUEUE_COUNTS.noticed + QUEUE_COUNTS.status), todo: String(QUEUE_COUNTS.todo),
       noticed: String(QUEUE_COUNTS.noticed), status: String(QUEUE_COUNTS.status) }) + '<span class="more">' + w("shell.queue.open") + "</span>" : "";
-    return '<header class="cs-mast">' + mark + '<a class="mk-grp" href="' + esc(groupHref) + '" data-nav' + tipAttr("<b>" + (GROUP ? soft(GROUP) : w("shell.group.unnamed")) + "</b>" + '<span class="more">' + w("shell.group.open") + "</span>", 1) + ">" + name + "</a>" + '<span class="spacer"></span>'
+    return '<header class="cs-mast">' + mark + (haveName ? '<a class="mk-grp" href="' + esc(groupHref) + '" data-nav' + tipAttr("<b>" + (shown ? soft(shown) : w("shell.group.unnamed")) + "</b>" + '<span class="more">' + w("shell.group.open") + "</span>", 1) + ">" + name + "</a>" : "") + '<span class="spacer"></span>'
       + '<a class="mk-mastsearch" href="' + placeHref("find") + '" data-nav aria-label="' + w("shell.search") + '"' + named(w("shell.search"), w("shell.search.holds")) + ">" + I("search") + (narrow ? "" : "<span>" + w("shell.search") + "</span>") + "</a>"
       + '<button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-shell="level" aria-label="' + level + '"' + named(level, w("shell.level.holds")) + ">" + I("question") + label(level) + "</button>"
       + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '" aria-label="' + w("shell.assistant") + '"' + named(w("shell.assistant"), w("shell.assistant.holds")) + ">" + I("machine") + label(w("shell.assistant")) + "</button>" : "")
@@ -1143,7 +1185,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + (handle ? '<span aria-hidden="true">' + esc(handle.slice(0, 1).toUpperCase()) + "</span>" : I("subject")) + "</button>"
       + '<div class="cs-dialog mk-menu" id="cs-menu" role="menu" aria-label="' + w("shell.menu.name") + '"' + (MENU ? "" : " hidden") + ">"
       + '<h2 class="eyebrow" tabindex="0"' + tipAttr(w("shell.menu.says"), 2) + ">" + w("shell.menu.name") + "</h2>"
-      + '<p class="muted">' + w("shell.menu.who", { name: GROUP ? GROUP : html(w("shell.group.unnamed")), handle }) + "</p>"
+      + (haveName ? '<p class="muted">' + w("shell.menu.who", { name: shown ? shown : html(w("shell.group.unnamed")), handle }) + "</p>" : "")
       + '<a class="cs-btn" data-tone="quiet" role="menuitem" href="' + esc(accountHref) + '" data-nav>' + w("shell.menu.account") + "</a>" + signout
       + '<div role="group" aria-label="' + w("shell.appearance") + '"><span class="eyebrow">' + w("shell.appearance") + "</span>" + themes + "</div></div></span></header>";
   }
@@ -1253,7 +1295,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       el.removeAttribute("data-level");
     }
   }
-  let MENU = false, DRAWN = {};
+  let MENU = false, DRAWN = {}, SHOWN_FOR = null, QUIET_FOCUS = false;
   const focusKey = (el) => (!el || !el.getAttribute ? null : el.id ? "#" + el.id
     : ["data-shell", "data-ai", "data-table", "data-id", "data-col", "data-theme-to", "data-areas", "data-i"].map((a) => (el.getAttribute(a) !== null ? "[" + a + '="' + el.getAttribute(a) + '"]' : "")).join("") || null);
   function draw() {
@@ -1267,9 +1309,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* K4194 (B15): a file input cannot be given its file again, so the node itself is carried into the new tree */
     const chosen = {};
     for (const el of root.querySelectorAll("input")) if (el.id && el.type === "file" && el.files && el.files.length) chosen[el.id] = el;
-    const fk = focusKey(doc.activeElement);
+    /* R9 (fix round 2, C79): a redraw of the screen already shown keeps its scroll and its focus (R93); a navigation opens the
+       screen at the top with nothing carried over from the one left */
+    const shownFor = MAIN || ROUTE, same = SHOWN_FOR === shownFor;
+    SHOWN_FOR = shownFor;
+    const fk = same ? focusKey(doc.activeElement) : null;
     /* R93: a redraw in place leaves the main column where it was scrolled to */
-    const before = doc.getElementById("cs-main"), top = before ? before.scrollTop : 0;
+    const before = doc.getElementById("cs-main"), top = same && before ? before.scrollTop : 0;
     root.innerHTML = frameHtml(ROUTE) + overlayHtml();
     const after = doc.getElementById("cs-main");
     if (after && top) after.scrollTop = top;
@@ -1315,13 +1361,20 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     ringDraw(root);
     testBand();
-    if (fk) { let el = null; try { el = root.querySelector(fk); } catch { el = null; } if (el && el.focus) el.focus(); }
+    /* R68, R9 (fix round 2, C78, C79): the focus put back after a redraw neither scrolls the column nor opens the explanation of
+       the control the member has just pressed */
+    if (fk) {
+      let el = null;
+      try { el = root.querySelector(fk); } catch { el = null; }
+      if (el && el.focus) { QUIET_FOCUS = true; try { el.focus({ preventScroll: true }); } finally { QUIET_FOCUS = false; } }
+    }
+    restoreRefusals();
     doc.title = titleOf();
   }
   /* R84 (N1184; DEC-299 (12)): the browser tab's title: `page.title` ({screen}, {team}), and on a public page `page.title.public`
      ({page}, {team}); the screen by its `screen.<id>.name`, the team by R60's name */
   function titleOf() {
-    const team = GROUP ? GROUP : textOf(w("shell.group.unnamed"));
+    const team = GROUP || (GROUP_KNOWN ? null : LAST_GROUP) || textOf(w("shell.group.unnamed"));
     const id = OUTSIDE || ROUTE.malformed ? "unavailable" : MAIN && !MAIN.unavail ? MAIN.spec.id : ROUTE.screen;
     const name = has("screen." + id + ".name") ? textOf(w("screen." + id + ".name"))
       : D.places.includes(ROUTE.screen) ? textOf(w(ROUTE.screen === "more" ? "shell.more" : "rail." + ROUTE.screen + ".name")) : textOf(w("screen.unavailable.name"));
@@ -1346,6 +1399,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     inst.refreshT = {};
     inst.words = {};
     for (const k of [...ACTSTATE.keys()]) if (k.startsWith(inst.key + "|")) ACTSTATE.delete(k);
+    for (const k of [...REFUSED.keys()]) if (k.startsWith(inst.key + "|")) REFUSED.delete(k);
     if (inst.retry !== null) { clearTimeout(inst.retry); inst.retry = null; }
     /* R49: the images' object addresses released with the screen */
     for (const im of Object.values(inst.images)) if (im.url) { try { win.URL.revokeObjectURL(im.url); } catch { /* released */ } im.url = null; }
@@ -1359,6 +1413,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     closing(DOCKI);
     MAIN = null; DOCKI = null; ENTRY_PAGE = false; RING = null; KEEP_LATER = false;
     ROUTE = parse(win.location.pathname);
+    /* R7, R9 (fix round 2, C24): the address of a place that holds one built screen (`/app/find`) is that screen's own, so
+       "comes later" is drawn only for a place with no built screen */
+    if (!ROUTE.root && !ROUTE.outside && !ROUTE.malformed && !screenOf(ROUTE.screen) && Object.hasOwn(D.placeScreens, ROUTE.screen)) {
+      const to = placeHref(ROUTE.screen);
+      if (to !== "/app/" + ROUTE.screen) { win.history.replaceState({}, "", to); ROUTE = parse(win.location.pathname); }
+    }
     OUTSIDE = !!ROUTE.outside;
     MENU = false;
     /* R79: an address outside the team's pages draws `unavailable` in the public frame, reading no session */
@@ -1832,7 +1892,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* the screen instance that drew an element: the guide's panel, the assistant's, else the main screen */
   const ownerOf = (el) => (el.closest && el.closest('.cs-dock[data-panel="guide"]') ? GUIDEI : el.closest && el.closest(".cs-dock") ? DOCKI : MAIN);
   function slotOf(ai) { return doc.getElementById("cs-root").querySelector('[data-slot="' + ai + '"]'); }
-  function besideAct(ai, inner) { const s = slotOf(ai); if (s) s.innerHTML = inner; }
+  /* R13 (fix round 2, C11): the refusal drawn beside an act is kept by the act's key, so a redraw (the re-read that follows the
+     press, a refresh) draws it again; whatever else is drawn in the slot, or the act's next press, or leaving the screen, ends it */
+  const REFUSED = new Map();
+  const actOf = (ai) => { const [k, i] = String(ai).split(":"); const ins = instOf(k); return ins ? ins.acts[Number(i)] || null : null; };
+  function besideAct(ai, inner) { const s = slotOf(ai); if (s) s.innerHTML = inner; const d = actOf(ai); if (d) REFUSED.delete(d.key); }
+  function restoreRefusals() {
+    if (!REFUSED.size) return;
+    for (const inst of [MAIN, DOCKI, GUIDEI]) if (inst) inst.acts.forEach((d, i) => { const h = REFUSED.get(d.key); const s = h ? slotOf(inst.key + ":" + i) : null; if (s) s.innerHTML = h; });
+  }
   const refusalHtml = (words) => '<span class="cs-gap" data-gap="refused" role="alert">' + I("refused") + "<span>" + words + "</span></span>";
   function press(btn) {
     const ai = btn.getAttribute("data-ai");
@@ -1861,14 +1929,22 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     const label = btn.childNodes ? btn.textContent : "";
     const fields = (d.spec.dialog || []).map((f, j) => '<span class="cs-field"><label for="cs-dlg-' + ai.replace(":", "-") + "-" + j + '">' + w(f.label) + '</label><textarea class="cs-input" id="cs-dlg-' + ai.replace(":", "-") + "-" + j + '"></textarea></span>').join("");
-    const does = has("act." + d.op + ".does") ? "<p>" + w("act." + d.op + ".does") + "</p>" : "";
+    /* R90, R11 (B4): the place word the screen gave the act explains it here too, in place of `.does` */
+    const doesKey = d.here || "act." + d.op + ".does";
+    const does = has(doesKey) ? "<p>" + w(doesKey) + "</p>" : "";
     besideAct(ai, '<span class="cs-dialog" role="dialog" aria-label="' + esc(label) + '"><span class="ends">' + does + "</span><p>"
       + w(weight === "signed" ? "shell.dialog.signed" : "shell.dialog.signs", { handle: ME ? ME.handle || "" : "" }) + "</p>" + fields + '<span class="mk-acts">'
       + '<button type="button" class="cs-btn" data-tone="primary" data-shell="confirm" data-for="' + esc(ai) + '">' + w("shell.confirm") + "</button>"
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="cancel" data-for="' + esc(ai) + '">' + w("shell.cancel") + "</button></span></span>");
   }
   /* R13, R74: a refusal drawn beside its act, with the low tone when Sounds is on */
-  function refuseBeside(ai, words) { besideAct(ai, refusalHtml(words)); sound("refused"); }
+  function refuseBeside(ai, words) {
+    const h = refusalHtml(words);
+    besideAct(ai, h);
+    const d = actOf(ai);
+    if (d) REFUSED.set(d.key, h);
+    sound("refused");
+  }
   /* R74: the act button's state: busy while the request is out; done after, locked for a terminal, signed or irreversible
      or outward act until a read redraws the screen, cleared after about two seconds for any other; a refusal clears both */
   function actState(inst, d, st) {
@@ -1922,6 +1998,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     besideAct(ai, "");
     req.public = inst.pub;
+    /* R109 (fix round 2, C77): the password fields as typed when the request goes out; only those whose value the request carries
+       are emptied by the act's success */
+    const typedSecrets = Array.from(doc.getElementById("cs-root").querySelectorAll('input[type="password"]')).map((el) => [el, String(el.value || "")]).filter(([, v]) => v);
     actState(inst, d, { busy: true });
     let a = await call(d.op, req);
     /* R34: an act answered `REAUTH_DUE` asks the password again and, on `reauth`'s success, is sent once more */
@@ -1931,15 +2010,23 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     if (a.kind !== "ok") {
       actState(inst, d, null);
+      /* R21 (K4245): the act's optional `failed(view, answer, cs)` runs at once when its request is refused or not answered, so a
+         line the screen raised for the press (a working line) is cleared before the refusal is drawn beside the act */
+      if (d.spec.failed) { try { await d.spec.failed(inst.view, a, kit(inst)); } catch { /* a screen's own hook never stops the shell */ } }
       if (a.kind === "silent" && !S && !inst.pub) return;
       const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, inst) : w("shell.noanswer");
       return refuseBeside(ai, words);
     }
     if (d.op === "unlock" && inst === MAIN && frameOf(MAIN.spec.id) !== "working") { ACTSTATE.delete(d.key); for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = ""; return unlocked(); }
     let after = null;
-    /* R21 (K3009): no secret survives a successful act: every password field its screen drew is cleared, so no redraw
-       restores one */
-    for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = "";
+    /* R21 (K3009), R109 (C77): no secret survives the act that sent it: a password field whose typed value the request carried is
+       cleared, so no redraw restores one; an act that sent none (a handle check) leaves what was typed */
+    if (typedSecrets.length) {
+      const carried = new Set();
+      const leaves = (v) => { if (typeof v === "string") carried.add(v); else if (Array.isArray(v)) v.forEach(leaves); else if (v && typeof v === "object" && Object.getPrototypeOf(v) === Object.prototype) Object.values(v).forEach(leaves); };
+      leaves(req.body); leaves(req.query); leaves(req.raw);
+      for (const [el, v] of typedSecrets) if (carried.has(v) || (typeof req.raw === "string" && req.raw.includes(v))) el.value = "";
+    }
     /* R74: done; a terminal, signed or irreversible or outward act stays disabled until a read redraws the screen (`gen`), any
        other clears about two seconds later on the page clock */
     const heavy = d.weight === "terminal" || d.weight === "signed" || d.weight === "irreversible" || d.outward;
@@ -2048,6 +2135,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (sh) return shell(sh, e);
       /* R49: a choice that drives its act redraws with the act following it */
       const ch = e.target.closest ? e.target.closest('[data-shell="choice"]') : null;
+      /* R90 (K4245): a plain choice records what the member chose in page memory and redraws nothing */
+      const kept = e.target.closest ? e.target.closest("[data-keep]") : null;
+      if (kept) {
+        const inst = ownerOf(kept);
+        if (inst) { activity(); inst.ui["choice:" + kept.getAttribute("data-keep")] = kept.value; }
+        return;
+      }
       if (ch && ch.getAttribute("data-redraw")) {
         /* R90: a choice that redraws sets its value in `view.ui` and redraws; it sends nothing */
         const name = ch.getAttribute("data-redraw");
@@ -2086,6 +2180,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R14, R68: an explanation opens at once on keyboard focus; and it closes when the focus moves to anything that is
        not it, so a card is never left open over the next field */
     root.addEventListener("focusin", (e) => {
+      if (QUIET_FOCUS) return;
       const el = e.target.closest ? e.target.closest("[data-tip]") : null;
       if (el) return openTip(el);
       if (TIP && !onTipOrEl(e.target)) closeTip();
@@ -2338,7 +2433,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
 
   /* ---------- start ---------- */
   async function loadWords() {
-    const a = await call("interfacewords");
+    /* R5 (fix round 2, C15): asked for by the release version `bootstrap` answered (the release is the version), so the answer can be
+       kept for that release; with none answered the request carries none */
+    const v = BOOT && typeof BOOT.version === "string" && BOOT.version ? BOOT.version : null;
+    const a = await call("interfacewords", v ? { query: { v } } : {});
     if (a.kind !== "ok" || !a.value || !Array.isArray(a.value.words)) return;
     wordsRead = true;
     const shown = new Map();
@@ -2352,7 +2450,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { limit: 500 }, background: true }), call("infolevel")]);
     if (!ME) return;
     /* R60: the display name only; the slug is never drawn as the group's name */
-    if (g.kind === "ok" && g.value) GROUP = typeof g.value.display_name === "string" && g.value.display_name.trim() ? g.value.display_name : null;
+    if (g.kind === "ok" && g.value) {
+      GROUP = typeof g.value.display_name === "string" && g.value.display_name.trim() ? g.value.display_name : null;
+      GROUP_KNOWN = true;
+      if (GROUP) local.set(GROUP_KEY, GROUP); else local.del(GROUP_KEY);
+    }
     if (q.kind === "ok" && q.value && Array.isArray(q.value.items)) {
       const count = (c) => q.value.items.filter((x) => x && x.class === c).length;
       /* R82: the queue's three kinds (To do, Noticed, Status), answered only with the queue read; none, no sentence */

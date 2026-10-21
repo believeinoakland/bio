@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -22,3 +22,23 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 ANSWER (K4026): done. civil-time, retrieval, image-cover and doc-clean added to case-disclosures' uses (modules.json) and to its requirements' Uses (BOB's); format 0, order.mjs unchanged. Merge tranche/T51 into your branch. The signed document keeps the code's 'acknowledgement' (K1333); the design is told its row is not read.
+
+## B3 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/case-disclosures tranche/T51 && git branch -m job/T51/case-disclosures stale/case-disclosures-local && git checkout -b job/T51/case-disclosures origin/job/T51/case-disclosures`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CASE-DISCLOSURES #14 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1)
+
+Mail with `--module case-disclosures`; record `build/jobs/T51/case-disclosures.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `case-disclosures`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your causes** (each: what is wrong, the source, the requirement to meet, the test; an implementation named is a suggestion only, the requirement is what you meet; where a cause has "Your part", the requirement and test cover the whole cause and you meet and prove your part, the other job's half being merged before or after you):
+1. **C39** (MAJOR) The publish gate counts a removed citation as load-bearing: it names captures the member removed from the question, not the live leg. Source: `case-disclosures/index.mjs:273-283` (`SELECT … FROM inquiry_basis` with no severed filter; whether severed rows are kept there is unconfirmed). Requirement: `restingCaptures` reads live legs only. Test: A finding whose cited leg was severed rests on no capture for the gate; control: the live leg is named.
+2. **C40** (MAJOR) The document page's only door gives a timestamp, but the gate needs BOTH a trusted timestamp and a co-archive (`co_attested = ts && ca`), so doing what the screen offers never satisfies it (pre-flight still timestamp_at null, co_archive null). **Your part: case-disclosures' part: the gate names which of timestamp and co-archive is missing; confirm what `attest` writes (read `attestation` R1 to R3) and report to BOB if a change belongs there.** Source: `case-disclosures/index.mjs:338`; `screens-inquiry/document.mjs:940-942` (`attest` only). Whether `attest` also writes the co-archive is unconfirmed. Requirement: One act on the document page, "Get independent confirmation", obtains both; where only one is obtained the page says what is still missing (BOB amends screens-inquiry R55's line). Test: case-disclosures: the gate names which of the two is missing; screens (wave 2): the act sends the call that requests both and draws what is missing; control: both present draws done.
+
+Read in full (never in part): case-disclosures lines on `restingCaptures`, `co_attested`, the attestation gate and R16; for each cause above, the code files named in its source, whole, and the tests that name the requirement ids you meet; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678). Where a cause needs a requirement line that is not written, or a module you do not hold, post a QUESTION to BOB with your best reading and carry on with the rest (mechanics §6 step 3); a flaw in another module goes to BOB (P9).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/case-disclosures/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-disclosures tranche/T51 job/T51/case-disclosures`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).

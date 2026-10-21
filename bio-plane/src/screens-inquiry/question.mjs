@@ -1,4 +1,5 @@
-/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47, R71–R74, R78: the question screen (Projects › <project> ›
+/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47, R71–R74, R78, R87–R89, R91, R101–R104, R110, R114, R116, R117, R120, R121:
+ * the question screen (Projects › <project> ›
  * Question; registry screen `question`).
  *
  * Self-contained functions (interface-shell R21 (1)): each refers only to its parameters, `cs` and the language's own
@@ -24,6 +25,8 @@ function reads(view) {
     waits: { op: "questionwaits", query: { question: id } },
     /* R54: the partition as the inquiry holds it, with the history of its changes (`inquiry` R65) */
     partition: { op: "inquirypartition", query: { id }, empty: () => false },
+    /* R110: the imports the team holds, each read for the findings it accepted (`importedcase`) when the page is drawn */
+    imports: { op: "importedcases", empty: (v) => !v || !Array.isArray(v.imports) || v.imports.length === 0 },
     relies: { op: "backlinks", query: { target: id },
               empty: (v) => !v || ((!Array.isArray(v.backlinks) || v.backlinks.length === 0) && v.out_of_view !== true) },
   };
@@ -34,13 +37,21 @@ function place(view) {
   const d = view.data && view.data.inquiry;
   const text = d && d.state === "ok" && d.value && d.value["bundle.md"];
   const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text.split(/\n---\s*\n/)[0] || "") : null;
-  if (!m) return {};
-  const t = view.ui && view.ui.later && view.ui.later["project:" + m[1]];
+  const home = m ? m[1] : "";
+  const pid = view.project || home;
+  if (!pid) return {};
+  const t = view.ui && view.ui.later && view.ui.later["project:" + pid];
   const ft = t && t.state === "ok" && t.value && typeof t.value["bundle.md"] === "string"
     ? /^title:\s*(.*)$/m.exec(t.value["bundle.md"]) : null;
   let title = ft ? ft[1].trim() : "";
   try { if (title.startsWith("\"")) title = JSON.parse(title); } catch { /* raw */ }
-  return { project: { id: m[1], title } };
+  /* C62: a project whose record states no title is named by the project list, as the render reads it */
+  if (!title) {
+    const pl = view.ui && view.ui.later && view.ui.later.projects;
+    const row = pl && pl.state === "ok" && pl.value && Array.isArray(pl.value.projects) ? pl.value.projects.find((x) => x && String(x.id) === pid) : null;
+    if (row && row.name) title = String(row.name);
+  }
+  return { project: { id: pid, title } };
 }
 
 /** R2, R5, R23–R27, R31, R34–R36, R38, R41: the question in its state. */
@@ -54,7 +65,9 @@ function render(cs, view) {
   const T = (k, f) => P.plain(cs, k, f);
   const later = (key, op, query, token) => P.later(cs, ui, key, op, query, token);
   const doc = d.inquiry && d.inquiry.state === "ok" ? P.front(d.inquiry.value["bundle.md"]) : null;
-  const project = doc && /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
+  /* R91: a question opened from a project acts for that project (the address's second part); the bare address, for its home project */
+  const home = doc && /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
+  const project = view.project || home;
   const out = [];
   /* R39: the question's words, else its title; never its id */
   const heading = doc ? (doc.question || doc.title || "") : "";
@@ -65,8 +78,14 @@ function render(cs, view) {
     const m = pr && pr.state === "ok" && pr.value && typeof pr.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(pr.value["bundle.md"]) : null;
     let t = m ? m[1].trim() : "";
     try { if (t.startsWith("\"")) t = JSON.parse(t); } catch { /* raw */ }
-    return t;
+    if (t || !pr || pr.state === "loading") return t;
+    /* C44, C62: a project whose record states no title is named by the project list (project-roster R26), read only then */
+    const pl = later("projects", "projectlist", { limit: "200" });
+    const row = pl.state === "ok" && pl.value && Array.isArray(pl.value.projects) ? pl.value.projects.find((x) => x && String(x.id) === project) : null;
+    return row && row.name ? String(row.name) : "";
   })();
+  /* C44: when no title can be had, the words the plane gave for it (a refused read's translation) follow "because"; with none, no stub is drawn */
+  const projectWhy = pr && pr.state === "failed" && pr.refusal && pr.refusal.fields && pr.refusal.fields.translation ? String(pr.refusal.fields.translation) : "";
   {
     const date = doc.created ? cs.date(String(doc.created), { year: true }) : "";
     /* K3402: who opened it, the author of its first promotion as the record keeps it (the image's `_history`), by
@@ -83,8 +102,10 @@ function render(cs, view) {
       return first ? P.who(cs, first.author, founderHandle) : "";
     })();
     const name = opener || T("state.undetermined", { reason: "" });
-    if (project) out.push(`<p class="mk-sub">${W("screen.question.opened", { name, date: { html: date }, project: "" })}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: "" }), [])}</p>`);
-    else out.push(`<p class="mk-sub">${W("screen.question.opened.noproject", { name, date: { html: date } })}</p>`);
+    const loadingProject = !projectTitle && pr && (pr.state === "loading" || (later("projects", "projectlist", { limit: "200" }).state === "loading"));
+    if (project && (projectTitle || projectWhy)) out.push(`<p class="mk-sub">${W("screen.question.opened", { name, date: { html: date }, project: "" })}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: projectWhy }), [])}</p>`);
+    else if (project && !loadingProject) out.push(`<p class="mk-sub">${W("screen.question.opened.noproject", { name, date: { html: date } })}</p>`);
+    else if (!project) out.push(`<p class="mk-sub">${W("screen.question.opened.noproject", { name, date: { html: date } })}</p>`);
   }
 
   const stepsAt = out.length;
@@ -108,6 +129,19 @@ function render(cs, view) {
   const citedLegs = legs.length ? legs
     : refs.filter((r) => (r.rel || "cites") === "cites").map((r, i) => ({ ord: i, target: r.target, role: "supports", fromRef: true }));
   const supports = citedLegs.filter((l) => (l.role || "supports") === "supports");
+  /* R110: a leg on another team's finding names `imported:<import>/<finding>` (inquiry-grammar R11) and a document nobody holds here;
+     the findings the team accepted are read from `importedcases` and each import's `importedcase`, by their refs */
+  const impRef = (t) => /^imported:([0-9a-f]{64})\/(.+)$/.exec(String(t));
+  const impList = d.imports && d.imports.state === "ok" && d.imports.value && Array.isArray(d.imports.value.imports) ? d.imports.value.imports.slice(0, 20) : [];
+  const acceptedFindings = [];
+  for (const imp of impList) {
+    const r = later("imp:" + imp.import, "importedcase", { import: String(imp.import) });
+    const e = r.state === "ok" && r.value && r.value.edition ? r.value.edition : null;
+    const group = r.state === "ok" && r.value ? String((r.value.group && (r.value.group.name || r.value.group.slug)) || r.value.group || "") : "";
+    for (const f of e && Array.isArray(e.findings) ? e.findings : [])
+      if (f && f.finding && f.origin && f.origin.acceptance) acceptedFindings.push({ import: String(imp.import), edition: e.edition, finding: String(f.finding), ref: String(f.ref || "imported:" + imp.import + "/" + f.finding), title: String(f.title || ""), group });
+  }
+  const impTitle = (target) => { const a = acceptedFindings.find((x) => x.ref === String(target)); return a ? a.title : ""; };
   const statusOf = (l) => { const r = refOf(String(l.target)); return r ? String(r.status || "") : (l.status === "severed" ? "severed" : ""); };
   const live = (l) => statusOf(l) !== "severed";
   const grounds = doc.lists.grounds || [];
@@ -128,6 +162,7 @@ function render(cs, view) {
     const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(l.target)) : null;
     const named = l.target_title || l.title || (r && r.target_title);
     if (named) return String(named);
+    if (impRef(l.target)) return impTitle(l.target) || T("state.undetermined", { reason: "" });
     /* K3402 (R39): a cited document is named by its own title, read from the record, never its id */
     const im = later("doc:" + l.target, "image", { id: String(l.target) });
     const m = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : null;
@@ -153,6 +188,35 @@ function render(cs, view) {
   };
   const legName = (l) => legTitle(l) + (pageOf(l) !== null ? " · " + T("screen.document.passage.where", { page: String(pageOf(l)) }) : "");
 
+  /* R116, R120: a leg the strength leaves out is named by its document's title (the reading's, else the record's), never its id;
+     a document with no title by the plain word `shell.card.document`; each leg once in a list */
+  const titleOf = (target) => {
+    const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(target)) : null;
+    if (r && r.target_title) return String(r.target_title);
+    if (impRef(target)) return impTitle(target);
+    const im = later("doc:" + target, "image", { id: String(target) });
+    const m = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : null;
+    let t = m ? m[1].trim() : "";
+    try { if (t.startsWith("\"")) t = JSON.parse(t); } catch { /* raw */ }
+    return t;
+  };
+  const nameLegs = (ids) => [...new Set(ids)].map((t) => titleOf(t) || T("shell.card.document")).join(", ");
+  const nlbIds = (x) => (x && Array.isArray(x.not_load_bearing) ? x.not_load_bearing.map((m) => String((m && typeof m === "object" ? m.target_id || m.target : m) || "")).filter(Boolean) : []);
+  /* the plane's own sentence for an axis, its record ids put back into titles; the sentences that take {legs} are drawn by their keys */
+  const axisReason = (a, x, loud) => {
+    if (!x) return "";
+    const ids = nlbIds(x), axisName = T("mark.scale." + a + ".name");
+    const bare = (text) => [...new Set([...ids, ...[x.weakest && (x.weakest.target_id || x.weakest.target)].filter(Boolean).map(String)])]
+      .reduce((t, i) => t.split(i).join(titleOf(i) || T("shell.card.document")), String(text || ""));
+    if (x.state === "unrated") {
+      if (!loud) return "";
+      const sets = Array.isArray(x.grounds) ? x.grounds.filter((g) => g && g.ground !== null && g.ground !== undefined) : [];
+      if (!ids.length) return Number(x.population) > 0 ? bare(x.detail) : W("strength.arithmetic.unrated_this_inquiry_rests_on_nothing", { axis: axisName });
+      return sets.length ? W("strength.arithmetic.unrated_no_leg_on_any_set", { axis: axisName, count: String(sets.length), legs: nameLegs(ids) })
+        : W("strength.arithmetic.unrated_no_leg_on_this_axis", { axis: axisName, legs: nameLegs(ids) });
+    }
+    return bare(ids.length ? String(x.detail || "").split(T("strength.arithmetic.present_and_not_yet_load_bearing", { legs: ids.join(", ") })).join("").trim() : x.detail);
+  };
   /* R51: the three steps under the title, each done, current or still to do from the question's state */
   function stepsHtml(st) {
     return `<ol class="mk-next" data-steps="1">` + ["source", "mark", "conclude"].map((k, i) => `<li data-step="${k}" data-state="${st[i]}"${st[i] === "current" ? ' aria-current="step"' : ""}>${W("question.steps." + k)}</li>`).join("") + "</ol>";
@@ -274,6 +338,21 @@ function render(cs, view) {
   const askAct = view.reachable && packName && member
     ? cs.act("airunopen", { label: "act.airunopen.label.question", data: { pack: String(packName) } }) : "";
 
+  /* R110: "Cite another team's finding": chosen among the findings the team accepted and the question does not yet rest on, with the
+     role it plays and an optional note; nothing is drawn when the team holds no import (R20), and a failed read is drawn failed */
+  const importCite = () => {
+    if (d.imports && d.imports.state === "empty") return "";
+    const have = new Set(citedLegs.map((l) => String(l.target)));
+    const choices = acceptedFindings.filter((x) => !have.has(x.ref));
+    const inner = cs.state("imports", view, () => (!choices.length ? "" : cs.choice("question-imp-finding", "act.owed_citeimported.label.question",
+        [{ value: "", text: "" }].concat(choices.map((c) => ({ value: c.import + "|" + c.edition + "|" + c.finding, text: c.title + (c.group ? " · " + c.group : "") }))), {})
+      + cs.checks("question-imp-role", { key: "screen.imported.citeimp.role" }, [["supports", "screen.imported.citeimp.role.supports", false], ["cuts_against", "screen.imported.citeimp.role.cuts", false]], { radio: true })
+      + cs.field("question-imp-note", "screen.imported.citeimp.note")
+      + `<div class="mk-acts">${cs.act("citeimported", { label: "act.owed_citeimported.label.question", tone: "primary" })}</div>`
+      + `<p class="mk-small">${W("screen.imported.citeimp.inherit1")} ${W("screen.imported.citeimp.inherit2")}</p>`));
+    return inner ? cs.sec("act.owed_citeimported.label.question", inner, { help: "screen.imported.citeimp.tip", id: "cite-imported" }) : "";
+  };
+
   const proposals = view.reachable ? vs.filter((v) => machine(v) && v.state === "suggested" && !v.hidden) : [];
   if (!citedLegs.length && !myRun && !asking && !concluded) {
     /* state c: new and empty, the three ways in (R38: "Capture a document for it" opens `capture` with this question) */
@@ -286,6 +365,7 @@ function render(cs, view) {
     out.push(cs.sec("question.empty.heading", endedPart(false) + `<p class="mk-note">${W("question.empty.note")}</p>` + cs.sheet(rows.join("")), { id: "state-c" }));
     /* R50, R51: nothing to conclude on before the first citation, said beneath the three ways; no "Concluding" section */
     out.push(`<p class="mk-note" data-owed="reading">${W("question.empty.conclude.own")}</p>`);
+    out.push(importCite());
     out[stepsAt] = stepsHtml(["current", "todo", "todo"]) + receipt;
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
@@ -348,10 +428,31 @@ function render(cs, view) {
       + cs.act("withdrawconclusion", { label: "act.withdrawconclusion.label.question", data: { inquiry: id } }), { id: "state-g" }));
   }
 
+  /* R104, R62: "Reopen this finding, with a reason": the way to a correction; the reason required; the docket where the next edition is
+     started. A finding concluded within a project (its own state still open: the conclusion is a row of the project's) is reopened by
+     withdrawing that conclusion (`withdrawconclusion`, with the project); the state move (`reopen`) is for a question whose own state is
+     concluded or a disposition. An open, unconcluded question draws neither. */
+  {
+    const ownState = String(doc.current_state || "");
+    const ownMovable = ownState === "concluded" || ownState === "deferred" || ownState === "dismissed";
+    const viaWithdraw = !ownMovable && concluded && !!project;
+    if (ownMovable || viaWithdraw) {
+      const pub = d.relies && d.relies.state === "ok" && d.relies.value && Array.isArray(d.relies.value.backlinks)
+        ? d.relies.value.backlinks.find((x) => x && (x.from_type === "published" || (x.from_type === "case" && x.from_state === "published"))) : null;
+      out.push(`<details class="mk-details" data-reopen="${viaWithdraw ? "withdraw" : "state"}"><summary>${W("screen.question.reopen.summary")}</summary>`
+        + `<p class="mk-small">${W("screen.question.reopen.what")} ${W("screen.question.reopen.case")} ${W("screen.question.reopen.kept")}</p>`
+        + cs.field("question-reopen-why", "screen.question.reopen.why", { rec: true, help: "screen.question.reopen.why.help" })
+        + cs.act("reopen", { label: "act.reopen.label.question", data: { inquiry: id, route: viaWithdraw ? "withdraw" : "state", project: viaWithdraw ? project : "" } })
+        + `<p class="mk-small">${W("screen.question.reopen.next")}${pub ? " " + W("screen.question.reopen.next.link", { link: { html: cs.ref("docket", String(pub.from), T("screen.question.reopen.next.link.text"), [T("shell.card.docket")]) } }) : ""}</p>`
+        + `<details class="mk-details"><summary>${W("screen.question.reopen.refused.summary")}</summary><div style="display:grid;gap:6px">`
+        + ["noreason", "badreason", "notsetdown"].map((k) => `<p class="cs-gap" data-gap="refused">${W("screen.question.reopen.refused." + k)}</p>`).join("") + "</div></details></details>");
+    }
+  }
+
   /* two grades, never one score (R2); a grade's strength sentence is drawn by its words (R34), never raw grade text */
-  function axes(s) {
+  function axes(s, loud) {
     const axis = (a) => (s[a] && s[a].state === "graded" ? cs.grade(a, s[a].grade)
-      : cs.mark("gap", s[a] && s[a].state === "undetermined" ? "undetermined" : "unrated", { reason: (s[a] && s[a].detail) || "" }));
+      : cs.mark("gap", s[a] && s[a].state === "undetermined" ? "undetermined" : "unrated", { reason: axisReason(a, s[a], loud) }));
     const parts = [axis("capture"), axis("connection")];
     if (s.testimony && s.testimony.state === "graded") parts.push(axis("testimony"));
     return parts.join("");
@@ -373,7 +474,7 @@ function render(cs, view) {
     }).join("");
     /* the read-back as saved now: until the member saves, every passage is one the answer cannot do without */
     const readback = `<div class="cs-sheet" data-readback="ask"><b>${W("question.rests.any")}</b>`
-      + live1.map((l) => `<span class="mk-small">· ${cs.esc(legName(l))}</span>`).join("") + `<span class="mk-small">${W("question.rests.readback")}</span></div>`;
+      + live1.map((l) => `<br><span class="mk-small">· ${cs.esc(legName(l))}</span>`).join("") + `<br><span class="mk-small">${W("question.rests.readback")}</span></div>`;
     return `<div class="mk-versions">${asks}</div>` + readback
       + cs.act("inquiryground", { label: "act.inquiryground.label.question", data: { inquiry: id, regroup: regroup ? "1" : "" }, tone: "primary" });
   };
@@ -395,14 +496,23 @@ function render(cs, view) {
                                   : W("screen.question.strength.meets"));
       }
       const weak = ["capture", "connection"].map((a) => s[a] && s[a].weakest).filter(Boolean)[0];
-      const weakText = weak && typeof weak === "object" ? (weak.title || weak.target || weak.detail || "") : weak;
-      const raise = ["capture", "connection"].map((a) => s[a] && s[a].state === "graded" && s[a].detail).filter(Boolean)[0];
-      return `<div class="mk-strengthbox"><span class="cs-strength">${axes(s)}<span class="phrase">${phrase}</span></span>`
+      const weakId = weak && typeof weak === "object" ? String(weak.target_id || weak.target || "") : "";
+      const weakText = weak && typeof weak === "object" ? (weak.title || (weakId ? titleOf(weakId) || T("shell.card.document") : weak.detail) || "") : weak;
+      const raise = ["capture", "connection"].map((a) => s[a] && s[a].state === "graded" && axisReason(a, s[a], true)).filter(Boolean)[0];
+      /* R89, R116: the legs the reading leaves out, once, by their titles (or, with no titles to name, their count), unless an unrated
+         axis's sentence has named them already; and the hunches it left out, each only above zero (R20) */
+      const out1 = [...new Set(["capture", "connection", "testimony"].flatMap((a) => nlbIds(s[a])).concat(Array.isArray(s.ungraded) ? s.ungraded.map((m) => String(m && typeof m === "object" ? m.target_id || m.target : m)) : []))];
+      const nOut = Math.max(out1.length, Array.isArray(s.ungraded) ? s.ungraded.length : Number(s.ungraded) || 0);
+      const namedAlready = ["capture", "connection", "testimony"].some((a) => s[a] && s[a].state === "unrated" && nlbIds(s[a]).length);
+      const nHunch = Number(s.hunches_left_out) || 0;
+      return `<div class="mk-strengthbox"><span class="cs-strength">${axes(s, true)}<span class="phrase">${phrase}</span></span>`
         + `<p class="mk-note">${W("screen.question.strength.two")}</p>`
         + (weakText ? `<p>${W("screen.question.strength.weakest", { weakest: String(weakText) })}</p>` : "")
         + (raise ? `<p>${W("screen.question.strength.raise", { raise: String(raise) })}</p>` : "")
+        + (nOut > 0 && !namedAlready ? `<p class="mk-small" data-strength="ungraded" data-count="${nOut}">${W("strength.arithmetic.present_and_not_yet_load_bearing", { legs: out1.length ? nameLegs(out1) : String(nOut) })}</p>` : "")
+        + (nHunch > 0 ? `<p class="mk-small" data-strength="hunches" data-count="${nHunch}"><b>${nHunch}</b> ${W("strength.hunch_why")}</p>` : "")
         + ["capture", "connection"].filter((a) => s[a] && s[a].state === "undetermined")
-            .map((a) => cs.mark("gap", "undetermined", { reason: s[a].detail || "" })).join("") + "</div>";
+            .map((a) => cs.mark("gap", "undetermined", { reason: axisReason(a, s[a], true) })).join("") + "</div>";
     }), { help: "mark.strength.means" }));
   }
 
@@ -439,6 +549,26 @@ function render(cs, view) {
   const partOf = (l) => parts.find((p) => p.legs.some((x) => x.ord === l.ord)) || null;
 
   /* Supports (R34): every passage the question cites, from its own legs; R25's chooser; R23's line beneath each; R12 */
+  /* C36 (R23, R24, R34): the first words of the passage a leg cites. The leg's own words, else the reading shown's; else the passage of the
+     cited capture's reading (`reading`, extraction R27) whose extent the leg states (every `extent_*` field the unit's extent carries, equal),
+     the capture being the leg's `extent_capture`, else the one the document's provenance names; none found, none drawn */
+  const clip = (t) => { const x = String(t || "").replace(/\s+/g, " ").trim(); return x.length > 160 ? x.slice(0, 160).replace(/\s+\S*$/, "") + "\u2026" : x; };
+  const wordsOf = (l, r) => {
+    if (l.words || (r && r.words)) return String(l.words || r.words);
+    const target = String(l.target);
+    if (impRef(target)) return "";
+    let sha = typeof l.extent_capture === "string" && /^[0-9a-f]{64}$/.test(l.extent_capture) ? l.extent_capture : "";
+    if (!sha) {
+      const im = later("doc:" + target, "image", { id: target });
+      try { const pj = JSON.parse(String((im.state === "ok" && im.value && im.value["data/provenance.json"]) || "")); sha = String((pj && pj.documents && pj.documents[0] && pj.documents[0].capture && pj.documents[0].capture.sha256) || ""); } catch { sha = ""; }
+    }
+    if (!/^[0-9a-f]{64}$/.test(sha)) return "";
+    const rd = later("legread:" + sha, "reading", { sha256: sha });
+    const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units : [];
+    const hit = units.find((u) => u && u.extent && typeof u.extent === "object" && String(u.text || "").trim()
+      && Object.keys(u.extent).length > 0 && Object.keys(u.extent).every((k) => l["extent_" + k] !== undefined && String(l["extent_" + k]) === String(u.extent[k])));
+    return hit ? String(hit.text) : "";
+  };
   const legRow = (l, role) => {
     const g = legGrade(l);
     const scale = l.grade_axis || l.scale || (role === "cuts_against" && l.testimony ? "testimony" : role === "cuts_against" && /testimony/.test(String(l.grade_axis || "")) ? "testimony" : "capture");
@@ -453,16 +583,28 @@ function render(cs, view) {
     const isLive = status === "confirmed" || status === "proposed" || status === "active";
     const part = role === "supports" && partitioned && !severed ? partOf(l) : null;
     const others = part ? part.legs.filter((x) => x.ord !== l.ord).map(legName) : [];
-    const line = part ? `<span class="mk-small" data-carries="${others.length ? "holds" : "falls"}">${others.length
+    /* C37 (R2): each part of the row is its own element, set off from the one before it by a break, so none runs into the next */
+    const line = part ? `<br><span class="mk-small" data-carries="${others.length ? "holds" : "falls"}">${others.length
       ? W("question.holds", { others: others.join(", ") }) : W("question.falls")}</span>` : "";
     return cs.row(g ? cs.grade(scale === "testimony" ? "testimony" : "capture", g) : "",
       /* the passage by its own words where the inquiry or the reading shown holds them (K3402) */
       ((() => { const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === target) : null;
-        const words = l.words || (r && r.words); return words ? `<span class="rec">“${cs.esc(words)}”</span>` : ""; })())
-      + `<span class="mk-small">${cs.ref("document", target, legTitle(l), [legTitle(l)])}${pageOf(l) !== null ? " · " + W("screen.document.passage.where", { page: String(pageOf(l)) }) : ""}`
+        const words = clip(wordsOf(l, r)); return words ? `<span class="rec" data-leg-words="1">“${cs.esc(words)}”</span><br>` : ""; })())
+      + `<span class="mk-small">${impRef(target) ? `<span class="rec" data-imported="1">${cs.esc(legTitle(l))}</span>` : cs.ref("document", target, legTitle(l), [legTitle(l)])}${pageOf(l) !== null ? " · " + W("screen.document.passage.where", { page: String(pageOf(l)) }) : ""}`
       + (severed ? ` · <span data-leg="severed">${why ? W("screen.question.leg.severed.why", { why }) : W("screen.question.leg.severed")}</span>` : "") + "</span>" + line,
-      isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
-        : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : "");
+      (() => {
+        /* R87: "Narrow the question" on a live leg of the reading shown, keyed by that reading's own ordinal for it */
+        const rv = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === target) : null;
+        const narrowAct = isLive && rv && rv.ord !== undefined && rv.ord !== null && shownName
+          ? cs.act("narrow", { label: "act.narrow.label.question", tone: "quiet", data: { ord: String(rv.ord), version: shownName, step: "list" } }) : "";
+        /* R110: "Take it back" is offered on a leg on another team's finding only (`sever` takes a document's edge) */
+        const imp = impRef(target);
+        const first = imp ? cs.act("withdrawimported", { label: "act.owed_withdrawimported.label.question", tone: "quiet", data: { import: imp[1], finding: imp[2] } })
+          : isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
+          : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : "";
+        /* R120 (B411, H1): the group the shell's stylesheet wraps and stacks at 390 px */
+        return first || narrowAct ? `<span class="mk-acts">${first}${narrowAct}</span>` : "";
+      })());
   };
   const chooser = vs.length ? cs.choice("question-reading", "question.reading.shown",
     vs.filter((v) => !v.hidden && v.state !== "rejected").map((v) => ({ value: String(v.name), text: String(v.name) })),
@@ -509,22 +651,62 @@ function render(cs, view) {
       + `<p class="mk-small">${W("question.ask.title")}</p>` + askForm(true) + "</details>");
   }
   const supportsRows = supports.length ? cs.sheet(supports.map((l) => legRow(l, "supports")).join("")) : "";
-  out.push(cs.sec("screen.question.supports.head", chooser + supportsRows
+  /* R87: the parts the record proposes for one cited passage (machine work, a proposal only), and the choice of one with the name
+     and reason of the narrower reading it makes */
+  const nz = ui.narrowing && ui.narrowing.version === shownName ? ui.narrowing : null;
+  const narrowPanel = nz ? (() => {
+    const rl = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.ord) === String(nz.ord)) : null;
+    const cands = Array.isArray(nz.candidates) ? nz.candidates : [];
+    const head = `<b>${W("act.narrow.label.question")}</b>${rl ? ` <span class="mk-small rec">${cs.esc(legTitle({ target: String(rl.target_id || rl.target) }))}</span>` : ""}`;
+    if (nz.state === "loading") return `<div class="cs-sheet" data-narrow="panel">${head}<p class="mk-small">${W("state.loading")}</p></div>`;
+    if (nz.state === "failed") return `<div class="cs-sheet" data-narrow="panel">${head}<p class="cs-gap" data-gap="refused" role="alert">${nz.words ? cs.esc(nz.words) : W("state.failed", { reason: "" })}</p></div>`;
+    return `<div class="cs-sheet" data-narrow="panel">${head}<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}`
+      + (cands.length ? cs.checks("question-narrow-part", "act.narrow.label.question",
+          cands.map((c, i) => ({ value: String(i), text: String(c.label || c.ref || c.content_id || "") + (c.label && c.ref ? " · " + c.ref : "") })), { radio: true })
+        : `<p class="mk-small">${nz.absence ? cs.esc(nz.absence) : ""}</p>`) + "</div>"
+      + cs.field("question-narrow-name", "screen.question.narrow.name", {})
+      + cs.field("question-narrow-description", "screen.question.narrow.description", { area: true, rec: true })
+      + cs.act("narrow", { label: "act.narrow.label.question", data: { ord: String(nz.ord), version: String(nz.version), step: "send" } }) + "</div>";
+  })() : "";
+  out.push(cs.sec("screen.question.supports.head", chooser + supportsRows + narrowPanel
     + `<p class="mk-small">${W("screen.question.cite.from")}</p>`
     + cs.act("cite", { label: "act.cite.label.question", data: { inquiry: id, q: heading }, tone: "primary" })
     /* R38: "Add a document" opens `capture` with this question as its subject */
     + ` <a class="cs-btn" data-tone="quiet" href="/app/capture/address/${cs.esc(id)}" data-nav data-adddoc="question">${W("question.adddoc")}</a>`));
   if (restsBack) out.push(restsBack);
+  out.push(importCite());
   const against = citedLegs.filter((l) => l.role === "cuts_against");
   if (against.length) out.push(cs.sec("screen.question.against.head", cs.sheet(against.map((l) => legRow(l, "cuts_against")).join(""))));
 
-  /* hunches: a member's suspicion, labeled, never evidence (mark.hunch) */
-  out.push(cs.sec("screen.question.hunches.head", (d.hunches && d.hunches.state === "empty" ? "" : cs.state("hunches", view, (h) =>
-    (h.hypotheses || []).map((x) => `<p><span class="cs-hunch" data-mark="hunch">${W("screen.question.hunch.by", { who: P.who(cs, x.held_by || "") })}</span> `
-      + `<span class="rec">${cs.esc(x.statement || "")}</span></p>`).join("")))
+  /* hunches: a member's suspicion, labeled, never evidence (mark.hunch). R101: any member who sees the question revises or takes
+     one back, each with her reason; every change stays on the record, its history drawn. R88: a hunch is about something (K4203) */
+  const hunchKind = Object.hasOwn(ui, "hunchKind") ? ui.hunchKind : "other";
+  const hunchDocs = [...new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))];
+  const hunchEnd = (x) => ({ value: x, text: x === id ? (heading || T("state.undetermined", { reason: "" })) : legTitle({ target: x }) });
+  const hunchRows = (h) => (h.hypotheses || []).map((x, i) => {
+    const hid = String(x.hypothesis_id || ""), who = P.who(cs, x.held_by || ""), gone = x.status === "withdrawn";
+    const hist = (Array.isArray(x.history) ? x.history : []).map((e) => `<p class="mk-small" data-history="${cs.esc(String(e.act || ""))}">${cs.esc(P.who(cs, e.by || ""))}`
+      + (e.at ? " · " + cs.date(String(e.at), { year: true }) : "") + (e.statement ? ` <span class="rec">${cs.esc(String(e.statement))}</span>` : "")
+      + (e.reason ? ` · ${W("shell.reason.lead")} <span class="rec">“${cs.esc(String(e.reason))}”</span>` : "") + "</p>").join("");
+    const change = gone ? `<p class="mk-small" data-hunch-gone="1">${W("screen.question.hunch.withdraw.note2")}</p>`
+      : `<details class="mk-details"><summary>${W("screen.question.hunch.change.summary", { name: who })}</summary><p class="mk-note">${W("screen.question.hunch.change.note")}</p>`
+        + cs.field("question-hrev-" + i, "screen.question.hunch.revise.label", { area: true, rec: true, value: String(x.statement || ""), help: "screen.question.hunch.revise.help" })
+        + cs.field("question-hrevr-" + i, "screen.question.hunch.revise.reason", { area: true, rec: true })
+        + cs.act("hypothesisrevise", { label: "act.hypothesisrevise.label.question", data: { hid, idx: String(i) } })
+        + cs.field("question-hwr-" + i, "screen.question.hunch.withdraw.reason", { area: true, rec: true })
+        + `<p class="mk-note">${W("screen.question.hunch.withdraw.note")} ${W("screen.question.hunch.withdraw.note2")}</p>`
+        + cs.act("hypothesiswithdraw", { label: "screen.question.hunch.withdraw.button", data: { hid, idx: String(i) } })
+        + `<details class="mk-details"><summary>${W("screen.question.hunch.refused.summary")}</summary><div class="cs-gap" data-gap="refused"><span>${W("screen.question.hunch.refused.body")} ${W("screen.question.hunch.refused.body2")}</span></div></details></details>`;
+    return `<div data-hunch="${cs.esc(hid)}" data-status="${gone ? "withdrawn" : "live"}"><p><span class="cs-hunch" data-mark="hunch">${W("screen.question.hunch.by", { who })}</span> `
+      + `<span class="rec">${cs.esc(x.statement || "")}</span></p>${hist}${change}</div>`;
+  }).join("");
+  out.push(cs.sec("screen.question.hunches.head", (d.hunches && d.hunches.state === "empty" ? "" : cs.state("hunches", view, hunchRows))
     + cs.field("question-hunch", "screen.question.hunch.label", { area: true, rec: true })
+    + (view.reachable ? cs.act("writinghelp", { data: { field: "statement", id: "question-hunch", forop: "hypothesishold" } }) : "")
     + cs.choice("question-hunch-kind", "screen.question.hunch.kind",
-        [["other", "screen.question.hunch.kind.other"], ["flow", "screen.question.hunch.kind.flow"]], { value: "other" })
+        [["other", "screen.question.hunch.kind.other"], ["flow", "screen.question.hunch.kind.flow"]], { value: hunchKind, redraw: "hunchKind" })
+    + (hunchKind === "flow" ? cs.choice("question-hunch-from", "screen.explore.from", [...hunchDocs, id].map(hunchEnd), {})
+      + cs.choice("question-hunch-to", "screen.security.to", [id, ...hunchDocs].map(hunchEnd), {}) : "")
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.question", data: { inquiry: id } }), { help: "mark.hunch.means" }));
 
   /* R25: the readings, each with its state, its strength (a what-if unless accepted) and its acts */
@@ -690,7 +872,7 @@ function render(cs, view) {
 
   /* R56: the themes its passages are in, each with how many of the question's passages it holds (the question has no theme
      of its own, `connections` R40); and the act that places a passage in one */
-  const passageDocs = [...new Set(citedLegs.filter(live).map((l) => String(l.target)))];
+  const passageDocs = [...new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))];
   if (passageDocs.length) {
     const tl = later("themes", "themeread", { limit: "200" });
     const themes = tl.state === "ok" && tl.value && Array.isArray(tl.value.themes) ? tl.value.themes.filter((t) => t && t.theme_id).slice(0, 20) : [];
@@ -738,7 +920,7 @@ function render(cs, view) {
         const newerSource = (a) => {
           if (a !== "capture" || Number.isNaN(pubAt)) return "";
           let best = null;
-          for (const t of new Set(citedLegs.filter(live).map((l) => String(l.target)))) {
+          for (const t of new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))) {
             const im = later("doc:" + t, "image", { id: t });
             const head = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? (im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : "";
             const m = /^\s+retrieved:\s*"?([^"\n]+?)"?\s*$/m.exec(head);
@@ -765,6 +947,46 @@ function render(cs, view) {
     }
   }
 
+  /* R103: what needs a second look, from the reminders the record holds for each document this question cites (`reevaluations` with that
+     target), the dependents that are this question; recording that one was looked at closes its cause for her question. A finding with
+     no reminder draws none (R20); a read that fails is drawn failed */
+  {
+    const targets = [...new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))].slice(0, 20);
+    const reads = targets.map((t) => ({ t, r: later("reeval:" + t, "reevaluations", { target: t }, String(ui.reevalSeq || 0)) }));
+    const failedRead = reads.find((x) => x.r.state === "failed");
+    const openCauses = [], doneCauses = [];
+    for (const { t, r } of reads) {
+      const v = r.state === "ok" && r.value && typeof r.value === "object" ? r.value : null;
+      if (!v) continue;
+      for (const o of Array.isArray(v.obligations) ? v.obligations : []) {
+        if (!o || o.bundle_id !== id) continue;
+        for (const c of Array.isArray(o.causes) ? o.causes : []) openCauses.push({ target: String(o.target || t), cause: c });
+        for (const c of Array.isArray(o.closed) ? o.closed : []) doneCauses.push({ target: String(o.target || t), cause: c });
+      }
+      for (const o of Array.isArray(v.closed) ? v.closed : []) {
+        if (!o || o.bundle_id !== id) continue;
+        for (const c of Array.isArray(o.causes) ? o.causes : []) doneCauses.push({ target: String(o.target || t), cause: c });
+      }
+    }
+    const docOf = (t) => titleOf(t) || T("shell.card.document");
+    if (failedRead && !openCauses.length && !doneCauses.length) out.push(cs.sec("screen.question.reeval.heading", cs.state(failedRead.r, () => ""), { id: "reeval" }));
+    else if (openCauses.length || doneCauses.length) {
+      const rowsHtml = openCauses.map(({ target, cause }) => `<p data-reeval="open">`
+          + (cause.source === "edition" ? `<b>${W("screen.question.reeval.edition", { document: docOf(target) })}</b>` : `<b>${cs.esc(String(cause.detail || cause.source || ""))}</b>`)
+          + `<span class="mk-small">${cause.since ? cs.date(String(cause.since), { year: true }) + " · " : ""}${cause.source === "edition" ? W("screen.question.reeval.edition.meta") : ""}</span></p>`).join("")
+        + doneCauses.map(({ target, cause }) => `<p data-reeval="done">${W("screen.question.reeval.done", { name: P.who(cs, cause.closed_by || ""), date: { html: cause.closed_at ? cs.date(String(cause.closed_at), { year: true }) : "" }, note: String(cause.note || "") })}`
+          + `<span class="mk-small">${W("screen.question.reeval.done.meta", { what: docOf(target) })}</span></p>`).join("");
+      const causes = openCauses.map(({ target, cause }) => ({ target, source: String(cause.source || ""), since: cause.since ? String(cause.since) : "" }));
+      const record = causes.length
+        ? (causes.length > 1 ? cs.choice("question-reeval-cause", "screen.question.reeval.edition.meta", causes.map((c, i) => ({ value: String(i), text: docOf(c.target) + " · " + c.source })), {}) : "")
+          + cs.field("question-reeval-note", "screen.question.reeval.note.label", { area: true, rec: true })
+          + cs.act("reevaluationrecord", { label: "act.reevaluationrecord.label.question", data: { causes: JSON.stringify(causes) } }) : "";
+      out.push(cs.sec("screen.question.reeval.heading", rowsHtml + record + cs.act("reevaluations", { label: "act.reevaluations.label.question", data: { inquiry: id }, tone: "quiet" })
+        + `<details class="mk-details"><summary>${W("screen.question.reeval.refused.summary")}</summary><div class="cs-gap" data-gap="refused"><span>${W("screen.question.reeval.refused.body")} ${W("screen.question.reeval.refused.body2")}</span></div></details>`,
+        { id: "reeval", help: ["screen.question.reeval.help", "screen.question.reeval.help2"] }));
+    }
+  }
+
   /* Concluding (R35, R41, R50, R51): offered once the question cites a passage, on an accepted reading or one she writes
      herself; open by itself when a reading stands */
   const stands = project ? (current && vs.some((v) => v.name === currentName && v.state === "accepted")) : accepted.length > 0;
@@ -782,6 +1004,8 @@ function render(cs, view) {
       + (project ? "" : cs.field("question-conclude-claim", "screen.question.conclude.claim", { area: true, rec: true }))
       + cs.field("question-conclude-falsifier", "question.conclude.falsifier", { area: true, rec: true, help: "question.conclude.falsifier.help" })
       + cs.checks("question-conclude-none", "question.conclude.falsifier", [["none", "question.conclude.nofalsifier"]])
+      /* R121: her reason is its own required box (what Conclude sends as the reason); Commentary stays an optional note */
+      + cs.field("question-conclude-reason", "question.conclude.reason", { area: true, rec: true, help: "question.conclude.reason.help" })
       + cs.field("question-conclude-commentary", "question.conclude.commentary", { area: true, rec: true, help: "question.conclude.commentary.help" })
       + cs.act("conclude", { label: "act.conclude.label.question", data: { inquiry: id } })
       + `<p class="mk-small">${W("screen.question.conclude.who")}</p></details>`;
@@ -798,20 +1022,44 @@ function render(cs, view) {
   if (concl) out.push(cs.sec("screen.question.concluding.head", concl));
 
   /* R51: the secondary acts fold under `question.more` (before a conclusion; a concluded question has its own row, R62) */
-  const moreInner = cs.field("question-narrow-name", "screen.question.narrow.name", {})
-    + cs.field("question-narrow-description", "screen.question.narrow.description", { area: true, rec: true })
-    + cs.act("narrow", { label: "act.narrow.label.question", data: { inquiry: id } })
-    + cs.act("search", { label: "act.search.label.question", data: { q: heading } })
+  const moreInner = cs.act("search", { label: "act.search.label.question", data: { q: heading } })
     + cs.field("question-check", "screen.question.check.label", { help: "screen.question.check.help" })
     + cs.field("question-check-note", "screen.question.check.note", { area: true, rec: true })
     + cs.act("checkrequest", { label: "act.checkrequest.label.question", data: { inquiry: id } })
     + (concluded ? "" : cs.field("question-plan", "screen.question.plan.label", {}) + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } }))
     /* R71: in state a only (a decided question has the receipt above, a concluded one its own row); a failed read is drawn failed */
     + (joined && !concluded && !decision && asideRead ? (asideRead.state === "failed" ? cs.state(asideRead, () => "") : asideRead.state === "loading" ? "" : asideFold()) : "");
-  out.push(`<details class="mk-details" data-fold="more"><summary>${W("question.more")}</summary>${moreInner}</details>`);
+  /* R102: divide this question into two: the reason, a question of her own for each, and where each passage goes (at least one of the two);
+     each new question is numbered by the plane's allocator and drawn with its number once made */
+  const divideFold = legs.length ? `<details class="mk-details" data-divide="1"><summary>${W("screen.question.divide.summary")}</summary>`
+    + `<p class="mk-note">${W("screen.question.divide.note")} ${W("screen.question.divide.note2")} ${W("screen.question.divide.note3")}</p>`
+    + cs.field("question-divide-reason", "screen.question.divide.reason", { area: true, rec: true, help: "screen.question.divide.limits" })
+    + cs.field("question-divide-q1", "screen.question.divide.q1", { area: true, rec: true, help: "screen.question.divide.limits" })
+    + cs.field("question-divide-q2", "screen.question.divide.q2", { area: true, rec: true, help: "screen.question.divide.limits" })
+    + legs.map((l) => cs.checks("question-divide-leg-" + l.ord, { key: "screen.question.divide.leg", fills: { passage: legName(l) } },
+      [["1", "screen.question.divide.to1"], ["2", "screen.question.divide.to2"]])).join("")
+    + `<p class="mk-note">${W("screen.question.divide.numbered")} ${W("screen.question.divide.every")}</p>`
+    + cs.act("inquirydivide", { label: "screen.question.divide.button", data: { inquiry: id } })
+    + (Array.isArray(ui.divided) && ui.divided.length ? `<div data-divided="1">` + ui.divided.map((c) => `<p data-child="${cs.esc(c.id)}">`
+      + cs.ref("question", c.id, c.question, [c.id]) + ` <span class="mk-small rec" data-number="1">${cs.esc(c.id)}</span></p>`).join("") + "</div>" : "")
+    + `<details class="mk-details"><summary>${W("screen.question.divide.refused.summary")}</summary><div class="cs-gap" data-gap="refused"><span>${W("screen.question.divide.refused.body")} ${W("screen.question.divide.refused.body2")}</span></div></details></details>` : "";
+  out.push(`<details class="mk-details" data-fold="more"><summary>${W("question.more")}</summary>${moreInner}${divideFold}</details>`);
 
   out[stepsAt] = stepsHtml(concluded ? ["done", "done", "done"] : !cited ? ["current", "todo", "todo"] : stands ? ["done", "done", "current"] : ["done", "current", "todo"]) + receipt;
   return out.join("");
+}
+
+/** C41 (R35, R50, R117): a basis version the plane refused (`BASIS_VERSION_REFUSED`) is drawn by its findings, as `BASIS_REFUSED` is: the first
+ *  finding by the word held for its code, else its own translation, else its detail, and the repairs it names; one with no finding is the
+ *  code's own sentence. Self-contained (the page carries it by its text). */
+function versionRefusal(refusal, cs) {
+  const list = refusal && Array.isArray(refusal.findings) ? refusal.findings : [];
+  const f = list.find((x) => x && typeof x === "object" && (x.translation || x.detail || x.code));
+  if (!f) throw new Error("no finding");
+  const key = f.code ? "refusal." + String(f.code) : "";
+  const said = key && cs.w(key) !== key ? cs.w(key) : cs.esc(String(f.translation || f.detail || ""));
+  const repairs = Array.isArray(f.repairs) ? f.repairs.filter((x) => typeof x === "string" && x.trim()) : [];
+  return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + said + "</span>" + repairs.map((x) => ' <span data-repair="1">' + cs.esc(x) + "</span>").join("");
 }
 
 /** R2's, R12's, R23–R25's, R31's and R41's acts, each answering `{query, body}` for the shell to send, or running its own
@@ -832,8 +1080,10 @@ const acts = [
       if (!reason) return { refuse: "screen.question.say075" };
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(String(text).split(/\n---\s*\n/)[0] || "") : null;
-      if (!m) return null;
-      return { body: { project: m[1], finding: String(view.subject || ""), to: chosen, reason } };
+      /* R91: the project part of the address, else the question's home project */
+      const proj = view.project || (m ? m[1] : "");
+      if (!proj) return null;
+      return { body: { project: proj, finding: String(view.subject || ""), to: chosen, reason } };
     },
     done(view, answer, cs) { cs.set("asideSeq", (view.ui.asideSeq || 0) + 1); } },
   { op: "cite", label: "act.cite.label.question",
@@ -841,20 +1091,76 @@ const acts = [
     send(view, el, cs) {
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
-      if (m) cs.go("find-in", m[1]); else cs.go("finder", el.dataset.q || "");
+      const proj = view.project || (m ? m[1] : "");
+      if (proj) cs.go("find-in", proj); else cs.go("finder", el.dataset.q || "");
       return null;
     } },
-  { op: "narrow", label: "act.narrow.label.question", reasonField: "description",
+  /* R110: rest the question on a finding the team accepted from another team's case, at the edition it accepted; whether the finding
+     is accepted is the plane's to judge (`IMPORTED_NOT_ACCEPTED`, carried inside `BASIS_REFUSED`), and a leg already held is answered
+     `alreadyCited`. With no finding or no role chosen, nothing is sent. */
+  { op: "citeimported", label: "act.owed_citeimported.label.question", rereads: ["inquiry", "basis", "strength"],
+    refusals: { IMPORTED_NOT_ACCEPTED: "refusal.IMPORTED_NOT_ACCEPTED",
+      BASIS_VERSION_REFUSED: versionRefusal,
+      BASIS_REFUSED: function (refusal, cs) {
+        const list = refusal && Array.isArray(refusal.findings) ? refusal.findings : [];
+        if (list.some((x) => x && x.code === "IMPORTED_NOT_ACCEPTED")) return cs.w("refusal.IMPORTED_NOT_ACCEPTED");
+        const f = list.find((x) => x && typeof x.detail === "string" && x.detail.trim());
+        if (!f) throw new Error("no finding");
+        return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
+      } },
     send(view, el, cs) {
+      const pick = String(cs.value("question-imp-finding") || "").split("|");
+      const role = (cs.value("question-imp-role") || [])[0];
+      if (pick.length !== 3 || !pick[0] || !pick[2] || !role) return null;
+      const note = String(cs.value("question-imp-note") || "").trim();
+      return { body: { inquiry: String(view.subject || ""), import: pick[0], finding: pick[2], edition: Number(pick[1]), role, ...(note ? { note } : {}) } };
+    } },
+  /* R110: take that leg back, with her reason (the shell asks it: the act is Reasoned); the history keeps it */
+  { op: "withdrawimported", label: "act.owed_withdrawimported.label.question", rereads: ["inquiry", "basis", "strength"],
+    send(view, el) {
+      const imp = String(el.dataset.import || ""), finding = String(el.dataset.finding || "");
+      if (!imp || !finding) return null;
+      return { body: { inquiry: String(view.subject || ""), import: imp, finding } };
+    } },
+  /* R87: two steps of one act. "Narrow the question" on a cited passage reads `narrowcandidates` (target, the reading shown, the
+     reading's ordinal for the leg) and lists the parts the record proposes; choosing one, with a name and a reason, sends `narrow`
+     with the part as its `extent`. Listing writes nothing and sends no `narrow`. */
+  { op: "narrow", label: "act.narrow.label.question", reasonField: "description", rereads: ["inquiry", "basis", "strength"],
+    refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
+      const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
+      if (!f) throw new Error("no finding");
+      return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
+    } },
+    send(view, el, cs) {
+      const target = String(view.subject || ""), version = String(el.dataset.version || ""), ord = String(el.dataset.ord || "");
+      if (el.dataset.step !== "send") {
+        const res = (a) => (a && a.result !== undefined ? a.result : a);
+        cs.set("narrowing", { ord, version, state: "loading", candidates: [] });
+        cs.call("narrowcandidates", { query: { target, version, ord } }).then((a) => {
+          const r = res(a);
+          if (!a || a.ok === false || !r || r.ok === false) return cs.set("narrowing", { ord, version, state: "failed", words: String((r && r.translation) || (r && (r.code || r.reason)) || "") });
+          cs.set("narrowing", { ord, version, state: "ok", candidates: Array.isArray(r.candidates) ? r.candidates : [], absence: r.absence && r.absence.says ? String(r.absence.says) : "" });
+        }, () => cs.set("narrowing", { ord, version, state: "failed", words: "" }));
+        return null;
+      }
       const name = String(cs.value("question-narrow-name") || "").trim();
       const description = String(cs.value("question-narrow-description") || "").trim();
-      if (!name || !description) return { refuse: "screen.question.narrow.empty" };
-      const version = String(cs.value("question-reading") || "");
-      return { body: { target: String(view.subject || ""), ...(version ? { version } : {}), name, description } };
-    } },
+      const st = view.ui.narrowing;
+      const pick = (cs.value("question-narrow-part") || [])[0];
+      const cand = st && Array.isArray(st.candidates) && pick !== undefined ? st.candidates[Number(pick)] : null;
+      if (!cand || !name || !description) return { refuse: "screen.question.narrow.empty" };
+      const extent = cand.fields && typeof cand.fields === "object" ? cand.fields : cand.content_id ? { content_id: cand.content_id } : cand.extent;
+      return { body: { target, version, ord: Number(ord), name, description, extent } };
+    },
+    done(view, answer, cs) { cs.set("narrowing", null); } },
   /* R35, R41: the reading she concludes on (the project's CURRENT), what would change it (required, or none stated), and
      her commentary (not evidence); sent by a member, never the assistant */
-  { op: "conclude", label: "act.conclude.label.question", reasonField: "commentary",
+  { op: "conclude", label: "act.conclude.label.question", reasonField: "reason",
+    refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
+      const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
+      if (!f) throw new Error("no finding");
+      return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
+    } },
     send(view, el, cs) {
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
@@ -864,14 +1170,20 @@ const acts = [
       const falsifier = String(cs.value("question-conclude-falsifier") || "").trim();
       const none = (cs.value("question-conclude-none") || []).includes("none");
       const commentary = String(cs.value("question-conclude-commentary") || "").trim();
-      /* R50: no reading chosen is her own: 1 to 500 characters, sent as `reading` in place of `version`; empty refused in place */
+      const reason = String(cs.value("question-conclude-reason") || "").trim();
+      /* R50: no reading chosen is her own: 1 to 500 characters, sent as `reading` in place of `version`; empty refused in place.
+         R114, R121: what is drawn is what is sent, so every field the act requires is named when it is missing: the reading, what would
+         change it, and her reason (sent as `reason`; Commentary is the optional note beside it) */
       if (!version && !claim && (!own || own.length > 500)) return { refuse: "refusal.BAD_READING" };
       if (!falsifier && !none) return { refuse: "question.conclude.falsifier.help" };
+      if (!reason) return { refuse: "question.conclude.reason.needed" };
       const q = { target: String(view.subject || "") };
-      if (m) q.project = m[1]; else if (claim && !version) q.conclusion = claim;
+      const proj = view.project || (m ? m[1] : "");
+      if (proj) q.project = proj; else if (claim && !version) q.conclusion = claim;
       if (version) q.version = version; else if (own) q.reading = own;
       if (falsifier) q.falsifier = falsifier; else q.no_falsifier = "1";
       if (commentary) q.commentary = commentary;
+      q.reason = reason;
       return { query: q, raw: "" };
     },
     /* R41 state g: the conclusion is answered to the project-aware read, read again once it is made or withdrawn */
@@ -898,16 +1210,37 @@ const acts = [
     send(view) {
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
-      return { query: { target: String(view.subject || ""), ...(m ? { project: m[1] } : {}) }, raw: "" };
+      const proj = view.project || (m ? m[1] : "");
+      return { query: { target: String(view.subject || ""), ...(proj ? { project: proj } : {}) }, raw: "" };
     },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } },
-  { op: "hypothesishold", label: "act.hypothesishold.label.question",
+  /* R88 (K4203): a hunch is about something. A suspicion is about the question (the list holding its id); where something went is
+     about {from, to}, chosen among the question and the documents it cites (the ends the page offers when the kind is chosen,
+     else the first cited document to the question) */
+  { op: "hypothesishold", label: "act.hypothesishold.label.question", rereads: ["hunches"],
     send(view, el, cs) {
       const statement = String(cs.value("question-hunch") || "").trim();
       if (!statement) return { refuse: "screen.question.hunch.empty" };
+      const id = String(view.subject || "");
       const kind = cs.value("question-hunch-kind") === "flow" ? "flow" : "other";
-      return { body: { inquiry: String(view.subject || ""), kind, statement } };
+      if (kind === "other") return { body: { inquiry: id, kind, statement, about: [id] } };
+      const doc = view.parts.front(view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "");
+      const first = (doc.lists.basis || []).map((l) => (l && l.target ? String(l.target) : "")).find(Boolean) || id;
+      const from = String(cs.value("question-hunch-from") || first), to = String(cs.value("question-hunch-to") || id);
+      return { body: { inquiry: id, kind, statement, about: { from, to } } };
     } },
+  /* R101: a hunch revised (the new words, when she changed them, and her reason) or taken back (her reason); each stays on the record */
+  ...["hypothesisrevise", "hypothesiswithdraw"].map((op) => ({ op, label: "act." + op + ".label.question", reasonField: "reason", rereads: ["hunches"],
+    send(view, el, cs) {
+      const op = el.getAttribute("data-act"), i = String(el.dataset.idx || "0"), hypothesisId = String(el.dataset.hid || "");
+      const reason = String(cs.value(op === "hypothesisrevise" ? "question-hrevr-" + i : "question-hwr-" + i) || "").trim();
+      if (!hypothesisId || !reason) return { refuse: "screen.question.hunch.refused.body" };
+      if (op === "hypothesiswithdraw") return { body: { hypothesisId, reason } };
+      const held = view.data.hunches && view.data.hunches.state === "ok" && view.data.hunches.value && Array.isArray(view.data.hunches.value.hypotheses)
+        ? view.data.hunches.value.hypotheses.find((h) => h && h.hypothesis_id === hypothesisId) : null;
+      const statement = String(cs.value("question-hrev-" + i) || "").trim();
+      return { body: { hypothesisId, ...(statement && (!held || statement !== String(held.statement || "").trim()) ? { statement } : {}), reason } };
+    } })),
   /* R36: the plan opened is linked by name */
   { op: "planopen", label: "act.planopen.label.question", reasonField: "title",
     send(view, el, cs) {
@@ -915,7 +1248,8 @@ const acts = [
       if (!title) return { refuse: "screen.question.plan.empty" };
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
-      return { body: { ...(m ? { project: m[1] } : {}), title, subjects: [{ kind: "inquiry", inquiry: String(view.subject || "") }] } };
+      const proj = view.project || (m ? m[1] : "");
+      return { body: { ...(proj ? { project: proj } : {}), title, subjects: [{ kind: "inquiry", inquiry: String(view.subject || "") }] } };
     },
     done(view, answer, cs) {
       const r = answer && answer.result !== undefined ? answer.result : answer;
@@ -937,6 +1271,93 @@ const acts = [
       if (!s || s.ok === false || !sr || sr.ok === false || !sr.handle) return { refuse: "screen.question.leg.unselectable" };
       return { query: { project: String(view.subject || ""), handle: String(sr.handle) }, raw: "" };
     } })),
+  /* R102: the division of a question into two. Each child's number is minted by the plane's allocator (as "Open a question" mints
+     one), its slug cut and trimmed so the id never ends in a hyphen; every passage must go to at least one of the two */
+  { op: "inquirydivide", label: "act.inquirydivide.label.question", reasonField: "reason", rereads: ["inquiry", "basis", "strength"],
+    refusals: { CHILD_REFUSED: function (refusal, cs) {
+      const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
+      if (!f) throw new Error("no finding");
+      return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
+    } },
+    async send(view, el, cs) {
+      const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
+      const basis = view.parts.front(text).lists.basis || [];
+      const reason = String(cs.value("question-divide-reason") || "").trim();
+      const qs = [String(cs.value("question-divide-q1") || "").trim(), String(cs.value("question-divide-q2") || "").trim()];
+      const homes = [[], []];
+      let orphan = false;
+      basis.forEach((l, ord) => {
+        if (!l || !l.target) return;
+        const on = cs.value("question-divide-leg-" + ord) || [];
+        if (on.includes("1")) homes[0].push(ord);
+        if (on.includes("2")) homes[1].push(ord);
+        if (!on.includes("1") && !on.includes("2")) orphan = true;
+      });
+      if (!reason || !qs[0] || !qs[1] || orphan || !basis.length) return { refuse: "screen.question.divide.refused.body" };
+      const res = (a) => (a && a.result !== undefined ? a.result : a);
+      const year = String(new Date(cs.now()).getUTCFullYear());
+      const children = [];
+      for (let i = 0; i < 2; i++) {
+        const r = res(await cs.call("allocid", { query: { prefix: "INQ", year } }).then((x) => x, () => null));
+        if (!r || r.ok === false || !r.id) return { refuse: "state.failed", fills: { reason: "" } };
+        const slug = qs[i].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+/, "").slice(0, 40).replace(/-+$/, "");
+        children.push({ id: String(r.id) + "-" + (slug || "part-" + (i + 1)), question: qs[i], legs: homes[i] });
+      }
+      return { body: { target: String(view.subject || ""), reason, children } };
+    },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const kids = r && Array.isArray(r.children) ? r.children : [];
+      cs.set("divided", kids.map((c) => ({ id: String(c && c.id || ""), question: String(c && c.question || "") })).filter((c) => c.id));
+    } },
+  /* R103: the reminders are read again at her press; recording that one was looked at names the dependent (this question), the cause
+     and her note, and closes that cause for it */
+  { op: "reevaluations", label: "act.reevaluations.label.question",
+    send(view, el, cs) { cs.set("reevalSeq", (view.ui.reevalSeq || 0) + 1); return null; } },
+  { op: "reevaluationrecord", label: "act.reevaluationrecord.label.question", reasonField: "note",
+    refusals: { REEVALUATION_NO_SUCH_CAUSE: "screen.question.reeval.refused.body2", REEVALUATION_NOTE_MALFORMED: "screen.question.reeval.refused.body" },
+    send(view, el, cs) {
+      let list = [];
+      try { list = JSON.parse(String(el.dataset.causes || "[]")); } catch { list = []; }
+      const note = String(cs.value("question-reeval-note") || "").trim();
+      if (!note) return { refuse: "screen.question.reeval.refused.body" };
+      const c = list.length > 1 ? list[Number(cs.value("question-reeval-cause"))] || list[0] : list[0];
+      if (!c) return null;
+      return { body: { dependent: String(view.subject || ""), target: String(c.target), source: String(c.source), ...(c.since ? { since: String(c.since) } : {}), note } };
+    },
+    done(view, answer, cs) { cs.set("reevalSeq", (view.ui.reevalSeq || 0) + 1); } },
+  /* R104, R62: a concluded finding reopened with her reason. A finding concluded within a project is reopened by withdrawing that
+     conclusion (`withdrawconclusion` with the project and the reason: the question's own state stays as it is, `basis-versions` R20); one
+     whose own state is concluded or a disposition by the state move (`reopen`, from the query). Each failure has its own sentence. */
+  { op: "reopen", label: "act.reopen.label.question", reasonField: "reason", rereads: ["inquiry", "basis", "strength"],
+    refusals: { NO_REASON: "screen.question.reopen.refused.noreason", BAD_REASON: "screen.question.reopen.refused.badreason", NOT_SET_DOWN: "screen.question.reopen.refused.notsetdown",
+      ILLEGAL_TRANSITION: "screen.question.reopen.refused.notsetdown" },
+    async send(view, el, cs) {
+      const reason = String(cs.value("question-reopen-why") || "").trim();
+      if (!reason) return { refuse: "screen.question.reopen.refused.noreason" };
+      if (el.dataset.route !== "withdraw") return { query: { target: String(view.subject || ""), reason }, raw: "" };
+      const a = await cs.call("withdrawconclusion", { query: { target: String(view.subject || ""), project: String(el.dataset.project || ""), reason }, raw: "" }).then((x) => x, () => null);
+      const r = a && a.result !== undefined ? a.result : a;
+      if (!a || a.ok === false || !r || r.ok === false) {
+        const code = String((r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "");
+        const key = { NO_REASON: "screen.question.reopen.refused.noreason", BAD_REASON: "screen.question.reopen.refused.badreason", NOTHING_TO_WITHDRAW: "refusal.NOTHING_TO_WITHDRAW" }[code];
+        return { refuse: key || "shell.unread" };
+      }
+      cs.set("later", Object.assign({}, view.ui.later, { current: null }));
+      return null;
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } },
+  /* R10: the assistant's help with one own-words field (`wizard-scripts` R27): drawn only while it is reachable; the draft is labelled
+     machine work and nothing is kept until she saves */
+  { op: "writinghelp", label: "act.writinghelp.label.question", rereads: [], reasonField: "told",
+    send(view, el, cs) {
+      view.ui.helpId = el.dataset.id;
+      return { body: { field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
+    },
+    done(view, answer, cs) {
+      const a = answer && answer.result !== undefined ? answer.result : answer;
+      if (a && typeof a.text === "string" && view.ui.helpId) cs.fill(view.ui.helpId, a.text, { label: "screen.start-send.draft.machine" });
+    } },
   { op: "heldrestore", label: "act.heldrestore.label.question",
     send(view, el) { return { body: { ids: [el.dataset.doc || ""] } }; } },
   { op: "search", label: "act.search.label.question",
@@ -944,6 +1365,12 @@ const acts = [
   /* R23, R24: what each passage carries, as a partition: "No" a part of its own; the passages that hold each other up one
      part together; each part's statement left empty. A restructure carries her reason (the shell's, NO_REASON) */
   { op: "inquiryground", label: "act.inquiryground.label.question", rereads: ["inquiry", "strength", "basis"],
+    /* R117: a refusal that carries `findings[]` draws the first finding's own detail; one with none, the code's sentence */
+    refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
+      const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
+      if (!f) throw new Error("no finding");
+      return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
+    } },
     send(view, el, cs) {
       const P = view.parts;
       const doc = P.front(view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "");
@@ -982,7 +1409,7 @@ const acts = [
       return { body };
     },
     /* VERSION_AFFIRMATION_INCOMPLETE by its words, naming the first part not yet affirmed */
-    refusals: { VERSION_AFFIRMATION_INCOMPLETE: (r, cs) => cs.w("refusal.VERSION_AFFIRMATION_INCOMPLETE",
+    refusals: { BASIS_VERSION_REFUSED: versionRefusal, VERSION_AFFIRMATION_INCOMPLETE: (r, cs) => cs.w("refusal.VERSION_AFFIRMATION_INCOMPLETE",
       { part: String((r && (r.part !== undefined ? r.part : Array.isArray(r.missing) ? r.missing[0] : "")) || "") }) },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } })),
   /* R31: the question read in her language, drawn in place; nothing saved */
@@ -1017,7 +1444,7 @@ const acts = [
       cs.set("asking", run);
       const pm = /^project:\s*(\S+)\s*$/m.exec(String((view.data.inquiry && view.data.inquiry.state === "ok" && view.data.inquiry.value["bundle.md"]) || "").split(/\n---\s*\n/)[0] || "");
       cs.call("airunopen", { body: { run, contextType: "inquiry", contextId: String(view.subject || ""), mode: "check",
-        principalClaude: "member:" + member, skillVersion: pack, bounds, ...(pm ? { project: pm[1] } : {}) } }).then((o) => {
+        principalClaude: "member:" + member, skillVersion: pack, bounds, ...(view.project || pm ? { project: view.project || pm[1] } : {}) } }).then((o) => {
         const r = res(o) || {};
         if (!o || o.ok === false || r.ok === false || r.started === false) {
           const code = String(r.code || r.reason || "");
@@ -1114,6 +1541,22 @@ const words = Object.freeze([
   "screen.question.frozen.today", "screen.question.frozen.unpinned", "screen.question.bias.moved",
   ...["same", "different", "stronger", "weaker", "unknown"].map((k) => "screen.question.word." + k),
   ...["takenup", "letgo", "kept", "none", "was", "now", "origin"].map((k) => "screen.question.compare." + k),
+  /* FR-28 (R87–R89, R101–R104, R114, R116, R120, R121) */
+  "strength.arithmetic.unrated_no_leg_on_any_set", "strength.arithmetic.unrated_no_leg_on_this_axis", "strength.arithmetic.unrated_this_inquiry_rests_on_nothing",
+  "strength.arithmetic.present_and_not_yet_load_bearing", "strength.hunch_why", "screen.explore.from", "screen.security.to",
+  "question.conclude.reason", "question.conclude.reason.help", "question.conclude.reason.needed",
+  ...["change.summary", "change.note", "revise.label", "revise.help", "revise.reason", "withdraw.reason", "withdraw.note", "withdraw.note2", "withdraw.button",
+    "refused.summary", "refused.body", "refused.body2"].map((k) => "screen.question.hunch." + k),
+  ...["hypothesisrevise", "hypothesiswithdraw", "reopen", "inquirydivide", "reevaluationrecord", "reevaluations", "writinghelp"].map((op) => "act." + op + ".label.question"),
+  ...["summary", "note", "note2", "note3", "reason", "limits", "q1", "q2", "leg", "numbered", "every", "refused.summary", "refused.body", "refused.body2"].map((k) => "screen.question.divide." + k),
+  ...["to1", "to2"].map((k) => "screen.question.divide." + k),
+  ...["heading", "edition", "edition.meta", "done", "done.meta", "note.label", "refused.summary", "refused.body", "refused.body2", "help", "help2"].map((k) => "screen.question.reeval." + k),
+  ...["summary", "what", "case", "kept", "why", "why.help", "next", "next.link", "next.link.text", "refused.summary", "refused.noreason", "refused.badreason", "refused.notsetdown"].map((k) => "screen.question.reopen." + k),
+  "act.writinghelp.does",
+  /* T51 CHANGE B22 (R110) */
+  "act.owed_citeimported.label.question", "act.owed_withdrawimported.label.question", "refusal.IMPORTED_NOT_ACCEPTED",
+  "screen.imported.citeimp.role", "screen.imported.citeimp.role.supports", "screen.imported.citeimp.role.cuts", "screen.imported.citeimp.note",
+  "screen.imported.citeimp.inherit1", "screen.imported.citeimp.inherit2", "screen.imported.citeimp.tip",
 ]);
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */

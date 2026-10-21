@@ -1,6 +1,26 @@
 # bundler (T51)
 
-**Status** · session_01FoYQKjGSDzypze3SYjMYUT · depth 2 · COMPLETE · handled B8
+**Status** · session_01KtdpCqCw2mUhYyt4JEEPkX · depth 2 · COMPLETE · handled B9
+
+## Record (BUNDLER #25, B9: R25 test)
+
+**Entries applied (B9, CHANGE: bundler R25 red at `bundler.test.mjs`)**
+- **Cause:** since 9055bb0502 (agent-runner FR-14, now R42) agent-runner's `wrangler.jsonc` declares migration `v2` (`RemoteSession`, a class with no binding of its own). `workerPart` reports it correctly; the test's expectation for agent-runner stated only `v1`.
+- **Test (`bundler.test.mjs`, R25 · the repository's own fleet):** agent-runner's binding list still stated by hand (`AGENT_RUNNER`), its migrations now read from the member's own `wrangler.jsonc` (`new_sqlite_classes` per tag, in order) rather than a hand list (K3268). agent-worker's and file-scanner's assertions unchanged. The test title says so.
+- **No source change, no requirement line change.**
+
+**Deferred / not done**
+- Nothing deferred.
+
+**Tests and checks** (from `/home/user/bio/bio-plane` and the process repository; `node_modules` installed by `npm ci --ignore-scripts` in `file-scanner`, `bio-plane/src/journey-check`, `sheet-worker`, `agent-runner`, `site`, which lacked them)
+- `node --test --test-force-exit test/m/bundler/*.test.mjs`: 135 pass, 0 fail (the R25 over-the-fleet test was the red one; now green).
+- `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words 0 failures; coverage shows other modules' ids only (agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19). `coverage.mjs bundler`: 40 of 40 live ids named, 0 failures.
+- `ownership.mjs bundler tranche/T51 job/T51/bundler`: 1 file changed by bundler, 0 failures. `format.mjs`: 0 failures. `architecture.mjs bundler`: 0 failures.
+
+**Reports (not my module)**
+1. agent-runner's live R37, R38 and R40 are named by no test (`checks/run.mjs`). Not bundler's; for BOB to route to agent-runner's job.
+
+Size (session_01KtdpCqCw2mUhYyt4JEEPkX): test runs 4, module lines 4369
 
 ## Record (BUNDLER #24, B8: FR-02)
 
@@ -196,3 +216,7 @@ FR-02 · bundler is done; pushed to job/T51/bundler (9c76d0cd7f). Applied: R39 (
 ## J10 · REPORT
 
 Ownership check: 1 failure, build/requirements/bundler.md is outside bundler's paths, tests and job record. B8 told me to write the NEW R39 and R40 lines first, so I did (that file's diff is only those two lines and the Status line). If BOB keeps the requirements file as its own, take the two lines from my commit 9c76d0cd7f and drop the file from my branch; nothing else in the ownership check fails.
+
+## J11 · COMPLETE
+
+COMPLETE (B9, CHANGE). R25 over the fleet: agent-runner's expected migrations are now read from its own wrangler.jsonc (v1 AgentRunner, v2 RemoteSession), not a hand list; the binding stays hand-listed. Test-only change, one file. Results: bundler tests 135 pass, 0 fail; checks/run.mjs: format, architecture, words 0 failures; coverage of bundler 40 of 40; ownership 0 failures. Other modules' coverage gaps (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19) are reported, not mine. Record: build/jobs/T51/bundler.md, Size line included. Pushed job/T51/bundler at 3bc868c6db.

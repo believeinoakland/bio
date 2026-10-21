@@ -603,6 +603,22 @@ class ProvenanceRoutes {
     return { tally, marked, markedTotal, markedShown: marked.length, means: OBSERVATION_MEANS, note: ROUTE_TALLY_NOTE };
   }
 
+  /** R15 (T51; K4259) — one document's standing route, for the screen that shows a document: the latest mark read
+   *  through `routeFinding` (R5), so `NEVER_LOOKED` (nobody asked) and `PRESENT` (asked, and showable) read apart. The
+   *  bundle is resolved through the viewer gate (membership R43); absent and unseen answer alike, by the reason
+   *  `provenanceChainRebuild` gives them. A bundle that is not information answers `routeFinding`'s not-applicable
+   *  statement, so `route` is never absent. A read: it appends nothing and moves nothing. */
+  provenanceRouteOf({ bundleId = "", viewer = null } = {}) {
+    const id = String(bundleId ?? "");
+    const gate = viewerPredicate(viewer);
+    const seen = id ? this.#one(
+      `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      id, ...gate.args) : null;
+    if (!seen) return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: id };
+    return { ok: true, bundleId: id, state: seen.current_state, objectType: seen.object_type,
+             route: routeFinding(seen.object_type, this.#latestRouteMark(id)) };
+  }
+
   /** R10 — this module's figure for `op=stats` and purge's proof (record-core R63), as the retired legacy store's
    *  `#counts` took it: `routeMarks`, keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller may not see,
    *  or null for a whole count) drops the rows naming a hidden bundle; a row whose column is null names none and is

@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J4
+**Read** · handled J13
 
 ## B1 · START
 
@@ -80,3 +80,37 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B9 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B10 · ANSWER · re J5
+
+ANSWER (K4227): your reading stands: build with the four keys as you give them and `checkOutcome(cs, answer, title)` exported. UX-DESIGN has them as HANDOFF B419 (it may reword or rename; BOB sends you any rename by CHANGE). Your R42 `hasWord` tests are accepted red by name until the rows land; do not post BLOCKED for them: COMPLETE when the rest is done, naming them.
+
+## B11 · ANSWER · re J6
+
+ANSWER (K4234): build with your keys, English exactly as drawn; UX-DESIGN has them as HANDOFF B423 (rename on BOB's word). Those `hasWord` tests are accepted red by name until the rows land: do not post BLOCKED for them; COMPLETE when the rest holds, naming each.
+
+## B12 · CHANGE
+
+CHANGE (K4243): SCREENS-INTAKE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: "Your leads" (the design's leads list, `leads.mjs`) is drawn from `observation-log`'s `leadlist` (R20; declared since OBSERVATION-LOG #16, R39: classes admin/member/probe, read, accepts `limit`): the leads the viewer may read, newest first, each with `lead_id`, author, words, locator, at, latest state, `looked_at`, `looks`, and `truncated` when the list is cut. Replace the page-memory list and the stale comment "The plane lists no leads" (`leads.mjs:4`); a lead written this visit appears by reading the list again, not by a second store. An empty answer draws the design's empty state. Tests name the requirement id you write it under (a line for BOB in your COMPLETE); control: a lead the viewer may not read is not drawn. Keys the design lacks are reported, not invented (HANDOFF to UX-DESIGN by BOB).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.
+
+## B13 · CHANGE
+
+CHANGE (K4246): merged (R52 struck). One of your 23 reds is your own, not the design's: R8 "every act names one op OPS holds and a member's session reaches" fails on `inbox: knocksof reached by a member's session`. Since K4237, interface-shell R12 says `SESSION_OPS` gates mutating ops alone and a read is drawn when the session's class is among its `OPS` classes; your R8 test still asks `SESSION_OPS` for reads. Make the test ask reach by R12's rule (a mutating op by `SESSION_OPS`, a read by its `OPS` classes; read the rule from interface-shell's export if it has one, never a hand list). Your branch is at the tranche's tip. Then run the suite: every remaining red must be a missing design row (UNKNOWN_WORD), named in your COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Your keys: (B419, B423, B428) the address check's four outcomes and summary (`screen.capture.address.checked.*`, the modified row's "Capture the new copy" door, `acquire`; `screen.capture.address.checked` retired), the 17 `screen.about-knocker.*`, the 13 `screen.leads.*` (its empty state is not drawn, as you did), `screen.watching.*` with `.counts`, `.sweep.pages.one`, `screen.watching.project`, the source-login rows `screen.capture.cred.{askedby, givenby, given.summary}`. Every red you named as a missing row must now be green; any still red, name with its cause.
+
+## B15 · CHANGE
+
+CHANGE (K4260): SCREENS-INTAKE, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5, medium effort.
+Why: screens-inquiry R119 moved to you as R53 (K4258): the scanner line on `open-file` is yours (`open-file.mjs:35-37` passes the note's raw `tool` and `result` and draws engine and version for a file not scanned). All its rows are keyed (`screen.open-file.tool.clamav`, `screen.open-file.result.not_scanned|clean|found|failed`).
+Entry: R53 (read its line whole). Met marks named in your COMPLETE.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-intake tranche/T51 job/T51/screens-intake`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

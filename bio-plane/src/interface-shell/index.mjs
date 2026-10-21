@@ -46,7 +46,7 @@ export const PATHS = Object.freeze({
   projects: ["projects"], project: ["projects", "@project"], document: ["projects", "@project", "screen.document.name"],
   question: ["projects", "@project", "screen.question.name"], assistant: ["projects", "@project", "screen.question.name"],
   projectai: ["projects", "@project", "screen.projectai.name"],
-  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.name"],
+  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.crumb"],
   plan: ["projects", "@project", "screen.plan.name"], "start-send": ["projects", "@project", "screen.plan.name", "screen.start-send.name"],
   request: ["projects", "@project", "screen.request.name"], action: ["projects", "@project", "screen.action.name"],
   timeline: ["projects", "@project", "screen.timeline.name"], money: ["projects", "@project", "screen.money.name"],
@@ -175,6 +175,8 @@ export const ADMIN_ACTS = Object.freeze(new Set([
    walk found asking no reason: the administrator's acts on a member or the team (`ADMIN_ACTS`), a project's owner added, and a
    review granted. The shell asks their reason before they run, as it does for a Reasoned weight (R11). */
 export const MARK_ASKS_EXTRA = Object.freeze(["projectowneradd", "reviewgrant"]);
+/* R11, R107: whether the shell asks the reason of an act drawn with the Reasoned mark and no weight */
+const asksReason = (op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op);
 
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
 export const SHELL_OPS = Object.freeze(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "infolevelset",
@@ -295,12 +297,20 @@ function dataOf(screens, guide) {
     /* R30, R45: the public ops (`classes: null`), the only ones a page with no session calls, by an act or by `cs.call` */
     publicOps: Object.keys(OPS).filter((op) => OPS[op].classes === null),
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
+    /* R12 (K4237): a read is gated by its classes, not by `SESSION_OPS`, which holds mutating ops alone */
+    readClasses: pick((op) => (OPS[op] && OPS[op].mutating === false && (OPS[op].classes === null || Array.isArray(OPS[op].classes)) ? (OPS[op].classes === null ? null : [...OPS[op].classes]) : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
-    markAsks: [...ops].filter((op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op)),
+    markAsks: [...ops].filter(asksReason),
     rungs: pick(rungOf),
-    /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only */
-    marks: pick((op) => (rungOf(op) === "none" && Object.hasOwn(MARKS, op) ? String(MARKS[op]).toLowerCase() : undefined)),
+    /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only.
+       R11, R107 (fix round 2, C76; K4199): the mark and the asking agree. A read carries no mark; an act is marked Reasoned
+       only where the shell asks its reason (`markAsks`), so no act says "Asks for a reason" and asks nothing. */
+    marks: pick((op) => {
+      if (rungOf(op) !== "none" || !Object.hasOwn(MARKS, op) || (OPS[op] && OPS[op].mutating === false)) return undefined;
+      const mark = String(MARKS[op]).toLowerCase();
+      return mark === "reasoned" && !asksReason(op) ? undefined : mark;
+    }),
     /* R50 (K3156): the acts held at the phone width: every act carrying a weight that `op-grades.phoneOf` answers false
        for (its terminal, attested and irreversible rungs, `IRREVERSIBLE_WEIGHT`, its larger-screen acts through
        `OP_ALIASES`); never one run on press (a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`: the
@@ -325,11 +335,14 @@ const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:f
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
 @media (max-width:${PHONE_WIDTH}px){
-.cs-main{overflow-x:hidden}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
+.cs-main{overflow-x:hidden;overflow-wrap:anywhere}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
 .cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button{min-height:44px;min-width:44px}
-.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px}
+.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px;flex:none}
+:root:root .cs-main input.mk-pick{width:44px;height:44px;margin:0}
+:root:root .mk-open,:root:root .mk-mastsearch{min-width:44px;min-height:44px;box-sizing:border-box;align-items:center}
+:root:root .cs-main label:has(>input[type=checkbox]),:root:root .cs-main label:has(>input[type=radio]){display:flex;align-items:center;gap:8px;min-height:44px;box-sizing:border-box}
 .cs-main,.cs-main>*,.cs-section,.cs-section>*,.cs-sheet,.cs-row>*,.mk-card,.cs-field,.mk-acts>*{min-width:0;max-width:100%}
 .cs-main :is(p,li,dt,dd,td,th,h1,h2,h3,.rec,.mk-data,.meta,a.cs-ref,code){overflow-wrap:anywhere}
 .mk-cards{grid-template-columns:minmax(0,1fr)}.cs-row .meta,.mk-acts{flex-wrap:wrap}.tw{max-width:100%;overflow-x:auto}

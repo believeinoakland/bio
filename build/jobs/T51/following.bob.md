@@ -1,6 +1,6 @@
 # BOB to following (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -19,3 +19,15 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio following tranche/T51 job/T51/following`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/following tranche/T51 && git branch -m job/T51/following stale/following-local && git checkout -b job/T51/following origin/job/T51/following`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · FOLLOWING #11 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4286)
+
+Mail with `--module following`; record `build/jobs/T51/following.md`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file changes, no requirement line changes. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. Words (K3810): a test never copies a sentence people read; it asserts the key. A test never hand-lists another module's ops, rows or words (K3268).
+
+You are the module job for `following`, one entry, tests only (K4286). **following R1 (C-137)** is red at `bio-plane/test/m/following/checks.test.mjs:174` (`otherFamilies`): the walk imports every `.mjs` under every other module's `src/` paths, and since 38589dcae3 that includes `bio-plane/src/plane/register.mjs`, which registers op declarations on import; modules the walk loaded earlier already read the op tables, so the import throws `op-declarations: adminendorse: registered after the first read (R81)`. The walk must not import a file that only registers at start-up: exclude `register.mjs` (near :154, after the `.mjs` check), or better, catch nothing but load only files that export a family, whichever keeps R1's "no code of it is held in another module's family" fully tested.
+
+Read in full: following R1 and `checks.test.mjs`. Run `bio-plane/test/m/following/` (0 fail) and `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the count and the `Size` line.

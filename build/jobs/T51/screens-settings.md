@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_01K19GNa6yQamxgFprY4YSqT · depth 2 · COMPLETE · handled B11
+**Status** · session_01Si5cxby7xVds46UHqHmk44 · depth 2 · COMPLETE · handled B25
 
 ## J1 · QUESTION
 
@@ -84,3 +84,125 @@ Waiting on BOB (J7).
 - **Size (session_01K19GNa6yQamxgFprY4YSqT):** test runs 8, module lines 4288 (src only; unchanged by the keys list beyond its entries, which are data).
 
 Waiting on BOB (J8).
+
+## J9 · REPORT
+
+REPORT (SCREENS-SETTINGS #10, FR-25). Started: B13–B15 read; merged tranche/T51; working the entries.
+
+**Found in `wizard-scripts` (another module): `writinghelp`'s declaration omits `op`, which its arm requires.** `wizard-scripts/index.mjs`:1753-1754 (`DECLARED_OPS`, R46) declares `fields: { accepts: ["field", "told", "draftHeld"], requires: ["told"] }`. But `writingHelp({op, field, told, draftHeld, …})` (`index.mjs`:1522) passes `op` to `writingHelpAt` (`writing-help.mjs`:58), which answers `WRITING_HELP_REFUSED` when `op` is not a non-empty string: the op the draft is for (`notewrite`, `noterevise`, `groupdescriptionset`, …) is how the arm decides whether help may be offered at all. R27 states the POST body is `{op, field, told, draftHeld}`. The guard (`interface-shell`'s harness) therefore refuses every screen's request as `sent op, which the op does not accept` (FieldMismatch `unknown: op`): `notes`, `group` and `grouprules` (4 of my tests) and every other screen that sends `writinghelp`. I do not weaken a declaration and I cannot send the op without `op`, so the fix is the owner's: `accepts` gains `"op"` (and `requires` it, since the arm refuses without it). Please send it to `wizard-scripts` as a CHANGE; my four tests turn green by themselves once it is merged and I merge the tranche. I carry on with all other entries meanwhile.
+
+## J10 · REPORT
+
+REPORT (SCREENS-SETTINGS #10, FR-25). Three more things in other modules that stop acts of mine from being drawn or sent. All three are measured by running the tranche as merged (J9's `writinghelp` is the fourth). I carry on with everything else and write each screen against the owner's documented shape.
+
+**1. Eight acts of my screens are in neither `SESSION_OPS` set, so `interface-shell`'s `can` (R12: "the op is in `SESSION_OPS.member` or `.admin`") never draws their buttons.** `selftest`, `bootstrap`, `runtime` (the `updates` screen, C82); `exportlog` and `export` (the `group` screen, C30); `biasmanifest`, `biasinhale`, `biasdebt` (the new `bias` screen, C47). Measured: `OPS` holds each (the mechanical pass declared them), `SESSION_OPS.member` and `.admin` hold none. Six are reads (`mutating: false`; `OPS` classes admin, member, probe) and `op-declarations`' own comment says "SESSION_OPS gates MUTATING ops alone", so the door lets a session call them; it is only the shell's `can` that asks set membership of every act, a read included. `export` is mutating, classes `["admin"]` only, so a founder's session reaches it by no set at all. Either `interface-shell` R12 lets a read (`OPS[op].mutating === false`, which the shell already knows as the rung `none`) pass without set membership, or `op-declarations` puts the six reads in both sets and gives `export` its session reach (the founder's, "a copy is taken only by a founder"); that choice, and the fix, are not mine. Until then the `updates` health section, `group`'s export and the `bias` screen draw no act and their tests cannot go green. `writinghelp`, `promote`, `biasadopt`, `biasdebtresolve`, `memberpairingset` and `expertisewithdraw` are in both sets (checked).
+
+**2. `credentials`' `DECLARED_OPS.bootstrap` accepts no field, but the part report needs one.** `setup.mjs` `bootstrapReport` answers `memberVersions` (what each part runs) only for `members=1` (`setup.mjs`:3344 reads `url.searchParams.get("members") === "1"`); the row is `fields: {accepts: [], requires: []}`. The `updates` screen's "Show what each part runs" must send `members=1`; the guard reports `sent members, which the op does not accept`. `accepts` gains `members`.
+
+**3. Words and data the design has not given (the job does not invent them; what is drawn is listed).**
+ a. `updates` health: no word for a part's name ("The assistant's worker", "Reading PDFs", …), for "release {version}", for "answering", "unbound" or "misnamed". `bootstrap` answers parts by module id (`agent-worker`, `pdf-worker`, …) with a state; I draw the id and the release as record data, a silent part by `screen.updates.health.part.silent`, an unbound or misnamed part by its state as data. `screen.updates.health.file.test` needs `{seconds}`, which `selftest` does not answer (it answers `captures: "read-write ok"` with no time), so it is not drawn. `screen.updates.health.runtime.heaviest` needs `{ms}` and `{calls}`; `runtime` answers per-metric peaks and means in each metric's unit and `subrequests.observed` (a ceiling, not a request's count), no "heaviest request" with outside calls, so it is not drawn; the metrics are drawn as record data (name, peak, mean, samples) without column words, and the two limit sentences and the note by their keys.
+ b. `settings`: the design's Settings list has a third section "For every member" with `bias` ("Declared bias"), but `words.json` holds no heading for it and no `screen.bias.purpose` (the list draws `screen.<id>.purpose` beneath each name). I add no link until both exist; the `bias` screen is reachable by its address.
+ c. Entry 11 (T-08): the entry says the setup release draws `updates.running.setup_on`; the keys' own notes say `release_setup` is for the setup release and `setup_on` is "said once, apart from any release". I read it as: a release with a member keeps `release`; one with none that is the setup release (installed the day `bootstrap`'s `installed_at` names) draws `release_setup`; one with none that is later draws `release_noactor`; the set-up date is said once by `setup_on` unless the release line already says it. Tell me if you meant otherwise.
+
+## J11 · QUESTION
+
+QUESTION (SCREENS-SETTINGS #10, FR-25 entry 3, the `bias` screen: R65). Entries 1, 2, 4–16 are applied and pushed (members, account, connect, updates, group, grouprules, security); `bias` is the one left. The drawing (`SCR.bias`, DEC-374) cannot be drawn whole from `words.json` as merged, and some of its data flows are not stated. Per your rule I draw what is keyed and invent nothing; the list below is what is missing. My best reading, which I build on unless you answer otherwise, is in each item.
+
+**A. Words the drawing needs and `words.json` lacks** (the 96 `screen.bias.*` rows are the drawing's sentence fragments; headings, labels and templates were not extracted). Please have UX-DESIGN give them: (1) labels: "Whose lens" (the scope choice) and its option "The whole team"; "Kind of statement" (the label) and the three kinds' short names (Scrutiny, Inference, Pattern); "The statement" (the textarea); "What it cites"; "Adopt it for" (the radio legend); `act.writinghelp.label.bias` (the registry lists `writinghelp` on `bias`); (2) headings: "In force for the whole team" (only the project form `in_force_for_the_coliseum` {project} exists), "Write a set", "Adopt it", "Proposed statements", "Left out", "Settled"; (3) row templates: a statement's "about {subject}" and "Why: {reason}" and "the team's, locked" / "this project's"; the dt "Lens"; the dts "A bar" and "A verdict"; the link rows "Write a set · …" and "Draft one from an outside policy · …" (only the second's title exists); a work product under an earlier lens ("Made under lens {then} on {date}. In force now: {now}, adopted {date}. The change: {change}") and a settled one ("Settled by {who} on {date}: “{reason}”"); (4) fills: `screen.bias.it_read_sentences_of` holds "4 sentences of 4" and `by_admin_for_the_team` holds both an administrator and an owner, so neither can be drawn for other numbers or a team-only or project-only adoption; each needs `{read}`/`{of}` and its variants.
+Until given, the screen draws a control whose label is missing without a label and a section whose heading is missing without a heading (never the key, never English I wrote); each lands as a `CHANGE` when the rows merge. My reading of what it can say meanwhile: the statements and what is in force by their data; the sentences that exist by key.
+
+**B. Data flows the drawing does not state** (my readings): (1) "Who or what it is about": the member types a name; I resolve it to a registry key with `entitybyalias` (`alias`), accept an `ENT-…` id typed as it is, and refuse an unknown name with `screen.bias.add_it_under_people_first`; the writing form sends the bundle `promote` takes (as `start-project.mjs` builds a project's): `files: [{path: "bundle.md", text}]` with frontmatter `object_type: bias`, `title` the set's name, `current_state: proposed` (the act is "Save the set and offer it for adoption"), `statements[]`, and the `## What This Does Not Enforce` section, `meta`, `snapKey`, `base: null`. (2) "Adopt this set" adopts the set just saved in this sitting (`promote` answers its `bundleId`), the page holding it in memory; there is no op that lists the team's bias sets, so a set offered earlier cannot be picked from a list. If you want a list, `index` by `object_type: bias` is the read I would use; say so. (3) Work under an earlier lens: `biasdebt` is asked per work product (`run`), and no op lists every open debt, so the section draws the one the address names (`/app/bias/<run>`, which is how R106's `bias-debt` reference opens the screen) and the queue's rows (screens-daily's) lead to it. (4) "Start a set from these" (the proposed statements) promotes them as a `draft` set after the member names a subject and writes a reason for each (the rows say "Choose who it is about and write why"); a draft need not cite evidence.
+
+Reply with changes to any reading; none is irreversible.
+
+## J12 · COMPLETE
+
+COMPLETE (SCREENS-SETTINGS #10, FR-25: B12 and its CHANGEs B13–B21). Requirement lines are in `build/requirements/screens-settings.md` (R63–R77, each marked *(not yet met: T51)*; B13 accepted), not in this record.
+
+**Entries applied** (each with a test that names its id and a control; module code `members`, `account`, `connect`, `updates`, `group`, `grouprules`, `security`, the new `bias`):
+1. C79 and 15 (DEC-386) R63: a confirmed expertise draws "Withdraw an expertise", its own act `expertisewithdraw` `{memberId, label}` and the shell's reason; Confirm stays `expertiseconfirm` for a declared one.
+2. C80 R64: the founder, first, in the "Whose key" chooser once claimed and she holds a handle (`signeradd` `memberId: "admin"`).
+3. C47 R65: the screen `bias` (7 registry acts; registered in `SCREENS`; the lens in force for the team or a project; writing a set and saving it offered; adopting the set just saved; drafting from an outside policy and "Start a set from these"; work under an earlier lens at `/app/bias/<run>`). Drawn with the keyed words only; the missing labels and headings are drawn without them (HANDOFF B427). One statement per set (the drawing's form).
+4. C30 R66: `group` draws the copy of the record (founder: field, act, "cannot be undone"; another administrator: who can) and the list of copies (`exportlog`).
+5. C81 R67: `account` "Your cover name" (`memberpairings` read, `memberpairingset` `{memberId, published}`, the state read back).
+6. C82 R68: `updates` "How your copy is doing": `selftest`, `bootstrap` (`members=1`) and `runtime`, each from its answer; a problem in its fold.
+7. C11 R69: the website file on `group`, drawn as `screens-entry` draws it, from `domain_claim.well_known`.
+8. L2 R70: `heldcaptures` asked `state: "held_and_vouched"`. 9. L30 R71: a member's name links their handle. 10. T-05 R72: the confirmation before the grant that administers (the kit's checks redraw; no second reason box). 11. T-08 R73: the noactor words, the setup release told by `bootstrap`'s `installed_at`, `setup_on` once (your reading c, B18). 12. T-14 R74: credential labels by `file-scanner.credential.*`. 13. T-18 R75: `screen.group.hosting.now.setup` and `.system`. 14. K4199: the harness gives the shell's reason in the 24 tests (`kit.mjs`: the reason is left out of `sent` unless a test gives its own). 16. K4203 R76: `connect` sends only `{kind, secret}` and an empty body. B15 R77: `no_signatures` by its key, else the answer's words.
+
+**Deferred:** one statement per set (the drawing's form; no word for "add another statement"); subject names in the lens (the owner answers registry keys, drawn as data; a name per subject would need a read the design does not give). **Not done, B19 (2):** the team's earlier offered sets are not listed. `index` has no owner declaration (`OPS` `{classes, mutating: false}`, no `fields`), so whether it accepts an `object_type` filter is not stated; only the set saved in this sitting is adoptable. REPORT: `index` needs a declared filter (or a dedicated read) before a set offered earlier can be listed.
+
+**Found in other modules** (reported earlier as J9, J10, J11; answered B16, B18, B19): `writinghelp`'s `op` (merged, green); `bootstrap`'s `members` (merged, green); session reach of reads (merged, green); `export` in the founder's session set (OP-DECLARATIONS #30: pending); the design's missing words (HANDOFF B425, B427). New: (a) `entitybyalias` has no owner declaration (the bias form looks a subject up by name with `{alias}`; the shape is read from `entities` code: `entities[]` with `entity_id`); (b) `promote`'s bias bundle: the frontmatter keys and the first-state rule for a new bias set (`current_state: proposed` at once) are my reading of `bias` R2–R8, unproved end to end here (the tests answer `promote` from a fake plane); (c) the fixtures' old `tokenClass: "session"` was no class the shell's R12 knows (`member`, `admin`): the kit now uses the shell's.
+
+**Tests and checks** (process repository, after merging `tranche/T51` at B21, `8af5af4b4b`): module suite 208 tests, 206 pass, 2 fail: the two R66 tests that draw `export` to the founder (`export` is in no session set until OP-DECLARATIONS #30; they go green by themselves once it merges, a merge of `tranche/T51` and a re-run). `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 0 failures (42 product files); `checks/coverage.mjs screens-settings` 76 of 76 live ids named by a test; `checks/words.mjs screens-settings` 0 failures (inline 0, testcopy 0, handlist 0); `checks/ownership.mjs screens-settings tranche/T51 job/T51/screens-settings`: 25 files, 1 failure: `build/requirements/screens-settings.md`, the one file K4210 accepts at your merge.
+
+Size (session_01YYLjzokpdPYtFU7x1UhDVH): test runs 70, module lines 4949
+
+## J13 · COMPLETE
+
+COMPLETE (SCREENS-SETTINGS #11, FR-25: B22).
+
+**Entries applied.**
+1. B19 (2) R65: the `bias` screen lists the team's earlier offered sets through `retrieval`'s `list` (`type: "bias"`, `state: "proposed"`, `limit: 50`), following `cursor` as `after` page after page, each page read once and kept in the page's memory, at most five pages. The set just saved comes first; a row that is not a bias set or not `proposed` is not listed; each set is drawn by its title and when it was last written (data), the first chosen unless another is; "Adopt it" sends `biasadopt` for the set chosen (`bundleId` from the choice), so a set offered earlier is adoptable without writing it again. An empty answer draws no list and no adoption; a list that cannot be read is drawn failed (`shell.unread`), never as no sets. Test: `bias.test.mjs` "R65 the team's earlier offered sets are listed and adoptable…" (two pages by cursor; an adopted set and a bundle of another type left out; the first, a later and the just-saved set adopted; empty answer; failed read) and R65's first test (the lens read and the sets read are the only reads at open).
+2. `entitybyalias`: the bias form's lookup sends only `{alias}` (test: "R65 writing a set…" asserts the request's query is `{alias}` alone, and the guard accepts it).
+3. The two R66 `export` tests are green after merging `tranche/T51` (op-declarations R83).
+4. `register.mjs` now registers through test-support's `registerDeclared(root, registerDeclaredOps)` (R17), no hand collection of rows.
+
+**For BOB: requirement lines.** R65 item "adopting the set just saved … " should read: "adopting a set the team offered — the one just saved, or any listed by `retrieval`'s `list` with `type: "bias"` and `state: "proposed"`, page after page by its cursor, at most five pages — for the whole team (an administrator's) or for a project (its owner's) …"; and "Test:" gains "a set offered earlier is listed and adoptable; one of another type or already adopted is not listed; an empty answer draws no list". The module's `uses` in `build/modules.json` needs `test-support` (screens-settings' tests import `bio-plane/test/declared-ops.mjs`): until then `checks/architecture.mjs screens-settings` reports the one failure below.
+
+**Deferred.** As in J12: one statement per set; subject names in the lens. The mixed-state choice (a set offered earlier, adopted before, is listed no more because it is no longer `proposed`) is by design: a set adopted for one project and offered for another is not offered again from this list.
+
+**Tests and checks** (after merging `tranche/T51` at `225cfd3f38`): module suite 209 tests, 209 pass, 0 fail. `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 1 failure: `bio-plane/test/m/screens-settings/register.mjs` imports test-support's `declared-ops.mjs`, which `build/modules.json` does not list in screens-settings' `uses` (BOB's file; see above); `checks/coverage.mjs screens-settings` 76 of 76 live ids named; `checks/words.mjs screens-settings` 0 failures; `checks/ownership.mjs screens-settings tranche/T51 job/T51/screens-settings` 5 files, 0 failures.
+
+Size (session_01JCbyiaVBiZ277MQAdnsSaX): test runs 5, module lines 4984
+
+`checks/run.mjs` (whole product): words 33 failures, all in other modules (op-grades test copies and others, not screens-settings; `words.mjs screens-settings` is 0). The `setup-words build --check` was not reached in the run.
+
+## J14 · COMPLETE
+
+COMPLETE (SCREENS-SETTINGS #11, FR-25: B23 and B24, after J13).
+
+**Entries applied** (merged `tranche/T51` at B23's tip first; U420 and U422 read):
+1. B425 R68: the health parts are named by bootstrap's own id (`screen.updates.health.part.<id>`), a serving part drawn with `.part.state.answering` and `.part.release`, a silent one by `.part.silent`, `.part.state.unbound`, `.part.state.misnamed` (with the name the answer gives), any other state by `.part.other` and the answer's own word; `.file.test` drawn when `selftest` answers `captures: "read-write ok"`; runtime's `.heaviest`, `.average`, `.samples` with the unit code beside the number (`ms` or `bytes`, B24: the code until the design words them), `.limits` with `{ceiling}` from `subrequests.observed` (a count, no unit; not drawn while no refusal has taught a ceiling, which `capture` R23 makes `null`).
+2. B425: `screen.settings.everyone` is the third section of `settings`, "For every member", holding the `bias` reference (name, purpose), drawn to every member.
+3. B427 R65: `bias` draws its labels (`lens.label`/`.team`, `kind.label`, `statement.label`, `cites.label`, `adoptfor.label`), headings (`head.team`, `head.write`, `head.adopt`, `head.proposed`, `head.left_out`, `head.settled`), rows (`row.about`, `row.why`, `row.team_locked` for a locked team statement, `row.project` for a project's, kinds by `kind.*`), `dt.lens`, `dt.bar`, `dt.verdict`, the two links (`link.write`, `link.draft`, anchors to the page's own sections), `it_read_sentences_of` from `coverage`, the adoption sentences (`by_admin_for_the_team`, its `.team` and `.project` variants picked by the adopter's scope: both with both bundles), `earlier.made` (then, `observed`, now, `raised`, `moved_basis`) and `earlier.settled`.
+4. B417 (2): `screen.bias.purpose` is read by `settings` through `screen.bias.purpose` (the reads list).
+5. `keys.mjs` (R39) regenerated from the design's `words-reads.json` (1,912 keys): the contract test is green.
+
+**Requirement lines for BOB.** R68's "A sentence the design holds only as a sample … is not drawn (REPORTED, J10)" is stale: the parts' names, `.file.test` and `.runtime.*` are words now. R65's "*Words:* … a control or section whose label or heading the design has not yet given is drawn without it" likewise. R17/R32: `settings` draws a third section, "For every member" (`screen.settings.everyone`), holding `bias`; R32's test counts three lists for an administrator and two for a member. Also (from J13) the `uses` of screens-settings needs `test-support`.
+
+**Judged readings** (none blocks): `row.team_locked` is drawn for a statement with `locked: true` and no project scope; `earlier.made`'s `{adopted_on}` is the debt's `raised` (when the lens changed) and `{made_on}` its `observed`: no field names the adoption day of the lens now.
+
+**Deferred.** As in J12/J13.
+
+**Tests and checks** (process repository): module suite 209 tests, 209 pass, 0 fail. `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 1 failure (the `test-support` `uses` entry, J13); `checks/coverage.mjs screens-settings` 76 of 76; `checks/words.mjs screens-settings` 0 failures, and no line of the whole-product words check names screens-settings; `checks/ownership.mjs screens-settings tranche/T51 job/T51/screens-settings` 0 failures.
+
+Size (session_01JCbyiaVBiZ277MQAdnsSaX): test runs 12, module lines 5101
+
+## J15 · COMPLETE · re B25
+
+COMPLETE (re B25, K4259): entry 1 (`updates`, R68, DEC-389) applied. Pushed `cea44ac799` on `job/T51/screens-settings`.
+
+**Entries applied**
+- Entry 1: the runtime figures are said with their unit by key, `screen.updates.health.runtime.unit.ms` and `.unit.bytes`, in `heaviest` and `average`. The raw token is never drawn. The subrequests ceiling stays a count with no unit. Test first (R68 runtime test updated to the keys; new R68 units test), seen failing, then passing.
+
+**Deferred**
+- None.
+
+**Decision (for BOB to record in `build/rulings.md`; not written by this job, since that file is outside this module's paths)**: a metric whose `unit` has no key (`ms`, `bytes` are the only keys held; instance-setup R34 answers these two) draws its name and its sample count only, with no figures and no raw token. Reason: a figure with a bare number is what R68 forbids; a sample count is a count, not a unit.
+
+**Requirement lines for BOB (R68)**
+- The sentence "runtime's unit by `screen.updates.health.runtime.unit.<code>` (DEC-389) once its job takes it" is now true. Please fold it into R68's text, and state the unit-less rule above.
+
+**Found in other modules (not changed here)**
+- `checks/run.mjs`: `testcopy` failure in `bio-plane/test/m/op-grades/t37.test.mjs:32` (translation-directed key). Not this module's.
+- `checks/coverage.mjs` over every module: 6 live ids named by no test (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, screens-inquiry R110 R119, screens-intake R53). Not this module's.
+- The design's reads list (`docs/development/ux-substrate/screens/words-reads.json`) does not carry `runtime.heaviest`, `runtime.average`, `runtime.samples` or `runtime.unit.*`; this module reads them anyway and the R39 test passes. Flagged only; the design owns that list.
+
+**Checks**
+- `node checks/run.mjs /home/user/bio`: architecture 0 findings for this module; words: 0 findings naming a screens-settings file (one `testcopy` finding is op-grades, above).
+- `format` 0 failures; `architecture screens-settings` 0 failures; `coverage screens-settings` 76 of 76 live ids named by a test, 0 failures.
+- `ownership screens-settings tranche/T51 job/T51/screens-settings`: 0 failures (1 file changed by this module: `updates.mjs`, plus its test).
+- Module suite `bio-plane/test/m/screens-settings/`: 210 pass, 0 fail (includes the contract test asserting `checkScreens(SCREENS)` is true, so no act differs from the design for this module).
+- `npm ci` run in each lock-file directory that lacked `node_modules` (K4113) before the first run; all exited 0.
+
+Size (session_01Si5cxby7xVds46UHqHmk44): test runs 9, module lines 5105

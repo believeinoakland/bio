@@ -39,7 +39,10 @@ export function stepOf(v) {
 export function draftOf(a) {
   return { id: a.id || a.filing, text: a.text, blanks: Array.isArray(a.blanks) ? a.blanks : [], unfilled: Array.isArray(a.unfilled) ? a.unfilled : [],
     template: a.template || null, disclosure: a.disclosure || null, advisory: typeof a.advisory === "string" && a.advisory ? a.advisory : null,
-    offers: Array.isArray(a.offers) ? a.offers : [] };
+    offers: Array.isArray(a.offers) ? a.offers : [],
+    // R49 (filings R25): each exhibit's grade against the venue's standard, as the preparing answer carries it
+    exhibits: Array.isArray(a.exhibits) ? a.exhibits : [], venueStandard: a.venue_standard && typeof a.venue_standard === "object" ? a.venue_standard : null,
+    tier: a.tier === undefined ? null : a.tier };
 }
 
 /** R11: reads the prepared draft the action holds, once per filing, through `filingread`; keeps it in the page's memory
@@ -111,7 +114,7 @@ export function stakeLines(cs, view) {
     if (m === null || m === undefined) matter = cs.w("stake.none");
     else if (typeof m !== "object" || typeof m.stake !== "string" || !m.stake.trim() || m.stake === "undetermined") matter = unreadable();
     else {
-      const by = String(m.set_by || "").replace(/^member:/, "");
+      const by = m.set_by ? cs.memberName(String(m.set_by).replace(/^member:/, "")) : "";
       const from = m.source === "action" || m.source === "project" ? m.source : "";
       matter = '<span class="rec">' + cs.esc(m.stake) + "</span>"
         + (from && by && m.set_at ? ' <span class="muted">· ' + cs.w("stake.source." + from, { who: by, date: { html: cs.date(m.set_at) } }) + "</span>" : "");
@@ -138,7 +141,7 @@ export function stakeAsk(cs, view) {
     ? '<details class="mk-details" open><summary>' + cs.w("stake.undetermined.summary") + '</summary><p class="mk-small">' + cs.w("stake.ask.undetermined") + "</p></details>" : "";
   return cs.sec("stake.ask.title", undetermined + '<p class="mk-note">' + cs.w("stake.ask.says", { kind: words.charAt(0).toUpperCase() + words.slice(1) }) + "</p>"
     + cs.field("action-stake", "stake.action.label", { rec: true, max: 1000, help: "stake.action.help", value: own })
-    + '<div class="mk-acts">' + save + "</div>", { help: "stake.ask.help" });
+    + '<div class="mk-acts">' + save + (view.reachable ? cs.act("writinghelp", { data: { field: "stake", id: "action-stake", forop: "actionstake" } }) : "") + "</div>", { help: "stake.ask.help" });
 }
 
 /** The steps drawn: `o.request` adds the period, form and cost limit fields (R8) and the portal's warning and number. */
@@ -153,27 +156,32 @@ export function sendSteps(cs, view, filings, o) {
   const part = function (key) { const s = cs.w(key); return /\{\w+\}/.test(s) ? "" : s; };
   const ui = view.ui;
   const n = String(ui.draftN || 0);
+  // R48: on `start-send` alone, the filing kept as the team's template, once approved (the step is second, send or sent)
+  const keep = !req && view.parts.templateKeep ? view.parts.templateKeep(cs, view, d, step) : "";
+  // what the approval released, said once it lands (who: the member who pressed it; the day: the page's clock)
+  const wasReleased = ui.releasedDone && Array.isArray(ui.releasedDone.items) && ui.releasedDone.items.length && (step === "second" || step === "send" || step === "sent") && view.me && view.me.handle
+    ? ui.releasedDone.items.map(function (r) { return '<p class="mk-note">' + cs.w("screen.start-send.release.done", { who: String(view.me.handle), date: { html: cs.date(new Date(cs.now()).toISOString().slice(0, 10)) }, reason: r.reason }) + "</p>"; }).join("") : "";
   if (step === "sent") {
     const s = d.sent.sending;
-    return '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
+    return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
       + (s.reference ? " · " + cs.w("screen.start-send.reference", { reference: s.reference }) : "") + "</p>"
-      + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>";
+      + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep;
   }
   if (step === "second") {
     // R3: while a second approval waits, the screen says so and offers no send.
-    return '<p class="mk-note" role="status">' + cs.w("screen.start-send.waitsecond") + "</p>"
-      + '<div class="mk-acts">' + cs.act("filingsecondapprove", { data: { filing: d.open.filing } }) + "</div>" + nosend;
+    return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.waitsecond") + "</p>"
+      + '<div class="mk-acts">' + cs.act("filingsecondapprove", { data: { filing: d.open.filing } }) + "</div>" + nosend + keep;
   }
   if (step === "send") {
     // R3, R4, R8: the outward warning, then the member's record of the sending: the day, how, and the venue's number.
     const how = req ? [1, 2, 3, 4].map(function (n) { return part("screen.request.howsend." + n); }).filter(Boolean) : [];
-    return (how.length ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + how.join("</li><li>") + "</li></ol>") : "")
+    return wasReleased + (how.length ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + how.join("</li><li>") + "</li></ol>") : "")
       + '<div class="cs-dialog" role="group" aria-label="' + cs.w("screen.start-send.outward") + '">' + '<span class="cs-tag-outward">' + cs.w("screen.start-send.outward") + "</span>"
       + '<p class="ends">' + cs.w(req ? "screen.request.outward" : "screen.start-send.outward.says") + "</p>"
       + cs.field("send-at", "screen.start-send.sentat", { type: "date", help: "screen.start-send.sentat.help" })
       + cs.field("send-account", "screen.start-send.how", { help: "screen.start-send.how.help" })
       + cs.field("send-reference", req ? "screen.request.reference" : "screen.start-send.reference.field", { help: req ? "screen.request.reference.help" : null })
-      + '<div class="mk-acts">' + cs.act("filingrecordsent", { tone: "primary", label: "screen.start-send.recordsent", data: { filing: d.open.filing } }) + "</div></div>" + nosend;
+      + '<div class="mk-acts">' + cs.act("filingrecordsent", { tone: "primary", label: "screen.start-send.recordsent", data: { filing: d.open.filing } }) + "</div></div>" + nosend + keep;
   }
   // R11: a draft prepared and not yet approved is read again on load; nothing is prepared again by reading.
   let reading = null;
@@ -205,13 +213,51 @@ export function sendSteps(cs, view, filings, o) {
   const text = cs.field("send-text-" + n, req ? "screen.request.text" : "screen.start-send.text", {
     area: true, rec: true, value: draft ? draft.text || "" : "", draft: label,
     help: req ? "screen.request.text.help" : "screen.start-send.text.help" });
+  // R49 (filings R25): each exhibit's grade against what the venue accepts; a flagged exhibit stops nothing, the approval stays
+  const venueWords = function (e) {
+    const state = e && e.venue && typeof e.venue === "object" ? e.venue.state : "";
+    return state === "accepted" ? cs.w("screen.start-send.exhibits.accepted")
+      : state === "contestable" ? cs.w("screen.start-send.exhibits.contestable1") + " " + cs.w("screen.start-send.exhibits.contestable2")
+        : state === "below" ? cs.w("screen.start-send.exhibits.below1") + " " + cs.w("screen.start-send.exhibits.below2")
+          : cs.w("screen.start-send.exhibits.undetermined");
+  };
+  const exhibits = draft && Array.isArray(draft.exhibits) && draft.exhibits.length
+    ? cs.sec("screen.start-send.exhibits.heading", '<p class="mk-small">' + cs.w("screen.start-send.exhibits.intro1") + " " + cs.w("screen.start-send.exhibits.intro2") + " "
+      + cs.w("screen.start-send.exhibits.intro3") + "</p>" + cs.sheet(draft.exhibits.map(function (e) {
+        const letter = e.grade && typeof e.grade === "object" ? String(e.grade.grade || "") : "";
+        const name = cs.esc(e.locator || e.sha256 || "") + (e.captured_at ? " · " + cs.w("screen.start-send.exhibits.captured", { date: { html: cs.date(e.captured_at) } }) : "");
+        return cs.row("", '<span class="mk-data">' + name + "</span>", "", (/^[A-D]$/.test(letter) ? cs.grade("capture", letter) : cs.w("screen.start-send.exhibits.nograde")) + " · " + venueWords(e));
+      }).join(""))
+      + (draft.venueStandard && draft.venueStandard.state === "undetermined"
+        ? '<details class="mk-details"><summary>' + cs.w("screen.start-send.exhibits.refused.summary") + "</summary><p class=\"mk-small\">" + cs.w("screen.start-send.exhibits.refused.body1") + " "
+          + cs.w("screen.start-send.exhibits.refused.body2") + " " + cs.w("screen.start-send.exhibits.refused.body3") + "</p></details>" : "")) : "";
+  // the writing help on the member's own words (a registry act of `start-send`; "" on a screen that does not list it, and while the assistant is unreachable)
+  const help = view.reachable && (step === "prepare" || draft)
+    ? cs.act("writinghelp", { data: { field: "text", id: "send-text-" + n, forop: "communicationprepare" } }) : "";
+  // R42 (C71): the sentences the approval was refused for, one choice each: rewrite (edit the text above), say it only asks, or treat
+  // the act as a breach claim; the field ids follow the record's own sentence numbers
+  const pointed = step === "approve" && ui.assertions && ui.assertions.filing === d.open.filing && Array.isArray(ui.assertions.items) && ui.assertions.items.length
+    ? ui.assertions.items.map(function (x) {
+      return '<div class="cs-field"><p class="mk-data">' + cs.esc(x.text) + "</p>"
+        + cs.checks("assert-pick-" + x.index, "phrasing.assertion.pointed", [["rewrite", "assertion.resolve.rewrite"], ["breach_claim", "assertion.resolve.breach_claim"]], { radio: true })
+        + cs.field("assert-words-" + x.index, "assertion.resolve.only_asks", { max: 500 }) + "</div>";
+    }).join("") : "";
+  // R42 (B16 a): a sentence the record contradicts is held until it is rewritten or released with a reason; the release is not an act
+  // of its own (the `release` op is ratification's vouching) but an entry the approval carries (`filingapprove`'s `release`, filings
+  // R34): each sentence is drawn with its reason and a tick, and the next press of "Approve this text" sends the ticked ones.
+  const held = step === "approve" && ui.contradicted && ui.contradicted.filing === d.open.filing && Array.isArray(ui.contradicted.items) && ui.contradicted.items.length
+    ? ui.contradicted.items.map(function (x) {
+      return cs.sec("screen.start-send.release.head", '<p class="mk-small"><span class="rec">“' + cs.esc(x.text) + "”</span></p>" + '<p class="mk-note">' + cs.w("pointer.record.contradicted") + "</p>"
+        + cs.field("release-why-" + x.index, "screen.start-send.release.why", { max: 500, rec: true, help: "screen.start-send.release.why.help" })
+        + cs.checks("release-pick-" + x.index, "act.release.label.start-send", [["release", "act.release.label.start-send"]]));
+    }).join("") : "";
   const acts = step === "prepare"
-    ? cs.act("communicationprepare", {}) + cs.act("filingprepare", {})
-    : cs.act("filingapprove", { tone: "primary", data: { filing: d.open.filing } });
+    ? cs.act("communicationprepare", {}) + cs.act("filingprepare", {}) + help
+    : cs.act("filingapprove", { tone: "primary", data: { filing: d.open.filing } }) + help;
   if (reading) return reading + nosend;
   // R21: the stake, above the approval; the question on `start-send` alone
   const stake = (!req && P.stakeAsk ? P.stakeAsk(cs, view) : "") + P.stakeLines(cs, view);
-  return fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers
+  return fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers + exhibits + pointed + held
     + (req && part("screen.request.describe") ? '<p class="mk-note">' + part("screen.request.describe") + "</p>" : "") + stake
     + '<div class="mk-acts">' + acts + "</div>" + '<p class="mk-note">' + cs.w("screen.start-send.approvefixes") + "</p>" + nosend;
 }
@@ -249,6 +295,15 @@ export const PREPARE = Object.freeze({
 export const PREPARE_FILING = Object.freeze({
   // R3: the filing from the group's template for this kind, or the member's text where she wrote one.
   op: "filingprepare",
+  // R41 (C70): the tier refusal draws its words and, beside them, the door to the action's risk (`risk.title`, where a member
+  // states the tier); the action is the one the refusal names. No refusal, no door.
+  refusals: {
+    FILING_TIER_UNDETERMINED: function (refusal, cs) {
+      const id = typeof refusal.action === "string" ? refusal.action : "";
+      return cs.w("refusal.FILING_TIER_UNDETERMINED")
+        + (id ? ' <a class="cs-ref" href="/app/action/' + encodeURIComponent(id) + '" data-nav>' + cs.w("risk.title") + "</a>" : "");
+    },
+  },
   send: function (view, el, cs) {
     const text = String(cs.value("send-text-" + (view.ui.draftN || 0)) || "").trim();
     return { body: text ? { action: view.subject, text: text } : { action: view.subject } };
@@ -258,14 +313,64 @@ export const PREPARE_FILING = Object.freeze({
 
 export const APPROVE = Object.freeze({
   // R3: terminal: approving fixes the text (the shell's dialog says so, `act.filingapprove.does`).
+  // R42 (C71; BOB's B11): refused with the sentences pointed out as saying the body broke a rule (`ASSERTION_UNRESOLVED`), the
+  // refusal draws one choice per sentence beside the act: rewrite it (edit the text above), say in her own words that it only
+  // asks (`words`), or treat the act as a breach claim. The resend carries `resolutions: [{sentence, resolution, words?}]`, the
+  // sentence's exact text; what she answered on an earlier refusal is carried again, as the record lists only what is still open.
   op: "filingapprove",
+  refusals: {
+    // the choices are drawn by the steps, above the approval, as the page's own fields: the refusal's place beside the act is
+    // replaced by the confirmation each press of a terminal act asks first
+    ASSERTION_UNRESOLVED: function (refusal, cs) {
+      const list = Array.isArray(refusal.sentences) ? refusal.sentences.filter(function (x) { return x && typeof x.text === "string"; }) : [];
+      cs.set("assertions", { filing: typeof refusal.filing === "string" ? refusal.filing : "", items: list.map(function (x, i) { return { index: typeof x.index === "number" ? x.index : i, text: x.text }; }) });
+      return cs.w("refusal.ASSERTION_UNRESOLVED");
+    },
+    // B16 (a): the sentences the record contradicts, held until released with a reason (drawn by the steps, above the approval)
+    CONTRADICTED_HELD: function (refusal, cs) {
+      const list = Array.isArray(refusal.sentences) ? refusal.sentences.filter(function (x) { return x && typeof x.text === "string"; }) : [];
+      cs.set("contradicted", { filing: typeof refusal.filing === "string" ? refusal.filing : "", items: list.map(function (x, i) { return { index: typeof x.index === "number" ? x.index : i, text: x.text }; }) });
+      return cs.w("refusal.CONTRADICTED_HELD");
+    },
+  },
   send: function (view, el, cs) {
     const body = { filing: el.dataset.filing };
-    if (view.ui.draft && view.ui.draft.id === el.dataset.filing) {
+    const own = view.ui.draft && view.ui.draft.id === el.dataset.filing;
+    let edited = "";
+    if (own) {
       const t = cs.value("send-text-" + (view.ui.draftN || 0));
-      if (typeof t === "string" && t.trim() && t !== view.ui.draft.text) body.text = t;
+      if (typeof t === "string" && t.trim() && t !== view.ui.draft.text) { body.text = t; edited = t; }
     }
+    const kept = view.ui.resolved || (view.ui.resolved = {});
+    const open = view.ui.assertions && view.ui.assertions.filing === el.dataset.filing && Array.isArray(view.ui.assertions.items) ? view.ui.assertions.items : [];
+    open.forEach(function (x) {
+      const pick = cs.value("assert-pick-" + x.index);
+      const words = String(cs.value("assert-words-" + x.index) || "").replace(/\s+/g, " ").trim().slice(0, 500);
+      if (Array.isArray(pick) && pick.includes("breach_claim")) kept[x.text] = { sentence: x.text, resolution: "breach_claim" };
+      else if (words) kept[x.text] = { sentence: x.text, resolution: "only_asks", words: words };
+    });
+    // a resolution binds the exact text: one whose sentence is no longer in the text is not sent
+    const now = own ? (edited || view.ui.draft.text || "") : "";
+    const resolutions = Object.keys(kept).filter(function (k) { return !now || now.indexOf(k) >= 0; }).map(function (k) { return kept[k]; });
+    if (resolutions.length) body.resolutions = resolutions;
+    // B16 (a): a sentence ticked for release goes with the approval as `release: [{ord, reason}]` (the sentence's index and a
+    // non-blank reason of at most 500 characters); a tick with no reason is refused in place
+    const held = view.ui.contradicted && view.ui.contradicted.filing === el.dataset.filing && Array.isArray(view.ui.contradicted.items) ? view.ui.contradicted.items : [];
+    const release = [];
+    for (const x of held) {
+      const pick = cs.value("release-pick-" + x.index);
+      if (!(Array.isArray(pick) && pick.includes("release"))) continue;
+      const why = String(cs.value("release-why-" + x.index) || "").replace(/\s+/g, " ").trim().slice(0, 500);
+      if (!why) return { refuse: "shell.reason.needed" };
+      release.push({ ord: x.index, reason: why });
+    }
+    if (release.length) body.release = release;
     return { body: body };
+  },
+  done: function (view, answer, cs) {
+    view.ui.assertions = null; view.ui.resolved = null; view.ui.contradicted = null;
+    const out = answer && Array.isArray(answer.released) ? answer.released.filter(function (r) { return r && typeof r.reason === "string" && r.reason; }) : [];
+    cs.set("releasedDone", { items: out });
   },
 });
 
@@ -291,6 +396,23 @@ export const SECOND = Object.freeze({
   send: function (view, el) { return { body: { filing: el.dataset.filing } }; },
 });
 
+export const TEMPLATE_SAVE = Object.freeze({
+  // R48 (C75; DEC-377): keeps the approved filing as the team's template, as a filing or as a brief for counsel (`filings` R32).
+  op: "templatesave", rereads: [],
+  send: function (view, el, cs) {
+    const name = String(cs.value("template-name") || "").trim();
+    if (!name || name.length > 200 || /[\r\n]/.test(name)) return { refuse: "refusal.TEMPLATE_NAME_REFUSED" };
+    const body = { filing: el.dataset.filing, name: name, use: cs.value("template-use") === "brief" ? "brief" : "file" };
+    // C65: the template is kept in the project the action belongs to, a scope its drafting rule accepts for a joined member; the filing's
+    // own basis names a project only when it rests on a determination, so a request or a start from a plan would otherwise ask for none
+    const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : null;
+    if (a && typeof a.project === "string" && a.project) body.project = a.project;
+    const notes = String(cs.value("template-notes") || "").trim();
+    if (notes) body.notes = notes;
+    return { body: body };
+  },
+});
+
 export const RECORD_SENT = Object.freeze({
   // R3, R4, R8: the member sent it by the office's own means; this records the day, how, and the venue's reference.
   op: "filingrecordsent", outward: true,
@@ -314,7 +436,11 @@ export const WRITE_HELP = Object.freeze({
   op: "writinghelp", rereads: [], reasonField: "told",
   send: function (view, el, cs) {
     view.ui.helpId = el.dataset.id;
-    return { body: { op: el.dataset.forop, field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
+    // the owner's declaration (`writinghelp`, wizard-scripts R46) requires `op`, the act the words are for (`data-forop`); a field that
+    // names none has nothing to be helped for and sends nothing
+    const forop = el.dataset.forop;
+    if (!forop) return null;
+    return { body: { op: forop, field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
   },
   done: function (view, answer, cs) {
     const a = answer && answer.result !== undefined ? answer.result : answer;

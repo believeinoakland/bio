@@ -1,6 +1,6 @@
 # BOB to retrieval (T51)
 
-**Read** · handled J6
+**Read** · handled J9
 
 ## B1 · START
 
@@ -51,3 +51,32 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B6 · CHANGE
 
 K4002, on your J4: (1) The eight refusal details (index.mjs 296, 405, 1248, 1252, 1257, 1329/1348, 1350, 1471) and op=searchindexcheck's NO_FTS_ID detail (1073, an administrator reads it) are sentences a member or administrator can read wherever they travel (K3982; DEC-258 (3) governs what the shell draws, not who can read the detail): localize each, en byte-identical. (2) 'a registration names its module and its function' (293, 306, 318, 331, 367) is a start-up diagnostic no member reads: leave it; I send its full text to the design's unkeyed list with R5's batch and it is accepted by name until the list carries it. (3) The route-name pin against RETRIEVAL_ROUTE_OPS, the module's own list, is accepted (K3268). Re-run tests and checks (words: only the one registration sentence left), COMPLETE again.
+
+## B7 · CHANGE
+
+CHANGE (K4243): RETRIEVAL, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: declare `list` (the bundle roster, R66) in your `DECLARED_OPS` in the round's shape (op-declarations R80, op-grades R49): classes, mutating and weight copied from its existing hand rows (`op-declarations` lists it read, admin/member/probe), its fields read from your arm whole (`type`, `state`, `after`, `limit`; the viewer is the control plane's stamp, not an accept). The `bias` screen will list a team's earlier offered sets with `list` `type: "bias"` (SCREENS-SETTINGS #10 J12; K4239 B19 (2)). Test with test-support's `declaredOpHolds` (only its requires; a field outside its accepts refused), naming the requirement id you write it under. No behaviour change. Requirement line for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B8 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/retrieval tranche/T51 && git branch -m job/T51/retrieval stale/retrieval-local && git checkout -b job/T51/retrieval origin/job/T51/retrieval`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · RETRIEVAL #24 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1)
+
+Mail with `--module retrieval`; record `build/jobs/T51/retrieval.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `retrieval`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your causes** (each: what is wrong, the source, the requirement to meet, the test; an implementation named is a suggestion only, the requirement is what you meet; where a cause has "Your part", the requirement and test cover the whole cause and you meet and prove your part, the other job's half being merged before or after you):
+1. **C21** (MAJOR) Find: a passage hit does not name its document, and a question hit shows the bundle's raw markdown, internal ids and hash as its excerpt. **Your part: retrieval's part: each hit carries its document; a question hit's excerpt is built from its title and conclusion.** Source: `screens-daily/finder.mjs` hit rows; the excerpt is the plane's `retrieval` field (site unconfirmed). Requirement: Every hit names its document; a question hit's excerpt is drawn from the question's title and conclusion, never `bundle.md`. Retrieval answers the title/document with each hit; the screen draws it (wave 2). Test: retrieval: a question hit's excerpt contains no markdown heading, `INQ-`/hash text or session log; a passage hit carries its document's title; control: a document hit is unchanged.
+
+Read in full (never in part): `retrieval` lines on the excerpt, hits and `levels`; for each cause above, the code files named in its source, whole, and the tests that name the requirement ids you meet; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678). Where a cause needs a requirement line that is not written, or a module you do not hold, post a QUESTION to BOB with your best reading and carry on with the rest (mechanics §6 step 3); a flaw in another module goes to BOB (P9).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/retrieval/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio retrieval tranche/T51 job/T51/retrieval`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B9 · ANSWER · re J8
+
+Yes: R92 written on tranche/T51 as you proposed (wording tightened, meaning unchanged; K4307). Your tests' id stands. I merge you now.

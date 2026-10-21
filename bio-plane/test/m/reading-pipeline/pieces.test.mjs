@@ -232,7 +232,10 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     assert.ok(out.reading.read_from_text && Array.isArray(out.text_units) && out.text_units.length > 0, `${name}: read, with units`);
     /* R28 (K1556; K2092) adds `metadata` (and a workbook's or a `.docx` document's `cells`) to the reading on purpose;
        every other byte stays pinned. */
-    const { metadata, cells, title, ...before } = out.reading;
+    const { metadata, cells, title, words_total, words_read, ...before } = out.reading;
+    /* R35 (T51 fix round 2) adds the two word counts on purpose: a capture read whole answers them equal; every other byte
+       stays pinned. */
+    assert.ok(Number.isInteger(words_total) && words_total > 0 && words_total === words_read, `${name}: R35's counts, equal`);
     /* R34 (T50) adds `title` on purpose, null for a PDF and an office capture (no entry states one); every other byte
        stays pinned. */
     assert.equal(title, null, `${name}: R34's title is present and null`);

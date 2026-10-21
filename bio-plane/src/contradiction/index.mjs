@@ -32,12 +32,14 @@
    amounts `money` holds for one transfer (its read contract `money_facts`, R19 there, and `reconcile`, R11 there); the
    module registers as a connection owner (`connection-grammar`, R58 here) and declares its tables explicitly (R59). */
 import { recordOf } from "../record-core/index.mjs";
+import { viewerMember, baseViewer, ROOT_ADMIN } from "../member-roster/index.mjs";
 import { viewerPredicate, GATE_MARK, membershipOf, noSuchProject, notAParticipant } from "../membership/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { basisVersionsOf, versionsIn } from "../basis-versions/index.mjs";
 import { eventsOf } from "../events/index.mjs";
+import { canonicalExtent } from "../content/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { compare, bounds } from "../civil-time/index.mjs";
 import { defaultRegistry, derivedId, isRecordId, BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
@@ -109,6 +111,12 @@ export const FALSE_CONFLICT_REASONS = Object.freeze(["same_fact_different_precis
 export const CLARIFY_CHOICES = Object.freeze(["differs", "one_wrong", "no_difference"]);
 /** R39: when an acceptance rate is due for review (DEC-77 item 3; §15 point 15). PROVISIONAL, as IDENTIFY's was. */
 export const ACCEPTANCE_REVIEW = Object.freeze({ rate: 0.95, min_offered: 30, status: "PROVISIONAL" });
+/** R61: the key a member's own flag of two documents is held under. It is no pairing key (R5, R18): the plane forms no
+ *  pair for it, a member names the two passages, so `pairs` never answers it and R5 refuses it. */
+export const FLAG_KEY = "FLAG";
+/** R61: a flag is a source against a source, the `world` label, so it is a lead (R24) and creates no duty of its own. */
+export const FLAG_LABEL = "world";
+
 /** R50: the one sentence a notice carries. */
 export const NOTICE_SENTENCE = word("contradiction.notice_sentence");
 /** R50 (T41, D64): the one sentence a notice carries instead when it names another party, a non-hidden project the
@@ -303,6 +311,13 @@ export class Contradiction {
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #x() { return typeof this.#extraction === "function" ? (this.#extraction = this.#extraction()) : this.#extraction; }
+  /** The member id a viewer's session names, as membership R154 reads it (`member-roster` R73): the id in `member:<id>`,
+   *  and for the founder's bare `admin` the founder's own id, so the founder is judged a joined participant (or not)
+   *  like any member. Null for a machine credential and for a spelling nothing admits. */
+  #memberOf(viewer) {
+    return viewerMember(viewer, baseViewer(viewer) === ROOT_ADMIN ? `member:${ROOT_ADMIN}` : null);
+  }
+
   /* Each service reached on first use: a function given is called once and its answer kept. */
   #m() { return typeof this.#membership === "function" ? (this.#membership = this.#membership()) : this.#membership; }
   #p() { return typeof this.#promotion === "function" ? (this.#promotion = this.#promotion()) : this.#promotion; }
@@ -1075,9 +1090,10 @@ export class Contradiction {
     this.#sql.exec(
       `INSERT OR IGNORE INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id,
          b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at, a_side, b_side, seq)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?,?,?,?)`,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed',?,?,?,?,?)`,
       row.candidate, row.key, row.a.kind, row.a.ref, row.a.version, row.a.bundle,
-      row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at,
+      row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason,
+      row.origin ?? "machine", row.at,
       JSON.stringify(row.a_side), JSON.stringify(row.b_side), seq);
     return true;
   }
@@ -1450,8 +1466,10 @@ export class Contradiction {
        read under the viewer's own sight: a project hidden from them is neither named nor counted (N366; R19, R55). */
     const parties = reaches ? this.#parties(row) : null;
     const shownReach = reaches ? this.#parties(row, viewer) : null;
-    const member = viewerPredicate(viewer).member;
+    const member = this.#memberOf(viewer);
     const m = this.#m();
+    /* R25: who took it up and in what words, from the `take_up` act the view already holds; kept once it is resolved. */
+    const takeUp = view.state === "taken_up" || view.state === "resolved" ? view.acts.find((a) => a.act === "take_up") : null;
     const between = parties && isProjectConflict(view.weight, view.state) && member
       ? parties.all.filter((p) => m && typeof m.isJoinedParticipant === "function" && m.isJoinedParticipant(p, member))
           .map((p) => ({ project: p, ...this.#partyView(row, p) }))
@@ -1459,11 +1477,13 @@ export class Contradiction {
     return {
       candidate: row.candidate, key: row.key, why: row.a?.context?.why ?? CONTRADICTION_KEYS[row.key]?.why ?? null,
       a: this.#shown(row.a), b: this.#shown(row.b),
-      machine: this.#machine(row), weight: view.weight, state: view.state,
+      machine: row.origin === "member" ? null : this.#machine(row), weight: view.weight, state: view.state,
       resolution: this.#resolutionOf(view), inquiry: view.inquiry,
       recommendations: this.#standing(row, view),
       reach: shownReach ? { projects: shownReach.all, truncated: shownReach.truncated } : null,
       default_question: this.#defaultQuestion(row),
+      ...(row.origin === "member" ? { flagged_by: { member: row.proposed_by, at: row.at, reason: row.reason } } : {}),
+      ...(takeUp ? { taken_up: { member: takeUp.author, at: takeUp.at, words: takeUp.words ?? null } } : {}),
       ...(between.length ? { between_projects: between } : {}),
     };
   }
@@ -1674,7 +1694,7 @@ export class Contradiction {
       /* DEC-85: seen half. Told only to a joined participant of a party reached through the side they may see, and
          carrying nothing of the other side. */
       if (!isProjectConflict(view.weight, view.state)) return [];
-      const member = viewerPredicate(viewer).member;
+      const member = this.#memberOf(viewer);
       const m = this.#m();
       if (!member || !m || typeof m.isJoinedParticipant !== "function") return [];
       return this.#reachOf(row[which]).projects.filter((p) => m.isJoinedParticipant(p, member))
@@ -2007,9 +2027,11 @@ export class Contradiction {
       derived: { method, as_of: row.at,
                  inputs: [{ candidate: row.candidate, key: row.key, a: ref("a"), b: ref("b"), run: row.run, label: row.label }] },
       candidate: row.candidate, key: row.key, weight: view.weight, state: view.state,
-      machine_work: true,
-      judgement: { label: row.label, reason: row.reason, run: row.run, proposed_by: row.proposed_by, origin: "machine" },
-      says: word("contradiction.says.two_things_paired"),
+      machine_work: row.origin !== "member",
+      judgement: { label: row.label, reason: row.reason, run: row.run, proposed_by: row.proposed_by, origin: row.origin ?? "machine" },
+      says: row.origin === "member"
+        ? localize("contradiction.says.two_documents_flagged", "two documents a member set side by side as contradicting, with their reason: a proposal for the project to settle, never evidence. A chain through it is a lead")
+        : word("contradiction.says.two_things_paired"),
       undetermined: { why: { key: UNDATED_WHY.key, vars: { ...UNDATED_WHY.vars } } },
     };
   }
@@ -2469,7 +2491,11 @@ export class Contradiction {
         files: files.map((f) => (f.path === "bundle.md" ? { path: "bundle.md", text } : f)),
         meta: { object_type: "inquiry", last_updated: when } });
       if (written.ok === false) return written;
-      const concluded = this.#b().conclude({ target: id, conclusion: conclusion ?? "", version: version ?? "",
+      /* R36: no named version means no reading to adopt on a freshly taken-up question, so the member's conclusion is her
+         own reading, accepted and concluded on in one act (`basis-versions` R51; its BAD_READING reaches her). */
+      const named = typeof version === "string" ? version.trim() : "";
+      const concluded = this.#b().conclude({ target: id, conclusion: conclusion ?? "", version: named,
+        ...(named ? {} : { reading: String(conclusion ?? "") }),
         falsifier: falsifier ?? "", noFalsifier: !!noFalsifier, viewer, author: who, identity: who });
       if (concluded.ok === false) return concluded;
       const act = this.#appendAct(row, view, { act: "resolve", author: who, inquiry: id, kind: res.kind ?? null,
@@ -2479,6 +2505,89 @@ export class Contradiction {
                conclusion: concluded,
                says: word("contradiction.says.question_concluded_resolution") };
     });
+  }
+
+  /** R61: one passage a member names, `{capture, extent}`: the capture it is of and the extent in it (`content` R1's), found
+   *  as the content row held for exactly that capture and canonical extent (`content` R45's read contract) and filed in a
+   *  bundle the viewer may see. A passage that is not named whole, is not held, or is not seen is one answer. */
+  #flagPassage(name, passage, viewer) {
+    const missing = (why) => ({ refusal: Contradiction.#refuse("FLAG_NO_PASSAGE",
+      localize("contradiction.index.flag_no_passage_detail", "{name}: {why}", { name, why }), { passage: name }) });
+    const p = passage && typeof passage === "object" && !Array.isArray(passage) ? passage : null;
+    const capture = p && typeof p.capture === "string" ? p.capture.trim() : "";
+    const extent = p && p.extent && typeof p.extent === "object" && !Array.isArray(p.extent) ? p.extent : null;
+    /* DEC-49 REGION is-flag-no-passage */
+    if (!capture || !extent || typeof extent.kind !== "string")
+      return missing(localize("contradiction.index.flag_passage_unnamed", "name the capture and the extent in it"));
+    let canon;
+    try { canon = canonicalExtent(extent); } catch { canon = null; }
+    const row = canon ? this.#rows(`SELECT content_id, capture_sha, bundle_id, ref, extent_kind, stale FROM content
+                                     WHERE capture_sha=? AND extent=? ORDER BY content_id LIMIT 16`, capture, canon)
+      .find((r) => this.#sees(r.bundle_id, viewer)) : null;
+    if (!row) return missing(localize("contradiction.index.flag_passage_unheld", "no passage you can see is held there"));
+    /* END DEC-49 REGION is-flag-no-passage */
+    return { row };
+  }
+
+  /** op=contradictionflag — R61: a member sets a passage of one document beside a passage of another as a contradiction
+   *  their project settles, with their reason. It is recorded as a run's judgement would be (R15), under the key `FLAG`,
+   *  label `world`, as the member's own act (`origin: "member"`, `proposed_by` the member): never machine work, and a lead
+   *  (R24), settled as any candidate (R31–R36). A candidate already held over the same two passages (any key, shown) is
+   *  answered and nothing is written. It never edits a document. */
+  flag({ here = null, other = null, reason = null, viewer = null, author = null, at = null } = {}) {
+    const machine = this.#machineRefusal(author);
+    if (machine) return machine;
+    const found = [["here", here], ["other", other]].map(([name, p]) => this.#flagPassage(name, p, viewer));
+    const lost = found.find((f) => f.refusal);
+    if (lost) return lost.refusal;
+    const [x, y] = found.map((f) => f.row);
+    /* DEC-49 REGION is-flag-same-document */
+    if (x.bundle_id === y.bundle_id || x.capture_sha === y.capture_sha)
+      return Contradiction.#refuse("FLAG_SAME_DOCUMENT",
+        localize("contradiction.index.flag_same_document_detail", "both passages are in the same document"));
+    /* END DEC-49 REGION is-flag-same-document */
+    /* DEC-49 REGION is-flag-no-reason */
+    if (typeof reason !== "string" || !reason.trim())
+      return Contradiction.#refuse("FLAG_NO_REASON",
+        localize("contradiction.index.flag_no_reason_detail", "say in your own words how the two disagree: no reason was given"));
+    /* END DEC-49 REGION is-flag-no-reason */
+    const over = this.#overCap({ reason });
+    if (over) return over;
+    const memo = new Map();
+    const side = (r) => {
+      const d = this.#doc(r.capture_sha, memo, viewer);
+      return { kind: "extent", content_id: r.content_id, capture_sha: r.capture_sha, ref: r.ref, extent_kind: r.extent_kind,
+               doctype: d.doctype, date: d.date,
+               ...(d.dated ? { date_precision: d.dated.precision, date_zone: d.dated.zone } : {}), read: d.read };
+    };
+    const handle = (q) => `${q.kind}|${q.ref}@${q.version}`;
+    const [sx, sy] = [side(x), side(y)];
+    const [rx, ry] = [this.#side(sx), this.#side(sy)];
+    const inOrder = handle(rx) <= handle(ry);
+    const [a, b] = inOrder ? [rx, ry] : [ry, rx];
+    const [pa, pb] = inOrder ? [sx, sy] : [sy, sx];
+    const id = sha256HexSync(canonicalJson({ v: 1, key: FLAG_KEY, sides: [handle(a), handle(b)] }));
+    /* A candidate already held over the same two passages, whichever key formed it, is the one answered; one withheld as
+       `not_shown` is not shown to this member, so it is no answer to a flag. */
+    const held = this.#rows(`SELECT candidate FROM contradiction_candidates
+                              WHERE (a_ref=? AND a_version=? AND b_ref=? AND b_version=?)
+                                 OR (a_ref=? AND a_version=? AND b_ref=? AND b_version=?) ORDER BY seq`,
+                            a.ref, a.version, b.ref, b.version, b.ref, b.version, a.ref, a.version)
+      .map((r) => ({ id: r.candidate, row: this.#candidate(r.candidate) }))
+      .map((c) => ({ ...c, view: this.#view(c.row) }))
+      .find((c) => c.view.weight !== "not_shown" && this.#sideSeen(c.row.a, viewer) && this.#sideSeen(c.row.b, viewer));
+    if (held)
+      return { ok: true, already: true, wrote: false, candidate: held.id, state: held.view.state,
+               says: localize("contradiction.says.flag_already_held", "these two passages are already set side by side as a contradiction, and it stays as it is") };
+    const who = author.trim();
+    const stamp = at || this.#now();
+    const why = localize("contradiction.flag_why", "a member set these two documents side by side as contradicting, with their reason");
+    const row = { candidate: id, key: FLAG_KEY, a, b, run: "", proposed_by: who, label: FLAG_LABEL, reason: reason.trim(),
+                  origin: "member", at: stamp, a_side: { ...pa, context: { why } }, b_side: { ...pb, context: { why } } };
+    this.#record.transact(() => this.#append(row));
+    return { ok: true, wrote: true, candidate: id, key: FLAG_KEY, weight: "lead", state: "open",
+             flagged_by: { member: who, at: stamp, reason: row.reason },
+             says: localize("contradiction.says.flag_written", "these two passages are set side by side as a contradiction for your project to settle: a lead, not a finding. Neither document is changed") };
   }
 
   /** op=contradictionrecommend — R37: the machine's one act. */
@@ -2695,7 +2804,7 @@ export class Contradiction {
     if (ex) return { refusal: ex };
     const held = pid ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid) : null;
     if (!held || held.object_type !== "project" || !this.#sees(pid, viewer)) return { refusal: noSuchProject(pid || null) };
-    const member = viewerPredicate(viewer).member;
+    const member = this.#memberOf(viewer);
     if (!member || !m || !m.isJoinedParticipant(pid, member)) return { refusal: notAParticipant(pid, member) };
     return { project: pid, member };
   }
@@ -2986,6 +3095,7 @@ export function contradictionOps(c, url, body) {
       explanation: v("explanation"), evidence: b.evidence, qualifiers: b.qualifiers, wrongSide: v("wrongSide"),
       reason: v("reason"), accepted: b.accepted, ...stamps() }),
     contradictiontakeup: () => c.takeUp({ candidate: v("candidate"), question: v("question"), frame: v("frame"), ...stamps() }),
+    contradictionflag: () => c.flag({ here: b.here, other: b.other, reason: v("reason"), ...stamps() }),
     contradictionresolve: () => c.resolve({ inquiry: v("inquiry"), resolution: b.resolution, conclusion: v("conclusion"),
       version: v("version"), falsifier: v("falsifier"), noFalsifier: v("noFalsifier"), accepted: b.accepted, ...stamps() }),
     contradictionrecommend: () => c.recommend({ run: b.run, candidate: b.candidate, coordinates: b.coordinates, at: b.at || null,
@@ -3010,6 +3120,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["candidate","choice","coordinates","explanation","evidence","qualifiers","wrongSide","reason","accepted"], requires: ["candidate","choice"] } },
   contradictiontakeup: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("contradiction.declared.contradictiontakeup", "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side"),
     fields: { accepts: ["candidate","question","frame"], requires: ["candidate","question","frame"] } },
+  contradictionflag: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, stamps: ["author","viewer"], needs: "contribute", weight: "reasoned", description: localize("contradiction.declared.contradictionflag", "document-directed: keyed by a passage in each of two documents the member may see, reached from either document; sets them side by side as a contradiction for the project to settle, with the member's reason, and changes neither document"),
+    fields: { accepts: ["here","other","reason"], requires: ["here","other","reason"] } },
   contradictionoptin: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("contradiction.declared.contradictionoptin", "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn"),
     fields: { accepts: ["candidate","project","words"], requires: ["candidate","project"] } },
   contradictionrespond: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("contradiction.declared.contradictionrespond", "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other"),

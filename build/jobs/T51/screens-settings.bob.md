@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J8
+**Read** · handled J15
 
 ## B1 · START
 
@@ -140,3 +140,57 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B15 · CHANGE
 
 CHANGE (K4213; file-safety J8, R46): `scanstatus` now carries `no_signatures: {since, reason, key, words, reason_key, reason_words}` when the scanner holds no signatures (absent otherwise). The `security` screen reads only `queued` and `held`; draw `no_signatures` by its key and words (the words are the answer's, by key), with a test and a control (absent: nothing drawn).
+
+## B16 · ANSWER · re J9
+
+ANSWER (K4227): confirmed: `writinghelp`'s arm refuses without `op` and R27's body is `{op, field, told, draftHeld}`. WIZARD-SCRIPTS #17 adds `op` to its `accepts` and `requires`; your four tests are accepted red by name until it merges, then merge the tranche.
+
+## B17 · RESUME
+
+RESUME (K4236): nothing pushed on your branch for 20 minutes while WORKING. Read your mailbox past your cursor (B13..B16), merge tranche/T51, and carry on; post BLOCKED with its cause if you are stuck.
+
+## B18 · ANSWER · re J10
+
+ANSWER (K4237) to J10.
+1. R12 is amended: a read is drawn when the session's class is among its `OPS` classes, set or no set (INTERFACE-SHELL #10, B23); `export` joins the founder's session set (OP-DECLARATIONS #30). Write your tests against that; BOB tells you when both merge.
+2. `bootstrap` accepts `members`: a CREDENTIALS job declares it (BOB tells you at its merge).
+3. a, b: the missing words (part names, "release {version}", answering/unbound/misnamed, the file test's and the runtime's sentences as `selftest` and `runtime` answer them, the Settings section "For every member" and `screen.bias.purpose`) go to UX-DESIGN (HANDOFF B425). Draw as you describe meanwhile; tests needing those rows are accepted red by name until it answers. c: your reading is right; keep it.
+
+## B19 · ANSWER · re J11
+
+ANSWER (K4239) to J11. A: the missing rows go to UX-DESIGN as HANDOFF B427, listed as you give them; draw meanwhile as you say (no label, no heading, never English of your own); tests needing them are accepted red by name until it answers. B: readings (1), (3) and (4) accepted. (2): also list the team's offered sets with `index` filtered to `object_type: bias`, when `index`'s declaration accepts that filter (else keep the in-sitting set only and REPORT); a set offered earlier must be adoptable without writing it again.
+
+## B20 · CHANGE
+
+CHANGE (K4239): interface-shell is merged with R12 (a read is drawn by its classes): merge tranche/T51; your updates, group exportlog and bias reads now draw. export's founder reach follows OP-DECLARATIONS #30; bootstrap's members follows CREDENTIALS #24 (BOB tells you at each merge).
+
+## B21 · CHANGE
+
+CHANGE (K4239): credentials is merged: bootstrap accepts members. Merge tranche/T51; the updates screen's "Show what each part runs" may send members=1.
+
+## B22 · CHANGE
+
+CHANGE (K4246): SCREENS-SETTINGS, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entries: (1) K4239's B19 (2), not done by #10 for want of a declared filter: the `bias` screen lists the team's earlier offered sets through `retrieval`'s `list` with `type: "bias"` (declared since RETRIEVAL #23, R91: accepts `type`, `state`, `after`, `limit`), so a set offered earlier is adoptable, not only the one saved this sitting; follow `after` while the answer says more exists, within the page's bound. Test naming R65 (or the id you amend); control: a set of another type is not listed, an empty answer draws no list. (2) `entitybyalias` is declared (entities R62): your bias form's lookup now counts as declared; confirm your test sends only `alias`. (3) Your two R66 `export` tests: `export` is in the founder's session set (op-declarations R83, merged); merge the tranche and confirm they are green. Replace any hand registration in your tests with test-support's `registerDeclared` (R17). Requirement lines for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B23 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Your keys: (B425) the health parts by bootstrap's id (`screen.updates.health.part.*`, `.part.release`, `.part.state.*`, `.part.other`, `.file.test`, `.runtime.{heaviest, average, samples, limits}`), `screen.settings.everyone`; (B427) the `bias` screen's labels, kinds, headings, row templates, `it_read_sentences_of`, `by_admin_for_the_team` with its `.team`/`.project` variants; (B417 2) `screen.bias.purpose`. Runtime's unit codes need a word each: BOB sends the list. Every test you held for these rows must now be green.
+
+## B24 · CHANGE
+
+CHANGE (K4249), with B23: `runtime`'s units are exactly two codes, `ms` and `bytes` (instance-setup R34; a metric ending `_bytes` is bytes, else ms); the subrequests ceiling carries no unit. The design is told; until it gives each a word, draw the code beside the number.
+
+## B25 · CHANGE
+
+CHANGE (K4259): SCREENS-SETTINGS, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5, medium effort (one model up if it blocks on tests).
+Why: the screen registry is re-taken at the design commit `09fbb247eb` (DEC-389; wizard-scripts R41, merged, K4259). WIZARD-SCRIPTS #20 compared every screen's registered acts with what its module draws; your screens differ as below. Draw each act as the design draws it (the drawing under `docs/development/ux-substrate/`, its rows in `words.json`), through interface-shell's kit, so interface-shell's `checkScreens` over your screens names no difference. An act whose drawing or rows are missing: draw nothing for it and name it in your COMPLETE (BOB HANDOFFs it to the design). Requirement lines for BOB in your COMPLETE.
+Entries:
+1. `updates` (R68, DEC-389): the runtime figures are said with their units by key, `screen.updates.health.runtime.unit.ms` and `.unit.bytes` (instance-setup R34 answers `ms` and `bytes`), never a bare number or the raw unit token.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-settings tranche/T51 job/T51/screens-settings`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

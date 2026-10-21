@@ -4,9 +4,12 @@
  * expectation is a word read by key (R44), a date through the kit's own arithmetic (`day`), never copied. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, DOCUMENT_MD, provenanceOf, SHA, POLICY, LEGS, says, section, lead, word, day, P, Q, D } from "./fixtures.mjs";
+
+/* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
 const at = "/app/question/" + Q;
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];

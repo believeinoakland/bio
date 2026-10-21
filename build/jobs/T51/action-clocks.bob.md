@@ -1,6 +1,6 @@
 # BOB to action-clocks (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -36,3 +36,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio action-clocks tranche/T51 job/T51/action-clocks`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+CHANGE (K4227), a new job session (ACTION-CLOCKS #16, sonnet): `clockPropose`'s `NO_SUCH_RULE` answers `{target, rule, detail}` and no list, so the due-date screen (screens-investigate R59) cannot offer the member a choice. Add `deadlines: [{rule, label?, citation?}]` to that refusal's answer: the deadlines the team's profile states that apply to the action's kind (what `clockPropose` would accept as `rule`), each with its label and citation where the profile gives them; an empty list when none applies. The code and the rest of the answer are unchanged (a field added, BOB's, §7). Requirement line (K4210): amend the refusal's line in `build/requirements/action-clocks.md`. Tests: the list for a kind with deadlines, the empty list, and a control that a valid rule is unchanged. Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

@@ -4932,7 +4932,7 @@ W.append(dict(key='screen.domainfile.step4', en="Open {address} in a browser. It
 W.append(dict(key='screen.domainfile.step5', en='Come back here and ask Civicsmith to check it, with the button above.', protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): step 5; "the button above" is the verify button of this screen'))
 W.append(dict(key='screen.domainfile.daily', en='Civicsmith reads the file as soon as you ask for the check, and again once a day, so a website that later drops the file stops being shown as verified.', protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): what the check does and when it repeats'))
 W.append(dict(key='screen.domainfile.refused.summary', en='When the check does not pass', protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): summary of the refusals fold'))
-W.append(dict(key='screen.domainfile.refused.malformed', en='That is not a website name. Type only the name, such as lakeshoretenants.org: no https://, no page, no port and no numbers-only address. Nothing was recorded.', protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): refusal for an address that is not a bare host name'))
+W.append(dict(key='screen.domainfile.refused.malformed', en='That is not a website name. Type only the name, such as example-tenants.org: no https://, no page, no port and no numbers-only address. Nothing was recorded.', protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): refusal for an address that is not a bare host name'))
 W.append(dict(key='screen.domainfile.refused.absent', en='Civicsmith found no file at that address, or the website sent it to another page. Check the folder name and the file name, and that the file opens without signing in, then ask for the check again.', protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): the check found no file'))
 W.append(dict(key='screen.domainfile.refused.mismatched', en="The file there is not this one. It names a different Civicsmith address or short name than your team's, or it is not the kind of file Civicsmith reads. Replace it with the file from this page, then ask for the check again.", protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): the file differs'))
 W.append(dict(key='screen.domainfile.refused.undetermined', en='Civicsmith could not reach the website just now. This says nothing against it, and your team is not marked as failing. Try again in a few minutes.', protected=False, note='DEC-374: B398 C11 (instance-setup groupdomainset): the check could not be made'))
@@ -4941,7 +4941,7 @@ W.append(dict(key='screen.domainfile.refused.notadmin', en="Only an administrato
 W.append(dict(key='screen.bias.the_lens_your_team_reads', en='Your team\'s declared way of reading evidence (its lens), stated so a reader can discount it.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.it_never_blocks_work', en='It never blocks work.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.in_force_for_the_coliseum', en='In force for {project}', protected=False, note='DEC-378: B401, sample data as placeholders ({project} the project name, {name} a member handle, {owners} the owners handles); DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
-W.append(dict(key='screen.bias.by_admin_for_the_team', en='By {admin} for the team, and by {owner} for this project, on {date}, each with a reason.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone. Placeholders hold a member name, a date or the title of the work.'))
+W.append(dict(key='screen.bias.by_admin_for_the_team', en='By {admin} for the team on {admin_date}, and by {owner} for this project on {owner_date}, each with a reason.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone. Placeholders hold a member name, a date or the title of the work.'))
 W.append(dict(key='screen.bias.what_this_set_does_not', en='What this set does not enforce', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.the_same_lens_gives_the', en='an identifying number, so anyone can check they are reading the same set of statements.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.when_a_project_statement_meets', en='When a project statement meets a locked one', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
@@ -4999,7 +4999,7 @@ W.append(dict(key='screen.bias.kept_with_the_set_so', en='Kept with the set, so 
 W.append(dict(key='screen.bias.when_you_read_it', en='When you read it', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.proposed_not_yet_yours', en='Proposed, not yet yours.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.choose_who_it_is_about', en='Choose who it is about and write why.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
-W.append(dict(key='screen.bias.it_read_sentences_of', en='It read 4 sentences of 4.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
+W.append(dict(key='screen.bias.it_read_sentences_of', en='It read {read} of {of} sentences.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.a_pattern_statement_is_never', en='A pattern statement is never proposed, because it must cite evidence your team holds.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.start_a_set_from_these', en='Start a set from these', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
 W.append(dict(key='screen.bias.it_says_how_strong_support', en='It says how strong support must be.', protected=False, note='DEC-374: B398 C47 (bias biasmanifest, biasadopt, biasinhale, biasdebt, biasdebtresolve): the Declared bias screen (Settings); the sentence stands alone.'))
@@ -5563,11 +5563,9 @@ W.append(dict(key='screen.watching.sweep.help', en='The sweeps of the projects y
 W.append(dict(key='screen.case-editor.findings_and_their_roles', en='Findings and their roles', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.a_case_is_made_of_findings', en='A case is made of findings.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.you_say_for_each_whether_the', en='You say, for each, whether the case rests on it or only carries it along.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
-W.append(dict(key='screen.case-editor.finding_1_its_role_in_the', en='Finding 1: its role in the case', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.relied_on_the_case_rests_on', en="Relied on: the case rests on it, so it must meet your project's standard of evidence.", protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.supporting_it_travels_with_the_case', en='Supporting: it travels with the case without carrying it.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.required_for_every_finding_at_least', en='Required for every finding; at least one must be relied on.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
-W.append(dict(key='screen.case-editor.finding_2_its_role_in_the', en='Finding 2: its role in the case', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.when_the_roles_cant_be_saved', en="When the roles can't be saved", protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.a_finding_has_no_role_or', en='A finding has no role, or none is relied on.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.choose_a_role_for_every_finding', en='Choose a role for every finding, and rely on at least one.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
@@ -5585,7 +5583,7 @@ W.append(dict(key='screen.case-editor.this_case_leaves_nothing_material_out', en
 W.append(dict(key='screen.case-editor.an_empty_list_is_a_claim', en='An empty list is a claim too, and it is allowed.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.silence_is_not_say_either_what', en='Silence is not: say either what is left out or that nothing is.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.another_member_of_your_team_acknowledges', en='Another member of your team acknowledges what the case does not cover, so readers are told it was read by a second person.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
-W.append(dict(key='screen.case-editor.acknowledgements_from_whoever_wrote_it_are', en='Acknowledgements from whoever wrote it are not counted.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
+W.append(dict(key='screen.case-editor.acknowledgements_from_whoever_wrote_it_are', en='Acknowledgments from whoever wrote it are not counted.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.when_it_cant_be_saved', en="When it can't be saved", protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.an_item_names_nothing_or_has', en='An item names nothing, or has no reason.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
 W.append(dict(key='screen.case-editor.say_what_is_left_out_and', en='Say what is left out and why, or remove the item.', protected=False, note='DEC-376: B398 C2/C53 (case-authoring casedraft, statementack; citation sever, reinstate): the case editor (Publishing), draft state; one sentence, translate it alone.'))
@@ -5708,7 +5706,7 @@ W.append(dict(key='screen.updates.health.head', en='How your copy is doing', pro
 W.append(dict(key='screen.updates.health.help', en="Whether your team's Civicsmith is working, what release each of its parts runs, and how much work its requests do.", protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; explanation of the section; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.check', en='Check your copy now', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; button; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.store', en="The team's record answers", protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result; translate in the same plain tone'))
-W.append(dict(key='screen.updates.health.file.test', en='A test file was written and read back in {seconds} s', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result; {seconds} is a measured time; translate in the same plain tone'))
+W.append(dict(key='screen.updates.health.file.test', en='A test file was written and read back', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result; {seconds} is a measured time; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.captures.off', en='Captured pages are not set up on this copy', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the check result for an optional part; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.check.note', en='This changes nothing and sends nothing out.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; note under the check; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.check.next', en='If a line shows a problem, tell whoever holds the hosting account.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; what to do next; translate in the same plain tone'))
@@ -5720,8 +5718,8 @@ W.append(dict(key='screen.updates.health.part.silent', en='did not answer within
 W.append(dict(key='screen.updates.health.parts.note', en='Each part should show the release above.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; note under the list of parts; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.parts.next', en='A part that shows another release, or does not answer, needs the update run again.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; second sentence of that note; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.runtime.act', en='Show what running costs', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; button; translate in the same plain tone'))
-W.append(dict(key='screen.updates.health.runtime.heaviest', en='Heaviest single request so far: {ms} ms of work, {calls} outside calls', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; {ms} and {calls} are measured numbers; translate in the same plain tone'))
-W.append(dict(key='screen.updates.health.runtime.limits', en='Cloudflare refuses a request that makes too many outside calls, so that limit is known by having been reached.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; translate in the same plain tone'))
+W.append(dict(key='screen.updates.health.runtime.heaviest', en='Heaviest so far: {peak} {unit}', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; {ms} and {calls} are measured numbers; translate in the same plain tone'))
+W.append(dict(key='screen.updates.health.runtime.limits', en='Cloudflare refuses a request that makes more than {ceiling} outside calls.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.runtime.cpu', en='The work limit ends the request and is found only by a test run.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; line of the running reading; translate in the same plain tone'))
 W.append(dict(key='screen.updates.health.runtime.note', en='This shows how hard the copy is working. Your Cloudflare account shows what it is charged.', protected=False, note='DEC-376: B398 C82 (instance-setup selftest, bootstrap, runtime): on the updates screen; note under the running reading; translate in the same plain tone'))
 # DEC-376 project and action: B398 C64, C66, C73
@@ -6387,6 +6385,546 @@ w411('screen.group.hosting.now.system', 'Recorded by Civicsmith itself on {date}
 w411('screen.join.invite.reread', 'Read the invitation again', 'T-19: the label of the Read the invitation button once the invitation has been read')
 w411('project.visibility.start.required', 'Choose who can find this project before you start it. Nothing was started.', 'T-20: the refusal when Start the project is pressed with neither choice made')
 w411('crumb.project.unjoined', 'A project you have not joined', 'H2: the path\'s name for a project whose title this member cannot read; never its identifier')
+
+# B416-B428 (T51 fix round): declared-op descriptions, updates health, the bias screen's missing rows
+w411('ai-accounts.declared.aikeepaway', 'Sets whether your team keeps its material away from every assistant, with a reason. Only an administrator can.', 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('ai-accounts.declared.groupkeynoticeseen', "Records that you have seen the notice about your team's assistant key.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('ai-accounts.declared.groupkeyremove', "Removes your team's assistant key. Only an administrator can.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('ai-accounts.declared.groupkeyset', "Saves your team's assistant key, which is never shown again. Only an administrator can.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('ai-accounts.declared.groupkeyswitch', "Turns your team's assistant key on or off. Only an administrator can.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('intent.declared.aspirationdeclare', 'Declares an aspiration for your team, a project or yourself.', 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('intent.declared.aspirationdepart', "Records that a project departs from one of your team's aspirations, with a reason.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('local-facts.declared.ruleconfirm', 'Confirms a rule another member drafted, so it applies to your team from then on.', 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('local-facts.declared.ruledraft', 'Drafts a rule for your team from its primary source, with a reason. Another member confirms it before it applies.', 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('local-facts.declared.rulewithdraw', "Withdraws one of your team's rules, with a reason. The rule stays on the record and is never deleted.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('strength.declared.projectbarset', "Sets how strong support must be for this project's findings, with a reason. It blocks no work.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('strength.declared.strengthbarset', "Sets how strong support must be, by default, for your team's findings. Only an administrator can.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('translations.declared.translationadopt', "Keeps your team's own wording of one of Civicsmith's words, so members reading that language see it.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('translations.declared.translationconfirm', "Confirms your team's wording of a protected word, so members reading that language then see it.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('translations.declared.translationrevert', "Undoes the latest change to your team's wording of one of Civicsmith's words. Only an administrator can.", 'B416 K4206: the declared op description, worded for members (team, never group); one sentence saying what the act does')
+w411('screen.updates.health.part.agent-worker', "The assistant's worker", "B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as agent-worker; the code shows it, never the module id")
+w411('screen.updates.health.part.pdf-worker', 'Reading PDFs', "B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as pdf-worker; the code shows it, never the module id")
+w411('screen.updates.health.part.ocr-worker', 'Reading text in images', "B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as ocr-worker; the code shows it, never the module id")
+w411('screen.updates.health.part.sheet-worker', 'Reading spreadsheets', "B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as sheet-worker; the code shows it, never the module id")
+w411('screen.updates.health.part.file-scanner', 'The file scanner', "B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as file-scanner; the code shows it, never the module id")
+w411('screen.updates.health.part.agent-runner', "The assistant's runner", "B425 K4237: the updates screen, the copy's health; the name of the part bootstrap answers as agent-runner; the code shows it, never the module id")
+w411('screen.updates.health.part.release', 'release {version}', "B425 K4237: the updates screen, the copy's health; the release one part runs")
+w411('screen.updates.health.part.state.answering', 'answering', "B425 K4237: the updates screen, the copy's health; state of a part")
+w411('screen.updates.health.part.state.silent', 'silent', "B425 K4237: the updates screen, the copy's health; state of a part that did not answer (beside part.silent)")
+w411('screen.updates.health.part.state.unbound', 'not connected to your copy', "B425 K4237: the updates screen, the copy's health; state unbound: the part is not wired to this copy")
+w411('screen.updates.health.part.state.misnamed', 'answers under another name', "B425 K4237: the updates screen, the copy's health; state misnamed: the part answered, but as another part")
+w411('screen.updates.health.part.other', 'Other things a part can show', "B425 K4237: the updates screen, the copy's health; the summary of the fold listing the two rarer states")
+w411('screen.updates.health.runtime.average', 'average {mean} {unit}', "B425 K4237: the updates screen, the copy's health; one metric of the running reading, its mean in the unit the runtime answers")
+w411('screen.updates.health.runtime.samples', 'measured over {samples} requests', "B425 K4237: the updates screen, the copy's health; how many requests the metric rests on")
+w411('screen.settings.everyone', 'For every member', 'B425 K4237: settings, the third section heading (Declared bias)')
+w411('screen.bias.lens.label', 'Whose lens', 'B427 K4239: the Declared bias screen (SCR.bias): label of the choice')
+w411('screen.bias.lens.team', 'The whole team', 'B427 K4239: the Declared bias screen (SCR.bias): its option; the other option is a project, named by its title')
+w411('screen.bias.kind.label', 'Kind of statement', 'B427 K4239: the Declared bias screen (SCR.bias): label')
+w411('screen.bias.kind.scrutiny', 'Scrutiny', "B427 K4239: the Declared bias screen (SCR.bias): short name of the kind in a statement's row")
+w411('screen.bias.kind.inference', 'Inference', 'B427 K4239: the Declared bias screen (SCR.bias): short name of the kind')
+w411('screen.bias.kind.pattern', 'Pattern', 'B427 K4239: the Declared bias screen (SCR.bias): short name of the kind')
+w411('screen.bias.statement.label', 'The statement', 'B427 K4239: the Declared bias screen (SCR.bias): label')
+w411('screen.bias.cites.label', 'What it cites', 'B427 K4239: the Declared bias screen (SCR.bias): label')
+w411('screen.bias.adoptfor.label', 'Adopt it for', 'B427 K4239: the Declared bias screen (SCR.bias): label of the choice')
+w411('screen.bias.head.team', 'In force for the whole team', "B427 K4239: the Declared bias screen (SCR.bias): section heading when the lens is the whole team (a project's is screen.bias.in_force_for_the_coliseum)")
+w411('screen.bias.head.write', 'Write a set', 'B427 K4239: the Declared bias screen (SCR.bias): heading')
+w411('screen.bias.head.adopt', 'Adopt it', 'B427 K4239: the Declared bias screen (SCR.bias): heading')
+w411('screen.bias.head.proposed', 'Proposed statements', 'B427 K4239: the Declared bias screen (SCR.bias): heading')
+w411('screen.bias.head.left_out', 'Left out', 'B427 K4239: the Declared bias screen (SCR.bias): heading')
+w411('screen.bias.head.settled', 'Settled', 'B427 K4239: the Declared bias screen (SCR.bias): heading')
+w411('screen.bias.row.about', 'about {subject}', "B427 K4239: the Declared bias screen (SCR.bias): a statement's row: who or what it is about")
+w411('screen.bias.row.why', 'Why: {reason}', "B427 K4239: the Declared bias screen (SCR.bias): a statement's row")
+w411('screen.bias.row.team_locked', "the team's, locked", "B427 K4239: the Declared bias screen (SCR.bias): a statement's row: the team's statement, which a project cannot replace")
+w411('screen.bias.row.project', "this project's", "B427 K4239: the Declared bias screen (SCR.bias): a statement's row: the project's own statement")
+w411('screen.bias.dt.lens', 'Lens', 'B427 K4239: the Declared bias screen (SCR.bias): definition term')
+w411('screen.bias.dt.bar', 'A bar', 'B427 K4239: the Declared bias screen (SCR.bias): definition term of a sentence left out')
+w411('screen.bias.dt.verdict', 'A verdict', 'B427 K4239: the Declared bias screen (SCR.bias): definition term of a sentence left out')
+w411('screen.bias.link.write', 'Write a set · statements about how your team reads sources, written by you.', 'B427 K4239: the Declared bias screen (SCR.bias): the link row')
+w411('screen.bias.link.draft', "Draft one from an outside policy · Civicsmith reads another organization's policy and proposes statements.", 'B427 K4239: the Declared bias screen (SCR.bias): the link row')
+w411('screen.bias.earlier.made', 'Made under lens {then} on {made_on}. In force now: {now}, adopted {adopted_on}. The change: {change}.', 'B427 K4239: the Declared bias screen (SCR.bias): work made under an earlier lens')
+w411('screen.bias.earlier.settled', 'Settled by {who} on {date}: “{reason}”', 'B427 K4239: the Declared bias screen (SCR.bias): work settled with a reason')
+w411('screen.bias.by_admin_for_the_team.team', 'By {admin} for the team, on {date}, with a reason.', 'B427 K4239: the Declared bias screen (SCR.bias): the Adopted line when only the team has adopted a set')
+w411('screen.bias.by_admin_for_the_team.project', 'By {owner} for this project, on {date}, with a reason.', 'B427 K4239: the Declared bias screen (SCR.bias): the Adopted line when only the project has adopted a set')
+# DEC-387: B419, B420, B423, B428 (the T51 fix round)
+W.append(dict(key='screen.capture.address.checked.summary', en='What checking it now tells you', protected=False, note='DEC-387: B419 1: capture, under Check it now: the summary of the four outcomes'))
+W.append(dict(key='screen.capture.address.checked.modified', en='Checked {title} just now: the page reads differently from the copy your team holds. Nothing was captured; capture it again to keep the new copy.', protected=False, note="DEC-387: B419 1: capture, Check it now, answer status modified; {title} the document's title; a Capture the new copy door beside it"))
+W.append(dict(key='screen.capture.address.checked.removed', en='Checked {title} just now: the site no longer gives this page. The copy your team holds is kept.', protected=False, note='DEC-387: B419 1: capture, Check it now, status removed'))
+W.append(dict(key='screen.capture.address.checked.unchanged', en='Checked {title} just now: the site still gives the same document your team holds.', protected=False, note='DEC-387: B419 1: capture, Check it now, status unchanged'))
+W.append(dict(key='screen.capture.address.checked.unknown', en='Checked {title} just now, but could not tell whether the page changed: {note}', protected=False, note="DEC-387: B419 1: capture, Check it now, status unknown; {note} the answer's own note"))
+W.append(dict(key='screen.standard.inforce.day.label', en='The day', protected=False, note="DEC-387: B419 2: standard, Was it in force on a date?: the day field's label (in place of act.standardinforce.label.standard)"))
+W.append(dict(key='screen.standard.inforce.result.line', en='On {date} it was: {state}', protected=False, note="DEC-387: B419 2: standard: the answer's line; {state} is one of the four state words below, bold; {date} the day asked"))
+W.append(dict(key='screen.standard.inforce.state.in_force', en='In force', protected=False, note='DEC-387: B419 2: standard: answer state in_force'))
+W.append(dict(key='screen.standard.inforce.state.not_in_force', en='Not in force', protected=False, note='DEC-387: B419 2: standard: answer state not_in_force'))
+W.append(dict(key='screen.standard.inforce.state.overridden', en='Overridden', protected=False, note='DEC-387: B419 2: standard: answer state overridden'))
+W.append(dict(key='screen.standard.inforce.state.undetermined', en='Undetermined', protected=False, note='DEC-387: B419 2: standard: answer state undetermined'))
+W.append(dict(key='screen.standard.inforce.others.summary', en='The other answers it can give', protected=False, note='DEC-387: B419 2: standard: summary of the details showing the other three states'))
+W.append(dict(key='screen.doorbell.secret.make', en='Make one for me', protected=False, note='DEC-387: B420 1: doorbell: the choice beside the secret phrase (generateSecret true); when ticked the phrase field is left empty'))
+W.append(dict(key='screen.doorbell.secret.make.help', en='A long random phrase is made for you and shown once, on the receipt. Write it down: nobody can show it to you again.', protected=False, note='DEC-387: B420 1: doorbell: under Make one for me'))
+W.append(dict(key='screen.doorbell.receipt.fingerprint', en='Fingerprint of what you sent: {fingerprint}', protected=False, note="DEC-387: B420 1: doorbell receipt: the answer's sha256, shortened in the middle"))
+W.append(dict(key='screen.doorbell.receipt.fingerprint.help', en='The same file always has the same fingerprint, so anyone can later check a copy against this one.', protected=False, note='DEC-387: B420 1: doorbell receipt: under the fingerprint'))
+W.append(dict(key='screen.doorbell.receipt.size', en='Size: {size}', protected=False, note="DEC-387: B420 1: doorbell receipt: the answer's bytes, written as a size such as 2.1 MB"))
+W.append(dict(key='screen.doorbell.receipt.pseudonym', en='Your pseudonym: {pseudonym}', protected=False, note="DEC-387: B420 1: doorbell receipt: the answer's pseudonym, only when a secret phrase was used or made"))
+W.append(dict(key='screen.doorbell.receipt.pseudonym.help', en='Material sent later with the same secret phrase shows under the same pseudonym. It says nothing about who you are.', protected=False, note='DEC-387: B420 1: doorbell receipt: under the pseudonym'))
+W.append(dict(key='screen.doorbell.receipt.secret', en='Your secret phrase: {secret}', protected=False, note='DEC-387: B420 1: doorbell receipt: the made secret, only when Make one for me was chosen; shown in this answer only'))
+W.append(dict(key='screen.doorbell.receipt.secret.note', en='Write it down now. This page shows it once and nobody can show it to you again; without it you cannot answer a request to publish something about you.', protected=False, note='DEC-387: B420 1: doorbell receipt: under the made secret'))
+W.append(dict(key='screen.docket.edition.label', en='The edition it answers', protected=False, note='DEC-387: B420 2: docket, file form: the choice of edition (docketfile edition)'))
+W.append(dict(key='screen.docket.edition.help', en='The published edition of this case the entry is about.', protected=False, note='DEC-387: B420 2: docket, file form: help under the edition choice'))
+W.append(dict(key='screen.docket.edition.option', en='Edition {n} · published {date}', protected=False, note='DEC-387: B420 2: docket, file form: one option of the edition choice, one per ratified edition, the latest first and chosen'))
+W.append(dict(key='screen.docket.capture.label', en='The document it rests on', protected=False, note='DEC-387: B420 2: docket, file form: the choice of captured document (docketfile capture)'))
+W.append(dict(key='screen.docket.capture.help', en='A document your team has captured: the response, statement or order itself.', protected=False, note='DEC-387: B420 2: docket, file form: help under the capture choice'))
+W.append(dict(key='screen.docket.capture.option', en='{title} · captured {date}', protected=False, note="DEC-387: B420 2: docket, file form: one option of the capture choice; {title} the document's title"))
+W.append(dict(key='screen.docket.capture.add', en='Capture it first', protected=False, note='DEC-387: B420 2: docket, file form: the door to Add to the record beneath the capture choice'))
+W.append(dict(key='screen.about-knocker.known.head', en='What became known', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.attribute.label', en='Which attribute', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.attribute.occupation', en='Occupation', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.attribute.employer', en='Employer', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.attribute.role', en='Role', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.kind.name', en='A name', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.value.label', en='What it is', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.value.help', en='At most 400 characters.', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.knownto.label', en='Who knows it', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.audience.member', en='One member', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.audience.group', en='The team', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.audience.public', en='The public', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.evidence.label', en='Your evidence', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.confirms.none', en='No claim', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.consent.detail', en='Which detail', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.person.which', en='Which person', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.about-knocker.notrecorded', en='not recorded', protected=False, note='DEC-387: B423 1: about-knocker, as drawn (R43)'))
+W.append(dict(key='screen.leads.mine.head', en='Your leads', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.one.head', en='One lead', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.written', en='Written by you on {date}', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.look.head', en='Record a look', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.look.opt.unclear', en='Could not tell', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.look.opt.found', en='It is there', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.look.which', en='Which one', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.share.head', en='Share it with a project', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.share.project', en='Which project', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.state.unclear', en='We looked and could not tell', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.state.absent', en='We looked and it is not there', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.state.part', en='We looked and found part of it', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.leads.state.found', en='We looked and it is there', protected=False, note='DEC-387: B423 2: leads (R44); the four .state.* are the result of the latest look, shown beside the lead in the list'))
+W.append(dict(key='screen.watching.running.head', en='The watching', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.running', en='Watching is running.', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.paused', en='Watching is paused.', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.pause', en='Pause the watching', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.resume', en='Resume the watching', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.list.head', en='Every watched address', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.counts', en='Due now: {due} · Scheduled: {scheduled} · Not scheduled: {unscheduled} · Ended: {ended}', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.slate.head', en='What is due', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.sweeps.head', en='Sweeps', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.sweep.pages', en='{count} pages', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.watching.sweep.pages.one', en='1 page', protected=False, note='DEC-387: B423 3: watching (R46); .counts is a label: count form, safe for any number; .sweep.pages the budget in screen.watching.sweepdef.scope, .one when the count is 1'))
+W.append(dict(key='screen.capture.cred.askedby', en='Asked for by {name}, {date} · Tries: {count}', protected=False, note='DEC-387: B423 4: capture, login section (R47); a label: count form, safe for any number'))
+W.append(dict(key='screen.capture.cred.givenby', en='Given by {name}, {date}', protected=False, note='DEC-387: B423 4: capture, login section (R47)'))
+W.append(dict(key='screen.capture.cred.given.summary', en='Once a login has been given', protected=False, note='DEC-387: B423 4: capture: summary of the details showing a login already given'))
+W.append(dict(key='screen.person.keeper.office.label', en='The office', protected=False, note='DEC-387: B423 5: person, Records its offices keep: label of the office choice (in place of screen.people.today.kind.office)'))
+W.append(dict(key='screen.person.keeper.source.label', en='What says so', protected=False, note='DEC-387: B423 5: person: label of the source choice (in place of screen.person.source)'))
+W.append(dict(key='screen.person.keeper.from.label', en='Since (optional)', protected=False, note='DEC-387: B423 5: person: label of the first date (in place of screen.person.fact.from)'))
+W.append(dict(key='screen.person.keeper.to.label', en='Until (optional)', protected=False, note='DEC-387: B423 5: person: label of the second date (in place of screen.person.fact.to)'))
+W.append(dict(key='screen.person.keeper.line.responsible', en='is responsible for {subject}', protected=False, note='DEC-387: B423 5: person: a responsible_for line after the office name (in place of label.linekinds.responsible_for); beside screen.person.keeper.line'))
+W.append(dict(key='screen.watching.project', en='Which project', protected=False, note='DEC-387: B428 1: watching: choice on both Ask for this to be gathered and Define a sweep; the projects the member has joined'))
+W.append(dict(key='screen.watching.project.help', en="Only projects you have joined. What is gathered is kept in that project's gathering file.", protected=False, note='DEC-387: B428 1: watching: help under the project choice'))
+W.append(dict(key='screen.case-editor.details.name.area', en='Area of government', protected=False, note='DEC-387: B428 2: the detail\'s name, on the case editor, the ceremony and the published page; the detail field is "area"'))
+W.append(dict(key='screen.case-editor.details.name.contact', en='Point of contact', protected=False, note='DEC-387: B428 2: the detail\'s name, on the case editor, the ceremony and the published page; the detail field is "contact"'))
+W.append(dict(key='screen.case-editor.details.name.related', en='Related work', protected=False, note='DEC-387: B428 2: the detail\'s name, on the case editor, the ceremony and the published page; the detail field is "related"'))
+W.append(dict(key='screen.case-editor.details.name.relationships', en='Relationships', protected=False, note='DEC-387: B428 2: the detail\'s name, on the case editor, the ceremony and the published page; the detail field is "relationships"'))
+W.append(dict(key='screen.case-editor.details.stated', en='Stated', protected=False, note="DEC-387: B428 2: the ceremony's mark on a detail the team has stated"))
+W.append(dict(key='screen.case-editor.details.rel.builds_on', en='Builds on', protected=False, note='DEC-387: B428 2: related work, relation builds_on (same_matter and other are screen.case-editor.details.rel.same and .other)'))
+W.append(dict(key='screen.case-editor.details.rel.responds_to', en='Responds to', protected=False, note='DEC-387: B428 2: related work, relation responds_to'))
+W.append(dict(key='screen.case-editor.details.rel.disagrees_with', en='Disagrees with', protected=False, note='DEC-387: B428 2: related work, relation disagrees_with'))
+W.append(dict(key='screen.case-editor.details.takeout', en='Take out', protected=False, note="DEC-387: B428 2: the button taking one entry out of a detail's list"))
+W.append(dict(key='screen.case-editor.role.relied', en='Relied on', protected=False, note="DEC-387: B428 2: case editor: a finding's role, relied on (case-grammar load_bearing)"))
+W.append(dict(key='screen.case-editor.role.supporting', en='Supporting', protected=False, note="DEC-387: B428 2: case editor: a finding's role, supporting"))
+W.append(dict(key='screen.case-editor.finding.role', en='Finding {n}: its role in the case', protected=False, note="DEC-387: B428 2: case editor: label of a finding's role choice; {n} the finding's number (replaces the two literal rows finding_1_ and finding_2_)"))
+W.append(dict(key='screen.ceremony.conf.self.tick', en='Publish {document} as self-attested only', protected=False, note='DEC-387: B428 2: ceremony: the tick for one unconfirmed document; {document} its title'))
+W.append(dict(key='case-inputs.details.not_stated', en='Not stated', protected=False, note='DEC-387: B428 2: a detail not yet stated, on the editor, the ceremony and the published page (the code asks for "Not stated.")'))
+# --- DEC-387 (BOB's B416-B428, T51 fix round): B421 the wizard steps on action, matter and due-date screens when the member has none; B422 the
+# queue's three new kinds; B426 the keys the daily screens guessed; B424 the action, matter, plan and start-and-send rows. Each key is read by the code by its id.
+def w387(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-387: ' + note))
+REWRITE.update({
+  # B424 (4): the stages of an escalation are named, never numbered
+  'screen.matter.stage.1': 'Documentation',
+  'screen.matter.stage.2': 'Notification',
+  'screen.matter.stage.3': 'Clock starts',
+  'screen.matter.stage.4': 'Response evaluation',
+  'screen.matter.stage.5': 'Legal tools',
+  'screen.matter.stage.6': 'Sustained attention',
+  'screen.matter.stage.7': 'Political accountability',
+  'screen.matter.proposed': 'Proposed next: {stage}. Civicsmith proposes; a member decides.',
+  'screen.matter.advance': 'Move on to the next stage: {stage}',
+  'screen.matter.atstage': 'at {stage}',
+  'screen.plan.escalation': 'escalation: {stage}',
+})
+# B421: step <n> of a library wizard that lands on an action, matter or due-date screen when the member has none (the welcome's step 4 pattern)
+_NONE = {
+ 'action': ("Your team has no action yet. An action is one thing the team does about a problem, such as a records request or a referral, kept with its dates, its replies and what came of it.", 'Open a plan'),
+ 'matter': ("Your team has no matter yet. A matter is what the team is pursuing about one problem, from the first letter to the outcome.", 'Open a plan'),
+ 'due-date': ("You have no due date yet. A due date is the day an office must answer by, worked out from the law once a request is sent, or a day your team set for itself.", 'Open a plan'),
+}
+_STEPS = [
+ ('WIZ-cb0ad18a17a04233', 9, 'due-date', 'Get a record', 'Send the request and record that you sent it; the due date is worked out then. Nothing else in this guide waits on it.'),
+ ('WIZ-bd7bde2c61b6badb', 8, 'due-date', 'Demand a correction', 'The body\'s window to correct the act starts when you record that you sent the demand. Send it first; the window\'s end then goes into your queue.'),
+ ('WIZ-33cece8a68e76f58', 1, 'matter', 'Take an escalation', 'Add the problem as a matter in a plan first, then come back to read where its escalation stands.'),
+ ('WIZ-33cece8a68e76f58', 2, 'action', 'Take an escalation', 'A reply is recorded on the action it answers. Start an action from a plan first; this step waits for it.'),
+ ('WIZ-33cece8a68e76f58', 3, 'matter', 'Take an escalation', 'An escalation moves only on a matter. Add one in a plan, then advance it or decline to escalate from here.'),
+ ('WIZ-33cece8a68e76f58', 4, 'matter', 'Take an escalation', 'Only an escalation that exists can be stopped. If your team has not opened one, there is nothing to stop yet.'),
+ ('WIZ-33cece8a68e76f58', 5, 'due-date', 'Take an escalation', 'A reminder needs a date to count from. Set one once an action or an escalation has a date; nothing else in this guide waits on it.'),
+ ('WIZ-d0cdcee9437b213b', 6, 'action', 'Refer it to an oversight body', 'The referral is an action. Start it from a plan, then come back to make it confidential if it should not be published.'),
+ ('WIZ-d0cdcee9437b213b', 7, 'action', 'Refer it to an oversight body', 'Replies are recorded on the action they answer. Start the referral first, then record what the body says.'),
+ ('WIZ-a17835c4d8235f65', 4, 'due-date', 'Pick up a plan', 'A reminder needs an item with a date. If the plan holds none you can take up, nothing here waits on it.'),
+ ('WIZ-a8c349d7d71b6bb0', 7, 'due-date', 'Start and send', 'The due date is worked out when you record that you sent it. Send it first; nothing else in this guide waits on it.'),
+]
+for _wid, _n, _kind, _name, _why in _STEPS:
+    _p = 'wizard.%s.step%d.none.' % (_wid, _n)
+    w387(_p + 'what', _NONE[_kind][0], 'B421: step %d of "%s" when the member has no %s: shown in place, without opening a screen' % (_n, _name, _kind))
+    w387(_p + 'why', _why, 'B421: step %d of "%s" when the member has no %s' % (_n, _name, _kind))
+    w387(_p + 'door', _NONE[_kind][1], 'B421: the step\'s button when there is no %s; it opens the project choice, then the plans' % _kind)
+
+ROWS = [
+# B422: the queue's three new kinds (queue-producers R46-R48, C62, DEC-378)
+('queue.owed.nobody', 'no one yet', 'B422: in {have} or {awaiting} when the list is empty'),
+('queue.endorsement-owed.summary', '{who} is proposed as an administrator. Agreed: {have}. Awaited: {awaiting}.', 'B422: the Queue item; {who} the proposed member, {have} the administrators who have endorsed, {awaiting} those still to'),
+('queue.endorsement-owed.detail', 'Endorse to add your agreement. This item leaves once you have endorsed.', 'B422: under the summary'),
+('queue.endorsement-owed.owner.summary.add', '{who} is proposed as an owner of {project}. Agreed: {agreed}. Awaited: {awaiting}.', 'B422: the Queue item for a vote to add an owner'),
+('queue.endorsement-owed.owner.summary.remove', '{who} asks to stand down as an owner of {project}. Agreed: {agreed}. Awaited: {awaiting}.', 'B422: the Queue item for a vote to let an owner stand down'),
+('queue.endorsement-owed.owner.detail', 'Your vote counts toward it. This item leaves once you have voted.', 'B422: under either owner summary'),
+('queue.expertise-confirmation-owed.summary', '{who} declared expertise: {label}.', 'B422: the Queue item an administrator sees'),
+('queue.expertise-confirmation-owed.detail', 'Confirm it if you can vouch for it. This item leaves once any administrator confirms.', 'B422: under the summary'),
+('act.projectownerremove.label.queue', 'Agree to remove an owner', 'B422: the button on the owner-vote item when the vote is to let an owner stand down (the add has act.projectowneradd.label.queue, "Add an owner")'),
+# B426: the keys the daily screens guessed
+('screen.queue.defer', 'Defer', 'B426: the button beside Dismiss with a reason on a hint or finding in the Queue; it puts the item aside until a day with a reason'),
+('screen.queue.bringback', 'Bring back', 'B426: the button on a snoozed or deferred row that returns the item to the Queue now; op queuesnooze with {case, clear} (queue R21; B430, K4249)'),
+('screen.queue.snoozed.head', 'Snoozed', 'B426: the section of What you answered that holds items hidden until a day you chose'),
+('screen.queue.snoozed.holds', 'Items you snoozed until a day you chose. They return on that day, or now with Bring back.', 'B426: help under the Snoozed heading'),
+('screen.queue.snoozed.until', 'comes back {date}', 'B426: a snoozed row'),
+('screen.home.waiting.counts', 'Waiting for a member to look: held captures {held}, Inbox items {inbox}.', 'B426: one status line on Home; both counts shown, a zero shown as 0, never worded as a plural'),
+('screen.queue.routed.auth.cannot', 'I could not tell', 'B426: the second choice of Who issued this document?'),
+('screen.queue.routed.auth.issuer.label', 'The issuing party', 'B426: label of the field naming who issued it'),
+('screen.queue.routed.auth.tried.label', 'What you tried', 'B426: label of the field for where you looked when you could not tell'),
+('screen.queue.routed.auth.tried.help1', 'Required if you could not tell.', 'B426: first sentence of the help under What you tried; the second is screen.queue.routed.auth.tried.help'),
+('screen.queue.routed.auth.record', 'Record my answer', 'B426: the button that records the answer (act taskdecide)'),
+# B424 (1): the reply form on the action screen
+('screen.action.what.came.back', 'What came back', 'B424 1: choice between a reply and a silence'),
+('screen.action.a.reply.came', 'A reply came', 'B424 1: the first choice; the second is screen.action.no.reply.came.by.the.date'),
+('screen.action.how.it.came', 'How it came', 'B424 1: the reply\'s medium'),
+('screen.action.reply.medium.email', 'Email', 'B424 1: medium option; medium is free text up to 500 characters (actions R13) and the token email is sent as its value (B430, K4249)'),
+('screen.action.reply.medium.letter', 'Letter', 'B424 1: medium option (token letter)'),
+('screen.action.reply.medium.portal', "The city's portal", 'B424 1: medium option (token portal)'),
+('screen.action.reply.medium.person', 'In person', 'B424 1: medium option (token in_person)'),
+('screen.action.reply.medium.other', 'Another way', 'B424 1: medium option (token other)'),
+('screen.action.your.account.of.it', 'Your account of it', 'B424 1: option of What you record it from'),
+('screen.action.it.follows', 'It follows', 'B424 1: the earlier entry this reply answers'),
+('screen.action.reply.follows.none', 'Nothing earlier', 'B424 1: option of It follows'),
+('screen.action.reply.follows.request', 'The request, sent {date}', 'B424 1: option of It follows naming the request'),
+('screen.action.reply.follows.reply', 'The {kind}, {date}', 'B424 1: option of It follows naming an earlier reply; {kind} the stage word with its first letter lower case'),
+('screen.action.reply.stage.none', 'Not stated', 'B424 1: stage option meaning the field is omitted; no none token exists (B430, K4249)'),
+('screen.action.reply.stage.acknowledgement', 'Acknowledgment', 'B424 1: stage option (token acknowledgement)'),
+('screen.action.reply.stage.fee_estimate', 'Fee estimate', 'B424 1: stage option (token fee_estimate)'),
+('screen.action.reply.stage.fee_waiver_decision', 'Decision on a fee waiver', 'B424 1: stage option (token fee_waiver_decision)'),
+('screen.action.reply.stage.extension_notice', 'Notice of an extension', 'B424 1: stage option (token extension_notice)'),
+('screen.action.reply.stage.production', 'Records produced', 'B424 1: stage option (token production)'),
+('screen.action.reply.stage.denial', 'Denial', 'B424 1: stage option (token denial)'),
+('screen.action.reply.stage.appeal_decision', 'Decision on an appeal', 'B424 1: stage option (token appeal_decision)'),
+('screen.action.reply.stage.court_decision', 'Court decision', 'B424 1: stage option (token court_decision)'),
+('screen.action.reply.outcome.none', 'Not decided', 'B424 1: outcome option meaning the field is omitted (no none token); offered only on received entries, and not offered where outcome is required: fee_waiver_decision, denial, appeal_decision, court_decision (B430, K4249)'),
+('screen.action.reply.outcome.granted', 'Granted', 'B424 1: outcome option (token granted)'),
+('screen.action.reply.outcome.denied', 'Denied', 'B424 1: outcome option (token denied)'),
+('screen.action.reply.outcome.partial', 'Granted in part', 'B424 1: outcome option (token partial)'),
+('screen.action.reply.outcome.reversed', 'Reversed', 'B424 1: outcome option (token reversed)'),
+('screen.action.reply.outcome.affirmed', 'Affirmed', 'B424 1: outcome option (token affirmed)'),
+('screen.action.reply.outcome.none_stated', 'No outcome stated', 'B424 1: outcome option (token none_stated)'),
+('screen.action.reply.outcome.none_exists', 'No such records exist', 'B424 1: outcome option (token none_exists)'),
+('screen.action.the.amount.quoted', 'The amount quoted', 'B424 1: the fee amount'),
+('screen.action.currency', 'Currency', 'B424 1: the fee currency'),
+('screen.action.reply.currency.usd', 'US dollars', 'B424 1: currency option (USD)'),
+# B424 (2) R52: one sentence for every reminder set, on an action's dated entry and on a due date
+('screen.reminder.on', 'We will remind you on {date}.', 'B424 2 R52: shown once a reminder is set; the due date uses the same key'),
+('screen.reminder.set.when', 'When a reminder is set', 'B424 2 R52: label of the drawn state'),
+# B424 (3) R39: the request asks which name the records concern
+('screen.request.subject.label', 'Which name the records concern', 'B424 3 R39: the choice before the office is chosen; replaces screen.person.keeper.subject.label on this screen'),
+('screen.request.subject.help', 'A name the record already follows. The offices that hold records about it are suggested next.', 'B424 3 R39: help under the choice; replaces screen.person.keeper.subject.help.a and .b on this screen'),
+# B424 (4): the matter
+('screen.matter.nodet', 'No determination yet', 'B424 4: subtitle of a matter with no determination'),
+('screen.matter.unavailable', 'Not available yet', 'B424 4: section listing what waits on a determination'),
+('screen.matter.parts', 'Parts recorded', 'B424 4: section of the consequences already recorded'),
+('screen.matter.revise', 'Revise the determination', 'B424 4: heading when a determination is replaced'),
+('screen.matter.replaces', 'What it replaces', 'B424 4: section naming the earlier determination'),
+('screen.matter.act', 'The act', 'B424 4: section of a determination naming the act'),
+('screen.matter.f.role', 'Role that acted', 'B424 4: field'),
+('screen.matter.f.body', 'Office or body', 'B424 4: field'),
+('screen.matter.f.findings', 'Published findings', 'B424 4: list of findings it rests on'),
+('screen.matter.f.rule', 'Rule', 'B424 4: choice of the rule'),
+('screen.matter.f.did', 'What was done', 'B424 4: field'),
+('screen.matter.f.determination', 'Your determination', 'B424 4: section holding the outcome choice'),
+('screen.matter.f.outcome.compliant', 'Compliant', 'B424 4: outcome choice'),
+('screen.matter.f.outcome.noncompliant', 'Noncompliant', 'B424 4: outcome choice'),
+('screen.matter.f.outcome.unclear', 'Unclear', 'B424 4: outcome choice'),
+('screen.matter.f.compare.matches', 'Matches', 'B424 4: how the two compare'),
+('screen.matter.f.compare.differs', 'Differs', 'B424 4: how the two compare'),
+('screen.matter.f.compare.open', 'Open', 'B424 4: how the two compare'),
+('screen.matter.f.cause', 'Cause', 'B424 4: field under Why it happened'),
+('screen.matter.record.this', 'Record this determination', 'B424 4: the button on a first determination'),
+('screen.matter.f.part', 'The part', 'B424 4: section of saying a consequence was addressed'),
+('screen.matter.f.partwas', 'This part was', 'B424 4: choice'),
+('screen.matter.f.addressed', 'Addressed', 'B424 4: choice'),
+('screen.matter.f.notaddressed', 'Not addressed', 'B424 4: choice'),
+('screen.matter.way.cannot', "Can't be undone", 'B424 4: a way a part was addressed'),
+('screen.matter.f.describe', 'Describe them', 'B424 4: field for who or what was affected'),
+('screen.matter.kind.class', 'People as a class', 'B424 4: kind of who or what was affected'),
+('screen.matter.kind.fund', 'A fund', 'B424 4: kind of who or what was affected'),
+('screen.matter.kind.program', 'A program', 'B424 4: kind of who or what was affected'),
+('screen.matter.kind.service', 'A service', 'B424 4: kind of who or what was affected'),
+('screen.matter.kind.office', 'An office or body', 'B424 4: kind of who or what was affected'),
+('screen.matter.kind.person', 'A named person', 'B424 4: kind of who or what was affected'),
+('screen.matter.kind.other', 'Something else', 'B424 4: kind of who or what was affected'),
+('screen.matter.unit.money', 'Money', 'B424 4: unit a consequence is measured in'),
+('screen.matter.unit.benefits', 'Benefits', 'B424 4: unit'),
+('screen.matter.unit.services', 'Services', 'B424 4: unit'),
+('screen.matter.unit.time', 'Time', 'B424 4: unit'),
+('screen.matter.unit.count', 'A count', 'B424 4: unit'),
+('screen.matter.unknown', 'Not known yet', 'B424 4: how you know, third choice'),
+('screen.matter.f.when', 'When it changed', 'B424 4: field of a success'),
+('screen.matter.f.purpose', 'Its purpose', 'B424 4: purpose of an action attached at the political accountability stage'),
+('screen.matter.f.purpose.official', 'Official request', 'B424 4: purpose'),
+('screen.matter.f.purpose.oversight', 'Oversight request', 'B424 4: purpose'),
+('screen.matter.f.purpose.audit', 'Audit request', 'B424 4: purpose'),
+('screen.matter.f.purpose.testimony', 'Testimony', 'B424 4: purpose'),
+('screen.matter.f.purpose.legislation', 'Enforcing legislation', 'B424 4: purpose'),
+('screen.matter.pause', 'Pause it', 'B424 4: section for pausing an escalation'),
+('screen.matter.reading.complied', 'Complied', 'B424 4: reading of a response'),
+('screen.matter.reading.partial', 'Partly complied', 'B424 4: reading of a response'),
+('screen.matter.reading.denied', 'Denied', 'B424 4: reading of a response'),
+('screen.matter.reading.none', 'No response', 'B424 4: the choice of no reply to read'),
+# B424 (5): the plan form
+('screen.plan.option.kind.mitigation', 'Mitigation', 'B424 5: What kind of option'),
+('screen.plan.option.kind.legal', 'Legal', 'B424 5: What kind of option'),
+('screen.plan.option.kind.awareness', 'Awareness', 'B424 5: What kind of option'),
+('screen.plan.option.kind.journalistic', 'Journalistic', 'B424 5: What kind of option'),
+('screen.plan.option.kind.grassroots', 'Grassroots', 'B424 5: What kind of option'),
+('screen.plan.option.kind.other', 'Other', 'B424 5: What kind of option'),
+('screen.plan.option.directed.press', 'The press', 'B424 5: Who it is directed to'),
+('screen.plan.option.role', 'The role', 'B424 5: field'),
+('screen.plan.option.date', 'The date', 'B424 5: field of Dates that bind it'),
+('screen.plan.option.tier.none', 'Not assessed yet', 'B424 5: How careful to be'),
+('screen.plan.option.tier.1', '1 · file freely', 'B424 5: tier 1 (the tier is a numbered doctrine)'),
+('screen.plan.option.tier.2', '2 · file with caution', 'B424 5: tier 2'),
+('screen.plan.option.tier.3', '3 · do not file without counsel', 'B424 5: tier 3'),
+('screen.plan.option.enforce', 'Seeking enforcement', 'B424 5: legend of the lobbying mark'),
+('screen.plan.option.enforce.none', 'None', 'B424 5: option of The requirement it seeks'),
+('screen.plan.dispose.them.choose', 'Choose them', 'B424 5: What to do with them'),
+('screen.plan.dispose.them.decline', 'Decline them', 'B424 5: What to do with them'),
+('screen.plan.dispose.them.blocked', 'Mark them blocked', 'B424 5: What to do with them'),
+('screen.plan.dispose.done', 'Mark done', 'B424 5: button'),
+('screen.plan.dispose.blocked', 'Mark blocked', 'B424 5: button'),
+('screen.plan.dispose.open', 'Return to undecided', 'B424 5: button'),
+('screen.plan.dispose.date', 'Which date', 'B424 5: choice of the option\'s date to be reminded of'),
+('screen.plan.phase.head', 'A phase', 'B424 5: section of laying out a scenario'),
+('screen.plan.phase.options', 'Options in this phase', 'B424 5: choice'),
+('screen.plan.phase.when', 'When it starts', 'B424 5: choice'),
+('screen.plan.phase.when.after', 'After another phase', 'B424 5: option of When it starts'),
+('screen.plan.phase.which', 'Which phase', 'B424 5: choice of the phase it follows'),
+('screen.plan.phase.none', 'No phase', 'B424 5: option of where a checkpoint goes'),
+# B424 (6): start and send
+('screen.start-send.contact.none', 'No one yet', 'B424 6: first option of the team\'s contact'),
+('screen.start-send.template.name.label', "The template's name", 'B424 6: label of the template name'),
+('screen.start-send.template.use.filing', 'A filing', 'B424 6: first option of What it is for'),
+('screen.start-send.exhibits.captured', 'captured {date}', 'B424 6: after an exhibit\'s title'),
+('screen.start-send.exhibits.nograde', 'Grade not determined', 'B424 6: an exhibit whose grade is not known'),
+('screen.start-send.release.head', 'A sentence the record contradicts', 'B424 6: section above the sentences held from approval'),
+('screen.start-send.release.why', 'Why you release it', 'B424 6: the reason field of Release this sentence'),
+('screen.start-send.release.why.help', 'In your own words, up to 500 characters. It is kept beside the text you approve.', 'B424 6: help under the reason'),
+('screen.start-send.release.done', 'Released by {who} on {date}: {reason}', 'B424 6: a sentence already released; {reason} in quotation marks by the code'),
+]
+for _k, _e, _n in ROWS:
+    w387(_k, _e, _n)
+
+# DEC-389: B430 (K4249), BOB's answers to DEC-387's owed items
+W.append(dict(key='act.release.label.start-send', en='Release this sentence', protected=True, note='DEC-389: B430 (2): part of approving, filingapprove with release [{ord, reason}] (filings R34, screens-action R42); not the release act'))
+W.append(dict(key='screen.action.sent.stage.request', en='The request', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token request)'))
+W.append(dict(key='screen.action.sent.stage.fee_waiver_request', en='Request for a fee waiver', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token fee_waiver_request)'))
+W.append(dict(key='screen.action.sent.stage.appeal', en='Appeal', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token appeal)'))
+W.append(dict(key='screen.action.sent.stage.court_filing', en='Court filing', protected=False, note='DEC-389: B430 (3): a sent entry\'s stage (token court_filing)'))
+W.append(dict(key='screen.updates.health.runtime.unit.ms', en='milliseconds', protected=False, note='DEC-389: B430 (4): runtime unit ms (instance-setup R34), filling {unit}'))
+W.append(dict(key='screen.updates.health.runtime.unit.bytes', en='bytes', protected=False, note='DEC-389: B430 (4): runtime unit bytes (instance-setup R34), filling {unit}; the subrequests ceiling has no unit'))
+
+# DEC-390: B432 (K4252)
+W.append(dict(key='store-door.declared.groupdescriptiondraft', en="Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.", protected=False, note='DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence'))
+
+# DEC-391: B435 (K4258) item 1
+W.append(dict(key='screen.objective.what-success-means', en='What success means', protected=False, note='DEC-391: B435 1: heading: heading of the section that sets and shows how the success of this objective is measured'))
+W.append(dict(key='screen.objective.proposals-to-decide', en='Proposals to decide', protected=False, note='DEC-391: B435 1: heading: heading of the section listing the proposals the assistant made for this objective'))
+W.append(dict(key='screen.objective.aspirations', en='Aspirations', protected=False, note='DEC-391: B435 1: heading: heading of the section listing the aspirations in force for this project'))
+W.append(dict(key='screen.objective.declare-an-aspiration', en='Declare an aspiration', protected=False, note='DEC-391: B435 1: fold title: title of the fold that opens the form to declare an aspiration'))
+W.append(dict(key='screen.objective.whose-it-is', en='Who holds it', protected=False, note='DEC-391: B435 1: field label: label of the choice, in the declare-an-aspiration form, of who holds the aspiration'))
+W.append(dict(key='screen.objective.the-whole-team-s', en="The whole team's", protected=False, note='DEC-391: B435 1: option: option of Whose it is: an aspiration the whole team holds'))
+W.append(dict(key='screen.objective.this-project-s', en="This project's", protected=False, note='DEC-391: B435 1: option: option of Whose it is: an aspiration this project holds'))
+W.append(dict(key='screen.objective.mine', en='Mine', protected=False, note='DEC-391: B435 1: option: option of Whose it is: an aspiration the viewer holds personally'))
+W.append(dict(key='screen.objective.about-which-party', en='About which party', protected=False, note='DEC-391: B435 1: field label: label of the choice, in the measure form, of the party the measure counts'))
+W.append(dict(key='screen.objective.which-aspiration', en='Which aspiration', protected=False, note='DEC-391: B435 1: field label: label of the choice of aspiration in the depart, dead-end and retire forms'))
+W.append(dict(key='screen.objective.which-goal', en='Which goal', protected=False, note='DEC-391: B435 1: field label: label of the choice of goal in the link-to-a-goal and close-a-goal forms'))
+W.append(dict(key='screen.objective.which-proposal', en='Which proposal', protected=False, note='DEC-391: B435 1: field label: label of the choice of proposal in the decide-a-proposal form'))
+W.append(dict(key='screen.objective.open-a-goal', en='Open a goal', protected=False, note='DEC-391: B435 1: fold title: title of the fold that opens the form to open a goal'))
+W.append(dict(key='screen.objective.what-it-pursues', en='What it pursues', protected=False, note='DEC-391: B435 1: field label: label of the field, in the open-a-goal form, for the aim the goal pursues'))
+W.append(dict(key='screen.objective.what-limits-it', en='What limits it', protected=False, note='DEC-391: B435 1: field label: label of the field, in the open-a-goal form, for the limits that bound the goal'))
+W.append(dict(key='screen.objective.close-a-goal', en='Close a goal', protected=False, note='DEC-391: B435 1: fold title: title of the fold that opens the form to close a goal'))
+W.append(dict(key='screen.objective.why-it-closes', en='Why it closes', protected=False, note='DEC-391: B435 1: field label: label of the field, in the close-a-goal form, for the reason the goal closes'))
+W.append(dict(key='screen.objective.put-it-off', en='Defer it', protected=False, note='DEC-391: B435 1: option: option of What to do with it: defer the proposal, with a reason'))
+W.append(dict(key='screen.objective.dismiss-it', en='Dismiss it', protected=False, note='DEC-391: B435 1: option: option of What to do with it: dismiss the proposal, with a reason'))
+W.append(dict(key='screen.objective.retire-an-aspiration', en='Retire an aspiration', protected=False, note='DEC-391: B435 1: fold title: title of the fold that opens the form to retire an aspiration'))
+W.append(dict(key='screen.objective.held-by-this-project', en='Held by this project', protected=False, note='DEC-391: B435 1: tag: tag on an aspiration row: this project holds it'))
+W.append(dict(key='screen.objective.held-by-me', en='Held by me', protected=False, note='DEC-391: B435 1: tag: tag on an aspiration row: the viewer holds it personally'))
+W.append(dict(key='screen.objective.this-project-departed', en='This project departed', protected=False, note='DEC-391: B435 1: tag: tag on a team aspiration row: this project has departed from it'))
+# DEC-391: B435 (K4258) item 2
+W.append(dict(key='screen.contradiction.first.passage', en='First passage', protected=False, note='DEC-391: B435 item 2: the heading over the first of the two passages, on the screen Two documents in tension'))
+W.append(dict(key='screen.contradiction.second.passage', en='Second passage', protected=False, note='DEC-391: B435 item 2: the heading over the second of the two passages'))
+W.append(dict(key='screen.contradiction.they.differ.in', en='They differ in', protected=False, note='DEC-391: B435 item 2: the label over the ticks naming the respects in which the two passages differ (say how they differ; conclude it)'))
+W.append(dict(key='screen.contradiction.time.or.occasion', en='Time or occasion', protected=False, note='DEC-391: B435 item 2: one of the respects they may differ in: they speak of different times or occasions'))
+W.append(dict(key='screen.contradiction.meaning', en='Meaning', protected=False, note='DEC-391: B435 item 2: one of the respects they may differ in: the same words mean different things'))
+W.append(dict(key='screen.contradiction.precision', en='Precision', protected=False, note='DEC-391: B435 item 2: one of the respects they may differ in (concluding): one is more exact than the other'))
+W.append(dict(key='screen.contradiction.what.shows.it', en='What in the record shows it', protected=False, note='DEC-391: B435 item 2: the label over the ticks naming what in the record shows the difference'))
+W.append(dict(key='screen.contradiction.the.first.passage', en='The first passage', protected=False, note='DEC-391: B435 item 2: a choice: names the first passage (which one is wrong; ask it around)'))
+W.append(dict(key='screen.contradiction.the.second.passage', en='The second passage', protected=False, note='DEC-391: B435 item 2: a choice: names the second passage (which one is wrong; ask it around)'))
+W.append(dict(key='screen.contradiction.optional.at.most.200.characters', en='Optional. At most 200 characters.', protected=False, note='DEC-391: B435 item 2: help under the two short notes on what holds for each passage'))
+W.append(dict(key='screen.contradiction.optional.at.most.500.characters', en='Optional. At most 500 characters.', protected=False, note='DEC-391: B435 item 2: help under the optional words when dismissing a lead'))
+W.append(dict(key='screen.contradiction.dismiss.it', en='Dismiss this lead', protected=False, note='DEC-391: B435 item 2: the section heading for dismissing a lead'))
+W.append(dict(key='screen.contradiction.anything.to.add', en='Anything to add', protected=False, note='DEC-391: B435 item 2: the label of the optional words under the reason for dismissing a lead'))
+W.append(dict(key='screen.contradiction.ask.it.around', en='Which passage the question is about', protected=False, note='DEC-391: B435 item 2: the label of the choice of which passage the new question is asked around'))
+W.append(dict(key='screen.contradiction.taken.up', en='Taken up', protected=False, note='DEC-391: B435 item 2: the section heading, on a contradiction already taken up, above the question it became'))
+W.append(dict(key='screen.contradiction.conclude.it', en='Conclude it', protected=False, note='DEC-391: B435 item 2: the section heading for concluding the question a contradiction became'))
+W.append(dict(key='screen.contradiction.your.conclusion', en='Your conclusion', protected=False, note='DEC-391: B435 item 2: the label of the field for her own words on what the contradiction turned out to be'))
+W.append(dict(key='screen.contradiction.two.rules.conflict', en='Two rules conflict', protected=False, note='DEC-391: B435 item 2: a choice of what it turned out to be: the two passages are rules that conflict (the next choice says how they are reconciled)'))
+W.append(dict(key='screen.contradiction.ask.for', en='Which project asks', protected=False, note='DEC-391: B435 item 2: the label of the choice of which of your projects asks to resolve a conflict with a record you cannot see'))
+W.append(dict(key='screen.contradiction.the.projects', en='The projects that asked', protected=False, note='DEC-391: B435 item 2: the section heading over the projects now named to each other, once every project has asked'))
+W.append(dict(key='screen.contradiction.responses', en='Responses', protected=False, note='DEC-391: B435 item 2: the section heading over the responses already sent between the projects'))
+W.append(dict(key='screen.contradiction.respond', en='Respond', protected=False, note='DEC-391: B435 item 2: the section heading over the form for sending your own response'))
+W.append(dict(key='screen.contradiction.your.response', en='Your response', protected=False, note='DEC-391: B435 item 2: the label of the response field'))
+W.append(dict(key='screen.contradiction.share.with.the.other.projects', en='Share with the other projects', protected=False, note='DEC-391: B435 item 2: the label over the ticks for what of you the response shows'))
+W.append(dict(key='screen.contradiction.my.cover.name', en='My cover name', protected=False, note='DEC-391: B435 item 2: a tick: show your cover name with the response'))
+W.append(dict(key='screen.contradiction.my.email.address', en='My email address', protected=False, note='DEC-391: B435 item 2: a tick: show your email address with the response'))
+W.append(dict(key='screen.contradiction.your.email.address', en='Your email address', protected=False, note='DEC-391: B435 item 2: the label of the email address field, shown only if the tick above is on'))
+W.append(dict(key='screen.contradiction.send.my.response', en='Send my response', protected=False, note='DEC-391: B435 item 2: the button that sends the response to the other projects'))
+W.append(dict(key='screen.contradiction.your.project.can.ask.to.resolve.it', en='Your project can ask to resolve it.', protected=False, note='DEC-391: B435 item 2: first sentence of the section on what you can do about a conflict with a record you cannot see; the sentence after it says what happens once every project asks'))
+W.append(dict(key='screen.contradiction.help.needed', en='Write something first; the help works from what you typed.', protected=False, note='DEC-391: B435 item 2: the refusal of the writing help when the field it would help with is empty'))
+W.append(dict(key='screen.contradiction.when.it.cannot.be.concluded', en='When it cannot be concluded', protected=False, note='DEC-391: B435 item 2: the fold heading over the reasons concluding is refused'))
+
+# DEC-391: B435 (K4258) item 2, keys the code has not yet named (minted by the design for screens-inquiry to use)
+W.append(dict(key='screen.contradiction.stated.dates', en='Stated dates: {first} · {second}', protected=False, note='DEC-391: B435 2: the facts row with the two passages\' stated dates (fact stated_date), first then second'))
+W.append(dict(key='screen.contradiction.kinds', en='Kinds: {first} · {second}', protected=False, note='DEC-391: B435 2: the facts row with the two documents\' kinds (fact doctype), first then second'))
+W.append(dict(key='screen.contradiction.passage.meta', en='Dated {date} · {kind} · captured by {member} on {captured}', protected=False, note='DEC-391: B435 2: the small line under a passage: its stated date, its document kind, who captured it and when'))
+W.append(dict(key='screen.contradiction.party.asked', en='Asked on {date}', protected=False, note='DEC-391: B435 2: a project line under The projects: the day that project asked to resolve it'))
+# DEC-391: B435 (K4258) item 5
+W.append(dict(key='screen.project.cmp_only_ours', en='Only in our lens', protected=False, note='DEC-391: B435 5: project, rerun comparison: heading of the list of statements that only this project\'s own lens holds, beside "Only in their lens".'))
+W.append(dict(key='screen.project.cmp_withdraw_do', en='Withdraw this pairing', protected=False, note='DEC-391: B435 5: project, rerun comparison: quiet button on a finding already paired with one of ours; withdraws the pairing (the history keeps both).'))
+
+# DEC-391: B435 (K4258) items 3-5, keys minted by the design
+W.append(dict(key='screen.document.text.label', en='Its text', protected=False, note='DEC-391: B435 document: label of the fact line that says whether every page of this copy has readable text.'))
+W.append(dict(key='screen.document.text.full', en='Full: every page has text', protected=False, note='DEC-391: B435 document, "Its text" line: value when every page has text; the code passes nothing.'))
+W.append(dict(key='screen.document.text.none', en='None: no page has text', protected=False, note='DEC-391: B435 document, "Its text" line: value when no page has text, as with a scan; the code passes nothing.'))
+W.append(dict(key='screen.document.text.unread', en='Unread: this copy has not been read yet', protected=False, note='DEC-391: B435 document, "Its text" line: value before the copy has been read; the code passes nothing.'))
+W.append(dict(key='screen.document.said_by', en='Said by {member}, {date}', protected=False, note='DEC-391: B435 document, line under each source the record says this copy came from or was vouched by: who said it and when. Placeholders {member}, {date}.'))
+W.append(dict(key='screen.document.retired_copy', en='This copy is retired: you can read it and its history, but new work cannot cite it.', protected=False, note='DEC-391: B435 document, note on a retired copy under its standing; the code passes nothing.'))
+W.append(dict(key='screen.document.checked.words_and_address', en='Checked: the words against the original file, and the web address against the site', protected=False, note='DEC-391: B435 document, record of this copy: what the member checked when the copy was put into use; the code passes nothing.'))
+W.append(dict(key='screen.document.checked.issuer', en="Checked: the department's own site published it", protected=False, note='DEC-391: B435 document, record of this copy: what the member checked when the grade changed; the code passes nothing.'))
+W.append(dict(key='screen.question.hunches_left_out.one', en='{n} hunch is left out and not graded, because a hunch is never evidence.', protected=False, note='DEC-391: B435 question, strength box: counted line when exactly one hunch is left out of the reading. Placeholder {n}.'))
+W.append(dict(key='screen.question.hunches_left_out.other', en='{n} hunches are left out and not graded, because a hunch is never evidence.', protected=False, note='DEC-391: B435 question, strength box: counted line when two or more hunches are left out of the reading. Placeholder {n}.'))
+W.append(dict(key='screen.question.hunch.history.hold', en='Kept this hunch', protected=False, note='DEC-391: B435 question, hunch history line: act word for the member keeping the hunch; the code passes nothing.'))
+W.append(dict(key='screen.question.hunch.history.revise', en='Revised this hunch', protected=False, note='DEC-391: B435 question, hunch history line: act word for a revision of its words or reason; the code passes nothing.'))
+W.append(dict(key='screen.question.hunch.history.withdraw', en='Withdrew this hunch', protected=False, note='DEC-391: B435 question, hunch history line: act word for taking the hunch back; the code passes nothing.'))
+W.append(dict(key='screen.question.reeval.cause.supersession', en='A newer version of {document} replaces the one this question rests on.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a newer version replaces the target. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.deferred', en='{document} was deferred, and this question rests on it.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the target was deferred. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.reopened', en='{document} was reopened, and this question rests on it.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the target was reopened. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.dismissed', en='{document} was dismissed, and this question rests on it.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the target was dismissed. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.corrected', en='Something this question rests on was named wrongly in {document}, and it has been corrected.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a side the question rests on was corrected. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.source', en='The grade of the source behind {document} changed.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the source behind a capture moved a rung. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.attribution', en='The grade of an observation in {document} changed, because of who it is credited to.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the credit level of an observation changed. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.withdrawal', en='{document} was withdrawn on its docket, and this question rests on it.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a case edition was withdrawn. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.contested', en='{document} was contested on its docket, and this question rests on it.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a case edition was contested. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.acceptance', en="Your team's acceptance of another team's finding in {document} was withdrawn.", protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when an acceptance was withdrawn. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.cited_case_moved', en='The status of a case cited in {document} changed.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a cited case moved. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.event_changed', en='An event named in {document} changed.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a held event changed. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.calculation_input_changed', en='An input of a calculation named in {document} changed.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a calculation input changed. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.deletion', en='{document} was deleted, and this question rests on it.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the target was deleted. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.source_status', en='The status of the source of {document} changed.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the source status changed. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.wp_retraction', en='A case edition of this project that cites {document} was retracted.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when a work product was retracted. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.annotation', en='{document} was annotated, and this question rests on it.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the target was annotated. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.question.reeval.cause.weakened', en='What this question rests on in {document} became weaker.', protected=False, note='DEC-391: B435 question, "Needs a second look" row: head of an open cause when the strength of a leg weakened. Placeholder {document}, the title of the target.'))
+W.append(dict(key='screen.project.cmp_their_reading', en='Their grades: {text}', protected=False, note='DEC-391: B435 project, rerun comparison, on each of their findings: how the original read it. Placeholder {text}, the two grades.'))
+W.append(dict(key='screen.project.cmp_our_reading', en='Our grades: {text}', protected=False, note='DEC-391: B435 project, rerun comparison, on each of our findings paired with theirs: how this project reads it. Placeholder {text}, the two grades.'))
+W.append(dict(key='screen.project.stage.reached', en='{stage} · reached', protected=False, note='DEC-391: B435 project, "What each stage needs": label of a stage the project has reached. Placeholder {stage}, the stage name.'))
+W.append(dict(key='screen.project.stage.not_reached', en='{stage} · not reached yet', protected=False, note='DEC-391: B435 project, "What each stage needs": label of a stage not yet reached. Placeholder {stage}, the stage name.'))
+W.append(dict(key='screen.project.ask_owners', en='Ask {owners}.', protected=False, note='DEC-391: B435 project, end of a refusal that only an owner can act: names the owners to ask. Placeholder {owners}, their names joined with commas.'))
+
+# DEC-393: B437 (K4262)
+W.append(dict(key='screen.action.minutes.notfound', en='These words are not in the document you chose. Copy them exactly as the minutes write them. Nothing was written.', protected=False, note='DEC-393: B437 1: in-place refusal in the minutes fold (screens-action R55): the typed passage is not in the chosen document'))
+W.append(dict(key='screen.action.minutes.needed', en='The meeting, its date, the document and the passage are all needed. Nothing was written.', protected=False, note='DEC-393: B437 1: in-place refusal in the minutes fold: one of the four parts is missing'))
+W.append(dict(key='screen.home.todo.vouch.one', en='Vouch for the photo you captured on {place}', protected=False, note='DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch'))
+W.append(dict(key='queue.letter-approval.summary', en='The letter {title} is waiting for your approval', protected=False, note='DEC-393: B437 2: queue kind letter-approval (minted by the design for screens-daily and its producer): a letter awaiting approval'))
+W.append(dict(key='queue.letter-approval.detail', en="A member prepared this letter, and it needs approval before it is sent. Read it, then approve it. Your team's Civicsmith sends nothing: once it is approved, you send it and record the sending.", protected=False, note='DEC-393: B437 2: queue kind letter-approval, its detail'))
+W.append(dict(key='screen.home.ailimit.set', en='Set the limit', protected=False, note='DEC-393: B437 2: Home, the button of ailimitset as drawn in place'))
+W.append(dict(key='screen.home.ailimit.remove', en='Remove', protected=False, note='DEC-393: B437 2: Home, the button of ailimitset that removes the limit, as drawn in place'))
+W.append(dict(key='screen.queue.explore.today', en='Explore today', protected=False, note='DEC-393: B437 2: queue, the button of exploreapprove as drawn in place'))
+W.append(dict(key='screen.queue.mute.kind', en='Mute this kind', protected=False, note='DEC-393: B437 2: queue, the button of queuemute as drawn in place'))
+W.append(dict(key='screen.queue.check.open', en='Open the check', protected=False, note='DEC-393: B437 2: queue, the button on a check-request row, as drawn in place'))
+W.append(dict(key='screen.queue.hint.promote', en='Open a question from this', protected=False, note='DEC-393: B437 2: queue, the button of promote on a hint, as drawn in place'))
+W.append(dict(key='screen.queue.vouch.them', en='Vouch for them', protected=False, note='DEC-393: B437 2: queue, the button of release on held captures, as drawn in place'))
+# DEC-394: B441 item 3
+W.append(dict(key='screen.capture.later.head', en='Your requests for later', protected=False, note="DEC-394: B441 3: capture: section title over the list of Ask for a capture later requests"))
+W.append(dict(key='screen.capture.later.about', en='Each address you asked to have captured later, and where it stands.', protected=False, note="DEC-394: B441 3: capture: line under the section title"))
+W.append(dict(key='screen.capture.later.waiting', en='Waiting to be fetched', protected=False, note="DEC-394: B441 3: capture: state of a request not yet fetched"))
+W.append(dict(key='screen.document.testify.head', en='A name the record did not match', protected=False, note="DEC-394: B441 3: document: summary of the fold in People and organizations it names"))
+W.append(dict(key='screen.document.testify.note1', en='Some names this copy uses were matched to no subject.', protected=False, note="DEC-394: B441 3: document: note in the fold"))
+W.append(dict(key='screen.document.testify.note2', en='If you know who or what one is, say so and how you know.', protected=False, note="DEC-394: B441 3: document: note in the fold"))
+W.append(dict(key='screen.document.testify.note3', en='It is your word, graded D, the lowest grade, and it never lowers a stronger match.', protected=False, note="DEC-394: B441 3: document: note in the fold"))
+W.append(dict(key='screen.document.testify.which.help', en='The names this copy uses that the record matched to no subject.', protected=False, note="DEC-394: B441 3: document: help on Which name"))
+W.append(dict(key='screen.document.testify.who', en='Who or what it is', protected=False, note="DEC-394: B441 3: document: label of the subject choice"))
+W.append(dict(key='screen.document.testify.how.help', en='Say how you know, in your own words.', protected=False, note="DEC-394: B441 3: document: help on How you know"))
+W.append(dict(key='screen.document.testify.how.help2', en='It is kept beside the match.', protected=False, note="DEC-394: B441 3: document: help on How you know"))
+W.append(dict(key='screen.document.testify.refused', en='Say how you know this first. Nothing was recorded.', protected=False, note="DEC-394: B441 3: document: refusal when no basis is given, before: Nothing was recorded."))
+W.append(dict(key='screen.project.docs.about1', en='Every document filed under this project.', protected=False, note="DEC-394: B441 3: project: line under The project's documents"))
+W.append(dict(key='screen.project.docs.about2', en='Open one to read it, cite a passage or retire it.', protected=False, note="DEC-394: B441 3: project: line under The project's documents"))
+W.append(dict(key='screen.project.docs.none1', en='Nothing is filed under this project yet.', protected=False, note="DEC-394: B441 3: project: empty state of the documents list"))
+W.append(dict(key='screen.project.docs.none2', en='Add a document and it appears here.', protected=False, note="DEC-394: B441 3: project: empty state of the documents list"))
+W.append(dict(key='screen.project.docs.listhelp', en='Shows every document filed under this project, the ones waiting for a vouch and the ones already vouched for.', protected=False, note="DEC-394: B441 3: project: tip on List this project's documents (the help of heldcaptures here)"))
+
+# DEC-394: B441 item 1
+W.append(dict(key='screen.case-editor.drafts.help', en='The drafts of this project, each named by its scope and the date it was prepared.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on case-editor'))
+W.append(dict(key='screen.case-editor.drafts.choose', en='Choosing one shows that draft.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on case-editor'))
+W.append(dict(key='screen.case-editor.drafts.newest', en='newest', protected=False, note='DEC-394, DEC-395 (B443): the word after the newest draft\'s line in the chooser on case-editor'))
+W.append(dict(key='screen.case-editor.drafts.item', en='Scope: {scope} · prepared {date}', protected=False, note='DEC-394, DEC-395 (B443): one draft in the Which draft chooser on case-editor: {scope} the draft\'s scope, {date} the day it was prepared'))
+W.append(dict(key='screen.case-editor.links.live', en='{count} review links are live, {earlier} of them on an earlier draft.', protected=False, note='DEC-394: B441 1: the note naming live review links on case-editor'))
+W.append(dict(key='screen.ceremony.drafts.help', en='The drafts of this project, each named by its scope and the date it was prepared.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on ceremony'))
+W.append(dict(key='screen.ceremony.drafts.choose', en='Choosing one shows that draft.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on ceremony'))
+W.append(dict(key='screen.ceremony.drafts.newest', en='newest', protected=False, note='DEC-394, DEC-395 (B443): the word after the newest draft\'s line in the chooser on ceremony'))
+W.append(dict(key='screen.ceremony.drafts.item', en='Scope: {scope} · prepared {date}', protected=False, note='DEC-394, DEC-395 (B443): one draft in the Which draft chooser on ceremony: {scope} the draft\'s scope, {date} the day it was prepared'))
+W.append(dict(key='screen.ceremony.links.live', en='{count} review links are live, {earlier} of them on an earlier draft.', protected=False, note='DEC-394: B441 1: the note naming live review links on ceremony'))
+W.append(dict(key='screen.review-copy.drafts.help', en='The drafts of this project, each named by its scope and the date it was prepared.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on review-copy'))
+W.append(dict(key='screen.review-copy.drafts.choose', en='Choosing one shows that draft.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on review-copy'))
+W.append(dict(key='screen.review-copy.drafts.newest', en='newest', protected=False, note='DEC-394, DEC-395 (B443): the word after the newest draft\'s line in the chooser on review-copy'))
+W.append(dict(key='screen.review-copy.drafts.item', en='Scope: {scope} · prepared {date}', protected=False, note='DEC-394, DEC-395 (B443): one draft in the Which draft chooser on review-copy: {scope} the draft\'s scope, {date} the day it was prepared'))
+W.append(dict(key='screen.review-copy.links.heading', en='Every live review link', protected=False, note='DEC-394: B441 1: the section of live links on any draft'))
+W.append(dict(key='screen.review-copy.links.note', en='A link on an earlier draft keeps working until you stop it here.', protected=False, note='DEC-394: B441 1: note under the live links'))
+W.append(dict(key='screen.review-copy.links.help', en='Every review link still working on any draft of this project: who it was shared with, which draft, when, and how many comments that reader made.', protected=False, note='DEC-394: B441 1: help of the live links section'))
+
+W.append(dict(key='screen.project.docs.head', en="The project's documents", protected=False, note="DEC-394: B441 3: project: section title"))
+W.append(dict(key='screen.document.testify.which', en='Which name', protected=False, note="DEC-394: B441 3: document: label of the name choice"))
+W.append(dict(key='screen.capture.later.captured', en='Captured', protected=False, note="DEC-394: B441 3: capture: state of a request that was fetched"))
+W.append(dict(key='screen.capture.later.turned', en='Turned away', protected=False, note="DEC-394: B441 3: capture: state of a request its source refused"))
+W.append(dict(key='screen.project.docs.kind.web', en='Web page', protected=False, note="DEC-394: B441 3: project: kind of a document in the list"))
+W.append(dict(key='screen.project.docs.kind.sheet', en='Spreadsheet', protected=False, note="DEC-394: B441 3: project: kind of a document in the list"))
+W.append(dict(key='screen.project.docs.kind.photo', en='Photo', protected=False, note="DEC-394: B441 3: project: kind of a document in the list"))
+W.append(dict(key='screen.project.docs.captured', en='captured', protected=False, note="DEC-394: B441 3: project: before the date a document was captured"))
+# DEC-394: B441 item 3 (e), UC-155: flag a contradiction by hand (owed op contradictionflag)
+W.append(dict(key='screen.document.contradict.head', en='This contradicts another document', protected=False, note='DEC-394: B441 3e: fold title on the document screen'))
+W.append(dict(key='screen.document.contradict.note1', en='If a passage here and a passage in another document cannot both be true, say so.', protected=False, note='DEC-394: B441 3e'))
+W.append(dict(key='screen.document.contradict.note2', en='The two are set side by side as a contradiction for your project to settle.', protected=False, note='DEC-394: B441 3e'))
+W.append(dict(key='screen.document.contradict.here', en='The passage here', protected=False, note='DEC-394: B441 3e: field'))
+W.append(dict(key='screen.document.contradict.here.help', en='Select the words on the page, or choose a passage you cited.', protected=False, note='DEC-394: B441 3e: help'))
+W.append(dict(key='screen.document.contradict.other', en='The other document and its passage', protected=False, note='DEC-394: B441 3e: field'))
+W.append(dict(key='screen.document.contradict.other.help', en='A document your team holds, and the passage in it.', protected=False, note='DEC-394: B441 3e: help'))
+W.append(dict(key='screen.document.contradict.why', en='How they disagree', protected=False, note='DEC-394: B441 3e: the reason field'))
+W.append(dict(key='screen.document.contradict.why.help', en='In your own words, up to 500 characters.', protected=False, note='DEC-394: B441 3e: help'))
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

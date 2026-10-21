@@ -29,9 +29,23 @@ export const PARTS = Object.freeze({
     }
     return L[key];
   },
+  /** R55: whom a reply is owed by, from whatever keys a counterparty holds: an addressee's own role and body or name, a described
+   *  audience's description; one not yet determined names nobody ("": no sentence is drawn). */
+  counterparty(c) {
+    if (!c || typeof c !== "object" || c.state === "undetermined") return "";
+    const text = (v) => (typeof v === "string" ? v.trim() : "");
+    if (c.state === "audience") return text(c.description);
+    const named = [text(c.role), text(c.body)].filter(Boolean).join(", ");
+    return named || text(c.name) || text(c.label) || text(c.office) || text(c.description);
+  },
   /** A word as plain text for a record or a request body, not for the page: `cs.w` escapes it as HTML, this undoes that. */
   plain(cs, key, fills) {
     return cs.w(key, fills).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
+  },
+  /** B14 (K4259): a section that is itself the read of a registry act the design draws as a section, not a button (`instance`,
+   *  `progression`): the section carries the act in `data-act`, as the design's `sec(…, {act})` does. Answers HTML. */
+  actSec(html, op) {
+    return String(html).replace(/^<section class="cs-section"/, '<section class="cs-section" data-act="' + String(op).replace(/[^a-z]/g, "") + '"');
   },
   /** R44: an undetermined answer's reason, `{key, vars}`, drawn through its word (`vars` that are themselves reasons likewise,
    *  an owner's as that owner answered it); a reason that is no held key (a bare string, a key the page does not carry) is
@@ -69,13 +83,34 @@ export const PARTS = Object.freeze({
     const options = rows.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256)
       .map((r) => ({ value: r.capture.sha256, text: r.title || cs.w("screen.held.untitled").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e])) }));
     if (d && d.state !== "loading" && !options.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
-    return cs.choice(id, o.label || "form.choose.document", options, {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
+    return cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
       + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
   },
-  /** R34: the passage the member chose: the chosen document's digest and its whole-document extent, else null. */
-  chosen(cs, id) {
+  /** R34, C59: the passage the member chose: the chosen document's digest and, when she selected words in `wordsId`'s picker, the extent of
+   *  the first unit selected (a unit's extent is `content`'s own), else the whole document; null with no document chosen. */
+  chosen(cs, id, wordsId) {
     const s = String(cs.value(id) || "").trim().toLowerCase();
-    return /^[0-9a-f]{64}$/.test(s) ? { captureSha: s, extent: { kind: "document" } } : null;
+    if (!/^[0-9a-f]{64}$/.test(s)) return null;
+    let extent = { kind: "document" };
+    const sel = wordsId ? cs.value(wordsId) : null;
+    if (sel && typeof sel === "object" && Array.isArray(sel.extents) && sel.extents.length) {
+      try { const e = JSON.parse(sel.extents[0]); if (e && typeof e === "object" && typeof e.kind === "string") extent = e; } catch { /* the whole document */ }
+    }
+    return { captureSha: s, extent };
+  },
+  /** R34, C59: "Choose the passage on the document": the words of the chosen document (`docChoice` with `drive`, so the choice is kept in
+   *  `view.ui["choice:" + docId]`; the first document until she chooses), from that document's reading (`reading`'s `text_units`, in order,
+   *  at most 500 drawn), for her to select; a unit's extent travels as its JSON. `later` is `PARTS.later`. With no document held, nothing. */
+  passagePick(cs, view, docId, wordsId, later) {
+    const d = view.data && view.data.docs;
+    const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
+    const shas = rows.map((r) => r && r.capture && r.capture.sha256).filter((x) => typeof x === "string" && x);
+    if (!shas.length) return "";
+    const made = view.ui["choice:" + docId];
+    const sha = shas.includes(made) ? made : shas[0];
+    const rd = later(cs, view, "words:" + sha, "reading", { query: { sha256: sha } });
+    return cs.state(rd, (v) => cs.words(wordsId, { units: (Array.isArray(v && v.text_units) ? v.text_units : []).filter((u) => u && String(u.text || "").trim()).slice(0, 500)
+      .map((u) => ({ extent: JSON.stringify(u.extent && typeof u.extent === "object" ? u.extent : { kind: "document" }), text: String(u.text) })) }));
   },
   /** A record id drawn as a reference to its screen (interface-shell R16): a person or organisation the record follows
    *  opens `person`, a document, capture, question or project its own; anything else carries its card only. */
@@ -214,13 +249,12 @@ export const PARTS = Object.freeze({
       const c = classOf(s);
       const ev = (Array.isArray(s.evidence) ? s.evidence : []).map((e) => (e.capture_sha ? cs.ref("capture", e.capture_sha, cs.w(o.words.cited), []) : e.source ? cs.esc(String(e.source)) : "")).filter(Boolean).join(" ");
       const letter = s.grade && /^[A-D]$/.test(s.grade.assertion || "") ? cs.grade("connection", s.grade.assertion) : "";
-      /* R35, R17: a step a member backed with a passage shows who attached it and when beside its citation, and offers its withdrawal */
+      /* R35, R17: a step a member backed with a passage shows who attached it and when beside its citation, */
       const by = s.kind === "step_source" && s.attached_by
         ? ` <span class="mk-small" data-attached="${cs.esc(s.id)}">${cs.w(o.words.attached, { by: String(s.attached_by).replace(/^member:/, ""), date: cs.date(s.at || "") })}</span>` : "";
-      const wd = s.kind === "step_source" && o && o.withdraw ? cs.act("stepsourcewithdraw", { label: o.words.withdraw, data: { id: s.id } }) : "";
       return cs.row(letter, `<b>${cs.esc(label(s.from))}</b> → <i>${cs.esc(s.word || s.kind)}</i> → <b>${cs.esc(label(s.to))}</b>`
         + (c === "lead" ? ` <b>${cs.w(s.label === "hunch" || s.class === "hunch" ? o.words.hunch : o.words.declared)}</b>` : ""),
-        (ev ? ev : c === "lead" ? "" : cs.mark("gap", "undetermined", { reason: cs.w(o.words.nosource) })) + by + wd);
+        (ev ? ev : c === "lead" ? "" : cs.mark("gap", "undetermined", { reason: cs.w(o.words.nosource) })) + by);
     }).join("");
     const trail = (o && Array.isArray(o.trail) ? o.trail : [centre]);
     const trailHtml = `<div class="mk-trail"><span class="k" data-tip="${cs.esc(cs.w("connection.graph.trail.means"))}">${cs.w("connection.graph.trail.label")}</span>`

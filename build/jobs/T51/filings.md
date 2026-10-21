@@ -1,6 +1,6 @@
 # filings (T51)
 
-**Status** · session_01AuFZ1srU2g5cYW4DV5f15N · depth 2 · COMPLETE · handled B4
+**Status** · session_01BpfWkadwTvmZqGLPzN8bte · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -44,3 +44,58 @@ T51-154 applied on `job/T51/filings` (tranche/T51 merged in, B2/B3 handled), pus
 - Dependents run (escalation, action-plans, plan-work, action-producers, affordances): failures all outside filings (REPORT J2 item 3); plan-work 50/50.
 
 Size (session_01AuFZ1srU2g5cYW4DV5f15N): test runs 14, module lines 3712
+
+## J4 · QUESTION
+
+Five readings I have built on and carry on with; a different answer to any is a CHANGE and I redo that declaration.
+
+1. **`resolutions` and `release` are not `[{index, …}]` (entry 1, for screens-action's START).** The arm (via action-grammar R19) takes `resolutions: [{sentence, resolution, words?}]`: `sentence` the exact text of the pointed-out sentence (an `index` is refused `ASSERTION_RESOLUTION_REFUSED`, as is any other key), `resolution` `only_asks` (with `words`, 1 to 500 characters on one line) or `breach_claim` (no `words`). `release` is `[{ord, reason}]`, `ord` the sentence's number in the record check. A phrase is flagged only when the draft states its `language` at preparation (without it the check reads "no list" and nothing is flagged). `filingapprove` declares `accepts: filing, text, release, resolutions, textcheck`, `requires: filing`. The screen that sends `index` is wrong, not the declaration.
+2. **Fields an arm refuses only in some cases are accepted, not required** (a declaration cannot state a condition): `communicationprepare` `text` (required unless the purpose is `document_infraction` or `chance_to_fix`, which the record assembles) and `audience` (required for `document_infraction`); `counselpacket` `counsel` (required at governing tier 3 or undetermined); `templatesave` `project` (required when the draft rested on no determination); `filingprepare` `template` or `text` (required when the profile gives the kind no default template). Declared requires: `filingprepare` action; `communicationprepare` action, purpose; `counselpacket` action, reason; `templatesave` filing and (name or template). If you want a field required whatever the case, the screens that assemble would fail the guard falsely.
+3. **`filingrecordsent` is the screens' name; the arm is `filingsent`** (`OP_ALIASES`). I declare the screens' name only, with `artifact_sha` and its camelCase twin `artifactSha`, which the arm also reads (requires filing, at, and one of account / artifact_sha / artifactSha).
+4. **C75's refusal** was not made anywhere: `filing-templates` refuses a `use: file` template only for a kind whose profile tier is 3, not for an action whose own tier was raised to 3 after the draft was approved. `templateSave` now refuses it, answering `TEMPLATE_TIER3_FILE` with `filing-templates`' own row (C-115.36), for a new template with `use` file or absent and for a new version of a `file` template; `use: brief` is accepted. No new code, row or word row beyond the one `localize` detail.
+5. **Descriptions are the hand rows' sentences** for the four ops whose hand row is a sentence (`communicationprepare`, `holdnoticeprepare`, `templatesave`, `filingsecondapprove`), as op-grades requires; `holdnoticeprepare`'s says "by her own hand" (op-grades' row, not mine to edit; filings R47 says the same).
+
+## J5 · COMPLETE
+
+FR-20 applied on `job/T51/filings` (tranche/T51 merged in; B5–B8 handled; B8 confirmed all five J4 readings). Requirement lines R66, R67, R68 written by me in `build/requirements/filings.md` (not in this record); their tests name them, so they carry no *(not yet met)* mark.
+
+**Entries applied**
+1. C71 · R66: `filingapprove` with `resolutions: [{sentence, resolution, words?}]` and `release: [{ord, reason}]` is accepted for flagged and contradicted text; controls `ASSERTION_UNRESOLVED`, `CONTRADICTED_HELD`. The screen's `index` is screens-action's defect (sent by BOB as CHANGE).
+2. C75/DEC-377 · R67: not refused anywhere before; `templateSave` now answers `TEMPLATE_TIER3_FILE` (filing-templates' own row) for `use: file` of a filing whose action is governed at tier 3; `use: brief` accepted; Tier 1/2 control.
+3, 4. K4168/K4202 · R68: `DECLARED_OPS` beside the ops map for `filingprepare`, `communicationprepare`, `filingapprove`, `filingrecordsent` (screens' name; arm `filingsent`), `filingsecondapprove`, `counselpacket`, `holdnoticeprepare`, `templatesave`; each held by `declaredOpHolds` in `declared-ops.test.mjs`.
+
+**Hand rows that can now go** (op-declarations / op-grades, not mine to edit): the rows for those eight ops, wherever they hold class, weight, description or fields.
+
+**Found in other modules**: none new. Standing from J2: plane store.mjs `filingsOf` not handed `env`/`caseInputs`; action-clocks `whyOf` "[object Object]" (the two packet reds are now green in this run).
+
+**Tests and checks**: `node --test bio-plane/test/m/filings/`: tests 154, pass 154, fail 0. format 0 failures; architecture filings 0; coverage filings 67 of 67; ownership 4 files, 0; `checks/run.mjs`: no finding names filings (remaining failures are other modules').
+
+Size (session_016qbXZJnFcwk8TErZNueoKY): test runs 4, module lines 3758
+
+## J6 · COMPLETE
+
+FR-20 complete: R66, R67, R68 written in build/requirements/filings.md; 154/154 tests; checks clean for filings. See record J5.
+
+## J7 · COMPLETE · re B9
+
+CHANGE B9 (K4236) applied. `filingRead` (R59) now answers the draft's stored `exhibits` and `venue_standard` (R25), as stored: the parsed columns, `exhibits: []` and `venue_standard: null` for a row stored before they existed and for a communication (which has no such columns). Code: bio-plane/src/filings/index.mjs (filingRead and its comment). Test: t51.test.mjs, "R59 R25 filingRead answers the exhibits and the venue standard...": prepare then filingread (module and op) answer the same exhibits and standard; control: a row with both columns NULL, and a communication.
+Requirement line for BOB: R59's answer list gains `exhibits` and `venue_standard` (R25), as stored (K4236). The requirements file is BOB's to edit; I did not.
+Deferred: none. Found in other modules: none new.
+Tests and checks: `node --test bio-plane/test/m/filings/`: tests 155, pass 155, fail 0. format 0 failures; architecture filings 0; coverage filings 67 of 67; ownership 3 files, 0 failures. node_modules installed for the five lockfile directories that lacked them (K4113).
+Size (session_011P9WhQpNaxxpwvt6fZhKcn): test runs 2, module lines 3759
+
+## J8 · COMPLETE · re B10
+
+Fix round 2 (B10) applied on `job/T51/filings`, pushed; tranche/T51 merged in first.
+
+**C65 · R32** A new template's scope is the project the request names, else the action's (`a.project`), else the filing basis's, as the module's other acts take it. Found: `templateSave` already took a named `project` first, so a request naming the project was already saved; the defect was that the action's own project was never consulted, and the basis's is empty for an action resting on no determination. Now `str(project) || str(act.project) || str(basis.project) || null`.
+
+**Requirement line for BOB (R32, to fold):** "A new template's `project` is the one the request names, else the action's, else the project the draft's basis names; with none of the three, `filing-templates` refuses `TEMPLATE_SCOPE_REFUSED` (its R3)."
+
+**Tests** (`fix-round.test.mjs`, written first; the action-names-its-project one seen failing, TEMPLATE_SCOPE_REFUSED): for an action resting on no determination, (a) request names no project and none exists: still refused TEMPLATE_SCOPE_REFUSED (control); request names its project: saved, scope `{project}`; (b) the action names its own project, the request none: saved in the action's project.
+
+**Runs:** `node --test bio-plane/test/m/filings/`: tests 157, pass 157, fail 0. Dependents (screens-action 220/220; control-plane stamps-action 4/4; op-declarations 237/238 and op-grades 140/142: the same failures with my change stashed, inherited, not filings'). `checks/run.mjs`: format 0, architecture 0, words 0 failures; coverage failures are other modules' (screens-inquiry, screens-intake, screens-publish, ...), none filings. ownership filings: 0 failures.
+
+Deferred: none. Found in other modules: none new.
+
+Size (session_01BpfWkadwTvmZqGLPzN8bte): test runs 6, module lines 3763

@@ -5,19 +5,24 @@
    rows (`pseudoBody` for the page's words, `pseudoValue` for every answer a screen fetches), then read in a real browser with
    the interface's stylesheets: none reported. Each control is a hard-coded sentence beside the data, reported by screen and
    element. No fixture invents a markup: the structure under test is the screens' own. */
+/* the owners' declared ops are registered first (op-declarations R80, R81; K4168), as screens-settings' suite does: a screen's import
+   reads the op table, and `expertisewithdraw` is member-roster's own declared op, which the screens' acts name (K4295). The
+   registration is asynchronous, so the screens are imported after it, as routed.test.mjs does. */
+import "../screens-settings/register.mjs";
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { browser } from "../../../src/journey-check/run.mjs";
-import { escapedOnPage, escapedIn, withoutPseudo, pseudoBody, pseudoValue, pseudoString, pseudoJson, DATA } from "../../../src/journey-check/pseudo.mjs";
-import { interfacePage } from "../../../src/interface-shell/index.mjs";
-import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
-import { SCREENS as ENTRY } from "../../../src/screens-entry/index.mjs";
-import { SCREENS as SETTINGS } from "../../../src/screens-settings/index.mjs";
-import { SCREENS as DAILY } from "../../../src/screens-daily/index.mjs";
-import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
-import { boot, ok, served, ADMIN } from "../interface-shell/harness.mjs";
-import { world } from "../file-safety/fixture.mjs";
-import OAKLAND from "../../../../jurisdictions/profiles/oakland-alameda.mjs";
+
+const { browser } = await import("../../../src/journey-check/run.mjs");
+const { escapedOnPage, escapedIn, withoutPseudo, pseudoBody, pseudoValue, pseudoString, pseudoJson, DATA } = await import("../../../src/journey-check/pseudo.mjs");
+const { interfacePage } = await import("../../../src/interface-shell/index.mjs");
+const { ASSET_FILES } = await import("../../../src/interface-assets/index.mjs");
+const { SCREENS: ENTRY } = await import("../../../src/screens-entry/index.mjs");
+const { SCREENS: SETTINGS } = await import("../../../src/screens-settings/index.mjs");
+const { SCREENS: DAILY } = await import("../../../src/screens-daily/index.mjs");
+const { WORD_ROWS, word } = await import("../../../src/setup-words/index.mjs");
+const { boot, ok, served, ADMIN } = await import("../interface-shell/harness.mjs");
+const { world } = await import("../file-safety/fixture.mjs");
+const { default: OAKLAND } = await import("../../../../jurisdictions/profiles/oakland-alameda.mjs");
 
 const SCREENS = [...ENTRY, ...SETTINGS, ...DAILY];
 const FOUNDER = { ...ADMIN, member: "admin", handle: "rosa", rootOfTrust: true };

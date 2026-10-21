@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_LIST_MAX, noReviewCopy } from "../../../src/review/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DEAD = JSON.stringify(noReviewCopy());
 const draft = (w, extra = {}, author = "ann") => w.r.act({ act: "draft", author, project: P, statement: "S", ...extra });
@@ -27,7 +28,7 @@ test("R8: a grant is live only while it exists with that fingerprint, is unrevok
   /* the draft moves to another case identity: dead, and alive again when it stands there once more */
   w.r.act({ act: "draft", author: "ann", draft: loose.draftId, caseId: "CASE-2026-0001" });
   assert.equal(w.r.liveGrant(SECRET(2)), null);
-  w.r.act({ act: "draft", author: "ann", draft: loose.draftId });
+  w.r.act({ act: "draft", author: "ann", draft: loose.draftId, caseId: null });
   assert.equal(w.r.liveGrant(SECRET(2)).grant.grant_id, gl.grantId);
   /* the bound edition is published and signed: dead exactly as a revoked one */
   assert.equal(w.r.grantAdmitsCaseEdition(SECRET(1), "CASE-2026-0001", 2), true);
@@ -141,8 +142,8 @@ test("R19: the list of a project's drafts, fenced exactly as R9, bounded, writin
   assert.deepEqual(Object.keys(d0).sort(), ["case", "created_at", "created_by", "draft_id", "read", "statement_by", "updated_at", "updated_by"]);
   assert.deepEqual([d0.created_by, d0.updated_by, d0.statement_by, d0.read], ["ann", "bea", "ann", `op=reviewcopy&draft=${ids[0]}`]);
   assert.deepEqual([d0.case.case_id, d0.case.edition], [null, null]);
-  assert.match(d0.case.identity, /DERIVES/);
-  assert.deepEqual(d1.case, { case_id: "CASE-2026-0001", edition: 2, identity: "the next edition (2) of CASE-2026-0001" });
+  assert.equal(d0.case.identity, word("review.index.derived_case_identity"));
+  assert.deepEqual(d1.case, { case_id: "CASE-2026-0001", edition: 2, identity: word("review.text.next_edition", { edition: "2", case_id: "CASE-2026-0001" }) });
   assert.deepEqual([d2.case.case_id, d2.case.edition], [null, 1]);
   assert.deepEqual([d3.created_by, d3.statement_by, d4.statement_by], ["ed", "ed", null]);
   /* the limit: clamped to [1, 500], 500 when absent or unreadable */

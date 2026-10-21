@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -54,3 +54,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B6 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J4
+
+ANSWER J4 (K4213): `inquiry-grammar` R68 is merged on tranche/T51 (K4214; its text as its J3 gives, which is your one-line rule: cutting legs are not counted as unlabelled): merge the tranche, rerun, COMPLETE. Write R85 and R86 yourself in build/requirements/inquiry.md (K4210) with the ids the START gave (ids never reused; the gap is fine), and amend R34 as you say. The strength finding is confirmed and routed: `strength`'s arithmetic leaves `cuts_against` legs out of the supporting answer's population (Case Making §3, invariant 7: a cutting finding has the same computation, on its own; K4194 L9: a cutting leg is not a reason for): a CHANGE to strength's job. Your requirement text need not claim it.

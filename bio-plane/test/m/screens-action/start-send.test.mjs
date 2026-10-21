@@ -87,7 +87,7 @@ test("R3: 'Approve this text' is terminal: its dialog says approving fixes it an
   assert.ok(text(p, p.root().querySelector('[role="dialog"]')).includes(W("act.filingapprove.does")), "the dialog states what approving does");
   await press(p, b, { confirm: true });
   assert.deepEqual(last(p, "filingapprove").body, { filing: FILING });
-  assert.deepEqual(ops(p), ["filingrecordsent"], "approved: the send step");
+  assert.deepEqual(ops(p), ["filingrecordsent", "templatesave"], "approved: the send step"); // R48: the template offer follows approval
 });
 
 test("R3: where the project asks a second approval, the screen says it waits and offers filingsecondapprove, never the send; control: once given, the send", async () => {
@@ -95,10 +95,10 @@ test("R3: where the project asks a second approval, the screen says it waits and
   let drafts = [waiting];
   const p = await open(STEP2, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)), filingsecondapprove: () => { drafts = [{ ...waiting, second_approval: { approved_by: "member:mai" } }]; return ok({}); } });
   said(p, "screen.start-send.waitsecond");
-  assert.deepEqual(ops(p), ["filingsecondapprove"]);
+  assert.deepEqual(ops(p), ["filingsecondapprove", "templatesave"]);
   await press(p, "filingsecondapprove", { confirm: true });
   assert.deepEqual(last(p, "filingsecondapprove").body, { filing: FILING });
-  assert.deepEqual(ops(p), ["filingrecordsent"]);
+  assert.deepEqual(ops(p), ["filingrecordsent", "templatesave"]);
 });
 
 test("R3: 'I have sent it · record the sending' is outward and records the day, how and the office's reference; the screen then says it was sent", async () => {
@@ -114,7 +114,7 @@ test("R3: 'I have sent it · record the sending' is outward and records the day,
   await press(p, "filingrecordsent", { values: { "send-at": "2026-10-10", "send-account": "by the office's web form", "send-reference": "R-12" }, reason: "sent" });
   assert.deepEqual({ ...last(p, "filingrecordsent").body, reason: undefined }, { filing: FILING, at: "2026-10-10", account: "by the office's web form", reference: "R-12", reason: undefined });
   assert.ok(text(p).includes(`${W("screen.start-send.sent", { date: D("2026-10-10") })} · ${W("screen.start-send.reference", { reference: "R-12" })}`));
-  assert.deepEqual(ops(p), []);
+  assert.deepEqual(ops(p), ["templatesave"]);
 });
 
 test("R3 (op-grades R18; interface-shell R50): at the phone width, 'I have sent it' is read, not done: what it does is drawn and nothing is sent", async () => {
@@ -233,7 +233,7 @@ test("R21: nothing waits on the question: approving, preparing and recording the
   await press(p, "filingapprove", { confirm: true });
   assert.equal(p.byOp("filingapprove").length, 1, "approved with the question unanswered");
   assert.equal(p.byOp("actionstake").length, 0, "no answer is recorded");
-  assert.deepEqual(ops(p), ["filingrecordsent"]);
+  assert.deepEqual(ops(p), ["filingrecordsent", "templatesave"]);
   const fresh = await open(STEP2, { ...DATA_PLANE, stakeatpreparation: TIER2() });
   assert.ok(ops(fresh).includes("communicationprepare") && ops(fresh).includes("filingprepare"));
   // the stake read failing or being undetermined stops nothing either

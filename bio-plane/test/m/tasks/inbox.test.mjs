@@ -108,7 +108,7 @@ test("R1, R3 (queue suite's share): a task routed with no manager and no adminis
   const r = w.t.taskResolve({ id: made.id, actor: "dave", note: "checked; unchanged", now: iso(NOW + 1000) });
   assert.deepEqual(r, { ok: true, id: made.id, status: "resolved", resolved_at: iso(NOW + 1000) });
   const row = w.all(`SELECT * FROM tasks WHERE id=?`, made.id)[0];
-  assert.deepEqual(JSON.parse(row.history).map((h) => [h.event, h.actor]), [["created", "consumer"], ["resolved", "dave"]]);
+  assert.deepEqual(JSON.parse(row.history).map((h) => [h.event, h.actor]), [["created", "consumer"], ["resolved_undecided", "dave"]]); // R21: an authority task put aside
   assert.equal(JSON.stringify(row).includes("checked"), false, "the note is not stored");
   assert.equal(w.t.taskResolve({ id: made.id, actor: "dave" }).already, true, "resolved once");
 });
@@ -125,6 +125,28 @@ test("R1 (N329): with no project manager the task goes to the earliest active ad
   assert.deepEqual(w.membership.activeAdmins(), ["admin", "bea", "zed", "ada"]);
   const r = w.t.taskDrain({ actor: "alarm" });
   assert.deepEqual(r.created.map((c) => [c.assignee, c.assignee_role]), [["bea", "group-admin"]]);
+});
+
+test("R1 (K4218; member-roster R76, R29): a claimed founder is an active member and still takes no routed task; the task goes to the first administrator after her, and with none it is unassigned (control: unclaimed)", async () => {
+  const route = async ({ claimed, admins = [] }) => {
+    const w = box([ev("a3")]);
+    w.bundle(DOC2);
+    for (const a of admins) w.member(a, { role: "admin" });
+    if (claimed) assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);
+    return { w, made: w.t.taskDrain({ actor: "alarm" }).created.map((c) => [c.assignee, c.assignee_role]) };
+  };
+  /* claimed: memberFacts answers her as an active member, and activeAdmins leads with her */
+  const a = await route({ claimed: true });
+  assert.equal(a.w.membership.memberFacts("admin").status, "active");
+  assert.equal(a.w.membership.activeAdmins()[0], "admin");
+  assert.deepEqual(a.made, [["unassigned", "group-admin"]], "the founder alone is no routing target");
+  const b = await route({ claimed: true, admins: ["ada"] });
+  assert.deepEqual(b.made, [["ada", "group-admin"]], "the first administrator after the founder");
+  /* control: unclaimed, memberFacts("admin") is null and the routing is the same */
+  const c = await route({ claimed: false });
+  assert.equal(c.w.membership.memberFacts("admin"), null);
+  assert.deepEqual(c.made, [["unassigned", "group-admin"]]);
+  assert.deepEqual((await route({ claimed: false, admins: ["ada"] })).made, [["ada", "group-admin"]]);
 });
 
 test("R1 (N322): an exhausted task id space keeps the event, its waiting entry carrying record-core R62's code, check and detail", () => {
@@ -405,7 +427,8 @@ test("R2: taskList lists visible tasks newest first, filtered, bounded with trun
   assert.deepEqual([all.limit, all.truncated], [200, false]);
   assert.deepEqual(all.tasks[0], { id: "TASK-2026-0004-d", kind: "authority-undetermined", refers_to: DOC,
     subject: { text: `about ${DOC}` }, assignee: "unassigned", assignee_role: "group-admin", status: "resolved",
-    created: iso(NOW - 500), resolved_at: iso(NOW), history: [{ at: iso(NOW - 500), event: "created", actor: "alarm" }] });
+    created: iso(NOW - 500), resolved_at: iso(NOW), history: [{ at: iso(NOW - 500), event: "created", actor: "alarm" }],
+    door: ["taskdecide", "taskforward", "taskresolve"] });
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", assignee: "alice" }).tasks.map((t) => t.id), ["TASK-2026-0001-a"]);
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", status: "resolved" }).tasks.map((t) => t.id), ["TASK-2026-0004-d"]);
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", refersTo: PRJ }).tasks, []);
@@ -464,7 +487,7 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   const done = res({ id: "TASK-2026-0001-a", actor: "alice", now: iso(NOW) });
   assert.deepEqual(done, { ok: true, id: "TASK-2026-0001-a", status: "resolved", resolved_at: iso(NOW) });
   const r2 = w.all(`SELECT status, resolved_at, history FROM tasks WHERE id='TASK-2026-0001-a'`)[0];
-  assert.deepEqual([r2.status, r2.resolved_at, JSON.parse(r2.history).at(-1)], ["resolved", iso(NOW), { at: iso(NOW), event: "resolved", actor: "alice" }]);
+  assert.deepEqual([r2.status, r2.resolved_at, JSON.parse(r2.history).at(-1)], ["resolved", iso(NOW), { at: iso(NOW), event: "resolved_undecided", actor: "alice" }]); // R21
   // the set form, each item on its own through record-core's perItem, the actor forced on every item
   w.task("TASK-2026-0005-e", DOC3);
   const set = w.t.taskResolve({ items: [{ id: "TASK-2026-0005-e", actor: "token:daemon" }, { id: "TASK-NONE" }], actor: "bob" });
@@ -674,7 +697,7 @@ test("R10: the viewer comes only from the control plane's stamp in the URL, neve
   const body = { viewer: "class:admin", actor: "alice", id: "TASK-1", to: "bob", limit: 3 };
   const ops = tasksOps(t, url, body);
   assert.deepEqual(Object.keys(ops).sort(), ["checkrecord", "checkrequest", "checkrequests", "checksof", "checktake",
-                                             "signrequest", "taskdrain", "taskforward", "taskresolve", "tasks"]);
+                                             "signrequest", "taskdecide", "taskdrain", "taskforward", "taskresolve", "tasks"]);
   ops.tasks(); ops.taskdrain(); ops.taskforward(); ops.taskresolve();
   assert.deepEqual(seen, [
     ["taskList", { assignee: "alice", status: "open", refersTo: "D", limit: "5", viewer: "member:alice" }],

@@ -41,6 +41,17 @@ const COLLECTED = await declaredOpsOf(fileURLToPath(new URL("../../../../", impo
 /* the owners' rows, `{op: declaration}`, as `test-support`'s one collector finds them; an op it lists as a duplicate fails (`declared.test.mjs`) */
 export const collectedDuplicates = () => COLLECTED.duplicates.slice();
 export function collectOwnerRows() { return COLLECTED.ops; }
+/* a stand-in's `send` for a real op: the fields its owner requires, read through the collector (K3268) and carried into the page as
+   data, with `extra` (an expression of view, el and cs) over them. A screen's function is self-contained, so it is built from source. */
+export const fitSend = (op, extra = "{}") => new Function("view", "el", "cs", "extra", `return { body: Object.assign(${JSON.stringify(declaredFit(op))}, ${extra}) };`);
+/* a request body a stand-in screen sends for a real op: exactly the fields its owner requires (the first alternative of a list), read
+   through the collector and never copied by hand (K3268), with `extra` over them */
+export function declaredFit(op, extra = {}) {
+  const row = COLLECTED.ops[op];
+  const body = {};
+  if (row && row.fields) for (const need of row.fields.requires || []) { const f = Array.isArray(need) ? need[0] : need; body[f] = "x"; }
+  return { ...body, ...extra };
+}
 const isRow = (r) => !!(r && typeof r === "object" && r.fields && typeof r.fields === "object");
 const flat = (list) => (Array.isArray(list) ? list : []).flatMap((x) => (Array.isArray(x) ? x : [x]));
 /* the field names a request carries: its query (less the marks the shell adds) and a JSON object body */

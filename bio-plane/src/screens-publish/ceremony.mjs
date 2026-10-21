@@ -29,7 +29,9 @@ export const CEREMONY = Object.freeze({
   place: function (view) {
     const id = String(view.subject || "").split("/")[0];
     const p = view.data.project;
-    return { project: { id: id, title: view.parts.titleOf(p && p.state === "ok" ? p.value : null, id) } };
+    // R68 (H2; DEC-384): a project whose title the viewer cannot read is named `crumb.project.unjoined`, never by its id
+    const title = view.parts.titleOf(p && p.state === "ok" ? p.value : null, "");
+    return title ? { project: { id: id, title: title } } : { project: { id: id, title: id }, projectKey: "crumb.project.unjoined" };
   },
 
   render: function (cs, view) {
@@ -55,15 +57,39 @@ export const CEREMONY = Object.freeze({
     ui.draftId = draft;
     const copy = copyR && copyR.state === "ok" ? copyR.value : null;
     const c = copy && copy.case ? copy.case : {};
-    const out = [cs.title(c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null, { thing: "case" }),
-      '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"];
+    const out = [cs.title(P.titleOf2(cs, copy, c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null), { thing: "case" }),
+      P.noCase(cs, copy)];
     if (!copy) { out.push(cs.state(copyR, function () { return ""; })); return out.join(""); }
-    const args = P.caseArgs(copy, draft);
+    // R50: the requests name the draft and the project, and add only what the member attested in this step (`P.attested`)
+    const args = Object.assign(P.caseArgs(copy, draft), ui.attestedBody || {});
+    const mine = ui.attested || { disc: [], words: {}, sa: [], why: {}, bias: "" };
 
     // R3's reads: the checks against the bar, what will be disclosed, and an edition waiting to publish.
     const pre = P.later(cs, view, "preflight", "publishpreflight", { body: args });
-    const ten = P.later(cs, view, "tensions", "publishtensions", { body: { project: args.project, targets: args.targets } });
-    const prepared = ui.prepared || null;
+    const ten = P.later(cs, view, "tensions", "publishtensions", { body: { project: args.project, draft: draft } });
+    const found = P.findingsOf(copy);
+    // R71 (fix round 2, C50): the case's published editions, read from the public record by the case alone; a case never published
+    // answers NOT_PUBLISHED and draws nothing. The edition this draft stands at is the next one unless it is itself published.
+    const pubR = c.case_id ? P.later(cs, view, "published", "publishedcase", { query: { caseId: c.case_id } }) : null;
+    const pubOk = pubR && pubR.state === "ok" && pubR.value && typeof pubR.value === "object" ? pubR.value : null;
+    const pubList = pubOk ? (Array.isArray(pubOk.editions) ? pubOk.editions : []).map(function (e) { return Number(e && typeof e === "object" ? e.edition : e); }).filter(function (n) { return n > 0; }) : [];
+    const pubLatest = pubList.length ? Math.max.apply(null, pubList) : 0;
+    const pubGone = pubR && pubR.state === "failed" && !(pubR.refusal && /^(NOT_PUBLISHED|NO_PUBLISHED_EDITION|NO_SUCH_)/.test(String(pubR.refusal.code || "")));
+    const ownPublished = pubLatest > 0 && Number(c.edition) > 0 && pubList.indexOf(Number(c.edition)) >= 0;
+    // R70 (fix round 2, C48): a prepared edition is kept across a reload: the record holds the unsigned document of the edition this
+    // draft stands at (`casedocument`; a case edition never authored answers NO_CASE_DOCUMENT), pinned as the draft's findings
+    let prepared = ui.prepared || null;
+    const wanted = !prepared && c.case_id && c.edition && !ownPublished ? { case: c.case_id, edition: String(c.edition) } : null;
+    const recR = wanted ? P.later(cs, view, "document", "casedocument", { query: wanted }) : null;
+    const rec = recR && recR.state === "ok" && recR.value && recR.value.ok !== false ? recR.value : null;
+    if (rec && rec.sign && typeof rec.sign.statement === "string" && !rec.signature && !rec.published_at) {
+      const mine = {};
+      found.forEach(function (t) { mine[t] = true; });
+      prepared = { caseId: rec.case_id || c.case_id, edition: rec.edition || c.edition, docSha: rec.doc_sha || null,
+        findings: (Array.isArray(rec.citations) ? rec.citations : []).filter(function (x) { return x && mine[x.target] && /^[0-9a-f]{64}$/.test(String(x.version || "")); })
+          .map(function (x) { return { target: x.target, bundleSha: x.version }; }) };
+    }
+    if (prepared && !ui.prepared) ui.prepared = prepared; // the acts of the Sign step read it from page memory
     const caseId = prepared ? prepared.caseId : c.case_id;
     const sched = caseId ? P.later(cs, view, "schedule", "publishschedule", { query: { case: caseId } },
       function (v) { return !v || !Array.isArray(v.editions) || v.editions.length === 0; }) : null;
@@ -79,6 +105,13 @@ export const CEREMONY = Object.freeze({
       return e.state === "published" && prepared && String(e.edition) === String(prepared.edition);
     }) : null;
 
+    // R71: an edition already public is named with its link; the draft that is itself published offers nothing to prepare
+    if (pubLatest > 0) {
+      out.push('<p role="status" data-published="' + pubLatest + '">' + cs.w("signing.ceremony.signednow", { edition: String(pubLatest) }) + "</p>"
+        + '<a href="/app/published/' + encodeURIComponent(caseId + "/" + pubLatest) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a>");
+      if (ownPublished) return out.join("");
+    } else if (pubGone) out.push(cs.state(pubR, function () { return ""; }));
+
     // R3: the steps in order, the current one marked.
     const NAMES = ["what", "strength", "leavesout", "people", "photos", "disclosures", "bias", "preview", "ties", "sign"];
     const unchecked = photoStep ? Number(photoStep.unchecked || 0) : 0;
@@ -92,36 +125,119 @@ export const CEREMONY = Object.freeze({
     out.push(cs.sec("screen.ceremony.checks", cs.state(pre, function (v) {
       const what = stepWith("pinned");
       const pinned = what && Array.isArray(what.pinned) ? what.pinned : [];
-      const found = (v.first ? [v.first] : []).concat(Array.isArray(v.blockers) ? v.blockers : []);
+      const foundAll = (v.first ? [v.first] : []).concat(Array.isArray(v.blockers) ? v.blockers : []);
       const seen = {};
       const lines = [];
-      found.forEach(function (b) {
+      foundAll.forEach(function (b) {
         const code = String(b && (b.code || b.reason) || "");
-        if (code === "NO_TARGET" || (code && seen[code])) return;
+        if (code === "PUBLISH_NO_FINDING" || code === "NO_TARGET" || (code && seen[code])) return;
         seen[code] = true;
         const says = b && b.says && typeof b.says.key === "string" ? cs.w(b.says.key, b.says.vars || {}) : P.refusalText(cs, b);
         lines.push(cs.w("ceremony.gate.other", { what: { html: says.replace(/[.\s]+$/, "") } }));
       });
-      if (!args.targets.length || found.some(function (b) { return b && (b.code || b.reason) === "NO_TARGET"; })) lines.unshift(cs.w("ceremony.gate.notargets"));
+      // R66 (L16; DEC-384): a draft that names no finding is refused `PUBLISH_NO_FINDING`; the gate says so and offers the door that
+      // adds one (the case editor, at "What goes in")
+      const nofinding = !found.length || foundAll.some(function (b) { return b && (b.code || b.reason) === "PUBLISH_NO_FINDING"; });
+      if (nofinding) lines.unshift(cs.w("ceremony.gate.notargets") + ' <a class="cs-btn" data-tone="quiet" data-addfinding href="/app/case-editor/' + encodeURIComponent(s[0] + "/" + draft) + '#what-goes-in" data-nav>'
+        + cs.w("screen.ceremony.gate.addfinding") + "</a>");
       return (pinned.length ? cs.sheet(pinned.map(function (f) { return cs.row("", cs.ref("question", f.target, f.target, []), ""); }).join("")) : "")
-        + (v.ready && !lines.length ? '<p data-ready="yes">' + cs.w("screen.ceremony.ready") + "</p>"
+        + (prepared ? "" : v.ready && !lines.length ? '<p data-ready="yes">' + cs.w("screen.ceremony.ready") + "</p>"
           : lines.length ? '<p data-ready="no"><b>' + cs.w("ceremony.gate.heading") + '</b></p><ul class="mk-list" data-blockers>' + lines.map(function (l) { return '<li role="alert">' + l + "</li>"; }).join("") + "</ul>"
             : '<p data-ready="no">' + cs.w("screen.ceremony.notready") + "</p>");
     }) + '<div class="mk-acts">' + cs.act("publishpreflight") + "</div>"));
 
+    // R57 (C12; DEC-378): the four details of this work, stated or not stated, never blocking the signing; read once the case has an id.
+    if (c.case_id) {
+      const dd = P.later(cs, view, "cdetails", "casedetails", { query: { case: c.case_id } });
+      const d = dd.state === "ok" && dd.value && dd.value.details && typeof dd.value.details === "object" ? dd.value.details : null;
+      if (d) out.push(cs.sec("act.owed_casedetails.label.case-editor", cs.sheet([["area", "screen.case-editor.details.name.area"], ["contact", "screen.case-editor.details.name.contact"],
+        ["related", "screen.case-editor.details.name.related"], ["relationships", "screen.case-editor.details.name.relationships"]].map(function (f) {
+        const x = d[f[0]] || {};
+        return cs.row("", '<span data-detail="' + f[0] + '">' + cs.w(f[1]) + "</span>", x.stated ? '<span class="muted" data-stated>' + cs.w("screen.case-editor.details.stated") + (x.set_at ? " · " + cs.date(x.set_at) : "") + "</span>"
+          : '<span class="muted" data-notstated>' + cs.w("case-inputs.details.not_stated") + "</span>");
+      }).join("")) + '<p class="mk-note">' + cs.w("screen.ceremony.details.ceremony.notstated1") + " " + cs.w("screen.ceremony.details.ceremony.notstated2") + "</p>"
+        + '<div class="mk-acts">' + cs.act("casedetails") + "</div>"));
+    }
+
     // R3: what will be disclosed with the case; "See everything that will be disclosed". Not drawn when nothing is to be
-    // disclosed, and no count is drawn at zero (R20).
+    // disclosed, and no count is drawn at zero (R20). R46 (C5; DEC-377): each candidate has a tick and an optional field for the
+    // owner's words; `publishpreflight` and `publish` send the ticked ones as `tensionsDisclosed`.
+    ui.tensionIds = [];
     out.push(P.sec(cs, "screen.ceremony.disclosed", cs.state(ten, function (v) {
       const all = ui.allTensions || null;
       const list = all && Array.isArray(all.candidates) ? all.candidates : Array.isArray(v.candidates) ? v.candidates.slice(0, 5) : [];
       const n = typeof v.count === "number" ? v.count : list.length;
       if (!n && !list.length) return "";
+      const named = list.filter(function (t) { return t && typeof t.candidate === "string" && t.candidate; });
+      ui.tensionIds = named.map(function (t) { return t.candidate; });
       return '<p>' + cs.w("screen.ceremony.disclosed.count", { n: String(n) }) + "</p>"
         + (list.length ? cs.sheet(list.map(function (t) {
           return cs.row("", '<span class="rec">' + cs.esc(t.says || t.summary || t.description || t.candidate || "") + "</span>", "");
         }).join("")) : "") + '<p class="muted">' + cs.w("screen.ceremony.timeline.frozen") + "</p>"
+        + (named.length ? '<p class="mk-small">' + cs.w("screen.ceremony.disc.intro1") + " " + cs.w("screen.ceremony.disc.intro2") + "</p>"
+          + cs.checks("ce-disc", "screen.ceremony.disc.list.legend", named.map(function (t) {
+            return { value: t.candidate, text: t.says || t.summary || t.description || t.candidate, on: mine.disc.includes(t.candidate) };
+          }))
+          + named.map(function (t, i) {
+            return cs.field("ce-dw-" + i, "screen.ceremony.disc.words.label", { rec: true, value: mine.words[t.candidate] || "", help: ["screen.ceremony.disc.words.help1", "screen.ceremony.disc.words.help2"] });
+          }).join("") : "")
         + '<div class="mk-acts">' + cs.act("publishtensions") + "</div>";
     })));
+
+    // R51 (C6; DEC-377): "Documents without a second confirmation", from the pre-flight: ask for the confirmation again (`reattest`),
+    // list the document as self-attested only with a required reason (`selfAttested`, sent with the pre-flight and `publish`), or the
+    // capturing member's own signed account (`captureaccount`).
+    // Each entry is `{capture, by, findings}` (case-authoring R82): the capture, the member who captured it (null when none), the findings resting on it.
+    const unconfRows = (pre.state === "ok" ? ((stepWith("not_co_attested") || {}).not_co_attested || []) : []).map(function (x) {
+      return typeof x === "string" ? { capture: x, by: null, findings: [] } : x && typeof x === "object" ? x : null;
+    }).filter(function (x) { return x && typeof x.capture === "string" && x.capture; });
+    const unconfirmed = unconfRows.map(function (x) { return x.capture; });
+    const unconfBy = function (x) {
+      const me = view.me || {};
+      return typeof x.by === "string" && x.by ? (me.member && me.handle && String(x.by) === String(me.member) ? me.handle : x.by) : "";
+    };
+    const already = pre.state === "ok" ? ((stepWith("not_co_attested") || {}).self_attested || []) : [];
+    ui.confIds = unconfirmed;
+    if (unconfirmed.length) {
+      const was = {};
+      already.forEach(function (a) { if (a && a.capture) was[a.capture] = a.reason || ""; });
+      const sa = ui.attested ? mine.sa : Object.keys(was);
+      out.push(cs.sec("screen.ceremony.conf.heading", '<p class="mk-note">' + cs.w("screen.ceremony.conf.intro1") + "</p>"
+        + cs.sheet(unconfRows.map(function (x) {
+          const sha = x.capture, by = unconfBy(x);
+          return cs.row("", '<span class="id" data-unconfirmed="' + cs.esc(sha) + '">' + cs.esc(String(sha).slice(0, 12)) + "</span>"
+            + (by ? ' <span class="meta" data-capturer="' + cs.esc(sha) + '">' + cs.esc(by) + "</span>" : "")
+            + '<span class="meta">' + cs.w("screen.ceremony.conf.row.meta") + "</span>"
+            + (Array.isArray(x.findings) ? x.findings.filter(function (f) { return typeof f === "string" && f; }).map(function (f) {
+              return '<p class="mk-small" data-rests="' + cs.esc(sha) + '">' + cs.w("screen.ceremony.conf.intro2", { finding: f }) + "</p>";
+            }).join("") : ""),
+            cs.act("reattest", { data: { capture: sha } }));
+        }).join("")) + '<p class="mk-note">' + cs.w("screen.ceremony.conf.retry.note") + "</p>"
+        + cs.checks("ce-sa", "screen.ceremony.conf.self.legend", unconfirmed.map(function (sha) { return { value: sha, key: "screen.ceremony.conf.self.tick", fills: { document: String(sha).slice(0, 12) }, on: sa.includes(sha) }; }))
+        + unconfirmed.map(function (sha, i) {
+          return cs.field("ce-sar-" + i, "screen.ceremony.conf.reason.label", { rec: true, value: ui.attested ? mine.why[sha] || "" : was[sha] || "",
+            help: ["screen.ceremony.conf.reason.help1", "screen.ceremony.conf.reason.help2"] });
+        }).join("") + '<p class="mk-note">' + cs.w("screen.ceremony.conf.self.note") + "</p>"
+        + unconfirmed.map(function (sha, i) {
+          const mineAcct = P.later(cs, view, "acct:" + sha, "captureaccounts", { query: { capture: sha } });
+          const actors = mineAcct.state === "ok" && Array.isArray(mineAcct.value.actors) ? mineAcct.value.actors : [];
+          const me = view.me || {};
+          // only the member who captured it adds an account of the capture
+          if (!actors.some(function (a) { return a && me.member && String(a.actor) === String(me.member); })) return "";
+          return cs.field("ce-cap-" + i, "screen.ceremony.conf.account.label", { area: true, rec: true, fills: { name: me.handle || me.member || "" },
+            help: ["screen.ceremony.conf.account.help1", "screen.ceremony.conf.account.help2"] })
+            + '<div class="mk-acts">' + cs.act("captureaccount", { data: { capture: sha, index: String(i) } }) + "</div>";
+        }).join("") + P.said(view, "reattest") + P.said(view, "captureaccount")));
+    }
+
+    // R44 (C2; DEC-376): the declared bias for this edition, the member's own words, fixed into the edition when she signs; sent with the
+    // pre-flight and `publish` as `biasAcknowledgement`. Never blocks publishing.
+    const heldBias = ui.attested ? mine.bias : (copy.authored && typeof copy.authored.biasAcknowledgement === "string" ? copy.authored.biasAcknowledgement : "");
+    out.push(cs.sec("screen.ceremony.step.bias", '<p class="mk-small">' + cs.w("screen.ceremony.the_teams_own_statement_of") + " " + cs.w("screen.ceremony.every_published_case_carries_it") + "</p>"
+      + '<p class="mk-small">' + cs.w("screen.ceremony.this_is_the_lens_in", { project: projectTitle }) + " " + cs.w("screen.ceremony.it_is_fixed_into_the") + "</p>"
+      + cs.field("ce-bias", "screen.case-editor.what_this_bias_means_for_this", { area: true, rec: true, value: heldBias, help: ["screen.case-editor.say_what_the_teams_declared_bias", "screen.case-editor.write_it_fresh_each_time_the"] })
+      + '<p class="mk-note">' + cs.w("screen.ceremony.declared_bias_never_blocks_publishing") + " " + cs.w("screen.ceremony.if_your_team_declared_none") + "</p>",
+    { help: "screen.ceremony.what_the_case_tells_its" }));
 
     // R4: the Photos step.
     out.push(P.sec(cs, "screen.ceremony.photos", !photos.length ? "" : '<p>' + cs.w("screen.ceremony.photos.copy") + "</p><p>" + cs.w("screen.ceremony.photos.gate") + "</p>"
@@ -161,7 +277,7 @@ export const CEREMONY = Object.freeze({
 
     // R5: the Ties step: the member's own confirmation of no undeclared tie, sent with `publish` as `tieAttested`.
     out.push(cs.sec("screen.ceremony.ties", cs.checks("ce-tie", "screen.ceremony.ties.legend", [["yes", "screen.ceremony.ties.confirm", false]])
-      + '<div class="mk-acts">' + P.explained(cs, cs.act("publish", { tone: "primary" }), "act.publish.does", "act.publish.here.ceremony") + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
+      + '<div class="mk-acts">' + cs.act("publish", { tone: "primary", here: "ceremony" }) + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
       + P.said(view, "publish") + (prepared ? '<p class="mk-note" role="status">' + cs.w("screen.ceremony.prepared", { edition: String(prepared.edition) }) + "</p>" : "")));
 
     // R42 (N880; DEC-340; case-authoring R34, R77; case-inputs R8, R19): beside "When it becomes public", the open requests for
@@ -186,7 +302,7 @@ export const CEREMONY = Object.freeze({
           + '</b><p class="rec">' + cs.esc(r.minutes || "") + "</p></div><div><b>" + cs.w("signing.minutes.right") + '</b><p class="rec">' + cs.esc(r.filed || "")
           + '</p></div></div><p class="mk-note">' + cs.w(r.same === true ? "signing.minutes.same" : "signing.minutes.differs") + "</p>";
       }).join(""), { help: "screen.ceremony.minutes.says" }));
-      else if (mins && !Array.isArray(mins) && mins.undetermined) out.push(cs.sec("screen.ceremony.minutes.heading", '<p class="mk-note" data-minutes-unread>' + cs.w("signing.minutes.unread") + "</p>", { help: "screen.ceremony.minutes.says" }));
+      else if (mins && !Array.isArray(mins) && mins.undetermined && !(asked && !Array.isArray(asked) && asked.read === false && !asked.undetermined)) out.push(cs.sec("screen.ceremony.minutes.heading", '<p class="mk-note" data-minutes-unread>' + cs.w("signing.minutes.unread") + "</p>", { help: "screen.ceremony.minutes.says" }));
     }
 
     // R12–R15: the Sign step, offered only once `publish` has answered (R5's control); at the phone width it says where
@@ -195,7 +311,9 @@ export const CEREMONY = Object.freeze({
     if ((prepared || phone) && !published && !waiting && !(ui.signed && ui.signed.at)) {
       const doc = prepared && !phone ? P.later(cs, view, "document", "casedocument", { query: { case: prepared.caseId, edition: String(prepared.edition) } }) : null;
       const zone = signStep && signStep.publish_at && (signStep.publish_at.zone || signStep.publish_at.time_zone) || "";
-      let sign = '<p class="mk-explain">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
+      // R70: preparing publishes nothing; the Sign step is the one that says publishing makes the edition permanent
+      let sign = '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"
+        + '<p class="mk-explain">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
       if (phone) sign += '<p role="status" data-phone>' + cs.w("signing.ceremony.phone", { project: projectTitle }) + "</p>";
       else {
         sign += '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.when") + "</legend>"
@@ -203,19 +321,26 @@ export const CEREMONY = Object.freeze({
           + cs.field("ce-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-time", "screen.ceremony.when.time", { type: "time" }) + "</fieldset>"
           + cs.state(doc, function (d) {
             const list = P.sitting(d, prepared) || [];
+            // C47: what the signature covers is counted; a document the case rests on that is not published with it is said, not
+            // counted as nothing (public-read R39)
+            const evidence = list.filter(function (x) { return x.kind === "evidence"; }).length, named = P.notPublished(d, prepared);
             return '<details data-statements><summary>' + cs.w("screen.ceremony.signs.exactly") + "</summary><ul class=\"mk-list\">"
               + list.map(function (x) {
                 return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id, edition: String(x.edition === undefined ? "" : x.edition), case: x.id }) + "</li>";
-              }).join("") + "</ul></details><p>" + cs.w("screen.ceremony.signs.count", { n: String(list.length),
-                findings: String(list.filter(function (x) { return x.kind === "finding"; }).length),
-                evidence: String(list.filter(function (x) { return x.kind === "evidence"; }).length) }) + "</p>";
+              }).join("") + "</ul></details><p>" + (evidence > 0 ? cs.w("screen.ceremony.signs.count", { n: String(list.length),
+                findings: String(list.filter(function (x) { return x.kind === "finding"; }).length), evidence: String(evidence) })
+                : cs.w("screen.ceremony.signs.linesabout")) + "</p>"
+              + (named === 1 ? '<p class="mk-note" data-unpublished="1">' + cs.w("screen.published.rests.on.the.council.minutes.one") + "</p>"
+                : named > 1 ? '<p class="mk-note" data-unpublished="' + named + '">' + cs.w("screen.published.rests.on.the.council.minutes", { count: String(named) }) + "</p>" : "");
           })
           // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`).
           + '<div class="mk-acts">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
             { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) + "</div>"
           + '<p class="muted">' + cs.w("screen.ceremony.device.next") + "</p>";
       }
-      if (ui.nokey) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
+      // R45 (C4): the making of a signing key is offered as soon as the step is drawn when this browser holds none
+      if (ui.keyHeld === undefined && !ui.keyAsked) { ui.keyAsked = true; cs.signer.held().then(function (h) { cs.set("keyHeld", !!(h && h.held)); }, function () { cs.set("keyHeld", true); }); }
+      if (ui.nokey || ui.keyHeld === false) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
         + cs.checks("ce-keep", "screen.ceremony.keep.legend", [["keep", "signing.ceremony.keepkey", false]])
         + '<div class="mk-acts">' + cs.act("signerregisterown", { tone: "primary" }) + "</div>" + P.said(view, "register") + "</div>";
       if (ui.notowner) sign += '<div class="cs-dialog" data-notowner><p>' + cs.w("signing.ceremony.notowner", { project: projectTitle, owners: ui.notowner.owners || "" }) + "</p>"
@@ -245,9 +370,13 @@ export const CEREMONY = Object.freeze({
     {
       // R3: "Check again": the checks read once more.
       op: "publishpreflight", label: "act.publishpreflight.label.ceremony",
-      send: function (view) {
+      send: function (view, el, cs) {
         const copy = view.parts.copyOf(view);
-        return copy ? { body: view.parts.caseArgs(copy, view.ui.draftId || "") } : null;
+        if (!copy) return null;
+        const at = view.parts.attested(view, cs);
+        if (at.refuse) return { refuse: at.refuse };
+        view.ui.attested = at.held; view.ui.attestedBody = at.body;
+        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), at.body) };
       },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "publishpreflight", answer)) view.parts.forget(view); }, // D29
     },
@@ -257,14 +386,39 @@ export const CEREMONY = Object.freeze({
       send: function (view) {
         const copy = view.parts.copyOf(view);
         if (!copy) return null;
-        const a = view.parts.caseArgs(copy, "");
-        return { body: { project: a.project, targets: a.targets } };
+        return { body: { project: copy.project, draft: view.ui.draftId || "" } };
       },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "publishtensions", answer)) return { stay: true }; // D29
         view.ui.allTensions = view.parts.value(answer);
         return { stay: true };
       },
+    },
+    {
+      // R57: "See the details of this work": the four details, read again; the ceremony only lists them.
+      op: "casedetails", label: "act.owed_casedetails.label.ceremony",
+      send: function (view) { const copy = view.parts.copyOf(view); const c = copy && copy.case; return c && c.case_id ? { query: { case: c.case_id } } : null; },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetails", answer)) view.parts.forget(view); return { stay: true }; }, // D29
+    },
+    {
+      // R51 (C6; DEC-377): "Ask for the confirmation again": a document held without a second confirmation is timestamped and archived
+      // once more; the answer shows only that it existed by then.
+      op: "reattest", label: "act.reattest.label.ceremony",
+      send: function (view, el) { return { body: { captureSha: el.dataset.capture } }; },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "reattest", answer)) view.parts.forget(view); }, // D29
+    },
+    {
+      // R51 (C6): the capturing member's own signed account of the capture (`bio-capture-account`, signed in `bio-ratify`), through
+      // the signer the way the sign step signs.
+      op: "captureaccount", label: "act.captureaccount.label.ceremony",
+      send: async function (view, el, cs) {
+        const sha = el.dataset.capture, text = String(cs.value("ce-cap-" + el.dataset.index) || "").trim();
+        if (!text) return { refuse: "refusal.ACCOUNT_NO_TEXT" };
+        const signed = await cs.signer.sign([{ label: "capture " + sha, bytes: view.parts.bytes("bio-capture-account " + sha + "\n" + text), namespace: "bio-ratify" }]);
+        if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== 1) return { refuse: "signing.ceremony.declined" };
+        return { body: { captureSha: sha, text: text, signature: signed.signatures[0] } };
+      },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "captureaccount", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R4: the areas the member marks on a photo (a person not part of a finding, a number plate, city staff at work
@@ -303,7 +457,10 @@ export const CEREMONY = Object.freeze({
         if (!copy) return null;
         const tick = cs.value("ce-tie");
         if (!(Array.isArray(tick) ? tick.includes("yes") : tick === true)) return { refuse: "screen.ceremony.ties.needed" };
-        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), { tieAttested: true }) };
+        const at = view.parts.attested(view, cs);
+        if (at.refuse) return { refuse: at.refuse };
+        view.ui.attested = at.held; view.ui.attestedBody = at.body;
+        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), at.body, { tieAttested: true }) };
       },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "publish", answer)) return; // D29: nothing is prepared on a refusal
@@ -385,13 +542,17 @@ export const CEREMONY = Object.freeze({
       send: async function (view, el, cs) {
         const tick = cs.value("ce-keep");
         const keep = Array.isArray(tick) ? tick.includes("keep") : tick === true;
+        // R72 (fix round 2, C51): the key this browser already holds for the member (kept, or loaded for this sitting) is the one
+        // registered; a new one is made only when none is held
+        const had = await cs.signer.held();
+        if (had && had.held === true && typeof had.keyB64 === "string") return { body: { keyB64: had.keyB64 } };
         const k = await cs.signer.register({ keep: keep });
         if (!k || k.ok !== true || typeof k.keyB64 !== "string") return { refuse: "signing.ceremony.declined" };
         return { body: { keyB64: k.keyB64 } };
       },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "sign", answer)) return; // D29
-        view.ui.nokey = false;
+        view.ui.nokey = false; view.ui.keyHeld = true;
         view.parts.say(cs, view, "sign", cs.w("screen.ceremony.registered"));
       },
     },

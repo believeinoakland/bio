@@ -19,7 +19,7 @@ export const IMPORTED = Object.freeze({
   },
 
   render: function (cs, view) {
-    const P = view.parts;
+    const P = view.parts, ui = view.ui;
     const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
     const out = [cs.title(c ? (c.case && (c.case.title || c.case.id)) || c.case || c.import : null, { thing: "case" })];
     if (c) {
@@ -62,6 +62,54 @@ export const IMPORTED = Object.freeze({
       out.push(cs.sec("screen.imported.accept", cs.field("im-checked", "screen.imported.checked.label", { area: true })
         + cs.field("im-reason", "screen.imported.reason.label", { area: true })
         + '<div class="mk-acts">' + cs.act("importaccept", { tone: "primary" }) + "</div>" + P.said(view, "importaccept")));
+      // R55 (C51; DEC-374): an import some of whose findings the team accepted can have the acceptance withdrawn, with a reason; an
+      // import with none accepted offers nothing. Rejecting an import and public acceptance with dependencies are not drawn.
+      const accepted = findings.filter(function (f) { return f.origin && f.origin.acceptance; });
+      if (accepted.length) out.push(cs.sec("screen.imported.accepted.heading", cs.field("im-withdraw", "screen.imported.withdraw.label", { area: true, help: "screen.imported.withdraw.help" })
+        + '<div class="mk-acts">' + cs.act("importacceptwithdraw", { label: "screen.imported.withdraw.button" }) + "</div>" + P.said(view, "importacceptwithdraw")));
+      // R58 (C49; DEC-378): "View under another lens": the edition's findings re-weighed under a lens the member chooses (none is
+      // chosen for her), the findings that moved and the statement that moved each, and the limit sentence. Nothing is saved or sent.
+      const lensKeys = [["as_published", "screen.imported.lens_as_published"], ["removed", "screen.imported.lens_removed"], ["own", "screen.imported.lens_own"]];
+      const rg = ui.regrade && ui.regrade.import === c.import ? ui.regrade : null;
+      const titleOf = function (id) { const f = findings.find(function (x) { return x.finding === id; }); return f ? f.title || f.finding : id; };
+      const pairOf = function (x) { return x && typeof x === "object" ? [x.capture, x.connection].filter(Boolean).join("/") || JSON.stringify(x) : x ? String(x) : ""; };
+      out.push(cs.sec("act.owed_importregrade.label.imported", '<p class="mk-small">' + cs.w("screen.imported.lens_what") + "</p>"
+        + cs.checks("im-lens", { key: "act.owed_importregrade.label.imported" }, lensKeys.map(function (k) { return [k[0], k[1], false]; }), { radio: true })
+        + '<div class="mk-acts">' + cs.act("importregrade") + "</div>" + P.said(view, "importregrade")
+        + (rg ? '<div data-regrade="' + cs.esc(rg.lens) + '"><p class="mk-small">' + cs.w("screen.imported.lens_does") + "</p>"
+          + (rg.lens_note ? P.fold(cs, "screen.imported.lens_none_summary", "<p>" + cs.w("screen.imported.lens_none") + "</p>") : "")
+          + (rg.lens === "undetermined" ? P.fold(cs, "screen.imported.lens_unreadable_summary", "<p>" + cs.w("screen.imported.lens_unreadable") + "</p>") : "")
+          + cs.sheet((Array.isArray(rg.findings) ? rg.findings : []).map(function (f) {
+            const why = Array.isArray(f.because) ? f.because : [];
+            return cs.row("", '<span class="rec">' + cs.esc(titleOf(f.finding)) + "</span>" + '<span class="meta" data-moved="' + (f.moved === true ? "yes" : "no") + '">'
+              + (f.moved === true ? cs.w("screen.imported.lens_moved", { published: pairOf(f.published && f.published.pair), regraded: pairOf(f.pair) })
+                + why.map(function (b) { return " " + cs.w("screen.imported.lens_because", { statement: b.text || b.statement || "", part: b.touched && b.touched.target ? b.touched.target : "" }); }).join("")
+                : f.moved === false ? cs.w("screen.imported.lens_unmoved") : "") + "</span>", "");
+          }).join("")) + (rg.limit ? '<p class="mk-note" data-limit>' + cs.esc(rg.limit) + "</p>" : "") + "</div>" : "")));
+
+      // R58: "Re-run this work in your own project": one of the team's projects declared a rerun of this edition (or one started first).
+      const plist = P.later(cs, view, "projects", "projectlist", {}, function () { return false; });
+      const mine = plist.state === "ok" && Array.isArray(plist.value.projects) ? plist.value.projects : [];
+      out.push(cs.sec("act.owed_rerunstart.label.imported", '<p class="mk-small">' + cs.w("screen.imported.rerun_what") + " " + cs.w("screen.imported.rerun_pairing_human") + "</p>"
+        + cs.choice("im-rerun", "screen.imported.rerun_project_label", [{ value: "", text: "" }].concat(mine.map(function (x) { return { value: String(x.id), text: String(x.title || x.name || x.id) }; })))
+        + '<p class="mk-small">' + cs.w("screen.imported.rerun_start_one") + "</p><p class=\"mk-note\">" + cs.w("screen.imported.rerun_declares", { edition: String(ed.edition || "") }) + " "
+        + cs.w("screen.imported.rerun_nothing", { team: group }) + "</p>"
+        + '<div class="mk-acts">' + cs.act("rerunstart") + "</div>" + P.said(view, "rerunstart")));
+
+      // R59 (C50; DEC-382): "Rest one of your team's questions on this", on a finding the team accepted only; the plane judges the rest.
+      if (accepted.length) {
+        const ql = P.later(cs, view, "questions", "list", { query: { type: "inquiry", limit: "500" } }, function () { return false; });
+        const qs = ql.state === "ok" && Array.isArray(ql.value.bundles) ? ql.value.bundles : [];
+        out.push(cs.sec("screen.imported.citeimp.head", accepted.map(function (f, i) {
+          return '<div data-citeimp="' + cs.esc(f.finding) + '"><p><span class="rec">' + cs.esc(f.title || f.finding || "") + "</span></p>"
+            + cs.choice("im-ci-q-" + i, "screen.imported.citeimp.q", [{ value: "", text: "" }].concat(qs.map(function (q) { return { value: String(q.bundle_id), text: String(q.title || q.bundle_id) }; })))
+            + cs.checks("im-ci-role-" + i, { key: "screen.imported.citeimp.role" }, [["supports", "screen.imported.citeimp.role.supports", false], ["cuts_against", "screen.imported.citeimp.role.cuts", false]], { radio: true })
+            + cs.field("im-ci-note-" + i, "screen.imported.citeimp.note")
+            + '<div class="mk-acts">' + cs.act("citeimported", { data: { finding: f.finding, index: String(i) } })
+            + (view.reachable ? cs.act("writinghelp", { data: { field: "note", id: "im-ci-note-" + i, forop: "citeimported" } }) : "") + "</div></div>";
+        }).join("") + '<p class="mk-small">' + cs.w("screen.imported.citeimp.inherit1") + " " + cs.w("screen.imported.citeimp.inherit2") + "</p>" + P.said(view, "citeimported")));
+      }
+
       out.push(cs.sec("screen.imported.flag", cs.field("im-issue", "screen.imported.issue.label", { area: true }) + '<div class="mk-acts">' + cs.act("importflag") + "</div>" + P.said(view, "importflag")));
       out.push(cs.sec("screen.imported.watch", cs.field("im-publisher", "screen.imported.publisher.label", { type: "url", help: "screen.imported.publisher.help" })
         + '<div class="mk-acts">' + cs.act("importwatch") + "</div>" + P.said(view, "importwatch")));
@@ -92,6 +140,22 @@ export const IMPORTED = Object.freeze({
 
   acts: [
     {
+      // B420 2/3 (interface-shell R20; DEC-387, DEC-382): the assistant's help with one own-words field, drawn only while it is reachable;
+      // nothing is kept until the member saves, and the draft fills the field labelled machine work. The owner's declaration
+      // (`writinghelp`, wizard-scripts R46) requires `op`, the act the words are for.
+      op: "writinghelp", label: "act.writinghelp.label.imported", rereads: [], reasonField: "told",
+      send: function (view, el, cs) {
+        view.ui.helpId = el.dataset.id;
+        const forop = el.dataset.forop;
+        if (!forop) return null;
+        return { body: { op: forop, field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
+      },
+      done: function (view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        if (a && typeof a.text === "string" && view.ui.helpId) cs.fill(view.ui.helpId, a.text, { label: "screen.start-send.draft.machine" });
+      },
+    },
+    {
       // R7: "Import a case": the case file the member chose, its bytes sent as one part.
       op: "caseimport", label: "act.caseimport.label.imported",
       send: async function (view, el, cs) {
@@ -121,6 +185,71 @@ export const IMPORTED = Object.freeze({
         return { body: { import: c.import, edition: ed.edition, findings: findings, checked: checked, reason: String(cs.value("im-reason") || "").trim() } };
       },
       done: function (view, answer, cs) { view.parts.refused(cs, view, "importaccept", answer); }, // D29
+    },
+    {
+      // R55: "Withdraw this acceptance, with a reason": nothing is sent without one.
+      op: "importacceptwithdraw", label: "act.importacceptwithdraw.label.imported", reasonField: "reason",
+      refusals: { IMPORT_ACCEPT_NO_REASON: "screen.imported.withdraw.label", IMPORT_NOTHING_ACCEPTED: "screen.imported.withdraw.none.summary" },
+      send: function (view, el, cs) {
+        const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
+        if (!c) return null;
+        const reason = String(cs.value("im-withdraw") || "").trim();
+        if (!reason) return { refuse: "screen.imported.withdraw.label" };
+        return { body: { import: c.import, edition: (c.edition || {}).edition, reason: reason } };
+      },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "importacceptwithdraw", answer)) view.parts.forget(view); }, // D29
+    },
+    {
+      // R58: "View under another lens": the edition re-weighed under the lens chosen (a read, nothing saved); none is chosen for her.
+      op: "importregrade", label: "act.owed_importregrade.label.imported",
+      send: function (view, el, cs) {
+        const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
+        const lens = (cs.value("im-lens") || [])[0];
+        if (!c || !lens) return null;
+        return { body: { import: c.import, edition: (c.edition || {}).edition, lens: lens } };
+      },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "importregrade", answer)) return { stay: true }; // D29
+        const r = view.parts.value(answer) || {};
+        cs.set("regrade", Object.assign({}, r, { import: r.import || (view.data.chosen.value || {}).import }));
+        return { stay: true };
+      },
+    },
+    {
+      // R58: "Re-run this work in your own project": one of the team's projects declared a rerun of this edition.
+      op: "rerunstart", label: "act.owed_rerunstart.label.imported",
+      refusals: {
+        PROJECT_ACT_NOT_THE_OWNER: function (r, cs) { return cs.w("screen.imported.rerun_refused_owner") + " " + cs.w("screen.imported.rerun_refused_owner_next"); },
+        RERUN_ALREADY: function (r, cs) { return cs.w("screen.imported.rerun_refused_already") + " " + cs.w("screen.imported.rerun_refused_already_next"); },
+      },
+      send: function (view, el, cs) {
+        const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
+        const project = String(cs.value("im-rerun") || "");
+        if (!c || !project) return null;
+        return { body: { project: project, import: c.import, edition: (c.edition || {}).edition } };
+      },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "rerunstart", answer)) return { stay: true }; // D29
+        view.parts.say(cs, view, "rerunstart", cs.w("screen.imported.rerun_compare_there"));
+        return { stay: true };
+      },
+    },
+    {
+      // R59: "Rest one of your team's questions on this": a question of the team rests on a finding the team accepted, at the edition
+      // shown; the plane judges whether the finding is accepted (`IMPORTED_NOT_ACCEPTED`), and this page offers it on accepted ones only.
+      op: "citeimported", label: "act.owed_citeimported.label.imported",
+      refusals: {
+        IMPORTED_NOT_ACCEPTED: function (r, cs) { return cs.w("screen.imported.citeimp.ref.notaccepted1") + " " + cs.w("screen.imported.citeimp.ref.notaccepted2"); },
+      },
+      send: function (view, el, cs) {
+        const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
+        const i = el.dataset.index;
+        const inquiry = String(cs.value("im-ci-q-" + i) || ""), role = (cs.value("im-ci-role-" + i) || [])[0];
+        if (!c || !inquiry || !role) return null;
+        const note = String(cs.value("im-ci-note-" + i) || "").trim();
+        return { body: Object.assign({ inquiry: inquiry, import: c.import, finding: el.dataset.finding, edition: (c.edition || {}).edition, role: role }, note ? { note: note } : {}) };
+      },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "citeimported", answer)) view.parts.forget(view); return { stay: true }; }, // D29
     },
     {
       // R7: "Flag an issue", kept within the group.

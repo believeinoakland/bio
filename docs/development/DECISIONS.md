@@ -5977,3 +5977,138 @@ decided: 2026-10-20 · the design session (P17)
 the design: "Withdraw an expertise" is its own act, `owed:expertisewithdraw` (member-roster's withdrawal, C79, FR-07; today `expertiseConfirm({withdraw: true})`), weight 2, its explanation "Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it."; "Confirm declared expertise" stays `expertiseconfirm`.
 reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`.
 owed: BOB: member-roster serves the withdrawal as its own op (`expertisewithdraw`) and declares it.
+
+### DEC-387 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (BOB's HANDOFFs B416 to B428: K4206, K4214, K4218, K4227, K4228, K4231, K4233, K4234, K4236, K4237, K4238, K4239, K4240; the T51 fix round's screen jobs)
+for: design
+question: The rows, labels and small drawings the fix round's jobs found missing, and the drawing questions they raised.
+why it is Bob's: it is not (P17, K3930, K3944): words and drawing detail beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: every row is added under the key the job reads, or a key named in U420; the drawing answers: a wizard step that lands on an action, matter or due-date screen with no subject explains in place and offers "Open a plan" (as DEC-384 for questions); "Make one for me" is a tick beside the doorbell's secret phrase; the docket's file form picks the edition it answers and the captured document it rests on, with "Capture it first"; the action's reply form shows how the reply came, what it follows and the reply's document; `determine` asks a reason only when it replaces an earlier determination, `consequencerecord` only when the member assesses it, `consequencerevise` always; the plan form keeps "Add another" for repeated rows; releasing a sentence the record contradicts is drawn on the send steps; "Defer" and "Bring back" and a snoozed section on the queue; one "We will remind you on {date}." (`screen.reminder.on`) for due-date and action; counts as "label: count"; the 15 declared ops' descriptions say "team"; the domain file's example is "example-tenants.org"; the bias screen's labels, headings and templates, with team-only and project-only adoption lines; the Updates health names each part in words; `linewithdraw` on the person page; "Withdraw an expertise" (DEC-386) unchanged; `imported` keeps "Help me write this" for its citing note. Strength's rule 11 of `bio-grading/4` stays code (the reads lists' unkeyed entries, beside V1_LINES and V2_LEGS). The reads lists are regenerated from the tranche @ the fix round's head (B417's notice: `affordances` now holds the 64 declared ops' `act.<op>.does`).
+reasoning recorded in: this entry; `screens/*` (rows noted "DEC-387"); U420 (the keys by HANDOFF).
+owed: BOB: name the ops for "Bring back" (no unsnooze act) and for releasing a contradicted sentence if it is not `release`; check the reply's medium tokens against the vocabulary; give the unit codes `runtime` answers, for their words.
+
+### DEC-388 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (the standing consistency read after DEC-387)
+for: design
+question: Do DEC-387's rows agree with the words already established?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: "Acknowledgments" (American spelling, `screen.case-editor.acknowledgements_from_whoever_wrote_it_are`); "Can't be undone" for the matter's way, as the established option says (`screen.matter.way.cannot`); "Checked {title} just now, but could not tell whether the page changed: {note}"; the snoozed section's help says "snoozed", so Defer (put aside with a reason) and Snooze do not compete. Kept: the queue rows' {have} and {agreed}, the placeholders the producers answer (B422).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: none.
+
+### DEC-389 · answered
+raised: 2026-10-20 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B430, K4249: its answers to DEC-387's owed items)
+for: design
+question: How do DEC-387's owed items take BOB's answers from the code?
+why it is Bob's: it is not (P17): words and drawing beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: (1) "Bring back" (`screen.queue.bringback`) is `queuesnooze` with `{case, clear}` (queue R21). (2) "Release this sentence" on Start and send is part of approving: its button and reason field carry `filingapprove` with `release: [{ord, reason}]` (filings R34, screens-action R42); `release` leaves start-send's acts; `act.release.label.start-send` stays as a drawn row ("Release this sentence"). (3) The reply's medium is free text up to 500 characters (actions R13): the five options send their tokens as the value. "Not stated" and "Not decided" omit the field (no `none` token); "Not decided" is offered only on received entries and never where outcome is required (fee_waiver_decision, denial, appeal_decision, court_decision). A sent entry's stages are worded: "The request", "Request for a fee waiver", "Appeal", "Court filing". (4) `runtime`'s units are worded "milliseconds" (`ms`) and "bytes" (`bytes`), filling `{unit}`; the subrequests ceiling shows no unit.
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/words-drawn.src.py` (rows noted "DEC-389" or "B430").
+owed: none.
+
+### DEC-390 · answered
+raised: 2026-10-20 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B432, K4252)
+for: design
+question: What does `groupdescriptiondraft`'s declared description say, and what mark does `sweeps` carry?
+why it is Bob's: it is not (P17): words and marks beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: `store-door.declared.groupdescriptiondraft` reads "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record." `sweeps` keeps the kit's weight 1, which is every read's weight (as `monitoring` and `monitorslate`): `WNAME` spells weight 1 "Reversible", and a weight-1 act draws no mark under its button (`btn` draws one only from weight 2). So `marks.mjs`'s "Reversible" for `sweeps` already is a read's mark; nothing changes in the kit.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (row noted "DEC-390").
+owed: none.
+
+### DEC-391 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B435, K4258: words the built screens need)
+for: design
+question: Which rows do the objective, contradiction, document, question, project and open-file screens need, under which keys?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the objective screen's 23 `PENDING_WORDS` keyed (`screen.objective.*`). (2) the contradiction screen's 31 `GAP_WORDS` keyed (`screen.contradiction.*`) and its purpose line in SCREEN_HELP; the four lines the code draws without a key are minted: `screen.contradiction.stated.dates`, `.kinds` ({first}, {second}), `.passage.meta` ({date}, {kind}, {member}, {captured}), `.party.asked` ({date}). (3)-(5) every key document.mjs, question.mjs and project.mjs look up was already keyed except `screen.project.cmp_only_ours` and `cmp_withdraw_do` (keyed); the words BOB names that the code does not yet look up are minted as whole phrases for the screen job to adopt: document `text.label`, `text.full|none|unread`, `said_by`, `retired_copy`, `checked.words_and_address`, `checked.issuer`; question `hunches_left_out.one|other` ({n}), `hunch.history.hold|revise|withdraw`, `reeval.cause.<source>` for the 17 causes other than edition ({document}); project `cmp_their_reading`, `cmp_our_reading` ({text}), `stage.reached|not_reached` ({stage}), `ask_owners` ({owners}). From/To stay `screen.explore.from` and `screen.security.to`. (6) `screen.open-file.result.not_scanned` was already keyed ("Not scanned yet", on the tranche since U422).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-391"), `screens/mock-refs.js`.
+owed: the standing consistency read of these rows (the next DEC).
+
+### DEC-392 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (the standing consistency read after DEC-391)
+for: design
+question: Do DEC-391's rows agree with the words already established?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: one verb per idea: "Defer it" (as `screen.queue.defer`, `state.item.deferred`), "{document} was deferred"; "Withdrew this hunch"; "Dismiss this lead". "Grade" for what the reruns compare and for a source's or observation's standing ("Their grades: {text}", "Our grades: {text}"; "reading" stays one whole account of a question). Plainer labels: "Which passage the question is about", "Which project asks", "The projects that asked", "What in the record shows it", "Who holds it"; "Checked: the department's own site published it"; "the web address". Reeval causes: a cited case's status changed; "Something this question rests on was named wrongly". The contradiction screen's purpose says "in tension", as its name, and names its four ways to settle it. Kept: "About which party"; the writing help's empty-field line (matches `screen.case-editor.help.needed`).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-refs.js`.
+owed: none.
+
+### DEC-393 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B437, K4262: gaps the screen jobs found while drawing)
+for: design
+question: Which rows and drawings close B437's four gaps, and which button words are meant on the queue and Home?
+why it is Bob's: it is not (P17): words and drawing beneath his rulings.
+provisional: as below.
+alternative: the registry's general act names on every button (rejected: a button says what it does in its own place).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the minutes fold's two in-place refusals keyed (`screen.action.minutes.notfound`, `.needed`). (2) `screen.home.todo.vouch.one`; a letter awaiting approval is the queue kind `letter-approval` (`queue.letter-approval.summary` with {title}, `.detail`); on the queue and Home the buttons say what they do on their row, the drawn words, while `act.<op>.label.<screen>` stays the act's name in menus and explanations; the drawn words' keys are listed in U428 (six minted: `screen.home.ailimit.set`, `.remove`, `screen.queue.explore.today`, `.mute.kind`, `.check.open`, `.hint.promote`, `.vouch.them`). (3) the docket's "Help me write this" stays: `field()` draws it under the summary whenever the team's assistant is on, as on other screens. (4) the reads lists regenerated from the tranche, so `words-reads.json` holds the updates screen's runtime keys.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-393"), `screens/words-reads.json`.
+owed: none.
+
+### DEC-394 · answered (items 1 and 3; item 2 put to Bob)
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B441, K4304: operations a member cannot finish with the screens as drawn; T51's bar, K4269/K4270)
+for: design (items 1, 3); Bob (item 2)
+question: How are a project's earlier drafts and their review links reached, and which controls complete the operations the walk found unreachable?
+why it is Bob's: items 1 and 3 are not (P17: drawing beneath his rulings); item 2 decides who may add an office, put to him on the page "Federal Records Requests" (https://claude.ai/artifact/FcRtETPqMVjaqocMQHQLTX), recommendation A (a member names the office inside the request, marked "named by a member" for an administrator to confirm).
+provisional: as below.
+alternative: none weighed for 1 and 3.
+recommendation: as below.
+reversal cost: low.
+response: items 1 and 3 none needed (the design's detail); item 2 awaits Bob.
+decided: 2026-10-21 · the design session (P17), items 1 and 3
+the design: (1) `case-editor`, `ceremony` and `review-copy` carry a "Which draft" chooser (read `casedrafts`), each draft named by its scope and the date it was prepared, the newest marked; `review-copy` lists every live review link on any draft (who, which draft, when, comments) each with "Stop sharing" (`reviewrevoke`); the editor and ceremony say how many links are live and link to it. (3a) `project`: "The project's documents" (`heldcaptures` with the project, held and vouched). (3b) the stored login was drawn by DEC-381 on `capture` (`capturecredentialsupply`, `capturecredentiallist`, `capturecredentialwithdraw`), registered `owed:` until the ops reach `main`, so its label key reads `act.owed_capturecredentialsupply.label.capture`. (3c) `capture`: "Your requests for later" (`capturerequests`), each with its state. (3d) `document`: "A name the record did not match" (`resolvetestify`, grade D, with a required reason). (3e) `document`: "This contradicts another document", drawn on the owed op `contradictionflag` (no member op exists: the contradiction ops take a run's judgement or an existing candidate).
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/words-drawn.src.py` (rows noted "DEC-394"); `question-federal-office.html`.
+owed: Bob: item 2 (federal offices: A, B or C). BOB: an op for UC-155's flag (`contradictionflag`: two passages and a reason, making a candidate); the stored login's act keys (owed_ prefix until the ops reach main).
+
+### DEC-395 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B443, K4321: DEC-394's drafts rows hold sample text, so interface-shell R23 fails)
+for: design
+question: How are DEC-394's draft rows worded so the shell names no place?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: on `case-editor`, `ceremony` and `review-copy`, `screen.<screen>.drafts.item` "Scope: {scope} · prepared {date}" is each draft's line (it replaces `drafts.earlier`), and `drafts.newest` is the word "newest" after the newest draft's line; `screen.case-editor.links.live` and `screen.ceremony.links.live` read "{count} review links are live, {earlier} of them on an earlier draft." The drawing marks the chooser's options and the live links' scope lines as record data. No other DEC-394 row holds sample text.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: none.

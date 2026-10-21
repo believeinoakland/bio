@@ -1,35 +1,45 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #231 (`session_01BPMDpdbR783Mu1VZPQPjjR`, depth 1, parent ROOT #7, **primary** account), 2026-10-20 ~13:15 UTC. **T51 is OPEN** on `tranche/T51`, its fix round **paused by Bob** (K4211): "57 jobs at once was just too much! … They need to all be killed. But save this plan, we can run them later this morning under the secondary account that refreshes at 11am." Every wave-2 session is archived; no job, timer or WATCH is live. The work resumes on the **secondary account** (rulings-active §1, account switch). Read `build/rulings-active.md` whole, then **K4200–K4211** whole (the last lines of `build/rulings.md`), then `build/plan/fix-round-T51.md` and `fix-round-T51-pass.md`.
+**Status** · Replaced whole at each handoff. Written by BOB #239 (`session_016bEJoZvnY3TsPuvNxNZRDf`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-21 ~09:10 UTC, at 52 % of its window. **T51 is OPEN** on `tranche/T51`; **fix round 2 is running** (wave 1 nearly done, wave 2 starting). Read `build/rulings-active.md` whole (§1 "How debugging runs", K4297, governs order), then **K4302 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-2-T51.md` whole (the round's plan, in force by K4303; BOB's changes are marked K4303 there and in the rulings).
 
-## NEEDS BOB (only Bob can do this)
+## What happened this session
 
-On the **secondary** account, once it has refreshed (11:00 local): open claude.ai/code, start a new session on repository `believeinoakland/bio`, branch `tranche/T51`, and paste:
-"You are ROOT #8, the session that starts every BOB for BIO/CivicOS on this account. Attach believeinoakland/civicos-process and read roles/ROOT.md whole, then act on this request: START BOB #232: tranche/T51 @ <the commit of this handoff>."
-(ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1` on that account may be used instead if it is still alive and under 55%.)
+- Took over (K4302); the walk's findings files were already pushed, nothing asked of Bob.
+- Planned fix round 2 from `walk-T51-build/CAUSES.md` (K4303): 92 of 96 causes in jobs; STARTs in `build/plan/starts-T51-F2/`. Requirement lines written before each job (K4303, K4307, K4308, K4309, K4310, K4312, K4316, K4317, K4319).
+- 26 jobs merged and archived with rows (K4307–K4321): retrieval, case-disclosures, monitoring, cause-reading, cause-conclude, strength, public-read, case-authoring, review, queue-producers, queue, screens-entry, cause-assistant, screens-inquiry, citation, cause-action (twice), screens-daily, people, events, screens-investigate, cause-ocr, cause-halves, filings, cause-shell (twice), screens-publish.
+- Added mid-round, each a hard cause found by a job: PEOPLE (C7), EVENTS (C54/C6 by captures, K4310), CONTRADICTION (`contradictionflag`, R61, DEC-394), WIZARD-SCRIPTS (registry re-take at 0310c4953d), CAUSE-HALVES (C41, C17), FILINGS (C65's real site), EXTRACTION (C17 re-read).
+- **DEC-394 (UX-DESIGN U429) merged into the tranche** (K4311): drafts chooser and live review links (screens-publish, C49), project documents (screens-inquiry), requests for later and stored login (screens-intake), naming a subject and the contradiction flag (screens-inquiry). ACK B442. Item 2 (federal offices) is with Bob through that lane.
+- CA24 diagnosed live (read-only): the founder's bare `admin` viewer; fixed in review (K4306).
 
-## Where the round stands
+## Do next, in order
 
-- **Wave 1 merged** (six jobs) and **the declaration pass committed** (K4203–K4206; census `declared 162 of 299`).
-- **Wave 2 started and stopped** (K4207, K4211): 57 STARTs posted, every job branch at the tranche tip at start. Work each session pushed before it was archived is on `job/T51/<module>` and in its record; a restarted session reads its record and mailbox and continues (§5.4 restart). **Merged since:** journey-check (FR-34, R30 written) and answer-envelope (FR-51) (K4210).
-- **Reported COMPLETE, not yet merged** (check `mail check` and ownership first): agent-runner, connections, affordances, inquiry-grammar, capture-requests, strength, capture, promotion, ai-accounts, file-safety, interface-shell (J9, CHANGE B19 done). Many of these put their requirement lines in their records: write each at the merge.
-- **Partly done** (restart): file-scanner, credentials, provenance, capture-sources, investigation, case-import, case-inputs, case-authoring, review, filings, tasks, queue-producers, queue, screens-entry, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, plane, installer, citation, monitoring, link-sweep, installer-steps, instance-setup, pdf-pixels, acquisition, inquiry, screens-wizards, wizard-scripts, member-roster, project-roster.
-- **Never started** (session created and archived at once): sources, ratification, run-productions, action-plans, explore, action-holds, store-door, control-plane, op-grades.
-- **text-chain** (FR-41): its entry L6 is `reading-pipeline`'s (R32, `visibleTextOfHtml`), so text-chain has nothing to do: write a reading-pipeline START (sonnet, the four tests text-chain's J3 lists) and don't restart text-chain.
+1. **Take over** (§5.1). Archive BOB #239 once idle (row `BOB-final`, T51). Delete its routines: backstop `trig_011qoERrVJsyAsHpmUNYTr5y` (09:01Z, may have fired) and any later backstop it armed; WATCH #239 `trig_016hj2SnN6KvDPaLyG344M3u` (09:40Z). Arm your own.
+2. **Read and merge the COMPLETEs waiting** (a haiku worker reads them, K4269): CAUSE-CAPTURE-T51 (`session_01GFqkWRF1arvd4PeKMk724o`, J2–J3; cause form: acquisition, capture, sources; past half its window, archive at merge; its J2 REPORTs: reading-pipeline `bytesOf`, provenance `captureGrade` batch, control-plane continuation document and 504 sentence, screens-intake `render_pending`/`file_name`/picker), CONTRADICTION #14 (J7–J8, R61), EXTRACTION #28 (J6), SCREENS-ACTION #11 (J13–J14; it had not read its START B19 when it posted: check it applied B19 before merging). Cause jobs: ownership in list form from `/home/user/cp-prep` (a worktree of civicos-process at `origin/prep/cause-job-K4273`; recreate with `git -C /home/user/civicos-process worktree add /home/user/cp-prep origin/prep/cause-job-K4273`).
+3. **WIZARD-SCRIPTS #21** (`session_01JThqS87JjBveokSN6hH16A`, haiku) is in a long turn (no push for 44 min at 09:08Z): if still quiet at your first check, RESUME, then restart one model up. When it merges: CHANGE SCREENS-PUBLISH's C49 (DEC-394 (1)) to a new SCREENS-PUBLISH session, and the op-declarations t50 R73 red clears with CONTRADICTION's merge.
+4. **Start the rest of wave 2** as their providers merge (STARTs in `starts-T51-F2/`, each naming its module's own branch and record; `-2` files are second jobs of the same module): screens-settings, screens-intake, screens-daily-2, screens-investigate-2 (need CAUSE-CAPTURE's C14 read); screens-inquiry-2 (needs WIZARD-SCRIPTS and CONTRADICTION for DEC-394 (3a, 3d, 3e)); control-plane (C15, C52, C12 and `interfacewords`' `v`, K4317); plus a SCREENS-PUBLISH job for C49 once the registry is re-taken. Each START has had BOB's additions (marked by K-number) appended above "Your causes": read them.
+5. **Words batch to UX-DESIGN** (one HANDOFF when wave 2 opens, K4270: none holds a merge): the rows jobs asked for, listed in K4309, K4312, K4313, K4317, K4319 (scanner remedy, read N of M words, Opened {date}, web leg paragraph label, C58's flow/success, Matter choose/none rows, routes-none, queue keys, standards held and cut, contract choice rows, member-proposal label, `shell.member.unknown`, the Sign step's count line, "Published: edition N").
+6. **After the waves:** the whole suite (two at a time, K4272), every generator in the manifest's order (ocr-worker's and agent-worker's bundles are stale; setup-words rows), `checks/run.mjs`; then the redeploy (rulings-active §1): **the scanner image first** (C84, plan §6: dispatch `container-images.yml` on `tranche/T51` (it is on `main`), write the printed digests into `fleet-member.json` and `wrangler.jsonc`, bundler R36), then push the tip to `deploy-test/biosmoke8/dry-run`, then `.../deploy` (each deploy needs Bob's approval in the refused session, rulings-active §2; not pre-approved for this session or yours); smoke; re-walk every cause's findings plus INFO-2026-0042 (re-capture: parts-only copies are not repaired, CAUSE-CAPTURE) and a live `op=capture` of a 21 MB PDF; then the final pass.
 
-## Next, in order (secondary account)
+## Accepted reds, by name, until the act named
 
-1. Take over (§5.1). BOB #231 is on the other account and cannot be archived from there: leave it, no BOB-final row (K1428). The channel's `BOB` row stays until the tranche close (K1897); write your Writer line as usual.
-2. Post the CHANGEs BOB #231 drafted but never sent (K4210): **control-plane** also declares `subscriptionsignin`; **op-grades** drops `RUNG_ABSENT.securitymap`; **tasks** and **queue-producers** mint an optional `door` (and queue-producers `facts.ms` per feed); and to every wave-2 job not yet answered: write your own requirement lines in `build/requirements/<module>.md`, the ownership listing of that one file accepted at the merge (K4210). Answers already posted (B-entries, K4209–K4210) stand.
-3. **Merge the COMPLETE jobs first** (they cost nothing to finish), in `modules.json` order.
-4. **Restart the rest in batches of at most 10 concurrent jobs** (K4211), providers before the screens that use them: owners first (member-roster, credentials, provenance, capture-sources, investigation, case-import, case-inputs, case-authoring, review, filings), then tasks, queue-producers, queue, citation, monitoring, link-sweep, instance-setup, the not-started haiku jobs, then the nine screen modules, plane last, installer-steps then installer. A restart is a new session `<MODULE> #<k+1>` with the fixed prompt on the same branch (merge the tranche into the job branch first if it is behind).
-5. Then the round's second pass (plan §7: the mark and the asking; the words check's two arms, K4208; hand-row deletion; bundler's split, 4,205 lines by K2513's rule), one check pass, the redeploy of biosmoke8 (handoff of BOB #230's step 6 stands: deploys are approved by Bob in the refused session, K4177), the targeted re-walk, the alpha cut, T51's close (§5.7).
+Plane R24 and screens-settings R39 (T52); journey-check R17 and its 13 walk-dependent tests; store-door R17 (hand-row deletion); promotion `row-census`; coverage's held ids (K4236) and the not-yet-met ids of the jobs not merged; op-declarations t50 R73/R21 (until CONTRADICTION and WIZARD-SCRIPTS merge, K4315); ocr-worker's 5 bundle tests (until the regeneration, K4316); interface-shell R23 (DEC-394's `drafts.newest` rows hold sample text: QUESTION B443 to UX-DESIGN, K4321); screens-publish R10 (until its C49 job, K4321).
 
-## Helpers
+## Running at handoff
 
-- `mt.mjs`: a copy of `.github/scripts/module-tests.mjs` filtering modules by argv, with `--test-force-exit`, excluding `journey-check/journey.test.mjs` (the local walk, K4111). **Run long commands as session-tracked background tasks** (K4207): an idle container is replaced.
-- Packages before any test run (K4113).
+CAUSE-CAPTURE-T51 #1, WIZARD-SCRIPTS #21, CONTRADICTION #14, EXTRACTION #28, SCREENS-ACTION #11 (addresses in the plan's Jobs line). Design lane: UX design #36 (`session_01N188yDWfxJHtvptW5hirUW`, same account; ring it after each post), B443 unanswered. Lanes' HANDOFFs unchanged (H43, A5, W4).
+
+## Acts on main or sessions (reviewed acts, §5.8)
+
+- `main` moves only by T51's close PR (§5.7 (3)), with the design stream's MERGE first (§5.7 (1), K1177); no refusal of either recorded.
+- Each deploy to biosmoke8 and the `container-images.yml` dispatch: Bob's one-line approval in the refused session (rulings-active §2, K1715); none pre-approved.
 
 ## Open with Bob
 
-- The secondary-account ROOT start above (NEEDS BOB).
+- The exact P7 / mechanics §6b / §11 text for K4297 (stale tests fixed by BOB; red tests never gate a test-copy deploy), rendered: https://claude.ai/artifact/VTF21FrrPStmqXr4CSEoT8 (file `build/plan/proposed-stale-test-rule.html`); on his "I approve the stale-test text", apply it on civicos-process (a branch and PR at T51's close, as K4275) and record a K.
+- Federal offices (C64): the design lane put it to Bob directly; its ANSWER follows his reply.
+
+## Open for BOB (not Bob's)
+
+- wizard-scripts' `wizards` declares `state` though its arm reads it from the query (K4230).
+- Registry account labels to secondary at T51's close (K4251); `prep/cause-job-K4273` and `prep/words-arms-K4208` to the process repository's `main` by PR at the close (K4275).
+- Small, for the close: case-authoring R77's not-reached minutes shape; `impact.mjs` lists `plane/r42-entry.mjs` as a test (K4320); notice-producers' duplicate notices (C69's live half) checked in the re-walk (K4308).

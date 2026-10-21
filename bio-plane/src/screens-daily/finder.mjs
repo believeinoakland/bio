@@ -49,11 +49,11 @@ export const finder = Object.freeze({
       }
     }
     if (ui.handle) out.selection = { op: "selection", query: { handle: String(ui.handle) } };
+    // R67: "See where nobody looked" reads the frontier at each of its four levels; a level's answer is never "empty" (it states what was looked at).
     if (ui.frontier) {
-      out.frontier = {
-        op: "frontier", query: { level: "document" },
-        empty: function (v) { return !v || !Array.isArray(v.never_looked) || v.never_looked.length === 0; },
-      };
+      ["document", "content", "meaning", "internet"].forEach(function (level) {
+        out["frontier_" + level] = { op: "frontier", query: { level: level }, empty: function () { return false; } };
+      });
     }
     return out;
   },
@@ -75,7 +75,8 @@ export const finder = Object.freeze({
     const head = cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.finder.sub") + "</p>";
     const browsing = !q.trim();
     // R54: the words field carries the kit's placeholder and its help beneath (the label stays the words), not the placeholder as help.
-    const box = '<div class="mk-search">' + cs.field("finder-q", "screen.finder.words", { value: q, placeholder: "find.query.placeholder", help: "find.query.help" })
+    // C23: the field takes the page's width with its button below it (a flex row would leave the field its content's width).
+    const box = "<div>" + cs.field("finder-q", "screen.finder.words", { value: q, placeholder: "find.query.placeholder", help: "find.query.help" })
       + '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", tone: "primary" }) + "</span></div>";
 
     // R54: "Show", "Only", "Show as" and "Theme" are choices that redraw and send nothing; their values are page memory (`choice:<id>`);
@@ -94,18 +95,19 @@ export const finder = Object.freeze({
     const themeList = themes && Array.isArray(themes.themes) ? themes.themes : [];
     const themeId = asTable ? "" : String(ui["choice:finder-theme"] || "");
     const onlyList = ONLY.filter(function (o) { return o !== "new_since" || since || o === only; });
+    // C23: each help line sits with the control it explains: Show as's, Only's (what "new" counts from, or why there is no "new") and Theme's.
+    const note = function (html) { return '<p class="mk-small muted">' + html + "</p>"; };
+    const cell = function (control, help) { return help ? "<div>" + control + help + "</div>" : control; };
+    const onlyHelp = asTable ? "" : lk && lk.state === "ok" && !since ? note("<b>" + cs.w("find.browse.nosince.summary") + "</b> " + cs.w("find.browse.nosince"))
+      : since ? note(cs.w("find.browse.new.means")) : "";
     const filters = !browsing ? "" : '<div class="mk-grid2">'
       + (asTable ? "" : cs.choice("finder-kind", "find.kind.label", KINDS.map(function (k) { return [k, "find.kind." + k]; }), { value: kind, redraw: "choice:finder-kind" })
-        + cs.choice("finder-state", "find.state.label", onlyList.map(function (o) { return [o, ONLY_KEY[o]]; }), { value: only, redraw: "choice:finder-state" }))
-      + cs.choice("finder-view", "screen.finder.showas", [["list", "screen.finder.showas.list"], ["table", "screen.finder.showas.table"]], { value: "list", redraw: "choice:finder-view" })
-      + (!asTable && themeList.length ? cs.choice("finder-theme", "theme.filter", [["", "theme.filter.any"]].concat(themeList.map(function (t) {
+        + cell(cs.choice("finder-state", "find.state.label", onlyList.map(function (o) { return [o, ONLY_KEY[o]]; }), { value: only, redraw: "choice:finder-state" }), onlyHelp))
+      + cell(cs.choice("finder-view", "screen.finder.showas", [["list", "screen.finder.showas.list"], ["table", "screen.finder.showas.table"]], { value: "list", redraw: "choice:finder-view" }), note(cs.w("screen.finder.table.view.help")))
+      + (!asTable && themeList.length ? cell(cs.choice("finder-theme", "theme.filter", [["", "theme.filter.any"]].concat(themeList.map(function (t) {
           return { value: String(t.theme_id), text: String(t.name || t.theme_id) };
-        })), { value: "", redraw: "choice:finder-theme" }) : "")
-      + "</div>"
-      + '<p class="mk-small muted">' + cs.w("screen.finder.table.view.help") + "</p>"
-      + (asTable ? "" : (!asTable && themeList.length ? '<p class="mk-small muted">' + cs.w("theme.filter.help") + "</p>" : "")
-        + (lk && lk.state === "ok" && !since ? '<p class="mk-small muted"><b>' + cs.w("find.browse.nosince.summary") + "</b> " + cs.w("find.browse.nosince") + "</p>"
-          : since && !asTable ? '<p class="mk-small muted">' + cs.w("find.browse.new.means") + "</p>" : ""));
+        })), { value: "", redraw: "choice:finder-theme" }), note(cs.w("theme.filter.help"))) : "")
+      + "</div>";
 
     // R44, R55: the browse's pages, read once per (view, kind, only, since) and kept in the screen's page memory: "Show more" adds the next.
     const key = (asTable ? "table" : kind + "|" + only) + "|" + (only === "new_since" ? since : "");
@@ -201,11 +203,17 @@ export const finder = Object.freeze({
     } else if (browsing) {
       if (!browse || browse.state === "loading") results = cs.state({ state: "loading" }, null);
       else if (browse.state === "failed") results = cs.state({ state: "failed", refusal: null }, null);
-      else if (asTable) results = st.table(cs, ui, browse, screenOf, kindWord);
+      else if (asTable) results = st.table(cs, ui, browse, screenOf, kindWord, pickBox);
       else {
         const items = browse.items || [];
         const unread = browse.undetermined && typeof browse.undetermined === "object";
-        results = (items.length ? cs.sheet(items.map(function (it) {
+        // C23: how many the filter holds (`total`, which follows "Show" and "Only"), not the page's rows; none at zero or unanswered.
+        const held = typeof browse.total === "number" && browse.total > 0
+          ? '<p class="mk-small"><b>' + (browse.total === 1 ? cs.w("screen.finder.table.count.one", { m: String(browse.awaiting || 0) }) : cs.w("screen.finder.table.count.other", { n: String(browse.total), m: String(browse.awaiting || 0) })) + "</b></p>" : "";
+        // C23: an empty list under a filter names the filter that found nothing.
+        const named = (kind !== "all" ? [cs.w("find.kind." + kind)] : []).concat(only !== "any" ? [cs.w(ONLY_KEY[only])] : []);
+        const nothing = named.length ? '<p class="cs-state" data-state="empty">' + named.join(" · ") + ": " + cs.w("state.empty") + "</p>" : cs.state({ state: "empty" }, null);
+        results = held + (items.length ? cs.sheet(items.map(function (it) {
           const id = String(it.id);
           const title = String(it.title || "");
           const sc = screenOf(it.kind, id);
@@ -214,7 +222,7 @@ export const finder = Object.freeze({
             + (it.flagged ? cs.act("secondlookclear", { label: "act.secondlookclear.label.finder", data: { item: id } }) : "");
           return cs.row(pickBox(id, title), cs.ref(sc, id, title, []) + '<span class="meta"><span>' + kindWord(it, sc) + "</span>"
             + (bits.length ? " · " + bits.join(" · ") : "") + (unread ? ' · <span class="muted">' + cs.w("state.undetermined", { reason: String(browse.undetermined.why || "") }) + "</span>" : "") + "</span>", acts, "");
-        }).join("")) : cs.state({ state: "empty" }, null))
+        }).join("")) : nothing)
           + (browse.truncated && browse.next ? '<p class="mk-note">' + cs.w("find.browse.more") + '</p><span class="mk-acts">'
             + cs.act("search", { label: "find.browse.showmore", data: { more: String(browse.next) } }) + "</span>" : "");
       }
@@ -223,23 +231,14 @@ export const finder = Object.freeze({
       results = st.routes(cs, view, q, screenOf, pickBox);
     }
 
-    const nobody = (ui.frontier && view.data.frontier ? cs.state("frontier", function (f) {
-      const n = typeof f.never_looked_count === "number" ? f.never_looked_count : (f.never_looked || []).length;
-      // R21: no count at zero.
-      if (!n) return '<p class="mk-note">' + cs.w("screen.finder.nobody.none") + "</p>";
-      return '<p class="mk-note">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</p>"
-        + '<ul class="mk-list">' + (f.never_looked || []).slice(0, 20).map(function (x) {
-          const t = x && typeof x === "object" ? (x.title || x.referent || x.authority || x.detail || "") : String(x);
-          return "<li>" + cs.esc(String(t)) + "</li>";
-        }).join("") + "</ul>";
-    }, { empty: "screen.finder.nobody.none" }) : "")
+    const nobody = (ui.frontier ? st.frontier(cs, view) : "")
       + '<span class="mk-acts">' + cs.act("frontier", { label: "act.frontier.label.finder" }) + "</span>";
 
     // The hold strip (interface-shell R19's): how many are held together and until when, from `selection`; R45's Watch and
     // Flag for what is picked; R57's cite. Drawn only with results to pick or a set held (R21: no empty hold tray).
     const sel = view.data.selection;
     const hitsOf = st.hits(view);
-    const rows = hitsOf.length || (browsing && !themeId && !asTable && browse && browse.state === "ok" && (browse.items || []).length);
+    const rows = hitsOf.length || (browsing && !themeId && browse && browse.state === "ok" && (browse.items || []).length);
     // R57: the cite state replaces the results while the held set is being cited; the strip stays, so the set can be let go.
     if (ui.cite && ui.handle) results = st.cite(cs, view, sel);
     const strip = !rows && !ui.handle ? "" : '<div class="cs-hold mk-hold">'
@@ -355,7 +354,7 @@ export const finder = Object.freeze({
         const chosen = cs.value("finder-cite-role");
         cs.set("citeDone", { role: Array.isArray(chosen) && chosen[0] === "against" ? "cuts_against" : "supports", cited: Array.isArray(a.cited) ? a.cited : [], alreadyCited: Array.isArray(a.alreadyCited) ? a.alreadyCited : [] });
       } },
-    { op: "frontier", label: "act.frontier.label.finder", rereads: ["frontier"],
+    { op: "frontier", label: "act.frontier.label.finder", rereads: ["frontier_document", "frontier_content", "frontier_meaning", "frontier_internet"],
       send: function (view, el, cs) { cs.set("frontier", true); return { query: { level: "document" } }; } },
     // "Count": a count over the held set, as a calculation with its method shown (calculations R4).
     { op: "calculationcreate", label: "act.calculationcreate.label.finder", rereads: [],

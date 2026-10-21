@@ -13,7 +13,7 @@ const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch
 /** R50: the op names this module's arms answer, the module's own declaration of them (`contentOps` holds one arm per
  *  name, and a test checks the two agree). */
 export const CONTENT_OP_NAMES = Object.freeze(["content", "contentcrop", "contentmint", "textattest", "attesttext",
-  "transcribe", "transcriptionattest", "transcription"]);
+  "transcribe", "transcriptionattest", "transcription", "transcriptions"]);
 
 /** R50: the module's route arms, keyed by op name, each a function of no arguments answering what its service answers. */
 export function contentOps(content, url, body) {
@@ -55,14 +55,23 @@ export function contentOps(content, url, body) {
     }),
     /* One typing, its text and its attestations (R26). */
     transcription: () => content.transcriptionRead({ id: q("id"), viewer: q("viewer") }),
+    /* A document's typings, listed (R57): the fields from the body, else the query; the viewer the query's stamp. */
+    transcriptions: () => content.transcriptionsOf({
+      bundleId: (body && body.bundleId) || q("bundleId"),
+      limit: body && body.limit != null ? body.limit : q("limit"),
+      after: (body && body.after) || q("after"),
+      viewer: q("viewer"),
+    }),
   };
 }
 
-/* R56 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+/* R56, R57 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
   transcribe: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("content.declared.transcribe", "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge"),
     fields: { accepts: ["bundleId","extent","text","at"], requires: ["bundleId","extent","text"] } },
   transcriptionattest: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("content.declared.transcriptionattest", "content-directed: a second member attests another member's typing, keyed by content id, with the attestor's note saying what they compared, now required (content R25, C-52.10; DEC-88: `reasoned`); the typist's own attestation is refused"),
     fields: { accepts: ["contentId","at","note"], requires: ["contentId","note"] } },
+  transcriptions: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("content.declared.transcriptions", "read: the typings a member has made of one document, keyed by document: each portion typed, who typed it, the digest of the text and the attestations of it, bounded and paged, the text itself left to the single typing's read; writes nothing"),
+    fields: { accepts: ["bundleId","limit","after"], requires: ["bundleId"] } },
 });

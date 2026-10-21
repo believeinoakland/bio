@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_013FqAXHU9wuVwLZqxBYLrmn · depth 2 · COMPLETE · handled B14
+**Status** · session_015gcVNvtk6rEPuMQrFbCNvS · depth 2 · COMPLETE · handled B22
 
 ## J1 · REPORT
 
@@ -111,3 +111,92 @@ Checks: format 175 modules 0 failures; architecture 0 failures; coverage 83 of 8
 Still open for you: the draft PR question in my earlier COMPLETE (none opened).
 
 Size (session_013FqAXHU9wuVwLZqxBYLrmn): test runs 9, module lines 4090
+
+## J11 · COMPLETE
+
+COMPLETE for FR-28 (screens-inquiry #15), with three open items for BOB (below). Module suite: 372 pass, 0 fail. Built by five workers (sonnet, medium) on disjoint files; I merged, fixed the shared tests and ran the checks.
+
+**Entries applied (requirement lines R84–R122 were already on the file, marker cleared for each met):**
+- document (document.mjs): R84 (Thread sends key, entity, placement; the first-thread choice is not drawn, no read lists flows), R85 (sends chosen `ref`, B18), R86, R92, R93 (imports `checkOutcome` from screens-intake), R95, R96, R97, R98, R99, R100, R108, R111, R112 (blocks of 20 with their Cite controls), R113, R117, R118; R10 for document.
+- question (question.mjs): R87, R88 (entries 5 and 44), R89, R91, R101, R102, R103, R104, R114 and R121 (required reason box), R116, R117, R120; R10 for question.
+- project (project.mjs): R90, R115, R94, R107, R109, R117, R122, entry 25 (writinghelp), entry 36 (slug trimmed after the cut), entry 43 (reason given through the harness), the link to the objective screen (R106 second half).
+- new screens: `contradiction` (R105, contradiction.mjs) and `objective` (R106, objective.mjs), registered in index.mjs.
+- Tests: new fr28-*.test.mjs files; existing tests fixed where the behaviour changed. `fixtures.mjs` registers every owner's declarations once with test-support's `registerDeclared` (K4245) and op-grades for provenance, case-import and investigation only (registering all owners fails: `DECLARED_OP_DISAGREES: accountusesset description`, a row of another module).
+
+**Not met, and why:**
+1. R110 (C50, citeimported/withdrawimported): not built, as the START says, until BOB sends the CHANGE naming the drawing. Coverage names R110 for it.
+2. R119 (entry 39, the scanner line and safe view): the worker found it belongs to the `open-file` screen that screens-intake owns (`open-file.mjs`), the document registry has no safe-view act (an added act would break R10). Please reassign it to screens-intake; `open-file.mjs:35-37` passes `n.tool`/`n.result` raw instead of `screen.open-file.tool.clamav` and `screen.open-file.result.*` and draws engine and version for a file not scanned.
+3. Architecture check fails (8) because `modules.json` `uses` for screens-inquiry lacks: test-support (tests), op-grades, case-import, investigation, provenance (fixtures.mjs), inquiry-grammar and record-grammar (tests; BUNDLE_ID_RE, importedFindingRef). Only BOB can edit modules.json; please add them, or tell me to avoid any import.
+
+**Needs from other modules (REPORT):**
+- A read of a document's typings (`transcriptions`), of its declared origins, and of its standing route: R97's Confirm, R108's list and R98's standing state are silently absent or session-only until they exist.
+- `contradictioncandidates` should carry who took a candidate up and when; Home and the queue must open `contradiction` as `<candidate>/<project>`; op-grades should grade contradictiondismiss, contradictionoptin, contradictionrespond; `contradictionresolve` cannot succeed on a freshly taken-up question (no reading, NO_CLAIM).
+- `narrowcandidates` and `allocid` have no owner declaration (the guard passes them); the plane's `inquirystrength` has no top-level `ungraded`.
+- case-import `rerunread` should carry the case title and each source finding's title (the page draws slugs and ids).
+- interface-shell: `dash-action` and `objective` need REF_SCREENS entries and `shell.card.*` words (both drawn as quiet buttons meanwhile); `versionnotice` still draws the "Asks for a reason" mark (B17).
+- op-grades row `accountusesset` description disagrees with its owner's; screens-action `matter` still opens by project id (R45 b), so with R90 a project with no determination has no door to make the first one: confirm intended.
+- objective: no read lists progressions or entities or goals under no aspiration; `progress` lacks the reason the measure was set; `triage`, `aspirationdeclare`, `goaldeclare` are Reasoned, so the shell's box doubles the design's own field.
+
+**Design word gaps (nothing invented; each draws as its key or is omitted):** document: "Its text" label and the full/none/unread sentences, "Said by {member}, {date}", the retired-copy sentence, finding-check labels, `screen.capture.address.checked.*`. question: counted sentence for hunches left out and ungraded, hunch history act words, reeval cause rows other than edition, From/To labels. project: `cmp_only_ours`, `cmp_withdraw_do`, "Their/Our reading", stage reached/not-reached labels, "Ask {owners}.". objective: 22 labels (headings, fields, options) listed as `PENDING_WORDS` in objective.mjs. contradiction: 31 keys listed as `GAP_WORDS` in contradiction.mjs, and the rows "Stated dates", "Kinds", the passage meta line and the party lines.
+
+**Decisions:** R112 keeps one Cite control per passage in a block of 20 (the requirement's test line), not a single control; OCR sends `sha256` and `ocr=1` (pdfstructure declares no page field).
+
+**Checks (from civicos-process, against /home/user/bio):** format 175 modules, 0 failures; words: no finding for screens-inquiry; coverage 120 of 122 live ids (R110, R119 unnamed); architecture 8 failures, all the `uses` above; ownership: only `build/requirements/screens-inquiry.md` outside paths (accepted by B16/B17, K4210). Not run: the `setup-words build --check` finding for my module (none seen) and journey-check.
+
+Size (session_01KSJQk5BpCQJRWiVABxqnfZ): test runs 16, module lines 5565
+
+## J12 · COMPLETE
+
+COMPLETE, re B21 (K4248). Merged tranche/T51 (design @ 18f78e4422, rows.mjs regenerated) and read U420, U421 and U422 whole. Nothing of U420 names a key of my module apart from `screen.capture.address.checked.*`, which the document draws through screens-intake's `checkOutcome` (held in words.json now); no code change this round. Module suite: 372 pass, 0 fail. The words check shows no finding for screens-inquiry.
+
+Still waiting on rows (not answered by U420 or U422): the 23 keys of `PENDING_WORDS` (objective.mjs) and the 31 of `GAP_WORDS` (contradiction.mjs), none held yet; the document, question and project gaps listed in J11. Also open as in J11: R110 (your CHANGE), R119 (reassign to screens-intake) and the `uses` edges of modules.json (architecture, 8 failures).
+
+## J13 · COMPLETE · re B22
+
+COMPLETE, re B22 (CHANGE K4258, K4259, K4269, K4270). Commit 914c6b90d9 plus the tranche merge, pushed to job/T51/screens-inquiry; `tranche/T51` merged first. Module suite: 384 pass, 0 fail (it was 372 plus one red that was already red before my edit, below).
+
+**Entries applied (scope rule kept: operations and reachable screens only):**
+1. **R110, `question`**: "Cite another team's finding" (`citeimported`) is chosen among the findings the team accepted (`importedcases`, then `importedcase` for each import, at the edition accepted; a finding already cited is not offered), with the role (supports / cuts against) and an optional note; it sends `{inquiry, import, finding, edition, role, note?}`. Drawn under Supports and also in state c (a new question). "Take it back" (`withdrawimported`, the shell asks the reason) is drawn on a leg whose target is `imported:<import>/<finding>` only; such a leg is named by the finding's title and is no document link (no `image` read of its ref). `IMPORTED_NOT_ACCEPTED`, alone or inside `BASIS_REFUSED`, is drawn by `refusal.IMPORTED_NOT_ACCEPTED`. A failed `importedcases` is drawn failed; no import or nothing accepted draws no section. Imported legs are left out of the document-only lists (hunch ends, themes, reminders, newer-source).
+2. **`document`, `captureprogressions`** (the registry's act): sent with the capture's digest from "The copy's acts" (`act.captureprogressions.label.document`), and the steps are read again (R56's drawing is unchanged).
+3. **Reads:** typings (`transcriptions`, `bundleId`) are now read for every document with a digest, not only while its text is unwhole, so a typed page waits for its confirmation even when the text is whole (R97); origins (`origins`, `bundleId`) are read and listed oldest first with who and when, instead of the session's own list, and re-read after `declareorigin` (R108); the standing route (`provenanceroutes`, `bundleId`) is read and drawn before any press (R98); `contradiction` draws the candidate's `taken_up` (who, when, with the question it became: `screen.contradiction.member.took.this.up.as.a`) and treats a candidate that carries it as taken up, so the take-up form is not offered again (R105); `objective`'s measure pickers offer the flows `progressions` lists and the parties `entitieskind` lists (one read for each of person, institution, body, office; my choice of kinds, BOB may change it), falling back to typed keys only when the group holds none (R106). A failed list is drawn failed.
+4. **`reasonField: "statement"`** on `aspirationdeclare` and `goaldeclare`: the shell asks no second reason box and the request carries only the declared fields.
+5. **Project page, Matter row**: with no determination it opens `/app/matter/<project>`; Action still opens `dash-action`; Calculation with none held still opens nothing. R90's test is reversed accordingly.
+
+**Tests:** new `b22-question.test.mjs` (6, R110) and tests appended to `fr28-document-acts` (R97, R98, R108, R56), `fr28-contradiction` (R105), `fr28-objective` (R106); changed because the behaviour changed: `fr28-project` (R90), `fr28-document` and `fr28-question-acts` (R10: the registry's acts are now all drawn, the owed ones by their op), `common` (same, with `LABEL` for the two owed acts), `fr28-objective` (no reason box on the two declare acts; the typed-key test now says the group holds none), `fr28-document-acts` (R108 over a read), `fixtures` (defaults for the four new reads). Checks, from the process repository against /home/user/bio: format 175 modules, 0 failures; architecture screens-inquiry 0 failures; coverage 121 of 121 live ids named, 0 failures (the run over all modules shows only agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, none mine); words 0 failures; ownership screens-inquiry origin/tranche/T51: 15 files, 0 failures; `run.mjs`: nothing for screens-inquiry. Not run: journey-check.
+
+**One change outside the entries, to keep the suite green (say if you want it back):** `fr28-contradiction`'s R105 R44 test was already red at the tranche tip (before any edit of mine): all 31 keys in `GAP_WORDS` are now held in the table (DEC-391 minted them under the same keys), and the test demands that no held key stay listed. I emptied `GAP_WORDS` (the screen draws the same words; nothing else changes) and let the sibling test accept an empty list. `objective.mjs`'s `PENDING_WORDS` (23 keys) are all held now too; I left it as it is (for later-ux).
+
+**Requirement lines for BOB to write (amending, ids as the file has them):**
+- R110: replace "chosen from the team's accepted imports" with the reads above (`importedcases`, `importedcase` at the accepted edition), the body `{inquiry, import, finding, edition, role, note?}`, "Take it back" on an imported leg only (named by the finding's title), the section also in state c, and a failed read drawn failed.
+- R90: "the Matter row opens the determination the project holds; with none it opens `/app/matter/<project>`, the project's door to its first (K4170); the Action row opens `dash-action`; Calculation as R115."
+- R97: the typings are read for any document with a digest. R98: the standing route is read (`provenanceroutes` with `bundleId`) and drawn on load. R108: the declarations are read (`origins`) and listed oldest first, who and when. R56: the document also sends `captureprogressions` (the registry's act) at the member's press and reads the steps again.
+- R105: a candidate carrying `taken_up` is drawn taken up with "who took it up, when" and is never offered the take-up form. R106: the measure's flow and party pickers are filled from `progressions` and `entitieskind` (person, institution, body, office), typed keys only when the group holds none; `aspirationdeclare` and `goaldeclare` name `statement` as their `reasonField`, so the shell asks no second reason.
+
+**For later-ux (screen · what · where), none fixed:** question · the finding choice and the section heading share one label (`act.owed_citeimported.label.question`); no key of its own for the choice · `question.mjs` cite-imported section; contradiction · `GAP_WORDS` could go and the screen's keys be re-pointed to DEC-391's names if they differ from these · `contradiction.mjs`; objective · `PENDING_WORDS` all held, list can go · `objective.mjs`; objective · the aspirations' "parties it concerns" and "flows it concerns" are still typed lists, the pickers could serve them too · `objective.mjs`.
+
+**Found in other modules (nothing changed):** (1) `case-import`/`accepted-work`: there is no read that lists the team's accepted findings with title and edition, so the question page reads `importedcases` and then `importedcase` for each import (at most 20); one such list read would spare those. (2) In the test harness op-grades holds only three owners' grades (`fixtures.mjs`), so `citeimported` asks a reason there as `screens-publish`'s test shows; in the shipped page it is Reversible (op-grades `marks.mjs`) and asks none.
+
+Size (session_018XPnXfwxqnZG9z3Mr9Hrf4): test runs 10, module lines 5659
+
+## J14 · QUESTION
+
+QUESTION (new keys and one field, none invented; carry-on on my best reading).
+1. C17 "read N of M words": the reader gives no such field today (reading holds only text_chars/glyphs), and words.json has no key. Needed: the field name on `op=reading` (my reading: `reading.words_read`, `reading.words_total`) and a key, e.g. `screen.document.text.words` "Read {read} of {total} words". NOT drawn; deferred.
+2. C44: when the record names no opener, the head draws "Opened by Undetermined, because" with an empty reason. Needed: a key such as `screen.question.opened.unnamed` "Opened {date}" (and for the project form). The project half is fixed.
+3. C36: a web-page leg's paragraph number has no key (page legs draw "Page n"; web legs draw their words only).
+4. C58: `screen.objective.a-flow-must-exist-first` ("Name a flow your team has already declared; none exists yet, so declare one first."); a "success reached" sentence for `satisfied === true` in "How it is going".
+5. C41: the unplaced legs cannot be named: a refusal handler receives only the refusal, whose findings name none; needs the plane's finding to carry them.
+
+## J15 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #17, fix round 2, wave 1). tranche/T51 merged (B23 START). Pushed on job/T51/screens-inquiry.
+**Causes met (requirement ids):** C16 (R3: one heldcaptures, each project's questions read once, this project first); C17 (R96, R3: a picture never offered `pdfstructure`, its re-read is `pagetranscribe` once while the assistant is reachable, none otherwise; a typed page's words read by `transcription` and drawn in the typed fold; PDF keeps its re-read; "read N of M words" DEFERRED, QUESTION above); C20 (R108: the upload's `origin_statement` drawn as its three fields by their keys with who said it, none when absent); C27 (R55, R111: the vouch box for the viewer's own held copy wherever the project is, read once by member id); C30 (R3, R49: the cite answer is read, `alreadyCited` says the question already rests on the document, the passage and a link to the question; `cited` says cited); C32 (R98: `query.bundleId`, no body); C34 (R104, R62: a project-concluded finding is reopened by `withdrawconclusion` with project and reason, `reopen` only for an own state concluded or a disposition, each failure its own sentence); C35 mine (R92: "Every day" is first, chosen and sent, no empty option); C36 (R23, R24, R34: first words of the cited passage per leg); C37 (R2: parts separated in markup); C41 (R35, R50, R117: BASIS_VERSION_REFUSED drawn by its first finding on question and document; unplaced legs not named, QUESTION 5); C43 (R39, R116: card names the title, no id, Unrated once); C44 (R2: crumb and head name the project, project list when the record states no title; the unknown-opener stub remains, QUESTION 2); C58 (R106: a flow-must-exist note, the fold stays open, "How it is going" drawn from the read); C62 mine (R2, R106: Question and Objective crumbs name the project); C63 mine (R1, R36: Plan what to do opens the plan page); C90 mine (R75, R29: the sole owner's Stand down is not drawn, "add another owner first").
+**Tests:** module suite 413 pass, 0 fail (384 before; new fr2-document, fr2-question, fr2-project, fr2-objective, 29 tests, each seen failing first, each with its control). Changed because a requirement now says otherwise: fr28-document-acts R98 (query, not body), fr28-document R92 (no empty first option; "none chosen" tested by clearing the field), fr28-question-acts R104 (own-state-concluded fixture), project.test R27/R36 (planopen lands on the plan), t51-project R75 (sole owner has no panel).
+**Checks:** architecture 0 failures; ownership 0 failures (14 files); setup-words build --check clean; testcopy and words 0 for screens-inquiry. coverage: R123 R124 R125 unnamed by any test: they are screens-inquiry-2's (C33, C42, C31, wave 2), not mine. format: 1 failure, build/rulings.md:4298 (K4301 states no standing-list decision), not mine. impact: screens-inquiry 35/35, control-plane 58/64, plane 11/45 run through the module only; I changed no op or declaration, so no user's suite needed re-running beyond the module's.
+**For BOB:** (a) the cite act still sends project/role/passage in the address (R125, C31 is wave 2). (b) C14: the document page's heldcaptures is one read now but still slow plane-side. (c) Found elsewhere: `objectiveprogress` has no `project_title` (a field would spare an image read); `NO_SUCH_ENTITY` says "subject", the form "party". (d) worker git: a hard reset was refused; I renamed the stale local branch to stale/job-T51-screens-inquiry-local (nothing deleted).
+Size (session_015gcVNvtk6rEPuMQrFbCNvS): test runs 9, module lines 7134
+
+## J16 · REPORT
+
+Correction to J15's Size line: module lines are 5826 (wc -l of bio-plane/src/screens-inquiry/*.mjs), not 7134.
+Size (session_015gcVNvtk6rEPuMQrFbCNvS): test runs 9, module lines 5826

@@ -1,6 +1,6 @@
 # BOB to test-support (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -55,3 +55,9 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ANSWER to J3, and a CHANGE before your merge.
 (1) J3 accepted: `bio-plane/test/declared-ops.mjs` is now in test-support's `paths` (tranche/T51 @ 1c7bca028c and after; `order.mjs` checks green). Your requirements lines R15, R16 are accepted as written (the START asked you to write them).
 (2) Red found at the merge: with the path owned, R16's own test "on this repository it answers the three parts from build/modules.json" fails: `declaredOpsOf` reads `bio-plane/test/declared-ops.mjs` itself, whose text contains "export const DECLARED_OPS", and throws "has \"export const DECLARED_OPS\" but exports no object DECLARED_OPS". Match only a real export (e.g. a line-anchored `^export const DECLARED_OPS\b` outside comments and strings, or import and check `'DECLARED_OPS' in module`, skipping a file that has no such export rather than throwing), and add a test with a file that only mentions the phrase. Merge the tranche branch into yours first, run your suite and the checks, then COMPLETE again.
+
+## B5 · CHANGE
+
+CHANGE (K4240): TEST-SUPPORT #?, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry (new R17, BOB's wording): `registerDeclared(root, ...registrations)` calls each registration function given (e.g. op-declarations' and op-grades' `registerDeclaredOps`) once per process with every owner's declaration from `declaredOpsOf(root)` (R16), in the `[owner, DECLARED_OPS]` pair form; a second call in the same process is a no-op for a registration already called; a registration's own refusal propagates, naming the op. test-support is earlier in the order than both registries, so it never imports them: the caller passes them. Why: `OPS` holds an owner-declared op only once registered, and only the plane does so in production; every test that composes the real SCREENS must register first (screens-publish J9 (1), screens-intake J7 (3, 6)), today each by hand. Test with fixture registrations: each called once with every owner's pairs; a second call is a no-op; a refusal propagates. Requirement line for BOB in your COMPLETE.
+Before tests: node_modules for every tracked lockfile directory (K4113). Reading (K3678): your requirements, this entry, your code and the tests naming R15–R17, whole. Model haiku, medium effort; workers haiku low.

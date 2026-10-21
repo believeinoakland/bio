@@ -98,13 +98,65 @@ export const PUBLISHED = Object.freeze({
     out.push(P.sec(cs, "screen.published.people", people.length ? cs.sheet(people.map(function (p) {
       return cs.row("", '<span class="rec">' + cs.esc(p.shown || p.name || p.title || "") + "</span>", p.reason ? '<span class="meta">' + cs.esc(p.reason) + "</span>" : "");
     }).join("")) : ""));
+    // R47 (C7; DEC-376): what the case leaves out and who else read that statement, the contradictions the team disclosed, and how the
+    // team reads evidence: each drawn from the edition's own answer, and only when the answer holds it (R20).
+    const left = e.completeness && typeof e.completeness === "object" ? e.completeness : null;
+    if (left && (left.statement || left.statement_by || Array.isArray(left.acknowledgements))) {
+      const acks = Array.isArray(left.acknowledgements) ? left.acknowledgements : null;
+      out.push(cs.sec("screen.published.what_this_case_leaves_out", (left.statement ? '<p class="rec">' + cs.esc(left.statement) + "</p>" : "")
+        + (left.statement_by || left.author ? '<p class="mk-small">' + cs.w("screen.published.written_by_writer_and_published", { writer: left.statement_by || "", publisher: left.author || "",
+          date: { html: left.at ? cs.date(left.at) : "" } }) + "</p>" : "")
+        + "<h3 class=\"mk-small\"><b>" + cs.w("screen.published.who_else_read_this_statement") + "</b></h3>"
+        + (acks && acks.length ? cs.sheet(acks.map(function (a) {
+          return cs.row("", '<span class="mk-data">' + cs.esc(a.recipient || a.by || "") + "</span>", "", (a.at ? cs.date(a.at) : "") + (a.reason ? ' · <span class="rec">' + cs.esc(a.reason) + "</span>" : ""));
+        }).join("")) : acks ? '<p class="mk-note" data-nobody>' + cs.w("screen.published.no_one_else_on_the") + "</p>"
+          : '<p class="mk-note" data-unsaid>' + cs.w("screen.published.this_edition_does_not_say") + "</p>")));
+    }
+    if (Object.hasOwn(e, "tensions")) {
+      const ts = Array.isArray(e.tensions) ? e.tensions : null;
+      const idx = function (id) { return findings.findIndex(function (f) { return String(f.bundle_id || f.id || "") === String(id); }); };
+      out.push(cs.sec("screen.published.contradictions_the_team_disclosed", ts && ts.length ? '<p>' + cs.w("screen.published.each_one_names_the_finding") + "</p>" + cs.sheet(ts.map(function (t) {
+        const n = idx(t.finding), side = function (x) { return x && x.text ? '<span class="mk-data">' + cs.esc(x.text) + "</span>" : ""; };
+        return cs.row("", "<b>" + (n >= 0 ? cs.w("screen.published.finding", { n: String(n + 1) }) : cs.esc(t.finding || "")) + "</b> · " + cs.esc(t.state || "")
+          + '<span class="meta" data-tension' + (t.highlighted ? ' data-highlighted' : "") + ">"
+          + (t.highlighted ? cs.esc(t.sentence || "") + " " + (t.side ? cs.w("screen.published.one_side_side", { side: { html: side(t.side) } }) : "")
+            : cs.w("screen.published.one_side_side", { side: { html: side(t.sides && t.sides.a) } }) + " " + cs.w("screen.published.the_other_side_side", { side: { html: side(t.sides && t.sides.b) } })
+              + (t.explanation ? ' <span class="rec mk-data">' + cs.esc(t.explanation) + "</span>" : ""))
+          + (t.owner_words && t.owner_words.text ? ' <span class="rec">' + cs.esc(t.owner_words.text) + "</span>" : "")
+          + (t.acknowledged_by ? " " + cs.w("screen.published.read_by_who_on_date", { who: t.acknowledged_by, date: { html: t.acknowledged_at ? cs.date(t.acknowledged_at) : "" } }) : "") + "</span>", "");
+      }).join("")) : ts ? '<p class="mk-note" data-none>' + cs.w("screen.published.the_team_disclosed_no_contradictions") + "</p>"
+        : '<p class="mk-note" data-before>' + cs.w("screen.published.this_edition_was_signed_before") + "</p>"));
+    }
+    if (typeof e.bias_acknowledgement === "string" && e.bias_acknowledgement.trim()) {
+      out.push(cs.sec("screen.published.the_lens_this_team_read", '<p class="rec" data-bias>' + cs.esc(e.bias_acknowledgement) + "</p>", { help: "screen.published.the_lens_this_team_read2" }));
+    }
+
+    // R57 (C12; DEC-378): the case's details as its team currently states them, for any reader; a field not stated draws nothing. They are
+    // not part of the signed edition. Read from the public `casedetailspublic`.
+    const dp = P.later(cs, view, "cdpub", "casedetailspublic", { query: { case: caseId } });
+    const dd = dp.state === "ok" && dp.value && dp.value.details && typeof dp.value.details === "object" ? dp.value.details : null;
+    if (dd) {
+      const rows = [];
+      const said = function (f) { return dd[f] && dd[f].stated ? dd[f].value : null; };
+      const area = said("area"), contact = said("contact"), related = said("related"), rels = said("relationships");
+      if (Array.isArray(area)) rows.push(["screen.case-editor.details.name.area", area.map(function (a) { return cs.esc(a.words); }).join(", ")]);
+      if (contact) rows.push(["screen.case-editor.details.name.contact", contact.kind === "doorbell" ? cs.w("screen.case-editor.details.contact.doorbell") : cs.esc(contact.text || "")]);
+      if (Array.isArray(related)) rows.push(["screen.case-editor.details.name.related", related.map(function (r) { return cs.esc(r.url || (r.case_ref ? r.case_ref.case : "")) + (r.words ? " · " + cs.esc(r.words) : ""); }).join("; ")]);
+      if (rels) rows.push(["screen.case-editor.details.name.relationships", rels.none ? cs.w("screen.case-editor.details.ties.none") : (rels.items || []).map(function (t) { return cs.esc(t.with) + " · " + cs.esc(t.nature); }).join("; ")]);
+      if (rows.length) out.push(cs.sec("act.owed_casedetailspublic.label.published", cs.sheet(rows.map(function (r) {
+        return cs.row("", "<b>" + cs.w(r[0]) + '</b><span class="meta mk-data" data-detail="' + cs.esc(r[0]) + '">' + r[1] + "</span>", "");
+      }).join("")) + '<p class="mk-note">' + cs.w("screen.published.details.pub.current1") + " " + cs.w("screen.published.details.pub.current2") + "</p>"
+        + '<div class="mk-acts">' + cs.act("casedetailspublic") + "</div>"));
+    }
+
     const evidence = Array.isArray(e.captures) ? e.captures : Array.isArray(e.materials) ? e.materials : [];
     // R19: each piece of evidence with a full SHA-256 opens its bytes by that hash (`publishedbytes`, no credential); a row
     // with no full hash draws no hash and no link.
     out.push(P.sec(cs, "screen.published.evidence", evidence.length ? cs.sheet(evidence.map(function (x) {
       const sha = String(x.sha256 || x.capture_sha || "").toLowerCase();
       const full = /^[0-9a-f]{64}$/.test(sha);
-      return cs.row("", '<span class="rec">' + cs.esc(x.title || x.label || x.locator || (full ? sha : "")) + "</span>",
+      const graded = P.gradeMark(cs, x.axis || "capture", x.grade);
+      return cs.row("", '<span class="rec">' + cs.esc(x.title || x.label || x.locator || (full ? sha : "")) + "</span>" + (graded ? ' <span data-evidence-grade>' + graded + "</span>" : ""),
         full ? '<span class="id">' + cs.esc(sha.slice(0, 12)) + "</span>" : "",
         full ? cs.act("publishedcase", { label: "screen.published.evidence.open", data: { sha: sha } }) : "");
     }).join("")) : ""));
@@ -117,7 +169,9 @@ export const PUBLISHED = Object.freeze({
 
     // R22 (N1094; DEC-240 (P1)): "Check a file you hold": the member of the public pastes the file's SHA-256 (the file itself
     // never reaches the page); `verify` answers whether this case rests on it, as a public op with no credential.
-    out.push(cs.sec("published.check.title", cs.field("pb-sha", "published.check.field", { rec: true, help: "published.check.field.help" })
+    // R54 (C10; DEC-376): or a file chosen here, whose SHA-256 the page works out itself; the file never leaves the page.
+    out.push(cs.sec("published.check.title", cs.field("pb-file", "screen.published.choose_a_file_or_paste", { type: "file", help: "screen.published.the_file_itself_never_leaves" })
+      + cs.field("pb-sha", "published.check.field", { rec: true, help: "published.check.field.help" })
       + '<div class="mk-acts">' + cs.act("verify", { label: "published.check.go", data: { check: "1" } }) + "</div>" + P.said(view, "check"), { help: "published.check.help" }));
     return out.join("");
   },
@@ -159,11 +213,17 @@ export const PUBLISHED = Object.freeze({
       // R6: "Check the signature": the edition's manifest checked against what the group published, without the group.
       op: "verify", label: "act.verify.label.published",
       // R22: the same act also takes the 64-character fingerprint a reader typed ("Check it"); nothing but that hash is sent.
-      send: function (view, el, cs) {
+      send: async function (view, el, cs) {
         view.ui.checking = "";
         if (el.dataset.check === "1") {
-          const typed = String(cs.value("pb-sha") || "").trim().toLowerCase();
-          if (!/^[0-9a-f]{64}$/.test(typed)) return { refuse: "published.check.field.help" };
+          let typed = String(cs.value("pb-sha") || "").trim().toLowerCase();
+          // R54: a chosen file is fingerprinted in this page; only the hash goes out
+          const file = cs.file("pb-file");
+          if (file) {
+            try { typed = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer()))).map(function (b) { return b.toString(16).padStart(2, "0"); }).join(""); }
+            catch (x) { return { refuse: "screen.published.choose_it_again_or_paste" }; }
+          }
+          if (!/^[0-9a-f]{64}$/.test(typed)) return { refuse: file ? "screen.published.choose_it_again_or_paste" : "screen.published.choose_a_file_or_paste" };
           view.ui.checking = typed;
           return { query: { sha256: typed } };
         }
@@ -207,10 +267,16 @@ export const PUBLISHED = Object.freeze({
         }
         const body = i >= 0 ? findings[i].body || {} : {};
         // A hash the group published that no finding of this edition rests on is "elsewhere"; one it never published is "no".
-        P.say(cs, view, "check", i >= 0 ? cs.w("published.check.yes", { n: String(i + 1), finding: body.conclusion || body.question || findings[i].title || "" })
+        P.say(cs, view, "check", i >= 0 ? cs.w("published.check.yes", { n: String(i + 1), finding: P.claimOf(view, findings[i]) || body.question || findings[i].title || "" })
           : cs.w(published ? "published.check.elsewhere" : "published.check.no"), i >= 0);
         return { stay: true };
       },
+    },
+    {
+      // R57: "Details of this work": the team's current statement of them, read again for any reader (public, no credential).
+      op: "casedetailspublic", label: "act.owed_casedetailspublic.label.published",
+      send: function (view) { return { query: { case: String(view.subject || "").split("/")[0] } }; },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetailspublic", answer)) view.parts.forget(view); return { stay: true }; }, // D29
     },
     {
       // R6: "Read the case": the edition read again, whole. R19: the same op also opens a piece of evidence's bytes by its

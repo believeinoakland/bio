@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J9
+**Read** · handled J16
 
 ## B1 · START
 
@@ -122,3 +122,47 @@ CHANGE (K4203, K4206): the declaration pass is merged into tranche/T51 (merge it
 - held: heldcaptures sends timer; heldrestore sends id, lacks ids; heldsetaside sends n, lacks ids
 - home: heldcaptures sends closed
 Fix in your own tests and harness only: each stand-in either sends exactly what the owner declares (read it through test-support's collector, never a hand copy, K3268) or uses a fixture op that no owner declares. If a stand-in mirrors a request a real screen sends, say so in your COMPLETE: the screen's own wave-2 job fixes the screen. Test: your suite green; control: a stand-in sending an undeclared field still fails the guard.
+
+## B20 · CHANGE
+
+CHANGE (K4217): two entries, re-opening your job.
+1. **Your stand-ins meet the owners' new declarations.** On tranche/T51 since K4214's merges your suite is 220 pass, 13 fail: the guard now checks declarations that merged after your COMPLETE: nine tests send `promote` with `title` (promotion R61 declares `accepts` the package fields, `requires` `files`, `meta`, `snapKey`), one sends `promote` with none of the three, and three send `openoriginal` with `id`, `sha256` or no capture (file-safety R48). Bring each stand-in to the declared request with `declaredFit`/`fitSend` as you did at J9, never loosening an assertion; where a test's point was the old field, assert the declared one. Merge the tranche first.
+2. **The standard's crumb (screens-investigate J6, DEC-384 entry 9).** `screens-investigate`'s `place(view)` now returns `{project, last}`; the shell's path reads `last` and draws the last crumb as `screen.standard.crumb` with `{name}` (`PATH.standard`, R8), the project's crumb from `project`. Test with a control (a `place` returning a string keeps today's crumb).
+Write your requirement lines yourself (K4210).
+
+## B21 · CHANGE
+
+CHANGE (K4219; project-roster J4): `design.test.mjs` (R107) sends `projectowneradd` with `who` and without `projectId`/`handle`; project-roster R40 declares it: bring the stand-in to the declared request (`declaredFit`), as entry 1 of B20.
+
+## B22 · CHANGE
+
+CHANGE (K4228), a new job session (INTERFACE-SHELL #10, sonnet): screens-publish R68 (DEC-384 H2, the crumb before joining) needs the path's project step to read `crumb.project.unjoined` when the viewer has not joined the project. `place(view)` cannot say so today (it gets no word function). Extend R110's `place` answer: `{project, last, projectKey?}` where `projectKey` is a word key the shell renders (with `{name}` = the project's title, escaped) in place of the title; absent, today's behaviour. Test and control; R110's line amended (K4210). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B23 · CHANGE
+
+CHANGE (K4237), re-opens the job. Merge tranche/T51 first (R12 amended there).
+R12: `can` asks `SESSION_OPS` membership of every act, a read included, but `SESSION_OPS` gates mutating ops alone (op-declarations' own rule; the door serves a read to any session whose class the op lists). So eight acts of screens-settings are never drawn: `selftest`, `bootstrap`, `runtime`, `exportlog`, `biasmanifest`, `biasinhale`, `biasdebt` (reads) and `export` (SCREENS-SETTINGS #10 J10 (1)). R12 now reads: the op is in the session's set, or, for a read (`OPS[op].mutating` false), the session's class is among `OPS[op].classes`. Test at the interface: a read in no set but whose classes hold the session's class is drawn; controls: a mutating op outside the set is not drawn; a read whose classes exclude the session's class is not drawn. (`export`'s session reach is OP-DECLARATIONS #30's.)
+R110's projectKey line from J11 is written by BOB at your merge.
+
+## B24 · CHANGE
+
+CHANGE (K4245): INTERFACE-SHELL, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entries: (1) your tests that compose the real SCREENS (t50, the declared tests, the page tests) register every owner's declarations with test-support's `registerDeclared(root, ...registrations)` (R17, merged) before composing, in place of any hand registration (K3268). (2) A `failed` hook on an act: when an act's request is refused, the act's working line clears at once and the refusal is drawn (screens-intake J7 (5): a refused capture left "working" on the page). Test; control: a successful act draws its answer as before. (3) The kit's whole-draw reset of `cs.choice` (screens-intake J7 (10), your R90): a redraw keeps a choice the member made; test with a control. Requirement lines for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.
+
+## B25 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Yours: any key of the shell's U420 names (B424 4: the shell's reason box opens only where an act asks a reason: `determine` when it replaces an earlier determination, `consequencerecord` when the member assesses it, `consequencerevise`; tell BOB if the shell, not the screen, decides that). Report any red of yours still waiting on a row.
+
+## B26 · CHANGE
+
+CHANGE (K4259): INTERFACE-SHELL, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-sonnet-5-5, medium effort (one model up if it blocks on tests).
+Why: `ref` (`browser.mjs:563-566`) draws an empty `<b></b>` for a kind with no `shell.card.<kind>` word and no facts, exempting only `theme` by name, against R106 (such a kind draws the item's facts alone). A screen of this round needs it (screens-inquiry J11's report, confirmed by BOB's reading worker against the code, K4259). Requirement lines (amended or a NEW R, next free id) in your COMPLETE for BOB.
+Entries:
+1. In `ref`, treat every kind with no held `shell.card.<kind>` word as `theme` is (its facts alone, nothing if none). Test: an `objective` ref with no facts draws no empty lead; control: `published` unchanged. (`dash-action` stays out of REF_SCREENS: nothing links it, R81.)
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio interface-shell tranche/T51 job/T51/interface-shell`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

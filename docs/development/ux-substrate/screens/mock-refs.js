@@ -417,6 +417,7 @@ const TITLE_HELP = {
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the team documents or information, without an account. It says exactly what happens to what is sent.",
 };
 const SCREEN_HELP = {
+  bias: 'The lens your team reads evidence through, stated so a reader can discount it. Write a set, draft one from an outside policy, adopt it, and settle work made under an earlier lens.',
   site: 'Civicsmith\'s own website: what it is, a team\'s published work, the teams that chose to be listed, and how to start a team.',
   install: 'Creates your team\'s Civicsmith in a Cloudflare account your team controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
   update: 'Updates your team\'s Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.',
@@ -463,6 +464,7 @@ const SCREEN_HELP = {
   'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
   document: 'One document as captured: its words by page, its copy\'s grade, its versions beside each other, the links it carries, the people and organizations it names, and what cites it. Cite from here.',
   project: 'A project: its questions, their strength against the project\'s bar, its members and its stage. Open a question or a plan from here.',
+  contradiction: 'Two passages in your team\'s record that are in tension: see both as written, then settle it by saying how they differ or that one is wrong, take it up as a question, conclude it, or dismiss it as a lead.',
   question: 'One question: what supports it and what cuts against it, its strength against the bar, and what would change the answer.',
   answers: 'Ask in plain words, with the assistant, or find and count without it. Answers come only from what your team holds, and show where they looked.',
   assistant: 'A question with the assistant beside it. It answers only from what your team holds and never concludes, signs or sends.',

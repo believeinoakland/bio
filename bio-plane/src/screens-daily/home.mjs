@@ -12,10 +12,17 @@ import { itemWords } from "./item-words.mjs";
 import { startProject } from "./start-project.mjs";
 import { participation } from "./participation.mjs";
 import { homeReadings } from "./home-readings.mjs";
+import { doors } from "./doors.mjs";
+import { todos } from "./todos.mjs";
+import { routed, ROUTED_REFUSALS } from "./routed.mjs";
+import { OPS } from "../op-declarations/index.mjs";
+
+// An act whose op the owners have not yet declared is not registered (screens-action's rule): `taskdecide` is `tasks`' alone.
+const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : []; };
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors, routed, todos },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -36,7 +43,12 @@ export const home = Object.freeze({
       published: { op: "publishedlist" },
       followed: { op: "peopledirectory", query: { show: "people", limit: "1" }, empty: function () { return false; } },
       clocks: { op: "clocksrunning" },
+      // R65: the doors to Held captures and the Inbox.
+      held: view.parts.doors().reads().held,
+      inbox: view.parts.doors().reads().inbox,
     };
+    // R17 (B21): the photos she captured and has not vouched for, each place a to-do of hers.
+    Object.assign(out, view.parts.todos().reads(view));
     if (view.me && view.me.member && !(view.me.administer === true || (Array.isArray(view.me.capabilities) && view.me.capabilities.indexOf("create_projects") >= 0))) {
       out.members = { op: "memberlist", empty: list("members") };
     }
@@ -85,15 +97,28 @@ export const home = Object.freeze({
     const q = ok(data.queue);
     const items = q && Array.isArray(q.items) ? q.items : [];
     const mine = function (it) { const a = it && it.assignee; return !!a && a !== "unassigned" && (a === me.member || a === me.handle); };
-    const forMe = items.filter(mine);
-    const forGroup = items.filter(function (it) { return !mine(it); });
+    // R29, C74: a project the member is invited to is hers to join, as the participants of the project (or `projectlist`, N1118) answer her place;
+    // the queue holds the same invitation as an item, and it is drawn once: as the project's row, not again among the items.
+    const pv0 = ok(data.projects);
+    const place = view.parts.participation(cs, view, pv0 && Array.isArray(pv0.projects) ? pv0.projects : []);
+    const invitedAll = pv0 && Array.isArray(pv0.projects) ? pv0.projects.filter(function (p) { return p && place[String(p.id)] === "invited"; }) : [];
+    const invitedIds = {};
+    invitedAll.forEach(function (p) { invitedIds[String(p.id)] = true; });
+    const dup = function (it) { return !!it && it.kind === "project-invitation" && !!it.subject && invitedIds[String(it.subject.id)] === true; };
+    const own = items.filter(function (it) { return !dup(it); });
+    const forMe = own.filter(mine);
+    const forGroup = own.filter(function (it) { return !mine(it); });
+    // C96: each Join says which project it joins, so two invitations are told apart (the accessible name; the row beside it names her).
+    const joinOf = function (html, name) {
+      return html ? html.replace("<button", '<button aria-label="' + cs.esc(cs.w("act.projectjoin.label.home") + " " + name) + '"') : html;
+    };
 
     // One item's row: its kind mark, its words (the update's and the source notices' keyed, R19, R22), the way to act on it,
     // its due date, and, on "Needs the group", whose move it is.
     // An item's options (R3) among Home's registered acts: resolving a task, and adopting or keeping a newer version (its
     // reason asked in place); any other way to act is "Open", its subject's screen.
     const HOME_ACTS = { taskresolve: "taskresolve", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion", versionkeep: "keepversion",
-      projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer" };
+      projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer", filingapprove: "filingapprove" };
     let seq = 0;
     const actsOf = function (it) {
       const ops = [];
@@ -104,7 +129,7 @@ export const home = Object.freeze({
       (Array.isArray(d.acts) ? d.acts : []).forEach(add);
       if (d.instead) add(d.instead);
       return ops.map(function (op) {
-        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "",
+        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "", subject: it.subject && it.subject.id ? String(it.subject.id) : "",
           project: it.subject && it.subject.id ? String(it.subject.id) : "", who: it.subject && it.subject.requester ? String(it.subject.requester) : (it.fills && it.fills.who ? String(it.fills.who) : "") };
         // R42: an owner answers a request to join with Grant or Decline.
         if (op === "projectrequestanswer") {
@@ -115,6 +140,7 @@ export const home = Object.freeze({
             return cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) });
           }).join("");
         }
+        if (op === "projectjoin") return joinOf(cs.act(op, { label: "act." + op + ".label.home", data: data }), String(it.subject && typeof it.subject.name === "string" && it.subject.name.trim() ? it.subject.name : data.project));
         if (op !== "adoptversion") return cs.act(op, { label: "act." + op + ".label.home", data: data });
         const f = "ha-" + (seq++);
         const button = cs.act(op, { label: "act." + op + ".label.home", data: Object.assign({ f: f }, data) });
@@ -136,13 +162,16 @@ export const home = Object.freeze({
         words = cs.w("home.update.ready", { version: String(d.version || it.version || ""), security: security ? cs.w("home.update.security") : "" });
         open = '<a class="cs-btn" data-tone="quiet" data-nav href="/app/updates">' + cs.w("queue.update.see") + "</a>";
       } else {
+        // R75: the decisions the record routes to a member: the authority form, an endorsement, an owner vote, an expertise.
+        const rt = view.parts.routed().draw(cs, it, { screen: "home", id: "hr-" + (seq++), ref: iw.subject(cs, it) });
         // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
         const wd = iw.words(cs, it);
-        words = wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
-        open = actsOf(it);
+        words = rt ? rt.summary + '<span class="meta">' + rt.detail + "</span>" : wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
+        open = rt ? rt.acts : actsOf(it);
         if (!open) {
           const to = iw.open(it);
-          open = '<a class="cs-btn" data-tone="quiet" data-nav href="' + (to || "/app/queue") + '">' + cs.w("screen.home.open") + "</a>";
+          // C74: Open opens the item's subject; a subject that opens nothing draws no Open (never a link to the queue).
+          open = to ? '<a class="cs-btn" data-tone="quiet" data-nav href="' + to + '">' + cs.w("screen.home.open") + "</a>" : "";
         }
       }
       let whose = "";
@@ -222,28 +251,31 @@ export const home = Object.freeze({
 
     // The strip (`cs.strip`, at most four readings), each one of the blocks below; none at zero.
     // R29: a project the member is invited to is hers to join, as the participants of the project (or `projectlist`, N1118) answer her place.
-    const pv0 = ok(data.projects);
-    const place = view.parts.participation(cs, view, pv0 && Array.isArray(pv0.projects) ? pv0.projects : []);
     // R42: a member who may not start projects and is in none reads the ways into one.
     const inNone = (data.projects && data.projects.state === "empty") || (pv0 && Array.isArray(pv0.projects) && !pv0.projects.some(function (p) { return p && (place[String(p.id)] === "joined" || place[String(p.id)] === "leaving"); }));
-    const invited = !firstVisit && pv0 && Array.isArray(pv0.projects) ? pv0.projects.filter(function (p) { return p && place[String(p.id)] === "invited"; }) : [];
-    const mineCount = forMe.length + invited.length;
+    const invited = !firstVisit ? invitedAll : [];
+    // R17 (B21): a to-do to vouch for the photos she captured is hers, as an item assigned to her is.
+    const vouching = view.parts.todos().vouch(cs, view, "home");
+    // C70: while her captures are being read the count is not whole, so neither the strip nor "Needs you" is drawn from it yet: once, whole.
+    const waiting = view.parts.todos().loading(view);
+    const mineCount = forMe.length + invited.length + vouching.n;
     const readings = [];
     if (!firstVisit && mineCount) readings.push({ n: mineCount, label: "screen.home.strip.you", screen: "queue" });
     if (forGroup.length) readings.push({ n: forGroup.length, label: "screen.home.strip.group", screen: "queue" });
     // R50 (3): a team's own passed dates are a reading of their own, opening the queue.
     const ours = forMe.concat(forGroup).filter(function (it) { return it && it.kind === "action-clock-overdue.ours"; }).length;
     if (!firstVisit && ours) readings.push({ n: "", label: { key: ours === 1 ? "home.strip.ours_passed.one" : "home.strip.ours_passed.other", fills: { n: String(ours) } }, says: "home.strip.ours_passed.opens", screen: "queue" });
-    const strip = readings.length ? cs.strip(readings) : "";
+    const strip = readings.length && !waiting ? cs.strip(readings) : "";
 
     const queueFailed = failed(data.queue) ? cs.sec("screen.home.needsyou", cs.state("queue", null)) : "";
     const joinRows = invited.map(function (p) {
       const id = String(p.id);
       return cs.row(cs.mark("kind", "todo"), cs.ref("project", id, p.name || id, []) + '<span class="meta">'
-        + cs.act("projectjoin", { label: "act.projectjoin.label.home", data: { project: id } }) + "</span>", "", "");
+        + joinOf(cs.act("projectjoin", { label: "act.projectjoin.label.home", data: { project: id } }), String(p.name || id)) + "</span>", "", "");
     }).join("");
-    const needsYou = !firstVisit && mineCount
-      ? cs.sec("screen.home.needsyou", cs.sheet(joinRows + src.fold(forMe).map(function (it) { return itemRow(it, false); }).join(""))) : "";
+    const needsYou = !firstVisit && waiting ? cs.sec("screen.home.needsyou", cs.state({ state: "loading" }, null))
+      : !firstVisit && mineCount
+      ? cs.sec("screen.home.needsyou", cs.sheet(joinRows + vouching.rows + src.fold(forMe).map(function (it) { return itemRow(it, false); }).join(""))) : "";
     const needsGroup = forGroup.length ? block("screen.home.needsgroup", forGroup, true) : "";
 
     // R42: "Getting into a project", for a member who may not start projects and is in none: the projects she was invited to,
@@ -263,7 +295,7 @@ export const home = Object.freeze({
       const invitedRows = (pv0 && Array.isArray(pv0.projects) ? pv0.projects : []).filter(function (p) { return p && place[String(p.id)] === "invited"; }).map(function (p) {
         const id = String(p.id);
         return cs.row(cs.mark("kind", "todo"), cs.w("queue.project-invitation.summary.unnamed", { project: { html: cs.ref("project", id, p.name || id, []) } })
-          + '<span class="meta">' + cs.w("queue.project-invitation.detail") + "</span>" + '<span class="meta">' + cs.act("projectjoin", { label: "act.projectjoin.label.home", data: { project: id } }) + "</span>", "", "");
+          + '<span class="meta">' + cs.w("queue.project-invitation.detail") + "</span>" + '<span class="meta">' + joinOf(cs.act("projectjoin", { label: "act.projectjoin.label.home", data: { project: id } }), String(p.name || id)) + "</span>", "", "");
       });
       const findRows = findable.map(function (p) {
         const id = String(p.id);
@@ -362,7 +394,8 @@ export const home = Object.freeze({
         return cs.row("", cs.ref("project", String(p.id), p.name || String(p.id), []), '<span class="muted">' + cs.w("screen.home.since.changed", { date: cs.date(String(p.lastChange)) }) + "</span>", "");
       }).join(""))) : "";
 
-    return strip + heading + queueFailed + needsYou + needsGroup + joinPart + areas + projects + recent + front;
+    // R65: the doors to Held captures and the Inbox, each only when it holds something.
+    return strip + heading + view.parts.routed().shown(cs, ui) + queueFailed + needsYou + needsGroup + view.parts.doors().draw(cs, view, "home") + joinPart + areas + projects + recent + front;
   },
 
   acts: [
@@ -377,6 +410,30 @@ export const home = Object.freeze({
       } },
     { op: "keepversion", label: "act.keepversion.label.home", rereads: ["queue"],
       send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
+    // R75: the decisions the record routes to a member, and passing a task on; each item leaves with the next read of the queue.
+    { op: "taskforward", label: "act.taskforward.label.home", rereads: ["queue"],
+      send: function (view, el, cs) {
+        const to = String(cs.value(el.dataset.f + "-to") || "").trim().replace(/^@/, "");
+        // C75: never oneself.
+        if (to && view.me && (to === view.me.handle || to === view.me.member)) return { refuse: "refusal.ALREADY_THEIRS" };
+        return to ? { body: { id: el.dataset.item, to: to } } : { refuse: "screen.home.fieldfirst" };
+      } },
+    { op: "adminendorse", label: "act.adminendorse.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.memberId ? { body: { memberId: el.dataset.memberId } } : null; },
+      // R82: the invitation the answer carries is kept and shown once (as Members does).
+      done: function (view, answer, cs) { view.parts.routed().keep(view, answer, cs); } },
+    { op: "projectowneradd", label: "act.projectowneradd.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.projectId && el.dataset.handle ? { query: { projectId: el.dataset.projectId, handle: el.dataset.handle } } : null; } },
+    { op: "expertiseconfirm", label: "act.expertiseconfirm.label.home", rereads: ["queue"],
+      send: function (view, el) { return el.dataset.memberId && el.dataset.label ? { body: { memberId: el.dataset.memberId, label: el.dataset.label } } : null; } },
+    // The authority form: the member's decision with its basis, the basis being the act's reason (`taskdecide` is Reasoned).
+    ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.home", reasonField: "basis", refusals: ROUTED_REFUSALS, rereads: ["queue"],
+      send: function (view, el, cs) { return view.parts.routed().decide(cs, el); } }),
+    // R17 (B21): vouching for the photos she captured (re-reading her captures and the doors), and approving a letter drafted for the group.
+    { op: "release", label: "act.release.label.home", reasonField: "acknowledgment", rereads: ["mine", "held"],
+      send: function (view, el, cs) { return view.parts.todos().release(view, el, cs); } },
+    { op: "filingapprove", label: "act.filingapprove.label.home", rereads: ["queue"],
+      send: function (view, el, cs) { return view.parts.todos().approve(view, el, cs); } },
     // R29: "Join", a project the member is invited to; the projects are read again, her place in it now joined.
     { op: "projectjoin", label: "act.projectjoin.label.home", rereads: ["projects"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
@@ -393,8 +450,9 @@ export const home = Object.freeze({
           return null;
         }
         if (!el.dataset.door) return null;
+        // R81: `startfrom` takes only `message` and `parts`; which door is open is the page's memory, and the press asks the doors again.
         cs.set("door", el.dataset.door);
-        return { query: { door: el.dataset.door } };
+        return { query: {} };
       },
     },
     // R42: ask to join a findable project, and withdraw the request; the ways in are read again.
@@ -414,8 +472,8 @@ export const home = Object.freeze({
       label: "act.promote.label.home",
       rereads: ["projects"],
       send: function (view, el, cs) {
-        const body = view.parts.startProject().body(cs, view, "home", "file.trigger.home");
-        return body ? { body: body } : { refuse: "screen.home.title.needed" };
+        const made = view.parts.startProject().body(cs, view, "home", "file.trigger.home");
+        return made.body ? { body: made.body } : { refuse: made.refuse || "screen.home.title.needed" };
       },
       // R1: opening `project` on success.
       done: function (view, answer, cs) {

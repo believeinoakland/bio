@@ -36,8 +36,30 @@ function reads(view) {
     stake: { op: "projectstake", query: { projectId: id } },
     votes: { op: "projectownervotes", query: { projectId: id } },
     plans: { op: "plans", query: { project: id }, empty: (v) => !v || !(Array.isArray(v.plans) ? v.plans : v.items || []).length },
+    /* R90: the determinations the project holds, which its Matter row opens; none held is a list of none, not an absence */
+    dets: { op: "determinations", query: { project: id, live: "true", limit: "200" }, empty: () => false },
+    /* R107: the project's reruns of imported editions (case-import R31); a project that is no rerun answers none, and no tab is drawn */
+    rerun: { op: "rerunread", query: { project: id }, empty: (v) => !v || !Array.isArray(v.reruns) || !v.reruns.length },
     ...directory,
   };
+}
+
+/** R117: the words of a refusal's findings (`findings[]`: `{check, code?, detail}`), each by the key of its code or check
+ *  (`refusal.<code>`) when the table holds one, else its own detail as the plane states it; "" when it names none, so the
+ *  code's own sentence stands. Self-contained (interface-shell R21 (1)). */
+function findingWords(cs, list) {
+  const out = [];
+  for (const f of Array.isArray(list) ? list.slice(0, 5) : []) {
+    if (!f || typeof f !== "object") continue;
+    let said = "";
+    for (const c of [f.code, f.check]) {
+      const key = typeof c === "string" && c ? "refusal." + c : "";
+      if (key && cs.w(key) !== key) { said = cs.w(key); break; }
+    }
+    if (!said && (f.detail || f.message)) said = cs.esc(String(f.detail || f.message));
+    if (said) out.push(said);
+  }
+  return out.join(" ");
 }
 
 /** The path's project step: the project's title as read (R39: never its id). */
@@ -118,6 +140,13 @@ function render(cs, view) {
   }
   if (doc && doc.objective && doc.objective !== title)
     out.push(`<p class="mk-sub"><span class="mk-small">${W("screen.project.objective")}</span> ${cs.esc(doc.objective)}</p>`);
+  /* R107: a rerun of another team's edition says so, and offers its "Compare with the original" tab (the comparison itself follows the
+     questions); a project that is no rerun draws neither, and a read that failed is drawn failed */
+  const rr = d.rerun;
+  const reruns = rr && rr.state === "ok" && rr.value && Array.isArray(rr.value.reruns) ? rr.value.reruns.filter((r) => r && typeof r === "object") : [];
+  if (rr && rr.state === "failed") out.push(`<div data-rerun="failed">${cs.state(rr, () => "")}</div>`);
+  if (reruns.length) out.push(reruns.map((r) => `<p class="mk-sub" data-rerun="head">${W("screen.project.cmp_head", { title: String(r.case || ""), edition: String(r.edition), team: String(r.group || "") })} ${W("screen.project.cmp_unchanged")}</p>`).join("")
+    + cs.act("rerunread", { tone: "primary" }));
   const people = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
     ? d.participants.value.participants.filter((x) => x && x.state !== "removed") : [];
   const mine = people.find((x) => x.handle && x.handle === me) || null;
@@ -134,7 +163,10 @@ function render(cs, view) {
     const k = ["forming", "investigating", "matured", "closed"].includes(s.stage) ? s.stage : "undetermined";
     const steps = ["forming", "investigating", "matured", "closed"].map((x) =>
       `<span class="${x === k ? "on" : ""}"${x === k ? " aria-current=\"step\"" : ""}>${W("screen.project.stage." + x)}</span>`).join("");
+    /* R109: a project closed by its owner reads closed with the reason she recorded */
+    const why = k === "closed" && ["resolved", "superseded", "abandoned"].includes(s.closed_reason) ? s.closed_reason : "";
     return `<div class="cs-ladder" data-ladder="stage">${steps}</div>`
+      + (why ? `<p class="mk-small"><span data-closed-reason="${why}">${W(why === "superseded" ? "screen.project.closenow.superseded" : "state.item." + why + ".name")}</span></p>` : "")
       + (k === "undetermined" ? cs.mark("gap", "undetermined", { reason: s.detail || "" }) : "") + counts(s.questions || {});
   })));
 
@@ -148,6 +180,43 @@ function render(cs, view) {
       + (!barDeclared ? W("project.bar.none") : c && k ? W("project.bar.both", { source: c, connection: k })
         : c ? W("project.bar.source_only", { source: c }) : W("project.bar.connection_only", { connection: k })) + "</p>";
   }), { help: barDeclared ? "term.bar.project.means" : "term.bar.team.means" }));
+
+  /* R94 (C64; project-stage R4): what each stage needs. An unreached stage draws why it is not reached and what it needs; a reached
+     stage draws neither. Drawn only when the stage read answers its `stages` (R20). */
+  const sr = d.stage && d.stage.state === "ok" && d.stage.value ? d.stage.value : null;
+  const stages = sr && Array.isArray(sr.stages) ? sr.stages : null;
+  if (stages) {
+    const rows = ["forming", "investigating", "matured", "closed"].map((k) => stages.find((x) => x && x.stage === k)).filter(Boolean).map((x) => {
+      const reached = x.reached === true;
+      const conds = !reached && x.needs && Array.isArray(x.needs.any_of) ? x.needs.any_of.map((c) => (c && c.condition ? String(c.condition) : "")).filter(Boolean) : [];
+      const either = conds.includes("concluded_held_question") && conds.includes("ratified_case_edition");
+      const meta = reached ? "" : (x.why ? `<span data-why="1">${cs.esc(String(x.why))}</span>` : "")
+        + (either ? ` <span data-need="1">${W("screen.project.either.one.reaches.it.the.project", { held: String(Number((sr.questions || {}).read) || 0) })}</span>` : "");
+      return `<div data-stage="${cs.esc(x.stage)}" data-reached="${reached ? "yes" : "no"}"${conds.length ? ` data-needs="${cs.esc(conds.join(" "))}"` : ""}>`
+        + cs.row(cs.icon(reached ? "accepted" : "clock"), `<b>${W("screen.project.stage." + x.stage)}</b>`, "", meta) + "</div>";
+    }).join("");
+    out.push(cs.sec("screen.project.what.each.stage.needs", `<p class="mk-small">${W("screen.project.the.record.decides.the.stage.by")} ${W("screen.project.nothing.here.is.a.button.when")}</p>${cs.sheet(rows)}`,
+      { help: ["screen.project.help.for.each.stage.what.it.took", "screen.project.help.counts.come.from.the.record.each"] }));
+  }
+
+  /* R109 (C65; DEC-381): "Close this project now", an owner's, after what each stage needs: what is still open, why she is closing it
+     (none chosen for her), an optional note, and the act, with the sentence that it closes now and keeps what was open beside her
+     reason. A project already closed offers no close. */
+  if (owner && sr && sr.stage !== "closed") {
+    const open = stages ? stages.find((x) => x && x.reached === false && x.stage !== "closed") : null;
+    const q = sr.questions || {};
+    out.push(cs.sec("screen.project.closenow.head",
+      (open && Number.isFinite(Number(q.read)) ? `<div data-closenow="open">${cs.sheet(cs.row(cs.icon("clock"), W("screen.project.closenow.open",
+        { stage: T("screen.project.stage." + open.stage), count: String(Number(q.concluded) || 0), total: String(Number(q.read)) })))}</div>` : "")
+      + cs.checks("project-close-why", "screen.project.closenow.why", [["resolved", "state.item.resolved.name"], ["superseded", "screen.project.closenow.superseded"], ["abandoned", "state.item.abandoned.name"]], { radio: true })
+      + cs.field("project-close-note", "screen.imported.citeimp.note", { area: true, rec: true })
+      + cs.act("projectclose", { tone: "primary" })
+      + `<p class="mk-note">${W("screen.project.closenow.note1")} ${W("screen.project.closenow.note2")}</p>`, { help: "screen.project.closenow.tip" }));
+  }
+
+  /* R106 (the project's half): the objective has its own page, which the project opens with its id */
+  out.push(cs.sec("screen.objective.name", `<p class="mk-small">${W("screen.project.how-far-the-project-has-come-toward-its-objectiv")} `
+    + `<a class="cs-btn" data-tone="quiet" href="/app/objective/${cs.esc(id)}" data-nav data-work="objective">${cs.esc(T("screen.objective.name"))}</a>` + "</p>"));
 
   /* R9: the project's questions, paged to the end; each a reference opening `question`, with its strength */
   const pages = [];
@@ -165,8 +234,10 @@ function render(cs, view) {
   const items = pages.filter((x) => x && x.inquiry);
   const firstQuestion = d.questions && d.questions.state === "ok" && !items.length && !pending && !failed;
   const nd = ui.notDrawn;
-  const said = (ui.promoteRefusal ? `<p class="mk-msg" role="alert" data-refusal="promote">${ui.promoteRefusal.translation
-      ? cs.esc(ui.promoteRefusal.translation) : W("state.failed", { reason: ui.promoteRefusal.code || "" })}</p>` : "")
+  /* R117: a refusal that names its findings draws each finding's words (by the key of its check, else its detail), not only the
+     code's generic sentence */
+  const said = (ui.promoteRefusal ? `<p class="mk-msg" role="alert" data-refusal="promote">${P.findings(cs, ui.promoteRefusal.findings)
+      || (ui.promoteRefusal.translation ? cs.esc(ui.promoteRefusal.translation) : W("state.failed", { reason: ui.promoteRefusal.code || "" }))}</p>` : "")
     + (nd ? `<p class="mk-msg" role="alert" data-refusal="drawquestion">${W("screen.project.questions.notdrawn",
         { reason: nd.translation || nd.code || "" })} ${cs.ref("question", nd.id, nd.title || T("state.undetermined", { reason: "" }), [nd.title || ""])}</p>` : "");
   const adddoc = `<a class="cs-btn" data-tone="quiet" href="/app/capture/address/${cs.esc(id)}" data-nav data-adddoc="project">${W("project.adddoc")}</a>`;
@@ -181,8 +252,16 @@ function render(cs, view) {
       const t = x.title || T("state.undetermined", { reason: "" });
       const st = later("strength:" + q, "inquirystrength", { id: q });
       const grades = cs.state(st, (s) => {
-        const ax = (a) => (s[a] && s[a].state === "graded" ? cs.grade(a, s[a].grade)
-          : cs.mark("gap", s[a] && s[a].state === "undetermined" ? "undetermined" : "unrated", { reason: (s[a] && s[a].detail) || "" }));
+        /* C43 (R39, R116): the card names no record id: an unrated axis is told once, by its mark (the question page's compact form,
+           which draws no reason on the quiet axis), and an undetermined axis's reason has any record id put back into the plain
+           word for a document, as the question page does for a leg with no title */
+        const bare = (text) => String(text || "").replace(/\b(?:INQ|INFO|PROJ|EVT|CALC|STD|DET)-\d{4}-\d{4}[\w-]*/g, () => T("shell.card.document"));
+        const told = new Set();
+        const ax = (a) => {
+          if (s[a] && s[a].state === "graded") return cs.grade(a, s[a].grade);
+          if (s[a] && s[a].state === "undetermined") { const why = bare(s[a].detail); const first = !told.has(why); told.add(why); return cs.mark("gap", "undetermined", { reason: first ? why : "" }); }
+          return cs.mark("gap", "unrated", { reason: "" });
+        };
         return `<span class="cs-strength">${ax("capture")}${ax("connection")}</span>`;
       });
       return cs.row("", cs.ref("question", q, t, [t]), grades);
@@ -226,8 +305,13 @@ function render(cs, view) {
     if (/^CALC-/.test(t)) own.calculation.push([t, String(r.title || kindName("calculation"))]);
     else if (/^STD-/.test(t)) own.standard.push([t, String(r.title || kindName("standard"))]);
   }
+  /* R90, R115 (K4170, K4259): a Matter row opens the determination the project holds, a Calculation row the calculation it holds. With no
+     determination held the Matter row opens `/app/matter/<project>` (the project needs a door to its first determination); with no
+     calculation held the kind is listed and opens nothing. The Action row opens the actions dashboard. */
+  const dl = d.dets && d.dets.state === "ok" && d.dets.value && Array.isArray(d.dets.value.items) ? d.dets.value.items : [];
+  for (const x of dl) if (x && x.id) own.matter.push([String(x.id), String((x.act && (x.act.event || x.act.id)) || kindName("matter"))]);
   for (const kind of Object.keys(own)) {
-    if (!own[kind].length) own[kind].push([id, kindName(kind)]);
+    if (!own[kind].length) own[kind].push([kind === "action" ? "@dash-action" : kind === "calculation" ? null : id, kindName(kind)]);
     for (const [sid, label] of own[kind]) work.push([kind, sid, label]);
   }
   /* R63: the published cases this project is the publisher of, read from the published editions (a case once however many
@@ -245,7 +329,11 @@ function render(cs, view) {
   }
   for (const cid of ours) { work.push(["published", cid, kindName("published")]); work.push(["docket", cid, kindName("docket")]); }
   const workRows = work.map(([kind, sid, label]) =>
-    cs.row("", (() => { const h = String(cs.ref(kind, sid, label, [T("shell.card." + kind)])); return /^<a /.test(h) ? h : `<span class="rec">${cs.esc(label)}</span>`; })(), ""));
+    cs.row("", (() => {
+      if (sid === "@dash-action") return `<a class="cs-btn" data-tone="quiet" href="/app/dash-action" data-nav data-work="dash-action">${cs.esc(label)}</a>`;
+      const h = String(cs.ref(kind, sid, label, [T("shell.card." + kind)]));
+      return /^<a /.test(h) ? h : `<span class="rec">${cs.esc(label)}</span>`;
+    })(), ""));
   out.push(cs.sec("project.work.title", cs.sheet(workRows.join(""))
     + (pub.state === "failed" ? cs.state(pub, () => "") : pubPending ? cs.state({ state: "loading" }, () => "") : ""), { help: "project.work.help" }));
   /* the act that opens a plan, for one of the project's questions */
@@ -253,6 +341,39 @@ function render(cs, view) {
   if (choices.length) out.push(cs.sec("screen.project.plan.head", cs.field("project-plan", "screen.project.plan.label", {})
     + cs.choice("project-plan-about", "screen.project.plan.about", choices, {})
     + cs.act("planopen", { label: "act.planopen.label.project", data: { project: id } })));
+
+  /* R107: "Compare with the original", opened by its tab: the lens difference as two lists above the source's findings, each beside the
+     project's paired finding and the two grades; pairing is her statement (rerunpair), withdrawn by the same act */
+  if (reruns.length && ui.compare === true) {
+    let n = 0;
+    const title = (qid) => { const it = items.find((x) => String(x.inquiry) === String(qid)); return it && it.title ? String(it.title) : T("state.undetermined", { reason: "" }); };
+    const grade = (pair, a) => { const g = pair && pair[a]; return g && g.state === "graded" && g.grade ? cs.grade(a, g.grade) : cs.mark("gap", g && g.state === "undetermined" ? "undetermined" : "unrated", { reason: (g && g.detail) || "" }); };
+    const pairOf = (pair) => `<span class="cs-strength">${grade(pair, "capture")}${grade(pair, "connection")}</span>`;
+    const list = (name, head, rows) => `<div data-lens="${name}"><b>${head}</b>${cs.sheet(rows.map((r) => cs.row(cs.icon("flagged"),
+      `<span class="mk-data">${cs.esc([r.kind, r.subject].filter(Boolean).join(" \u00b7 "))}</span> <span class="rec">\u201c${cs.esc(r.text || "")}\u201d</span>`)).join(""))}</div>`;
+    const pick = [{ value: "", key: "screen.project.cmp_pair_none" }].map((o) => [o.value, o.key]);
+    const body = reruns.map((r) => {
+      const diff = r.lens_difference && typeof r.lens_difference === "object" ? r.lens_difference : null;
+      const lenses = diff ? cs.sec("screen.project.cmp_lens_diff", `<div class="mk-grid2">${list("only_source", W("screen.project.cmp_only_theirs"), Array.isArray(diff.only_source) ? diff.only_source : [])}${list("only_own", W("screen.project.cmp_only_ours"), Array.isArray(diff.only_own) ? diff.only_own : [])}</div>`
+          + `<p class="mk-small">${W("screen.project.cmp_both", { count: String(Number(diff.shared) || 0) })}</p>`)
+        : `<p class="mk-small" data-lens-note="1">${cs.esc(String(r.lens_difference_stated || ""))}</p>`;
+      const rows = (Array.isArray(r.findings) ? r.findings : []).map((f) => {
+        const k = n++;
+        const pairs = Array.isArray(f.pairings) ? f.pairings : [];
+        const agree = !pairs.length ? "" : pairs.some((x) => x.agree === false) ? "false" : pairs.every((x) => x.agree === true) ? "true" : "undetermined";
+        const lines = pairs.map((x) => `<span class="meta" data-side="ours">${W("screen.project.cmp_paired", { finding: title(x.own_finding) })} ${pairOf(x.pair)}${x.agree === false ? " " + W("screen.project.cmp_differ") : ""}</span>`).join("");
+        const control = pairs.length
+          ? pairs.map((x) => cs.act("rerunpair", { label: "screen.project.cmp_withdraw_do", tone: "quiet", data: { source: String(f.ref || ""), own: String(x.own_finding), edition: String(r.edition), withdraw: "yes" } })).join("")
+          : cs.choice("project-pair-own-" + k, "screen.project.cmp_pair_label", pick.concat(items.map((x) => ({ value: String(x.inquiry), text: String(x.title || "") }))), {})
+            + cs.act("rerunpair", { data: { source: String(f.ref || ""), edition: String(r.edition), n: String(k) } });
+        return `<div data-source-finding="${cs.esc(f.finding)}"${agree ? ` data-agree="${agree}"` : ""}>`
+          + cs.row(cs.icon("finding"), `<span class="rec">${cs.esc(f.finding)}</span><span class="meta" data-side="theirs">${pairOf(f.source && f.source.pair)}</span>${lines}`
+            + (pairs.length ? "" : `<span class="meta">${W("screen.project.cmp_unpaired")}</span>`), "") + `<div class="mk-acts">${control}</div></div>`;
+      }).join("");
+      return lenses + cs.sec("screen.project.cmp_findings", rows + (rows ? `<p class="mk-small">${W("screen.project.cmp_pair_is")} ${W("screen.project.cmp_pair_strength")} ${W("screen.project.cmp_pair_withdraw")}</p>` : ""));
+    }).join("");
+    out.push(cs.sec("act.owed_rerunread.label.project", `<div data-rerun="compare"><p class="mk-small">${W("screen.project.cmp_names")} ${W("screen.project.cmp_not_cause")}</p>${body}</div>`));
+  }
 
   /* R28: who can find it, its history newest first, and an owner's act (drawn in the foot's fold, R52 (2)) */
   const visibilitySec = cs.sec("project.visibility.title", cs.state("visibility", view, (v) => {
@@ -294,15 +415,29 @@ function render(cs, view) {
         + (v.stake ? `<p><b>${W("stake.project.label")}</b></p><p class="rec" data-stake="project">${cs.esc(v.stake)}</p>`
           + `<p class="mk-small">${W("stake.set", { who: P.who(cs, v.set_by || ""), date: { html: v.set_at ? cs.date(String(v.set_at), { year: true }) : "" } })}${earlier ? " · " + W("stake.history", { n: String(earlier) }) : ""}</p>`
           : `<p class="mk-small" data-stake="none">${W("stake.none")}</p>`)
-        + (canSet ? cs.field("project-stake", "stake.project.label", { area: true, rec: true, help: "stake.project.help", value: v.stake || "" })
-          + cs.act("projectstakeset", { label: "stake.project.save", data: { project: id } }) : "");
+        + (canSet ? (() => {
+          /* entry 25: the assistant's help in her own words, kept only by her own save */
+          const dr = ui.draft && ui.draft.field === "stake" ? ui.draft : null;
+          return cs.field("project-stake", "stake.project.label", { area: true, rec: true, help: "stake.project.help", value: dr ? dr.text : v.stake || "",
+              ...(dr ? { draft: "screen.group-identity.draft.label", draftFills: { handle: dr.askedBy } } : {}) })
+            + (dr && dr.untested ? ` <span class="mk-tag">${W("ai.label.untested")}</span>` : "")
+            + (view.reachable ? cs.act("writinghelp", { data: { field: "stake", id: "project-stake" } }) : "")
+            + cs.act("projectstakeset", { label: "stake.project.save", data: { project: id } });
+        })() : "");
     });
     if (!(st && st.state === "empty")) out.push(cs.sec("stake.project.title", stakeInner, { id: "stake" }));
   }
 
   /* R29: members, one row each with role and date (the founder unnamed by key, R40); owners' acts; changes waiting */
   out.push(cs.sec("screen.project.members.head", cs.state("participants", view, () => {
+    /* changes waiting on owners (project-roster R30), and an owner who has not agreed agrees by the same act */
+    const votes = d.votes && d.votes.state === "ok" && Array.isArray(d.votes.value.changes) ? d.votes.value.changes : [];
+    const pend = ui.consensus ? votes.concat([ui.consensus]) : votes;
+    const seatedOwners = people.filter((x) => Number(x.owner) && x.state === "joined");
+    const agreedOf = (c) => (Array.isArray(c.agreed) ? c.agreed : []).map((a) => String(a && typeof a === "object" ? a.handle || "" : a));
     const rows = people.map((x) => {
+      /* R122 (DEC-384 T-06): a removal waiting on this owner */
+      const rm = x.handle && Number(x.owner) ? pend.filter((c) => c && c.change === "remove" && String(c.target) === String(x.handle)).pop() || null : null;
       const name = P.who(cs, x);
       const role = W(Number(x.owner) ? "project.member.owner" : "project.member.member");
       /* R54: an owner's date is `owner_since`, a member's `joined_at`; a null date draws none, never "since null" */
@@ -310,19 +445,22 @@ function render(cs, view) {
       const date = since ? W(Number(x.owner) ? "project.member.since" : "project.member.joined", { date: { html: cs.date(String(since), { year: true }) } }) : "";
       const self = x.handle && x.handle === me;
       /* R75: "Stand down as owner…" opens the vote in place (state e) and sends nothing */
-      const acts = self && Number(x.owner) ? cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle), mode: "open" } })
-        : owner && !self && x.handle && x.state === "joined" ? (Number(x.owner) ? "" : cs.act("projectowneradd", { label: "act.projectowneradd.label.project", data: { handle: String(x.handle) } }))
+      const awaitingNames = rm ? (Array.isArray(rm.awaiting) && rm.awaiting.length ? rm.awaiting : seatedOwners.map((o) => o.handle).filter((h) => h !== x.handle && !agreedOf(rm).includes(String(h)))).map((h) => P.who(cs, h)).join(", ") : "";
+      const acts = self && Number(x.owner)
+        ? (rm ? `<span class="mk-small" data-standdown="opened">${W("project.owners.standdown.opened", { awaiting: awaitingNames })}</span>`
+          /* C90 (R75, R29): the only owner has no vote that could carry: the act is not drawn, and the row says to add another owner first */
+          : seatedOwners.length < 2 ? `<span class="mk-small" data-standdown="sole">${W("refusal.LAST_OWNER")}</span>`
+          : cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle), mode: "open" } }))
+        : owner && !self && x.handle && x.state === "joined" ? (Number(x.owner) ? (rm && !agreedOf(rm).includes(String(me))
+          ? cs.act("projectownerremove", { label: "project.owners.agree.remove", fills: { who: name }, data: { handle: String(x.handle), mode: "open" } }) : "") : cs.act("projectowneradd", { label: "act.projectowneradd.label.project", data: { handle: String(x.handle) } }))
           + cs.field("project-remove-why-" + x.handle, "shell.reason", { help: "shell.reason.help" })
           + cs.act("projectremove", { label: "act.projectremove.label.project", data: { handle: String(x.handle) } }) : "";
       return cs.row("", `<span class="rec">${cs.esc(name)}</span> · ${role}` + (x.state === "invited" ? " · " + W("screen.project.members.invited", { handle: "" }) : ""), acts, date);
     }).join("");
-    /* changes waiting on owners (project-roster R30), and an owner who has not agreed agrees by the same act */
-    const votes = d.votes && d.votes.state === "ok" && Array.isArray(d.votes.value.changes) ? d.votes.value.changes : [];
-    const pend = ui.consensus ? votes.concat([ui.consensus]) : votes;
     const waiting = pend.map((c) => {
       const fills = { who: P.who(cs, c.target), by: P.who(cs, c.proposed_by), date: { html: c.proposed_at ? cs.date(String(c.proposed_at), { year: true }) : "" },
         agreed: (c.agreed || []).map((h) => P.who(cs, h)).join(", "), awaiting: (c.awaiting || []).map((h) => P.who(cs, h)).join(", ") };
-      const mineToAgree = owner && (c.awaiting || []).includes(me);
+      const mineToAgree = owner && c.change !== "remove" && (c.awaiting || []).includes(me);
       return `<p class="mk-small" data-pending="${c.change === "remove" ? "remove" : "add"}">${W(c.change === "remove" ? "project.owners.pending.remove" : "project.owners.pending", fills)}</p>`
         + (mineToAgree ? cs.act(c.change === "remove" ? "projectownerremove" : "projectowneradd", { label: c.change === "remove" ? "screen.project.agree.dev.stands.down.as" : "project.owners.agree",
             fills: c.change === "remove" ? { member: fills.who } : { who: fills.who }, data: c.change === "remove" ? { handle: String(c.target || ""), mode: "open" } : { handle: String(c.target || "") } }) : "");
@@ -541,7 +679,8 @@ const acts = [
       const res = (a) => (a && a.result !== undefined ? a.result : a);
       const fail = (a) => {
         const r = res(a);
-        cs.set("promoteRefusal", { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "", translation: r && r.translation });
+        cs.set("promoteRefusal", { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "", translation: r && r.translation,
+          findings: r && Array.isArray(r.findings) ? r.findings : a && Array.isArray(a.findings) ? a.findings : [] });
       };
       cs.set("promoteRefusal", null);
       cs.set("notDrawn", null);
@@ -550,7 +689,9 @@ const acts = [
       cs.call("allocid", { query: { prefix: "INQ", year } }).then((a) => {
         const r = res(a);
         if (!r || !r.id) return fail(a);
-        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+        /* L20: the slug is cut at 40 and then trimmed again, so a cut that falls on a hyphen leaves no trailing one (record-grammar's
+           BUNDLE_ID_RE refuses it, and every act resting on the question with it) */
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-+$/, "");
         const id = r.id + (slug ? "-" + slug : "");
         const now = clock.toISOString().split(".")[0] + "Z";
         /* an inquiry document as record-grammar's inquiry grammar asks (HEADINGS.inquiry; first legal state `open`),
@@ -599,7 +740,19 @@ const acts = [
       const already = !!(r && Array.isArray(r.alreadyCited) && r.alreadyCited.length && !(Array.isArray(r.cited) && r.cited.length));
       cs.set("qgen", (view.ui.qgen || 0) + 1);
       cs.set("drawSaid", already ? "screen.project.draw.already" : "screen.project.draw.done");
-    } },
+    },
+    /* R117: a BASIS_REFUSED that names its findings draws their words, not the generic sentence */
+    refusals: { BASIS_REFUSED: (r, cs) => {
+      const out = [];
+      for (const f of Array.isArray(r.findings) ? r.findings.slice(0, 5) : []) {
+        if (!f || typeof f !== "object") continue;
+        let said = "";
+        for (const c of [f.code, f.check]) { const key = typeof c === "string" && c ? "refusal." + c : ""; if (key && cs.w(key) !== key) { said = cs.w(key); break; } }
+        if (!said && (f.detail || f.message)) said = cs.esc(String(f.detail || f.message));
+        if (said) out.push(said);
+      }
+      return out.length ? out.join(" ") : cs.w("refusal.BASIS_REFUSED");
+    } } },
   { op: "findin", label: "act.findin.label.project",
     send(view, el, cs) { cs.go("find-in", String(view.subject || "")); return null; } },
   { op: "projectbarset", label: "act.projectbarset.label.project", rereads: ["bar"],
@@ -631,7 +784,21 @@ const acts = [
       const r = answer && answer.result !== undefined ? answer.result : answer;
       if (!r || !r.id) return;
       cs.set("plans", (Array.isArray(view.ui.plans) ? view.ui.plans : []).concat([{ id: String(r.id), title: String(r.title || "") }]));
-    } },
+      /* C63 (R1, R36): the plan opened is its own page, where the receipt is: the press opens it with the plan as subject */
+      cs.go("plan", String(r.id));
+    },
+    /* R117: the same for an action's basis refused with its findings */
+    refusals: { ACTION_BASIS_REFUSED: (r, cs) => {
+      const out = [];
+      for (const f of Array.isArray(r.findings) ? r.findings.slice(0, 5) : []) {
+        if (!f || typeof f !== "object") continue;
+        let said = "";
+        for (const c of [f.code, f.check]) { const key = typeof c === "string" && c ? "refusal." + c : ""; if (key && cs.w(key) !== key) { said = cs.w(key); break; } }
+        if (!said && (f.detail || f.message)) said = cs.esc(String(f.detail || f.message));
+        if (said) out.push(said);
+      }
+      return out.length ? out.join(" ") : cs.w("refusal.ACTION_BASIS_REFUSED");
+    } } },
   /* R28: an owner's change of who can find it, with her reason (in the query, where project-roster reads it) */
   { op: "projectvisibilityset", label: "act.projectvisibilityset.label.project", rereads: ["visibility"],
     send(view, el, cs) {
@@ -710,6 +877,48 @@ const acts = [
     send(view, el, cs) {
       const reason = String(cs.value("project-rescue-why") || "").trim();
       return { query: { projectId: String(view.subject || ""), handle: String((view.me && view.me.handle) || ""), reason }, raw: "" };
+    } },
+  /* R109: an owner closes the project now, with one of three reasons (the act's own `reason`, so the shell asks no second one) and
+     an optional note */
+  { op: "projectclose", label: "screen.project.closenow.do", reasonField: "reason", rereads: ["stage"],
+    send(view, el, cs) {
+      const pick = cs.value("project-close-why");
+      const reason = Array.isArray(pick) ? String(pick[0] || "") : "";
+      if (!["resolved", "superseded", "abandoned"].includes(reason)) return { refuse: "screen.project.closenow.ref.reason" };
+      const note = String(cs.value("project-close-note") || "").trim();
+      return { body: { project: String(view.subject || ""), reason, ...(note ? { note } : {}) } };
+    },
+    refusals: { PROJECT_ACT_NOT_THE_OWNER: "screen.project.closenow.ref.owner", CLOSE_BAD_REASON: "screen.project.closenow.ref.reason" } },
+  /* R107: the tab opens and closes the comparison, which the page's read of `rerunread` already holds: nothing is sent */
+  { op: "rerunread", label: "act.owed_rerunread.label.project", rereads: [],
+    send(view, el, cs) { cs.set("compare", view.ui.compare !== true); return null; } },
+  /* R107: pairing one of the project's findings with the source's, or withdrawing the pairing; her statement, never a check */
+  { op: "rerunpair", label: "act.owed_rerunpair.label.project", rereads: ["rerun"],
+    send(view, el, cs) {
+      const project = String(view.subject || "");
+      const edition = Number(el.dataset.edition);
+      const base = { project, source_finding: String(el.dataset.source || ""), ...(Number.isFinite(edition) && el.dataset.edition ? { edition } : {}) };
+      if (el.dataset.withdraw === "yes") return { body: { ...base, own_finding: String(el.dataset.own || ""), withdraw: true } };
+      const own = String(cs.value("project-pair-own-" + el.dataset.n) || "");
+      if (!own) return { refuse: "screen.project.cmp_pair_none" };
+      return { body: { ...base, own_finding: own } };
+    },
+    refusals: {
+      PROJECT_ACT_NOT_A_PARTICIPANT: (r, cs) => cs.w("screen.project.cmp_refused_member") + " " + cs.w("screen.project.cmp_refused_member_next"),
+      NO_SUCH_OWN_FINDING: (r, cs) => cs.w("screen.project.cmp_refused_own") + " " + cs.w("screen.project.cmp_refused_own_next"),
+    } },
+  /* entry 25: the assistant's help with the project's stake, in her own words; nothing is kept until she saves it */
+  { op: "writinghelp", label: "act.writinghelp.label.project", rereads: [], reasonField: "told",
+    send(view, el, cs) {
+      const told = String(cs.value(el.dataset.id) || "").trim();
+      return { body: { op: "projectstakeset", field: "stake", told } };
+    },
+    done(view, answer, cs) {
+      const a = answer && answer.result !== undefined ? answer.result : answer;
+      const me = view.me || {};
+      const by = a && a.label && a.label.asked_by ? String(a.label.asked_by).replace(/^member:/, "") : me.member;
+      if (a && typeof a.text === "string") cs.fill("project-stake", a.text);
+      cs.set("draft", { field: "stake", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : by, untested: !!(a && (a.untested || (a.label && a.label.untested))) });
     } },
   /* R76, R77: "Telling the network". `noticeprepare` composes the next revision and writes nothing; pressed in its `open`,
      `change` and `close` modes it only opens or closes the form (nothing is sent). A new notice, a change (`notice` named) and a
@@ -850,6 +1059,16 @@ const words = Object.freeze([
   ...["heading", "beforevote", "takes", "agreed", "notyet"].map((k) => "screen.project.standdown." + k),
   ...["owners", "takes", "why"].map((k) => "screen.project.scale.head." + k), "screen.project.scale.now", "screen.project.scale.takes", "screen.project.scale.who",
   "screen.project.dev.is.standing.down.as", "screen.project.ownerstand.required",
+  /* FR-28: stage needs (R94), the close (R109), the rerun comparison (R107), the stand-down notice (R122), the objective's link (R106), writing help */
+  ...["what.each.stage.needs", "the.record.decides.the.stage.by", "nothing.here.is.a.button.when", "either.one.reaches.it.the.project",
+    "help.for.each.stage.what.it.took", "help.counts.come.from.the.record.each", "how-far-the-project-has-come-toward-its-objectiv"].map((k) => "screen.project." + k),
+  ...["head", "open", "why", "superseded", "do", "note1", "note2", "ref.owner", "ref.reason", "tip"].map((k) => "screen.project.closenow." + k),
+  "state.item.resolved.name", "state.item.abandoned.name", "screen.objective.name", "screen.imported.citeimp.note",
+  ...["head", "unchanged", "names", "not_cause", "lens_diff", "only_theirs", "both", "findings", "paired", "differ", "unpaired", "pair_label", "pair_none",
+    "pair_is", "pair_strength", "pair_withdraw", "refused_member", "refused_member_next", "refused_own", "refused_own_next"].map((k) => "screen.project.cmp_" + k),
+  "act.owed_rerunread.label.project", "act.owed_rerunpair.label.project", "act.writinghelp.label.project", "act.writinghelp.does",
+  "project.owners.standdown.opened", "project.owners.agree.remove", "screen.group-identity.draft.label", "ai.label.untested",
+  "refusal.BASIS_REFUSED", "refusal.ACTION_BASIS_REFUSED", "refusal.PROJECT_ACT_NOT_THE_OWNER", "refusal.CLOSE_BAD_REASON",
   ...["heading", "legend.welcome", "legend.sign", "thenotice", "change", "stop", "lapsed.on", "missed", "your.team.has.two.other", "tell.the.network.we.are", "an.owner.can.publish.a", "it.is.public.and.it", "only.an.owner.can.do",
     "you.sign.it.in.your", "it.names.no.member.only", "what.the.notice.says", "what.the.team.is.working", "one.line.up.to.280",
     "nothing.is.filled.in.from", "a.few.words.more.optional", "one.line.up.to.120", "the.matter.it.belongs.to", "one.line.up.to.120.2",
@@ -875,5 +1094,5 @@ const words = Object.freeze([
 
 /** The project screen (interface-shell R21), with the module's shared readers as its parts. */
 export function projectScreen(parts) {
-  return Object.freeze({ id: "project", reads, place, render, acts, words, parts });
+  return Object.freeze({ id: "project", reads, place, render, acts, words, parts: Object.freeze({ ...parts, findings: findingWords }) });
 }

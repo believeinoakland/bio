@@ -7,9 +7,11 @@ export const env = (result) => ({ ok: true, result, store: "bio", tokenClass: "m
 export const refuse = (code, extra = {}) => env({ ok: false, reason: code, code, translation: `translated ${code}`, ...extra });
 
 export const VOCAB = ["contribute", "publish", "create_projects"];
-export const ADMIN = Object.freeze({ member: "rosa", handle: "rosa", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "session" });
-export const MEMBER = Object.freeze({ member: "dev", handle: "dev", administer: false, capabilities: ["contribute"], vocabulary: VOCAB, tokenClass: "session" });
-export const READER = Object.freeze({ member: "teo", handle: "teo", administer: false, capabilities: [], vocabulary: VOCAB, tokenClass: "session" });
+export const ADMIN = Object.freeze({ member: "rosa", handle: "rosa", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "member" });
+export const MEMBER = Object.freeze({ member: "dev", handle: "dev", administer: false, capabilities: ["contribute"], vocabulary: VOCAB, tokenClass: "member" });
+/** The founder's session (the shell's `tokenClass: "admin"`, interface-shell R12): hers alone reaches `export` (corpus-export). */
+export const FOUNDER = Object.freeze({ member: "admin", handle: "sparky", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "admin" });
+export const READER = Object.freeze({ member: "teo", handle: "teo", administer: false, capabilities: [], vocabulary: VOCAB, tokenClass: "member" });
 
 const exp = (label, confirmed) => ({ label, state: confirmed ? "confirmed" : "declared", confirmed, by: confirmed ? "rosa" : null, at: "2026-10-05T10:00:00Z", history: [] });
 
@@ -150,6 +152,9 @@ export function accountTable(me, over = {}) {
     // who registered a key for the member, by handle (R57)
     memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     infolevel: env({ ok: true, level: "pause", set_at: "2026-10-05T00:00:00Z", asked_at: null }),
+    // member-roster R19: what the viewer may see of the pairings (her own, and the published); the stored choice is hers
+    memberpairings: env({ ok: true, pairings: [{ handle: "ana", cover: "Ana the CPA", published: true }, { handle: me.handle, cover: "Mai K.", published: false }], limit: 200, truncated: false }),
+    memberpairingset: (q, b) => env({ ok: true, memberId: b.memberId, published: b.published === true, by: me.member }),
     memberlanguageset: (q, b) => env({ ok: true, member: me.member, language: b.language, set_at: "2026-10-12T00:00:00Z" }),
     infolevelset: (q, b) => env({ ok: true, level: b.level }),
     expertisedeclare: (q, b) => env({ ok: true, memberId: me.member, label: b.label, state: "declared", confirmed: false }),
@@ -221,6 +226,11 @@ export function notesTable(me, over = {}) {
 /** One `time_zone` fact as `factstatus` lists it (local-facts R2): the path is the fact's own, `governs` the value in force. */
 export const tzFact = (profile, zone, origin = "profile") => ({ path: `${profile}/time_zone`, fact: { fact: "time_zone", profile }, status: origin === "corrected" ? "corrected" : "unconfirmed",
   profile: { value: zone, status: "verified", basis: "x" }, governs: origin === "corrected" ? { value: zone, origin, source: "the county site", says: "corrected locally by rosa, 2026-10-10" } : { value: zone, origin } });
+/** corpus-export R2: the copies taken, newest first. */
+export const EXPORTS = [
+  { seq: 2, at: "2026-10-18T14:05:00Z", scope: "working-corpus", bundles: 38, files: 112, note: "Before the Coliseum lease hearing", tables: 14, rows: 800, format: "json" },
+  { seq: 1, at: "2026-09-02T09:40:00Z", scope: "working-corpus", bundles: 31, files: 87, note: null, tables: 14, rows: 700, format: "json" },
+];
 /** group, read by `me` (instance-setup R10, R11, R84, R85; membership R107; strength's bar). */
 export function groupTable(over = {}) {
   return {
@@ -244,6 +254,9 @@ export function groupTable(over = {}) {
     courtnoticeset: (q, b) => env({ ok: true, choice: b.choice, by: "rosa", at: "2026-10-12T00:00:00Z" }),
     hostingaccessset: (q, b) => env({ ok: true, holders: b.holders, note: b.note || null, recorded_by: "rosa", at: "2026-10-12T00:00:00Z" }),
     strengthbarset: (q, b) => env({ ok: true, group: "eastoak", capture: b.capture, connection: b.connection, author: "rosa", at: "2026-10-12T00:00:00Z", reason: b.reason }),
+    // corpus-export R1, R2: the copy is the answer itself (a manifest); the list is the copies taken, newest first
+    export: (q, b) => env({ ok: true, at: "2026-10-20T10:00:00Z", scope: "working-corpus", counts: { bundles: 40, files: 120, tables: 15, rows: 900 }, logged: true, verify: "v" }),
+    exportlog: env({ ok: true, exports: EXPORTS, limit: 200, truncated: false }),
     ...over,
   };
 }
@@ -363,9 +376,27 @@ export function updatesTable(notice = {}, over = {}) {
     updatestart: (q, b) => env({ ok: true, version: b.version, address: "https://civicsmith.org/update?release=" + b.version }),
     updatelater: (q, b) => env({ ok: true, version: b.version, kind: "later" }),
     updateskip: (q, b) => env({ ok: true, version: b.version, kind: "skip" }),
+    // an administrator's bootstrap carries the copy's facts (instance-setup R95: `installed_at` is when it was set up); with `members=1` each part's own build (R17)
+    bootstrap: (q) => ({ ok: true, service: "bio-plane", version: "0.83.0", part_signin: true, part_scanner: false, part_safe_view: false, installed_at: "2026-09-02T10:00:00Z",
+      ...(q.members === "1" ? { memberVersions: MEMBER_VERSIONS } : {}) }),
+    // instance-setup R18: the deployment's own check
+    selftest: { ok: true, service: "bio-plane", version: "0.83.0", time: "2026-10-14T06:10:00Z", tokenClass: "admin", bindings: { STORE: true, CAPTURES: "not configured", PUBLISHED: "not configured", ADMIN_TOKEN: true, PROBE_TOKEN: true, DAEMON_TOKEN: "not configured" }, r2Configured: false, store: { bundles: 4 }, captures: "not configured", bindingsAllPresent: true },
+    // instance-setup R37: what the instance was measured to cost
+    runtime: env({ ok: true, measured: { metrics: [{ metric: "capture_work_bytes", unit: "bytes", peak: 800000, peak_at: "2026-10-12T00:00:00Z", peak_detail: null, last: 1200, last_at: "2026-10-13T00:00:00Z", samples: 40, total: 2000000, mean: 50000 },
+      { metric: "request_work", unit: "ms", peak: 1840, peak_at: "2026-10-12T00:00:00Z", peak_detail: null, last: 90, last_at: "2026-10-13T00:00:00Z", samples: 5200, total: 1612000, mean: 310, peak_ms: 1840, last_ms: 90, total_ms: 1612000, mean_ms: 310 }], note: "units" },
+      cpu_probe: { steps: 0, highest_completed: 0, elapsed_at_highest_ms: 0, rows: [], note: "nothing is known about the ceiling by measurement" }, subrequests: { runtime: "subrequests", observed: 50, probeDue: false, probeEvery: 20 }, asymmetry: "the subrequest ceiling is known by having been refused" }),
     ...over,
   };
 }
+/** `bootstrap`'s `memberVersions` (instance-setup R17): each part's own build, as it answered. */
+export const MEMBER_VERSIONS = Object.freeze({
+  "agent-worker": { binding: "AGENT_WORKER", state: "SERVING", version: "0.83.0" },
+  "pdf-worker": { binding: "PDF_WORKER", state: "SERVING", version: "0.83.0" },
+  "ocr-worker": { binding: "OCR_WORKER", state: "SILENT", why: "timed out" },
+  "sheet-worker": { binding: "SHEET_WORKER", state: "MISNAMED", name: "other-worker", version: "0.83.0" },
+  "agent-runner": { binding: "AGENT_WORKER", via: "agent-worker", state: "UNBOUND" },
+  "file-scanner": { binding: "FILE_SCANNER", state: "SERVING", version: "0.82.0" },
+});
 
 /** grouprules, read by a member (local-facts R12, R19): rules drafted and waiting (tiers 1, 2 and none; one the viewer drafted), one in force, one withdrawn. */
 const SHA = (c) => c.repeat(64);
@@ -382,17 +413,66 @@ export const GROUP_RULES = [
 /** `rulefields` (local-facts R18) for deadlines: the kinds of action, claim first; `heldcaptures` rows and a `reading`'s text units for the draft form (DEC-357). */
 export const RULE_KINDS = ["claim", "request_for_comment", "public_comment", "party_participation"];
 export const DOC_SHA = "d".repeat(64);
+/** A document a member has vouched for (capture R88): listed only when `heldcaptures` is asked `state: "held_and_vouched"`. */
+export const VOUCHED_DOC = { title: "Planning Commission bylaws (vouched)", capture: { sha256: "f".repeat(64) } };
 export const UNITS_OF_DOC = [{ seq: 1, text: "Comments close five days\nbefore the meeting.", extent: { kind: "pdf-page", page: 2 } }, { seq: 2, text: "Speakers register by noon.", extent: { kind: "pdf-page", page: 3 } }];
 export function grouprulesTable(over = {}) {
   return {
     rulefields: env({ ok: true, section: "deadlines", count: 2, fields: [{ field: "rule", required: true, kind: "text" }, { field: "applies_to", required: true, kind: "choice", choices: RULE_KINDS }] }),
-    heldcaptures: env({ ok: true, held: [{ title: "Parks Commission rules of procedure", capture: { sha256: DOC_SHA } }, { title: "Untitled", capture: { sha256: "e".repeat(64) } }] }),
+    // capture R77, R88: the documents at `collected` by default; `state: "held_and_vouched"` adds those a member has vouched for
+    heldcaptures: (q) => env({ ok: true, held: [{ title: "Parks Commission rules of procedure", capture: { sha256: DOC_SHA } }, { title: "Untitled", capture: { sha256: "e".repeat(64) } }, ...(q.state === "held_and_vouched" ? [VOUCHED_DOC] : [])] }),
     reading: env({ ok: true, text_units: UNITS_OF_DOC }),
     ruledraft: (q, b) => env({ ok: true, rule: "GR-0009", state: "drafted" }),
     grouprules: env({ ok: true, rules: GROUP_RULES, count: GROUP_RULES.length }),
     memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     ruleconfirm: (q, b) => env({ ok: true, rule: b.rule, state: "confirmed", at: "2026-10-12T00:00:00Z", tier: 1, with_statement: !!b.statement }),
     rulewithdraw: (q, b) => env({ ok: true, rule: b.rule, state: "withdrawn", already: false, at: "2026-10-12T00:00:00Z" }),
+    ...over,
+  };
+}
+
+/** bias (bias R11–R21, R35, R36; the owner's shapes): the lens in force for the team and for a project, a set offered and adopted, an outside
+ *  policy read into proposals, and a work product under an earlier lens. */
+export const PROJ_BIAS = { id: "PROJ-2026-0001-coliseum", title: "The Coliseum lease" };
+const ST = (id, over) => ({ statement_id: id, bundle_id: "BIAS-2026-0001-team", scope: "instance", kind: "scrutiny", subject: "ENT-2026-0007", text: "We read the Department's own reports closely, because it reports on its own conduct.", justification: "It writes the figures it is judged by.", locked: true, nullifies: null, ...over });
+export const LENS_TEAM = { ok: true, scope: "instance", scope_id: "", in_force: true,
+  bundles: [{ bundle_id: "BIAS-2026-0001-team", revision: "a".repeat(64), scope: "instance", adopted_by: "member:rosa", adopted_at: "2026-10-08T00:00:00Z", source_url: null, retrieved: null, source_sha256: null }],
+  statements_sha: "9f3a" + "0".repeat(56) + "c07e", statements: [ST("s1")], residue: [{ bundle_id: "BIAS-2026-0001-team", scope: "instance", text: "It sets no bar for how strong support must be, and it never rules that a source is false.", stated: true }],
+  lock_violations: [], interactions: [], count: 1, total: 1, limit: 200, offset: 0, truncated: false };
+export const LENS_PROJECT = { ...LENS_TEAM, scope: "project", scope_id: PROJ_BIAS.id,
+  bundles: [...LENS_TEAM.bundles, { bundle_id: "BIAS-2026-0002-proj", revision: "b".repeat(64), scope: "project", adopted_by: "member:dev", adopted_at: "2026-10-08T00:00:00Z" }],
+  statements: [ST("s1"), ST("p1", { bundle_id: "BIAS-2026-0002-proj", scope: "project", kind: "inference", subject: "ENT-2026-0009", text: "A late reply to a request is not read as a refusal.", justification: "Offices miss dates for many reasons.", locked: false })],
+  residue: [...LENS_TEAM.residue, { bundle_id: "BIAS-2026-0002-proj", scope: "project", text: "", stated: false }], total: 2, count: 2 };
+export const POLICY = { ok: true, installed: false, adopted: false, writes: 0, proposes: "p",
+  bars: [{ text: "A single source is not confirmation.", construct: "required_strength", detail: "d" }], bars_count: 1,
+  statements: [{ id: "prop-1", kind: "scrutiny", subject: null, text: "Staff verify every claim against two sources.", justification: null, citations: [], proposed: true, authored: false },
+    { id: "prop-2", kind: "inference", subject: null, text: "We do not treat silence as agreement.", justification: null, citations: [], proposed: true, authored: false }], statements_count: 2,
+  residue: [{ text: "All sources are unreliable.", why: "w", check: "C-26.5" }, { text: "Our editors meet on Mondays at nine.", why: "This states a property of the source." }], residue_count: 2,
+  coverage: { sentences_read: 4, sentences_total: 4, input_truncated: false }, pin: { source_url: "Bay Courier standards page", retrieved: "October 8, 2026" }, limit: 200, truncated: false };
+export const DEBT_OPEN = { ok: true, run: "RUN-2026-0042", found: true, open: true, context: { type: "project", id: PROJ_BIAS.id }, raised: "2026-10-09T00:00:00Z", observed: "2026-10-09T00:00:00Z",
+  moved_basis: "a statement about the City Housing Department was added", lens_then: "41be" + "0".repeat(56) + "a2d0", lens_now: "9f3a" + "0".repeat(56) + "c07e", settled: { settled: false }, settlements: [], limit: 50, truncated: false };
+export const DEBT_SETTLED = { ...DEBT_OPEN, open: false, settled: { settled: true, at: "2026-10-10T00:00:00Z", kind: "resolved", kind_state: "determined" },
+  settlements: [{ seq: 1, kind: "resolved", at: "2026-10-10T00:00:00Z", actor: "member:mai", reason: "The new statement is about the Department's reports; this finding cites none.", by_run: null, lens_then: null, lens_now: null }] };
+/* The bias sets `list` answers, in the owner's rows (retrieval R63): two offered, one adopted already, and a bundle of another type. */
+export const BIAS_SETS = [
+  { bundle_id: "BIAS-2026-0001-earlier", object_type: "bias", current_state: "proposed", title: "Earlier set: how we read the county", last_updated: "2026-10-01T10:00:00Z", bundle_sha: "a".repeat(64), route: null },
+  { bundle_id: "BIAS-2026-0002-adopted", object_type: "bias", current_state: "adopted", title: "Already adopted", last_updated: "2026-09-01T10:00:00Z", bundle_sha: "b".repeat(64), route: null },
+  { bundle_id: "STD-2026-0001-other", object_type: "standard", current_state: "proposed", title: "Not a bias set", last_updated: "2026-10-02T10:00:00Z", bundle_sha: "c".repeat(64), route: null },
+  { bundle_id: "BIAS-2026-0004-second", object_type: "bias", current_state: "proposed", title: "Second offered set", last_updated: "2026-10-03T10:00:00Z", bundle_sha: "d".repeat(64), route: null },
+];
+
+export function biasTable(over = {}) {
+  return {
+    list: () => env({ bundles: [], limit: 50, cursor: null, total: 0 }),
+    biasmanifest: (q) => env(q.scope === "project" ? (q.scopeId === PROJ_BIAS.id ? LENS_PROJECT : { ok: true, scope: "project", scope_id: q.scopeId, in_force: false, note: "none" }) : LENS_TEAM),
+    projectlist: env({ ok: true, projects: [PROJ_BIAS] }),
+    biasdebt: (q) => env(q.run === "RUN-2026-0042" ? DEBT_OPEN : { ok: true, run: q.run, found: false, note: "none" }),
+    biasinhale: () => env(POLICY),
+    promote: (q, b) => env({ ok: true, bundleId: "BIAS-2026-0003-lakeshore", revision: "c".repeat(64), state: b.meta.current_state }),
+    biasadopt: (q, b) => env({ ok: true, bundle_id: b.bundleId, scope: b.scope || "instance", in_force: false, pins_proposed: true, adopted_by: "member:rosa" }),
+    biasdebtresolve: (q, b) => env({ ok: true, run: b.run, settled: { settled: true, kind: "resolved" } }),
+    entitybyalias: (q) => env({ ok: true, entities: q.alias === "City Housing Department" ? [{ entity_id: "ENT-2026-0007", label: "City Housing Department" }] : [] }),
+    writinghelp: () => env({ ok: true, text: "We read it closely.", label: { kind: "machine", asked_by: "member:rosa" }, withheld: [], note: "" }),
     ...over,
   };
 }

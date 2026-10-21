@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_0146dGPcD3Eun2HP73CZiCwq · depth 2 · COMPLETE · handled B5
+**Status** · session_01QLncWLte6oxmKhPKXXRUyy · depth 2 · COMPLETE · handled B19
 
 ## J1 · QUESTION
 
@@ -50,3 +50,162 @@ COMPLETE (re B4, K4093): merged tranche/T51; no local stand-in of a provider was
 ## J5 · COMPLETE
 
 COMPLETE (re B5, K4096): merged tranche/T51. The three test copies are gone: the declared-step marker the providers answer is built in fixtures.mjs (DECLARED) and graph.test.mjs uses it. words for this module: 0 failures; suite 155 pass, 0 fail. Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 46, module lines 2,851
+
+## J6 · QUESTION
+
+QUESTION (entries 5 and 10, R53 against R58; entry 9, R57). Two points, best readings given; I carry on with everything else.
+
+1. Entries 5 (L10, K4194) and 10 (I-32, DEC-384) disagree. Entry 5: an organization's page makes no `person` read (`people` refuses any kind but `person`, `#personRefusal`). Entry 10: it draws "Same organization?" with a claim's row (`.same.because.org`, `.same.claimed.org`), the candidates (`.candidates.org`) and the kinds of claim (`.claim.kind.*.org`), which need `person`'s `claims` and `samepersoncandidates`, both refused for an organization today. My best reading: no `person` or `samepersoncandidates` read for `institution`, `body` or `movement` (R53, as entry 5 says); the page draws "Same organization?" (`.same.org`, `.same.holds.org`), the claim form's choices (`.claim.same_as.org`, `.claim.not_same_as.org`, `.claim.kind.*.org`) and the fact form with three kinds (Name, Address, Contact) and `screen.person.kind.help.org`; a refusal of `identityclaim` or `recordpersonfact` (`NOT_A_PERSON`) is drawn by its word. The rows of claims and candidates for an organization (`.same.claimed.org`, `.same.because.org`, `.candidates.org`) then appear only when `people` serves organizations (a layer-5 change, yours to order); I read them from `person` and `samepersoncandidates` only when `entity` says `person`. If you want those keys drawn now, `people` must answer for an organization; tell me, or tell me to read `person` for organizations and draw a NOT_A_PERSON refusal as "no claims".
+
+2. Entry 9: the path's last crumb (`screen.standard.crumb`, "Standard: {name}") is the shell's `PATH` entry (`interface-shell` R8, `mock-shell.js` `PATH.standard`), and `place(view)` has no kit to read a word: the screen cannot set either. What I do: `place` returns the project's title from the `image` read; an unreadable project is named `crumb.project.unjoined`, whose text the screen's render leaves in `view.ui` for `place` (the shell draws the body before the path). The last crumb stays `screen.standard.name` until `interface-shell` takes `place`'s `{project, last}` (or reads `screen.standard.crumb` with `{name}`); that is an `interface-shell` change, not mine.
+
+## J7 · QUESTION
+
+QUESTION (R51, R59, words) — three things need an owner or the design; best readings, and I carry on with everything else.
+
+1. op-declarations (R51, `standard` "Check a date"): `standardinforce` is not in `SESSION_OPS.member` (nor `standard`, `standards`), so the shell's act gate (`can`, interface-shell R12) draws no button for it to a member. My code and tests are built; the R51 test stays red until `op-declarations` adds `standardinforce` to the member (and admin) session set. CHANGE to op-declarations, please.
+
+2. action-clocks (R59, due date with no rule): `clockPropose` answers `NO_SUCH_RULE` with `{target, rule, detail}` and no list of the deadlines the member's rules do state, so the pick box has nothing to carry. Built on this reading: the refusal's answer carries `deadlines: [{rule, label?, citation?}]` (the profile deadlines that apply to the action's kind); the screen keeps them through the act's own refusal function (`refusals.NO_SUCH_RULE`, interface-shell R21) and draws `screen.due-date.rule.*`, a choice, "Work it out again" with the chosen `rule`, and a door to `/app/places`. Tested against a fixture that carries the list. If the owner answers the list elsewhere (a read), tell me which; otherwise `action-clocks` needs a CHANGE to add `deadlines` to that refusal.
+
+3. UX-DESIGN keys missing (nothing invented; I draw with the keys held and say here what is lacking): (a) R51: the answer's own words "In force" / "Not in force" / "Overridden" / "Undetermined" (the drawing hard-codes them; I draw the owner's `why` sentence and the gap mark for undetermined) and the label of the day field "The day" (I use `act.standardinforce.label.standard`); (b) R54: "we will remind you on {date}" (I draw the held `screen.due-date.on` "Remind me on" followed by the date, beside the entry).
+
+## J8 · COMPLETE
+
+COMPLETE (re B6, B7/B8, B10; fix round FR-29). The requirement lines are written in build/requirements/screens-investigate.md (R49–R59, none held back in this record; R51 carries its own not-yet-met note). Entries applied:
+1 C26 → R49: "Define a progression" on the project's own timeline always; an unknown progression key draws the empty state with the form; the known flow is unchanged (one form).
+2 C68 → R50: "Records its offices keep" on an organization's page (offices from `post_in` lines + `entitieskind`; standing `custodian_of`/`responsible_for` lines; the form sends `recordline` with kind, from, to, basis and `valid` only when a date is given; the design's three refusals by `refusals` functions). Registry act `recordline` on `person` drawn (R10 green).
+3 C40 → R51: "Was it in force on a date?" with `standardinforce` (a read act) and the owner's answer with its reason; `standard` registry act drawn (R10 green). RED by name, accepted (B10): the test cannot press the button until op-declarations #29 adds `standardinforce` to the member/admin session sets.
+4 L2 → R52: the six reads (and so every `docChoice`, the matter's folds included) ask `heldcaptures` with `state: "held_and_vouched"`; `pickers.test.mjs` runs each screen against an owner-shaped answer that honours `state`.
+5 L10 → R53 and 10 I-32 → R58: institution/body/movement pages: three fact kinds + `screen.person.kind.help.org`; `person` and `samepersoncandidates` read for every kind with `NOT_A_PERSON` drawn as no claims/candidates (B9); all ten `.org` keys drawn.
+6 L21 → R54: the day a reminder was set for is drawn beside its entry (held key `screen.due-date.on` + the date; the sentence "we will remind you on" is not keyed).
+7 L22 → R55: the head names the counterparty from role/body, name/label/office, or an audience's description; none for an undetermined one (`PARTS.counterparty`).
+8/9 L24, I-30 → R56, R57: `place` answers `{project: {id, title}, last}`; title from the project's record, `crumb.project.unjoined` when unreadable, `last` the standard's citation; `interface-shell` R110 (merged) draws `screen.standard.crumb`; B9 (2) thus needs nothing further.
+11 E6 → R59: `refusals.NO_SUCH_RULE` on `clockpropose` keeps the refusal's `deadlines` (B10 (2): ACTION-CLOCKS #16 builds them) and the page draws `screen.due-date.rule.*` with the pick, the help and the door to `/app/places`; choosing one sends `{target, rule}`.
+Also fixed (guard findings of my screens, not entries): explore's re-read after `stepsource`/`stepsourcewithdraw` sent its body as the request (missing `from`, `at`); `acquire` sent a `project` it does not accept; the proceeding's `entitycreate` sent no `label` when the member gave none (now the case number). BOB's nine inherited reds (B1) are green. Deferred: none.
+Found in other modules / for UX-DESIGN (HANDOFF B419 per B10): R51's answer words ("In force", "Not in force", "Overridden") and the day field's label; R54's "we will remind you on {date}"; R50's labels for the office choice and "What says so" and a keyed phrase for a `responsible_for` line (stand-ins in use: `screen.people.today.kind.office`, `screen.person.source`, `screen.person.fact.from`/`.to`, `label.linekinds.responsible_for`); the note `screen.person.keeper.withdraw.a/b` promises a withdrawal the registry gives the person page no act for (`linewithdraw`), drawn as the design has it. The test harness's `refusedIn` carries no extra fields, so R59's test builds its refusal itself.
+Tests and checks (screens-investigate, tranche/T51 merged at f5176d5078+): module suite 175 tests, 174 pass, 1 fail (R51, accepted red); format 0 failures; architecture 0 failures; coverage 59 of 59 ids named; words (module and all 175 modules together) no finding naming this module (the 26 are other modules'); ownership 18 files, 0 failures; setup-words build --check: stale-rows note only (op-declarations/action-plans rows), none naming this module; checks/run.mjs: every failure is in op-grades' tests, none mine.
+Size (session_013U8Ciq9twS4zjfvFdM57Xa): test runs 45, module lines 3,018
+
+## J9 · COMPLETE
+
+COMPLETE (re B12, K4245): R51's test failed on the request's query. The harness's `query` is every URL parameter, and `op` is one of them (as timeline.test.mjs:140 already expects), so the drawing was right. It sends only the declared fields, `id` and `date` (standards' DECLARED_OPS: accepts and requires both). The fix is the test: standard.test.mjs:100 now expects `{ op, id, date }`. No drawing change.
+
+**Entries applied**
+- B12: fixed as above. The R51 test is green, so the red accepted in J8 is cleared. J7 item 1 (`standardinforce` in SESSION_OPS.member) is also settled: op-declarations' t51 test passes on the tranche merged in.
+- B11 (action-clocks `deadlines`): merged at the tranche tip; no change needed in my code.
+
+**Deferred** none.
+
+**Report (for BOB)**
+- Requirements: no line changed by me. R51's own not-yet-met note in build/requirements/screens-investigate.md is out of date now that its test passes; for BOB to clear.
+- Nothing found in another module.
+
+**Tests and checks** (from /home/user/bio/bio-plane): `node --test test/m/screens-investigate/`: 175 pass, 0 fail (was 174 pass, 1 fail). From the process repository: format 0 failures; architecture screens-investigate 0 failures; coverage screens-investigate 59 of 59 live ids named, 0 failures; ownership tranche/T51 1 file, 0 failures.
+
+Size (session_01W8ujgLnaNkquRgeBeghZRT): test runs 3, module lines 3018
+
+## J10 · REPORT
+
+Answers CHANGE B13 (K4248). Commit 4840b98cbb on job/T51/screens-investigate (tranche/T51 merged at fc771223d3).
+
+**Applied**
+- B419 (2): the standard's in-force answer draws `screen.standard.inforce.result.line` ("On {date} it was: {state}") with `screen.standard.inforce.state.{in_force, not_in_force, overridden, undetermined}`; the day field is `screen.standard.inforce.day.label`. Stand-ins removed.
+- B419 (3): the reminder beside its entry, on due-date, draws `screen.reminder.on` ("We will remind you on {date}."). `screen.due-date.on` stays only as the reminder day field's label.
+- B423, keeper rows: the office field `screen.person.keeper.office.label`, the source field `source.label`, the dates `from.label` and `to.label`, and a responsible-for statement `line.responsible` ("is responsible for {subject}"). The `screen.people.today.kind.office`, `screen.person.source`, `screen.person.fact.from`/`.to` and `label.linekinds.responsible_for` stand-ins are gone from the keeper section.
+- Tests: R51 asserts the day label and each state's result line; R54 asserts `screen.reminder.on`; new R50 test asserts the responsible-for key.
+
+**HELD: the withdraw act (B423 `linewithdraw` on person).** I added it. Every screen-module page then failed to build: interface-shell's `checkScreens` rejects an act that the screen registry does not carry for that screen ("is not the registry's for it"). The generated `bio-plane/src/wizard-scripts/screen-registry.mjs` (wizard-scripts' artifact, pinned at the design commit its R41 names) has no `linewithdraw` on `person`, though `docs/development/ux-substrate/screens/registry.json` on this tranche does (`screens[person].acts`). `build-data.mjs --check` passes against its pin, so the artifact is stale against the design, not broken.
+- The one act BOB needs to give: a CHANGE to wizard-scripts to re-take the registry at the design commit now on tranche/T51 (DEC-387/388 and B423's rows), regenerate its three files, and merge. Then I add the act back: a reasoned withdrawal per kept statement, with a reason field, as withdrawidentityclaim draws it, plus its test.
+- Until then, R10 ("each screen draws exactly its registry acts") stays red, cause: this stale pin. The act is not in the module, so no other test is affected.
+- Requirement lines for BOB: R50 gains the withdraw line once the act lands; R51's not-yet-met note is out of date (its test is green, as J9 said).
+
+**Found in other modules (BOB to route; none is in my diff)**
+- `members` screen: act `expertisewithdraw` is not in OPS (interface-shell). It fails every page build in plane t47 and t50 and control-plane t46-app (6 reds: R75, R81, R25). Also op-declarations: DECLARED_OP_DISAGREES on `groupkeynoticeseen` description.
+- `checks/run.mjs` (whole tree): coverage has 4 live ids named by no test: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19. Words: testcopy 24 in op-grades t36, t37, t41, t46, t47, t48, t49.
+- `run.mjs` names nothing of screens-investigate.
+
+**Checks** (module suite: 176 tests, 175 pass, 1 fail = R10, the held act above)
+- format 0 failures; architecture 0 failures; coverage screens-investigate 59 of 59 ids named, 0 failures; words screens-investigate 0 failures (7 unkeyed); ownership tranche/T51 vs job/T51/screens-investigate: 7 files, 0 failures; setup-words build --check: rows match words.json.
+
+## J11 · COMPLETE
+
+COMPLETE (re B13, K4248), with one held act (J10 REPORT). Entries applied: B419 (2) and (3), and the B423 keeper keys, as in the REPORT. Deferred: the withdraw act (`linewithdraw` on person), held until wizard-scripts re-pins its registry; the R10 red is named with that cause.
+
+Tests: module suite 176, 175 pass, 1 fail (R10). Checks: format 0; architecture 0; coverage 59 of 59; words 0 for this module; ownership 7 files, 0 failures; setup-words --check ok; run.mjs names nothing of this module.
+
+Size (session_01S8VGM3tuVs3msj6bpgKFvC): test runs 4, module lines 3024
+
+## J12 · COMPLETE
+
+COMPLETE (re B14, K4259): the three entries applied; one is a removal BOB should confirm (entry 3). Commit d48d377908 on job/T51/screens-investigate. interface-shell's `SCREEN_REGISTRY` (09fbb247eb) against my twelve screens' acts: no difference left (checked over the module's real `SCREENS`).
+
+**Entries applied**
+1. `person` · `linewithdraw` (B423; R50): drawn on each standing kept statement of an organization's office, in the row's act slot with the source's grade and citation kept beside it, labelled `act.linewithdraw.label.person` ("Withdraw this statement, with a reason"). The shell asks the reason (op-grades rung `reasoned`); the act sends `{lineId, reason}` and the lines are read again. A withdrawn line draws none; a person's page draws none. The section's closing note (`keeper.withdraw.a/.b`) stays. The module's R10 ("each screen draws exactly its registry acts") is green for `person`.
+2. `timeline` · `instance`, `progression`: the design draws them as the sections they read (`sec(…, {act: 'instance'})` on "Progressions it follows" and "Its steps", `{act: 'progression'}` on state c's "Steps"), not as buttons. Both are now among the screen's `acts`, and each of those three sections carries its act in `data-act` through a new part `actSec` (interface-shell's `cs.sec` has no `act` option; see the requirement line below). No button is drawn for either.
+3. `explore` · `stepsourcewithdraw`: REMOVED. The design (`mock-screens.js` `SCR.explore` at 09fbb247eb) draws only `stepsource` there; no registry screen lists `stepsourcewithdraw`; the design holds its act row (`mock-acts.js`, weight in `mock-kit.js`, `act.stepsourcewithdraw.does`) but places it on no screen. Per B14 and K3052 the control is gone from the hop line and from the graph's step list; the keys `screen.explore.withdraw` (nothing else read it) and the `withdraw` graph option are gone with it. Consequence to know: a member can no longer take back an attached source from the page (the op is served and unchanged).
+
+**Requirement lines for BOB**
+- screens-investigate R17: drop "and offers `stepsourcewithdraw` (reasoned)" and the withdrawal half of its test ("control: after the withdrawal it is drawn a lead"); R35: drop "and offers `stepsourcewithdraw` (R17)"; R10's list of acts (R50 gains the withdraw line, K4259 entry 1).
+- screens-investigate R33/R49: add that the sections "Progressions it follows", "Its steps" and state c's "Steps" carry `instance` / `progression` as the design draws them; the module lists both in `acts`.
+- interface-shell: `RE_POINTS.explore` (`stepsourcewithdraw`, R55, R73) names an op no screen draws any more: it can go. `cs.sec` could take the design's `{act}` option (the module sets `data-act` on its section itself until it does).
+- HANDOFF to the design (if BOB wants withdrawal back): where on `explore` a member takes back an attached source, and its registry row; until then the page has no way to do it.
+
+**Deferred** none.
+
+**Found in other modules (none in my diff)**
+- setup-words: `node bio-plane/src/setup-words/build.mjs --check` fails on `words-unreviewed.json` ("stale or absent") on the tranche tip as well (checked on origin/tranche/T51 in a clean worktree, with and without my change); presumably stale after the 09fbb247eb re-take.
+- Generated artifact stale: `bio-plane/dist/bio-plane.bundled.mjs` bundles this module's screens; BOB regenerates it at the layer close.
+- `checks/run.mjs` over the whole tree: coverage names 6 modules with ids no test names (agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; screens-inquiry R110, R119; screens-intake R53); words: testcopy 1 in op-grades `t37.test.mjs`:32. None of it is screens-investigate.
+- `sheet-worker` and `site` have no `node_modules` after the `npm ci` loop (the loop printed nothing for them); not needed by this module's tests.
+
+**Tests and checks**
+- Written first and seen failing, each with its control: `linewithdraw` (organization.test.mjs, R50 B14: two standing lines draw two acts, a withdrawn line none, a person's page none, no reason sends nothing, the lines are read again after the act), `instance`/`progression` (timeline.test.mjs, R33 B14: the three states' sections carry the act, no button, no section for a project that follows nothing), the removal (explore.test.mjs R17, graph.test.mjs R35: no withdrawal control), and common.test.mjs R10 now compares each screen's acts to the registry's with no re-point or unplaced list.
+- node --test bio-plane/test/m/screens-investigate/*.test.mjs: 178 tests, 178 pass, 0 fail (baseline 176, 175 pass: R10 red for `linewithdraw`).
+- node --test bio-plane/test/m/interface-shell/*.test.mjs: 243 pass, 0 fail.
+- format 175 modules, 0 failures; architecture screens-investigate 33 files, 0 failures; coverage 59 of 59 live ids named, 0 failures; words screens-investigate 0 failures (7 unkeyed); ownership tranche/T51 vs job/T51/screens-investigate: 13 files, 0 failures.
+
+Size (session_01SEkZkEvrW6ukwiw4b8mKpD): test runs 9, module lines 3029
+
+## J13 · COMPLETE
+
+COMPLETE (re B15, K4267): tranche/T51 merged; R10's reference-with-card test is green. Commit pushed on job/T51/screens-investigate.
+
+Applied: the timeline's undated event reference (the `statement` of the fixture) now carries its facts, the event's status and the `screen.timeline.undated.apart` sentence the row already draws, so its card says something. The same test also found one on `money`: the moved-event reference ("the event") in a row's "when it moved" now carries the date the row states. No test exemption was added; both fixes are in the source. R10's text does not change.
+
+Tests/checks: module suite 178 tests, 178 pass, 0 fail. format 0; architecture screens-investigate 0; words 0; coverage 59 of 59; ownership 3 files, 0 failures.
+
+Deferred: none. Other modules: nothing new.
+
+Size (session_01SEkZkEvrW6ukwiw4b8mKpD): test runs 12, module lines 3029
+
+## J14 · QUESTION
+
+QUESTION (C54, C6 my part; the half is in `events`, not mine). The Timeline cannot keep an event attached to a project whose document names no person, organization or event, and Matter's event picker has nothing to read.
+What I found: `timeline` answers the events concerning the entity or event ids in its `set`, and refuses `NO_SET` otherwise with "a project's scope is resolved by its caller" (events R28). `createEvent` takes `concerns` of a registered entity or an EVT only (a PROJ- is NO_SUCH_ENTITY); the `project` argument at events/index.mjs:475 belongs to a testimony attestation and only scopes who may see it. The screen takes `set` from the project document's references (ENT-/EVT-), so: a project whose document names an entity keeps an event recorded here (the screen sends `concerns` = that entity; I prove it by reload), but a project whose document names none loses the event at the next visit, and the design's own sentence `screen.timeline.noset` ("Start with Record an event") cannot be true. There is no op that adds a reference to a project document, and none that lists a project's events.
+My best reading, the smallest change that makes both halves true: `events` accepts a project (`PROJ-`, one the viewer sees) as a `concerns` end of `createEvent`, and `timeline` (and `eventsfor`) accept a `PROJ-` id in `set`, answering the events whose concerns include it. Then the screen sends `concerns: [project, ...]` and reads `set` = the project id plus the document's references; Matter's picker (cause-action-t51) reads `timeline` with `set` = the project. Who holds it, and when? Until then I keep what works (events tied to the project's named entities, plus the page-memory list) and report C54 and my part of C6 as partly met, blocked on events.
+
+## J15 · QUESTION
+
+QUESTION (C8's "follow days" box; words rows). Neither stops the work; I carry on and use stand-ins.
+1. C8 says "the follow days box is not named as required". There is no days box on the money trail (`money.mjs` draws the figure form and "Start a money trail" only), and none anywhere else in screens-investigate (grep for days). Which screen and field did the walk mean (E36)? If it is another module's, say whose; I have changed nothing for it.
+2. Word rows I need and the design has not given (no sentence invented; each stand-in is named): (a) the project's Standard screen now lists the standards the record holds (C61): its heading `screen.standard.held` ("Standards the team holds"; stand-in: `screen.standard.name`, "Standard") and a sentence for a cut list ("More standards are held than are shown"; stand-in: none, the cut is not said); (b) "Committed against paid" now chooses the contract (R23, C57): `screen.money.f.contract` still ends "(a record id)" and `screen.money.f.nocontract` says "Name the contract by its record id": both want rewording for a choice ("The contract, for committed against paid" / "Choose the contract"; stand-ins: the two rows as they stand); (c) a figure proposed to a trail by the member who read it (C8) is drawn by `money`'s own label `screen.money.proposed`, "proposed by the machine; not included", which is false for a member's proposal: a member-proposal row ("proposed by a member; not included") is the design's, and `money`'s `readSet` would answer it by who proposed (money's, BOB's).
+
+## J16 · COMPLETE
+
+COMPLETE · screens-investigate · fix round 2, wave 1. C56, C57, C8, C59, C60, C61, C62 met; C54 and my part of C6 PARTLY met (events half, B17); C7 screen half met (people's half is People #13's, not yet merged on my tip).
+
+Causes (requirement ids): C56 R34 (the event kinds offered are `affordances`' `event_kinds`, no hand list; unread = failed); C57 R4, R23 (committed against paid chooses the contract from `peopledirectory` show=contracts; none held = empty state and a refusal in words); C8 R4 (recordfact success sends `moneysetpropose` {setId, factId, method} for the open trail; rows come from the trail's proposals, `ui.recent` gone; a refused proposal drawn); C59 R34 (person: passage picker `cs.words` from the chosen document's `reading`, the first selected unit's extent sent, else the whole document; cited documents named by title); C60 R32 (connect: empty answer says `screen.people.counts.none` + `entity.naming.says`, else the count and each document); C61 R8 (standard page: words from `content` + `reading`, document named, never the content id; project Standard screen lists `standards` with doors `/app/standard/<STD>/<PROJ>`); C62 R56 (that door carries the project, so the standard's path names it); C7 R53 (sends `recordpersonfact`->`personfact` for the three kinds, draws the recorded fact; no Born/Died/Locality).
+
+Needed from the plane for C54/C6 (for SCREENS-INVESTIGATE-2): `events` accepts a project (PROJ-) as a `concerns` end of `createEvent`, and `timeline` accepts a PROJ- in `set` (events concerning it). The screen then sends `concerns:[project,...]` and reads `set` = project + document references; today it ties the event to the project's first named entity and keeps `ui.added` as a bridge.
+
+Deferred: the passage picker on the other forms (timeline, money, standard): same parts, but one `reading` read per visit each, so BOB's call; the held-standards list says nothing when cut off (no word row).
+Reports for BOB: (1) C8's "follow days" box is not in this module (J15). (2) Word rows wanted (J15): `screen.standard.held`, a cut-list sentence, rewording of `screen.money.f.contract`/`.nocontract`, a member-proposal label for `screen.money.proposed`. (3) C60: resolution happens when a reading is made, with no back-fill when an entity or alias is added later; a memo read earlier names the person only after a member matches it. By design, not a fault; a back-fill is a policy choice. (4) `op-declarations` OPS: `moneysetpropose` is unexplained/ungrounded for a screen send; check it is callable by a member session. (5) Existing tests changed on purpose: person R1 control (first document held is now the default choice), money R4 (figure now a row via the trail's proposals).
+
+Tests: `node --test --test-force-exit test/m/screens-investigate/`: 191 tests, 0 fail after the person control change; with the nine other files that name my module (plane t47/t50, op-declarations t50/t51, interface-shell declared/t50, action-clocks t51, control-plane t46-app, people why): 285 pass, 0 fail. New file fix2.test.mjs (11 tests); seen failing on the old code: all but C7 and C54's (both passed before, as the screen half was already right). Checks: format 0 for my files (one failure is rulings.md K4301, not mine); architecture 0 for my files; coverage screens-investigate not among failures; words 0; ownership 0 failures.
+
+Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 14, module lines 3119
+
+## J17 · COMPLETE
+
+COMPLETE · screens-investigate · CHANGE B19 applied. Merged tranche/T51 (PEOPLE #13, people R9 serves an organisation's name, address and contact facts). C7 proved against it: people's own `orgfacts.test.mjs` (the plane records the three kinds for institution, body, movement and `personAt` reads them back) and my C7 test (the page sends `recordpersonfact` for the three kinds only and draws the recorded fact, no Born/Died/Locality) pass together: 22 pass, 0 fail (with organization.test.mjs). No code change was needed. C7 is now met in full. B18 read: stand-ins kept.
+Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 15, module lines 3119

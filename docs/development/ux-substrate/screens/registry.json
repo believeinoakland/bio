@@ -1977,6 +1977,15 @@
      ]
     },
     {
+     "op": "capturerequests",
+     "label": "Show my requests for later",
+     "status": "declared",
+     "modules": [
+      "capture-requests",
+      "op-declarations"
+     ]
+    },
+    {
      "op": "monitorset",
      "label": "Watch this address",
      "status": "declared",
@@ -2398,6 +2407,20 @@
      "status": "owed"
     },
     {
+     "op": "resolvetestify",
+     "label": "Say who this name is",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "op-declarations"
+     ]
+    },
+    {
+     "op": "owed:contradictionflag DEC-394",
+     "label": "Say these two contradict",
+     "status": "owed"
+    },
+    {
      "op": "themeplace",
      "label": "Place it in a theme",
      "status": "declared",
@@ -2797,6 +2820,15 @@
      "op": "owed:projectclose DEC-381",
      "label": "Close this project with a reason",
      "status": "owed"
+    },
+    {
+     "op": "heldcaptures",
+     "label": "List this project's documents",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
@@ -3455,6 +3487,12 @@
      "modules": [
       "lines"
      ]
+    },
+    {
+     "op": "linewithdraw",
+     "label": "Withdraw this statement, with a reason",
+     "status": "declared",
+     "servedBy": "lines R8 (op linewithdraw, served by the lines module and listed open in op-declarations; its module row has no classes object the check reads)"
     },
     {
      "op": "identityclaim",
@@ -4798,6 +4836,15 @@
      ]
     },
     {
+     "op": "casedrafts",
+     "label": "Which draft",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "review"
+     ]
+    },
+    {
      "op": "whatchangedpropose",
      "label": "Draft \"what changed\"",
      "status": "declared",
@@ -4893,6 +4940,15 @@
    "purpose": "A named outsider's revocable view of the draft.",
    "acts": [
     {
+     "op": "casedrafts",
+     "label": "Which draft",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "review"
+     ]
+    },
+    {
      "op": "reviewgrant",
      "label": "Share for review",
      "status": "declared",
@@ -4935,6 +4991,15 @@
    "frame": "working",
    "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob's D9, K3060; Q4): when it becomes public, the password asked again (D3), the member's own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn't an owner (DEC-207).",
    "acts": [
+    {
+     "op": "casedrafts",
+     "label": "Which draft",
+     "status": "declared",
+     "modules": [
+      "op-declarations",
+      "review"
+     ]
+    },
     {
      "op": "publishpreflight",
      "label": "Check before publishing",
@@ -5258,6 +5323,14 @@
      "modules": [
       "op-declarations",
       "review"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],

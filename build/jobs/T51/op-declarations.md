@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01Wn8nVUduH4GbFBXsW5fYy7 · depth 2 · COMPLETE · handled B12
+**Status** · session_01Uihot6oAdmTPVZ9YVwa3Rs · depth 2 · COMPLETE · handled B21
 
 ## J1 · QUESTION
 
@@ -85,3 +85,182 @@ B11 applied (pushed; tranche/T51 merged in): DEC-382's six owed acts (citeimport
 ## J11 · COMPLETE
 
 B12 applied (pushed; tranche/T51 merged in). OWED_BY_FIX_ROUND (test/m/op-declarations/browser.mjs) is now derived from the registry's own owed rows: every owed act that is no op, no browser act (R76) and no installer route, so no hand list; an act leaves it when it becomes an op. t50's R73 gap check reads it (the gaps are the browser acts plus that list). op-declarations tests 242, pass 242, fail 0; architecture, coverage, words (all modules), ownership, format: 0 failures. Size (session_01Wn8nVUduH4GbFBXsW5fYy7): test runs 17, module lines 3452
+
+## J12 · REPORT
+
+Found in another module (citation), not worked here (never change another module).
+
+`citation`'s `DECLARED_OPS.citeimported` (bio-plane/src/citation/index.mjs, line ~1134, T51 FR-35) is a mutating op with no `needs`, so `registerDeclaredOps` refuses it: `op-declarations: citeimported: NEEDS_MISSING (R80)`. R80 requires `needs` on a mutating op that has no hand row, and `citeimported` has none (it is declared-only). Reproduce: `registerDeclaredOps` over every owner's `DECLARED_OPS` (the collector `declaredOpsOf`, test-support R16) throws on this row.
+
+Effect today: the plane cannot register every owner's declarations at start-up, and no test can register all of them. My tests register only case-import's and member-roster's rows (`test/m/op-declarations/register-owners.mjs`), so this does not block op-declarations' suite (242 tests pass).
+
+Proposed fix for citation's job (the act is a member's own contribution; its sibling member acts declare `needs: "contribute"`): add `needs` to `citeimported` (likely `"contribute"`, to be confirmed against citation R-lines and NEEDS), keeping `classes`, `machineClasses`, `mutating` and `stamps` as declared. BOB to route it to citation.
+
+Other owners' rows were not checked beyond the first refusal; registration stops at the first.
+
+## J13 · COMPLETE
+
+FR-68 (op-declarations, T51 fix round): entries applied.
+
+**Entry 1 (K3268): done.** Hand lists of case-import's ops in my tests now read the owner's `DECLARED_OPS` (registered by `test/m/op-declarations/register-owners.mjs`, R80), not a hand list:
+- `t28.test.mjs` "R14, R6": the served set is the hand R14 ops, the watch ops and case-import's declared ops; a declared op no act list names is stamped by its declaration (`OP_STAMPS`); the act lists name the rest. Control added: an op in no table and no declaration (`importnosuchop`) is no spec, no session set, gate `machine`.
+- `t31.test.mjs` "R16, R6": same reading for the act and BY lists (declared-only ops excluded, their stamps read from the declaration).
+Both failed before (`importregrade: no spec`, the list diffs); they pass with the four new ops (importregrade, rerunstart, rerunpair, rerunread).
+
+**Entry 2 (R73, R21): done.** `registryActGaps` in t50 "R73, R21": `expertisewithdraw` is declared by member-roster (R79, merged), so it is no gap. t50 now reads the owed acts its registered owners declare (`OWED_NOW`) instead of the registry's owed list. Same cause in t33 "R19, R6" and t46 "R51, R6" (`membership: expertisewithdraw has no spec`), which now register member-roster's rows; t33 "R19, R4, R5, R30" and t46 "R52" read the declared ops as declared (their hand expectations are unchanged).
+
+**Requirement line** (K4210): `build/requirements/op-declarations.md` Status line amended (no requirement's meaning changed). Ownership reports that file as outside my paths; B13 accepts that at my merge.
+
+**Deferred / found elsewhere**
+- citation: `citeimported`'s declared row has no `needs` and R80 refuses it, so the plane cannot register every owner's declarations. Reported in a separate REPORT; not worked here. My tests register only case-import's and member-roster's rows until it is fixed, and the owner-wide collector (test-support `declaredOpsOf`) is not used in my tests for that reason.
+- Process-check findings in other modules (not mine): coverage (agent-harness R17, agent-runner R37/R38/R40, installer-steps R26/R31, journey-check R19, link-sweep R13–R15); words (op-grades testcopy, strength inline). None in op-declarations.
+
+**Tests and checks run**
+- `node --test test/m/op-declarations/*.test.mjs` (bio-plane): 242 tests, 242 pass (before the fix: 5 failing).
+- `node checks/format.mjs` (via checks/run.mjs): 175 modules, 0 failures.
+- `node checks/run.mjs /home/user/bio`: architecture 0 failures; words: 16 failures, none in op-declarations (op-grades, strength); coverage: 6235 of 6245 ids named, 5 failures, none in op-declarations.
+- `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 8 files changed; 1 failure, the requirements file (accepted at merge per B13).
+
+Commit `9747460e05` pushed to `job/T51/op-declarations`.
+
+Size (session_017CpAHUqZY2t5XBCS52jgiU): test runs 7, module lines 3452
+
+## J14 · BLOCKED
+
+Cause: context (reading). Stopping before any change; nothing is edited or committed beyond the start.
+
+**Done so far (this session, depth 2)**
+- Attached civicos-process; read roles/JOB.md whole. Merged `origin/tranche/T51` into `job/T51/op-declarations` (the prior job head `e158183a040` is kept in its history); `mail start` recorded (`fdefb24683`).
+- Installed `node_modules` for every tracked lockfile directory that lacked one (K4113).
+- Baseline, `node --test test/m/op-declarations/*.test.mjs`: two reds, both caused by owners that now declare ops my tests do not register:
+  - `t23.test.mjs` "R10, R6 (N506, K1207)": link-sweep's map serves `sweepset` and `sweepratify`, which link-sweep now declares (`link-sweep/index.mjs` ~98–102) but which have no spec here.
+  - `t33.test.mjs` "R19, R6": `tasks: taskdecide has no spec`. tasks declares `taskdecide` (`tasks/index.mjs` ~1275), not registered in my tests.
+
+**Findings for B14 (register every owner)**
+- `declaredOpsOf` (test-support, `bio-plane/test/declared-ops.mjs`) collects 378 ops across all owners, no duplicates.
+- Registering all of them is refused by one owner: `link-sweep`, `sweepset: NEEDS_MISSING (R80)`. A probe that registers each owner alone found no other refusal. This is link-sweep's defect (a mutating op with no `needs`); it goes to BOB as a REPORT, not worked here.
+- Plan for the next session: `register-owners.mjs` registers every owner except link-sweep (via `declaredOpsOf`, root `../../../..` from the test directory); `t23`'s R10 test reads link-sweep's served list from its map and treats an op with no spec as owed (`OWED_BY_FIX_ROUND` from `browser.mjs`) rather than hand-listing `["sweeps"]`. Check whether the architecture check accepts the test importing test-support (B14: REPORT to add `test-support` to uses if not).
+
+**Finding for B15 (standardinforce)**
+- `standardinforce` has a hand row at `src/op-declarations/index.mjs:1211` (classes admin, member, probe; not mutating). `standards` also declares it (`standards/index.mjs` ~2827). Neither `SESSION_OPS.member` nor `SESSION_OPS.admin` holds it. Registration does not merge a hand-held op (R80), so the fix is a hand entry in both session lists beside its siblings, with a control test. The `STANDARDS_READS` list is at `index.mjs:1968`, and the session composition starts around `index.mjs:2182`.
+
+**Reading disclosure (the reason for this BLOCKED)**
+- `build/requirements/op-declarations.md`: read lines 1–176 of 375 only (the Read tool truncated the page). Lines 177–375 are unread.
+- `src/op-declarations/index.mjs` (2,919 lines): read by excerpt only (grep and targeted ranges). Not read whole.
+- `t23.test.mjs`: read in part. `t33.test.mjs`: read in part.
+- Under JOB.md I may not act on partial reads, so the next session reads these whole before editing.
+
+**Next step:** a fresh job session reads requirements, `index.mjs` and the two tests whole, then applies B14 (register owners, link-sweep excluded and reported) and B15 (both session sets, with control), reruns the suite, checks, and posts COMPLETE.
+
+Size: not yet measured; no module code changed.
+
+## J15 · REPORT
+
+Three things in other modules, found while doing B14, B15 and B17 (op-declarations #30):
+
+1. **Architecture edge (B14).** `register-owners.mjs` now registers every owner through test-support's `declaredOpsOf`; the architecture check refuses it: `bio-plane/test/m/op-declarations/register-owners.mjs imports bio-plane/test/declared-ops.mjs of test-support, which op-declarations does not declare in uses`. Please add `test-support` to op-declarations' `uses` in `build/modules.json` (the requirements' Uses line already names it, tests only). Every owner registers without a refusal (link-sweep's `needs: "contribute"` is merged); no owner is excluded.
+2. **B17 (`export` in `SESSION_OPS.admin`) turns admission's tests red, and it does not yet let the founder take a copy.** Admission answers a session's call to `export` `ROOT_OF_TRUST_REQUIRED` (C-38.4) before it reads the session sets. Its tests pin that: `admission.test.mjs` R8 (:42, :48), the order test (:66–70, :209), R14 and `invariants.test.mjs` (:22, :26) use `export` as the op a session cannot reach; `control-plane` R28 (the gates' order) goes red with it. Admission's job must change its gate and re-pin those tests (use `purge` or `instancegroupseed` as the unreachable op); I changed only the tables, as B17 says. Without the change in admission the founder's button is drawn and the call is refused.
+3. **screens-investigate R51 (standardinforce).** With B15 the shell now draws `standardinforce`, but `test/m/screens-investigate/standard.test.mjs:89` ("a date sends standardinforce with the declared fields") fails on a field `op: 'standardinforce'` in the sent fields, which is that module's own test and drawing, not a table of mine. The 12 reds in `interface-shell`, the others in `screens-*` and the 20 in `control-plane`/8 in `plane` are the same with and without my changes (checked by reverting `index.mjs`), apart from item 2.
+
+## J16 · COMPLETE
+
+**Entries applied (OP-DECLARATIONS #30; B13 entries 1 and 2, B14, B15, B17; B16 sets the order).**
+
+1. **K3268 / B14: every owner registered, no hand list.** `test/m/op-declarations/register-owners.mjs` now registers every owner's `DECLARED_OPS` through test-support's `declaredOpsOf` (378 ops, no duplicate, link-sweep included, none excluded). Because registration is asynchronous, `browser.mjs` (which reads `OPS` as it is evaluated) imports it first. `t23`'s R10 test reads link-sweep's served list from its map (`sweeps` is R10's hand row, `sweepset` and `sweepratify` its declarations). The totality tests (`t34`, `t46`, `t47`, `t48`) read the owed acts an owner declares as served, from `browser.mjs`' `OWED_SERVED_BY_OWNERS` (derived from the registry file and the registered declarations, never listed); `t48`'s fresh-process count compares the child's ops with this process's and requires the difference to be declarations. `t28`'s two tests (case-import's four new ops `importregrade`, `rerunstart`, `rerunpair`, `rerunread`) are green, with the control that an op in no table and no declaration is refused.
+2. **R73 (R21) `registryActGaps` on `expertisewithdraw`:** green by the declaration (member-roster R79 merged and registered); no change needed.
+3. **B15 / R82:** `standardinforce` is in `SESSION_OPS.member` and `SESSION_OPS.admin` (a hand entry beside its siblings, since a hand-held op keeps its hand row, R80; its spec, stamps and `NEEDS` row are what standards declares, and a test reads them from the declaration); named in `ACT_HELP_ABSENT`'s read ground until `ACT_HELP` holds a text (R34). Test and controls: `t51` R82 (written first, seen failing).
+4. **B17 / R83:** `export` is in `SESSION_OPS.admin` only. A session reaches a mutating op, so it needs a `NEEDS` row: `null`, composed as a third part of the table (`composeNeeds(hand, family, founderRows)`, refusing an overlap; `FOUNDER_SESSION_NEEDS`), which `op-capabilities` could hold instead if BOB prefers (its module, not touched). Test and controls: `t51` R83 (written first, seen failing); `tables.test.mjs` R3 and `t49` pins updated (the founder's set adds `export`; 881 NEEDS keys).
+
+**Requirement lines for BOB (written in `build/requirements/op-declarations.md`, the ownership listing of that file accepted at the merge):** the Status line; **R82** (`standardinforce`, amends R18); **R83** (`export`, amends R3, with a sentence in R3's third part); a Uses line for `test-support` (`declaredOpsOf`, tests only; a new `modules.json` edge, BOB's, see the REPORT).
+
+**Deferred / found in other modules:** see the REPORT (the architecture edge for `test-support`; admission's gate and tests for `export`; screens-investigate's R51 test).
+
+**Tests and checks run**
+- `node --test test/m/op-declarations/*.test.mjs` (bio-plane): tests 244, pass 244, fail 0 (before: 2 red at START; B14's registration first turned 6 red until the totality tests read the declarations).
+- Dependent modules, same with and without my changes except `export`: `affordances` 280/280, `corpus-export` 27/27; `admission` 55/58 (the 3 are B17's `export`, REPORT 2); `control-plane` 303/324 (20 are the tranche's, 1 is B17's R28); `plane` 258/266 (the tranche's); `interface-shell` 223/235 (the tranche's).
+- From the process repository: `node checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `checks/coverage.mjs /home/user/bio op-declarations`: 82 of 82 live requirement ids named, 0 failures. `checks/words.mjs /home/user/bio op-declarations`: 0 failures (the product-wide run shows 27 words failures, all in op-grades, strength). `checks/architecture.mjs /home/user/bio op-declarations`: 1 failure, the missing `test-support` edge (REPORT 1). `checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 14 files changed, 1 failure, the requirements file (accepted at the merge, B13).
+
+Size (session_01FT9GgSLGmUqkGFtMCTxFqA): test runs 24, module lines 3458
+
+## J17 · BLOCKED
+
+BLOCKED. Cause: context (reading). Stopping before any change; nothing is edited.
+
+**Done this session (depth 2, session_01EXU2JECeQbjRAzyd8tuBGX)**
+- Attached civicos-process; read roles/JOB.md whole; read the job record and the inbox. The remote record was ahead of my local copy (J16, handled B17); B18 was the only unread entry.
+- Checked out `job/T51/op-declarations` at its remote head and merged `tranche/T51` into it (a fast-forward to `1f82676f5d`). Recorded the start with `mail start` (`0248aae58a`).
+- Located the code for B18, by grep only (not yet read whole):
+  - `ACT_HELP_ABSENT`: `src/op-declarations/index.mjs:2643`; `strengthbarset` is named at `:2649`, and the 69 design ops are named in the same groups.
+  - `OP_ALIASES`: `src/op-declarations/index.mjs:94`; `strengthbarset: "strengthbar"` at `:99`.
+  - The R34 partition test: `test/m/op-declarations/t36.test.mjs:299`. It already reads `explained()` from `test/m/op-declarations/help.mjs`, which reads affordances' `ACT_HELP`; the hand list is the `ACT_HELP_ABSENT` groups.
+  - Affordances' `T51_DESIGN_OPS` is at `bio-plane/src/affordances/act-help.mjs:42`, and `ACT_HELP` at `:230`.
+- Read whole: `build/requirements/op-declarations.md` lines 1–175 of 380.
+
+**Not yet read whole (the reason for this BLOCKED)**
+- `build/requirements/op-declarations.md` lines 176–380 (includes R21's alias list and R34's text).
+- `src/op-declarations/index.mjs` (about 2,900 lines; I have only grepped it).
+- `src/affordances/act-help.mjs` (231 lines), `test/m/op-declarations/t34.test.mjs` (R21 alias tests), `test/m/op-declarations/t36.test.mjs` (R34 partition test).
+My context is past the half-window line; reading these now would not fit, so I stop here (JOB.md, step 1).
+
+**Next step for a fresh session**
+1. Read whole: requirements 176–380; `index.mjs`; `act-help.mjs`; `t34.test.mjs`; `t36.test.mjs`.
+2. Install `node_modules` where a tracked lockfile lacks one (K4113).
+3. Entry 1 (B18 (1)): drop from `ACT_HELP_ABSENT`'s grounds the 69 ops affordances now holds in `ACT_HELP` (its `T51_DESIGN_OPS`, plus `accountdrafts` and `accountpropose`). Make the partition test read affordances' `ACT_HELP` (the `explained()` path), never a hand list. Write the test first and see it fail.
+4. Entry 2 (B18 (2)): remove `strengthbarset` from `OP_ALIASES` and from R21's list (26 aliases). A test with a control.
+5. Run the suite, `checks/run.mjs`, the ownership check; post COMPLETE with the requirement lines for BOB (R21 and R34 amended).
+
+No requirement line has been written yet. The record's cursor is B17; B18 is not yet handled.
+
+## J18 · COMPLETE
+
+COMPLETE (OP-DECLARATIONS #32, session_01GykvWFgopputGrmd98pLi2, depth 2; B18 and B19 applied). Branch `job/T51/op-declarations` at `16fdb2832e`, tranche/T51 merged in (`7fa81cd685`).
+
+**Entries applied**
+1. R34 partition (B18 (1)): `ACT_HELP_ABSENT` no longer names the 53 ops affordances' `ACT_HELP` holds (its `T51_DESIGN_OPS`, `accountdrafts`, `accountpropose`, and `standardinforce`, `sweeps` it already held; B18 said 69, 16 of those were in no ground here). `test/m/op-declarations/help.mjs` reads `ACT_HELP` alone: the K4070 word fallback is gone. A new t36 test reads affordances' exported `T51_DESIGN_OPS` and its `ACT_HELP` (no hand list, K3268) and fails if any op both explained and named; its control is `projectownervotes`, still named. The five R34 reds (t36, t41, t42, t50 R75, t51 R82) are cleared; t46 and t50's controls now use `stepcreate`, an op still unexplained (the old controls were ops affordances now explains).
+2. R21 (B18 (2)): `strengthbarset` is out of `OP_ALIASES` (26 aliases) and out of the alias ground. Nothing else changed in the table. A new t34 test pins the 26, the op served by strength's own declaration, its spec, `NEEDS` (`publish`), stamps (`author`, `viewer`; `identity` by the act list) and the grounds.
+
+**Why strengthbarset is a family op here (a judgement, B18 did not say it).** Without the alias, R80 refused strength's registration of `strengthbarset` (`NEEDS_MISSING`: a mutating op with no hand row must carry `needs`, and strength's `DECLARED_OPS` row gives none; `op-capabilities` holds a hand row for `strengthbar` only). To keep what the alias gave it (capability `publish`, the `author` stamp, `DECLARATION_ACTIONS`) I put it in a `strength` family with the existing kind `publishgate` and added it to `DECLARATION_ACTIONS`. When strength's row gives `needs: "publish"` this family entry can go (R81 will then compare the two).
+
+**Requirement lines for BOB**
+- R21: add "(T51 K4254) `strengthbarset` is no alias: strength declares it itself (`reasoned`); the alias table holds 26 aliases." Test: the alias count and the op's spec, `NEEDS` and stamps; control: the remaining aliases stay aliases.
+- R34: add "(T51 K4254) R34 is read against `ACT_HELP` as affordances' T51 job holds it: the 53 ops of its `T51_DESIGN_OPS`, `accountdrafts`, `accountpropose` (and `standardinforce`, `sweeps`) leave their grounds; the partition tests read `ACT_HELP`, not a list. `strengthbarset` is named under the last ground until `ACT_HELP` holds it."
+- R3 (counts only): the family part of `NEEDS` is 531 rows, aliases 26, hand 323, founder 1: still 881.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT)**
+1. `strength` (src/strength/index.mjs:1683): its ops map serves the arm `strengthbar`, not `strengthbarset`, while `DECLARED_OPS` names `strengthbarset` and `screens-settings` sends it. With the alias gone no arm of strength serves `strengthbarset`, so R6 (no spec without a handler) is not met until strength serves it (an arm calling `strengthBarSet` with `author: q("author")`). I cannot see the door's routing from my module; control-plane/plane should be told if it routed the alias to the `strengthbar` arm.
+2. `strength` DECLARED_OPS `strengthbarset` gives no `needs` (see above); it should say `"publish"`.
+3. `affordances` (src/affordances/act-help.mjs:196): the text is held under `strengthbar` keyed `act.strengthbarset.does`; `strengthbarset` itself has no `ACT_HELP` entry, so it sits under `ACT_HELP_ABSENT.unexplained` here. Holding it under `strengthbarset` (the word exists) lets it leave.
+4. The L11-wide run shows one words failure naming op-grades (`test/m/op-grades/t37.test.mjs:32` testcopy), none naming mine. Other coverage failures in the run belong to agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry.
+
+**Tests and checks** (from `bio-plane`): `node --test test/m/op-declarations/*.test.mjs`: tests 246, pass 246, fail 0 (before: 244 tests, 5 failing). Process repo: `format.mjs`: 175 modules, 0 failures; `architecture.mjs op-declarations`: 0 failures; `coverage.mjs op-declarations`: 82 of 82 live ids named; `words.mjs op-declarations`: 0 failures; `ownership.mjs ... tranche/T51 job/T51/op-declarations`: 9 files changed, 0 failures; `run.mjs` format and architecture 0 failures, no finding in my module; `setup-words/build.mjs --check`: "words-unreviewed.json is stale or absent" (expected; no refusal naming my module). My layer's tests (manifest) are not named beyond the module's suite.
+
+Size (session_01GykvWFgopputGrmd98pLi2): test runs 9, module lines 3464
+
+## J19 · COMPLETE
+
+COMPLETE for B20 (K4262), with B21 read (route taken; job started at depth 2 under session session_01Uihot6oAdmTPVZ9YVwa3Rs).
+
+**Entries applied.** B20: `strengthbarset` leaves the unexplained ground in `ACT_HELP_ABSENT`; `strengthbar` takes it (the design gives it no text and no screen sends it). Header comment of the table records it (K4262, B20).
+
+**Test changed.** `t34.test.mjs` R21 test (K4254) asserted `strengthbarset` sits under `unexplained`; that is superseded by B20. It now asserts `strengthbarset` is explained by `ACT_HELP` (through `help.mjs`) and under no ground, and `strengthbar` is explained by none and under `unexplained`. This is the test that went red after the entry, and it is the same check, not a weakened one.
+
+**Reds before the fix (seen):** R34 member partition; R34 `T51_DESIGN_OPS` check; R47/R34 N862; R75. **After:** 246 of 246 pass.
+
+**Requirement lines.** None changed. R21 (line 99) and R34 do not name the ground of `strengthbarset`, so no BOB line is needed.
+
+**Deferred.** None.
+
+**Other modules (P9), found by the checks, not in this job's files:**
+- coverage: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; screens-inquiry R110, R119; screens-intake R53 are named by no test.
+- words: op-grades `bio-plane/test/m/op-grades/t37.test.mjs:32` (testcopy, translation-directed).
+
+**Checks run.**
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0; words 1 failure (op-grades, not this module); coverage 6 failures (other modules, listed above). Op-declarations files: 0 findings.
+- `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 3 files changed by op-declarations, 0 failures.
+- Suite: `node --test "test/m/op-declarations/**/*.test.mjs"` in `bio-plane`: 246 pass, 0 fail.
+
+**Git.** The B21 route kept the stale commit on `stale/op-declarations-local`. Pushed as `12dabe5943` on `job/T51/op-declarations`.
+
+**Size (session_01Uihot6oAdmTPVZ9YVwa3Rs): test runs 4, module lines 3466.**

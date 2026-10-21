@@ -13,7 +13,7 @@ import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot, ok, silent, bytes, MEMBER, ADMIN, SESSION, STORE_KEY, Event } from "./harness.mjs";
+import { boot, ok, refused, silent, bytes, fitSend, declaredFit, MEMBER, ADMIN, SESSION, STORE_KEY, Event } from "./harness.mjs";
 import { ALL, DOORBELL, JOIN } from "./screens.fixture.mjs";
 
 /* an HTML-escaped sentence, as the page puts it in an explanation */
@@ -65,7 +65,8 @@ test("R90 cs.act(op, {here}) explains the button by act.<op>.here.<place> in pla
   assert.ok(!tip("here").includes(h(word("act.promote.does"))), "in place of .does");
   assert.ok(tip("plain").includes(h(word("act.promote.does"))), "no here is .does");
   assert.ok(tip("gone").includes(h(word("act.promote.does"))), "a here word the table lacks falls back to .does");
-  assert.ok(tip("here").includes(word("weight.reasoned.name")) || tip("here").includes(h(word("weight.reasoned.means"))), "the weight line follows");
+  /* fix round 2, C76: `promote` is marked Reasoned and asks nothing, so it carries no weight line */
+  assert.ok(!tip("here").includes(h(word("weight.reasoned.means"))), "no weight line for an act that asks nothing");
 });
 
 test("R90 a strip reading's says closes that reading's own explanation after its label in bold; the phone's one chip carries no reading's says; a reading with none explains nothing; the cap of four stays", async () => {
@@ -484,13 +485,13 @@ test("R97 a passphrase of the empty string with keep false makes the unprotected
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 const GOT = {
   id: "finder", reads: () => ({}),
-  acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { id: "c1" }, name: "x.bin", verify: view.ui.verify || undefined }))); return null; } }],
+  acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: view.ui.verify || undefined }))); return null; } }],
   render: (cs, view) => cs.act("search") + '<pre id="dl">' + cs.esc(view.ui.dl || "") + "</pre>",
 };
 test("R98 cs.download with verify hashes the bytes in the browser before any file is made: matching bytes download; altered bytes save nothing and answer DIGEST_MISMATCH with expected and got; control: without verify a download saves as before", async () => {
   const body = new Uint8Array([1, 2, 3, 4, 5, 250]);
   const page = async (verify) => {
-    const screen = { ...GOT, acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { id: "c1" }, name: "x.bin", verify: VERIFY }))); return null; } }] };
+    const screen = { ...GOT, acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: VERIFY }))); return null; } }] };
     const src = interfacePage([screen]).replace("VERIFY", JSON.stringify(verify));
     return boot({ screens: [screen], path: "/app/finder", html: src.split("__CSP_NONCE__").join("n0nce"), plane: { openoriginal: bytes(body, "application/octet-stream") } });
   };
@@ -643,8 +644,8 @@ test("R102 every screen of the registry has its tab title (page.title with scree
     assert.equal(p.root().querySelectorAll(".cs-pips, .w, [data-weighed]").length, 0, id + " carries no weight mark");
     if (ops.length) assert.ok(p.root().querySelectorAll("button[data-act]").length > 0 || !sessionless, id + ": its acts are drawn");
   }
-  const home = await boot({ screens: ALL });
-  assert.ok(home.root().querySelector('button[data-act="promote"] .cs-pips'), "a working screen keeps its marks");
+  const home = await boot({ screens: ALL, path: "/app/members", plane: { whoami: ok(ADMIN) } });
+  assert.ok(home.root().querySelector('button[data-act="memberadd"] .cs-pips'), "a working screen keeps its marks (an act that asks)");
   const long = "A very long team name that has to wrap and never be cut, however many words it takes to say it in full";
   const wrapped = await boot({ screens: ALL, plane: { groupidentity: ok({ ok: true, display_name: long }) } });
   assert.equal(wrapped.root().querySelector(".cs-mast .mk-grp").textContent, long, "whole");
@@ -689,7 +690,7 @@ test("R103 an explanation opens below what it explains, else above: the first th
 
 const SEARCHING = {
   id: "finder", words: [["screen.finder.t.l", "fx l", false], ["screen.finder.t.a", "fx a", false], ["screen.finder.t.b", "fx b", false], ["screen.finder.t.h1", "fx h1", false], ["screen.finder.t.h2", "fx h2", false]],
-  reads: (view) => ({ list: { op: "search", query: { show: view.ui.show || "a" }, refusals: { BAD: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }),
+  reads: (view) => ({ list: { op: "search", query: { q: view.ui.show || "a" }, refusals: { BAD: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }),
   acts: [],
   render(cs, view) {
     return cs.choice("c1", "screen.finder.t.l", [["a", "screen.finder.t.a"], ["b", "screen.finder.t.b"]], { redraw: "show" })
@@ -710,7 +711,7 @@ test("R90 (K4072) a choice that redraws re-runs the screen's reads with the choi
   assert.equal(p.byOp("search").length, 1, "no read beyond the redraw's");
   await pickIn(p, "c1", "b");
   assert.equal(p.byOp("search").length, 2, "read once more");
-  assert.equal(p.byOp("search")[1].query.show, "b", "with the new query");
+  assert.equal(p.byOp("search")[1].query.q, "b", "with the new query");
 });
 
 test("R90 (K4073) cs.sec and cs.field take help as one key or a list, each its own sentence; a read's own refusal function is handed the kit; cs.checks takes the redraw option", async () => {
@@ -741,4 +742,73 @@ test("R90 (K4076) a text field's typed input carries the screen's handler, debou
   await p.back("/app/finder/other");
   await p.clock.tick(1000);
   assert.equal(p.doc.getElementById("typed").textContent, "", "cancelled with the screen");
+});
+
+/* ---------- K4245: an act's failed hook (R21) and a kept choice (R90) ---------- */
+
+/* a screen function is self-contained, so the owner's required fields are carried into its source as data (K3268) */
+const withBody = (src) => new Function("return " + src.replace("__BODY__", JSON.stringify(JSON.stringify(declaredFit("promote")))))();
+const WORKING = {
+  id: "home", reads: () => ({}),
+  words: [["screen.home.t.l", "fx label", false]],
+  acts: [{ op: "promote",
+    send: withBody('function (view, el, cs) { cs.set("working", true); return { body: JSON.parse(el.dataset.body) }; }'),
+    done(view, answer, cs) { cs.set("working", false); },
+    failed(view, answer, cs) { cs.set("working", false); cs.set("failedKind", answer.kind + ":" + (answer.code || "")); } }],
+  render: withBody('function (cs, view) { return (view.ui.working ? \'<p id="working">on</p>\' : "") + \'<p id="failedKind">\' + cs.esc(view.ui.failedKind || "-") + "</p>" + cs.act("promote", { label: "act.promote.label.home", data: { body: __BODY__ } }); }'),
+};
+
+test("R21 an act's failed hook runs at once when its request is refused or not answered, so the line the press raised is cleared before the refusal is drawn beside the act; control: a successful act draws its answer as before and never calls failed", async () => {
+  const refusedPage = await boot({ screens: [WORKING], plane: { promote: refused("ZZ_REFUSED", "No.") } });
+  await refusedPage.click('button[data-act="promote"]');
+  assert.equal(refusedPage.doc.getElementById("working"), null, "the working line is cleared");
+  assert.equal(refusedPage.doc.getElementById("failedKind").textContent, "refused:ZZ_REFUSED", "failed was handed the refusal");
+  assert.ok(refusedPage.root().querySelector('[data-slot] [data-gap="refused"]'), "the refusal is drawn beside the act, after the hook's redraw");
+  const silentPage = await boot({ screens: [WORKING], plane: { promote: silent } });
+  await silentPage.click('button[data-act="promote"]');
+  assert.equal(silentPage.doc.getElementById("working"), null, "no answer clears it too");
+  assert.equal(silentPage.doc.getElementById("failedKind").textContent, "silent:");
+  /* control: success runs done and not failed, and the answer is drawn as before */
+  const okPage = await boot({ screens: [WORKING], plane: { promote: ok({}) } });
+  await okPage.click('button[data-act="promote"]');
+  assert.equal(okPage.doc.getElementById("working"), null, "done cleared it");
+  assert.equal(okPage.doc.getElementById("failedKind").textContent, "-", "failed was not called");
+  assert.equal(okPage.root().querySelector('[data-gap="refused"]'), null);
+});
+
+test("R21 an act with no failed hook is refused as before (control)", async () => {
+  const plain = { ...WORKING, acts: [{ op: "promote", send: withBody('function (view, el) { return { body: JSON.parse(el.dataset.body) }; }') }] };
+  const p = await boot({ screens: [plain], plane: { promote: refused("ZZ_REFUSED", "No.") } });
+  await p.click('button[data-act="promote"]');
+  assert.ok(p.root().querySelector('[data-slot] [data-gap="refused"]'));
+});
+
+const AUD = {
+  id: "home", reads: () => ({ list: { op: "queue" } }),
+  words: [["screen.home.t.l", "fx label", false], ["screen.home.t.a", "fx a", false], ["screen.home.t.b", "fx b", false], ["screen.home.t.c", "fx c", false]],
+  /* no rereads: the act re-reads every read, each shown as loading, so the whole screen is redrawn without the choice for a moment */
+  acts: [{ op: "promote", send: fitSend("promote") }],
+  render(cs, view) {
+    return cs.state("list", (items) => cs.choice("aud", "screen.home.t.l", [["a", "screen.home.t.a"], ["b", "screen.home.t.b"], ["c", "screen.home.t.c"]], { value: "a" })
+      + cs.choice("num", "screen.home.t.l", [{ value: 1, text: "one" }, { value: 2, text: "two" }])
+      + cs.choice("gone", "screen.home.t.l", [["a", "screen.home.t.a"], ["b", "screen.home.t.b"]], { value: "a" }) + cs.act("promote", { label: "act.promote.label.home", data: { k: "x" } }), { empty: "state.empty" });
+  },
+};
+
+test("R90 a redraw keeps a choice the member made: the whole-draw reset to its seed, after an act re-reads every read, no longer happens; the seed applies only until the member chooses (control)", async () => {
+  const p = await boot({ screens: [AUD], plane: { queue: ok({ items: [1] }) } });
+  const pick = (id) => p.doc.getElementById(id);
+  assert.ok(p.root().querySelector('#aud option[value="a"]').hasAttribute("selected"), "seeded before the member chooses (control)");
+  pick("aud").value = "c"; p.fire(pick("aud"), "change");
+  pick("num").value = "2"; p.fire(pick("num"), "change");
+  await p.click('button[data-act="promote"]');
+  assert.equal(p.byOp("queue").length >= 2, true, "the act re-read the screen's reads");
+  assert.equal(pick("aud").value, "c", "kept across the whole redraw");
+  assert.ok(p.root().querySelector('#aud option[value="c"]').hasAttribute("selected"));
+  assert.equal(pick("num").value, "2", "a numeric option value is kept too");
+  assert.equal(pick("gone").value, "a", "a choice the member did not make keeps its seed (control)");
+  await p.click('button[data-act="promote"]');
+  assert.equal(pick("aud").value, "c", "and after a second act");
+  /* a choice leaves nothing in a request or storage */
+  assert.ok(p.byOp("promote").every((r) => JSON.stringify(r.body || {}).indexOf('"c"') < 0), "the choice is sent by no op of its own");
 });

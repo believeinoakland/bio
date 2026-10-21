@@ -105,9 +105,9 @@ const LOOK = { ok: true, result: { ok: true, handle: "mai", until: "2026-10-21T0
 
 test("R5 reset: passwordresetlook reads the link in its body and draws for whom it is and until when", async () => {
   const o = await open("reset", { fragment: { reset: LINK }, table: { passwordresetlook: LOOK } });
-  assert.deepEqual(o.requests.map((r) => [r.op, r.body, r.query]), [["passwordresetlook", { link: LINK }, {}]]);
+  assert.deepEqual(o.requests.map((r) => [r.op, r.body, r.query]), [["passwordresetlook", { link: LINK }, {}], ["groupidentity", undefined, {}]]);
   has(o, "screen.reset.for", { handle: "mai", date: { html: date("2026-10-21") } });
-  has(o, "screen.reset.keeps");
+  has(o, "screen.reset.keeps", { name: { html: said("screen.entry.group") } });
 });
 
 test("R5 set: 'Set my new password' sends passwordreset with the link and the password in the body only; then 'Sign in' to front", async () => {
@@ -141,6 +141,35 @@ test("R5 control: the link is in no address, query, link drawn or text, only in 
   assert.ok(!o.drawn().includes(LINK));
   for (const r of o.requests) {
     assert.ok(!JSON.stringify(r.query || {}).includes(LINK));
-    assert.equal(JSON.stringify(r.body).includes(LINK), ["passwordresetlook", "passwordreset"].includes(r.op));
+    assert.equal(JSON.stringify(r.body ?? null).includes(LINK), ["passwordresetlook", "passwordreset"].includes(r.op));
   }
+});
+
+// ---- reset fills its words (R32) ----
+
+const UNFILLED = /\{\w+\}/;
+const IDENTITY = (display_name) => ({ ok: true, result: { ok: true, group: "river-town", display_name } });
+
+test("R32 reset fills every placeholder: the live page names the team in screen.reset.keeps and draws no '{'; the set and dead pages likewise; control: an unnamed team draws the unnamed-team word, never the short name", async () => {
+  const live = await open("reset", { fragment: { reset: LINK }, table: { passwordresetlook: LOOK, groupidentity: IDENTITY("River Town") } });
+  has(live, "screen.reset.keeps", { name: "River Town" });
+  assert.doesNotMatch(live.text, UNFILLED, "the live page");
+  assert.doesNotMatch(live.drawn(), UNFILLED, "nothing unfilled in any pass");
+  // the team's name is asked in the public frame, with no session (as front asks it)
+  assert.ok(live.requests.some((r) => r.op === "groupidentity" && !r.header));
+  const set = await open("reset", { fragment: { reset: LINK }, table: { passwordresetlook: LOOK, groupidentity: IDENTITY("River Town"), passwordreset: { ok: true, result: { ok: true } } } });
+  await set.press("passwordreset", { values: { "rs-pw": "my new long password", "rs-pw2": "my new long password" } });
+  assert.doesNotMatch(set.text, UNFILLED, "the set page");
+  const dead = await open("reset", { fragment: { reset: LINK }, table: { passwordresetlook: { ok: false, code: "RESET_LINK_DEAD" }, groupidentity: IDENTITY("River Town") } });
+  assert.doesNotMatch(dead.text, UNFILLED, "the dead page");
+  // control: no name set
+  for (const display_name of [null, "  "]) {
+    const o = await open("reset", { fragment: { reset: LINK }, table: { passwordresetlook: LOOK, groupidentity: IDENTITY(display_name) } });
+    has(o, "screen.reset.keeps", { name: { html: said("screen.entry.group") } });
+    assert.doesNotMatch(o.text, UNFILLED);
+    assert.ok(!o.text.includes("river-town"), "never the short name");
+  }
+  // control: a name that cannot be read still leaves no placeholder
+  const none = await open("reset", { fragment: { reset: LINK }, table: { passwordresetlook: LOOK, groupidentity: { ok: false, code: "DOOR_RATE_LIMITED" } } });
+  assert.doesNotMatch(none.text, UNFILLED);
 });

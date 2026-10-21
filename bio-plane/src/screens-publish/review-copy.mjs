@@ -35,11 +35,19 @@ export const REVIEW_COPY = Object.freeze({
     const chosen = drafts.find(function (x) { return x.draft_id === want; }) || drafts[drafts.length - 1] || null;
     view.ui.draft = chosen;
     const c = chosen && chosen.case ? chosen.case : {};
-    const out = [cs.title(c.identity ? P.plain(cs.w("screen.review-copy.heading", { case: c.identity, edition: String(c.edition || "") })) : null, { thing: "case" })];
-    if (!chosen) { out.push(cs.state("drafts", function () { return ""; }, { empty: "screen.review-copy.nodraft" })); return out.join(""); }
+    const copy = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
+    const held = copy && copy.state === "ok" ? copy.value : null;
+    // R60, R63: the heading is the title `review` answers; the identity sentence is body text, drawn where no case is named
+    const out = [cs.title(P.titleOf2(cs, held, c.identity ? P.plain(cs.w("screen.review-copy.heading", { case: c.identity, edition: String(c.edition || "") })) : null), { thing: "case" })];
+    if (!chosen) {
+      // R64 (I-29): beside "There is no draft to share yet", the door that makes one: the case editor
+      out.push(cs.state("drafts", function () { return ""; }, { empty: "screen.review-copy.nodraft" }));
+      if (d && d.state === "empty") out.push('<p><a class="cs-btn" data-tone="quiet" data-nodraft-go href="/app/case-editor/' + encodeURIComponent(String(view.subject || "").split("/")[0]) + '" data-nav>' + cs.w("screen.review-copy.nodraft.go") + "</a></p>");
+      return out.join("");
+    }
+    out.push(P.noCase(cs, held));
 
     // The named readers: each a row with what they may read and until when, and "Stop sharing" (R2, R18).
-    const copy = P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } });
     out.push(P.sec(cs, "screen.review-copy.readers", cs.state(copy, function (v) {
       const grants = (Array.isArray(v.grants) ? v.grants : []).filter(function (g) { return !g.revoked_at && !g.revokedAt; });
       if (!grants.length) return "";
@@ -60,13 +68,16 @@ export const REVIEW_COPY = Object.freeze({
     })) + P.said(view, "reviewrevoke"));
 
     // Sharing with a named reader: a name, a role and an end date; the secret shown once as the reader's link (R2).
-    out.push(cs.sec("screen.review-copy.share", cs.field("rc-name", "screen.review-copy.name.label", { rec: true })
+    // C66 (fix round 2): the boxes are drawn with their button; a member who may not share is shown none of them (and only the file)
+    const grant = cs.act("reviewgrant", { tone: "primary" }), file = view.ui.export ? "" : cs.act("reviewexport", { data: { step: "open" } });
+    out.push(grant ? cs.sec("screen.review-copy.share", cs.field("rc-name", "screen.review-copy.name.label", { rec: true })
       + cs.field("rc-role", "screen.review-copy.role.label", { rec: true, help: "screen.review-copy.role.help" })
       + cs.field("rc-until", "screen.review-copy.until.label", { type: "date", help: "screen.review-copy.until.help" })
-      + '<div class="mk-acts">' + cs.act("reviewgrant", { tone: "primary" }) + (view.ui.export ? "" : cs.act("reviewexport", { data: { step: "open" } })) + "</div>" + P.said(view, "reviewgrant")
+      + '<div class="mk-acts">' + grant + file + "</div>" + P.said(view, "reviewgrant")
       + (view.ui.link ? '<div class="cs-sheet" data-reader-link><span class="id">' + cs.esc(view.ui.link.href) + "</span><p>"
         + cs.w("screen.review-copy.link.for", { who: view.ui.link.who }) + " <b>" + cs.w("screen.review-copy.noemail") + "</b></p><p class=\"muted\">"
-        + cs.w("screen.review-copy.link.once") + "</p></div>" : "")));
+        + cs.w("screen.review-copy.link.once") + "</p></div>" : ""))
+      : file ? '<div class="mk-acts">' + file + "</div>" : "");
 
     // R40 (A81): "Save as a file": the warning, what the file carries, the one box, and the file handed over to save
     if (view.ui.export) {
@@ -84,19 +95,20 @@ export const REVIEW_COPY = Object.freeze({
       if (done && done.declined) out.push(P.fold(cs, "screen.review_copy.when.this.browser.doesn.t", "<p>" + cs.w("screen.review_copy.this.browser.did.not.accept") + " " + cs.w("screen.review_copy.nothing.left.this.page") + "</p>"));
     }
 
-    // The readers' comments, each answered by "Reply" (R2).
-    if (c.case_id) {
-      const comments = P.later(cs, view, "comments", "reviewcomments", { query: { case: c.case_id, edition: String(c.edition || ""), draft: chosen.draft_id } },
-        function (v) { return !v || !Array.isArray(v.comments) || v.comments.length === 0; });
-      out.push(P.sec(cs, "screen.review-copy.comments", P.listed(cs, comments, function (v) {
-        return cs.sheet(v.comments.map(function (x, i) {
-          return cs.row("", '<span class="rec">' + cs.esc(x.text) + "</span>",
-            '<span class="meta">' + cs.w(x.reviewer_kind === "recipient" ? "screen.review-copy.from.reader" : "screen.review-copy.from.member", { who: x.reviewer || "" })
-            + (x.at ? " · " + cs.date(x.at) : "") + "</span>",
-            x.reviewer_kind === "recipient" ? cs.field("rc-reply-" + i, "screen.review-copy.reply.label", { area: true }) + cs.act("reviewcomment", { data: { index: String(i) } }) : "");
-        }).join(""));
-      }) + P.said(view, "reviewcomment")));
-    }
+    // The readers' comments, each answered by "Reply" (R2). R62 (L19): they come from the copy answer itself, so a draft that names
+    // no case still draws them; R65 (G6): an acknowledgement is drawn by key, naming the reader by what the grant states, never an id.
+    const comments = held && Array.isArray(held.comments) ? held.comments : [];
+    const acks = held && held.statement_acknowledgements && Array.isArray(held.statement_acknowledgements.acknowledgements) ? held.statement_acknowledgements.acknowledgements : [];
+    out.push(P.sec(cs, "screen.review-copy.comments", (comments.length ? cs.sheet(comments.map(function (x, i) {
+      const reader = x.author_kind === "recipient" || x.reviewer_kind === "recipient";
+      return cs.row("", '<span class="rec">' + cs.esc(x.text) + "</span>",
+        '<span class="meta">' + cs.w(reader ? "screen.review-copy.from.reader" : "screen.review-copy.from.member", { who: x.recipient || x.author || x.reviewer || "" })
+        + (x.at ? " · " + cs.date(x.at) : "") + "</span>",
+        reader ? cs.field("rc-reply-" + i, "screen.review-copy.reply.label", { area: true }) + cs.act("reviewcomment", { data: { index: String(i) } }) : "");
+    }).join("")) : "")
+      + (acks.length ? '<ul class="mk-list" data-acked>' + acks.map(function (a) {
+        return "<li>" + cs.w("screen.review-copy.acked", { who: a.recipient || a.by || "", date: { html: a.at ? cs.date(a.at) : "" } }) + "</li>"; }).join("") + "</ul>" : "")
+      + P.said(view, "reviewcomment")));
     return out.join("");
   },
 

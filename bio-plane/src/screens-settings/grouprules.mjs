@@ -18,7 +18,7 @@ export const grouprules = {
   reads() {
     // the kinds of action a deadline may apply to (local-facts R18) and the captures the member can see, for the draft form
     return { rules: { op: "grouprules" }, roster: { op: "memberlist" }, fields: { op: "rulefields", query: { section: "deadlines" } },
-      docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+      docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
   },
 
   render(cs, view) {

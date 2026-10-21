@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { interfacePage, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
-import { boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
+import { fitSend, boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
 import { documentOf } from "./dom.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { ALL, HELD } from "./screens.fixture.mjs";
@@ -298,11 +298,11 @@ test("R63 R69 the phone's More page heads with screen.more.sub and lists the pla
   }
 });
 
-test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark and its explanation only: Sign in, Search, Start a project, Capture and Mute each draw theirs; control: Search still runs on press, and a weighed act carries its weight, not a mark", async () => {
-  const cases = [["front", "login"], ["finder", "search"], ["home", "promote"], ["capture", "acquire"], ["queue", "queuemute"]];
+test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark and its explanation only: Sign in, Search, Capture and Mute draw theirs (Reversible: none above it), a Terminal-marked act its mark; control: Search still runs on press, and a weighed act carries its weight, not a mark. (fix round 2, C76) Start a project is marked Reasoned and asks nothing, so it draws no mark", async () => {
+  const cases = [["front", "login"], ["finder", "search"], ["capture", "acquire"], ["queue", "queuemute"], ["connect", "subscriptiondisconnect"]];
   for (const [id, op] of cases) {
     assert.ok(Object.hasOwn(MARKS, op), op + " in MARKS");
-    const s = { id, reads: () => ({}), acts: [{ op }], render: fn(`return cs.act("${op}");`) };
+    const s = { id, reads: () => ({}), acts: [{ op, send: fitSend(op) }], render: fn(`return cs.act("${op}");`) };
     const p = await boot({ screens: [s], path: "/app/" + id, plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "create_projects", "publish"] }) } });
     const b = btn(p, op);
     assert.ok(b, op);
@@ -323,7 +323,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
     assert.equal(p.byOp(op).length, 1, op + " runs on press");
   }
   /* control: a weighed act carries its weight */
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release", send: fitSend("release") }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
   assert.equal(btn(q, "release").querySelector(".w").hasAttribute("data-mark"), false);
   assert.equal(btn(q, "cite").querySelector(".w"), null, "R77: a Reversible act draws no weight");

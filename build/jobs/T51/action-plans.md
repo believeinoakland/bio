@@ -1,6 +1,6 @@
 # action-plans (T51)
 
-**Status** · session_014XCjtGo1PwP3JkN5NxAqDd · depth 2 · COMPLETE · handled B2
+**Status** · session_019adkgzUkBj7R8ajuFvhTNL · depth 2 · COMPLETE · handled B4
 
 ## Completion
 
@@ -50,3 +50,34 @@ Test runs: 7 (6 before, 1 after the change). Size (session_014XCjtGo1PwP3JkN5NxA
 ## J2 · COMPLETE
 
 Change B2 applied on job/T51/action-plans (commit after e867f14aef): PHASE_MALFORMED reads refusal.PHASE_MALFORMED by word; the localize id a_phase_has_an_id is retired; R47 title drops the control clause. 88 of 88 tests pass; words, architecture, format, coverage and ownership show 0 failures for action-plans. Record: build/jobs/T51/action-plans.md, section "Change B2".
+
+## J3 · COMPLETE
+
+Applied B3 (K4206) and B4 (requirement lines). Commit 59856e01e6 on job/T51/action-plans.
+
+**K4206, `optionadopt` declared** in `DECLARED_OPS` (`bio-plane/src/action-plans/index.mjs`, beside `optionadd`): classes `admin`, `member`, `probe` and `mutating: true` (from `op-declarations`); weight `undetermined` (from `op-grades`); description `localize("action-plans.declared.optionadopt", …)` with `op-grades`' sentence. Fields: `accepts` `proposal`, `offer`, `plan` and the body fields R9 reads; `requires` `[["proposal", "offer"]]`.
+
+**Judgement for BOB (no decision needed unless he disagrees):** the offer form also needs `plan`, which a requires list cannot state as conditional. `plan` is accepted, not required, so the declaration is true as stated but not complete for the offer form. The proposal form needs no `plan`.
+
+**No refusal changed.** The absent-id refusal, `NO_SUCH_PLAN_PROPOSAL`, already names `proposal` in its detail, so the arm needed no change (P8).
+
+**Test (R53, `declared-ops.test.mjs`).** Written first: red with "the declaration has no fields.accepts and fields.requires arrays". Green after the declaration. It uses a real member proposal from `optionPropose` as the base, so the requires-alone case is a valid call and not an absent-id refusal.
+
+**Requirement.** New R53 in `build/requirements/action-plans.md`, no "not yet met" mark (its test names it). R52 unchanged.
+
+**Words.** `action-plans.declared.optionadopt` has no row in `setup-words` yet, so `localize` uses the en sentence; rows regenerate at the layer close (BOB). No test names the id explicitly; the other declared ids have no such test either. Say if you want one added.
+
+**Deferred.** None.
+
+**Found in other modules.** None. The tree-wide words check reports 16 failures in other modules (e.g. `op-grades` `t47`, `t48`, `t49` testcopy). None names action-plans.
+
+**Checks** (`checks/*` from `civicos-process`, against `/home/user/bio`):
+- Module suite `bio-plane/test/m/action-plans/*.test.mjs`: 99 pass, 0 fail.
+- `format.mjs`: 175 modules, 0 failures.
+- `architecture.mjs action-plans`: 0 failures.
+- `coverage.mjs action-plans`: 53 of 53 live requirement ids named by a test.
+- `words.mjs action-plans`: 0 failures.
+- `ownership.mjs … tranche/T51 job/T51/action-plans`: 1 failure, `build/requirements/action-plans.md` (outside the module's paths). B4 says that listing is accepted at merge.
+- `run.mjs`: no finding names action-plans (16 words failures in other modules).
+
+Size (session_019adkgzUkBj7R8ajuFvhTNL): test runs 4, module lines 3357

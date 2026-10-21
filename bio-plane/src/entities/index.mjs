@@ -2089,4 +2089,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["captureSha","ref","entityId","basis"], requires: ["captureSha","ref","entityId","basis"] } },
   resolutiondefect: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution"),
     fields: { accepts: ["captureSha","ref","entityId","reason","source"], requires: ["captureSha","ref","entityId","reason"] } },
+  /* R62 (T51; K4243; op-declarations R80, op-grades R49): a read, so its class and mutating are the hand row's. `alias` is what the
+     arm reads; a call without it answers `count: 0`, not a refusal, so no field is required. */
+  entitybyalias: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("entities.declared.entitybyalias", "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing"),
+    fields: { accepts: ["alias"], requires: [] } },
 });

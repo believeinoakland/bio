@@ -15,6 +15,8 @@ function captureReads(view) {
   return { open: { op: "opencaptures", query: {}, empty: (v) => !v || !Array.isArray(v.captures) || !v.captures.length },
            held: { op: "heldcaptures", query: { limit: 200, state: "held_and_vouched" } },
            members: { op: "memberlist" },
+           /* R47 (C20): the member's team's requests a source turned away for a login */
+           refused: { op: "capturerequests", query: { state: "refused", limit: 50 }, empty: (v) => !v || !Array.isArray(v.requests) || !v.requests.length },
            ...(/^INQ-[A-Za-z0-9-]+$/.test(id) ? { questions: { op: "search", query: { q: "type:inquiry", limit: "200" },
              empty: (v) => !v || !Array.isArray(v.hits) || !v.hits.length } } : {}) };
 }
@@ -55,8 +57,8 @@ async function projectOf(cs, id) {
 
 /* R33 (N1139; DEC-325): a document is titled from its own title: the reading's `title` when it is not null; else what the
  * answer's document states; else, for an address that gives only a host, `document.untitled.web` (`{site}` the host,
- * `{date}` the day captured), never a slug or an address; else the address's last segment, as before. Plain text, at most
- * 200 characters. */
+ * `{date}` the day captured), never a slug or an address; else R50's `screen.capture.address.untitled` (`{kind}` from the document's
+ * format, `{site}` the address's host), never the address's file part. Plain text, at most 200 characters. */
 function titleOf(cs, o) {
   const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
   const read = o.reading && typeof o.reading.title === "string" ? o.reading.title.replace(/\s+/g, " ").trim() : "";
@@ -70,8 +72,18 @@ function titleOf(cs, o) {
     const day = new Date(cs.now ? cs.now() : Date.now()).toISOString().split(".")[0] + "Z";
     return plain(cs.w("document.untitled.web", { site: host, date: { html: cs.date(day) } })).slice(0, 200);
   }
-  const last = (address.replace(/[?#].*$/, "").match(/\/([^/]+)\/?$/) || [])[1] || "";
-  return String(last || address).slice(0, 200);
+  /* R50 (DEC-384 I-03): a document with no title is "A {kind} from {site}", never the file part of its address. `kind` is the
+     document's own format (`document.kind.*`), else what its declared media type names, else "file". */
+  const prof = o.doc && o.doc.profile && o.doc.profile.format && typeof o.doc.profile.format.format === "string" ? o.doc.profile.format.format : "";
+  const media = String((o.doc && o.doc.capture && o.doc.capture.content_type) || (o.doc && o.doc.profile && o.doc.profile.source_content_type) || "").toLowerCase().split(";")[0].trim();
+  const BY_MEDIA = { "application/pdf": "pdf", "text/html": "html", "application/xhtml+xml": "html", "text/plain": "text", "text/csv": "csv",
+    "image/jpeg": "jpeg", "image/png": "png", "application/zip": "zip",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx", "application/vnd.oasis.opendocument.text": "odt",
+    "application/vnd.oasis.opendocument.spreadsheet": "ods", "application/vnd.oasis.opendocument.presentation": "odp" };
+  const kinds = ["pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "jpeg", "png", "html", "zip", "text"];
+  const kind = kinds.includes(prof) ? prof : BY_MEDIA[media] || "undetermined";
+  return plain(cs.w("screen.capture.address.untitled", { kind: plain(cs.w("document.kind." + kind)), site: host || "" })).slice(0, 200);
 }
 
 /* R13, DEC-342: a refusal in words, beside the act or the address that met it: `refusal.<CODE>` when the table holds the code,
@@ -158,8 +170,9 @@ function renderCapture(cs, view) {
     .map(([k, w]) => `<span role="tab"${k === tab ? ' aria-selected="true"' : ""}><a href="/app/capture/${k}${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav${k === tab ? ' aria-current="page"' : ""}>${cs.w(w)}</a></span>`).join("");
   /* R24: the capture's result links the document it made; R22: "Cite a passage" opens `find-in` over it, with the question
      chosen when the capture was made for one. Nothing is linked for a refused promotion or an answer naming no bundle. */
+  const plainText = (s) => String(s).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
-    ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.title || g.bundleId, [])}`
+    ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.existed ? plainText(cs.w("screen.capture.address.existed.open")) : g.title || g.bundleId, [])}`
       + (g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
       /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
       + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
@@ -232,22 +245,59 @@ function renderCapture(cs, view) {
           + cs.row(cs.icon("clock"), `${cs.w("screen.capture.a64.capturing_it_again_keeps_the_new_copy_be")} ${cs.w("screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un")}`) : ""))
           + `<div class="mk-acts">${cs.act("acquire", { label: "screen.capture.a64.capture_the_new_copy", data: { again: "1" } })}${leave}</div>`;
     }
-    body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
-      + forq
-      + (watch && cs.can("monitorset") ? `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
-        + cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
-      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}${watch ? `${cs.act("monitorset")}${cs.act("monitor")}` : ""}</div>`
-      + unfinished
-      + a64
-      + (got ? (got.archive
+    /* R45 (C19; DEC-375): keep the page as the site sent it or as a visitor saw it (`render: true`); the web-archive capture is
+       refused to members, so it is told and offered nothing */
+    const keep = cs.checks("ci-render", "screen.watching.sweepdef.match", [["site", "screen.capture.render.keep.site", !U.render], ["visitor", "screen.capture.render.keep.visitor", !!U.render]], { radio: true })
+      + `<p class="mk-small muted">${cs.w("screen.capture.render.keep.explain1")} ${cs.w("screen.capture.render.keep.explain2")}</p>`
+      + `<details class="mk-details"><summary>${cs.w("screen.capture.archive.summary")}</summary><p class="mk-small">${cs.w("screen.capture.archive.explain1")} ${cs.w("screen.capture.archive.explain2")}</p></details>`;
+    /* R50 (A1, A2): the working line from the press until the answer; the result is a status line under the button */
+    const working = U.working ? `<p class="mk-note" role="status" data-working><b>${cs.w("screen.capture.address.working.head")}</b> ${cs.w("screen.capture.address.working")}</p>` : "";
+    const result = (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
         : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title }) + made(got)) : "")
-      + refusedPromotion("address")
+      + refusedPromotion("address");
+    /* R47 (C20; DEC-381): "A source that asked for a login": each request a source turned away for a login, a username and a secret
+       field (the secret is typed into a password field, sent once and never drawn back), the login given and the request tried
+       again, a retry by itself, the stored logins and their withdrawal. No secret, length or digest is ever drawn. */
+    const R = D.refused;
+    const turned = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) ? R.value.requests.filter((r) => r && r.source_reason === "login" && r.state === "refused") : [];
+    const stored = (Array.isArray(U.logins) ? U.logins : []).filter((e) => e && !e.withdrawn_at);
+    const who = (m) => { const id = String(m || "").replace(/^member:/, ""); const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
+      const h = id ? ((roster.find((x) => x && x.member_id === id) || {}).handle || "") : ""; return h ? cs.ref("member", id, h, []) : ""; };
+    const credNote = U.credDone
+      ? (U.credDone.refused !== undefined ? `<p class="cs-state" data-state="failed" role="alert">${U.credDone.refused}</p>` : "") : "";
+    const credSec = !turned.length && !stored.length && !cs.can("capturecredentiallist") ? "" : cs.sec("screen.capture.cred.head",
+      (turned.length ? `<p class="mk-small">${cs.w("screen.capture.cred.why1")} ${cs.w("screen.capture.cred.why2")}</p>`
+        + cs.sheet(turned.map((r) => cs.row(cs.icon("refused"), `<b>${cs.w("screen.capture.cred.turned", { source: { html: `<span class="mk-data">${cs.esc(r.host || "")}</span>` } })}</b>`,
+          "", (who(r.principal_plane) && r.requested_at ? cs.w("screen.capture.cred.askedby", { name: { html: who(r.principal_plane) }, date: { html: cs.date(r.requested_at) }, count: Number(r.attempts) || 0 })
+            : [who(r.principal_plane), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" · ")))).join(""))
+        + cs.field("cc-user", "screen.capture.cred.user", { autocomplete: "off" })
+        + cs.field("cc-secret", "screen.capture.cred.secret", { type: "password", autocomplete: "off", help: ["screen.capture.cred.sealed1", "screen.capture.cred.sealed2"] })
+        + turned.map((r) => `<div class="mk-acts">${cs.act("capturecredentialsupply", { tone: "primary", data: { request: r.request, host: r.host } })}${cs.act("capturerequestretry", { label: "screen.capture.cred.retry", data: { request: r.request } })}</div>`).join("")
+        + `<p class="mk-small muted">${cs.w("screen.capture.cred.only1")} ${cs.w("screen.capture.cred.only2")}</p>` : "")
+      + credNote
+      + stored.map((e) => cs.sheet(cs.row(cs.icon("accepted"), `${cs.w("screen.capture.cred.stored", { source: { html: `<span class="mk-data">${cs.esc(e.host || "")}</span>` } })}<span class="meta">${cs.w("screen.capture.cred.notshown")}</span>`,
+          cs.act("capturecredentialwithdraw", { tone: "quiet", data: { credential: e.credential } }), (who(e.supplied_by) && e.supplied_at ? cs.w("screen.capture.cred.givenby", { name: { html: who(e.supplied_by) }, date: { html: cs.date(e.supplied_at) } })
+            : [who(e.supplied_by), e.supplied_at ? cs.date(e.supplied_at) : ""].filter(Boolean).join(" · "))))).join("")
+      + `<div class="mk-acts">${cs.act("capturecredentiallist")}</div>`
+      + (Array.isArray(U.logins) ? `<p class="mk-small muted">${cs.w("screen.capture.cred.listnote1")} ${cs.w("screen.capture.cred.listnote2")}</p>` : ""),
+      { help: ["screen.capture.cred.tip1", "screen.capture.cred.tip2"] });
+    body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
+      + forq
+      + keep
+      + (watch && cs.can("monitorset") ? `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
+        + cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
+      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}${watch ? `${cs.act("monitorset")}${cs.act("monitor")}` : ""}</div>`
+      + working
+      + result
+      + unfinished
+      + a64
+      + credSec
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
         { address: U.requested.address }) : "")
       + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
-      + (U.checked ? said("screen.capture.address.checked", { title: U.checked }) : "")
+      + (U.checked ? `<p class="mk-note" role="status">${view.parts.checkOutcome(cs, U.checked.answer, U.checked.title)}</p>` : "")
       + `<p class="mk-note">${cs.w("screen.capture.address.note")}</p>`;
   } else if (tab === "file") {
     const how = [["made", "screen.capture.file.how.made"], ["handed", "screen.capture.file.how.handed"],
@@ -311,12 +361,17 @@ async function sendAcquire(view, el, cs) {
   const chosen = view.parts.forOf(view).id;
   const question = /^INQ-/.test(chosen) ? String(cs.value("ci-for") || chosen).trim() : "";
   const body = question ? { locator: address, for: question } : { locator: address };
-  if (el && el.dataset && el.dataset.again === "1") { cs.set("a64", null); return { body }; }
+  /* R45: the page as a visitor saw it is asked for only when that is chosen; the site's own copy sends no `render` */
+  const visitor = cs.value("ci-render-1") === true;
+  if (visitor) body.render = true;
+  cs.set("render", visitor);
+  const begin = () => { cs.set("captured", null); cs.set("working", true); cs.later(90000, (k, v) => { if (v && v.ui && v.ui.working) k.set("working", false); }); };
+  if (el && el.dataset && el.dataset.again === "1") { cs.set("a64", null); begin(); return { body }; }
   cs.set("a64", { looking: true });
   const asked = await cs.call("heldat", { query: { address, check: "true" } });
   const r = asked && asked.result && typeof asked.result === "object" ? asked.result : asked;
   if (!r || r.ok === false || typeof r.held !== "boolean") { cs.set("a64", { failed: r && r.ok === false ? view.parts.refusalHtml(cs, r) : "" }); return null; }
-  if (r.held === false) { cs.set("a64", null); return { body }; }
+  if (r.held === false) { cs.set("a64", null); begin(); return { body }; }
   const state = r.changed && (r.changed.state === "unchanged" || r.changed.state === "changed") ? r.changed.state : "undetermined";
   cs.set("a64", { state, copy: r.copy && typeof r.copy === "object" ? r.copy : {} });
   return null;
@@ -332,6 +387,7 @@ async function doneAcquire(view, answer, cs) {
   const fin = view.ui && view.ui.finishing;
   const title = fin && fin.session && fin.title ? fin.title : view.parts.titleOf(cs, { reading: a.reading, doc, address });
   const sha = doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "";
+  cs.set("working", false);
   cs.set("promoteRefused", null);
   /* R31: a continuation (`continued`) files nothing new: its supporting files join the capture it resumed */
   if (a.continued) { cs.set("captured", { title, address, bundleId: null, sha }); cs.set("finishing", null); return; }
@@ -340,7 +396,15 @@ async function doneAcquire(view, answer, cs) {
                          bundleId: typeof a.bundleId === "string" ? a.bundleId : null });
     return;
   }
-  if (a.existed === true) { cs.set("captured", { existed: true, title, address, bundleId: typeof a.bundleId === "string" ? a.bundleId : null, sha }); return; }
+  /* R49 (L3; K4194): `existed: true` says the object store held the bytes, not that a document the viewer can see does. The
+     record is asked (`heldat`, no `check`: nothing is fetched) for the document that holds the sha as this viewer sees it: one
+     that shows is linked and nothing is written; none that shows is promoted for the viewer below, as a new capture is. */
+  if (a.existed === true) {
+    const held = sha ? await cs.call("heldat", { query: { sha256: sha } }) : null;
+    const h = held && held.result && typeof held.result === "object" ? held.result : held;
+    const doc0 = h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" && h.copy.document ? h.copy.document : "";
+    if (doc0) { cs.set("captured", { existed: true, title, address, bundleId: doc0, sha }); return; }
+  }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
@@ -407,8 +471,20 @@ async function sendMonitor(view, el, cs) {
   return { body: { bundleId: found.bundleId } };
 }
 function doneMonitor(view, answer, cs) {
-  cs.set("checked", (view.ui && view.ui.target && view.ui.target.title) || "");
+  cs.set("checked", { title: (view.ui && view.ui.target && view.ui.target.title) || "", answer: answer || {} });
 }
+
+/* R42 (C55; K4164: one owner): what a check found, drawn from the answer's `status` (`modified`, `removed`, `unchanged`) and, when
+ * it names none, its `note` (`monitoring` R10): four different sentences, never "Checked just now" for every outcome. The one
+ * drawing of it: `screens-inquiry` imports `checkOutcome` for the document page and draws nothing of its own. Answers the
+ * sentence's HTML. */
+function checkOutcome(cs, answer, title) {
+  const a = answer && typeof answer === "object" ? answer : {};
+  const st = a.status === "modified" || a.status === "removed" || a.status === "unchanged" ? a.status : "unknown";
+  const t = String(title || "");
+  return cs.w("screen.capture.address.checked." + st, st === "unknown" ? { title: t, note: typeof a.note === "string" ? a.note : "" } : { title: t });
+}
+export { checkOutcome };
 
 /* R2: the upload. `statement` composed from the three answers in order, each with its label, at most 2,000 characters;
  * nothing is sent while one is empty, and the screen says which. The file's bytes are the raw body (control-plane R72),
@@ -488,11 +564,61 @@ function doneWritingHelp(view, answer, cs) {
   cs.set("draft", { handle: (view.me && view.me.handle) || "", untested });
 }
 
+/* R47 (C20; DEC-381): "Give a login for this source and try again". The login is a username and a secret typed here, sent once as
+ * `secret` ("user:secret", the form `capture-sources` R56 hands to Basic) for the refused request's host, at the team's scope; the
+ * secret is read from its field and held nowhere else, never put in the page's state. Its refusals are drawn by the design's words. */
+function sendCredentialSupply(view, el, cs) {
+  const user = String(cs.value("cc-user") || "").trim(), secret = String(cs.value("cc-secret") || "");
+  const host = el && el.dataset ? String(el.dataset.host || "") : "";
+  const request = el && el.dataset ? String(el.dataset.request || "") : "";
+  if (!user) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.cred.user") } } };
+  if (!secret) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.cred.secret") } } };
+  cs.set("credDone", null);
+  cs.set("credFor", { request, host });
+  return { body: { kind: "login", host, secret: `${user}:${secret}`, scope: "group" } };
+}
+/* the login stored, the turned-away request goes back in the queue (`capturerequestretry`); a request its source did not turn
+   away is refused in words and the login stays stored */
+async function doneCredentialSupply(view, answer, cs) {
+  const f = (view.ui && view.ui.credFor) || {};
+  cs.set("credFor", null);
+  const a = f.request ? await cs.call("capturerequestretry", { body: { request: f.request } }) : null;
+  const r = a && a.result && typeof a.result === "object" ? a.result : a;
+  if (r && r.ok === false) { cs.set("credDone", { refused: view.parts.refusalHtml(cs, r) }); return; }
+  cs.set("credDone", { retried: f.request });
+  const l = await cs.call("capturecredentiallist", { body: {} });
+  const v = l && l.result && typeof l.result === "object" ? l.result : l;
+  if (v && Array.isArray(v.entries)) cs.set("logins", v.entries);
+}
+function sendCredentialRetry(view, el, cs) {
+  cs.set("credDone", null);
+  return { body: { request: el && el.dataset ? String(el.dataset.request || "") : "" } };
+}
+function doneCredentialRetry(view, answer, cs) { cs.set("credDone", { retried: true }); }
+function sendCredentialList() { return { body: {} }; }
+function doneCredentialList(view, answer, cs) {
+  const a = answer || {};
+  cs.set("logins", Array.isArray(a.entries) ? a.entries : []);
+}
+function sendCredentialWithdraw(view, el, cs) {
+  return { body: { credential: el && el.dataset ? String(el.dataset.credential || "") : "" } };
+}
+async function doneCredentialWithdraw(view, answer, cs) {
+  const l = await cs.call("capturecredentiallist", { body: {} });
+  const v = l && l.result && typeof l.result === "object" ? l.result : l;
+  cs.set("logins", v && Array.isArray(v.entries) ? v.entries : []);
+}
+/* R47: the refusals of the three, by the design's words: a machine, the team's own Civicsmith, a request its source did not turn away */
+const CRED_REFUSALS = Object.freeze({
+  CAPTURE_CREDENTIAL_NOT_A_MEMBER: function (refusal, cs) { return cs.w("screen.capture.cred.ref.machine1") + " " + cs.w("screen.capture.cred.ref.machine2"); },
+  CAPTURE_CREDENTIAL_OWN_HOST: function (refusal, cs) { return cs.w("screen.capture.cred.ref.own1") + " " + cs.w("screen.capture.cred.ref.own2"); },
+});
+
 export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, filedFor, forOf, projectOf, promoteDocument, refusalHtml, titleOf }),
+  parts: Object.freeze({ bundleFor, checkOutcome, filedFor, forOf, projectOf, promoteDocument, refusalHtml, titleOf }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire,
                     refusals: Object.freeze({ BAD_LOCATOR: "refusal.BAD_LOCATOR", SOURCE_REFUSED: "refusal.SOURCE_REFUSED",
@@ -507,6 +633,11 @@ export const CAPTURE_SCREEN = Object.freeze({
                     refusals: Object.freeze({ UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE",
                                               MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" }) }),
+    Object.freeze({ op: "capturecredentialsupply", label: "act.owed_capturecredentialsupply.label.capture", send: sendCredentialSupply, done: doneCredentialSupply, refusals: CRED_REFUSALS }),
+    Object.freeze({ op: "capturerequestretry", label: "act.capturerequestretry.label.capture", send: sendCredentialRetry, done: doneCredentialRetry,
+                    refusals: Object.freeze({ CAPTURE_REQUEST_NOT_RETRYABLE: function (refusal, cs) { return cs.w("screen.capture.cred.ref.notretry"); } }) }),
+    Object.freeze({ op: "capturecredentiallist", label: "act.owed_capturecredentiallist.label.capture", send: sendCredentialList, done: doneCredentialList }),
+    Object.freeze({ op: "capturecredentialwithdraw", label: "act.owed_capturecredentialwithdraw.label.capture", send: sendCredentialWithdraw, done: doneCredentialWithdraw }),
     Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, reasonField: "words" }),
     Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, reasonField: "told" }),
   ]),

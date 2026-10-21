@@ -235,7 +235,7 @@ test("R17: an item's own acts on Home send their bodies and re-read the queue, n
 test("R1, R25, R30: \"Start a project\" sends promote with the member's title as a new forming project, written as its title, and opens project on success", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77", owner: "mai" }) });
   assert.ok(button(p, "promote").textContent.startsWith(word("project.start.go")), "the form's own act: its label, then the weight the shell draws");
-  await press(p, "promote", { values: { "home-title": "  Park bond oversight " } });
+  await press(p, "promote", { values: { "home-visibility-hidden": true, "home-title": "  Park bond oversight " } });
   const r = last(p, "promote");
   assert.equal(r.method, "POST");
   assert.equal(r.headers.Authorization, "Bearer tok-1");
@@ -252,27 +252,31 @@ test("R1, R25, R30: \"Start a project\" sends promote with the member's title as
   assert.equal(p.location.pathname, "/app/project/PROJ-77");
   // A title with a quote or newline stays one YAML string.
   const q = await open("/app", { ...PLANE, ...CREATOR });
-  await press(q, "promote", { values: { "home-title": 'A "quoted"\ntitle' } });
+  await press(q, "promote", { values: { "home-visibility-hidden": true, "home-title": 'A "quoted"\ntitle' } });
   assert.match(last(q, "promote").body.files[0].text, /\ntitle: "A \\"quoted\\"\\ntitle"\n/);
 });
 
-test("R30: the form asks the title and who can find it; hidden is preselected and an untouched form sends it; choosing findable sends discoverable", async () => {
+test("R30, R80: the form asks the title and who can find it; neither choice is preselected; none chosen sends nothing and says so; choosing findable sends discoverable", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77" }) });
   const start = main(p).querySelector('details[data-start="project"]');
   const sel = start.querySelector("#home-visibility");
   assert.ok(start.querySelector("label[for=home-title]").textContent.includes(word("project.start.title")));
   assert.ok(start.textContent.includes(word("project.start.title.help")) && start.textContent.includes(word("project.visibility.start.later")));
-  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.textContent), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
-  assert.equal(sel.value, "hidden", "preselected");
-  await press(p, "promote", { values: { "home-title": "Parks" } });
-  assert.equal(last(p, "promote").body.visibility, "hidden", "control: an untouched form sends hidden");
+  assert.deepEqual(sel.querySelectorAll("input[type=radio]").map((o) => o.parentNode.textContent.trim()), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
+  assert.equal(sel.querySelectorAll("input[type=radio]").filter((o) => o.checked).length, 0, "R80: nothing is chosen for the member");
+  const refusedBtn = await press(p, "promote", { values: { "home-title": "Parks" } });
+  assert.equal(p.byOp("promote").length, 0, "R80: Start with neither chosen sends nothing");
+  assert.ok(beside(p, refusedBtn).includes(word("project.visibility.start.required")), "R80: refused in place with the required key");
   const q = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-78" }) });
-  await press(q, "promote", { values: { "home-title": "Parks", "home-visibility": "discoverable" } });
+  await press(q, "promote", { values: { "home-title": "Parks", "home-visibility-discoverable": true } });
   assert.equal(last(q, "promote").body.visibility, "discoverable");
+  const h = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-79" }) });
+  await press(h, "promote", { values: { "home-title": "Parks", "home-visibility-hidden": true } });
+  assert.equal(last(h, "promote").body.visibility, "hidden", "control: hidden, once chosen, is sent");
   // PROJECT_VISIBILITY_NO_OWNER and NAME_TAKEN are drawn by their words.
   for (const code of ["PROJECT_VISIBILITY_NO_OWNER", "NAME_TAKEN"]) {
     const t = await open("/app", { ...PLANE, ...CREATOR, promote: refused(code, null, 409) });
-    const b = await press(t, "promote", { values: { "home-title": "Parks" } });
+    const b = await press(t, "promote", { values: { "home-visibility-hidden": true, "home-title": "Parks" } });
     assert.equal(beside(t, b).replace(/\s+/g, " "), word(`refusal.${code}`), code);
   }
 });
@@ -283,7 +287,7 @@ test("R1, R25: control: with no title nothing is sent and the member is told in 
   assert.equal(p.byOp("promote").length, 0);
   assert.equal(beside(p, b), word("screen.home.title.needed"));
   const t = await open("/app", { ...PLANE, ...CREATOR, promote: refused("NAME_TAKEN", null, 409) });
-  const c = await press(t, "promote", { values: { "home-title": "Parks" } });
+  const c = await press(t, "promote", { values: { "home-visibility-hidden": true, "home-title": "Parks" } });
   assert.equal(beside(t, c), word("refusal.NAME_TAKEN"));
   assert.equal(t.doc.getElementById("home-title").value, "Parks", "the form keeps what the member typed (interface-shell R13)");
   assert.equal(t.location.pathname, "/app");
@@ -334,7 +338,8 @@ test("R40: pressing a door sends startfrom for it and opens its offer in place; 
   assert.equal(main(p).querySelectorAll("button[data-script]").length, 0, "no script name before a press");
   assert.doesNotMatch(text(p), /Trace the deed|Pull the file/);
   await press(p, "startfrom", { nth: 0 });
-  assert.ok(p.byOp("startfrom").some((r) => r.query.door === "problem"), "startfrom is sent for the door");
+  // R81: the door is page memory; `startfrom` takes no `door` (the guard, over the owner's declaration), so the press sends it bare.
+  assert.ok(p.byOp("startfrom").length >= 2 && p.byOp("startfrom").every((r) => r.query.door === undefined), "startfrom is sent on the press with no door field");
   assert.deepEqual(doorOps(p, "problem"), [["WIZ-33b5887790b7561b", "1"], ["WIZ-cb0ad18a17a04233", "2"]]);
   assert.deepEqual(doorOps(p, "money"), [], "only the pressed door is open");
   // Control: with "Follow the money" not offered, the money door names only what startfrom names.
@@ -599,4 +604,53 @@ test("R64: controls: a member who is not an administrator sends no securitymap a
   assert.ok(!t.includes(word("screen.home.rd.documents")) && !t.includes(word("screen.home.rd.cases")) && !t.includes(word("screen.home.rd.followed.other")), "no reading at zero");
   const a = text(quiet, main(quiet).querySelector('[data-area="action"]'));
   assert.ok(!a.includes(word("screen.home.rd.clocks")) && !a.includes(word("home.move.theirs")), "no clock reading at zero");
+});
+
+// C74, C96 (fix round 2): an invitation is drawn once, its Join says which project, and a row's Open opens its subject.
+const INVITATION = (project, name) => ({ id: `OBLIGATION::project-invitation::${project}::mai`, class: "OBLIGATION", kind: "project-invitation", assignee: "mai", assignee_role: "member",
+  subject: { kind: "project", id: project, name }, basis: { inviter: "rosa" }, options: [{ id: "projectjoin" }], disposition: { available: false, instead: "projectjoin" } });
+const INVITED = ok({ ok: true, projects: [{ id: "PROJ-8", name: "Library hours", stage: "forming", participation: "invited" }, { id: "PROJ-9", name: "Park lights", stage: "forming", participation: "invited" },
+  { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", participation: "joined" }] });
+
+test("R29, C74: a project the member is invited to is one row on Home though the queue holds its invitation too; an invitation the list does not know is drawn from the queue", async () => {
+  const p = await open("/app", { ...PLANE, projectlist: INVITED, queue: ok({ items: [INVITATION("PROJ-9", "Park lights")], item_count: 1 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  const joins = main(p).querySelectorAll('button[data-act="projectjoin"]');
+  assert.equal(joins.length, 2, "PROJ-8 and PROJ-9 once each, not PROJ-9 twice");
+  assert.deepEqual(joins.map((b) => b.dataset.project).sort(), ["PROJ-8", "PROJ-9"]);
+  assert.ok(!text(p).includes(word("queue.project-invitation.detail")) || main(p).querySelectorAll("section")[0].querySelectorAll(".cs-row").length === 2, "one row for each project in Needs you");
+  assert.equal(main(p).querySelectorAll("section").filter((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word("screen.home.needsgroup")).length, 0, "and none under Needs the group");
+  // Control: the project is not in the list the member is invited to, so the queue's own invitation is the one drawn.
+  const only = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", participation: "joined" }] }),
+    queue: ok({ items: [INVITATION("PROJ-9", "Park lights")], item_count: 1 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  assert.equal(main(only).querySelectorAll('button[data-act="projectjoin"]').length, 1);
+});
+
+test("R29, C96: two invitations draw two distinct labels, each naming its project", async () => {
+  const p = await open("/app", { ...PLANE, projectlist: INVITED, queue: ok({ items: [], item_count: 0 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  const labels = main(p).querySelectorAll('button[data-act="projectjoin"]').map((b) => b.getAttribute("aria-label"));
+  assert.equal(labels.length, 2);
+  assert.equal(new Set(labels).size, 2, "distinct");
+  assert.ok(labels.some((l) => l.includes("Library hours")) && labels.some((l) => l.includes("Park lights")));
+  assert.ok(labels.every((l) => l.startsWith(word("act.projectjoin.label.home"))), "the label's own word leads");
+  // Control: a joined project offers none; the queue's invitation for a project with a name is told apart the same way.
+  const item = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [] }), queue: ok({ items: [INVITATION("PROJ-8", "Library hours"), INVITATION("PROJ-9", "Park lights")], item_count: 2 }), projectjoin: ok({ ok: true }) });
+  await settle();
+  const two = main(item).querySelectorAll('button[data-act="projectjoin"]').map((b) => b.getAttribute("aria-label"));
+  assert.equal(new Set(two).size, 2);
+});
+
+test("R17, C74: a row's Open opens its subject's screen; a subject that opens nothing draws no Open, not a link to the queue", async () => {
+  const items = [
+    { id: "CONDITION::a", class: "CONDITION", kind: "reply", summary: "A reply is due", subject: { kind: "action", id: "ACT-2" } },
+    { id: "CONDITION::b", class: "CONDITION", kind: "request-awaiting", summary: "A request is awaited", subject: { kind: "capture_request", id: "CR-1" } },
+  ];
+  const p = await open("/app", { ...PLANE, queue: ok({ items, item_count: 2 }) }, { screens: withScreens("action") });
+  await settle();
+  const rowOf = (needle) => main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes(needle));
+  const opens = (r) => r.querySelectorAll("a[data-nav]").filter((a) => a.textContent === word("screen.home.open")).map((a) => a.getAttribute("href"));
+  assert.deepEqual(opens(rowOf("A reply is due")), ["/app/action/ACT-2"], "its subject's screen");
+  assert.deepEqual(opens(rowOf("A request is awaited")), [], "no Open to the queue");
 });

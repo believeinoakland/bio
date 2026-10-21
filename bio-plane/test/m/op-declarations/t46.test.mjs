@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 import { explained } from "./help.mjs";
 import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
 import { T46_SHARES } from "../../../src/op-declarations/t46.mjs";
@@ -166,7 +167,7 @@ test("R51, R21, R27, R34: the registry's and the library's owed act escalationst
   assert.ok(Object.hasOwn(OPS, "escalationstoppursuing") && !Object.hasOwn(OP_ALIASES, "escalationstoppursuing"));
   for (const op of ["escalationstoppursuing", "escalationreopen"]) assert.deepEqual(ground(op), [], op);
   /* negative control */
-  assert.deepEqual(ground("escalationsuspend"), ["unexplained"]);
+  assert.deepEqual(ground("stepcreate"), ["unexplained"]);
 });
 
 test("R51 (N919; ai-runs R18; K2952, K2976): airundispatch — a member's own act, reached by her session or her own ai credential (classes admin, member, no machineClasses, so an agent's scope reaches it; no probe, no daemon), mutating, a present null NEEDS row, by stamped and nothing carrying a credential, in ai-runs' family (kind memberrun), both session sets; no entry in aiRunsOps serves it — its handler is control-plane's route to AiRuns' dispatchMemberRun (negative control: a session-only act hands an agent nothing)", () => {
@@ -331,10 +332,18 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];
   /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
   const BROWSER = browserActs(registry);
-  assert.deepEqual([...owed].sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER].sort());   // T48 (R65, R66): DEC-226's three, declared by R66
+  /* T51 fix round (R21, R80): an owed row an owner declares is read as served, class (a), not as owed (`register-owners.mjs`) */
+  const DECLARED_NOW = Object.values(REGISTERED).flatMap((rows) => Object.keys(rows));
+  const OWED_HAND = ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER];
+  assert.deepEqual([...owed].filter((o) => !DECLARED_NOW.includes(o)).sort(), OWED_HAND.filter((o) => !DECLARED_NOW.includes(o)).sort());   // T48 (R65, R66): DEC-226's three, declared by R66
   for (const op of OWED) assert.ok(regActs.some((a) => a.op === op && a.status === "declared"), `${op} is not a declared act`);
-  for (const op of [...OWED, ...owed].filter((o) => !OWED_T49.includes(o) && !LEFT_OUT.includes(o) && !BROWSER.includes(o)))
+  for (const op of [...OWED, ...owed].filter((o) => !OWED_T49.includes(o) && !LEFT_OUT.includes(o) && !BROWSER.includes(o) && !DECLARED_NOW.includes(o)))
     assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.member.has(op), op);
+  /* R80: an owed act an owner declares is that op, in a session set unless its declaration makes it public */
+  for (const op of owed.filter((o) => DECLARED_NOW.includes(o) && !BROWSER.includes(o) && !OWED_T49.includes(o))) {
+    assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), op);
+    assert.equal(SESSION_OPS.member.has(op), OPS[op].classes !== null, op);
+  }
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
   for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);

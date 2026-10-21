@@ -1,4 +1,4 @@
-/* reading-pipeline (R1–R32): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
+/* reading-pipeline (R1–R35): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
    ladder, the chain composed as it goes, the content type's reader over the text, and the reading with its
    provenance, its container, its dialect and its text units; and the pieces of it `extraction`'s re-read (its
    R31–R35) composes (R23). Split from `extraction` by N513 with no change of meaning (its `pipeline.mjs`, which it
@@ -247,11 +247,13 @@ export function mergeTier3Text(base, ocr, eligible, { kept = [] } = {}) {
       filled.push(b.page); appended.push(b.page);
       const already = keptSet.has(b.page) && said.startsWith(b.text);
       pages.push({ ...b, text: already ? said : (said.length ? `${b.text}\n${said}` : b.text),
+                   ...(got.unread_words ? { unread_words: got.unread_words } : {}),
                    undetermined: [...(Array.isArray(b.undetermined) ? b.undetermined : []).filter((u) => !discharged(u)),
                                   ...fromOcr] });
     } else if (got) {
       filled.push(b.page);
-      pages.push({ page: b.page, text: said, undetermined: fromOcr });
+      pages.push({ page: b.page, text: said, undetermined: fromOcr,
+                   ...(got.unread_words ? { unread_words: got.unread_words } : {}) });
     } else {
       pages.push(b);
     }
@@ -436,6 +438,10 @@ export function ocrTextFromMember(res, { calibration = null } = {}) {
   const pages = Array.isArray(r.pages) ? r.pages : [];
   let anchorless = 0, kept = 0, floored = 0, undetermined = 0;
   const outPages = [];
+  /* R35: the words of a region the confidence floor (or an unusable confidence) discards are counted, never carried:
+     only the count rides on the page, so a reading can say how many words it could not read. */
+  const unreadOf = (before, after) => before.reduce((n, region, i) =>
+    n + (after[i] && after[i].text == null && typeof region.text === "string" ? wordsIn(region.text) : 0), 0);
   for (const p of pages) {
     const pageNo = p && Number.isInteger(p.page) ? p.page : null;
     if (pageNo == null) continue;
@@ -448,7 +454,8 @@ export function ocrTextFromMember(res, { calibration = null } = {}) {
     const f = applyConfidenceFloor(anchored, typeof r.confidence_floor === "number" ? r.confidence_floor : null);
     floored += f.floored; undetermined += f.undetermined;
     kept += f.regions.filter((x) => x.text != null).length;
-    outPages.push({ page: pageNo, regions: f.regions,
+    const unread = unreadOf(anchored, f.regions);
+    outPages.push({ page: pageNo, regions: f.regions, ...(unread ? { unread_words: unread } : {}),
                     text: f.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
                     undetermined: f.regions.filter((x) => x.undetermined)
                       .map((x) => ({ page: pageNo, reason: "ocr_below_floor", font: null,
@@ -463,7 +470,8 @@ export function ocrTextFromMember(res, { calibration = null } = {}) {
     return { ok: false, why: word("reading-pipeline.why.ocr_member_provenance", { detail: String(chain.detail) }) };
   const text = {
     document: outPages.map((p) => p.text).filter(Boolean).join("\n"),
-    pages: outPages.map((p) => ({ page: p.page, text: p.text, undetermined: p.undetermined })),
+    pages: outPages.map((p) => ({ page: p.page, text: p.text, undetermined: p.undetermined,
+                                 ...(p.unread_words ? { unread_words: p.unread_words } : {}) })),
     undetermined: outPages.flatMap((p) => p.undetermined),
     counts: { chars: outPages.reduce((n, p) => n + p.text.length, 0), undetermined },
     regions: outPages.flatMap((p) => p.regions),
@@ -785,23 +793,27 @@ const sheetRangeOf = (u) => {
   return r && r.kind === "sheet-range" && typeof r.sheet === "string" && r.sheet && typeof r.range === "string" && r.range
     ? { sheet: r.sheet, range: r.range } : { sheet: null, range: null };
 };
+/* Every unit of the text, before the wire's cap and budget: null when the text has no unit list. */
+function allUnitsOf(i2text) {
+  if (!i2text) return null;
+  const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
+    .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0
+      ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null))
+    .filter(Boolean);
+  return Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
+        (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
+    : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
+        (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
+    : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
+        (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
+    : Array.isArray(i2text.sheets)     ? arm(i2text.sheets, "sheet-range", sheetRangeOf)
+        .filter((u) => u.extent.sheet !== null)
+    : null;
+}
 export function textUnitsFor(i2text) {
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
-    const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
-      .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0
-        ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null))
-      .filter(Boolean);
-    const units =
-        Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
-          (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
-      : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
-          (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
-      : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
-          (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
-      : Array.isArray(i2text.sheets)     ? arm(i2text.sheets, "sheet-range", sheetRangeOf)
-          .filter((u) => u.extent.sheet !== null)
-      : null;
+    const units = allUnitsOf(i2text);
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, dropped = 0;
     const kept = [], runs = [];
     let run = null;
@@ -822,6 +834,23 @@ export function textUnitsFor(i2text) {
     textUnitsSkipped = runs.length ? runs : null;
   }
   return { textUnits, textUnitsOverBound, textUnitsSkipped };
+}
+
+/* R35 (T51 fix round 2, C17): the words of a text, a word being a run of non-whitespace holding a glyph. */
+export const wordsIn = (s) => (typeof s === "string" ? s.split(/\s+/).filter((w) => glyphCount(w) > 0).length : 0);
+
+/* R35: `{words_total, words_read}` of a text that has text units, else null. `words_total` is the words of every unit the
+   text has plus the words an OCR region below its floor held (carried as a count on the page, `unread_words`, never
+   as text); `words_read` is the words of the units `textUnitsFor` keeps, a unit cut to its cap by the prefix it keeps. They
+   are equal when the whole text was read. */
+export function textWordsFor(i2text) {
+  const kept = textUnitsFor(i2text).textUnits;
+  if (!kept) return null;
+  const all = allUnitsOf(i2text) || [];
+  const unread = (Array.isArray(i2text.pages) ? i2text.pages : [])
+    .reduce((n, p) => n + (p && Number.isInteger(p.unread_words) && p.unread_words > 0 ? p.unread_words : 0), 0);
+  const sum = (units) => units.reduce((n, u) => n + wordsIn(u.text), 0);
+  return { words_total: sum(all) + unread, words_read: sum(kept) };
 }
 
 /* ===================================================================== *
@@ -848,21 +877,90 @@ const decodeReferences = (s) => s.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6}
 const BLOCK_TAG = "address|article|aside|blockquote|body|caption|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form"
   + "|h[1-6]|header|hr|html|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul";
 
+/* R32 (T51; K4194; fix round 2, K4303): a captured page's reading is its evidentiary region, never its furniture.
+   An element `nav`, or any element whose `role` is `navigation`, goes with its contents, counted by its own name so a
+   nested one of the same name does not end it early; an element with no end tag is not guessed at (its tag goes, its
+   words stay). When the page has a `main` element (else an `article` element), only its contents give passages
+   (subresources R8's body regions); with neither, an element `header`, `footer` or `aside`, and any element whose
+   `role` is `banner`, `contentinfo`, `complementary` or `search`, goes the same way: inside a main or an article they
+   are kept. A skip link (an `a` whose `href` begins `#` and whose text begins "Skip to") goes. An unresolved template
+   token goes. A page with no landmark keeps all its text. */
+const TAG_ATTRS = "(?:\"[^\"]*\"|'[^']*'|[^'\">])*";
+const VOID_TAG = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
+const attrOf = (attrs, name) => {
+  const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(attrs);
+  return m ? (m[1] ?? m[2] ?? m[3]) : null;
+};
+const roleOf = (attrs) => (attrOf(attrs, "role") ?? "").trim().split(/\s+/)[0].toLowerCase();
+const isNavigation = (name, attrs) => name.toLowerCase() === "nav" || roleOf(attrs) === "navigation";
+const FURNITURE_NAME = new Set(["header", "footer", "aside"]);
+const FURNITURE_ROLE = new Set(["banner", "contentinfo", "complementary", "search"]);
+const isFurniture = (name, attrs) => FURNITURE_NAME.has(name.toLowerCase()) || FURNITURE_ROLE.has(roleOf(attrs));
+const openTag = () => new RegExp(`<([A-Za-z][A-Za-z0-9:-]*)(${TAG_ATTRS})>`, "g");
+/* The end of the element a start tag opened, counted by its own name: where its contents end and where it does. Null
+   when it is never closed. `after` is the index just past the start tag. */
+function endOfElement(markup, name, after) {
+  const same = new RegExp(`<(/?)${name}(?=[\\s>/])(${TAG_ATTRS})>`, "gi");
+  same.lastIndex = after;
+  for (let depth = 1, t = same.exec(markup); t; t = same.exec(markup)) {
+    if (t[1]) depth--;
+    else if (!t[2].endsWith("/")) depth++;
+    if (depth === 0) return { inner: t.index, end: same.lastIndex };
+  }
+  return null;
+}
+function dropElements(markup, isDropped) {
+  const open = openTag();
+  let out = "", from = 0;
+  for (let m = open.exec(markup); m; m = open.exec(markup)) {
+    if (!isDropped(m[1], m[2])) continue;
+    const name = m[1].toLowerCase(), after = m.index + m[0].length;
+    let end = after;   /* a void or self-closing tag, or one never closed, is only itself */
+    if (!VOID_TAG.has(name) && !m[2].endsWith("/")) end = endOfElement(markup, name, after)?.end ?? after;
+    out += markup.slice(from, m.index) + " ";
+    from = open.lastIndex = end;
+  }
+  return out + markup.slice(from);
+}
+/* The contents of every outermost closed element `name` in the page, in its order, a block break between them; null
+   when the page has none. */
+function contentsOf(markup, name) {
+  const open = openTag(), parts = [];
+  for (let m = open.exec(markup); m; m = open.exec(markup)) {
+    if (m[1].toLowerCase() !== name || m[2].endsWith("/")) continue;
+    const e = endOfElement(markup, name, open.lastIndex);
+    if (!e) continue;
+    parts.push(markup.slice(open.lastIndex, e.inner));
+    open.lastIndex = e.end;
+  }
+  return parts.length ? parts.join("<hr>") : null;
+}
+const SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
+const dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
+  const href = attrOf(attrs, "href");
+  const said = decodeReferences(inner.replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "")).replace(/\s+/g, " ").trim();
+  return href !== null && href.trim().startsWith("#") && /^skip to/i.test(said) ? " " : whole;
+});
+const TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/g;
+
 /* The page's visible text: comments, `head`, `script`, `style` and `template` contents are dropped (an unclosed one
-   drops to the end), every tag is removed (a block tag ends its paragraph, `br` its line), and character references
-   are decoded last, so a decoded `&lt;` is text, never a tag. */
+   drops to the end), then navigation, then the page's main or article contents or else its other furniture, as above, every tag is removed (a block tag ends its paragraph, `br` its line),
+   and character references are decoded, so a decoded `&lt;` is text, never a tag. Template tokens go last, so one
+   written as references goes too. */
 export function visibleTextOfHtml(html) {
-  const dropped = html
+  const live = dropElements(html
     .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
     .replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
     .replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ")
-    .replace(/<![^>]*>|<\?[^>]*>/g, " ")
+    .replace(/<![^>]*>|<\?[^>]*>/g, " "), isNavigation);
+  const region = contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture);
+  const dropped = dropSkipLinks(region)
     .replace(/\s+/g, " ");   /* the source's own line breaks and blank lines are no paragraph break in a page */
   const bare = dropped
     .replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n")
     .replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n")
     .replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
-  return decodeReferences(bare);
+  return decodeReferences(bare).replace(TEMPLATE_TOKEN, " ");
 }
 
 /* R32: the units of text read as text. `html` is true for a capture whose detected format is `html`.
@@ -871,8 +969,7 @@ export function visibleTextOfHtml(html) {
    with a blank line anywhere keeps its paragraphs (a wrapped paragraph is never split), a one-line text is one unit,
    and an HTML page is read by R32's rule. */
 const BLANK_LINE_RUN = /\r?\n[ \t\f\v\u00a0 ]*(?:\r?\n[ \t\f\v\u00a0 ]*)+/;
-export function textUnitsOfText(text, { html = false } = {}) {
-  if (typeof text !== "string" || !text) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
+function paragraphsOfText(text, html) {
   const visible = html ? visibleTextOfHtml(text) : text;
   /* Runs between blank lines; a run of no character (the text's edges, a markup-only block) is no paragraph, so `para`
      counts the paragraphs the text has, from 0, and a page's leading blank does not shift it. */
@@ -882,7 +979,15 @@ export function textUnitsOfText(text, { html = false } = {}) {
     .map((p) => (html ? p.replace(/[ \t\f\v\u00a0 \r\n]+/g, " ") : p).trim())
     .filter((p) => p.length))
     .map((p, para) => ({ para, text: p }));
-  return textUnitsFor({ paragraphs });
+  return { paragraphs };
+}
+export function textUnitsOfText(text, { html = false } = {}) {
+  if (typeof text !== "string" || !text) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
+  return textUnitsFor(paragraphsOfText(text, html));
+}
+/* R35: the words of a capture read as text, over the text its units are drawn from. */
+export function textWordsOfText(text, { html = false } = {}) {
+  return typeof text === "string" && text ? textWordsFor(paragraphsOfText(text, html)) : null;
 }
 
 /* ===================================================================== *
@@ -1301,6 +1406,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const container = fmt && fmt !== "undetermined" ? fmt : "text";
       reading.text_source = layerChainFor(null, { tier: null, container });
       reading.text_container = container;
+      /* R35: the words of the text the units were drawn from, and the words the units hold. */
+      Object.assign(reading, textWordsOfText(text, { html: fmt === "html" }));
     }
   } else if (wireable) {
     /* R2 (D-593, D-684): through the entry over the stored bytes, tier 1, including delimited text read as text at
@@ -1382,6 +1489,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
         : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
               .filter(Boolean).join(" — ")) };
+      /* R35: a reading with text units counts its words. */
+      if (textUnits) Object.assign(reading, textWordsFor(i2text));
       /* R34: a determined reading carries the title its entry's metadata states, else null; a failed one carries none. */
       if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata);
       /* R29: the pages the AI read, labeled as its reading. */

@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -58,3 +58,11 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B5 · CHANGE
+
+CHANGE (K4226), a new job session (CAPTURE #39, haiku): acquisition R95 takes `opts.timings` and control-plane R115 builds the timings object at the door, but `captureOp`'s `acquire` arm (index.mjs, near line 2836) calls `c.acquire(body, {...})` without it. Forward the handler's `h.timings` as `opts.timings` (only when given; nothing else changes), with a test that a given timings object reaches `acquire` and a control that none is passed when none is given. Requirement line: amend the `acquire` arm's line in `build/requirements/capture.md` (K4210). The plane's `gatedOp` forwarding `ctx.timings` is PLANE #44's. Your suite and checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B6 · CHANGE
+
+CHANGE (K4234), a new job session (CAPTURE #40, haiku): `acquireOp` (capture/ops.mjs) calls `store.fetch('http://x/acquire?…')` without the door's `trace`; send it (query or body, as plane R55 carries it) so the object can hold that acquire's timings under it (PLANE #44). Test that the request carries the trace given and a control without one. Requirement line in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.

@@ -14,7 +14,12 @@
    line with Reactivate (never for a member who has left), "no signing key yet"; and "Register a key for this member"
    (`signeradd`: a pasted public line, split here into `keyB64` and `comment`). Then what removing an administrator takes
    (`adminarith`: the live count in words, the founder's reconcile fold, the fold of how it changes). A removal under way is not
-   drawn (N1248, T52's); R23's withdraw in a row's panel moved to the keys section. */
+   drawn (N1248, T52's); R23's withdraw in a row's panel moved to the keys section.
+   T51 FR-25 (R63, R64, R71, R72; C79, C80, L30, T-05; DEC-376, DEC-384, DEC-386): a confirmed expertise offers "Withdraw an expertise",
+   its own act (`expertisewithdraw`, with the administrator's reason) beside Confirm for a declared one; the signing-key chooser lists the
+   founder, once she holds a handle; a member's name opens `/app/members/<handle>` (the address carries the handle, never the id the
+   invitation was made under); and ticking "look after the team's Civicsmith" in the invitation draws what it hands over, the invitation
+   waiting for the administrator's answer. */
 
 export const members = {
   id: "members",
@@ -54,8 +59,14 @@ export const members = {
     const vocabulary = Array.isArray(me.vocabulary) && me.vocabulary.length ? me.vocabulary : ["contribute", "publish", "create_projects"];
     const capName = (c) => vocabulary.indexOf(c) >= 0 || c === "administer" ? T(S + "cap." + c) : c;
     const out = [cs.title()];
-    // a member opened by address has their row's panel open (interface-shell R19's `open:<rows>`)
-    if (view.subject && view.ui && !view.ui.subjectOpened) { view.ui["open:roster"] = [...(view.ui["open:roster"] || []), String(view.subject)]; view.ui.subjectOpened = true; }
+    // a member opened by address (their handle, R71; or the id an earlier link carried) has their row's panel open (interface-shell R19's
+    // `open:<rows>`), once the roster is read
+    const isSubject = (m) => view.subject !== undefined && view.subject !== null && (m.handle === view.subject || m.member_id === view.subject);
+    if (view.subject && view.ui && !view.ui.subjectOpened && okv(data.roster)) {
+      const at = roster.find(isSubject);
+      if (at) view.ui["open:roster"] = [...(view.ui["open:roster"] || []), String(at.member_id)];
+      view.ui.subjectOpened = true;
+    }
 
     // the roster (R1): handle, cover, role, capabilities, status; no "formerly" (DEC-197). The founder's row is the roster's own
     // (R51; membership R147): drawn from `memberlist`'s row for her, first, and counted once with the rest, so the counts agree with
@@ -72,10 +83,10 @@ export const members = {
       const isFounder = (m) => m.founder === true || m.member_id === "admin";
       const expOf = (m) => {
         const ex = okv(data.expertise);
-        return view.subject === m.member_id && ex ? ex.expertise || [] : m.expertise || [];
+        return isSubject(m) && ex ? ex.expertise || [] : m.expertise || [];
       };
       // the member by handle (their reference); the founder by hers, else `member.founder.unnamed` with its explanation, never by her id (R51)
-      const nameOf = (m) => (isFounder(m) ? E(founderName()) : m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle")));
+      const nameOf = (m) => (isFounder(m) ? E(founderName()) : m.handle ? cs.ref("member", m.handle, m.handle) : E(T(S + "nohandle")));
       const capsOf = (m) => (m.role === "admin" ? W(S + "cap.all") : E((m.capabilities || []).map(capName).join(", ")));
       const expText = (m) => {
         const e = expOf(m).filter((x) => x.state !== "withdrawn");
@@ -126,7 +137,14 @@ export const members = {
             const c = cs.act("passwordresetlink", { label: "act.owed_passwordresetlink.label.members", data: { member: id } });
             if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="mk-msg" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);
           }
-          for (const e of expOf(m)) if (e.state === "declared" && !e.confirmed) p.push(`<p>${W(S + "expertise.declared", { label: e.label })}</p>${cs.act("expertiseconfirm", { data: { member: id, label: e.label } })}`);
+          // a declared expertise is confirmed; a confirmed one is withdrawn, the confirmation and the declaration together (R63; DEC-376, DEC-386)
+          for (const e of expOf(m)) {
+            if (e.state === "declared" && !e.confirmed) p.push(`<p>${W(S + "expertise.declared", { label: e.label })}</p>${cs.act("expertiseconfirm", { data: { member: id, label: e.label } })}`);
+            else if (e.confirmed === true && e.state !== "withdrawn") {
+              const c = cs.act("expertisewithdraw", { label: "act.owed_expertisewithdraw.label.members", data: { member: id, label: e.label } });
+              if (c) p.push(`<p>${W(S + "expertise.confirmed", { label: e.label })}</p>${c}`);
+            }
+          }
           return p.join("");
         },
       });
@@ -135,11 +153,26 @@ export const members = {
     // more for administrators (R23): the group's other settings
     if (admin) out.push(cs.sec(S + "more.heading", `<ul class="mk-list" data-list="more">${["group", "places", "recovery"].map((id) => `<li><a class="cs-ref" href="/app/${id}" data-nav>${W("screen." + id + ".name")}</a></li>`).join("")}</ul>`));
 
-    // inviting (R2): the short id, the cover and the capabilities ticked; the invitation shown once
+    // inviting (R2): the short id, the cover and the capabilities ticked; the invitation shown once. The capabilities are the kit's checks, which
+    // redraw at once and send nothing (interface-shell R90): ticking "look after the team's Civicsmith" draws what it hands over and the
+    // invitation waits for the administrator's answer (R72; DEC-384 T-05)
     const add = cs.act("memberadd");
     if (add) {
       const shown = ui.invite ? `<div class="mk-msg" data-shown="invite"><p>${W(S + "invite.shown", { handle: ui.invite.memberId, expires: D(ui.invite.expires) })}</p><p><code>${E(ui.invite.link)}</code></p></div>` : "";
-      out.push(`<div id="members-invite">${cs.sec(S + "invite.heading", `${shown}${cs.field("mi-id", S + "invite.id", { help: S + "invite.id.help", autocomplete: "off" })}${cs.field("mi-cover", S + "invite.cover", { autocomplete: "off" })}<fieldset><legend>${W(S + "invite.caps")}</legend>${vocabulary.map((v) => `<input type="checkbox" id="mi-cap-${v}"${v === "contribute" ? " checked" : ""}><label for="mi-cap-${v}">${E(capName(v))}</label>`).join("")}<input type="checkbox" id="mi-cap-administer"><label for="mi-cap-administer">${E(capName("administer"))}</label></fieldset>${add}<p class="mk-note">${W(S + "invite.noemail")}</p>`)}</div>`);
+      const caps = [...vocabulary, "administer"];
+      let picked = Array.isArray(ui.inviteCaps) ? ui.inviteCaps : ["contribute"];
+      // "Go back" is answered here: the grant is unticked and the question forgotten
+      if (ui.adminOk === "no") { ui.adminOk = undefined; picked = ui.inviteCaps = picked.filter((c) => c !== "administer"); }
+      const grant = picked.indexOf("administer") >= 0;
+      if (!grant && ui.adminOk !== undefined) ui.adminOk = undefined;
+      const who = String(cs.value("mi-cover") || cs.value("mi-id") || "").trim();
+      const asking = grant && who !== "";
+      const card = asking ? `<div class="mk-msg" data-confirm="administer"><p>${W(S + "cap.administer.confirm", { who })}</p>${cs.checks("mi-ok", { text: T(S + "cap.administer.confirm.head", { who }) }, [
+        { value: "yes", key: S + "cap.administer.confirm.yes", fills: { who }, on: ui.adminOk === "yes" },
+        { value: "no", key: S + "cap.administer.confirm.no", on: false },
+      ], { radio: true, redraw: "adminOk" })}</div>` : "";
+      const boxes = cs.checks("mi-caps", S + "invite.caps", caps.map((v) => ({ value: v, text: capName(v), on: picked.indexOf(v) >= 0 })), { redraw: "inviteCaps" });
+      out.push(`<div id="members-invite">${cs.sec(S + "invite.heading", `${shown}${cs.field("mi-id", S + "invite.id", { help: S + "invite.id.help", autocomplete: "off" })}${cs.field("mi-cover", S + "invite.cover", { autocomplete: "off" })}${boxes}${card}${asking && ui.adminOk !== "yes" ? "" : add}<p class="mk-note">${W(S + "invite.noemail")}</p>`)}</div>`);
     }
 
     // joining through the group's website: a website key, or the reusable join link, each shown once
@@ -189,8 +222,9 @@ export const members = {
           return `<li data-member="${E(m.member_id)}"><b>${E(label)}</b> ${mine.length ? mine.map(line).join(" ") : `<span class="mk-small">${W(S + "no.signing.key.yet")}</span>`}</li>`;
         }).join("")}</ul>`;
       };
-      // a member to register for: an active member who has a handle (record data); the founder is no member of the roster to `signeradd`
-      const who = activeList.filter((m) => !isF(m) && m.handle).map((m) => ({ value: m.member_id, text: m.handle }));
+      // a member to register for: an active member who has a handle (record data), the founder among them once the instance is claimed
+      // and she holds one (R64; member-roster R76, credentials R81); a key cannot be registered for a name with no handle (credentials R6)
+      const who = activeList.filter((m) => (isF(m) ? !!founderHandle : !!m.handle)).map((m) => ({ value: m.member_id, text: isF(m) ? founderName() : m.handle }));
       const reg = cs.act("signeradd");
       const form = reg && who.length ? `${cs.choice("ms-who", S + "keys.whose", who)}${cs.field("ms-line", S + "keys.public", { help: S + "keys.public.help", autocomplete: "off" })}${reg}<p class="mk-note">${W(S + "the.one.line.the.member")} ${W(S + "it.is.the.public.half")}</p><p class="mk-note">${W(S + "the.record.shows.that.you")} ${W(S + "they.see.it.under.your")}</p>` : "";
       out.push(cs.sec(S + "keys.heading", `<p class="mk-note">${W(S + "a.signing.key.lets.a")} ${W(S + "civicsmith.holds.only.the.public")} ${W(S + "use.this.when.a.member")}</p>${cs.state(data.signers, rowsOf)}<p class="mk-note">${W(S + "key.react.withdraw.a.key.when.a")} ${W(S + "key.react.a.key.a.member.withdrew")}</p>${form}`));
@@ -244,13 +278,18 @@ export const members = {
         const vocabulary = view.me && Array.isArray(view.me.vocabulary) && view.me.vocabulary.length ? view.me.vocabulary : ["contribute", "publish", "create_projects"];
         const memberId = String(cs.value("mi-id") || "").trim(), cover = String(cs.value("mi-cover") || "").trim();
         if (!memberId || !cover) return { refuse: "screen.members.invite.incomplete" };
-        const body = { memberId, cover, capabilities: vocabulary.filter((v) => cs.value("mi-cap-" + v) === true) };
-        if (cs.value("mi-cap-administer") === true) body.role = "admin";
+        const caps = [...vocabulary, "administer"].filter((v, i) => cs.value("mi-caps-" + i) === true);
+        // the grant that includes administering is confirmed first (R72): nothing is sent until the answer is yes
+        if (caps.indexOf("administer") >= 0 && !(view.ui && view.ui.adminOk === "yes")) { cs.set("inviteCaps", caps); return null; }
+        const body = { memberId, cover, capabilities: caps.filter((v) => v !== "administer") };
+        if (caps.indexOf("administer") >= 0) body.role = "admin";
         return { body };
       },
       done(view, answer, cs) {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         if (a && a.invite) cs.set("invite", { memberId: a.memberId, expires: a.expires, link: (view.origin || "") + "/#invite=" + encodeURIComponent(a.invite) });
+        // the next invitation asks again
+        if (view.ui && view.ui.adminOk !== undefined) cs.set("adminOk", undefined);
       } },
     { op: "membercaps", rereads: ["roster"],
       send(view, el, cs) {
@@ -274,6 +313,9 @@ export const members = {
         return reason && reason.length <= 2000 ? { body: { memberId: el.dataset.member, reason } } : { refuse: "screen.members.remove.noreason" };
       } },
     { op: "expertiseconfirm", rereads: ["roster", "expertise"],
+      send(view, el) { return { body: { memberId: el.dataset.member, label: el.dataset.label } }; } },
+    // the confirmed expertise taken back, the confirmation and the declaration together, with the administrator's reason (the shell's, interface-shell R107; R63)
+    { op: "expertisewithdraw", rereads: ["roster", "expertise"],
       send(view, el) { return { body: { memberId: el.dataset.member, label: el.dataset.label } }; } },
     // the link the member opens to choose a new password (screens-entry's `reset`), shown once
     { op: "passwordresetlink", rereads: [],

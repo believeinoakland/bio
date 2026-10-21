@@ -52,7 +52,7 @@ function render(cs, view) {
   const at = ui.at || P.today(cs);
   const gk = Array.isArray(ui.graphKinds) ? ui.graphKinds : null;
   const gq = P.later(cs, view, "graph", "exploregraph", { body: Object.assign({ centre, at: { value: at, precision: "day", zone: "UTC" }, rings: 2 }, gk && gk.length ? { kinds: gk } : {}) });
-  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf, trail: Array.isArray(ui.trail) && ui.trail.length ? ui.trail : [centre], act: "explore", names: fromName ? { [from]: fromName } : {}, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: S + "attached", withdraw: S + "withdraw" }, withdraw: true }))));
+  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf, trail: Array.isArray(ui.trail) && ui.trail.length ? ui.trail : [centre], act: "explore", names: fromName ? { [from]: fromName } : {}, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: S + "attached" } }))));
 
   /* the chains, as the last walk answered them */
   const a = ui.answer;
@@ -86,8 +86,7 @@ function render(cs, view) {
       return `<li data-hop="${cs.esc(h.id)}">${cs.w(S + "hop", { from: endRef(h.from), to: endRef(h.to) })} <i>${cs.esc(wordOf(h.kind))}</i> ${unnamedEnds(h)} ${g} `
         + (declared ? `<b>${cs.w(S + "declared")}</b> ` + cs.act("stepsource", { label: "act.stepsource.label.explore", data: { relation: h.id } })
           : hunch ? cs.mark("hunch") : src || cs.mark("gap", "undetermined", { reason: cs.w(S + "nosource") }))
-        + (attached ? ` <span class="mk-small" data-attached="${cs.esc(h.id)}">${cs.w(S + "attached", { by: String(h.attached_by || "").replace(/^member:/, ""), date: cs.date(h.at || "") })}</span> `
-          + cs.act("stepsourcewithdraw", { label: S + "withdraw", data: { id: h.id } }) : "")
+        + (attached ? ` <span class="mk-small" data-attached="${cs.esc(h.id)}">${cs.w(S + "attached", { by: String(h.attached_by || "").replace(/^member:/, ""), date: cs.date(h.at || "") })}</span> ` : "")
         + (h.undetermined && h.undetermined.why ? ` ${cs.mark("gap", "undetermined")} <span class="mk-small">${P.why(cs, h.undetermined.why)}</span>` : "") + "</li>";
     };
     const chain = (path, i) => {
@@ -203,18 +202,7 @@ const acts = [
     done(view, answer, cs) {
     const w = view.ui.lastWalk;
     if (!w) return undefined;
-    return cs.call(w.op, w.body).then((a) => {
-      const r = a && a.result !== undefined ? a.result : a;
-      if (a && a.ok !== false && r && typeof r.refused !== "string") { view.ui.verified = {}; cs.set("answer", r); }
-    });
-  } },
-  /* R17: a standing attached source withdrawn, with a reason; the walk read again, the step a lead once more */
-  { op: "stepsourcewithdraw", label: "screen.explore.withdraw",
-    send(view, el) { const id = String((el && el.dataset && el.dataset.id) || ""); return id ? { body: { id } } : null; },
-    done(view, answer, cs) {
-    const w = view.ui.lastWalk;
-    if (!w) return undefined;
-    return cs.call(w.op, w.body).then((a) => {
+    return cs.call(w.op, { body: w.body }).then((a) => {
       const r = a && a.result !== undefined ? a.result : a;
       if (a && a.ok !== false && r && typeof r.refused !== "string") { view.ui.verified = {}; cs.set("answer", r); }
     });

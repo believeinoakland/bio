@@ -1184,6 +1184,8 @@ export class Events {
                                           of: [...new Set([...held.of, id])] } : { ...it, of: [id] });
         }
       }
+      /* R53 (K4310): the events holding an attestation that cites one of the captures, an event the set already found not repeated */
+      for (const it of this.#eventsCiting(shas, viewer)) if (!items.has(it.event_id)) items.set(it.event_id, { ...it, of: [] });
       /* R29: `from` and `to` bound the placed items only; every placed-nowhere item of the set is still listed apart */
       const all = [...items.values()];
       const r = this.#range(all.filter((i) => i.when), from, to);
@@ -1264,6 +1266,20 @@ export class Events {
       });
     }
     return out;
+  }
+
+  /* R53 (K4310): the live events holding an attestation, a capture extent or a dated fact, that cites one of `shas`, each
+     in sight (R40): an attestation whose capture the viewer may not see is neither read nor counted. A relation's citation
+     is never an event's own attestation (`serves`). */
+  #eventsCiting(shas, viewer) {
+    if (!shas.length) return [];
+    const sees = this.#seer(viewer), byEvent = new Map();
+    for (let i = 0; i < shas.length; i += 400) {
+      const part = shas.slice(i, i + 400);
+      for (const a of this.#rows(`SELECT event_id, bundle_id FROM event_attestations WHERE serves='event' AND capture_sha IN (${part.map(() => "?").join(",")})`, ...part))
+        if (sees(a.bundle_id) && !byEvent.has(a.event_id)) byEvent.set(a.event_id, { parts: [], concerns: false });
+    }
+    return this.#itemsFor(byEvent, viewer, null);
   }
 
   /* An event of the set, with the events within it and those that concern it. */

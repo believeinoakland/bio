@@ -85,7 +85,9 @@ export function projectRows(cs, view, w, glance, join, states) {
     return cs.sheet(projects.map(function (p) {
       const id = String(p.id);
       const joinAct = join && states && states[id] === "invited" ? cs.act("projectjoin", { label: join, data: { project: id } }) : "";
-      return cs.row("", cs.ref("project", id, p.name || id, []) + (function () { const c = countOf(id); return c ? '<span class="meta">' + c + "</span>" : ""; })()
+      // R72 (C84; project-roster R39): a stranded project, every owner gone, is marked; the row opens the project, where the rescue is.
+      const rescue = p.rescue_open === true ? '<span class="meta">' + cs.w("project.rescue.title.nodate") + "</span>" : "";
+      return cs.row("", cs.ref("project", id, p.name || id, []) + rescue + (function () { const c = countOf(id); return c ? '<span class="meta">' + c + "</span>" : ""; })()
         + (joinAct ? '<span class="meta">' + joinAct + "</span>" : ""), ladder(p.stage), glanceOf(p));
     }).join("")) + (list && list.truncated ? '<p class="mk-note">' + cs.w(w + ".truncated") + "</p>" : "");
   };

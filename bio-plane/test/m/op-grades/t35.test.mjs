@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, OP_ALIASES,
          LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
-import { reqText, ticked, tickedAll, readRows } from "./declared.mjs";
+import { reqText, ticked, tickedAll, readRows, declaredSentence, doesSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
@@ -53,11 +53,10 @@ const R22_REASONS = {
   unpack: "archive-directed: keyed by a held archive's capture, reached from its screen; files its entries as captures of "
     + "their own at the archive's grade, each promoted beside it",
   coarchiveset: "setting: the group's choice whether a capture asks for a co-archive; an administrator's act; moves no bundle",
-  signout: "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
-  signouteverywhere: "session-directed: ends the caller's own session, or every session of the caller's role; moves no "
-    + "bundle",
-  recoverycodesissue: "credential: an administrator's own recovery codes, shown once; moves no bundle",
-  recover: "credential: a recovery code and a new password, reached with no session; moves no bundle",
+  signout: declaredSentence("credentials", "signout"),
+  signouteverywhere: declaredSentence("credentials", "signout"),
+  recoverycodesissue: declaredSentence("credentials", "recoverycodesissue"),
+  recover: declaredSentence("credentials", "recover"),
 };
 /* K2043 (B3): the other ops T35 grades for L5's and L6's owners, each with the code its reasoned
    grade rests on (in the family) or its ground */
@@ -71,7 +70,8 @@ const B3_CODES = { standardforce: "STANDARD_NO_REASON", standardforcewithdraw: "
   standardbenchmark: "STANDARD_NO_REASON", usewithdraw: "NO_REASON", uselink: "DUTY_NO_REASON",
   useunlink: "DUTY_NO_REASON" };
 /* the reads of T35's table: R22 names its own in backticks (`credit` is public and apart), the rest are K2043's */
-const T35_READS = readRows(T35_NON_ACTS).filter((op) => op !== "credit");
+/* a read whose owner words it without the "read: " lead holds the owner's sentence (K4168): securitymap */
+const T35_READS = [...readRows(T35_NON_ACTS), ...Object.keys(T35_NON_ACTS).filter((op) => T35_NON_ACTS[op] === doesSentence(op))].filter((op) => op !== "credit");
 const R22_READS = T35_READS.filter((op) => tickedAll(reqText(22)).includes(op));
 const B3_READS = T35_READS.filter((op) => !R22_READS.includes(op));
 
@@ -92,8 +92,9 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
   for (const [op, why] of Object.entries(R22_REASONS)) assert.equal(NON_ACTS[op], why, op);
   for (const op of ["noterevise", "notedelete"]) assert.equal(NON_ACTS[op], NON_ACTS.notewrite, op);
   for (const op of R22_READS) {
-    assert.ok(NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 20, op);
-    assert.equal(gradeOf(op), op === "securitymap" ? "caller-owned" : null, op); /* R39 (T48) gave securitymap its row */
+    /* securitymap is declared in its owner's words, which do not lead with "read: " (K4168) */
+    assert.ok(op === "securitymap" ? NON_ACTS[op] === doesSentence(op) : NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 20, op);
+    assert.equal(gradeOf(op), null, op); /* a read takes no grade; securitymap is one too (K4210) */
   }
   assert.match(NON_ACTS.findin, /records nothing/);
   assert.equal(NON_ACTS.credit, "read: public, no credential");

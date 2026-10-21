@@ -56,8 +56,9 @@
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`) and
  * `files` (`bundle_id`, `path`, `content`), its R37 (R12's findings, R19's project); publication's `cases`
- * (`case_id`, `project_id`), `published_cases` (`case_id`, `edition`) and `case_documents` (`case_id`, `edition`,
- * `doc_sha`, `text`, `draft_id`, `sig_armored`), its R40 (R3, R5, R31, R33).
+ * (`case_id`, `project_id`), `published_cases` (`case_id`, `edition`, `scope`), `published_case_members` (`case_id`,
+ * `edition`, `ord`, `bundle_id`, `role`; R39's starting point) and `case_documents` (`case_id`, `edition`,
+ * `doc_sha`, `text`, `draft_id`, `sig_armored`), its R40 (R3, R5, R31, R33, R39).
  *
  * READ CONTRACT it states (R26): `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`,
  * `created_at`), on record-core R37's terms, which `case-inputs`' statement writer (its R3) reads under
@@ -69,10 +70,10 @@ import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
-import { caseAuthoringOf } from "../case-authoring/index.mjs";
+import { caseAuthoringOf, AUTHORED_FIELDS, ACT_FIELDS, MEMBER_ROLES } from "../case-authoring/index.mjs";
 import { caseInputsOf } from "../case-inputs/index.mjs";
 import { caseAccountOf } from "../case-account/index.mjs";
-import { ratificationOf } from "../ratification/index.mjs";
+import { ratificationOf, SUBJECT_POSITIONS } from "../ratification/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
@@ -84,9 +85,11 @@ import { word, localize } from "../setup-words/index.mjs";
 export { REVIEW_COPY_CHECKS } from "./checks.mjs";
 export { REVIEW_SCHEMA, REVIEW_TABLES } from "./schema.mjs";
 
-/** R4: the fields of `op=publish` a draft keeps; every other field of the act is dropped. */
-export const REVIEW_DRAFT_FIELDS = Object.freeze(["targets", "target", "caseId", "newCase", "scope", "statement",
-  "excluded", "subjectPosition", "subjectJustification", "biasAcknowledgement", "roles"]);
+/** R4, R37 (K4209): the fields of `op=publish` a draft keeps, derived and never hand-listed from `case-authoring`'s R65
+ *  (its `AUTHORED_FIELDS` and `ACT_FIELDS`), less the four that are not a draft's arguments: `project` and `draft` name
+ *  this module's own act, `viewer` and `author` are the control plane's stamps. Every other field of the act is dropped. */
+export const REVIEW_DRAFT_FIELDS = Object.freeze([...new Set([...AUTHORED_FIELDS, ...ACT_FIELDS])]
+  .filter((k) => !["project", "draft", "viewer", "author"].includes(k)));
 /** R3: a draft's arguments as JSON, at most the size `op=publish` would accept. */
 export const REVIEW_DRAFT_MAX = 64 * 1024;
 /** R18: a comment's trimmed text. */
@@ -169,7 +172,7 @@ export function caseIdentitySentence(caseId, edition, newCase) {
     return word("review.text.next_edition_draft", { edition: String(edition), case_id: String(caseId) });
   if (caseId) return word("review.text.next_edition", { edition: String(edition), case_id: String(caseId) });
   if (newCase) return word("review.text.new_case_whose");
-  return localize("review.index.derived_case_identity", "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment — a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them");
+  return localize("review.index.derived_case_identity", "a draft that does not name a case yet; which case it becomes is settled when it is published");
 }
 
 /* The statement as a case document PRINTS it: the frontmatter-safe normalisation the acknowledgements hash, so two
@@ -234,6 +237,46 @@ function lastChange({ draft, comments, grants, acknowledgements }) {
     undetermined_within: tied.map((c) => ({ at: c.at, by: c.by, by_kind: c.by_kind, kind: c.kind })),
     stated: localize("review.index.act_tiestated_this_is_the", "{act}.{tieStated} THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy draws live and dates nowhere — each finding's text, the publish gates' verdict, and the project's declared floors — any of which can move the hash without moving this date.", { act: String(act), tieStated: String(tieStated) }),
   };
+}
+
+/* R12, R36: a draft's targets as the act took them: a list, or a comma-separated string, else the single `target`. */
+function draftTargets(params) {
+  return Array.isArray(params.targets) ? params.targets
+       : typeof params.targets === "string" && params.targets.trim() ? params.targets.split(",")
+       : params.target ? [params.target] : [];
+}
+
+/* R41 (L15, C46): a finding is answered in its own words, never as the file. The team's Session Log (`## Session Log`
+   to the next `## ` heading, or the end) is the team's working record, with its record ids, hashes and members' reasons,
+   and never reaches a reader of the copy, whichever door: it is cut from every text answered. Text without such a
+   section is answered unchanged. */
+function withoutLog(text) {
+  const m = /^## Session Log[ \t]*\r?$/m.exec(text);
+  if (!m) return text;
+  const rest = text.slice(m.index + m[0].length);
+  const next = rest.search(/\n## /);
+  const before = text.slice(0, m.index).replace(/\s+$/, "");
+  const after = next < 0 ? "" : rest.slice(next + 1);
+  return before ? `${before}\n${after ? `\n${after}` : ""}` : after;
+}
+
+/* R41 (L15, C46): a finding file's words without its front matter (the lines between the opening and closing `---`
+   fences) and without the Session Log. `statement` is the finding's own words: the front matter's `conclusion` (what
+   `op=conclude` wrote there) or `statement` when it holds one as a plain string, first; else the text that follows the
+   front matter. `falsifier` is what would change it, the front matter's, else null. `text` is what follows the front
+   matter. A file with no front matter answers its words unchanged (less any Session Log). */
+function findingWords(content) {
+  const raw = String(content ?? "");
+  let parsed = null;
+  try { parsed = parseFrontmatter(raw); } catch { parsed = null; }
+  if (!parsed || parsed.data === null || typeof parsed.data !== "object") {
+    const text = withoutLog(raw);
+    return { text, statement: text, falsifier: null };
+  }
+  const body = withoutLog(String(parsed.body ?? "").replace(/^(?:\r?\n)+/, ""));
+  const own = (k) => (typeof parsed.data[k] === "string" && parsed.data[k].trim() ? parsed.data[k].trim() : null);
+  return { text: body, statement: own("conclusion") ?? own("statement") ?? (body.trim() ? body : null),
+           falsifier: own("falsifier") };
 }
 
 /* R13: the dry run's own throw, so a rollback is told apart from a failure. */
@@ -321,8 +364,29 @@ export class Review {
     if (!b) return { target: id, present: false, role,
                      detail: localize("review.index.this_draft_names_a_finding", "this draft names a finding its editor cannot read, or one that does not exist.") };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+    /* R41 (L15): a reader reads the finding's own words, never the file's front matter. */
+    const words = md ? findingWords(md.content) : null;
     return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
-             text: md ? md.content : null };
+             text: words ? words.text : null, statement: words ? words.statement : null,
+             falsifier: words ? words.falsifier : null };
+  }
+
+  /** R40 (L14): THE SHORT TITLE a screen draws as a draft's heading, beside the identity sentence it keeps for body text:
+   *  a named case reads "Case X, edition N"; a draft that names none reads `review.title.draft` with its scope or, failing
+   *  that, its subject (the first finding it names that its editor can read: that finding's title), else
+   *  `review.title.untitled`. Reads; never the identity sentence. */
+  #title(ident, params, gate) {
+    if (ident.caseId)
+      return localize("review.index.case_edition_title", "Case {case_id}, edition {edition}", { case_id: String(ident.caseId), edition: String(ident.edition) });
+    const scope = typeof params.scope === "string" ? params.scope.trim() : "";
+    let subject = "";
+    if (!scope) {
+      for (const raw of draftTargets(params)) {
+        const b = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, String(raw ?? "").trim(), ...gate.args);
+        if (b && typeof b.title === "string" && b.title.trim()) { subject = b.title.trim(); break; }
+      }
+    }
+    return scope || subject ? word("review.title.draft", { title: scope || subject }) : word("review.title.untitled");
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -352,6 +416,27 @@ export class Review {
   #topEdition(caseId) {
     const r = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, caseId);
     return r && r.m != null ? Number(r.m) : 0;
+  }
+
+  /** R39 (C9, DEC-374): A NEW DRAFT THAT NAMES A PUBLISHED CASE BEGINS FROM THAT CASE'S HIGHEST PUBLISHED EDITION, and
+   *  carries only what the next edition may: the findings it rests on and the roles they hold (publication's
+   *  `published_case_members`, its R40) and its scope (`published_cases`). A field the act sent, even as `null`, is
+   *  the member's own and is never filled. The four statements, the position, the bias acknowledgement and the account are
+   *  authored afresh for every edition (DEC-12), so they are not carried. Reads; the case's own rows are never written. */
+  #fromPublished(params, caseId, sent) {
+    const top = this.#topEdition(caseId);
+    if (top < 1) return;
+    if (!sent.has("targets") && !sent.has("target")) {
+      const members = this.#rows(`SELECT bundle_id, role FROM published_case_members WHERE case_id=? AND edition=?
+                                  ORDER BY ord`, caseId, top);
+      if (members.length) {
+        params.targets = members.map((m) => m.bundle_id);
+        const held = members.filter((m) => m.role);
+        if (!sent.has("roles") && held.length) params.roles = Object.fromEntries(held.map((m) => [m.bundle_id, m.role]));
+      }
+    }
+    const edition = this.#one(`SELECT scope FROM published_cases WHERE case_id=? AND edition=?`, caseId, top);
+    if (!sent.has("scope") && edition && typeof edition.scope === "string" && edition.scope.trim()) params.scope = edition.scope;
   }
 
   /** R5: A DRAFT'S CASE IDENTITY IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and never taken from the
@@ -465,8 +550,21 @@ export class Review {
                localize("review.index.this_draft_is_project_id", "this draft is {project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.", { project_id: String(existing.project_id) }));
       /* END DEC-49 REGION is-review-draft-changes-project */
     if (!this.membership.isProjectEditor(owning, who)) return notReviewOwner("draft");
+    /* R37 (C3): AN EDIT KEEPS EVERY FIELD IT DOES NOT SEND. The draft's arguments after an edit are the old ones with each
+       sent field replaced; a sent `null` or an empty (blank) string clears that field, `caseId: null` the draft's case
+       too. An empty list is a value, not a clearing: `excluded: []` is a claim (case-authoring R3), and silence is not. */
     const params = {};
-    for (const k of REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
+    if (existing) {
+      const held = JSON.parse(existing.params);
+      for (const k of REVIEW_DRAFT_FIELDS) if (k in held) params[k] = held[k];
+    }
+    const sent = new Set();
+    for (const k of REVIEW_DRAFT_FIELDS) {
+      if (rest[k] === undefined) continue;
+      sent.add(k);
+      const v = rest[k];
+      if (v === null || (typeof v === "string" && !v.trim())) delete params[k]; else params[k] = v;
+    }
     const named = typeof params.caseId === "string" && params.caseId.trim() ? params.caseId.trim() : null;
     if (named) {
       if (this.#caseProject(named) !== owning)
@@ -475,7 +573,8 @@ export class Review {
                  localize("review.index.no_case_of_owning_s", "no case of {owning}'s answers to {named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.", { owning: String(owning), named: String(named) }), { caseId: named });
         /* END DEC-49 REGION is-review-no-such-case */
       params.caseId = named;
-    }
+      if (!existing) this.#fromPublished(params, named, sent);
+    } else delete params.caseId;
     const json = JSON.stringify(params);
     if (json.length > REVIEW_DRAFT_MAX)
       /* DEC-49 REGION is-review-draft-too-large */
@@ -636,9 +735,7 @@ export class Review {
     const { draft: d, grant, reader } = door;
     const params = JSON.parse(d.params);
     const ident = this.draftIdentity(d);
-    const targets = Array.isArray(params.targets) ? params.targets
-                  : typeof params.targets === "string" && params.targets.trim() ? params.targets.split(",")
-                  : params.target ? [params.target] : [];
+    const targets = draftTargets(params);
     /* R12: THE FINDINGS ARE READ AS THE DRAFT'S EDITOR SEES THEM, for both doors: the grant is the editor's act, so a
        recipient is shown exactly what the editor put in front of them and never a document the editor could not see. */
     const gate = viewerPredicate(`member:${d.updated_by}`);
@@ -713,10 +810,15 @@ export class Review {
       case: { case_id: ident.caseId, edition: statedEdition(ident, !!params.newCase),
               identity: caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
               newCase: !!params.newCase },
+      title: this.#title(ident, params, gate),
       authored: { scope: params.scope ?? null, statement: params.statement ?? null,
                   excluded: params.excluded ?? null, subjectPosition: params.subjectPosition ?? null,
                   subjectJustification: params.subjectJustification ?? null,
-                  biasAcknowledgement: params.biasAcknowledgement ?? null },
+                  biasAcknowledgement: params.biasAcknowledgement ?? null,
+                  account: params.account ?? null, whatChanged: params.whatChanged ?? null },
+      /* R38 (C2): the choices `op=publish` accepts, so a screen offers them without listing either: the positions
+         `ratification` names (`case-authoring` imports the same list) and `case-authoring`'s member roles. */
+      choices: { subject_positions: [...SUBJECT_POSITIONS], roles: [...MEMBER_ROLES] },
       findings, gates: gates.gates, missing: gates.missing, evaluated: gates.evaluated,
       comments, comments_truncated: commentRows.length > cap, list_limit: cap,
       statement_acknowledgements: statementAcks,
@@ -752,15 +854,26 @@ export class Review {
     });
   }
 
+  /** R18 (C52): THE MEMBER A COMMENTING VIEWER NAMES, whichever way the control plane spells it: `member:<id>`, that
+   *  spelling carrying a project (`member:<id>@<project>`, membership R149) and the founder's bare `admin`; the member's
+   *  id, never the spelling. A machine credential, an unrecognised spelling and an absent viewer name none (null): a
+   *  comment is a person's. */
+  #commenter(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope !== "participant") return null;
+    return gate.member ?? (String(gate.viewer ?? "").split("@")[0] || null);
+  }
+
   /** R18: a comment through R10's doors (`op=reviewcomment`). A recipient's is attributed to the grant, a member's to
    *  the member. */
   comment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
     const v = String(viewer ?? "");
-    const door = bySecret || v.startsWith("member:") ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
+    const member = this.#commenter(v);
+    const door = bySecret || member ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
     if (!door) return noReviewCopy();
     const { draft: d, grant } = door;
     const kind = grant ? "recipient" : "member";
-    const author = grant ? grant.grant_id : v.slice("member:".length);
+    const author = grant ? grant.grant_id : member;
     const body = String(text ?? "").trim();
     if (!body || body.length > REVIEW_TEXT_MAX)
       /* DEC-49 REGION is-review-comment-text */
@@ -1084,3 +1197,36 @@ export function reviewOps(r, url, body) {
     casedrafts: () => r.list({ project: q("project"), viewer: q("viewer"), limit: q("limit") }),
   };
 }
+
+/** R42 (T51; K4168, K4202; op-declarations R80, op-grades R49): THE OPS A SCREEN SENDS, declared by their owner beside the ops
+ *  map. Each row's `classes`, `mutating`, `weight` and `description` are copied from the op's existing rows in
+ *  `op-declarations` and `op-grades`, never chosen (the registrations refuse a row that differs). `fields.accepts` is every
+ *  field the arm reads from the query and the body, less the control plane's stamps (`author`, `viewer`, `bySecret` and the
+ *  grant's `secretSha`, R22, R29); `fields.requires` the ones it refuses without, as the refusal names them. `reviewcomment`
+ *  is addressed by `draft` in the query and answers a request without it, like every request the doors refuse, with the
+ *  dead answer (R10), which names nothing: so `draft` is accepted there and not required. A recipient presents the link's
+ *  `secret` in the body; the control plane takes it, sends only its fingerprint as `secretSha` (R29) and drops the field,
+ *  so the op as a screen reaches it accepts `secret` though this arm never reads one (a member's call sends none). `casedraft` is
+ *  satisfied by a project (a new draft) or a draft (an edit), and keeps the fields a draft keeps (R4, R37). */
+export const DECLARED_OPS = Object.freeze({
+  casedraft: {
+    classes: ["admin", "member", "probe"], mutating: true, weight: "reversible",
+    description: localize("review.declared.casedraft", "review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy"),
+    fields: { accepts: Object.freeze(["draft", "project", ...REVIEW_DRAFT_FIELDS]), requires: Object.freeze([Object.freeze(["project", "draft"])]) },
+  },
+  reviewgrant: {
+    classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("review.declared.reviewgrant", "review copy: its subject is a DRAFT CASE keyed draft_id and its product is a grant keyed grant_id, not a move of any bundle"),
+    fields: { accepts: Object.freeze(["draft", "recipient", "until"]), requires: Object.freeze(["draft", "recipient"]) },
+  },
+  reviewrevoke: {
+    classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("review.declared.reviewrevoke", "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state"),
+    fields: { accepts: Object.freeze(["grant"]), requires: Object.freeze(["grant"]) },
+  },
+  reviewcomment: {
+    classes: null, mutating: true, weight: "reversible",
+    description: localize("review.declared.reviewcomment", "review-directed: keyed by a review copy; a reader's comment for the case's owner"),
+    fields: { accepts: Object.freeze(["draft", "text", "secret"]), requires: Object.freeze(["text"]) },
+  },
+});

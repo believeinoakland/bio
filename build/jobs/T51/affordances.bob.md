@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J7
+**Read** · handled J16
 
 ## B1 · START
 
@@ -58,3 +58,34 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B7 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · CHANGE
+
+CHANGE (K4225), a new job session (AFFORDANCES #38): on the merged tranche two of your tests are red (278/2): "R1 R12 R19 R24: case-inputs' ops" and "R1 R4 R12 R19 R24: case-import's ops". Each hand-lists another module's ops (case-inputs now has `casedetailsset`, `casedetails`, `casedetailspublic`; case-import `importregrade`, `rerunstart`, `rerunpair`, `rerunread`), which K3268 forbids. Read each owner's op set from its own `DECLARED_OPS` and its ops map (never a hand list); keep what each test asserts (the checks' families, a rung or stated absence for every write, nothing unaccounted, the control). Where a new op has no rung or stated absence in `affordances`' own reading, take it from the owner's declared `weight` as op-grades R49 registers it; if that needs a change outside your module, REPORT. Merge `tranche/T51` first; run your suite and the checks; requirement line only if a requirement's meaning changes (K4210); `Size`; COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K4247): AFFORDANCES, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: `test/m/affordances/t48.test.mjs:181` (R12, R39) still expects `securitymap` among the `caller-owned` absences; it has been a read since K4210 (op-grades R39 as amended, merged), so the test fails on the tranche. Make the expectation follow op-grades' tables (read from its exports, never a hand list, K3268); `groupdescriptiondraft` leaves the `caller-owned` absences too once OP-GRADES #20 merges (K4247), so read it, don't list it. Also report any other affordances red on the tranche with its cause (op-grades #19 saw R2 and R41's unaccounted). Requirement lines, if any change, for BOB in your COMPLETE.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B10 · CHANGE
+
+CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388 rewordings): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated (e8229b325b). Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, the entry `## U420` (and U422). Merge `tranche/T51` first. Yours (U421): the design's `words-reads.json` now gives `affordances` the 64 declared ops' `act.<op>.does` words (selftest, export, exportlog, memberpairingset, runtime, contradiction*, bias*, goal*, aspiration*, lead*, escalation*, reevaluation*, sweeps, triage among them), so `ACT_HELP` and its test change with them: `ACT_HELP` reads each by its key, the test asserts keys, never sentences. With B9's entry.
+
+## B11 · CHANGE
+
+CHANGE (K4250), with B10: (1) your J9 reading of the start-up refusal is not right: `marks.mjs` grades nothing (its header says so); the refusal was link-sweep's own `sweeps` row (`weight: "reversible"` on a read), now fixed and merged; `groupdescriptiondraft` is next, fixed by STORE-DOOR #14 with OP-GRADES #20. (2) R2, R41 (`unaccounted`) are red in control-plane's and your suites: these ops are not in your published list or unranked: `capturecredentiallist`, `capturecredentialsupply`, `capturecredentialwithdraw`, `casedetails`, `casedetailsset`, `citeimported`, `declareorigin`, `expertisewithdraw`, `export`, `importregrade`, `namedrequests`, `namedrequestset`, `projectclose`, `rerunpair`, `rerunread`, `rerunstart`, `sweepratify`, `sweepset`, `taskdecide`, `withdrawimported`. Each is declared by its owner: make R2/R41's accounting read the owners' declarations through the registration (K3268), never a hand list; if a rank must come from op-grades, say which and BOB routes it. Merge the tranche first.
+
+## B12 · CHANGE
+
+CHANGE (K4258): AFFORDANCES, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5.
+Why: op-declarations (J18, confirmed by BOB at `bio-plane/src/affordances/act-help.mjs:196`): your `ACT_HELP` holds the help sentence `act.strengthbarset.does` under the key `strengthbar`, so `strengthbarset`, the op strength declares and screens-settings sends, has no `ACT_HELP` entry and stays in op-declarations' unexplained ground.
+Entry: hold that help under `strengthbarset` (keep `strengthbar` too only if a test of yours shows a screen still sends it); your R2/R41 accounting and the `T51_DESIGN_OPS` export follow. Test: `ACT_HELP.strengthbarset` reads `act.strengthbarset.does`; control: every other entry unchanged. Requirement line for BOB if any line names the key.
+
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio affordances tranche/T51 job/T51/affordances`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

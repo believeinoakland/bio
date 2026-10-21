@@ -6,6 +6,9 @@ import { ok, refusedIn, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
 import { NEEDS } from "../../../src/op-declarations/index.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, lead, word, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
+
+
 const PROJECT = SCREENS.find((s) => s.id === "project");
 /* a day as `cs.date` draws it (`date.daymonthyear`, `date.month.*`, DEC-333), read through the same words, never copied */
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
@@ -178,12 +181,13 @@ test("R27 R36 This project's work: its plans by name and the calculations, stand
   /* R52 (1): a kind it has none of is still listed, so the first one can be made (R27's "not listed" is retired) */
   const none = await open(at());
   assert.ok(section(none, "project.work.title").textContent.includes(word("screen.plan.name")), "no plan: the plan kind is still listed");
-  /* R36: a plan opened here is listed by name at once */
-  const o = await open(at(), { plane: { planopen: ok({ ok: true, id: "PLAN-2026-0004", title: "Ask the committee" }) } });
+  /* R36 (fix round 2, C63): a plan opened here opens its page, where the receipt is; the plan is listed by name when she returns */
+  const stubPlan = { id: "plan", reads: () => ({}), render: () => "", acts: [], words: [] };
+  const o = await open(at(), { boot: { screens: [...SCREENS, stubPlan] }, plane: { planopen: ok({ ok: true, id: "PLAN-2026-0004", title: "Ask the committee" }) } });
   fill(o, { "project-plan": "Ask the committee", "project-plan-about": Q });
   await press(o, "planopen");
   assert.deepEqual(o.byOp("planopen")[0].body, { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: Q }] });
-  assert.ok(section(o, "project.work.title").textContent.includes("Ask the committee"));
+  assert.equal(o.location.pathname, "/app/plan/PLAN-2026-0004");
 });
 
 test("R28 who can find it: the setting, its history newest first ending with how it started, and an owner's reasoned change", async () => {
@@ -221,8 +225,10 @@ test("R29 R40 R54 members: one row each with role, the founder unnamed by key, n
   assert.deepEqual(actsIn(rows[1]), ["projectownerremove"], "her own row: stand down");
   assert.deepEqual(actsIn(rows[2]).sort(), ["projectowneradd", "projectremove"], "a member's row, to an owner");
   assert.ok(says(s, "project.owners.rule"));
-  await press(p, "projectowneradd", { within: rows[2] });
+  /* K4199 (interface-shell R107): the shell opens its reason box before "Make an owner"; she gives the reason as a member does */
+  await press(p, "projectowneradd", { within: rows[2], reason: "she has done the work" });
   assert.deepEqual([p.byOp("projectowneradd")[0].query.projectId, p.byOp("projectowneradd")[0].query.handle], [P, "ana"]);
+  assert.equal(p.byOp("projectowneradd")[0].body.reason, "she has done the work", "and the shell sends it with the act");
   await press(p, "projectremove", { within: section(p, "screen.project.members.head").querySelectorAll(".cs-row")[2] });
   assert.equal(p.byOp("projectremove")[0].query.handle, "ana");
   assert.ok(!("comment" in p.byOp("projectremove")[0].query), "an empty reason is not refused, and none is sent");

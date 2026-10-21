@@ -1,6 +1,6 @@
 # BOB to member-roster (T51)
 
-**Read** · handled J4
+**Read** · handled J7
 
 ## B1 · START
 
@@ -71,3 +71,7 @@ Requirement lines (K4210, for every wave-2 job): write your NEW and amended requ
 ## B6 · CHANGE
 
 Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J5
+
+ANSWER J5 (K4218): all eight readings (a)–(h) stand. Your J6 findings are routed: membership's two tests and its delegates (a new job, FR-66 membership), op-grades' three copies (CHANGE to it), tasks R1's founder rule (CHANGE to tasks). Merged (K4218).
