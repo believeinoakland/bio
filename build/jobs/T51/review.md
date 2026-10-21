@@ -1,6 +1,31 @@
 # review (T51)
 
-**Status** · session_01FnocwFJGM3fMnossXJZ36Q · depth 2 · COMPLETE · handled B12
+**Status** · session_01BgzvhhpsZ9CfjrbXUVyebx · depth 2 · COMPLETE · handled B12
+
+## Completion record (fix round 4, B13 START, K4429; REVIEW #22)
+
+COMPLETE for fix round 4, wave 1 (#12). Branch job/T51/review, `tranche/T51` merged at the start and again before COMPLETE (up to date; no wave-1 provider merged before me, so nothing of this round was read from a double).
+
+**C46 (my part, the provider; seam owner screens-publish)**
+
+1. **Root cause (certain, confirmed by reproducing):** `review/index.mjs` `#finding` took a finding's words only from the question's own bytes (`findingWords`: front-matter `conclusion`/`statement`, or the body's `## Conclusion`). A question a *project* concluded keeps the conclusion as that project's record (`conclusions` rows in the project's document, `basis-versions` R22; `op=conclude` with a project answers `inquiry_moved: false` and writes nothing into the question), so its bytes hold no words and the finding read "Not concluded yet" at both doors and in `list`'s `concluded` findings. Fix: `#finding` now asks `#recorded` first, which reads `ratification.caseConclusionFor(project, question, viewer, state)` (the answer the publish gate and the case document use) for the draft's own project and the draft's last editor as viewer (in `list`, the project and the requesting viewer): only while the project's latest act is a conclusion with an adopted claim, the claim is the `statement` and the conclusion's falsifier the `falsifier`, `concluded: true`, `not_concluded: null`. A withdrawn conclusion, another project's, and a no-project conclusion (written in the question's own bytes) are not that project's record and answer the file's words as before. No new sentence; the `Not concluded yet` stand-in key is unchanged.
+2. **Why the tests missed it, and the gap fix:** the earlier fixtures put a string `conclusion` in the question's front matter (survivors class d) and `fixture.mjs`'s `ratification` double answered no claim, so no test had a question concluded the way a project concludes. The new `conclusions.test.mjs` builds the questions with case-authoring's real fixture (real record-core, membership, basis-versions, ratification, strength, case-authoring, case-inputs, case-account) and concludes them with the real `conclude` (project adoption; no project) and `withdrawConclusion`; the question's own bytes are asserted to hold no `conclusion:`.
+3. **Failing-first test on the walker's row:** `conclusions.test.mjs` "R41, R12: a question the project concluded by adopting a reading reads as concluded in the claim's words at the member door, the outside reader's door and in the concluded list" (the walker's CA16 and CA21 rows): RED before the fix, `actual [true, false, 'Not concluded yet']` against `[true, true, null]` at `findings[0]` (member door, line 50); GREEN after: statement "Federal agencies must disclose requested records unless one of nine exemptions applies." and the falsifier at the member door, the recipient door (grant secret) and `list().concluded[0].findings[0]`; no `## ` heading and no "Not concluded yet". Controls (green before and after): a question concluded by `conclude` with no project answers its conclusion words at both doors; a question nobody concluded, one the project concluded then withdrew, and one only another project concluded answer `concluded: false`, `statement: null`, a plain state sentence, no heading.
+4. **Platform check: N** (pure code over the record; no limit, door or worker involved).
+
+**Seam (screens-publish owns the through-the-door test):** the editor's cites list drawing the raw id is `screens-publish/case-editor.mjs`; this module already answers `title` for every present finding (R12), which that screen is to draw. Nothing else of the seam needs a change here.
+
+**Requirement ids met:** R41, R12 (and R36's `concluded` list findings, which read the same way). **Deferred:** none. **Found in other modules:** none. **Generated artifacts made stale:** `bio-plane/dist/bio-plane.bundled.mjs` and `release/bio-plane.bundled.mjs` embed `review/index.mjs`; regenerate with the bundle command (manifest section 14).
+
+**Proposed requirement line (BOB writes `build/requirements/`):**
+- R41 (amend): "A present finding that is a question the draft's project has concluded (`ratification` R1's `caseConclusionFor` answers `concluded` for the project and the question, its claim adopted) answers that conclusion's claim as `statement` and its falsifier as `falsifier`, first, whether or not the question's own bytes hold words; a conclusion the project withdrew, another project's, and one written in the question's own bytes (no project) answer the file's words, as above. Test: a question concluded by a project's adoption answers the claim at the member and recipient doors and in `list`'s `concluded`; control: the no-project conclusion, a withdrawn conclusion and another project's answer as before."
+
+**Tests and checks**
+- `node --test --test-force-exit bio-plane/test/m/review/`: tests 86, pass 86, fail 0 (83 + the 3 new).
+- Users (`build/plan/impact.mjs origin/tranche/T51 HEAD`): notice-producers 130/130, queue 206/206, op-declarations 1 red (R34, affordances R48), store-door 1 red (R17 `groupdescriptiondraft`), control-plane 1 red (R81 end to end), plane 5 reds (R18/R5, R24, R5/R9/R45, R5, R9). Each red is identical with `review/index.mjs` reverted to the tranche tip (same failing tests, same counts), none names `review`: named, not fixed.
+- `node checks/run.mjs`: format 0 failures; architecture 0 failures; words: no failure in `review` (the 3 inline failures are in `op-grades`); coverage: no `review` failure (the 15 failures are other modules' not-yet-met ids); channels 0 failures. `node checks/ownership.mjs review tranche/T51 job/T51/review`: 3 files changed by review, 0 failures.
+
+Size (session_01BgzvhhpsZ9CfjrbXUVyebx): test runs 9, module lines 1633
 
 ## Completion record (fix round 3, B11 START, K4356; REVIEW #21)
 
@@ -194,3 +219,7 @@ NOTE: R19 `editions` was tested against a scripted double of case-authoring.draf
 Suites: review 83/83; users: notice-producers, queue, op-declarations, control-plane all green; plane 279/280 (R24 words) and store-door 52/53 (R17 groupdescriptiondraft) are not review's. format, architecture, words 0 failures; coverage none for review; ownership 0.
 Proposed lines for you: R41 and R12 amendments (statement/falsifier/not_concluded/title), wording in my record. Bundles under bio-plane/dist and release are stale until regenerated.
 Size (session_01FnocwFJGM3fMnossXJZ36Q): test runs 12, module lines 1610
+
+## J10 · COMPLETE
+
+COMPLETE for fix round 4 (C46, my part). Root cause: #finding read a finding's words only from the question's own bytes; a project's conclusion is its own record (inquiry_moved false), so the finding read 'Not concluded yet'. Fix: the project's recorded claim and falsifier (ratification caseConclusionFor) come first. Failing-first test conclusions.test.mjs through the real conclude (red 'Not concluded yet', then green); platform check N; review suite 86/86; users' reds identical on the tranche tip; checks and ownership clean for review. Proposed R41 amendment and the stale bundles are in my record (build/jobs/T51/review.md). No QUESTION open.
