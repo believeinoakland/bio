@@ -564,7 +564,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const key = inst.key + "|" + op + "|" + JSON.stringify(o.data || {});
         /* R107: an act drawn with no weight but carrying the Reasoned mark, and listed in `D.markAsks`, asks its reason before it runs */
         const asks = weight === "none" && D.marks[op] === "reasoned" && D.markAsks.includes(op) && !inst.pub && !browser;
-        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser, asks }) - 1;
+        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser, asks, here: hereKey && has(hereKey) ? hereKey : null }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
         /* R64 (`op-grades` R42): an act drawn with no weight carries the design kit's mark, as a mark and its explanation
            only; its friction stays R11's (it runs on press). R77 (U2c; DEC-295): only an act above Reversible draws dots and a
@@ -1929,7 +1929,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     const label = btn.childNodes ? btn.textContent : "";
     const fields = (d.spec.dialog || []).map((f, j) => '<span class="cs-field"><label for="cs-dlg-' + ai.replace(":", "-") + "-" + j + '">' + w(f.label) + '</label><textarea class="cs-input" id="cs-dlg-' + ai.replace(":", "-") + "-" + j + '"></textarea></span>').join("");
-    const does = has("act." + d.op + ".does") ? "<p>" + w("act." + d.op + ".does") + "</p>" : "";
+    /* R90, R11 (B4): the place word the screen gave the act explains it here too, in place of `.does` */
+    const doesKey = d.here || "act." + d.op + ".does";
+    const does = has(doesKey) ? "<p>" + w(doesKey) + "</p>" : "";
     besideAct(ai, '<span class="cs-dialog" role="dialog" aria-label="' + esc(label) + '"><span class="ends">' + does + "</span><p>"
       + w(weight === "signed" ? "shell.dialog.signed" : "shell.dialog.signs", { handle: ME ? ME.handle || "" : "" }) + "</p>" + fields + '<span class="mk-acts">'
       + '<button type="button" class="cs-btn" data-tone="primary" data-shell="confirm" data-for="' + esc(ai) + '">' + w("shell.confirm") + "</button>"
