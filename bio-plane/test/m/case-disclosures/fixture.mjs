@@ -246,10 +246,10 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
                    VALUES (?, ?, ?, 'pdf-page', ?, ?, 'plane', '2026-01-01', 0)`, id, capture, bundle, extent, ref);
     },
     /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), concluded in its own bytes. */
-    finding(id, legs, { state = "concluded", lines = [] } = {}) {
+    finding(id, legs, { state = "concluded", lines = [], severed = [] } = {}) {
       const head = record.head(id);
       const r = promotion.promote({ bundleId: id, base: head ? head.bundleSha : null, snapKey: `k${++n}`,
-        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines }) }],
+        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines, severed }) }],
         meta: { object_type: "inquiry" } });
       if (!r.ok) throw new Error(`fixture finding refused: ${JSON.stringify(r).slice(0, 600)}`);
       return r;
@@ -406,14 +406,14 @@ export function infoMd(id) {
 }
 
 /** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes. */
-export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
+export function inqMd(id, legs = [], { state = "concluded", lines = [], severed = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
   /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
   const refs = [...new Set(legs.map((l) => l.target).filter((t) => !String(t).startsWith("imported:")))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
-    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",
-                                                              '    note: ""'])] : ["references: []"]),
+    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`,
+                                                              `    status: ${severed.includes(t) ? "severed" : "confirmed"}`, '    note: ""'])] : ["references: []"]),
     "state_history: []",
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => Object.entries({ role: "supports", ...l })
       .sort(([a], [b]) => (a === "target" ? -1 : b === "target" ? 1 : 0))
