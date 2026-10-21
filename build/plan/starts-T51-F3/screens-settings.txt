@@ -30,4 +30,6 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-setting
 
 **Added at K4380 (CAUSE-SHELL-3 merged):** the interface page now loads the shell as one external versioned script (`/app/shell-<version>.js`, `integrity`, `<meta name="cs-version">`, no inline script, no nonce; interface-shell R1, R2; answer-envelope R6). Your the `contract` test look for `<script nonce=` or inline shell data in the served page: make them current against the external script (`interfaceScript`), test files only, the requirement unchanged.
 
+**Added at K4398:** the Account key section hands a key file to the signer by `cs.signer.sign(statements, {keyFile})` (interface-shell R116, INTERFACE-SHELL #14, merged before you), never by filling the kit's dialog box by its id.
+
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
