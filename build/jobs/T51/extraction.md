@@ -173,3 +173,12 @@ What would work (the module and what it needs; I write none of it before your re
  (b) the read of a PDF over a size bound (say 2 MB, RC-R1's own figure) goes to the PDF_WORKER fleet member (tier 2, its own isolate and limits) and the object only stores its answer; `reading-pipeline.read` is `reading-pipeline`'s (cause-reading-3 in wave 1), the object's alarm is `plane`'s.
  (c) extraction, mine: `readHeld` and `readheld` already read what the pipeline reads; once (a) or (b) lands there is nothing further to change in extraction for C5a. Until then `readHeld` of a 21 MB PDF (C5b) meets the same wall: its reading by tier 1 would need about +400 MB.
 Please decide: which of (a) or (b), and which job; or hold C5a's fix for the redeploy's phase clock (K4428). My C5b/N5 work (below) is independent of this and proceeds.
+
+## J9 · QUESTION
+
+QUESTION (replaces nothing; J8 is the C5a step-0 report). One cross-module thing `op=readheld` (N5, RC-R3) needs, found by running the impacted suites:
+
+`bio-plane/test/m/op-declarations/t36.test.mjs` (R34, affordances R48) now lists `readheld` among the member ops that have "no text and no ground": every op in SESSION_OPS.member must have an explanation in affordances' `ACT_HELP` or be named in `ACT_HELP_ABSENT`. `readheld` is a member op because extraction declares it (`DECLARED_OPS.readheld`, classes admin and member, `needs: null`, weight undetermined), which RC-R3 requires so a screen can offer it. The same test already fails on the tranche tip for `capturecredentiallist`, so it is red there, not caused by me; mine adds `readheld` to its list.
+Smallest thing I need: `affordances` (or whoever BOB names) adds `readheld` to `ACT_HELP` (a sentence such as the press "Read it now" does: the document's record holds it unread, the press reads it) or to `ACT_HELP_ABSENT`. I cannot write another module's file. Until it is written, that one test names `readheld` as well as `capturecredentiallist`.
+
+Also for your information (no answer needed): the op's door route. `control-plane/owner-ops.mjs:103` already maps a store-internal `readheld` to `readHeld({sha, storeName})`; extraction now also exports `extractionOps().readheld` (the member's op: gated by the `viewer` stamp, refused as an absent record, NO_SHA without a digest), spread earlier in `plane/store.mjs:777` and so overridden by the control-plane arm unless control-plane's job drops its arm or passes `viewer` through it. control-plane (wave 0 #6) owns that; I list it in my COMPLETE.
