@@ -80,3 +80,21 @@ Two things for BOB:
 2. Finding for jurisdictions: a deadline in the profile grammar (R26) has no `label` field and the combined view never carries one, so today each item has `rule` and `citation` only. The due-date screen (screens-investigate R59) should draw the citation until a label exists.
 
 Tests (t51.test.mjs, each naming R2): list for a kind with deadlines, the empty list (kind with none; no profile), control of a valid rule. Module suite 83/83; consumers (due-date 6/6, action-plans, affordances t45/t46, plane compose, monitoring) 283/283. format, architecture, coverage (25/25), words, ownership: 0 failures; checks/run.mjs lists words failures only in op-grades. Size (session_01V7byxdmjg2NpBgmASX69w6): test runs 7, module lines 2133.
+
+## Completion (fix round 3, B4; ACTION-CLOCKS #17)
+
+**Cause met.** C53 (the action page cannot read reminders after a reload): action-clocks **R26**. `op=remindersfor` is an arm of `actionClocksOps` answering `remindersFor({action, viewer})` (R4): `{ok: true, reminders}` or `actions.noSuchAction` for an absent or invisible action; `action` read from the address, else the body; `viewer` from the stamp only. Declared in `DECLARED_OPS` as `remindersfor` (classes admin, member; `mutating: false`; weight `read`; accepts and requires `action`), its description a `localize` id (`action-clocks.declared.remindersfor`). No new sentence a member reads and no refusal.
+
+**Tests** (written first; the op test seen failing with "remindersfor is not a function").
+- `t51.test.mjs`: R26 through the op map: a reminder set by a member is answered by a fresh op call, equal to the service's own answer; the action from the body; controls: an invisible and an absent action answer `actions.noSuchAction`; a viewer in the body is not the stamp; the declaration's fields and `mutating: false`.
+- `declared-ops.test.mjs`: R25 R26 `declaredOpHolds` for `remindersfor`.
+- `reminders.test.mjs`: the pinned op key list gains `remindersfor`.
+
+**Deferred.** None. **Found in another module.** None. op-declarations' and op-grades' rows for `remindersfor` are theirs (sent by BOB as the job merges); my declared test does not need them.
+
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/action-clocks/*.test.mjs`: tests 86, pass 86, fail 0.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 36 modules; reds pdf-worker 1/12, scheduler 12/13, affordances 21/28, queue 29/31, screens-wizards 9/10, control-plane 62/63, plane 39/42, journey-check 1/16 are identical on the tranche tip with a no-op change to this module (checked in a worktree), so inherited, not this change.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs action-clocks`: 0. `checks/coverage.mjs action-clocks`: 26 of 26 live ids named, 0. `checks/words.mjs action-clocks`: 0 findings. `checks/ownership.mjs action-clocks tranche/T51 job/T51/action-clocks`: 5 files, 0 failures.
+
+Size (session_019moQM11yaAcc7xfvrEDnxX): test runs 5, module lines 2162
