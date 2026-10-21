@@ -6172,3 +6172,18 @@ decided: 2026-10-21 · the design session (P17)
 the design: `screen.held.vouch.partsonly` (only parts were kept, so it cannot be vouched for: capture it again whole, or set it aside); `screen.inbox.knock.name` "File name, as the sender gave it", `screen.inbox.knock.type` "Kind of file, as the sender gave it".
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-399").
 owed: none.
+
+### DEC-400 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B455, K4337)
+for: design
+question: Three rows B455 names.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `screen.contradiction.flagged.by` "{member} said these two contradict, {date}"; `act.heldcaptures.here.project` "List this project's documents"; `screen.document.testify.how` "How you know".
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-400").
+owed: none.
