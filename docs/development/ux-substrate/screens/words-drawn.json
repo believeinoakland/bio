@@ -37685,6 +37685,138 @@
    "en": "Named by a member",
    "protected": false,
    "note": "DEC-402: the mark on an office a member named, until an administrator confirms it"
+  },
+  {
+   "key": "screen.capture.logins.head",
+   "en": "Logins for sites",
+   "protected": false,
+   "note": "DEC-403: B458 1: section on capture"
+  },
+  {
+   "key": "screen.capture.logins.about1",
+   "en": "Some sites show their records only after a login.",
+   "protected": false,
+   "note": "DEC-403: B458 1: what the section is for"
+  },
+  {
+   "key": "screen.capture.logins.about2",
+   "en": "A login stored here is used when your team's Civicsmith captures from that site.",
+   "protected": false,
+   "note": "DEC-403: B458 1"
+  },
+  {
+   "key": "screen.capture.logins.about3",
+   "en": "The secret is sealed and never shown again, to you or to anyone.",
+   "protected": false,
+   "note": "DEC-403: B458 1"
+  },
+  {
+   "key": "screen.capture.logins.row",
+   "en": "{kind} · {scope} · given by {member}, {date}",
+   "protected": false,
+   "note": "DEC-403: B458 1: a stored login's line under its site"
+  },
+  {
+   "key": "screen.capture.logins.none.head",
+   "en": "When none is stored",
+   "protected": false,
+   "note": "DEC-403: B458 1: fold"
+  },
+  {
+   "key": "screen.capture.logins.none",
+   "en": "No login is stored yet. Give one below when a site asks for it.",
+   "protected": false,
+   "note": "DEC-403: B458 1: the empty list"
+  },
+  {
+   "key": "screen.capture.logins.give",
+   "en": "Give a login for a site",
+   "protected": false,
+   "note": "DEC-403: B458 1: fold"
+  },
+  {
+   "key": "screen.capture.logins.site",
+   "en": "The site",
+   "protected": false,
+   "note": "DEC-403: B458 1: field (host)"
+  },
+  {
+   "key": "screen.capture.logins.site.help",
+   "en": "Its address, such as records.example-city.gov. The login is used for that site only.",
+   "protected": false,
+   "note": "DEC-403: B458 1: help"
+  },
+  {
+   "key": "screen.capture.logins.kind",
+   "en": "What the site asks for",
+   "protected": false,
+   "note": "DEC-403: B458 1: field (kind)"
+  },
+  {
+   "key": "screen.capture.logins.kind.login",
+   "en": "A username and password",
+   "protected": false,
+   "note": "DEC-403: B458 1: kind login"
+  },
+  {
+   "key": "screen.capture.logins.kind.user-agent",
+   "en": "A browser name the site requires",
+   "protected": false,
+   "note": "DEC-403: B458 1: kind user-agent"
+  },
+  {
+   "key": "screen.capture.logins.kind.other",
+   "en": "Something else",
+   "protected": false,
+   "note": "DEC-403: B458 1: kind other"
+  },
+  {
+   "key": "screen.capture.logins.scope",
+   "en": "Who may use it",
+   "protected": false,
+   "note": "DEC-403: B458 1: field (scope)"
+  },
+  {
+   "key": "screen.capture.logins.scope.help",
+   "en": "Who can capture with it. Nobody ever sees the secret.",
+   "protected": false,
+   "note": "DEC-403: B458 1: help"
+  },
+  {
+   "key": "screen.capture.logins.scope.member",
+   "en": "Only me",
+   "protected": false,
+   "note": "DEC-403: B458 1: scope member"
+  },
+  {
+   "key": "screen.capture.logins.scope.project",
+   "en": "This project",
+   "protected": false,
+   "note": "DEC-403: B458 1: scope project"
+  },
+  {
+   "key": "screen.capture.logins.scope.group",
+   "en": "The whole team",
+   "protected": false,
+   "note": "DEC-403: B458 1: scope group"
+  },
+  {
+   "key": "screen.capture.logins.name",
+   "en": "Username for this site",
+   "protected": false,
+   "note": "DEC-403: B458 1: field"
+  },
+  {
+   "key": "screen.capture.logins.secret",
+   "en": "Password or secret for this site",
+   "protected": false,
+   "note": "DEC-403: B458 1: field"
+  },
+  {
+   "key": "screen.capture.logins.store",
+   "en": "Store this login",
+   "protected": false,
+   "note": "DEC-403: B458 1: the button giving a login ahead of any refused request (capturecredentialsupply, no request to retry)"
   }
  ],
  "rewrite": {

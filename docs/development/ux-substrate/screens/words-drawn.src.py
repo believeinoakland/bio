@@ -7013,6 +7013,31 @@ W.append(dict(key='screen.request.nameoffice.law.help', en='The law sets the due
 W.append(dict(key='screen.request.nameoffice.use.help', en='Saves the office for your team, marked as named by you, and chooses it for this request.', protected=False, note="DEC-402: the button's explanation"))
 W.append(dict(key='screen.request.nameoffice.mark', en='Named by a member', protected=False, note='DEC-402: the mark on an office a member named, until an administrator confirms it'))
 
+# DEC-403: B458 (K4356, K4357) item 1: stored logins on capture
+W.append(dict(key='screen.capture.logins.head', en='Logins for sites', protected=False, note='DEC-403: B458 1: section on capture'))
+W.append(dict(key='screen.capture.logins.about1', en='Some sites show their records only after a login.', protected=False, note='DEC-403: B458 1: what the section is for'))
+W.append(dict(key='screen.capture.logins.about2', en="A login stored here is used when your team's Civicsmith captures from that site.", protected=False, note='DEC-403: B458 1'))
+W.append(dict(key='screen.capture.logins.about3', en='The secret is sealed and never shown again, to you or to anyone.', protected=False, note='DEC-403: B458 1'))
+W.append(dict(key='screen.capture.logins.row', en='{kind} · {scope} · given by {member}, {date}', protected=False, note="DEC-403: B458 1: a stored login's line under its site"))
+W.append(dict(key='screen.capture.logins.none.head', en='When none is stored', protected=False, note='DEC-403: B458 1: fold'))
+W.append(dict(key='screen.capture.logins.none', en='No login is stored yet. Give one below when a site asks for it.', protected=False, note='DEC-403: B458 1: the empty list'))
+W.append(dict(key='screen.capture.logins.give', en='Give a login for a site', protected=False, note='DEC-403: B458 1: fold'))
+W.append(dict(key='screen.capture.logins.site', en='The site', protected=False, note='DEC-403: B458 1: field (host)'))
+W.append(dict(key='screen.capture.logins.site.help', en='Its address, such as records.example-city.gov. The login is used for that site only.', protected=False, note='DEC-403: B458 1: help'))
+W.append(dict(key='screen.capture.logins.kind', en='What the site asks for', protected=False, note='DEC-403: B458 1: field (kind)'))
+W.append(dict(key='screen.capture.logins.kind.login', en='A username and password', protected=False, note='DEC-403: B458 1: kind login'))
+W.append(dict(key='screen.capture.logins.kind.user-agent', en='A browser name the site requires', protected=False, note='DEC-403: B458 1: kind user-agent'))
+W.append(dict(key='screen.capture.logins.kind.other', en='Something else', protected=False, note='DEC-403: B458 1: kind other'))
+W.append(dict(key='screen.capture.logins.scope', en='Who may use it', protected=False, note='DEC-403: B458 1: field (scope)'))
+W.append(dict(key='screen.capture.logins.scope.help', en='Who can capture with it. Nobody ever sees the secret.', protected=False, note='DEC-403: B458 1: help'))
+W.append(dict(key='screen.capture.logins.scope.member', en='Only me', protected=False, note='DEC-403: B458 1: scope member'))
+W.append(dict(key='screen.capture.logins.scope.project', en='This project', protected=False, note='DEC-403: B458 1: scope project'))
+W.append(dict(key='screen.capture.logins.scope.group', en='The whole team', protected=False, note='DEC-403: B458 1: scope group'))
+W.append(dict(key='screen.capture.logins.name', en='Username for this site', protected=False, note='DEC-403: B458 1: field'))
+W.append(dict(key='screen.capture.logins.secret', en='Password or secret for this site', protected=False, note='DEC-403: B458 1: field'))
+
+W.append(dict(key='screen.capture.logins.store', en='Store this login', protected=False, note='DEC-403: B458 1: the button giving a login ahead of any refused request (capturecredentialsupply, no request to retry)'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
