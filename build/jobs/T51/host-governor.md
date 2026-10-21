@@ -13,3 +13,7 @@
 - **Double.** Provider order: I provide; nothing consumed from another wave-1 job.
 
 Size (session_012JfPrhVAyX8eCRnPmwMWYQ): test runs 14, module lines 447
+
+## J1 · COMPLETE
+
+C13 (my part, P4b) met: R29. governorAdmit({host, peek:true}) answers as R1-R6 would and writes nothing (no state for an unmet host, no token/grant/refusal/cool-off change); only peek===true peeks; governedFetch unchanged. New peek.test.mjs (8 tests, seen failing first, controls). host-governor 47/0. Direct users: acquisition 185/0, capture 228/0, capture-requests 129/0, network-notices 75/0, monitoring 168/0, machinery-producers 35/0, instance-setup 217/0, plane 279/1 (plane R24 screen-words, not my diff, red on tranche tip). Checks: coverage host-governor clean, architecture 0, words 0, ownership 0; format 1 on tranche tip (rulings.md K4349), not mine. For BOB: acquisition must pass peek:true at acquisition/index.mjs:912 (R97) or the double booking stands. Size (session_012JfPrhVAyX8eCRnPmwMWYQ): test runs 14, module lines 447
