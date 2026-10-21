@@ -16,7 +16,7 @@ page.on("requestfinished", async (r) => {
     const sz = await r.sizes();
     log.push({ path: u.pathname, op: u.searchParams.get("op"), q: u.search.slice(0, 120), status: res.status(), ms: Math.round(t.responseEnd),
       wait: Math.round(t.responseStart - t.requestStart), body: sz.responseBodySize, cc: res.headers()["cache-control"] || null, cf: res.headers()["server-timing"] || null,
-      enc: res.headers()["content-encoding"] || null, start: Math.round(t.startTime - T0) });
+      enc: res.headers()["content-encoding"] || null, start: Math.round(t.startTime - T0), end: t.startTime + t.responseEnd });
   } catch {}
 });
 await page.goto(BASE + "/"); 
@@ -30,12 +30,13 @@ for (const p of paths) {
   const t0 = Date.now();
   await page.goto(BASE + p);
   // settle: network idle for 700ms
-  await page.waitForLoadState("networkidle").catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 12000 }).catch(() => {});
   const ms = Date.now() - t0;
   const byOp = {};
   for (const r of log) { const k = r.op || r.path; (byOp[k] ||= { n: 0, bytes: 0, ms: 0, maxms: 0 }); byOp[k].n++; byOp[k].bytes += Math.max(0, r.body); byOp[k].ms += r.ms; byOp[k].maxms = Math.max(byOp[k].maxms, r.ms); }
   if (process.env.DUMP) out.push({ dump: log.map(r => `${String(r.start).padStart(6)} +${String(r.ms).padStart(5)} w${String(r.wait).padStart(5)} ${String(r.body).padStart(8)} ${r.status} ${r.op||r.path}${r.op==="heldcaptures"||r.op==="queue"?" "+r.q:""} cc=${r.cc||"-"} enc=${r.enc||"-"}`) });
-  out.push({ path: p, settle_ms: ms, requests: log.length, api: log.filter(r => r.op).length, bytes: log.reduce((a, r) => a + Math.max(0, r.body), 0), byOp,
+  const apiEnd = log.filter(r => r.op).reduce((a, r) => Math.max(a, r.end), t0);
+  out.push({ path: p, settle_ms: ms, api_done_ms: Math.round(apiEnd - t0), requests: log.length, api: log.filter(r => r.op).length, bytes: log.reduce((a, r) => a + Math.max(0, r.body), 0), byOp,
     words: log.filter(r => r.op === "interfacewords").map(r => ({ status: r.status, body: r.body, cc: r.cc, enc: r.enc, q: r.q, ms: r.ms })),
     slowest: [...log].sort((a, c) => c.ms - a.ms).slice(0, 5).map(r => ({ op: r.op || r.path, ms: r.ms, wait: r.wait, body: r.body })) });
 }
