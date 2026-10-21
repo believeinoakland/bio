@@ -433,7 +433,7 @@ test("R75 C88: the hosting account is not said to be recorded at setup when a fo
   has(f, "screen.group.hosting.now", { by: "sparky", date: day("2026-10-04") });
   lacks(f, "screen.group.hosting.now.setup", { date: day("2026-10-04") });
   const g = await open("group", { me: MEMBER, table: hosted("member:admin") });
-  has(g, "screen.group.hosting.now", { by: "The team's founder", date: day("2026-10-04") });
+  has(g, "screen.group.hosting.now", { by: said("member.founder.unnamed"), date: day("2026-10-04") });
   assert.ok(!/\badmin\b/.test(g.text));
   // control: no one / the machines
   has(await open("group", { me: MEMBER, table: hosted("") }), "screen.group.hosting.now.setup", { date: day("2026-10-04") });
@@ -450,7 +450,7 @@ test("R40 R75 C94: who set the stake and who recorded the hosting account are na
   has(a, "screen.group.hosting.now", { by: "luisa", date: day("2026-10-04") });
   assert.ok(!a.text.includes("m-7"));
   const b = await open("group", { me: MEMBER, table: table("member:m-9", "member:m-9") });
-  has(b, "stake.set", { who: "A member of your team", date: day("2026-10-04") });
-  has(b, "screen.group.hosting.now", { by: "A member of your team", date: day("2026-10-04") });
+  has(b, "stake.set", { who: said("shell.card.member"), date: day("2026-10-04") });
+  has(b, "screen.group.hosting.now", { by: said("shell.card.member"), date: day("2026-10-04") });
   assert.ok(!b.text.includes("m-9"));
 });
