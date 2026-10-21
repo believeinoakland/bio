@@ -165,3 +165,22 @@ QUESTION (C69, C94; fix round 2). Best reading below; I carry on with it and it 
 2. C94 and "never an id" for a member who has no handle: R46 says "her handle, else her id", and no word key exists for such a member (interface-shell R111 names none), so I changed only the founder (the defect: `admin` shown) and left a handle-less ordinary member named by her id, as R46 states. If you want no id at all, the design stream needs a row (suggested `member.unnamed`, "A member") and R46's wording changes; say so and I use it.
 
 3. C69's second half, "two identical NOTICED items": NOTICED items come from `notice-producers`, which `queue` reads beside this module; this module cannot collapse them. The rule above holds for every item this module answers (machinery, action included). If the live duplicate is in notice-producers' own answer, its job (or queue's merge) needs the same rule: one item per matter.
+
+## J9 · COMPLETE
+
+COMPLETE (B8 START, fix round 2, wave 1). Branch job/T51/queue-producers @ ed4a728d86, tranche/T51 merged at the start (nothing newer).
+
+**Causes met**
+- **C69** (R8, proposed R52; QUESTION above): `feedItems` answers one item per matter. A fact of one action's deadline, in any status and however many facts, is one `local-fact-due` for that action (least id stands, basis `statuses` and `paths` name what it stands for); any item equal to an earlier one in everything but its id is that item again; two actions' deadlines, and items on different subjects, stay two. Tests in `matters.test.mjs` (5): four statuses of one action's facts are one; the survivor is the same whatever order the provider answered; two equal notices are one, differing ids with equal content one, another subject two; two actions two; a repeat keeps the first one's place, no id twice. Seen failing on the unchanged source (5 of 5 new C69 tests fail there; the "two matters are two" control passes on both).
+- **C94** (queue-producers' part; proposed R53): `#memberName` names the founder by the handle she holds (membership `founderHandle`), else by `member.founder.unnamed`'s word, never `admin`; R14's signer key, R33's author, R44's inviter (when `by.member` names the founder) and R46-R48's `who` read through it. Tests in `names.test.mjs` (4: R14 twice, R33, R48): founder with and without a held handle; control: an ordinary member's handle as itself, a handle-less member keeps R46's fallback (her id). Seen failing on the unchanged source (3 of 4; the R14 control passes on both). Shell's `memberName(id)` and the screens' use of it are the other jobs'.
+
+**Deferred:** none. **Words:** no new sentence; `member.founder.unnamed` is the existing row. The key wanted for a handle-less non-founder member is in the QUESTION (item 2).
+
+**Found in other modules (P9):** `build/rulings.md:4298`: K4301 records Bob's approval of a refused act but states no standing-list decision (`checks/format.mjs`: 1 failure, BOB's file). `notice-producers`/`queue`: item 3 of the QUESTION (NOTICED duplicates). No generated artifact made stale.
+
+**Tests and checks** (from /home/user/civicos-process unless stated)
+- `node --test --test-force-exit bio-plane/test/m/queue-producers/` (bio): 147 tests, 147 pass, 0 fail (138 before, 9 new: matters 5, names 4; the older tests that name a handle-less member by her id are unchanged and pass).
+- Users of what I provide: `bio-plane/test/m/queue/` 206 pass, 0 fail; `bio-plane/test/m/instance-setup/` 216 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 1 failure, `build/rulings.md:4298` (not mine). `checks/architecture.mjs`: 26 product files, 106 relative imports; 0 failures. `checks/coverage.mjs`: 39 of 39 live ids named; 0 failures. `checks/words.mjs`: 0 failures. `checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`: 4 files changed; 0 failures.
+
+Size (session_014VPFaRWHG8FznaELunDUKF): test runs 9, module lines 3618
