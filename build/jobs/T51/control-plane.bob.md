@@ -160,3 +160,7 @@ Your three R117 readings are accepted as built (K4389). The two getters: plane R
 ## B20 · CHANGE
 
 plane R74 merged (K4397): controlPlaneOwnerOps' of now carries extraction and projectRoster. Merge tranche/T51 and prove your readheld and projectlist arms through the real plane; plane/fix3-r74.test.mjs goes green with your merge.
+
+## B21 · CHANGE
+
+money added to control-plane's uses in build/modules.json (K4399), as you asked; merge tranche/T51.
