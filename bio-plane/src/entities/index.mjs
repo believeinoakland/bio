@@ -602,6 +602,19 @@ export class Entities {
     const by = declaredBy == null ? null : String(declaredBy);
     /* R63: an office a member who is not an administrator registers is marked until an administrator confirms it; one an
        administrator or a machine registers is not. Which screen may send the act is the door's (`op-grades`), not asked here. */
+    /* R65: an office named again is the held one (`existed: true`), found by its folded name among the live aliases of an office
+       that does not state another law; nothing is written, so her repeat neither makes another entry nor clears a mark. */
+    if (k === "office") {
+      const held = this.#rows(`SELECT DISTINCT e.entity_id, e.label, e.law FROM entities e JOIN entity_aliases a ON a.entity_id=e.entity_id
+                                   WHERE e.kind='office' AND a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`, normAlias(name))
+        .filter((r) => !lawKey || !r.law || r.law === lawKey);
+      const hit = held.find((r) => lawKey && r.law === lawKey) || held[0];
+      if (hit) {
+        const n = this.#one(`SELECT count(*) AS c FROM entity_aliases WHERE entity_id=?`, hit.entity_id).c;
+        return { ok: true, existed: true, entity_id: hit.entity_id, kind: k, label: hit.label, alias_count: Number(n), at,
+                 sector: this.#one(`SELECT sector FROM entities WHERE entity_id=?`, hit.entity_id).sector };
+      }
+    }
     const marked = k === "office" ? (by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
     return this.#record.transact(() => {
       const { id } = this.#record.allocId("ENT", at.slice(0, 4));
