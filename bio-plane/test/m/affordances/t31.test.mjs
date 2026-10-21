@@ -118,7 +118,8 @@ test("R1 R12 R24: wizard-scripts' ops — each write decorates with a rung or a 
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
   assert.deepEqual(ALL.filter((op) => !unaccounted([]).stale.includes(op)), []);
-  for (const op of WIZARD_READS) assert.ok(unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  /* K4279 (R12): a read carried ungated is not stale, a NON_ACT's owner-declared read */
+  for (const op of WIZARD_READS) assert.ok(!unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = unaccounted([...table, { op: "wizardunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["wizardunnamed"], ["wizardunnamed"]]);
 });

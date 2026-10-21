@@ -48,7 +48,9 @@ test("R1 R12 R36: publishat, publishatmove and publishatcancel — ratification 
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
   assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
-  assert.ok(A.unaccounted([{ op: "publishschedule", mutating: false, gated: false }]).stale.includes("publishschedule"));
+  /* K4279 (R12): an owner's declared read carried ungated is not stale; carried by no row it is */
+  assert.ok(!A.unaccounted([{ op: "publishschedule", mutating: false, gated: false }]).stale.includes("publishschedule"));
+  assert.ok(A.unaccounted([]).stale.includes("publishschedule"));
 });
 
 /* ---- a member's own notes (op-grades R15) ---------------------------------------------------------------------------- */
