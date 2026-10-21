@@ -12,6 +12,7 @@ import { routesForSessions } from "./door-routes.mjs";
 const { OPS } = O;
 const { entitiesOps } = await import("../../../src/entities/index.mjs");
 const { fileSafetyOps } = await import("../../../src/file-safety/index.mjs");
+const { moneyOps } = await import("../../../src/money/index.mjs");
 const { captureOps } = await import("../../../src/capture/index.mjs");
 const { actionClocksOps } = await import("../../../src/action-clocks/index.mjs");
 
@@ -20,8 +21,7 @@ const here = new URL("http://do/");
 const OWNERS = {
   officeconfirm: ["entities R64", () => entitiesOps(null, here, null)],
   scanmirror: ["file-safety R49", () => fileSafetyOps(null, here, null, {})],
-  /* money is no use of control-plane, so its map is not read here (reported to BOB); the declaration and the routing are checked */
-  moneysets: ["money R28", null],
+  moneysets: ["money R28", () => moneyOps(null, here, null)],
   captureseenin: ["capture R101", () => captureOps(null, here, null, {})],
   remindersfor: ["action-clocks R26", () => actionClocksOps(null, here, null)],
 };
