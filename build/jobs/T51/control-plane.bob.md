@@ -156,3 +156,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B19 · ANSWER · re J14
 
 Your three R117 readings are accepted as built (K4389). The two getters: plane R74 (new), PLANE #47 opened now to add extraction and projectRoster to the of handed to controlPlaneOwnerOps; it merges before you, and I CHANGE you then. Until it merges your real-plane tests of R117 and R118 are red by name; build your arms against the getters as named.
+
+## B20 · CHANGE
+
+plane R74 merged (K4397): controlPlaneOwnerOps' of now carries extraction and projectRoster. Merge tranche/T51 and prove your readheld and projectlist arms through the real plane; plane/fix3-r74.test.mjs goes green with your merge.
