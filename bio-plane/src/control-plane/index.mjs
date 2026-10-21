@@ -202,6 +202,9 @@ const PUBLISHED_STORE = "bio";
 /* R105 (K3770): the longest an `acquire` is let run at the door. */
 const ACQUIRE_BOUND_MS = 25000;
 /* R121: the refusals of an `acquire` that say the capture did not complete, whatever their status */
+/* R120: a PDF over this size, or less than this budget left of the bound, is answered kept and read after */
+const READING_DEFER_PDF_BYTES = 2 * 1024 * 1024;
+const READING_BUDGET_MS = 8000;
 const DOOR_TIMED_CODES = Object.freeze(["ACQUIRE_TIMED_OUT", "STORE_DID_NOT_ANSWER", "CAPTURE_NOT_KEPT"]);
 /* R105, R115 (fix round 2, C12; acquisition R13, R20, R95): WHAT A CALL THE DOOR STOPPED WAITING FOR HAD KEPT, from the stage times the
    object states for it (`stageTimes`): `held` once its stage `receipt` (the capture's record, acquisition R13) has ended, for the
@@ -2341,7 +2344,19 @@ export function makeFetch(hooks = {}) {
                       ...(detailKey(kept) ? { detail: word(detailKey(kept)) } : {}), kept, timings: failedTimings(stages) }, 504);
       }, (e) => { clearTimeout(timer); throw e; });
     };
-    const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
+    /* R120 (fix round 4, C5a/P8; K4434): THE READING THAT WILL NOT FIT THE BOUND FOLLOWS. The handler asks this of the document it has just
+       filed, before it reads it: a PDF over 2 MB, or any document once what is left of R105's bound is under the 8 seconds a reading is given,
+       is answered when kept with `reading_pending: true` and no reading; the reading follows by `readHeld` and the plane's alarm. */
+    const deferReading = (document) => {
+      if (op !== "acquire") return false;
+      const c = document && typeof document === "object" ? document.capture : null;
+      const type = typeof c?.content_type === "string" ? c.content_type.toLowerCase() : "";
+      const named = typeof document?.locator === "string" && /\.pdf(?:[?#]|$)/i.test(document.locator);
+      const pdf = type.startsWith("application/pdf") || (type === "" && named);
+      if (pdf && Number.isFinite(c?.bytes) && c.bytes > READING_DEFER_PDF_BYTES) return true;
+      return (hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS) - seen.clock.elapsed() < READING_BUDGET_MS;
+    };
+    const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
       trace: trace ?? acquireTrace,   /* K4234: `acquire`'s trace, the key its stages are kept under */
       grantMember: aiCred?.grant ? aiCred.principal : undefined, timings })) : undefined;   /* R53 (K1684): an ask's grant's member; R115: `acquire`'s timings */
@@ -2350,6 +2365,7 @@ export function makeFetch(hooks = {}) {
       const promoted = await promoteAcquired(armed);
       seen.clock.end("promote");
       await readHeldAfterAcquire(promoted);
+      await pendReading(promoted);
       const res = await doorTimedFailure(promoted);
       if (!captureStep && url.searchParams.get("step") === null) return res;
       let body;
@@ -2368,16 +2384,28 @@ export function makeFetch(hooks = {}) {
       return { body: out.reply.body, status: out.reply.status };
     }
     /* R117 (fix round 3, C5, C17; K4356, K4358; extraction R80): A HELD CAPTURE GETS ITS READING. `readHeld` is the store-internal
-       route `readheld` (this door's own map, no spec, so no caller reaches it): extraction's act, which reads a home that has no
+       route `readheldfor` (this door's own map, no spec, so no caller reaches it): extraction's act, which reads a home that has no
        reading once the evidence store holds its bytes whole, and answers `{ok, read, why?}` (`why`: `NO_HOME`, `READING_HELD`,
        `NO_WHOLE_OBJECT`; never shown to a member, K4365). A refusal or a silence of the route is `null`: it never turns a kept
        capture into a failed one, and the answer it follows is relayed as it was. */
     async function readHeld(sha) {
       if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return null;
       try {
-        const asked = await doAnswer(stub.fetch(new Request(`http://do/readheld?sha=${sha}&store=${encodeURIComponent(storeName)}`)));
+        const asked = await doAnswer(stub.fetch(new Request(`http://do/readheldfor?sha=${sha}&store=${encodeURIComponent(storeName)}`)));
         return asked.answered && asked.result && typeof asked.result === "object" && asked.result.ok === true ? asked.result : null;
       } catch { return null; }
+    }
+    /* R120: a reading deferred (`reading_pending: true`) is registered with the plane's alarm, the store-internal `pendingadd`, which finishes it by
+       `readHeld` within a minute (plane R75); a refusal or a silence of the registration changes nothing the caller receives (the screen's
+       promotion and the member's next look still find the capture). */
+    async function pendReading(res) {
+      let b = null;
+      try { b = await res.clone().json(); } catch { return; }
+      const sha = shaOf(b);
+      if (!b || b.ok !== true || b.reading_pending !== true || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return;
+      try {
+        await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=reading&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
+      } catch { /* the alarm is the reading's second chance, never the capture's gate */ }
     }
     /* R121: an `acquire` the handler answers as a failure of the capture (a 502 or 504, the silence of the object, a capture not kept)
        carries the timings of R121 beside whatever the handler stated; any other answer is the handler's, untouched. */

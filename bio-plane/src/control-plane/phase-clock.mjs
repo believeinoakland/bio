@@ -18,6 +18,8 @@ export function makeClock(now = () => Date.now()) {
   return {
     begin(name) { if (!phases.has(name)) phases.set(name, { start: now(), end: null }); },
     end(name) { const p = phases.get(name); if (p && p.end === null) p.end = now(); },
+    /** Milliseconds since the door took the request. */
+    elapsed() { return Math.max(0, now() - t0); },
     call(route, ms) { calls.set(route, (calls.get(route) ?? 0) + Math.max(0, ms)); },
     /** `{acquire, reading, promote}`, each `{started_ms, elapsed_ms}` (and `running: true` while it had not ended) or `null` when not reached. */
     door() {
