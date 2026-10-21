@@ -142,3 +142,7 @@ CHANGE (K4363). Merge tranche/T51 first: R83 amended. Export the pre-flight's ed
 ## B16 · ANSWER · re J13
 
 ANSWER J13 (K4364): your reading stands: address = /app/published/<case>/<edition>, the form R83 ships and the screens link. No public-read builder this round.
+
+## B17 · CHANGE
+
+CHANGE (K4365; C40's last hop, found by CASE-DISCLOSURES #15, now merged). Merge tranche/T51 first (case-disclosures R2 amended and merged). Your #notCoAttested (index.mjs:1679-1692) builds each not_co_attested row as {capture, by, findings} only, dropping the facts the capture row c already carries: add timestamp_at, co_archive, missing, late, timestamp_late and late_words from c to each row, so screens-publish can say which proof exists late and which is missing. Test (seen failing first): after a late timestamp the pre-flight's not_co_attested row carries timestamp_late: true, late_words, missing: ['co_archive']; control: a capture with no attempt carries both missing and is not late.
