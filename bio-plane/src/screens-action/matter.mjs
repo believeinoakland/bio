@@ -152,7 +152,14 @@ export const matter = Object.freeze({
       const doc = P.later(cs, view, "projdoc", "image", { id: k.project }, "");
       const text = doc.state === "ok" && doc.value && typeof doc.value["bundle.md"] === "string" ? doc.value["bundle.md"] : "";
       const set = P.refsOf(text);
-      const tl = set.length ? P.later(cs, view, "events", "timeline", { set: set.join(",") }, "") : { state: "ok", value: {} };
+      // K4310 (events R53): the timeline answers by the project's captures too, so the event picker needs no set of ids
+      const dl = P.later(cs, view, "docs", "heldcaptures", { project: k.project, limit: "200", state: "held_and_vouched" }, "");
+      const shas = dl.state === "ok" && dl.value && Array.isArray(dl.value.held) ? dl.value.held.map(function (r) { return r && r.capture && r.capture.sha256; }).filter(Boolean).slice(0, 200) : [];
+      if (dl.state === "loading") return "";
+      const q = {};
+      if (set.length) q.set = set.join(",");
+      if (shas.length) q.captures = shas.join(",");
+      const tl = set.length || shas.length ? P.later(cs, view, "events", "timeline", q, "") : { state: dl.state === "loading" ? "loading" : "ok", value: {} };
       const w = tl.state === "ok" && tl.value && tl.value.world ? tl.value.world : {};
       const items = (Array.isArray(w.items) ? w.items : []).concat(Array.isArray(w.placed_nowhere) ? w.placed_nowhere : []);
       const opts = items.filter(function (e) { return e && e.event_id; }).map(function (e) {
