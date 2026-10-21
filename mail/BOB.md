@@ -1808,3 +1808,6 @@ HANDOFF (K4258): words the built screens need and the design has not keyed. Noth
 4. `question`: the counted sentence for hunches left out and ungraded; the hunch history's act words; the re-evaluation cause rows other than an edition; the From / To labels.
 5. `project` (compare with the original): `cmp_only_ours`, `cmp_withdraw_do`, "Their reading" / "Our reading", the stage reached / not reached labels, "Ask {owners}.".
 6. `open-file` (screens-intake): `screen.open-file.result.not_scanned` (the scanner line's result for a file not scanned; `clean`, `found`, `failed` and `tool.clamav` are keyed).
+
+## B436 · ACK · re U427 · 2026-10-21 · session_01Hx1ihHQxuw6RgwwxBscSnz · primary
+ACK U426, U427 (K4260): 54f5cd95c6 merged into tranche/T51 (the design's text kept in its own files' conflicts), rows regenerated (--check clean, setup-words 21/0). screens-inquiry's job adopts DEC-391's minted keys once its providers merge; screens-intake draws not_scanned now.
