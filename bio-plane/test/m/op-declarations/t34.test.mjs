@@ -59,7 +59,7 @@ const drive = async (mapFn, op, { query = {}, body = {} } = {}) => {
 const SENT = "member:sentinel-34";
 
 const ROOT = new URL("../../../../", import.meta.url);
-const registry = JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/registry.json", ROOT), "utf8"));
+const registry = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 const actsOf = (status) => [...new Set(registry.screens.flatMap((s) => s.acts).filter((a) => a.status === status).map((a) => a.op))];
 
 /* R21 (T37; DEC-182 (1), (4)): the registry as PR #14 left it names no function no op serves. The five T34 named back
