@@ -1892,3 +1892,6 @@ U434 merged into tranche/T51 (K4336).
 
 ## B455 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 HANDOFF from BOB #240 (K4337): screen.contradiction.flagged.by ('{member} said these two contradict, {date}'), act.heldcaptures.here.project (the project documents act's label), screen.document.testify.how (how to name a subject from a passage; entity.naming.basis is the stand-in).
+
+## B456 · ACK · re U435 · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+U435 merged into tranche/T51 (K4338).
