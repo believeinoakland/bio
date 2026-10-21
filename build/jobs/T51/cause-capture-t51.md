@@ -75,3 +75,7 @@ Other modules (for routing):
 - screens-intake: draw `render_pending`, a pending attestation, `capture.file_name`; use `fields:"picker"` for pickers; never offer OCR/vouch for a document with no object under its fingerprint (parts-only past 32 MiB).
 - Generated artifacts stale: setup-words rows.mjs, agent-worker and plane bundles (listed in my record).
 - Two failures on tranche/T51 untouched: store-door R17, plane R24.
+
+## J3 · COMPLETE
+
+COMPLETE: C5 (acquisition R10/R11, capture R86), C12 (acquisition R20, capture R68), C13 (acquisition R5/R6/R12), C14 (capture R77/R88), C25 (acquisition R16 file_name; title is reading-pipeline's), C26 (capture R96). Suites: acquisition 185, capture 220, sources 44, 36 direct users pass but two failing identically on tranche/T51 untouched (store-door R17, plane R24). Checks 0 failures for my modules; ownership 0. Requirement readings in J1, other-module findings in J2, record in build/jobs/T51/cause-capture-t51.md.
