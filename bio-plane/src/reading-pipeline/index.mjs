@@ -1485,7 +1485,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     /* R2 (D-593, D-684): through the entry over the stored bytes, tier 1, including delimited text read as text at
        intake and a multi-part capture within the bound: a CSV's text is the entry's own decode. */
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
-    let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null;
+    let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
     try {
       if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
@@ -1495,6 +1495,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         const st = await entry.structure(bytes);
         if (st && st.ok) {
           i2text = st.text || null; wiredTier = 1;
+          /* R34: a structure reader states the document's own metadata beside its text (pdf-reader R39: the /Info Title). */
+          structMeta = st.metadata || null;
           if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
           /* N100 (R12): each page's box, off the structure object (tier 2 and 3 replace `text`, not it). */
           pageBoxes = pageBoxesFrom(st.pageBoxes);
@@ -1564,7 +1566,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       /* R35: a reading with text units counts its words. */
       if (textUnits) Object.assign(reading, textWordsFor(i2text));
       /* R34: a determined reading carries the title its entry's metadata states, else null; a failed one carries none. */
-      if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata);
+      if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata) ?? titleOfMetadata(structMeta);
       /* R29: the pages the AI read, labeled as its reading. */
       if (aiRead) reading.ai_transcription = aiRead;
       /* R12: never zero. */

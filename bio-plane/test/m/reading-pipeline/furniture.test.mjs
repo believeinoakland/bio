@@ -151,3 +151,19 @@ test("R34 C25 (T51 fix round 3; the walker's page): a captured page whose addres
   assert.deepEqual(neither.text_units.map((u) => u.text), strip(neither));
   assert.deepEqual(withTitle.text_units.map((u) => u.extent), neither.text_units.map((u) => u.extent));
 });
+
+test("R34 (K4363): a PDF reads the Title its structure reader states beside its text (the /Info Title), cleaned as a title; one with none, a blank one or a non-string reads null", async () => {
+  const { withEntry, i2 } = await import("./fixture.mjs");
+  const w = fresh();
+  const run = (metadata) => withEntry({ format: "pdf", structure: async () => ({ ok: true, pages: 1, notes: [], text: i2([{ page: 0, text: "alpha words" }]),
+      ...(metadata === undefined ? {} : { metadata }) }) },
+    async () => { const d = await hold(w.evidence, `%PDF-1.7 ${Math.random()}`); return (await w.read(doc({ digest: d, ct: "application/pdf", format: "pdf" }))).reading; });
+  assert.equal((await run({ title: "  Notice\n 2026-118 ", source: "/Info" })).title, "Notice 2026-118");
+  assert.equal((await run({ source: "/Info" })).title, null);
+  assert.equal((await run({ title: "   " })).title, null);
+  assert.equal((await run({ title: 5 })).title, null);
+  assert.equal((await run(null)).title, null);
+  const none = await run(undefined);
+  assert.equal(Object.hasOwn(none, "title"), true);
+  assert.equal(none.title, null);
+});
