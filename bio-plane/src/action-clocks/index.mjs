@@ -1532,7 +1532,7 @@ export function actionClocksOwns(t) {
 
 /** The module's ops (K3, K671), entries of the route map `plane` composes (its R5) and control-plane's `dispatch` looks
  *  up: `op=reminderset` (R4), `op=reminderanswer` (R6), `op=clockadopt` (R13), `op=clockstate` (R18, T45), and the
- *  reads `op=clocksics` (R14), `op=clocklateness` (R15), `op=clockproposals` (R20, T46) and `op=clocksrunning` (R24, T51). `viewer` and `author` are
+ *  reads `op=clocksics` (R14), `op=clocklateness` (R15), `op=clockproposals` (R20, T46), `op=clocksrunning` (R24, T51) and `op=remindersfor` (R26, T51). `viewer` and `author` are
  *  the control plane's stamps, read from the query, so a caller's own copy never wins. */
 export function actionClocksOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -1558,6 +1558,7 @@ export function actionClocksOps(m, url, body) {
     clocklateness: () => m.lateness({ from: pick("from"), to: pick("to"), project: pick("project"), viewer: q("viewer") }),
     clockproposals: () => m.clockProposalsFor({ action: pick("action"), viewer: q("viewer") }),
     clocksrunning: () => m.clocksRunning({ viewer: q("viewer") }),
+    remindersfor: () => m.remindersFor({ action: pick("action"), viewer: q("viewer") }),
   };
 }
 
@@ -1570,4 +1571,7 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["target","entry","on"], requires: ["target","entry"] } },
   clockadopt: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("action-clocks.declared.clockadopt", "a member adopts a standing clock proposal, as proposed or amended, as a clock entry with its basis and trace (action-clocks R13)"),
     fields: { accepts: ["target","proposal","why","date","text","description","standard","owed_by"], requires: ["target","proposal"] } },
+  /* R26 (fix round 3, C53): an action's reminders, read after a reload. */
+  remindersfor: { classes: ["admin","member"], mutating: false, weight: "read", description: localize("action-clocks.declared.remindersfor", "read: an action's reminders, each with its entry, its day, who set it and its state; writes nothing (action-clocks R26)"),
+    fields: { accepts: ["action"], requires: ["action"] } },
 });
