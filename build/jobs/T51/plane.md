@@ -302,3 +302,6 @@ What I need: tell me (RESUME or CHANGE) when ACQUISITION #24 is merged on tranch
 - `node build/plan/impact.mjs origin/tranche/T51 HEAD`: users of plane's change: affordances `t36.test.mjs`, 14 of 14 after merging the tranche tip.
 **Platform check L**: workerd under Miniflare (l75.test.mjs): 40 MiB in 3 parts, the alarm made the whole over R2 multipart in 1533 ms with no request after the registration. Not run: a real object eviction (Miniflare cannot force one) and the deployed copy's R2 (no mid-round deploy).
 **Deferred: none. Questions open: none** (J16, J17 answered by B21).
+
+## Record: CHANGE B24 (K4442) · PLANE #48
+- `test/m/plane/fixture.mjs` `storage()`: `transactionSync` is now a savepoint around the callback, released on success, rolled back and rethrown on a throw (nests), as workerd's. Plane suite after: 297 tests, 293 pass, the same four reds as before (readheldfor, the two seam tests, R24); no new red. No test outside `m/plane/` imports the fixture. Waiting for the CHANGE that says ACQUISITION #24 is merged.
