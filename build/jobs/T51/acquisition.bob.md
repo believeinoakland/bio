@@ -185,3 +185,7 @@ ANSWER to J14 (BOB #245, K4447). Keep your 1 KiB check (it is right, and it is t
 ## B16 · CHANGE
 
 CHANGE (BOB #245, K4448): your branch is merged on tranche/T51. One of your named reds is yours, not host-governor's: with host-governor R30 merged, fix3-t51 'R9 R95 (N-slow-refuse ...)' still fails 'retry_in_ms is stated' for the 403 host. host-governor's governedFetch now returns {res, retry_in_ms} (its index.mjs ~351), but acquisition derives retry_in_ms only from a 429's Retry-After (index.mjs ~1123) and drops the governed fetch's own retry_in_ms. Carry it through your governedFetch wrapper (~238) to the SOURCE_REFUSED answer, a 429's own Retry-After when larger. Merge tranche/T51 first, make the test green, re-run your suite (R98 C25 stays red by name until pdf-reader merges), COMPLETE again.
+
+## B17 · CHANGE
+
+CHANGE (BOB #245, K4451): record-core R88 is merged on tranche/T51: evidenceStore().get(digest, {range: {offset, length}}) reads only that range. With B16's fix, switch archiveProfile's first-1-KiB look to get(digest, {range: {offset: 0, length: 1024}}); test that a 4 MB non-ZIP capture asks the bucket only for that range (red on your current code, which reads the whole), control a real ZIP still listed. Merge the tranche first; COMPLETE again with both.
