@@ -107,8 +107,8 @@ export function zip(entries) {
 /* ---------------------------------------------------------------- a case file */
 
 /** A finding's published bytes: its id and its frozen per-axis pair. */
-export function findingText(id, pair = { capture: "B", connection: "C" }) {
-  return ["---", `id: ${id}`, "object_type: inquiry", "published_strength:",
+export function findingText(id, pair = { capture: "B", connection: "C" }, title = null) {
+  return ["---", `id: ${id}`, "object_type: inquiry", ...(title ? [`title: ${JSON.stringify(title)}`] : []), "published_strength:",
           ...Object.entries(pair).flatMap(([axis, g]) => [`  - axis: ${axis}`, `    state: ${g ? "graded" : "unrated"}`, `    grade: ${g ?? "null"}`]),
           "---", "", `# ${id}`, ""].join("\n");
 }
@@ -142,13 +142,13 @@ export function calcInputAt(calc, hash) {
  *  document and its signature in part 1 and each other file in a part of its own. A document is a material, carried
  *  at `materials/<name>/document`. */
 export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, lens = LENS, bar, note = "", findings = [F1, F2, F3],
-                           pairs = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [], apps = null, printedLens = null } = {}) {
+                           pairs = {}, titles = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [], apps = null, printedLens = null } = {}) {
   const at = (kind, key) => caseFilePath(kind, key);
   const files = [
     { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs, apps, printedLens })) },
     { path: at("case_signature"), kind: "case_signature", bytes: bytes(`-----BEGIN SSH SIGNATURE-----\n${caseId}/${edition}\n`) },
     { path: at("complete_edition"), kind: "complete_edition", bytes: bytes(`<!doctype html><title>${caseId}</title>`) },
-    ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id])) })),
+    ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id], titles[id] ?? null)) })),
     ...documents.map((d) => ({ path: at("document", d.name), kind: "document", bytes: d.bytes })),
     ...calcInputs.map((d) => ({ ...calcInputAt(d.calc ?? "CALC-2026-0007", sha(d.listedAs ?? d.bytes)), bytes: d.bytes,
                                 ...(d.listedAs ? { listedAs: d.listedAs } : {}) })),
