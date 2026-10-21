@@ -249,3 +249,8 @@ COMPLETE · screens-investigate · fix round 2, wave 2 (B20). C14 (my part), C95
 - checks: format 175 modules, 0 failures; architecture screens-investigate 0 failures; coverage screens-investigate 59 of 59 live ids named, 0 failures; words screens-investigate 0 findings (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, 7 unkeyed); ownership origin/tranche/T51 vs job/T51/screens-investigate: 17 files, 0 failures. checks/run.mjs over the whole tree: coverage names agent-harness R17, agent-runner R37 R38 R40, control-plane R116, installer-steps R26 R31, journey-check R19, screens-inquiry R123 R124 R125, screens-intake R54 (none is this module's).
 
 Size (session_01UQmdTQBCP15uXJbRv75eXR): test runs 7, module lines 3151
+
+## J20 · COMPLETE
+
+COMPLETE · screens-investigate · CHANGE B21 applied. DEC-396 merged. Adopted: `screen.standard.held` (the held-standards heading, replacing `screen.standard.name`) and `screen.standard.held.more` (said when the list is cut); `screen.money.proposed.member` for a figure a member proposed (`screen.money.proposed` stays for a machine's); `.f.contract` and `.nocontract` need no code change. J18 item 1 is answered by this for the held list only; the picker search label and no-match rows are still stand-ins. Tests: 2 new, 1 changed (the C8 test now expects the member label); module suite 211 tests, 211 pass. format 0, architecture 0, coverage 59 of 59, words 0, ownership 17 files 0 failures. Pushed.
+Size (session_01UQmdTQBCP15uXJbRv75eXR): test runs 9, module lines 3156
