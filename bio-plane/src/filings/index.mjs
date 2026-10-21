@@ -2831,7 +2831,7 @@ export class Filings {
 
   /** R32 (K922 (1)): a member starts a template draft from an approved filing draft (R6), or a draft of a new version of a
    *  named template, by handing the approved text and `from: {filing, sha}` to `filing-templates.templateDraft` (its R3)
-   *  and answering its answer. A new template's `project` defaults to the project the draft drew on, its `kind` to the
+   *  and answering its answer. A new template's `project` is the one the request names, else the action's, else the project the draft drew on (C65), its `kind` to the
    *  action's, its `use` to `file` and its `profiles` to those that give the action's kind (else `general`); the R26
    *  library is gone (K921), and its rows are `filing-templates`' to migrate (K927). */
   templateSave({ filing = null, template = null, project = null, name = null, kind = null, use = null, profiles = null,
@@ -2868,7 +2868,9 @@ export class Filings {
       const actionKind = d.kind || (this.#action(d.action_id, viewer) || {}).kind || null;
       const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === (kind ?? actionKind)) : null;
       const givers = entry ? [entry.profile, ...(Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : [])].filter(Boolean) : [];
-      defaults.project = project ?? (parse(d.basis) || {}).project ?? null;
+      /* C65 (T51): the project the request names, else the action's, else the basis's, as the module's other acts take it
+         (`a.project || basis.project`): an action resting on no determination has none in its basis */
+      defaults.project = str(project) || str(act && act.project) || str((parse(d.basis) || {}).project) || null;
       defaults.kind = kind ?? actionKind;
       defaults.use = use ?? "file";
       defaults.profiles = profiles ?? (givers.length ? [...new Set(givers)] : "general");
