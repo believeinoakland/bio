@@ -78,3 +78,7 @@ You are the module job (P8, mechanics §6) for the modules `reading-pipeline` an
 Do not change pdf-reader, extraction or control-plane; a change there goes to BOB (P9). Words by key (K3810). No generated artifact edited (manifest §14).
 Run: both modules' suites, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users (extraction with `c5b-memory`, control-plane's whole-path test, capture, screens-inquiry); `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline,text-chain tranche/T51 job/T51/cause-reading-3`.
 COMPLETE lists the four fields with the numbers, requirement ids met (propose a line: BOB writes it), suite counts, no QUESTION open, and the `Size` line.
+
+## B6 · CHANGE
+
+CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
