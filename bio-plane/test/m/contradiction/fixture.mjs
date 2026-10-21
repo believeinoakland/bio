@@ -200,11 +200,11 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
       st.sql.exec(`INSERT OR IGNORE INTO project_participants (project_id, member_id, state, owner, created, updated)
                    VALUES (?, ?, ?, ?, '2026-01-01', '2026-01-01')`, projectId, memberId, state, owner);
     },
-    /* A content row over `capture` filed in `bundleId` (content R45's columns). */
-    content(contentId, capture, bundleId, { ref = `ref of ${contentId}`, kind = "pdf-page", stale = 0 } = {}) {
+    /* A content row over `capture` filed in `bundleId` (content R45's columns); `extent` the canonical extent it holds. */
+    content(contentId, capture, bundleId, { ref = `ref of ${contentId}`, kind = "pdf-page", stale = 0, extent = "{}" } = {}) {
       w.bundle(bundleId);
       st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, stale)
-                   VALUES (?, ?, ?, ?, '{}', ?, 'plane', '2026-01-01', ?)`, contentId, capture, bundleId, kind, ref, stale);
+                   VALUES (?, ?, ?, ?, ?, ?, 'plane', '2026-01-01', ?)`, contentId, capture, bundleId, kind, extent, ref, stale);
       return contentId;
     },
     leg(inquiry, ord, role, { content = null, target = "INFO-2026-0001", note = null } = {}) {
