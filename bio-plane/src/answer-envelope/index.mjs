@@ -25,7 +25,7 @@ const pagePolicy = (nonce) => `${PAGE_POLICY}; script-src 'nonce-${nonce}'`;
 /* R6 (fix round 3, C15, P2.4; K4359): the interface page carries no inline script, so its policy names the shell's versioned script by
    its hash (`interface-shell` exports it) with this origin, and no nonce */
 const SCRIPT_HASH = /^sha256-[A-Za-z0-9+/]{43}=$/;
-const hashPolicy = (hashes) => `${PAGE_POLICY}; script-src 'self' ${hashes.map((h) => `'${h}'`).join(" ")}`;
+const hashPolicy = (hashes) => PAGE_POLICY + "; script-src " + ["'self'", ...hashes.map((h) => "'" + h + "'")].join(" ");
 
 /* `interfacePage`'s slot (`interface-shell` R1, R2; was `setup-page` R28, K2038): the literal the page holds in each
    script element's `nonce` attribute, which every HTML body served gets the response's nonce in place of, wherever it
