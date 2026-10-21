@@ -153,3 +153,10 @@ Size (session_01LkHLbMfkdEmVbWwt9jrgwo): test runs 6, module lines 4540
 ## J14 · COMPLETE
 
 COMPLETE (SCREENS-ACTION #11, re B19): C94 met for screens-action: plan, action, hold and the stake's source name members by cs.memberName (handle, the founder included; the kit's word when none; agents as the plane names them). Tests c94-t51 (3, seen failing first, controls included); module suite 223 of 223; format, architecture, ownership, words 0; coverage 55 of 55. Nothing deferred; nothing found in other modules. Record J13.
+
+## J15 · QUESTION
+
+QUESTION (best reading given; I carry on). Three gaps in what the design draws, none blocks:
+1. C64, DEC-402: the "Name the office yourself" fold draws no field for the note `entities` R1 requires on `entitycreate` (the act is Reasoned, so `op-grades` and the shell need her own words). I drew the kit's reason field there (`shell.reason`, `shell.reason.help`, existing rows) as a stand-in and send it as `note`. UX-DESIGN may want its own two rows (the note's label and help) on `request`.
+2. C64: the drawing's one line "The agency and office" fills an office arm that needs a role and a body (`actions` R9). I take the text before the first comma as the body and after it as the role (the drawing's example splits so); with no comma, the role and body are both the text. The office entity is created with the whole text as its label and `entity_id` is sent on the action. If BOB prefers two fields, that is a drawing change.
+3. C66: "Show the routes" with none says it with `screen.matter.routes.none` ("No route is known for this matter yet."), the matter screen's row, as a stand-in; this screen wants its own row ("... for this kind of action yet"). Please ask UX-DESIGN for it.
