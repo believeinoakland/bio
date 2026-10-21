@@ -28,7 +28,7 @@
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";
 import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
-         SWEEP_SCOPE_CHECKS } from "./checks.mjs";
+         SWEEP_SCOPE_CHECKS, CAPTURE_KEEP_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat } from "../formats.mjs";
 import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
@@ -401,8 +401,9 @@ export async function keepWhole(ev, { sha, parts, total, bytes = null }) {
 }
 /* R10 (C5): the refusal when a multipart capture cannot be kept whole; nothing is filed and the parts already stored are named by no
    document, as TOO_LARGE's are. */
-const notKept = (parts, why) => ({ ok: false, reason: "CAPTURE_NOT_KEPT",
-  detail: localize("acquisition.index.capture_not_kept", "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again", { parts: String(parts), why: String(why) }) });
+const notKept = (parts, why) => { const row = CAPTURE_KEEP_CHECKS.CAPTURE_NOT_KEPT; return { ok: false, reason: "CAPTURE_NOT_KEPT", code: "CAPTURE_NOT_KEPT",
+  check: row.check, translation: row.translation,
+  detail: localize("acquisition.index.capture_not_kept", "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again", { parts: String(parts), why: String(why) }) }; };
 
 /* R20, R5 (T51; the walk's C12, C13): the longest `acquire` waits, inside the door's bound, for the render (3.3 to 17.5 s), which
    comes after the bytes are kept. Past its wait it goes on by itself and the document is answered kept, the render pending,
