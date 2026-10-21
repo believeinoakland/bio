@@ -17,7 +17,7 @@ const NOID = /\bu-7\b|\badmin\b|\bu-99\b/;
 
 test("R29 R40 R54 C94 the members the project names from the record are drawn by handle, never by id: a participant given by id, the visibility history's setter, the stake's, the owners' vote; an id no roster holds by the plain word; control: the roster silent, the fallback words", async () => {
   const plane = (roster) => ({ memberlist: roster,
-    projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: 1 }, { member: "u-7", state: "joined", owner: 0 }] }),
+    projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: 1 }, { member: "u-7", state: "joined", owner: 0 }, { handle: "ana", state: "joined", owner: 0 }] }),
     projectvisibility: ok({ ok: true, projectId: P, setting: "hidden", recorded: true, history: [
       { setting: "hidden", set_by: "u-7", reason: null, at: "2026-10-01T09:00:00Z" },
       { setting: "discoverable", set_by: "admin", reason: "ready", at: "2026-10-05T09:00:00Z" },
