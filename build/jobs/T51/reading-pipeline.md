@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01Ff44xuNBVDnvzJCTR8DH73 · depth 2 · COMPLETE · handled B5
+**Status** · session_016qGyozq8Rczq8BoW6LAp4C · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -100,3 +100,22 @@ COMPLETE (B5, FR-65, L6, K4194): the reading of a captured web page is its conte
 - `checks/run.mjs /home/user/bio`: no line names reading-pipeline; its 7 coverage and 7 words failures are other modules' (inherited).
 
 Size (session_01Ff44xuNBVDnvzJCTR8DH73): test runs 12, module lines 1790
+
+## J6 · COMPLETE
+
+COMPLETE (B6, fix round 2, C5's reading half, K4323): the reader reads the whole object held under the document's fingerprint first. `tranche/T51` merged into the branch.
+
+**Entry applied.** `bytesOf` (`bio-plane/src/reading-pipeline/index.mjs`) for a multipart document now asks `evidence.get(capture.sha256)` first and returns that object whole; it assembles parts, under MULTIPART_READ_MAX, only when no whole object is held (a failing read of the whole falls through to the parts). A document with neither is refused as before (parts over the bound: the same `why`; a missing part: the same `why`).
+
+**Proposed R2 wording, for BOB to write:** append to R2: "(T51 fix round 2, C5; K4323; capture R86, acquisition R10, R11) **The whole object first.** A multi-part capture whose whole object is held under the document's fingerprint is read from that object; its parts are assembled, within MULTIPART_READ_MAX, only when no whole object is held, and a document with neither is a failed reading saying so. Test: a 21 MiB three-part capture whose whole object is held is read whole, the parts never fetched; control: the same parts with no whole object held, over the bound, still refuse as before." Also the R23 line for `bytesOf` could say "(R2: the whole object first)".
+
+**Test** (`test/m/reading-pipeline/pieces.test.mjs`, "R2 R23: bytesOf reads the whole object held ..."), seen failing first on the unchanged code (`pass 8, fail 1`), then passing; its control is inside it: parts only, 21 MiB, refuses with the over-the-bound sentence; with the whole held only that key is fetched and the bytes equal the whole; a small multipart with no whole still assembles.
+
+**Deferred / found elsewhere:** nothing deferred. `bio-plane/dist/bio-plane.bundled.mjs` (and the other bundles holding `bytesOf`) are stale until rebuilt, not edited. Callers of `bytesOf` in other modules (extraction's re-read, `index.mjs` line 1337 here) are unchanged and get the new behaviour. No census op is owned by this change.
+
+**Tests and checks:**
+- module + d606, tier2-wire, pdf-worker-binding: `tests 153, pass 153, fail 0`.
+- users (`modules.json` uses): extraction + events `tests 290, pass 290, fail 0`; content `tests 142, pass 142, fail 0`. (`impact.mjs origin/tranche/T51 HEAD` names 108 modules, 1686 files; I ran the three direct users.)
+- `format.mjs`: 0 failures; `architecture.mjs reading-pipeline`: 0 failures; `coverage.mjs reading-pipeline`: `35 of 35 live requirement ids named by a test; 0 failures`; `words.mjs reading-pipeline`: 0 failures; `ownership.mjs reading-pipeline tranche/T51`: `3 files changed ...; 0 failures`.
+
+Size (session_016qGyozq8Rczq8BoW6LAp4C): test runs 8, module lines 1860

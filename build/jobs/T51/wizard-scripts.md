@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01PZ9Gu5FRgJY1fJyGfYx9Tz · depth 2 · COMPLETE · handled B16
+**Status** · session_01JThqS87JjBveokSN6hH16A · depth 2 · COMPLETE · handled B18
 
 ## J1 · BLOCKED
 
@@ -328,3 +328,63 @@ DEFERRED: none.
 
 
 Size (session_01PZ9Gu5FRgJY1fJyGfYx9Tz): test runs 5, module lines 2865
+
+## J16 · REPORT
+
+REPORT · B17 (fix round 2, K4311): what the re-take of the registry at 0310c4953d brings in other modules' suites. Nothing in another module was changed (P7).
+
+The new registry holds seven acts that other modules do not yet draw or mark. Their suites now fail; each waits for its owner's job in fix round 2 (wave 1 or 2 in build/plan/fix-round-2-T51.md):
+- op-grades R42 and R46 (2 failures): `capturerequests`, `casedrafts` and `contradictionflag` have no mark in MARKS. For op-grades' job.
+- screens-intake R8 (1): capture does not yet draw `capturerequests`. For screens-intake's job (wave 2).
+- screens-publish R10 (1): case-editor does not yet draw `casedrafts`. For screens-publish's job (wave 2).
+- screens-inquiry R10 (entry 25 and document), R5 R14 to R41 (3): project does not draw `heldcaptures`; document does not draw `resolvetestify` or the owed `contradictionflag`. For screens-inquiry-2's job (wave 2).
+
+Failing on the tranche tip as well (run on a clean worktree of origin/tranche/T51 before my commit), so not from this change: store-door R17 (groupdescriptiondraft), interface-shell R23 (a place name in the shell's program text), screens-settings R39 (screen.bias.adoptfor.label is a key the module reads), plane R24 (screen purpose words).
+
+Dependencies: journey-check failed only for lack of node_modules (playwright-core); I ran `npm ci` in bio-plane/src/journey-check, as the START requires. Its suite then gave 72 pass, 7 fail, all in the local-arm journey walks and one words row for "group".
+
+REQUIREMENT FOR BOB (K4311): R47 is in my test file and not yet in build/requirements/wizard-scripts.md, because that file is outside this job's paths. Proposed text, for Bob to write or to tell me to write:
+"R47 (T51 fix round 2; K4311; DEC-394; amends R45) The registry is re-taken at `0310c4953d`. SCREEN_REGISTRY_SOURCE becomes `0310c4953d` (the design commit DEC-394 merged into tranche/T51 by K4311): 83 screens and 563 acts (433 declared, 83 function, 47 owed; 43 owed ops). The acts DEC-394 draws are registered on their screens (casedrafts on case-editor, ceremony and review-copy; heldcaptures on project; capturerequests on capture; resolvetestify on document), and its owed contradictionflag is carried apart on document (R13). capture's three owed capturecredential acts are unchanged. The earlier file is kept beside the carried one. Test: t51.test.mjs (R47): the pin, the counts, the named acts, the owed set, and a changed generated registry fails --check."
+
+## J17 · COMPLETE
+
+COMPLETE · B17 (fix round 2, K4311) · wizard-scripts. Head: the commit that carries this (job/T51/wizard-scripts), on top of tranche/T51 (merged first).
+
+CAUSES: CAUSES.md names no CODE cause in wizard-scripts. Its one line (S-15, the welcome wizard's six side-trip steps) is WORDS, deferred to T52's later-ux.md. The job's work is the mechanical entry only (R47).
+
+APPLIED
+- The registry re-taken at 0310c4953d (DEC-394). source/registry.json is that file (sha256 e63249fe1ab5cad5...); the earlier one is kept as registry-09fbb247eb.json. build-data.mjs pins 0310c4953d (SOURCES.registry, header). screen-registry.mjs is regenerated: the only generated file that changed. The library and the front doors are unchanged; build-data.mjs --check is green.
+- Counts: 83 screens, 563 acts (433 declared, 83 function, 47 owed; 43 owed ops). Before: 556 acts (427, 83, 46).
+- Added acts (7): capture: capturerequests (declared; capture-requests, op-declarations). document: resolvetestify (declared; entities, op-declarations) and the owed contradictionflag (DEC-394; carried apart, R13). project: heldcaptures (declared; capture). case-editor, ceremony, review-copy: casedrafts (declared; op-declarations, review). capture's three owed capturecredential acts were already owed at 09fbb247eb and are unchanged.
+- No census op of this module's is added; DECLARED_OPS (R46) is unchanged. No sentence of this module changed.
+- Tests: R47 added to t51.test.mjs. Written first and seen failing (the pin still 09fbb247eb). Older pins that described the previous commit re-pinned in library, t47, t48, t50 and t51 (counts, owed ops 43, t50's owed set 39). The R47 control: a flipped pin in the generated file fails --check.
+- Requirement text: R47 is not in build/requirements/wizard-scripts.md (outside this job's paths). Its proposed text is in the REPORT (J16) for BOB to write or to tell me to write.
+
+CHECKS (job branch)
+- node --test bio-plane/test/m/wizard-scripts/: 129 pass, 0 fail.
+- build-data.mjs --check: green.
+- checks/format: 0 failures. checks/architecture: 0 failures. checks/words (whole product): 0 inline, plain, testcopy, missingkey or handlist findings. checks/coverage: wizard-scripts' live ids all named; the product has 11 coverage failures, none in wizard-scripts. checks/ownership (wizard-scripts, tranche/T51): 10 files, 0 failures.
+
+IMPACT (build/plan/impact.mjs origin/tranche/T51 HEAD names 26 other modules; run at two at once; baselines on a clean worktree of origin/tranche/T51)
+- Pass: pdf-worker, tasks, queue-producers, queue, translations, affordances, op-declarations, admission, answer-envelope, signin-door, instance-setup, screens-entry, screens-wizards, screens-daily, screens-investigate, screens-action, control-plane (314).
+- Caused by the new acts (their modules do not yet draw or mark them; owners' jobs in the fix round): op-grades R42 and R46 (2); screens-intake R8 (1); screens-publish R10 (1); screens-inquiry R10 entry 25 and document, R5 (3). Detail is in the REPORT (J16).
+- Failing on the tranche tip as well: store-door R17, interface-shell R23, screens-settings R39, plane R24.
+- journey-check: first failed only for lack of node_modules; I ran npm ci in bio-plane/src/journey-check (the START's rule). Then 72 pass, 7 fail: R1(a), R9, R10, R11, R17, R20 and the R20 control. The local arm's first failure is the installer's Cloudflare step ("page.waitForURL: Timeout 180000ms"). The clean baseline fails at file level (journey.test.mjs, plus R17), so I cannot show the local-arm failures are pre-existing. They look environmental, not from the registry, but it is not established. A re-run by the JOURNEYS lane, or on biosmoke8, would settle it.
+
+DEFERRED: none of the job's own work. The other modules' reds are reported, not changed (P7).
+
+Size (session_01JThqS87JjBveokSN6hH16A): test runs 39, module lines 2701 (own code: the .mjs files under bio-plane/src/wizard-scripts/, the three generated files excluded)
+
+## J18 · COMPLETE · re B18
+
+COMPLETE · B18 (ANSWER to J16) · wizard-scripts, fix round 2. Head: c9131f7289 on job/T51/wizard-scripts (pushed). It supersedes J17: tranche/T51 is merged in (merge d513b205e4); R47 is now met.
+
+DONE, as J17 says: the registry re-take at 0310c4953d (commit 95cec52e08 before the merge); the 7 added acts; the pins and the R47 test. The R47 marker is removed (c9131f7289), since its tests name it and pass, as R46 did.
+
+CHECKS on the merged head
+- node --test bio-plane/test/m/wizard-scripts/: 129 pass, 0 fail.
+- build-data.mjs --check: green. checks/format: 0 failures. checks/architecture: 0 failures. checks/coverage (wizard-scripts): 47 of 47 live ids named, R47 among them.
+- checks/words (whole product): 0 failures. checks/ownership (wizard-scripts, tranche/T51 to HEAD): 0 failures.
+- Impact (J17): the reds in other modules are as J16 reports; I changed none of them. The journey-check first failure was missing node_modules; npm ci was run in bio-plane/src/journey-check.
+
+Size (session_01JThqS87JjBveokSN6hH16A): test runs 40, module lines 2701 (own code, the three generated files excluded)

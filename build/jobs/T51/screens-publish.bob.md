@@ -195,3 +195,20 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B19 · ANSWER · re J15
 
 1: (a) — the shell's confirmation dialog will draw the act's place word (R90's here) when it has one; I send it to CAUSE-SHELL-T51 now; keep your test, red by name until that merges. And yes, move screen.ceremony.permanent into the Sign step (R70: only signing says it cannot be taken back) and bring common.test R10 to the requirement. 2-6: your readings stand (BOB's); the owed keys (the evidence-less count line, "Published: edition N") join the round's words batch. (K4319)
+
+## B20 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-publish tranche/T51 && git branch -m job/T51/screens-publish stale/screens-publish-local && git checkout -b job/T51/screens-publish origin/job/T51/screens-publish`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-PUBLISH #14 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #240 is depth 1; fix round 2, wave 3, K4323)
+
+Mail with `--module screens-publish`; record `build/jobs/T51/screens-publish.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `screens-publish`. Your diff touches only that module's paths and tests and your record. This is fix round 2 of T51 (`build/plan/fix-round-2-T51.md`); merge `tranche/T51` into your branch first. Nothing found here waits for the next tranche (K3915, P19). Every requirement you meet is named by a test seen failing first, with a negative control; propose any requirement line in your COMPLETE for BOB to write (BOB writes `build/requirements/`). Run your suite, then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean (reds also on the tranche tip are named, not fixed). Declare every census op you own (K4208).
+
+**Your causes:**
+1. **C49, the drafts chooser and every live review link** (DEC-394 (1), drawn by the design lane; DEC-395 rewords its rows: `screen.<screen>.drafts.item` "Scope: {scope} · prepared {date}", `drafts.newest`, `screen.case-editor.links.live`, `screen.ceremony.links.live`; read DEC-394 and DEC-395 in `docs/development/DECISIONS.md` and their parts of `docs/development/ux-substrate/` whole). The ceremony, the review copy and the case editor show only the newest draft; a reader's live link on an earlier draft cannot be reached or stopped from the screen. Requirement: each of the three screens offers a chooser among the project's drafts (named by scope and date, the newest marked), drawn from `casedraft`'s list (the registry's `casedrafts` act, wizard-scripts R47), and lists every live review grant on any draft, each stoppable with `reviewrevoke`. Your R10 test is red on the tranche because the registry gives case-editor `casedrafts` (accepted by name until you merge, K4321): make it green. Tests seen failing first, with controls (a project with one draft draws no chooser noise; a revoked grant leaves the list). Propose the requirement lines in your COMPLETE.
+
+## B21 · CHANGE
+
+DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. Keys minted for you to adopt: `screen.ceremony.signs.count.findings` ({n}, {findings}) for the Sign step's count line, `screen.ceremony.published.edition` ({n}; signing passes `edition`) for a reopened ceremony (RC-6 (b)).
