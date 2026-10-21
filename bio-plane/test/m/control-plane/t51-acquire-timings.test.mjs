@@ -95,7 +95,9 @@ test("R105, R115 (C12): a call stopped while its attestation ran, after the capt
   /* the walk's ca.gov: fetch 934, read 828, receipt, profile 2825, attest 20887 and running */
   const a = await timedOutWith({ total_ms: 25000, stages: { reputation: 12, fetch: 934, read: 828, receipt: 40, profile: 2825, attest: 20887 }, running: "attest" });
   assert.equal(a.kept, "held");
-  assert.equal(a.detail, undefined, "the design's `kept nothing` is not said of a capture that is kept");
+  assert.notEqual(a.detail, word("refusal.ACQUIRE_TIMED_OUT"), "the design's `kept nothing` is not said of a capture that is kept");
+  /* K4334: the design's own row for a kept capture (DEC-397) is its detail once the word table holds it, else none */
+  assert.equal(a.detail, hasWord("refusal.ACQUIRE_TIMED_OUT.held") ? word("refusal.ACQUIRE_TIMED_OUT.held") : undefined);
   assert.deepEqual(a.timings.running, "attest", "the times are still stated");
   /* control: every stage after the receipt reads the same, the stopped one included */
   for (const running of ["profile", "subresources", "unpack"]) {
@@ -120,17 +122,19 @@ test("R105, R115 (C12) control: a call stopped before the capture was recorded i
   }
 });
 
-test("R105, R115 (C12) control: with no stage stated (the bootstrap credential's call has no trace, or the object answers none) nothing is claimed either way: `kept: undetermined`, no `detail`", async () => {
+test("R105, R115 (C12) control: with no stage stated (the bootstrap credential's call has no trace, or the object answers none) nothing is claimed either way: `kept: undetermined`, its own row or no `detail`", async () => {
   const a = await timedOutWith({});
   assert.equal(a.kept, "undetermined");
-  assert.equal(a.detail, undefined);
+  /* K4334: never `kept nothing`; the design's undetermined row (DEC-397) once the word table holds it, else none */
+  assert.notEqual(a.detail, word("refusal.ACQUIRE_TIMED_OUT"));
+  assert.equal(a.detail, hasWord("refusal.ACQUIRE_TIMED_OUT.undetermined") ? word("refusal.ACQUIRE_TIMED_OUT.undetermined") : undefined);
   const b = await timedOutWith(null);
   assert.equal(b.kept, "undetermined");
   const noTrace = world({ answer: (c) => (c.route === "acquiretimings" ? new Response(JSON.stringify({ ok: true, result: { ok: true, stageTimes: { stages: { receipt: 1 } } } })) : null) });
   const hooks = { ...defaultHooks(), acquireBoundMs: 40, async gatedOp(ctx) { if (ctx.op !== "acquire") return undefined; await new Promise((r) => setTimeout(r, 400)); return M.json({ ok: true }); } };
   const c = await call(noTrace.env, { op: "acquire", token: noTrace.env.ADMIN_TOKEN, method: "POST", hooks, body: { locator: "https://example.org/big" } });
   assert.equal(c.json.kept, "undetermined", "a call with no trace is asked of nothing, so it states nothing");
-  assert.equal(c.json.detail, undefined);
+  assert.equal(c.json.detail, hasWord("refusal.ACQUIRE_TIMED_OUT.undetermined") ? word("refusal.ACQUIRE_TIMED_OUT.undetermined") : undefined);
 });
 
 test("R105, R115 (C12) control: an answer in time carries no `kept`", async () => {
