@@ -46,3 +46,27 @@ Words not converted, for the design's unkeyed list: the 15 'where' strings in ch
 Tests/checks. basis-versions 183 pass, 0 fail with basis-version-grammar's 11 (194 together). Users, mine vs a worktree of tranche/T51: strength 161/0, run-productions 59/0, reevaluation 145/0, skills 130/0, review 61/0, store-door 48/0, project-stage 23/0 all green; inherited reds, every failing test also fails on tranche/T51 and mine fail strictly fewer: contradiction 2 (conformance battery 'undetermined reason not a key', K3958), affordances 4, answer-envelope 4, plane 1, queue-producers 2. Not run by me: agent-steps' fixture (absent). format 0 failures; architecture 0; coverage 45 of 45 ids, 0; ownership 0 failures; words: only the 15 locators; setup-words build --check: stale-rows note only (accepted-work word, not mine).
 
 Size (session_01778SRJXwE8E8B1xtKcWZ2m): test runs 14, module lines 2,825
+
+## J6 · COMPLETE
+
+COMPLETE (T51 · basis-versions), answering B7 (CHANGE, K4259). Branch `job/T51/basis-versions` at `3533bedc4c`, pushed.
+
+**Entries applied.**
+1. `narrowcandidates` is declared in `DECLARED_OPS` (`bio-plane/src/basis-versions/index.mjs`): classes `admin`, `member`, `probe`; `mutating: false`; `weight: "read"`; description `localize("basis-versions.declared.narrowcandidates", …)` with the sentence of op-grades' row ("read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labeled machine work and writes nothing"); `fields: { accepts: ["target","version","ord"], requires: ["target","version","ord"] }`. Agrees with the op-declarations hand row (`classes`, `mutating: false`).
+2. Tests (`bio-plane/test/m/basis-versions/declared-ops.test.mjs`), written first and seen failing (no declaration): `R57 … declares narrowcandidates` runs `declaredOpHolds` through the module's ops map over the real `mkNarrow` fixture, with refusals named per field (`NARROW_NO_INQUIRY`, `NARROW_NO_SUCH_VERSION`, `NARROW_NO_SUCH_LEG`); and `R57 … declares narrowcandidates as a read` checks `mutating` false, `weight` read, and that the description is the sentence its key names (it writes nothing). Control: the removed row fails both.
+
+**Requirement line for BOB.** I propose amending R57 rather than a NEW R: append to R57's list "and `narrowcandidates` (weight `read`, accepts and requires `target`, `version`, `ord`; K4259)". R57's test already covers the declaration pass; the new arm is in `declared-ops.test.mjs`.
+
+**Deferred.** None.
+
+**Found in other modules (P9), not touched:**
+- Coverage: six live ids named by no test: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; screens-inquiry R110, R119; screens-intake R53.
+- Words, testcopy: `bio-plane/test/m/op-grades/t37.test.mjs:32` copies the sentence "translation-directed: keyed by a language and an interface word; …" (op-grades' row). Owner: op-grades.
+
+**Tests and checks run.**
+- Installed node_modules where a lockfile had none (K4113: `npm ci --ignore-scripts`).
+- `node --test test/m/basis-versions/`: tests 180, pass 180, fail 0.
+- `node checks/run.mjs /home/user/bio`: format 0 failures (175 modules); architecture 0 failures; channels 0 failures; coverage 6 failures, all in the other modules listed above; words 1 failure, the op-grades testcopy above. basis-versions and its files: 0 findings in every check.
+- `node checks/ownership.mjs /home/user/bio basis-versions tranche/T51 job/T51/basis-versions`: 3 files changed, 0 failures.
+
+Size (session_012QGXjkj6ha3NnkkWJ68nZt): test runs 4, module lines 2850 (`bio-plane/src/basis-versions/*.mjs`, all lines, comments included; 2 lines added this job).
