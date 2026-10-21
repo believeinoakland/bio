@@ -5,7 +5,7 @@ import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, press, choose, until, last } from "./fixtures.mjs";
+import { open, press, choose, until, last, ok } from "./fixtures.mjs";
 import { fresh, bucket } from "../doorbell/fixture.mjs";
 import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { knockOp } from "../../../src/doorbell/door.mjs";
@@ -80,4 +80,59 @@ test("R80 C47 control: a finding that states its role and both grades keeps the 
   const p = await open(`/app/published/${encodeURIComponent(C + "/2")}`, { boot: PUBLIC, plane: publishedPlane([FINDING("FND-2026-0031")]) });
   const card = main(p).querySelectorAll("[data-finding] p")[1].textContent.replace(/\s+/g, " ").trim();
   assert.ok(card.startsWith(word("case-grammar.load_bearing") + " · ") && !/·\s*$/.test(card));
+});
+
+/* ---------- C46 (R75, R61): a concluded question, concluded by the real `conclude` and by a project's adoption, through the real review ---------- */
+import { world, V, readingLines, currentLines } from "../case-authoring/fixture.mjs";
+import { reviewOf } from "../../../src/review/index.mjs";
+import { sha as shaOf } from "../review/fixture.mjs";
+
+const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-what-does-the-federal-freedom", OWN = "INQ-2026-0002-o";
+const CLAIM = "Federal agencies must disclose requested records unless one of nine exemptions applies.";
+const OWN_WORDS = "The agency answered inside the statutory twenty days.";
+const SECRET = "SECRET-C46";
+function chain() {
+  const w = world({ provider: false });
+  w.member("alice");
+  w.doc(DOC);
+  for (const q of [Q, OWN]) w.finding(q, [{ target: DOC }], { state: "open", lines: readingLines("first", [DOC], q === OWN ? OWN_WORDS : CLAIM) });
+  const P = w.project("Team", "alice", [Q, OWN], { extra: [...currentLines(Q), ...currentLines(OWN).slice(1)] });
+  const r = reviewOf(w.host, { record: w.record, membership: w.membership, strength: w.strength, basisVersions: w.basisVersions, publication: w.publication,
+    caseAuthoring: w.ca, caseInputs: w.ci, caseAccount: w.cacc, ratification: w.ratification, now: () => w.clock.ms });
+  const conclude = (o) => w.basisVersions.conclude({ author: "alice", viewer: V("alice"), identity: V("alice"), ...o });
+  assert.equal(conclude({ target: Q, project: P, falsifier: "A court order holding an exemption applies to every record." }).ok, true);
+  assert.equal(conclude({ target: OWN, conclusion: OWN_WORDS, falsifier: "A clerk's log dating the answer later.", version: "first" }).ok, true);
+  const d = r.act({ act: "draft", author: "alice", project: P, targets: [Q, OWN] });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 200));
+  assert.equal(r.act({ act: "grant", author: "alice", draft: d.draftId, recipient: "Reader", secretSha: shaOf(SECRET) }).ok, true);
+  const plane = {
+    image: ok({ "bundle.md": w.text(P) }),
+    casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: d.draftId, case: { case_id: null }, created_by: "alice", updated_by: "alice" }] }),
+    reviewcopy: (req) => ok(req.body && req.body.secret ? r.copy({ secretSha: shaOf(req.body.secret), bySecret: true }) : r.copy({ draft: d.draftId, viewer: V("alice") })),
+  };
+  return { P, d, plane };
+}
+
+test("R75 R61 C46 the case editor and the outside reader draw a question concluded by a project's adoption and one concluded by `conclude` in the conclusion's words, never 'Not concluded yet'; the cites list names the question by its title", async () => {
+  const { P, d, plane } = chain();
+  const ed = await open(`/app/case-editor/${P}/${d.draftId}`, { plane });
+  const rows = text(ed);
+  assert.ok(rows.includes(CLAIM) && rows.includes(OWN_WORDS), "both conclusions drawn in their words at the editor");
+  const out = await open("/app/review", { boot: { session: null, hash: "#grant=" + SECRET }, plane });
+  const t = text(out);
+  assert.ok(t.includes(CLAIM) && t.includes(OWN_WORDS), "and to the outside reader");
+  for (const [who, page] of [["editor", ed], ["reader", out]]) {
+    assert.ok(!drew(page, "review.index.not_concluded_yet"), `${who}: not drawn as not concluded yet`);
+    assert.ok(!/(^|\s)## /.test(text(page)), `${who}: no heading marks`);
+  }
+});
+
+test("R75 C46 the passages the case cites are named by the question's title, never its id (the walker's list), and a cited target that is no finding keeps its id (control)", async () => {
+  const { P, d, plane } = chain();
+  const md = ["---", `id: ${P}`, "title: Team", "references:", `  - target: ${Q}`, "    rel: cites", "    status: live", "  - target: INFO-2026-0099", "    rel: cites", "    status: live", "---", ""].join("\n");
+  const ed = await open(`/app/case-editor/${P}/${d.draftId}`, { plane: { ...plane, image: ok({ "bundle.md": md }) } });
+  const cited = [...main(ed).querySelectorAll("[data-cited]")].map((e) => [e.getAttribute("data-cited"), e.textContent.trim()]);
+  const title = JSON.parse(JSON.stringify(plane.reviewcopy({ body: {} }).json.result)).findings.find((f) => f.target === Q).title;
+  assert.ok(title && title !== Q, "the real review states the question's title");
+  assert.deepEqual(cited, [[Q, title], ["INFO-2026-0099", "INFO-2026-0099"]]);
 });

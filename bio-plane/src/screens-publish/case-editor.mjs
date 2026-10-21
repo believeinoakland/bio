@@ -171,9 +171,14 @@ export const CASE_EDITOR = Object.freeze({
     // acts are reasoned); nothing is deleted. Read from the project's own document, which keeps a removed citation.
     const cites = P.references(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null)
       .filter(function (r) { return !r.rel || r.rel === "cites"; });
+    // C46: a passage the case cites is named by its title where the draft's copy states one (a finding it names), never by its id
+    const citeName = function (t) {
+      const x = found.find(function (y) { return y && y.target === t; });
+      return x && typeof x.title === "string" && x.title.trim() ? x.title.trim() : t;
+    };
     if (cites.length) out.push(cs.sec("screen.case-editor.the_passages_this_case_cites", cs.sheet(cites.map(function (r) {
       const gone = r.status === "severed";
-      return cs.row("", '<span class="rec" data-cited="' + cs.esc(r.target) + '" data-status="' + (gone ? "severed" : "live") + '">' + cs.esc(r.target) + "</span>"
+      return cs.row("", '<span class="rec" data-cited="' + cs.esc(r.target) + '" data-status="' + (gone ? "severed" : "live") + '">' + cs.esc(citeName(r.target)) + "</span>"
         + (gone && r.note ? '<span class="meta">' + cs.esc(r.note) + "</span>" : ""), "",
         cs.act(gone ? "reinstate" : "sever", { data: { handle: r.target } }));
     }).join("")) + P.said(view, "citation"), { help: ["screen.case-editor.removing_one_takes_it_out_of", "screen.case-editor.nothing_is_deleted_a_removed_citation"] }));
