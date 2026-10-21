@@ -171,6 +171,16 @@ function renderCapture(cs, view) {
       /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
       + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
       + "</p>" : "";
+  /* R2 (C17): for an upload filed under no project, whether the document was read: the text it holds (the reading's count when it states
+     one), or that no reading is held and, for a picture, that its words can't be found until it is read or typed */
+  const readLine = (u) => {
+    const r = u && u.reading;
+    if (!r || !u.filed || u.filed.id) return "";
+    if (!r.read) return said(r.picture ? "capture.picture.unread" : "screen.document.text.unread");
+    const state = r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) })
+      : cs.w(r.words ? "screen.document.text.full" : "screen.document.text.none");
+    return `<p class="mk-note" role="status" data-reading="read">${cs.w("screen.document.text.label")}: ${state}</p>`;
+  };
   /* R21: a refused promotion is drawn on its tab in words (`refusalHtml`), else the shell's own for a failure with none */
   const refusedPromotion = (t) => U.promoteRefused && U.promoteRefused.tab === t
     ? `<p class="cs-state" data-state="failed" role="alert">${U.promoteRefused.html || cs.w("shell.unread")}</p>` : "";
@@ -326,7 +336,7 @@ function renderCapture(cs, view) {
       + cs.field("ci-where", "screen.capture.file.where", { help: "screen.capture.file.wherehelp", value: U.where || "" })
       + cs.field("ci-what", "screen.capture.file.what", { area: true, rec: true, value: U.what || "" })
       + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.captureupload.label.capture" })}</div>`
-      + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: U.uploaded.name }) + made(U.uploaded) : "")
+      + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: U.uploaded.name }) + made(U.uploaded) + readLine(U.uploaded) : "")
       + refusedPromotion("file")
       + `<p class="mk-note">${cs.w("screen.capture.file.note")}</p>`;
   } else {
@@ -620,7 +630,20 @@ async function doneUpload(view, answer, cs) {
   const title = view.parts.titleOf(cs, { reading: isPage ? a.reading : null, doc: {}, address: "", fileName: name || String((doc && doc.name_stated && doc.name_stated.text) || "") });
   const made = await view.parts.promoteDocument(cs, { doc: doc || {}, title, locator: String((doc && doc.locator) || ""), project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
-  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha });
+  /* R2 (C17): a project-less upload's result line says whether it was read (a picture, which way to have it read) */
+  const reading = { ...view.parts.readingOf(a, doc || {}), picture: /^image\//i.test(String(sent.type || "")) };
+  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha, reading });
+}
+
+/* R2 (C17; control-plane R100, R117): whether the upload was read, from the answer: its `reading` (the answer's or its document's) and the
+ * `text_units` beside it. `{read: false}` when the answer carries none; else `{read: true, words, wordsRead, wordsTotal}` (the counts the
+ * reading states, else null). */
+function readingOf(a, doc) {
+  const r = a && a.reading && typeof a.reading === "object" ? a.reading : doc && doc.reading && typeof doc.reading === "object" ? doc.reading : null;
+  if (!r) return { read: false };
+  const units = Array.isArray(a && a.text_units) ? a.text_units : Array.isArray(doc && doc.text_units) ? doc.text_units : Array.isArray(r.text_units) ? r.text_units : [];
+  const n = (k) => (Number.isInteger(r[k]) && r[k] >= 0 ? r[k] : null);
+  return { read: true, words: units.filter((u) => u && String(u.text || "").trim()).length, wordsRead: n("words_read"), wordsTotal: n("words_total") };
 }
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */
@@ -714,7 +737,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ alsoFiled, bundleFor, checkOutcome, copyOf, filedFor, forOf, homeOf, projectOf, promoteDocument, refusalHtml, refusedHtml, titleOf }),
+  parts: Object.freeze({ alsoFiled, bundleFor, checkOutcome, copyOf, filedFor, forOf, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, titleOf }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     refusals: Object.freeze({ /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */

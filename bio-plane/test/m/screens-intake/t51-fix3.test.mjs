@@ -88,3 +88,122 @@ test("R49 (acquisition R96) a `CAPTURE_NOT_KEPT` acquire is drawn through its ro
   assert.ok(hasKey("refusal.CAPTURE_NOT_KEPT") ? says(p, "refusal.CAPTURE_NOT_KEPT") : text(p).includes("The copy could not be kept whole, so nothing was filed."));
   assert.equal(p.byOp("promote").length + p.byOp("captureseenin").length, 0);
 });
+
+/* ---------- C17: R2 (the result line of a project-less upload) ---------- */
+
+const UP = { capture: { sha256: USHA, bytes: 14 }, receipt: { address: `upload:${USHA}`, via: "upload", retrieved: "2026-10-02T10:00:00Z" } };
+const UDOC = { file: `snapshots/upload-${USHA}`, locator: `upload:${USHA}`, capture: { method: "uploaded", sha256: USHA, encoding: "binary", bytes: 14 }, provenance_chain: [{ who: "x", asserts: "y" }], source: { kind: "uploader" } };
+const picture = () => new File(["photo bytes"], "Seminary Ave.jpg", { type: "image/jpeg" });
+const note = () => new File(["a note"], "note.txt", { type: "text/plain" });
+const FILLED = { "ci-how-made": true, "ci-where": "6012 Seminary Ave", "ci-what": "The pothole." };
+async function upload(path, file, answer) {
+  const p = await open(path, { plane: { ...CAPTURED, image: IMAGE, captureupload: ok({ ok: true, existed: false, ...UP, ...answer }) } });
+  fill(p, { "ci-file": file, ...FILLED });
+  await press(p, "captureupload");
+  return p;
+}
+
+test("R2 (C17) a project-less upload's result line says the document was read when the answer carries a reading", async () => {
+  const p = await upload("/app/capture/file", note(), { document: { ...UDOC, reading: { title: "A note", words_read: 2, words_total: 2 }, text_units: [{ text: "a note" }] } });
+  assert.ok(says(p, "screen.document.text.label"));
+  assert.ok(says(p, "screen.document.text.read", { read: "2", total: "2" }), "the count when the reading states one");
+  assert.ok(!says(p, "screen.document.text.unread") && !says(p, "capture.picture.unread"));
+  const plain = await upload("/app/capture/file", note(), { document: { ...UDOC, reading: { title: "A note" }, text_units: [{ text: "a note" }] } });
+  assert.ok(says(plain, "screen.document.text.full"), "a reading with words and no count");
+  const blank = await upload("/app/capture/file", picture(), { document: { ...UDOC, reading: { title: null }, text_units: [] } });
+  assert.ok(says(blank, "screen.document.text.none"), "a reading that found no words");
+});
+
+test("R2 (C17) a project-less upload with no reading says no reading is held, and for a picture what to do next", async () => {
+  const photo = await upload("/app/capture/file", picture(), { document: UDOC });
+  assert.ok(says(photo, "capture.picture.unread"), "a picture: its words can't be found until read or typed");
+  assert.ok(!says(photo, "screen.document.text.read", { read: "0", total: "0" }));
+  const file = await upload("/app/capture/file", note(), { document: UDOC });
+  assert.ok(says(file, "screen.document.text.unread"), "any other file: not read yet");
+});
+
+test("R2 (C17) control: an upload with a project says what it did before and draws no reading line", async () => {
+  const p = await upload(`/app/capture/file/${MINE}`, picture(), { document: UDOC });
+  assert.ok(says(p, "screen.capture.file.done", { name: "Seminary Ave.jpg" }));
+  assert.ok(says(p, "capture.filed.project", { project: "Pothole repairs" }));
+  assert.ok(!says(p, "capture.picture.unread") && !says(p, "screen.document.text.unread") && !says(p, "screen.document.text.label"));
+});
+
+/* ---------- C14: R77, R88 (the reads the screens make) ---------- */
+
+test("R50 (C14) Add makes one `heldcaptures` read, with fields=picker, and no read for a row; Held reads full rows (no picker fields)", async () => {
+  const picked = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0003-a", title: "Housing notice", project: null, capture: { sha256: SHA }, standing: "collected" }], truncated: false });
+  const add = await open("/app/capture/address", { plane: { ...CAPTURED, heldcaptures: picked, acquire: ok({ ok: true, document: DOC, reading: { title: "Housing notice" } }) } });
+  assert.deepEqual(add.byOp("heldcaptures").map((r) => r.query.fields), ["picker"], "one read, the cheap picker row");
+  fill(add, { "ci-address": ADDRESS });
+  await press(add, "acquire");
+  assert.equal(add.byOp("heldcaptures").length, 1, "an act does not read the list again");
+  assert.equal(add.byOp("image").length + add.byOp("captureaccounts").length, 0, "no read for each row");
+  const held = await open("/app/held", { plane: { heldcaptures: ok({ ok: true, held: [{ bundle_id: "INFO-2026-0003-a", title: "Housing notice", project: null, capture: { sha256: SHA, grade: null }, age_days: 2, eligible: true }], truncated: false }) } });
+  assert.ok(held.byOp("heldcaptures").length >= 1 && held.byOp("heldcaptures").every((r) => r.query.fields === undefined), "Held keeps full rows");
+  assert.ok(text(held).includes("Housing notice"));
+});
+
+/* ---------- C25: R54 (one rule for a document's name) ---------- */
+
+const promoted = (p) => p.byOp("promote").map((r) => r.body.meta.title);
+async function captureOf(answer, address = "https://www.example.gov/page") {
+  const p = await open("/app/capture/address", { plane: { ...CAPTURED, acquire: ok({ ok: true, ...answer }) } });
+  fill(p, { "ci-address": address });
+  await press(p, "acquire");
+  return p;
+}
+
+test("R54 (C25) a page with a title is named by it; one without by its file name; one with neither by its host and the day, never the file part of its address", async () => {
+  const titled = await captureOf({ document: { ...DOC, title: "Notice 2026-118" } });
+  assert.deepEqual(promoted(titled), ["Notice 2026-118"]);
+  const filed = await captureOf({ document: { ...DOC, title: null, capture: { ...DOC.capture, file_name: "notice.pdf" } } });
+  assert.deepEqual(promoted(filed), ["notice.pdf"]);
+  const neither = await captureOf({ document: { ...DOC, title: null } }, "https://www.example.gov/reports/street-maintenance-2026.pdf");
+  assert.equal(promoted(neither).length, 1);
+  assert.ok(promoted(neither)[0].includes("www.example.gov") && !promoted(neither)[0].includes("street-maintenance"), "host and day");
+});
+
+test("R54 (C25) the name drawn at capture from `document.title` equals the name drawn once read from `reading.title`; a multi-part capture, with no `document.title`, is named by the reading's title", async () => {
+  const atCapture = await captureOf({ document: { ...DOC, title: "Housing notice" } });
+  const onceRead = await captureOf({ document: { ...DOC, title: null }, reading: { title: "Housing notice" } });
+  assert.deepEqual(promoted(atCapture), promoted(onceRead));
+  const parts = [{ file: "snapshots/p1", sha256: "1".repeat(64), bytes: 5 }, { file: "snapshots/p2", sha256: "2".repeat(64), bytes: 5 }];
+  const packet = await captureOf({ document: { ...DOC, title: null, parts }, reading: { title: "The whole packet" } });
+  assert.deepEqual(promoted(packet), ["The whole packet"]);
+  const unread = await captureOf({ document: { ...DOC, title: null, parts, capture: { ...DOC.capture, file_name: "packet.pdf" } } });
+  assert.deepEqual(promoted(unread), ["packet.pdf"], "no reading yet: the file name");
+});
+
+test("R54 (C25) a PDF with no reading yet is named by its file name, once read by `reading.title`; one with no Title is named by its file name on both", async () => {
+  const pdf = (extra = {}) => ({ document: { ...DOC, title: null, capture: { ...DOC.capture, file_name: "agenda.pdf" } }, ...extra });
+  assert.deepEqual(promoted(await captureOf(pdf())), ["agenda.pdf"]);
+  assert.deepEqual(promoted(await captureOf(pdf({ reading: { title: "Board agenda, October" } }))), ["Board agenda, October"]);
+  assert.deepEqual(promoted(await captureOf(pdf({ reading: { title: null } }))), ["agenda.pdf"]);
+});
+
+test("R54 (C25) control: two documents from one host with different titles are told apart by their names", async () => {
+  const a = await captureOf({ document: { ...DOC, title: "Minutes, September" } });
+  const b = await captureOf({ document: { ...DOC, title: "Minutes, October" } });
+  assert.notEqual(promoted(a)[0], promoted(b)[0]);
+});
+
+/* ---------- C23: R4 (Held by project) ---------- */
+
+const ROW = (id, title, project, extra = {}) => ({ bundle_id: id, title, project, capture: { sha256: SHA, grade: null }, age_days: 1, eligible: true, ...extra });
+const PROJECTS = ok({ projects: [{ id: MINE, name: "Pothole repairs" }, { id: HOME, name: "Housing repairs" }] });
+
+test("R4 (C23) Held filtered by a project reads that project's captures and marks a document filed there from another project (`also_here`); with no project chosen it lists all", async () => {
+  const own = ROW("INFO-2026-0010-own", "Street survey", MINE);
+  const seen = ROW("INFO-2026-0011-seen", "Board minutes", HOME, { also_here: { home: HOME } });
+  const held = (r) => (r.query.project === MINE ? ok({ ok: true, held: [own, seen], truncated: false }) : ok({ ok: true, held: [own, ROW("INFO-2026-0011-seen", "Board minutes", HOME), ROW("INFO-2026-0012-other", "Other minutes", HOME)], truncated: false }));
+  const filtered = await open(`/app/held/${MINE}`, { plane: { heldcaptures: held, projectlist: PROJECTS } });
+  assert.ok(filtered.byOp("heldcaptures").length >= 1 && filtered.byOp("heldcaptures").every((r) => r.query.project === MINE), "every list is that project's");
+  assert.ok(text(filtered).includes("Street survey") && text(filtered).includes("Board minutes") && !text(filtered).includes("Other minutes"));
+  const marked = Array.from(main(filtered).querySelectorAll("[data-also-here]"));
+  assert.equal(marked.length, 1, "only the filed-from-elsewhere row is marked");
+  assert.ok(marked[0].textContent.includes("Housing repairs") || marked[0].closest("[role=listitem], tr, .cs-row") !== null, "the mark names where it is held");
+  const all = await open("/app/held", { plane: { heldcaptures: held, projectlist: PROJECTS } });
+  assert.ok(all.byOp("heldcaptures").every((r) => r.query.project === undefined));
+  assert.ok(text(all).includes("Other minutes") && main(all).querySelectorAll("[data-also-here]").length === 0, "all listed, none marked");
+});

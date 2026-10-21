@@ -93,6 +93,14 @@ function renderHeld(cs, view) {
     const basis = { CAPTURE_RECEIVED_NOT_FETCHED: "screen.held.grade.received", CAPTURE_AXIS_AUTHORED: "screen.held.grade.testimony" }[g.basis];
     return `<span class="meta">${basis ? cs.w(basis) : cs.w("state.undetermined", { reason: cs.w("screen.held.grade.ungraded") })}</span>`;
   };
+  /* R4 (C23; capture R77, R100): a document filed in the project from another project (`also_here`) is marked, and said to be held under its
+     home (`screen.capture.address.filedhere`, a stand-in key until the design writes the row; before it the row's project, which is the home) */
+  const alsoHere = (r) => {
+    if (!r.also_here || typeof r.also_here !== "object") return "";
+    const id = typeof r.also_here.home === "string" ? r.also_here.home : "";
+    const home = id ? (projectRows.find((x) => x && x.id === id) || {}).name || "" : "";
+    return `<span class="meta" data-also-here="1">${home && cs.w("screen.capture.address.filedhere") !== "screen.capture.address.filedhere" ? cs.w("screen.capture.address.filedhere", { project: home }) : ""}</span>`;
+  };
   const thumb = (r) => r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256
     ? `<span class="mk-thumb">${cs.ref("capture", r.capture.sha256, cs.w("screen.held.thumb").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
   const list = cs.state(view.data.held, (v) => cs.rows({
@@ -111,7 +119,7 @@ function renderHeld(cs, view) {
       /* C23: the one word for the state a held capture is in, the Find chip's (`state.item.review.name`) */
       + `<span class="meta">${cs.w("state.item.review.name")} · ${grade(r)} ${[age(r.age_days), projectOf(r)].filter(Boolean).join(" · ")}`
       + source(r) + "</span>"
-      + eligibility(r) + asked(r) + files(r)],
+      + alsoHere(r) + eligibility(r) + asked(r) + files(r)],
   }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
     ,
   { empty: "screen.held.empty" });
