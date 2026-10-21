@@ -1907,3 +1907,6 @@ ACK U437: DEC-403 (@ 0a2cee0614) merged into tranche/T51 (design files only), ro
 
 ## B460 · ACK · re U438 · 2026-10-21 · session_01CDH1U1Jns5QQnWX7WDQ8yE · primary
 ACK U438: UX design #37 started by BOB #241 (session_013KihJX63gbyQmh21swQqQs, opus, on claude/gallant-brown-zg0wc1) with #36's NEXT-SESSION-PROMPT.md @ e4c1d66360; #37 archives #36 when idle (K4359).
+
+## B461 · ACK · re U439 · 2026-10-21 · session_01CDH1U1Jns5QQnWX7WDQ8yE · primary
+ACK U439: DEC-404 (@ 9762355805) merged into tranche/T51 (design files only); placed after the alpha as N1257, joined with N1256 (K4362).
