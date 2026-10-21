@@ -388,3 +388,27 @@ CHECKS on the merged head
 - Impact (J17): the reds in other modules are as J16 reports; I changed none of them. The journey-check first failure was missing node_modules; npm ci was run in bio-plane/src/journey-check.
 
 Size (session_01JThqS87JjBveokSN6hH16A): test runs 40, module lines 2701 (own code, the three generated files excluded)
+
+## J19 · COMPLETE
+
+COMPLETE · fix round 2, cause 1 (registry re-take at 654a735535, DEC-396, U431). Commit 660410cedd on job/T51/wizard-scripts (merged tranche/T51 first).
+
+APPLIED
+- SCREEN_REGISTRY_SOURCE and SOURCES.registry move to `654a735535` (`build-data.mjs`, `screen-registry.mjs` regenerated: the only generated file that changed; library and front doors unchanged). The vendored `source/registry.json` is the file at 654a735535 (83 screens, 563 acts: 434 declared, 83 function, 46 owed, 42 owed ops). The file it replaces is kept whole as `source/registry-0310c4953d.json`.
+- `contradictionflag` is a declared act on document (no owed row) and is no longer carried apart.
+- Tests: new R48 in `t51.test.mjs`, seen failing first (red at the pin). R47's test now reads the kept file at 0310c4953d; R45, R47, R48 and the pin and count assertions in library, t47, t48, t50 name the carried pin and counts. Historic claims are unchanged except where they described the carried file.
+
+DEFERRED: none.
+
+FOUND IN OTHER MODULES: none turned red by this change. Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 27 modules, 546 test files. I ran the 545 bio-plane files and the one pdf-worker file. All pass on my branch except 104 tests in 23 files (journey-check, store-door, screens-settings, screens-publish, screens-intake, screens-inquiry, plane, op-grades, affordances). The same 104 fail at origin/tranche/T51 (worktree run of those 23 files: identical failing titles). These reds are on the tranche tip and are named, not fixed: op-grades R17, R42, R46 (and t48, t50); journey-check (walker, journey, live, dec340, pseudo, design29, group, names, frames, words, own-reading); plane release and r42-entry; affordances catalogue; screens-inquiry fr28; store-door declared-ops.
+
+FOR BOB TO WRITE (build/requirements/wizard-scripts.md), after R47:
+- **R48** (T51 fix round 2; U431, DEC-396; amends R47) The registry is re-taken at `654a735535`. SCREEN_REGISTRY_SOURCE becomes `654a735535`: 83 screens and 563 acts (434 declared, 83 function, 46 owed; 42 owed ops). `contradictionflag` is a registered act on document and no longer carried as owed. The earlier file is kept whole beside the carried one at `0310c4953d`. Test: the pin, counts and owed set; `--check` passes on the committed files; control: a one-byte change to the generated registry fails it.
+
+TESTS AND CHECKS
+- Module suite: `node --test --test-force-exit bio-plane/test/m/wizard-scripts/*.test.mjs`: 130 tests, 130 pass, 0 fail.
+- `build-data.mjs --check`: passes ("match their sources").
+- format: 175 modules, 0 failures. architecture (wizard-scripts): 0 failures. coverage (wizard-scripts): 47 of 47 live ids named, 0 failures (R48 is named by a test; BOB writes its line). ownership vs tranche/T51: 0 failures. words (wizard-scripts): 0 failures.
+- Impact run as above.
+
+Size (session_01HJALQNVYJCEBKqDywwPMoe): test runs 9, module lines 2865
