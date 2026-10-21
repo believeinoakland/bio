@@ -117,3 +117,17 @@ What landed and held, by measurement: P1 (words cached), P2.2 (`projectlist` now
 
 ## Not done in this pass
 The acts (C12) and key registration, as above; the member's side and 390 px; the plane's per-op timer for P9. The baseline file (`BASELINE.md`) has not been written and is superseded by this table for the screens re-measured.
+
+## WHAT BOB NEEDS TO DO TO ADVANCE PERFORMANCE (PERFORMANCE #1, after the re-measure; answers Bob's question "do we need further research?")
+**Ready to build, no more research (fix round 4):**
+1. **P7** (`capture-sources`, `render.mjs:343` and `browserrender.mjs:193`): keep and collect sub-resource bodies about 8 at a time, results kept in request order; skip a put when the digest is held. Expected: legistar 18-24 s → about 10-14 s (bar 15 s).
+2. **P10** (`capture`, `screens-intake`/`screens-inquiry`): Held and Document read picker rows first and the heavy per-row fields only for the rows on screen; per-row work in lanes. Expected: Held 4.7 s → about 1.5 s.
+3. **P9 duplicates** (`interface-shell`, `queue`): `bootstrap` and `queue` read once per load and shared by the frame and the screen; `queue` answers a count for the frame; `casedrafts` ×3 and `projectquestions` ×11 on Project reduced the same way.
+
+**Research that must be built into round 4 so the round after it can finish the job (tell the job that carries them it is instrumentation, not a feature):**
+4. **Timings that survive a failure** (`acquisition`): the answer's `timings` is `{}` on `ACQUIRE_TIMED_OUT` and `STORE_DID_NOT_ANSWER`, exactly where P8 needs it. Without this, P8 (PDFs from 2.5 MB up cannot be captured) cannot be located.
+5. **A per-op timer inside the plane** (`control-plane`, answer header or log, off for members): `bootstrap` takes 1.0-1.3 s for 452 bytes, `groupidentity` 0.58 s, `queue` 0.75 s; where those seconds go is not visible from outside. Without it P9's floor cannot be reduced past about 3 s on Home.
+
+**After the redeploy that carries 1-5** the lane will: run the 2.5 MB PDF once and name the stalled stage (P8), read the per-op timer and name the frame's cost (P9), re-time the render phase by phase, measure C12's acts and the member side and 390 px, and write BASELINE.md. Ring the lane with the commit and run id as for this re-measure.
+
+**Needed from BOB:** (a) name a test member the lane may register a signing key for (key registration was not measured: it writes the administrator's key); (b) nothing else is waiting on Bob. One item may come to Bob after step 5: if the frame's roughly 15 reads per load cannot get Home under 2 s by trimming, combining them into one "frame" answer changes the layer boundaries (an architecture question, Bob's); the lane will bring it with options and a recommendation only once the per-op timer shows how much of the floor it removes.
