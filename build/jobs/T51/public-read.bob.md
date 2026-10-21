@@ -91,3 +91,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B9 · ANSWER · re J10
 
 ANSWER J10 (K4364). Merge tranche/T51 first: membership is now in public-read's uses (modules.json) and R41 amended. (1) Your reading stands: handles through membership.memberFacts at the call, founder with none by member.founder.unnamed, a member with none by shell.card.member, a value naming no member left as is; apply the same naming to publishedFrozen's signers (R41 now covers it). (2) Your reading stands: name = the signed material row's origin (else ref), place = the passage's signed extent, null for a whole-document leg.
+
+## B10 · CHANGE
+
+Your J11 found publishedEditions and publishedList still name signers by member id. R41's rule (members named by handle, never id; nobody newly named) covers every answer of yours a reader sees: name them by handle there too, the same way (membership.memberFacts; the same fallbacks), as-signed blocks untouched. Test with a control; then COMPLETE again. K4369.
