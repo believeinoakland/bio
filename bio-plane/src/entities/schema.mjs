@@ -16,7 +16,13 @@ CREATE TABLE IF NOT EXISTS entities (
   declared_by TEXT,
   at          TEXT,
   sector      TEXT,
-  forum_kind  TEXT
+  forum_kind  TEXT,
+  named_by_member INTEGER,
+  confirmed_by    TEXT,
+  confirmed_at    TEXT,
+  contact_kind    TEXT,
+  contact_value   TEXT,
+  law             TEXT
 );
 CREATE INDEX IF NOT EXISTS entities_kind ON entities(kind);
 -- ALIASES are FIRST-CLASS and per entity (safeguard 4). The canonical label is also an alias (canonical=1).

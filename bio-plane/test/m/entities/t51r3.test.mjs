@@ -106,6 +106,19 @@ test("R63 (K4364, DEC-402) an office also holds where requests go (contact: addr
   assert.equal(none.e.createEntity({ kind: "office", label: "O", note: NOTE }).ok, true);
 });
 
+test("R63 a store written before the mark gets its columns once at boot; an office it already holds reads unmarked, with no contact and no law, and can then be named beside it", () => {
+  const w = team();
+  const old = nameOffice(w, "ada", "Old Office").entity_id;
+  for (const c of ["named_by_member", "confirmed_by", "confirmed_at", "contact_kind", "contact_value", "law"]) w.st.sql.exec(`ALTER TABLE entities DROP COLUMN ${c}`);
+  assert.equal(w.rows(`PRAGMA table_info(entities)`).some((c) => c.name === "named_by_member"), false, "the store is as it was before");
+  w.e.migrate();
+  w.e.migrate();
+  const read = w.e.readEntity({ entityId: old }).entity;
+  assert.deepEqual([read.named_by_member, read.confirmed_by, read.contact, read.law], [false, null, null, null]);
+  assert.equal(nameOffice(w, "bea", "New Office").ok, true);
+  assert.deepEqual(listed(w).entities.map((i) => [i.label, i.named_by_member]), [["Old Office", false], ["New Office", true]]);
+});
+
 /* ---------------------------------------------------------------- R64 */
 
 test("R64 an administrator's confirm clears the mark and records herself and when; the name, alias and note of the office are unchanged", () => {
