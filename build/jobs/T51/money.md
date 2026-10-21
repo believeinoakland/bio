@@ -99,3 +99,18 @@ Also the census scope: a literal survey of refusal codes across `bio-plane/src` 
 **Question B (words).** `refusal.MONEY_BAD_PERIOD` has no row in `docs/development/ux-substrate/screens/words.json` (DESIGN handoff ask 1). I have not invented a sentence. The refusal's `detail` carries the real reason through the existing money keys (`money.index.the_profiles_fiscal_year_for`, `money.index.the_active_profiles_hold_no`). Please have the design stream write the row, or tell me the stand-in key you want.
 
 Impact: 90 modules use money; I am running their affected suites (1327 files) now and will report the counts in COMPLETE.
+
+## J7 · QUESTION
+
+Money fix round 4, after your ANSWER B5 (applied; commits 7dd51def43 and 2b5885dbb9 on job/T51/money, pushed).
+
+**REPORT: a test of another module breaks on my change.** `bio-plane/test/m/intent/amount.test.mjs:119` asserts `row(bad, "ENT-1").amount.code === "BAD_PERIOD"`, a money period refusal. Under R29 (a) money now answers `MONEY_BAD_PERIOD`, so this assertion fails. I have not edited intent (P9). Its owner needs to move the expectation to `MONEY_BAD_PERIOD`, or intent's own code path needs to be checked. The same grep found `calculations/index.mjs` and `following` answering `BAD_PERIOD` for their own reasons: calculations' use is what your ANSWER asked me to report in COMPLETE.
+
+**QUESTION C: the census clashes 16 money codes.** `bio-plane/test/m/money/refusal-census.test.mjs` (R29's census, red by name) finds 16 codes money answers that another module also answers, with the record-grammar shared rows excluded:
+- NO_PERIOD (events, workbooks); BAD_RANGE (workbooks); UNKNOWN_BASIS (people); NO_STAGE (progressions); NO_SUCH_LINE (lines); QUESTION_NOT_HELD (events, people, standards); NO_METHOD (events); MACHINE_NEEDS_IDENTIFIERS (lines); LISTENER_FAILED (events); NO_REASON (consequences, events, lines, people, progressions, workbooks); NO_SHA (lines, people, workbooks); NO_LABEL (money-checks); NO_CONTRACT (money-checks); MEMBER_ACT_ONLY (events, money-checks, people); NO_SET (events, progressions); NO_BASIS (lines, progressions).
+
+My recommendation: (1) the codes that are a shared act row in `record-grammar`'s `SHARED_ACT_CHECKS` (NO_REASON, NO_SHA, MEMBER_ACT_ONLY, and others that the table names) are excluded by design, but the census check reads the table by text, so please confirm which of these are in the table and I'll correct the exclusion; (2) for the rest, money keeps its own code by prefixing it `MONEY_` (renaming around 12 codes and their tests; no screen row is keyed to them yet, to my reading); (3) money-checks is a sibling module of money: its `NO_LABEL`, `NO_CONTRACT` and `MEMBER_ACT_ONLY` are its own to rename, and I will not change them. Please answer which way, and whether money-checks is in scope.
+
+Until the answer, COMPLETE stays open. The census test is red by name, not silent.
+
+Impact: 90 modules, 10,485 tests run on the earlier build (before the all-period change): 10,456 pass, 17 fail. The failures are in screens, plane, affordances, words, and tasks modules, plus the intent test above. I have not yet confirmed which of the 17 are on the tranche tip. I will re-run on the current build and name them.
