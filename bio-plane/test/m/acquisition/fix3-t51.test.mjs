@@ -318,10 +318,10 @@ test("R98 (C25) controls: a plain-text capture and a binary capture answer title
   assert.equal(t.document.title, null);
   const bn = (await run(w, { "https://t.example/n.bin": octet(bin(2048)) }, { locator: "https://t.example/n.bin" })).body;
   assert.equal(bn.document.title, null);
-  /* a PDF answers none at capture (BOB's ruling K4363): the reading names its /Info /Title once read, and the screens fall back to the file name until then */
+  /* a PDF answers its /Info /Title at capture (R98, fix round 4, C25; replaces K4363's "none at capture") */
   const pdf = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Title (A PDF title) >> endobj\ntrailer << /Info 1 0 R >>\n%%EOF");
   const pd = (await run(w, { "https://t.example/n.pdf": () => new Response(pdf, { headers: { "content-type": "application/pdf" } }) }, { locator: "https://t.example/n.pdf" })).body;
-  assert.equal(pd.document.title, null);
+  assert.equal(pd.document.title, "A PDF title");
   assert.equal(pd.reading, undefined);
   /* K4370: a PDF with no Title entry answers null at capture too, the same as one with a Title entry */
   const bare = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Author (Clerk) >> endobj\ntrailer << /Info 1 0 R >>\n%%EOF");

@@ -193,3 +193,17 @@ CHANGE (BOB #245, K4451): record-core R88 is merged on tranche/T51: evidenceStor
 ## B18 · CHANGE
 
 CHANGE (BOB #245, K4453, K4454): you own the C13a/C13b through-the-door tests (P4: you come directly after capture-sources and use it). CAPTURE-SOURCES #16 is merged; its COMPLETE (build/jobs/T51/capture-sources.md, J6, 'Seam test for acquisition') holds the file's full text. Merge tranche/T51, add it as bio-plane/test/m/acquisition/seam-render.test.mjs (import the fake binding from ../capture-sources/fake-binding.mjs; drop the 'IMPORTS OF A MODULE LATER' header note; name the requirement ids your module meets, R99 for C13b), run it and your suite, architecture and ownership 0, COMPLETE again with its numbers.
+
+## B19 · START
+
+START · ACQUISITION #25 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, after DEC-412; K4458)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/acquisition tranche/T51 && git branch -m job/T51/acquisition stale/acquisition-local && git checkout -b job/T51/acquisition origin/job/T51/acquisition`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module acquisition`; record `build/jobs/T51/acquisition.md`. Model claude-haiku-5-5, medium effort. Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `acquisition`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+The design's DEC-412 rows (merged on tranche/T51, rows.mjs regenerated) made a hand-copied sentence in your module stale. Words rule (K3810, K3930): a sentence a member reads is read by its key from the word table (`word(...)`/the module's own row reader), never copied; tests assert the key or read from the table.
+
+**Your fix:** `bio-plane/src/acquisition/checks.mjs:362-366`: `CAPTURE_KEEP_CHECKS.CAPTURE_NOT_KEPT`'s translation is a `localize('acquisition.checks.capture_not_kept', ...)` stand-in; the design row `refusal.CAPTURE_NOT_KEPT` now exists: read it as its neighbours do (`word("refusal.CAPTURE_NOT_KEPT")`, as `BAD_FOR` ~:349) and drop the stand-in comment. Red now: `bio-plane/test/m/acquisition/checks.test.mjs` 'R29 R31' (correct as it is). Users: capture.
+
+Run: your module's suite, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users named below; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`. COMPLETE: what changed (file:line), the failing test now green (it was red on the tranche tip), suite counts, the `Size` line.

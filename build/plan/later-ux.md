@@ -59,3 +59,5 @@
 - Money · the period sentence says "A follow names the days it covers" (re-walk B E36) · K4357 · 2026-10-21
 - Vouch for this copy · marked "Asks for a reason" and asks nothing: joins the K4199 line (re-walk B C76, CA31, E09) · K4357 · 2026-10-21
 - screens-publish · published page · inline links ("Finding n", "Edition n", "its docket") 18–22 px high at 390 px; running text in the drawing · SCREENS-PUBLISH #15 J19 · 2026-10-21
+- acquisition · `CAPTURE_NOT_KEPT` still reads its stand-in sentence, not DEC-412's `refusal.CAPTURE_NOT_KEPT` row (`checks.mjs:362`); N1261 · K4459 · 2026-10-21
+- file-safety · `SIGNATURES_RUN_RECENT` still reads its stand-in sentence, not DEC-412's row (`checks.mjs:96`); N1261 · K4459 · 2026-10-21

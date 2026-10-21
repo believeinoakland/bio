@@ -131,3 +131,7 @@ You are the module job (P8, mechanics §6) for `affordances`. Your diff touches 
 Every requirement you meet is named by a test seen failing first, with a negative control. R-NOTMET (no "not met" or "deferred" at COMPLETE; ask BOB). Run your suite, op-declarations', then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean. COMPLETE lists the four fields with the red-then-green evidence and `Size (<session id>): test runs <n>, module lines <n>`.
 
 **Added by BOB #245 (K4441):** citation's `cite` now accepts an optional `ground` (citation R19, R21 as amended): its op help names it beside the others.
+
+## B17 · CHANGE
+
+CHANGE (BOB #245, K4458): the design's DEC-412 rows are merged on tranche/T51 (rows regenerated). Your module reads act.contradictionflag.does and the new act.*.does rows (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin); the registry puts scanmirror on security and officeconfirm on places. Merge the tranche before your tests.
