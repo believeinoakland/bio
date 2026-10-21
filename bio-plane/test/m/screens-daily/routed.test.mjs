@@ -23,7 +23,8 @@ const SEEN = { lookedsince: ok({ since: "2026-10-01T00:00:00Z" }), projectlist: 
 const SCR = { screens: withScreens("document", "project") };
 const screens = ["queue", "home"];
 const at = { queue: "/app/queue", home: "/app" };
-const planeOf = (items, extra = {}) => ({ ...ADMINS, ...SEEN, queue: ok({ items, item_count: items.length }), ...extra });
+const ROSTER = ok({ members: ["mai", "ana", "ben", "bo", "cy", "di"].map((h) => ({ member_id: "id-" + h, handle: h, status: "active" })) });
+const planeOf = (items, extra = {}) => ({ memberlist: ROSTER, ...ADMINS, ...SEEN, queue: ok({ items, item_count: items.length }), ...extra });
 
 test("R75 (words): the words the authority form and the routed items read are held by the word list", () => {
   for (const k of ["screen.queue.routed.auth.item", "screen.queue.routed.auth.open", "screen.queue.routed.auth.question", "screen.queue.routed.auth.know",
