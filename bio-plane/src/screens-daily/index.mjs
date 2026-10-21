@@ -163,7 +163,7 @@ const WORDS_OF = {
     "screen.finder.covered.read.says.other", "screen.finder.covered.docs", "screen.finder.covered.docs.says.one", "screen.finder.covered.docs.says.other", "screen.finder.covered.looked",
     // R67, R77, R78: the frontier at four levels, the partial match, a hit with no title.
     "screen.answers.look", "screen.answers.state.other", ...["document", "content", "meaning", "internet"].map((l) => `screen.answers.level.${l}`), ...["LOOKED_FOUND", "LOOKED_ABSENT", "NOT_LOOKED"].map((s) => `screen.answers.state.${s}`),
-    "screen.finder.noresult.partial", "screen.finder.partial.head", "queue.source.untitled",
+    "screen.finder.noresult.partial", "screen.finder.partial.head", "queue.source.untitled", "shell.card.document", "shell.card.member",
     "screen.find-in.passage", "act.cite.label.find-in", "screen.document.cite.question", "screen.document.cite.role", "screen.document.cite.noquestion", "screen.findin.cite.supports",
     "screen.findin.cite.against", "screen.findin.cite.norole", "queue.answered.col.did", ...["newly_cited_supporting_the_question", "left_as_it_was", "the_question_already_cited_it",
       "cite_every_document_you_hold_together_in", "each_document_is_cited_whole_as_its_own_", "a_document_the_question_already_cites_is", "if_the_set_changed_after_you_held_it_wha",

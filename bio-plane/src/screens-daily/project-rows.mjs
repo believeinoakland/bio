@@ -60,12 +60,15 @@ export function projectRows(cs, view, w, glance, join, states) {
     // An owner answered with no handle is drawn by its member id; `null` is an opener no longer active (R27).
     const unnamed = function (x) { return !!x && x.founder === true && !x.handle; };
     const plain = function (t) { return String(t).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
-    const who = p.owner && (p.owner.handle || (!unnamed(p.owner) && p.owner.member)) ? String(p.owner.handle || p.owner.member) : "";
+    // R85: a member answered with no handle is named by the roster's handle (`cs.memberName`), else by its plain word; never by her member id.
+    const unknown = function (n) { return cs.esc(n) === cs.w("shell.card.member"); };
+    const handleOf = function (x) { return x && x.handle ? String(x.handle) : x && !unnamed(x) && x.member ? cs.memberName(x.member) : ""; };
+    const who = p.owner ? handleOf(p.owner) : "";
     const owner = !("owner" in p) ? ""
-      : '<span class="muted">' + (who ? cs.w(w + ".owner", { handle: "" }) + cs.ref("member", who, who, [])
+      : '<span class="muted">' + (who ? cs.w(w + ".owner", { handle: "" }) + (unknown(who) ? cs.esc(who) : cs.ref("member", who, who, []))
         : unnamed(p.owner) ? cs.w(w + ".owner", { handle: "" }) + cs.w("member.founder.unnamed") : cs.w(w + ".owner.none")) + "</span>";
     const members = Array.isArray(p.members)
-      ? p.members.map(function (m) { return unnamed(m) ? plain(cs.w("member.founder.unnamed")) : String(m && (m.handle || m.member) || ""); }).filter(Boolean) : null;
+      ? p.members.map(function (m) { return unnamed(m) ? plain(cs.w("member.founder.unnamed")) : handleOf(m); }).filter(Boolean) : null;
     const activity = Array.isArray(p.activity) && p.activity.length === 8 ? p.activity.map(function (n) { return Number(n) || 0; }) : null;
     const last = "lastChange" in p
       ? '<span class="muted">' + (p.lastChange ? cs.w(w + ".lastchange", { date: cs.date(String(p.lastChange)) }) : cs.w(w + ".lastchange.none")) + "</span>"
