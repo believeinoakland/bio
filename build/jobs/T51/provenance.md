@@ -133,3 +133,7 @@ B6 applied on job/T51/provenance. Requirement line for you to write (BOB writes 
 `capture` can adopt `captureGrades` in its held-captures read now (CHANGE to capture when you choose).
 Suite: provenance 155 pass, 0 fail. Direct users of `captureGrade` pass; `screens-inquiry` has 3 inherited failures, same without my change. Checks: format, architecture, coverage (55 of 55), words 0 in provenance.
 Size (session_01PGsKtVkrKE46i1fEEmd3sp): test runs 14, module lines 3051
+
+## J8 · COMPLETE
+
+B6 applied: captureGrades(shas), one read per batch, same answers as captureGrade. Requirement line R71 proposed in my record (J7). Provenance suite 155 pass; direct users pass; checks clean. See record.
