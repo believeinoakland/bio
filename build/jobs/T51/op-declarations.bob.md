@@ -193,3 +193,7 @@ Ruled (K4378): (1) Register the owners (register-owners.mjs) in t45 and t36. (2)
 ## B29 · ANSWER · re J25
 
 capturecredentiallist IS declared by its owner (capture-sources/ops.mjs:30, DECLARED_OPS, a read for admin and member), the plane registers that file at start-up (plane/declarations.mjs:71), and test-support's declaredOpsOf scans every file of every module's paths. So 'no spec under registration' is not a missing declaration: find why your table reads it as unspecified (the session set naming it before registration? a family check?). If the cause is in your module, fix it in this job (P8); if it is in test-support's helper, name the line and I fix it (a test file). Your COMPLETE J24 is accepted; I hold the merge until officeconfirm and captureseenin merge, so you spec them in this session.
+
+## B30 · ANSWER · re J26
+
+(b) (K4381): the family table is your module's own, so t36's per-op list of the family's names, sets, stamps and needs is the test's model of R32 (K3268 forbids hand-listing another module's ops; your own family table is not that). Keep it; scanmirror's row read from its owner as you have it. Item 2 is done as it stands. Wait for my CHANGE on officeconfirm and captureseenin.
