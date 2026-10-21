@@ -226,3 +226,7 @@ CHANGE (BOB #244; K4433): the plane provides a store-internal route `pendingadd`
 ## B26 · CHANGE
 
 CHANGE (BOB #244; K4434): control-plane R120 is RELEASED and written on tranche/T51 (merge it): EXTRACTION #30 measured the reading as the slow phase (1.5 s, 3.4 s, 14-21 s for 2.4, 8.4, 15.2 MiB PDFs) and its memory as the cause of the 2.5 MB failure (pdf-reader R41 bounds it, PDF-READER #8). Build R120: a capture whose reading will not fit what is left of the bound (25 s less 8 s) or a PDF over 2 MB is answered when kept with `reading_pending: true`; the reading follows by `readHeld`, after the screen's promotion and by the plane's `pendingadd` / alarm (PLANE #48). Your phase clock (R121) still ships with it.
+
+## B27 · CHANGE
+
+CHANGE (BOB #244; K4435): your test "R81 end to end: Home draws the group's projects ... each with its question count paged from the real `projectquestions`" is stale at 753ea4db8a: Home now draws counts from the roster row's `question_count` (C14, screens-daily `project-rows.mjs:4-21`), so no `projectquestions` read is made. Bring R81's test to what R81 and C14 now require (counts from the roster row, no per-project read: that is also your P9 read-set test), in your job.
