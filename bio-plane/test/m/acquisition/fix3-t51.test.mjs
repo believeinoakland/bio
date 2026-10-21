@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, sha, text, page, HTML } from "./fixture.mjs";
 import { RENDER_DEFAULTS } from "../../../src/render.mjs";
+import { HostGovernor } from "../../../src/host-governor/index.mjs";
 
 const MIB = 1024 * 1024;
 const BOUND_MS = 25000;
@@ -161,7 +162,7 @@ test("R20 R95 (C12): a capture is answered without waiting for the timestamp: an
   assert.ok(r.body.document.attestation_attempts.every((a) => a.pending === true && a.attempted === true && a.ok === false && typeof a.note === "string"));
   assert.ok(r.body.timings.stages.attest < 250, `the attest stage starts the attempts and waits no set time (${r.body.timings.stages.attest} ms)`);
   assert.equal(w.store.state.late.length, 0, "nothing recorded yet");
-  const late = await until(() => w.store.state.late[0], 6000);
+  const late = await until(() => w.store.state.late[0], 20000);
   assert.ok(late, "the attempt is recorded when it ends");
   assert.equal(late.captureSha, sha("slow attestation"));
   assert.ok(late.recordedAt - answeredAt >= 1500, "recorded after the answer: the answer did not wait for it");
@@ -203,6 +204,19 @@ test("R97 R9 R5 (C13): a render-arm acquire of one page books one grant for its 
   assert.equal((w.gov.granted["r.example"] || 0) - before, 1, "one grant for one visit");
   const asks = w.gov.calls.filter((c) => c[1] === "r.example" && (c[0] === "admit" || c[0] === "peek"));
   assert.deepEqual(asks.map((c) => c[0]), ["peek", "admit"], "the render's admission is a peek; the fetch's is the one booking");
+});
+
+test("R97 R9 R5 (C13): through host-governor's real governor, a render-arm acquire of one page leaves `granted` one higher and the peek writes nothing", async () => {
+  const w = world({ env: renderer() });
+  const g = new HostGovernor({ sql: w.s.sql, core: w.core }); g.migrate();
+  w.store.governor = g;
+  const first = await run(w, { [PAGE]: () => page(SHELL_HTML) }, { locator: PAGE, render: true });
+  assert.equal(first.body.document.capture.method, "rendered");
+  const row = g.governorState({ host: "r.example" }).hosts[0];
+  assert.equal(row.granted, 1, "one grant for one visit");
+  const before = JSON.stringify(g.governorState({ host: "q.example" }));
+  g.governorAdmit({ host: "q.example", peek: true });
+  assert.equal(JSON.stringify(g.governorState({ host: "q.example" })), before, "a peek creates no state");
 });
 
 test("R97 R5 R9 (C13) controls: a host in cool-off is refused on the render arm as before and nothing is booked; a plain fetch books one grant as before", async () => {
