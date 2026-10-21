@@ -157,3 +157,15 @@ Options.
  C: serve the title from the register at read time. Rejected: it makes the published answer depend on working material (R10/R14).
 
 What I need: A or B. Until answered I carry on with the rest (checks, record); for A I will build legs.mjs and its test once case-grammar R12 and case-disclosures carry `title`.
+
+## J16 · REPORT
+
+REPORT (public-read, after B12). Built and pushed; not COMPLETE only because one test waits on a merge, named below.
+
+C48 / R42 (my part): (1) CERTAIN: `PublicRead.publishedAddress({case, edition})` (index.mjs, before `publishedFrozen`), `/app/published/` + encodeURIComponent("<case>/<n>"); null for unpublished/unnamed. case-authoring:1702 composes `/app/published/${id}/${n}` unencoded and ceremony.mjs:134 its own: both to be replaced by the builder (their jobs). (2) the old tests never asked for the address; the new test uses the shell's route form as oracle. (3) published-address.test.mjs, 3 tests, red ("publishedAddress is not a function") then green, incl. the edition 2 control. (4) N.
+
+C47 / R41 (my part): legs.mjs now names an entry by the row's `title`, else `origin`, else `ref`. Test: evidence-names.test.mjs "R41 (1), C47 ..." with controls (null, absent, blank title keep the address). Seen RED: actual name is the address. It stays RED BY NAME until case-grammar R12 carries `title` (CASE-GRAMMAR #19): its `materialsOf` reader (case-grammar/materials.mjs MATERIAL_FIELDS, :86, :131) drops `title` today. Nothing else of mine is open. (2) tested on a scripted entry; the fixture now signs a titled row through the real case document writer. (4) N.
+
+Suites: public-read 242 pass before the C47 test, 1 red now by the above. Checks: ownership 0, format 0, architecture 0; coverage and words findings are other modules' (installer-steps, interface-shell, pdf-reader, queue, screens-*, op-grades t33/t51), none public-read.
+
+Need: ring me (RESUME) once case-grammar's R12 `title` is on tranche/T51; I merge, rerun the suite and checks, and COMPLETE with the Size line.
