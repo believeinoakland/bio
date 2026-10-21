@@ -235,3 +235,24 @@ Cause 1 (every op this round adds is accounted for) is not met from this module'
 QUESTION (re B14, K4376). Nine ops have no sentence in the word list, so I hold each under its own key with a plain `localize` default (stand-ins, R62): `act.origins.does`, `act.inboxlist.does`, `act.transcriptions.does`, `act.progressions.does`, `act.remindersfor.does`, `act.moneysets.does`, `act.scanmirror.does`, `act.officeconfirm.does`, `act.captureseenin.does`. The defaults are in `bio-plane/src/affordances/act-help.mjs` (`T51_STANDIN_HELP`); the design's rows should replace them. Test t36 names them and asserts `hasWord` is false for each, so the test fails when a row lands and that test is then updated.
 
 One reads-list gap, for the design's decision: `act.contradictionflag.does` is in `words.json` but not in `words-reads.json` for this module. I hold it under the word-list key (`T51_LIST_ONLY_OPS`). If the design means it not to be held, I drop it and its test line.
+
+## J19 · COMPLETE
+
+COMPLETE (re B14, K4376). Commit a3afb574d4 on job/T51/affordances, pushed; merged origin/job/T51/affordances first (no conflicts).
+
+Entries applied: B14's list. All 28 names (the message says 22 + 3; the list has 25 + 3) are held in `ACT_HELP`: 18 under their owed texts (`T51_OWED_OPS`, read from `act.owed_<op>.does`, which the reads list gives), `contradictionflag` (`T51_LIST_ONLY_OPS`, see the QUESTION), and nine stand-ins (`T51_STANDIN_HELP`, `localize` defaults, see the QUESTION). t36 gained one test naming the set and its controls; the existing t36 expectations name the stand-ins and the list-only key. No requirement line changes.
+
+Not met, from B13 (J17, still open): the t33 R12 red for `moneysets`, `remindersfor`, `scanmirror`, `officeconfirm` and `captureseenin` is op-grades' rows (NON_ACTS and RUNGS/RUNG_ABSENT), as J17 said. The stand-ins here do not change that: `unaccounted` reads those rows, not `ACT_HELP`.
+
+Deferred: none in my module. Found in other modules: the op-grades rows of J17 (owner: op-grades, via BOB).
+
+Tests and checks:
+- node --test bio-plane/test/m/affordances/*.test.mjs: 282 tests, 280 pass, 2 fail. The two: t33.test.mjs:189 (R12 R24, J17) and t36's R48 R53 R54 R56 R57 R61 R62 test, fixed by the count (452 = 442 + 10) before the final run; the final run of t36 alone is 14 of 14 green. (The run before the last t36 fix showed 2 fails: the t33 line and that count, so the full suite after the fix is 281 pass, 1 fail: t33.)
+- checks/format.mjs: 175 modules; 0 failures
+- checks/architecture.mjs affordances: 34 product files, 385 relative imports; 0 failures
+- checks/coverage.mjs affordances: 54 of 54 live ids named; 0 failures
+- checks/words.mjs affordances: 6835 literals read, 18163 words; 0 failures (missingkey 0, testcopy 0; the nine stand-ins are `localize` calls, so the words check reads them as dev, 1)
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 0 failures
+- setup-words build --check: expected to report stale rows for the new `localize` ids (the nine `act.<op>.does` stand-ins), as J6/J9 did; I did not regenerate it (a generated artifact, manifest §14).
+
+Size (session_018BsD9g3GXwi6e8g4cAa1QE): test runs 8, module lines 2775
