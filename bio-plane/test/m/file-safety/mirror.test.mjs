@@ -212,7 +212,7 @@ test("R50 (C84): the six-hour self-start leaves a run alive, and an open request
   await alive.capture(pdf(false, "a"));
   await alive.fs.scanBatch({});
   assert.equal(started(alive).length, 0, "a run alive");
-  const open = world({ scan: { signatures: NO_SET({ last_attempt: at(T0 - 7 * HOUR), request: { at: at(T0 - 3 * MIN) } }) } });
+  const open = world({ scan: { signatures: NO_SET({ last_attempt: at(T0 - 7 * HOUR), request: at(T0 - 3 * MIN) }) } });
   await open.capture(pdf(false, "b"));
   await open.fs.scanBatch({});
   assert.equal(started(open).length, 0, "a request open");

@@ -1016,7 +1016,7 @@ export class FileSafety {
       if (!ver || !ver.signatures || Number.isFinite(Date.parse(ver.signatures.published))) return;
       const sigs = ver.signatures;
       const run = FileSafety.#runOf(sigs, now);
-      if ((run && run.alive) || sigs.request || sigs.requested_at) return;
+      if ((run && run.alive) || sigs.request) return;
       const last = msOf(sigs.last_attempt);
       if (Number.isFinite(last) && now - last <= MIRROR_SELF_START_MS) return;
       await this.#startRun();
