@@ -24,3 +24,22 @@ test("R74 R51 C40 after reattest the document's sentence is read again: it says 
   assert.ok(!drew(p, "screen.ceremony.conf.intro2", { finding: F1 }), "the sentence is not left saying neither");
   assert.deepEqual(rawKeys(main(p)).filter((k) => k.startsWith("screen.ceremony.conf")), [], "no key of the row drawn raw");
 });
+
+/* ---------- C14: each screen's read set (R79): the frame's `bootstrap` and `queue` once, and no read of the screen's own repeated ---------- */
+import { C } from "./fixtures.mjs";
+const readsOf = (p) => { const c = {}; for (const r of p.requests) c[r.op] = (c[r.op] || 0) + 1; return c; };
+for (const [screen, path, own] of [
+  ["case-editor", `/app/case-editor/${P}/${DR}`, ["image", "casedrafts", "reviewcopy", "casecheck", "casedocument", "whatchangeddrafts", "accountdrafts", "casedetails"]],
+  ["review-copy", `/app/review-copy/${P}/${DR}`, ["image", "casedrafts", "reviewcopy"]],
+  ["ceremony", `/app/ceremony/${P}/${DR}`, ["image", "reviewcopy", "casedrafts", "publishpreflight", "publishtensions", "publishschedule", "casedetails", "casedocument", "photomarks"]],
+  ["published", `/app/published/${C}`, ["publishedcase", "casedetailspublic"]],
+]) {
+  test(`R79 C14 ${screen} loads with one bootstrap, one queue and each of its own reads once: no read repeated`, async () => {
+    const p = await open(path);
+    const c = readsOf(p);
+    if (screen !== "published") assert.deepEqual([c.bootstrap, c.queue], [1, 1], "the frame's reads, once");
+    else assert.equal(c.bootstrap, 1);
+    for (const op of own) assert.ok((c[op] || 0) <= 1, `${op} read ${c[op]} times`);
+    assert.ok(!c.casecheck || !c.queuelist, "the list of queue items is the Queue screen's alone");
+  });
+}
