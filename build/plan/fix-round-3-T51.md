@@ -222,6 +222,8 @@ On the live copy: `op=reading&sha256=<the project-less photo's sha>` as the memb
 
 **Probe result (K4358, `fix-round-3-c17-probe.md`):** (a). `op=reading` for INFO-2026-0080's sha answers `found:false` to both roles (before any redaction); an earlier project-less photo is read, so project-lessness is not the cause. A second upload of the same bytes answers `existed:true` with a document; `readUploaded` (control-plane index.mjs:2349) returns it unread and `doneUpload` promotes it without a reading, discarding the first upload's. `control-plane` carries it (read when `existed:true` carries a document and no reading is held for the sha, through extraction's `readHeld`); the `membership` job is not opened.
 
+**Added at K4363:** wave 2 gains `record-core` (R87 `putFromParts`: a whole object made from held parts by the store's multipart upload, streamed; acquisition R96's past-memory arm calls it when present) and `control-plane` R118 (the door hands review R43 `sharedDraftsByProject` to project-roster's `projectList`). A PDF's title at capture stays `null` (acquisition answers HTML titles); the reading names it once read (reading-pipeline R34 via pdf-reader's `metadata.title`), so R54's one rule falls back to the file name until then.
+
 ## 9. After the round
 
 1. BOB merges each wave in the order above and runs the whole suite on the merged tranche before the next wave opens (never as a gate for the deploy, K4297 (1)).
