@@ -37,7 +37,7 @@ test("R82 (C3, K4303): a pre-flight of a case whose publish is refused CO_ATTEST
   assert.equal(pre.first && pre.first.reason, REFUSED, "a refusal stays in first");
   assert.equal(pre.ready, false);
   const step = pre.steps[2];
-  assert.deepEqual(step.not_co_attested, [{ capture: b, by: null, findings: [Q] }]);
+  assert.deepEqual(step.not_co_attested.map(({ capture, by, findings }) => ({ capture, by, findings })), [{ capture: b, by: null, findings: [Q] }]);
   assert.ok(!step.not_co_attested.some((x) => x.capture === a), "a co-attested capture is not listed");
   assert.deepEqual(step.self_attested, [], "none is stated as self-attested yet");
   assert.ok(pre.steps[0].stated, "the steps that need the act still state they were not reached");
@@ -56,7 +56,7 @@ test("R82 (C3, K4303): when another refusal comes first the captures are still k
   const { w, P, b } = setup();
   const noStatement = w.ca.publishPreflight(args(P, [Q], { statement: "" }));
   assert.equal(noStatement.first.reason, "NO_STATEMENT");
-  assert.deepEqual(noStatement.steps[2].not_co_attested, [{ capture: b, by: null, findings: [Q] }]);
+  assert.deepEqual(noStatement.steps[2].not_co_attested.map(({ capture, by, findings }) => ({ capture, by, findings })), [{ capture: b, by: null, findings: [Q] }]);
   const noRoles = w.ca.publishPreflight(args(P, [Q], { roles: null }));
   assert.equal(noRoles.first.reason, "NO_MEMBER_ROLE");
   assert.equal("not_co_attested" in noRoles.steps[2], false, "unknown roles: nothing listed");
@@ -92,4 +92,20 @@ test("R16 (C67, K4303) control: a finding that is a member of the case is cited;
   const both = w.publish(P, "alice", [Q, Q2], { tieAttested: true, selfAttested: [{ capture: b, reason: REASON }] });
   assert.equal(both.ok, true, JSON.stringify(both).slice(0, 300));
   assert.deepEqual(both.case_citations.map((x) => x.target), [Q, Q2, DOC]);
+});
+
+test("R82 (C40, K4365): each not_co_attested row carries the capture's own facts — after a late timestamp it is timestamp_late with late_words and the co-archive still missing; a capture with no attempt misses both and is not late (control)", () => {
+  const { w, P, b } = setup();
+  const row = () => w.ca.publishPreflight(args(P, [Q])).steps[2].not_co_attested.find((x) => x.capture === b);
+  const none = row();
+  assert.deepEqual([none.missing, none.timestamp_late, none.late, none.late_words, none.timestamp_at, none.co_archive],
+                   [["timestamp", "co_archive"], false, false, null, null, null]);
+  const at = "2026-09-28T00:05:00Z";
+  w.st.sql.exec(`INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at, by, outcome) VALUES (?, 1, 'timestamp',
+    'tsa.example', 1, ?, 'alice', ?)`, b, at, JSON.stringify({ late: true, kind: "timestamp", ok: true, at }));
+  const late = row();
+  assert.deepEqual([late.missing, late.timestamp_late, late.late, late.timestamp_at, late.co_archive, late.by, late.findings],
+                   [["co_archive"], true, true, at, null, null, [Q]]);
+  assert.equal(typeof late.late_words, "string");
+  assert.ok(late.late_words.includes(at));
 });

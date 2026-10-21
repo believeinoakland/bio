@@ -39,6 +39,8 @@ export function world() {
     current_state TEXT)`);
   /* record-core R37's `manifest` read contract (bundle_id, author, created, rowid), for R27's opener. */
   db.exec(`CREATE TABLE manifest (bundle_id TEXT NOT NULL, snap_key TEXT NOT NULL, author TEXT, created TEXT NOT NULL)`);
+  /* record-core R37's `files` read contract (bundle_id, path, content), for R42's question count. */
+  db.exec(`CREATE TABLE files (bundle_id TEXT NOT NULL, path TEXT NOT NULL, content TEXT, PRIMARY KEY (bundle_id, path))`);
   const declared = [];
   /* record-core's settings (its R25), for R24's active profiles: `jurisdiction_profiles` a test sets directly. */
   const settings = { jurisdiction_profiles: ["test-port-ellery"] };
@@ -77,6 +79,13 @@ export function world() {
     /* A project with its recorded `current_state` (record-core R37), `forming` unless a test names another or null. */
     project(id, title = `Project ${id}`, state = "forming") {
       w.bundle(id, "project", title, null, state); m.reindexProjectSight(id); return id;
+    },
+    /* R42: a project's document, citing each of `cites` (a target marked `severed` when given as `[id, "severed"]`). */
+    doc(id, ...cites) {
+      const refs = cites.map((c) => { const [t, status] = [].concat(c);
+        return `  - rel: cites\n    target: ${t}${status ? `\n    status: ${status}` : ""}`; }).join("\n");
+      db.prepare(`INSERT OR REPLACE INTO files (bundle_id, path, content) VALUES (?, 'bundle.md', ?)`)
+        .run(id, `---\n${refs ? `references:\n${refs}\n` : ""}---\nbody`);
     },
     /* A manifest entry of `id` written by `author` at `created` (record-core R37), in the order recorded. */
     entry(id, author, created = new Date().toISOString()) {

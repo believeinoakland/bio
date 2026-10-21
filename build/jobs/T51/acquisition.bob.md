@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J6
+**Read** · handled J9
 
 ## B1 · START
 
@@ -77,3 +77,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B7 · ANSWER · re J6
 
 ANSWER J6 (K4363). Merge tranche/T51 first. (1) Past memory: record-core R87 (new) is evidenceStore().putFromParts(digest, partDigests) -> {ok, size} | refusal: the store's own multipart upload under the digest known at the end, streaming held parts, one part in memory. RECORD-CORE runs in wave 2. Build (a) now; past MULTIPART_KEEP_MAX keep the parts as today and, when the store answers putFromParts (feature-detect it), call it after the answer (ctx.waitUntil / outside the door's bound), then the door's readHeld reads the whole (control-plane R117). Test the call path against a scripted double of putFromParts; name the past-memory arm 'met against a double, live at RECORD-CORE's merge' in COMPLETE. (2) PDF title: answer title: null for a PDF at capture; the reading names it once read (reading-pipeline R34 via pdf-reader metadata.title), so screens-intake R54's one rule falls back to the file name until then. No new edge. Your HTML title as planned.
+
+## B8 · CHANGE
+
+host-governor R29 (governorAdmit({host, peek:true}): answers admission or refusal and books nothing) is merged into tranche/T51 (K4367), with capture-sources R68 and capture R77/R100. Merge tranche/T51 into your branch before finishing, and pass peek:true where the render path admits (acquisition/index.mjs ~912, your entry (c), R97), so one host visit books once.

@@ -1,6 +1,6 @@
 # file-scanner (T51)
 
-**Status** · session_0172oS2PZLHiPd6oiG9rpt9D · depth 2 · COMPLETE · handled B9
+**Status** · session_01ThvxTdnEuR6MHsy8ZcAz62 · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -100,3 +100,16 @@ COMPLETE. Entry FR-SCAN (K4182) applied; choice (a): ClamAV's own `freshclam` in
 - Tests: R34 x3 (refusal with reason + SIGNATURES_ABSENT; the image's updater runs freshclam for the official host alone with no agent set and keeps nothing on refusal; a set from the official path is loaded and used: EICAR found, clean clean, control with no set `not_scanned`), R6 x3 and the worker tests changed to the new path. Installed clamav here to run them: file-scanner 81 tests, 81 pass, 0 skipped. format 0, architecture 0, words 0, coverage 33/33 (R34 is named by tests but not yet in the file), ownership 0 failures; checks/run.mjs other modules' coverage reds are not mine.
 - Found in other modules: none. Live check after the redeploy is yours (the 27 files).
 - Size (session_0172oS2PZLHiPd6oiG9rpt9D): test runs 12, module lines 2606
+
+## J12 · COMPLETE
+
+COMPLETE for B12 (fix round 3, wave 1: C84, the scanner's part; R6 amended by BOB, R34 and R8, R12 unchanged), on job/T51/file-scanner (tranche/T51 merged in first; commit "file-scanner: POST /mirror?async=1 and a seeded signature updater").
+
+- Entries applied. (a) `POST /mirror?async=1` (`handler.mjs`, `clamav.mjs` `mirrorAsync`): answers 202 `{ok:true, started:true}` at once (503 `R2_NOT_CONFIGURED` first, as a plain run), the run handed to `deps.waitUntil` (the Worker's `ctx.waitUntil`, `worker.mjs`), its outcome (or the updater's `MIRROR_REFUSED:` reason) landing in `/version` `signatures`; a plain `POST /mirror`, `async=0` and the daily cron are unchanged. (b) Seeding: every run first hands the updater's run directory the currently mirrored files (`PUT /update/<run>/<file>`, read from R2), so `freshclam` patches with `.cdiff`s and fetches nothing whole; the image's `POST /update/<run>` now also answers `changed`, the files whose SHA-256 differs from those handed over, and the Worker brings back and re-stages only those (an unchanged file keeps its stored copy and key; a day with no change still leaves a complete set and a new `mirrored_at`). A seed the updater cannot take is dropped (the run directory removed) and the run goes on whole; a refusal still leaves the last good set. An updater answer with no `changed` list counts as everything changed.
+- IMAGE SOURCE CHANGED: `file-scanner/container/scanner.mjs` (route `PUT /update/<run>/<file>`, `changed`, header comment). Not published by me; BOB publishes it from the tranche tip at the redeploy. Its digest and `source_sha256` in `fleet-member.json`/`wrangler.jsonc` are bundler's concern at the cut (R36). `dist/file-scanner.bundled.mjs` and `.bundle.json` rebuilt with `npm run build` (this module's own artifact).
+- Requirement lines: BOB's R6 amendment was already on the tranche; I removed its `*(not yet met: T51)*` marker (now named by tests, see below). No new line proposed. Census ops: none (PLANE_OPS is empty; the module's ops are service-binding routes).
+- Tests (written first; the async test hung on the old code, the others failed): `test/mirror.test.mjs`: R6 async 202 at once and outcome (and a refusal's reason) in /version; R6 control: plain / `async=0` / `async=` run in the request, nothing deferred, async without a bucket 503; R6 a seeded run fetches nothing whole, patches only the changed file, re-stages only it, keeps the unchanged keys, with the control that an unseeded run fetches all three whole; R6 a refused seeded run leaves the last good set and an unseedable updater falls back to a whole fetch; R6 the image's updater (fake `freshclam`) runs in a directory holding the handed-over files and names `changed`, refuses a non-database file name; `test/worker.test.mjs`: through the bundle's `fetch(request, env, ctx)`, the async start answers 202 and hands the run to `ctx.waitUntil`. The R34 image test now expects `changed`.
+- Ran: `node --test --test-force-exit test/` in file-scanner (clamav installed here): 86 tests, 86 pass, 0 fail, 0 skipped. `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 175 (file-scanner only; 8 of 9 of its test files). format: 1 failure, `build/rulings.md:4346` (K4349), not mine and on the tranche; architecture 0 failures; coverage 34 of 34 ids named, 0 failures; words: no finding in file-scanner; ownership: 10 files, 1 listed failure, `build/requirements/file-scanner.md`, the one file B10/B11 accept at merge.
+- Deferred: none. Found in other modules: none. Generated artifact stale: none by me beyond the image digest (above).
+- Not proved here: whether the ClamAV host accepts Cloudflare egress (read after the redeploy). file-safety's `scanmirror` op and screens-settings' button are other jobs' halves, calling `/mirror?async=1`.
+- Size (session_01ThvxTdnEuR6MHsy8ZcAz62): test runs 8, module lines 2740

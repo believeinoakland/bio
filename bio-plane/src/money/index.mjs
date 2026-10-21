@@ -903,6 +903,38 @@ export class Money {
              inclusions: st.inclusions, exclusions: st.exclusions, proposals: props };
   }
 
+  /* R28 (T51; fix round 3, C8): the money sets whose `concerns` carry the id asked for (a project's among them), newest
+     first by creation, each in the set's shape, bounded and saying when it was cut. A set holds one id, so a trail
+     started in a project is listed under that project; a set with no `concerns` is listed under no id. An id that names
+     a bundle the viewer may not see (a project of R43's fence) is answered exactly as an id that names nothing. Writes
+     nothing. */
+  moneySets({ concerns, purpose, limit, after, viewer } = {}) {
+    if (!filled(concerns)) return refusal("NO_CONCERNS", localize("money.index.money_sets_are_listed_by", "money sets are listed by what they concern: name the id (moneysets&concerns=...)"));
+    if (purpose !== undefined && purpose !== null && purpose !== "" && !SET_PURPOSES.includes(purpose))
+      return refusal("UNKNOWN_PURPOSE", localize("money.index.a_money_sets_purpose_is_2", "a money set's purpose is {list}", { list: String(list(SET_PURPOSES)) }));
+    const n = Number.parseInt(limit ?? LIST_LIMIT_DEFAULT, 10);
+    const lim = Number.isFinite(n) ? Math.min(Math.max(n, 1), LIST_LIMIT_MAX) : LIST_LIMIT_DEFAULT;
+    const v = viewer ?? "";
+    const id = concerns.trim();
+    const held = !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id);
+    const rows = held && !this.#visibleBundle(id, v) ? []
+      : this.#rows(`SELECT * FROM money_sets WHERE concerns=? ${filled(purpose) ? "AND purpose=?" : ""} ORDER BY at DESC, rowid DESC`,
+          id, ...(filled(purpose) ? [purpose] : []));
+    let from = 0;
+    if (filled(after)) {
+      const i = rows.findIndex((r) => r.set_id === after);
+      if (i === -1) return refusal("BAD_AFTER", localize("money.index.after_names_no_set_in", "after names no set in this list; start again without it"));
+      from = i + 1;
+    }
+    const page = rows.slice(from, from + lim);
+    const truncated = from + lim < rows.length;
+    const sets = page.map((r) => {
+      const st = this.#setState(r.set_id, v);
+      return { set_id: r.set_id, purpose: r.purpose, label: r.label, concerns: r.concerns, inclusions: st.inclusions, exclusions: st.exclusions };
+    });
+    return { ok: true, sets, limit: lim, truncated, next: truncated ? page[page.length - 1].set_id : null };
+  }
+
   /* R25: one fact's trail row, read from the fact, the events it concerns and the set's other inclusions; writes
      nothing. Each part is what the source states, never filled from another fact, an event's participants or an
      entity's role, and never placed by the fact's period. */
@@ -1270,6 +1302,7 @@ export function moneyOps(money, url, body) {
     moneyreconcile: () => money.reconcile({ a: q("a"), b: q("b"), viewer: q("viewer") }),
     moneysetcreate: () => money.createSet(b),
     moneyset: () => money.readSet({ setId: q("id"), viewer: q("viewer") }),
+    moneysets: () => money.moneySets({ concerns: q("concerns"), purpose: q("purpose"), limit: q("limit"), after: q("after"), viewer: q("viewer") }),
     moneysetinclude: () => money.include(b),
     moneysetexclude: () => money.exclude(b),
     moneysetpropose: () => money.proposeInclusion(b),
@@ -1292,6 +1325,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["setId","factId","reason"], requires: ["setId","factId","reason"] } },
   reconcile: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.reconcile", "read: whether two money facts are consistent, or each dimension that differs; writes nothing"),
     fields: { accepts: ["a","b"], requires: ["a","b"] } },
+  moneysets: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.moneysets", "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing"),
+    fields: { accepts: ["concerns","purpose","limit","after"], requires: ["concerns"] } },
   committedagainstpaid: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.committedagainstpaid", "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing"),
     fields: { accepts: ["contract","at"], requires: ["contract"] } },
   authoritychain: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("money.declared.authoritychain", "read: the chain of authorising events toward the event a fact concerns, bounded; writes nothing"),

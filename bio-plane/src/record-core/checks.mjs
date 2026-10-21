@@ -202,6 +202,24 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.35', where: at("allocIdOp", "is-allocid-input-present"),
     translation: localize('record-core.checks.allocid_year_required', 'A part of your team\'s Civicsmith asked for an id without a year, so nothing was allocated. {BUILD_FAULT}', { BUILD_FAULT: String(BUILD_FAULT) }),
   }),
+  /* New (T51, R87; fix round 3, C5; K4363): a whole object made from parts the store holds. The four refusals of
+     `putFromParts` take the next free numbers of C-102, after C-102.35. */
+  EVIDENCE_PARTS_MALFORMED: Object.freeze({
+    check: 'C-102.36', where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize('record-core.checks.evidence_parts_malformed', 'A part of your team\'s Civicsmith asked to keep a document whole without naming it and its parts as fingerprints, so nothing was kept. {BUILD_FAULT}', { BUILD_FAULT: String(BUILD_FAULT) }),
+  }),
+  EVIDENCE_PART_MISSING: Object.freeze({
+    check: 'C-102.37', where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize('record-core.checks.evidence_part_missing', 'One piece of a large document was not there when your team\'s Civicsmith went to put the document together, so the document was not kept whole and nothing was written. Capture it again.'),
+  }),
+  EVIDENCE_DIGEST_MISMATCH: Object.freeze({
+    check: 'C-102.38', where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize('record-core.checks.evidence_digest_mismatch', 'The pieces of a large document did not add up to the document that was meant, so it was not kept whole and nothing was written. Capture it again.'),
+  }),
+  EVIDENCE_STORE_REFUSED: Object.freeze({
+    check: 'C-102.39', where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize('record-core.checks.evidence_store_refused', 'The place where your team\'s Civicsmith keeps documents would not take a large document whole, so it was not kept and nothing was written. Try again; if it happens again, tell whoever hosts your team\'s Civicsmith.'),
+  }),
 });
 
 /* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection), MOVED from the catalogue
