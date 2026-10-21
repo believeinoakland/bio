@@ -229,3 +229,9 @@ Cause 1 (every op this round adds is accounted for) is not met from this module'
 3. Once those land on the tranche, `t33.test.mjs:189` should go green with no change here. Send a CHANGE and I will add a control for the five (the existing "one left out is seen" control already holds).
 
 **Entries not applied:** cause 1 (blocked, owners' rows). **Checks:** not re-run; no affordances file changed this round, so format, architecture, coverage, words and ownership stand as at J16.
+
+## J18 · QUESTION
+
+QUESTION (re B14, K4376). Nine ops have no sentence in the word list, so I hold each under its own key with a plain `localize` default (stand-ins, R62): `act.origins.does`, `act.inboxlist.does`, `act.transcriptions.does`, `act.progressions.does`, `act.remindersfor.does`, `act.moneysets.does`, `act.scanmirror.does`, `act.officeconfirm.does`, `act.captureseenin.does`. The defaults are in `bio-plane/src/affordances/act-help.mjs` (`T51_STANDIN_HELP`); the design's rows should replace them. Test t36 names them and asserts `hasWord` is false for each, so the test fails when a row lands and that test is then updated.
+
+One reads-list gap, for the design's decision: `act.contradictionflag.does` is in `words.json` but not in `words-reads.json` for this module. I hold it under the word-list key (`T51_LIST_ONLY_OPS`). If the design means it not to be held, I drop it and its test line.
