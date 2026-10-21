@@ -44,7 +44,7 @@ import { T49_RUNG_ABSENT, T49_NON_ACTS } from "./t49.mjs";
 /* R45, R47 (T50; DEC-300 (5)): T50's new ops, graded from their owners, and the four acts DEC-300 (5) weighs Reversible. */
 import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
 /* R48 (T51; DEC-340): the three reads the design's new screens add, stated absent as reads. */
-import { T51_NON_ACTS } from "./t51.mjs";
+import { T51_NON_ACTS, T51_RUNGS, T51_RUNG_ABSENT, T51_ACT_NON_ACTS } from "./t51.mjs";
 /* R49, R50 (T51 fix round; K4168): the owners' op declarations, taken into the tables above (`registerDeclaredOps`). */
 import { createDeclaredOps } from "./declared.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -640,6 +640,7 @@ const RUNGS_DATA = {
   ...T47_RUNGS,
   ...T48_RUNGS,
   ...T50_RUNGS,
+  ...T51_RUNGS,
 };
 
 
@@ -851,6 +852,7 @@ const RUNG_ABSENT_DATA = {
   ...T48_RUNG_ABSENT,
   ...T49_RUNG_ABSENT,
   ...T50_RUNG_ABSENT,
+  ...T51_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -1577,6 +1579,7 @@ const NON_ACTS_DATA = {
   ...T49_NON_ACTS,
   ...T50_NON_ACTS,
   ...T51_NON_ACTS,
+  ...T51_ACT_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its

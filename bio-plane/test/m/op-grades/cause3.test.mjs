@@ -10,9 +10,11 @@ import { collectDeclaredOps } from "./declared.mjs";
 
 const here = new URL("../../../../", import.meta.url).pathname;
 const owners = await collectDeclaredOps(here);
+/* the owners' declared rows, scripted until each owner has merged: `file-safety` R49, `entities` R64, `capture` R101 (descriptions word for word) */
 const DOUBLE = {
-  "file-safety": { scanmirror: { classes: ["admin", "member"], mutating: true, weight: "substrate", description: "double: an administrator starts a signature run" } },
-  entities: { officeconfirm: { classes: ["admin", "member"], mutating: true, weight: "reasoned", description: "double: an administrator confirms an office a member named" } },
+  "file-safety": { scanmirror: { classes: ["admin", "member"], mutating: true, weight: "substrate", description: NON_ACTS.scanmirror } },
+  entities: { officeconfirm: { classes: ["admin", "member"], mutating: true, weight: "reversible", description: NON_ACTS.officeconfirm } },
+  capture: { captureseenin: { classes: ["admin", "member"], mutating: true, weight: "observational", description: NON_ACTS.captureseenin } },
 };
 async function registered() {
   const m = await import(`../../../src/op-grades/index.mjs?cause3=${Math.random()}`);
@@ -33,21 +35,24 @@ test("C64 a member's entitycreate is admitted from the request screen and refuse
   assert.throws(() => { MEMBER_SCREEN_ACTS.entitycreate.push("people"); }, TypeError, "frozen");
 });
 
-test("C64 scanmirror is graded under the ground substrate and officeconfirm Reasoned, from their owners' declarations (a scripted double until the owners merge); control: other ops' grades are unchanged", async () => {
+test("C64 (K4379, K4380) scanmirror is graded under the ground substrate, officeconfirm Reversible and captureseenin under the ground observational, each with its NON_ACTS publication row that agrees with its owner's declaration (a scripted double until the owner has merged); control: other ops' grades are unchanged", async () => {
+  assert.equal(RUNG_ABSENT.scanmirror.ground, "substrate");
+  assert.equal(RUNGS.officeconfirm, "reversible");
+  assert.equal(RUNG_ABSENT.captureseenin.ground, "observational");
+  assert.equal(RUNGS.scanmirror, undefined, "an administrator's maintenance act has no rung");
+  assert.equal(RUNG_ABSENT.officeconfirm, undefined);
+  assert.equal(RUNGS.captureseenin, undefined);
+  for (const op of ["scanmirror", "officeconfirm", "captureseenin"]) {
+    assert.equal(typeof NON_ACTS[op], "string", op);
+    assert.equal(phoneOf(op), true, op);
+  }
   const m = await registered();
-  assert.equal(m.RUNG_ABSENT.scanmirror.ground, "substrate");
-  assert.equal(m.RUNGS.scanmirror, undefined, "an administrator's maintenance act has no rung");
-  assert.equal(m.RUNGS.officeconfirm, "reasoned");
-  assert.equal(m.RUNG_ABSENT.officeconfirm, undefined);
-  for (const op of ["scanmirror", "officeconfirm"]) assert.equal(typeof m.NON_ACTS[op] === "string" || m.NON_ACTS[op] === undefined, true, op);
-  assert.equal(m.phoneOf("scanmirror"), true);
-  assert.equal(m.phoneOf("officeconfirm"), true);
+  for (const op of ["scanmirror", "officeconfirm", "captureseenin"]) assert.equal(m.NON_ACTS[op], NON_ACTS[op], `${op}: the owner's row agrees (a disagreement refuses the registration)`);
   /* control: nothing else moved */
+  assert.equal(RUNGS.entitycreate, "reasoned");
   for (const op of ["entitycreate", "expertiseconfirm", "contradictionflag", "adminendorse"]) assert.equal(m.RUNGS[op], RUNGS[op], op);
   for (const [op, rung] of Object.entries({ ...RUNGS })) assert.equal(m.RUNGS[op], rung, `${op}: a hand row is unchanged`);
   for (const [op, row] of Object.entries({ ...RUNG_ABSENT })) assert.deepEqual(m.RUNG_ABSENT[op], row, `${op}: a hand row is unchanged`);
-  assert.equal(phoneOf("entitycreate"), true);
-  assert.ok(NON_ACTS.entitycreate);
 });
 
 test("B3 (money R28) moneysets, a read its owner declares beside moneyset, has a hand row that agrees with the owner's declaration (R49, R50; registration refuses a disagreement): a NON_ACTS read reason, no rung, no ground; control: moneyset's hand row is unchanged", async () => {
