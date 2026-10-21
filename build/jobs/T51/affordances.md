@@ -194,3 +194,20 @@ Its other tests pass. Those four are the consequence BOB foresaw in J18; I have 
 
 Other reds on the tranche, not this module (already at the tip before this job, not caused by it): the affordances suite shows 32 failing tests (33 at the start of this job; the R48 test now passes). The failures are the module-load `DECLARED_OP_DISAGREES: groupdescriptiondraft description` from op-grades/declared.mjs (words-unreviewed.json is stale: `setup-words/build.mjs --check` says so), and the miniflare/workerd startup failures in plane.test.mjs and its neighbours. None names affordances' ACT_HELP.
 `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage's six failures name agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry, screens-intake, none affordances; words: one testcopy failure in op-grades (t37.test.mjs:32), none affordances.
+
+## J16 · COMPLETE
+
+COMPLETE (re B12 · CHANGE K4258), affordances, commit 47a6215e96 on job/T51/affordances (merged tranche/T51 first, ddce873865).
+
+Entries applied: B12 · `strengthbarset` held under `act.strengthbarset.does` (added to `T51_DESIGN_OPS`); `strengthbar` held none, its key and its alias line removed. Test first, seen failing, then green (`B12 (T51, K4258; R48, R62)`, t36.test.mjs), controls seen: a text under `strengthbar` and a table without `strengthbarset` each depart from R48.
+Requirement lines: none names `strengthbar`, so none changed.
+Deferred: none in this module.
+Found in another module: op-declarations' ACT_HELP_ABSENT (REPORT J15): four of its tests go red until it moves `strengthbarset` out and grounds `strengthbar`; not edited here.
+
+Tests and checks:
+- `node --test test/m/affordances/*.test.mjs`: 282 tests, 250 pass, 32 fail. At the start of this job 33 failed; the R48 `ACT_HELP` test is now green. The 32 are the same as before (the groupdescriptiondraft DECLARED_OP_DISAGREES at load, and the workerd startup failures), none about affordances' table.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage has no affordances failure; words has no affordances finding (its one failure is op-grades' t37.test.mjs:32).
+- `node bio-plane/src/setup-words/build.mjs --check`: words-unreviewed.json stale (the expected note); no refusal naming affordances.
+- `node checks/ownership.mjs /home/user/bio affordances tranche/T51 job/T51/affordances`: 3 files (act-help.mjs, t36.test.mjs, this record), 0 failures.
+
+Size (session_01Wou66QFMgiLpLmx2dvGc3B): test runs 6, module lines 2777
