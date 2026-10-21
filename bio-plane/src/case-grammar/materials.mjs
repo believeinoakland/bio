@@ -10,7 +10,9 @@
  *                           `CATALOG_VERSION`), the versions the document was graded and checked under.
  *   materials:              one row per document or observation any member's chain reaches: `ref`, `kind` (`document`
  *                           or `observation`), `sha`, `text_sha`, `origin`, `archived_copy`, `included` (whether it
- *                           travels whole), `rests_under` (`load_bearing` or `supporting`).
+ *                           travels whole), `rests_under` (`load_bearing` or `supporting`),
+ *                           `title` (fix round 4, C47; K4438: the capture's title, null when it has none or for an
+ *                           observation; optional: a row written before it lacks it and reads null).
  *                           (T37; N757; DEC-180 (4); T38: N779, K2248; T39: N806, K2333) A `document` row may also
  *                           state `obscured_copy` and `obscured_label`: the material travels as its copy, never whole:
  *                           a photo's (nothing of the original but its pixels, its marked areas, if any, covered), or
@@ -91,6 +93,11 @@ export const MATERIAL_ATTESTATION_FIELDS = Object.freeze(["ref", "by_kind", "by"
 export const MATERIAL_KINDS = Object.freeze(["document", "observation"]);
 export const MATERIAL_RESTS_UNDER = Object.freeze(["load_bearing", "supporting"]);
 export const ATTESTATION_BY_KINDS = Object.freeze(["member", "co_attestation", "project", "group"]);
+/** R12 (fix round 4, C47; K4438): the optional flat field after `rests_under`, the document's title as its capture holds
+ *  it, so `public-read` names an entry by it without reading the register at read time (its R10, R14). Written only when
+ *  the row is handed a `title` (a sentence, else null: the capture has none, or an observation), so a writer that does not
+ *  know it yet, and every row written before it, is written and read exactly as before: absent reads null. */
+export const MATERIAL_TITLE_FIELD = "title";
 /** R12 (T37; N757): the two flat fields a `document` row carried as its copy adds, after `rests_under`, in order. */
 export const MATERIAL_OBSCURED_FIELDS = Object.freeze(["obscured_copy", "obscured_label"]);
 /** R12 (T40; N798; DEC-185 (1); K2394): the optional flat field after them, whether the copy has marked areas covered;
@@ -123,6 +130,8 @@ const obscuredSpelled = (o) => (o && typeof o === "object" && !Array.isArray(o)
       obscured_label: typeof o.label === "string" && o.label.trim() ? o.label : null,
       ...(typeof o.marked === "boolean" ? { [MATERIAL_OBSCURED_MARKED_FIELD]: o.marked } : {}),
       ...(o.kind !== undefined ? { [MATERIAL_OBSCURED_KIND_FIELD]: oneOf(o.kind, MATERIAL_OBSCURED_KINDS) } : {}) } : null);
+const titleOf = (r) => { try { return typeof r.title === "string" && r.title.trim() ? r.title : null; } catch { return null; } };
+const titled = (r) => { try { return r.title !== undefined; } catch { return false; } };
 /* T40: `obscured_marked` (above) only when the row is handed `marked` as a boolean; T47 (R31): `obscured_kind` only when
    it is handed a `kind`, any value but `photo` or `document` written null. */
 const materialRow = (r) => {
@@ -130,7 +139,8 @@ const materialRow = (r) => {
   const obscured = kind === "document" ? obscuredOf(r.obscured) : null;
   return { ref: r.ref ?? null, kind, sha: r.sha ?? null, text_sha: r.text_sha ?? null, origin: r.origin ?? null,
            archived_copy: r.archived_copy ?? null, included: !obscured && r.included === true,
-           rests_under: oneOf(r.rests_under, MATERIAL_RESTS_UNDER), ...obscured };
+           rests_under: oneOf(r.rests_under, MATERIAL_RESTS_UNDER),
+           ...(titled(r) ? { [MATERIAL_TITLE_FIELD]: titleOf(r) } : {}), ...obscured };
 };
 /* An attestation row as written, each kind's rule applied whatever it is handed. */
 const attestationRow = (r) => {
@@ -145,14 +155,15 @@ const attestationRow = (r) => {
 };
 
 /** R12 (K1317): the `materials:` block's lines, from `[{ref, kind, sha, text_sha, origin, archived_copy, included,
- *  rests_under, obscured?}]`, in the order given; `materials: []` when there are none. A `document` row handed
+ *  rests_under, title?, obscured?}]`, in the order given; `materials: []` when there are none. A `document` row handed
  *  `obscured: {copy, label, marked?, kind?}` adds `obscured_copy` and `obscured_label` (and `obscured_marked`, then R31's
  *  `obscured_kind`) after `rests_under` and is written `included: false`; every other row is written byte for byte as
  *  before T37. */
 export function materialsLines(rows) {
   const written = objects(rows).map(materialRow);
   if (!written.length) return ["materials: []"];
-  return ["materials:", ...written.flatMap((r) => [...MATERIAL_FIELDS, ...("obscured_copy" in r ? MATERIAL_OBSCURED_FIELDS : []),
+  return ["materials:", ...written.flatMap((r) => [...MATERIAL_FIELDS, ...(MATERIAL_TITLE_FIELD in r ? [MATERIAL_TITLE_FIELD] : []),
+    ...("obscured_copy" in r ? MATERIAL_OBSCURED_FIELDS : []),
     ...(MATERIAL_OBSCURED_MARKED_FIELD in r ? [MATERIAL_OBSCURED_MARKED_FIELD] : []),
     ...(MATERIAL_OBSCURED_KIND_FIELD in r ? [MATERIAL_OBSCURED_KIND_FIELD] : [])]
     .map((f, i) => `${i ? "   " : "  -"} ${f}: ${scalar(r[f])}`))];
@@ -173,7 +184,7 @@ export function materialBlockLines(given) {
 }
 
 /** R12: the two blocks read back from a `/6` document's front matter, in the document's order: `{materials: [{ref,
- *  kind, sha, text_sha, origin, archived_copy, included, rests_under, obscured}], attestations: [{ref, by_kind, by, level, at,
+ *  kind, sha, text_sha, origin, archived_copy, included, rests_under, title, obscured}], attestations: [{ref, by_kind, by, level, at,
  *  signature, recorded_in}]}`; a block the document does not carry answers null, and a document carrying neither (or
  *  any other format) answers null. `included` reads true only when the bytes say true. `obscured` is `{copy, label, marked,
  *  kind}` for a `document` row stating either flat field, else null (T37); a copy not stated reads null, undetermined, a
@@ -188,7 +199,7 @@ export function materialsOf(fm) {
     return {
       materials: has("materials")
         ? objects(d.materials).map((r) => ({ ...read(r, MATERIAL_FIELDS), included: bool(r.included) === true,
-                                             obscured: obscuredRead(r) })) : null,
+                                             title: str(r[MATERIAL_TITLE_FIELD]), obscured: obscuredRead(r) })) : null,
       attestations: has("material_attestations") ? objects(d.material_attestations).map((r) => read(r, MATERIAL_ATTESTATION_FIELDS)) : null,
     };
   } catch {
