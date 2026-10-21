@@ -18,7 +18,7 @@ export const grouprules = {
   reads() {
     // the kinds of action a deadline may apply to (local-facts R18) and the captures the member can see, for the draft form
     return { rules: { op: "grouprules" }, roster: { op: "memberlist" }, fields: { op: "rulefields", query: { section: "deadlines" } },
-      docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+      docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
   },
 
   render(cs, view) {
@@ -33,12 +33,12 @@ export const grouprules = {
     const okv = (o) => (o && o.state === "ok" ? o.value : null);
     const roster = okv(data.roster) && Array.isArray(data.roster.value.members) ? data.roster.value.members : [];
     const today = new Date(typeof cs.now === "function" ? cs.now() : Date.now()).toISOString().slice(0, 10);
-    // who, by handle through the roster; the founder by hers, else `member.founder.unnamed`; a stamp the roster does not know, as given
+    // who, by handle through the roster, else by the kit's `memberName` (C94): the founder by hers or the unnamed word, a member with no
+    // handle or one the roster does not hold by the fallback word, never an id
     const who = (id) => {
       const x = String(id == null ? "" : id).replace(/^member:/, "");
-      if (x === "admin") { const f = roster.find((r) => r.founder === true || r.member_id === "admin"); return (f && f.handle) || T("member.founder.unnamed"); }
-      const m = roster.find((r) => r.member_id === x);
-      return m ? m.handle || x : x;
+      const m = roster.find((r) => r.member_id === x || (x === "admin" && r.founder === true));
+      return (m && m.handle) || cs.memberName(x);
     };
     const out = [cs.title(), `<p class="mk-small">${W(S + "sub1")} ${W(S + "sub2")}</p>`, `<p class="mk-note">${W(S + "note")} ${W(S + "note2")}</p>`];
 
@@ -163,9 +163,16 @@ export const grouprules = {
         const one = (id) => { const v = cs.value(id); return Array.isArray(v) ? String(v[0] || "") : String(v || ""); };
         const fact = one("gr-kind") === "fact";
         // the one name the member gives; the stored `rule` or `key` is derived from it (a letter first, then letters, digits and _)
+        // an empty box is refused naming it (C87): the box's own label, as plain text
+        const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+        const missing = (labelKey) => ({ refuse: "shell.field.needed", fills: { field: plain(cs.w(labelKey)) } });
         let slug = val("gr-name").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-        if (!slug) return { refuse: "screen.grouprules.name.help1" };
+        if (!slug) return missing("screen.grouprules.name.label");
         if (!/^[a-z]/.test(slug)) slug = "r_" + slug;
+        if (fact && !val("gr-statement")) return missing("screen.grouprules.statement.label");
+        if (!fact && !val("gr-amount")) return missing("screen.grouprules.amount.label");
+        if (!val("gr-cite")) return missing("screen.grouprules.cite.label");
+        if (!val("gr-eff")) return missing("screen.grouprules.eff.label");
         const entry = fact ? { key: slug, trigger: one("gr-shown"), statement: val("gr-statement") } : { rule: slug, applies_to: one("gr-app") };
         if (fact) { const bears = (cs.value("gr-bears") || []).map(String); if (bears.length) entry.applies_to = bears; }
         else {
@@ -191,6 +198,8 @@ export const grouprules = {
         if (one("gr-src") === "first" || !/^[0-9a-f]{64}$/.test(sha)) return { refuse: "screen.grouprules.src.refuse" };
         const norm = (t) => String(t || "").replace(/\s+/g, " ").trim();
         const want = norm(cs.value("gr-pass"));
+        if (!want) return missing("screen.grouprules.pass.label");
+        if (!val("gr-why")) return missing("screen.grouprules.why.label");
         const a = want ? await cs.call("reading", { query: { sha256: sha } }) : null;
         const r = a && a.result !== undefined ? a.result : a;
         const unit = r && Array.isArray(r.text_units) ? r.text_units.find((u) => u && u.extent && typeof u.extent === "object" && norm(u.text).includes(want)) : null;
@@ -210,7 +219,7 @@ export const grouprules = {
         const me = view.me || {};
         const by = a && a.label && a.label.asked_by ? String(a.label.asked_by).replace(/^member:/, "") : me.member;
         if (a && typeof a.text === "string") cs.fill("gr-statement", a.text);
-        cs.set("draft", { field: "statement", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : by, untested: !!(a && (a.untested || (a.label && a.label.untested))) });
+        cs.set("draft", { field: "statement", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : cs.memberName(by), untested: !!(a && (a.untested || (a.label && a.label.untested))) });
       } },
   ],
 };

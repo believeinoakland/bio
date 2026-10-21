@@ -70,6 +70,8 @@ ${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000
         const kinds = ["professional", "issue", "community", "catch-all", "other"].filter((k) => cs.value("gi-k-" + k) === true);
         const body = { kinds, visibility: cs.value("gi-v-public") === true ? "public" : "members" };
         const other = String(cs.value("gi-other") || "").trim(), focus = String(cs.value("gi-focus") || "").trim(), purpose = String(cs.value("gi-purpose") || "").trim();
+        // never saved empty (C87): with no kind ticked and nothing written, the first box to fill is named
+        if (!kinds.length && !other && !focus && !purpose) return { refuse: "shell.field.needed", fills: { field: String(cs.w("screen.group-identity.focus.field")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
         if (other) body.otherKind = other;
         if (focus) body.focus = focus;
         if (purpose) body.purpose = purpose;
@@ -89,7 +91,7 @@ ${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000
         const one = (p) => {
           if (!p || typeof p.text !== "string") return null;
           const by = p.label && p.label.asked_by ? String(p.label.asked_by).replace(/^member:/, "") : me.member;
-          return { askedBy: by === me.member && me.handle ? me.handle : by, untested: !!(p.untested || (a && a.untested)) };
+          return { askedBy: by === me.member && me.handle ? me.handle : cs.memberName(by), untested: !!(p.untested || (a && a.untested)) };
         };
         const draft = { focus: one(a && a.focus), purpose: one(a && a.purpose) };
         if (draft.focus) cs.fill("gi-focus", a.focus.text);

@@ -167,3 +167,24 @@ test("R60 control: with a profile active none of the six sentences is drawn, R19
   lacks(m, "screen.places.noprofile.says", { state: "Nevada" });
   assert.equal(rulesRef(m).length, 1);
 });
+
+/* ---- T51 fix round 2: C87, C94 ---- */
+
+test("R46 C87: Add a court with its name empty sends nothing and names the box; filled, it sends (control)", async () => {
+  const a = await open("places", { me: ADMIN, table: placesTable() });
+  const r = await a.press("entitycreate", { data: { court: "1" }, values: { "pl-court": "   " } });
+  assert.deepEqual(r.sent, []);
+  assert.equal(a.refused.text, said("shell.field.needed", { field: said("court.add.name") }), "the box is named: " + (a.refused && a.refused.text));
+  assert.equal((await a.press("entitycreate", { data: { court: "1" }, values: { "pl-court": "Berkeley Housing Court" } })).sent.filter((x) => x.op === "entitycreate").length, 1);
+});
+
+test("R46 C94: a court a member added names that member by memberName: the handle where it differs from the id, the fallback word where the member has none, never an id", async () => {
+  const roster = [{ member_id: "m-7", handle: "luisa", role: "member", status: "active", capabilities: [], expertise: [] }, { member_id: "m-9", handle: null, role: "member", status: "invited", capabilities: [], expertise: [] }];
+  const courts = [{ entity_id: "ENT-0201", kind: "body", forum_kind: "court", label: "Court One", note: "n", declared_by: "member:m-7", at: "2026-10-09T00:00:00Z" }, { entity_id: "ENT-0202", kind: "body", forum_kind: "court", label: "Court Two", note: "n", declared_by: "member:m-9", at: "2026-10-09T00:00:00Z" }];
+  const table = placesTable({ memberlist: env({ members: roster }), entitieskind: (q) => q.kind === "body" ? env({ ok: true, kind: "body", entities: courts, count: 2, limit: 500, truncated: false, next: null }) : env({ ok: true, kind: "office", entities: [], count: 0, limit: 500, truncated: false, next: null }) });
+  const a = await open("places", { me: ADMIN, table });
+  const items = all(all(a.tree, (e) => e.attrs["data-list"] === "courts")[0], (e) => e.tag === "li").map((e) => textOf(e));
+  assert.ok(items[0].includes(said("screen.places.court.added", { name: "luisa", date: day("2026-10-09T00:00:00Z") })), items[0]);
+  assert.ok(items[1].includes(said("screen.places.court.added", { name: said("shell.card.member"), date: day("2026-10-09T00:00:00Z") })), items[1]);
+  assert.ok(!a.text.includes("m-7") && !a.text.includes("m-9"));
+});

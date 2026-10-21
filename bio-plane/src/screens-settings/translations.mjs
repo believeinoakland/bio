@@ -74,7 +74,7 @@ export const translations = {
           const drafts = Array.isArray(x.drafts) ? x.drafts : [];
           const p = [];
           // the stored drafts, labeled machine work, each one to keep as drafted or corrected
-          if (drafts.length) p.push(`<fieldset><legend>${W(S + "drafts")}</legend>${drafts.map((d, i) => `<input type="radio" id="${fid}-d${i}" name="${fid}-d" data-draft="${E(d.id)}"><label for="${fid}-d${i}"><span class="mk-tag">${W(S + "draft.label", { handle: d.asked_by_name || String(d.asked_by || "").replace(/^member:/, "") })}</span> <span class="rec">${E(d.text)}</span></label>`).join("")}</fieldset>`);
+          if (drafts.length) p.push(`<fieldset><legend>${W(S + "drafts")}</legend>${drafts.map((d, i) => `<input type="radio" id="${fid}-d${i}" name="${fid}-d" data-draft="${E(d.id)}"><label for="${fid}-d${i}"><span class="mk-tag">${W(S + "draft.label", { handle: d.asked_by_name || cs.memberName(String(d.asked_by || "").replace(/^member:/, "")) })}</span> <span class="rec">${E(d.text)}</span></label>`).join("")}</fieldset>`);
           const adopt = cs.act("translationadopt", { data: { key: k } });
           if (adopt) p.push(`${cs.field(fid, S + "text.field", { help: drafts.length ? S + "text.help.draft" : S + "text.help", rec: true, max: 2000, value: x.text || "", autocomplete: "off" })}${adopt}`);
           if (x.state === "awaiting" && x.protected) {
@@ -132,7 +132,7 @@ export const translations = {
         if (a && typeof a.english === "string") {
           const me = view.me || {};
           const by = a.label && a.label.asked_by ? String(a.label.asked_by).replace(/^member:/, "") : me.member;
-          cs.set("readings", { ...((view.ui && view.ui.readings) || {}), [a.key]: { english: a.english, askedBy: by === me.member && me.handle ? me.handle : by } });
+          cs.set("readings", { ...((view.ui && view.ui.readings) || {}), [a.key]: { english: a.english, askedBy: by === me.member && me.handle ? me.handle : cs.memberName(by) } });
         }
       } },
   ],

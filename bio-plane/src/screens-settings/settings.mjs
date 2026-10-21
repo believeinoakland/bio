@@ -16,13 +16,15 @@ export const settings = {
     // the design's link list (R32): each section is its icon and its screen's name as the reference, its purpose beneath as a box of
     // its own, so the two never run together
     const ICON = { account: "subject", connect: "machine", ties: "group", notes: "case", recovery: "signed", group: "group", "group-identity": "group", members: "subject", teamai: "machine",
-      places: "group", security: "status", updates: "changed", translations: "wizard", wizards: "wizard", bias: "flagged" };
+      places: "group", security: "status", updates: "changed", translations: "wizard", wizards: "wizard", bias: "flagged", watching: "clock", leads: "case" };
     const I = (n) => `<svg class="i" aria-hidden="true"><use href="/app/assets/icons.svg#i-${n}"/></svg>`;
+    // the design holds no purpose for the two doors added in the fix round (C91), so none is drawn for them
     const list = (ids) => `<div class="mk-links" data-list="settings">${ids.map((id) => `<a class="cs-ref" href="/app/${id}" data-nav data-screen="${id}">${I(ICON[id])}${W("screen." + id + ".name")}</a><span class="mk-small" data-purpose="${id}">${W("screen." + id + ".purpose")}</span>`).join("")}</div>`;
     const out = [cs.title(), cs.sec(S + "yours", list(["account", "connect", "ties", "notes", "recovery"]))];
     if (me.administer === true) out.push(cs.sec(S + "groups", list(["group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards"])));
     // the third section, for every member: the declared bias (DEC-387)
-    out.push(cs.sec(S + "everyone", list(["bias"])));
+    // C91: the doors to the watched addresses and to the leads, to a member or an administrator who may use them
+    out.push(cs.sec(S + "everyone", list(["bias", ...(cs.can("monitoring") ? ["watching"] : []), ...(cs.can("lead") ? ["leads"] : [])])));
     return out.join("");
   },
 

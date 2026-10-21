@@ -104,7 +104,7 @@ export const account = {
       if (!x || x === "not recorded") return null;
       if (x === "admin") { const f = roster.find((r) => r.founder === true || r.member_id === "admin"); return (f && f.handle) || T("member.founder.unnamed"); }
       const m = roster.find((r) => r.member_id === x);
-      return m ? m.handle || x : x;
+      return (m && m.handle) || cs.memberName(x);
     };
     out.push(cs.sec(S + "key.heading", cs.state(data.signers, (v) => {
       const mine = (v.signers || []).filter((s) => s.member_id === me.member && s.status === "active");
