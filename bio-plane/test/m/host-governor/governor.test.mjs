@@ -340,7 +340,7 @@ test("R15: governedFetch asks for the target's host; a refusal is answered with 
   const gov = recorder({ admitted: false, reason: "cooling_off", retry_in_ms: 1234, refusals: 2, last_refusal_status: 429 });
   const r = await governedFetch("https://Docs.Example.gov:8443/a?b=1", { userAgent: "UA/1", fetch, governor: gov });
   assert.deepEqual(r, { refusedByGovernor: true, reason: "cooling_off", retry_in_ms: 1234, last_refusal_status: 429 });
-  assert.deepEqual(gov.calls, [["admit", { host: "docs.example.gov:8443" }]]);
+  assert.deepEqual(gov.calls, [["admit", { host: "docs.example.gov:8443", maxWaitMs: 3000 }]]);
   assert.deepEqual(fetched, []);
   const appetite = await governedFetch("https://a.example/", { fetch, governor: recorder({ admitted: false, reason: "appetite", retry_in_ms: 500 }) });
   assert.deepEqual(appetite, { refusedByGovernor: true, reason: "appetite", retry_in_ms: 500, last_refusal_status: null });
@@ -366,7 +366,7 @@ test("R16: admitted, it waits wait_ms, fetches once following redirects with the
   assert.deepEqual(Object.keys(r), ["res"]);
   assert.deepEqual(slept, [850]);
   assert.deepEqual(fetched, [["https://a.example/doc", { redirect: "follow", headers: { "user-agent": "CivicOS/1 (+https://x)" } }]]);
-  assert.deepEqual(gov.calls, [["admit", { host: "a.example" }], ["report", { host: "a.example", status: 429, retry_after_ms: 120_000 }]]);
+  assert.deepEqual(gov.calls, [["admit", { host: "a.example", maxWaitMs: 3000 }], ["report", { host: "a.example", status: 429, retry_after_ms: 120_000 }]]);
   // no agent supplied: none is composed here
   const bare = [];
   await governedFetch("https://a.example/", { fetch: async (u, i) => { bare.push(i); return response(200); }, governor: recorder({ admitted: true, wait_ms: 0 }), sleep: async () => { throw new Error("no wait asked"); } });
