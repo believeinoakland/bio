@@ -754,7 +754,7 @@ export class Doorbell {
     const from = after ? keyOf(after, 2) : ["", ""];
     if (!from) return badCursor();
     const found = this.#rows(
-      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha FROM inbox
+      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha, file_name, media_type FROM inbox
         WHERE pseudonym = ? AND (received, knock_id) > (?, ?) ORDER BY received, knock_id LIMIT ?`, pseudonym, ...from, cap + 1);
     const knocks = found.slice(0, cap), truncated = found.length > cap, last = knocks[knocks.length - 1];
     return { ok: true, pseudonym, continuity: word("doorbell.continuity"), knocks, count: knocks.length,
@@ -803,6 +803,8 @@ export function doorbellOps(d, url, body) {
 export const DECLARED_OPS = Object.freeze({
   knock: { classes: null, mutating: true, weight: "credential", description: localize("doorbell.declared.knock", "an unauthenticated request to be let in"),
     fields: { accepts: ["content","contentB64","note","contact","knockerSecret","generateSecret","fileName","mediaType"], requires: [] } },
+  inboxlist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("doorbell.declared.inboxlist", "read: the knocks in the inbox, newest first, bounded and paged, sortable by received time, status, secret or project; never a contact in a pulled document; writes nothing"),
+    fields: { accepts: ["status","sort","dir","limit","after"], requires: [] } },
   inboxget: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("doorbell.declared.inboxget", "read: one knock in the inbox, keyed by knock id; writes nothing"),
     fields: { accepts: ["id"], requires: ["id"] } },
   doorbelltally: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.doorbelltally", "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing"),

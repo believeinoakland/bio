@@ -1473,8 +1473,19 @@ export class QueueProducers {
     /* R49: the sight, titles and homes of the targets and holders the notices name, read at once */
     seen.prefetch(list.map((n) => n && n.target));
     this.#titlesOf(list.flatMap((n) => (n ? [n.target, n.holder] : []))); this.#caseRows(list.map((n) => n && n.holder), viewer);
+    /* R52 (C69): one item per (holder, target, newer version), standing where the first stood, the least notice id surviving (so the
+       same one stands at every read) and its basis naming every notice it stands for. A notice whose newer version the viewer cannot
+       see has no version to key on and stays its own matter. */
+    const matterOf = (n) => (n.newer_capture ?? n.newer_bundle)
+      ? `${n.holder}\u0000${n.target ?? ""}\u0000${n.newer_capture ?? n.newer_bundle}` : `notice\u0000${n.notice}`;
+    const standing = new Map();
     for (const n of list) {
       if (!n || typeof n.notice !== "string" || !n.notice) continue;
+      const k = matterOf(n), g = standing.get(k);
+      if (!g) standing.set(k, { first: n, notices: [n.notice] });
+      else { g.notices.push(n.notice); if (n.notice < g.first.notice) g.first = n; }
+    }
+    for (const { first: n, notices } of standing.values()) {
       const raisedMs = Date.parse(n.raised_at ?? "");
       /* the pinned document's title only where this viewer may see it (R11); else the sentence for a target with no title */
       const titleOfTarget = seen(n.target) === null ? null : this.#titleOf(n.target);
@@ -1501,7 +1512,7 @@ export class QueueProducers {
                                   affects ? say("queue.newer-capture-affects-reference.detail.affects", { affects }) : ""),
                    detail_key: "queue.newer-capture-affects-reference.detail" };
         })(),
-        basis: { source: "reevaluation.notices", notice: n.notice, holder: n.holder, target: n.target ?? null,
+        basis: { source: "reevaluation.notices", notice: n.notice, notices: [...new Set(notices)].sort(), holder: n.holder, target: n.target ?? null,
                  grade: n.grade ?? null, affects: n.affects ?? null, raised_at: n.raised_at ?? null,
                  bound: { limit: page.limit ?? QueueProducers.QUEUE_NOTICES_MAX, truncated: page.truncated === true },
                  detail: localize("queue-producers.index.a_notice_is_reevaluations_its", "a notice is reevaluation's (its R14): raised when a newer capture of what a reference is pinned to is graded affected or undetermined, never for A or B. It is read here, never raised, and it closes only by the holder's adoption or keeping (its R15).") },

@@ -1902,6 +1902,20 @@ async function askUpdater(deps, path, init) {
     return { ok: false, code: "UPDATER_UNAVAILABLE" };
   }
 }
+async function seedUpdater(deps, run, previous) {
+  for (const [name, f] of Object.entries(previous.files || {})) {
+    const obj = await deps.bucket.get(f.key);
+    if (!obj) return false;
+    let r;
+    try {
+      r = await deps.updater(`/update/${run}/${name}`, { method: "PUT", body: obj.body, duplex: "half" });
+    } catch {
+      return false;
+    }
+    if (!r.ok) return false;
+  }
+  return true;
+}
 async function runMirror(deps) {
   const now = deps.now();
   const previous = await readJson(deps.bucket, CURRENT);
@@ -1910,12 +1924,19 @@ async function runMirror(deps) {
   const files = {};
   let error = null;
   try {
+    if (previous && !await seedUpdater(deps, run, previous)) await askUpdater(deps, `/update/${run}`, { method: "DELETE" });
     const got = await askUpdater(deps, `/update/${run}`, { method: "POST" });
     if (!got.ok || !Array.isArray(got.files)) {
       throw new Error(got.code === "MIRROR_REFUSED" ? `MIRROR_REFUSED:${String(got.detail || "no reason given").slice(0, 300)}` : "UPDATER_UNAVAILABLE");
     }
     try {
+      const changed = new Set(Array.isArray(got.changed) ? got.changed : got.files);
       for (const name of got.files) {
+        const held = previous && previous.files && previous.files[name];
+        if (!changed.has(name) && held) {
+          files[name] = held;
+          continue;
+        }
         let r;
         try {
           r = await deps.updater(`/update/${run}/${name}`);
@@ -1968,6 +1989,13 @@ async function runMirror(deps) {
     const last = previous ? signaturesOf(previous) : null;
     return { ok: false, versions: last, published: previous ? previous.published : null, error };
   }
+}
+async function mirrorAsync(deps) {
+  if (!deps.bucket) return reply(503, { ok: false, code: "R2_NOT_CONFIGURED" });
+  const run = runMirror(deps).catch(() => {
+  });
+  if (typeof deps.waitUntil === "function") deps.waitUntil(run);
+  return reply(202, { ok: true, started: true });
 }
 async function mirror(deps) {
   if (!deps.bucket) return reply(503, { ok: false, code: "R2_NOT_CONFIGURED" });
@@ -4382,10 +4410,10 @@ var POSTS = {
   "/provider/test": providerTest
 };
 async function handle(request, deps) {
-  const { pathname } = new URL(request.url);
+  const { pathname, searchParams } = new URL(request.url);
   if (request.method === "GET" && pathname === "/version") return version(deps);
   if (request.method === "GET" && pathname === "/providers") return providersList();
-  if (request.method === "POST" && pathname === "/mirror") return mirror(deps);
+  if (request.method === "POST" && pathname === "/mirror") return searchParams.get("async") === "1" ? mirrorAsync(deps) : mirror(deps);
   const route = request.method === "POST" && Object.hasOwn(POSTS, pathname) ? POSTS[pathname] : null;
   if (!route) return UNKNOWN();
   let body = null;
@@ -4431,7 +4459,7 @@ async function socketConnect(address, options) {
   const { connect } = await import("cloudflare:sockets");
   return connect(address, options);
 }
-function depsOf(env) {
+function depsOf(env, ctx) {
   return {
     bucket: env.CAPTURES || null,
     scanner: container(env.SCANNER, "file-scanner"),
@@ -4441,17 +4469,18 @@ function depsOf(env) {
     connect: socketConnect,
     vpc: env.SECURITY_VPC || null,
     now: () => Date.now(),
-    version: env.VERSION
+    version: env.VERSION,
+    waitUntil: ctx && typeof ctx.waitUntil === "function" ? (p) => ctx.waitUntil(p) : null
   };
 }
 var worker_default = {
   // installer R39: the member's limits, stated in the bundle a release signs.
   limits: MEMBER_LIMITS_STATEMENT,
-  fetch(request, env) {
-    return handle(request, depsOf(env));
+  fetch(request, env, ctx) {
+    return handle(request, depsOf(env, ctx));
   },
   scheduled(event, env, ctx) {
-    ctx.waitUntil(runMirror(depsOf(env)));
+    ctx.waitUntil(runMirror(depsOf(env, ctx)));
   }
 };
 export {

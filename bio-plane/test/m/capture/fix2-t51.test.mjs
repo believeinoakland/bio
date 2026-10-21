@@ -371,12 +371,11 @@ function wholeWorld() {
 
 test("R77 (K4328; C10): a held row, the picker's and the whole read's, states whole: true when an object is held under its fingerprint, false when none is (a copy held in parts only), null where it cannot be said (no capture, no evidence store, a head that fails); each distinct fingerprint is asked once", async () => {
   const w = wholeWorld();
-  for (const fields of [undefined, "picker"]) {
-    const r = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, fields });
-    assert.deepEqual(r.held.map((x) => [x.bundle_id, x.whole]), [["INFO-1", true], ["INFO-2", false], ["INFO-3", false], ["INFO-4", null]], String(fields));
-  }
+  /* R77 (fix round 3; C14): the picker's `whole` is the register's (fix3b-t51.test.mjs); the full row's is the store's */
+  const r = await w.c.heldCaptures({ viewer: "class:admin", now: NOW });
+  assert.deepEqual(r.held.map((x) => [x.bundle_id, x.whole]), [["INFO-1", true], ["INFO-2", false], ["INFO-3", false], ["INFO-4", null]]);
   const heads = w.b.calls.filter((x) => x[0] === "head").map((x) => x[1]);
-  assert.equal(heads.length, 6, "three fingerprints per read, none twice");
+  assert.equal(heads.length, 3, "three fingerprints, none twice");
   assert.deepEqual([...new Set(heads)].sort(), [1, 2, 3].map((i) => `bio/captures/${H(String(i))}`).sort());
   /* no evidence store: undetermined, never false */
   const none = fresh();
@@ -386,7 +385,7 @@ test("R77 (K4328; C10): a held row, the picker's and the whole read's, states wh
   /* a head that fails reads null, with the list still answered */
   const bad = wholeWorld();
   bad.b.head = async () => { throw new Error("down"); };
-  const br = await bad.c.heldCaptures({ viewer: "class:admin", now: NOW, fields: "picker" });
+  const br = await bad.c.heldCaptures({ viewer: "class:admin", now: NOW });
   assert.deepEqual(br.held.map((x) => x.whole), [null, null, null, null]);
   /* control: an empty page asks the store nothing */
   const calls = w.b.calls.length;

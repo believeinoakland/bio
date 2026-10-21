@@ -132,6 +132,19 @@ async function askUpdater(deps, path, init) {
   } catch { return { ok: false, code: 'UPDATER_UNAVAILABLE' }; }
 }
 
+/** R6: the mirrored set handed to the updater's fresh directory, so that `freshclam` brings each database up to date
+ *  and does not fetch it whole. Answers false when the updater did not take a file (the run then goes on unseeded). */
+async function seedUpdater(deps, run, previous) {
+  for (const [name, f] of Object.entries(previous.files || {})) {
+    const obj = await deps.bucket.get(f.key);
+    if (!obj) return false;
+    let r;
+    try { r = await deps.updater(`/update/${run}/${name}`, { method: 'PUT', body: obj.body, duplex: 'half' }); } catch { return false; }
+    if (!r.ok) return false;
+  }
+  return true;
+}
+
 /** One mirror run: `{ok, versions, published, error?}`. The databases come from ClamAV's own updater, `freshclam`, run
  *  in the signature-updater instance of the image under its own identity (R6, R34); the Worker opens no connection. */
 export async function runMirror(deps) {
@@ -142,12 +155,17 @@ export async function runMirror(deps) {
   const files = {};
   let error = null;
   try {
+    if (previous && !(await seedUpdater(deps, run, previous))) await askUpdater(deps, `/update/${run}`, { method: 'DELETE' });
     const got = await askUpdater(deps, `/update/${run}`, { method: 'POST' });
     if (!got.ok || !Array.isArray(got.files)) {
       throw new Error(got.code === 'MIRROR_REFUSED' ? `MIRROR_REFUSED:${String(got.detail || 'no reason given').slice(0, 300)}` : 'UPDATER_UNAVAILABLE');
     }
     try {
+      // The updater names what it changed from the set it was handed; an answer without that list changed everything.
+      const changed = new Set(Array.isArray(got.changed) ? got.changed : got.files);
       for (const name of got.files) {
+        const held = previous && previous.files && previous.files[name];
+        if (!changed.has(name) && held) { files[name] = held; continue; }
         let r;
         try { r = await deps.updater(`/update/${run}/${name}`); } catch { throw new Error(`UPDATER_UNAVAILABLE:${name}`); }
         if (r.status !== 200 || !r.body) throw new Error(`UPDATER_UNAVAILABLE:${name}`);
@@ -191,6 +209,14 @@ export async function runMirror(deps) {
     const last = previous ? signaturesOf(previous) : null;
     return { ok: false, versions: last, published: previous ? previous.published : null, error };
   }
+}
+
+/** POST /mirror?async=1 (R6): the run is begun and left to end after the answer, its outcome landing in /version. */
+export async function mirrorAsync(deps) {
+  if (!deps.bucket) return reply(503, { ok: false, code: 'R2_NOT_CONFIGURED' });
+  const run = runMirror(deps).catch(() => {});
+  if (typeof deps.waitUntil === 'function') deps.waitUntil(run);
+  return reply(202, { ok: true, started: true });
 }
 
 /** POST /mirror (R6). */

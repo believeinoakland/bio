@@ -55,31 +55,8 @@ test("R10 (C5) control: a single-part capture is unchanged (one object, no secon
   for (const p of r2.body.document.parts) assert.ok(w2.held(p.sha256));
 });
 
-test("R10 (C5): where the whole cannot be kept it is refused in words and nothing is filed: a part missing at read-back, a whole the store will not take", async () => {
-  const big = bin(16 * MIB + 5);
-  const partShas = [sha(big.subarray(0, 8 * MIB)), sha(big.subarray(8 * MIB, 16 * MIB)), sha(big.subarray(16 * MIB))];
-  /* a part that is gone when it is read back */
-  const w = world();
-  const get = w.b.get.bind(w.b);
-  w.b.get = async (k) => (k.endsWith(partShas[1]) ? null : get(k));
-  const r = await run(w, { "https://a.example/big": octet(big) }, { locator: "https://a.example/big" });
-  assert.equal(r.status, 502);
-  assert.equal(r.body.reason, "CAPTURE_NOT_KEPT");
-  assert.equal(typeof r.body.detail, "string");
-  assert.ok(r.body.detail.length > 20, "words, not a code alone");
-  assert.equal(r.body.document, undefined, "nothing is filed");
-  assert.equal(w.prov.receipts.length, 0, "no receipt");
-  assert.equal(w.held(sha(big)), false);
-  /* the store refuses the whole */
-  const w2 = world();
-  const put = w2.b.put.bind(w2.b);
-  w2.b.put = async (k, bytes, opts) => { if (k.endsWith(sha(big))) throw new Error("bucket refused"); return put(k, bytes, opts); };
-  const r2 = await run(w2, { "https://a.example/big": octet(big) }, { locator: "https://a.example/big" });
-  assert.deepEqual([r2.status, r2.body.reason, r2.body.document, w2.prov.receipts.length], [502, "CAPTURE_NOT_KEPT", undefined, 0]);
-});
-
-/* ---------- C12: the attestation is requested after the document is kept ---------- */
-import { ATTEST_WAIT_MS, RENDER_WAIT_MS } from "../../../src/acquisition/index.mjs";
+/* ---------- C12 (the attestation is requested after the document is kept; its tests are fix3-t51.test.mjs's, R20) ---------- */
+import { RENDER_WAIT_MS } from "../../../src/acquisition/index.mjs";
 import { RENDER_DEFAULTS } from "../../../src/render.mjs";
 import { text, page, HTML } from "./fixture.mjs";
 
@@ -90,49 +67,6 @@ const until = async (f, ms = 15000) => { const t0 = Date.now(); while (Date.now(
    after `ms` with `answer` */
 const slowAttest = (doc, ms, answer = () => new Response("down", { status: 503 })) => (u) =>
   (u === doc ? text("slow attestation") : async () => { await sleep(ms); return answer(); });
-
-test("R20 (C12): an attestation that takes longer than the wait does not hold the capture: the kept document is answered within the bound with the attempt pending, and the attempt is recorded when it ends", async () => {
-  assert.ok(ATTEST_WAIT_MS > 0 && ATTEST_WAIT_MS <= 10000);
-  const w = world();
-  const r = await run(w, slowAttest("https://a.example/x", 60), { locator: "https://a.example/x", coArchive: false }, { attestWaitMs: 10 });
-  const answeredAt = Date.now();
-  assert.equal(r.status, 200);
-  assert.equal(r.body.document.capture.sha256, sha("slow attestation"), "the document is kept");
-  assert.deepEqual(w.prov.receipts.map((x) => x.captureSha), [sha("slow attestation")], "the receipt is written");
-  assert.ok(r.body.document.attestation_attempts.length >= 1);
-  assert.ok(r.body.document.attestation_attempts.every((a) => a.pending === true && a.attempted === true && a.ok === false && typeof a.note === "string" && a.note.length > 10),
-            "each attempt in progress is recorded as pending, in the register's shape");
-  assert.ok(r.body.timings.stages.attest < 60, "the attest stage is the wait, not the attestation");
-  assert.equal(w.store.state.late.length, 0, "nothing recorded yet");
-  /* when it ends, its outcome is recorded against the capture */
-  const late = await until(() => w.store.state.late[0]);
-  assert.ok(late, "the attempt is recorded when it ends");
-  assert.equal(late.captureSha, sha("slow attestation"));
-  assert.ok(late.recordedAt - answeredAt >= 60, "the attestation ended after the answer: the answer did not wait for it");
-  assert.ok(late.attempts.length >= 1 && late.attempts.every((a) => typeof a.service === "string" && typeof a.attempted === "boolean" && typeof a.ok === "boolean")
-            && late.attempts.some((a) => a.attempted === true),
-            "each attempt is recorded in the register's shape, as it would have been in the document");
-  assert.ok(late.attempts.some((a) => a.ok === false && /503|failed/.test(a.note)), "a failure is recorded as an attempt, with its note");
-  assert.equal(w.store.state.events.filter((e) => e.kind === "authority-undetermined").length, 1, "the capture is not undone");
-});
-
-test("R20 (C12) controls: a fast attestation is recorded in the document as before and nothing is recorded late; a failing attest still files the document and records the failure", async () => {
-  const fast = world();
-  const f = await run(fast, (u) => (u === "https://a.example/x" ? text("fast") : new Error("tsa down")), { locator: "https://a.example/x" });
-  assert.equal(f.status, 200);
-  assert.ok(f.body.document.attestation_attempts.length >= 1);
-  assert.ok(f.body.document.attestation_attempts.every((a) => a.pending === undefined && a.ok === false && /tsa down/.test(a.note)), "the failure is the document's own attempt");
-  await sleep(60);
-  assert.equal(fast.store.state.late.length, 0, "nothing late");
-  /* a wait of zero is no wait for the document, but the attempt is still made and recorded: an authority that answers late
-     with a refusal is a failed attempt, and the capture stands */
-  const w = world();
-  const r = await run(w, slowAttest("https://a.example/x", 10, () => { throw new Error("tsa down"); }), { locator: "https://a.example/x", coArchive: false }, { attestWaitMs: 0 });
-  assert.equal(r.status, 200);
-  assert.equal(r.body.document.capture.sha256, sha("slow attestation"));
-  const late = await until(() => w.store.state.late[0]);
-  assert.ok(late && late.attempts.some((a) => a.ok === false && /tsa down|failed/.test(a.note)));
-});
 
 /* ---------- C13: the render is a continuation of the filed capture ---------- */
 const PAGE = "https://r.example/page";

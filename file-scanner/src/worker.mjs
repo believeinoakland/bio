@@ -51,22 +51,22 @@ async function socketConnect(address, options) {
   return connect(address, options);
 }
 
-function depsOf(env) {
+function depsOf(env, ctx) {
   return {
     bucket: env.CAPTURES || null, scanner: container(env.SCANNER, 'file-scanner'),
     updater: container(env.SCANNER, 'file-scanner-signature-updater', { [UPDATER_HEADER]: '1' }), renderer: container(env.RENDERER, 'safe-view'),
     fetch: (req) => fetch(req), connect: socketConnect, vpc: env.SECURITY_VPC || null, now: () => Date.now(),
-    version: env.VERSION,
+    version: env.VERSION, waitUntil: ctx && typeof ctx.waitUntil === 'function' ? (p) => ctx.waitUntil(p) : null,
   };
 }
 
 export default {
   // installer R39: the member's limits, stated in the bundle a release signs.
   limits: MEMBER_LIMITS_STATEMENT,
-  fetch(request, env) {
-    return handle(request, depsOf(env));
+  fetch(request, env, ctx) {
+    return handle(request, depsOf(env, ctx));
   },
   scheduled(event, env, ctx) {
-    ctx.waitUntil(runMirror(depsOf(env)));
+    ctx.waitUntil(runMirror(depsOf(env, ctx)));
   },
 };

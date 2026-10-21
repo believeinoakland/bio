@@ -1,5 +1,5 @@
 /* host-governor — the per-host request governor (layer 3; D-95). Requirements: build/requirements/host-governor.md
-   (R1–R28). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
+   (R1–R29). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
 
    Our APPETITE is a configured constant because it is ours. Their CAPACITY is discovered by being refused and
    recorded, the pattern capture_limits proved. The governor lives in the Durable Object because the object
@@ -85,6 +85,12 @@ export class HostGovernor {
     return r;
   }
 
+  /* R29: the state R2 would create for a host not yet met, held in memory only: a peek decides on it and writes none. */
+  #unmet(host, now) {
+    return { host, appetite_per_min: null, tokens: GOVERNOR.burstTokens, refilled_at: now, last_grant_at: 0,
+             cooloff_until: 0, refusals: 0, last_refusal_at: null, last_refusal_status: null };
+  }
+
   /** This module's table, at every boot, idempotent; and its purge declaration (R24), once: exempt, because a
    *  cool-off is a counterparty's refusal and a purged instance still honours it. Run by the host inside its boot. */
   migrate() {
@@ -107,18 +113,22 @@ export class HostGovernor {
       ?? GOVERNOR.defaultAppetitePerMin;
   }
 
-  /** R1–R6. Never throws on its own logic. */
+  /** R1–R6, R29. Never throws on its own logic. `{host, peek: true}` (the one option this op accepts besides `host`;
+   *  declared for the census, K4208) answers exactly as the booking would at this instant and writes nothing: no
+   *  state for a host not yet met (R2's full burst is answered), no token, no grant, no refusal counted. Only
+   *  `peek === true` peeks. */
   governorAdmit(q) {
     const host = hostOf(q);
     if (!host) return { admitted: false, reason: "no host named" };
+    const peek = q.peek === true;
     const now = this.now();
     const at = new Date(now).toISOString();
-    const r = this.#rowOrNew(host, now);
+    const r = peek ? (this.#row(host) ?? this.#unmet(host, now)) : this.#rowOrNew(host, now);
     const appetite = this.#appetite(r);
 
     /* R4, R22: a cool-off overrides the bucket entirely, whatever appetite is configured. */
     if (r.cooloff_until > now) {
-      this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`, at, host);
+      if (!peek) this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`, at, host);
       return { admitted: false, reason: "cooling_off", retry_in_ms: r.cooloff_until - now,
                refusals: r.refusals, last_refusal_status: r.last_refusal_status };
     }
@@ -128,8 +138,9 @@ export class HostGovernor {
     const tokens = Math.min(GOVERNOR.burstTokens, r.tokens + (Math.max(0, now - r.refilled_at) / 60_000) * appetite);
     if (tokens < 1) {
       const retryIn = Math.ceil(((1 - tokens) / appetite) * 60_000);
-      this.sql.exec(`UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
-        tokens, now, at, host);
+      if (!peek)
+        this.sql.exec(`UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+          tokens, now, at, host);
       return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
     }
 
@@ -140,9 +151,10 @@ export class HostGovernor {
     const gapWanted = (60_000 / appetite) * j;
     const sinceLast = now - (r.last_grant_at || 0);
     const wait = Math.max(0, Math.round(gapWanted - sinceLast));
-    this.sql.exec(
-      `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
-      tokens - 1, now, now + wait, at, host);
+    if (!peek)
+      this.sql.exec(
+        `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
+        tokens - 1, now, now + wait, at, host);
     return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
   }
 
