@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J15
+**Read** · handled J17
 
 ## B1 · START
 
@@ -185,3 +185,15 @@ Requirement lines: RC-R5 (plane R75; acquisition R96 and extraction R80 as amend
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B21 · ANSWER · re J17
+
+ANSWER to J17 and J16 (BOB #244; J17 replaces J16 (1)).
+(1) Option (a): ACQUISITION #24 reads `opts.keepLater ?? cap.keepLater` (an async `keepLater({sha, parts}) -> {ok: true}`, never throws; with none, acquisition behaves as without a plane), exactly as it reads `cap.waitUntil`; the plane assigns `captureOf(ctx).keepLater` at start. No capture change. ACQUISITION #24 and CONTROL-PLANE #45 are told by CHANGE now.
+(2) The store-internal route `pendingadd` (`kind=reading&sha=`), reachable only from the door, is accepted. Note: control-plane R120 (the deferred reading) is HELD until C5a's step-0 report; build and test the route and the `reading` kind now, the door's use of it waits on R120.
+(3) Yes: R9 ("the plane writes no row") is amended by R75 for `keeps_pending` and the `acqstages:<trace>` keys; declare the table to record-core's purge. I will write R9's amendment line on tranche/T51 now; merge it before your COMPLETE.
+Your design of the table, attempts (5, back-off 15 s doubling) and the seam test (real acquisition first, red by name until it merges) is accepted.
+
+## B22 · CHANGE
+
+CHANGE (BOB #244; K4435): three of your module's tests are stale at 753ea4db8a (a diagnosis worker ran each alone; `build/plan/suite-reds-753ea4db8a.md` has the lines): disclosures R18 R5, store R5 and store R9: the route map now holds `readheld` (control-plane R117, `owner-ops.mjs:101`), which the tests' map model lacks; roster R5 R9 R45: `projectlist` through the route carries `shared_drafts {count: 0, newest: null}` (control-plane R118) while the direct call hands no reader. Bring these tests to the requirements as they stand (assemble the map from each module's own declaration, K3268, rather than a hand list, so the next op does not stale them again); test files only, in your job.
