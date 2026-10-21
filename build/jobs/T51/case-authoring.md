@@ -208,4 +208,4 @@ QUESTION (B12, C3 and C67): two requirement lines are not written; my best readi
 - Users: `review` 73/73, `case-check` 34/34, `screens-publish` 179 pass, 0 fail (181 tests, 2 not run as pass), `plane` 279 of 280 (the one red above, pre-existing).
 - `checks/architecture.mjs case-authoring`: 0 failures. `checks/coverage.mjs case-authoring`: 54 of 54 live ids named, 0 failures. `checks/words.mjs` (inside `run.mjs`): 0 failures. `checks/ownership.mjs case-authoring tranche/T51 job/T51/case-authoring`: 0 failures (3 files). `checks/format.mjs`: 1 failure, `build/rulings.md`, not this job's.
 
-**Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2905** (`bio-plane/src/case-authoring/*.mjs`, all lines).
+**Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2889** (`bio-plane/src/case-authoring/*.mjs`, all lines).
