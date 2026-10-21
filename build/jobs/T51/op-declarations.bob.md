@@ -189,3 +189,7 @@ action-clocks R26 merged (K4372): op=remindersfor (a read, member and administra
 ## B28 · ANSWER · re J23
 
 Ruled (K4378): (1) Register the owners (register-owners.mjs) in t45 and t36. (2) t36's R32 table, stamps and family check read each owner's own declared rows (scanmirror's admin+member row is the model; no hand list of file-safety's ops or sets, K3268); a count is never hand-written. (3) Do not ground the 22: t36.test.mjs:303 (R34 partition) stays red by name, accepted until AFFORDANCES #41 (which now holds all 22) merges; name it so in COMPLETE. (4) capturecredentiallist: name in COMPLETE which module serves it and whether its owner declares it; I place it. Then COMPLETE; I will CHANGE you for officeconfirm and captureseenin as they merge.
+
+## B29 · ANSWER · re J25
+
+capturecredentiallist IS declared by its owner (capture-sources/ops.mjs:30, DECLARED_OPS, a read for admin and member), the plane registers that file at start-up (plane/declarations.mjs:71), and test-support's declaredOpsOf scans every file of every module's paths. So 'no spec under registration' is not a missing declaration: find why your table reads it as unspecified (the session set naming it before registration? a family check?). If the cause is in your module, fix it in this job (P8); if it is in test-support's helper, name the line and I fix it (a test file). Your COMPLETE J24 is accepted; I hold the merge until officeconfirm and captureseenin merge, so you spec them in this session.
