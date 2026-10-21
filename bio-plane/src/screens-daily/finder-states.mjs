@@ -139,12 +139,14 @@ export function finderStates() {
     prows.forEach(function (r) { docsIn[String(r.bundle_id || r.capture_sha || r.document || "")] = true; });
     const pdocs = Object.keys(docsIn).length;
     const passageRows = cs.sheet(prows.map(function (r) {
-      const id = String(r.bundle_id || r.document_id || "");
-      const t = typeof r.title === "string" && r.title.trim() ? r.title : r.document && typeof r.document.title === "string" ? r.document.title : "";
+      // R83: the row names its document, by the `document` the plane gives it (retrieval R92); one with no title by the kit's plain word, never its id.
+      const d = r.document && typeof r.document === "object" ? r.document : {};
+      const id = String(d.bundle_id || r.bundle_id || r.document_id || "");
+      const t = typeof d.title === "string" && d.title.trim() ? d.title : typeof r.title === "string" && r.title.trim() ? r.title : cs.w("shell.card.document");
       const ex = r.extent && typeof r.extent === "object" ? r.extent : {};
       const place = ex.passage !== undefined ? ex.passage : ex.paragraph;
       return cs.row(cs.mark("origin", "search"), '<span class="rec">' + (r.snippet ? excerpt(r.snippet) : "") + '</span><span class="meta">' + cs.w("find.row.kind.passage") + (r.grade ? " · " + cs.grade("capture", String(r.grade)) : "")
-        + (t ? " · " + cs.ref(id ? "document" : "document", id, t, []) : "") + (place !== undefined ? " · " + cs.w("screen.find-in.passage", { n: String(place) }) : "") + "</span>", "", "");
+        + (id ? " · " + cs.ref("document", id, t, []) : "") + (place !== undefined ? " · " + cs.w("screen.find-in.passage", { n: String(place) }) : "") + "</span>", "", "");
     }).join(""));
     const passagesSec = p && p.state === "ok" && ptotal > 0
       ? cs.sec("screen.finder.route.passages", '<p class="mk-small">' + (ptotal === 1 ? cs.w("screen.finder.route.passages.holds.one") : cs.w("screen.finder.route.passages.holds.other", { n: String(ptotal), m: String(Math.max(pdocs, 1)) })) + "</p>" + passageRows) : failedRoute(p);

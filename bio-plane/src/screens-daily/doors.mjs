@@ -13,7 +13,7 @@ export function doors() {
   // The reads: the held captures (the most `heldcaptures` pages in one answer) and the knocks (`inbox`).
   const reads = function () {
     return {
-      held: { op: "heldcaptures", query: { limit: "200" }, empty: none("held") },
+      held: { op: "heldcaptures", query: { limit: "200", fields: "picker" }, empty: none("held") },
       inbox: { op: "inbox", query: { limit: "200" }, empty: none("inbox", function (k) { return k && k.status === "new"; }) },
     };
   };

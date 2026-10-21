@@ -24774,20 +24774,6 @@
       "line": 1146
     },
     {
-      "id": "file-safety.index.no_signatures",
-      "en": "The file scanner has no signatures.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1025
-    },
-    {
-      "id": "file-safety.index.no_signatures_since",
-      "en": "The file scanner has had no signatures since {date}.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1023
-    },
-    {
       "id": "file-safety.index.no_tool_of_the_teams",
       "en": "No tool of the team's has this id.",
       "module": "file-safety",
@@ -24814,27 +24800,6 @@
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
       "line": 1115
-    },
-    {
-      "id": "file-safety.index.signatures_failed",
-      "en": "The last download of signatures did not finish.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1029
-    },
-    {
-      "id": "file-safety.index.signatures_not_fetched",
-      "en": "No download of signatures has finished yet.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1031
-    },
-    {
-      "id": "file-safety.index.signatures_refused",
-      "en": "The signature service refused the download (status {status}).",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1027
     },
     {
       "id": "file-safety.index.the_text_could_not_be",
@@ -42719,7 +42684,7 @@
       "en": "the capture's bytes are not held in the evidence store, so nothing was read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1350
+      "line": 1354
     },
     {
       "id": "reading-pipeline.index.decoded_glyphs",
@@ -42733,42 +42698,42 @@
       "en": "the document was not read as text ({why}), so no reading was attempted",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1508
+      "line": 1512
     },
     {
       "id": "reading-pipeline.index.entry_no_text",
       "en": "the {fmt} entry produced no text from these bytes",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1490
+      "line": 1494
     },
     {
       "id": "reading-pipeline.index.entry_not_read_bytes",
       "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1504
+      "line": 1508
     },
     {
       "id": "reading-pipeline.index.multipart",
       "en": "multipart",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1508
+      "line": 1512
     },
     {
       "id": "reading-pipeline.index.no_capture_digest",
       "en": "the document names no capture digest, so there are no bytes to read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1334
+      "line": 1338
     },
     {
       "id": "reading-pipeline.index.non_textual_large",
       "en": "non-textual or too large",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1508
+      "line": 1512
     },
     {
       "id": "reading-pipeline.index.pages_not_asked_request",
@@ -42789,7 +42754,7 @@
       "en": " — no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1378
+      "line": 1382
     },
     {
       "id": "reading-pipeline.index.reading_not_composed",

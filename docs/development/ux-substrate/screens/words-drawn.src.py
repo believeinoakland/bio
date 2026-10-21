@@ -6926,6 +6926,47 @@ W.append(dict(key='screen.document.contradict.other.help', en='A document your t
 W.append(dict(key='screen.document.contradict.why', en='How they disagree', protected=False, note='DEC-394: B441 3e: the reason field'))
 W.append(dict(key='screen.document.contradict.why.help', en='In your own words, up to 500 characters.', protected=False, note='DEC-394: B441 3e: help'))
 
+# DEC-396: B444 (K4323) item 1
+W.append(dict(key='file-safety.index.no_signatures', en='The file scanner has no signatures, so files are kept and shown but not scanned.', protected=False, note='DEC-396: B444 1: the line on setup step 7 (Security) and on Settings › Security when the built-in file scanner holds no signatures and no date is known: what is true of the scanner'))
+W.append(dict(key='file-safety.index.no_signatures_since', en='The file scanner has had no signatures since {date}, so files are kept and shown but not scanned.', protected=False, note='DEC-396: B444 1: the same line when a date is known: {date} the day it first could not scan for want of signatures'))
+W.append(dict(key='file-safety.index.signatures_refused', en="The signature service refused the download (status {status}). The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security: {status} the three-digit answer of the service; says what the administrator can do'))
+W.append(dict(key='file-safety.index.signatures_failed', en="The last download of signatures did not finish. The scanner tries again daily; an administrator can check that your team's Civicsmith can reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when a download was tried and broke off; says what the administrator can do'))
+W.append(dict(key='file-safety.index.signatures_not_fetched', en="No download of signatures has finished yet. The scanner tries again daily; if this stays, an administrator can check that your team's Civicsmith can reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when no download has been tried or finished; says what the administrator can do'))
+
+# DEC-396: B444 items 2, 3, 4, 6: keys the job code does not yet look up, minted by the design for the jobs to adopt
+W.append(dict(key='screen.document.text.read', en='Read {read} of {total} words', protected=False, note='DEC-396: B444 2 (C17): the document reading line; {read} words_read, {total} words_total (reading-pipeline R35)'))
+W.append(dict(key='screen.project.opened.date', en='Opened {date}', protected=False, note='DEC-396: B444 3: a project or question opened with no opener named'))
+W.append(dict(key='screen.question.leg.paragraph', en='Paragraph {n}', protected=False, note='DEC-396: B444 4: a web leg\'s place in its page, beside "Page N" for a paged document'))
+W.append(dict(key='screen.matter.pick.choose', en='Choose one', protected=False, note='DEC-396: B444 6: the first, empty row of the matter\'s pickers (event, cause, way)'))
+W.append(dict(key='screen.matter.pick.none', en='None of these', protected=False, note='DEC-396: B444 6: the row of a matter picker when nothing listed fits'))
+W.append(dict(key='screen.matter.routes.none', en='No route is known for this matter yet.', protected=False, note='DEC-396: B444 6: the routes (procedure guides) list when it is empty'))
+# DEC-396: B444 (K4323) items 7-12
+W.append(dict(key='screen.action.kind.records_petition', en='Court petition to enforce a records request', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list: an action that asks a court to enforce a records request'))
+W.append(dict(key='screen.action.kind.brown_act_demand', en='Brown Act demand', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list: a demand to correct an action taken against the Brown Act'))
+W.append(dict(key='screen.action.kind.assessment_challenge', en='Challenge to a tax, assessment or fee', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list'))
+W.append(dict(key='screen.action.kind.taxpayer_action', en='Taxpayer action', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list'))
+W.append(dict(key='screen.action.kind.consent_decree_motion', en='Motion under a consent decree', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list'))
+W.append(dict(key='screen.action.kind.constitutional_claim', en='Constitutional claim', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list'))
+W.append(dict(key='screen.start-send.kind.records_petition', en='court petition to enforce a records request', protected=False, note='DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps'))
+W.append(dict(key='screen.start-send.kind.brown_act_demand', en='Brown Act demand', protected=False, note='DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps'))
+W.append(dict(key='screen.start-send.kind.assessment_challenge', en='challenge to a tax, assessment or fee', protected=False, note='DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps'))
+W.append(dict(key='screen.start-send.kind.taxpayer_action', en='taxpayer action', protected=False, note='DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps'))
+W.append(dict(key='screen.start-send.kind.consent_decree_motion', en='motion under a consent decree', protected=False, note='DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps'))
+W.append(dict(key='screen.start-send.kind.constitutional_claim', en='constitutional claim', protected=False, note='DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps'))
+W.append(dict(key='screen.standard.held', en='Standards the team holds', protected=False, note="DEC-396: B444 item 8: heading of the list of held standards on a project's Standard screen"))
+W.append(dict(key='screen.standard.held.more', en='More standards are held than are shown.', protected=False, note='DEC-396: B444 item 8: under the held standards list when it is cut'))
+W.append(dict(key='shell.member.unknown', en='A member of your team', protected=False, note="DEC-396: B444 item 9: the shell's name for a member id that has no handle"))
+W.append(dict(key='screen.money.proposed.member', en='proposed by a member; not included', protected=False, note='DEC-396: B444 item 10: money trail: label of a figure a member proposed to the trail, beside the machine one'))
+W.append(dict(key='screen.ceremony.signs.count.findings', en='One confirmation signs all {n}: the edition and its {findings} findings.', protected=False, note='DEC-396: B444 item 11: Sign step, under the list of what is signed, when no evidence is signed with the case'))
+W.append(dict(key='screen.ceremony.published.edition', en='Published: edition {n}', protected=False, note='DEC-396: B444 item 11: a reopened ceremony whose edition is already public'))
+W.append(dict(key='refusal.FLAG_NO_PASSAGE', en='Each side of a contradiction names a passage: a document and the part of it. One is missing, is not held here, or is not one you can see; the answer says which. Choose it again. Nothing was written.', protected=False, note='DEC-396: B444 item 12: refusal when saying two documents contradict'))
+W.append(dict(key='refusal.FLAG_SAME_DOCUMENT', en='A contradiction is between two documents, and both passages are in the same one. Choose a passage in a different document. Nothing was written.', protected=False, note='DEC-396: B444 item 12: refusal when saying two documents contradict'))
+W.append(dict(key='refusal.FLAG_NO_REASON', en='Saying two documents contradict is a kept decision, and a kept decision says why. Write how they disagree, in your own words. Nothing was written.', protected=False, note='DEC-396: B444 item 12: refusal when saying two documents contradict'))
+REWRITE.update({
+  'screen.money.f.contract': 'The contract, for committed against paid',   # DEC-396: B444 item 8: now a choice, not a record id
+  'screen.money.f.nocontract': 'Choose the contract.',   # DEC-396: B444 item 8
+})
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

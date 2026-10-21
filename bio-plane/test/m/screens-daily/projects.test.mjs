@@ -80,9 +80,9 @@ test("R10 (DEC-201 (8); project-roster R27): each row draws its owner by handle,
   assert.ok(text(p, a).includes(word("screen.projects.owner", { handle: "" }).trim() + " dev") || text(p, a).includes(word("screen.projects.owner", { handle: "dev" })));
   assert.ok(a.querySelectorAll(".cs-card, a.cs-ref").some((e) => e.textContent === "dev"));
   assert.ok(text(p, b).includes(word("screen.projects.owner.none")));
-  // An owner answered with no handle (project-roster R27's form when the handle is unknown) is drawn by its member id.
+  // An owner answered with no handle (project-roster R27's form when the handle is unknown) is named as R85 (C94) says: never by her member id.
   const nohandle = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-8", name: "N", stage: "forming", owner: { member: "M-7", handle: null } }] }) });
-  assert.ok(text(nohandle, rows(nohandle)[0]).includes("M-7"));
+  assert.ok(!text(nohandle, rows(nohandle)[0]).includes("M-7") && text(nohandle, rows(nohandle)[0]).includes(word("shell.card.member")));
   assert.ok(!text(nohandle).includes(word("screen.projects.owner.none")));
   // Control: a row answering no owner says nothing of one.
   const bare = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-9", name: "Bare", stage: "forming" }] }) });
