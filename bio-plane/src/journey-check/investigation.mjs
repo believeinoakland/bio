@@ -254,6 +254,9 @@ async function openDock(page) {
   await settle(page);
 }
 
+/* The conclusion form's fields: a falsifier, the reason (the page refuses to conclude with its box empty, `question.conclude.reason.needed`) and a commentary. */
+export const concludeFields = (falsifier, commentary) => ({ "question-conclude-falsifier": falsifier, "question-conclude-reason": "The notice answers the question.", "question-conclude-commentary": commentary });
+
 /* Step 12: the proposed reading accepted, stood on for the project, and concluded. */
 async function concludeOn(walk, page, { question, project }) {
   await walk.step(page, "12 · accept a reading, stand on it for the project, and conclude", async (p) => {
@@ -262,8 +265,8 @@ async function concludeOn(walk, page, { question, project }) {
        level" (`level-empty-…`, which states no claim and so cannot be concluded on) */
     await act(p, "versionaccept", { which: ':not([data-version^="level-empty"])', reason: "I read the notice; it says the repair was ordered." });
     await act(p, "versioncurrent", { which: ':not([data-version^="level-empty"])', reason: "The project stands on the city's own order." });
-    await act(p, "conclude", { fields: { "question-conclude-falsifier": "The city withdrawing or amending notice 2026-118",
-      "question-conclude-commentary": "The city's notice orders the landlord to repair the roof within 28 days." },
+    await act(p, "conclude", { fields: concludeFields("The city withdrawing or amending notice 2026-118",
+      "The city's notice orders the landlord to repair the roof within 28 days."),
     reason: "The notice answers the question." });
     await requireWord(p, "question.concluded.by", { within: "#cs-main" });
   });
@@ -323,7 +326,7 @@ async function concludeOwn(walk, page, { label, question, reading, falsifier, co
     await requireWord(p, "question.conclude.own.field", { within: "#cs-main" });
     await requireWord(p, "question.conclude.own.help", { within: "#cs-main" });
     await form.getByLabel(wordPattern("question.conclude.own.field")).first().fill(reading);
-    await act(p, "conclude", { fields: { "question-conclude-falsifier": falsifier, "question-conclude-commentary": commentary }, reason: "The notice answers the question." });
+    await act(p, "conclude", { fields: concludeFields(falsifier, commentary), reason: "The notice answers the question." });
     await requireWord(p, "question.concluded.by", { within: "#cs-main" });
     await requireWord(p, "question.reading.by.member", { within: "#cs-main" });
   });
