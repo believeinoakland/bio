@@ -12,6 +12,7 @@ import { sourceItems } from "./source-items.mjs";
 import { itemWords } from "./item-words.mjs";
 import { queueStates } from "./queue-states.mjs";
 import { doors } from "./doors.mjs";
+import { todos } from "./todos.mjs";
 import { routed, ROUTED_REFUSALS } from "./routed.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 
@@ -20,7 +21,7 @@ const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : [];
 
 export const queue = Object.freeze({
   id: "queue",
-  parts: { sourceItems, itemWords, queueStates, doors, routed },
+  parts: { sourceItems, itemWords, queueStates, doors, routed, todos },
 
   // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind). R59, R61: `/app/queue/answered` reads what the
   // member answered and the set-aside findings; R58: `/app/queue/choose` reads the queue as it is, each item with a box. The queue's
@@ -46,6 +47,8 @@ export const queue = Object.freeze({
       // R65: the doors to Held captures and the Inbox, on the list only.
       held: view.parts.doors().reads().held,
       inbox: view.parts.doors().reads().inbox,
+      // R17 (B21): the photos she captured and has not vouched for.
+      ...view.parts.todos().reads(view),
     };
   },
 
@@ -58,7 +61,7 @@ export const queue = Object.freeze({
       taskresolve: "taskresolve", taskforward: "taskforward", proposedispose: "proposedispose", queuesnooze: "queuesnooze",
       queuemute: "queuemute", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion",
       versionkeep: "keepversion", reminderanswer: "reminderanswer", promote: "promote", projectkeyset: "projectkeyset",
-      exploreapprove: "exploreapprove", updatelater: "updatelater", projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer",
+      exploreapprove: "exploreapprove", updatelater: "updatelater", projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer", filingapprove: "filingapprove",
     };
     const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "case";
     const ui = view.ui || {};
@@ -366,13 +369,17 @@ export const queue = Object.freeze({
     }
     // R65: the doors to Held captures and the Inbox, on the list and its empty states.
     const doorsHtml = view.parts.doors().draw(cs, view, "queue");
+    // R17 (B21): the photos she captured and has not vouched for are to-dos of hers, drawn above the list, so they are waiting on her.
+    const vouching = view.parts.todos().vouch(cs, view, "queue");
+    const vouchHtml = vouching.n ? cs.sheet(vouching.rows) : "";
     if (q && q.state === "empty") {
       if (qv.feeds && qv.all_answered === false) {
-        return cs.title(undefined, {}) + doneNote + '<p class="mk-sub">' + cs.w("queue.allclear.withheld") + "</p>" + failedRow + doorsHtml + mutedPart;
+        return cs.title(undefined, {}) + doneNote + '<p class="mk-sub">' + cs.w("queue.allclear.withheld") + "</p>" + failedRow + doorsHtml + vouchHtml + mutedPart;
       }
+      if (vouching.n) return cs.title(undefined, {}) + doneNote + doorsHtml + vouchHtml + mutedPart;
       return cs.title(undefined, {}) + doneNote + doorsHtml + listOf(false) + (qv.feeds ? states.allClear(cs, qv) : "") + mutedPart;
     }
-    return cs.title(undefined, {}) + doneNote + (q && q.state === "ok" ? failedRow + states.entry(cs) : "") + doorsHtml + note + sorts + listOf(false) + mutedPart;
+    return cs.title(undefined, {}) + doneNote + (q && q.state === "ok" ? failedRow + states.entry(cs) : "") + doorsHtml + note + sorts + vouchHtml + listOf(false) + mutedPart;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).
@@ -481,6 +488,13 @@ export const queue = Object.freeze({
       send: function (view, el) { return el.dataset.version ? { body: { version: el.dataset.version } } : null; } },
     { op: "exploreapprove", label: "act.exploreapprove.label.queue",
       send: function (view, el) { return { body: { owner: el.dataset.owner, day: el.dataset.day } }; } },
+    // R17 (B21): vouching for the photos she captured, and approving a letter drafted for the group; each leaves with the next read.
+    { op: "release", label: "act.release.label.queue", reasonField: "acknowledgment",
+      send: function (view, el, cs) { return view.parts.todos().release(view, el, cs); },
+      done: function (view, answer, cs) { cs.set("done", "release"); } },
+    { op: "filingapprove", label: "act.filingapprove.label.queue",
+      send: function (view, el, cs) { return view.parts.todos().approve(view, el, cs); },
+      done: function (view, answer, cs) { cs.set("done", "filingapprove"); } },
     // R75: the decisions the record routes to a member; each item leaves with the next read.
     { op: "adminendorse", label: "act.adminendorse.label.queue",
       send: function (view, el) { return el.dataset.memberId ? { body: { memberId: el.dataset.memberId } } : null; },

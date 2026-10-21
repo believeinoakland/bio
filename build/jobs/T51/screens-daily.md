@@ -1,6 +1,32 @@
 # screens-daily (T51)
 
-**Status** · session_01H683kiCEiqxBkXJ8cFTJ9t · depth 2 · COMPLETE · handled B20
+**Status** · session_01529AmD3t2nQgB7HFWQs2QU · depth 2 · COMPLETE · handled B22
+
+## Completion (SCREENS-DAILY #14, B21)
+
+**Entries applied, with tests, pushed @ job/T51/screens-daily:**
+1. `home` and `queue` draw `release` and `filingapprove` (the registry rows at `09fbb247eb`, DEC-389), in a new part `todos.mjs`; both screens' `acts` now equal the registry's (`contract.test.mjs` no longer leaves them to other screens: `ELSEWHERE_DRAWN` is gone).
+   - `release`: "Vouch for N photos you captured on {place}" is a to-do of the member's own on Home's "Needs you" (counted on the strip) and above the queue's list, one for each place her held captures come from (a new read `mine`: `heldcaptures {member, limit}`). It opens her two statements (`screen.held.ack`, `screen.held.mitigation`) and the act `release` (`act.release.label.home|queue`, reasoned by her acknowledgment), which sends `select` over that place's captures and then `release` over the handle, as the project's dashboard does; with a statement missing nothing is sent and the missing one is named. Sentences: `screen.home.todo.vouch` ({count}, {place}), `.vouch.noplace`, `.vouch.noplace.one`. A queue with nothing else waiting no longer says "Nothing is waiting on you" while one of these is.
+   - `filingapprove`: an item whose option is `filingapprove` (a letter drafted for the group) draws the act (`act.filingapprove.label.home|queue`, terminal, so the shell confirms). Pressing it reads `filingsfor {action}` (the item's subject) and sends `filingapprove {filing}` for the newest draft not yet sent and not approved; with none it sends nothing and opens the action.
+   - Tests: `todos.test.mjs` (written first and seen failing; 15 tests, each on Home and on the queue, controls included) and `contract.test.mjs` R1–R13 (the registry's acts, exactly).
+
+- (B22, R74) A contradiction item seen in part opens `/app/contradiction/<candidate>/<project>`: the project from `parties[0].project` (a notice) or `between_projects[0].project` (a candidate), the slash unescaped (`item-words.mjs`, `targetOf` and `open`); with no project it opens by the candidate alone as before. Test: `queue.test.mjs` R74 (seen failing first), control included. **R74 amended line for BOB:** a contradiction item opens `<candidate>/<project>` when its subject names a side's project (`parties[0]` or `between_projects[0]`), else the candidate alone.
+
+**Deferred:** none.
+
+**Requirement lines for BOB:** R3 add: `release` and `filingapprove` are registered acts of Home and the queue. R17 add: "Vouch for N photos you captured on {place}" (`screen.home.todo.vouch`, `.vouch.noplace`, `.vouch.noplace.one`) is a to-do of the member's own for each place her held captures (`heldcaptures {member}`) come from, with her two statements and `release` (`select` then `release`, R79 of screens-inquiry's dashboard the same); on the queue it is drawn above the list and counts as something waiting (R41). R3 add: a letter's item draws `filingapprove` ("Read and approve it"): `filingsfor {action}`, then `filingapprove {filing}`. Private Uses: `heldcaptures`, `select`, `release`, `filingsfor`, `filingapprove` through the plane; the registry's reading of "ELSEWHERE" in this module's contract test is retired.
+
+**For BOB (REPORT; the design's, B21's "rows missing"):**
+1. Words the design does not hold for these to-dos: the one-photo-at-a-place form on Home (`screen.home.todo.vouch.one` does not exist; the dashboard's `screen.dash-project.next.vouch.one` is read in its place). The drawing's button texts "Vouch for them" and "Read and approve it" are the held screen's `act.release.label.held` and Home's `screen.home.todo.approve.button`; the registry's per-screen labels differ ("Vouch for photos"/"Vouch for a capture", "Approve the text"/"Approve a letter"), and I used the registry's `act.<op>.label.<screen>`, as screens-action does for `filingapprove` on `dash-action`. If the design means the drawing's texts on Home and the queue, it holds them under those keys.
+2. The queue draws no item "Approve the follow-up letter to …, drafted by Rosa": no `queue.<kind>.summary` row exists for a letter awaiting approval, and no producer in the repository emits an item carrying `filingapprove` that I could read (`affordances` offers it on an action with an unapproved draft, so an item for an action subject carries it as an option). The item is drawn by the unkeyed words (`queue.unkeyed.*`) with the act; a keyed kind and its rows are the design's and the producer's. Likewise the queue has no `screen.queue.todo.vouch`; Home's keys are read on both.
+3. `setup-words/build.mjs --check` reports `words-unreviewed.json` stale at the tranche tip too (unchanged by this job; generated, manifest §14).
+4. `checks/run.mjs` over all modules: coverage 6 failures in other modules (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry, screens-intake), words 1 (op-grades `t37.test.mjs`:32); none names screens-daily.
+
+**Tests and checks run (process repo at its head):**
+- `node --test bio-plane/test/m/screens-daily/`: 223 tests, 223 pass (after B22).
+- `node checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs … screens-daily`: 0 failures. `coverage.mjs … screens-daily`: 79 of 79 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: 8 files changed, 0 failures. `checks/run.mjs`: format 0, architecture 0, coverage and words as REPORT 4.
+
+Size (session_01529AmD3t2nQgB7HFWQs2QU): test runs 9, module lines 3897
 
 ## Completion (SCREENS-DAILY #13, B19, B20)
 
@@ -221,3 +247,11 @@ COMPLETE (SCREENS-DAILY #13), re B19 and B20 (K4248, K4249). Pushed @ job/T51/sc
 Done: the endorsement, owner-vote and expertise items drawn by the design's rows on Home and the queue (have/awaiting/agreed from `basis`, "no one yet" when empty, the id when `fills.who` is absent); the authority form's confirmed labels and its button `screen.queue.routed.auth.record`; Defer `screen.queue.defer`; the snoozed section (`screen.queue.snoozed.*`) with Bring back `screen.queue.bringback`, sending `queuesnooze {case, clear: "1"}`; Home's `screen.home.waiting.counts`; `register-tasks.mjs` on test-support's `registerDeclared` (async, so routed.test.mjs imports the page after it). "R75 (words)" is green.
 Suite 207 of 207. format 0; coverage 79 of 79; words 0 (screens-daily); ownership 0; setup-words --check clean; architecture 1: the tests' `register-tasks.mjs` imports test-support, which `uses` does not hold (yours, as B19 says: add test-support for tests, drop `tasks`).
 For you: (2) `projectownerremove` is on neither registry row nor in RE_POINTS, so the remove vote is worded by `.owner.summary.remove` and opened at its project, with no act; (4) not mine: `test/m/control-plane/t47-e2e.test.mjs` fails at plane start with `DECLARED_OP_DISAGREES: groupkeynoticeseen description` (ai-accounts' row against the hand row, from DEC-387's rewording); control-plane shows 25 failures at the tip.
+
+## J12 · COMPLETE
+
+COMPLETE (B21): `home` and `queue` now draw `release` and `filingapprove` as the design draws them (todos.mjs); both screens' acts equal the registry's. Vouch to-dos (one per place, her two statements, select then release) on Home and above the queue's list; "Read and approve it" on a letter's item (filingsfor, then filingapprove). Module suite 222/222; format, architecture, coverage (79/79), words, ownership 0 failures. See the record's "Completion (SCREENS-DAILY #14, B21)" for requirement lines and REPORTs: (1) rows missing in the design: screen.home.todo.vouch.one (dashboard's key read instead), and the drawing's button texts differ from the registry labels (I used act.<op>.label.<screen>); (2) no keyed queue kind/producer for a letter awaiting approval, so its item is drawn by the unkeyed words with the act; (3) setup-words build --check reports words-unreviewed.json stale at the tranche tip (not mine).
+
+## J13 · COMPLETE
+
+COMPLETE (B22): R74 done: a conflict seen in part opens /app/contradiction/<candidate>/<project> (project from parties[0] or between_projects[0], slash unescaped); a whole-seen candidate still opens by id. Test seen failing first; module suite 223/223; format, architecture, coverage 79/79, words, ownership 0 failures. Amended R74 line is in the record's Completion (#14, B21) section. B21's COMPLETE (J12) stands.

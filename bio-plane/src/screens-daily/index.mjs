@@ -66,8 +66,14 @@ const ROUTED_ACTS = (screen) => [...ACTS(screen, ["adminendorse", "projectownera
 // R65: the doors to Held captures and the Inbox, on Home and the queue; on Home, the line that says how many wait for a member to look.
 const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name", ...(screen === "home" ? ["screen.home.waiting.counts"] : [])];
 
+// R17 (B21): the to-dos to vouch for the photos she captured (the dashboard's sentence for one photo at a place, Home's having none) and the
+// statements the vouching asks; approving a letter reads only its act's words.
+const TODOS = ["screen.home.todo.vouch", "screen.home.todo.vouch.noplace", "screen.home.todo.vouch.noplace.one", "screen.dash-project.next.vouch.one",
+  "screen.held.ack", "screen.held.ackhelp", "screen.held.mitigation", "screen.held.mitigationhelp", "screen.held.none", "screen.held.vouchmissing",
+  "screen.held.vouchbad", "screen.held.selectfailed"];
+
 const WORDS_OF = {
-  home: [...SHARED, ...DOORS_TO("home"), "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion"]),
+  home: [...SHARED, ...DOORS_TO("home"), "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion", "release", "filingapprove"]), ...TODOS,
     "act.projectjoin.label.home", "act.projectjoin.does",
     "door.front.head", "door.front.intro", "door.front.blank", ...DOORS.flatMap((k) => [`door.front.${k}.name`, `door.front.${k}.hint`]),
     ...MARKS(["kind.todo", "kind.noticed", "kind.status"]), "mark.due.means", "home.update.ready", "home.update.security", "queue.update.see",
@@ -94,7 +100,7 @@ const WORDS_OF = {
   queue: [...SHARED, ...DOORS_TO("queue"), "screen.queue.name", "screen.queue.purpose", ...MARKS(["kind.todo", "kind.noticed", "kind.status", "origin.accepted"]),
     "mark.due.means", "mark.hint.label", "mark.hint.means",
     ...ACTS("queue", ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote",
-      "projectkeyset", "exploreapprove", "actionmove"]),
+      "projectkeyset", "exploreapprove", "actionmove", "release", "filingapprove"]), ...TODOS,
     ...KEYED_QUEUE, "action.noreply.title", ...SOURCES, "file.trigger.queue",
     "queue.update.section", "queue.update.section_says", "queue.update.ready", "queue.update.see", "updates.ready.security", "updates.ready.security_says",
     "act.owed_updatelater.label.queue", "act.owed_updatelater.does",
