@@ -32,3 +32,7 @@
 Setup: `npm ci` in `file-scanner`, `bio-plane/src/journey-check`, `sheet-worker`, `agent-runner` and `site` (each has a lockfile and lacked `node_modules`, K4113).
 
 Size (session_01VVenL6MJ6dcy8qFSYYxGwR): test runs 6, module lines 50 (34 added, 16 removed across four test files).
+
+## J1 · COMPLETE
+
+COMPLETE, branch job/T51/cause-stale-T51 at ff5e57e9c6 (pushed). Four test files, no member operation or requirement line changed. affordances: 273 of 273 pass (7 failing before). op-grades: 142 of 142 pass; R44's test now reads the words-reads list with no written count. coverage: affordances 54/54, op-grades 51/51. Full run.mjs: four coverage failures in agent-harness (R17), agent-runner (R37, R38, R40), installer-steps (R26, R31) and journey-check (R19), modules this job does not hold. Ownership: the diff is in affordances' and op-grades' paths and tests; the comma form of the checker is refused ('no such module'). Details and the Size line are in the record. Note for BOB: the R44 requirement's parenthetical '11 keys at fa3c8b7e8e' is now stale as a number; I left it.
