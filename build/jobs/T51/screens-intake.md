@@ -175,3 +175,46 @@ Checks (from civicos-process, product /home/user/bio): format 0 failures; archit
 Deferred: none. Other-module findings and one stale generated bundle are in my REPORT.
 
 Size (session_01VMaZFp9WEEsWKQj2NDgzHf): test runs 4, module lines 2163
+
+## Fix round 2 (SCREENS-INTAKE #13, START B16 / CHANGE B15; model sonnet, medium)
+
+**Entries applied:** R49 (C9, C10), R50 (C11), R53 (met by the code already on the branch; its tests are `open-file.test.mjs`), R54 (C25), and the causes C14, C23, C28 (the part the plane allows), C29, C45, C78, C90, C91, DEC-394 (3b) and (3c), CAUSE-CAPTURE-T51 J2 (draw `render_pending` and a pending attestation, `capture.file_name`, pickers).
+
+- **C9 / C10 (R49)** `capture.mjs` `doneAcquire`, `doneUpload`, parts `homeOf` and `refusedHtml`. `existed: true` asks `heldat` by digest (no `check`) through `homeOf`; a document the viewer sees is linked and nothing is written. `acquire` already carries the question as `for`, and acquisition R47 records the ask (`recordCapturedFor`) also when `existed` is true, so the screen sends no second record. None that shows: the address arm promotes (as before); the file arm promotes when the answer carries the document, else writes nothing (see report 1). `CAPTURE_HELD_BY_ANOTHER_BUNDLE` names the holder and links it (title read from its bundle, `shell.card.document` where unreadable) when the promotion's refusal carries `holder`; without it, the sentence alone.
+- **C11 (R50)** `failedAcquire` clears `working`; `acquire` re-reads only `open`; every other act of `capture` names the reads it changed (`rereads`).
+- **C14 (R77, R88)** `capture` reads `heldcaptures` once with `fields: "picker"` (`state: held_and_vouched`, limit 200); no act re-reads it. `held` reads its two lists (held, set aside) once each; `heldcaptures` and `release` re-read only `held`. `todos.mjs`, `grouprules.mjs` and `money.mjs` are other modules' files (screens-daily, screens-settings, screens-investigate): their wave-2 jobs hold C14's rest.
+- **C23 (R4)** `held`: opened for a project (`/app/held/<PROJ-…>`) both lists read `heldcaptures` with that `project`; a row's project name opens that filter and the filter has a way back (`screen.held.name`); each held row says `state.item.review.name`. The squeezed "Open the file" control is CSS (C81, `cause-shell-t51`).
+- **C25 (R54)** `titleOf`: reading title, else the document's stated title, else its file name (`capture.file_name`, an upload's `name_stated` or its own name), else `document.untitled.web` (host and day); `screen.held.untitled` where there is no host. R50's kind-and-site sentence is replaced (its keys leave the screen's list). An upload uses the same function.
+- **C29 (R3)** the testimony's result links the document (`cs.ref`), named by the first of the member's own words; no id, no link, and no blank.
+- **C45 (R25)** "For which question" names the question by its title (the one read for the routed question, else the search hit's), else `shell.card.question`.
+- **C78 (R47)** the explanation of "Show the stored logins" is the next thing under that button, before the list.
+- **C90 (R46)** "Pause the watching" / "Resume" only for `view.me.administer === true`; the state is said to all.
+- **C91 (R44, R46)** `capture` draws doors to `/app/watching` and `/app/leads` (`screen.watching.name`, `screen.leads.name`) when `cs.can("capturerequest")` (a member or administrator who may act on the record).
+- **C28 (R7, R32)** the knock's detail shows its fingerprint under `screen.document.fingerprint`. The rest of C28 is not the screen's (reports 2 and QUESTION).
+- **J2** `render_pending.note` and a pending attestation's note are drawn in the plane's own words under the result; the finishing of a render continuation is "Finish it" (R31), the capture session being in `opencaptures`.
+- **DEC-394 (3b)** met by R47 (supply, list, withdraw on `capture`; keys `act.owed_capturecredential….label.capture` as they are); tests `t51-credentials.test.mjs`. **(3c)** new, below.
+
+**Requirement lines for BOB to fold** (none written in the requirements file by me):
+- **R55** (DEC-394 3c; `capture-requests` R23; amends R47) `capture`'s address tab lists the member's own capture requests (`capturerequests`, the one read that also serves R47) under `screen.capture.later.head` with `.about`, each with its address, the day asked and its state: `requested` or `draining` as `screen.capture.later.waiting`, `captured` as `.captured`, `refused` as `.turned`; a request another member asked, an `expired` one and an empty list are not drawn. Test: `t51-fix2.test.mjs` "R55".
+- **R56** (C91; amends R44, R46) `capture` draws a door to `watching` and to `leads` (`screen.watching.name`, `screen.leads.name`) for a viewer who may act on the record; none otherwise. Test: "C91".
+- **R4 amended** (C23) `held` opened with a project subject reads that project's captures; a row names its state by `state.item.review.name`; a project name opens the filter.
+- **R7/R32 amended** (C28) a knock's detail shows its fingerprint (`screen.document.fingerprint`).
+- **R3 amended** (C29) the testimony's result links the document. **R25 amended** (C45) the question is named by its title. **R47 amended** (C78) the note under "Show the stored logins". **R46 amended** (C90) pause and resume are an administrator's. **R50 amended** (C11) a refusal clears the working note at once and stays drawn. **R40 note**: `bundleFor` still reads `heldcaptures` in full (it needs the source address, which the picker does not give).
+
+**Tests changed because a requirement was amended** (not weakened): the R50 untitled sentence (kind and site) is R54's host and day in `capture.test.mjs` (R33 control, the slug of the bundle id), `t51-capture.test.mjs`, `t51-check.test.mjs`; the testimony's sentence now links (`capture.test.mjs` R3); `common.test.mjs` R8 (an act may name the reads it changed); `t51-credentials.test.mjs` R47 (the paywall request is now in the member's "requests for later", so the control is about the login section); `t51-watching.test.mjs` R46 (the pause is an administrator's; the refusal test is for an administrator who has lost standing).
+
+**Words I needed and did not find (QUESTION):** see the QUESTION. Drawn from existing keys: doors, the other-home link, the filter's way back.
+
+**Reports (other modules, P9):**
+1. `capture` R86: `captureupload` answers `existed: true` with no `document` even when the record holds only a receipt and no home (the interrupted upload of C10), so the screen cannot file one for the viewer; it files when the answer carries the document and links a visible holder. Proposed: answer the document (as a new upload's) when `holds.registered` is not true.
+2. `doorbell`: a knock stores no file name or type and no read gives its bytes before the pull, so C28's name, type and safe view cannot be drawn; "put back" (`inboxresolve` to `new`, `doorbell` R3) is served but has no word for its button.
+3. `capture` R77: a held row does not say its capture has no object under its fingerprint (parts-only past 32 MiB); the screen cannot withhold vouch or OCR from it. Proposed: a field on `capture` (`whole: false`).
+4. `capture` R40/`bundleFor`: `heldat` by address would give the copy's document at the cost of one look instead of a 1000-row list; R40 names the list.
+5. The Held list needs each row's grade, so it cannot use the picker read: it reads two full lists of 50.
+6. `screens-inquiry` suite on `tranche/T51` already has three reds (R10 document and entry 25 acts, R5 R14–R16 acts: `contradictionflag` in the registry); same on an untouched checkout of the tranche.
+7. Coverage reds in the process checks are other modules' (agent-harness, agent-runner, control-plane, installer-steps, journey-check, screens-inquiry R123–R125).
+
+**Checks:** `node checks/run.mjs`: format 0, architecture 0, words 0 (screens-intake), coverage: screens-intake not listed among its 6 failures; ownership: 14 files, 0 failures.
+**Suites:** screens-intake 201 of 201; screens-inquiry 410 of 413 (the three are on the tranche untouched); control-plane 324 of 324.
+
+**Size (session_016TLvaypBQx6X3AHUVwEdcN):** test runs 9, module lines 2233
