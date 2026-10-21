@@ -6926,6 +6926,13 @@ W.append(dict(key='screen.document.contradict.other.help', en='A document your t
 W.append(dict(key='screen.document.contradict.why', en='How they disagree', protected=False, note='DEC-394: B441 3e: the reason field'))
 W.append(dict(key='screen.document.contradict.why.help', en='In your own words, up to 500 characters.', protected=False, note='DEC-394: B441 3e: help'))
 
+# DEC-396: B444 (K4323) item 1
+W.append(dict(key='file-safety.index.no_signatures', en='The file scanner has no signatures, so files are kept and shown but not scanned.', protected=False, note='DEC-396: B444 1: the line on setup step 7 (Security) and on Settings › Security when the built-in file scanner holds no signatures and no date is known: what is true of the scanner'))
+W.append(dict(key='file-safety.index.no_signatures_since', en='The file scanner has had no signatures since {date}, so files are kept and shown but not scanned.', protected=False, note='DEC-396: B444 1: the same line when a date is known: {date} the day it first could not scan for want of signatures'))
+W.append(dict(key='file-safety.index.signatures_refused', en="The signature service refused the download (status {status}). The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security: {status} the three-digit answer of the service; says what the administrator can do'))
+W.append(dict(key='file-safety.index.signatures_failed', en="The last download of signatures did not finish. The scanner tries again daily; an administrator can check that your team's Civicsmith can reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when a download was tried and broke off; says what the administrator can do'))
+W.append(dict(key='file-safety.index.signatures_not_fetched', en="No download of signatures has finished yet. The scanner tries again daily; if this stays, an administrator can check that your team's Civicsmith can reach the service.", protected=False, note='DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when no download has been tried or finished; says what the administrator can do'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
