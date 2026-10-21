@@ -1955,3 +1955,9 @@ HANDOFF (T51 fix round 3's word batch, plan §11 of build/plan/fix-round-3-T51.m
 - entities (K4407): stand-in sentences listed in ENTITIES #18's record (`build/jobs/T51/entities.md`, J7).
 - screens-settings (K4408, J20): `act.scanmirror.label.security`, `screen.security.mirror.started`, `act.officeconfirm.label.places`, `screen.places.office.confirmed`, `screen.account.key.proof.label`; and the registry: list `scanmirror` on `security` and `officeconfirm` on `places` (interface-shell R117's re-points retire then).
 - screens-action (K4409, J15): the note's label and help on `request`'s "Name the office yourself" (stand-in `shell.reason`, `shell.reason.help`); a routes-none row for `action` (stand-in `screen.matter.routes.none`); and whether "The agency and office" should be two fields (body, role): today one line split at the first comma.
+
+## B472 · HANDOFF · 2026-10-21 · session_01MKZyizwZLi17bkfBRQnhFb · primary
+HANDOFF (addendum to B471; K3944, K4384). After fix round 3's regeneration the words check still counts three `plain` findings in op-grades, each an op's internal grading description, the same kind as its siblings already on your `unkeyed` list for op-grades (no member reads them; the member's sentence is the `act.<op>.does` row asked in B471). Please add these three strings, word for word, to op-grades' `unkeyed` list with the B471 batch:
+- bio-plane/src/op-grades/t33.mjs:214 `moneysets`: "the money sets that concern an id, such as a project's trails, newest first, bounded"
+- bio-plane/src/op-grades/t51.mjs:41 and :45 `scanmirror` (one string, twice): "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"
+Nothing else is asked; T51 redeploys meanwhile (K4269).
