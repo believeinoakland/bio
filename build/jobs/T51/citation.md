@@ -191,3 +191,12 @@ CITATION #17 · fix round 2 · C31 met (citation's part).
 Deferred: none.
 
 Size (session_01T23tysCBff1C94XfhB4Qo3): test runs 9, module lines 1698
+
+## J12 · COMPLETE
+
+Applied B9 (R20, K4308). `cite` reads each field from the POST body, and from the address where the body lacks it; the body wins where both are sent (the part's `extent_*`/`content_id` merge the same way); the stamps stay in the address; a call naming no source is refused CITE_ONE_SOURCE, writing nothing. `found` is an object or one JSON string.
+- Tests: `cite-post.test.mjs` names R20, R1, R19, R7: body cites; address-only still cites; body wins; no source refused with the document unchanged (control: a handle cites).
+- Suites: citation 127 pass, 0 fail; affordances `plane.test.mjs` 31 pass and `members.test.mjs` 1 pass, both unchanged and green again. coverage citation 20 of 20, words 0, architecture 0, ownership 0 failures.
+Deferred: none. Other modules: the REPORT J10 is withdrawn for the two tests; the screens still move to a body as C31's other half.
+
+Size (session_01T23tysCBff1C94XfhB4Qo3): test runs 11, module lines 1704
