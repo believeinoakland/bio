@@ -25,7 +25,7 @@ COMPLETE for fix round 4, wave 1 (#12). Branch job/T51/review, `tranche/T51` mer
 - Users (`build/plan/impact.mjs origin/tranche/T51 HEAD`): notice-producers 130/130, queue 206/206, op-declarations 1 red (R34, affordances R48), store-door 1 red (R17 `groupdescriptiondraft`), control-plane 1 red (R81 end to end), plane 5 reds (R18/R5, R24, R5/R9/R45, R5, R9). Each red is identical with `review/index.mjs` reverted to the tranche tip (same failing tests, same counts), none names `review`: named, not fixed.
 - `node checks/run.mjs`: format 0 failures; architecture 0 failures; words: no failure in `review` (the 3 inline failures are in `op-grades`); coverage: no `review` failure (the 15 failures are other modules' not-yet-met ids); channels 0 failures. `node checks/ownership.mjs review tranche/T51 job/T51/review`: 3 files changed by review, 0 failures.
 
-Size (session_01BgzvhhpsZ9CfjrbXUVyebx): test runs 9, module lines 1637
+Size (session_01BgzvhhpsZ9CfjrbXUVyebx): test runs 9, module lines 1633
 
 ## Completion record (fix round 3, B11 START, K4356; REVIEW #21)
 
