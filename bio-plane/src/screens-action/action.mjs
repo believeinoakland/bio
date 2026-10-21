@@ -268,6 +268,20 @@ export const action = Object.freeze({
           + cs.field("reply-fee-basis", "screen.action.what.the.fee.is.for", { help: "screen.action.optional.in.the.office.s.words" })
           + pick("reply-fee-answers", "screen.action.it.answers.this.sending", answersOpts, { help: "screen.action.the.earlier.sending.the.quote.responds" })
           + (revisesOpts.length > 1 ? pick("reply-fee-revises", "screen.action.it.revises.this.quote", revisesOpts, { help: "screen.action.only.when.the.office.changes.a" }) : ""));
+      // R55 (actions R108): on a public comment, the reply can carry the minutes' passage: the meeting, its day, the document that holds
+      // the minutes (a held capture, as above) and the passage as the minutes write it. The words are located in the document's reading
+      // (`reading`, read once a document is chosen) and the passage sent is the extent of the unit that holds them; any other kind draws
+      // no fold.
+      const pickedDoc = view.ui.minutesDoc && docOpts.some(function (o) { return o.value === view.ui.minutesDoc; }) ? view.ui.minutesDoc : "";
+      const minRead = pickedDoc ? P.later(cs, view, "minread", "reading", { sha256: pickedDoc }, "") : null;
+      const minutesFold = a.kind === "public_comment" && cs.can("actioncorrespond")
+        ? fold("screen.action.minutes.heading", noteOf("screen.action.minutes.says") + '<p class="eyebrow">' + cs.w("screen.action.minutes.legend") + "</p>"
+          + cs.field("minutes-meeting", "screen.action.minutes.meeting.label", { help: "screen.action.minutes.meeting.help1" })
+          + cs.field("minutes-date", "screen.action.minutes.date.label", { type: "date", help: "screen.action.minutes.date.help1" })
+          + cs.choice("minutes-doc", "screen.action.minutes.doc.label", [{ value: "", text: "" }].concat(docOpts), { redraw: "minutesDoc" }) + noteOf("screen.action.minutes.doc.help1")
+          + (minRead && minRead.state === "failed" ? cs.state(minRead) : "")
+          + cs.field("minutes-passage", "screen.action.minutes.passage.label", { area: true, rec: true, help: "screen.action.minutes.passage.help1" })
+          + '<div class="mk-acts">' + cs.act("actioncorrespond", { label: "screen.action.minutes.record", tone: "primary" }) + "</div>") : "";
       const replies = cs.sec("screen.action.replies", (received.length ? cs.sheet(received.map(function (c) {
         const e = entries.find(function (x) { return x.ord === c.ord; }) || {};
         const pr = e.pressure ? cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(e.pressure.kind) ? e.pressure.kind : "other")) : "";
@@ -275,10 +289,13 @@ export const action = Object.freeze({
           ? cs.choice("pressure-kind-" + c.ord, "screen.action.pressure.kind", ["legal", "retaliation", "discrediting", "other"].map(function (k) { return [k, "screen.action.pressure." + k]; }))
             + cs.field("pressure-note-" + c.ord, "screen.action.pressure.note") + cs.act("actionpressure", { data: { ord: String(c.ord) } }) : "";
         return cs.row(cs.date(c.at), cs.w(c.direction === "no_response" ? "screen.action.noresponse" : "screen.action.received")
-          + (c.party ? " · " + cs.esc(c.party) : "") + (c.medium ? " · " + cs.esc(c.medium) : "") + (pr ? '<span class="meta">' + pr + "</span>" : ""), "", mark);
+          + (c.party ? " · " + cs.esc(c.party) : "") + (c.medium ? " · " + cs.esc(c.medium) : "") + (pr ? '<span class="meta">' + pr + "</span>" : "")
+          // R55: a recorded entry's minutes, said once beside it with the meeting and its day
+          + (e.minutes && e.minutes.meeting ? '<span class="meta" data-minutes="' + c.ord + '">' + cs.w("screen.action.minutes.says") + " · " + cs.esc(e.minutes.meeting)
+            + (e.minutes.date ? " · " + cs.date(e.minutes.date) : "") + "</span>" : ""), "", mark);
       }).join("")) : "")
         // R27: the form belongs to the act: a member who may not record a reply is shown no field of it
-        + (cs.can("actioncorrespond") ? replyForm + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>" : ""));
+        + (cs.can("actioncorrespond") ? replyForm + minutesFold + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>" : ""));
 
       // R12, R31 (3): the pressure marks and records on this action, each with where it arrived, who made it and whether a hold
       // is placed (a legal one as `screen.action.legalmark`), paged by `after`; none drawn at zero; the profile's fact on a legal
@@ -446,6 +463,23 @@ export const action = Object.freeze({
         if (dueBy) { if (!/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) return { refuse: "screen.action.reply.at.needed" }; q.due_by = dueBy; }
         const fee = val("reply-fee");
         if (fee) { q.quote_amount = fee; put("quote_currency", "reply-fee-cur"); put("quote_basis", "reply-fee-basis"); put("quote_answers", "reply-fee-answers"); put("quote_revises", "reply-fee-revises"); }
+        // R55: the minutes' passage, on a public comment's reply: all four parts or none; the words are found in the chosen document's
+        // reading and the unit's extent is the passage (actions R108); a silence carries none
+        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
+        const parts = { "minutes-meeting": "screen.action.minutes.meeting.label", "minutes-date": "screen.action.minutes.date.label",
+          "minutes-doc": "screen.action.minutes.doc.label", "minutes-passage": "screen.action.minutes.passage.label" };
+        if (a.kind === "public_comment" && Object.keys(parts).some(function (id) { return val(id); })) {
+          const need = Object.keys(parts).find(function (id) { return !val(id); });
+          if (need) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w(parts[need]) } } };
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(val("minutes-date"))) return { refuse: "screen.action.reply.at.needed" };
+          const flat = function (s) { return String(s).replace(/\s+/g, " ").trim(); };
+          const words = flat(val("minutes-passage"));
+          const read = view.ui.later && view.ui.later.minread;
+          const units = read && read.state === "ok" && read.value && Array.isArray(read.value.text_units) ? read.value.text_units : [];
+          const unit = units.find(function (u) { return u && u.extent && typeof u.extent === "object" && flat(u.text || "").includes(words); });
+          if (!unit) return { refuse: "ai.progress.check.fail", fills: { passage: words } };
+          q.minutes = JSON.stringify({ meeting: val("minutes-meeting"), date: val("minutes-date"), passage: { captureSha: val("minutes-doc"), extent: unit.extent } });
+        }
         return { query: q, raw: "" };
       },
     },
