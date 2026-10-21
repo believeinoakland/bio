@@ -99,7 +99,9 @@ test("R4 \"Ask the city for the record\" opens request for the project", async (
 });
 
 test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail (createset, its name its words), committedagainstpaid", async () => {
+  let proposed = false;
   const p = await open(at, { plane: { recordfact: ok({ ok: true, fact_id: "MNY-2026-new", grade: { reading: "B" } }), createset: ok({ ok: true, set_id: "MSR-2026-0002" }),
+    moneysetpropose: () => { proposed = true; return ok({ ok: true }); }, moneyset: () => ok(TRAIL(proposed ? { proposals: [{ proposal_id: 1, fact_id: "MNY-2026-new", method: "member:recordfact", by: "member:ana", at: "x", label: "proposed", trail: { from: { stated: true }, to: { stated: true }, gaps: [] } }] } : {})),
     committedagainstpaid: ok({ ok: true, committed: { sum: { value: "1300000.00" } }, paid: { sum: { value: "1250000.00" } }, difference: { figure: { value: "50000.00" } } }) } });
   fill(p, { "mf-amount": "310,000", "mf-asread": "Overhead allocation … 310,000", "mf-kind": "allocation", "mf-phase": "actual", "mf-stage": "paid", "mf-basis": "undetermined",
     "mf-fiscal": "FY2022", "mf-payer": "Sewer Fund 3100", "mf-doc": SHA });
@@ -107,10 +109,10 @@ test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail 
   assert.deepEqual(p.byOp("recordfact")[0].body, { amount: "310,000", as_read: "Overhead allocation … 310,000", currency: "USD", sign: "+", precision: "exact", kind: "allocation",
     phase: "actual", basis: "undetermined", period: { fiscal: "FY2022" }, from: { as_written: "Sewer Fund 3100" }, to: null,
     source: { capture_sha: SHA, extent: { kind: "document" } }, stage: "paid" });
+  assert.equal(p.byOp("moneysetpropose")[0].body.factId, "MNY-2026-new", "C8: proposed to the open trail");
   assert.ok(rowOf(p, "MNY-2026-new"), "the new figure is a row, not yet in the trail");
-  fill(p, { "mf-contract": "ENT-2026-0005" });
   await press(p, "committedagainstpaid");
-  assert.equal(p.byOp("committedagainstpaid")[0].query.contract, "ENT-2026-0005");
+  assert.equal(p.byOp("committedagainstpaid")[0].query.contract, "ENT-2026-0005", "C57: the contract is chosen, not typed");
   drew(main(p), "screen.money.cap.diff", { committed: "1300000.00", paid: "1250000.00", difference: "50000.00" });
   fill(p, { "mf-label": "Overhead charges, FY2022" });
   await press(p, "createset");
