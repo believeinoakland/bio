@@ -58,3 +58,9 @@ Checks run (summary lines):
 - node --test --test-force-exit test/m/answer-envelope/ (in bio-plane): tests 41, pass 41, fail 0 (catalogue-end :17, :80, :124 and families :689 among them).
 
 Size (session_01FvmPgUS1f2D4dmmfN6kjNh): test runs 1, module lines 890
+
+## J3 · REPORT
+
+Other modules, found by `node checks/run.mjs /home/user/bio` at this tip (not answer-envelope's; not touched):
+1. Coverage: live requirement ids named by no test: agent-harness R17; agent-runner R37 R38 R40; installer-steps R26 R31; journey-check R19. Coverage reports 6449 of 6456 named (4 failures). The other three modules listed in J2's REPORT are now covered.
+2. Architecture (3917 product files), format (175 modules), channels (2 participants) and words (175 modules; 0 failures) show 0 failures.
