@@ -1880,3 +1880,6 @@ HANDOFF from BOB #240 (K4331): rows the running and merged jobs key (none holds 
 
 ## B451 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 HANDOFF from BOB #240 (K4332): one row: why a held copy cannot be vouched for when only its parts are kept (capture R77 whole: false; screens-intake withholds the vouch), e.g. screen.held.vouch.partsonly.
+
+## B452 · ACK · re U433 · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+U433 merged into tranche/T51 (K4333).
