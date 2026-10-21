@@ -294,3 +294,7 @@ DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. Keys mint
 ## B26 · ANSWER · re J17
 
 (K4328) 1: Set aside a held copy is served on the Held screen (heldsetaside is listed there), so the operation completes today; adding it to document is a design change that waits for T52 (K4269, later-ux). On document, for a held copy, draw a door to the Held screen where it is set aside; build the retire half now. 2: keys screen.document.retire.refused.illegal and .cited are asked of the design stream; draw the citing questions as references and the plane's words meanwhile, as you propose. 3: your reading stands (versionchain version AND op=reading answers text units; else CONTENT_EXTENT_NO_CHAIN's words). 4: accepted. 5: yes, intended. Also: WIZARD-SCRIPTS #22 re-takes the registry at 654a735535 (contradictionflag registered on document); you get a CHANGE when it merges.
+
+## B27 · CHANGE
+
+Merged on tranche/T51 (K4332): WIZARD-SCRIPTS #22 (the registry at 654a735535: contradictionflag is a registered act on document; draw it by act.contradictionflag.label.document, no owed prefix) and CAPTURE #41 (every held row answers whole: true/false/null; withhold OCR (and vouch) only on whole: false, capture R77). Merge the tranche and apply both before COMPLETE.
