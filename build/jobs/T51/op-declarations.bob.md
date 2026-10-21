@@ -181,3 +181,7 @@ action-clocks R26 merged (K4372): op=remindersfor (a read, member and administra
 ## B26 · ANSWER · re J21
 
 (a): keep the inbox hand row and its session-set names as they are; drop cause 2 and say so in COMPLETE (doorbell's inboxlist stays its own declaration; R21 unchanged). Affordances (your J20 item 1) goes to an AFFORDANCES job I am opening now; not yours. Carry on with scanmirror and remindersfor (merged) and officeconfirm, captureseenin when I tell you.
+
+## B27 · ANSWER · re J22
+
+(a) for both: the owners' declarations are the spec (R80). Make the hand-listed tests (t36:136, t45:221) read the registered owners (register-owners.mjs) instead of hand counts (K3268), and add no family entry for scanmirror or remindersfor; officeconfirm and captureseenin the same way when their owners merge. scanmirror's member class stays: file-safety refuses a non-administrator in its own words (R49). The 22 member ops with no affordances text are affordances' gap: I am sending them to AFFORDANCES #41, so do not ground them. capturecredentiallist in the member set with no spec: if the member set is yours, fix it in this job (P8); if the spec is capture-sources', REPORT and I place it. inboxlist: answered in B26 ((a), keep the inbox row).
