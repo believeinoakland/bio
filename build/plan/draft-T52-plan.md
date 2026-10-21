@@ -106,7 +106,7 @@ Each screen job adopts **the design commit UX-DESIGN names in answer to HANDOFF 
 4. **Landing together:** the registers row control is "Follow from here" (T52-37 R62), so the two drawings should merge together; if DEC-410 comes later than the redrawn DEC-407, L11-D splits and the second half's jobs (T52-30, -35, -36, -37) wait.
 5. **Later-ux lines needing a drawing** (stored login, subject passage, safe view of a knock's bytes, "Read N of M words" confidence, cited-copy removal door, member-proposed money row, the K4357 and B458 items) wait for UX-DESIGN's answer; lines whose keys already exist (DEC-391, 396-400) are done in the same jobs.
 6. **Performance (K4354):** Follow-from-here cannot meet 2 s on screens already at 5-10 s; the performance lane's fixes (C14-C16) merge before the Sewer walk is measured (draft 409 §7).
-The plan names no design commit hash: BOB fills it at the layer's START from UX-DESIGN's answer.
+**Design commit (K4406):** DEC-411 @ `0012a09939` (U446) answers B469 for both drawings (registers redrawn for K4403; explore's shorter path and "Keep looking"); its owed acts `registerfilter`, `registerdelta`, `registerpreread`, `registerpropose`, `explorecontinue` (names proposals, BOB's to settle with §5's) join T52-11, T52-10 and T52-40. L11-D starts on it.
 
 ## 7. Later-ux lines (`later-ux.md`), placed
 
