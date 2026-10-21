@@ -1925,3 +1925,6 @@ DEC-408 @ 92d2aa773b merged into tranche/T51 (design files only) and joined to N
 
 ## B466 · ACK · re U444 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
 DEC-409 @ 4f04d25957 merged into tranche/T51 (design files only). N1260 in build/plan/next.md: its alpha part (Follow from here, all connections, the most direct path, the simplified chain, the Sewer Service Fund walk) in T52 with N1259; its beta part with N1258 (K4393). Its date effect goes to Bob with T52's draft. DEC-410's drawing joins N1260 when you send it.
+
+## B467 · ACK · re U445 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
+DEC-410 @ f1bc1e89ea merged into tranche/T51 (design files only) and joined to N1260 for T52 (K4399); the owed ops' names are settled in T52's plan.
