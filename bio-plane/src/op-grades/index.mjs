@@ -47,7 +47,7 @@ import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
 import { T51_NON_ACTS } from "./t51.mjs";
 /* R49, R50 (T51 fix round; K4168): the owners' op declarations, taken into the tables above (`registerDeclaredOps`). */
 import { createDeclaredOps } from "./declared.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -999,8 +999,10 @@ const NON_ACTS_DATA = {
   contradictiondismiss: "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
   contradictionclarify: "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
   contradictiontakeup: "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
-  /* K4323 (R51): the owner's declared word, never a sentence held here */
-  contradictionflag: word("contradiction.declared.contradictionflag"),
+  /* K4323 (R51): the owner's declared word. Its id is contradiction's own, which the design's words.json does not key (it keys the
+     owed act as `act.owed_contradictionflag.does`, another sentence), so `word` would refuse it; `localize` answers the row the list
+     holds for that id, whatever English is given here, so a word changed there changes this reason with it. */
+  contradictionflag: localize("contradiction.declared.contradictionflag", "document-directed: keyed by a passage in each of two documents the member may see, reached from either document; sets them side by side as a contradiction for the project to settle, with the member's reason, and changes neither document"),
   contradictionrecommend: "run-directed: a run's recommendation of the respects in which a candidate's sides may differ, keyed by (run, candidate); the run is the subject and no bundle state offers it",
   resolutiondefect: "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
   contradictioncandidates: "read: the contradictions shown on an inquiry, a passage, an entity, a bundle, a project or one candidate, each with its sides, label, weight and state; writes nothing",
