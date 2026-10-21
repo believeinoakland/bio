@@ -33,3 +33,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B2 · CHANGE
 
 One more share (K4307, from QUEUE #31 J8, C66): the shell's home read asks `op=queue` with `limit: 500` (`interface-shell/browser.mjs:2368`) and the walk saw a console 400 for it, though queue clamps 1-500 and does not refuse. Find what answers 400 for that call (a door or a declaration's bound) and make the shell's call one the plane accepts; report to BOB if the refusal is in a module you do not hold.
+
+## B3 · ANSWER · re J1
+
+1: interim rows accepted; shell.member.unknown goes to the design lane in the round's words batch. 2: yes, the shell sends v; control-plane (wave 2) declares interfacewords' fields (its op) and keys C15's cache on v. 3: all six lines written as you proposed (interface-shell R9, R11, R13, R60, R68, R108; op-grades R42 for reads; K4317); merge tranche/T51, name them in your COMPLETE.
