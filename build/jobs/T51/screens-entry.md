@@ -132,3 +132,20 @@ Size (session_01G5kaQEiscMUfxNCvhoTCB3): test runs 4, module lines 1135
 ## J7 · COMPLETE
 
 B9 applied: join names memberlanguageset in its acts and draws the language choice as the design does (data-act on the choice's field, no button; enroll still sends the language once after login). R31 written by me in build/requirements/screens-entry.md (K4210; the ownership check lists that one file, accepted at merge). Test R31 seen failing, with control. Module tests 93/93 (R10 green since B8); format, architecture, coverage (28 of 28), words 0 failures. Nothing deferred; nothing undrawn for lack of a drawing. Details in build/jobs/T51/screens-entry.md.
+
+## Completion (B10, fix round 2, wave 2)
+
+**Entries applied.** Merged `tranche/T51` (wave 1 in). I wrote R32 and R33 in `build/requirements/screens-entry.md` myself (K4210), marked *(not yet met: T51)*; each test names its id and was seen failing before the change.
+- **C82 (R32).** `reset` now reads `groupidentity` (public, as `front` does) beside `passwordresetlook` and fills `{name}` of `screen.reset.keeps` with the team's name, else the unnamed-team word `screen.entry.group` (never the short name). The live, set and dead pages draw no `{`. The R5 tests that listed the requests and read the link out of every body were updated for the second read.
+- **C83 (R33), my part.** `setup` step 7 reads `scanstatus` (the administrator's own read; asked unconditionally because the shell computes `reads` once per load, so a read gated on `bootstrap` would never fire for a returning founder) and draws, only while `part_scanner` is `true`: signatures held (no `no_signatures`) → `screen.setup.security.scanner`, "checked"; `no_signatures` → since when and why from the answer's keys (`file-safety.index.no_signatures_since` with `{date}`, `signatures_refused` with `{status}`, or the answer's own words where the list lacks a key), never the scanner's code and never "checked"; the read not answering, or the scanner unreachable → nothing is claimed. The five `file-safety.index.*` keys are declared in `words.mjs`.
+
+**Deferred / asked.** What the administrator can do about a scanner with no signatures has no word row: nothing in `words.json` says it, and I wrote none (QUESTION J-posted to BOB: a row like "ask whoever installed your team's Civicsmith to check the scanner's signature download" for `setup` step 7 and, for screens-settings, the Security page). The Security page itself is screens-settings'.
+
+**Found in other modules.** `build/rulings.md:4298` fails `checks/format.mjs` (K4301 records an approval but no standing-list decision, §16): BOB's file, not touched.
+
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/screens-entry/`: tests 96, pass 96, fail 0.
+- Users: `journey-check/pseudo.test.mjs` 7/7 (after `npm ci --ignore-scripts` in `bio-plane/src/journey-check`, K4113), `instance-setup/page.test.mjs`, `interface-shell/declared.test.mjs`, `interface-shell/t50.test.mjs`, `plane/t47.test.mjs`, `plane/t50.test.mjs`, `control-plane/t46-app.test.mjs`: all green.
+- `checks/format.mjs`: 1 failure, `build/rulings.md:4298` (not mine). `architecture.mjs screens-entry`: 0. `coverage.mjs screens-entry`: 30 of 30 ids named, 0. `words.mjs screens-entry`: 0 (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, unkeyed 0). `ownership.mjs screens-entry tranche/T51 job/T51/screens-entry`: 0 failures.
+
+Size (session_0174THkG52z2ZaHHouaMb9q7): test runs 7, module lines 1158
