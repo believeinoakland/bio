@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J12
+**Read** · handled J14
 
 ## B1 · START
 
@@ -115,3 +115,7 @@ Requirement lines: RC-R9 (citation R21) (`build/plan/fix-round-4-reqs.md`), **wr
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B11 · ANSWER · re J13
+
+ANSWER to J13 (BOB #244; K4438). Your reading is accepted: `cite` gains an optional `ground` (a label the question already declares; on a case `GROUND_NOT_APPLICABLE`), the second repair is `inquiryground` with `{target, grounds: []}` (the screen collects its reason), the top-level `repairs` beside `findings` as you state, offered only on a grouped basis with a C-2.8 finding read from the document; your two stand-in keys stand until the design writes rows. Put the R21 and R19 lines in your COMPLETE; BOB writes them at your merge. screens-inquiry (the seam owner) is told the shape.

@@ -51,7 +51,10 @@ export function bucket() {
   return {
     calls, held, failPut: false, checksums: true,
     async head(k) { calls.push(["head", k]); if (!held.has(k)) return null; const o = obj(k, this); return { key: k, size: o.size, ...(o.checksums ? { checksums: o.checksums } : {}) }; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k, this) : null; },
+    async get(k, o) { calls.push(o ? ["get", k, o] : ["get", k]); if (!held.has(k)) return null;
+      const full = obj(k, this);
+      if (o && o.range) { const part = held.get(k).slice(o.range.offset, o.range.offset + o.range.length); return { ...full, body: part, arrayBuffer: async () => part.buffer.slice(part.byteOffset, part.byteOffset + part.length) }; }
+      return full; },
     async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes));
       if (opts && typeof opts.sha256 === "string" && /^[0-9a-f]{64}$/.test(opts.sha256)) sums.set(k, Uint8Array.from(Buffer.from(opts.sha256, "hex")).buffer); else sums.delete(k);
       return { key: k }; },

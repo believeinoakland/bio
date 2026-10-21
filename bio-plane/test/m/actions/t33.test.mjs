@@ -20,11 +20,11 @@ const doc = (lines) => actionMd("", lines).replace("id: \n", "");
 const reasons = (list) => list.map((r) => r.reason);
 
 /* A registered entity (entities R1); a proceeding with its facet (entities R45). */
-function ent(w, kind, label) {
+function ent(w, kind, label, declaredBy = M) {
   const proceeding = kind === "proceeding"
     ? { forum: ent(w, "institution", `${label}, its forum`), kind: "commitment_suit", number: `MC-26-${String(1000 + (ent.n = (ent.n || 0) + 1)).slice(-4)}` }
     : undefined;
-  const r = w.a.entities.createEntity({ kind, label, note: `${label}, registered by the test`, declaredBy: M, proceeding });
+  const r = w.a.entities.createEntity({ kind, label, note: `${label}, registered by the test`, declaredBy, proceeding });
   assert.equal(r.ok, true, JSON.stringify(r));
   return r.entity_id;
 }
@@ -76,8 +76,9 @@ test("R9 R47 actionCreate fills an office arm's entity id from the one office en
   /* a stated entity id is the member's, and never replaced */
   const stated = w.a.actionCreate({ document: doc([...CP, `  entity_id: ${office}`, "action_kind: other"]), viewer: M, author: M });
   assert.deepEqual([stated.ok, "addressee" in stated], [true, false]);
-  /* two office entities held for the role and body: none is chosen */
-  const twin = ent(w, "office", "Town Clerk");
+  /* two office entities held for the role and body: none is chosen (the twin a machine's, since a member naming a held
+     office again is answered the held one, entities R65) */
+  const twin = ent(w, "office", "Town Clerk", MACHINE);
   line(w, "post_in", twin, w.a.entities.entitiesByAlias({ alias: "Town of Port Ellery" }).entities[0].entity_id);
   const amb = w.a.actionCreate({ document: doc([...CP, "action_kind: other"]), viewer: M, author: M });
   assert.deepEqual([amb.addressee.entity_id, amb.addressee.filled], [null, "ambiguous"]);

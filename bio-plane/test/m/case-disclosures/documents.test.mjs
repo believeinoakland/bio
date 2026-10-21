@@ -252,9 +252,9 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: a, text_sha: held.text_sha, origin: `https://example.org/${DOC}`,
       archived_copy: w.cd.captureFacts(a).co_archive, included: false, rests_under: "load_bearing",
-      obscured: R22(COPY) },
+      title: `Document ${DOC}`, obscured: R22(COPY) },
     { ref: DOC2, kind: "document", sha: d, text_sha: reached.materials[1].held.text_sha, origin: null,
-      archived_copy: null, included: true, rests_under: "load_bearing", obscured: null }]);
+      archived_copy: null, included: true, rests_under: "load_bearing", title: `Document ${DOC2}`, obscured: null }]);
   assert.equal(out.materials.rows[0].archived_copy, "https://archive.example/web/a");
   const own = (ref) => out.materials.attestations.filter((x) => x.ref === ref && x.by_kind !== "co_attestation").map((x) => x.by_kind);
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");

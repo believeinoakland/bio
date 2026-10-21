@@ -184,6 +184,8 @@ Every job: medium effort; its suites then `build/plan/impact.mjs tranche/T51 HEA
 | queue-producers | haiku | 1 | 14 | queue-producers | C69 |
 | queue | sonnet | 1 | 15 | queue | P9 (count for the frame) |
 | journey-check | sonnet | 1 | 17 | journey-check | the local arm's moved fixture, R30 (K4435) |
+| case-grammar | sonnet | 1 | 18 | case-grammar | C47* (`title` in the signed material row, K4438) |
+| case-disclosures | sonnet | 1 | 19 | case-disclosures | C47* (writes `title`, K4438) |
 | cause-shell-4 | sonnet | 1 | 16 | interface-assets, interface-shell | C81 (S), C14*, C51*, C59* |
 | screens-settings | sonnet | 2 | 1 | screens-settings | words of C84, C14* |
 | screens-intake | sonnet | 2 | 2 | screens-intake | C9 (S), FC-23, C14* |
@@ -192,6 +194,9 @@ Every job: medium effort; its suites then `build/plan/impact.mjs tranche/T51 HEA
 | screens-investigate | sonnet | 2 | 5 | screens-investigate | C59 (S), C8*, C14* |
 | screens-publish | sonnet | 2 | 6 | screens-publish | C28, C46, C48, C49, C40, C47, C51 (S), C81*, C14* |
 | screens-action | sonnet | 2 | 7 | screens-action | C64-template (S), C64-law (S), C64-more, C65, C53-min, C14* |
+| affordances | haiku | 2 | 8 | affordances | `readheld` and `capturecredentiallist` explanations (K4437) |
+| record-core | sonnet | 1 | 20 | record-core | P10 (c): ranged `get` (R88), so acquisition's archive check reads 1 KiB, not 4.26 MB, from R2 (K4447) |
+| ratification | sonnet | 2 | 9 | ratification | P10 (d): `examineMember` asks `contradiction.candidatesFor` once per contested state, three identical scans per document; one read, states filtered after (K4445) |
 
 **Wave 0** (priority; BOB merges in the table's order, runs the whole suite and the seam tests, and reads the two step-0 reports before releasing fixes): pdfstructure > host-governor > acquisition > extraction > plane > control-plane. **Wave 1** (16 providers, independent; merge as the table). **Wave 2** (7) starts when wave 1 is merged; it does not wait on the design's word rows (K4269): a missing row is drawn by its stand-in, and section 5.4's check lists every key still drawn raw before the deploy. A half a job finds in a module it does not hold goes to BOB as a QUESTION answered before the next wave opens (round 3's reserve).
 

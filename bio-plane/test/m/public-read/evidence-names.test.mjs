@@ -35,7 +35,7 @@ const ENC = (t) => new TextEncoder().encode(t);
 /* One case edition (`/7`) over F, which rests on two legs of one captured document (the minutes, at two places) and on one
    leg of working material (an observation). The case document signs the blocks R12 and R17 write for them. `falsifier`
    is the sentence the finding's published bytes state, when a test gives one. */
-async function evidenceWorld({ members = null, ids = {}, falsifier = null } = {}) {
+async function evidenceWorld({ members = null, ids = {}, falsifier = null, title } = {}) {
   const w = world(members ? { members } : {});
   const writer = ids.writer ?? "olive", publisher = ids.publisher ?? "olive";
   for (const m of new Set([writer, publisher])) w.member(m, { handle: ids.handles?.[m] ?? `h_${m}` });
@@ -53,7 +53,7 @@ async function evidenceWorld({ members = null, ids = {}, falsifier = null } = {}
   const text = (await import("../publication/fixture.mjs")).caseDoc(CASE, 1, {
     format: "bio-case-document/7", project: proj, method: { grading: "bio-grading/1", checks: "1.57.0" },
     materials: [{ ref: DOC_A, kind: "document", sha: CAP_A, text_sha: null, origin: ORIGIN, archived_copy: null, included: false,
-                  rests_under: "load_bearing" }],
+                  rests_under: "load_bearing", ...(title === undefined ? {} : { title }) }],
     roles: [{ target: F, version_sha: pin, role: "load_bearing" }],
     strength: [{ target: F, axis: "capture", grade: "B" }, { target: F, axis: "connection", grade: "C" }] });
   const lines = text.split("\n"), close = lines.indexOf("---", 1);
@@ -189,4 +189,18 @@ test("R41 (3) the public list and a finding's editions name signer and deliverer
   const members = { memberFacts: (id) => (id === "admin" ? { cover: null, handle: null, role: "admin", status: "active" } : null) };
   const f = await evidenceWorld({ members, ids: { writer: "admin", publisher: "admin" } });
   assert.equal(f.w.read("publishedlist").bundles[0].attestor_member, word("member.founder.unnamed"));
+});
+
+test("R41 (1), C47 an evidence entry is named by the document's title as the signed row states it, else its address; the place stays the passage's", async () => {
+  const TITLE = "Freedom of Information Act: frequently asked questions";
+  const { w, env } = await evidenceWorld({ title: TITLE });
+  const basis = (await anon(w, env, { id: F })).findings[0].basis;
+  assert.deepEqual(basis[0].document, { name: TITLE, place: { kind: "pdf-page", page: 1 } }, "the title, not the address");
+  assert.deepEqual(basis[1].document, { name: TITLE, place: { kind: "pdf-page", page: 4 } }, "two legs of one capture: one title, two places");
+  assert.ok(!JSON.stringify(basis).includes(ORIGIN), "the address is not the name when a title is signed");
+  /* CONTROL: a row with a null title, and an older row with none, are named by their address as before. */
+  for (const title of [null, undefined, "   "]) {
+    const o = await evidenceWorld({ title });
+    assert.equal((await anon(o.w, o.env, { id: F })).findings[0].basis[0].document.name, ORIGIN, `title ${JSON.stringify(title)}`);
+  }
 });

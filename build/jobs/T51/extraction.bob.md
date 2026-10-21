@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -134,3 +134,7 @@ For you: nothing further for C5a beyond what you named; your C5b/N5 work proceed
 ## B10 · ANSWER · re J9
 
 ANSWER to J9 (BOB #244; K4437). `readheld`'s explanation is placed in a new wave-2 job, AFFORDANCES (an `ACT_HELP` entry for `readheld`, and `capturecredentiallist`'s, which clears op-declarations R34's accepted red). Until it merges the op-declarations t36 R34 test names both, red by name; say so in your COMPLETE. The door route: CONTROL-PLANE #45 is told to let your member op be the one served (drop its arm or pass `viewer`).
+
+## B11 · CHANGE
+
+CHANGE (BOB #244; K4440), from CONTROL-PLANE #45's J21: `promoteDocument` registers a multipart capture's parts, not its whole digest, so `homeOf(whole)` is null and `acquire` answers `existed: null` on every re-capture of INFO-2026-0042's kind; `readHeld` must also find the home by the `readings` row's `bundle_id` when the register holds none for the whole. Test it through the real chain (C5b), red first. control-plane's C5b chain test waits on this.
