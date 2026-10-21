@@ -1,43 +1,37 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #240 (`session_01CSYE5AY6ezQWUcLQeekq3D`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-21 ~11:50 UTC, at 52 % of its window. **T51 is OPEN** on `tranche/T51`. **Fix round 2 is finished:** every job merged (K4323–K4342), artifacts regenerated (K4343), checks clean (K4344), **the redeploy is running** (K4345). Read `build/rulings-active.md` whole (§1 "How debugging runs", K4297, governs order), then **K4323 to the last line** of `build/rulings.md` whole.
+**Status** · Replaced whole at each handoff. Written by BOB #241 (`session_01CDH1U1Jns5QQnWX7WDQ8yE`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-21 ~14:40 UTC, at 39 % of its window. **T51 is OPEN** on `tranche/T51`, in **fix round 3, wave 1**. Read `build/rulings-active.md` whole (§1 "How debugging runs" K4297 and "Speed" K4354 govern), then **K4347 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-3-T51.md` whole (the round's plan, in force, K4356; additions at K4358, K4363).
 
 ## What happened this session
 
-- Took over (K4323). Merged every remaining fix-round-2 job and the ones placed during it (46 job sessions in the round in all; this session: CAUSE-CAPTURE, EXTRACTION, SCREENS-ACTION, CONTRADICTION, WIZARD-SCRIPTS ×2, READING-PIPELINE, SCREENS-DAILY, PROVENANCE, CONTROL-PLANE, OP-GRADES, SCREENS-PUBLISH, CAPTURE ×2, SCREENS-INTAKE (four merges), SCREENS-INVESTIGATE, DOORBELL, SCREENS-SETTINGS ×2, SCREENS-INQUIRY, INTERFACE-SHELL, ENTITIES). All archived with rows; no job session runs.
-- Design stream: DEC-395 to DEC-400 (U430–U435) merged into the tranche, design files only, each ACKed; the word rows they mint for already-merged modules are in `build/plan/later-ux.md` for T52 (K4270).
-- Stale tests fixed by BOB, test files only (K4297): affordances `register-owners.mjs` and `plane.test.mjs` R19 (K4326, K4329), control-plane `t51-acquire-timings` (K4334), screens-publish drafts tests name R73 (K4344).
-- Container images published from the tranche (`container-images.yml`, run 39591403237, not refused); digests written by `bundles.mjs --record-image` (scanner `33dae268…`, the C84 fix) (K4341, K4343).
-- Regeneration in the manifest's order; `fleetbundles` and `newgroup-bundle-fresh` green, no skip; plane bundle 30.42 MiB (K4343). `checks/run.mjs`: format, architecture, channels, words 0; coverage only the held ids (K4344).
-- Redeploy: tip `e1367d2a2c` pushed to `deploy-test/biosmoke8/dry-run` (run 39594324262, green) and `deploy-test/biosmoke8/deploy` (run **39594486416**, green in 6m16s, 11:54Z). Neither push was refused.
+- Took over (K4347); smoke of fix round 2's redeploy green (both roles, both widths).
+- Targeted re-walk of round 2 (`walk-T51-rewalk/A.md`, `B.md`): every BLOCKER fixed; ~60 STILL, 9 NEW (K4352, K4355). Suite at the deployed commit: only accepted reds, plus case-checker R13/R25 (manifest regeneration order fixed: `rows.mjs` before `program.mjs`, K4355; clears at the round's regeneration) and a load-dependent doc-clean R4.
+- Bob: approved the stale-test text (applied on civicos-process `prep/stale-test-K4349`, K4349); weekly meter 29 % then 30 % (K4349, K4361); opened the **PERFORMANCE** lane (#1 `session_015HB1ABUMedpZ4X94giQAiz`, K4351; its P1–P6 in fix round 3, K4353); speed bar **A** (screen and act ≤ 2 s, web capture ≤ 15 s, K4354).
+- Design stream: DEC-401/402 (federal offices A now; B is N1256), DEC-403 (stored logins; testify and contradiction folds), DEC-404 (places in layers after the alpha, N1257) merged into the tranche, design files only, each ACKed; **UX design #37** started (`session_013KihJX63gbyQmh21swQqQs`, K4359). Note: `git pull` is now configured `pull.rebase false` in this checkout; a rebase once flattened a design merge (ancestry restored by an empty merge, K4359): always merge, never rebase, when the tranche holds design merges.
+- Fix round 3 planned whole (K4356), requirements written (K4359, K4360, K4363, K4364), STARTs reviewed and fixed (K4360), **wave 1 started** (K4361): 20 jobs + RECORD-CORE #26 in a freed slot (K4365).
+- Merged so far (K4365): CAPTURE-SOURCES #15, EXTRACTION #29, CASE-DISCLOSURES #15 (archived, rows written).
+
+## Running jobs (wave 1; addresses in `current.md`'s Jobs line)
+
+FILE-SCANNER #10, CREDENTIALS #25 (COMPLETE J12, crossed by ANSWER B10: merge once it reads B10), PROJECT-ROSTER #14, HOST-GOVERNOR #11, ACQUISITION #22, CAPTURE #43, DOORBELL #6, FILE-SAFETY #14, CAUSE-READING-3 #1, ENTITIES #18, MONEY #6, WIZARD-SCRIPTS #23 (haiku), QUEUE-PRODUCERS #22, PUBLIC-READ #27, CASE-AUTHORING #35 (CHANGE B17: C40's `not_co_attested` facts), REVIEW #21, CAUSE-SHELL-3 #1, RECORD-CORE #26. Answers already given: K4363, K4364.
 
 ## Do next, in order
 
-1. **Take over** (§5.1). Archive BOB #240 once idle (row `BOB-final`, T51). Delete its routines: WATCH #240 `trig_01KPrp9YcR4vtoR5Pj2q6Tj1` (12:45Z); no backstop is armed (no job runs). Arm your WATCH. Channel: UX-DESIGN #36 (`session_01N188yDWfxJHtvptW5hirUW`), cursor at U435, nothing owed either way.
-2. **The deploy run 39594486416 is green** (every member and the plane deployed, 6m16s); go straight to the smoke.
-3. **Smoke** biosmoke8 (`build/plan/walk-T51-build/smoke.mjs`, `SMOKE.md`; rulings-active §4 for reaching the copy, `JOURNEY_ADMIN_*`/`JOURNEY_MEMBER_*`): `/`, sign in as administrator and as member, each screen loads.
-4. **Targeted re-walk** (rulings-active §1 (3), K4162): every cause's findings (the Findings lines of `walk-T51-build/CAUSES.md`; `BRIEF.md` is the walkers' brief; sonnet medium walkers, at most two suites at once), plus: INFO-2026-0042 re-captured (parts-only copies are not repaired, CAUSE-CAPTURE), a live `op=capture` of a 21 MB PDF (C5: the whole object kept, read by reading-pipeline R2), CA24 (the founder's reply, C52), notice-producers' duplicate notices (C69, K4308), the scanner signing state (C83/C84: `POST /mirror` once, `/version` `signatures.last_error`, waiting files scan on the next tick), C13 and C18's live measures. Each defect found is grouped by cause and fixed in one round (K4297 (3)); wording-only goes to `later-ux.md` (K4269, K4270).
-5. **The whole suite beside the walk** (K4297 (1), never a gate): `.github/scripts/module-tests.mjs` from a worktree at the deployed commit, `node_modules` linked or installed (K4113). BOB #240's run was on a pre-merge snapshot and is lost with its container; its partial result: every module green but generator reds (setup-words, fleetbundles: cleared by K4343) and control-plane's two timeout tests (fixed by K4334).
-6. **Then the final pass**, and T51's close (§5.7): design MERGE first (§5.7 (1), K1177), `main` merged in, every module's tests (K2704), the close PR.
+1. **Take over** (§5.1). Archive BOB #241 once idle (row `BOB-final`, T51). Delete its routines: backstop `trig_01VXvVYBoNG5L7s4ByjsmFkq` (14:45Z) and WATCH #241 `trig_013MLvRiFNNWjPETjzMEyxVu`; arm your own backstop (a layer runs) and WATCH. Channel: UX-DESIGN #37, cursor at U439, nothing owed either way. Lanes: PERFORMANCE (its HANDOFF past P6), AI-DESIGN past A5, JOURNEYS past W4, INVESTIGATION-DESIGN past H43.
+2. **Watch wave 1** (§5.4): read each job's entries, answer, merge each complete job at once (`checks/ownership.mjs . <module> tranche/T51 origin/job/T51/<module>`; cause jobs list their modules comma-separated), strike its met marks, archive its session and write its row. Merge order where it matters: plan §3 (providers before users). After CAUSE-SHELL-3 merges, control-plane's page tests that expect a nonce are red until CONTROL-PLANE merges in wave 2 (accepted by name, K4360 (5)); journey-check's `pseudo` test is BOB's to make current then (K4297 (2), K4364).
+3. **Wave 2** once wave 1 is merged (plan §3): SCREENS-SETTINGS #15, SCREENS-INTAKE #14, SCREENS-DAILY #17, SCREENS-INQUIRY #19, SCREENS-INVESTIGATE #13, SCREENS-PUBLISH #15, SCREENS-ACTION #12, CONTROL-PLANE #44; STARTs ready in `build/plan/starts-T51-F3/` (amended at K4364, K4365: re-read each before posting). No membership job (K4358).
+4. **After the round** (plan §9): regenerate in the manifest's order, checks, the scanner image republished (`container-images.yml`, digest by `bundles.mjs --record-image`), redeploy biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}`, targeted re-walk of what changed, the performance lane's re-measure against K4354's bar, the final pass, then T51's close (§5.7): design MERGE first, `main` merged in, every module's tests, the close PR; the process repository's PR carrying `prep/cause-job-K4273`, `prep/words-arms-K4208`, `prep/stale-test-K4349` (M-T51-6).
+5. Words: when the jobs name their stand-in keys, send one batch to UX-DESIGN (B458 (3)).
 
 ## Accepted reds, by name, until the act named
 
-Plane R24 and screens-settings R39 (T52); journey-check R17 and its walk-dependent tests (local-arm walks time out on the installer's Cloudflare step in a container); store-door R17 (`groupdescriptiondraft` hand row); promotion `row-census`; coverage's held ids (K4236: agent-harness R17, agent-runner R37, R38, R40, installer-steps R26, R31, journey-check R19); `plane/r42-entry.mjs` listed as a test by `impact.mjs` (a helper, not a test).
+Plane R24 and screens-settings R39 (T52); journey-check R17 and its walk-dependent local-arm tests; store-door R17; promotion `row-census`; coverage's held ids (K4236); case-checker R13, R25 until the round's regeneration (K4355); control-plane's nonce page tests between CAUSE-SHELL-3's and CONTROL-PLANE's merges (K4360).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- `main` moves only by T51's close PR (§5.7 (3)), with the design stream's MERGE first (§5.7 (1), K1177); no refusal of either recorded.
-- Deploys to biosmoke8: by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296); this session's were not refused. If one is refused, it is §16: Bob's one-line approval in the refused session (rulings-active §2, K1715).
+- `main` moves only by T51's close PR (§5.7 (3)), the design stream's MERGE first (§5.7 (1), K1177); no refusal of either recorded. The process repository's `main` by PR at the close (K4275: its direct push was refused).
+- Deploys to biosmoke8: by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296); BOB #240's were not refused. If one is, §16: Bob's one-line approval in the refused session.
 
 ## Open with Bob
 
-- The exact P7 / mechanics §6b / §11 text for K4297 (stale tests fixed by BOB; red tests never gate a test-copy deploy), rendered: https://claude.ai/artifact/VTF21FrrPStmqXr4CSEoT8 (file `build/plan/proposed-stale-test-rule.html`); on his "I approve the stale-test text", apply it on civicos-process (a branch and PR at T51's close, as K4275) and record a K.
-- Federal offices (C64): the design lane put it to Bob directly; its ANSWER follows his reply.
-- The account showed a seven-day usage warning this session; Bob's 80 % rule (rulings-active §1, K2341) applies when he reports it.
-
-## Open for BOB (not Bob's), for the close
-
-- The inbox list hand-declared `inbox` but routed `inboxlist` (plane R71 refused doorbell's declaration): alias it (K4332).
-- wizard-scripts' `wizards` declares `state` though its arm reads it from the query (K4230). case-authoring R77's not-reached minutes shape; `impact.mjs` lists `plane/r42-entry.mjs` as a test (K4320).
-- Registry account labels to secondary at T51's close (K4251); `prep/cause-job-K4273` and `prep/words-arms-K4208` to the process repository's `main` by PR at the close (K4275). The cause-form ownership check lives on `prep/cause-job-K4273` (a worktree: `git -C /home/user/civicos-process worktree add /home/user/cp-prep origin/prep/cause-job-K4273` after fetching that ref).
-- A safe view of an inbox knock before the pull needs a drawing first (`later-ux.md`, K4332).
+Nothing.

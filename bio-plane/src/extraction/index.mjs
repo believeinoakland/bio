@@ -622,6 +622,44 @@ export class Extraction {
     return !!this.#one(`SELECT 1 AS x FROM composed_readings WHERE reading_sha256=?`, sha256HexSync(JSON.stringify(reading)));
   }
 
+  /* ---- reading a held home (R80) ---- */
+
+  /** R80 (T51 fix round 3, C5; K4356, K4358; amends R20, R27; provenance R4; control-plane R117): an in-process act the
+   *  door calls, not an op. A home the register names (`provenance.homeOf`) that has no `readings` row is read once the
+   *  evidence store holds the object under the digest, whole: the stored document is read as R1 and `read` do, and the
+   *  reading written for that bundle by R19's writer, in one transaction with the history and the index, as a composed
+   *  reading of this instance. Otherwise nothing is written and the answer is `{ok: true, read: false, why}`, `why` a
+   *  stable code: `NO_HOME` (the register names none, or the digest is no digest), `READING_HELD` (a reading, a failed
+   *  one too, is already held) or `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no
+   *  register row and no promotion, and replaces no reading: a reading that lands while the bytes are read stands (the
+   *  row is looked at again inside the write). A reading that finds nothing is a failed reading, recorded (R45). */
+  async readHeld({ sha = null, storeName = "bio", env = null } = {}) {
+    const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
+    const home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
+      ? this.#provenance.homeOf(digest) : null;
+    const left = (why) => ({ ok: true, read: false, why });
+    if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
+    if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return left("READING_HELD");
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    let whole = null;
+    try { whole = ev ? (typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest)) : null; } catch { whole = null; }
+    if (!whole) return left("NO_WHOLE_OBJECT");
+    const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
+    const out = await this.read(document, { storeName, env });
+    const prof = document.profile && typeof document.profile === "object" ? document.profile : null;
+    const wrote = this.core.transact(() => {
+      if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return null;
+      return this.writeReading({ bundleId: home.bundleId, captureSha: digest, reading: out.reading,
+        textUnits: Array.isArray(out.text_units) ? out.text_units : null,
+        textUnitsOverBound: out.text_units_over_bound, textUnitsSkipped: out.text_units_skipped,
+        profileFormat: prof && prof.format && typeof prof.format.format === "string" ? prof.format.format : null,
+        composed: true });
+    });
+    if (!wrote) return left("READING_HELD");
+    await wrote.afterRead;
+    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true };
+  }
+
   /* ---- writing (R19–R24) ---- */
 
   /** R20: promotion's projection. For each document in `data/provenance.json` with a capture digest and a reading
