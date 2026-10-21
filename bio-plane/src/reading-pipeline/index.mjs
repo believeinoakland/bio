@@ -1297,6 +1297,10 @@ export async function bytesOf(evidence, doc) {
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
   };
   if (!Array.isArray(doc.parts)) return { bytes: await whole(doc.capture.sha256) };
+  /* R2 (T51 fix round 2, C5): the whole object held under the document's fingerprint is read first; parts are
+     assembled, and bounded, only when none is held. */
+  const held = typeof (doc.capture && doc.capture.sha256) === "string" ? await whole(doc.capture.sha256).catch(() => null) : null;
+  if (held) return { bytes: held };
   const total = doc.parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
   if (total > MULTIPART_READ_MAX)
     return { bytes: null, why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(doc.parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
