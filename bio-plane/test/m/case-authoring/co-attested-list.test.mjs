@@ -33,13 +33,16 @@ function setup() {
 const capturedBy = (w, sha, actor = "member:alice") =>
   w.st.sql.exec(`INSERT INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`, sha, actor, CAPTURED_AT);
 
+/* C40 (K4365) added the capture's own facts to each row; these tests hold the original three fields. */
+const core = (rows) => rows.map(({ capture, by, findings }) => ({ capture, by, findings }));
+
 test("R82 (B10, K4240): step three lists each capture the case rests on that is not co-attested as {capture, by, findings}: the member recorded as capturing it, and each finding resting on it, once; a co-attested capture is not listed", () => {
   const { w, P, a, b } = setup();
   capturedBy(w, b);
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], { selfAttested: [{ capture: b, reason: REASON }] }));
   assert.equal(pre.first, null, JSON.stringify(pre.first).slice(0, 300));
   const list = pre.steps[2].not_co_attested;
-  assert.deepEqual(list, [{ capture: b, by: "alice", findings: [Q, Q2] }]);
+  assert.deepEqual(core(list), [{ capture: b, by: "alice", findings: [Q, Q2] }]);
   assert.ok(!list.some((x) => x.capture === a), "a co-attested capture is never listed");
 });
 
@@ -52,7 +55,7 @@ test("R82 (B10, K4240) control: a capture no finding of the case rests on is not
   assert.ok(!all.steps[2].not_co_attested.some((x) => x.capture === held), "a capture no finding rests on is not listed");
   const only = w.ca.publishPreflight(args(P, [Q2], { selfAttested: [{ capture: b, reason: REASON }] }));
   assert.equal(only.first, null, JSON.stringify(only.first).slice(0, 300));
-  assert.deepEqual(only.steps[2].not_co_attested, [{ capture: b, by: "alice", findings: [Q2] }]);
+  assert.deepEqual(core(only.steps[2].not_co_attested), [{ capture: b, by: "alice", findings: [Q2] }]);
 });
 
 test("R82 (B10, K4240): a capture with no member recorded as capturing it, or only a machine, answers by: null; the pre-flight writes nothing", () => {
@@ -60,10 +63,10 @@ test("R82 (B10, K4240): a capture with no member recorded as capturing it, or on
   const before = w.snapshot();
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], { selfAttested: [{ capture: b, reason: REASON }] }));
   assert.equal(pre.first, null, JSON.stringify(pre.first).slice(0, 300));
-  assert.deepEqual(pre.steps[2].not_co_attested, [{ capture: b, by: null, findings: [Q, Q2] }]);
+  assert.deepEqual(core(pre.steps[2].not_co_attested), [{ capture: b, by: null, findings: [Q, Q2] }]);
   assert.deepEqual(w.snapshot(), before, "the pre-flight writes nothing");
   /* a machine actor is not a member: the capture still answers by: null */
   capturedBy(w, b, "machine:agent-1");
   const machine = w.ca.publishPreflight(args(P, [Q, Q2], { selfAttested: [{ capture: b, reason: REASON }] }));
-  assert.deepEqual(machine.steps[2].not_co_attested, [{ capture: b, by: null, findings: [Q, Q2] }]);
+  assert.deepEqual(core(machine.steps[2].not_co_attested), [{ capture: b, by: null, findings: [Q, Q2] }]);
 });
