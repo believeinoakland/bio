@@ -114,8 +114,10 @@ test("R28 C79 a project opened within the minute it was started says it was star
   const line = main(p).querySelector('[data-visibility="started"]');
   assert.ok(line, "the sentence is drawn");
   assert.ok(says(line, "project.visibility.started", { setting: word("project.visibility.setting.hidden"), date: day(iso) }), "started hidden, on the day");
+  assert.ok(line.closest("details").hasAttribute("open"), "in the foot's fold, open while the project is new so the member sees it");
   const old = await open(at, { images: { [P]: { "bundle.md": startedMd(startedAgo(86400000)) } }, plane: { projectvisibility: NOHISTORY } });
   assert.equal(main(old).querySelector('[data-visibility="started"]'), null, "a day later, none");
+  assert.ok(!main(old).querySelector('details[data-fold="settings"]').hasAttribute("open"), "and the fold is closed as before");
   /* control: the history's own end (R28) is drawn once and never doubled by the new sentence */
   const hist = ok({ ok: true, projectId: P, setting: "hidden", recorded: true, history: [{ setting: "hidden", set_by: "dev", reason: null, at: iso }] });
   const h = await open(at, { images: { [P]: { "bundle.md": startedMd(iso) } }, plane: { projectvisibility: hist } });

@@ -1,4 +1,4 @@
-/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47, R71–R74, R78, R87–R89, R91, R101–R104, R110, R114, R116, R117, R120, R121:
+/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38–R41, R44–R47, R71–R74, R78, R87–R89, R91, R101–R104, R110, R114, R116, R117, R120, R121:
  * the question screen (Projects › <project> ›
  * Question; registry screen `question`).
  *
@@ -11,7 +11,13 @@
  *
  * Its states (R41, `Q_ST`): c, nothing cited (the three ways in); b, passages cited and no partition (what each passage
  * carries, no strength drawn); a, the strength against the bar and the read-back; d, a run of hers at work on it; e, a
- * reading the assistant proposed; f, the assistant's limit reached; g, concluded. Every sentence is a word by key (R44). */
+ * reading the assistant proposed; f, the assistant's limit reached; g, concluded. Every sentence is a word by key (R44).
+ *
+ * Fix round 3 (T51): a refused basis version names the legs it left unplaced by their documents' titles (C41; R35, R50, R117; basis-version-grammar
+ * R11); a leg whose extent states a paragraph draws it, counted from zero in the record and drawn from one (C36; R23, R24, R34, R78); a record that
+ * names no opener draws the day it was opened and no undetermined name (C44; R2); a removed citation is counted nowhere: not asked about, not saved
+ * in the partition, not read back, not named among the legs the strength leaves out, and the page reads the strength and the partition again after a
+ * sever (C38; R2, R23, R24); a member the record names is drawn by her handle, never by her id (C94; R40, R46). */
 
 /** R2, R25, R26: the reads, each as its owner documents it. */
 function reads(view) {

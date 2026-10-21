@@ -12,7 +12,8 @@
  *   reading, no read answers it (Private, Suggestions);
  *   "The story so far" (`cs.storyline`) from `timeline`; "Activity" (`cs.initials`, `cs.activity`) from `projectlist`.
  * A project she is not in draws R60's states; a name is a handle, the unnamed founder by `member.founder.unnamed` (R40); no
- * record id is a title (R39). Self-contained functions (interface-shell R21 (1)); the shared readers are the screen's `parts`. */
+ * record id is a title (R39). Self-contained functions (interface-shell R21 (1)); the shared readers are the screen's `parts`.
+ * Fix round 3 (T51): the queue is asked within the door's bound, 200 (C66; R79); a member the reads name is drawn by her handle, never her id (C94; R40). */
 
 import { named } from "./question.mjs";
 

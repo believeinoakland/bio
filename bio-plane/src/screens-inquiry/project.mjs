@@ -1,4 +1,4 @@
-/* screens-inquiry R1, R9–R11, R14, R16, R20, R21, R27–R30, R38–R40, R43, R44, R52–R54, R60, R63, R75–R77: the project screen (Projects › <project>;
+/* screens-inquiry R1, R9–R11, R14, R16, R20, R21, R27–R30, R38–R40, R43, R44, R52–R54, R60, R63, R75–R77, R128: the project screen (Projects › <project>;
  * registry screen `project`).
  *
  * Self-contained functions (interface-shell R21 (1)); the readers they share are the screen's `parts` (common.mjs). The
@@ -11,7 +11,11 @@
  * `projectbarset`. "Open a question" writes the inquiry and draws it into the project (R11); "Draw on a question from
  * elsewhere" chooses among the questions she may see (R16). "This project's work" (R27): its plans (`plans`), and the
  * calculations, standards and timeline its own references name. Who can find it (R28, `projectvisibility`); its members
- * and owners (R29, `projectparticipants`, `projectownervotes`), the founder unnamed by key (R40). Every sentence a key. */
+ * and owners (R29, `projectparticipants`, `projectownervotes`), the founder unnamed by key (R40). Every sentence a key.
+ *
+ * Fix round 3 (T51): "The project's documents" (R128; DEC-394 (3a)), every document filed under the project, read by `heldcaptures` and listed again by
+ * its act; a project with no history of who can find it that was opened within the minute says it was started (C79; R28); a member the reads name is
+ * drawn by her handle, never by her id (C94; R29, R40, R54). */
 
 import { named } from "./question.mjs";
 
@@ -428,6 +432,12 @@ function render(cs, view) {
     out.push(cs.sec("act.owed_rerunread.label.project", `<div data-rerun="compare"><p class="mk-small">${W("screen.project.cmp_names")} ${W("screen.project.cmp_not_cause")}</p>${body}</div>`));
   }
 
+  /* C79 (R28): a project with no history of who can find it yet, opened within the minute it was started (its record's own `created`
+     against the page's clock), says it was started, with the setting it has and the day; the foot's fold that holds the sentence is open
+     while it is so new, so the member sees it */
+  const vv = d.visibility && d.visibility.state === "ok" && d.visibility.value ? d.visibility.value : null;
+  const born = doc && doc.created ? Date.parse(String(doc.created)) : NaN;
+  const fresh = !!vv && !(Array.isArray(vv.history) && vv.history.length) && Number.isFinite(born) && Math.abs(cs.now() - born) <= 60000;
   /* R28: who can find it, its history newest first, and an owner's act (drawn in the foot's fold, R52 (2)) */
   const visibilitySec = cs.sec("project.visibility.title", cs.state("visibility", view, (v) => {
     const hist = (Array.isArray(v.history) ? v.history : []).slice();
@@ -440,14 +450,9 @@ function render(cs, view) {
       { change: setWord(h.setting), who: byOf(h.set_by), date: { html: h.at ? cs.date(String(h.at), { year: true }) : "" }, reason: String(h.reason || "") })}</p>`);
     if (hist.length) lines.push(`<p class="mk-small" data-visibility="started">${W("project.visibility.started",
       { setting: setWord(hist[0].setting), date: { html: hist[0].at ? cs.date(String(hist[0].at), { year: true }) : "" } })}</p>`);
-    else {
-      /* C79 (R28): a project with no history yet, opened within the minute it was started (its record's own `created` against the page's
-         clock), says it was started, with the setting it has and the day */
-      const born = doc && doc.created ? Date.parse(String(doc.created)) : NaN;
-      if (Number.isFinite(born) && Math.abs(cs.now() - born) <= 60000)
-        lines.push(`<p class="mk-small" data-visibility="started">${W("project.visibility.started",
-          { setting: T(v.setting === "discoverable" ? "project.visibility.setting.findable" : "project.visibility.setting.hidden"), date: { html: cs.date(String(doc.created), { year: true }) } })}</p>`);
-    }
+    else if (fresh)
+      lines.push(`<p class="mk-small" data-visibility="started">${W("project.visibility.started",
+        { setting: T(v.setting === "discoverable" ? "project.visibility.setting.findable" : "project.visibility.setting.hidden"), date: { html: cs.date(String(doc.created), { year: true }) } })}</p>`);
     return `<p data-visibility="${v.setting === "discoverable" ? "discoverable" : "hidden"}">${W(v.setting === "discoverable" ? "project.visibility.discoverable" : "project.visibility.hidden")}</p>`
       + lines.join("")
       + (owner ? cs.field("project-visibility-why", "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
@@ -724,7 +729,7 @@ function render(cs, view) {
     cs.choice("project-bar-capture", "mark.scale.capture.name", letters2(), { value: barDeclared && barRead.capture ? barRead.capture : "" })
     + cs.choice("project-bar-connection", "mark.scale.connection.name", letters2(), { value: barDeclared && barRead.connection ? barRead.connection : "" })
     + `<p class="mk-small">${W("screen.project.bar.help")}</p>` + cs.act("projectbarset", { label: "act.projectbarset.label.project", data: { project: id } })) : "";
-  out.push(`<details class="mk-details" data-fold="settings"><summary>${W("project.settings.fold")}</summary>${barSet}${visibilitySec}</details>`);
+  out.push(`<details class="mk-details" data-fold="settings"${fresh ? " open" : ""}><summary>${W("project.settings.fold")}</summary>${barSet}${visibilitySec}</details>`);
   return out.join("");
 }
 
