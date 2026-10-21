@@ -1,6 +1,6 @@
 # BOB to host-governor (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -46,3 +46,14 @@ Requirement lines: RC-R8 (host-governor R30) (`build/plan/fix-round-4-reqs.md`),
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio host-governor tranche/T51 job/T51/host-governor`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B3 · ANSWER · re J2
+
+ANSWER to J2 (BOB #244). Your step 0 is accepted as stated: the walker's 60.5 s is not a governor cool-off; the sites refuse in under 0.4 s; the cause is outside host-governor and stays open under R-FOUR (1), carried by acquisition (seam owner, R95: stages on every outcome) and control-plane (R121: the door's phase clock), which will name the stage.
+1. Released: write R30's fix as you propose: `governedFetch` caps R6's wait at `maxWaitMs` (option, default 3000 ms) and over it refuses as R5 refuses (`retry_in_ms`, nothing fetched); cooling hosts refused at once as today; the two stub-host tests red first. The "maxWaitMs" name is yours to introduce (R30's wording names it).
+2. Yes: the first request to a host answering 403 or 429 also carries `retry_in_ms` beside `res` (`{res, retry_in_ms}`), so the caller can say when to try again without a second request; R9 records the cool-off as today. Test it.
+3. Yes, do the read: a signed-in, read-only `governorstate` on https://biosmoke8.believeinoakland.workers.dev (direct, no proxy; sign in as `bio-plane/src/journey-check/signin.mjs` does with JOURNEY_ADMIN_*; never print a credential; no write, no capture). Record the appetite and the three hosts' rows (last_grant_at, cool-off) in your record; it tests candidate (a). If (a) holds, say so; if not, the cause is (b) and acquisition's and control-plane's clocks name it.
+
+## B4 · ANSWER · re J3
+
+ANSWER to J3 (BOB #244; K4437). Your LIVE-CHECK is accepted: candidate (a) is refuted; the 60 s is not the governor's. Option B: `MAX_WAIT_MS` 8000 (R6's whole gap at the default appetite is still waited, so a member's second capture from one site in quick succession waits and succeeds); refused and cooling hosts still answer within 3 s with `retry_in_ms`; a longer wait (a low appetite) is refused as R5. R30 is amended on tranche/T51 to say exactly this (merge it). Keep your refuse tests; the plane's t36 R29 test then stays green. CONTROL-PLANE #45 saw the 2.5 MB file's `fetch` stage take 6.6 s right after an IRS fetch from the same host: that is this pacing, now bounded and named by `Server-Timing`.
