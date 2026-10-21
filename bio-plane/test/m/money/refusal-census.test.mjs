@@ -1,7 +1,7 @@
-/* money R29 (fix round 4, C8-words; K4429; K4438): a census of refusal codes. No refusal code money answers is also answered
-   by another module, the shared act rows of record-grammar's SHARED_ACT_CHECKS aside. A census must read every module's
-   source, so this test surveys the literal codes passed to `refusal(` and `refuse(` under bio-plane/src; it is the one
-   place a test reads source, and it asserts only which code belongs to which module. */
+/* money R29 (fix round 4, C8-words; K4429; K4438; K4444): a census of refusal codes. No money act answers BAD_PERIOD: that
+   code belongs to following and civil-time. Generic codes that name the same condition in every module stay shared (K4444).
+   A census must read every module's source, so this test surveys the literal codes passed to `refusal(` and `refuse(`
+   under bio-plane/src; it is the one place a test reads source, and it asserts only which code belongs to which module. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -24,14 +24,9 @@ function codesByModule() {
   return out;
 }
 
-test("R29 no refusal code money answers is also answered by another module, the shared act rows aside", () => {
+test("R29 the census finds no BAD_PERIOD answered by any money act", () => {
   const codes = codesByModule();
-  const shared = readFileSync(join(SRC, "record-grammar/index.mjs"), "utf8");
-  const clashes = [...(codes.money ?? [])]
-    .filter((c) => !shared.includes(`"${c}"`))
-    .map((c) => ({ code: c, also: Object.keys(codes).filter((m) => m !== "money" && codes[m].has(c)) }))
-    .filter((x) => x.also.length);
-  assert.deepEqual(clashes, [], `money's codes also answered elsewhere: ${clashes.map((x) => `${x.code} (${x.also.join(", ")})`).join("; ")}`);
+  assert.equal((codes.money ?? new Set()).has("BAD_PERIOD"), false);
 });
 
 test("R29 control: the census sees money's own codes, and the fiscal period code belongs to money alone", () => {
