@@ -226,10 +226,10 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
      *  whole unless `indexed: false`; fetched `direct` by this instance unless `receipt: false` (a Grade B capture,
      *  provenance R13, R24); registered at `snapshots/<name>` (a `.png` name makes it a photo to the real case-carriage,
      *  its bytes put in the evidence store). Answers the capture's sha. */
-    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true, name = "c0.txt" } = {}) {
+    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true, name = "c0.txt", title = `Document ${id}` } = {}) {
       const c = { path: `snapshots/${name}`, text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
-        files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
+        files: [{ path: "bundle.md", text: infoMd(id, title) }, { path: c.path, text: c.text },
                 { path: "data/provenance.json", text: JSON.stringify({ documents: [{ ...provDoc(c), ...extra }] }) }],
         meta: { object_type: "information" },
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
@@ -398,8 +398,8 @@ export function importsStandIn() {
   return s;
 }
 
-export function infoMd(id) {
-  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
+export function infoMd(id, title = `Document ${id}`) {
+  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: ${JSON.stringify(title)}`,
           "current_state: collected", "prior_state: null", `created: "${T0}"`,
           `last_updated: "${T0}"`, "references: []", "state_history: []", "criticality: supporting",
           "---", "", "## Summary", "", "A document.", ""].join("\n");
