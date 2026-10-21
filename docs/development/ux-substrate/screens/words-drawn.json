@@ -37469,6 +37469,30 @@
    "en": "Saying two documents contradict is a kept decision, and a kept decision says why. Write how they disagree, in your own words. Nothing was written.",
    "protected": false,
    "note": "DEC-396: B444 item 12: refusal when saying two documents contradict"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT.held",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.",
+   "protected": false,
+   "note": "DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT.undetermined",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.",
+   "protected": false,
+   "note": "DEC-397: B446: a timed-out capture whose kept state cannot be told"
+  },
+  {
+   "key": "form.choose.search",
+   "en": "Search your documents",
+   "protected": false,
+   "note": "DEC-397: B447 (screens-investigate C95): the document picker's search box label"
+  },
+  {
+   "key": "form.choose.search.none",
+   "en": "No document matches. Try other words, or add the document first.",
+   "protected": false,
+   "note": "DEC-397: B447: the document picker's search found nothing"
   }
  ],
  "rewrite": {

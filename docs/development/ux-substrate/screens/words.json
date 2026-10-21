@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2574,
+  "refusal": 2576,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -103,7 +103,7 @@
   "time": 4,
   "size": 4,
   "reference": 1,
-  "form": 3,
+  "form": 5,
   "unavailable": 2,
   "page": 2,
   "person": 1,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18102,
+  "total": 18106,
   "protected": 1068
  },
  "words": [
@@ -75291,6 +75291,34 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-396: B444 item 12: refusal when saying two documents contradict"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT.held",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT.undetermined",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B446: a timed-out capture whose kept state cannot be told"
+  },
+  {
+   "key": "form.choose.search",
+   "en": "Search your documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B447 (screens-investigate C95): the document picker's search box label"
+  },
+  {
+   "key": "form.choose.search.none",
+   "en": "No document matches. Try other words, or add the document first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B447: the document picker's search found nothing"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
