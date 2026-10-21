@@ -32,7 +32,7 @@ Requirement lines: RC-R10 (screens-publish R9 amended, R80 new; public-read R42)
    > | (editor aside) | - | 1280 | admin | case editor after edition 1 was published | NEW (MINOR) | the editor still says "A draft that names no case yet ... Draft ... Distributed Not checked yet" for a draft whose edition 1 is public (the ceremony page says "Published: edition 1" correctly) | shots/B/editor-after-publish-1280.png |
    (1) PARTLY CERTAIN; detail UNKNOWN. The pre-flight's `editions` come from `draftEditions({caseId})` (`case-authoring/index.mjs:1662`) where `caseId` is the case named, else the one published case the members serve, else the unsigned preparation (`#caseStood`, :1669-1676); "the act's own run is rolled back" so a minted case states neither (:1660); review R19 `editions` was tested against a scripted double. Which of the three sources is empty on a fresh instance: root cause unknown, STEP 0 finds it by preparing and reloading in a fresh instance and reports to BOB.
    (2) A scripted double of `draftEditions`. Fix: the real `draftEditions` in the screen's test.
-   (3) Prepare edition 1, reload (fresh instance): "Edition 1 is prepared" and no stop reasons; publish: "Published: edition 1" and the address from one builder (`publishedAddress`; resolves J13) (RC-R10).
+   (3) Prepare edition 1, reload (fresh instance): "Edition 1 is prepared" and no stop reasons; publish: "Published: edition 1" and the address from one builder (`publishedAddress`; resolves J13) (screens-publish R80; public-read R42).
    (4) L (a fresh object instance stands for the reload).
 
 4. **C49**: Owner; step 0. One module: no seam; the test enters by the act.
@@ -53,7 +53,7 @@ Requirement lines: RC-R10 (screens-publish R9 amended, R80 new; public-read R42)
    > | C47 | CA38/CA36 | 1280, 390 | outsider | published page of CASE-2026-4783 | FIXED (MINOR left) | "What would overturn it A statute that lets ..." is drawn beside the finding; EVIDENCE lists the document by its address "https://www.foia.gov/faq.html" (not "Capture B" twice) but not the page title or the paragraph cited; "Relied on ·" ends in a stray dot. Loads in 5.4 s, fits at 390 | shots/B/published-1280.png, published-390.png |
    (1) CERTAIN: the entry's name is the address (`public-read`); the "Relied on ·" stray dot is the screen's join.
    (2) Tested on a scripted entry. Fix: the walker's published case through the real chain.
-   (3) CASE-2026-4783: the entry names the document's title and "Paragraph 4", no stray dot (RC-R10, public-read R41).
+   (3) CASE-2026-4783: the entry names the document's title and "Paragraph 4", no stray dot (screens-publish R80; public-read R41, R42).
    (4) N.
 
 7. **C51**: Seam owner (S): `cs.signer` (cause-shell-4, merged). Your whole-path test: the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape.
@@ -65,9 +65,9 @@ Requirement lines: RC-R10 (screens-publish R9 amended, R80 new; public-read R42)
    (3) Load a key file: the page says it has the key (not "no signing key in this browser"); the progress line is words; the signed strings are separated.
    (4) N.
 
-8. **C81 (this screen's call sites)**: Call sites only.
+8. **C81**: Seam owner (S), with the call sites: cause-shell-4 (wave 1) fixes the shell's row layout (interface-shell R120) and is merged before you. Your whole-path test: the case editor and the review copy, built by the member's own acts through the real ops, measured at 390 px with the real merged shell and a live-sized control count; edit your call sites only if the shell's fix leaves them squeezed.
    > | C81 (cut) | CA18/CA61 | 390 | admin | Case editor "Remove a citation" and Review copy "Stop sharing" | STILL (MAJOR) | each button is squeezed to a 44 px wide, 267 px (editor) and 229 px (review copy) tall column with its letters stacked one over another ("R e m o v e a c i t a t i o n"): unreadable. The same editor list still shows the raw question id (C46) | shots/B/m390-cut-editor.png, m390-cut-reviewcopy.png |
-   (1) CERTAIN: `screens-publish` has the `cs.row("", text, act)` call sites (`case-editor.mjs:70,111,156,160,176`, `published.mjs:83,99,111,120,147,159`, `parts.mjs:386`); cause-shell-4 (S) fixes the shell's row layout (interface-shell R120).
+   (1) CERTAIN: `screens-publish` has the `cs.row("", text, act)` call sites (`case-editor.mjs:70,111,156,160,176`, `published.mjs:83,99,111,120,147,159`, `parts.mjs:386`); cause-shell-4 (provider) fixes the shell's row layout (interface-shell R120).
    (2) Phone tests measure named states with scripted data; "Remove a citation" is in no test. Fix: measure the walker's two screens.
    (3) Case editor "Remove a citation" and review copy "Stop sharing" at 390 px: each over 200 px wide, one line; edit these call sites only if the shell's fix leaves them squeezed.
    (4) Chromium at 390 px.
@@ -76,7 +76,7 @@ Requirement lines: RC-R10 (screens-publish R9 amended, R80 new; public-read R42)
    > | C14 | CA2/CA19/CA45/E24/E29/E36 | 1280 | admin, member | timed screens (load to settled; includes the reads) | STILL (MAJOR, over 5 s) | Question 5.5 to 7.1 s (once 10.6 s; 32 to 35 reads), Document 5.6 to 7.4 s (35 to 45 reads), Project 5.0 to 6.4 s (37 to 69 reads, for an empty new project), Home 6.6 to 8.2 s (52 reads), People 7.2 s, Money 5.5 s, Plan 5.4 s, Action 8.4 s first load, published page 5.4 s, reader link 4.9 to 6.7 s, Ceremony 3.3 to 5.9 s (twice 10 s, once 37 s), Queue 4.3 s (once 14.5 s, 82 items). Within about 2 s: Add 0.9 s, cite 2.0 s, vouch 0.4 s, conclude 2.7 s, key registration 0.7 s, choose option 1.5 s, reply 1.6 s. Acts over 2 s: reattest 4.0 s, prepare edition 2.3 to 5.6 s, create money trail 3.9 s, Start the request 3.2 s, new web capture 5.1 s and 7.1 s | |
    (1) Known (lane): the frame reads `bootstrap` and `queue` and the screen again; repeats `casedrafts` 3x, `projectquestions` 11x on Project, `inquirystrength` 2x. ROOT CAUSE UNKNOWN for where each slow act spends its time (no per-op time until control-plane's `Server-Timing`).
    (2) Jobs counted reads, not time (class b). Fix: the screen's test asserts its read set (one `queue`, one `bootstrap`, no per-project repeat); the record gives its time.
-   (3) Failing-first: the read-set test for this screen, over the providers' merged answers.
+   (3) Failing-first: the read-set test for this screen, over the providers' merged answers (control-plane R122: one `bootstrap` per page load; queue R93: the frame reads `count`, only the Queue screen reads the list).
    (4) LIVE-CHECK (P, read-only): this screen's reads timed on the smoke copy (`Server-Timing` if merged, else the lane's `probe.mjs`), numbers in the record; acts over 2 s at the re-walk, P11 if they miss.
 
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).

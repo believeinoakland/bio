@@ -154,6 +154,8 @@ The 15-minute guard (`MIRROR_MIN_GAP_MS`, `scanMirror` :1020) compares against t
 - **NR (none of them a row found STILL):** N2 (cannot be made: no empty choice); **C87c** (survivors A12: `screens-settings/identity.mjs:70-73` refuses only when no kind is ticked and all boxes are empty; the walker ticked kinds; a different input, not a defect; dated fixture check at the re-walk); C41 (no contrived state; dated fixture); C4, C89, C90 (shared state; fixtures); old names of PDFs captured before this release (new records only, R-OLD; the re-walk uses new captures); the first-try `STORE_DID_NOT_ANSWER` after a pause is folded into C5a.
 - **LU** (section 6): "Check it now" label, C71 reason, "Pages 1", C95 list, "the city" words, money's "follow" word, unresolved ceremony rows.
 
+**Seam owners (K4431; supersede section 2's and section 8's where they differ):** the last-merged job on each path owns its through-the-door test: control-plane (C5a, C5b), plane (C5c), acquisition (N-slow-refuse), capture-sources (C13a, C13b), screens-daily (C25: capture to every list), screens-settings (C84), screens-intake (C9), screens-inquiry (N5, cite-refusal), screens-investigate (C59), screens-action (C64-template, C64-law, C64-more), screens-publish (C51, C81, C28, C46, C48); providers test the same case at their interface. The STARTs in `starts-T51-F4/` carry these.
+
 ## 3. Jobs
 
 Every job: medium effort; its suites then `build/plan/impact.mjs tranche/T51 HEAD`; "declare every census op you own"; R-FOUR, R-SEAM, R-NOTMET, R-OLD.
