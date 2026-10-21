@@ -272,3 +272,21 @@ Cause 1 (moneysets) is done and committed on job/T51/op-declarations (f94ce2b1b1
 1. `affordances` test `bio-plane/test/m/affordances/t33.test.mjs:189` (R12, R24) is red on the tranche with my change. Its line 195 asserts `unaccounted(table)` has no `unpublished` op, and `moneysets` (a money read, now declared by money's family) is reported as unpublished. The affordances' table is affordances' own file, so I changed nothing there. Needs the affordances owner: publish `moneysets` in its read table, or ground it there.
 
 2. `op=inbox` is still served (control-plane DO_PATH maps it to `inboxlist`); the `inbox` hand row stays as it is on tranche/T51. See my QUESTION on cause 2.
+
+## J21 · QUESTION
+
+Cause 2 (the inbox list): I did not make the rename in BOB's START, because it breaks the route and two invariants. Best reading and what I did:
+
+What I tried: rename my hand row `inbox` to `inboxlist`, add `inbox → inboxlist` to OP_ALIASES, and rename the session-set names to match.
+What broke, seen in the suites and checks:
+- `op=inbox` answered UNKNOWN_OP (control-plane inbox-door tests, 2 failing). The plane checks the op name against OPS before its DO_PATH maps it, so the hand row (or an alias) must keep the name `inbox`.
+- Six alias tests (op-declarations t34, t37, t46, t52, t54, t65) require every alias to be a registry function act (R21). The registry has no `inbox` act, only the screen `inbox`, so the alias fails them.
+- Renaming the hand row to `inboxlist` with no alias makes doorbell's test ops.test.mjs:25 a `handlist` red in the words check, because `inboxlist` is then an op of this module's hand table and not doorbell's.
+
+What is on tranche/T51 now (my branch leaves it as it was): the `inbox` hand row and the `inbox` session-set names, unchanged. Doorbell's `inboxlist` declaration is an owner declaration and still joins OPS.
+
+Options:
+(a) Keep as is (recommended). The route works, every check is clean, and doorbell's `inboxlist` stays its own declaration. Cost: the name `inbox` stays a hand row, not a doorbell declaration.
+(b) Rename to `inboxlist` and add `inbox → inboxlist` as an alias. That needs R21 amended to say the plane's route aliases may name a route rather than a registry act, a requirement change for BOB to write, and the words red in doorbell's test to be resolved there.
+
+Please answer (a) or (b). I will not change cause 2 until then.
