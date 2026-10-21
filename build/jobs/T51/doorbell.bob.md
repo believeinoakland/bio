@@ -22,3 +22,16 @@ CHANGE (K3982), on your two open points, before I merge:
 1. `knocker.test.mjs`:205 matches a regular-expression copy of the product sentence ("received at the doorbell of your team's Civicsmith as knock … not fetched"). setup-words R13 binds it whatever the check counts (K3964): compare `asserts` with the product's own `localize`/`word` call evaluated with the fixture's vars, by equality.
 2. `expect.mjs`:18 mints `localize("doorbell.checks.group_can_see", …)`, an id no product code reads. A test never holds a sentence (K3810) and never mints an id (the extraction would make it a row): if the product shows that sentence, the test reads the product's key; if not, delete the constant and assert what the product actually answers.
 Merge `tranche/T51` (never rebase), run your tests and `node checks/words.mjs /home/user/bio doorbell`, and COMPLETE again.
+
+## B3 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/doorbell tranche/T51 && git branch -m job/T51/doorbell stale/doorbell-local && git checkout -b job/T51/doorbell origin/job/T51/doorbell`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · DOORBELL #5 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #240 is depth 1; fix round 2, wave 3, K4323)
+
+Mail with `--module doorbell`; record `build/jobs/T51/doorbell.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `doorbell`. Your diff touches only that module's paths and tests and your record. This is fix round 2 of T51 (`build/plan/fix-round-2-T51.md`); merge `tranche/T51` into your branch first. Nothing found here waits for the next tranche (K3915, P19). Every requirement you meet is named by a test seen failing first, with a negative control; propose any requirement line in your COMPLETE for BOB to write (BOB writes `build/requirements/`). Run your suite, then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean (reds also on the tranche tip are named, not fixed). Declare every census op you own (K4208).
+
+**Your causes:**
+1. **C28's plane half: what a knock is** (SCREENS-INTAKE #13 REPORT 2, K4328). A knock in the inbox stores no file name or type, so the inbox cannot tell a member what arrived before she pulls it. Requirement (new line, proposed by you; read your R3 and the knock's record whole): a knock records the file name and media type its sender stated (bounded, never trusted as a type check: the file-safety scan still decides), and the inbox read answers both. Test with control (a knock with neither stated answers them absent). A read of the bytes before the pull (a safe view) is not in this entry; say in your COMPLETE what it would take.

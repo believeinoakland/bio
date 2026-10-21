@@ -34,6 +34,8 @@ import { acquireReadingOp } from "../extraction/ops.mjs";
    nine screen modules' screens (R81's order), with screens-wizards' guide in the dock (interface-shell R31), and
    interface-assets' files. */
 import { appRouteOf, appPage, appAsset, logoAsked, addressPageOf } from "./app.mjs";
+/* R116 (fix round 2; C15): the interface words kept for the release and compressed */
+import { interfaceWordsCache } from "./words-cache.mjs";
 import { interfacePage } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
@@ -56,7 +58,7 @@ import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, to
    it), asked of the Worker environment alone. */
 import { AiRuns } from "../ai-runs/index.mjs";
 /* R99 (T49; K3366, K3368; DEC-257, DEC-258): every member-facing sentence is read by key through setup-words. */
-import { word } from "../setup-words/index.mjs";
+import { word, hasWord } from "../setup-words/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { instanceGroupOp, groupIdentityOp, groupLogoAsset } from "../setup.mjs";
@@ -195,6 +197,20 @@ async function withTrace(res, trace) {
 const PUBLISHED_STORE = "bio";
 /* R105 (K3770): the longest an `acquire` is let run at the door. */
 const ACQUIRE_BOUND_MS = 25000;
+/* R105, R115 (fix round 2, C12; acquisition R13, R20, R95): WHAT A CALL THE DOOR STOPPED WAITING FOR HAD KEPT, from the stage times the
+   object states for it (`stageTimes`): `held` once its stage `receipt` (the capture's record, acquisition R13) has ended, for the
+   attestation, the profile and the rest come after it and never undo it (R20); `nothing` while it had not; `undetermined` when the
+   object states no stage (a call with no trace, or an object that answers none), where the door claims nothing. */
+/* the design's key for each state; the two it was asked for (K4326) are read when the design holds them, never a sentence of this module's */
+function detailKey(kept) {
+  const key = kept === "nothing" ? "refusal.ACQUIRE_TIMED_OUT" : `refusal.ACQUIRE_TIMED_OUT.${kept}`;
+  return kept === "nothing" || hasWord(key) ? key : null;
+}
+function keptOf(times) {
+  const stages = times && typeof times === "object" && times.stages && typeof times.stages === "object" ? times.stages : null;
+  if (!stages) return "undetermined";
+  return Object.hasOwn(stages, "receipt") && times.running !== "receipt" ? "held" : "nothing";
+}
 
 async function fingerprint(v) {
   if (!v) return null;
@@ -653,7 +669,9 @@ export function makeFetch(hooks = {}) {
     res = await withTrace(res, seen.trace);
     await tallySessionRefusal(res, seen.session);
     res = await tallyOnTheWayOut(res, seen, req, env);
-    return await withPagePolicy(res);
+    res = await withPagePolicy(res);
+    /* R116: last, so the tallies above read the answer as it was made and a refusal is never kept */
+    return seen.op === "interfacewords" ? await interfaceWordsCache(res, req, env) : res;
   };
   planeDoor.limits = PLANE_LIMITS;
   planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
@@ -2288,9 +2306,13 @@ export function makeFetch(hooks = {}) {
       const late = new Promise((resolve) => { timer = setTimeout(() => resolve("late"), hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS); });
       return Promise.race([work, late]).then(async (got) => {
         clearTimeout(timer);
-        return got === "late" ? json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op,
-                                       store: storeName, tokenClass: cls, detail: word("refusal.ACQUIRE_TIMED_OUT"),
-                                       timings: await acquireStages() }, 504) : got;
+        if (got !== "late") return got;
+        /* R105, R115 (fix round 2, C12): what was kept is read off the stages the object states, and the design's sentence ("kept
+           nothing") is said only where nothing was */
+        const stages = await acquireStages();
+        const kept = keptOf(stages);
+        return json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op, store: storeName, tokenClass: cls,
+                      ...(detailKey(kept) ? { detail: word(detailKey(kept)) } : {}), kept, timings: stages }, 504);
       }, (e) => { clearTimeout(timer); throw e; });
     };
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
