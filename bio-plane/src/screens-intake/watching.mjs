@@ -22,7 +22,8 @@ function renderWatching(cs, view) {
   const state = L ? cs.sheet(paused
       ? cs.row(cs.icon("hold"), `<b>${cs.w("screen.watching.paused")}</b> ${cs.w("screen.watching.paused.line", { name: { html: named(handleOf(paused.by)) }, date: { html: paused.at ? cs.date(paused.at) : "" }, time: paused.at ? String(paused.at).slice(11, 16) : "" })} ${cs.w("screen.watching.paused.effect")}`)
       : cs.row(cs.icon("clock"), `<b>${cs.w("screen.watching.running")}</b>`, "", cs.w("screen.watching.running.meta")))
-    + `<div class="mk-acts">${paused ? cs.act("monitorpause", { label: "screen.watching.resume", data: { paused: "false" } }) : cs.act("monitorpause", { label: "screen.watching.pause", data: { paused: "true" } })}</div>` : "";
+    /* C90: pausing and resuming are the administrator's; a member, whom the plane would refuse, is not offered them */
+    + (view.me && view.me.administer === true ? `<div class="mk-acts">${paused ? cs.act("monitorpause", { label: "screen.watching.resume", data: { paused: "false" } }) : cs.act("monitorpause", { label: "screen.watching.pause", data: { paused: "true" } })}</div>` : "") : "";
   const running = state ? cs.sec("screen.watching.running.head", state) : "";
   /* every watched address: how often, when last checked, when next due; the unscheduled and the ended stated, none left out */
   const listed = cs.state(D.list, (v) => {

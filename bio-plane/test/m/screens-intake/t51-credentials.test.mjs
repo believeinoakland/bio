@@ -24,7 +24,7 @@ test("R47 a request turned away for a login is drawn with the login form; only a
   assert.ok(tail && text(p).includes(tail), "R47 asked for by the member, the day and the tries, by key");
   assert.equal(main(p).querySelectorAll('button[data-act="capturecredentialsupply"]').length, 1, "one row asked for a login");
   assert.equal(main(p).querySelectorAll('button[data-act="capturerequestretry"]').length, 1, "the retry only on that refused request");
-  assert.ok(!text(p).includes("paid.example.org") && !text(p).includes("fine.example.org"), "control: a paywall refusal and an accepted request are not offered a login or a retry");
+  assert.ok(!text(p).includes(word("screen.capture.cred.turned", { source: "paid.example.org" })) && !text(p).includes(word("screen.capture.cred.turned", { source: "fine.example.org" })), "control: a paywall refusal and an accepted request are not offered a login or a retry");
   assert.equal(p.doc.getElementById("cc-secret").getAttribute("type"), "password");
   assert.ok(says(p, "screen.capture.cred.sealed1") && says(p, "screen.capture.cred.sealed2"));
 });

@@ -71,7 +71,9 @@ test("R8 after an act the screen reads again what it changed (every read, or non
   for (const s of SCREENS) {
     const reads = Object.keys(s.reads({ subject: s.id === "capture" ? "address" : SHA, me: MEMBER, data: {}, ui: {} }));
     for (const a of s.acts) {
-      if (reads.length) assert.equal(a.rereads, undefined, `${s.id} ${a.op} reads everything again`);
+      /* what an act changed is read again, not every read (C14: an act does not read a whole list it did not change): an act names
+         reads the screen has, or names none (it reads all); a screen with no reads has nothing to name */
+      if (reads.length) assert.ok(a.rereads === undefined || [...a.rereads].every((n) => reads.includes(n)), `${s.id} ${a.op} names reads the screen has`);
       else assert.deepEqual([...(a.rereads || [])], [], `${s.id} ${a.op}`);
     }
   }

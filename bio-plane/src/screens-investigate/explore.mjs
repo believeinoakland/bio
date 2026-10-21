@@ -86,7 +86,7 @@ function render(cs, view) {
       return `<li data-hop="${cs.esc(h.id)}">${cs.w(S + "hop", { from: endRef(h.from), to: endRef(h.to) })} <i>${cs.esc(wordOf(h.kind))}</i> ${unnamedEnds(h)} ${g} `
         + (declared ? `<b>${cs.w(S + "declared")}</b> ` + cs.act("stepsource", { label: "act.stepsource.label.explore", data: { relation: h.id } })
           : hunch ? cs.mark("hunch") : src || cs.mark("gap", "undetermined", { reason: cs.w(S + "nosource") }))
-        + (attached ? ` <span class="mk-small" data-attached="${cs.esc(h.id)}">${cs.w(S + "attached", { by: String(h.attached_by || "").replace(/^member:/, ""), date: cs.date(h.at || "") })}</span> ` : "")
+        + (attached ? ` <span class="mk-small" data-attached="${cs.esc(h.id)}">${cs.w(S + "attached", { by: P.who(cs, h.attached_by), date: cs.date(h.at || "") })}</span> ` : "")
         + (h.undetermined && h.undetermined.why ? ` ${cs.mark("gap", "undetermined")} <span class="mk-small">${P.why(cs, h.undetermined.why)}</span>` : "") + "</li>";
     };
     const chain = (path, i) => {

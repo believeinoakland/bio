@@ -168,7 +168,7 @@ const ACT_HELP = {
   owed_capturecredentiallist: 'Lists the sources your team has stored a login for, and who gave each, with the date. It never shows a username or a secret.',
   owed_capturecredentialwithdraw: 'Destroys the stored login for this source. Requests to it are turned away for a login again until someone gives a new one.',
   owed_declareorigin: 'Records, with your name and the date, the system this document came from. A second declaration is added beside the first and never replaces it. The document itself does not change.',
-  owed_contradictionflag: 'Sets a passage here beside a passage in another document as a contradiction your project settles, with your reason. It changes neither document.',
+  contradictionflag: 'Sets a passage here beside a passage in another document as a contradiction your project settles, with your reason. It changes neither document.',
   owed_citeimported: 'Rests one of your team\'s questions on a finding your team accepted from another team\'s case, at the edition shown. It carries the fact that they published it, and the grade the edition published, never higher.',
   owed_withdrawimported: 'Takes another team\'s finding off this question\'s answer, with your reason. The history keeps it, and so does each version already frozen.',
   owed_namedrequests: 'Lists the requests to gather something on a schedule that you may see, with where each is looked for, when it was last tried and when it is next due.',

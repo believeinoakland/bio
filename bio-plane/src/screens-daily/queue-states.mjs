@@ -201,11 +201,12 @@ export function queueStates() {
     if (r.act === "resolved") {
       const byYou = r.by_you === true;
       const meta = r.by === null || r.by === undefined ? at
-        : byYou ? cs.w("queue.answered.byyou", { when: { html: at } }) : cs.w("queue.answered.bymember", { member: String(r.by), when: { html: at } }) + " · " + cs.w("queue.answered.byother");
+        : byYou ? cs.w("queue.answered.byyou", { when: { html: at } }) : cs.w("queue.answered.bymember", { member: cs.memberName(r.by), when: { html: at } }) + " · " + cs.w("queue.answered.byother");
       return cs.row(cs.icon("accepted"), said("queue.answered.done", { item: { html: title } }) + (meta ? '<span class="meta">' + meta + "</span>" : ""), "", "");
     }
     if (r.act === "forwarded") {
-      const who = r.to === null || r.to === undefined || r.to === "" ? "" : String(r.to);
+      // R85: the member it went to by her handle (`cs.memberName`), never her id.
+      const who = r.to === null || r.to === undefined || r.to === "" ? "" : cs.memberName(r.to);
       return cs.row(cs.icon("accepted"), (who ? cs.w("queue.answered.forwarded", { item: { html: title }, member: who }) : cs.w("queue.answered.forwarded.unnamed", { item: { html: title } }))
         + '<span class="meta">' + cs.w("queue.answered.byyou", { when: { html: at } }) + "</span>", "", "");
     }
@@ -274,8 +275,8 @@ export function queueStates() {
       const you = r.decided_by === "you" || r.by_you === true || (view.me && r.decided_by && (r.decided_by === view.me.member || r.decided_by === view.me.handle));
       const dismissed = r.state === "dismissed";
       const decision = dismissed
-        ? (you ? cs.w("queue.aside.dismissed", { date: { html: cs.date(String(r.at || "")) } }) : cs.w("queue.aside.dismissed.bymember", { member: String(r.decided_by || ""), date: { html: cs.date(String(r.at || "")) } }))
-        : (you ? cs.w("queue.aside.deferred", { date: { html: cs.date(String(r.at || "")) } }) : cs.w("queue.aside.deferred.bymember", { member: String(r.decided_by || ""), date: { html: cs.date(String(r.at || "")) } }));
+        ? (you ? cs.w("queue.aside.dismissed", { date: { html: cs.date(String(r.at || "")) } }) : cs.w("queue.aside.dismissed.bymember", { member: cs.memberName(r.decided_by), date: { html: cs.date(String(r.at || "")) } }))
+        : (you ? cs.w("queue.aside.deferred", { date: { html: cs.date(String(r.at || "")) } }) : cs.w("queue.aside.deferred.bymember", { member: cs.memberName(r.decided_by), date: { html: cs.date(String(r.at || "")) } }));
       const version = r.definition_version !== null && r.definition_version !== undefined ? " · " + cs.w("queue.aside.v2", { n: String(r.definition_version) }) : "";
       const reason = typeof r.reason === "string" && r.reason.trim() ? ' · <span class="rec">' + cs.esc(r.reason) + "</span>" : "";
       const again = !dismissed ? cs.act("proposedispose", { label: "act.proposedispose.label.queue", data: { to: "dismissed", project: r.project ? String(r.project) : "", finding: String(r.finding || ""), key: r.key ? String(r.key) : "", version: r.definition_version === null || r.definition_version === undefined ? "" : String(r.definition_version) } }) : "";

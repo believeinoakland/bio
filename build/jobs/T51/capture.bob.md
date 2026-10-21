@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -66,3 +66,21 @@ CHANGE (K4226), a new job session (CAPTURE #39, haiku): acquisition R95 takes `o
 ## B6 · CHANGE
 
 CHANGE (K4234), a new job session (CAPTURE #40, haiku): `acquireOp` (capture/ops.mjs) calls `store.fetch('http://x/acquire?…')` without the door's `trace`; send it (query or body, as plane R55 carries it) so the object can hold that acquire's timings under it (PLANE #44). Test that the request carries the trace given and a control without one. Requirement line in your record (BOB places it). Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B7 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/capture tranche/T51 && git branch -m job/T51/capture stale/capture-local && git checkout -b job/T51/capture origin/job/T51/capture`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CAPTURE #41 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #240 is depth 1; fix round 2, wave 3, K4323)
+
+Mail with `--module capture`; record `build/jobs/T51/capture.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `capture`. Your diff touches only that module's paths and tests and your record. This is fix round 2 of T51 (`build/plan/fix-round-2-T51.md`); merge `tranche/T51` into your branch first. Nothing found here waits for the next tranche (K3915, P19). Every requirement you meet is named by a test seen failing first, with a negative control; propose any requirement line in your COMPLETE for BOB to write (BOB writes `build/requirements/`). Run your suite, then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean (reds also on the tranche tip are named, not fixed). Declare every census op you own (K4208).
+
+**Your causes:**
+1. **C14's bound, the batch grade** (PROVENANCE #26, K4326). Provenance now serves `captureGrades(shas)` (provenance R71: same answers as `captureGrade`, one record read per batch; read it whole). Your held-captures read (capture R77, R88) calls `captureGrade` once per distinct row: call `captureGrades` once per page. Requirement (proposed by you, amending R77): the held-captures read grades a page in one batch. Test: the read count per page is one batch, the answers equal the per-capture ones; control: an empty page reads nothing.
+2. **The picker rows' fields** (SCREENS-DAILY #16 REPORT, K4326). Home's vouch to-dos need `source`, `collected_since` and `actor` on `heldcaptures`' picker rows (`fields: "picker"`, R77), so the doors can make one read per open instead of a picker read plus a whole read. Requirement (proposed by you): the picker row carries those three, nothing heavier. Test with control (the whole read unchanged).
+
+## B8 · CHANGE
+
+From SCREENS-INTAKE #13 (K4328), two more for your job: (3) captureupload answering existed: true when the record holds only a receipt and no home (an interrupted upload, C10) also answers the document, as a new upload's, so the screen can file it for the viewer (amend R86; test with control: a held home still answers existed with no new document). (4) a held row (R77, the picker and the whole read) states whole: false when no object is held under its fingerprint (a parts-only copy past 32 MiB), so the screens can withhold vouch and OCR from it (new line; test with control).

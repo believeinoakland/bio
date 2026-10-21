@@ -145,6 +145,7 @@ test("R58: Snooze sends queuesnooze once for each distinct case among the chosen
   assert.equal(beside(none, b), word("screen.queue.fieldfirst"));
 });
 
+const ROSTER = ok({ members: [{ member_id: "id-rosa", handle: "rosa", status: "active" }, { member_id: "id-mai", handle: "mai", status: "active" }] });
 const ANSWERED = ok({ ok: true, count: 5, window_days: 30, bound: 200, truncated: false, answered: [
   { act: "resolved", id: "T9", class: "OBLIGATION", kind: "check-requested", title: "The lease check", by: "mai", by_you: true, at: "2026-10-14T14:05:00Z" },
   { act: "resolved", id: "T8", class: "OBLIGATION", kind: "update-ready", title: null, by: "rosa", by_you: false, at: "2026-10-09T11:02:00Z" },
@@ -154,7 +155,7 @@ const ANSWERED = ok({ ok: true, count: 5, window_days: 30, bound: 200, truncated
 ] });
 
 test("R59: the answered page reads queue with answered true and draws each answer newest first with who and when, a forward and a snooze with their days; it sends nothing but the read", async () => {
-  const p = await open("/app/queue/answered", { queue: (req) => (req.query.answered ? ANSWERED : ok({ ok: true, aside: [] })) });
+  const p = await open("/app/queue/answered", { memberlist: ROSTER, queue: (req) => (req.query.answered ? ANSWERED : ok({ ok: true, aside: [] })) });
   const reads = p.byOp("queue");
   assert.ok(reads.some((r) => r.query.answered === "true"));
   assert.deepEqual(p.requests.filter((r) => r.method !== "GET" && r.op !== "subscriptionsignin").map((r) => r.op), [], "the page sends nothing but the read");
@@ -241,7 +242,7 @@ test("R61: the set-aside findings are listed on the answered page with the decis
   const declared = collectOwnerRows().proposedispose;
   assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definition_version: 3, to: "dismissed", reason: "r" } }, declared).map((m) => m.field), ["definition_version"]);
   assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definitionVersion: 3, to: "dismissed", reason: "r" } }, declared), []);
-  const other = await open("/app/queue/answered", { queue: (req) => (req.query.aside ? ASIDE([row(1, { decided_by: "rosa" })]) : ANSWERED) });
+  const other = await open("/app/queue/answered", { memberlist: ROSTER, queue: (req) => (req.query.aside ? ASIDE([row(1, { decided_by: "rosa" })]) : ANSWERED) });
   assert.ok(text(other).includes(word("queue.aside.dismissed.bymember", { member: "rosa", date: dmy("2026-10-08") })), "another member's decision by her handle");
 });
 

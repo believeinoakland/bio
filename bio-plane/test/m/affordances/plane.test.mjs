@@ -839,7 +839,7 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline", "escalationsuspend",
     "determine" /* N310: conformance's interface, backing.test.mjs */,
     /* N345: at contradiction's and entities' interfaces over contradiction's fixture, contradiction.test.mjs */
-    "contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve", "resolutiondefect",
+    "contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve", "contradictionflag", "resolutiondefect",
     /* N364: at sources' interface over its fixture, sources.test.mjs */
     "sourcedisclose", "sourcelink", "sourceconsent",
     /* K727: at action-plans' interface over its fixture, backing.test.mjs */

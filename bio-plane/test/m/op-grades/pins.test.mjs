@@ -83,6 +83,8 @@ test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one
   /* R38, R40, R41 (T48) */
   want.reversible.push("actionreplyquoting", "updatelater", "updatestart", "planask");
   want.reasoned.push("updateskip", "stepsource", "stepsourcewithdraw");
+  /* K4323 (fix round 2; contradiction R61): a member's flag of two documents, reasoned (FLAG_NO_REASON) */
+  want.reasoned.push("contradictionflag");
   /* R45, R47 (T50) */
   for (const [op, r] of Object.entries(T50_RUNGS)) want[r].push(op);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);

@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
-import { fresh, bucket, evidenceStore, hold, doc, member, withEntry, i2, noText, unreadImage, ocrAnswer, calibration } from "./fixture.mjs";
+import { EVIDENCE_PREFIX, fresh, bucket, evidenceStore, hold, doc, member, withEntry, i2, noText, unreadImage, ocrAnswer, calibration } from "./fixture.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
@@ -17,6 +17,7 @@ import { registerDoctypes } from "../../../../doctypes/index.mjs";
    store does. */
 registerDoctypes(registerDoctype);
 
+const sha256Of = (u8) => createHash("sha256").update(u8).digest("hex");
 const hex = (s) => createHash("sha256").update(s).digest("hex");
 const { tier2Escalate, decodeView, pageBoxesFrom, needsTier3, tier3Extend, tier3SeedFrom, layerChainFor, readingFromWire,
         textCountsOf, textUnitsFor, bytesOf, CAPTURE_TEXT_UNIT_CAP, PROVENANCE_SCHEME } = rp;
@@ -151,6 +152,33 @@ test("R23 R2 R24: bytesOf reads the evidence store handed in by digest, assemble
                /part 2 of 2 is not held/);
   assert.match((await bytesOf(store, { capture: { sha256: "x" }, parts: [{ sha256: p1, bytes: 21 * 1024 * 1024 }] })).why, /over the \d+ B/);
   assert.ok(b.calls.every(([op, k]) => op !== "get" || k.startsWith("bio/captures/")), "only the store's own keys are read");
+});
+
+test("R2 R23: bytesOf reads the whole object held under the document's fingerprint first, a 21 MB three-part capture included; with parts only, over the bound, it still refuses", async () => {
+  const b = bucket();
+  const store = evidenceStore(b);
+  const third = 7 * 1024 * 1024;
+  const parts = [new Uint8Array(third).fill(1), new Uint8Array(third).fill(2), new Uint8Array(third).fill(3)];
+  const shas = [];
+  for (const p of parts) shas.push(await hold(b, p));
+  const whole = new Uint8Array(third * 3);
+  parts.forEach((p, i) => whole.set(p, i * third));
+  const document = (digest) => ({ capture: { sha256: digest }, parts: parts.map((p, i) => ({ sha256: shas[i], bytes: p.length })) });
+  /* control: parts only (no whole held), 21 MiB, over MULTIPART_READ_MAX: refused as before */
+  const wholeSha = sha256Of(whole);
+  const refused = await bytesOf(store, document(wholeSha));
+  assert.equal(refused.bytes, null);
+  assert.match(refused.why, /over the \d+ B/);
+  /* the whole object held: read, whole and unaltered, parts never fetched */
+  await hold(b, whole);
+  b.calls.length = 0;
+  const got = await bytesOf(store, document(wholeSha));
+  assert.equal(got.bytes.length, third * 3);
+  assert.ok(Buffer.from(got.bytes).equals(Buffer.from(whole)));
+  assert.deepEqual(b.calls.map(([, k]) => k), [`${EVIDENCE_PREFIX}${wholeSha}`], "only the whole object is read");
+  /* a whole object absent and a store that throws on it: parts within the bound are still assembled */
+  const small = await hold(b, "ab");
+  assert.equal(new TextDecoder().decode((await bytesOf(store, { capture: { sha256: "f".repeat(64) }, parts: [{ sha256: small, bytes: 2 }] })).bytes), "ab");
 });
 
 test("R23: the pieces hold no state: the same inputs answer the same, call after call", async () => {

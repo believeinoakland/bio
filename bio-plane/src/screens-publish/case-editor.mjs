@@ -56,16 +56,21 @@ export const CASE_EDITOR = Object.freeze({
       return m && me.member === m && me.handle ? me.handle : m || "";
     };
 
-    // Every draft of the project, each opening its own editor; the chosen one marked. With none, the screen's one empty
-    // state, which names the first step (R20).
-    out.push(d.state === "empty" ? cs.state("drafts", function () { return ""; }, { empty: "screen.case-editor.nodrafts" }) : cs.sec("screen.case-editor.drafts", cs.sheet(drafts.map(function (x) {
-      const c = x.case || {};
-      const name = c.case_id && c.identity ? cs.esc(c.identity) : cs.w("case.draft.untitled", { project: projectTitle });
-      const link = '<a href="/app/case-editor/' + encodeURIComponent(project + "/" + x.draft_id) + '" data-nav'
-        + (chosen && x.draft_id === chosen.draft_id ? ' aria-current="true"' : "") + ">" + name + "</a>";
-      return cs.row("", link, c.edition ? '<span class="meta">' + cs.w("screen.case-editor.edition", { n: String(c.edition) }) + "</span>" : "",
-        cs.w("screen.case-editor.preparedby", { who: x.updated_by ? handleOf(x, "updated_by") : handleOf(x, "created_by") }));
-    }).join(""))));
+    // The project's drafts: with a choice (two or more) "Which draft" among them, each named by its scope and the day it was prepared, the
+    // newest marked, and how many review links are live (C49; DEC-394, DEC-395); with one, its own row opening its editor. With none, the
+    // screen's one empty state, which names the first step (R20).
+    const chosenR = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
+    const list = P.draftCopies(cs, view, drafts, chosen ? chosen.draft_id : "", chosenR);
+    out.push(d.state === "empty" ? cs.state("drafts", function () { return ""; }, { empty: "screen.case-editor.nodrafts" }) : cs.sec("screen.case-editor.drafts", drafts.length > 1
+      ? P.draftChooser(cs, view, "case-editor", list, chosen.draft_id, projectTitle) + P.liveNote(cs, view, "case-editor", list)
+      : cs.sheet(drafts.map(function (x) {
+        const c = x.case || {};
+        const name = c.case_id && c.identity ? cs.esc(c.identity) : cs.w("case.draft.untitled", { project: projectTitle });
+        const link = '<a href="/app/case-editor/' + encodeURIComponent(project + "/" + x.draft_id) + '" data-nav'
+          + (chosen && x.draft_id === chosen.draft_id ? ' aria-current="true"' : "") + ">" + name + "</a>";
+        return cs.row("", link, c.edition ? '<span class="meta">' + cs.w("screen.case-editor.edition", { n: String(c.edition) }) + "</span>" : "",
+          cs.w("screen.case-editor.preparedby", { who: x.updated_by ? handleOf(x, "updated_by") : handleOf(x, "created_by") }));
+      }).join(""))));
 
     // R31: a project's first case (state b): the concluded questions to take in, each ticked, then the scope.
     const scope = function (authored) {
@@ -297,6 +302,15 @@ export const CASE_EDITOR = Object.freeze({
   },
 
   acts: [
+    {
+      // C49: "Which draft": the project's drafts read once more, and the editor opened on the one chosen (`pickDraft`).
+      op: "casedrafts", label: "act.casedrafts.label.case-editor",
+      send: function (view, el, cs) {
+        view.ui.pickDraft = String(cs.value("drafts-case-editor") || "");
+        return { query: { project: String(view.subject || "").split("/")[0] } };
+      },
+      done: function (view, answer, cs) { return view.parts.pickDraft(view, answer, cs, "case-editor"); },
+    },
     {
       // R1: "Prepare the draft": a new draft of the project, or the chosen one changed, with the member's scope and words.
       // R31: a first case sends the project and the ticked concluded questions as `targets`, with no `caseId` and no

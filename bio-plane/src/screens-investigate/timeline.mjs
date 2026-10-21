@@ -8,6 +8,7 @@ import { PARTS } from "./parts.mjs";
 import { TIMELINE_PARTS } from "./timeline-parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
+import { rereading } from "./rereads.mjs";
 
 /* R33 (4): the addresses. State a is the project (`/app/timeline/<project>`); state b one matter the project follows,
  * `<project>/matter/<progression>/<entity>`; state c one progression, `<project>/progression/<progression>`. */
@@ -20,7 +21,7 @@ function reads(view) {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     people: { op: "peopledirectory", query: { limit: "200" } },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
-    docs: { op: "heldcaptures", query: { project: id, limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { project: id, limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
     vocab: { op: "affordances", query: {} },
   };
   if (mode === "matter" && key && eid) out.matter = { op: "instance", query: { key, id: eid } };
@@ -79,9 +80,9 @@ function render(cs, view) {
         + `${cs.act("findin", { label: S + "find.dates" })}</div></div>${citedOrder(it)}` : "";
     return `<div class="mk-ev" data-event="${cs.esc(it.event_id)}"><span class="mk-date">${when(it.when)}</span> <b>${P.refOf(cs, it.event_id, it.kind ? cs.w(S + "kind", { kind: it.kind }) : it.event_id, [it.status || ""], "event")}</b> ${detail(it)}${order}</div>`;
   };
-  /* the project's set: the people, organisations and events its document cites, and the events recorded here since */
-  const set = doc ? [...new Set(doc.refs.filter((r) => /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target)
-    .concat(Array.isArray(view.ui.added) ? view.ui.added : []))] : [];
+  /* the project's set: the people, organisations and events its document cites. An event recorded here is found by the captures it cites
+     (events R53, C54), which are the project's own documents below, so no list of what was recorded is kept in the page. */
+  const set = doc ? [...new Set(doc.refs.filter((r) => /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target))] : [];
   /* R33 (5): the capture digests of the project's documents (at most 200, newest first, events R53) join the set */
   const docsRead = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
   const shas = docsRead.map((r) => r && r.capture && r.capture.sha256).filter(Boolean).slice(0, 200);
@@ -144,7 +145,7 @@ function render(cs, view) {
   /* R49: the first expected flow is defined from the project's own timeline, not only from inside a flow's page */
   if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
-    P.docChoice(cs, view, "tl-doc")
+    P.docChoice(cs, view, "tl-doc", { project: id })
     + kindChoice
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
@@ -163,20 +164,15 @@ function render(cs, view) {
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
   { op: "createevent", label: "act.createevent.label.timeline",
     send(view, el, cs) {
       const at = view.parts.chosen(cs, "tl-doc");
       if (!at) return { refuse: "screen.timeline.passage.empty" };
-      const proj = view.data.project;
-      const set = proj && proj.state === "ok" ? view.parts.front(proj.value["bundle.md"]).refs.filter((r) => /^ENT-/.test(String(r.target || ""))).map((r) => r.target) : [];
-      return { body: Object.assign({ kind: String(cs.value("tl-kind") || "other"), attestations: [at] }, set.length ? { concerns: set.slice(0, 1) } : {}) };
+      /* C54: the event is attested by the passage chosen; the timeline finds it again by that capture, so it is tied to no person the page guessed */
+      return { body: { kind: String(cs.value("tl-kind") || "other"), attestations: [at] } };
     },
-    done(view, answer, cs) {
-      const r = answer && answer.result !== undefined ? answer.result : answer;
-      if (r && r.event_id) view.ui.added = (Array.isArray(view.ui.added) ? view.ui.added : []).concat([r.event_id]);
-      view.ui.later = {};
-    } },
+    done(view) { view.ui.later = {}; } },
   { op: "addparticipant", label: "act.addparticipant.label.timeline",
     send(view, el, cs) {
       const eventId = String(cs.value("tl-event") || ""), entityId = String(cs.value("tl-who") || "").trim();
@@ -261,7 +257,7 @@ const acts = [
   /* B14: the registry's reads of states b and c, drawn as the sections that show them (`data-act`), never as buttons */
   { op: "instance", label: "act.instance.label.timeline", send() { return null; } },
   { op: "progression", label: "act.progression.label.timeline", send() { return null; } },
-];
+], ["project", "people", "questions", "vocab", "matter", "def"]);
 
 const TIMELINE_KEYS = [
   "screen.timeline.more.people", "screen.timeline.order.cited.before", "screen.timeline.order.cited.after", "screen.timeline.order.relation",

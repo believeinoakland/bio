@@ -19055,6 +19055,13 @@
       "line": 27
     },
     {
+      "id": "control-plane.declared.interfacewords",
+      "en": "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/owner-ops.mjs",
+      "line": 36
+    },
+    {
       "id": "control-plane.declared.subscriptionsignin",
       "en": "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle",
       "module": "control-plane",
@@ -24774,20 +24781,6 @@
       "line": 1146
     },
     {
-      "id": "file-safety.index.no_signatures",
-      "en": "The file scanner has no signatures.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1025
-    },
-    {
-      "id": "file-safety.index.no_signatures_since",
-      "en": "The file scanner has had no signatures since {date}.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1023
-    },
-    {
       "id": "file-safety.index.no_tool_of_the_teams",
       "en": "No tool of the team's has this id.",
       "module": "file-safety",
@@ -24814,27 +24807,6 @@
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
       "line": 1115
-    },
-    {
-      "id": "file-safety.index.signatures_failed",
-      "en": "The last download of signatures did not finish.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1029
-    },
-    {
-      "id": "file-safety.index.signatures_not_fetched",
-      "en": "No download of signatures has finished yet.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1031
-    },
-    {
-      "id": "file-safety.index.signatures_refused",
-      "en": "The signature service refused the download (status {status}).",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1027
     },
     {
       "id": "file-safety.index.the_text_could_not_be",
@@ -39709,49 +39681,49 @@
       "en": "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1686
+      "line": 1728
     },
     {
       "id": "provenance.index.capture_axis_authored",
       "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1763
+      "line": 1805
     },
     {
       "id": "provenance.index.capture_is_not_a_document",
       "en": "capture {capture} is not a document this record's register holds in {bundle}",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1231
+      "line": 1273
     },
     {
       "id": "provenance.index.deciding_who_issued_a_document",
       "en": "deciding who issued a document is a named member's act, and this call carries nobody",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1218
+      "line": 1260
     },
     {
       "id": "provenance.index.name_the_party_that_issued",
       "en": "name the party that issued the document, in at most 500 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1241
+      "line": 1283
     },
     {
       "id": "provenance.index.say_how_you_know_or",
       "en": "say how you know, or what you tried, in at most 2000 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1239
+      "line": 1281
     },
     {
       "id": "provenance.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1216
+      "line": 1258
     },
     {
       "id": "public-read.casefile.a_finding_id_a_material",
@@ -42719,7 +42691,7 @@
       "en": "the capture's bytes are not held in the evidence store, so nothing was read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1350
+      "line": 1354
     },
     {
       "id": "reading-pipeline.index.decoded_glyphs",
@@ -42733,42 +42705,42 @@
       "en": "the document was not read as text ({why}), so no reading was attempted",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1508
+      "line": 1512
     },
     {
       "id": "reading-pipeline.index.entry_no_text",
       "en": "the {fmt} entry produced no text from these bytes",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1490
+      "line": 1494
     },
     {
       "id": "reading-pipeline.index.entry_not_read_bytes",
       "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1504
+      "line": 1508
     },
     {
       "id": "reading-pipeline.index.multipart",
       "en": "multipart",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1508
+      "line": 1512
     },
     {
       "id": "reading-pipeline.index.no_capture_digest",
       "en": "the document names no capture digest, so there are no bytes to read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1334
+      "line": 1338
     },
     {
       "id": "reading-pipeline.index.non_textual_large",
       "en": "non-textual or too large",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1508
+      "line": 1512
     },
     {
       "id": "reading-pipeline.index.pages_not_asked_request",
@@ -42789,7 +42761,7 @@
       "en": " — no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1378
+      "line": 1382
     },
     {
       "id": "reading-pipeline.index.reading_not_composed",

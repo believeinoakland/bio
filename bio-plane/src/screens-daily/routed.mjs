@@ -26,9 +26,10 @@ export function routed() {
   };
   const clean = function (v) { return String(v === undefined || v === null ? "" : v).trim(); };
   // Who has agreed and who is still awaited, as the producer carries them in the item's `basis` (queue-producers R46, R47): the
-  // handles joined (a plain string, escaped when filled in), or `queue.owed.nobody` when none.
+  // names joined (a plain string, escaped when filled in), or `queue.owed.nobody` when none.
   const listOf = function (cs, list) {
-    const names = (Array.isArray(list) ? list : []).map(clean).filter(Boolean);
+    // R85: the producer carries member ids (the founder's is `admin`); each is named by handle (`cs.memberName`), never by id.
+    const names = (Array.isArray(list) ? list : []).map(clean).filter(Boolean).map(function (x) { return cs.memberName(x); });
     return names.length ? names.join(", ") : { html: cs.w("queue.owed.nobody") };
   };
 

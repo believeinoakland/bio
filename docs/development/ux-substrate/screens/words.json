@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2571,
+  "refusal": 2576,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6908,
+  "screen": 6931,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 11,
   "duty": 6,
   "published": 9,
-  "shell": 172,
+  "shell": 173,
   "settings": 4,
   "entity": 33,
   "find": 43,
@@ -103,7 +103,7 @@
   "time": 4,
   "size": 4,
   "reference": 1,
-  "form": 3,
+  "form": 5,
   "unavailable": 2,
   "page": 2,
   "person": 1,
@@ -114,7 +114,7 @@
   "timeline": 2,
   "caseimport": 4,
   "acquisition": 45,
-  "file-safety": 47,
+  "file-safety": 52,
   "extraction": 25,
   "events": 86,
   "entities": 22,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18070,
+  "total": 18106,
   "protected": 1068
  },
  "words": [
@@ -20208,10 +20208,10 @@
   },
   {
    "key": "screen.money.f.contract",
-   "en": "The contract, for committed against paid (a record id)",
+   "en": "The contract, for committed against paid",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.money.f.expertise",
@@ -20271,10 +20271,10 @@
   },
   {
    "key": "screen.money.f.nocontract",
-   "en": "Name the contract by its record id.",
+   "en": "Choose the contract.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.money.f.nopassage",
@@ -75069,6 +75069,258 @@
    "note": "DEC-394: B441 3e: help"
   },
   {
+   "key": "file-safety.index.no_signatures",
+   "en": "The file scanner has no signatures, so files are kept and shown but not scanned.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the line on setup step 7 (Security) and on Settings › Security when the built-in file scanner holds no signatures and no date is known: what is true of the scanner"
+  },
+  {
+   "key": "file-safety.index.no_signatures_since",
+   "en": "The file scanner has had no signatures since {date}, so files are kept and shown but not scanned.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the same line when a date is known: {date} the day it first could not scan for want of signatures"
+  },
+  {
+   "key": "file-safety.index.signatures_refused",
+   "en": "The signature service refused the download (status {status}). The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security: {status} the three-digit answer of the service; says what the administrator can do"
+  },
+  {
+   "key": "file-safety.index.signatures_failed",
+   "en": "The last download of signatures did not finish. The scanner tries again daily; an administrator can check that your team's Civicsmith can reach the service.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when a download was tried and broke off; says what the administrator can do"
+  },
+  {
+   "key": "file-safety.index.signatures_not_fetched",
+   "en": "No download of signatures has finished yet. The scanner tries again daily; if this stays, an administrator can check that your team's Civicsmith can reach the service.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 1: the reason line under the no-signatures line, setup step 7 and Settings › Security, when no download has been tried or finished; says what the administrator can do"
+  },
+  {
+   "key": "screen.document.text.read",
+   "en": "Read {read} of {total} words",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 2 (C17): the document reading line; {read} words_read, {total} words_total (reading-pipeline R35)"
+  },
+  {
+   "key": "screen.project.opened.date",
+   "en": "Opened {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 3: a project or question opened with no opener named"
+  },
+  {
+   "key": "screen.question.leg.paragraph",
+   "en": "Paragraph {n}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 4: a web leg's place in its page, beside \"Page N\" for a paged document"
+  },
+  {
+   "key": "screen.matter.pick.choose",
+   "en": "Choose one",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 6: the first, empty row of the matter's pickers (event, cause, way)"
+  },
+  {
+   "key": "screen.matter.pick.none",
+   "en": "None of these",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 6: the row of a matter picker when nothing listed fits"
+  },
+  {
+   "key": "screen.matter.routes.none",
+   "en": "No route is known for this matter yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 6: the routes (procedure guides) list when it is empty"
+  },
+  {
+   "key": "screen.action.kind.records_petition",
+   "en": "Court petition to enforce a records request",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the action page subtitle and the queue kind list: an action that asks a court to enforce a records request"
+  },
+  {
+   "key": "screen.action.kind.brown_act_demand",
+   "en": "Brown Act demand",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the action page subtitle and the queue kind list: a demand to correct an action taken against the Brown Act"
+  },
+  {
+   "key": "screen.action.kind.assessment_challenge",
+   "en": "Challenge to a tax, assessment or fee",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the action page subtitle and the queue kind list"
+  },
+  {
+   "key": "screen.action.kind.taxpayer_action",
+   "en": "Taxpayer action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the action page subtitle and the queue kind list"
+  },
+  {
+   "key": "screen.action.kind.consent_decree_motion",
+   "en": "Motion under a consent decree",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the action page subtitle and the queue kind list"
+  },
+  {
+   "key": "screen.action.kind.constitutional_claim",
+   "en": "Constitutional claim",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the action page subtitle and the queue kind list"
+  },
+  {
+   "key": "screen.start-send.kind.records_petition",
+   "en": "court petition to enforce a records request",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps"
+  },
+  {
+   "key": "screen.start-send.kind.brown_act_demand",
+   "en": "Brown Act demand",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps"
+  },
+  {
+   "key": "screen.start-send.kind.assessment_challenge",
+   "en": "challenge to a tax, assessment or fee",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps"
+  },
+  {
+   "key": "screen.start-send.kind.taxpayer_action",
+   "en": "taxpayer action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps"
+  },
+  {
+   "key": "screen.start-send.kind.consent_decree_motion",
+   "en": "motion under a consent decree",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps"
+  },
+  {
+   "key": "screen.start-send.kind.constitutional_claim",
+   "en": "constitutional claim",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 7: the same kind in lower case, in the start-and-send steps"
+  },
+  {
+   "key": "screen.standard.held",
+   "en": "Standards the team holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 8: heading of the list of held standards on a project's Standard screen"
+  },
+  {
+   "key": "screen.standard.held.more",
+   "en": "More standards are held than are shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 8: under the held standards list when it is cut"
+  },
+  {
+   "key": "shell.member.unknown",
+   "en": "A member of your team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 9: the shell's name for a member id that has no handle"
+  },
+  {
+   "key": "screen.money.proposed.member",
+   "en": "proposed by a member; not included",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 10: money trail: label of a figure a member proposed to the trail, beside the machine one"
+  },
+  {
+   "key": "screen.ceremony.signs.count.findings",
+   "en": "One confirmation signs all {n}: the edition and its {findings} findings.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 11: Sign step, under the list of what is signed, when no evidence is signed with the case"
+  },
+  {
+   "key": "screen.ceremony.published.edition",
+   "en": "Published: edition {n}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 11: a reopened ceremony whose edition is already public"
+  },
+  {
+   "key": "refusal.FLAG_NO_PASSAGE",
+   "en": "Each side of a contradiction names a passage: a document and the part of it. One is missing, is not held here, or is not one you can see; the answer says which. Choose it again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 12: refusal when saying two documents contradict"
+  },
+  {
+   "key": "refusal.FLAG_SAME_DOCUMENT",
+   "en": "A contradiction is between two documents, and both passages are in the same one. Choose a passage in a different document. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 12: refusal when saying two documents contradict"
+  },
+  {
+   "key": "refusal.FLAG_NO_REASON",
+   "en": "Saying two documents contradict is a kept decision, and a kept decision says why. Write how they disagree, in your own words. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-396: B444 item 12: refusal when saying two documents contradict"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT.held",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT.undetermined",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B446: a timed-out capture whose kept state cannot be told"
+  },
+  {
+   "key": "form.choose.search",
+   "en": "Search your documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B447 (screens-investigate C95): the document picker's search box label"
+  },
+  {
+   "key": "form.choose.search.none",
+   "en": "No document matches. Try other words, or add the document first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-397: B447: the document picker's search found nothing"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -115562,7 +115814,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_contradictionflag.label.document",
+   "key": "act.contradictionflag.label.document",
    "en": "Say these two contradict",
    "protected": true,
    "source": "registry.json"
@@ -118510,7 +118762,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_contradictionflag.does",
+   "key": "act.contradictionflag.does",
    "en": "Sets a passage here beside a passage in another document as a contradiction your project settles, with your reason. It changes neither document.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"

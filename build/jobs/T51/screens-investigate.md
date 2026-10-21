@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01QLncWLte6oxmKhPKXXRUyy · depth 2 · COMPLETE · handled B19
+**Status** · session_01UQmdTQBCP15uXJbRv75eXR · depth 2 · COMPLETE · handled B22
 
 ## J1 · QUESTION
 
@@ -209,3 +209,48 @@ Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 14, module lines 3119
 
 COMPLETE · screens-investigate · CHANGE B19 applied. Merged tranche/T51 (PEOPLE #13, people R9 serves an organisation's name, address and contact facts). C7 proved against it: people's own `orgfacts.test.mjs` (the plane records the three kinds for institution, body, movement and `personAt` reads them back) and my C7 test (the page sends `recordpersonfact` for the three kinds only and draws the recorded fact, no Born/Died/Locality) pass together: 22 pass, 0 fail (with organization.test.mjs). No code change was needed. C7 is now met in full. B18 read: stand-ins kept.
 Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 15, module lines 3119
+
+## J18 · QUESTION
+
+QUESTION (C95; word rows and a field of the picker read). Neither stops the work; I carry on with the stand-ins named.
+1. Word rows I need and the design has not given (no sentence invented): (a) the label of the document picker's search box (stand-in: `shell.search`, "Search", an existing row); (b) a sentence for a search that finds no document (stand-in: `state.empty`, "Nothing here"). Suggested keys for the design: `form.choose.search`, `form.choose.search.none`.
+2. The date in the picker (C95 "title and date"): capture R77's picker rows (`fields: "picker"`) answer `bundle_id`, `title`, `project`, `capture.sha256`, `standing` and no date, so documents titled alike cannot yet be told apart on the page. The full row has `collected_since`, which the same page of rows already holds: capture should add `collected_since` to the picker row (a field only; no extra read). The picker draws "<title> · <date>" from `collected_since` when the row answers it, and the title alone today. Who holds it, and when? (capture, cause-capture-t51 or a wave 3 job).
+
+## J19 · COMPLETE
+
+COMPLETE · screens-investigate · fix round 2, wave 2 (B20). C14 (my part), C95, C94 (my part) met; C54 and my part of C6 now met in full; the send of C8 proved.
+
+**Causes (requirement ids)**
+- **C14** (R34, R52; capture R77, R88): every document read of the module (person, timeline, money, standard, proceeding, calculation) asks `heldcaptures` with `fields: "picker"` and `state: "held_and_vouched"`, once when the screen opens (`money.mjs:19` among them); each act names the reads it changed (`rereads`, new file `rereads.mjs`), so an act does not read the documents again. `money`'s `acquire` (it files a copy) leaves `rereads` unset and does read them again. Test: each of the six screens opens with one picker read, answered by a plane that refuses any other form of the read; one act per screen is sent, the screen's own read is read again, the documents are not.
+- **C95** (R34): `PARTS.docChoice` lists the screen's project first (timeline, money, standard, calculation, a matter's folds; person and proceeding know no project and keep the owner's order), each document by title and date, with a search box (drawn from two documents) that narrows on the page by title, case-blind, with no further read; a search finding none says `state.empty` and keeps the box; each picker's search is its own; the person page's passage picker follows the documents shown. The date is drawn from the row's `collected_since` when the row answers it; today the picker row has none (QUESTION J18, item 2).
+- **C94** (R111 users): new part `PARTS.who(cs, by)` names a stamp through the kit's `memberName` (a class or machine keeps its own name). Adopted at every site of the module that drew an id: person (other names, ties, claims, withdrawn facts), standard (proposed by, adopted by), timeline (threaded by, declared by), money (started by, read by), explore and the graph (attached by), calculation (accepted by, visited by), due date (proposed by). Theme and ties read handles the owners already answer and are unchanged. Test: each screen over a roster where `admin` is `sparky`, a member has no handle and a class proposes; no id is drawn.
+- **C54, C6 my part** (R3, R33): the event is sent with its attestation alone (no `concerns` guessed from the first named entity) and found again through `captures` (events R53), which the screen already sends; the page-memory list `ui.added` is gone. Test: an event on a project whose document names no entity survives a reload; a named entity's project records it the same way (no `concerns`); another project's documents do not find it.
+- **C8 (the send)**: `moneysetpropose` is in `SESSION_OPS.member` (op-declarations, token class `proposal`, money R13): a member's session may send it; proved by a test on the exported set. No gate to name.
+
+**Existing tests changed on purpose**: `timeline.test.mjs` R3 (createevent no longer sends `concerns`; the timeline is read again by captures); `fix2.test.mjs` C54 test replaced by the wave 2 tests in `fix2w2.test.mjs` (19 new tests); `fixtures.mjs` gains the `memberlist` roster.
+
+**Requirement lines for BOB**
+- screens-investigate R34: "Which document" is the picker read (`fields: "picker"`, one read when the screen opens, not again after an act that files no document), this project's first, by title and date, with a search box from two documents; R52: every `heldcaptures` read asks `fields: "picker"` as well as `state: "held_and_vouched"`.
+- R3 / R33: an event recorded on `timeline` is sent with its attestation alone and found again by the project's captures (events R53); no list is kept in the page; R3's "tied to what the project names" is not in force.
+- Uses (Private): `memberlist` through the kit's `memberName` (interface-shell R111); `capture` `heldcaptures` `fields`.
+
+**Reported to BOB**
+1. QUESTION J18: two word rows (search label, no match) and the picker row's `collected_since` (capture).
+2. J15 (still open from wave 1): the word rows for the Standard screen's held list, the contract choice wording and the member-proposal label.
+3. Generated artifact stale: `bio-plane/dist/bio-plane.bundled.mjs` bundles this module's screens; BOB regenerates it.
+4. `build/plan/impact.mjs` lists `bio-plane/test/m/plane/r42-entry.mjs` as a test of `plane`; it is a helper that holds no test, so running it as one fails ("test failed") with or without this change. The other ten plane files pass.
+5. `node_modules` is absent for `agent-runner`, `bio-plane/src/journey-check`, `file-scanner`, `sheet-worker`, `site`; none is needed by this module's suites.
+
+**Deferred** none.
+
+**Tests and checks**
+- node --test --test-force-exit bio-plane/test/m/screens-investigate/: 209 tests, 209 pass, 0 fail (baseline 191; +19 new, -1 replaced).
+- impact.mjs origin/tranche/T51 HEAD names control-plane (58 files: 308 tests, 308 pass) and plane (11 files: 84 pass, plus the helper above).
+- checks: format 175 modules, 0 failures; architecture screens-investigate 0 failures; coverage screens-investigate 59 of 59 live ids named, 0 failures; words screens-investigate 0 findings (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, 7 unkeyed); ownership origin/tranche/T51 vs job/T51/screens-investigate: 17 files, 0 failures. checks/run.mjs over the whole tree: coverage names agent-harness R17, agent-runner R37 R38 R40, control-plane R116, installer-steps R26 R31, journey-check R19, screens-inquiry R123 R124 R125, screens-intake R54 (none is this module's).
+
+Size (session_01UQmdTQBCP15uXJbRv75eXR): test runs 7, module lines 3151
+
+## J20 · COMPLETE
+
+COMPLETE · screens-investigate · CHANGE B21 applied. DEC-396 merged. Adopted: `screen.standard.held` (the held-standards heading, replacing `screen.standard.name`) and `screen.standard.held.more` (said when the list is cut); `screen.money.proposed.member` for a figure a member proposed (`screen.money.proposed` stays for a machine's); `.f.contract` and `.nocontract` need no code change. J18 item 1 is answered by this for the held list only; the picker search label and no-match rows are still stand-ins. Tests: 2 new, 1 changed (the C8 test now expects the member label); module suite 211 tests, 211 pass. format 0, architecture 0, coverage 59 of 59, words 0, ownership 17 files 0 failures. Pushed.
+Size (session_01UQmdTQBCP15uXJbRv75eXR): test runs 9, module lines 3156

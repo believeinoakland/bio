@@ -3,10 +3,13 @@
 
 /* R4: one read, `heldcaptures` (capture R77): each row's title, project, age, source, batch eligibility (R78) and the
  * questions it was captured for; an archive's row with its held files beside it. */
-function heldReads() {
-  return { held: { op: "heldcaptures", query: { limit: 50 }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+function heldReads(view) {
+  /* R4 (C23): opened for a project (`/app/held/<PROJ-…>`), both lists read that project's captures; opened bare, every project's */
+  const s = String((view && view.subject) || "");
+  const filter = /^PROJ-[A-Za-z0-9-]+$/.test(s) ? { project: s } : {};
+  return { held: { op: "heldcaptures", query: { limit: 50, ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
-           aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+           aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside", ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R40 (membership R17, R147): the handles an upload's uploader is named by; the stamp names a member by id */
            members: { op: "memberlist" },
            /* B6: a row names its project by the project's name, never by its record id */
@@ -59,9 +62,12 @@ function renderHeld(cs, view) {
   const projectRows = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.projects)
     ? view.data.projects.value.projects : [];
   /* B6: the project's name; a project the viewer's list does not name is not named at all (no slug, no id) */
+  /* C23: a project's name opens the list for that project (a link to `/app/held/<id>`); inside the filter it is not a door to itself */
+  const filtered = /^PROJ-[A-Za-z0-9-]+$/.test(String(view.subject || "")) ? String(view.subject) : "";
   const projectOf = (r) => {
     const p = r.project ? projectRows.find((x) => x && x.id === r.project) : null;
-    return p && p.name ? cs.w("screen.held.project", { project: p.name }) : r.project ? "" : cs.w("screen.held.noproject");
+    if (!p || !p.name) return r.project ? "" : cs.w("screen.held.noproject");
+    return cs.w("screen.held.project", { project: filtered ? p.name : { html: `<a href="/app/held/${encodeURIComponent(r.project)}" data-nav>${cs.esc(p.name)}</a>` } });
   };
   const roster = view.data.members && view.data.members.state === "ok" && view.data.members.value && Array.isArray(view.data.members.value.members)
     ? view.data.members.value.members : [];
@@ -101,7 +107,8 @@ function renderHeld(cs, view) {
     key: (r) => r.bundle_id,
     pick: true,
     cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
-      + `<span class="meta">${grade(r)} ${[age(r.age_days), projectOf(r)].filter(Boolean).join(" · ")}`
+      /* C23: the one word for the state a held capture is in, the Find chip's (`state.item.review.name`) */
+      + `<span class="meta">${cs.w("state.item.review.name")} · ${grade(r)} ${[age(r.age_days), projectOf(r)].filter(Boolean).join(" · ")}`
       + source(r) + "</span>"
       + eligibility(r) + asked(r) + files(r)],
   }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
@@ -133,6 +140,7 @@ function renderHeld(cs, view) {
   const A = view.data.aside, W = Array.isArray(U.waiting) && U.waiting.length;
   const aside = W || (A && (A.state === "failed" || (A.state === "ok" && Array.isArray(A.value.held) && A.value.held.length))) ? asideSec : "";
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
+    + (filtered ? `<p class="mk-small"><a href="/app/held" data-nav>${cs.w("screen.held.name")}</a></p>` : "")
     + `<div class="mk-acts">${cs.act("heldcaptures")}</div>`
     + list
     + (U.released ? said("screen.held.released", { count: U.released }) : "")
@@ -206,7 +214,8 @@ function doneRestore(view, answer, cs) {
 /* R4: "See held captures": the list asked again (a read, so nothing changes), then drawn by the reads made again. */
 function sendRefresh(view, el, cs) {
   cs.set("released", 0);
-  return { query: { limit: 50 } };
+  const s = String((view && view.subject) || "");
+  return { query: { limit: 50, ...(/^PROJ-[A-Za-z0-9-]+$/.test(s) ? { project: s } : {}) } };
 }
 
 /* R23: `release`'s refusals in words. `refusal.CRUCIAL_IN_BATCH` counts the crucial documents and `refusal.ENTRY_REQUIREMENTS`
@@ -230,8 +239,8 @@ export const HELD_SCREEN = Object.freeze({
   reads: heldReads,
   render: renderHeld,
   acts: Object.freeze([
-    Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh }),
-    Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
+    Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh, rereads: Object.freeze(["held"]) }),
+    Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, rereads: Object.freeze(["held"]), reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
     Object.freeze({ op: "heldsetaside", label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
     Object.freeze({ op: "heldrestore", label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),
   ]),

@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J15
+**Read** · handled J16
 
 ## B1 · START
 
@@ -222,3 +222,11 @@ Read in full (never in part): screens-settings lines on members, group (export, 
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-settings/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-settings tranche/T51 job/T51/screens-settings`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B27 · CHANGE
+
+DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. The scanner's state rows are written under file-safety's keys (`file-safety.index.no_signatures`, `.no_signatures_since`, `.signatures_refused`, `.signatures_failed`, `.signatures_not_fetched`): draw C83's state from them.
+
+## B28 · ANSWER · re J16
+
+(K4331) Your readings for C89, C90 and C14 stand; C88 overrides R75's 'at setup' as you read it. All six rows are asked of the design stream in one HANDOFF (B450): key them now (screen.group.hosting.now.date, screen.group.export.count.tables.one/.other, screen.security.nosignatures.next, screen.group.domain.checked, shell.field.needed, screen.watching.purpose, screen.leads.purpose) and draw nothing raw until they exist, as you do. Also read B27 (DEC-396's scanner rows). Then post COMPLETE.
