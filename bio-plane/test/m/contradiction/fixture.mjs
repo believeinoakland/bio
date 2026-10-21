@@ -54,7 +54,7 @@ export function storage() {
 
 
 /** A fresh record with the modules above and contradiction over it. `gate: false` registers no run gate. */
-export function world({ gate = true, now = null } = {}) {
+export function world({ gate = true, now = null, strictConclude = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -97,7 +97,7 @@ export function world({ gate = true, now = null } = {}) {
   const drawing = new Map();      /* inquiry -> [project ids] */
   const stances = new Map();      /* `${project}|${inquiry}` -> {claim, version} */
   const bv = {
-    concludeCalls: [], concludeRefusal: null,
+    concludeCalls: [], concludeRefusal: null, accepted: new Set(),      /* `${inquiry}|${version}` named accepted */
     projectsDrawingOn(inq, viewer) {
       const all = (drawing.get(inq) || []).filter((p) => membership.inSight(p, viewer)).sort();
       const out = all.slice(0, 32).map((id) => ({ id, title: `title of ${id}`, current: null }));
@@ -118,14 +118,28 @@ export function world({ gate = true, now = null } = {}) {
     conclude(args) {
       bv.concludeCalls.push(args);
       if (bv.concludeRefusal) return bv.concludeRefusal;
+      /* With `strictConclude`: R16's no-project arms in its order, and R51's one-act path (a `reading` takes the place of a
+         named `version`, 12 to 500 characters), as basis-versions answers them. Off, it concludes whatever it is given
+         (the stand-in other modules' tests were written against). */
+      const concl = String(args.conclusion ?? "").trim(), vname = String(args.version ?? "").trim();
+      const hasReading = args.reading !== undefined && args.reading !== null;
+      const own = hasReading ? String(args.reading).trim() : "";
+      if (strictConclude) {
+        if (!concl && !hasReading) return { ok: false, reason: "NO_CONCLUSION", code: "NO_CONCLUSION" };
+        if (hasReading && (own.length < 12 || own.length > 500 || vname))
+          return { ok: false, reason: "BAD_READING", code: "BAD_READING" };
+        if (!hasReading && (!vname || !bv.accepted.has(`${args.target}|${vname}`)))
+          return { ok: false, reason: "NO_CLAIM", code: "NO_CLAIM" };
+      }
       const md = record.readFile(args.target, "bundle.md");
       const head = record.head(args.target);
       let text = md.text.replace(/^current_state: .*$/m, "current_state: concluded")
                         .replace(/^prior_state: .*$/m, `prior_state: ${head.currentState}`);
-      text = text.replace(/\n---\n/, `\nconclusion: "${args.conclusion}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
+      text = text.replace(/\n---\n/, `\nconclusion: "${concl || own}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
       const r = promotion.promote({ bundleId: args.target, base: head.bundleSha, snapKey: `conclude${++n}`,
         author: args.author, files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
-      return r.ok ? { ok: true, target: args.target, to: "concluded", relationship: "no_project", project: null } : r;
+      return r.ok ? { ok: true, target: args.target, to: "concluded", relationship: "no_project", project: null,
+                      version: hasReading ? "reading-1" : vname, ...(hasReading ? { own_reading: true } : {}) } : r;
     },
   };
   let n = 0;

@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_01JCbyiaVBiZ277MQAdnsSaX · depth 2 · COMPLETE · handled B24
+**Status** · session_01Si5cxby7xVds46UHqHmk44 · depth 2 · COMPLETE · handled B25
 
 ## J1 · QUESTION
 
@@ -177,3 +177,32 @@ COMPLETE (SCREENS-SETTINGS #11, FR-25: B23 and B24, after J13).
 **Tests and checks** (process repository): module suite 209 tests, 209 pass, 0 fail. `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 1 failure (the `test-support` `uses` entry, J13); `checks/coverage.mjs screens-settings` 76 of 76; `checks/words.mjs screens-settings` 0 failures, and no line of the whole-product words check names screens-settings; `checks/ownership.mjs screens-settings tranche/T51 job/T51/screens-settings` 0 failures.
 
 Size (session_01JCbyiaVBiZ277MQAdnsSaX): test runs 12, module lines 5101
+
+## J15 · COMPLETE · re B25
+
+COMPLETE (re B25, K4259): entry 1 (`updates`, R68, DEC-389) applied. Pushed `cea44ac799` on `job/T51/screens-settings`.
+
+**Entries applied**
+- Entry 1: the runtime figures are said with their unit by key, `screen.updates.health.runtime.unit.ms` and `.unit.bytes`, in `heaviest` and `average`. The raw token is never drawn. The subrequests ceiling stays a count with no unit. Test first (R68 runtime test updated to the keys; new R68 units test), seen failing, then passing.
+
+**Deferred**
+- None.
+
+**Decision (for BOB to record in `build/rulings.md`; not written by this job, since that file is outside this module's paths)**: a metric whose `unit` has no key (`ms`, `bytes` are the only keys held; instance-setup R34 answers these two) draws its name and its sample count only, with no figures and no raw token. Reason: a figure with a bare number is what R68 forbids; a sample count is a count, not a unit.
+
+**Requirement lines for BOB (R68)**
+- The sentence "runtime's unit by `screen.updates.health.runtime.unit.<code>` (DEC-389) once its job takes it" is now true. Please fold it into R68's text, and state the unit-less rule above.
+
+**Found in other modules (not changed here)**
+- `checks/run.mjs`: `testcopy` failure in `bio-plane/test/m/op-grades/t37.test.mjs:32` (translation-directed key). Not this module's.
+- `checks/coverage.mjs` over every module: 6 live ids named by no test (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, screens-inquiry R110 R119, screens-intake R53). Not this module's.
+- The design's reads list (`docs/development/ux-substrate/screens/words-reads.json`) does not carry `runtime.heaviest`, `runtime.average`, `runtime.samples` or `runtime.unit.*`; this module reads them anyway and the R39 test passes. Flagged only; the design owns that list.
+
+**Checks**
+- `node checks/run.mjs /home/user/bio`: architecture 0 findings for this module; words: 0 findings naming a screens-settings file (one `testcopy` finding is op-grades, above).
+- `format` 0 failures; `architecture screens-settings` 0 failures; `coverage screens-settings` 76 of 76 live ids named by a test, 0 failures.
+- `ownership screens-settings tranche/T51 job/T51/screens-settings`: 0 failures (1 file changed by this module: `updates.mjs`, plus its test).
+- Module suite `bio-plane/test/m/screens-settings/`: 210 pass, 0 fail (includes the contract test asserting `checkScreens(SCREENS)` is true, so no act differs from the design for this module).
+- `npm ci` run in each lock-file directory that lacked `node_modules` (K4113) before the first run; all exited 0.
+
+Size (session_01Si5cxby7xVds46UHqHmk44): test runs 9, module lines 5105

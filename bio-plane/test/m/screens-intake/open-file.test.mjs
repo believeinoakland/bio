@@ -12,7 +12,7 @@ const SHA = "f".repeat(64);
    is the subject's: `OPENED` are those bytes, `DSHA` their digest, the subject of the page that opens them */
 const OPENED = "%PDF-1.7";
 const DSHA = createHash("sha256").update(OPENED, "utf8").digest("hex");
-const NOTE = { note_id: 1, kind: "scan", tool: "Built-in scanner", engine: "ClamAV", engine_version: "1.4.2", scanned_at: "2026-10-06T03:10:00Z", result: "clean", findings: [] };
+const NOTE = { note_id: 1, kind: "scan", tool: "clamav", engine: "ClamAV", engine_version: "1.4.2", scanned_at: "2026-10-06T03:10:00Z", result: "clean", findings: [] };
 const BASE = { verdictnotes: ok({ ok: true, notes: [NOTE] }), scanfindings: ok({ ok: true, findings: [] }) };
 const STATES = {
   low: { threatof: ok({ ok: true, threat: "low", reasons: [], scan_hold: null }), originalstate: ok({ may_open: true, path: "plain", why: null }) },
@@ -45,11 +45,35 @@ test("R5 a low-risk file draws openoriginal with its checks, and offers no warne
   const p = await at("low");
   assert.ok(main(p).querySelector('[data-risk="low"]'));
   assert.ok(btn(p, "openoriginal"));
-  assert.ok(says(p, "screen.open-file.note.line", { tool: "Built-in scanner", engine: "ClamAV 1.4.2", result: "clean" }));
+  assert.ok(says(p, "screen.open-file.note.line", { tool: word("screen.open-file.tool.clamav"), result: word("screen.open-file.result.clean") }));
   assert.ok(text(p).includes(`${word("screen.open-file.note.at")} ${day(6, "october", 2026)}`));
   assert.equal(btn(p, "openwithwarning"), null);
   assert.equal(btn(p, "releasescanhold"), null);
   assert.deepEqual(rawKeys(p), []);
+});
+
+/* ---- T51 (CHANGE B15): R53 ---- */
+test("R53 each scan result draws the note's line by key: its tool and its result are words, never the note's raw result", async () => {
+  for (const result of ["clean", "found", "failed", "not_scanned"]) {
+    const p = await at("low", { verdictnotes: ok({ ok: true, notes: [{ ...NOTE, result }] }) });
+    assert.ok(says(p, "screen.open-file.note.line", { tool: word("screen.open-file.tool.clamav"), result: word(`screen.open-file.result.${result}`) }), result);
+    assert.ok(!text(p).includes(`${word("screen.open-file.result.clean")}: ${result}`), "no raw result in the line");
+  }
+  assert.doesNotMatch(text(await at("low", { verdictnotes: ok({ ok: true, notes: [{ ...NOTE, result: "not_scanned" }] }) })), /not_scanned/, "never the raw state");
+});
+
+test("R53 a scan that ran draws its engine, version and date; a note not scanned draws none of them", async () => {
+  const clean = await at("low");
+  assert.ok(text(clean).includes("ClamAV 1.4.2"), "the engine and its version");
+  assert.ok(text(clean).includes(`${word("screen.open-file.note.at")} ${day(6, "october", 2026)}`), "the date");
+  const none = await at("low", { verdictnotes: ok({ ok: true, notes: [{ ...NOTE, result: "not_scanned" }] }) });
+  assert.ok(says(none, "screen.open-file.note.line", { tool: word("screen.open-file.tool.clamav"), result: word("screen.open-file.result.not_scanned") }));
+  assert.ok(!text(none).includes("ClamAV"), "no engine");
+  assert.ok(!text(none).includes(word("screen.open-file.note.at")), "no date");
+  /* control: a tool or result the words do not hold is not drawn raw: the shell's "could not be read" */
+  const unknown = await at("low", { verdictnotes: ok({ ok: true, notes: [{ ...NOTE, tool: "zzz-scanner" }] }) });
+  assert.ok(says(unknown, "shell.unread"));
+  assert.ok(!text(unknown).includes("zzz-scanner"));
 });
 
 test("R5 a high-risk file draws safeview first and deepercheck; openwithwarning only on the warned path, sent only with both confirmations", async () => {

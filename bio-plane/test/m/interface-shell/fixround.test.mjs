@@ -229,3 +229,20 @@ test("R12 control: a mutating op outside the set is not drawn, and a read whose 
   assert.equal(OPS.selftest.classes.includes("agent"), false);
   assert.deepEqual(await drawnOps("updates", ["selftest"], { ...who, tokenClass: "agent" }, "/app/updates"), [], "a class the read does not list");
 });
+
+/* K4259: a kind with no `shell.card.<kind>` word is drawn with the item's facts alone, nothing if it has none, as `theme` is */
+const BARE = { id: "home", words: [], reads() { return {}; }, acts: [],
+  render(cs) { return [cs.ref("objective", "X-1", "bare", []), cs.ref("objective", "X-1", "bare-null", [null, ""]), cs.ref("published", "X-1", "word", [])].join(" "); } };
+
+test("R106 an objective reference with no facts draws no empty lead and no card; control: published keeps its word", async () => {
+  assert.ok(!hasWord("shell.card.objective"), "the kind holds no card word");
+  assert.ok(hasWord("shell.card.published"));
+  const p = await boot({ screens: [BARE], path: "/app" });
+  const find = (t) => p.root().querySelectorAll("a.cs-ref, span.cs-card").find((e) => e.textContent === t);
+  for (const t of ["bare", "bare-null"]) {
+    const tip = find(t).getAttribute("data-tip");
+    assert.ok(!tip || !tip.includes("<b></b>"), "no empty heading");
+    assert.ok(!tip || !tip.includes("<b>"), "no lead of any kind: the item has no facts and the kind no word");
+  }
+  assert.ok((find("word").getAttribute("data-tip") || "").includes(word("shell.card.published")), "published unchanged");
+});

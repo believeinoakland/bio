@@ -36323,6 +36323,582 @@
    "en": "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record.",
    "protected": false,
    "note": "DEC-390: B432 K4252: the declared op description of groupdescriptiondraft (a read), worded for members (team, never group); one sentence"
+  },
+  {
+   "key": "screen.objective.what-success-means",
+   "en": "What success means",
+   "protected": false,
+   "note": "DEC-391: B435 1: heading: heading of the section that sets and shows how the success of this objective is measured"
+  },
+  {
+   "key": "screen.objective.proposals-to-decide",
+   "en": "Proposals to decide",
+   "protected": false,
+   "note": "DEC-391: B435 1: heading: heading of the section listing the proposals the assistant made for this objective"
+  },
+  {
+   "key": "screen.objective.aspirations",
+   "en": "Aspirations",
+   "protected": false,
+   "note": "DEC-391: B435 1: heading: heading of the section listing the aspirations in force for this project"
+  },
+  {
+   "key": "screen.objective.declare-an-aspiration",
+   "en": "Declare an aspiration",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to declare an aspiration"
+  },
+  {
+   "key": "screen.objective.whose-it-is",
+   "en": "Who holds it",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice, in the declare-an-aspiration form, of who holds the aspiration"
+  },
+  {
+   "key": "screen.objective.the-whole-team-s",
+   "en": "The whole team's",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of Whose it is: an aspiration the whole team holds"
+  },
+  {
+   "key": "screen.objective.this-project-s",
+   "en": "This project's",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of Whose it is: an aspiration this project holds"
+  },
+  {
+   "key": "screen.objective.mine",
+   "en": "Mine",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of Whose it is: an aspiration the viewer holds personally"
+  },
+  {
+   "key": "screen.objective.about-which-party",
+   "en": "About which party",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice, in the measure form, of the party the measure counts"
+  },
+  {
+   "key": "screen.objective.which-aspiration",
+   "en": "Which aspiration",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice of aspiration in the depart, dead-end and retire forms"
+  },
+  {
+   "key": "screen.objective.which-goal",
+   "en": "Which goal",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice of goal in the link-to-a-goal and close-a-goal forms"
+  },
+  {
+   "key": "screen.objective.which-proposal",
+   "en": "Which proposal",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the choice of proposal in the decide-a-proposal form"
+  },
+  {
+   "key": "screen.objective.open-a-goal",
+   "en": "Open a goal",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to open a goal"
+  },
+  {
+   "key": "screen.objective.what-it-pursues",
+   "en": "What it pursues",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the field, in the open-a-goal form, for the aim the goal pursues"
+  },
+  {
+   "key": "screen.objective.what-limits-it",
+   "en": "What limits it",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the field, in the open-a-goal form, for the limits that bound the goal"
+  },
+  {
+   "key": "screen.objective.close-a-goal",
+   "en": "Close a goal",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to close a goal"
+  },
+  {
+   "key": "screen.objective.why-it-closes",
+   "en": "Why it closes",
+   "protected": false,
+   "note": "DEC-391: B435 1: field label: label of the field, in the close-a-goal form, for the reason the goal closes"
+  },
+  {
+   "key": "screen.objective.put-it-off",
+   "en": "Defer it",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of What to do with it: defer the proposal, with a reason"
+  },
+  {
+   "key": "screen.objective.dismiss-it",
+   "en": "Dismiss it",
+   "protected": false,
+   "note": "DEC-391: B435 1: option: option of What to do with it: dismiss the proposal, with a reason"
+  },
+  {
+   "key": "screen.objective.retire-an-aspiration",
+   "en": "Retire an aspiration",
+   "protected": false,
+   "note": "DEC-391: B435 1: fold title: title of the fold that opens the form to retire an aspiration"
+  },
+  {
+   "key": "screen.objective.held-by-this-project",
+   "en": "Held by this project",
+   "protected": false,
+   "note": "DEC-391: B435 1: tag: tag on an aspiration row: this project holds it"
+  },
+  {
+   "key": "screen.objective.held-by-me",
+   "en": "Held by me",
+   "protected": false,
+   "note": "DEC-391: B435 1: tag: tag on an aspiration row: the viewer holds it personally"
+  },
+  {
+   "key": "screen.objective.this-project-departed",
+   "en": "This project departed",
+   "protected": false,
+   "note": "DEC-391: B435 1: tag: tag on a team aspiration row: this project has departed from it"
+  },
+  {
+   "key": "screen.contradiction.first.passage",
+   "en": "First passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the heading over the first of the two passages, on the screen Two documents in tension"
+  },
+  {
+   "key": "screen.contradiction.second.passage",
+   "en": "Second passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the heading over the second of the two passages"
+  },
+  {
+   "key": "screen.contradiction.they.differ.in",
+   "en": "They differ in",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label over the ticks naming the respects in which the two passages differ (say how they differ; conclude it)"
+  },
+  {
+   "key": "screen.contradiction.time.or.occasion",
+   "en": "Time or occasion",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: one of the respects they may differ in: they speak of different times or occasions"
+  },
+  {
+   "key": "screen.contradiction.meaning",
+   "en": "Meaning",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: one of the respects they may differ in: the same words mean different things"
+  },
+  {
+   "key": "screen.contradiction.precision",
+   "en": "Precision",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: one of the respects they may differ in (concluding): one is more exact than the other"
+  },
+  {
+   "key": "screen.contradiction.what.shows.it",
+   "en": "What in the record shows it",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label over the ticks naming what in the record shows the difference"
+  },
+  {
+   "key": "screen.contradiction.the.first.passage",
+   "en": "The first passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a choice: names the first passage (which one is wrong; ask it around)"
+  },
+  {
+   "key": "screen.contradiction.the.second.passage",
+   "en": "The second passage",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a choice: names the second passage (which one is wrong; ask it around)"
+  },
+  {
+   "key": "screen.contradiction.optional.at.most.200.characters",
+   "en": "Optional. At most 200 characters.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: help under the two short notes on what holds for each passage"
+  },
+  {
+   "key": "screen.contradiction.optional.at.most.500.characters",
+   "en": "Optional. At most 500 characters.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: help under the optional words when dismissing a lead"
+  },
+  {
+   "key": "screen.contradiction.dismiss.it",
+   "en": "Dismiss this lead",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading for dismissing a lead"
+  },
+  {
+   "key": "screen.contradiction.anything.to.add",
+   "en": "Anything to add",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the optional words under the reason for dismissing a lead"
+  },
+  {
+   "key": "screen.contradiction.ask.it.around",
+   "en": "Which passage the question is about",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the choice of which passage the new question is asked around"
+  },
+  {
+   "key": "screen.contradiction.taken.up",
+   "en": "Taken up",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading, on a contradiction already taken up, above the question it became"
+  },
+  {
+   "key": "screen.contradiction.conclude.it",
+   "en": "Conclude it",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading for concluding the question a contradiction became"
+  },
+  {
+   "key": "screen.contradiction.your.conclusion",
+   "en": "Your conclusion",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the field for her own words on what the contradiction turned out to be"
+  },
+  {
+   "key": "screen.contradiction.two.rules.conflict",
+   "en": "Two rules conflict",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a choice of what it turned out to be: the two passages are rules that conflict (the next choice says how they are reconciled)"
+  },
+  {
+   "key": "screen.contradiction.ask.for",
+   "en": "Which project asks",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the choice of which of your projects asks to resolve a conflict with a record you cannot see"
+  },
+  {
+   "key": "screen.contradiction.the.projects",
+   "en": "The projects that asked",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading over the projects now named to each other, once every project has asked"
+  },
+  {
+   "key": "screen.contradiction.responses",
+   "en": "Responses",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading over the responses already sent between the projects"
+  },
+  {
+   "key": "screen.contradiction.respond",
+   "en": "Respond",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the section heading over the form for sending your own response"
+  },
+  {
+   "key": "screen.contradiction.your.response",
+   "en": "Your response",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the response field"
+  },
+  {
+   "key": "screen.contradiction.share.with.the.other.projects",
+   "en": "Share with the other projects",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label over the ticks for what of you the response shows"
+  },
+  {
+   "key": "screen.contradiction.my.cover.name",
+   "en": "My cover name",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a tick: show your cover name with the response"
+  },
+  {
+   "key": "screen.contradiction.my.email.address",
+   "en": "My email address",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: a tick: show your email address with the response"
+  },
+  {
+   "key": "screen.contradiction.your.email.address",
+   "en": "Your email address",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the label of the email address field, shown only if the tick above is on"
+  },
+  {
+   "key": "screen.contradiction.send.my.response",
+   "en": "Send my response",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the button that sends the response to the other projects"
+  },
+  {
+   "key": "screen.contradiction.your.project.can.ask.to.resolve.it",
+   "en": "Your project can ask to resolve it.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: first sentence of the section on what you can do about a conflict with a record you cannot see; the sentence after it says what happens once every project asks"
+  },
+  {
+   "key": "screen.contradiction.help.needed",
+   "en": "Write something first; the help works from what you typed.",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the refusal of the writing help when the field it would help with is empty"
+  },
+  {
+   "key": "screen.contradiction.when.it.cannot.be.concluded",
+   "en": "When it cannot be concluded",
+   "protected": false,
+   "note": "DEC-391: B435 item 2: the fold heading over the reasons concluding is refused"
+  },
+  {
+   "key": "screen.contradiction.stated.dates",
+   "en": "Stated dates: {first} · {second}",
+   "protected": false,
+   "note": "DEC-391: B435 2: the facts row with the two passages' stated dates (fact stated_date), first then second"
+  },
+  {
+   "key": "screen.contradiction.kinds",
+   "en": "Kinds: {first} · {second}",
+   "protected": false,
+   "note": "DEC-391: B435 2: the facts row with the two documents' kinds (fact doctype), first then second"
+  },
+  {
+   "key": "screen.contradiction.passage.meta",
+   "en": "Dated {date} · {kind} · captured by {member} on {captured}",
+   "protected": false,
+   "note": "DEC-391: B435 2: the small line under a passage: its stated date, its document kind, who captured it and when"
+  },
+  {
+   "key": "screen.contradiction.party.asked",
+   "en": "Asked on {date}",
+   "protected": false,
+   "note": "DEC-391: B435 2: a project line under The projects: the day that project asked to resolve it"
+  },
+  {
+   "key": "screen.project.cmp_only_ours",
+   "en": "Only in our lens",
+   "protected": false,
+   "note": "DEC-391: B435 5: project, rerun comparison: heading of the list of statements that only this project's own lens holds, beside \"Only in their lens\"."
+  },
+  {
+   "key": "screen.project.cmp_withdraw_do",
+   "en": "Withdraw this pairing",
+   "protected": false,
+   "note": "DEC-391: B435 5: project, rerun comparison: quiet button on a finding already paired with one of ours; withdraws the pairing (the history keeps both)."
+  },
+  {
+   "key": "screen.document.text.label",
+   "en": "Its text",
+   "protected": false,
+   "note": "DEC-391: B435 document: label of the fact line that says whether every page of this copy has readable text."
+  },
+  {
+   "key": "screen.document.text.full",
+   "en": "Full: every page has text",
+   "protected": false,
+   "note": "DEC-391: B435 document, \"Its text\" line: value when every page has text; the code passes nothing."
+  },
+  {
+   "key": "screen.document.text.none",
+   "en": "None: no page has text",
+   "protected": false,
+   "note": "DEC-391: B435 document, \"Its text\" line: value when no page has text, as with a scan; the code passes nothing."
+  },
+  {
+   "key": "screen.document.text.unread",
+   "en": "Unread: this copy has not been read yet",
+   "protected": false,
+   "note": "DEC-391: B435 document, \"Its text\" line: value before the copy has been read; the code passes nothing."
+  },
+  {
+   "key": "screen.document.said_by",
+   "en": "Said by {member}, {date}",
+   "protected": false,
+   "note": "DEC-391: B435 document, line under each source the record says this copy came from or was vouched by: who said it and when. Placeholders {member}, {date}."
+  },
+  {
+   "key": "screen.document.retired_copy",
+   "en": "This copy is retired: you can read it and its history, but new work cannot cite it.",
+   "protected": false,
+   "note": "DEC-391: B435 document, note on a retired copy under its standing; the code passes nothing."
+  },
+  {
+   "key": "screen.document.checked.words_and_address",
+   "en": "Checked: the words against the original file, and the web address against the site",
+   "protected": false,
+   "note": "DEC-391: B435 document, record of this copy: what the member checked when the copy was put into use; the code passes nothing."
+  },
+  {
+   "key": "screen.document.checked.issuer",
+   "en": "Checked: the department's own site published it",
+   "protected": false,
+   "note": "DEC-391: B435 document, record of this copy: what the member checked when the grade changed; the code passes nothing."
+  },
+  {
+   "key": "screen.question.hunches_left_out.one",
+   "en": "{n} hunch is left out and not graded, because a hunch is never evidence.",
+   "protected": false,
+   "note": "DEC-391: B435 question, strength box: counted line when exactly one hunch is left out of the reading. Placeholder {n}."
+  },
+  {
+   "key": "screen.question.hunches_left_out.other",
+   "en": "{n} hunches are left out and not graded, because a hunch is never evidence.",
+   "protected": false,
+   "note": "DEC-391: B435 question, strength box: counted line when two or more hunches are left out of the reading. Placeholder {n}."
+  },
+  {
+   "key": "screen.question.hunch.history.hold",
+   "en": "Kept this hunch",
+   "protected": false,
+   "note": "DEC-391: B435 question, hunch history line: act word for the member keeping the hunch; the code passes nothing."
+  },
+  {
+   "key": "screen.question.hunch.history.revise",
+   "en": "Revised this hunch",
+   "protected": false,
+   "note": "DEC-391: B435 question, hunch history line: act word for a revision of its words or reason; the code passes nothing."
+  },
+  {
+   "key": "screen.question.hunch.history.withdraw",
+   "en": "Withdrew this hunch",
+   "protected": false,
+   "note": "DEC-391: B435 question, hunch history line: act word for taking the hunch back; the code passes nothing."
+  },
+  {
+   "key": "screen.question.reeval.cause.supersession",
+   "en": "A newer version of {document} replaces the one this question rests on.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a newer version replaces the target. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.deferred",
+   "en": "{document} was deferred, and this question rests on it.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the target was deferred. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.reopened",
+   "en": "{document} was reopened, and this question rests on it.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the target was reopened. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.dismissed",
+   "en": "{document} was dismissed, and this question rests on it.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the target was dismissed. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.corrected",
+   "en": "Something this question rests on was named wrongly in {document}, and it has been corrected.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a side the question rests on was corrected. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.source",
+   "en": "The grade of the source behind {document} changed.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the source behind a capture moved a rung. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.attribution",
+   "en": "The grade of an observation in {document} changed, because of who it is credited to.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the credit level of an observation changed. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.withdrawal",
+   "en": "{document} was withdrawn on its docket, and this question rests on it.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a case edition was withdrawn. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.contested",
+   "en": "{document} was contested on its docket, and this question rests on it.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a case edition was contested. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.acceptance",
+   "en": "Your team's acceptance of another team's finding in {document} was withdrawn.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when an acceptance was withdrawn. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.cited_case_moved",
+   "en": "The status of a case cited in {document} changed.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a cited case moved. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.event_changed",
+   "en": "An event named in {document} changed.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a held event changed. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.calculation_input_changed",
+   "en": "An input of a calculation named in {document} changed.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a calculation input changed. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.deletion",
+   "en": "{document} was deleted, and this question rests on it.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the target was deleted. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.source_status",
+   "en": "The status of the source of {document} changed.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the source status changed. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.wp_retraction",
+   "en": "A case edition of this project that cites {document} was retracted.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when a work product was retracted. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.annotation",
+   "en": "{document} was annotated, and this question rests on it.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the target was annotated. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.question.reeval.cause.weakened",
+   "en": "What this question rests on in {document} became weaker.",
+   "protected": false,
+   "note": "DEC-391: B435 question, \"Needs a second look\" row: head of an open cause when the strength of a leg weakened. Placeholder {document}, the title of the target."
+  },
+  {
+   "key": "screen.project.cmp_their_reading",
+   "en": "Their grades: {text}",
+   "protected": false,
+   "note": "DEC-391: B435 project, rerun comparison, on each of their findings: how the original read it. Placeholder {text}, the two grades."
+  },
+  {
+   "key": "screen.project.cmp_our_reading",
+   "en": "Our grades: {text}",
+   "protected": false,
+   "note": "DEC-391: B435 project, rerun comparison, on each of our findings paired with theirs: how this project reads it. Placeholder {text}, the two grades."
+  },
+  {
+   "key": "screen.project.stage.reached",
+   "en": "{stage} · reached",
+   "protected": false,
+   "note": "DEC-391: B435 project, \"What each stage needs\": label of a stage the project has reached. Placeholder {stage}, the stage name."
+  },
+  {
+   "key": "screen.project.stage.not_reached",
+   "en": "{stage} · not reached yet",
+   "protected": false,
+   "note": "DEC-391: B435 project, \"What each stage needs\": label of a stage not yet reached. Placeholder {stage}, the stage name."
+  },
+  {
+   "key": "screen.project.ask_owners",
+   "en": "Ask {owners}.",
+   "protected": false,
+   "note": "DEC-391: B435 project, end of a refusal that only an owner can act: names the owners to ask. Placeholder {owners}, their names joined with commas."
   }
  ],
  "rewrite": {

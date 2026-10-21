@@ -1,6 +1,6 @@
 # BOB to record-core (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,16 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio record-core tranche/T51 job/T51/record-core`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K4259): RECORD-CORE, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5, medium effort (one model up if it blocks on tests).
+Why: `allocid` (arm `index.mjs:1879`, `allocIdOp` 516-531) has hand rows only and record-core has no `DECLARED_OPS`; four screens send it. A screen of this round needs it (screens-inquiry J11's report, confirmed by BOB's reading worker against the code, K4259). Requirement lines (amended or a NEW R, next free id) in your COMPLETE for BOB.
+Entries:
+1. Export `DECLARED_OPS` beside your ops map with `allocid`: classes `["admin","member","probe"]`, `mutating: true`, `weight: "substrate"`, `needs: "contribute"`, description by key (`record-core.declared.allocid`, the op-grades row's sentence), `fields: {accepts: ["prefix","year"], requires: ["prefix","year"]}`, agreeing with the hand rows (op-declarations R81); honesty test with `declaredOpHolds`. The plane's assembly (`plane/declarations.mjs`) is the plane's file: report in your COMPLETE that it must add you (BOB sends it), never edit it.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio record-core tranche/T51 job/T51/record-core`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

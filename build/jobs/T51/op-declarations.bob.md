@@ -127,3 +127,21 @@ Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku,
 ## B19 · RESUME
 
 RESUME (K4256): OP-DECLARATIONS #32 (sonnet), depth 2, replaces #31, which stopped at half its window while reading (J17; nothing edited). Its J17 lists what to read whole and the two entries of B18; follow it. Read `src/op-declarations/index.mjs` in parts by a reading worker (sonnet, medium) told the task (the `ACT_HELP_ABSENT` groups, `OP_ALIASES`, R21, R34) if it will not fit whole (mechanics §17 (3)); you then read every section the edit touches whole.
+
+## B20 · CHANGE
+
+CHANGE (K4262): OP-DECLARATIONS, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5, medium effort.
+Why: AFFORDANCES #40 (merged, K4262) now holds `strengthbarset`'s help under `strengthbarset` (in `T51_DESIGN_OPS`) and holds none for `strengthbar` (no screen sends it; the design gives it no text). Four of your tests now read red: R34 (strengthbarset must leave the unexplained ground), R75 (an op both explained and named), the R34 partition over `SESSION_OPS.member` and R47/R34 (N862) (`strengthbar` needs a ground).
+Entry: in `ACT_HELP_ABSENT`, `strengthbarset` leaves the unexplained ground; `strengthbar` takes the "no design text" ground the other undesigned ops use. Your suite green again; R21/R34 lines for BOB if their text changes.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B21 · CHANGE
+
+CHANGE (K4267): your container's copy of `job/T51/op-declarations` was cloned stale (behind origin, with one unpushed "starts" line), so `mail start` could not push. Do not reset and do not force anything. Take this route instead, which discards nothing (the stale commit stays on a local branch of its own):
+  cd /home/user/bio && git fetch origin job/T51/op-declarations tranche/T51 && git branch -m job/T51/op-declarations stale/op-declarations-local && git checkout -b job/T51/op-declarations origin/job/T51/op-declarations
+Then re-run `mail start` (your session and depth 2), `mail inbox`, and apply every CHANGE past your record's cursor as they say. If a step of this route is refused too, post BLOCKED naming the refused command and wait.

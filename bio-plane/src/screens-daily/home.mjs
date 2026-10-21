@@ -13,6 +13,7 @@ import { startProject } from "./start-project.mjs";
 import { participation } from "./participation.mjs";
 import { homeReadings } from "./home-readings.mjs";
 import { doors } from "./doors.mjs";
+import { todos } from "./todos.mjs";
 import { routed, ROUTED_REFUSALS } from "./routed.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 
@@ -21,7 +22,7 @@ const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : [];
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors, routed },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors, routed, todos },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -46,6 +47,8 @@ export const home = Object.freeze({
       held: view.parts.doors().reads().held,
       inbox: view.parts.doors().reads().inbox,
     };
+    // R17 (B21): the photos she captured and has not vouched for, each place a to-do of hers.
+    Object.assign(out, view.parts.todos().reads(view));
     if (view.me && view.me.member && !(view.me.administer === true || (Array.isArray(view.me.capabilities) && view.me.capabilities.indexOf("create_projects") >= 0))) {
       out.members = { op: "memberlist", empty: list("members") };
     }
@@ -102,7 +105,7 @@ export const home = Object.freeze({
     // An item's options (R3) among Home's registered acts: resolving a task, and adopting or keeping a newer version (its
     // reason asked in place); any other way to act is "Open", its subject's screen.
     const HOME_ACTS = { taskresolve: "taskresolve", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion", versionkeep: "keepversion",
-      projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer" };
+      projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer", filingapprove: "filingapprove" };
     let seq = 0;
     const actsOf = function (it) {
       const ops = [];
@@ -113,7 +116,7 @@ export const home = Object.freeze({
       (Array.isArray(d.acts) ? d.acts : []).forEach(add);
       if (d.instead) add(d.instead);
       return ops.map(function (op) {
-        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "",
+        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "", subject: it.subject && it.subject.id ? String(it.subject.id) : "",
           project: it.subject && it.subject.id ? String(it.subject.id) : "", who: it.subject && it.subject.requester ? String(it.subject.requester) : (it.fills && it.fills.who ? String(it.fills.who) : "") };
         // R42: an owner answers a request to join with Grant or Decline.
         if (op === "projectrequestanswer") {
@@ -238,7 +241,9 @@ export const home = Object.freeze({
     // R42: a member who may not start projects and is in none reads the ways into one.
     const inNone = (data.projects && data.projects.state === "empty") || (pv0 && Array.isArray(pv0.projects) && !pv0.projects.some(function (p) { return p && (place[String(p.id)] === "joined" || place[String(p.id)] === "leaving"); }));
     const invited = !firstVisit && pv0 && Array.isArray(pv0.projects) ? pv0.projects.filter(function (p) { return p && place[String(p.id)] === "invited"; }) : [];
-    const mineCount = forMe.length + invited.length;
+    // R17 (B21): a to-do to vouch for the photos she captured is hers, as an item assigned to her is.
+    const vouching = view.parts.todos().vouch(cs, view, "home");
+    const mineCount = forMe.length + invited.length + vouching.n;
     const readings = [];
     if (!firstVisit && mineCount) readings.push({ n: mineCount, label: "screen.home.strip.you", screen: "queue" });
     if (forGroup.length) readings.push({ n: forGroup.length, label: "screen.home.strip.group", screen: "queue" });
@@ -254,7 +259,7 @@ export const home = Object.freeze({
         + cs.act("projectjoin", { label: "act.projectjoin.label.home", data: { project: id } }) + "</span>", "", "");
     }).join("");
     const needsYou = !firstVisit && mineCount
-      ? cs.sec("screen.home.needsyou", cs.sheet(joinRows + src.fold(forMe).map(function (it) { return itemRow(it, false); }).join(""))) : "";
+      ? cs.sec("screen.home.needsyou", cs.sheet(joinRows + vouching.rows + src.fold(forMe).map(function (it) { return itemRow(it, false); }).join(""))) : "";
     const needsGroup = forGroup.length ? block("screen.home.needsgroup", forGroup, true) : "";
 
     // R42: "Getting into a project", for a member who may not start projects and is in none: the projects she was invited to,
@@ -404,6 +409,11 @@ export const home = Object.freeze({
     // The authority form: the member's decision with its basis, the basis being the act's reason (`taskdecide` is Reasoned).
     ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.home", reasonField: "basis", refusals: ROUTED_REFUSALS, rereads: ["queue"],
       send: function (view, el, cs) { return view.parts.routed().decide(cs, el); } }),
+    // R17 (B21): vouching for the photos she captured (re-reading her captures and the doors), and approving a letter drafted for the group.
+    { op: "release", label: "act.release.label.home", reasonField: "acknowledgment", rereads: ["mine", "held"],
+      send: function (view, el, cs) { return view.parts.todos().release(view, el, cs); } },
+    { op: "filingapprove", label: "act.filingapprove.label.home", rereads: ["queue"],
+      send: function (view, el, cs) { return view.parts.todos().approve(view, el, cs); } },
     // R29: "Join", a project the member is invited to; the projects are read again, her place in it now joined.
     { op: "projectjoin", label: "act.projectjoin.label.home", rereads: ["projects"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },

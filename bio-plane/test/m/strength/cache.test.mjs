@@ -198,13 +198,13 @@ test("R23: a store holding the cache on bundles carries it over once, so no sear
 test("R6 (rec108), R5: inquirystrength's answer is exactly ok, target, depth_bound, the three axes and the hunches left out, with out_of_view only when something was withheld", () => {
   const w = cached();
   const r = w.s.inquiryStrength({ id: INQ, viewer: MACHINE });
-  assert.deepEqual(Object.keys(r).sort(), ["capture", "connection", "depth_bound", "hunches_left_out", "ok", "target", "testimony"]);
+  assert.deepEqual(Object.keys(r).sort(), ["capture", "connection", "depth_bound", "hunches_left_out", "ok", "target", "testimony", "ungraded", "ungraded_count"]);
   assert.equal(r.target, INQ);
   assert.equal(r.depth_bound, 6);
   w.project("PROJ-2026-0042-abc", ["alice"]);
   w.inquiry("INQ-2026-0006-a", [{ target: "PROJ-2026-0042-abc", grade: "B", axis: "connection", source: "resolution" }]);
   const withheld = w.s.inquiryStrength({ id: "INQ-2026-0006-a", viewer: "member:carol" });
   assert.deepEqual(Object.keys(withheld).sort(),
-    ["capture", "connection", "depth_bound", "hunches_left_out", "ok", "out_of_view", "target", "testimony"]);
+    ["capture", "connection", "depth_bound", "hunches_left_out", "ok", "out_of_view", "target", "testimony", "ungraded", "ungraded_count"]);
   assert.equal(withheld.out_of_view, true);
 });

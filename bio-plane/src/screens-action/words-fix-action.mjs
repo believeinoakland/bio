@@ -22,6 +22,10 @@ export const WORDS = Object.freeze([
   "screen.action.if.the.reply.quotes.a.fee", "screen.action.a.fee.quote.is.kept.as", "screen.action.the.amount.quoted", "screen.action.currency",
   "screen.action.reply.currency.usd", "screen.action.it.answers.this.sending", "screen.action.the.earlier.sending.the.quote.responds",
   "screen.action.it.revises.this.quote", "screen.action.only.when.the.office.changes.a", "screen.reminder.on",
+  // R55 (actions R108; DEC-341): the minutes' fold on a public comment's reply
+  "screen.action.minutes.heading", "screen.action.minutes.says", "screen.action.minutes.legend", "screen.action.minutes.meeting.label",
+  "screen.action.minutes.meeting.help1", "screen.action.minutes.date.label", "screen.action.minutes.date.help1", "screen.action.minutes.doc.label",
+  "screen.action.minutes.doc.help1", "screen.action.minutes.passage.label", "screen.action.minutes.passage.help1", "screen.action.minutes.record",
   // the stages and outcomes the vocabulary names, by token (none is the empty choice)
   "screen.action.sent.stage.request", "screen.action.sent.stage.fee_waiver_request", "screen.action.sent.stage.appeal", "screen.action.sent.stage.court_filing",
   "screen.action.reply.stage.none", "screen.action.reply.stage.acknowledgement", "screen.action.reply.stage.fee_estimate", "screen.action.reply.stage.fee_waiver_decision",
@@ -34,5 +38,7 @@ export const EXTRA = Object.freeze({
   // R37, R40, R43: the cards of the screens the action opens; R54: the one list of laws
   action: ["screen.due-date.name", "screen.due-date.purpose", "screen.counsel.name", "screen.counsel.purpose", "screen.start-send.name", "screen.start-send.purpose", "law.pick",
     // R38 (B15 (1)): the reply's document is offered as the docket's capture option; R52: the reminder's sentence
-    "screen.docket.capture.option", "screen.reminder.on"],
+    "screen.docket.capture.option", "screen.reminder.on",
+    // R55: a part of the minutes left empty is asked for by `findin.fieldneeded`; words that the document's reading does not hold are `ai.progress.check.fail`'s
+    "findin.fieldneeded", "ai.progress.check.fail"],
 });

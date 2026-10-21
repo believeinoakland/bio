@@ -387,3 +387,22 @@ test("R70: ACT_HELP is re-generated at the design commit `8c5e692e19`: actionhol
   assert.equal(meetsR48({ ...ACT_HELP, actionhold: ACT_HELP.actionhold + " and more" }), false);
   assert.equal(meetsR48({ ...ACT_HELP, afifthentry: ACT_HELP.actionhold }), false);
 });
+
+test("B12 (T51, K4258; R48, R62): `strengthbarset`, the op strength declares and screens-settings sends, is held under its own name from "
+   + "`act.strengthbarset.does`; `strengthbar`, whose text the design does not give and which no screen sends, is held none; "
+   + "each other entry is as before, and the table departs from R48 with either change left out", () => {
+  assert.ok(READS.reads.includes("act.strengthbarset.does"), "the reads list gives the text");
+  assert.ok(T51_DESIGN_OPS.includes("strengthbarset"), "strengthbarset is one of the declared ops the reads list explains (K4248)");
+  assert.equal(ACT_HELP_KEYS.strengthbarset, "act.strengthbarset.does");
+  assert.equal(ACT_HELP.strengthbarset, word("act.strengthbarset.does"));
+  assert.ok(hasWord("act.strengthbarset.does"));
+  /* the design gives no `act.strengthbar.does`, and `strengthbar` is no alias of strengthbarset (op-declarations R21, K4254) */
+  assert.equal(hasWord("act.strengthbar.does"), false);
+  assert.equal(Object.hasOwn(ACT_HELP, "strengthbar"), false, "strengthbar is held none");
+  assert.equal(Object.hasOwn(ACT_HELP_KEYS, "strengthbar"), false);
+  /* controls (K874): the table as it stood, with `strengthbar` holding strengthbarset's text, departs from R48; so does one without it */
+  const without = (op) => Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== op));
+  assert.equal(meetsR48({ ...ACT_HELP, strengthbar: ACT_HELP.strengthbarset }), false, "a text held under the op that does not own it");
+  assert.equal(meetsR48(without("strengthbarset")), false, "the op left out");
+  assert.equal(meetsR48(ACT_HELP), true, "the table as it now stands meets R48");
+});

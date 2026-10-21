@@ -32,9 +32,20 @@ function renderOpenFile(cs, view) {
      team's Civicsmith did not fetch; its checks are said in words and the original never opens before a check */
   const actors = D.accounts && D.accounts.state === "ok" && D.accounts.value && Array.isArray(D.accounts.value.actors) ? D.accounts.value.actors : [];
   const addedBy = view.me && view.me.member ? actors.some((x) => x && String(x.actor || "").replace(/^member:/, "") === view.me.member) : false;
-  const notes = cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row"><span>${cs.w("screen.open-file.note.line",
-      { tool: n.tool || "", engine: [n.engine, n.engine_version].filter(Boolean).join(" "), result: n.result || "" })}</span>`
-      + (n.scanned_at ? `<span class="meta">${cs.w("screen.open-file.note.at")} ${cs.date(n.scanned_at)}</span>` : "") + "</div>").join("")}</div>`,
+  /* R53: a scan note's line by key: its tool and its result are each a word by key, never the note's raw text; a key the
+     words do not hold draws the shell's "could not be read". Only a note that has scanned draws its engine, version and date. */
+  const noteLine = (n) => {
+    const tool = String(n.tool || ""), result = String(n.result || "");
+    const known = (key) => cs.w(key) !== key;
+    if (!known("screen.open-file.tool." + tool) || !known("screen.open-file.result." + result)) return `<span>${cs.w("shell.unread")}</span>`;
+    const scanned = result !== "not_scanned";
+    const engine = scanned ? [n.engine, n.engine_version].filter(Boolean).join(" ") : "";
+    return `<span>${cs.w("screen.open-file.note.line", { tool: { html: cs.w("screen.open-file.tool." + tool) },
+        result: { html: cs.w("screen.open-file.result." + result) } })}</span>`
+      + (engine ? `<span class="meta">${cs.esc(engine)}</span>` : "")
+      + (scanned && n.scanned_at ? `<span class="meta">${cs.w("screen.open-file.note.at")} ${cs.date(n.scanned_at)}</span>` : "");
+  };
+  const notes = cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row">${noteLine(n)}</div>`).join("")}</div>`,
     { empty: addedBy ? "screen.open-file.check.notyet" : "screen.open-file.checks.none" });
   const safeDrawn = (s) => {
     if (!s) return "";

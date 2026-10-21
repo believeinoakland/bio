@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_015aeBb5LHgEaQ6wS441ymgk · depth 2 · COMPLETE · handled B17
+**Status** · session_013NDvbTWUS73nhaNbAc4Gek · depth 2 · COMPLETE · handled B18
 
 ## J1 · REPORT
 
@@ -120,3 +120,21 @@ Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 11, module lines 4473
 
 COMPLETE (re B17). tranche/T51 merged (U424, DEC-389). Already as DEC-389 says: the release rides `filingapprove` (no `release` act on start-send; `act.release.label.start-send` is the drawn tick's row); stage/outcome `none` omit the field. New: a sent entry's stage keys `screen.action.sent.stage.*` are drawn under "It follows" (an appeal, fee-waiver request or court filing reads as `The {kind}, {date}`; the request stays "The request"). Suite 210 of 210; format, architecture, ownership, words 0; coverage 54 of 54. My earlier deferrals stand; the registry's `release` carve-out in contract.test is now inert.
 Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 13, module lines 4476
+
+## J12 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #10, re B18). Branch was at the tranche tip; no merge needed. Module suite 214 of 214; format, architecture, words, ownership 0; coverage 55 of 55 (R55 named).
+
+Entries applied.
+1. R55 (actions R108): on an action whose kind is `public_comment`, the reply form draws the design's minutes fold (`screen.action.minutes.heading`, `.says`, `.legend`, meeting, date, document, passage, each with its help1, and the act `screen.action.minutes.record`) and sends `minutes` (JSON of `{meeting, date, passage: {captureSha, extent}}`) with the received entry. The document is picked from the project's held captures (the reply document's list, `heldcaptures`); once chosen, the screen reads its `reading` (`sha256`) and the extent sent is the one of the text unit that holds the member's words (whitespace-insensitive). All four parts or none: a missing part is refused in place by `findin.fieldneeded`; words no unit holds are refused in place by `ai.progress.check.fail`; a silence carries none. Any other kind draws no fold and sends no `minutes`. A recorded entry's `minutes` are said beside it (`screen.action.minutes.says`, the meeting, the day). Contract test: the `release` carve-out is removed.
+Tests: `minutes-t51.test.mjs` (4), seen failing without the change (3 of 4; the fourth is the control), then green. words build `--check`: `words-unreviewed.json` is stale, and was before my change too (not this module's file).
+
+Deferred: none. 
+
+Found in other modules / for BOB.
+- Readings of R55 I took (best reading, nothing blocked): the design's "The passage" ("Copy the words exactly as the minutes write them") is words and `actions` takes an extent, so the words are located in the document's reading; the design draws no key for "those words are not in the document", so I used `ai.progress.check.fail` ("{passage}: not found in the document as quoted, so it is left out") for it and `findin.fieldneeded` for a missing part. UX-DESIGN may want its own two rows (`screen.action.minutes.notfound`, `.needed`); I word nothing myself. If BOB prefers the member to pick the passage from the reading's units instead of typing it, that is a one-function change.
+- `screen.action.minutes.notpublic` is the refusal `MINUTES_NOT_PUBLIC_COMMENT` that `actions` answers in its own words; the screen never offers the fold on another kind, so the key is not read here.
+- setup-words: `bio-plane/src/setup-words/words-unreviewed.json` is stale at the tranche tip (`build.mjs --check`): regenerate (setup-words' file).
+- Requirement line for BOB: R55 can drop "not yet met": the fold, the `minutes` sent and the entry's says are as written above.
+
+Size (session_013NDvbTWUS73nhaNbAc4Gek): test runs 6, module lines 4535

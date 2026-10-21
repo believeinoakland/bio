@@ -1,6 +1,6 @@
 # content (T51)
 
-**Status** · session_01JPMzjtaiYQhhvavJECf8NY · depth 2 · COMPLETE · handled B4
+**Status** · session_01P2JndhzMAdUJg3Zg8sCpBP · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -70,3 +70,27 @@ Job T51-188 · content, CHANGE B4 (K3988) done. Commit 54c8dbdc4e keys the three
 **Deferred.** None.
 
 Size (session_01JPMzjtaiYQhhvavJECf8NY): test runs 2, module lines 3531
+
+## J4 · COMPLETE · re B5
+
+Job K4259 · content, CHANGE B5 done: the `transcriptions` read op.
+
+**Applied.** Entry 1. `op=transcriptions {bundleId, limit?, after?}` (ops map arm `transcriptions` → `Content.transcriptionsOf`), reading `bundleId`, `limit`, `after` from the body, else the query, and `viewer` from the stamp. It answers `{ok, bundle_id, transcriptions: [{content_id, bundle_id, capture_sha, extent_kind, extent, ref, transcriber, at, text_sha256, attestations: [{attestor, at, counts}]}], count, limit, after, truncated, cursor}` (`attestations_truncated` when the attestation read was cut). Rows are in content-id order; `cursor` is the last content id listed when more remain, else null; the default page is 50, the maximum 200. The typed text is not listed (`op=transcription` reads it). `counts` is false for the typist's own, as `transcriptionRead` says. Refusals: `NO_TARGET` (no bundleId), `NO_SUCH_BUNDLE` (absent and unseen answer alike, R37), `NOT_A_DOCUMENT` (seen, not a document), each `detail` keyed with `localize`. `DECLARED_OPS.transcriptions`: classes admin, member, probe (as `content` and `transcription` in op-declarations), `mutating: false`, `weight: "read"`, accepts `bundleId`, `limit`, `after`, requires `bundleId`; `CONTENT_OP_NAMES` lists it.
+
+**Requirement lines for BOB** (next free id R57; the tests name it):
+- **R57** `transcriptionsOf({bundleId, limit, after, viewer})` (`op=transcriptions`) lists a document's typings, in content-id order, a page at a time: each `{content_id, bundle_id, capture_sha, extent_kind, extent, ref, transcriber, at, text_sha256, attestations: [{attestor, at, counts}]}` (`counts` false for the typist's own, R26), with `limit` (default 50, at most 200), `after`, `truncated` (measured by reading one more) and `cursor` (the last content id listed when truncated, else null); the typed text is `transcriptionRead`'s. Refusals in order: `NO_TARGET` (no bundleId); `NO_SUCH_BUNDLE` (absent or not visible, the same answer, R37); `NOT_A_DOCUMENT`. Writes nothing.
+- R50: the ops map holds nine ops, adding `transcriptions` (R57).
+- R56: `DECLARED_OPS` also declares `transcriptions` (`weight: "read"`, `mutating: false`, requires `bundleId`).
+
+**Tests** (`bio-plane/test/m/content/transcriptions.test.mjs`, written first and seen failing; and `declared-ops.test.mjs`, one more `declaredOpHolds`): a typed document lists its typings with attestations; the typist's own attestation lists with `counts` false and equals `op=transcription`'s; a document nothing typed (and another document's typings) lists none; the control: an unseen document, an absent one and a viewer-less call answer alike and the same call by a member who sees it lists; `NO_TARGET` and `NOT_A_DOCUMENT`; paging to the end with `limit` and `cursor`, the default and the clamp; the declaration.
+
+**Found in other modules (REPORT).** (1) op-declarations holds no row for `transcriptions` (its `content` and `transcription` rows are at lines 872 and 1113 of `src/op-declarations/index.mjs`): the classes above are what to give it. (2) `test/m/plane/*` fail at load before and after my change: `DECLARED_OP_DISAGREES: groupdescriptiondraft description` (not content's; so I could not see the plane suite judge the new arm).
+
+**Deferred.** None.
+
+**Checks, as run.**
+- `node --test bio-plane/test/m/content/`: tests 142, pass 142, fail 0.
+- `node checks/run.mjs /home/user/bio`: "format: 175 modules, 175 requirements files; 0 failures"; "architecture: 3907 product files … 0 failures"; coverage's 6 failures (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry, screens-intake) and the words check's one failure (op-grades `t37.test.mjs:32`) are other modules'.
+- `node checks/ownership.mjs /home/user/bio content tranche/T51 job/T51/content`: "1 files changed by content …; 0 failures".
+
+Size (session_01P2JndhzMAdUJg3Zg8sCpBP): test runs 3, module lines 3593

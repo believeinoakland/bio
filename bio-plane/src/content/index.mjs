@@ -76,6 +76,9 @@ export const CONTENT_EARNED_MAX = 200;
 /** R41 (N117): how many of the rows one re-read stales are read back and graded, in ONE read, inside the writer's
  *  transaction. The rest are marked by the same one UPDATE, counted by the same read, and told as ungraded. */
 export const STALE_GRADED_MAX = 200;
+/** R57: how many typings one `transcriptions` read lists by default, and at most. */
+export const TRANSCRIPTIONS_LIMIT_DEFAULT = 50;
+export const TRANSCRIPTIONS_LIMIT_MAX = 200;
 /** R51: the figures this module reports for `op=stats` and purge's proof, through record-core's `registerCounts`. */
 export const CONTENT_COUNT_KEYS = Object.freeze(["content", "contentStale"]);
 
@@ -1028,6 +1031,46 @@ export class Content {
       ...(txs.truncated ? { attestations_truncated: true } : {}),
       says: word("content.says.typed_authored_text", { transcriber: String(t.transcriber), portion: String(standing ? standing.ref : "this portion") }),
     };
+  }
+
+  /** R57: THE TYPINGS OF ONE DOCUMENT, listed (`op=transcriptions`), in content-id order, a page at a time: each portion
+   *  typed (its row's extent and `ref`), who typed it, when, the digest of the text (the text itself is
+   *  `transcriptionRead`'s) and the attestations of it, each with `counts` false for the typist's own as R26 says. A
+   *  document the viewer may not see answers exactly as an absent one (R37); one that is not a document is refused by
+   *  name, after sight. `cursor` is the last content id listed when more remain, else null. Writes nothing. */
+  transcriptionsOf({ bundleId = null, limit = null, after = null, viewer = null } = {}) {
+    const target = typeof bundleId === "string" ? bundleId.trim() : "";
+    if (!target)
+      return { ok: false, reason: "NO_TARGET",
+               detail: localize("content.index.listing_typings_names_document", "listing a document's typings names the document: pass bundleId=<INFO-…>") };
+    const kind = this.#typeOf(target);
+    if (!kind || !this.sees(target, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", target,
+               detail: localize("content.index.no_document_is_addressed_by_3", "no document is addressed by {target} in this record", { target: String(target.slice(0, 60)) }) };
+    if (kind !== "information")
+      return { ok: false, reason: "NOT_A_DOCUMENT", target, target_type: kind,
+               detail: localize("content.index.target_has_no_typings", "{target} is not a document, so nobody has typed any page of it (DEC-21)", { target: String(target.slice(0, 60)) }) };
+    const want = Math.floor(Number(limit));
+    const cap = want >= 1 ? Math.min(want, TRANSCRIPTIONS_LIMIT_MAX) : TRANSCRIPTIONS_LIMIT_DEFAULT;
+    const from = typeof after === "string" ? after : "";
+    const page = this.#rows(
+      `SELECT t.content_id, t.bundle_id, t.capture_sha, t.transcriber, t.at, t.text_sha256, c.extent_kind, c.extent, c.ref
+         FROM transcriptions t JOIN content c ON c.content_id = t.content_id
+        WHERE t.bundle_id=? AND t.content_id>? ORDER BY t.content_id LIMIT ?`, target, from, cap + 1);
+    const truncated = page.length > cap;
+    const rows = page.slice(0, cap);
+    const txs = this.#transcriptionsOver(rows.map((r) => r.content_id));
+    const transcriptions = rows.map((r) => {
+      const tx = txs.by.get(r.content_id);
+      return { content_id: r.content_id, bundle_id: r.bundle_id, capture_sha: r.capture_sha,
+               extent_kind: r.extent_kind, extent: safeJson(r.extent), ref: r.ref,
+               transcriber: r.transcriber, at: r.at, text_sha256: r.text_sha256,
+               attestations: (tx ? tx.attestations : []).map((a) => ({ attestor: a.attestor, at: a.at,
+                                                                      counts: a.attestor !== r.transcriber })) };
+    });
+    return { ok: true, bundle_id: target, transcriptions, count: transcriptions.length, limit: cap, after: from || null,
+             truncated, cursor: truncated ? rows[rows.length - 1].content_id : null,
+             ...(txs.truncated ? { attestations_truncated: true } : {}) };
   }
 
   /* ===================================================================== *

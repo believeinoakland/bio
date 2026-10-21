@@ -75,7 +75,8 @@ export const DOCKET = Object.freeze({
       + cs.field("dk-summary", "screen.docket.summary.label", { area: true, rec: true })
       + cs.choice("dk-proposed", "screen.docket.proposed.label", [["record", "screen.docket.proposed.record"], ["public", "screen.docket.proposed.public"], ["both", "screen.docket.proposed.both"]])
       + cs.field("dk-reason", "screen.docket.reason.label", { area: true, help: "screen.docket.reason.help" })
-      + '<div class="mk-acts">' + cs.act("docketfile") + "</div>" + P.said(view, "docketfile")));
+      + '<div class="mk-acts">' + cs.act("docketfile")
+      + (view.reachable ? cs.act("writinghelp", { data: { field: "summary", id: "dk-summary", forop: "docketfile" } }) : "") + "</div>" + P.said(view, "docketfile")));
     out.push('<p class="muted">' + cs.w("screen.docket.order") + "</p>" + P.said(view, "docketpost"));
 
     // R52 (C9; DEC-374): "Start the next edition": a published case is never changed; the next edition is a new draft that begins
@@ -137,6 +138,22 @@ export const DOCKET = Object.freeze({
         const r = view.parts.value(answer) || {};
         view.parts.forget(view);
         cs.go("case-editor", String(view.subject || "").split("/")[0] + (r.draftId ? "/" + r.draftId : ""));
+      },
+    },
+    {
+      // R8 (B17; interface-shell R20; DEC-387): the assistant's help with "What it says", drawn only while it is reachable and never under
+      // the reason; told only what the member typed, and its words fill the field labelled machine work. The owner's declaration
+      // (`writinghelp`, wizard-scripts R46) requires `op`, the act the words are for.
+      op: "writinghelp", label: "act.writinghelp.label.docket", rereads: [], reasonField: "told",
+      send: function (view, el, cs) {
+        view.ui.helpId = el.dataset.id;
+        const told = String(cs.value(el.dataset.id) || "").trim();
+        if (!el.dataset.forop || !told) return null;
+        return { body: { op: el.dataset.forop, field: el.dataset.field, told: told } };
+      },
+      done: function (view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        if (a && typeof a.text === "string" && view.ui.helpId) cs.fill(view.ui.helpId, a.text, { label: "screen.start-send.draft.machine" });
       },
     },
     {

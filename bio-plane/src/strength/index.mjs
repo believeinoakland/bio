@@ -689,8 +689,10 @@ export class Strength {
     const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
     /* R5: the hunch legs this answer names, so a hunch on a target the viewer may not see is neither named nor counted. */
     const seenHunches = hunchCount(legs.filter((l) => !(l.target_id && keep(l.target_id) === null)));
-    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, hunches_left_out: seenHunches,
-             ...(withheld ? { out_of_view: true } : {}) };
+    /* R6 (T51; K4259): the ungraded members, after the redaction above: those inert on every axis, once each by target. */
+    const ungraded = ungradedEverywhere(axes);
+    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ungraded, ungraded_count: ungraded.length,
+             hunches_left_out: seenHunches, ...(withheld ? { out_of_view: true } : {}) };
   }
 
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
@@ -1571,6 +1573,20 @@ function distinctParts(legs) {
    `population`) count unseen members too, so they go whenever anything is withheld (`hidden`, which also covers a
    load-bearing member no list names). Nothing says how much was withheld: `out_of_view: true` states only that
    something was. Returns the original object when nothing is withheld. */
+/* R6 (T51; K4259): a member inert on every axis carries no grade at all, so it is ungraded; a leg graded on one axis
+   is inert on the others and is not. One entry per target, in the order the first axis names them. */
+function ungradedEverywhere(axes) {
+  const keyOf = (m) => m.target_id ?? m.bundle_id;
+  const inert = STRENGTH_AXES.map((a) => new Set((axes[a].not_load_bearing ?? []).map(keyOf)));
+  const seen = new Set();
+  return (axes[STRENGTH_AXES[0]].not_load_bearing ?? []).filter((m) => {
+    const key = keyOf(m);
+    if (seen.has(key) || !inert.every((set) => set.has(key))) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function redactAxis(axis, keep, hidden) {
   let touched = !!hidden;
   const unseen = (id) => id != null && keep(id) === null;
@@ -1669,7 +1685,7 @@ function refusePairComposed(out) {
 export { refusePairComposed };
 
 /** The module's ops (K3): `strength` (in-process), `inquirystrength`, `versionstrength`, `partitionindependence`,
- *  `strengthbar`, `projectbarset` (R40), `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
+ *  `strengthbar` and `strengthbarset` (R41), `projectbarset` (R40), `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
 export function strengthOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1681,6 +1697,8 @@ export function strengthOps(s, url, body) {
       partition: (body && body.partition !== undefined) ? body.partition : q("partition"),
       version: q("version"), viewer: q("viewer") }),
     strengthbar: () => s.strengthBarSet({ ...(body || {}), author: q("author") }),
+    /* R41 (T51; K4258): the same act under the name the screens send; `strengthbar` stays served until its hand row goes. */
+    strengthbarset: () => s.strengthBarSet({ ...(body || {}), author: q("author") }),
     /* R40: the project from the body, else the query; `author`, `viewer` and `identity` are the control plane's stamps,
        never the body's. */
     projectbarset: () => s.projectBarSet({ ...(body || {}), project: (body && body.project != null) ? body.project : q("project"),
@@ -1694,7 +1712,7 @@ export function strengthOps(s, url, body) {
 /* R41 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
-  strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
+  strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", needs: "publish", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
     fields: { accepts: ["group","capture","connection","reason"], requires: [["capture","connection"],"reason"] } },
   projectbarset: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("strength.declared.projectbarset", "project-directed: keyed by a project; the project's own required strength, set with the member's reason; never the group's bar, and it gates nothing (`strength` R21)"),
     fields: { accepts: ["project","capture","connection","reason"], requires: ["project","reason"] } },

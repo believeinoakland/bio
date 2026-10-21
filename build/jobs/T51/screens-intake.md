@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_01BrnZiLD3xe4Eof2hHkGjyT · depth 2 · COMPLETE · handled B14
+**Status** · session_01VMaZFp9WEEsWKQj2NDgzHf · depth 2 · COMPLETE · handled B14
 
 ## Record
 
@@ -150,3 +150,28 @@ COMPLETE (B14, K4248, SCREENS-INTAKE #11). `tranche/T51` merged (the design's ro
 Also drawn now, from the design's new rows: `screen.capture.cred.askedby` (the turned-away row: member, day, tries) and `.givenby` (the stored login's row); `screen.watching.sweep.pages.one` for a budget of one page. Not drawn: `screen.capture.cred.given.summary` ("Once a login has been given"): the drawing wraps a just-given login's row in a details after the supply; this screen draws the stored login in its own row (list and withdraw) and keeps no separate just-given row. Say if it should be added. R52 stays as written in the requirements file.
 
 Size (session_01BrnZiLD3xe4Eof2hHkGjyT): test runs 17, module lines 2150
+
+## J12 · REPORT
+
+Found while completing B15 (checks/run.mjs over the whole tree). None is in screens-intake; none is changed by this job.
+
+1. screens-inquiry: coverage names R110 and R119 by no test. R119 is the requirement moved to screens-intake as R53 (K4258). Please retire the screens-inquiry R119 line, or the coverage check keeps counting it.
+2. Coverage, other modules: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19. Each is named by no test under its module's tests path.
+3. Words, other module: op-grades bio-plane/test/m/op-grades/t37.test.mjs:32 is a testcopy finding ("translation-directed: keyed by a language and an interface word").
+4. Generated artifacts made stale by this job's source change: bio-plane/dist/bio-plane.bundled.mjs and release/bio-plane.bundled.mjs both carry screens-intake's open-file.mjs. Not regenerated here (manifest §14); to regenerate at layer close.
+
+## J13 · COMPLETE
+
+COMPLETE (B15, K4260, SCREENS-INTAKE #12). R53 met.
+
+Entry applied: R53 (moved from screens-inquiry R119). `open-file.mjs`: each scan note is drawn as `screen.open-file.note.line` with its tool from `screen.open-file.tool.<tool>` and its result from `screen.open-file.result.<result>`, never the raw values; a key the words do not hold draws `shell.unread`; only a note that has scanned draws its engine, version and date. `index.mjs`: the open-file reads list names the five new keys (`screen.open-file.tool.clamav`, `screen.open-file.result.{clean,found,failed,not_scanned}`). Commit f21b6306d8 on job/T51/screens-intake.
+
+Tests (written first; the two R53 tests fail on the pre-change code and pass now): R53 each result draws its line by key (control: no raw result); R53 engine, version and date on a scan that ran, none on not_scanned, and an unknown tool draws shell.unread. The R5 fixture now names the tool as the plane does (`clamav`), not the display name.
+
+Suite: `node --test bio-plane/test/m/screens-intake/` 181 tests, 181 pass, 0 fail, 0 skipped.
+
+Checks (from civicos-process, product /home/user/bio): format 0 failures; architecture 0; coverage 0 (52 of 52 live ids named by a test); ownership 0 failures (4 files: the three code files and the job record, all in the module's paths); `checks/run.mjs`: words 0 findings for screens-intake; failures only in other modules, reported in my REPORT.
+
+Deferred: none. Other-module findings and one stale generated bundle are in my REPORT.
+
+Size (session_01VMaZFp9WEEsWKQj2NDgzHf): test runs 4, module lines 2163

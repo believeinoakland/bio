@@ -558,11 +558,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       ref(kind, id, label, facts) {
         const screen = D.refScreens[kind];
         const target = screen && screenOf(screen) && id !== undefined && id !== null && id !== "" ? hrefOf(screen, id) : null;
-        /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`) is the item's
-           own facts alone */
+        /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`, `objective`, ...) is the
+           item's own facts alone, nothing if it has none (R106) */
         const lead = kw("shell.card." + kind);
-        const someFact = (facts || []).some((f) => f !== null && f !== undefined && f !== "");
-        const card = (lead || (kind !== "theme" && !someFact) ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
+        const card = (lead ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
           .map((f) => '<span class="why">' + soft(f) + "</span>").join("")) + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
           ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"

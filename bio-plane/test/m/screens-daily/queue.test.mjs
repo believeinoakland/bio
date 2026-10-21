@@ -401,3 +401,9 @@ test("R74: a tension row opens `contradiction` at its pair; other kinds are unch
   assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty", subject: { kind: "contradiction_candidate", id: "CAND-3" } }), ["/app/contradiction/CAND-3"]);
   assert.deepEqual(await opensOf({ class: "FINDING", kind: "newer-capture-affects-reference", subject: { kind: "capture", id: "abc123" } }), ["/app/document/abc123"]);
 });
+
+test("R74: a conflict the member sees only half of opens `<candidate>/<project>`, the project from `between_projects[0]` (a candidate) or `parties[0]` (a notice), the slash unescaped; control: a whole-seen candidate still opens by its id", async () => {
+  assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty-unseen", subject: { kind: "contradiction_candidate", id: "CAND-3", between_projects: [{ project: "PROJ-1" }, { project: "PROJ-2" }] } }), ["/app/contradiction/CAND-3/PROJ-1"]);
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "tension", subject: { kind: "contradiction_notice", id: "N-1", candidate: "CAND-2", parties: [{ project: "PROJ-9" }] } }), ["/app/contradiction/CAND-2/PROJ-9"]);
+  assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty", subject: { kind: "contradiction_candidate", id: "CAND-3" } }), ["/app/contradiction/CAND-3"]);
+});
