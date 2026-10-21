@@ -15,7 +15,7 @@
  * store handed in (`capture`'s) reaches it as `store.acquisition`, as it reaches attestation's instance.
  *
  * Every refusal is an answer `{ok: false, reason, code, check, translation, ...}`, never a throw. */
-import { listArchive, streamMember, ARCHIVE_LIMITS, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
+import { hasZipMagic, listArchive, streamMember, ARCHIVE_LIMITS, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
          normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
 import { createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { partsHeld, UNPACKED_VIA, provenanceOf } from "../provenance/index.mjs";
@@ -789,6 +789,16 @@ async function archiveProfile(inst, ev, sha, parts) {
     });
     return officePart ? notAnArchive(sha, { format: null, part: officePart.name }) : null;
   }
+  /* R48 (fix round 4, P10 c; K4445): the opening bytes first. A capture that does not begin with the ZIP local-file magic is no ZIP archive
+     (R17's `zip` needs the magic, `formats.mjs`), so it is answered at once from its first part's head, never profiled whole. */
+  try {
+    const first = await ev.get(parts[0].sha256);
+    const head = first ? new Uint8Array(await first.arrayBuffer()).subarray(0, 1024) : null;
+    if (head && !hasZipMagic(head.subarray(0, 4))) {
+      const f = detectFormat(head, null);
+      return notAnArchive(sha, { format: f && f.format !== "zip" ? f.format : null });
+    }
+  } catch { /* an unreadable head is profiled as before */ }
   const total = parts.reduce((n, x) => n + x.bytes, 0);
   let fmt = null;
   try {
