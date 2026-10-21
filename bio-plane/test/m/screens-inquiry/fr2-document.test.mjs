@@ -101,7 +101,7 @@ test("R3 R97 C17 a page typed by hand is drawn as the page's reading: its words,
 });
 
 /* ---- C20 ---- */
-const STATEMENT = () => [`${word("screen.capture.file.how")}: ${word("screen.capture.file.how.made")}`, `${word("screen.capture.file.where")}: 6012 Seminary Ave, October 4, 2026, 9:12 AM`,
+const STATEMENT = () => [`${word("screen.capture.file.how")}: ${word("screen.capture.file.how.made")}`, `${word("screen.capture.file.where")}: the corner of Fourth and Main, at noon`,
   `${word("screen.capture.file.what")}: The pothole, about 60 cm across.`].join("\n");
 const withStatement = (s) => ({ images: { [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: SHA },
   ...(s ? { origin_statement: { text: s, words_of: "member:mai", evidence_of_truth: false } } : {}) }] }) } } });
@@ -109,7 +109,7 @@ test("R108 C20 the statement the upload stored is drawn as its three fields, eac
   const p = await openWith(at, withStatement(STATEMENT()));
   const box = main(p).querySelector("[data-statement]");
   assert.ok(box, "the statement");
-  for (const [k, v] of [["screen.capture.file.how", word("screen.capture.file.how.made")], ["screen.capture.file.where", "6012 Seminary Ave, October 4, 2026, 9:12 AM"], ["screen.capture.file.what", "The pothole, about 60 cm across."]]) {
+  for (const [k, v] of [["screen.capture.file.how", word("screen.capture.file.how.made")], ["screen.capture.file.where", "the corner of Fourth and Main, at noon"], ["screen.capture.file.what", "The pothole, about 60 cm across."]]) {
     const row = box.querySelector(`[data-statement-field="${k}"]`);
     assert.ok(row, k);
     assert.ok(text(row).includes(word(k)) && text(row).includes(v), `${k} head and value`);

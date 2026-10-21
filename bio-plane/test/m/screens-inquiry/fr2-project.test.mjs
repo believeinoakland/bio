@@ -11,7 +11,7 @@ const cardOf = (p, q) => section(p, "screen.project.questions.head").querySelect
 const everything = (el) => el.outerHTML;
 
 test("C43 R39 R116 a question's card on the project page draws no record id and the unrated reason once, where the plane's detail names ids", async () => {
-  const detail = `${Q} rests on nothing yet: ${D} is present and not yet load-bearing`;
+  const detail = `${Q} sentinel-head-zz: ${D} sentinel-tail-zz`;
   const unrated = { state: "unrated", detail, not_load_bearing: [{ target_id: D }], population: 1 };
   const p = await open(at, { plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: unrated, connection: unrated }) } });
   const card = cardOf(p, Q);
@@ -20,7 +20,7 @@ test("C43 R39 R116 a question's card on the project page draws no record id and 
   const html = card.outerHTML.replace(/href="[^"]*"/g, "");
   assert.ok(!/INQ-\d|INFO-\d/.test(html), "no record id in what the card draws (text or tips)");
   assert.equal(card.querySelectorAll('.cs-gap[data-gap="unrated"]').length, 2, "both axes keep their mark");
-  assert.ok(!card.textContent.includes("rests on nothing yet"), "the plane's long sentence for the quiet axes is not repeated on the card");
+  assert.ok(!card.textContent.includes("sentinel-head-zz"), "the plane's long sentence for the quiet axes is not repeated on the card");
   /* an undetermined reason the plane gives for both axes is told once */
   const und = { state: "undetermined", detail: `its owner has not settled ${D}` };
   const q = await open(at, { plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: und, connection: und }) } });

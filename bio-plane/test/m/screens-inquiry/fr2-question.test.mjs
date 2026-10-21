@@ -111,14 +111,14 @@ test("R2 the parts of a leg and of the read-back are separate elements: a leg's 
 /* ------------------------------------------------------------------------------------------------------------------ C41 */
 
 test("R35 R50 R117 a BASIS_VERSION_REFUSED answer lists its findings: the first finding's own translation and its repair, not only the generic sentence; control: BASIS_REFUSED is drawn as before", async () => {
-  const finding = { check: "C-27.9", code: "VERSION_PARTITION_INCOMPLETE", detail: "version 'main' has 1 leg with no ground", translation: "Every passage must be placed in a part.", repairs: ["give every leg of this version a ground"] };
+  const finding = { check: "C-27.9", code: "VERSION_PARTITION_INCOMPLETE", detail: "version 'main' has 1 leg with no ground", translation: "Every passage must be placed in a part.", repairs: ["repair-sentinel-qq"] };
   const go = async (code, findings) => {
     const p = await open(at, { plane: { conclude: refusedBody(code, { findings }) } });
     fill(p, { "question-conclude-falsifier": "logs dated later", "question-conclude-reason": "it answers it" });
     return press(p, "conclude");
   };
   const slot = await go("BASIS_VERSION_REFUSED", [finding]);
-  assert.ok(slot.textContent.includes("give every leg of this version a ground"), "the repair");
+  assert.ok(slot.textContent.includes("repair-sentinel-qq"), "the repair");
   assert.ok(!says(slot, "refusal.BASIS_VERSION_REFUSED") || slot.textContent.includes("give every leg"), "the finding is listed");
   const own = await go("BASIS_VERSION_REFUSED", [{ check: "C-27.1", code: "NO_SUCH_KEY_HELD", detail: "d", translation: "The plane's own words for it." }]);
   assert.ok(own.textContent.includes("The plane's own words for it."));
