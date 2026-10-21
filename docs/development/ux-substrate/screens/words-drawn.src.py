@@ -6870,6 +6870,25 @@ W.append(dict(key='screen.queue.check.open', en='Open the check', protected=Fals
 W.append(dict(key='screen.queue.hint.promote', en='Open a question from this', protected=False, note='DEC-393: B437 2: queue, the button of promote on a hint, as drawn in place'))
 W.append(dict(key='screen.queue.vouch.them', en='Vouch for them', protected=False, note='DEC-393: B437 2: queue, the button of release on held captures, as drawn in place'))
 
+# DEC-394: B441 item 1
+W.append(dict(key='screen.case-editor.drafts.help', en='The drafts of this project, each named by its scope and the date it was prepared.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on case-editor'))
+W.append(dict(key='screen.case-editor.drafts.choose', en='Choosing one shows that draft.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on case-editor'))
+W.append(dict(key='screen.case-editor.drafts.newest', en='Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026', protected=False, note='DEC-394: B441 1: the newest draft in the chooser on case-editor'))
+W.append(dict(key='screen.case-editor.drafts.earlier', en='Scope: the 2024 lease amendment', protected=False, note='DEC-394: B441 1: the earlier draft in the chooser on case-editor'))
+W.append(dict(key='screen.case-editor.links.live', en='2 review links are live, one of them on an earlier draft.', protected=False, note='DEC-394: B441 1: the note naming live review links on case-editor'))
+W.append(dict(key='screen.ceremony.drafts.help', en='The drafts of this project, each named by its scope and the date it was prepared.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on ceremony'))
+W.append(dict(key='screen.ceremony.drafts.choose', en='Choosing one shows that draft.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on ceremony'))
+W.append(dict(key='screen.ceremony.drafts.newest', en='Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026', protected=False, note='DEC-394: B441 1: the newest draft in the chooser on ceremony'))
+W.append(dict(key='screen.ceremony.drafts.earlier', en='Scope: the 2024 lease amendment', protected=False, note='DEC-394: B441 1: the earlier draft in the chooser on ceremony'))
+W.append(dict(key='screen.ceremony.links.live', en='2 review links are live, one of them on an earlier draft.', protected=False, note='DEC-394: B441 1: the note naming live review links on ceremony'))
+W.append(dict(key='screen.review-copy.drafts.help', en='The drafts of this project, each named by its scope and the date it was prepared.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on review-copy'))
+W.append(dict(key='screen.review-copy.drafts.choose', en='Choosing one shows that draft.', protected=False, note='DEC-394: B441 1: the help of the Which draft chooser on review-copy'))
+W.append(dict(key='screen.review-copy.drafts.newest', en='Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026', protected=False, note='DEC-394: B441 1: the newest draft in the chooser on review-copy'))
+W.append(dict(key='screen.review-copy.drafts.earlier', en='Scope: the 2024 lease amendment', protected=False, note='DEC-394: B441 1: the earlier draft in the chooser on review-copy'))
+W.append(dict(key='screen.review-copy.links.heading', en='Every live review link', protected=False, note='DEC-394: B441 1: the section of live links on any draft'))
+W.append(dict(key='screen.review-copy.links.note', en='A link on an earlier draft keeps working until you stop it here.', protected=False, note='DEC-394: B441 1: note under the live links'))
+W.append(dict(key='screen.review-copy.links.help', en='Every review link still working on any draft of this project: who it was shared with, which draft, when, and how many comments that reader made.', protected=False, note='DEC-394: B441 1: help of the live links section'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

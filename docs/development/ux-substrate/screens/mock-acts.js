@@ -92,6 +92,7 @@ const ACT_HELP = {
   noterevise: 'Changes your note. Notes are yours alone, so nothing else changes.',
   notedelete: 'Deletes your note. If you turned it into something shared, that stays.',
   accountpropose: 'Asks the assistant to draft the case\'s account in the order you chose, from the case\'s own findings and evidence. Its draft arrives labeled as machine work, with the sentences Civicsmith could not support marked; the account stays the one you write.',
+  casedrafts: 'Lists the project\'s drafts of the case, each named by its scope and the date it was prepared, the newest marked.',
   accountdrafts: 'Lists every draft the assistant made of this case\'s account, oldest first, each with how it was ordered and what Civicsmith marked.',
   writinghelp: 'Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.',
   translationdraft: 'Asks the assistant to draft translations of Civicsmith\'s words, labeled as drafts for a speaker to check.',

@@ -37,7 +37,7 @@ const WEIGHT = {
   owed_noteadd:1, owed_noteconvert:2, translationdraft:1, translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,
   goallink:1, goalclose:3, aspirationretire:3,
   biasmanifest:1, biasinhale:1, biasdebt:1, biasadopt:2, biasdebtresolve:3,
-  retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, subscriptiondisconnect:3, reviewrevoke:3, escalationend:3, wizardretire:3,
+  retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, subscriptiondisconnect:3, reviewrevoke:3, casedrafts:1, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3, contradictiondismiss:3, contradictionoptin:3, contradictionrespond:3, contradictionclarify:2, contradictiontakeup:2, contradictionresolve:2,
   retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, subscriptiondisconnect:3, reviewrevoke:3, escalationend:3, escalationresume:1, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
