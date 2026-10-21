@@ -412,3 +412,17 @@ TESTS AND CHECKS
 - Impact run as above.
 
 Size (session_01HJALQNVYJCEBKqDywwPMoe): test runs 9, module lines 2865
+
+## J20 · REPORT
+
+REPORT · reds after the registry re-take at 43379a1a44 (job head 0ace868859)
+
+1. `interface-shell` R1–R6 (R21, R38) turns red, and it is caused by this job's registry change. `request` now registers `entitycreate` (DEC-402), but the `screens-action` screen does not yet serve that act. Owner: `screens-action` (its C64 half: "Name the office yourself" and `entitycreate` in request's acts). It stays red until that job lands. I changed no other module.
+
+2. Not verified against the tranche tip, and not touched by this change: `plane/release` R24 (`screen.objective.purpose` is not in the words list; objective is a screen from the 1cc4a957f0 registry) and one `store-door` declared-ops test (`groupdescriptiondraft` as a hand row disagrees with op-grades' owner row, K4247 / op-grades R49). Owners: `op-grades` and the words owner. Named, not fixed.
+
+3. `journey-check` (journey.test, group.test: 14 tests) fails in the live-instance and browser walks. It ran after `npm ci` in bio-plane/src/journey-check. Not verified against the tip; the walk needs a live instance. Named, not fixed.
+
+4. Cleared in this job: `screens-wizards` (3 tests). My first small-2 change dropped `state` from the body the screen sends. Fixed at 0ace868859: the arm reads state through `pick` (body, then query) and the declaration accepts it.
+
+Proposed line for BOB to write (R49, T51 fix round 3; C64; DEC-401, DEC-402; K4356; amends R47, R48): The registry is re-taken at 43379a1a44: SCREEN_REGISTRY_SOURCE becomes 43379a1a44, 83 screens and 564 acts (435 declared, 83 function, 46 owed; 42 owed ops); `request` registers `entitycreate`. The earlier file is kept whole beside the carried one at 654a735535. Test: the pin, the counts, `request` lists `entitycreate`, and `build-data.mjs --check` passes; a one-byte change to the generated registry fails it.
