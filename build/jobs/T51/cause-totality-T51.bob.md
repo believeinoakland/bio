@@ -19,3 +19,7 @@ Read in full: both requirement lines and the requirements they cite (affordances
 ## B2 · CHANGE
 
 CHANGE (K4280): CAUSE-TESTS-T51 is merged into tranche/T51 (its control-plane register-declared.mjs registration with op-grades is there). Merge tranche/T51 into your branch now before reproducing #324.
+
+## B3 · RESUME
+
+RESUME (K4282): your RUNNING time (02:14) has passed and nothing has been pushed since 01:54. If your affordances run finished, read its result, run op-grades' and control-plane's suites (at most two at once), and post COMPLETE with the counts and your Size line. If a test is red, say which and why in a QUESTION.
