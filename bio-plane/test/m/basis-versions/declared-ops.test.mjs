@@ -93,3 +93,15 @@ test("R57 basis-versions declares withdrawconclusion: its requires alone raise n
   await declaredOpHolds({ op: "withdrawconclusion", declaration: DECLARED_OPS["withdrawconclusion"], call: mk("withdrawconclusion", {"author":"member:alice","viewer":"member:alice","identity":"member:alice"}, null, null, (fields, env) => (real(fields, env))),
     refusedNaming: named({"reason":["NO_REASON"],"target":["NO_TARGET"],"project":["NOT_A_PROJECT"]}, true), same: sameCode });
 });
+
+test("R57 basis-versions declares narrowcandidates: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "narrowcandidates", declaration: DECLARED_OPS["narrowcandidates"], call: mk("narrowcandidates", {"viewer":"member:alice"}, async () => (mkNarrow()), null, (fields, env) => (real(fields, env))),
+    refusedNaming: named({"target":["NARROW_NO_INQUIRY"],"version":["NARROW_NO_SUCH_VERSION"],"ord":["NARROW_NO_SUCH_LEG"]}, true), values: {"version":"first","ord":0}, same: sameCode });
+});
+
+test("R57 basis-versions declares narrowcandidates as a read: not mutating, weight read, its description the sentence its key basis-versions.declared.narrowcandidates names (it writes nothing)", () => {
+  const row = DECLARED_OPS["narrowcandidates"];
+  assert.equal(row.mutating, false);
+  assert.equal(row.weight, "read");
+  assert.match(row.description, /writes nothing/);
+});

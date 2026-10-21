@@ -29,6 +29,8 @@
  *     design's new ones, read by key), as are `noticeprepare`, `noticepost`, `signeradd` and `versionnotice`, whose `does` words the
  *     design's reads list for this module gives (R62); `op-declarations`' `ACT_HELP_ABSENT` keeps none of them;
  *   - T51 (K4093; DEC-359): `actionholdrelease`, which the design @ `2a64c5ae77` explains, is held (R70 re-taken at that design);
+ *   - T51 (K4248, B12): `strengthbarset` is held under its own text, `act.strengthbarset.does`, in `T51_DESIGN_OPS`; `strengthbar`, an op
+ *     whose text the design does not give and which no screen sends (the screens send `strengthbarset` and `projectbarset`), is held none;
  *   - T51 (R69): the seven browser acts, `BROWSER_ACTS`, are held under their own names from `act.owed_<name>.does`;
  *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61);
  *   - `selftest` (FR-40, K4190): the word list holds `act.selftest.does` for the updates screen (DEC-376), but this module's reads
@@ -103,6 +105,7 @@ export const T51_DESIGN_OPS = Object.freeze([
   "sourcedisclose",
   "sourcepersonlink",
   "standardinforce",
+  "strengthbarset",
   "sweeps",
   "templatesave",
   "transcriptionattest",
@@ -146,7 +149,7 @@ export const ACT_HELP_OPS = Object.freeze([
   "escalationreopen", "scenariosetaside", "scenariorestore", "planpause", "planresume", "matteroutcomeset",
   "itemtakeup", "watchlink", "watchanswer", "followend", "pagetranscribe", "transcribe", "exploreapprove",
   "handlechange", "handlecheck", "obscuremarkwithdraw", "obscuremark", "standarddeclare", "moneyrecord",
-  "tabledeclare", "strengthbar", "projectbarset", "drawquestion", "spotcheckvisit", "projectquestions", "projectlist",
+  "tabledeclare", "projectbarset", "drawquestion", "spotcheckvisit", "projectquestions", "projectlist",
   "projectinvite", "projectjoin", "planopen", "sever", "reinstate", "narrow", "conclude", "withdrawconclusion",
   "hypothesishold", "instance", "progression", "progressiondefine", "thread", "discharge", "captureprogressions",
   "themeread", "themedeclare", "themeplace", "themepropose", "themewithdraw", "checkrequest", "ask", "rule",
@@ -193,7 +196,6 @@ const KEY_EXCEPTIONS = Object.freeze({
   personfact: "act.recordpersonfact.does",
   datedfact: "act.recorddatedfact.does",
   moneyrecord: "act.recordfact.does",
-  strengthbar: "act.strengthbarset.does",
   rule: "act.ruleanswer.does",
   standingend: "act.standingquestionend.does",
   identitywithdraw: "act.withdrawidentityclaim.does",

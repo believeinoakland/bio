@@ -260,8 +260,8 @@ test("R68 What running costs (runtime): the measured work as the answer gives it
   has(a, "screen.updates.health.runtime.limits", { ceiling: "50" }); has(a, "screen.updates.health.runtime.cpu"); has(a, "screen.updates.health.runtime.note");
   const t = textOf(part(a, "screen.updates.health.head"));
   const R = "screen.updates.health.runtime.";
-  assert.ok(t.includes("request_work") && t.includes(said(R + "heaviest", { peak: "1840", unit: "ms" })) && t.includes(said(R + "average", { mean: "310", unit: "ms" })) && t.includes(said(R + "samples", { samples: "5200" })), "a measurement in ms is drawn in ms");
-  assert.ok(t.includes("capture_work_bytes") && t.includes(said(R + "heaviest", { peak: "800000", unit: "bytes" })) && !t.includes("800000 ms"), "a count of work is never drawn as a time");
+  assert.ok(t.includes("request_work") && t.includes(said(R + "heaviest", { peak: "1840", unit: said(R + "unit.ms") })) && t.includes(said(R + "average", { mean: "310", unit: said(R + "unit.ms") })) && t.includes(said(R + "samples", { samples: "5200" })), "a measurement in ms is drawn in ms");
+  assert.ok(t.includes("capture_work_bytes") && t.includes(said(R + "heaviest", { peak: "800000", unit: said(R + "unit.bytes") })) && !t.includes("800000 ms"), "a count of work is never drawn as a time");
   // control: a ceiling no refusal has taught yet is not drawn
   const none = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: env({ ok: true, measured: { metrics: [] }, subrequests: { runtime: "subrequests", observed: null, probeDue: true, probeEvery: 20 } }) }) });
   await none.press("runtime", {});
@@ -270,6 +270,20 @@ test("R68 What running costs (runtime): the measured work as the answer gives it
   await bad.press("runtime", {});
   lacks(bad, "screen.updates.health.runtime.note");
   assert.ok(bad.refused && bad.refused.text.length > 0);
+});
+
+test("R68 units (DEC-389): a runtime figure is said with its unit by key (unit.ms, unit.bytes); a unit with no key is never drawn as its raw token", async () => {
+  const R = "screen.updates.health.runtime.";
+  const metric = (unit) => ({ metric: "request_work", unit, peak: 1840, peak_at: "2026-10-12T00:00:00Z", peak_detail: null, last: 310, last_at: "2026-10-13T00:00:00Z", samples: 5200, total: 1612000, mean: 310 });
+  const ms = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: env({ ok: true, measured: { metrics: [metric("ms")] } }) }) });
+  await ms.press("runtime", {});
+  assert.ok(ms.text.includes(said(R + "heaviest", { peak: "1840", unit: said(R + "unit.ms") })), "milliseconds, by key");
+  // control: a unit with no key is not drawn as its token; its figures are not drawn either
+  const odd = await open("updates", { me: ADMIN, table: updatesTable({}, { runtime: env({ ok: true, measured: { metrics: [metric("joules")] } }) }) });
+  await odd.press("runtime", {});
+  assert.ok(!odd.text.includes("joules"), "the raw unit token is never drawn");
+  assert.ok(!odd.text.includes(said(R + "heaviest", { peak: "1840", unit: "" })), "a figure with no unit is not drawn");
+  has(odd, R + "cpu");
 });
 
 test("R68 control: the section is an administrator's only; a member reads that the screen is administrators' and none of the three reads is sent", async () => {
