@@ -1,6 +1,6 @@
 # ocr-worker (T51)
 
-**Status** · session_01DuirV8btJ9Ff4eRbjgcxEv · depth 2 · COMPLETE · handled B3
+**Status** · session_013tFr4MZkgDf57StoymPBB3 · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -63,3 +63,21 @@ FR-67 · ocr-worker · entry 1 (L26, K4194) applied.
 **Checks** (process repository, against /home/user/bio): format 175 modules, 0 failures; architecture 23 product files, 29 relative imports, 0 failures; coverage 24 of 24 live requirement ids named, 0 failures; words: no finding in ocr-worker; ownership: one failure, the listing of build/requirements/ocr-worker.md, accepted at my merge by B3. Module tests (`node test/ocr-worker.test.mjs`): 265 passed, 1 failed (R19, the stale bundle above).
 
 Size (session_01DuirV8btJ9Ff4eRbjgcxEv): test runs 7, module lines 808
+
+## J4 · COMPLETE
+
+T51-FR67 · ocr-worker · re-run after CHANGE B4 (K4292). Tests only; no source or requirement line changed.
+
+**Entries applied.** The R23 jpeg and png tests (`ocr-worker/test/ocr-worker.test.mjs`, the B8 block): the `direct` frame is now `renderPictureToPixels(bytes, 0, { maxEdge, grey: true, prepare: true })`, the options the member uses (`src/member.mjs:100`). The R23 tests now compare against the prepared picture's own digest, as the R24 tests do. Commit b7f425d5c9.
+
+**Deferred.** None.
+
+**Found in other modules.** Coverage (`checks/run.mjs`) reports live ids named by no test in other modules: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19. Not this job's; reported for BOB.
+
+**Tests and checks.**
+- `node --test --test-force-exit test/` in `ocr-worker/`: 266 passed, 0 failed.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage fails only in the modules above; channels 0 failures; words: plain 0, testcopy 0, inline 0, missingkey 0, handlist 0, marker 0.
+- `node checks/coverage.mjs /home/user/bio ocr-worker`: 24 of 24 live ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio ocr-worker tranche/T51 job/T51/ocr-worker`: 1 file changed by ocr-worker; 0 failures.
+
+Size (session_013tFr4MZkgDf57StoymPBB3): test runs 3, module lines 808 (ocr-worker/src excluding the generated src/tesslib.mjs)

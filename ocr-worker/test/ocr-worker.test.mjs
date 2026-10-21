@@ -944,7 +944,7 @@ console.log("\n--- B4 · R7: the real renderer's refusals pass through verbatim;
 console.log("\n--- B8 · R23: a photograph of a printed sentence, transcribed inside workerd by the real renderer and engine ---");
 {
   for (const [name, bytes, format] of [["photojpg", PHOTO_JPG, "jpeg"], ["photopng", PHOTO_PNG, "png"]]) {
-    const direct = await renderPictureToPixels(bytes, 0, { maxEdge: PICTURE_MAX_EDGE, grey: true });
+    const direct = await renderPictureToPixels(bytes, 0, { maxEdge: PICTURE_MAX_EDGE, grey: true, prepare: true });
     const { status, body } = await ask(name);
     t(`R23 ${format}: 200 ok:true, with the fields R8 names`, [status, body.ok, keys(body)],
       [200, true, ["cap", "confidence_floor", "deferred", "engine", "grain", "image", "measured_by", "model", "notes", "ok", "pages", "version"]]);
