@@ -10,3 +10,6 @@
 - project page · `rerunread` finding titles not drawn (case-import R31 serves them) · K4259 · 2026-10-21
 - strength displays · `ungraded` not drawn (strength R6 serves it) · K4259 · 2026-10-21
 - objective, about-knocker, leads, watching · `screen.<id>.purpose` rows missing (plane R24 red, accepted by name until T52) · K4276 diagnosis · 2026-10-21
+- question · the cite-imported finding choice and its section heading share one label (`act.owed_citeimported.label.question`) · screens-inquiry J13 · 2026-10-21
+- contradiction · `GAP_WORDS` emptied; its keys could be re-pointed to DEC-391's names · screens-inquiry J13 · 2026-10-21
+- objective · `PENDING_WORDS` all held, the list can go; aspirations' parties and flows are still typed lists, pickers could serve them · screens-inquiry J13 · 2026-10-21
