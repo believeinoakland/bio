@@ -228,6 +228,21 @@ test("R31 a viewer who does not see the project at full, an absent id and an id 
   assert.equal((await read({}, "bob")).ok, true, "a participant sees it");
 });
 
+test("R31 each finding row of rerunread carries its title, read from the imported finding's front matter; a finding with no title answers null, never its id", async () => {
+  const w = seeded();
+  w.script.set(F1, { role: "load_bearing", result: "recreated", pair: { capture: g("C"), connection: g("C") } });
+  const a = await imp(w, caseFile({ apps: APPS, printedLens: PRINTED, titles: { [F1]: "Transfers to the shell company" } }));
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  w.project(P1, { owner: "alice" });
+  assert.equal((await door(w, "rerunstart", { viewer: V("alice"), by: V("alice"), project: P1, import: a.import, edition: 1 })).ok, true);
+  const r = await door(w, "rerunread", { viewer: V("alice"), project: P1 });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(pairs(r, F1).title, "Transfers to the shell company");
+  /* the control: findings whose file states no title answer null, and never the id */
+  for (const f of [F2, F3]) assert.equal(pairs(r, f).title, null, f);
+  assert.deepEqual(r.reruns[0].findings.map((f) => f.finding), [F1, F2, F3], "the rows are otherwise as before");
+});
+
 /* ================================================================ R32 */
 
 test("R32 a rerun and a pairing leave every imported edition's bytes, every acceptance and every finding of the project unchanged, and write no bundle", async () => {

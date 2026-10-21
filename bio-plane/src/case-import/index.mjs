@@ -1304,6 +1304,15 @@ export class CaseImport {
              shared: [...sourceKeys].filter((x) => ownKeys.has(x)).length };
   }
 
+  /* R31: a finding's title, from the `title` of its file's front matter in the imported edition; null when the file or the
+     title is absent, never the id. */
+  #findingTitle(importId, ed, finding) {
+    const path = caseGrammar.caseFilePath("finding", finding);
+    const file = path ? this.fileOf({ import: importId, edition: ed, path }) : null;
+    const fm = file ? this.#call(() => parseFrontmatter(new TextDecoder().decode(file.bytes)).data) : null;
+    return isObj(fm) ? str(fm.title) : null;
+  }
+
   /* R31: one declared rerun, read. */
   #rerunView(r, projectLens) {
     const i = this.#import(r.import_id);
@@ -1328,8 +1337,8 @@ export class CaseImport {
         const row = CaseImport.#printedStatement(printed, id);
         return { statement: id, kind: row?.kind ?? null, subject: row?.subject ?? null, text: row?.text ?? null };
       });
-      return { finding: f.finding, ref: importedFindingRef(i.import_id, f.finding), role: f.role ?? null,
-               source: { pair: f.pair ?? null, lens_statements: lensStatements }, paired: pairings.length > 0, pairings };
+      return { finding: f.finding, ref: importedFindingRef(i.import_id, f.finding), title: this.#findingTitle(i.import_id, ed, f.finding),
+               role: f.role ?? null, source: { pair: f.pair ?? null, lens_statements: lensStatements }, paired: pairings.length > 0, pairings };
     });
     const difference = CaseImport.#lensDifference(printed, projectLens);
     return { rerun: idOf("rerun", r.rn), project: r.project, import: i.import_id, group: i.source_group, case: i.case_id, edition: ed,
