@@ -120,3 +120,19 @@ COMPLETE (B9, FR-34 group E). pseudoString remembers each string's answer (modul
 FOR YOU: R30 is not in build/requirements/journey-check.md: the ownership check refuses that file as outside my paths, so I left it out of my branch. Its line (ready to paste) is in my record under 'R30 line'; test names carry R30, so coverage reads it once you write it. Checks: format 0, architecture 0, words 0, ownership 0, coverage misses only R19 (conditional) plus R30 until written.
 
 REPORT: group.test.mjs:19 (R17 row scan) is red on 15 rows of other modules, not mine and not caused by this change: ai-accounts 5 (declared.aikeepaway, declared.groupkeynoticeseen ...), intent 2, local-facts 3, strength 2, translations 3: declaration-pass rows saying 'group' for a team, in neither GROUP_SENSE nor a words.json 'team' row (the DEC-355 route, K4066).
+
+## J7 · COMPLETE
+
+COMPLETE (B10 CHANGE, K4295). Pushed `0e0fa0d6c2` on `job/T51/journey-check`.
+
+**Entries applied.** `bio-plane/test/m/journey-check/pseudo.test.mjs`: the owners' declared ops are registered before any screen is loaded, through `screens-settings/register.mjs` (the suite the screens' own tests use, so `expertisewithdraw` is in `OPS`). The screens and the other modules are now imported after it (`await import(...)`), as `routed.test.mjs` does. Two attempts first, both recorded: a direct `registerDeclared` call at the top of the file failed ("registered after the first read (R81)", because a static import had already read the table); a static import of the screens after it failed the same way. Every control is unchanged; only the import order changed.
+
+**Deferred.** None.
+
+**Found in other modules.** None new. Coverage outside my module (not mine, not touched): agent-harness R17; agent-runner R37 R38 R40; installer-steps R26 R31.
+
+**Tests.** `pseudo.test.mjs`: 7 pass, 0 fail. `group.test.mjs`: 4 pass, 1 fail (R17, the expected red, T52, K4269); R17's other four tests pass.
+
+**Checks** (run from the process repository on `/home/user/bio`): format 0 failures; architecture 0 failures (an earlier version importing op-declarations and test-support directly was refused as undeclared in journey-check's `uses`, so it now goes through screens-settings, which `uses` declares); words 0; channels 0; ownership `journey-check tranche/T51 job/T51/journey-check` 0 failures (one file changed: `pseudo.test.mjs`); coverage: journey-check R19 is the only id unnamed (conditional, unmet, as before).
+
+Size (session_01Fueqh9zRCDKCheePb5TyFi): test runs 5, module lines 3372
