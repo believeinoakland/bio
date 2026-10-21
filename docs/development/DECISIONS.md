@@ -6037,3 +6037,18 @@ decided: 2026-10-20 · the design session (P17)
 the design: `store-door.declared.groupdescriptiondraft` reads "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record." `sweeps` keeps the kit's weight 1, which is every read's weight (as `monitoring` and `monitorslate`): `WNAME` spells weight 1 "Reversible", and a weight-1 act draws no mark under its button (`btn` draws one only from weight 2). So `marks.mjs`'s "Reversible" for `sweeps` already is a read's mark; nothing changes in the kit.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (row noted "DEC-390").
 owed: none.
+
+### DEC-391 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B435, K4258: words the built screens need)
+for: design
+question: Which rows do the objective, contradiction, document, question, project and open-file screens need, under which keys?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the objective screen's 23 `PENDING_WORDS` keyed (`screen.objective.*`). (2) the contradiction screen's 31 `GAP_WORDS` keyed (`screen.contradiction.*`) and its purpose line in SCREEN_HELP; the four lines the code draws without a key are minted: `screen.contradiction.stated.dates`, `.kinds` ({first}, {second}), `.passage.meta` ({date}, {kind}, {member}, {captured}), `.party.asked` ({date}). (3)-(5) every key document.mjs, question.mjs and project.mjs look up was already keyed except `screen.project.cmp_only_ours` and `cmp_withdraw_do` (keyed); the words BOB names that the code does not yet look up are minted as whole phrases for the screen job to adopt: document `text.label`, `text.full|none|unread`, `said_by`, `retired_copy`, `checked.words_and_address`, `checked.issuer`; question `hunches_left_out.one|other` ({n}), `hunch.history.hold|revise|withdraw`, `reeval.cause.<source>` for the 17 causes other than edition ({document}); project `cmp_their_reading`, `cmp_our_reading` ({text}), `stage.reached|not_reached` ({stage}), `ask_owners` ({owners}). From/To stay `screen.explore.from` and `screen.security.to`. (6) `screen.open-file.result.not_scanned` was already keyed ("Not scanned yet", on the tranche since U422).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-391"), `screens/mock-refs.js`.
+owed: the standing consistency read of these rows (the next DEC).
