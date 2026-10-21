@@ -110,7 +110,8 @@ test("R3 (blocks 1-2) the public read answers the case, with each finding's own 
   assert.deepEqual(["opened" in s, "ratified_at" in s, s.ratified_at], [false, true, T1], "`opened` is not published");
   assert.deepEqual([s.scope, s.project !== null, s.bar, s.bias_acknowledgement], ["The question.", true, BAR, "none declared"]);
   assert.equal(s.bar_detail, localize("public-read.index.the_standard_of_evidence_this", "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it."));
-  assert.deepEqual(s.completeness, COMPLETENESS1, "completeness travels as recorded, with its position and justification");
+  /* R41 (3): the publisher is named by her handle (the fixture's `h_<id>`); everything else travels as recorded */
+  assert.deepEqual(s.completeness, { ...COMPLETENESS1, author: "h_olive" }, "completeness travels as recorded, with its position and justification");
   assert.deepEqual([s.complete, s.awaiting], [true, []]);
   assert.equal(s.document.doc_sha, w.row(`SELECT doc_sha FROM case_documents`).doc_sha, "the signed case document is served");
   const f = s.findings[0];
@@ -118,8 +119,8 @@ test("R3 (blocks 1-2) the public read answers the case, with each finding's own 
   assert.deepEqual(
     [f.ord, f.bundle_id, f.title, f.bundle_sha, f.version_sha, f.edition, f.role, f.ratified_at, f.gate_version, f.sig_armored],
     [0, F, "Finding F", pin, pin, 1, "load_bearing", T1, "plane-gate/test", SIG(11)]);
-  assert.deepEqual(f.attestor, { member: "olive", key_b64: KEY }, "the attestation is public and per finding");
-  assert.deepEqual(f.delivered_by, { kind: "member", member: "olive" }, "the deliverer is its own fact (R12)");
+  assert.deepEqual(f.attestor, { member: "h_olive", key_b64: KEY }, "the attestation is public and per finding, the signer named by her handle (R41)");
+  assert.deepEqual(f.delivered_by, { kind: "member", member: "h_olive" }, "the deliverer is its own fact (R12)");
   assert.deepEqual(f.strength.map((a) => [a.axis, a.state, a.grade]), [["capture", "graded", "B"], ["connection", "graded", "C"]],
                    "both frozen axes, per finding, as the case document states them — never one letter");
   assert.deepEqual([f.frozen_from, Array.isArray(f.grounds)], ["case_document", true], "the pair and grounds are the case document's");
@@ -293,7 +294,7 @@ test("R3 (block 8, M0-11) the loose branch: ratified bytes in no case answer, wi
     assert.equal("detail" in c, false, `${label}: the loose state's own sentence is not on the one success return`);
     assert.deepEqual([f0.version_sha, f0.role, f0.edition, f0.strength, f0.required, f0.sig_armored, f0.bundle_sha],
                      [null, null, 1, null, null, SIG(21), LOOSE_SHA], `${label}: nothing pinned it, and it derives no pair`);
-    assert.deepEqual([f0.attestor, f0.delivered_by], [{ member: "olive", key_b64: KEY }, { kind: "member", member: "olive" }]);
+    assert.deepEqual([f0.attestor, f0.delivered_by], [{ member: "h_olive", key_b64: KEY }, { kind: "member", member: "h_olive" }]);
     assert.deepEqual([f0.serves, f0.names, f0.unresolved, f0.tensions], [[], [], [], null]);
     assert.deepEqual([c.tensions, c.highlighted, c.tensions_unread, c.captures, c.sources], [null, null, null, null, null]);
     assert.equal(c.tensions_detail, localize("public-read.index.not_a_case_discloses", "this is not a case, so it discloses no contradiction"));
