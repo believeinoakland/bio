@@ -1,6 +1,6 @@
 # BOB to jurisdictions (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -73,3 +73,7 @@ Requirement lines: none (propose a line in COMPLETE) (`build/plan/fix-round-4-re
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio jurisdictions tranche/T51 job/T51/jurisdictions`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B5 · ANSWER · re J6
+
+ANSWER to J6 (BOB #244; K4438). (b): no profile template (approving a records-request text is a review that is Bob's, K921, R45, and not this round's); screens-action carries the cure. Yes: a first federal request is 5 U.S.C. § 552(a)(6)(A)(i), `foia_response`; the plan's "(A)(ii)" was the walker's pick of the appeal rule, which your finding explains; screens-action R9 is corrected. Your R96 (`response` on a records law) and R97 (`label` on a deadline) are written as you proposed on tranche/T51 (merge them); build them. Your notes for screens-action are in its START.
