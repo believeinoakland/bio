@@ -200,3 +200,31 @@ Size (session_01D6KgPVrvb8G2TEKd3zrgrR): test runs 4, module lines 3797
 - No generated artifact made stale beyond the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, rebuilt at layer close); no new word key.
 
 Size (session_01CbTTqezcoRxwxDi7p8kyVT): test runs 6, module lines 4219
+
+## J8 · COMPLETE
+
+**COMPLETE** for B8 (K4328) · commit `66a70b6b46` on `job/T51/capture` (J7's work is below it).
+
+**Entries applied**
+3. **R86, an interrupted upload.** `uploadCapture` told a home from a receipt: provenance's `registerHolds` answers `registered` (the register files the bytes under a document) and `acquired` (a receipt names them). Bytes the register files answer as before (`existed: true`, no document, no actor, `within` not called). Bytes only a receipt names (an upload interrupted before it was filed) answer `existed: true` **with `document`**, built as a new upload's (this upload's statement, name, profile, `by`); the receipt is written as a second sighting; no actor is recorded and `within` is not called, so the screen files the document for the viewer by its own act. A receipt that cannot be written is still `RECEIPT_NOT_WRITTEN` with no document.
+4. **R77, `whole`.** Every held row, the picker's and the full read's (archive rows included), carries `whole`: `true` when the evidence store holds an object under the row's capture fingerprint, `false` when none is (a copy held in parts only), `null` where it cannot be said (the row has no capture, no evidence store, a `head` that fails, or the page's wait `HELD_PAGE_WAIT_MS` ran out). Each distinct fingerprint of a page is asked once, 8 at a time, under that wait; an empty page asks the store nothing.
+
+**Proposed requirement lines (BOB writes them)**
+- Amend **R86**: *Bytes the record's register files under no document but a receipt names (an upload interrupted before it was filed) also answer `existed: true`, and with `document`, built as a new upload's from this upload's statement, name and type; the receipt is written as a second sighting, no actor is recorded and `within` is not called. Bytes the register files answer `existed: true` with no document, as before.* Test: `fix2-t51.test.mjs` (R86 K4328), controls: a held home, bytes nowhere held, a receipt that cannot be written.
+- Amend **R77**: *Each row, the `picker` row included, also answers `whole`: true when the evidence store holds an object under the row's capture fingerprint, false when it holds none (a copy kept in parts only), null where that cannot be said (no capture, no evidence store, a failed read, or the page's wait `HELD_PAGE_WAIT_MS` ran out). A page asks the store once for each distinct fingerprint, and nothing for an empty page.* Test: `fix2-t51.test.mjs` (R77 K4328), controls: a missing evidence store, a failing head and an empty page.
+
+**Decisions of mine, for BOB to record** (details under P17; none needs Bob)
+- `whole` is a tri-state, never `false` for "could not ask": screens withhold vouch and OCR only on `false`.
+- The interrupted upload's `within` is not called (B8 says the screen files it); if BOB wants the control plane to promote it in the same act, that is a call to `within` on this path and an amendment to R86.
+- The check is a `head` per distinct fingerprint, not a rule on size, because a copy kept in parts before C5 can be under 32 MiB too.
+
+**Found in other modules (for BOB)**: `captureupload`'s door (control-plane / store-door) must carry the new `document` on an `existed: true` answer and `screens-intake` must draw it; I did not touch them. `op=heldcaptures` declarations (`op-declarations`) list `fields`; no change needed to accept, but `affordances` help for `heldcaptures` may mention `whole`. Stale generated: `bio-plane/dist/bio-plane.bundled.mjs` (the plane source includes `capture`); `setup-words/rows.mjs` is unaffected (no new `localize` id).
+
+**Deferred**: none. Correction to J7's Size line: module source is 3,976 lines at J7; now see the line below.
+
+**Tests and checks**
+- `node --test --test-force-exit test/m/capture/ test/cap13-reuse-pages.test.mjs test/d57selflink.test.mjs` (bio-plane): 225 tests, 225 pass, 0 fail. Seen failing first against the source without the change (6 fail). `held-golden.json` regenerated; its diff is only the added `"whole": null` (that fixture has no evidence store).
+- Users (instance-setup seeds, capture-requests plane, screens-daily, screens-inquiry document and t50, screens-intake, affordances, op-declarations, op-grades, wizard-scripts, interface-shell): 1528 tests, 1525 pass, 3 fail, the same three at `origin/tranche/T51`: op-grades R42 and R46, screens-intake `common.test.mjs` R8.
+- `checks/format.mjs`: 0 failures. `architecture.mjs capture`: 0. `coverage.mjs capture`: 52 of 52. `words.mjs capture`: 0. `ownership.mjs capture origin/tranche/T51 job/T51/capture`: 6 files, 0 failures.
+
+Size (session_01CbTTqezcoRxwxDi7p8kyVT): test runs 11, module lines 4066
