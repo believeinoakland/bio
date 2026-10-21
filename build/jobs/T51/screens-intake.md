@@ -236,3 +236,7 @@ Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 9, module lines 2233
 ## B17 CHANGE applied (CONTROL-PLANE #43, K4326)
 
 `acquire`'s `ACQUIRE_TIMED_OUT` is drawn by what the 504 says it `kept`: `held` and `undetermined` by `refusal.ACQUIRE_TIMED_OUT.held` / `.undetermined`, anything else by the base `refusal.ACQUIRE_TIMED_OUT`. Those two keys are not yet in the word table, so the screen falls back to the base words until they are (its test asserts the keyed word once `hasWord` holds it; the keys are not in the screen's word list yet, because the words check refuses a listed key the table lacks: add them to `SCREEN_KEYS.capture` when the rows exist). Also from the merge: the registry now lists `capturerequests` on `capture` (DEC-394 3c): "Show my requests for later" (`act.capturerequests.label.capture`) is drawn and re-reads the list. screens-intake 202 of 202; format, architecture, words 0.
+
+## J16 · COMPLETE
+
+COMPLETE (B17 applied): ACQUIRE_TIMED_OUT drawn by kept (held/undetermined keys fall back to the base words until the rows exist; add them to SCREEN_KEYS.capture then); the merged registry's capturerequests act is drawn. screens-intake 202 of 202; format, architecture, words 0; ownership 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 5, module lines 2245
