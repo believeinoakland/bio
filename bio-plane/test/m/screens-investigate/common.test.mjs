@@ -17,8 +17,6 @@ const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/u
  * answered pending, refused and not at all must leave the screen standing, and draw its own state where the screen draws one (the
  * reads that only feed a title or a choice draw none). The screen's subject read and the screen's other state-drawn reads are
  * found by the page itself: at least one read per screen draws its state. */
-/* Registry acts no screen draws as an act: `instance` and `progression` are reads the timeline makes (R33, state b and c). */
-const UNPLACED = { timeline: ["instance", "progression"] };
 /* The design's own label keys for acts whose words the requirements name (R31, R32, R33, R36, R37). */
 const LABELS = { "person:entityalias": "entity.alias.add", "person:aliaswithdraw": "act.owed_aliaswithdraw.label.person", "person:relationdeclare": "entity.relation.declare",
   "person:resolve": "entity.naming.match", "person:resolvetestify": "entity.naming.testify", "person:connect": "entity.connect", "timeline:thread": "progression.thread",
@@ -109,13 +107,12 @@ test("R10 each screen draws exactly its registry acts, labelled by its words, ea
   for (const s of SCREENS) {
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
-    /* interface-shell R55: on explore, stepsource and stepsourcewithdraw re-point connectionassert (screens-investigate R17) */
-    const want = (s.id === "explore" ? [...reg.acts.map((a) => a.op.replace(/^owed:(\S+).*$/, "$1")).filter((o) => o !== "connectionassert"), "stepsource", "stepsourcewithdraw"] : reg.acts.map((a) => a.op.replace(/^owed:(\S+).*$/, "$1"))).filter((o) => !(UNPLACED[s.id] || []).includes(o));
-    for (const o of UNPLACED[s.id] || []) assert.ok(reg.acts.some((a) => a.op.replace(/^owed:(\S+).*$/, "$1") === o) && !s.acts.some((a) => a.op === o), `${s.id}: ${o} is a registry act this module does not draw`);
+    /* B14 (K4259): each screen names exactly the acts the registry lists for it (and its owed acts under their op names) */
+    const want = reg.acts.map((a) => a.op.replace(/^owed:(\S+).*$/, "$1"));
     assert.deepEqual([...new Set(s.acts.map((a) => a.op))].sort(), [...new Set(want)].sort(), s.id);
     for (const a of s.acts) {
       assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
-      assert.equal(a.label, LABELS[s.id + ":" + a.op] ? LABELS[s.id + ":" + a.op] : a.op === "stepsource" ? "act.stepsource.label.explore" : a.op === "stepsourcewithdraw" ? "screen.explore.withdraw" : `act.${a.op}.label.${s.id}`);
+      assert.equal(a.label, LABELS[s.id + ":" + a.op] ? LABELS[s.id + ":" + a.op] : a.op === "stepsource" ? "act.stepsource.label.explore" : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
     }
   }

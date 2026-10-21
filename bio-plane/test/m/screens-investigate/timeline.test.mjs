@@ -275,3 +275,23 @@ test("R49 a progression address of a key the record does not hold draws the empt
   assert.equal(refused.byOp("progressiondefine").length, 1, "sent once");
   assert.ok(main(refused).textContent.includes(word("refusal.NO_BASIS")), "the owner's refusal is drawn beside the act");
 });
+
+/* B14 entry 2 (K4259; registry at 09fbb247eb): `instance` and `progression` are acts the design draws as the sections they read */
+test("R33 B14 the module names instance and progression among the timeline's acts, and draws each as the design does: the section it reads carries the act (data-act), never a button; the three states", async () => {
+  const names = (await import("./fixtures.mjs")).SCREENS.find((s) => s.id === "timeline").acts.map((a) => a.op);
+  for (const op of ["instance", "progression"]) assert.ok(names.includes(op), op);
+  const sectionActs = (p) => main(p).querySelectorAll("section[data-act]").map((s) => s.getAttribute("data-act"));
+  const a = await open(at);
+  assert.deepEqual(sectionActs(a), ["instance"], "state a: Progressions it follows is the instance read");
+  assert.equal(secOf(a, "progression.follows").getAttribute("data-act"), "instance");
+  const b = await open(MORE_PATHS.matter);
+  assert.equal(secOf(b, "progression.steps").getAttribute("data-act"), "instance", "state b: Its steps");
+  assert.deepEqual(sectionActs(b), ["instance"]);
+  const c = await open(MORE_PATHS.progression);
+  assert.equal(secOf(c, "progression.steps").getAttribute("data-act"), "progression", "state c: Steps");
+  assert.deepEqual(sectionActs(c), ["progression"]);
+  for (const p of [a, b, c]) for (const op of ["instance", "progression"]) assert.ok(button(p, op) === null, `${op} is a read the section draws, not a button`);
+  /* control: a project that follows no matter draws no instance section (R22) */
+  const none = await open(at, { plane: { instances: ok({ ok: true, count: 0, items: [], truncated: false }) } });
+  assert.deepEqual(sectionActs(none), []);
+});

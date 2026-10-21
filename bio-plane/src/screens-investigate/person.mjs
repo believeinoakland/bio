@@ -3,6 +3,7 @@
  * `samepersoncandidates`. Each position and fact is a reference to its source passage; a fact is removed for good only by
  * `personexpunge`, behind its consequence statement (op-grades R21), with the Irreversible weight, and at the phone width it
  * is read and not done (interface-shell R11).
+ * R50: an office's kept lines each withdrawn with a reason (`linewithdraw`).
  * R32: what the team says about them (other names, declared ties, the documents that may name them), every fact recorded
  * (those valid today, those whose validity is not settled, the withdrawn in a fold), and a sentence in place of an empty
  * graph. R38, R39: "Same person?" in the design's words, its two acts each explained. */
@@ -148,7 +149,7 @@ function render(cs, view) {
   out.push(cs.sec(S + "connections", cs.state(gq, (g) => (none(g)
     ? `<p class="cs-state" data-state="empty">${cs.w("person.graph.none")}</p>`
     : P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
-      words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached", withdraw: "screen.explore.withdraw" } })))));
+      words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached" } })))));
   /* R22: a section that holds nothing is not drawn (loading and failed are still drawn) */
   if (!p || (p.posts || []).length) out.push(cs.sec(S + "positions", cs.state(d, (v) => {
     const posts = v.posts || [];
@@ -222,6 +223,7 @@ function render(cs, view) {
       const srcNow = view.ui["choice:kp-src"] === "own" ? "own" : "doc";
       out.push(cs.sec(K + "heading", `<p>${cs.w(K + "intro.a")} ${cs.w(K + "intro.b")}</p>`
         + (kept.length ? cs.sheet(kept.map((x) => cs.row(gradeOf({ assertion: x.line.assertion }), `${cs.esc(x.office)} ${x.line.kind === "custodian_of" ? cs.w(K + "line", { subject: cs.esc(subjectName(x.line.to)) }) : cs.w(K + "line.responsible", { subject: cs.esc(subjectName(x.line.to)) })} · ${dated(x.line)}`,
+          x.line.line_id ? cs.act("linewithdraw", { label: "act.linewithdraw.label.person", data: { line: x.line.line_id } }) : "",
           cite(x.line.basis && x.line.basis.captureSha ? { captureSha: x.line.basis.captureSha, extent: x.line.basis.extent } : null))).join("")) : "")
         + cs.choice("kp-office", K + "office.label", offices, {}) + `<p class="mk-small">${cs.w(K + "office.help")}</p>`
         + cs.choice("kp-kind", K + "kind.label", [["custodian_of", K + "kind.keeps"], ["responsible_for", K + "kind.responsible"]], {}) + `<p class="mk-small">${cs.w(K + "kind.help.a")} ${cs.w(K + "kind.help.b")}</p>`
@@ -338,6 +340,13 @@ const acts = [
       const f = String(cs.value("kp-from") || "").trim(), t = String(cs.value("kp-to") || "").trim();
       const kind = String(cs.value("kp-kind") || "custodian_of") === "responsible_for" ? "responsible_for" : "custodian_of";
       return { body: Object.assign({ kind, from, to, basis }, f || t ? { valid: { from: f || null, to: t || null, precision: "day", zone: "UTC" } } : {}) };
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
+  /* R50, B14: a statement recorded by mistake is withdrawn with a reason (the shell asks it, `lines` R8); the lines are read again */
+  { op: "linewithdraw", label: "act.linewithdraw.label.person",
+    send(view, el) {
+      const lineId = String((el && el.dataset && el.dataset.line) || "").trim();
+      return lineId ? { body: { lineId } } : null;
     },
     done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "identityclaim", label: "act.identityclaim.label.person", reasonField: "note",
@@ -478,7 +487,7 @@ const PERSON_KEYS = [
 ];
 
 const words = ["screen.person.name", "screen.person.purpose",
-  ...["explore", "recordpersonfact", "recordline", "identityclaim", "withdrawidentityclaim", "followregister", "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]
+  ...["explore", "recordpersonfact", "recordline", "linewithdraw", "identityclaim", "withdrawidentityclaim", "followregister", "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]
     .flatMap((op) => ["act." + op + ".label.person", "act." + op + ".does"]),
   "act.owed_aliaswithdraw.label.person", "act.owed_aliaswithdraw.does",
   "act.personexpunge.label.person", "act.personexpunge.does",
