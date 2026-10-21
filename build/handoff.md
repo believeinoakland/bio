@@ -1,34 +1,39 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #237 (`session_01XWYkfQwcGngVDWPFWmqomf`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, **secondary** account), 2026-10-21 ~03:00 UTC, at 40 % of its window. **T51 is OPEN** on `tranche/T51`; **the fix round's planned jobs are all merged and no job runs.** Read `build/rulings-active.md` whole (its §1 lines for K4269/K4270 and its §4 lines for K4268, K4272 are new), then **K4268 to the last line** of `build/rulings.md` whole, then `build/plan/redeploy-walk-T51.md` whole: it is the checklist for everything that follows.
+**Status** · Replaced whole at each handoff. Written by BOB #238 (`session_017kJfT1heNKtMWETrVdBWxU`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, **secondary** account), 2026-10-21 ~07:15 UTC, at 39 % of its window. **T51 is OPEN** on `tranche/T51`; **the T51 build is deployed to biosmoke8 and walked; no job runs.** Read `build/rulings-active.md` whole (its §1 "How debugging runs", K4297, is new and governs the order of everything below), then **K4285 to the last line** of `build/rulings.md` whole, then `build/plan/walk-T51-build/CAUSES.md` whole (55 KB: a reading worker, sonnet medium, if it will not fit, K3676).
 
-## What changed this session (Bob's, and BOB's after his questions)
+## What happened this session
 
-- **Bob's bar for T51 (K4269, K4270):** a design change enters T51 only for an operation that does not work or a required screen nothing reaches; misused words and improper renderings are recorded in `build/plan/later-ux.md` for T52 and never hold the deployment or the release debugging (unless one stops a member completing an operation). "Group" for "team" and the words check's arms are T52. The design lane is told (B438, B439).
-- **Job results are read by a haiku worker** (K4269): BOB hears success or not and why, the requirement lines owed, reports about other modules.
-- **The redeploy is a milestone** (K4269): after it, the thorough walk of rendering, every journey and the whole flow (finding documents, capture, evidence, connections, conclusions, action). The checklist's §4 maps it.
-- **Cause jobs (K4271, K4273, K4275; P8, mechanics §6a):** one job may hold every module one cause touches. Certified by D16. On the process repository's branch `prep/cause-job-K4273` only (its push to `main` was refused by auto mode, K4275): a cause job's START tells it to read §6a there, and BOB runs `ownership.mjs <product> <m1>,<m2> …` from a checkout of that branch (`git -C /home/user/civicos-process checkout prep/cause-job-K4273`). It reaches `main` by pull request at T51's close. Two ran: CAUSE-TESTS-T51 (four modules, K4280) and CAUSE-TOTALITY-T51 (two, K4282).
-- **Tests by impact, two tiers (K4272):** `node build/plan/impact.mjs <base> <head>` lists the suites a change reaches; run only those at a merge; the exhaustive and wording sweeps once per batch and before the redeploy; **at most two suites at once** on the 4-core container (six at once made load flakes, K4276). A changed shared table (word rows, `DECLARED_OPS`) reaches its readers: run them (BOB #237 skipped this for DEC-393's rows and it cost a round, K4282).
+- Every red the whole suite found was a stale test; all fixed and merged (K4285–K4295, K4299). No member operation failed in the suite.
+- The deploy route never worked (`workflow_dispatch` needs the file on `main`, K4290); with Bob's approval (K4296) `deploy-test.yml` also runs on a push to `deploy-test/<copy>/dry-run` or `deploy-test/<copy>/deploy`. **Deployed** 05:21 UTC, run 39548609065 (K4298); smoke clean (`walk-T51-build/SMOKE.md`).
+- Bob, on the slow road (K4297, K4298): BOB fixes stale tests itself, no job; no red test holds a deploy unless it shows a member's operation failing; the five overlapping lines are one rule in rulings-active. **Follow it, not older checklists.**
+- Bob (K4300): "find ALL the problems then go back and fix them, redeploy, and repeat. Be efficient!" Four walkers walked the build (`walk-T51-build/setup-team.md`, `find-capture.md`, `evidence-connections.md`, `conclusions-action.md`, `bob.md`); a diagnosis worker grouped them: **`CAUSES.md`, 96 causes (87 CODE, 8 of them BLOCKER; 5 PERF; 3 DESIGN; 1 DATA; 0 TEST) and 23 WORDS items.**
 
-## Open now (do first)
+## Do next, in order
 
-1. **New reds since 639fa02cf3 (K4282, K4283).** affordances 7 (N345's, T23's, case-inputs', case-import's, actionhold's, wizard-scripts' ops; publishat R36) and op-grades words R44 (37 !== 11) were green at 639fa02cf3 and red at the tip. The whole-suite run (container-local, partial to ~152 of 175 modules) also shows single reds in **bundler R25** (fleet members' Durable Objects), **ai-accounts R7** (`accountFor`), **capture-sources R55** (refusals carry check and translation), **following R1** (C-137 family rows); they may share the cause. **The bisect answered: K4284** (affordances' 7 are CAUSE-TOTALITY-T51's own unmigrated sibling tests; op-grades R44 a stale count after DEC-393's reads). Place one cause job (haiku) holding affordances and op-grades, tests only, as K4284 says; confirm the four single reds' cause (DEC-393's rows first) and place them by cause.
-2. Then follow `build/plan/redeploy-walk-T51.md` from §1: regenerate (rehearsed clean, K4277), the whole suite (`node .github/scripts/module-tests.mjs` in a separate worktree with artifacts regenerated first; serial by module), the redeploy by `deploy-test.yml` (dry run first; a refused dispatch is recorded and approved by Bob in that session, never rerouted), smoke, the live re-reads, then the walk.
+1. **NEEDS BOB, first:** the walkers' findings files and screenshots in `build/plan/walk-T51-build/` are **not pushed**: two commits of them were refused by auto mode as "Data Exfiltration" (K4301); the files hold no credential (checked), but the conclusions-action walker printed a grant link and the admin password into its own transcript, and some screenshots may show a review link. If this handoff's commit carried `CAUSES.md`, the plan can be made from it alone; the findings files themselves were in BOB #238's container only. Ask Bob for nothing new unless the successor needs those files: the approval already asked is "Approved: BOB may commit and push the walk's findings files in build/plan/walk-T51-build to tranche/T51", and it is valid only in BOB #238's session.
+2. **Plan the fix round from `CAUSES.md`** (P19: every CODE cause in this round): one job per cause or per module (K4271, cause jobs from `prep/cause-job-K4273`), the 8 BLOCKERs (C1–C8) first, providers merged first; PERF causes C12 (co-attestation inside the 25 s capture bound), C14 (`heldcaptures` 2–14 s), the 6 MB `interfacewords` refetch; WORDS to `later-ux.md` unless one stops an act (K4270); DESIGN to UX-DESIGN as one HANDOFF only where an operation cannot complete (K4269). B1 (`bob.md`: agent-runner's `RemoteSession` answers its version 503, so `part_signin` is false and `connect` offers no sign-in) is a CODE cause for agent-runner.
+3. Diagnosis worker's open points (BOB's to decide, P17): may a wrong held capture ever be retired; is a published case's empty EVIDENCE list by design; the scanner's 403 (DATA: does the deployed file-scanner carry freshclam fix bf97a18595?); CA24 (owner's reply refusal) needs a live read; C5 (21 MB PDF kept with no bytes) unconfirmed side.
+4. Then: merge, regenerate (manifest order), redeploy by pushing the tip to `deploy-test/biosmoke8/dry-run` then `.../deploy` (each deploy needs Bob's approval in the session that pushes, rulings-active §2; K4296's covered BOB #238 only), smoke, then a targeted re-walk of what changed plus the smoke, then one final full pass (rulings-active "How debugging runs").
 
 ## Accepted reds, by name, until the act named
 
-plane R24 (four `screen.<id>.purpose` rows) and screens-settings R39 (`screen.bias.adoptfor.label`): T52, `later-ux.md` (K4276, K4278). Coverage's held ids (K4236): agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19. promotion `row-census` until its stamp (K4205). doc-clean R4 only if it fails alone (K4149). ocr-worker's suite and every stale generated artifact until the regeneration (handoff of BOB #236). The new reds of item 1 until their fix merges.
+plane R24 and screens-settings R39 (T52, `later-ux.md`); journey-check R17 (T52, K4269) and its 13 walk-dependent tests (K4149, K4295); store-door R17 until the hand-row deletion (K4292); promotion `row-census` until its stamp (K4205); coverage's held ids (K4236).
+
+## Side effects on biosmoke8 (all walkers', K4300)
+
+An extra administrator (the team now has two administrators besides the founder's; S-22), walk projects "Walk T51 <area>", test members, 3 record exports, four signing keys on the administrator account, the member joined "Walk T51 setup-team findable". The development copy holds nothing secret (K3556).
 
 ## Running
 
-Nothing of the round. The design lane (UX design #36, `session_01N188yDWfxJHtvptW5hirUW`, this account) has nothing open; last merged DEC-393 (U428, ACK B440). Lanes' HANDOFFs unchanged (H43, A5, W4).
+Nothing. The design lane (UX design #36) has nothing open (U428, ACK B440). Lanes' HANDOFFs unchanged (H43, A5, W4).
 
 ## Open with Bob
 
-- None.
+- The findings-files approval of item 1, only if still needed.
+- The exact P7/§6a text for K4297 (BOB fixes stale tests itself), rendered, is owed to Bob (K1258); K4297 governs meanwhile.
 
 ## Open for BOB (not Bob's)
 
 - wizard-scripts' `wizards` declares `state` though its arm reads it from the query (K4230).
-- HANDOFF to the design: where on `explore` a member takes back an attached source (`stepsourcewithdraw`, K4267), only if the walk shows a member cannot complete it (K4269).
 - Registry account labels to secondary at T51's close (K4251); `prep/cause-job-K4273` and `prep/words-arms-K4208` to the process repository's `main` by PR at the close (K4275).
