@@ -167,8 +167,8 @@ test("the N345 routes: each op reads its own fields from the body or query and t
   assert.equal(ops({ viewer: M1, author: M1 }, { candidate: lead, reason: "not_same_matter" }).contradictiondismiss().ok, true);
   for (const op of ["contradictionnotices", "contradictionoptin", "contradictionrespond", "contradictionresponses"])
     assert.equal(ops({ viewer: M1, author: M1, project: "PROJ-2026-0404-x" }, { candidate: duty, text: "t" })[op]().code, "NO_SUCH_PROJECT", op);
-  /* the module's own route map: fourteen ops, each a contradiction op and a function (their names are op-declarations', not listed here) */
+  /* the module's own route map: fifteen ops (R61's `contradictionflag` among them), each a contradiction op and a function (their names are op-declarations', not listed here) */
   const routes = ops({}, null);
-  assert.equal(Object.keys(routes).length, 14);
+  assert.equal(Object.keys(routes).length, 15);
   for (const [name, handler] of Object.entries(routes)) assert.ok(name.startsWith("contradiction") && typeof handler === "function", name);
 });
