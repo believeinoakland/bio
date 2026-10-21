@@ -128,3 +128,7 @@ Checks: architecture 0 failures; words 0; coverage public-read 0 (other modules'
 Deferred / for BOB: as-signed blocks (`captures[].member` and acknowledgement, `lens`) name members as signed and are left so; a cover-level attribution must not be turned into a handle. `publishedEditions`/`publishedList` still name signers by id (R2, outside R41).
 
 Size (session_01LwWDy5JCBriNttXnEF6fAW): test runs 9, module lines 3836
+
+## J12 · COMPLETE
+
+COMPLETE (B8, fix round 3): C47 and C94 met, R41. Details, suites, checks and Size line in my record's J11. Public-read 238 pass; downstream 3 reds not mine (plane release.test:74, case-checker R13/R25).
