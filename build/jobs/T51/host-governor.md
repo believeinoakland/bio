@@ -64,3 +64,7 @@ Options: (A) keep 3000 as R30 says; the plane job (wave 0, after me) changes t36
 - **Requirement ids met:** R30 (and R4, R9, R15, R16 as amended). **Questions:** J2 and J3 both answered (B3, B4); none open.
 
 Size (session_01E5aZgMS5PZNR6n1pGjwdGB): test runs 22, module lines 470
+
+## J4 · COMPLETE
+
+COMPLETE: host-governor N-slow-refuse (R30, K4437 option B). governedFetch maxWaitMs default 8000 never slept over, over-long wait refused as R5; governorAdmit({host,maxWaitMs}); first 403/429/503 returns {res, retry_in_ms}; refused/cooling hosts answer at once. Four fields in my record. Root cause outside the governor (LIVE-CHECK P: three sites granted 1, report ~30 ms after grant, wait_ms 0); acquisition R95 and control-plane R121 name the stage. Tests: host-governor 57/0 (refuse.test.mjs, red first, controls); users capture 240, capture-requests 129, network-notices 75, monitoring 168, plane t36 14/0; plane 278/5 and acquisition 194/1 are the tranche tip's reds. Checks format/architecture/coverage/ownership 0. No question open. Size (session_01E5aZgMS5PZNR6n1pGjwdGB): test runs 22, module lines 470
