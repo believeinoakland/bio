@@ -480,13 +480,20 @@ test("R22 a capture made from a project is filed under it and says so, with no q
   assert.equal(main(p).querySelector('a[href^="/app/find-in/"]'), null, "no question to cite into");
 });
 
+/* the promotion follows the capture's answer after the page's own rounds, so it is waited for (bounded), never read after a fixed settle */
+async function promoteSent(p, ms = 20000) {
+  const end = Date.now() + ms;
+  while (p.byOp("promote").length === 0 && Date.now() < end) { await p.settle(20); await new Promise((r) => setTimeout(r, 10)); }
+  return p.byOp("promote")[0];
+}
+
 test("R22 controls: no subject, a subject that is neither a project nor a question, and a question stating no project file it under none; a question that cannot be read files nothing", async () => {
   for (const path of ["/app/capture/address", "/app/capture/address/INFO-2026-0004-lease", "/app/capture/address/"]) {
     const p = await open(path, { plane: CAPTURED });
     fill(p, { "ci-address": ADDRESS });
     await press(p, "acquire");
+    assert.doesNotMatch((await promoteSent(p)).body.files.find((f) => f.path === "bundle.md").text, /^project:/m, path);
     await p.settle();
-    assert.doesNotMatch(p.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text, /^project:/m, path);
     assert.equal(p.byOp("image").length, 0, path);
     assert.ok(!text(p).includes(word("capture.filed.project", { project: "" }).split("{")[0].trim()), `${path}: says nothing is filed`);
     assert.equal(main(p).querySelector('a[href^="/app/find-in/"]'), null, `${path}: nothing to cite into`);
@@ -494,8 +501,7 @@ test("R22 controls: no subject, a subject that is neither a project nor a questi
   const n = await open(`/app/capture/address/${Q}`, { plane: FOR_QUESTION("") });
   fill(n, { "ci-address": ADDRESS });
   await press(n, "acquire");
-  await n.settle();
-  assert.doesNotMatch(n.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text, /^project:/m);
+  assert.doesNotMatch((await promoteSent(n)).body.files.find((f) => f.path === "bundle.md").text, /^project:/m);
   /* the question's read fails: nothing is promoted, so nothing is filed where the member did not mean */
   const u = await open(`/app/capture/address/${Q}`, { plane: { ...CAPTURED, image: ok(null) } });
   fill(u, { "ci-address": ADDRESS });
