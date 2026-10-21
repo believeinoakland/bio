@@ -59,3 +59,41 @@ Size (session_01UF9B3un1kmYypbACDBFPct): test runs 10, module lines 1625
 
 REPORT correcting J5: the grca page now reads 16 units (was 35), not 25. Held modules' own code: reading-pipeline 1952 lines + text-chain (textchain.mjs) 1983 = 3935.
 Size (session_01UF9B3un1kmYypbACDBFPct): test runs 10, module lines 3935
+
+## J7 · QUESTION
+
+QUESTION (step 0, the measurement; nothing is built yet). Where the large-PDF reading's memory goes. Method: `read` of a stored capture in a child process (`--expose-gc`), heap + array buffers above an idle process (23 MB with the doctypes registered, as the plane and extraction's fixture register them), polled every 1-2 ms; "capped" = `--max-old-space-size=idle+N --max-semi-space-size=2` as PDF-READER #8 did, so garbage cannot lie about. Each stage of `readInner` was also run alone with a collection after it ("held" = what is still live). Files: BUDGET-2025-BUD 2.4 MiB/188 p, -PER 8.4 MiB/295 p, BUDGET-2024-APP 15.2 MiB/1,354 p (sha256 as pdf-reader pins), and the c5b synthetic 20.1 MB/1,300 p. Scripts are in my scratchpad, not in the repository.
+
+1. The whole `read`, peak above idle (MB):
+| file | text chars | no heap cap | smallest heap that completes it |
+|---|---|---|---|
+| BUD 2.4 MiB | 3,800 | 112 | idle+56 completes, peak 42 |
+| PER 8.4 MiB | 21,327 | 130 | idle+56 completes, peak 61 (the bound is 64) |
+| APP 15.2 MiB | 13,598,363 | 953 | dies at idle+150, completes at idle+200 (peak 111) |
+| synthetic 20.1 MB | 20,166,920 | 1,121 (extraction's c5b reads 890) | dies at idle+250, completes only at about idle+300 |
+With no doctype registered (reading-pipeline's own fixture) the same reads peak 103 / 123 / 237 / 125 MB: the difference is stage 6 below. extraction's c5b peak is all inside `read` (865 of 890 MB; `writeReading` adds nothing).
+
+2. By stage (APP, then synthetic; uncapped heap, MB above idle; "held" is what is live after the stage):
+| stage | APP held / peak | synthetic held / peak | whose |
+|---|---|---|---|
+| 1 `entry.structure(bytes)` | 12 / 233 (52 capped) | 20 / 73 (48 capped) | pdf-reader (R41), 37-52 MB when the heap is capped |
+| 2 `tier2Escalate` -> `needsTier2` -> `glyphCount(text.document)` | 38 / 47 | 39 / 41 | mine / text-chain; `for…of` allocates nothing, but the first pass over the `document` string FLATTENS it: +26 MB held |
+| 3 `tier3Extend`, 4 `containerExtentOf`, 7 `layerChainFor`, 10 `textCountsOf`, 11 `emittedFieldsOf` | 38 / 38-41 | 39-41 | mine, nothing |
+| 5 `textUnitsFor` (`allUnitsOf` + wire budget) | 38 / 52-59 | 41 / 61-66 | mine, +14 to +25 transient (a unit list copy and a `TextEncoder` encode per unit) |
+| **6 `docprofile.readText(decodeView(i2text))`** | **39 / 379 (109 capped)** | **40 / 835 (dies even at idle+250)** | **docprofile + doctypes** |
+| 8 `textWordsFor` | 39 / 40-61 | 47 | mine, `split(/\s+/)` of each unit |
+| 9 `readingProvenance` (sha-256 of the flattened text) | 39 / 45-79 | 42 / 79 | mine, `TextEncoder().encode` of the whole text (+35 MB for the APP's 13.6 M characters) |
+Small files: BUD and PER hold 10 and 18 MB after stage 1 and every later stage is below 45; the whole read is below 64 capped.
+
+3. The lines that hold it.
+(a) **Stage 6, `docprofile/readtext.mjs:274-305` (`readText`) over the whole text.** `flattenText` is cheap (37 ms, +14 MB, it only re-joins the pages to compare them with `document`, :167-169). The cost is `doctypeFor` (docprofile/doctypes/registry.mjs `doctypeFor` = `recognise` + `alsoFor`): every registered type's `detect(ctx)` runs over the whole 13-20 M character string, and for three of them the run is a 140-155 MB garbage burst each on the APP: `doctypes/meeting-minutes.mjs:165-176` (`t` flattened, `flat.match(...)`), `doctypes/staff-report.mjs:196-207` (`split(/\r?\n/)` over the whole text, then regexes per line), `doctypes/regulation.mjs:210-220` (`flat.match(RECITAL)`, `CODIFYING`); `meeting-agenda.mjs:132-149` +15 MB. Time: 5.5 s (APP) and 8.6 s (synthetic) for `doctypeFor` alone, 17-31 s for the whole read. These are not my modules. Calling `readText` is R11 ("Final text goes to `docprofile.readText`").
+(b) **What `read` holds across the whole run** (`reading-pipeline/index.mjs` `readInner`, :1407-1625): the stored `bytes` (`const bytes`, :1432, live to the end; 15.9 MB), then `i2text` = pdf-reader's `text.document` (every page joined, flat) AND `text.pages[].text` (the same text again): 38 MB for the APP, 41 MB for the synthetic (2.8 bytes per character: the joined string is two-byte as soon as one page holds a character past U+00FF). Nothing is released; `classifiedText` and `emitted` point at the same object to the end. So even with stage 6 free, the read holds about 16 + 38 + a transient 25-45 = 80-100 MB for the APP: over 64, from the reading's own text alone.
+(c) The units themselves are small: 58 units, under the 512 KiB wire budget (R15). "The output" the target allows is tiny; the 38-41 MB is the reading's intermediate text.
+
+4. What I can fix inside reading-pipeline and text-chain, and what that buys (APP, estimated from the stages): drop `bytes` after the entry returns (-16), hand the later stages the pages and not a second flat copy of them (the joined `document` is built once, when `readText` and the digest need it, then dropped; -26 to -38 held), hash the text by pages rather than one `encode` of all of it (-35 transient, same digest), and count words/glyphs per unit without a second pass (-20 transient). That brings the read to about the held text of one copy (about 14-27 MB) + one page set, **under 64 MB for BUD, PER and the APP only if stage 6 is also bounded**; stage 6 alone is 109-379 MB on the APP and more than 250 MB on the synthetic, and it is not mine.
+
+5. Decisions I need from BOB (the fix is not started):
+ (i) Stage 6. Options: (A) doctypes/docprofile bound their own `detect`/`parse` work (their owners; the three detects flatten and scan the whole string; a streaming scan per page keeps their answers the same); (B) `read` hands `readText` the document in a bounded form for a very large text (for example the first N characters, N a number BOB sets, say 4 MiB), which changes what the recognisers can see on a large PDF and so may change `content_type` / entities for those documents (a requirement change to R11, so it is BOB's, and Bob's only if he sees it as a policy of what a "reading" of a large book is); (C) both. Recommendation: (A), because a large budget book is exactly what the recognisers should still classify from its whole text, and it changes no answer; it needs jobs for doctypes (three detects) and docprofile (`readText`). I do not recommend (B) unless (A) cannot reach 64 MB.
+ (ii) pdf-reader returns `document` AND `pages` (two copies of the text, 2.8 bytes per character together). A pdf-reader answer without `document` (the pages are the text; `docprofile.flattenText` already joins them when `document` is absent, `readtext.mjs:180-183`) would halve the held text at its source and make stage 2's flatten free; it is a change to pdf-reader's answer (their R-numbers, extraction/content read `text.document`?). I have not read their uses; BOB decides whether that job exists.
+ (iii) The bound's meaning. The target says "under 64 MB above idle, heap + array buffers" and the file's own bytes count. For the 20 MB synthetic that leaves 44 MB for everything else; with the text held once (20-40 MB) that is possible only if nothing else copies it. If BOB prefers, the bound can exclude the stored bytes (the object holds them regardless).
+Until (i) is answered I will do part 4 (it is inside my paths and cannot make anything worse) with the failing-first test at `read`'s interface, and report its numbers. Tell me if you would rather I wait.
