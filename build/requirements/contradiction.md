@@ -56,7 +56,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
   At most 32 projects per inquiry and 32 inquiries per content row, with `truncated` stated. A duty is never muted, dismissed or set aside, and it leaves only by resolution (DEC-84 item 2). *(its K5 arm not yet met: no measured recommender run, K488)*
 
 **candidatesFor({on, label?, weight?, state?, after?, limit?, viewer})** (`op=contradictioncandidates`)
-- **R25**
+- **R25** (T51 K4264) Once it is `taken_up` or `resolved` by an inquiry's take-up, it also carries `taken_up: {member, at, words}` (the member who took it up, the instant, the question as worded) from its `take_up` act; absent otherwise.
   - **`on`.** Exactly one of `{inquiry}`, `{content}`, `{entity}`, `{bundle}`, `{project}` or `{candidate}`. None, or more than one, is `CANDIDATES_NO_SUBJECT` (C-60.2). `{project}` answers the candidates whose duty or lead reaches that project (R24's rule).
   - **Which candidates.** The candidates of weight other than `not_shown` whose both sides the viewer may see (R10), newest first. `{entity}` answers instead in the stated date of the earlier-dated side (R9), with undated candidates last and counted as `undated`, never placed by guess.
   - **Each candidate.** Its key and the sentence saying why its sides were paired (R11's table), both sides verbatim with their source, stated date, doctype and capture, the label and reason labelled machine work, the weight, the state (R26), its resolution and the member who made it, the standing recommendations (R37) labelled machine work, the reach of a duty (R24) and `default_question` (the stated default R35 may take).
@@ -161,7 +161,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
   A promotion refusal is relayed whole, and nothing is written. The candidate reads `taken_up` (R26).
 
 **resolve({inquiry, resolution, conclusion, version, falsifier | noFalsifier, accepted?, viewer, author})** (`op=contradictionresolve`)
-- **R36** After R30's first refusal:
+- **R36** After R30's first refusal: (T51 K4264) With no `version`, the conclusion is the member's own reading, passed to `conclude` as `reading` (`basis-versions` R51), so a freshly taken-up question is concluded in one act; `conclude`'s `BAD_READING` (12 to 500 characters) reaches the member. With a `version`, the named accepted version's claim is adopted as before.
   - an inquiry that is absent, invisible or not a contradiction inquiry is `NOT_A_CONTRADICTION_INQUIRY` (C-93.27), the same answer for each;
   - on K5, a CORRECTED kind or `double_speak_or_reversal` is `PLURALITY_HAS_NO_WRONG_SIDE` (C-93.22);
   - R30's acceptance checks follow.
@@ -407,4 +407,4 @@ Rows C-60.2, C-60.3 (`CONTRADICTION_PAIR_CHECKS`) and C-93.8–C-93.39 (`CONTRAD
 
 None: answered by Bob 2026-09-26 (K102).
 
-- **R60** (T51; K4168; the T51 declaration pass; op-declarations R80, R81; op-grades R49, R50; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: a frozen object keyed by the op's door name, each row `{classes, machineClasses?, mutating, weight, description, fields: {accepts, requires}}`, its class, weight and description copied from the op's existing rows and its fields read from the arm whole (the stamps and the shell's `reason` are not accepts unless the arm reads a `reason` of its own): `contradictionresolve`, `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionoptin`, `contradictionrespond`. Test: `declaredOpHolds` for each, with only its requires, without each, and with a field outside its accepts (`declared-ops.test.mjs`).
+- **R60** (T51; K4168; the T51 declaration pass; op-declarations R80, R81; op-grades R49, R50; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: a frozen object keyed by the op's door name, each row `{classes, machineClasses?, mutating, weight, description, fields: {accepts, requires}}`, its class, weight and description copied from the op's existing rows and its fields read from the arm whole (the stamps and the shell's `reason` are not accepts unless the arm reads a `reason` of its own): `contradictionresolve`, `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionoptin`, `contradictionrespond`. Test: `declaredOpHolds` for each, with only its requires, without each, and with a field outside its accepts (`declared-ops.test.mjs`). (T51 K4264) `contradictionresolve`'s absent `conclusion` is refused naming it by `BAD_READING`.
