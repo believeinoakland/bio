@@ -132,8 +132,10 @@ test("R100 control: the plane's refusals are drawn by the design's words; no mat
 
 /* ---- R108 ---- */
 test("R108 declaring where the document came from sends the bundle and the system; a second declaration is drawn beside the first, never replacing it", async () => {
-  let n = 0;
-  const p = await open(at, { plane: { declareorigin: (r) => ok({ ok: true, bundleId: D, system: r.body.system, by: "mai", at: "2026-10-08T09:00:00Z", seq: ++n }) } });
+  /* the declarations are read (`origins`, provenance R70) and read again after each one */
+  const store = [];
+  const p = await open(at, { plane: { origins: () => ok({ ok: true, bundleId: D, origins: store.slice() }),
+    declareorigin: (r) => { store.push({ seq: store.length + 1, system: r.body.system, by: "mai", at: "2026-10-08T09:00:00Z" }); return ok({ ok: true, bundleId: D, ...store[store.length - 1] }); } } });
   const s = section(p, "screen.document.origin.head");
   assert.ok(says(s, "screen.document.origin.second1") && says(s, "screen.document.origin.second2"));
   fill(p, { "document-origin-system": "The city's records portal" });
@@ -160,4 +162,58 @@ test("R108 each refusal is drawn by its key: a machine, an empty system, a recor
     assert.ok(says(await press(q, "declareorigin"), key), code);
     assert.equal(section(q, "screen.document.origin.head").querySelectorAll("[data-origin]").length, 0, "a refused declaration is not listed");
   }
+});
+
+/* ---- B22 (CHANGE K4258, K4259): the reads these controls need, read as their owners now answer them ---- */
+test("R97 entry 3 (B22): the document's typings are read (`transcriptions`, `bundleId`) whether or not its text is whole, so a typed page waits for its confirmation even once the text is full", async () => {
+  const p = await open(at, { plane: { reading: ok(READING({ unread_pages: [] })), transcriptions: TYPED("rosa") } });
+  assert.equal(state(p), "full");
+  assert.equal(p.byOp("transcriptions")[0].query.bundleId, D);
+  assert.ok(main(p).querySelector("[data-fold=typed]"), "the typed page is drawn beside a whole text");
+  assert.ok(actsIn(main(p)).includes("transcriptionattest"));
+  const none = await open(at, { plane: { reading: ok(READING({ unread_pages: [] })) } });
+  assert.equal(main(none).querySelector("[data-fold=typed]"), null, "control: no typing, no fold");
+});
+
+test("R98 entry 3 (B22): the standing route is read as `provenanceroutes` answers it for the document (`bundleId`) and drawn before any press: never looked at, not shown, shown; a read that fails is drawn failed", async () => {
+  const route = (finding) => ok({ ok: true, bundleId: D, state: "verified", objectType: "information", route: { applies: true, finding } });
+  const fresh = await open(at);
+  assert.equal(fresh.byOp("provenanceroutes")[0].query.bundleId, D);
+  assert.ok(says(main(fresh), "screen.document.route.standing"), "nobody has looked: the standing sentence");
+  const marked = await open(at, { plane: { provenanceroutes: route("LOOKED_INDETERMINATE") } });
+  assert.ok(says(main(marked), "screen.document.route.notshown") && !says(main(marked), "screen.document.route.standing"));
+  const shown = await open(at, { plane: { provenanceroutes: route("PRESENT") } });
+  assert.ok(says(main(shown), "screen.document.route.shown"));
+  const bad = await open(at, { plane: { provenanceroutes: refusedIn("NO_SUCH_BUNDLE", "x") } });
+  assert.ok(section(bad, "screen.document.copyacts.head").querySelector('[data-state="failed"]'), "a failed read is drawn failed");
+});
+
+test("R108 entry 3 (B22): the declared origins are read (`origins`, `bundleId`) and listed oldest first with who and when, those made elsewhere as well; a read that fails is drawn failed", async () => {
+  const list = [{ seq: 1, system: "The city's records portal", by: "rosa", at: "2026-10-01T09:00:00Z" }, { seq: 2, system: "The clerk's office, by email", by: "mai", at: "2026-10-08T09:00:00Z" }];
+  const p = await open(at, { plane: { origins: ok({ ok: true, bundleId: D, origins: list }) } });
+  assert.equal(p.byOp("origins")[0].query.bundleId, D);
+  const rows = section(p, "screen.document.origin.head").querySelectorAll("[data-origin]");
+  assert.equal(rows.length, 2);
+  assert.ok(text(rows[0]).includes(list[0].system) && text(rows[0]).includes("rosa") && text(rows[0]).includes(day(list[0].at)));
+  assert.ok(text(rows[1]).includes(list[1].system), "the later one after it");
+  const none = await open(at);
+  assert.equal(section(none, "screen.document.origin.head").querySelectorAll("[data-origin]").length, 0, "control: none declared, none listed");
+  const bad = await open(at, { plane: { origins: refusedIn("ORIGIN_NOT_A_DOCUMENT", "x") } });
+  assert.ok(section(bad, "screen.document.origin.head").querySelector('[data-state="failed"]'), "a failed read is drawn failed");
+});
+
+test("R56 entry 2 (B22): the document sends `captureprogressions` (the registry's act) with its capture's digest, and reads the steps it is threaded to again", async () => {
+  const inst = { ok: true, instances: [{ progression_key: "PRG-rent", progression_label: "Lease rent flow", entity_id: "ENT-city", definition_version: 1 }] };
+  const p = await open(at, { plane: { captureprogressions: ok({ ok: true, instances: [] }) } });
+  assert.equal(p.byOp("captureprogressions")[0].query.sha256, SHA);
+  assert.equal(p.byOp("captureprogressions").length, 1);
+  assert.equal(section(p, "progression.threadedto"), undefined, "no steps, no steps section");
+  assert.ok(actsIn(main(p)).includes("captureprogressions"), "the act is drawn");
+  let answer = { ok: true, instances: [] };
+  const q = await open(at, { plane: { captureprogressions: () => ok(answer) } });
+  answer = inst;
+  await press(q, "captureprogressions");
+  assert.equal(q.byOp("captureprogressions").length, 3, "the press sends it and the page reads the steps again");
+  assert.equal(q.byOp("captureprogressions")[1].query.sha256, SHA);
+  assert.ok(section(q, "progression.threadedto"), "the steps it is threaded to are now drawn");
 });

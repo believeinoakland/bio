@@ -78,6 +78,16 @@ function render(cs, view) {
     if (p && p.progression_key) flows.set(p.progression_key, p.progression_label || flows.get(p.progression_key) || null);
     for (const i of Array.isArray(p && p.instances) ? p.instances : []) if (i && i.entity_id) parties.set(i.entity_id, i.entity_label || parties.get(i.entity_id) || null);
   }
+  /* the flows the group holds (`progressions`, progressions R48) and the parties it holds (`entitieskind`, entities R51, one read for each kind
+     that can be a party: a person or an organisation or post), so the measure's two pickers offer what exists and not a typed id */
+  const flowList = ask("flows", "progressions", { limit: "200" });
+  for (const f of Array.isArray(val(flowList) && val(flowList).items) ? val(flowList).items : [])
+    if (f && f.progression_key) flows.set(String(f.progression_key), flows.get(String(f.progression_key)) || (f.label ? String(f.label) : null));
+  const partyReads = ["person", "institution", "body", "office"].map((kind) => ask("kind:" + kind, "entitieskind", { kind, limit: "200" }));
+  for (const r of partyReads)
+    for (const e of Array.isArray(val(r) && val(r).entities) ? val(r).entities : [])
+      if (e && e.entity_id) parties.set(String(e.entity_id), parties.get(String(e.entity_id)) || (e.label ? String(e.label) : null));
+  const readFailed = [flowList, ...partyReads].find((r) => r && r.state === "failed");
   const flowKey = ui.obflow && flows.has(ui.obflow) ? ui.obflow : cond && cond.progression ? cond.progression : [...flows.keys()][0] || "";
   const prog = flowKey ? ask("prog:" + flowKey, "progression", { key: flowKey }) : null;
   const progV = val(prog) && val(prog).found !== false ? val(prog) : null;
@@ -109,6 +119,7 @@ function render(cs, view) {
   const letters = [{ value: "", text: "–" }, ...["A", "B", "C", "D"].map((l) => ({ value: l, text: l }))];
   const measure = note("say-which-payments-or-records-count-what-each-mu") + note("the-screen-then-counts-them-from-your-documents")
     + flowField
+    + (readFailed ? cs.state(readFailed, () => "") : "")
     + (parties.size ? cs.choice("ob-ent", K("about-which-party"), opts(parties), { value: cond && cond.entity || "" }) : cs.field("ob-ent", K("about-which-party"), {}))
     + cs.field("ob-rel", K("linked-to-it-as-optional"), { value: cond && cond.relation || "" })
     + cs.field("ob-min", K("only-amounts-of-at-least-optional"), { help: [K("leave-it-empty-to-count-every-amount"), K("a-top-amount-and-a-currency-can-be-given-too")] })
@@ -253,7 +264,7 @@ const acts = [
       const reason = String(cs.value("ob-tr-why") || "").trim();
       return { body: { proposal, act, project: String(view.subject || ""), ...(reason ? { reason } : {}) } };
     } },
-  { op: "aspirationdeclare", label: "act.aspirationdeclare.label.objective", rereads: ["aspirations"],
+  { op: "aspirationdeclare", label: "act.aspirationdeclare.label.objective", reasonField: "statement", rereads: ["aspirations"],
     done(view, answer, cs) { cs.set("seq", (view.ui.seq || 0) + 1); },
     send(view, el, cs) {
       const statement = String(cs.value("ob-asp-st") || "").trim();
@@ -275,7 +286,7 @@ const acts = [
   { op: "aspirationretire", label: "act.aspirationretire.label.objective", reasonField: "taught", rereads: ["aspirations"],
     done(view, answer, cs) { cs.set("seq", (view.ui.seq || 0) + 1); },
     send(view, el, cs) { return { body: { aspiration: String(cs.value("ob-ret-asp") || ""), taught: String(cs.value("ob-ret-taught") || "").trim() } }; } },
-  { op: "goaldeclare", label: "act.goaldeclare.label.objective", rereads: ["goals"],
+  { op: "goaldeclare", label: "act.goaldeclare.label.objective", reasonField: "statement", rereads: ["goals"],
     done(view, answer, cs) { cs.set("seq", (view.ui.seq || 0) + 1); },
     send(view, el, cs) {
       const statement = String(cs.value("ob-goal-st") || "").trim(), bounds = String(cs.value("ob-goal-bd") || "").trim();

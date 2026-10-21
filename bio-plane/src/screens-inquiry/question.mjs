@@ -1,4 +1,4 @@
-/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47, R71–R74, R78, R87–R89, R91, R101–R104, R114, R116, R117, R120, R121:
+/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47, R71–R74, R78, R87–R89, R91, R101–R104, R110, R114, R116, R117, R120, R121:
  * the question screen (Projects › <project> ›
  * Question; registry screen `question`).
  *
@@ -25,6 +25,8 @@ function reads(view) {
     waits: { op: "questionwaits", query: { question: id } },
     /* R54: the partition as the inquiry holds it, with the history of its changes (`inquiry` R65) */
     partition: { op: "inquirypartition", query: { id }, empty: () => false },
+    /* R110: the imports the team holds, each read for the findings it accepted (`importedcase`) when the page is drawn */
+    imports: { op: "importedcases", empty: (v) => !v || !Array.isArray(v.imports) || v.imports.length === 0 },
     relies: { op: "backlinks", query: { target: id },
               empty: (v) => !v || ((!Array.isArray(v.backlinks) || v.backlinks.length === 0) && v.out_of_view !== true) },
   };
@@ -113,6 +115,19 @@ function render(cs, view) {
   const citedLegs = legs.length ? legs
     : refs.filter((r) => (r.rel || "cites") === "cites").map((r, i) => ({ ord: i, target: r.target, role: "supports", fromRef: true }));
   const supports = citedLegs.filter((l) => (l.role || "supports") === "supports");
+  /* R110: a leg on another team's finding names `imported:<import>/<finding>` (inquiry-grammar R11) and a document nobody holds here;
+     the findings the team accepted are read from `importedcases` and each import's `importedcase`, by their refs */
+  const impRef = (t) => /^imported:([0-9a-f]{64})\/(.+)$/.exec(String(t));
+  const impList = d.imports && d.imports.state === "ok" && d.imports.value && Array.isArray(d.imports.value.imports) ? d.imports.value.imports.slice(0, 20) : [];
+  const acceptedFindings = [];
+  for (const imp of impList) {
+    const r = later("imp:" + imp.import, "importedcase", { import: String(imp.import) });
+    const e = r.state === "ok" && r.value && r.value.edition ? r.value.edition : null;
+    const group = r.state === "ok" && r.value ? String((r.value.group && (r.value.group.name || r.value.group.slug)) || r.value.group || "") : "";
+    for (const f of e && Array.isArray(e.findings) ? e.findings : [])
+      if (f && f.finding && f.origin && f.origin.acceptance) acceptedFindings.push({ import: String(imp.import), edition: e.edition, finding: String(f.finding), ref: String(f.ref || "imported:" + imp.import + "/" + f.finding), title: String(f.title || ""), group });
+  }
+  const impTitle = (target) => { const a = acceptedFindings.find((x) => x.ref === String(target)); return a ? a.title : ""; };
   const statusOf = (l) => { const r = refOf(String(l.target)); return r ? String(r.status || "") : (l.status === "severed" ? "severed" : ""); };
   const live = (l) => statusOf(l) !== "severed";
   const grounds = doc.lists.grounds || [];
@@ -133,6 +148,7 @@ function render(cs, view) {
     const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(l.target)) : null;
     const named = l.target_title || l.title || (r && r.target_title);
     if (named) return String(named);
+    if (impRef(l.target)) return impTitle(l.target) || T("state.undetermined", { reason: "" });
     /* K3402 (R39): a cited document is named by its own title, read from the record, never its id */
     const im = later("doc:" + l.target, "image", { id: String(l.target) });
     const m = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : null;
@@ -163,6 +179,7 @@ function render(cs, view) {
   const titleOf = (target) => {
     const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(target)) : null;
     if (r && r.target_title) return String(r.target_title);
+    if (impRef(target)) return impTitle(target);
     const im = later("doc:" + target, "image", { id: String(target) });
     const m = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : null;
     let t = m ? m[1].trim() : "";
@@ -307,6 +324,21 @@ function render(cs, view) {
   const askAct = view.reachable && packName && member
     ? cs.act("airunopen", { label: "act.airunopen.label.question", data: { pack: String(packName) } }) : "";
 
+  /* R110: "Cite another team's finding": chosen among the findings the team accepted and the question does not yet rest on, with the
+     role it plays and an optional note; nothing is drawn when the team holds no import (R20), and a failed read is drawn failed */
+  const importCite = () => {
+    if (d.imports && d.imports.state === "empty") return "";
+    const have = new Set(citedLegs.map((l) => String(l.target)));
+    const choices = acceptedFindings.filter((x) => !have.has(x.ref));
+    const inner = cs.state("imports", view, () => (!choices.length ? "" : cs.choice("question-imp-finding", "act.owed_citeimported.label.question",
+        [{ value: "", text: "" }].concat(choices.map((c) => ({ value: c.import + "|" + c.edition + "|" + c.finding, text: c.title + (c.group ? " · " + c.group : "") }))), {})
+      + cs.checks("question-imp-role", { key: "screen.imported.citeimp.role" }, [["supports", "screen.imported.citeimp.role.supports", false], ["cuts_against", "screen.imported.citeimp.role.cuts", false]], { radio: true })
+      + cs.field("question-imp-note", "screen.imported.citeimp.note")
+      + `<div class="mk-acts">${cs.act("citeimported", { label: "act.owed_citeimported.label.question", tone: "primary" })}</div>`
+      + `<p class="mk-small">${W("screen.imported.citeimp.inherit1")} ${W("screen.imported.citeimp.inherit2")}</p>`));
+    return inner ? cs.sec("act.owed_citeimported.label.question", inner, { help: "screen.imported.citeimp.tip", id: "cite-imported" }) : "";
+  };
+
   const proposals = view.reachable ? vs.filter((v) => machine(v) && v.state === "suggested" && !v.hidden) : [];
   if (!citedLegs.length && !myRun && !asking && !concluded) {
     /* state c: new and empty, the three ways in (R38: "Capture a document for it" opens `capture` with this question) */
@@ -319,6 +351,7 @@ function render(cs, view) {
     out.push(cs.sec("question.empty.heading", endedPart(false) + `<p class="mk-note">${W("question.empty.note")}</p>` + cs.sheet(rows.join("")), { id: "state-c" }));
     /* R50, R51: nothing to conclude on before the first citation, said beneath the three ways; no "Concluding" section */
     out.push(`<p class="mk-note" data-owed="reading">${W("question.empty.conclude.own")}</p>`);
+    out.push(importCite());
     out[stepsAt] = stepsHtml(["current", "todo", "todo"]) + receipt;
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
@@ -511,14 +544,17 @@ function render(cs, view) {
       /* the passage by its own words where the inquiry or the reading shown holds them (K3402) */
       ((() => { const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === target) : null;
         const words = l.words || (r && r.words); return words ? `<span class="rec">“${cs.esc(words)}”</span>` : ""; })())
-      + `<span class="mk-small">${cs.ref("document", target, legTitle(l), [legTitle(l)])}${pageOf(l) !== null ? " · " + W("screen.document.passage.where", { page: String(pageOf(l)) }) : ""}`
+      + `<span class="mk-small">${impRef(target) ? `<span class="rec" data-imported="1">${cs.esc(legTitle(l))}</span>` : cs.ref("document", target, legTitle(l), [legTitle(l)])}${pageOf(l) !== null ? " · " + W("screen.document.passage.where", { page: String(pageOf(l)) }) : ""}`
       + (severed ? ` · <span data-leg="severed">${why ? W("screen.question.leg.severed.why", { why }) : W("screen.question.leg.severed")}</span>` : "") + "</span>" + line,
       (() => {
         /* R87: "Narrow the question" on a live leg of the reading shown, keyed by that reading's own ordinal for it */
         const rv = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === target) : null;
         const narrowAct = isLive && rv && rv.ord !== undefined && rv.ord !== null && shownName
           ? cs.act("narrow", { label: "act.narrow.label.question", tone: "quiet", data: { ord: String(rv.ord), version: shownName, step: "list" } }) : "";
-        const first = isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
+        /* R110: "Take it back" is offered on a leg on another team's finding only (`sever` takes a document's edge) */
+        const imp = impRef(target);
+        const first = imp ? cs.act("withdrawimported", { label: "act.owed_withdrawimported.label.question", tone: "quiet", data: { import: imp[1], finding: imp[2] } })
+          : isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
           : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : "";
         /* R120 (B411, H1): the group the shell's stylesheet wraps and stacks at 390 px */
         return first || narrowAct ? `<span class="mk-acts">${first}${narrowAct}</span>` : "";
@@ -592,13 +628,14 @@ function render(cs, view) {
     /* R38: "Add a document" opens `capture` with this question as its subject */
     + ` <a class="cs-btn" data-tone="quiet" href="/app/capture/address/${cs.esc(id)}" data-nav data-adddoc="question">${W("question.adddoc")}</a>`));
   if (restsBack) out.push(restsBack);
+  out.push(importCite());
   const against = citedLegs.filter((l) => l.role === "cuts_against");
   if (against.length) out.push(cs.sec("screen.question.against.head", cs.sheet(against.map((l) => legRow(l, "cuts_against")).join(""))));
 
   /* hunches: a member's suspicion, labeled, never evidence (mark.hunch). R101: any member who sees the question revises or takes
      one back, each with her reason; every change stays on the record, its history drawn. R88: a hunch is about something (K4203) */
   const hunchKind = Object.hasOwn(ui, "hunchKind") ? ui.hunchKind : "other";
-  const hunchDocs = [...new Set(citedLegs.filter(live).map((l) => String(l.target)))];
+  const hunchDocs = [...new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))];
   const hunchEnd = (x) => ({ value: x, text: x === id ? (heading || T("state.undetermined", { reason: "" })) : legTitle({ target: x }) });
   const hunchRows = (h) => (h.hypotheses || []).map((x, i) => {
     const hid = String(x.hypothesis_id || ""), who = P.who(cs, x.held_by || ""), gone = x.status === "withdrawn";
@@ -789,7 +826,7 @@ function render(cs, view) {
 
   /* R56: the themes its passages are in, each with how many of the question's passages it holds (the question has no theme
      of its own, `connections` R40); and the act that places a passage in one */
-  const passageDocs = [...new Set(citedLegs.filter(live).map((l) => String(l.target)))];
+  const passageDocs = [...new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))];
   if (passageDocs.length) {
     const tl = later("themes", "themeread", { limit: "200" });
     const themes = tl.state === "ok" && tl.value && Array.isArray(tl.value.themes) ? tl.value.themes.filter((t) => t && t.theme_id).slice(0, 20) : [];
@@ -837,7 +874,7 @@ function render(cs, view) {
         const newerSource = (a) => {
           if (a !== "capture" || Number.isNaN(pubAt)) return "";
           let best = null;
-          for (const t of new Set(citedLegs.filter(live).map((l) => String(l.target)))) {
+          for (const t of new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))) {
             const im = later("doc:" + t, "image", { id: t });
             const head = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? (im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : "";
             const m = /^\s+retrieved:\s*"?([^"\n]+?)"?\s*$/m.exec(head);
@@ -868,7 +905,7 @@ function render(cs, view) {
      target), the dependents that are this question; recording that one was looked at closes its cause for her question. A finding with
      no reminder draws none (R20); a read that fails is drawn failed */
   {
-    const targets = [...new Set(citedLegs.filter(live).map((l) => String(l.target)))].slice(0, 20);
+    const targets = [...new Set(citedLegs.filter(live).filter((l) => !impRef(l.target)).map((l) => String(l.target)))].slice(0, 20);
     const reads = targets.map((t) => ({ t, r: later("reeval:" + t, "reevaluations", { target: t }, String(ui.reevalSeq || 0)) }));
     const failedRead = reads.find((x) => x.r.state === "failed");
     const openCauses = [], doneCauses = [];
@@ -998,6 +1035,32 @@ const acts = [
       const proj = view.project || (m ? m[1] : "");
       if (proj) cs.go("find-in", proj); else cs.go("finder", el.dataset.q || "");
       return null;
+    } },
+  /* R110: rest the question on a finding the team accepted from another team's case, at the edition it accepted; whether the finding
+     is accepted is the plane's to judge (`IMPORTED_NOT_ACCEPTED`, carried inside `BASIS_REFUSED`), and a leg already held is answered
+     `alreadyCited`. With no finding or no role chosen, nothing is sent. */
+  { op: "citeimported", label: "act.owed_citeimported.label.question", rereads: ["inquiry", "basis", "strength"],
+    refusals: { IMPORTED_NOT_ACCEPTED: "refusal.IMPORTED_NOT_ACCEPTED",
+      BASIS_REFUSED: function (refusal, cs) {
+        const list = refusal && Array.isArray(refusal.findings) ? refusal.findings : [];
+        if (list.some((x) => x && x.code === "IMPORTED_NOT_ACCEPTED")) return cs.w("refusal.IMPORTED_NOT_ACCEPTED");
+        const f = list.find((x) => x && typeof x.detail === "string" && x.detail.trim());
+        if (!f) throw new Error("no finding");
+        return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
+      } },
+    send(view, el, cs) {
+      const pick = String(cs.value("question-imp-finding") || "").split("|");
+      const role = (cs.value("question-imp-role") || [])[0];
+      if (pick.length !== 3 || !pick[0] || !pick[2] || !role) return null;
+      const note = String(cs.value("question-imp-note") || "").trim();
+      return { body: { inquiry: String(view.subject || ""), import: pick[0], finding: pick[2], edition: Number(pick[1]), role, ...(note ? { note } : {}) } };
+    } },
+  /* R110: take that leg back, with her reason (the shell asks it: the act is Reasoned); the history keeps it */
+  { op: "withdrawimported", label: "act.owed_withdrawimported.label.question", rereads: ["inquiry", "basis", "strength"],
+    send(view, el) {
+      const imp = String(el.dataset.import || ""), finding = String(el.dataset.finding || "");
+      if (!imp || !finding) return null;
+      return { body: { inquiry: String(view.subject || ""), import: imp, finding } };
     } },
   /* R87: two steps of one act. "Narrow the question" on a cited passage reads `narrowcandidates` (target, the reading shown, the
      reading's ordinal for the leg) and lists the parts the record proposes; choosing one, with a name and a reason, sends `narrow`
@@ -1418,6 +1481,10 @@ const words = Object.freeze([
   ...["heading", "edition", "edition.meta", "done", "done.meta", "note.label", "refused.summary", "refused.body", "refused.body2", "help", "help2"].map((k) => "screen.question.reeval." + k),
   ...["summary", "what", "case", "kept", "why", "why.help", "next", "next.link", "next.link.text", "refused.summary", "refused.noreason", "refused.badreason", "refused.notsetdown"].map((k) => "screen.question.reopen." + k),
   "act.writinghelp.does",
+  /* T51 CHANGE B22 (R110) */
+  "act.owed_citeimported.label.question", "act.owed_withdrawimported.label.question", "refusal.IMPORTED_NOT_ACCEPTED",
+  "screen.imported.citeimp.role", "screen.imported.citeimp.role.supports", "screen.imported.citeimp.role.cuts", "screen.imported.citeimp.note",
+  "screen.imported.citeimp.inherit1", "screen.imported.citeimp.inherit2", "screen.imported.citeimp.tip",
 ]);
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */

@@ -297,12 +297,13 @@ function render(cs, view) {
     if (/^CALC-/.test(t)) own.calculation.push([t, String(r.title || kindName("calculation"))]);
     else if (/^STD-/.test(t)) own.standard.push([t, String(r.title || kindName("standard"))]);
   }
-  /* R90, R115: a Matter row opens the determination the project holds, a Calculation row the calculation it holds; with none held the
-     kind is still listed and opens nothing. The Action row opens the actions dashboard. Never the project's own id. */
+  /* R90, R115 (K4170, K4259): a Matter row opens the determination the project holds, a Calculation row the calculation it holds. With no
+     determination held the Matter row opens `/app/matter/<project>` (the project needs a door to its first determination); with no
+     calculation held the kind is listed and opens nothing. The Action row opens the actions dashboard. */
   const dl = d.dets && d.dets.state === "ok" && d.dets.value && Array.isArray(d.dets.value.items) ? d.dets.value.items : [];
   for (const x of dl) if (x && x.id) own.matter.push([String(x.id), String((x.act && (x.act.event || x.act.id)) || kindName("matter"))]);
   for (const kind of Object.keys(own)) {
-    if (!own[kind].length) own[kind].push([kind === "action" ? "@dash-action" : kind === "matter" || kind === "calculation" ? null : id, kindName(kind)]);
+    if (!own[kind].length) own[kind].push([kind === "action" ? "@dash-action" : kind === "calculation" ? null : id, kindName(kind)]);
     for (const [sid, label] of own[kind]) work.push([kind, sid, label]);
   }
   /* R63: the published cases this project is the publisher of, read from the published editions (a case once however many

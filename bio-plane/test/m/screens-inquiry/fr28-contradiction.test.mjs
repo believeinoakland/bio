@@ -55,9 +55,10 @@ test("R105 the screen is registered with exactly the acts the registry lists, ea
   assert.ok(SCREENS.some((s) => s === CONTRADICTION_SCREEN), "registered in SCREENS");
 });
 
-test("R105 R44 every key the screen names beyond its own family is a words.json word (hasWord); a design word still missing is listed in GAP_WORDS and the screen draws the gap's key until the design stream writes it", () => {
+test("R105 R44 every key the screen names beyond its own family is a words.json word (hasWord); a design word still missing would be listed in GAP_WORDS (none now) and the screen would draw the gap's key until the design stream writes it", () => {
   for (const k of CONTRADICTION_SCREEN.words) assert.ok(hasWord(k), k);
-  assert.ok(GAP_WORDS.length > 0 && GAP_WORDS.every((k) => k.startsWith(S)));
+  /* the 31 gap keys are all held since DEC-391 minted them, so the list is empty; any that is listed again must be this screen's and unheld */
+  assert.ok(GAP_WORDS.every((k) => k.startsWith(S) && !hasWord(k)));
   /* control: a gap key is not named in `words` (the page serves the screen's own family by prefix once the row exists) */
   for (const k of GAP_WORDS) assert.ok(!CONTRADICTION_SCREEN.words.includes(k), k);
   for (const k of ["name", "say.how.they.differ", "why.they.are.side.by.side", "this.is.a.conflict.the.record", "this.is.a.lead.the.assistant",
@@ -438,4 +439,23 @@ test("R105 writinghelp: beside her conclusion on a taken-up question and beside 
   fill(e, { "cd-resp": "Our notice came from the letter." });
   await e.click(main(e).querySelector('button[data-act="writinghelp"]'));
   assert.deepEqual(e.byOp("writinghelp")[0].body, { op: "contradictionrespond", field: "response", told: "Our notice came from the letter." });
+});
+
+/* ---- B22 entry 3: the candidate's `taken_up` ---- */
+test("R105 entry 3 (B22): a candidate that carries `taken_up` (who, when) is drawn as taken up, with that line beside the question it became, and is not offered to take up again; control: without it (open) the take-up form is offered", async () => {
+  const when = "2026-10-14T09:00:00Z";
+  const p = await open("/app/contradiction/" + CAND, view(cand({ state: "taken_up", inquiry: INQ, taken_up: { member: "dev", at: when, words: "Which date applies?" } })));
+  assert.equal(stateOf(p), "c");
+  const line = main(p).querySelector("[data-taken-up]");
+  assert.ok(line, "who took it up and when is drawn");
+  assert.ok(line.textContent.includes("dev") && line.textContent.includes(day(when)), "the member and the date");
+  assert.ok(line.querySelector("a.cs-ref"), "beside the question it became, as a reference");
+  assert.equal(act(p, "contradictiontakeup"), null, "a contradiction taken up is not offered again");
+  /* the record's `taken_up` is enough on its own: an open view that carries it is not offered the form either */
+  const q = await open("/app/contradiction/" + CAND, view(cand({ state: "open", inquiry: INQ, taken_up: { member: "dev", at: when, words: null } })));
+  assert.equal(stateOf(q), "c");
+  assert.equal(act(q, "contradictiontakeup"), null);
+  const open1 = await open("/app/contradiction/" + CAND, view(cand()));
+  assert.ok(act(open1, "contradictiontakeup"), "control: an open one with no `taken_up` offers it");
+  assert.equal(main(open1).querySelector("[data-taken-up]"), null);
 });
