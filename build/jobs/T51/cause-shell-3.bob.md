@@ -43,3 +43,7 @@ money R28 merged into tranche/T51 (K4369): money now serves and declares op=mone
 ## B4 · CHANGE
 
 Grade rows owed in op-grades this round (K4370), besides moneysets (B3): captureseenin (capture R101, a mutating member act, from the document and Add screens) and remindersfor (action-clocks R26, a read). Their jobs are running now; add the rows when they merge (I will tell you), or now from the requirement lines if that is simpler for you.
+
+## B5 · CHANGE
+
+action-clocks R26 merged (K4372): op=remindersfor (a read). Its op-grades row when you next merge tranche/T51.
