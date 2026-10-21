@@ -23,13 +23,11 @@ const REGISTRY = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substra
     .map((a) => ({ ...a, op: String(a.op).replace(/^owed:/, "").split(" ")[0] })) }));
 const byId = Object.fromEntries(SCREENS.map((s) => [s.id, s]));
 const SCREEN_IDS = SCREENS.map((s) => s.id);
-// The acts a screen draws are the registry's for it (the owner's declaration, N1073: read, never listed here) less the ones this
-// module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs), with a named re-point
-// of the shell (interface-shell R21: R29's "Join" on Home and Projects, until the registry lists it there).
-// Registered acts this module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs).
-const ELSEWHERE_DRAWN = { home: ["release", "filingapprove"], queue: ["release", "filingapprove"] };
+// The acts a screen draws are the registry's for it (the owner's declaration, N1073: read, never listed here), with a named
+// re-point of the shell (interface-shell R21: R29's "Join" on Home and Projects, until the registry lists it there). Since B21
+// (DEC-389) Home and the queue draw `release` ("Vouch for photos") and `filingapprove` themselves, where the design draws them.
 const EXPECTED = Object.fromEntries(REGISTRY.filter((r) => SCREEN_IDS.includes(r.id)).map((r) => [r.id,
-  [...new Set([...r.acts.map((a) => a.op), ...(RE_POINTS[r.id] || [])])].filter((op) => !(ELSEWHERE_DRAWN[r.id] || []).includes(op))]));
+  [...new Set([...r.acts.map((a) => a.op), ...(RE_POINTS[r.id] || [])])]]));
 
 test("R1–R6, R10, R15 (interface-shell R21): SCREENS is the seven registry screens home, elsewhere, projects, queue, finder, find-in, answers, each {id, reads, render, acts, words}", () => {
   assert.deepEqual(SCREENS.map((s) => s.id), ["home", "elsewhere", "projects", "queue", "finder", "find-in", "answers"]);
@@ -51,7 +49,7 @@ test("R1–R13 (interface-shell R21, R38): each screen's acts are exactly its re
       assert.ok(OPS[op], `${s.id}: ${op} is in OPS`);
       assert.ok(reg.includes(op) || (RE_POINTS[s.id] || []).includes(op), `${s.id}: ${op} is registered, or a named re-point`);
     }
-    for (const op of reg) assert.ok(mine.includes(op) || (ELSEWHERE_DRAWN[s.id] || []).includes(op), `${s.id}: registered ${op} is offered`);
+    for (const op of reg) assert.ok(mine.includes(op), `${s.id}: registered ${op} is offered`);
     for (const a of s.acts) {
       assert.equal(typeof a.send, "function", `${s.id}.${a.op} send`);
       if (a.rereads) for (const r of a.rereads) assert.equal(typeof r, "string");
@@ -162,7 +160,7 @@ test("R7 (interface-shell R13): each refusal word an act names is a listed word"
 });
 
 test("R7: after an act the screen re-reads what it changed: an act names only its own screen's reads to re-read, or all of them", () => {
-  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "directory", "requests"], elsewhere: ["door"], projects: ["projects", "themes", "directory", "requests"], queue: ["queue", "muted"], finder: ["search", "selection", "frontier_document", "frontier_content", "frontier_meaning", "frontier_internet", "lookedat", "themes", "theme", "browse"], "find-in": ["questions"], answers: ["search"] };
+  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "directory", "requests", "mine", "held"], elsewhere: ["door"], projects: ["projects", "themes", "directory", "requests"], queue: ["queue", "muted"], finder: ["search", "selection", "frontier_document", "frontier_content", "frontier_meaning", "frontier_internet", "lookedat", "themes", "theme", "browse"], "find-in": ["questions"], answers: ["search"] };
   for (const s of SCREENS) for (const a of s.acts) for (const r of a.rereads || []) assert.ok(readsOf[s.id].includes(r), `${s.id}.${a.op} rereads ${r}`);
   // The queue's acts change the queue: each re-reads all (the item resolved or muted leaves the list, R3).
   for (const a of byId.queue.acts) assert.equal(a.rereads, undefined, a.op);

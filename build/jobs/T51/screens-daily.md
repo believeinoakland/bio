@@ -2,6 +2,30 @@
 
 **Status** · session_01529AmD3t2nQgB7HFWQs2QU · depth 2 · WORKING · handled B20
 
+## Completion (SCREENS-DAILY #14, B21)
+
+**Entries applied, with tests, pushed @ job/T51/screens-daily:**
+1. `home` and `queue` draw `release` and `filingapprove` (the registry rows at `09fbb247eb`, DEC-389), in a new part `todos.mjs`; both screens' `acts` now equal the registry's (`contract.test.mjs` no longer leaves them to other screens: `ELSEWHERE_DRAWN` is gone).
+   - `release`: "Vouch for N photos you captured on {place}" is a to-do of the member's own on Home's "Needs you" (counted on the strip) and above the queue's list, one for each place her held captures come from (a new read `mine`: `heldcaptures {member, limit}`). It opens her two statements (`screen.held.ack`, `screen.held.mitigation`) and the act `release` (`act.release.label.home|queue`, reasoned by her acknowledgment), which sends `select` over that place's captures and then `release` over the handle, as the project's dashboard does; with a statement missing nothing is sent and the missing one is named. Sentences: `screen.home.todo.vouch` ({count}, {place}), `.vouch.noplace`, `.vouch.noplace.one`. A queue with nothing else waiting no longer says "Nothing is waiting on you" while one of these is.
+   - `filingapprove`: an item whose option is `filingapprove` (a letter drafted for the group) draws the act (`act.filingapprove.label.home|queue`, terminal, so the shell confirms). Pressing it reads `filingsfor {action}` (the item's subject) and sends `filingapprove {filing}` for the newest draft not yet sent and not approved; with none it sends nothing and opens the action.
+   - Tests: `todos.test.mjs` (written first and seen failing; 15 tests, each on Home and on the queue, controls included) and `contract.test.mjs` R1–R13 (the registry's acts, exactly).
+
+**Deferred:** none.
+
+**Requirement lines for BOB:** R3 add: `release` and `filingapprove` are registered acts of Home and the queue. R17 add: "Vouch for N photos you captured on {place}" (`screen.home.todo.vouch`, `.vouch.noplace`, `.vouch.noplace.one`) is a to-do of the member's own for each place her held captures (`heldcaptures {member}`) come from, with her two statements and `release` (`select` then `release`, R79 of screens-inquiry's dashboard the same); on the queue it is drawn above the list and counts as something waiting (R41). R3 add: a letter's item draws `filingapprove` ("Read and approve it"): `filingsfor {action}`, then `filingapprove {filing}`. Private Uses: `heldcaptures`, `select`, `release`, `filingsfor`, `filingapprove` through the plane; the registry's reading of "ELSEWHERE" in this module's contract test is retired.
+
+**For BOB (REPORT; the design's, B21's "rows missing"):**
+1. Words the design does not hold for these to-dos: the one-photo-at-a-place form on Home (`screen.home.todo.vouch.one` does not exist; the dashboard's `screen.dash-project.next.vouch.one` is read in its place). The drawing's button texts "Vouch for them" and "Read and approve it" are the held screen's `act.release.label.held` and Home's `screen.home.todo.approve.button`; the registry's per-screen labels differ ("Vouch for photos"/"Vouch for a capture", "Approve the text"/"Approve a letter"), and I used the registry's `act.<op>.label.<screen>`, as screens-action does for `filingapprove` on `dash-action`. If the design means the drawing's texts on Home and the queue, it holds them under those keys.
+2. The queue draws no item "Approve the follow-up letter to …, drafted by Rosa": no `queue.<kind>.summary` row exists for a letter awaiting approval, and no producer in the repository emits an item carrying `filingapprove` that I could read (`affordances` offers it on an action with an unapproved draft, so an item for an action subject carries it as an option). The item is drawn by the unkeyed words (`queue.unkeyed.*`) with the act; a keyed kind and its rows are the design's and the producer's. Likewise the queue has no `screen.queue.todo.vouch`; Home's keys are read on both.
+3. `setup-words/build.mjs --check` reports `words-unreviewed.json` stale at the tranche tip too (unchanged by this job; generated, manifest §14).
+4. `checks/run.mjs` over all modules: coverage 6 failures in other modules (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry, screens-intake), words 1 (op-grades `t37.test.mjs`:32); none names screens-daily.
+
+**Tests and checks run (process repo at its head):**
+- `node --test bio-plane/test/m/screens-daily/`: 222 tests, 222 pass.
+- `node checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs … screens-daily`: 0 failures. `coverage.mjs … screens-daily`: 79 of 79 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: see the push below. `checks/run.mjs`: format 0, architecture 0, coverage and words as REPORT 4.
+
+Size (session_01529AmD3t2nQgB7HFWQs2QU): test runs 9, module lines 3897
+
 ## Completion (SCREENS-DAILY #13, B19, B20)
 
 **Entries applied, with tests, pushed @ job/T51/screens-daily (merged with tranche/T51 at K4249):**
