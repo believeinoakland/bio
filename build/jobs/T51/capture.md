@@ -177,3 +177,26 @@ Size (session_01LedUpF3AAa5y9xN9UujA4d): test runs 3, module lines 3789
 - `checks/run.mjs /home/user/bio`: capture's files show 0 findings.
 
 Size (session_01D6KgPVrvb8G2TEKd3zrgrR): test runs 4, module lines 3797
+
+## J7 · COMPLETE
+
+**COMPLETE** for B7 (fix round 2, wave 3; K4323, K4326) · commit `0dc8050eb4` on `job/T51/capture`, merged with `origin/tranche/T51`.
+
+**Entries applied**
+1. **C14's bound, the batch grade.** `heldCaptures` grades a page once: a private `#gradesOf` asks `provenance.captureGrades` (provenance R71) one time for the page's distinct first-capture digests, and each row's `capture.grade` is that answer whole (equal to `captureGrade`'s). A provenance that serves no batch is asked one digest at a time as before; a batch that throws, answers no list, or answers a non-object (a promise, a string) reads each grade null with the digest still named. An empty page reads nothing. `captureGrade` is no longer asked on the held path.
+2. **The picker rows' fields.** `fields: "picker"` rows now also carry `source` (`{address, via, retrieved}` or null), `collected_since` and `actor`, exactly as the full row gives them (`#captureFacts`); one more read per page (the actors), no grade, no questions, no eligibility, no bytes, no archive. The full read is unchanged (the golden list test still passes).
+
+**Proposed requirement lines (BOB writes them)**
+- Amend **R77** (T51 fix round 2; K4326; provenance R71): *`heldCaptures` grades a page of rows in one batch: `provenance.captureGrades` is asked once for the page's distinct capture digests, each row's `capture.grade` the answer `captureGrade` gives for it; an answer that is not an object, a batch that fails, or a provenance with no batch reads that grade null with the digest named (a provenance serving no batch is asked one digest at a time); an empty page asks nothing. The `picker` row (`fields: "picker"`) carries `bundle_id`, `title`, `project`, `source`, `collected_since`, `capture: {sha256}`, `actor` and `standing`, the three added fields as the full row gives them, and nothing heavier.* Tests: `fix2-t51.test.mjs` (three new tests naming R77; the C14 picker test updated to the new field list).
+
+**Seen failing first**: against the source without my change, the three new tests and the updated picker test fail (4 fail, 6 pass); with it, 10 pass. Controls in them: an empty page reads nothing; the full read equals its earlier answer; the sight limits the picker as it limits the list; a throwing, list-less or non-object batch reads null.
+
+**Deferred**: none. **Found in other modules**: nothing new. One red outside capture, identical on `origin/tranche/T51` without my commit: `screens-intake/common.test.mjs` "R8 every act names one op…" (`capture draws capturerequests`).
+
+**Tests and checks**
+- `node --test --test-force-exit test/m/capture/ test/cap13-reuse-pages.test.mjs test/d57selflink.test.mjs` (bio-plane): 223 tests, 223 pass, 0 fail.
+- Users of `heldcaptures` (instance-setup seeds, capture-requests plane, screens-daily, screens-inquiry document and t50, screens-intake, affordances catalogue): 510 tests, 509 pass, 1 fail (the screens-intake red above, also red at the tranche tip).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs capture`: 0 failures. `checks/coverage.mjs capture`: 52 of 52 live ids, 0 failures. `checks/words.mjs capture`: 0 failures. `checks/ownership.mjs capture origin/tranche/T51 job/T51/capture`: 3 files, 0 failures.
+- No generated artifact made stale beyond the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, rebuilt at layer close); no new word key.
+
+Size (session_01CbTTqezcoRxwxDi7p8kyVT): test runs 6, module lines 4219
