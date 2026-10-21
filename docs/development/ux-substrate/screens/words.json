@@ -76155,7 +76155,7 @@
   },
   {
    "key": "screen.registers.never.keep",
-   "en": "An import never keeps a home address or a phone number, and neither is ever published.",
+   "en": "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-407: guardrail"
