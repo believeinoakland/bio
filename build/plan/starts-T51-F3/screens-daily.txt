@@ -1,6 +1,6 @@
 FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-daily tranche/T51 && git branch -m job/T51/screens-daily stale/screens-daily-local && git checkout -b job/T51/screens-daily origin/job/T51/screens-daily`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
 
-START · SCREENS-DAILY #17 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #241 is depth 1; fix round 3, wave 2, K4356)
+START · SCREENS-DAILY #17 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #242 is depth 1; fix round 3, wave 2, K4356)
 
 **Amended at K4370** from the review of wave 1's merged code: items marked (K4370).
 
