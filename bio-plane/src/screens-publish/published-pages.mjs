@@ -82,7 +82,7 @@ export const PUBLISHED_PAGES = Object.freeze({
       + ' · <a href="' + P.hrefOf(caseId, edition) + '" data-nav data-whole-case>' + cs.w("screen.published.back.to.the.whole.case") + "</a></p>";
     const stand = f.standing && typeof f.standing === "object" ? f.standing : {};
     const meets = stand.meets === true ? "yes" : stand.meets === false ? "no" : null, bar = stand.bar && typeof stand.bar === "object" ? stand.bar : {};
-    const strengths = (stand.role === "load_bearing" ? cs.w("case-grammar.load_bearing") + " · " : "") + P.gradeMark(cs, "capture", P.gradeOf(f, "capture")) + " " + P.gradeMark(cs, "connection", P.gradeOf(f, "connection"))
+    const strengths = P.strengthLine(cs, view, stand, f)
       + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "");
     if (body.state === "unavailable" || body.state === "withheld") {
       // the finding's identity and strengths, never an empty page; the reason as the plane gave it, in its words (DEC-342), and a

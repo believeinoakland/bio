@@ -135,7 +135,7 @@ export const SCREEN_KEYS = Object.freeze({
     "act.casedrafts.label.ceremony", "act.casedrafts.does", "screen.ceremony.drafts.help", "screen.ceremony.drafts.choose", "screen.ceremony.drafts.newest", "screen.ceremony.drafts.item", "screen.ceremony.links.live", "case.draft.untitled", "screen.ceremony.signs.count.findings", "screen.ceremony.published.edition",
   ]),
   published: Object.freeze([
-    "screen.document.passage.where",
+    "screen.document.passage.where", "screen.question.leg.paragraph",
     "refusal.NO_SUCH_CASE",
     "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.published.name", "screen.published.purpose",
