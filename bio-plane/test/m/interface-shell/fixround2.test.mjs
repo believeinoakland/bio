@@ -255,3 +255,18 @@ test("R5 (C15) the words request carries the release version bootstrap answers; 
   assert.equal(down.byOp("interfacewords").length, 1, "a bootstrap that fails never holds the words back");
   assert.equal(down.byOp("interfacewords")[0].query.v, undefined);
 });
+
+/* ---------- B4 · R90, R11: a place word explains the act in the confirmation dialog too ---------- */
+
+test("R90 R11 (C48) an act drawn with a here word confirms with that word, not .does; control: an act with none confirms with .does", async () => {
+  const draw = (extra) => standIn("ceremony", new Function("cs", `return cs.act('publish', { label: 'x'${extra} });`), [{ op: "publish", send: fitSend("publish") }]);
+  const dialogOf = async (extra) => {
+    const p = await boot({ screens: [draw(extra)], path: "/app/ceremony/C-1", plane: { whoami: ok(ADMIN_ALL) } });
+    await p.click('button[data-act="publish"]');
+    return p.root().querySelector(".cs-dialog .ends").textContent;
+  };
+  const here = textOf(word("act.publish.here.ceremony")), does = textOf(word("act.publish.does"));
+  assert.notEqual(here, does);
+  assert.equal(await dialogOf(", here: 'ceremony'"), here);
+  assert.equal(await dialogOf(""), does);
+});

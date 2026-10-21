@@ -51,3 +51,7 @@ Size (session_013bNQKD9Hm7fy4unt8sjgMn): test runs 14, module lines 3224
 ## J3 · COMPLETE
 
 COMPLETE: C24 C76 C77 C78 C79 C80 C81 C94 C11 C15 (shell parts as stated) met; B2 (C66 limit 500) not reproducible, queue/tasks accept it; details, counts and Size in the record (J2). Requirement lines R9 R11 R13 R60 R68 R108 and op-grades R42 met as B3 wrote them.
+
+## J4 · COMPLETE
+
+B4 (K4319, C48; R90, R11): an act drawn with a here word confirms with that word in the confirmation dialog, in place of `act.<op>.does`; with none, `.does`. Test `fixround2.test.mjs` (publish on `ceremony`), seen failing first. interface-shell 263 tests, 262 pass, 1 fail (R23, same on the tranche). Ownership unchanged (shell files and tests only).
