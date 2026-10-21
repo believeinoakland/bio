@@ -374,3 +374,13 @@ Re B29: capturecredentiallist has its spec under registration; my earlier 'no sp
 ## J28 · REPORT
 
 Re B31: merged tranche/T51 with AFFORDANCES #41 (51d3838b3c). t36.test.mjs:306 now names capturecredentiallist only (the partition's one op with no text and no ground); not grounded. One change in my module: moneysets leaves my ACT_HELP_ABSENT read ground, since affordances now explains it (the t36:332 and t50 checks named it). Suite: 233 tests, 232 pass, 1 fail (t36:306). Checks: format, architecture, words clean; ownership 0 failures.
+
+## J29 · REPORT
+
+Re B32: merged tranche/T51 (43975005c1, pushed). captureseenin is declared by capture's DECLARED_OPS and needs no spec here; my tests read it as they read scanmirror's. Nothing to change in this module.
+
+My suite, 247 tests: 241 pass, 6 fail. Tip (origin/tranche/T51, without my branch) fails 8 of 246: t33:290, t34:177, t36:135, t45:221, t46:303, t47:292, t48:186, t50:391. My branch fixes t33:290, t36:135 and t45:221 and fails none that the tip does not. The six on my branch: t34:177, t46:303, t47:292, t48:186, t50:391 (R21 and R52–R73 registry-act tests, red on tip; registerimport and the registry's acts, not this module's table) and t36:306 (capturecredentiallist, the one partition op with no text and no ground, per B31).
+
+Checks: format clean; ownership 0 failures; words: 3 failures, all in op-grades (t33.mjs:214, t51.mjs:41 and :45: moneysets' and scanmirror's descriptions copied into op-grades as plain text), not op-declarations; architecture: plane t47.test.mjs imports screens-wizards, which plane does not declare (not this module); coverage: 8 modules red (not op-declarations, which is 82 of 82 per the last run).
+
+Waiting on officeconfirm (ENTITIES) to merge.
