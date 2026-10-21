@@ -35,7 +35,20 @@ export const PUBLISHED_PARTS = Object.freeze({
   falsifierOf: function (view, f) {
     const body = f && f.body && typeof f.body === "object" ? f.body : {}, au = body.authored && typeof body.authored === "object" ? body.authored : {};
     const cw = f && f.case_words && typeof f.case_words === "object" ? f.case_words : {};
-    return view.parts.wordsOf(cw.falsifier, body.falsifies, au.falsifier);
+    return view.parts.wordsOf(cw.falsifier, f && f.falsifier, body.falsifies, au.falsifier);
+  },
+
+  /* R6, R19, R37 (fix round 3, C47; public-read R41): the document an evidence entry (a leg of the signed bytes) rests on, by the name and
+     the place the signed case states: `document: {name, place}`. The place is the passage's own extent; a page of a PDF is drawn as the
+     page it is (extents are counted from zero), any other extent is not worded here and a whole document has none. "" for a leg resting on
+     working material (`document: null`), which draws nothing of it. */
+  docLine: function (cs, leg) {
+    const d = leg && leg.document && typeof leg.document === "object" ? leg.document : null;
+    if (!d) return "";
+    const name = typeof d.name === "string" ? d.name.trim() : "";
+    const at = d.place && typeof d.place === "object" ? d.place : null;
+    const page = at && at.kind === "pdf-page" && Number.isInteger(at.page) && at.page >= 0 ? cs.w("screen.document.passage.where", { page: String(at.page + 1) }) : "";
+    return name || page ? '<span class="rec" data-document>' + cs.esc(name) + "</span>" + (page ? ' <span class="meta" data-place>' + page + "</span>" : "") : "";
   },
 
   /* A finding's grade on `axis` as a letter (A to D), or "" when its frozen pair does not state one. */
@@ -94,8 +107,15 @@ export const PUBLISHED_PARTS = Object.freeze({
     const line = (stand.role === "load_bearing" ? cs.w("case-grammar.load_bearing") + " · " : "") + P.gradeMark(cs, "capture", P.gradeOf(f, "capture")) + " "
       + P.gradeMark(cs, "connection", P.gradeOf(f, "connection"))
       + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "");
+    // C47: what would change it, and the evidence entries each by its document's name and place, as the signed case states them
+    const why = P.falsifierOf(view, f);
+    const docs = o && (o.link || o.open) ? P.legs(f).map(function (l) { return P.docLine(cs, l); }).filter(Boolean) : [];
     return '<article class="mk-finding" data-finding="' + cs.esc(id) + '">' + head + '<p class="rec mk-fbody">' + cs.esc(P.claimOf(view, f) || body.question || f.title || "")
-      + "</p><p>" + line + "</p>" + (o && o.open ? P.sources(cs, view, f) : "") + "</article>";
+      + "</p><p>" + line + "</p>"
+      + (why ? '<p class="mk-small" data-falsifier><b>' + cs.w("screen.published.what.would.overturn.it") + '</b> <span class="rec">' + cs.esc(why) + "</span></p>" : "")
+      + (docs.length ? '<p class="mk-small"><b>' + cs.w("screen.published.evidence") + '</b></p><ul class="mk-list" data-evidence-names>'
+        + docs.map(function (d) { return "<li>" + d + "</li>"; }).join("") + "</ul>" : "")
+      + (o && o.open ? P.sources(cs, view, f) : "") + "</article>";
   },
 
   /* R39: what a finding rests on, listed for the print: the documents it only names, counted, by what they do to it; and

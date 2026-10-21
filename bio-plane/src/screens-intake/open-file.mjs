@@ -202,10 +202,10 @@ export const OPEN_FILE_SCREEN = Object.freeze({
   render: renderOpenFile,
   parts: Object.freeze({ openedAs }),
   acts: Object.freeze([
-    Object.freeze({ op: "openoriginal", label: "act.openoriginal.label.open-file", send: sendOpenOriginal }),
-    Object.freeze({ op: "openwithwarning", label: "act.openwithwarning.label.open-file", send: sendOpenWithWarning }),
-    Object.freeze({ op: "safeview", label: "act.safeview.label.open-file", send: sendSafeView }),
-    Object.freeze({ op: "deepercheck", label: "act.deepercheck.label.open-file", send: sendDeeperCheck, done: doneDeeperCheck }),
-    Object.freeze({ op: "releasescanhold", label: "act.releasescanhold.label.open-file", send: sendReleaseScanHold, done: doneReleaseScanHold }),
+    Object.freeze({ op: "openoriginal", rereads: Object.freeze([]), label: "act.openoriginal.label.open-file", send: sendOpenOriginal }),
+    Object.freeze({ op: "openwithwarning", rereads: Object.freeze([]), label: "act.openwithwarning.label.open-file", send: sendOpenWithWarning }),
+    Object.freeze({ op: "safeview", rereads: Object.freeze([]), label: "act.safeview.label.open-file", send: sendSafeView }),
+    Object.freeze({ op: "deepercheck", rereads: Object.freeze(["threat", "state", "notes", "findings"]), label: "act.deepercheck.label.open-file", send: sendDeeperCheck, done: doneDeeperCheck }),
+    Object.freeze({ op: "releasescanhold", rereads: Object.freeze(["threat", "state", "notes", "findings", "accounts"]), label: "act.releasescanhold.label.open-file", send: sendReleaseScanHold, done: doneReleaseScanHold }),
   ]),
 });

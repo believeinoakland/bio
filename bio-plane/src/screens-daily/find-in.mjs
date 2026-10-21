@@ -254,7 +254,7 @@ export const findIn = Object.freeze({
       done: function (view, answer, cs) { cs.set("keeping", true); } },
     // R47, R48: the recording acts, each its form's body from the result's passage (`view.parts.forms`); the result it was drawn on
     // is kept for the acknowledgement `findin.recorded` (R48 (4)), and the passage keeps its acts and counts its facts.
-    { op: "recordpersonfact", label: "act.recordpersonfact.label.find-in",
+    { op: "recordpersonfact", label: "act.recordpersonfact.label.find-in", rereads: [],
       refusals: { BAD_VALIDITY: "refusal.BAD_VALIDITY" },
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
@@ -276,7 +276,7 @@ export const findIn = Object.freeze({
         all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: { html: fact }, screen: { html: link } }) };
         return all;
       })()); } },
-    { op: "recorddatedfact", label: "act.recorddatedfact.label.find-in",
+    { op: "recorddatedfact", label: "act.recorddatedfact.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -293,7 +293,7 @@ export const findIn = Object.freeze({
         return all;
       })()); } },
     // The member's own words why the group holds the city to it are the act's reason (interface-shell R11, K3002).
-    { op: "standarddeclare", label: "act.standarddeclare.label.find-in", reasonField: "reason",
+    { op: "standarddeclare", label: "act.standarddeclare.label.find-in", rereads: [], reasonField: "reason",
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -311,7 +311,7 @@ export const findIn = Object.freeze({
         all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: target ? cs.ref("standard", String(target), cs.w("screen.standard.name"), []) : cs.w("screen.standard.name") } }) };
         return all;
       })()); } },
-    { op: "recordfact", label: "act.recordfact.label.find-in",
+    { op: "recordfact", label: "act.recordfact.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -329,7 +329,7 @@ export const findIn = Object.freeze({
         all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: target ? cs.ref("money", String(target), cs.w("screen.money.name"), []) : cs.w("screen.money.name") } }) };
         return all;
       })()); } },
-    { op: "tabledeclare", label: "act.tabledeclare.label.find-in",
+    { op: "tabledeclare", label: "act.tabledeclare.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -346,7 +346,7 @@ export const findIn = Object.freeze({
         return all;
       })()); } },
     // Cites the passage in the chosen question (citation's `found` form; every argument in the query).
-    { op: "cite", label: "act.cite.label.find-in",
+    { op: "cite", label: "act.cite.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const ui = view.ui || {};
         const k = (ui.found || {}).kinds[Number(el.dataset.k)];

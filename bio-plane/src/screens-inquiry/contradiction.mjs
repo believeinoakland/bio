@@ -207,7 +207,7 @@ function render(cs, view) {
     (c.why ? `<p data-why="1">${E(c.why)}</p>` : "")
     + (m && m.reason ? `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}${m.label === "world" ? " " + W(S + "the.assistant.s.judgement.not.a") : ""}`
       + `<p class="rec mk-data">“${E(m.reason)}”</p></div>` : "")
-    + (fb ? `<div data-flagged-by="1"><p class="rec mk-data">“${E(fb.reason.trim())}”</p><p class="mk-small mk-data">${E(whoIs(fb.member))}${fb.at ? " · " + cs.date(String(fb.at), { year: true }) : ""}</p></div>` : "")
+    + (fb ? `<div data-flagged-by="1"><p class="rec mk-data">“${E(fb.reason.trim())}”</p><p class="mk-small">${W("screen.contradiction.flagged.by", { member: whoIs(fb.member), date: { html: fb.at ? cs.date(String(fb.at), { year: true }) : "" } })}</p></div>` : "")
     + (rows ? cs.sheet(rows) : ""),
     { help: [S + "help.why.these.two.were.put.together", S + "help.the.sentence.in.quotes.is.the"] }));
   if (state === "closed") return hold("closed", out.join("") + note(S + "someone.already.closed.this.and.it"));
@@ -381,7 +381,7 @@ const acts = [
 ];
 
 /** The keys the screen names beyond its own family (R44: every one a words.json word). */
-const words = Object.freeze([...BORROWED, "mark.origin.machine.name", "mark.origin.machine.means", "state.undetermined", "state.empty", "draft.machine.label",
+const words = Object.freeze([...BORROWED, "screen.contradiction.flagged.by", "mark.origin.machine.name", "mark.origin.machine.means", "state.undetermined", "state.empty", "draft.machine.label",
   "ai.label.untested.writinghelp", "refusal.DISMISSAL_REASON_UNKNOWN", "act.writinghelp.label.contradiction",
   ...["clarify", "takeup", "dismiss", "resolve", "optin", "respond"].map((o) => `act.contradiction${o}.label.contradiction`)]);
 

@@ -22,17 +22,11 @@ const PLANE = {
   groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants", description: "Rents and leases on city land." }),
   queue: ok({ items: QITEMS, item_count: 6 }),
   projectlist: ok({ ok: true, count: 3, limit: 200, truncated: false, projects: [
-    { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", lastChange: "2026-10-12T15:00:00Z" },
-    { id: "PROJ-2", name: "Pothole repairs", stage: "forming", lastChange: "2026-09-20T15:00:00Z" },
-    { id: "PROJ-3", name: "Odd", stage: "paused" },
+    // Each project's questions and drafts shared for review are on its roster row (project-roster R42): PROJ-1 holds 3 questions and shares drafts, PROJ-2 one, PROJ-3 none.
+    { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", lastChange: "2026-10-12T15:00:00Z", question_count: 3, shared_drafts: { count: 3, newest: "2026-10-10T10:00:00Z" } },
+    { id: "PROJ-2", name: "Pothole repairs", stage: "forming", lastChange: "2026-09-20T15:00:00Z", question_count: 1, shared_drafts: { count: 0, newest: null } },
+    { id: "PROJ-3", name: "Odd", stage: "paused", question_count: 0, shared_drafts: null },
   ] }),
-  // Each project's questions, paged (basis-versions R50): PROJ-1 holds 3 over two pages, PROJ-2 one, PROJ-3 none.
-  projectquestions: (req) => {
-    const pages = { "PROJ-1": [[{ inquiry: "INQ-1" }, { inquiry: "INQ-2" }], [{ inquiry: "INQ-3" }]], "PROJ-2": [[{ inquiry: "INQ-4" }]], "PROJ-3": [[]] };
-    const at = req.query.after ? 1 : 0;
-    const list = pages[req.query.project] || [[]];
-    return ok({ ok: true, project: req.query.project, items: list[at] || [], cursor: at + 1 < list.length ? "INQ-2" : null });
-  },
   startfrom: ok({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
   lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
 };
@@ -172,40 +166,17 @@ test("R1, R8: each project the member sees is a reference opening project, with 
   assert.deepEqual(ladders[0].children.map((s) => s.textContent), ["forming", "investigating", "matured", "closed"].map((s) => word(`screen.home.stage.${s}`)));
 });
 
-test("R8, R21, R25: each project's question count is read from projectquestions, paged to its end, and drawn with the project, picking the singular or plural key; a count at zero is not drawn", async () => {
+test("R8, R21, R25 (fix round 3, C14): each project's question count is its roster row's own, drawn with the project, picking the singular or plural key; a count at zero is not drawn; none is read project by project", async () => {
   const p = await open("/app", PLANE);
   await settle();
-  const reads = p.byOp("projectquestions").map((r) => `${r.query.project}:${r.query.after || ""}`);
-  assert.deepEqual(reads.sort(), ["PROJ-1:", "PROJ-1:INQ-2", "PROJ-2:", "PROJ-3:"], "PROJ-1 paged on past its first page's cursor");
+  assert.equal(p.byOp("projectquestions").length, 0, "no per-project read (project-roster R42)");
   assert.ok(text(p).includes("The Coliseum lease" + word("screen.home.questions.many", { n: "3" })));
   assert.ok(text(p).includes("Pothole repairs" + word("screen.home.questions.one")), "R25: one question, the singular key");
   assert.ok(!text(p).includes(word("screen.home.questions.many", { n: "0" })));
 });
 
-test("R8: a page shorter than its limit with a cursor is not the end: the count pages on until the cursor is null", async () => {
-  const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "A", stage: "forming" }] }),
-    projectquestions: (req) => ok({ ok: true, items: req.query.after === "c2" ? [{ inquiry: "Q9" }] : req.query.after === "c1" ? [] : [{ inquiry: "Q1" }],
-      cursor: req.query.after === "c2" ? null : req.query.after === "c1" ? "c2" : "c1" }) });
-  await settle();
-  assert.equal(p.byOp("projectquestions").length, 3);
-  assert.ok(text(p).includes("A" + word("screen.home.questions.many", { n: "2" })));
-});
-
-test("R8: a count is loading until its pages are read, and a failed read is drawn failed, never as none", async () => {
-  const loading = await open("/app", { ...PLANE, projectquestions: { pending: true } });
-  await settle();
-  assert.equal(main(loading).querySelectorAll('.cs-row [data-state="loading"]').length, 3);
-  assert.doesNotMatch(text(loading), /\d+ questions?/);
-  let calls = 0;
-  const failed = await open("/app", { ...PLANE, projectquestions: (req) => (req.query.project === "PROJ-1" && ++calls === 2 ? refused("STORE_DID_NOT_ANSWER", null, 502) : PLANE.projectquestions(req)) });
-  await settle();
-  assert.equal(main(failed).querySelectorAll('.cs-row [data-state="failed"]').length, 1, "PROJ-1's second page failed: its count is failed");
-  assert.doesNotMatch(text(failed), /The Coliseum lease\d+ question/, "control: never drawn as a count from the pages read");
-  assert.ok(text(failed).includes("Pothole repairs" + word("screen.home.questions.one")));
-});
-
 test("R8: a project whose stage is null is drawn undetermined; a list answered truncated says more projects exist", async () => {
-  const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, truncated: true, projects: [{ id: "PROJ-5", name: "Unstaged", stage: null }] }) });
+  const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, truncated: true, projects: [{ id: "PROJ-5", name: "Unstaged", stage: null, question_count: 0 }] }) });
   await settle();
   assert.ok(text(p).includes("Unstaged" + word("state.undetermined", { reason: word("screen.home.stage.none") })));
   assert.equal(main(p).querySelectorAll(".cs-ladder [aria-current]").length, 0);
@@ -475,49 +446,6 @@ test("R34: every key Home reads is a word of the list, and what it draws for a s
     assert.ok(text(p).includes(word(k)), k);
 });
 
-test("R8: counts that answer out of order, or across a redraw, are all drawn: each answer is merged into the page's current memory (CONTROL-PLANE #37)", async () => {
-  const gates = {};
-  const gate = (id) => new Promise((resolve) => { gates[id] = resolve; });
-  const plane = { ...PLANE, startfrom: DOORS,
-    projectquestions: (req) => gate(req.query.project).then(() => ok({ ok: true, project: req.query.project, items: gates[req.query.project + ":n"], cursor: null })) };
-  const p = await open("/app", plane);
-  await settle();
-  const countOf = (name) => { const row = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes(name)); return row ? text(p, row) : ""; };
-  assert.ok(gates["PROJ-1"] && gates["PROJ-2"] && gates["PROJ-3"], "each project's count was asked");
-  gates["PROJ-2:n"] = [{ inquiry: "A" }]; gates["PROJ-1:n"] = [{ inquiry: "B" }, { inquiry: "C" }]; gates["PROJ-3:n"] = [{ inquiry: "D" }, { inquiry: "E" }, { inquiry: "F" }];
-  // Out of order, close together: PROJ-2, then PROJ-1.
-  gates["PROJ-2"](); gates["PROJ-1"]();
-  await settle();
-  assert.ok(countOf("Pothole repairs").includes(word("screen.home.questions.one")), "PROJ-2 drawn");
-  assert.ok(countOf("The Coliseum lease").includes(word("screen.home.questions.many", { n: "2" })), "PROJ-1 drawn too");
-  // Across a redraw: a door is pressed between PROJ-3's asking and its answer.
-  await p.click(main(p).querySelector('[data-door="problem"] button'));
-  await settle();
-  gates["PROJ-3"]();
-  await settle();
-  assert.ok(countOf("Odd").includes(word("screen.home.questions.many", { n: "3" })), "PROJ-3 drawn after a redraw");
-  assert.ok(countOf("Pothole repairs").includes(word("screen.home.questions.one")) && countOf("The Coliseum lease").includes(word("screen.home.questions.many", { n: "2" })), "and the earlier two are kept");
-});
-
-test("R8: projectRows keeps each count under its own key: two answers that land out of order against a page memory that is replaced on each write both survive", async () => {
-  const rows = screen("home").parts.projectRows;
-  const gates = {};
-  const view = { ui: {}, me: {}, data: {} };
-  const cs = {
-    // The page's memory is replaced on every write (a copy with the key set), as a shell redrawing from a fresh copy would.
-    set: (k, v) => { view.ui = Object.assign({}, view.ui, { [k]: v }); },
-    call: (op, o) => new Promise((resolve) => { gates[o.query.project] = () => resolve({ result: { ok: true, items: [{ inquiry: "x" }], cursor: null } }); }),
-    w: (k) => k, esc: (x) => String(x), state: (s) => s.state, ref: (k, id, t) => t, row: (a, b) => b, sheet: (x) => x, date: (x) => x,
-  };
-  const draw = () => rows(cs, view, "screen.home", false)({ projects: [{ id: "A", name: "A" }, { id: "B", name: "B" }] });
-  draw();
-  gates.B(); await new Promise((r) => setTimeout(r, 0));
-  gates.A(); await new Promise((r) => setTimeout(r, 0));
-  const out = draw();
-  assert.ok(!/loading/.test(out), "neither count is left loading: " + out);
-  assert.equal((out.match(/screen\.home\.questions\.one/g) || []).length, 2, "both counts drawn");
-});
-
 // R64: Home's remaining readings, as the plane answers the reads each makes.
 const R64 = {
   browse: (req) => ok({ ok: true, items: [], total: req.query.kinds === "document" ? 142 : 0, truncated: false }),
@@ -569,7 +497,7 @@ test("R64: edition lines: a case with a draft shared until a date says so, with 
   const inv = text(p, main(p).querySelector('[data-area="investigation"]'));
   assert.ok(inv.includes(word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy("2026-10-20") })), "no comment: the sentence that says none is to answer");
   assert.ok(inv.includes(word("screen.home.area.edition.comments.one", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02"), until: dmy("2026-10-20") })), "one recipient commented");
-  assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.project).sort(), ["PROJ-1", "PROJ-2", "PROJ-3"], "each of the member's projects");
+  assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.project).sort(), ["PROJ-1"], "only the project whose row says a draft is shared (project-roster R42)");
   assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), ["DRAFT-1", "DRAFT-2"], "a draft of no case reads no grant");
   assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === "CASE-1")[0].query.edition, "2", "the latest edition");
   const bare = await open("/app", { ...R64_ADMIN, casedrafts: ok({ ok: true, drafts: [] }) });

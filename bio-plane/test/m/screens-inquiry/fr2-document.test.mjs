@@ -44,7 +44,7 @@ test("R55 R111 C27 a held copy outside any project draws the vouch box for the m
   const row = { ...HELD_ROW, project: null, actor: "member:admin" };
   const p = await openWith(at, { ...noProject, plane: { heldcaptures: heldOf([row]), whoami: ok({ tokenClass: "member", session: true, member: "admin", handle: "sparky", administer: true, capabilities: ["contribute"], vocabulary: ["contribute"] }) } });
   assert.equal(p.byOp("heldcaptures").length, 1, "one read");
-  assert.equal(p.byOp("heldcaptures")[0].query.member, "admin", "matched on the member id");
+  assert.equal(p.byOp("heldcaptures")[0].query.bundle_id, D, "this copy's row, matched on its capture's actor, the member id");
   const box = main(p).querySelector("[data-held]");
   assert.ok(box && says(box, "document.held.says"), "the vouch box");
   assert.ok(actsIn(box).includes("release"));

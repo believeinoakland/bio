@@ -798,7 +798,7 @@ test("R36 Add opened from a question says what it files under first; a project o
 
 /* ---- T51 (T51-117): R38, R40 ---- */
 const COPY_DOC = "INFO-2026-0002-street-maintenance";
-const COPY = { sha256: SHA, document: COPY_DOC, project: null, retrieved: "2026-09-14T10:30:00Z", actor: "member:mai", grade: null, address: ADDRESS };
+const COPY = { sha256: SHA, document: COPY_DOC, project: null, retrieved: "2026-09-14T10:30:00Z", actor: "member:rosa", grade: null, address: ADDRESS };
 const HELD_AT = (state, more = {}) => ok({ ok: true, held: true, copy: COPY, versions: 1, truncated: false,
   changed: { state, basis: "x", as_of: "2026-09-14T10:30:00Z", earlier_differs: false, ...(state === "undetermined" ? {} : { looked_at: "2026-10-19T09:00:00Z" }) }, ...more });
 const VOUCHED = ok({ ok: true, held: [{ bundle_id: COPY_DOC, title: "Street maintenance report 2026", standing: "verified", source: { address: ADDRESS }, capture: { sha256: SHA, grade: null } }] });
@@ -820,9 +820,9 @@ test("R38 an address already held and unchanged: heldat is asked with check and 
   const open_ = main(p).querySelector(`a.cs-ref[href="/app/document/${COPY_DOC}"]`);
   assert.ok(open_ && open_.textContent === word("screen.capture.openit"), "Open it: a reference to document at copy.document");
   assert.ok(open_.getAttribute("data-tip").includes(word("screen.capture.openit.help")), "its help");
-  assert.ok(says(p, "screen.capture.a64.captured_by", { name: "mai-h", date: dayOf("2026-09-14T10:30:00Z") }), "who captured it, by the handle memberlist gives, and the day");
+  assert.ok(says(p, "screen.capture.a64.captured_by", { name: "rosa-h", date: dayOf("2026-09-14T10:30:00Z") }), "who captured it, by the handle the shell knows, and the day");
   assert.ok(says(p, "screen.capture.a64.nothing_added"));
-  assert.ok(!text(p).includes("member:mai") && !/\bmai\b(?!-)/.test(text(p).replace(/mai-h/g, "")), "never the id");
+  assert.ok(!text(p).includes("member:rosa") && !/\brosa\b(?!-)/.test(text(p).replace(/rosa-h/g, "")), "never the id");
   assert.ok(text(p).includes(dayOf("2026-09-14T10:30:00Z")), "the day, by cs.date");
   assert.ok(says(p, "screen.capture.a64.the_site_still_gives_the_same_document"));
   assert.ok(!says(p, "screen.capture.a64.the_site_has_changed_since"));

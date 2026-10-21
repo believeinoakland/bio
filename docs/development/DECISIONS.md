@@ -6308,3 +6308,48 @@ decided: 2026-10-21 · Bob
 the design: consistent with K1485 and K1493, which stand: an import never bulk-copies home addresses or phone numbers (K1485); a member may keep one in their own notes; it is never published (K1493), and it is removed on a lawful demand the place's profile lists (California Gov. Code 7928.215: an official's home address or phone number, within 48 hours; K1493). `registers`' line now reads "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published." (key screen.registers.never.keep).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 owed: BOB: the publication filter's test that a home address or phone number in a member's note never reaches a published surface, with N1259.
+
+### DEC-409 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's direction: "The support for the assistant doing research on people, events, money, donations, and other dimensions should be robust ... The UX for members doing similar investigations should also be rich, powerful, efficient, and robust.")
+for: Bob
+question: What does "follow the money, and every other dimension" commit Civicsmith to, and when?
+why it is Bob's: doctrine, requirements and release scope (P17).
+provisional: Capability Ladders §2 CONNECTIONS (K1469, K1487): one `explore` across every owner, cited and graded, weakest hop governing, bounded; screens People, Timeline, Money trail, Explore connections, Find drawn; people and money layers largely unbuilt (the 2026-10-05 study).
+alternative: B, combined walks in the alpha too; C, "Follow from here", combined walks and the assistant all in the first beta.
+recommendation: A: the alpha carries each dimension's tools, the registers and "Follow from here"; the first beta the combined walks and the assistant's research.
+reversal cost: medium (scope of the alpha and the first beta).
+response: "Sure, efficiency is counted in steps, but if the first way a connection is made across multiple hops may not be the most direct. Just as in math a problem can be 'simplified', the system should include support for recognizing all meaningful connections, though also be able to find the must [most] direct path. The choice is A today, but B in the first beta."
+decided: 2026-10-21 · Bob
+the design: as folded in Capability Ladders §2 CONNECTIONS "RULED 2026-10-21": the doctrine (following the trail in every dimension, singly and in combination, is the core, for members and the assistant through the same explorer); the alpha: each dimension's tools, the registers, "Follow from here" from any item into any dimension in place; the first beta: combined walks across dimensions and the assistant's research across every dimension (measured as DEC-405); between two things, every meaningful connection within bounds and the most direct path (fewest hops, then the strongest weakest hop, then date; never a judgment score), and a member's step-by-step chain "simplified" by showing a shorter cited path beside it; robust measured (a real Oakland matter per combined walk, K4354's 2 seconds, acts counted against a target set before the walk).
+reasoning recorded in: this entry; `docs/architecture/BIO_Capability_Ladders_v0_1.md` (Status "Amended 2026-10-21 (DEC-409)"; §2 CONNECTIONS "RULED 2026-10-21").
+owed: BOB: the alpha's plan (with N1259) carries "Follow from here" across the dimension screens and `explore`'s all-connections and most-direct-path reads with the simplified-chain offer, and their tests; the first beta's (with N1258) the combined walks and the assistant's research across dimensions, with the step targets and Oakland test matters. Design: "Follow from here", all connections, most direct path and "a shorter path" drawn (the next DEC).
+
+### DEC-410 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-409)
+for: design
+question: How are "Follow from here", every connection, the most direct path and a shorter path drawn?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) "Follow from here", one control (`follow(kind)` in mock-kit.js) for a person or organization, money, an event and a document, opening a menu of the other dimensions, each opening that screen scoped to the item in place: on `people` rows, `money` figures, `timeline` events, `document`, `finder` results, `registers` result rows (as a donation) and `explore` chains (`owed:followfrom DEC-409`, else existing ops). (2) On `explore`: "List every connection" and "Find the most direct path" beside Explore; "Most direct path" first, with "The most direct path has the fewest steps. If two are equally short, the one whose weakest step is strongest comes first, then the earlier date. This is a fact about the chains, not a judgment of them."; "Every connection between them", each chain with its steps, weakest grade and dates, hub and declared-only steps marked, and "Not every connection was searched: …" when the bounds cut it short; "A chain you built" with "A shorter cited path joins the same two ends." and "See the shorter path" / "Keep mine" (`owed:exploreall`, `owed:explorepath`, `owed:exploreshorter`, DEC-409). (3) Drawn paused, "Comes in the first beta": combined walks; "Ask the assistant to research this". 47 keys (`screen.follow.*`, `screen.explore.direct|all|shorter|later.*`).
+reasoning recorded in: this entry; `screens/mock-kit.js`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/registry.src.py`, `screens/words-drawn.src.py`, `screens/page.src.html` (rows noted "DEC-410").
+owed: BOB: the ops above (names are proposals) with DEC-409's requirements. Design, later: "Follow from here" on offices, laws and funds once their screens carry items.
+
+### DEC-411 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B469 HANDOFF, for Bob's K4403 given in BOB #243's session)
+for: design
+question: How are `registers` and `explore` redrawn for Bob's K4403?
+why it is Bob's: it is not (P17): drawing beneath his ruling K4403 (cited, not re-ruled).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `registers`: "Registers we know" (name, source, URL, size in bytes, rows) with the door "A register we know that is not listed" (name, URL, source; "Propose this register"); company officers listed, tagged "Not in the alpha", "Bringing in company officers in bulk comes in the beta.", no import control; import "Whole or in part" with a filter (names or organizations, amounts, dates, filer numbers) prefilled from the current project and saying so; "Work out what it would add" (new rows, bytes, an estimated time) before the import; "Importing runs by fixed steps and never uses the assistant."; "Phone and address columns are left out as it arrives." (DEC-408); the filter kept with the import and shown as what watching looks for; "Read it ahead, for the team" (a pre-read as a resource); watches automatic only for a project's stated interest, shown with it, one queue item per watch per change with a count; FEC rows carry 11 CFR 104.15's notice and no donor-list export; a cited row "Cited as an extract of {file}, fingerprint {fingerprint}, {date}". `explore`: shorter paths evidenced first, then "Leads", each "a lead, not evidence", the note never calling the member's chain wrong; at 2 seconds "The explorer stopped after 2 seconds and shows what it found. More may exist." with "Keep looking". New acts owed to K4403: registerfilter, registerdelta, registerpreread, registerpropose, explorecontinue. About 39 keys added, 6 retired, 7 reworded.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-411").
+owed: BOB: the acts above with N1259 and N1260 (names are proposals).

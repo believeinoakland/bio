@@ -74,6 +74,8 @@ export const SCREEN_KEYS = Object.freeze({
     "act.capturerequestretry.label.capture",
     "act.capturerequests.label.capture", "screen.watching.name", "screen.leads.name", "shell.card.question", "shell.card.document", "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE", "refusal.ACQUIRE_TIMED_OUT",
     "screen.capture.later.head", "screen.capture.later.about", "screen.capture.later.waiting", "screen.capture.later.captured", "screen.capture.later.turned",
+    /* R2 (T51 fix round 3, C17): whether a project-less upload was read */
+    "screen.document.text.label", "screen.document.text.full", "screen.document.text.none", "screen.document.text.read", "screen.document.text.unread", "capture.picture.unread",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",

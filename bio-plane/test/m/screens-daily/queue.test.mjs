@@ -409,7 +409,7 @@ test("R74: a conflict the member sees only half of opens `<candidate>/<project>`
 });
 
 // C73 (fix round 2): the line says how the list is sorted, and the vouch to-dos follow the sort.
-const HELD1 = { ok: true, held: [{ bundle_id: "INF-H1", title: "Photo", source: { address: "https://city.example/gate", via: "web" }, collected_since: "2026-10-03T10:00:00Z" }], state: "held", truncated: false, next: null };
+const HELD1 = { ok: true, held: [{ bundle_id: "INF-H1", title: "Photo", source: { address: "https://city.example/gate", via: "web" }, collected_since: "2026-10-03T10:00:00Z", actor: "mai" }], state: "held", truncated: false, next: null };
 const SORTED = [
   { id: "TSK-A", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), age: { since: "2026-10-05T10:00:00Z" }, due: day(2), summary: "Alpha item", options: [], disposition: { instead: "taskresolve" } },
   { id: "TSK-B", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-2", "The Coliseum lease"), age: { since: "2026-10-01T10:00:00Z" }, summary: "Bravo item", options: [], disposition: { instead: "taskresolve" } },
@@ -418,7 +418,7 @@ const SORTED = [
 const orderOf = (p) => main(p).querySelectorAll(".cs-row").map((r) => text(p, r)).map((t) => (t.includes("Alpha") ? "A" : t.includes("Bravo") ? "B" : t.includes("Charlie") ? "C" : t.includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })) ? "V" : "?")).filter((x) => x !== "?").join("");
 
 test("R2, C73: after a sort the line names the sort and no longer says the list is grouped by case; by case it still says grouped; the vouch to-dos follow the sort", async () => {
-  const plane = { queue: ok({ items: SORTED, item_count: 3 }), heldcaptures: (req) => ok(req.query.member ? HELD1 : { ok: true, held: [] }) };
+  const plane = { queue: ok({ items: SORTED, item_count: 3 }), heldcaptures: ok(HELD1) };
   const grouped = word("screen.queue.grouped");
   for (const s of ["added", "due", "kind"]) {
     const p = await open("/app/queue/" + s, plane);

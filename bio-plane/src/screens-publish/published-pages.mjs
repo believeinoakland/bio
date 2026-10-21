@@ -119,7 +119,8 @@ export const PUBLISHED_PAGES = Object.freeze({
         what = '<span class="cs-card" tabindex="0" data-level="1" data-tip="' + cs.esc("<b>" + cs.w("screen.published.leg.namedonly") + "</b>" + cs.w("screen.published.leg.namedonly.explain"))
           + '">' + cs.w("screen.published.leg.namedonly") + "</span>";
       }
-      return cs.row("", "<b>" + cs.w("screen.published.leg", { n: String(i + 1) }) + "</b> · " + cs.w(P.cuts(l) ? "screen.published.leg.cuts" : "screen.published.leg.supports") + " " + what, grade);
+      const doc = P.docLine(cs, l); // C47: the document the leg rests on, by name and place
+      return cs.row("", "<b>" + cs.w("screen.published.leg", { n: String(i + 1) }) + "</b> · " + cs.w(P.cuts(l) ? "screen.published.leg.cuts" : "screen.published.leg.supports") + " " + what + (doc ? " " + doc : ""), grade);
     }).join("")), ["screen.published.each.leg.is.one.thing.explain", "screen.published.a.leg.the.team.holds.explain", "screen.published.leg.grade.explain"]);
 
     // "What rests on what": the chain from the documents up to the finding, a line for each leg

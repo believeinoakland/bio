@@ -22,7 +22,6 @@ import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 import { draftOnObject } from "../../../src/plane/ask.mjs";
 import { interfaceScript, interfaceScriptHash } from "../../../src/interface-shell/index.mjs";
-import { GUIDE as WIZARD_GUIDE } from "../../../src/screens-wizards/index.mjs";
 
 /* Instants and minted ids differ between two objects; everything else must not. */
 const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
@@ -220,9 +219,11 @@ test("R48 (T47; N1002; DEC-201; control-plane R81, R82): the page the plane's Wo
   /* interface-shell R1, R2: the page loads the shell's script from one external element, its integrity the hash of that script;
      the renders are drawn by that script, so they are looked for in it (answer-envelope R6 may stamp the element with a nonce) */
   const all = [];
+  let WIZARD_GUIDE;   /* the wizards' guide, read with their screens, as the composed page reads it (control-plane's APP_OPTIONS) */
   for (const mod of SCREEN_MODULES) {
-    let SCREENS;
-    try { ({ SCREENS } = await import(`../../../src/${mod}/index.mjs`)); } catch (e) { assert.fail(`${mod}: ${String(e && e.message).split("\n")[0]}`); }
+    let SCREENS, GUIDE;
+    try { ({ SCREENS, GUIDE } = await import(`../../../src/${mod}/index.mjs`)); } catch (e) { assert.fail(`${mod}: ${String(e && e.message).split("\n")[0]}`); }
+    if (mod === "screens-wizards") WIZARD_GUIDE = GUIDE;
     assert.ok(Array.isArray(SCREENS) && SCREENS.length > 0, `${mod} offers screens`);
     all.push(...SCREENS);
   }

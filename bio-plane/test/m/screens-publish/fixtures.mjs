@@ -80,6 +80,8 @@ export function plane(o = {}) {
   let prepared = false;
   return {
     whoami: ok({ ...MEMBER, member: "dev", handle: "dev", capabilities: ["contribute", "create_projects", "publish"] }),
+    /* the roster the kit names members by (interface-shell R111): a member id is drawn as its handle */
+    memberlist: ok({ members: [{ member_id: "dev", handle: "dev" }, { member_id: "mai", handle: "mai" }, { member_id: "rosa", handle: "rosa" }] }),
     image: ok({ "bundle.md": projectMd }),
     openoriginal: bytes("PNG", "image/png"),
     casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" }, created_by: "dev", updated_by: "dev" }] }),

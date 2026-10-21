@@ -7,7 +7,7 @@
 /* R44: the projects the member has joined (the share's choices), the team's members (who looked), and, at a lead's address, the lead. */
 function leadsReads(view) {
   const id = typeof view.subject === "string" && /^LEAD-[A-Za-z0-9-]+$/.test(view.subject) ? view.subject : "";
-  return { list: { op: "leadlist" }, projects: { op: "projectlist" }, members: { op: "memberlist" },
+  return { list: { op: "leadlist" }, projects: { op: "projectlist" },
            ...(id ? { one: { op: "leadread", query: { id }, subject: true } } : {}) };
 }
 
@@ -17,8 +17,8 @@ function renderLeads(cs, view) {
   const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
   const mine = D.list && D.list.state === "ok" && D.list.value && Array.isArray(D.list.value.leads) ? D.list.value.leads.filter((l) => l && typeof l.lead_id === "string") : [];
   const projects = D.projects && D.projects.state === "ok" && D.projects.value && Array.isArray(D.projects.value.projects) ? D.projects.value.projects : [];
-  const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
-  const handleOf = (m) => { const x = String(m || "").replace(/^member:/, ""); return (roster.find((r) => r && r.member_id === x) || {}).handle || ""; };
+  /* C94 (interface-shell R111): a member is named by the shell's name for her id (her handle; a fallback word where none is known), never the id */
+  const handleOf = (m) => { const x = String(m || "").replace(/^member:/, ""); return x ? cs.memberName(x) : ""; };
   const nameOf = (p) => (projects.find((x) => x && x.id === p) || {}).name || "";
   const STATE = { LOOKED_ABSENT: "absent", LOOKED_INDETERMINATE: "unclear", partial: "part", PRESENT: "found" };
   const stateWord = (s) => (STATE[s] ? cs.w("screen.leads.state." + STATE[s]) : cs.w("screen.leads.state.never"));
@@ -119,10 +119,10 @@ export const LEADS_SCREEN = Object.freeze({
   reads: leadsReads,
   render: renderLeads,
   acts: Object.freeze([
-    Object.freeze({ op: "lead", label: "act.lead.label.leads", send: sendLead, done: doneLead, reasonField: "words" }),
-    Object.freeze({ op: "leadread", label: "act.leadread.label.leads", send: sendRead, done: doneRead }),
-    Object.freeze({ op: "leadlook", label: "act.leadlook.label.leads", send: sendLook, done: doneChanged, reasonField: "detail" }),
-    Object.freeze({ op: "leadshare", label: "act.leadshare.label.leads", send: sendShare, done: doneChanged, reasonField: "reason" }),
-    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.leads", send: sendHelp, done: doneHelp, reasonField: "told" }),
+    Object.freeze({ op: "lead", rereads: Object.freeze(["list"]), label: "act.lead.label.leads", send: sendLead, done: doneLead, reasonField: "words" }),
+    Object.freeze({ op: "leadread", rereads: Object.freeze([]), label: "act.leadread.label.leads", send: sendRead, done: doneRead }),
+    Object.freeze({ op: "leadlook", rereads: Object.freeze(["list"]), label: "act.leadlook.label.leads", send: sendLook, done: doneChanged, reasonField: "detail" }),
+    Object.freeze({ op: "leadshare", rereads: Object.freeze(["list"]), label: "act.leadshare.label.leads", send: sendShare, done: doneChanged, reasonField: "reason" }),
+    Object.freeze({ op: "writinghelp", rereads: Object.freeze([]), label: "act.writinghelp.label.leads", send: sendHelp, done: doneHelp, reasonField: "told" }),
   ]),
 });

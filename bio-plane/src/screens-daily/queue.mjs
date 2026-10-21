@@ -14,6 +14,7 @@ import { queueStates } from "./queue-states.mjs";
 import { doors } from "./doors.mjs";
 import { todos } from "./todos.mjs";
 import { forward } from "./forward.mjs";
+import { notices } from "./notices.mjs";
 import { routed, ROUTED_REFUSALS } from "./routed.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 
@@ -22,7 +23,7 @@ const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : [];
 
 export const queue = Object.freeze({
   id: "queue",
-  parts: { sourceItems, itemWords, queueStates, doors, routed, todos, forward },
+  parts: { sourceItems, itemWords, queueStates, doors, routed, todos, forward, notices },
 
   // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind). R59, R61: `/app/queue/answered` reads what the
   // member answered and the set-aside findings; R58: `/app/queue/choose` reads the queue as it is, each item with a box. The queue's
@@ -48,8 +49,7 @@ export const queue = Object.freeze({
       // R65: the doors to Held captures and the Inbox, on the list only.
       held: view.parts.doors().reads().held,
       inbox: view.parts.doors().reads().inbox,
-      // R17 (B21): the photos she captured and has not vouched for.
-      ...view.parts.todos().reads(view),
+      // R17 (B21): the photos she captured and has not vouched for are rows of the `held` read above (C14, P2.3).
       // C75: the members a task may be passed to, a choice.
       roster: { op: "memberlist", empty: none("members") },
     };
@@ -182,6 +182,7 @@ export const queue = Object.freeze({
         day: it.subject && it.subject.day ? String(it.subject.day) : "",
         owner: it.basis && it.basis.owner ? String(it.basis.owner) : "",
         notice: d.notice ? String(d.notice) : "",
+        notices: view.parts.notices().of(it),
         finding: d.finding ? String(d.finding) : "",
         project: d.project ? String(d.project) : (Array.isArray(d.projects) && d.projects[0] ? String(d.projects[0]) : (cas ? String(cas.id) : "")),
       };
@@ -282,6 +283,9 @@ export const queue = Object.freeze({
     // with it, so the list waits for her captures to be read rather than drawing twice.
     const todos = view.parts.todos();
     const vouch = choosingNow() ? [] : todos.items(cs, view, "queue");
+    // C70: the vouch rows are a band the shell's number does not know: this screen reports how many it draws (once her captures are read),
+    // whatever state it is in, and the masthead and the rail add it to the queue's own count.
+    if (!todos.loading(view)) cs.band(choosingNow() ? todos.items(cs, view, "queue").length : vouch.length);
     const listOf = function (picking) {
       if (!picking && todos.loading(view)) return cs.state({ state: "loading" }, null);
       const draw = function (q) {
@@ -401,10 +405,10 @@ export const queue = Object.freeze({
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).
   acts: [
-    { op: "taskresolve", label: "act.taskresolve.label.queue",
+    { op: "taskresolve", label: "act.taskresolve.label.queue", rereads: ["queue"],
       send: function (view, el, cs, extra) { return el.dataset.multi ? view.parts.queueStates().run("taskresolve", view, el, cs, extra) : { body: { id: el.dataset.item } }; },
       done: function (view, answer, cs) { cs.set("done", "taskresolve"); } },
-    { op: "taskforward", label: "act.taskforward.label.queue",
+    { op: "taskforward", label: "act.taskforward.label.queue", rereads: ["queue"],
       send: function (view, el, cs, extra) {
         if (el.dataset.multi) return view.parts.queueStates().run("taskforward", view, el, cs, extra);
         // C75: a member chosen from the group's, never oneself.
@@ -412,7 +416,7 @@ export const queue = Object.freeze({
         return picked.to ? { body: { id: el.dataset.item, to: picked.to } } : picked;
       },
       done: function (view, answer, cs) { cs.set("done", "taskforward"); } },
-    { op: "proposedispose", label: "act.proposedispose.label.queue",
+    { op: "proposedispose", label: "act.proposedispose.label.queue", rereads: ["queue", "aside"],
       send: function (view, el, cs, extra) {
         if (el.dataset.multi) return view.parts.queueStates().run("proposedispose", view, el, cs, extra);
         // R61: a deferred set-aside finding is dismissed with a reason: an instance row by its key and version, a project row by both.
@@ -423,7 +427,7 @@ export const queue = Object.freeze({
         return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: to } };
       },
       done: function (view, answer, cs) { cs.set("done", "proposedispose"); } },
-    { op: "queuesnooze", label: "act.queuesnooze.label.queue",
+    { op: "queuesnooze", label: "act.queuesnooze.label.queue", rereads: ["queue"],
       send: function (view, el, cs, extra) {
         if (el.dataset.multi) return view.parts.queueStates().run("queuesnooze", view, el, cs, extra);
         // R69: "Bring back" clears the snooze of the case (`clear: "1"`, queue R21); R79 (c): a day before tomorrow is not sent.
@@ -432,7 +436,7 @@ export const queue = Object.freeze({
         return day.refuse ? day : { body: { case: el.dataset.project, until: day.until } };
       } },
     // R18 (queue R19, R20): "Mute a kind" mutes the item's kind for its nearest home case; with no case, the item.
-    { op: "queuemute", label: "act.queuemute.label.queue",
+    { op: "queuemute", label: "act.queuemute.label.queue", rereads: ["queue", "muted"],
       send: function (view, el) {
         // R50 (1): "Turn back on" sends the same form with `unmute`.
         if (el.dataset.unmute === "kind") return { body: { case: el.dataset.mutecase, kinds: [el.dataset.kind], unmute: true } };
@@ -441,16 +445,16 @@ export const queue = Object.freeze({
       },
       done: function (view, answer, cs) { cs.set("done", "queuemute"); } },
     // Adopting asks why (reevaluation R15); the member's words are the act's reason (interface-shell R11, K3002).
-    { op: "adoptversion", label: "act.adoptversion.label.queue", reasonField: "why",
+    { op: "adoptversion", label: "act.adoptversion.label.queue", rereads: ["queue"], reasonField: "why",
       send: function (view, el, cs) {
         const why = String(cs.value(el.dataset.f + "-why") || "").trim();
-        return why ? { body: { notice: el.dataset.notice, why: why } } : { refuse: "screen.queue.fieldfirst" };
+        return why ? view.parts.notices().send(cs, "adoptversion", el, { why: why }) : { refuse: "screen.queue.fieldfirst" };
       },
       done: function (view, answer, cs) { cs.set("done", "adoptversion"); } },
-    { op: "keepversion", label: "act.keepversion.label.queue",
-      send: function (view, el) { return { body: { notice: el.dataset.notice } }; },
+    { op: "keepversion", label: "act.keepversion.label.queue", rereads: ["queue"],
+      send: function (view, el, cs) { return view.parts.notices().send(cs, "keepversion", el, {}); },
       done: function (view, answer, cs) { cs.set("done", "keepversion"); } },
-    { op: "reminderanswer", label: "act.reminderanswer.label.queue",
+    { op: "reminderanswer", label: "act.reminderanswer.label.queue", rereads: ["queue"],
       send: function (view, el, cs) {
         const on = String(cs.value(el.dataset.f + "-on") || "").trim();
         const body = { target: el.dataset.subject, entry: Number(el.dataset.entry || 0) };
@@ -458,7 +462,7 @@ export const queue = Object.freeze({
         return { body: body };
       } },
     // A hint becomes a question in its case's project (R3; promotion's inquiry), opened on success.
-    { op: "promote", label: "act.promote.label.queue",
+    { op: "promote", label: "act.promote.label.queue", rereads: ["queue"],
       send: function (view, el, cs) {
         const q = String(cs.value(el.dataset.f + "-question") || "").trim();
         if (!q) return { refuse: "screen.queue.fieldfirst" };
@@ -482,7 +486,7 @@ export const queue = Object.freeze({
         const id = answer && (answer.bundleId || (answer.result && answer.result.bundleId));
         if (id) cs.go("question", id);
       } },
-    { op: "projectkeyset", label: "act.projectkeyset.label.queue",
+    { op: "projectkeyset", label: "act.projectkeyset.label.queue", rereads: ["queue"],
       send: function (view, el, cs) {
         const key = String(cs.value(el.dataset.f + "-key") || "").trim();
         const owner = String(el.dataset.owner || "");
@@ -490,42 +494,42 @@ export const queue = Object.freeze({
         return key && project ? { body: { project: project, key: key } } : { refuse: "screen.queue.fieldfirst" };
       } },
     // R13: the unsent request dropped, with the member's reason (the shell asks it: `actionmove` is reasoned).
-    { op: "actionmove", label: "act.actionmove.label.queue",
+    { op: "actionmove", label: "act.actionmove.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.action ? { body: { target: el.dataset.action, to: "abandoned" } } : null; } },
     // R42: "Join" an invitation, and an owner's Grant or Decline of a request to join; the item leaves with the re-read.
-    { op: "projectjoin", label: "act.projectjoin.label.queue",
+    { op: "projectjoin", label: "act.projectjoin.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; },
       done: function (view, answer, cs) { cs.set("done", "projectjoin"); } },
-    { op: "projectrequestanswer", label: "act.projectrequestanswer.label.queue",
+    { op: "projectrequestanswer", label: "act.projectrequestanswer.label.queue", rereads: ["queue"],
       send: function (view, el) {
         return el.dataset.project && el.dataset.who && el.dataset.answer ? { query: { projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer } } : null;
       },
       done: function (view, answer, cs) { cs.set("done", "projectrequestanswer"); } },
     // R19: Not now, for every administrator (instance-setup R90).
-    { op: "updatelater", label: "act.owed_updatelater.label.queue",
+    { op: "updatelater", label: "act.owed_updatelater.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.version ? { body: { version: el.dataset.version } } : null; } },
-    { op: "exploreapprove", label: "act.exploreapprove.label.queue",
+    { op: "exploreapprove", label: "act.exploreapprove.label.queue", rereads: ["queue"],
       send: function (view, el) { return { body: { owner: el.dataset.owner, day: el.dataset.day } }; } },
     // R17 (B21): vouching for the photos she captured, and approving a letter drafted for the group; each leaves with the next read.
-    { op: "release", label: "act.release.label.queue", reasonField: "acknowledgment",
+    { op: "release", label: "act.release.label.queue", reasonField: "acknowledgment", rereads: ["held"],
       send: function (view, el, cs) { return view.parts.todos().release(view, el, cs); },
       done: function (view, answer, cs) { cs.set("done", "release"); } },
-    { op: "filingapprove", label: "act.filingapprove.label.queue",
+    { op: "filingapprove", label: "act.filingapprove.label.queue", rereads: ["queue"],
       send: function (view, el, cs) { return view.parts.todos().approve(view, el, cs); },
       done: function (view, answer, cs) { cs.set("done", "filingapprove"); } },
     // R75: the decisions the record routes to a member; each item leaves with the next read.
-    { op: "adminendorse", label: "act.adminendorse.label.queue",
+    { op: "adminendorse", label: "act.adminendorse.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.memberId ? { body: { memberId: el.dataset.memberId } } : null; },
       // R82: the invitation the answer carries is kept and shown once (as Members does), the done note beside it.
       done: function (view, answer, cs) { view.parts.routed().keep(view, answer, cs); cs.set("done", "adminendorse"); } },
-    { op: "projectowneradd", label: "act.projectowneradd.label.queue",
+    { op: "projectowneradd", label: "act.projectowneradd.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.projectId && el.dataset.handle ? { query: { projectId: el.dataset.projectId, handle: el.dataset.handle } } : null; },
       done: function (view, answer, cs) { cs.set("done", "projectowneradd"); } },
-    { op: "expertiseconfirm", label: "act.expertiseconfirm.label.queue",
+    { op: "expertiseconfirm", label: "act.expertiseconfirm.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.memberId && el.dataset.label ? { body: { memberId: el.dataset.memberId, label: el.dataset.label } } : null; },
       done: function (view, answer, cs) { cs.set("done", "expertiseconfirm"); } },
     // The authority form: the member's decision with its basis, the basis being the act's reason (`taskdecide` is Reasoned).
-    ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.queue", reasonField: "basis", refusals: ROUTED_REFUSALS,
+    ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.queue", reasonField: "basis", rereads: ["queue"], refusals: ROUTED_REFUSALS,
       send: function (view, el, cs) { return view.parts.routed().decide(cs, el); },
       done: function (view, answer, cs) { cs.set("done", "taskdecide"); } }),
   ],

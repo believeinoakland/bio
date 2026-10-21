@@ -77,33 +77,47 @@ export const CEREMONY = Object.freeze({
     const pre = P.later(cs, view, "preflight", "publishpreflight", { body: args });
     const ten = P.later(cs, view, "tensions", "publishtensions", { body: { project: args.project, draft: draft } });
     const found = P.findingsOf(copy);
-    // R71 (fix round 2, C50): the case's published editions, read from the public record by the case alone; a case never published
-    // answers NOT_PUBLISHED and draws nothing. The edition this draft stands at is the next one unless it is itself published.
-    const pubR = c.case_id ? P.later(cs, view, "published", "publishedcase", { query: { caseId: c.case_id } }) : null;
+    // C46: a finding is named by its title, where the draft's copy states one, never by its id
+    const nameOf = function (t) {
+      const x = (Array.isArray(copy.findings) ? copy.findings : []).find(function (y) { return y && y.target === t; });
+      return x && typeof x.title === "string" && x.title.trim() ? x.title.trim() : t;
+    };
+    const steps = pre.state === "ok" && Array.isArray(pre.value.steps) ? pre.value.steps : [];
+    const stepWith = function (k) { return steps.find(function (x) { return x && typeof x === "object" && k in x; }) || null; };
+    // R70, R71 (fix round 3, C48, C50; case-authoring R83, review R19): what this draft has prepared and published is read from the record:
+    // the pre-flight's `editions`, else the draft's own in `casedrafts`; `{prepared, published: {edition, address}}`, so a reloaded page states
+    // it again. An older answer that states neither is read as before: the case's public editions (`publishedcase`) and the unsigned
+    // document of the edition the draft stands at (`casedocument`).
+    const mineDraft = all.find(function (x) { return x && x.draft_id === draft; }) || null;
+    const objOf = function (v) { return v && typeof v === "object" && !Array.isArray(v) ? v : null; };
+    const recd = pre.state === "ok" && objOf(pre.value.editions) ? pre.value.editions : mineDraft && objOf(mineDraft.editions) ? mineDraft.editions : null;
+    const recPub = recd && objOf(recd.published) && Number(recd.published.edition) > 0 ? recd.published : null;
+    const caseFor = c.case_id || (objOf(stepWith("pinned")) ? String(stepWith("pinned").case || "") : "");
+    const waitPre = !recd && pre.state === "loading"; // the record is asked for the edition once the pre-flight has said what it holds
+    const pubR = !recd && !waitPre && c.case_id ? P.later(cs, view, "published", "publishedcase", { query: { caseId: c.case_id } }) : null;
     const pubOk = pubR && pubR.state === "ok" && pubR.value && typeof pubR.value === "object" ? pubR.value : null;
     const pubList = pubOk ? (Array.isArray(pubOk.editions) ? pubOk.editions : []).map(function (e) { return Number(e && typeof e === "object" ? e.edition : e); }).filter(function (n) { return n > 0; }) : [];
-    const pubLatest = pubList.length ? Math.max.apply(null, pubList) : 0;
+    const pubLatest = recd ? (recPub ? Number(recPub.edition) : 0) : pubList.length ? Math.max.apply(null, pubList) : 0;
     const pubGone = pubR && pubR.state === "failed" && !(pubR.refusal && /^(NOT_PUBLISHED|NO_PUBLISHED_EDITION|NO_SUCH_)/.test(String(pubR.refusal.code || "")));
-    const ownPublished = pubLatest > 0 && Number(c.edition) > 0 && pubList.indexOf(Number(c.edition)) >= 0;
-    // R70 (fix round 2, C48): a prepared edition is kept across a reload: the record holds the unsigned document of the edition this
-    // draft stands at (`casedocument`; a case edition never authored answers NO_CASE_DOCUMENT), pinned as the draft's findings
+    const ownPublished = pubLatest > 0 && (recd ? (Number(c.edition) > 0 ? pubLatest >= Number(c.edition) : !(Number(recd.prepared) > 0)) : Number(c.edition) > 0 && pubList.indexOf(Number(c.edition)) >= 0);
+    // R70: a prepared edition is kept across a reload: the record holds the unsigned document of the edition this draft stands at
+    // (`casedocument`; a case edition never authored answers NO_CASE_DOCUMENT), pinned as the draft's findings
     let prepared = ui.prepared || null;
-    const wanted = !prepared && c.case_id && c.edition && !ownPublished ? { case: c.case_id, edition: String(c.edition) } : null;
+    const preparedNo = recd ? (Number(recd.prepared) > 0 ? String(Number(recd.prepared)) : "") : c.edition ? String(c.edition) : "";
+    const wanted = !prepared && !waitPre && caseFor && preparedNo && !ownPublished ? { case: caseFor, edition: preparedNo } : null;
     const recR = wanted ? P.later(cs, view, "document", "casedocument", { query: wanted }) : null;
     const rec = recR && recR.state === "ok" && recR.value && recR.value.ok !== false ? recR.value : null;
     if (rec && rec.sign && typeof rec.sign.statement === "string" && !rec.signature && !rec.published_at) {
       const mine = {};
       found.forEach(function (t) { mine[t] = true; });
-      prepared = { caseId: rec.case_id || c.case_id, edition: rec.edition || c.edition, docSha: rec.doc_sha || null,
+      prepared = { caseId: rec.case_id || caseFor, edition: rec.edition || preparedNo, docSha: rec.doc_sha || null,
         findings: (Array.isArray(rec.citations) ? rec.citations : []).filter(function (x) { return x && mine[x.target] && /^[0-9a-f]{64}$/.test(String(x.version || "")); })
           .map(function (x) { return { target: x.target, bundleSha: x.version }; }) };
     }
     if (prepared && !ui.prepared) ui.prepared = prepared; // the acts of the Sign step read it from page memory
-    const caseId = prepared ? prepared.caseId : c.case_id;
+    const caseId = prepared ? prepared.caseId : caseFor;
     const sched = caseId ? P.later(cs, view, "schedule", "publishschedule", { query: { case: caseId } },
       function (v) { return !v || !Array.isArray(v.editions) || v.editions.length === 0; }) : null;
-    const steps = pre.state === "ok" && Array.isArray(pre.value.steps) ? pre.value.steps : [];
-    const stepWith = function (k) { return steps.find(function (x) { return x && typeof x === "object" && k in x; }) || null; };
     const photoStep = stepWith("photos");
     const photos = photoStep && Array.isArray(photoStep.photos) ? photoStep.photos : [];
     const signStep = stepWith("publish_at") || stepWith("signer") || {};
@@ -114,10 +128,12 @@ export const CEREMONY = Object.freeze({
       return e.state === "published" && prepared && String(e.edition) === String(prepared.edition);
     }) : null;
 
-    // R71: an edition already public is named with its link; the draft that is itself published offers nothing to prepare
+    // R71: an edition already public is named with its link (the address the record gives); the draft that is itself published offers
+    // nothing to prepare
     if (pubLatest > 0) {
+      const addr = recPub && typeof recPub.address === "string" && /^\/app\/published\/[^\s"<>]+$/.test(recPub.address) ? recPub.address : "/app/published/" + encodeURIComponent(caseId + "/" + pubLatest);
       out.push('<p role="status" data-published="' + pubLatest + '">' + cs.w("screen.ceremony.published.edition", { n: String(pubLatest) }) + "</p>"
-        + '<a href="/app/published/' + encodeURIComponent(caseId + "/" + pubLatest) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a>");
+        + '<a href="' + cs.esc(addr) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a>");
       if (ownPublished) return out.join("");
     } else if (pubGone) out.push(cs.state(pubR, function () { return ""; }));
 
@@ -149,7 +165,7 @@ export const CEREMONY = Object.freeze({
       const nofinding = !found.length || foundAll.some(function (b) { return b && (b.code || b.reason) === "PUBLISH_NO_FINDING"; });
       if (nofinding) lines.unshift(cs.w("ceremony.gate.notargets") + ' <a class="cs-btn" data-tone="quiet" data-addfinding href="/app/case-editor/' + encodeURIComponent(s[0] + "/" + draft) + '#what-goes-in" data-nav>'
         + cs.w("screen.ceremony.gate.addfinding") + "</a>");
-      return (pinned.length ? cs.sheet(pinned.map(function (f) { return cs.row("", cs.ref("question", f.target, f.target, []), ""); }).join("")) : "")
+      return (pinned.length ? cs.sheet(pinned.map(function (f) { return cs.row("", cs.ref("question", f.target, nameOf(f.target), []), ""); }).join("")) : "")
         + (prepared ? "" : v.ready && !lines.length ? '<p data-ready="yes">' + cs.w("screen.ceremony.ready") + "</p>"
           : lines.length ? '<p data-ready="no"><b>' + cs.w("ceremony.gate.heading") + '</b></p><ul class="mk-list" data-blockers>' + lines.map(function (l) { return '<li role="alert">' + l + "</li>"; }).join("") + "</ul>"
             : '<p data-ready="no">' + cs.w("screen.ceremony.notready") + "</p>");
@@ -196,14 +212,21 @@ export const CEREMONY = Object.freeze({
     // R51 (C6; DEC-377): "Documents without a second confirmation", from the pre-flight: ask for the confirmation again (`reattest`),
     // list the document as self-attested only with a required reason (`selfAttested`, sent with the pre-flight and `publish`), or the
     // capturing member's own signed account (`captureaccount`).
-    // Each entry is `{capture, by, findings}` (case-authoring R82): the capture, the member who captured it (null when none), the findings resting on it.
+    // Each entry is `{capture, by, findings, timestamp_at, co_archive, missing, late, timestamp_late, late_words}` (case-authoring R82,
+    // case-disclosures R2): the capture, the member who captured it (null when none), the findings resting on it, which of the two proofs
+    // (`timestamp`, `co_archive`) it still lacks, and the plane's own sentence when its timestamp was made late (null when it was not).
     const unconfRows = (pre.state === "ok" ? ((stepWith("not_co_attested") || {}).not_co_attested || []) : []).map(function (x) {
       return typeof x === "string" ? { capture: x, by: null, findings: [] } : x && typeof x === "object" ? x : null;
     }).filter(function (x) { return x && typeof x.capture === "string" && x.capture; });
     const unconfirmed = unconfRows.map(function (x) { return x.capture; });
-    const unconfBy = function (x) {
-      const me = view.me || {};
-      return typeof x.by === "string" && x.by ? (me.member && me.handle && String(x.by) === String(me.member) ? me.handle : x.by) : "";
+    const unconfBy = function (x) { return typeof x.by === "string" && x.by ? cs.memberName(x.by) : ""; };
+    // R51 (fix round 3, C40): the proof still absent, not the fixed sentence for both; an older entry that states none keeps it
+    const proofLine = function (x) {
+      const miss = Array.isArray(x.missing) ? x.missing : null;
+      const key = !miss || (miss.indexOf("timestamp") >= 0 && miss.indexOf("co_archive") >= 0) ? "screen.ceremony.conf.row.meta"
+        : !miss.length ? "screen.ceremony.conf.row.done" : miss.indexOf("co_archive") >= 0 ? "screen.ceremony.conf.row.missing.co_archive" : "screen.ceremony.conf.row.missing.timestamp";
+      return '<span class="meta" data-proof="' + (miss ? miss.join(" ") : "") + '">' + cs.w(key) + "</span>"
+        + (typeof x.late_words === "string" && x.late_words ? ' <span class="meta" data-late>' + x.late_words + "</span>" : "");
     };
     const already = pre.state === "ok" ? ((stepWith("not_co_attested") || {}).self_attested || []) : [];
     ui.confIds = unconfirmed;
@@ -216,9 +239,9 @@ export const CEREMONY = Object.freeze({
           const sha = x.capture, by = unconfBy(x);
           return cs.row("", '<span class="id" data-unconfirmed="' + cs.esc(sha) + '">' + cs.esc(String(sha).slice(0, 12)) + "</span>"
             + (by ? ' <span class="meta" data-capturer="' + cs.esc(sha) + '">' + cs.esc(by) + "</span>" : "")
-            + '<span class="meta">' + cs.w("screen.ceremony.conf.row.meta") + "</span>"
+            + proofLine(x)
             + (Array.isArray(x.findings) ? x.findings.filter(function (f) { return typeof f === "string" && f; }).map(function (f) {
-              return '<p class="mk-small" data-rests="' + cs.esc(sha) + '">' + cs.w("screen.ceremony.conf.intro2", { finding: f }) + "</p>";
+              return '<p class="mk-small" data-rests="' + cs.esc(sha) + '">' + cs.w("screen.ceremony.conf.intro2", { finding: nameOf(f) }) + "</p>";
             }).join("") : ""),
             cs.act("reattest", { data: { capture: sha } }));
         }).join("")) + '<p class="mk-note">' + cs.w("screen.ceremony.conf.retry.note") + "</p>"
@@ -256,7 +279,7 @@ export const CEREMONY = Object.freeze({
         // The sentence of facts: with the local day the photo was taken when the Photos step answers one (`photosOf`'s `dated`,
         // case-disclosures R33), else without it.
         const when = typeof ph.dated === "string" ? ph.dated : "";
-        const relied = (ph.relied_on_by || []).map(function (r) { return r && (r.target || r.member) || ""; }).filter(Boolean).join(", ");
+        const relied = (ph.relied_on_by || []).map(function (r) { return nameOf(r && (r.target || r.member) || ""); }).filter(Boolean).join(", ");
         const facts = when ? cs.w("screen.ceremony.photo.facts.dated", { by: ph.taken_by || "", date: { html: cs.date(when) }, findings: relied })
           : cs.w("screen.ceremony.photo.facts", { by: ph.taken_by || "", findings: relied });
         return '<div class="cs-sheet" data-photo="' + cs.esc(sha) + '"><p><b>' + cs.w("screen.ceremony.photo.name", { n: String(i + 1) }) + "</b> "
@@ -342,6 +365,9 @@ export const CEREMONY = Object.freeze({
               + (named === 1 ? '<p class="mk-note" data-unpublished="1">' + cs.w("screen.published.rests.on.the.council.minutes.one") + "</p>"
                 : named > 1 ? '<p class="mk-note" data-unpublished="' + named + '">' + cs.w("screen.published.rests.on.the.council.minutes", { count: String(named) }) + "</p>" : "");
           })
+          // R72 (fix round 3, C51): with no signing key in this browser, the key file the member made earlier is chosen here and loaded for
+          // the sitting (`cs.keyFile`); a device that holds a key is not asked for one
+          + (ui.keyHeld === false ? cs.field("ce-keyfile", "shell.signer.loadfile", { type: "file", help: "shell.signer.load" }) : "")
           // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`).
           + '<div class="mk-acts">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
             { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) + "</div>"
@@ -378,7 +404,7 @@ export const CEREMONY = Object.freeze({
   acts: [
     {
       // C49: "Which draft": the project's drafts read once more, and the ceremony opened on the one chosen (`pickDraft`).
-      op: "casedrafts", label: "act.casedrafts.label.ceremony",
+      op: "casedrafts", label: "act.casedrafts.label.ceremony", rereads: [],
       send: function (view, el, cs) {
         view.ui.pickDraft = String(cs.value("drafts-ceremony") || "");
         return { query: { project: String(view.subject || "").split("/")[0] } };
@@ -387,7 +413,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R3: "Check again": the checks read once more.
-      op: "publishpreflight", label: "act.publishpreflight.label.ceremony",
+      op: "publishpreflight", label: "act.publishpreflight.label.ceremony", rereads: [],
       send: function (view, el, cs) {
         const copy = view.parts.copyOf(view);
         if (!copy) return null;
@@ -400,7 +426,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R3: "See everything that will be disclosed".
-      op: "publishtensions", label: "act.publishtensions.label.ceremony",
+      op: "publishtensions", label: "act.publishtensions.label.ceremony", rereads: [],
       send: function (view) {
         const copy = view.parts.copyOf(view);
         if (!copy) return null;
@@ -414,21 +440,21 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R57: "See the details of this work": the four details, read again; the ceremony only lists them.
-      op: "casedetails", label: "act.owed_casedetails.label.ceremony",
+      op: "casedetails", label: "act.owed_casedetails.label.ceremony", rereads: [],
       send: function (view) { const copy = view.parts.copyOf(view); const c = copy && copy.case; return c && c.case_id ? { query: { case: c.case_id } } : null; },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetails", answer)) view.parts.forget(view); return { stay: true }; }, // D29
     },
     {
       // R51 (C6; DEC-377): "Ask for the confirmation again": a document held without a second confirmation is timestamped and archived
       // once more; the answer shows only that it existed by then.
-      op: "reattest", label: "act.reattest.label.ceremony",
+      op: "reattest", label: "act.reattest.label.ceremony", rereads: [],
       send: function (view, el) { return { body: { captureSha: el.dataset.capture } }; },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "reattest", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R51 (C6): the capturing member's own signed account of the capture (`bio-capture-account`, signed in `bio-ratify`), through
       // the signer the way the sign step signs.
-      op: "captureaccount", label: "act.captureaccount.label.ceremony",
+      op: "captureaccount", label: "act.captureaccount.label.ceremony", rereads: [],
       send: async function (view, el, cs) {
         const sha = el.dataset.capture, text = String(cs.value("ce-cap-" + el.dataset.index) || "").trim();
         if (!text) return { refuse: "refusal.ACCOUNT_NO_TEXT" };
@@ -441,7 +467,7 @@ export const CEREMONY = Object.freeze({
     {
       // R4: the areas the member marks on a photo (a person not part of a finding, a number plate, city staff at work
       // with a reason), or "nothing to obscure" (`areas: []`).
-      op: "obscuremark", label: "act.obscuremark.label.ceremony",
+      op: "obscuremark", label: "act.obscuremark.label.ceremony", rereads: [],
       send: function (view, el, cs) {
         const i = el.dataset.index;
         if (el.dataset.nothing === "1") return { query: { capture: el.dataset.capture }, body: { areas: [] } };
@@ -461,7 +487,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R4: a mark withdrawn with a reason, never erased.
-      op: "obscuremarkwithdraw", label: "act.obscuremarkwithdraw.label.ceremony", reasonField: "reason",
+      op: "obscuremarkwithdraw", label: "act.obscuremarkwithdraw.label.ceremony", rereads: [], reasonField: "reason",
       send: function (view, el, cs) {
         return { query: { capture: el.dataset.capture }, body: { mark: Number(el.dataset.mark), reason: String(cs.value(el.dataset.field) || "").trim() } };
       },
@@ -469,7 +495,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R5: the Ties step's confirmation prepares the edition for signing: `publish` with `tieAttested: true`.
-      op: "publish", label: "act.publish.label.ceremony",
+      op: "publish", label: "act.publish.label.ceremony", rereads: ["copy", "drafts"],
       send: function (view, el, cs) {
         const copy = view.parts.copyOf(view);
         if (!copy) return null;
@@ -492,7 +518,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R12, R13: "Sign and publish now": one sitting over every statement listed, sent as one `caseratify`.
-      op: "caseratify", label: "act.caseratify.label.ceremony",
+      op: "caseratify", label: "act.caseratify.label.ceremony", rereads: ["copy", "drafts"],
       refusals: {
         NO_ATTESTING_KEY: function (r, cs) { cs.set("nokey", true); return cs.w("screen.ceremony.refused.nokey"); },
         NO_SIGNERS: function (r, cs) { cs.set("nokey", true); return cs.w("screen.ceremony.refused.nokey"); },
@@ -509,7 +535,9 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
-        const signed = await cs.signer.sign(list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
+        const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
+        if (sat.refuse) return { refuse: sat.refuse };
+        const signed = sat.signed;
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== list.length) return { refuse: "signing.ceremony.declined" };
         return { body: { caseId: pr.caseId, edition: Number(pr.edition), expectedSha: doc.doc_sha, sig: signed.signatures[0],
           members: list.slice(1).map(function (x, i) { return { id: x.id, sha: x.sha, signature: signed.signatures[i + 1] }; }) } };
@@ -523,7 +551,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R12, R13: "Sign now and publish at <time>": the same sitting, the edition held until then.
-      op: "publishat", label: "act.publishat.label.ceremony",
+      op: "publishat", label: "act.publishat.label.ceremony", rereads: ["copy", "drafts"],
       refusals: {
         NO_ATTESTING_KEY: function (r, cs) { cs.set("nokey", true); return cs.w("screen.ceremony.refused.nokey"); },
         NO_SIGNERS: function (r, cs) { cs.set("nokey", true); return cs.w("screen.ceremony.refused.nokey"); },
@@ -542,7 +570,9 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
-        const signed = await cs.signer.sign(list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
+        const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
+        if (sat.refuse) return { refuse: sat.refuse };
+        const signed = sat.signed;
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== list.length) return { refuse: "signing.ceremony.declined" };
         return { body: { caseId: pr.caseId, edition: Number(pr.edition), expectedSha: doc.doc_sha, sig: signed.signatures[0], at: at,
           members: list.slice(1).map(function (x, i) { return { id: x.id, sha: x.sha, signature: signed.signatures[i + 1] }; }) } };
@@ -556,27 +586,29 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R15: no signing key in this browser: one made on this device by the signer kit, kept only when the member ticks.
-      op: "signerregisterown", label: "act.signerregisterown.label.ceremony",
+      op: "signerregisterown", label: "act.signerregisterown.label.ceremony", rereads: [],
       send: async function (view, el, cs) {
         const tick = cs.value("ce-keep");
         const keep = Array.isArray(tick) ? tick.includes("keep") : tick === true;
+        // R72 (fix round 3, C51): the member is told the key is being made and registered, until the work ends
+        view.parts.say(cs, view, "register", cs.w("screen.ceremony.registering"));
         // R72 (fix round 2, C51): the key this browser already holds for the member (kept, or loaded for this sitting) is the one
         // registered; a new one is made only when none is held
         const had = await cs.signer.held();
         if (had && had.held === true && typeof had.keyB64 === "string") return { body: { keyB64: had.keyB64 } };
         const k = await cs.signer.register({ keep: keep });
-        if (!k || k.ok !== true || typeof k.keyB64 !== "string") return { refuse: "signing.ceremony.declined" };
+        if (!k || k.ok !== true || typeof k.keyB64 !== "string") { view.parts.unsay(cs, view, "register"); return { refuse: "signing.ceremony.declined" }; }
         return { body: { keyB64: k.keyB64 } };
       },
       done: function (view, answer, cs) {
-        if (view.parts.refused(cs, view, "sign", answer)) return; // D29
+        if (view.parts.refused(cs, view, "sign", answer)) { view.parts.unsay(cs, view, "register"); return; } // D29
         view.ui.nokey = false; view.ui.keyHeld = true;
         view.parts.say(cs, view, "sign", cs.w("screen.ceremony.registered"));
       },
     },
     {
       // R15: a member who is not an owner asks the owners to sign (tasks R19).
-      op: "signrequest", label: "act.signrequest.label.ceremony",
+      op: "signrequest", label: "act.signrequest.label.ceremony", rereads: [],
       send: function (view) { const pr = view.ui.prepared; return pr ? { body: { case: pr.caseId, edition: Number(pr.edition) } } : null; },
       done: function (view, answer, cs) {
         if (!view.parts.refused(cs, view, "signrequest", answer)) view.parts.say(cs, view, "signrequest", cs.w("screen.ceremony.asked")); // D29
@@ -585,7 +617,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R14: "Move the time".
-      op: "publishatmove", label: "act.publishatmove.label.ceremony",
+      op: "publishatmove", label: "act.publishatmove.label.ceremony", rereads: ["copy", "drafts"],
       send: function (view, el, cs) {
         const at = view.parts.at(cs.value("ce-move-date"), cs.value("ce-move-time"));
         if (!at) return { refuse: "screen.ceremony.when.needed" };
@@ -599,7 +631,7 @@ export const CEREMONY = Object.freeze({
     },
     {
       // R14: "Cancel publishing".
-      op: "publishatcancel", label: "act.publishatcancel.label.ceremony",
+      op: "publishatcancel", label: "act.publishatcancel.label.ceremony", rereads: ["copy", "drafts"],
       send: function (view, el) { return { body: { case: el.dataset.case, edition: Number(el.dataset.edition) } }; },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "moved", answer)) return; // D29
