@@ -2055,11 +2055,15 @@ SCR.explore = c => { const st = ({ nocentre: 'b' })[c.v] || 'a'; const sel = v =
     row(grade('connection', 'C'), '<b class="mk-data">J. Ortega</b> → member of → <b class="mk-data">City Council</b> → <span class="mk-tag"><i>too common to walk</i></span> → <b class="mk-data">Coliseum lease</b><span class="meta">2 steps · weakest step C · since 2023 · a hub: shown, not walked through</span>', follow('who')) +
     row(grade('connection', 'D'), '<b class="mk-data">J. Ortega</b> → <i>declared, not evidenced</i> → <b class="mk-data">Bayline Properties</b> → leases to → <b class="mk-data">Coliseum lease</b><span class="meta">2 steps · weakest step D · no date · a lead, not a finding</span>', btn('stepsource', 'Attach a source to a declared step') + follow('who')) +
     row(grade('connection', 'B'), CH_PAID + '<span class="meta">3 steps · weakest step B · fiscal year 2024</span>', btn('exploreverify', 'Check this chain') + follow('money'))
-   ) + '<div style="margin-top:8px">' + gapm('undetermined', '<b>Not every connection was searched:</b> the search stopped at 4 steps and at 5,000 places visited, so there may be others.') + '</div>', { help: 'Every chain the search found between the two ends, not only the first. Each shows its steps, its weakest step and its dates; a step through a place too common to walk, or one declared with no source, is marked.' })}
+   ) + '<div style="margin-top:8px">' + gapm('undetermined', 'The explorer stopped after 2 seconds and shows what it found. More may exist.') + acts(btn('owed:explorecontinue K4403', 'Keep looking')) + '</div>', { help: 'Every chain the search found between the two ends, not only the first. Each shows its steps, its weakest step and its dates; a step through a place too common to walk, or one declared with no source, is marked.' })}
   ${sec('Chains that stop at a name the record lacks', sheet(row(grade('connection', 'C'), '<b class="mk-data">Bayline Properties</b> → <span class="mk-data">paid</span> → <b>' + ref('Not yet named', 'document', 'The record holds this organization but no name for it yet. Open it to see the documents that mention it.') + '</b><span class="meta">named in <span class="mk-data">2</span> documents only by an account number</span>', '')))}
   ${sec('A chain you built', sheet(
-    row(grade('connection', 'B'), CH_PAID + '<span class="meta">built by you, step by step · 3 steps · weakest step B</span><br><b>A shorter cited path joins the same two ends.</b> It has 2 steps, against your 3.', acts(btn('owed:exploreshorter DEC-409', 'See the shorter path'), btn('owed:exploreshorter DEC-409', 'Keep mine', { tone: 'quiet' })))
-   ), { help: 'Where you built a chain step by step, a shorter cited path between its two ends is shown beside it. Yours is never changed or replaced; you choose.' })}
+    row(grade('connection', 'B'), CH_PAID + '<span class="meta">built by you, step by step · 3 steps · weakest step B</span><br><b>Paths with fewer steps join the same two ends.</b> The best has 2 steps, against your 3.', acts(btn('owed:exploreshorter DEC-409', 'See the shorter paths'), btn('owed:exploreshorter DEC-409', 'Keep mine', { tone: 'quiet' }))) +
+    '<div class="meta" style="padding:6px 12px"><b>Evidenced paths</b></div>' +
+    row(grade('connection', 'B'), CH_AMEND + '<span class="meta">2 steps · weakest step B · January 12, 2024</span>', follow('document')) +
+    '<div class="meta" style="padding:6px 12px"><b>Leads</b></div>' +
+    row(grade('connection', 'D'), '<b class="mk-data">J. Ortega</b> → <i>declared, not evidenced</i> → <b class="mk-data">Bayline Properties</b> → leases to → <b class="mk-data">Coliseum lease</b><span class="meta">2 steps · weakest step D · <i>a lead, not evidence</i></span>', btn('stepsource', 'Attach a source to a declared step'))
+   ), { help: 'Where you built a chain step by step, paths with fewer steps between its two ends are shown beside it: evidenced paths first, then leads. Yours is never changed or replaced; you choose.' })}
   <div class="cs-part" data-state="later"><div class="sum"><span class="n">${I('hold')}</span><span class="t">Combined walks, such as who gave to the official whose department paid this vendor</span><span class="why">Comes in the first beta</span></div></div>
   <div class="cs-part" data-state="later"><div class="sum"><span class="n">${I('hold')}</span><span class="t">Ask the assistant to research this</span><span class="why">Comes in the first beta</span></div></div>
   ${acts(btn('promote', 'Open a question from this chain'))}
@@ -2829,18 +2833,46 @@ SCR.watching = c => ({ rail: 'add', title: 'Watched addresses', crumbs: ['Add', 
    alertconnect (the alpha, unassisted); registerask, registermatch, registerwatchpropose (after the alpha, drawn paused). */
 const regOff = h => h.replace(/<(button|input|textarea|select)\b/g, '<$1 disabled');
 SCR.registers = c => ({ rail: 'add', title: 'Public registers', crumbs: ['Add', 'Public registers'], main: `
-  ${h1('Public registers', 'Registers that public offices keep, which your team brings in whole, searches, cites and watches. None of it needs the assistant.')}
+  ${h1('Public registers', 'Registers that public offices keep, which your team brings in whole or in part, reads ahead, searches, cites and watches. None of it needs the assistant.')}
   ${sec('Registers your team holds', `<div style="display:grid;gap:12px">
    ${sheet(
-    row(I('document'), '<b class="mk-data">Oakland campaign finance (NetFile)</b><span class="meta">From <span class="mk-data">netfile.com</span> · brought in <span class="mk-data">October 14, 2026</span> · <span class="mk-data">48,210</span> rows · next check <span class="mk-data">October 28, 2026</span></span>', '') +
-    row(I('document'), '<b class="mk-data">Economic interest filings (Form 700)</b><span class="meta">From <span class="mk-data">fppc.ca.gov</span> · brought in <span class="mk-data">September 30, 2026</span> · <span class="mk-data">3,904</span> rows · next check <span class="mk-data">October 30, 2026</span></span>', ''))}
+    row(I('document'), '<b class="mk-data">Oakland campaign finance (NetFile)</b><span class="meta">From <span class="mk-data">netfile.com</span> · brought in <span class="mk-data">October 14, 2026</span> · <span class="mk-data">48,210</span> rows · next check <span class="mk-data">October 28, 2026</span></span><span class="meta">Kept with it, and what watching looks for: <span class="mk-data">names Martinez and Ortega, amounts over $500, filer 1234567</span></span>', '') +
+    row(I('document'), '<b class="mk-data">Economic interest filings (Form 700)</b><span class="meta">From <span class="mk-data">fppc.ca.gov</span> · read ahead for the team <span class="mk-data">September 30, 2026</span> · <span class="mk-data">3,904</span> rows · no project has asked yet</span><span class="meta">Read in whole: watching looks for any change</span>', ''))}
    ${acts(btn('owed:registerlist DEC-406', 'List the registers your team holds'))}
    <details class="mk-details"><summary>When your team holds none</summary>${note('Your team holds no register yet. Bring one in below.')}</details></div>`)}
+  ${sec('Registers we know', `<div style="display:grid;gap:12px">
+   ${note('Each is listed with where it comes from and how big it is.')}
+   ${sheet(
+    row(I('document'), '<b class="mk-data">Oakland campaign finance (NetFile)</b><span class="meta">From <span class="mk-data">City of Oakland Public Ethics Commission</span> · <span class="mk-data">netfile.com/oakland</span> · <span class="mk-data">212,480,000</span> bytes · <span class="mk-data">48,210</span> rows</span>', '') +
+    row(I('document'), '<b class="mk-data">California campaign finance (CAL-ACCESS)</b><span class="meta">From <span class="mk-data">California Secretary of State</span> · <span class="mk-data">cal-access.sos.ca.gov</span> · <span class="mk-data">1,940,000,000</span> bytes · <span class="mk-data">6,310,000</span> rows</span>', '') +
+    row(I('document'), '<b class="mk-data">Federal campaign finance (FEC)</b><span class="meta">From <span class="mk-data">Federal Election Commission</span> · <span class="mk-data">fec.gov/data</span> · <span class="mk-data">9,800,000,000</span> bytes · <span class="mk-data">41,000,000</span> rows</span>', '') +
+    row(I('document'), '<b class="mk-data">Economic interest filings (Form 700)</b><span class="meta">From <span class="mk-data">Fair Political Practices Commission</span> · <span class="mk-data">fppc.ca.gov</span> · <span class="mk-data">18,400,000</span> bytes · <span class="mk-data">3,904</span> rows</span>', '') +
+    row(I('document'), '<b class="mk-data">Oakland lobbyist directory</b><span class="meta">From <span class="mk-data">City of Oakland Public Ethics Commission</span> · <span class="mk-data">oaklandca.gov/lobbyists</span> · <span class="mk-data">1,200,000</span> bytes · <span class="mk-data">212</span> rows</span>', '') +
+    row(I('document'), '<b class="mk-data">State license files</b><span class="meta">From <span class="mk-data">California Department of Consumer Affairs</span> · <span class="mk-data">dca.ca.gov/data</span> · <span class="mk-data">730,000,000</span> bytes · <span class="mk-data">2,150,000</span> rows</span>', '') +
+    row(I('hold'), '<b class="mk-data">Company officers</b> <span class="mk-tag">Not in the alpha</span><span class="meta">From <span class="mk-data">California Secretary of State</span> · <span class="mk-data">bizfileonline.sos.ca.gov</span> · <span class="mk-data">3,100,000,000</span> bytes · <span class="mk-data">8,900,000</span> rows</span><span class="meta">Bringing in company officers in bulk comes in the beta.</span>', ''))}
+   <details class="mk-details"><summary>A register we know that is not listed</summary><div style="display:grid;gap:12px;margin-top:8px">
+    ${note('Give its name, its address and who publishes it. It is proposed for the list, and nothing is brought in.')}
+    ${field('mk-rgpname', 'Name of the register', '', { act: 'owed:registerpropose K4403' })}
+    ${field('mk-rgpurl', 'Its address (URL)', '', { act: 'owed:registerpropose K4403' })}
+    ${field('mk-rgpsrc', 'Who publishes it', '', { act: 'owed:registerpropose K4403' })}
+    ${acts(btn('owed:registerpropose K4403', 'Propose this register'))}</div></details></div>`)}
   ${sec('Bring in a register', `<div style="display:grid;gap:12px">
    ${note('Your team\'s Civicsmith keeps the whole register as a capture, with its source and the date. It reads the register in the background, and the team is told in the queue when it is ready.')}
-   ${choice('mk-rgwhich', 'Which register', ['Oakland campaign finance (NetFile)', 'California campaign finance (CAL-ACCESS)', 'Federal campaign finance (FEC)', 'Economic interest filings (Form 700)', 'Oakland lobbyist directory', 'State license files', 'Company officers', 'Another register: give its address below'], 'Oakland campaign finance (NetFile)', { act: 'owed:registerimport DEC-406', data: true })}
-   ${field('mk-rgaddr', 'The register\'s address, if it is not in the list', '', { act: 'owed:registerimport DEC-406', help: 'Where the register is published. Leave it empty to bring in the one chosen above.' })}
-   ${acts(btn('owed:registerimport DEC-406', 'Bring in this register', { tone: 'primary' }))}</div>`)}
+   ${note('Importing runs by fixed steps and never uses the assistant.')}
+   ${choice('mk-rgwhich', 'Which register', ['Oakland campaign finance (NetFile)', 'California campaign finance (CAL-ACCESS)', 'Federal campaign finance (FEC)', 'Economic interest filings (Form 700)', 'Oakland lobbyist directory', 'State license files'], 'Oakland campaign finance (NetFile)', { act: 'owed:registerimport DEC-406', data: true })}
+   <h3 class="mk-h3">Whole or in part</h3>
+   ${note('Leave every box empty to bring in the whole register.')}
+   ${note('Filled in from the project <b class="mk-data">Pothole repairs</b>; change it as you like.')}
+   ${field('mk-rgfnames', 'Names or organizations', 'Martinez, Ortega', { act: 'owed:registerfilter K4403' })}
+   ${field('mk-rgfmin', 'Smallest amount', '500', { act: 'owed:registerfilter K4403' })}${field('mk-rgfmax', 'Largest amount', '', { act: 'owed:registerfilter K4403' })}
+   ${field('mk-rgffrom', 'From this date', '', { act: 'owed:registerfilter K4403' })}${field('mk-rgfto', 'Up to this date', '', { act: 'owed:registerfilter K4403' })}
+   ${field('mk-rgfids', 'Filer numbers', '1234567', { act: 'owed:registerfilter K4403' })}
+   ${acts(btn('owed:registerdelta K4403', 'Work out what it would add'))}
+   ${sheet(row(I('document'), 'Compared with what your record holds: <span class="mk-data">3,128</span> new rows, <span class="mk-data">1,482,000</span> bytes, about <span class="mk-data">4 minutes</span> to read in.', ''))}
+   ${note('The filter is kept with the import and shown as what watching looks for.')}
+   ${note('Phone and address columns are left out as it arrives.')}
+   ${acts(btn('owed:registerimport DEC-406', 'Bring in this register', { tone: 'primary' }), btn('owed:registerpreread K4403', 'Read it ahead, for the team'))}
+   ${note('Reading it ahead keeps the register, whole or in the part you chose, as a resource for the team before any project asks.')}</div>`)}
   ${sec('Search the registers', `<div style="display:grid;gap:12px">
    ${field('mk-rgwho', 'Person or organization', '', { act: 'owed:registersearch DEC-406' })}
    ${field('mk-rgmin', 'Smallest amount', '', { act: 'owed:registersearch DEC-406' })}${field('mk-rgmax', 'Largest amount', '', { act: 'owed:registersearch DEC-406' })}
@@ -2848,16 +2880,21 @@ SCR.registers = c => ({ rail: 'add', title: 'Public registers', crumbs: ['Add', 
    ${choice('mk-rgin', 'In which register', ['Every register your team holds', 'Oakland campaign finance (NetFile)', 'Economic interest filings (Form 700)'], 'Every register your team holds', { act: 'owed:registersearch DEC-406', data: true })}
    ${acts(btn('owed:registersearch DEC-406', 'Search', { tone: 'primary' }))}
    ${sheet(row(I('document'), '<b class="mk-data">Rosa Martinez</b> · <span class="mk-data">$500</span> · <span class="mk-data">March 3, 2026</span><span class="meta">Oakland campaign finance (NetFile) · row <span class="mk-data">1,204</span> · brought in <span class="mk-data">October 14, 2026</span></span>', acts(btn('owed:registerrowcite DEC-406', 'Cite this row')) + follow('money')))}
-   ${note('A cited row carries its register, its source and the date it was brought in.')}</div>`)}
+   ${note('A cited row travels as a labeled extract of the file it came from.')}
+   ${sheet(row(I('document'), '<span class="meta">Cited as an extract of <span class="mk-data">netfile-oakland-2026-10-14.csv</span>, fingerprint <span class="mk-data">9f3a…c71e</span>, <span class="mk-data">October 14, 2026</span></span>', ''))}
+   ${sheet(row(I('document'), '<b class="mk-data">Jane Doe</b> · <span class="mk-data">$250</span> · <span class="mk-data">June 9, 2026</span><span class="meta">Federal campaign finance (FEC) · row <span class="mk-data">88,402</span> · brought in <span class="mk-data">October 14, 2026</span></span>', acts(btn('owed:registerrowcite DEC-406', 'Cite this row'))))}
+   ${note('Under 11 CFR 104.15, the names and addresses of contributors may not be sold or used to ask for contributions or for commercial purposes.')}
+   ${note('Rows from this register cannot be exported as a donor list.')}</div>`)}
   ${sec('Watched filers, licenses and dockets', `<div style="display:grid;gap:12px">
+   ${note('A watch starts by itself only for what a project has said it is interested in, and it is shown with that project and its interest.')}
    ${sheet(
-    row(I('clock'), '<b class="mk-data">Filer 1234567</b><span class="meta">Oakland campaign finance (NetFile) · watched since <span class="mk-data">October 2, 2026</span> · last changed <span class="mk-data">October 15, 2026</span></span>', acts(btn('owed:registerwatchstop DEC-406', 'Stop watching'))) +
+    row(I('clock'), '<b class="mk-data">Filer 1234567</b><span class="meta">Oakland campaign finance (NetFile) · watched for the project <b class="mk-data">Pothole repairs</b>, which has an interest in <span class="mk-data">contributions from road contractors</span></span><span class="meta"><b><span class="mk-data">3</span> changes since you last looked</b></span>', acts(btn('owed:registerwatchstop DEC-406', 'Stop watching'))) +
     row(I('clock'), '<b class="mk-data">Docket 4:26-cv-01234</b><span class="meta">CourtListener · watched since <span class="mk-data">October 9, 2026</span> · no change yet</span>', acts(btn('owed:registerwatchstop DEC-406', 'Stop watching'))))}
    <details class="mk-details"><summary>When your team watches none</summary>${note('Your team watches no filer, license or docket yet.')}</details>
    ${choice('mk-rgwreg', 'In which register', ['Oakland campaign finance (NetFile)', 'Economic interest filings (Form 700)', 'State license files', 'Federal court dockets (CourtListener)'], 'Oakland campaign finance (NetFile)', { act: 'owed:registerwatch DEC-406', data: true })}
    ${field('mk-rgwnum', 'Filer number, license number or docket number', '', { act: 'owed:registerwatch DEC-406' })}
    ${acts(btn('owed:registerwatch DEC-406', 'Watch it', { tone: 'primary' }))}
-   ${note('You are told once in your queue when it changes.')}</div>`)}
+   ${note('Each change to a watch is one item in your queue, with how many changes there have been since you last looked.')}</div>`)}
   ${sec('Alerts from outside services', `<div style="display:grid;gap:12px">
    ${note('CourtListener sends an alert when a federal court docket changes. It needs your team\'s own key, and a few alerts are free.')}
    ${field('mk-rgkey', 'Your team\'s CourtListener key', '', { act: 'owed:alertconnect DEC-406', help: 'It is sealed when you give it and never shown again, to you or to anyone.' })}

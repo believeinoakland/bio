@@ -4089,6 +4089,11 @@
      ]
     },
     {
+     "op": "owed:explorecontinue K4403",
+     "label": "Keep looking",
+     "status": "owed"
+    },
+    {
      "op": "owed:followfrom DEC-409",
      "label": "Follow this item into another dimension",
      "status": "owed"
@@ -5803,6 +5808,26 @@
     {
      "op": "owed:registerwatchpropose DEC-406",
      "label": "Propose watches",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerfilter K4403",
+     "label": "Choose which rows of a register to bring in",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerdelta K4403",
+     "label": "See what an import would add",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerpreread K4403",
+     "label": "Read a register ahead, for the team",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerpropose K4403",
+     "label": "Propose a register that is not listed",
      "status": "owed"
     },
     {
