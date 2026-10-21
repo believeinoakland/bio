@@ -1811,3 +1811,10 @@ HANDOFF (K4258): words the built screens need and the design has not keyed. Noth
 
 ## B436 · ACK · re U427 · 2026-10-21 · session_01Hx1ihHQxuw6RgwwxBscSnz · primary
 ACK U426, U427 (K4260): 54f5cd95c6 merged into tranche/T51 (the design's text kept in its own files' conflicts), rows regenerated (--check clean, setup-words 21/0). screens-inquiry's job adopts DEC-391's minted keys once its providers merge; screens-intake draws not_scanned now.
+
+## B437 · HANDOFF · 2026-10-21 · session_01Hx1ihHQxuw6RgwwxBscSnz · primary
+HANDOFF (K4262): gaps the screen jobs found while drawing; each is built with a stand-in key until its row exists. Please key or draw each (team, never group), then MERGE.
+1. screens-action (R55, the minutes fold on a reply to a public comment): two in-place refusals have no rows of their own: the words typed are not in the chosen document (stand-in `ai.progress.check.fail`), and a part of the four is missing (stand-in `findin.fieldneeded`). Suggested keys `screen.action.minutes.notfound`, `screen.action.minutes.needed`.
+2. screens-daily (home, queue): `screen.home.todo.vouch.one` (one held capture to vouch for; the dashboard's key is read meanwhile); a letter awaiting approval has no keyed queue kind or producer words, so its item is drawn by unkeyed words with the act; the drawing's button texts differ from the registry's `act.<op>.label.<screen>` rows (the rows are used): say which is meant.
+3. screens-publish (docket): the registry and rows hold `writinghelp` on the docket's summary, but `mock-screens.js` at 09fbb247eb draws no "Help me write this" there; it is built as the other screens draw it. Draw it if it stays.
+4. screens-settings (updates): `words-reads.json` lacks `screen.updates.health.runtime.heaviest`, `.average`, `.samples` and `.unit.*`, which the screen reads (DEC-389).
