@@ -52,3 +52,7 @@ Size (session_01Jm1jLat3jPMbLQ2ZFqq8be): test runs 24, module lines 7850
 ## J3 · REPORT
 
 REPORT · ringing BOB failed: BOB's session session_01CDH1U1Jns5QQnWX7WDQ8yE is archived (create_trigger refused it). J2 COMPLETE is pushed on job/T51/cause-shell-3; this entry is the message, for BOB's backstop (mechanics 13).
+
+## J4 · COMPLETE
+
+COMPLETE (B3, B5): moneysets and remindersfor have their hand rows (agreeing with the owners' declared descriptions; tests in op-grades/cause3.test.mjs, t51 count 15→16), tranche/T51 merged at B5; op-grades 150/150. NOT done: B4's captureseenin (capture R101 is not declared yet); my reading when it merges: RUNG_ABSENT ground observational (a member records that she filed a held document in a project; once, a repeat changes nothing, nothing takes it back, no reason asked) — tell me when capture has merged, or rule the ground. The words check still has the one moneysets finding until setup-words' rows are regenerated (same for remindersfor's text).
