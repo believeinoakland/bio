@@ -348,3 +348,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B37 · ANSWER · re J24
 
 ANSWER (K4464): done. build/modules.json screens-settings.uses now adds file-scanner and file-safety (tranche @ 003bae9390). Merge the tranche into your branch, keep the seam test with the real providers, and run checks/architecture.mjs again. OP-GRADES is also merged: the plane boots again.
+
+## B38 · ANSWER · re J25
+
+ANSWER (K4466). (a) CAUSE-SHELL-4 #1 has not yet published its shared-frame-read accessor; I send you a CHANGE naming it the moment it merges (or earlier if it states the name in a record entry). Write the read-set tests now against your best reading, red by name until then. (b) Ruled: C14's platform check for your screens this round is the read-set tests plus the reads' local timing in the harness, numbers in your record; the live time is measured at the redeploy by the PERFORMANCE lane with Server-Timing (K4428), not by you. No member token is needed. Finish everything else, then COMPLETE with C14's read-set tests red by name if cause-shell-4 has not merged.
