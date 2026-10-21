@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01CbTTqezcoRxwxDi7p8kyVT · depth 2 · COMPLETE · handled B8
+**Status** · session_01T3TLLsdGuDoX11D81FT2G3 · depth 2 · COMPLETE · handled B9
 
 ## J1 · COMPLETE
 
@@ -228,3 +228,24 @@ Size (session_01CbTTqezcoRxwxDi7p8kyVT): test runs 6, module lines 4219
 - `checks/format.mjs`: 0 failures. `architecture.mjs capture`: 0. `coverage.mjs capture`: 52 of 52. `words.mjs capture`: 0. `ownership.mjs capture origin/tranche/T51 job/T51/capture`: 6 files, 0 failures.
 
 Size (session_01CbTTqezcoRxwxDi7p8kyVT): test runs 11, module lines 4066
+
+## J9 · COMPLETE
+
+**COMPLETE** for B9 (K4337, K4334) · commit on `job/T51/capture`.
+
+**Entries applied**
+1. **R77, `format` (DEC-394 (3a)).** The full held row (archive rows included) carries `format`: the format id the document's own register document (`data/provenance.json`) profiles the row's capture as, `null` when it names none or there is no register document. The picker row carries none. Test `fix3-t51.test.mjs` (R77), control: unregistered/format-less rows answer null; picker has no key. `held-golden.json` regenerated: diff is only added `format` keys.
+2. **`heldcaptures` fields (K4334).** `DECLARED_OPS.heldcaptures` already accepts `fields` and `state`; no change needed. A new test proves the arm reads both as declared (picker rows; the three states) and refuses a value outside either, naming it.
+3. **K4208, census ops I own.** Declared `heldat` (machineClasses admin, probe; requires one of address/sha256), `capturegrade` (requires capture|captureSha) and `captureaccounts` (requires nothing: an absent digest reads as an unknown one, R69). `declared-ops.test.mjs`, with `declaredOpHolds`. (`opencaptures` is acquisition's.)
+
+**Proposed requirement lines (BOB writes them)**
+- Amend **R77**: *The full held row (not the picker's) also answers `format`: the register's format id for the row's capture as the document's register document holds it, `null` when it holds none.*
+- Amend **R97**: *its op list gains `heldat`, `capturegrade`, `captureaccounts`; `captureaccounts` requires nothing because an absent digest answers as an unknown one (R69).*
+
+**Deferred**: none. **Found in other modules**: none.
+
+**Tests and checks**
+- capture suite + cap13 + d57: 230/230. Users (screens-inquiry/intake/daily/settings/investigate/action/publish: 1915/1915; capture-requests, ratification, instance-setup, affordances, op-declarations, op-grades, interface-shell, wizard-scripts, extraction, doorbell: 1778 pass, 0 fail).
+- format 0; architecture capture 0; coverage 52 of 52; words capture 0 failures; ownership 6 files, 0 failures.
+
+Size (session_01T3TLLsdGuDoX11D81FT2G3): test runs 8, module lines 4079

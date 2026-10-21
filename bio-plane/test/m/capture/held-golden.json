@@ -25,6 +25,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1000,
+    "format": "zip",
     "whole": null
    },
    {
@@ -52,6 +53,7 @@
     "actor": "member:m2",
     "retrieved": null,
     "bytes": 1028,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -79,6 +81,7 @@
     "actor": "m1",
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1001,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -104,6 +107,7 @@
     "actor": null,
     "retrieved": "2026-01-03T00:00:00Z",
     "bytes": 1002,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -131,6 +135,7 @@
     "actor": "m1",
     "retrieved": "2026-01-28T00:00:00Z",
     "bytes": 1027,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -156,6 +161,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-03T00:00:00Z",
     "bytes": 1030,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -187,6 +193,7 @@
     "actor": null,
     "retrieved": "2026-01-05T00:00:00Z",
     "bytes": 1032,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -214,6 +221,7 @@
     "actor": "m1",
     "retrieved": "2026-01-06T00:00:00Z",
     "bytes": 1033,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -241,6 +249,7 @@
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
     "bytes": 1003,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -266,6 +275,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
     "bytes": 1006,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -293,6 +303,7 @@
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
     "bytes": 1031,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -318,6 +329,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
     "bytes": 1034,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -349,6 +361,7 @@
     "actor": null,
     "retrieved": "2026-01-09T00:00:00Z",
     "bytes": 1008,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -374,6 +387,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-09T00:00:00Z",
     "bytes": 1036,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -401,6 +415,7 @@
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
     "bytes": 1009,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -424,6 +439,7 @@
     "actor": "m1",
     "retrieved": null,
     "bytes": 1007,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -449,6 +465,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-11T00:00:00Z",
     "bytes": 1010,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -474,6 +491,7 @@
     "actor": null,
     "retrieved": "2026-01-11T00:00:00Z",
     "bytes": 1038,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -499,6 +517,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-13T00:00:00Z",
     "bytes": 1012,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -526,6 +545,7 @@
     "actor": "m1",
     "retrieved": "2026-01-14T00:00:00Z",
     "bytes": 1013,
+    "format": "zip",
     "whole": null
    },
    {
@@ -547,6 +567,7 @@
     "actor": null,
     "retrieved": null,
     "bytes": 1014,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -574,6 +595,7 @@
     "actor": "m1",
     "retrieved": "2026-01-12T00:00:00Z",
     "bytes": 1039,
+    "format": "zip",
     "whole": null
    },
    {
@@ -605,6 +627,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-17T00:00:00Z",
     "bytes": 1016,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -630,6 +653,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-19T00:00:00Z",
     "bytes": 1018,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -661,6 +685,7 @@
     "actor": null,
     "retrieved": "2026-01-21T00:00:00Z",
     "bytes": 1020,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -684,6 +709,7 @@
     "actor": "m1",
     "retrieved": null,
     "bytes": 1021,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -711,6 +737,7 @@
     "actor": "m1",
     "retrieved": "2026-01-20T00:00:00Z",
     "bytes": 1019,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -736,6 +763,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-23T00:00:00Z",
     "bytes": 1022,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -761,6 +789,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-25T00:00:00Z",
     "bytes": 1024,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -788,6 +817,7 @@
     "actor": "m1",
     "retrieved": "2026-01-26T00:00:00Z",
     "bytes": 1025,
+    "format": "pdf",
     "whole": null
    }
   ],
@@ -824,6 +854,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1000,
+    "format": "zip",
     "whole": null,
     "standing": "collected"
    },
@@ -852,6 +883,7 @@
     "actor": "member:m2",
     "retrieved": null,
     "bytes": 1028,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -880,6 +912,7 @@
     "actor": "m1",
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1001,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -907,6 +940,7 @@
     "actor": null,
     "retrieved": "2026-01-02T00:00:00Z",
     "bytes": 1029,
+    "format": "pdf",
     "whole": null,
     "standing": "verified",
     "vouched": {
@@ -937,6 +971,7 @@
     "actor": null,
     "retrieved": "2026-01-03T00:00:00Z",
     "bytes": 1002,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -965,6 +1000,7 @@
     "actor": "m1",
     "retrieved": "2026-01-28T00:00:00Z",
     "bytes": 1027,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -991,6 +1027,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-03T00:00:00Z",
     "bytes": 1030,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1023,6 +1060,7 @@
     "actor": null,
     "retrieved": "2026-01-05T00:00:00Z",
     "bytes": 1032,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1050,6 +1088,7 @@
     "actor": null,
     "retrieved": "2026-01-06T00:00:00Z",
     "bytes": 1005,
+    "format": "pdf",
     "whole": null,
     "standing": "verified",
     "vouched": {
@@ -1082,6 +1121,7 @@
     "actor": "m1",
     "retrieved": "2026-01-06T00:00:00Z",
     "bytes": 1033,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1110,6 +1150,7 @@
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
     "bytes": 1003,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1136,6 +1177,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
     "bytes": 1006,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1164,6 +1206,7 @@
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
     "bytes": 1031,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1190,6 +1233,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-07T00:00:00Z",
     "bytes": 1034,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1222,6 +1266,7 @@
     "actor": null,
     "retrieved": "2026-01-09T00:00:00Z",
     "bytes": 1008,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1248,6 +1293,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-09T00:00:00Z",
     "bytes": 1036,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1276,6 +1322,7 @@
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
     "bytes": 1009,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1300,6 +1347,7 @@
     "actor": "m1",
     "retrieved": null,
     "bytes": 1007,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1326,6 +1374,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-11T00:00:00Z",
     "bytes": 1010,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1349,6 +1398,7 @@
     "actor": null,
     "retrieved": null,
     "bytes": 1035,
+    "format": "pdf",
     "whole": null,
     "standing": "verified",
     "vouched": {
@@ -1379,6 +1429,7 @@
     "actor": null,
     "retrieved": "2026-01-11T00:00:00Z",
     "bytes": 1038,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1405,6 +1456,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-13T00:00:00Z",
     "bytes": 1012,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1433,6 +1485,7 @@
     "actor": "m1",
     "retrieved": "2026-01-14T00:00:00Z",
     "bytes": 1013,
+    "format": "zip",
     "whole": null,
     "standing": "collected"
    },
@@ -1460,6 +1513,7 @@
     "actor": null,
     "retrieved": "2026-01-12T00:00:00Z",
     "bytes": 1011,
+    "format": "pdf",
     "whole": null,
     "standing": "verified",
     "vouched": {
@@ -1486,6 +1540,7 @@
     "actor": null,
     "retrieved": null,
     "bytes": 1014,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1514,6 +1569,7 @@
     "actor": "m1",
     "retrieved": "2026-01-12T00:00:00Z",
     "bytes": 1039,
+    "format": "zip",
     "whole": null,
     "standing": "collected"
    },
@@ -1546,6 +1602,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-17T00:00:00Z",
     "bytes": 1016,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1573,6 +1630,7 @@
     "actor": null,
     "retrieved": "2026-01-18T00:00:00Z",
     "bytes": 1017,
+    "format": "pdf",
     "whole": null,
     "standing": "verified",
     "vouched": {
@@ -1603,6 +1661,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-19T00:00:00Z",
     "bytes": 1018,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1635,6 +1694,7 @@
     "actor": null,
     "retrieved": "2026-01-21T00:00:00Z",
     "bytes": 1020,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1659,6 +1719,7 @@
     "actor": "m1",
     "retrieved": null,
     "bytes": 1021,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1687,6 +1748,7 @@
     "actor": "m1",
     "retrieved": "2026-01-20T00:00:00Z",
     "bytes": 1019,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1713,6 +1775,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-23T00:00:00Z",
     "bytes": 1022,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1739,6 +1802,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-25T00:00:00Z",
     "bytes": 1024,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1767,6 +1831,7 @@
     "actor": "m1",
     "retrieved": "2026-01-26T00:00:00Z",
     "bytes": 1025,
+    "format": "pdf",
     "whole": null,
     "standing": "collected"
    },
@@ -1794,6 +1859,7 @@
     "actor": null,
     "retrieved": "2026-01-24T00:00:00Z",
     "bytes": 1023,
+    "format": "pdf",
     "whole": null,
     "standing": "verified",
     "vouched": {
@@ -1841,6 +1907,7 @@
     "actor": "member:m2",
     "retrieved": "2026-01-05T00:00:00Z",
     "bytes": 1004,
+    "format": "pdf",
     "whole": null,
     "set_aside": {
      "reason": "wrong page",
@@ -1873,6 +1940,7 @@
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
     "bytes": 1037,
+    "format": "pdf",
     "whole": null,
     "set_aside": {
      "reason": "wrong page",
@@ -1905,6 +1973,7 @@
     "actor": "m1",
     "retrieved": "2026-01-16T00:00:00Z",
     "bytes": 1015,
+    "format": "pdf",
     "whole": null,
     "set_aside": {
      "reason": "wrong page",
@@ -1935,6 +2004,7 @@
     "actor": null,
     "retrieved": "2026-01-27T00:00:00Z",
     "bytes": 1026,
+    "format": "zip",
     "whole": null,
     "set_aside": {
      "reason": "wrong page",
@@ -1978,6 +2048,7 @@
     "actor": "m1",
     "retrieved": "2026-01-06T00:00:00Z",
     "bytes": 1033,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -2005,6 +2076,7 @@
     "actor": "m1",
     "retrieved": "2026-01-10T00:00:00Z",
     "bytes": 1009,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -2032,6 +2104,7 @@
     "actor": "m1",
     "retrieved": "2026-01-28T00:00:00Z",
     "bytes": 1027,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -2059,6 +2132,7 @@
     "actor": "m1",
     "retrieved": "2026-01-04T00:00:00Z",
     "bytes": 1003,
+    "format": "pdf",
     "whole": null
    },
    {
@@ -2086,6 +2160,7 @@
     "actor": "m1",
     "retrieved": "2026-01-12T00:00:00Z",
     "bytes": 1039,
+    "format": "zip",
     "whole": null
    },
    {
@@ -2109,6 +2184,7 @@
     "actor": "m1",
     "retrieved": null,
     "bytes": 1021,
+    "format": "pdf",
     "whole": null
    }
   ],
