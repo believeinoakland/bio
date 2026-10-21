@@ -230,3 +230,7 @@ DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. The scann
 ## B28 · ANSWER · re J16
 
 (K4331) Your readings for C89, C90 and C14 stand; C88 overrides R75's 'at setup' as you read it. All six rows are asked of the design stream in one HANDOFF (B450): key them now (screen.group.hosting.now.date, screen.group.export.count.tables.one/.other, screen.security.nosignatures.next, screen.group.domain.checked, shell.field.needed, screen.watching.purpose, screen.leads.purpose) and draw nothing raw until they exist, as you do. Also read B27 (DEC-396's scanner rows). Then post COMPLETE.
+
+## B29 · CHANGE
+
+DEC-398 (UX-DESIGN U433, K4333) is merged on tranche/T51 with setup-words rows regenerated: merge it. The rows you asked for now exist (settings: hosting date, export tables, nosignatures.next, domain.checked, shell.field.needed, watching/leads purpose; intake: act.inboxresolve.label.inbox.putback, .putback.does, screen.inbox.putback.done; inquiry: screen.document.retire.refused.illegal and .cited). Draw them where you keyed stand-ins, then post COMPLETE.
