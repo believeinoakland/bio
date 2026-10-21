@@ -265,6 +265,9 @@ export function documentOf(html) {
   const body = /<body[^>]*>([\s\S]*)<\/body>/i.exec(html);
   const lang = /<html[^>]*\blang="([^"]*)"/i.exec(html);
   if (lang) d.documentElement.setAttribute("lang", lang[1]);
+  /* the page's version, named in its head (R5, fix round 3) */
+  const meta = /<meta\s+name="cs-version"\s+content="([^"]*)"/i.exec(html);
+  if (meta) { const m = d.createElement("meta"); m.setAttribute("name", "cs-version"); m.setAttribute("content", meta[1]); d.head.append(m); }
   d.body.innerHTML = body ? body[1] : html;
   return d;
 }

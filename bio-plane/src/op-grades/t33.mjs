@@ -211,6 +211,7 @@ export const T33_NON_ACTS = {
   moneysummable: R("whether named facts may be summed, or the first dimension that differs"),
   moneyreconcile: R("whether two money facts are consistent, or each dimension that differs"),
   moneyset: R("one money set's inclusions, exclusions and open proposals, each with its reason"),
+  moneysets: R("the money sets that concern an id, such as a project's trails, newest first, bounded"),   // money R28 (fix round 3, B3)
   committedagainstpaid: R("a contract's committed and paid facts with their sums and the difference, never a verdict"),
   authoritychain: R("the chain of authorising events toward the event a fact concerns, bounded"),
   /* money-checks */

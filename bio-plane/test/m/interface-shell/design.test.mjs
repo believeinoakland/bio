@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { interfacePage, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
 import { fitSend, boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
@@ -101,7 +101,7 @@ test("R56 the page links civicsmith.css and then shell.css, both before its own 
   for (const [c, reader] of Object.entries(HOOK_CLASSES)) assert.ok(typeof reader === "string" && reader.length > 10, c + " names what reads it");
   /* the shell's own program draws only defined classes */
   const defined = stylesheetClasses(ASSET_FILES["civicsmith.css"].body, ASSET_FILES["shell.css"].body, styleOf(html));
-  const shellOwn = classLiterals(/<script[^>]*>([\s\S]*)<\/script>/.exec(interfacePage([]))[1]);
+  const shellOwn = classLiterals(interfaceScript([]));
   for (const c of shellOwn) assert.ok(defined.has(c) || Object.hasOwn(HOOK_CLASSES, c), c);
   assert.ok(shellOwn.size > 30);
 });
