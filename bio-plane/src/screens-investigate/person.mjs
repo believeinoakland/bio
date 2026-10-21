@@ -11,6 +11,7 @@
 import { PARTS } from "./parts.mjs";
 import { GRAPH_SHARED, FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
+import { rereading } from "./rereads.mjs";
 
 /* R41: the subject read is `entity` (`found: false` the absence); `person` and `samepersoncandidates` are read (by `PARTS.later`,
    once the entity says its kind) only for a person or an organization, and again after each act (`view.ui.pn`). */
@@ -21,7 +22,7 @@ function reads(view) {
     people: { op: "peopledirectory", query: { limit: "200" } },
     entity: { op: "entity", query: { id }, subject: true, empty: (v) => !v || v.found === false },
     naming: { op: "readingname", query: { entity: id } },
-    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
 }
 
@@ -53,7 +54,6 @@ function render(cs, view) {
     const r = rows.find((x) => x && x.capture && x.capture.sha256 === sha);
     return (r && r.title) || "";
   };
-  const handleOf = (by) => String(by || "").replace(/^member:/, "");
   /* each item cited, dated and graded: its passage a reference to the capture, its grade one mark */
   const cite = (c, label) => (c && (c.captureSha || c.capture_sha)
     ? P.refOf(cs, c.captureSha || c.capture_sha, label || docTitle(c.captureSha || c.capture_sha) || cs.w(S + "source"), [c.extent && c.extent.page !== undefined ? cs.w(S + "page", { page: String(Number(c.extent.page) + 1) }) : ""], "capture")
@@ -70,7 +70,7 @@ function render(cs, view) {
   const aliasSec = () => {
     const aliases = ((ent && ent.aliases) || []).filter((a) => !a.withdrawn);
     const aliasRow = (a) => cs.row("", `<b>${cs.esc(a.alias)}</b>`,
-      `<span class="mk-small">${/^member:/.test(String(a.declared_by || "")) ? cs.w("entity.alias.by", { who: cs.esc(handleOf(a.declared_by)), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
+      `<span class="mk-small">${/^member:/.test(String(a.declared_by || "")) ? cs.w("entity.alias.by", { who: cs.esc(P.who(cs, a.declared_by)), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
       + (!a.canonical && /^member:/.test(String(a.declared_by || "")) ? cs.act("aliaswithdraw", { label: "act.owed_aliaswithdraw.label.person", data: { alias: a.alias } }) : ""));
     return cs.sec("entity.alias.title", (aliases.length ? cs.sheet(aliases.map(aliasRow).join("")) : "")
       + cs.field("person-alias", org ? "entity.alias.label.org" : "entity.alias.label", { help: "entity.alias.help" })
@@ -82,7 +82,7 @@ function render(cs, view) {
       const other = r.direction === "in" ? r.from_entity : r.to_entity;
       const kind = ["member_of", "proxy_for", "overlaps"].includes(r.relation) ? r.relation : "overlaps";
       return cs.row("", `<b>${cs.w("entity.relation." + kind)}</b> · ${P.refOf(cs, other, nameOf(other), [])}`,
-        `<span class="mk-small">${cs.w("entity.relation.declared", { who: cs.esc(handleOf(r.declared_by)), date: cs.date(r.at || "", { year: true }), where: cs.esc(String(r.citation || "")) })}</span>`
+        `<span class="mk-small">${cs.w("entity.relation.declared", { who: cs.esc(P.who(cs, r.declared_by)), date: cs.date(r.at || "", { year: true }), where: cs.esc(String(r.citation || "")) })}</span>`
         + (r.justification ? ` <span class="rec">${cs.esc(r.justification)}</span>` : ""));
     };
     return cs.sec("entity.relation.title", (rels.length ? cs.sheet(rels.map(relRow).join("")) : `<p class="cs-state" data-state="empty">${cs.w(noneKey)}</p>`)
@@ -181,7 +181,7 @@ function render(cs, view) {
   const goneLine = (f) => {
     const w = f.withdrawn || {};
     return cs.row(gradeOf(f.grade), `<b>${kindWord(f)}</b> · ${cs.esc(f.value)}`,
-      `<span class="mk-small">${cs.w(S + "facts.withdrawn.by", { name: cs.esc(String(w.handle || w.by_handle || handleOf(w.by))), date: cs.date(w.at || "", { year: true }), reason: cs.esc(String(w.reason || "")) })}</span>`);
+      `<span class="mk-small">${cs.w(S + "facts.withdrawn.by", { name: cs.esc(String(w.handle || w.by_handle || P.who(cs, w.by))), date: cs.date(w.at || "", { year: true }), reason: cs.esc(String(w.reason || "")) })}</span>`);
   };
   const removable = standing.filter((f) => f.fact_id);
   const factsInner = cs.state(d, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "")
@@ -267,7 +267,7 @@ function render(cs, view) {
     const because = bases.includes(c.basis) ? cs.w(S + "same.because" + sfx, { grade: cs.esc(c.grade || ""), basis: cs.w(S + "basis.row." + c.basis) }) : cs.esc(c.why || "");
     return cs.row(cs.grade("subject", c.grade || ""),
       `<b>${cs.w(orgPage ? S + "claim.kind." + kind + ".org" : "label.identityclaimkinds." + kind)}</b> · ${P.refOf(cs, otherId, nameOf(otherId), [])} · ${because}`
-      + ` <span class="mk-small">${cs.w(S + "claim.by", { by: cs.esc(handleOf(c.by)), date: cs.date(c.at || "") })}</span>`
+      + ` <span class="mk-small">${cs.w(S + "claim.by", { by: cs.esc(P.who(cs, c.by)), date: cs.date(c.at || "") })}</span>`
       + (c.why && bases.includes(c.basis) ? ` <span class="rec">${cs.esc(c.why)}</span>` : ""),
       `<details class="mk-details" open><summary>${cs.w("act.withdrawidentityclaim.label.person")}</summary><p class="mk-small">${cs.w("act.withdrawidentityclaim.does")}</p>`
         + cs.field("person-wd-reason-" + i, S + "claim.withdraw.reason", { area: true, rec: true })
@@ -309,7 +309,7 @@ function render(cs, view) {
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
   { op: "explore", label: "act.explore.label.person",
     send(view, el, cs) {
       if (el && el.dataset && el.dataset.node) {
@@ -457,7 +457,7 @@ const acts = [
       const field = a.field === "basis" ? "person-naming-basis" : "person-rel-why";
       cs.fill(field, String(a.text || ""));
     } },
-];
+], ["entity", "naming", "people"]);
 
 const PERSON_KEYS = [
   "screen.person.g.cited", "screen.person.g.declared", "screen.person.g.hunch", "screen.person.g.nosource", "screen.person.connections",

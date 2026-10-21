@@ -19,7 +19,6 @@ export const TIMELINE_PARTS = Object.freeze({
       const threads = Array.isArray(m.threads) ? m.threads : [];
       const last = threads.length ? threads[threads.length - 1] : null;
       const words = { always: "always", usually: "usually", sometimes: "sometimes", unless_exception: "unless", never: "never" };
-      const handle = (h) => String(h || "").replace(/^member:/, "");
       const labelOf = (st, i) => `${i + 1} · ${cs.esc(st.label || st.stage_key)}`;
       const titleOf = (sha) => {
         const rows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
@@ -30,7 +29,7 @@ export const TIMELINE_PARTS = Object.freeze({
         const title = titleOf(d.capture_sha) || (d.bundle_id ? "" : "");
         const ref = P.refOf(cs, d.bundle_id || d.capture_sha, title || P.plain(cs, S + "source"), [], d.bundle_id ? "document" : "capture");
         const dated = d.own_date && d.own_date.value
-          ? cs.w("progression.threadedby", { date: cs.date(String(d.own_date.value).slice(0, 10), { year: true }), who: cs.esc(handle(last && last.threaded_by)), when: cs.date(String((last && last.at) || "").slice(0, 10), { year: true }) })
+          ? cs.w("progression.threadedby", { date: cs.date(String(d.own_date.value).slice(0, 10), { year: true }), who: cs.esc(P.who(cs, last && last.threaded_by)), when: cs.date(String((last && last.at) || "").slice(0, 10), { year: true }) })
           : cs.mark("gap", "undetermined", { reason: d.own_date_why || "" });
         return `${ref} <span class="mk-small">${dated}</span>`;
       };
@@ -64,8 +63,8 @@ export const TIMELINE_PARTS = Object.freeze({
         + P.actSec(cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.steps" }), "instance")
         + cs.sec("progression.chain", chain, { help: S + "tip.sure" })
         + (findings.length ? cs.sec("progression.findings", cs.sheet(findings.map(findingRow).join("")), { help: S + "tip.findings" }) : "")
-        + fold("progression.thread", cs.choice("pm-thread-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-thread-doc") + cs.act("thread", { label: "progression.thread" }))
-        + fold("progression.discharge", cs.choice("pm-dis-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-dis-doc")
+        + fold("progression.thread", cs.choice("pm-thread-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-thread-doc", { project }) + cs.act("thread", { label: "progression.thread" }))
+        + fold("progression.discharge", cs.choice("pm-dis-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-dis-doc", { project })
           + cs.field("pm-dis-reason", "entity.relation.why", { area: true, rec: true }) + cs.field("pm-dis-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
           + cs.act("discharge", { label: "progression.discharge" }))
         + (findingOpts.length ? fold("progression.setaside", cs.choice("pm-aside-finding", "progression.findings", findingOpts, {})
@@ -81,9 +80,8 @@ export const TIMELINE_PARTS = Object.freeze({
       /* R49: a progression the record does not hold is the empty state with the form that defines it beside it */
       if (!v || v.found === false) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>` + view.parts.defineFold(cs);
       const stages = Array.isArray(v.stages) ? v.stages : [];
-      const handle = (h) => String(h || "").replace(/^member:/, "");
       const words = { always: "always", usually: "usually", sometimes: "sometimes", unless_exception: "unless", never: "never" };
-      const sub = (n, by, at) => cs.w(S + "progression.sub", { what: cs.esc(v.label || ""), n: String(n), name: cs.esc(handle(by)), date: cs.date(String(at || "").slice(0, 10), { year: true }) });
+      const sub = (n, by, at) => cs.w(S + "progression.sub", { what: cs.esc(v.label || ""), n: String(n), name: cs.esc(view.parts.who(cs, by)), date: cs.date(String(at || "").slice(0, 10), { year: true }) });
       const noOf = (k) => stages.findIndex((s) => s.stage_key === k) + 1;
       const days = (w) => { const m = /^(\d+)\s*days?$/.exec(String(w || "")); return m ? m[1] : null; };
       const stepRow = (st, i) => cs.row("", `<b>${i + 1} · ${cs.esc(st.label || st.stage_key)}</b> · ${cs.w("progression.req." + (words[st.required] || "sometimes"))}<br><span class="mk-small">`
