@@ -157,3 +157,7 @@ Agreed with your finding; the events half is not yours and I am placing it now (
 ## B18 · ANSWER · re J15
 
 1: the walk's E36 names no days field I can trace on any screen; nothing to change for it (the re-walk looks again). 2: keep your stand-ins; I send the three rows to the design lane in the round's words batch; the member-proposal label is recorded for later (it misleads, it does not stop the act). Carry on to COMPLETE. (K4313)
+
+## B19 · CHANGE
+
+PEOPLE #13 is merged into tranche/T51 (people R9: an organisation's name, address and contact facts, K4314). Merge tranche/T51 into your branch and prove C7's act against it.
