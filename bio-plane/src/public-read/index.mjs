@@ -494,6 +494,14 @@ export class PublicRead {
       ? { ...s, ...Object.fromEntries(keys.filter((k) => Object.hasOwn(s, k)).map((k) => [k, this.#handleOf(s[k], cache)])) } : s;
   }
 
+  /* R41 (3): a completeness block with its writer, publisher and the members who read the statement named by handle. */
+  #completenessByHandle(c, cache) {
+    if (!c || typeof c !== "object" || Array.isArray(c)) return c;
+    return { ...this.#stampedByHandle(c, ["author", "statement_by"], cache),
+      ...(Array.isArray(c.acknowledgements)
+        ? { acknowledgements: c.acknowledgements.map((x) => (x && x.kind === "recipient" ? x : this.#stampedByHandle(x, ["by"], cache))) } : {}) };
+  }
+
   /* R41 (3): `publishedCase`'s answer with each member it names, by handle: the case's writer and publisher and those who
      read the statement (`completeness`), each finding's attestor and who delivered it, the case document's signer and
      its deliverer, and who acknowledged each disclosed contradiction. The signed bytes (`document.text`), the manifest and
@@ -501,12 +509,8 @@ export class PublicRead {
   #byHandle(a) {
     const cache = new Map();
     const stamp = (s, keys) => this.#stampedByHandle(s, keys, cache);
-    const c = a.completeness;
     return { ...a,
-      completeness: c && typeof c === "object" && !Array.isArray(c)
-        ? { ...stamp(c, ["author", "statement_by"]),
-            ...(Array.isArray(c.acknowledgements) ? { acknowledgements: c.acknowledgements.map((x) => (x && x.kind === "recipient" ? x : stamp(x, ["by"]))) } : {}) }
-        : c,
+      completeness: this.#completenessByHandle(a.completeness, cache),
       findings: a.findings.map((f) => ({ ...f, attestor: stamp(f.attestor, ["member"]), delivered_by: stamp(f.delivered_by, ["member"]) })),
       document: a.document && typeof a.document === "object" && !a.document.withheld
         ? { ...a.document, attestor: stamp(a.document.attestor, ["member"]), delivered_by: stamp(a.document.delivered_by, ["member"]) }
@@ -742,7 +746,7 @@ export class PublicRead {
      divergence from DATA-MODEL 2.4.4 — so a public index is not N+1 reads of
      the bytes to learn what each case is called. */
   publishedList() {
-    const index = this.#withheldIndex();
+    const index = this.#withheldIndex(), handles = new Map(); // R41 (3): members named by handle
     return { bundles: this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, delivered_by, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`)
@@ -764,7 +768,8 @@ export class PublicRead {
       .map((r) => {
         const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
         const sole = this.publication.soleCase(cms);
-        return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
+        return withheldRow({ ...r, attestor_member: this.#handleOf(r.attestor_member, handles),
+                 delivered_by: this.#stampedByHandle(this.#deliveredBy(r), ["member"], handles),
                  case_id: sole ? sole.case_id : null, case_edition: sole ? sole.edition : null,
                  cases: cms }, index.bySha.get(r.bundle_sha));
       }),
@@ -788,7 +793,7 @@ export class PublicRead {
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
               delivered_by, gate_version, sig_armored, strength, required
        FROM published_bundles WHERE bundle_id=? ORDER BY edition`, bundleId);
-    const index = this.#withheldIndex();
+    const index = this.#withheldIndex(), handles = new Map(); // R41 (3): members named by handle
     /* REC-44: `completeness` is no longer here and that is the correction — it
        is a CASE assertion, so it is fetched from the case each edition belongs
        to rather than repeated on every member finding of it. */
@@ -819,7 +824,8 @@ export class PublicRead {
       /* R28: an edition an order withholds whole states no case content here; a finding whose bytes are withheld
          states no title. */
       const caseWhole = !!(cm && (index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`) || {}).whole);
-      return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
+      return withheldRow({ ...r, attestor_member: this.#handleOf(r.attestor_member, handles),
+               delivered_by: this.#stampedByHandle(this.#deliveredBy(r), ["member"], handles),
                case_id: cid, case_edition: cm ? cm.edition : null, cases: cms,
                bar: c && c.bar ? safeJson(c.bar) : null,
                /* The container's manifest is the CASE edition's, so it is
@@ -832,7 +838,7 @@ export class PublicRead {
                               : {}),
                scope: c && !caseWhole ? (c.scope ?? null) : null,
                bias_acknowledgement: c && !caseWhole ? (c.bias_acknowledgement ?? null) : null,
-               completeness: c && c.completeness && !caseWhole ? JSON.parse(c.completeness) : null,
+               completeness: c && c.completeness && !caseWhole ? this.#completenessByHandle(JSON.parse(c.completeness), handles) : null,
                ...(caseWhole ? { case_withheld: { orders: index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`).orders,
                                                   detail: WITHHELD_SENTENCE } } : {}),
                strength: r.strength ? JSON.parse(r.strength) : null,

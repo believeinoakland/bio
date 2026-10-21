@@ -171,3 +171,22 @@ test("R41 (3), R38 what each published case froze for a question names its signe
   const founder = await evidenceWorld({ members, ids: { writer: "admin", publisher: "admin" } });
   assert.equal(founder.w.read("publishedfrozen", { id: F }).cases[0].signed_by.member, word("member.founder.unnamed"));
 });
+
+test("R41 (3) the public list and a finding's editions name signer and deliverer by handle, never by member id", async () => {
+  const ids = { writer: "mem-7731", publisher: "mem-4821", handles: { "mem-7731": "rowan", "mem-4821": "olive" } };
+  const { w } = await evidenceWorld({ ids });
+  const row = w.read("publishedlist").bundles[0];
+  const ed = w.read("publishededitions", { id: F }).editions[0];
+  for (const [label, r] of [["list", row], ["editions", ed]]) {
+    assert.equal(r.attestor_member, "olive", `${label}: the signer`);
+    assert.deepEqual(r.delivered_by, { kind: "member", member: "olive" }, `${label}: who delivered`);
+  }
+  assert.equal(ed.completeness.author, "olive");
+  assert.equal(ed.completeness.statement_by, "rowan");
+  assert.ok(!JSON.stringify([row, ed]).includes("mem-"), "no member id among the names");
+  /* CONTROL: the same people, no more: key sets and the key beside the name are as before; the founder with no handle gets the word. */
+  assert.deepEqual(Object.keys(ed.delivered_by).sort(), ["kind", "member"]);
+  const members = { memberFacts: (id) => (id === "admin" ? { cover: null, handle: null, role: "admin", status: "active" } : null) };
+  const f = await evidenceWorld({ members, ids: { writer: "admin", publisher: "admin" } });
+  assert.equal(f.w.read("publishedlist").bundles[0].attestor_member, word("member.founder.unnamed"));
+});

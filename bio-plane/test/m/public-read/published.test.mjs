@@ -51,15 +51,15 @@ test("R2 publishedList and publishedEditions name every edition with its signer,
   const { w } = published();
   const list = w.read("publishedlist");
   assert.deepEqual(list.bundles.map((b) => [b.bundle_id, b.edition, b.attestor_member, b.gate_version, b.case_id]),
-                   [[F, 1, "olive", "plane-gate/test", "CASE-2026-0001"]]);
-  assert.deepEqual(list.bundles[0].delivered_by, { kind: "member", member: "olive" });
+                   [[F, 1, "h_olive", "plane-gate/test", "CASE-2026-0001"]]);
+  assert.deepEqual(list.bundles[0].delivered_by, { kind: "member", member: "h_olive" });
   assert.deepEqual(list.bundles[0].cases, [{ case_id: "CASE-2026-0001", edition: 1 }]);
   assert.deepEqual(list.cases.map((c) => [c.case_id, c.edition, c.findings]), [["CASE-2026-0001", 1, [F]]]);
   assert.equal(w.read("publishededitions", {}).reason, "NO_ID");
   const eds = w.read("publishededitions", { id: F });
   assert.deepEqual(eds.editions.map((e) => [e.edition, e.case_id, e.case_edition, e.scope, e.bias_acknowledgement,
                                             e.attestor_member, e.gate_version, e.delivered_by.kind]),
-                   [[1, "CASE-2026-0001", 1, "The question.", "none declared", "olive", "plane-gate/test", "member"]]);
+                   [[1, "CASE-2026-0001", 1, "The question.", "none declared", "h_olive", "plane-gate/test", "member"]]);
   /* a finding two cases pin: every case named, the scalar null */
   const { w: w2, proj, pin } = published();
   w2.prepare("CASE-2026-0002", 1, { project: proj, roles: [{ target: F, version_sha: pin }] });
@@ -223,12 +223,12 @@ test("R12 signer and deliverer are two facts, and neither is copied from the oth
   w.record.transact(() => w.p.commitEdition({ bundleId: F, bundleSha: pin, shas: [], attestorKey: "k",
     attestorMember: "olive", gateVersion: "g", sigArmored: SIG(2), deliveredBy: null, edges: [] }));
   const row = w.pr.publishedList().bundles[0];
-  assert.equal(row.attestor_member, "olive");
+  assert.equal(row.attestor_member, "h_olive");
   assert.equal(row.delivered_by.kind, "undetermined", "a deliverer never recorded is not read off the signer");
   const ed = w.pr.publishedEditions(F).editions[0];
-  assert.deepEqual([ed.attestor_member, ed.delivered_by.kind], ["olive", "undetermined"]);
+  assert.deepEqual([ed.attestor_member, ed.delivered_by.kind], ["h_olive", "undetermined"]);
   const f = w.pr.publishedCase({ id: "CASE-2026-0001" }).findings[0];
-  assert.deepEqual([f.attestor.member, f.delivered_by.kind], ["h_olive", "undetermined"], "publishedCase names her by her handle (R41), the lists by her id");
+  assert.deepEqual([f.attestor.member, f.delivered_by.kind], ["h_olive", "undetermined"], "every read names her by her handle (R41)");
 });
 
 test("R13 undetermined is stated and never filled: a deliverer, an acknowledgement list a document is silent about, the tensions of a document before /5", () => {

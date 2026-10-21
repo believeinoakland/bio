@@ -104,19 +104,19 @@ test("R2 (deliverer) publishedList and publishedEditions name the signer and, be
   for (const list of [w.pr.publishedList(), w.read("publishedlist")]) {
     const row = (id) => list.bundles.find((b) => b.bundle_id === id);
     assert.deepEqual(list.bundles.map((b) => b.bundle_id).sort(), [LOOSE, OLD_LOOSE, LEAD, OLD_LEAD].sort());
-    assert.deepEqual([row(LEAD).attestor_member, row(LEAD).delivered_by], ["iris", MEMBER_IS("gus")]);
-    assert.deepEqual([row(LOOSE).attestor_member, row(LOOSE).delivered_by], ["iris", FOUNDER_IS]);
+    assert.deepEqual([row(LEAD).attestor_member, row(LEAD).delivered_by], ["h_iris", MEMBER_IS("h_gus")]);
+    assert.deepEqual([row(LOOSE).attestor_member, row(LOOSE).delivered_by], ["h_iris", FOUNDER_IS]);
     for (const id of [OLD_LEAD, OLD_LOOSE]) {
-      assert.equal(row(id).attestor_member, "iris", "the signer is still named");
+      assert.equal(row(id).attestor_member, "h_iris", "the signer is still named, by her handle (R41)");
       assert.ok(isUndetermined(row(id).delivered_by), `${id}: undetermined, never back-filled from iris: ${JSON.stringify(row(id).delivered_by)}`);
     }
     /* THE TABLE: no determined deliverer equals its signer */
     assert.deepEqual(list.bundles.filter((b) => kindOf(b.delivered_by) === `member:${b.attestor_member}`).map((b) => b.bundle_id), []);
   }
-  for (const [id, want] of [[LEAD, "member:gus"], [LOOSE, "founder"], [OLD_LEAD, "undetermined"], [OLD_LOOSE, "undetermined"]]) {
+  for (const [id, want] of [[LEAD, "member:h_gus"], [LOOSE, "founder"], [OLD_LEAD, "undetermined"], [OLD_LOOSE, "undetermined"]]) {
     for (const eds of [w.pr.publishedEditions(id), w.read("publishededitions", { id })]) {
       assert.equal(eds.ok, true);
-      assert.deepEqual(eds.editions.map((e) => [e.edition, e.attestor_member, kindOf(e.delivered_by)]), [[1, "iris", want]]);
+      assert.deepEqual(eds.editions.map((e) => [e.edition, e.attestor_member, kindOf(e.delivered_by)]), [[1, "h_iris", want]]);
       if (want === "undetermined") assert.ok(isUndetermined(eds.editions[0].delivered_by));
     }
   }

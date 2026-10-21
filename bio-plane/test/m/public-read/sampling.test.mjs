@@ -108,10 +108,10 @@ test("R13 (T46) an acknowledgement list is answered as recorded: null (a documen
     const c = w.read("publishedcase", { id: CASE });
     assert.equal(c.ok, true, label);
     /* R41 (3): `publishedCase` and the Worker name the member who read it by her handle (the fixture's `h_<id>`); the shape is
-       as recorded, and the list `publishedEditions` answers is the stored row as it is */
+       as recorded, and `publishedEditions` likewise */
     const named = acks && acks.map((a) => ({ ...a, by: "h_olive" }));
     assert.deepEqual(c.completeness.acknowledgements, named, `${label}: publishedCase`);
-    assert.deepEqual(w.read("publishededitions", { id: F }).editions[0].completeness.acknowledgements, acks, `${label}: publishedEditions`);
+    assert.deepEqual(w.read("publishededitions", { id: F }).editions[0].completeness.acknowledgements, named, `${label}: publishedEditions`);
     assert.deepEqual((await workerCase(w, env)).completeness.acknowledgements, named, `${label}: the Worker`);
   }
 });
