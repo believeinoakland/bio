@@ -221,6 +221,7 @@ Words rule (R34) stands: a sentence the design does not hold is never invented; 
 - **R92** (K4399; C81): Home and Projects at 390 px have nothing past the screen's edge and every target at least 44 px.
 - **R93** (K4399; queue-producers R52): an item standing for several notices closes all of them on one press, the same reason for each; a refusal on one stops the rest and is shown once.
 - **R94** (K4399; interface-shell R113): each act of the queue, Find and Find in names the reads it changes.
+- **R95** *(not yet met: T51)* (fix round 4, C70; K4429) **The Queue says what each number counts.** The Queue screen states the number of items and, apart, the number of captures waiting to be vouched for; the vouch band's rows are not queue items, and the bell and the sidebar equal the items the Queue lists. Test, over the real shell and the real screen with 46 held captures and 79 items: the bell and the sidebar read 79 and the page says what 79 and 46 count; control: with no held capture the band is not drawn.
 
 ## Private
 

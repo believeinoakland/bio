@@ -160,7 +160,7 @@ Every job: medium effort; its suites then `build/plan/impact.mjs tranche/T51 HEA
 
 | job | model | wave | merge | modules held | causes |
 |---|---|---|---|---|---|
-| pdfstructure | sonnet | 0 | 1 | pdfstructure | C25* |
+| pdf-reader | sonnet | 0 | 1 | pdf-reader | C25* |
 | host-governor | sonnet | 0 | 2 | host-governor | N-slow-refuse |
 | acquisition | sonnet | 0 | 3 | acquisition | C5a*, C5c, C13b (S), C25 (S) |
 | extraction | sonnet | 0 | 4 | extraction | C5b*, N5* |

@@ -105,6 +105,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
   - (T46; N904; K2832, K2917; `record-core` R83) A stored `declared_stake` that `record-core`'s strict `getSetting` (`{strict: true}`) answers `SETTING_UNREADABLE` (its R83), a value held that is not valid JSON, is answered `stake: "undetermined"`, with `detail` saying the declared stake could not be read, never `stake: null` as if no stake were declared; a setting never set still answers `stake: null`. Control: a stored `declared_stake` that is not valid JSON answers `"undetermined"`, and the same setting never set answers null.
 
   Controls: the same subject stamped with two different `group` values answers the same `hash`; with no source registered the identity reads null with its detail, never a guess; an unset setting answers `stake: null`, an unreadable one `"undetermined"`; a second registration is refused.
+- **R42** *(not yet met: T51)* (fix round 4, C48/N6; K4429; amends R41) **`publishedAddress({case, edition}) → string | null`** is the one builder of a published case's public address, as `public-read` serves it (its route): the page, the case editor, the ceremony and the pre-flight (`case-authoring` R83) draw no address composed another way; `null` for a case or edition not published. Test: for `CASE-2026-4783` edition 1 the address equals the route `public-read` serves and opens the page; an unpublished edition answers `null`. Control: the address of edition 2 differs from edition 1's only by its edition.
 
 ## Private
 
