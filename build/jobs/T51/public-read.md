@@ -144,3 +144,16 @@ Size (session_01LwWDy5JCBriNttXnEF6fAW): test runs 12, module lines 3860
 ## J14 · COMPLETE
 
 COMPLETE (B10): publishedList and publishedEditions name signers by handle; details in J13.
+
+## J15 · QUESTION
+
+QUESTION 1 (C47: where the document's title comes from). C48's half is done: R42 `publishedAddress` is built and tested red then green (commit on my branch). C47 I cannot build inside public-read, and the START's "R41 as it stands" does not give the walker's result.
+
+Fact. R41 (1) as it stands says the entry's `name` is the signed material row's `origin` (else `ref`), which is why the page lists "https://www.foia.gov/faq.html". The signed case's `materials:` row (case-grammar R12: `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}`; written by case-disclosures `materials.mjs:69`) carries NO title. public-read reads the published projection and the signed case only (R10, R14: answers must be identical with or without working material), so it cannot read the document's title from the register without breaking R10. The place ("Paragraph 4") already travels in `document.place` as the passage's signed `extent`; wording it ("Paragraph 4") and the "Relied on ·" dot are screens-publish's (R80).
+
+Options.
+ A (recommended): add the title to the signed material row: case-grammar R12 gains `title` (the document's title as the capture holds it, `null` when it has none), case-disclosures `materialRows` writes it, and R41 (1) becomes "name = the signed row's `title`, else `origin`, else `ref`". New case documents only (R-OLD: an older signed case keeps its address; a signed document is never rewritten). My part is then a few lines in legs.mjs plus the test on CASE-2026-4783's chain; case-grammar and case-disclosures are other modules' jobs, so BOB writes those two lines and they merge before me.
+ B: keep the address as the name (no change to signed data) and have screens-publish word the place only; the walker's MINOR "title" stays open and is recorded as such.
+ C: serve the title from the register at read time. Rejected: it makes the published answer depend on working material (R10/R14).
+
+What I need: A or B. Until answered I carry on with the rest (checks, record); for A I will build legs.mjs and its test once case-grammar R12 and case-disclosures carry `title`.
