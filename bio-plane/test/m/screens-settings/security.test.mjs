@@ -288,10 +288,10 @@ test("R15 C84: Security draws a button that checks for new signatures now, sends
 });
 
 test("R15 C84: a run asked for inside the minimum gap, or with no scanner bound, is refused beside the button in file-safety's own words; no button where no scanner is built in, and none to a member who does not administer (control)", async () => {
-  const recent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "A check for signatures was made a few minutes ago. No run was started." }) }) });
+  const recent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "the owner's own words for a run started lately" }) }) });
   await recent.press("scanmirror");
   assert.ok(recent.refused, "refused beside the button");
-  assert.equal(recent.refused.text, "A check for signatures was made a few minutes ago. No run was started.", "the refusal's own words while the list lacks the code");
+  assert.equal(recent.refused.text, "the owner's own words for a run started lately", "the refusal's own words while the list lacks the code");
   const absent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SCANNER_ABSENT") }) });
   await absent.press("scanmirror");
   assert.equal(absent.refused.text, said("refusal.SCANNER_ABSENT"), "the owner's row's words");
