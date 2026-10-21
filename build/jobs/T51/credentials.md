@@ -200,3 +200,13 @@ Tests and checks:
 - `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (outside the paths). B6 accepts this listing of that one file at merge.
 
 Size (session_019uitbe7o6WXsqjVUksVxFY): test runs 3, module lines 2699
+
+## J11 · QUESTION
+
+QUESTION (C51, the 37.6 s registration): the credentials arm is not where the time goes, so the dominant stage sits in a module I do not hold.
+
+Measured at the module's interface, real SQLite and real membership (the credentials test world): `signerRegisterOwn` takes 0.4 to 2 ms and makes 5 store calls (the member's row, the key's row, the insert, membership's list of active administrators, the credentials row for that list). The count is the same with 2 members and 0 keys or 12 members and 60 keys. The administrator "notification" is not a fan-out: the answer's `notified` is membership's list read at the act, and the feed reads the key's row later. No hash or other costly work is in the arm. So 37.6 s is not credentials' own work.
+
+Stages that remain, none mine: (1) the control plane / admission path in front of `signerregister` (the op has weight `credential`; whether an act of that weight triggers a password hash, a re-ask check or a session read before the store door is for admission and control-plane to say); (2) the store door's dispatch around `dispatch.mjs:427`; (3) the browser: the key made in the member's own browser (WebCrypto) and, per the walk, a fresh key made at each signing, which belongs to screens-publish / screens-settings (wave 2). I cannot name which from here without a live run: the arm's `timings` now carries the plane's part, so a walk on biosmoke8 that reads the answer will show the arm at 0 to 2 ms and place the rest on the door or the browser.
+
+Best reading: ask the control-plane job (and screens-publish) to time the door and the browser stages for C51; mine is met and proven. Nothing here blocks me, so I carry on to COMPLETE.
