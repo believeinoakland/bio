@@ -55,8 +55,8 @@ export const connect = {
     // bare "you" (R37: every fill filled)
     const names = (by) => {
       const id = String(by || "").replace(/^member:/, "");
-      if (id === me.member) return me.handle || (me.member === "admin" ? T("member.founder.unnamed") : id);
-      return id === "admin" ? T("member.founder.unnamed") : id;
+      if (id === me.member && me.handle) return me.handle;
+      return cs.memberName(id);
     };
     const out = [cs.title(), `<p>${W(S + "optional")}</p>`];
     // a part that opens and closes (R49; the design's `.cs-part`): a number, its title, one line of why; anything needed before the first

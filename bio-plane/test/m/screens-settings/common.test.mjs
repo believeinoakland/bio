@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, FOUNDER_ROW, ROSTER, SIGNER_KEYS, membersTable, teamaiTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, grouprulesTable, env } from "./fixtures.mjs";
+import { ADMIN, MEMBER, FOUNDER_ROW, ROSTER, SIGNER_KEYS, membersTable, teamaiTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, grouprulesTable, updatesTable, env } from "./fixtures.mjs";
 
 const SECRET = "SENTINEL-SECRET-0123456789";
 
@@ -212,4 +212,47 @@ test("R28 every labeled field is drawn with cs.field: its label and its help are
     }
     for (const sel of all(o.tree, (e) => e.tag === "select")) assert.ok(ancestor(sel, (e) => /\bcs-field\b/.test(e.attrs.class || "")), `${id}: ${sel.attrs.id} is not drawn with cs.choice`);
   }
+});
+
+/* ---- T51 fix round 2: C94 (one helper, `memberName`, names a member by handle on every screen; no id is drawn) ---- */
+
+const NAMED = [{ member_id: "m-7", handle: "luisa", role: "admin", status: "active", capabilities: ["contribute"], cover: "L", expertise: [], invitation: "spent" }, { member_id: "m-9", handle: null, role: "member", status: "invited", capabilities: ["contribute"], cover: "N", expertise: [], invitation: "live" }];
+const FALLBACK = () => said("shell.card.member");
+
+test("R27 R73 C94: updates names who allowed or skipped a release by memberName: the handle where it differs from the id, the fallback word where the member has none, never an id", async () => {
+  const notice = (by) => ({ running: { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: by }, earlier: [
+    { version: "0.83.1", skipped_at: "2026-10-02T10:00:00Z", skipped_by: by, reason: "We wait." }, { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: by }] });
+  const a = await open("updates", { me: ADMIN, table: updatesTable(notice("member:m-7"), { memberlist: env({ members: [FOUNDER_ROW, ...NAMED] }) }) });
+  has(a, "updates.running.release", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: "luisa" });
+  has(a, "updates.earlier.skipped", { version: "0.83.1", date: day("2026-10-02T10:00:00Z"), who: "luisa", reason: "We wait." });
+  assert.ok(!a.text.includes("m-7"));
+  const b = await open("updates", { me: ADMIN, table: updatesTable(notice("member:m-9"), { memberlist: env({ members: [FOUNDER_ROW, ...NAMED] }) }) });
+  has(b, "updates.running.release", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: FALLBACK() });
+  assert.ok(!b.text.includes("m-9"));
+});
+
+test("R48 C94: teamai names who set the key, and who made each change, by memberName; a member with no handle by the fallback word, never an id", async () => {
+  const a = await open("teamai", { me: ADMIN, table: teamaiTable({ memberlist: env({ members: [FOUNDER_ROW, ...NAMED] }), groupkeystate: env({ ok: true, held: true, on: true, set_at: "2026-10-06T08:00:00Z", by: "member:m-7", suggestions: false, standing: false, uses: {} }),
+    accounthistory: env({ ok: true, owner: "group", count: 2, limit: 200, truncated: false, changes: [{ at: "2026-10-06T08:00:00Z", by: "member:m-7", change: "key_set", kind: "apikey" }, { at: "2026-10-07T08:00:00Z", by: "member:m-9", change: "switched", on: true }] }) }) });
+  has(a, "screen.teamai.setby", { who: "luisa", date: day("2026-10-06T08:00:00Z") });
+  assert.ok(!a.text.includes("m-7") && !a.text.includes("m-9"), "no id");
+  const b = await open("teamai", { me: ADMIN, table: teamaiTable({ memberlist: env({ members: [FOUNDER_ROW, ...NAMED] }), groupkeystate: env({ ok: true, held: true, on: true, set_at: "2026-10-06T08:00:00Z", by: "member:m-9", suggestions: false, standing: false, uses: {} }) }) });
+  has(b, "screen.teamai.setby", { who: FALLBACK(), date: day("2026-10-06T08:00:00Z") });
+  assert.ok(!b.text.includes("m-9"));
+});
+
+test("R57 C94: a key an administrator registered for the member names the registrar by memberName: the handle where it differs from the id, the fallback word for one with none, never an id", async () => {
+  const mine = (by) => ({ key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIMine00000000000000000000000000000000000001", member_id: "dev", comment: "", status: "active", added: "2026-10-03T00:00:00Z", origin: "admin", registered_by: by });
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine("m-7")] }), memberlist: env({ members: [FOUNDER_ROW, ...NAMED] }) }) });
+  has(a, "screen.account.registered.for.you.by.rosa", { member: "luisa", date: day("2026-10-03T00:00:00Z") });
+  const b = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine("m-9")] }), memberlist: env({ members: [FOUNDER_ROW, ...NAMED] }) }) });
+  has(b, "screen.account.registered.for.you.by.rosa", { member: FALLBACK(), date: day("2026-10-03T00:00:00Z") });
+  assert.ok(!a.text.includes("m-7") && !b.text.includes("m-9"));
+});
+
+test("R15 C94: a member who does not administer is told whose screen security is by the administrators' handles; an administrator with none by the fallback word, never an id", async () => {
+  const roster = [FOUNDER_ROW, { member_id: "m-7", handle: "luisa", role: "admin", status: "active", capabilities: [], expertise: [] }, { member_id: "m-5", handle: null, role: "admin", status: "active", capabilities: [], expertise: [] }];
+  const a = await open("security", { me: MEMBER, table: securityTable({ memberlist: env({ members: roster }) }) });
+  has(a, "screen.security.admins", { admins: [said("member.founder.unnamed"), "luisa", FALLBACK()].join(", ") });
+  assert.ok(!a.text.includes("m-5") && !a.text.includes("m-7"));
 });

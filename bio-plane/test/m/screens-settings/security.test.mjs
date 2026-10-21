@@ -209,3 +209,27 @@ test("R77 a scanner that holds no signatures is said so by the key and words sca
   const none = await open("security", { me: ADMIN, table: sc({}) });
   assert.equal(all(none.tree, (e) => /^nosignatures/.test(e.attrs["data-state"] || "")).length, 0);
 });
+
+/* ---- T51 fix round 2: C83 ---- */
+
+test("R15, R77 C83: files are said to be checked only while signatures are held; a scanner with none draws that state with its date and reason and no checked sentence; control: signatures held draw the sentence", async () => {
+  const scan = (extra) => securityTable({ scanstatus: env({ ok: true, scanner: { bound: true, version: "1" }, renderer: { bound: true, version: "1" }, queued: 48, overdue: 0, held: 0, tools: [], ...extra }) });
+  const ns = { since: "2026-10-15T03:00:00Z", reason: "REFUSED:main.cvd:403", key: "file-safety.index.no_signatures_since", words: "The file scanner has had no signatures since 15 October 2026.", reason_key: "file-safety.index.signatures_refused", reason_words: "The signature service refused the download (status 403)." };
+  const none = await open("security", { me: ADMIN, table: scan({ signatures_age_ms: null, no_signatures: ns }) });
+  lacks(none, "screen.security.files.on");
+  assert.equal(all(none.tree, (e) => e.attrs["data-state"] === "files").length, 0, "no checked sentence");
+  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), ns.words, "since when");
+  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), ns.reason_words, "why, in words");
+  // a scanner that did not answer, or none bound, claims nothing either
+  for (const sc of [{ scanner: { bound: true, version: null, unreachable: true }, signatures_age_ms: null }, { scanner: { bound: false, version: null }, signatures_age_ms: null }]) {
+    const o = await open("security", { me: ADMIN, table: scan(sc) });
+    lacks(o, "screen.security.files.on");
+  }
+  // a scan state that could not be read claims nothing
+  const unread = await open("security", { me: ADMIN, table: securityTable({ scanstatus: { ok: false, status: 500 } }) });
+  lacks(unread, "screen.security.files.on");
+  // control: signatures held
+  const held = await open("security", { me: ADMIN, table: scan({ signatures_age_ms: 3600000 }) });
+  has(held, "screen.security.files.on");
+  assert.equal(all(held.tree, (e) => /^nosignatures/.test(e.attrs["data-state"] || "")).length, 0);
+});

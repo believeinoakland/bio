@@ -172,6 +172,7 @@ export function connectTable(me, situation = "group", over = {}) {
   const ownKey = situation === "own";
   const sub = situation === "subscription";
   return {
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     assistantstate: env(kept ? { ok: true, on: false, set_by: KEEPAWAY_ON.set_by, set_at: KEEPAWAY_ON.set_at, reason: KEEPAWAY_ON.reason } : { ok: true, on: true, set_by: null, set_at: null, reason: null }),
     aikeepawaystate: env(kept ? KEEPAWAY_ON : { on: false, reason: null, set_by: null, set_at: null, uses: [] }),
     groupkeystate: env({ ok: true, on: situation === "group" || ownKey }),
@@ -234,6 +235,7 @@ export const EXPORTS = [
 /** group, read by `me` (instance-setup R10, R11, R84, R85; membership R107; strength's bar). */
 export function groupTable(over = {}) {
   return {
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     groupidentity: env({ group: "eastoak", declared_stake: { stake: "Several of our members rent from landlords the city regulates.", set_by: "member:rosa", set_at: "2026-10-04T00:00:00Z" }, declared_stake_history: [{ stake: null, set_by: "member:rosa", set_at: "2026-10-01T00:00:00Z" }, { stake: "Several of our members rent from landlords the city regulates.", set_by: "member:rosa", set_at: "2026-10-04T00:00:00Z" }], display_name: "East Oakland Watch", domain: "eastoak.example", domain_verified_at: "2026-10-03T00:00:00Z", logo: false,
       display_name_recorded: "East Oakland Watch", display_name_history: [], domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: { domain: "eastoak.example", verdict: "verified", checked_at: "2026-10-03T00:00:00Z" } }, domain_history: [], domain_checks: [] }),
     grouplanguages: env({ ok: true, languages: ["en", "es"] }),
@@ -271,6 +273,7 @@ export const COURTS = [
 /** places: two pages of offices, the second answered only when asked `after` the first's last. */
 export function placesTable(over = {}) {
   return {
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     profiles: env({ ok: true, profiles: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }], conflicts: [], choices: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }, { id: "us-ca", name: "California", covers: ["California"] }], view: "main" }),
     placewantedstate: env({ ok: true, name: "Alameda County", set_by: "rosa", set_at: "2026-10-04T00:00:00Z", matches: [] }),
     entitieskind: (q) => q.kind === "body" ? env({ ok: true, kind: "body", entities: COURTS, count: COURTS.length, limit: 500, truncated: false, next: null })
@@ -324,7 +327,7 @@ export function securityTable(over = {}) {
       buckets: [{ start: q.from, counts: { signin: 4, credential: 1, rate: 2, handover: 0, through: 3, total: 10 }, usual: { signin: 1, credential: 0, rate: 1, handover: 0, through: 1, total: 3 } }],
       totals: { count: 10, usual: 3, busiest: q.from }, countries: [{ country: "XX-SENTINEL-COUNTRY", count: 9 }], unplaced: 1 }),
     bootstrap: { ok: true, service: "bio-plane", part_signin: true, part_scanner: true, part_safe_view: true },
-    scanstatus: env({ ok: true, scanner: { bound: true, version: "1" }, renderer: { bound: true, version: "1" }, queued: 3, overdue: 0, held: 1, tools: [] }),
+    scanstatus: env({ ok: true, scanner: { bound: true, version: "1" }, renderer: { bound: true, version: "1" }, signatures_age_ms: 86400000, queued: 3, overdue: 0, held: 1, tools: [] }),
     securitytools: env({ ok: true, tools: [{ tool_id: "T1", provider_id: "acme-scan", kinds: ["scan"], use: "on_request", state: "on", handling_digest: "d".repeat(64), added_by: "rosa", added_at: "2026-10-03T00:00:00Z" }] }),
     securitytoolevents: env({ ok: true, events: [{ tool_id: "T1", event: "test_passed", at: "2026-10-03T00:00:00Z", reason: null }], cursor: null, truncated: false }),
     securitytoolcatalogue: env({ ok: true, offered: [CATALOGUE_ENTRY, OWN_ENTRY], refused: [], held: [] }),
@@ -463,6 +466,7 @@ export const BIAS_SETS = [
 
 export function biasTable(over = {}) {
   return {
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER, { member_id: "mai", handle: "mai", role: "member", status: "active", capabilities: ["contribute"], cover: "Mai", expertise: [], invitation: "spent" }] }),
     list: () => env({ bundles: [], limit: 50, cursor: null, total: 0 }),
     biasmanifest: (q) => env(q.scope === "project" ? (q.scopeId === PROJ_BIAS.id ? LENS_PROJECT : { ok: true, scope: "project", scope_id: q.scopeId, in_force: false, note: "none" }) : LENS_TEAM),
     projectlist: env({ ok: true, projects: [PROJ_BIAS] }),

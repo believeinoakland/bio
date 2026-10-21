@@ -119,7 +119,7 @@ export const places = {
       const added = ui.courtAdded ? `<p data-shown="court">${W(S + "court.done", { name: ui.courtAdded })}</p>` : "";
       const list = cs.state(data.courts, (v) => {
         const items = Array.isArray(v.entities) ? v.entities : [];
-        return items.length ? `<ul class="mk-list" data-list="courts">${items.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${byMember(o) ? W(S + "court.added", { name: String(o.declared_by).replace(/^member:/, ""), date: D(o.at) }) : W(S + "court.seeded")}</li>`).join("")}</ul>` : "";
+        return items.length ? `<ul class="mk-list" data-list="courts">${items.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${byMember(o) ? W(S + "court.added", { name: cs.memberName(String(o.declared_by).replace(/^member:/, "")), date: D(o.at) }) : W(S + "court.seeded")}</li>`).join("")}</ul>` : "";
       });
       const add = cs.act("entitycreate", { label: "court.add", data: { court: "1" } });
       const form = add ? `${cs.field("pl-court", "court.add.name", { help: "court.add.help", rec: true, autocomplete: "off" })}${add}` : "";
@@ -161,7 +161,8 @@ export const places = {
       send(view, el, cs) {
         if (el.dataset.court === "1") {
           const name = String(cs.value("pl-court") || "").trim();
-          if (!name) return { refuse: "court.add.help" };
+          // an empty box is refused naming it (C87): the box's own label, as plain text
+          if (!name) return { refuse: "screen.security.config.missing", fills: { field: String(cs.w("court.add.name")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
           return { body: { kind: "body", forum_kind: "court", label: name, note: name } };
         }
         const label = String(cs.value("pl-label") || "").trim(), note = String(cs.value("pl-note") || "").trim();

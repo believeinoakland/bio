@@ -68,7 +68,7 @@ export const bias = {
       const p0 = ui.scope && ui.scope.project ? projectOf(ui.scope.project) : null;
       let h = `<h3>${p0 ? W(B + "in_force_for_the_coliseum", { project: projTitle(p0) }) : W(B + "head.team")}</h3>` + cs.sheet(rows);
       // who adopted what, and when (the owner's adoptions, by member id as data)
-      const by = (b) => String(b.adopted_by || "").replace(/^member:/, "");
+      const by = (b) => cs.memberName(String(b.adopted_by || "").replace(/^member:/, ""));
       const teamB = bundles.find((b) => b.scope === "instance"), projB = bundles.find((b) => b.scope === "project");
       h += `<dl class="mk-dl"><dt>${W(B + "dt.lens")}</dt>`;
       if (teamB && projB) h += `<dd>${W(B + "by_admin_for_the_team", { admin: by(teamB), admin_date: D(teamB.adopted_at), owner: by(projB), owner_date: D(projB.adopted_at) })}</dd>`;
@@ -191,7 +191,7 @@ export const bias = {
               + `<details class="mk-details"><summary>${W(B + "when_it_cannot_be_settled")}</summary>${gap("refused", `<span>${W(B + "you_gave_no_reason")} ${W(B + "write_why_the_change_does")}</span>`)}${gap("refused", `<span>${W(B + "someone_settled_it_already_or")} ${W(B + "open_your_queue_to_see")}</span>`)}</details>`;
           }
           const done = settlements.filter((x) => x && x.reason);
-          if (done.length) h += `<h3>${W(B + "head.settled")}</h3>` + cs.sheet(done.map((x) => cs.row(icon("accepted"), W(B + "earlier.settled", { who: String(x.actor || x.by || "").replace(/^member:/, ""), date: D(x.at), reason: String(x.reason) }))).join(""));
+          if (done.length) h += `<h3>${W(B + "head.settled")}</h3>` + cs.sheet(done.map((x) => cs.row(icon("accepted"), W(B + "earlier.settled", { who: cs.memberName(String(x.actor || x.by || "").replace(/^member:/, "")), date: D(x.at), reason: String(x.reason) }))).join(""));
           return h;
         })) + `</div>`);
     }
@@ -214,6 +214,9 @@ export const bias = {
         const q = (s) => JSON.stringify(String(s));
         const fromInhale = el.dataset.from === "inhale";
         let statements = [], title = "", state = "proposed", residue = "";
+        // an empty box is refused naming it (C87): the box's own label, as plain text
+        const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+        const missing = (labelKey) => ({ refuse: "screen.security.config.missing", fills: { field: plain(cs.w(labelKey)) } });
         const subjectOf = async (typed) => {
           const t = String(typed || "").trim();
           if (/^ENT-\d{4}-\d+$/.test(t)) return t;
@@ -230,17 +233,22 @@ export const bias = {
             const pr = (view.ui && view.ui.proposal && view.ui.proposal.statements) || [];
             state = "draft"; title = String(cs.value("bi-source") || "").trim() || "Draft";
             for (let i = 0; i < pr.length; i++) {
+              if (!String(cs.value("bi-psub" + i) || "").trim()) return missing("screen.bias.who_or_what_it_is");
               const subject = await subjectOf(cs.value("bi-psub" + i)), why = String(cs.value("bi-pwhy" + i) || "").trim();
               if (!subject) return { refuse: "screen.bias.add_it_under_people_first" };
-              if (!why) return { refuse: "screen.bias.a_statement_has_no_reason" };
+              if (!why) return missing("screen.bias.why_you_read_it_this");
               statements.push({ id: "s" + (i + 1), kind: pr[i].kind, subject, text: pr[i].text, justification: why, citations: [], locked: false });
             }
           } else {
             const kind = String(cs.value("bi-kind") || "scrutiny");
             title = String(cs.value("bi-name") || "").trim();
             const text = String(cs.value("bi-text") || "").trim(), why = String(cs.value("bi-why") || "").trim(), cite = String(cs.value("bi-cite") || "").trim();
+            if (!title) return missing("screen.bias.name_of_the_set");
+            if (!String(cs.value("bi-subject") || "").trim()) return missing("screen.bias.who_or_what_it_is");
+            if (!text) return missing("screen.bias.statement.label");
+            if (!why) return missing("screen.bias.why_you_read_it_this");
+            if (kind === "pattern" && !cite) return missing("screen.bias.cites.label");
             const subject = await subjectOf(cs.value("bi-subject"));
-            if (!title || !text) return { refuse: "screen.bias.a_statement_has_no_reason" };
             if (!subject) return { refuse: "screen.bias.add_it_under_people_first" };
             statements = [{ id: "s1", kind, subject, text, justification: why, citations: cite ? [cite] : [], locked: false }];
             residue = String(cs.value("bi-not") || "").trim();
@@ -277,7 +285,7 @@ export const bias = {
     { op: "biasinhale", rereads: [],
       send(view, el, cs) {
         const policy = String(cs.value("bi-policy") || "").trim();
-        if (!policy) return { refuse: "screen.bias.the_policy_in_its_own" };
+        if (!policy) return { refuse: "screen.security.config.missing", fills: { field: String(cs.w("screen.bias.the_policy_in_its_own")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
         const source = String(cs.value("bi-source") || "").trim(), retrieved = String(cs.value("bi-when") || "").trim();
         return { body: Object.assign({ policy }, source ? { source } : {}, retrieved ? { retrieved } : {}) };
       },

@@ -3,7 +3,7 @@
    what each act sends. The team's key and its account are `teamai`'s (teamai.test.mjs). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf, texts, SCREENS } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, squash, textOf, texts, SCREENS } from "./kit.mjs";
 import { SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { ADMIN, MEMBER, READER, ROSTER, FOUNDER_ROW, SIGNERS, SIGNER_KEYS, ARITH, membersTable, membersTableMember, refuse, env } from "./fixtures.mjs";
 
@@ -569,4 +569,71 @@ test("R72 choosing the grant that includes administering draws the confirmation 
   const stuck = await c.press("memberadd", { values: { "mi-id": "lee", "mi-cover": "Lee", ["mi-caps-" + idx]: true } });
   assert.deepEqual(stuck.sent, []);
   has(c, "screen.members.cap.administer.confirm.head", { who: "Lee" });
+});
+
+/* ---- T51 fix round 2: C89, C90, C94 ---- */
+
+test("R2 C89: inviting a third administrator is a proposal the plane records: it is drawn as done (not as a refusal) with who must still endorse, the roster is read again and shows the proposed member; control: another refusal is still a refusal, and an invitation that is not for an administrator is unchanged", async () => {
+  let listed = 0;
+  const proposed = { member_id: "lee", handle: null, role: "admin", status: "proposed", capabilities: ["contribute"], cover: "Lee from 62nd", expertise: [], invitation: null };
+  const table = membersTable({
+    memberlist: () => env({ members: [FOUNDER_ROW, ...ROSTER, ...(++listed > 1 ? [proposed] : [])] }),
+    memberadd: (q, b) => refuse("CONSENSUS_REQUIRED", { memberId: b.memberId, proposed: true, have: ["rosa"], awaiting: ["admin", "lu"] }),
+  });
+  const a = await open("members", { me: ADMIN, table });
+  const idx = [...ADMIN.vocabulary, "administer"].indexOf("administer");
+  for (const [id, v] of Object.entries({ "mi-id": "lee", "mi-cover": "Lee from 62nd" })) a.b.doc.getElementById(id).value = v;
+  await a.tick("mi-caps-" + idx, true);
+  await a.tick("mi-ok-0", true);
+  const before = a.p.requests.filter((r) => r.op === "memberlist").length;
+  const r = await a.press("memberadd", {});
+  assert.equal(a.p.requests.filter((x) => x.op === "memberadd").length, 1, "one request for the proposal");
+  assert.deepEqual(r.sent.find((x) => x.op === "memberadd").body, { memberId: "lee", cover: "Lee from 62nd", capabilities: ["contribute"], role: "admin" });
+  assert.equal(a.refused, null, "not drawn as a refusal");
+  const note = all(a.tree, (e) => e.attrs["data-shown"] === "proposed")[0];
+  assert.ok(note, "drawn as done");
+  assert.equal(squash(textOf(note)), said("refusal.CONSENSUS_REQUIRED", { awaiting: said("member.founder.unnamed") + ", lu" }));
+  assert.ok(a.p.requests.filter((x) => x.op === "memberlist").length > before, "the roster is read again");
+  assert.ok(a.text.includes("Lee from 62nd") || rowOf(a.tree, "lee"), "the proposed member is in the roster");
+  // control: any other refusal is drawn as one
+  const b = await open("members", { me: ADMIN, table: membersTable({ memberadd: { ok: false, status: 403, code: "NOT_AN_ADMIN" } }) });
+  for (const [id, v] of Object.entries({ "mi-id": "lee", "mi-cover": "Lee" })) b.b.doc.getElementById(id).value = v;
+  await b.tick("mi-caps-" + idx, true);
+  await b.tick("mi-ok-0", true);
+  await b.press("memberadd", {});
+  assert.ok(b.refused && b.refused.key === "refusal.NOT_AN_ADMIN", JSON.stringify(b.refused));
+  // control: not for an administrator, sent as before
+  const c = await open("members", { me: ADMIN, table: membersTable() });
+  const plain = await c.press("memberadd", { values: { "mi-id": "kay", "mi-cover": "Kay", "mi-caps-0": true } });
+  assert.deepEqual(plain.sent[0].body, { memberId: "kay", cover: "Kay", capabilities: ["contribute"] });
+});
+
+test("R56 C90: the vote to remove an administrator is not drawn where the plane cannot carry it (two administrators); with three, or with the count unread, it is (control)", async () => {
+  const two = await open("members", { me: ADMIN, table: membersTable({ adminarith: ARITH(2) }) });
+  assert.deepEqual(btn(panelOf(two.tree, "lu"), "adminremove"), [], "no removal vote at two administrators");
+  has(two, "screen.members.a.majority.that.leaves.out");
+  const three = await open("members", { me: ADMIN, table: membersTable({ adminarith: ARITH(3) }) });
+  assert.equal(btn(panelOf(three.tree, "lu"), "adminremove").length, 1);
+  const unread = await open("members", { me: ADMIN, table: membersTable({ adminarith: refuse("NOT_AN_ADMIN") }) });
+  assert.equal(btn(panelOf(unread.tree, "lu"), "adminremove").length, 1, "an unread count hides nothing");
+});
+
+test("R55 R56 C94: a key's registrar and a removal's voters are named by memberName: a member the roster does not hold or who has no handle by the fallback word, never an id", async () => {
+  const signers = [
+    { key_b64: SIGNER_KEYS.dev, member_id: "dev", comment: "", status: "active", added: "2026-10-04T00:00:00Z", status_by: "ghost-7", status_at: "2026-10-04T00:00:00Z", origin: "admin", registered_by: "ghost-7", member_status: "active" },
+    { key_b64: SIGNER_KEYS.lu, member_id: "lu", comment: "", status: "revoked", added: "2026-10-05T00:00:00Z", status_by: "mai-k", status_at: "2026-10-06T00:00:00Z", origin: "self", registered_by: "lu", member_status: "active" },
+  ];
+  const a = await open("members", { me: ADMIN, table: membersTable({ signerlist: env({ signers }) }) });
+  const dev = textOf(all(a.tree, (e) => e.tag === "li" && e.attrs["data-member"] === "dev")[0]);
+  assert.ok(dev.includes(said("screen.members.key.registered.by.rosa.3", { member: said("shell.card.member"), date: day("2026-10-04T00:00:00Z") })), dev);
+  const lu = textOf(all(a.tree, (e) => e.tag === "li" && e.attrs["data-member"] === "lu")[0]);
+  assert.ok(lu.includes(said("screen.members.key.react.key.withdrawn.by.rosa.12", { member: said("shell.card.member"), date: day("2026-10-06T00:00:00Z") })), lu);
+  for (const id of ["ghost-7", "mai-k"]) assert.ok(!a.text.includes(id), id + " is not drawn");
+  // a voter and the one awaited, by handle or the fallback word
+  const under = env({ ok: true, removals: [{ target: "lu", voters: [{ voter: "ghost-7", at: "2026-10-14T00:00:00Z" }], awaiting: ["mai-k"], have: 1, need: 2 }] });
+  const b = await open("members", { me: ADMIN, table: membersTable({ adminremovalsopen: under }) });
+  const block = textOf(all(b.tree, (e) => e.attrs["data-removal"] === "lu")[0]).replace(/\s+/g, " ");
+  assert.ok(block.includes(said("screen.members.removal.agreed", { member: said("shell.card.member") })));
+  assert.ok(block.includes(said("screen.members.removal.notyet", { member: said("shell.card.member") })));
+  for (const id of ["ghost-7", "mai-k"]) assert.ok(!block.includes(id), id + " is not drawn");
 });
