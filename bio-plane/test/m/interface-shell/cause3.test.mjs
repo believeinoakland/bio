@@ -180,3 +180,16 @@ test("the key-file helper answers a chosen file's text and refuses an unchosen, 
   assert.equal(p.requests.length, before, "it sends nothing");
   assert.equal(p.root().innerHTML, html, "it changes no screen");
 });
+
+test("R113 a partial re-read (a read that appears once the assistant is reachable) does not discard the answer of a full read still on its way", async () => {
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+  const screen = { id: "members", words: [], reads: (view) => (view.reachable ? { a: { op: "memberlist" }, b: { op: "browse" } } : { a: { op: "memberlist" } }), acts: [],
+    render: (cs) => cs.state("a", () => '<b id="drawn">a</b>') };
+  let release;
+  const p = await boot({ screens: [screen], path: "/app/members", plane: { ...plane, ...reach, memberlist: () => new Promise((r) => { release = () => r(ok({ members: [] })); }) } });
+  assert.equal(p.byOp("browse").length, 1, "the new read was read");
+  assert.equal(p.doc.getElementById("drawn"), null, "the first read has not answered");
+  release();
+  await settle();
+  assert.ok(p.doc.getElementById("drawn"), "its answer, arriving after the partial re-read, is drawn");
+});

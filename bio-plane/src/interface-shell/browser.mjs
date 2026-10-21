@@ -341,7 +341,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const sigOf = (sp) => JSON.stringify([sp.op, sp.query || null, sp.body || null]);
   const readsOf = (inst) => { try { return inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { return {}; } };
   /* R113: the reads whose request differs from the one last sent for them */
-  const changedReads = (inst) => Object.entries(readsOf(inst)).filter(([n, sp]) => inst.sig[n] !== undefined && inst.sig[n] !== sigOf(sp)).map(([n]) => n);
+  const changedReads = (inst) => Object.entries(readsOf(inst)).filter(([n, sp]) => inst.sig[n] !== sigOf(sp)).map(([n]) => n);
   function rereadChanged(inst, more) {
     const names = [...new Set(changedReads(inst).concat(more || []))];
     if (names.length && (inst.pub || ME)) return readAll(inst, names);
@@ -356,6 +356,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     let specs = {};
     try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
     const gen = ++inst.gen;
+    /* R113: a partial re-read must not discard the answers of a full read still in flight: only a newer full read does */
+    if (!names) inst.fullGen = gen;
     if (inst.key === "m" && subjectless(inst, specs)) { inst.unavail = "nothing"; return draw(); }
     const todo = Object.entries(specs).filter(([n]) => !names || names.includes(n));
     /* R113: a read's request is remembered only when it is read, so a read left alone is compared with the last request it was sent */
@@ -365,7 +367,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     draw();
     await Promise.all(todo.map(async ([n, spec]) => {
       const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
-      if (gen !== inst.gen && !names) return;
+      if (!names && gen !== inst.fullGen) return;
       inst.data[n] = outcome(spec, a, inst);
       /* R93: a read marked `refresh: true` is re-read every 45 seconds; its answer is stamped for `cs.fresh()` */
       if (spec.refresh === true) { inst.fresh[n] = a.kind === "ok" ? Date.now() : 0; armRefresh(inst, n); }
