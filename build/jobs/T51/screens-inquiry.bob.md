@@ -298,3 +298,7 @@ DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. Keys mint
 ## B27 · CHANGE
 
 Merged on tranche/T51 (K4332): WIZARD-SCRIPTS #22 (the registry at 654a735535: contradictionflag is a registered act on document; draw it by act.contradictionflag.label.document, no owed prefix) and CAPTURE #41 (every held row answers whole: true/false/null; withhold OCR (and vouch) only on whole: false, capture R77). Merge the tranche and apply both before COMPLETE.
+
+## B28 · CHANGE
+
+DEC-398 (UX-DESIGN U433, K4333) is merged on tranche/T51 with setup-words rows regenerated: merge it. The rows you asked for now exist (settings: hosting date, export tables, nosignatures.next, domain.checked, shell.field.needed, watching/leads purpose; intake: act.inboxresolve.label.inbox.putback, .putback.does, screen.inbox.putback.done; inquiry: screen.document.retire.refused.illegal and .cited). Draw them where you keyed stand-ins, then post COMPLETE.
