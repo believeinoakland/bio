@@ -248,3 +248,7 @@ Merged tranche/T51 (437339a938). Module tests 75/75 (new: signatures 3, declared
 - `checks/ownership.mjs … file-safety tranche/T51 job/T51/file-safety`: 8 files changed by file-safety; 0 failures.
 
 Size (session_013rwPMgEDrWmt84TRnUfgec): test runs 9, module lines 2474
+
+## J9 · QUESTION
+
+Words needed (K3810; I used stand-ins with plain localize defaults, named in my record): refusal.SIGNATURES_RUN_RECENT (new row C-140.44: a check for signatures was made under 15 minutes ago, no run started; the answer also carries attempted_at), file-safety.index.signatures_refused_unnumbered (the reason line when the scanner states MIRROR_REFUSED with no status number), file-safety.index.checking_for_new_signatures, file-safety.index.no_scanner_so_no_run_started, file-safety.index.a_run_was_started_lately, file-safety.index.the_scanner_did_not_start. Please have the design stream write the first two; the other four are acts and details. Nothing waits on this.
