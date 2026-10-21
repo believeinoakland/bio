@@ -13,12 +13,14 @@
    T51 (T51-30): a resolution says how it was matched (`matched_by`, R58) and `resolutionsFor` answers what the document
    names (`names`); `onlyByIdentifier` (R57), `subjectsNamed` (R59) and `similarSubjects` (R60) are the reads the graph,
    Find's subject route and the near-match check make; a naming candidate carries its `page` (R61).
+   T51 fix round 3 (C64; DEC-401, DEC-402): an office a member names carries `named_by_member` until an administrator
+   confirms it (R63), and `confirmOffice` (`op=officeconfirm`) is that confirm (R64).
    Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their dispatch), the check
    catalogue (C-91, now `checks.mjs`; the shared act rows and the grade list are `record-grammar`'s, read from there)
    and `schema.mjs` (the four tables, now `schema.mjs` here), with the rows this job applied named at their sites.
    It derives no connection: that is `connections`'. */
 import { recordOf, perItem } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER, notAnAdmin } from "../membership/index.mjs";
 import { normAlias, labelTerms, noSha } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
@@ -30,7 +32,7 @@ import { MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { registerOwner, BOUNDS, DECLARED_LABEL, LOWEST_GRADE } from "../connection-grammar/index.mjs";
 import { validAt, compare as compareTimes, reasonText } from "../civil-time/index.mjs";
 import { checkContentExtent, canonicalExtent, describeExtent, CONTENT_EXTENT_DOCUMENT_ONLY } from "../content/index.mjs";
-import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDEX, SECTOR_COLUMN, FORUM_KIND_COLUMN, MATCHED_BY_COLUMN, MATCHED_BY } from "./schema.mjs";
+import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDEX, SECTOR_COLUMN, FORUM_KIND_COLUMN, MATCHED_BY_COLUMN, MATCHED_BY, OFFICE_MARK_COLUMNS } from "./schema.mjs";
 import { IDSPACE_CHECKS, ENTITY_CHECKS, idspaceRefusal } from "./checks.mjs";
 
 export { IDSPACE_CHECKS, ENTITY_CHECKS, ENTITIES_SCHEMA };
@@ -420,6 +422,9 @@ export class Entities {
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
     for (const [table, column] of [...WITHDRAWAL_COLUMNS, SECTOR_COLUMN, FORUM_KIND_COLUMN])
       if (!this.#cols(table).includes(column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+    /* R63, R64: the office mark, absent from a store written before it (those offices read unmarked). */
+    for (const [table, column, type] of OFFICE_MARK_COLUMNS)
+      if (!this.#cols(table).includes(column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
     /* R39: the folded basis, filled once for the machine resolutions of a store written before it. */
     const [bt, bc] = BASIS_NORM_COLUMN;
     if (!this.#cols(bt).includes(bc)) {
@@ -572,10 +577,13 @@ export class Entities {
     const name = isProceeding ? facet.label : lab;
     const at = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
+    /* R63: an office a member who is not an administrator registers is marked until an administrator confirms it; one an
+       administrator or a machine registers is not. Which screen may send the act is the door's (`op-grades`), not asked here. */
+    const marked = k === "office" ? (by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
     return this.#record.transact(() => {
       const { id } = this.#record.allocId("ENT", at.slice(0, 4));
-      this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at,sector,forum_kind) VALUES (?,?,?,?,?,?,?,?)`,
-                     id, k, name, note.slice(0, 2000), by, at, sec, fk);
+      this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at,sector,forum_kind,named_by_member) VALUES (?,?,?,?,?,?,?,?,?)`,
+                     id, k, name, note.slice(0, 2000), by, at, sec, fk, marked);
       const seen = new Set();
       const put = (alias, canonical) => {
         const norm = normAlias(alias);
@@ -658,7 +666,7 @@ export class Entities {
   readEntity({ entityId, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an entity is read by its id (op=entity&id=ENT-...)");
-    const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind FROM entities WHERE entity_id=?`, entityId);
+    const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by, confirmed_at FROM entities WHERE entity_id=?`, entityId);
     if (!e) return { ok: true, found: false, entity_id: entityId, entity: null };
     return { ok: true, found: true, entity: this.#entityView(e, this.#redactor(viewer)) };
   }
@@ -669,7 +677,7 @@ export class Entities {
     const norm = normAlias(alias);
     if (!norm) return { ok: true, alias: typeof alias === "string" ? alias : null, count: 0, entities: [] };
     const hits = this.#rows(
-      `SELECT DISTINCT e.entity_id, e.kind, e.label, e.note, e.declared_by, e.at, e.sector, e.forum_kind
+      `SELECT DISTINCT e.entity_id, e.kind, e.label, e.note, e.declared_by, e.at, e.sector, e.forum_kind, e.named_by_member, e.confirmed_by, e.confirmed_at
          FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
         WHERE a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`, norm);
     const keep = this.#redactor(viewer);
@@ -722,13 +730,14 @@ export class Entities {
       const empty = { ok: true, kind: k, entities: [], count: 0, limit: cap, truncated: false, next: null };
       if (viewerPredicate(viewer).scope === "DENY") return empty;
       const isOrg = ORGANISATION_KINDS.includes(k);
-      const rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind FROM entities
+      const rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector, forum_kind, named_by_member, confirmed_by FROM entities
                                 WHERE kind=? AND entity_id > ?${forums.length ? ` AND forum_kind IN (${forums.map(() => "?").join(",")})` : ""}
                                 ORDER BY entity_id LIMIT ?`, k, from, ...forums, cap + 1);
       const truncated = rows.length > cap;
       const page = truncated ? rows.slice(0, cap) : rows;
       const entities = page.map((e) => ({ entity_id: e.entity_id, kind: e.kind, label: e.label, note: e.note,
         ...(isOrg ? { sector: e.sector || SECTOR_UNDETERMINED, forum_kind: e.forum_kind ?? null } : {}),
+        ...(k === "office" ? { named_by_member: !!e.named_by_member, confirmed_by: e.confirmed_by ?? null } : {}),
         declared_by: e.declared_by, at: e.at }));
       return { ...empty, entities, count: entities.length, truncated,
                next: truncated ? entities[entities.length - 1].entity_id : null };
@@ -937,6 +946,38 @@ export class Entities {
     } catch (err) {
       return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_5", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
+  }
+
+  /* R63, R64: whether `by` is an active administrator (membership's R64; a machine class or an unknown id is none). */
+  #administers(by) {
+    try { return !!this.#membership && typeof this.#membership.isAdministrator === "function" && this.#membership.isAdministrator(by) === true; }
+    catch { return false; }
+  }
+
+  /** R64 (T51 fix round 3; C64; DEC-401, DEC-402; `op=officeconfirm`): an administrator confirms an office a member named
+   *  (R63): the mark is cleared, who confirmed it and when are kept, and nothing else of the office changes. Refusals, in
+   *  order, each writing nothing: `NO_ENTITY` (R37), `NO_SUCH_ENTITY` (R36), `NOT_AN_ADMIN` (membership's, a machine class
+   *  included), `NOT_AN_OFFICE`, `NOT_NAMED_BY_A_MEMBER`; a repeat answers `already: true`, whoever repeats it. `by` is the
+   *  control plane's stamp (R4). */
+  confirmOffice({ entityId, by = null } = {}) {
+    if (typeof entityId !== "string" || !entityId)
+      return noEntity(localize("entities.index.an_office_is_confirmed_by", "an office a member named is confirmed by its entity id"));
+    const e = this.#one(`SELECT kind, named_by_member, confirmed_by, confirmed_at FROM entities WHERE entity_id=?`, entityId);
+    if (!e) return noSuchEntity(entityId);
+    const who = by == null ? null : String(by);
+    if (!who || !this.#administers(who))
+      return notAnAdmin(who, localize("entities.index.confirming_an_office_a_member", "confirming an office a member named"));
+    if (e.kind !== "office")
+      return { ok: false, reason: "NOT_AN_OFFICE", entity_id: entityId, kind: e.kind,
+               detail: localize("entities.index.only_an_office_a_member", "only an office a member named is confirmed, and this subject is a {kind}. Nothing was changed.", { kind: String(e.kind) }) };
+    if (e.confirmed_by && !e.named_by_member)
+      return { ok: true, already: true, entity_id: entityId, named_by_member: false, confirmed_by: e.confirmed_by, at: e.confirmed_at };
+    if (!e.named_by_member)
+      return { ok: false, reason: "NOT_NAMED_BY_A_MEMBER", entity_id: entityId,
+               detail: localize("entities.index.this_office_was_not_named", "this office was not named by a member, so there is nothing to confirm. Nothing was changed.") };
+    const at = this.#now();
+    this.#sql.exec(`UPDATE entities SET named_by_member=0, confirmed_by=?, confirmed_at=? WHERE entity_id=?`, who, at, entityId);
+    return { ok: true, entity_id: entityId, named_by_member: false, confirmed_by: who, at };
   }
 
   /** R8 (K106): a mistaken alias withdrawn, never erased. Hidden from every new match and from R6; still listed
@@ -1311,6 +1352,9 @@ export class Entities {
              declared_by: e.declared_by, at: e.at,
              sector: isOrg ? e.sector || SECTOR_UNDETERMINED : null,
              forum_kind: FORUM_ENTITY_KINDS.includes(e.kind) ? e.forum_kind ?? null : null,
+             named_by_member: e.kind === "office" ? !!e.named_by_member : null,
+             confirmed_by: e.kind === "office" ? e.confirmed_by ?? null : null,
+             confirmed_at: e.kind === "office" ? e.confirmed_at ?? null : null,
              sector_history: sec.rows.map((h) => ({ sector: h.sector, prior: h.prior, note: h.note, by: h.set_by, at: h.at })),
              identifiers: ids.rows.map(identifierView),
              proceeding: e.kind === "proceeding" ? this.proceedingOf(e.entity_id) : null,
@@ -2063,6 +2107,8 @@ export function entitiesOps(e, url, body) {
     /* R11, R12: the recogniser and the member's grade-D testimony, the request's body as given. */
     resolve: () => e.resolve(body || {}),
     resolvetestify: () => e.testify(body || {}),
+    /* R64 (T51 fix round 3): an administrator confirms an office a member named; `by` is the control plane's stamp (R4). */
+    officeconfirm: () => e.confirmOffice(body || {}),
     /* R43 (T33-25): a scheme identifier held on an entity, its `by` the control plane's stamp (R4). */
     entityidentify: () => e.addIdentifier(body || {}),
     entity: () => e.readEntity({ entityId: q("id"), viewer: q("viewer") }),
@@ -2103,6 +2149,10 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["captureSha","ref","entityId","basis"], requires: ["captureSha","ref","entityId","basis"] } },
   resolutiondefect: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution"),
     fields: { accepts: ["captureSha","ref","entityId","reason","source"], requires: ["captureSha","ref","entityId","reason"] } },
+  /* R62 (T51 fix round 3; C64; DEC-401, DEC-402): the administrator's confirm of an office a member named (R64). A member reaches the
+     arm and is refused `NOT_AN_ADMIN` by it, as at memberAdd; `by` is the control plane's stamp, not an accept. */
+  officeconfirm: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("entities.declared.officeconfirm", "registry write, keyed by entity: an administrator confirms an office a member named from a request, clearing its mark"),
+    fields: { accepts: ["entityId"], requires: ["entityId"] } },
   /* R62 (T51; K4243; op-declarations R80, op-grades R49): a read, so its class and mutating are the hand row's. `alias` is what the
      arm reads; a call without it answers `count: 0`, not a refusal, so no field is required. */
   entitybyalias: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("entities.declared.entitybyalias", "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing"),

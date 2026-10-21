@@ -63,7 +63,7 @@ test("R54 absent, none is held (never guessed, never other): a body, an institut
   }
   assert.deepEqual(w.e.entitiesOfKind({ kind: "body", viewer: VIEWER, forum_kind: "court" }).entities.map((e) => e.entity_id), [court]);
   assert.deepEqual(w.e.entitiesOfKind({ kind: "office", viewer: VIEWER }).entities.map((e) => Object.keys(e)),
-                   Array(2).fill(["entity_id", "kind", "label", "note", "declared_by", "at"]), "an office item answers no forum_kind");
+                   Array(2).fill(["entity_id", "kind", "label", "note", "named_by_member", "confirmed_by", "declared_by", "at"]), "an office item answers no forum_kind");
 });
 
 test("R54 control: forum_kind on a person (or any kind but body and institution) is refused FORUM_KIND_NOT_FOR_KIND, a value outside the list UNKNOWN_FORUM_KIND naming it, both before an id is allocated and writing nothing", () => {

@@ -186,6 +186,13 @@ export const SECTOR_COLUMN = Object.freeze(["entities", "sector"]);
    written before T50 lacks the column and its entities read none. */
 export const FORUM_KIND_COLUMN = Object.freeze(["entities", "forum_kind"]);
 
+/* R63, R64 (T51 fix round 3; C64; DEC-401, DEC-402): an office a member named from a request is marked `named_by_member`
+   (1) until an administrator confirms it, who confirming it and when are kept; NULL for every other entity and for an
+   office registered before the mark (it reads unmarked). A store written before it lacks the columns. */
+export const OFFICE_MARK_COLUMNS = Object.freeze([
+  ["entities", "named_by_member", "INTEGER"], ["entities", "confirmed_by", "TEXT"], ["entities", "confirmed_at", "TEXT"],
+]);
+
 /* R8: the columns a store written before K106 lacks. */
 export const WITHDRAWAL_COLUMNS = Object.freeze([
   ["entity_aliases", "withdrawn_by"], ["entity_aliases", "withdrawn_at"], ["entity_aliases", "withdrawn_reason"],
