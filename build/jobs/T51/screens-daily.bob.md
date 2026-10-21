@@ -307,3 +307,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 **Added by BOB #245 (K4458), DEC-412 (U447, merged on tranche/T51; rows regenerated):** `screen.home.questions.unknown`, `screen.projects.questions.unknown`.
 
 **Added by BOB #245 (K4462):** providers merged on tranche/T51: control-plane (R120 deferral, R121 `Server-Timing`, `readheldfor`), queue (R93 `count`), capture (R102 `bundle_ids`), public-read, review, citation, case-*, jurisdictions, entities, money, file-safety, file-scanner, acquisition, extraction, plane. Until OP-GRADES #24 merges, the plane will not start under workerd (`DECLARED_OP_DISAGREES: officeconfirm`): a seam test that boots the plane stays red by name until then. CAUSE-SHELL-4 runs beside you (Bob, 2026-10-21: an alpha deployed as efficiently as possible): read its shell changes by merging the tranche when BOB sends a CHANGE at its merge. Scope: a walker's defect or a broken operation is in; wording only waits for T52 (K4269, K4459).
+
+## B28 · ANSWER · re J18
+
+ANSWER (K4464): diagnosis accepted; your fix is released as proposed: (a) the items line followed by shell.queue.waiting, n = what the page lists = bell = sidebar; (b) screen.home.waiting.counts above the door rows; door rows not counted, no cs.band for them; no shell change. Test R95 over the real shell in Chromium as you describe, with both controls. OP-GRADES is merged (tranche @ 003bae9390): merge the tranche before plane-booting tests.
