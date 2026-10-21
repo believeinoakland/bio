@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01HkiEHqLtSvzj1srMtcPyNY · depth 2 · COMPLETE · handled B15
+**Status** · session_01HkiEHqLtSvzj1srMtcPyNY · depth 2 · COMPLETE · handled B17
 
 ## J1 · REPORT
 
@@ -217,3 +217,28 @@ Open (named, not marked met): (i) P10 (c): "switch archiveProfile to get(digest,
 Declared ops: none added. Deferred: none.
 
 Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 30, module lines 3504
+
+## J16 · COMPLETE
+
+COMPLETE (B16 applied; ACQUISITION #24). `tranche/T51` merged (host-governor R30 is on it); head pushed on job/T51/acquisition.
+
+B16: `acquire` keeps the governed fetch's own `retry_in_ms` (host-governor R30's `{res, retry_in_ms}`) and `SOURCE_REFUSED` answers the larger of it and a 429's `Retry-After`. The N-slow-refuse whole-path test (real `HostGovernor`: 403 host, 429 host, cooling host refused at once with no fetch, ok host unchanged) is now green.
+
+Suite: acquisition 201 of 204 on the first run after the change. Reds: `R98 (fix round 4, C25)`, red by name until pdf-reader R40's `pdfTitle` merges (not on `tranche/T51`); `R29 R31` on the design's `refusal.CAPTURE_NOT_KEPT` row (accepted). The third was `R95: the times are the only difference` (stage-times.test.mjs), a flake under load that passes alone and 4 of 4 times in its file (the T48-15 family: a second-boundary field in the comparison); not changed by this CHANGE.
+Checks: architecture acquisition 0 failures; ownership 0 failures.
+
+Open: P10 (c) as in J15 (record-core R88 ranged get, your CHANGE); R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s root cause unknown, for the redeploy's clocks.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 33, module lines 3507
+
+## J17 · COMPLETE
+
+COMPLETE (B17 applied; ACQUISITION #24). `tranche/T51` merged (record-core R88 on it); head pushed on job/T51/acquisition.
+
+P10 (c) closed: `archiveProfile` asks the store for `get(digest, {range: {offset: 0, length: 1024}})` (`unpack.mjs`); `readThrough` passes a ranged get to the store uncached, and answers it from its cache when the whole part was already read (so a store with no stored checksum, whose provenance R7 check reads the part anyway, costs no extra read). Test (t50, "R48 (P10 c)"): a 4 MB non-ZIP held capture (stored with its checksum, as R2 holds it) answers NOT_AN_ARCHIVE and every bucket `get` carries the range offset 0, length 1024; red on the previous code (it asked for the whole object), green now; control: a real ZIP is still listed (2 entries). The fixture bucket now honours `range` and records the option.
+
+Suite 202 of 204. Reds: `R98 (fix round 4, C25)`, red by name until pdf-reader R40's `pdfTitle` merges; `R29 R31`, the design's `refusal.CAPTURE_NOT_KEPT` row. N-slow-refuse green (B16). Architecture acquisition 0 failures; ownership 0 failures.
+
+Open: R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s, root cause unknown, for the redeploy's clocks.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 36, module lines 3512

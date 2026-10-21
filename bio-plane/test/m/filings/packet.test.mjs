@@ -216,7 +216,11 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
   const base = { rule: "claim_act", applies_to: "claim", days: 10, citation: "Test Stat. § 9.30", basis: "TEST", status: "researched" };
   const prof = (deadlines) => {
     const x0 = world();
-    return { ...x0.profile(PROFILE), id: "test-filings-deadlines", deadlines };
+    /* the records-request windows stay, since the profile's records law names one as its first-request window
+       (jurisdictions R96) */
+    const p0 = x0.profile(PROFILE);
+    return { ...p0, id: "test-filings-deadlines",
+             deadlines: [...(p0.deadlines || []).filter((d) => d.applies_to === "records_request"), ...deadlines] };
   };
   const x = tier3({}, { profiles: [prof([{ ...base, days: 11, count: "business", starts: "act" },
                                          { ...base, rule: "claim_filed", count: "calendar", starts: "filed" }])] });
@@ -249,8 +253,10 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
 test("R30 a packet's business-day deadline states the calendar's status as action-clocks R10 states it, read through local-facts' factStatus: unconfirmed, confirmed, corrected (naming who and when, counted on the corrected days), undetermined when disputed; the office's own entries read for that office alone; a calendar count states none", async () => {
   const x0 = world();
   const PID = "test-filings-r30";
-  const p = { ...x0.profile(PROFILE), id: PID,
-              deadlines: [{ rule: "claim_act", applies_to: "claim", days: 2, count: "business", starts: "act", citation: "Test Stat. § 9.30", basis: "TEST", status: "researched" },
+  const p0 = x0.profile(PROFILE);
+  const p = { ...p0, id: PID,
+              deadlines: [...(p0.deadlines || []).filter((d) => d.applies_to === "records_request"), /* jurisdictions R96 */
+                          { rule: "claim_act", applies_to: "claim", days: 2, count: "business", starts: "act", citation: "Test Stat. § 9.30", basis: "TEST", status: "researched" },
                           { rule: "claim_cal", applies_to: "claim", days: 2, count: "calendar", starts: "act", citation: "Test Stat. § 9.31", basis: "TEST", status: "researched" }] };
   const x = world({ profiles: [p] });
   /* the act on Wednesday 12 August 2026; the Town Clerk's office alone keeps Friday the 14th; only Sunday is the

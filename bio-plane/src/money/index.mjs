@@ -72,6 +72,10 @@ export function refusal(code, detail, extra = {}) {
   const row = Object.prototype.hasOwnProperty.call(SHARED_ACT_CHECKS, code) ? SHARED_ACT_CHECKS[code] : null;
   return { ...extra, ok: false, reason: code, code, ...(row ? { check: row.check, translation: row.translation } : {}), detail };
 }
+/* R29 (K4438): every period refusal of money answers MONEY_BAD_PERIOD, its own code; `detail` is the real reason. The one
+   sentence a member reads for it is keyed here, a stand-in until the design writes `refusal.MONEY_BAD_PERIOD`. */
+const badPeriod = (detail, extra = {}) =>
+  refusal("MONEY_BAD_PERIOD", detail, { ...extra, translation: localize("refusal.MONEY_BAD_PERIOD", "That period is not one this team's money records can read.") });
 const list = (xs) => xs.join(", ");
 
 /* K1569: THE ONE ANSWER TO ONE CONDITION, no money fact with the id `factId` is held (or the asker may not see it,
@@ -223,19 +227,19 @@ export class Money {
      and end instants, or a refusal. */
   #period(p, view) {
     if (p === undefined || p === null) return refusal("NO_PERIOD", localize("money.index.a_money_fact_states_the", "a money fact states the accounting period it covers"));
-    if (!isObj(p)) return refusal("BAD_PERIOD", localize("money.index.a_period_is_from_to", "a period is {from, to, precision, zone} or {fiscal, body}"));
+    if (!isObj(p)) return badPeriod(localize("money.index.a_period_is_from_to", "a period is {from, to, precision, zone} or {fiscal, body}"));
     const extra = Object.keys(p).find((k) => !PERIOD_FIELDS.has(k));
-    if (extra) return refusal("BAD_PERIOD", localize("money.index.a_period_has_no_field", "a period has no field {extra}", { extra: String(extra.slice(0, 40)) }));
+    if (extra) return badPeriod(localize("money.index.a_period_has_no_field", "a period has no field {extra}", { extra: String(extra.slice(0, 40)) }));
     const tz = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
     const zone = filled(p.zone) ? p.zone : tz;
-    if (!zone) return refusal("BAD_PERIOD", localize("money.index.the_period_states_no_zone", "the period states no zone and the active profiles give no time zone"));
+    if (!zone) return badPeriod(localize("money.index.the_period_states_no_zone", "the period states no zone and the active profiles give no time zone"));
     if (p.fiscal !== undefined) {
-      if (!filled(p.fiscal)) return refusal("BAD_PERIOD", localize("money.index.a_fiscal_key_is_a", "a fiscal key is a non-empty string, such as the profile's label for a fiscal year"));
+      if (!filled(p.fiscal)) return badPeriod(localize("money.index.a_fiscal_key_is_a", "a fiscal key is a non-empty string, such as the profile's label for a fiscal year"));
       const body = filled(p.body) ? p.body : "*";
       const fy = Array.isArray(view.fiscal_year) ? view.fiscal_year : [];
       const entry = fy.find((f) => f && f.body === body) || fy.find((f) => f && f.body === "*");
       if (!entry || typeof entry.start !== "string")
-        return refusal("BAD_PERIOD", localize("money.index.the_active_profiles_hold_no", "the active profiles hold no fiscal year for {body}, so {fiscal} cannot be mapped", { body: String(body), fiscal: String(p.fiscal) }));
+        return badPeriod(localize("money.index.the_active_profiles_hold_no", "the active profiles hold no fiscal year for {body}, so {fiscal} cannot be mapped", { body: String(body), fiscal: String(p.fiscal) }));
       const years = [...p.fiscal.matchAll(/\d{4}/g)].map((m) => Number(m[0]));
       for (const y of years.flatMap((y) => [y - 1, y])) {
         let fp;
@@ -245,22 +249,22 @@ export class Money {
           return r.ok === false ? r : { ...r, key: p.fiscal, body };
         }
       }
-      return refusal("BAD_PERIOD", localize("money.index.the_profiles_fiscal_year_for", "the profile's fiscal year for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }));
+      return badPeriod(localize("money.index.the_profiles_fiscal_year_for", "the profile's fiscal year for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }));
     }
     return this.#range({ from: p.from, to: p.to ?? null, precision: p.precision || "day", zone });
   }
   #range({ from, to, precision, zone }) {
-    if (!filled(from)) return refusal("BAD_PERIOD", localize("money.index.a_period_states_its_start", "a period states its start (from)"));
+    if (!filled(from)) return badPeriod(localize("money.index.a_period_states_its_start", "a period states its start (from)"));
     if (!["day", "minute", "second"].includes(precision))
-      return refusal("BAD_PERIOD", localize("money.index.a_periods_precision_is_day", "a period's precision is day, minute or second"));
+      return badPeriod(localize("money.index.a_periods_precision_is_day", "a period's precision is day, minute or second"));
     let a, b = null;
     try { a = bounds({ value: from, precision, zone }); } catch { a = { refused: "DATE_INVALID", why: "unreadable" }; }
-    if (a.refused || a.undetermined) return refusal("BAD_PERIOD", localize("money.index.the_periods_start_why", "the period's start: {why}", { why: reasonText(a.why) }), { why: a.why });
+    if (a.refused || a.undetermined) return badPeriod(localize("money.index.the_periods_start_why", "the period's start: {why}", { why: reasonText(a.why) }), { why: a.why });
     if (to !== null) {
-      if (typeof to !== "string") return refusal("BAD_PERIOD", localize("money.index.a_periods_end_is_a", "a period's end is a value of its precision, or null when unstated"));
+      if (typeof to !== "string") return badPeriod(localize("money.index.a_periods_end_is_a", "a period's end is a value of its precision, or null when unstated"));
       try { b = bounds({ value: to, precision, zone }); } catch { b = { refused: "DATE_INVALID", why: "unreadable" }; }
-      if (b.refused || b.undetermined) return refusal("BAD_PERIOD", localize("money.index.the_periods_end_why", "the period's end: {why}", { why: reasonText(b.why) }), { why: b.why });
-      if (b.latest <= a.earliest) return refusal("BAD_PERIOD", localize("money.index.the_period_ends_before_it", "the period ends before it starts"));
+      if (b.refused || b.undetermined) return badPeriod(localize("money.index.the_periods_end_why", "the period's end: {why}", { why: reasonText(b.why) }), { why: b.why });
+      if (b.latest <= a.earliest) return badPeriod(localize("money.index.the_period_ends_before_it", "the period ends before it starts"));
     }
     return { from, to, precision, zone, start: a.earliest, end: b ? b.latest : null };
   }

@@ -1033,7 +1033,7 @@ async function acquireRun(cap, body0, opts, t) {
   const validators = crHeldSha && !renderAsked ? cap.validatorsOf({ addressNorm: addrNorm, captureSha: crHeldSha }) : null;
   const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
                                      ...(validators.lastModified ? { "if-modified-since": validators.lastModified } : {}) } : null;
-  let res = archiveMemento ? archiveMemento.res : null, resolvedUrl = null;
+  let res = archiveMemento ? archiveMemento.res : null, resolvedUrl = null, governedRetryMs = null;
   if (!res) try {
     /* R31, R42: a sweep's redirects, and every redirect when the group's own hosts are named, are followed BY HAND,
        one governed fetch per hop, each target judged (against the scope, against the group's own hosts) before
@@ -1051,6 +1051,7 @@ async function acquireRun(cap, body0, opts, t) {
           retry_in_ms: g.retry_in_ms || 0, locator });
       }
       res = g.res;
+      governedRetryMs = Number.isFinite(g.retry_in_ms) ? g.retry_in_ms : null;   // host-governor R30: the cool-off the refusal recorded
       if (!byHand) break;
       const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
       if (!loc || hop >= REDIRECT_MAX) break;
@@ -1122,8 +1123,9 @@ async function acquireRun(cap, body0, opts, t) {
   if (!res.ok) {
     await noteOutcome("source_refused", res.status);
     /* R9 (fix round 4, N-slow-refuse): a source that says wait is relayed at once, with how long it said (`Retry-After`) */
-    const waitMs = res.status === 429 ? retryAfterMs(res.headers.get("retry-after")) : null;
-    return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator, ...(Number.isFinite(waitMs) && waitMs > 0 ? { retry_in_ms: waitMs } : {}) });
+    const asked = res.status === 429 ? retryAfterMs(res.headers.get("retry-after")) : null;
+    const waitMs = Math.max(Number.isFinite(asked) ? asked : 0, governedRetryMs || 0);
+    return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator, ...(waitMs > 0 ? { retry_in_ms: waitMs } : {}) });
   }
   /* R32: on the archive arm the success is the memento's, recorded once it is chosen (below), never for one refused. */
   if (!archiveMemento) await noteOutcome("success", res.status);

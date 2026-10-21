@@ -28,6 +28,7 @@ import { captureRequestsOf, captureRequestsOps } from "../../../src/capture-requ
 import { recordOf, recordCoreOps } from "../../../src/record-core/index.mjs";
 import { governorOf, governorRoutes } from "../../../src/host-governor/index.mjs";
 import { acquireTimingsOps } from "../../../src/plane/acquire-timings.mjs";
+import { pendingOf, pendingOps } from "../../../src/plane/pending.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
 import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
@@ -88,6 +89,7 @@ import { aiUseOf, aiUseOps } from "../../../src/ai-use/index.mjs";
 import { readingGuidesOf, readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
 import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerGettersOf } from "../../../src/plane/owners.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { investigationOf } from "../../../src/investigation/index.mjs";
 import { investigationOps } from "../../../src/investigation/ops.mjs";
@@ -109,6 +111,9 @@ export const MODULE_MAPS = [
   ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
                                   coarchivestate: () => acquisitionOf(c).coArchiveState(),
                                   ...acquireTimingsOps(c, u) })],   /* R73 (K4231): acquisition's stage times of a running call */
+  /* R75 (T51 fix round 4; K4429): the plane's own store-internal route, `pendingadd`, directly after acquisition's pair: the door's
+     deferred reading (control-plane R120) written down for the object's alarm. R75 amends R9 for it and for `pending-work`. */
+  ["plane", (c, u) => pendingOps(pendingOf(c), u)],
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
   ["doorbell", (c, u, b) => doorbellOps(doorbellOf(c), u, b)],   /* R37: directly after capture's */
   ["file-safety", (c, u, b, e) => fileSafetyOps(fileSafetyOf(c), u, b, e)],   /* R26: directly after doorbell's */
@@ -199,9 +204,7 @@ export const MODULE_MAPS = [
     .filter(([op]) => !Object.hasOwn(translationsOps(translationsOf(c), u, b), op)))],
   ["admission", (c, u, b) => admissionOps(admissionOf(c), u, b)],
   /* plane R35 (K2585): control-plane's own map for owners with no arm (its R71, R72), over each owner's one instance */
-  ["control-plane", (c, u, b, e) => controlPlaneOwnerOps({ aiUse: () => aiUseOf(c), aiRuns: () => aiRunsOf(c, e),
-    caseAccount: () => caseAccountOf(c), review: () => reviewOf(c), legEarning: () => legEarningOf(c), capture: () => captureOf(c),
-    steps: () => stepsOf(c), investigation: () => investigationOf(c), questionExplorer: () => questionExplorerOf(c) }, u, b)],
+  ["control-plane", (c, u, b, e) => controlPlaneOwnerOps(ownerGettersOf(c, e), u, b)],   /* the getters the store hands (plane/owners.mjs), not a copy of them (K4435) */
   ["store-door", (c, u, b) => controlPlaneRoutes(c, u, b)],
 ];
 

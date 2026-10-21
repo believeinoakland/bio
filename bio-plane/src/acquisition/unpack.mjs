@@ -58,8 +58,11 @@ export function readThrough(ev) {
       heads.set(key, h);
       return h;
     },
-    async get(key) {
+    async get(key, options) {
+      /* R88 (record-core): a ranged look is the store's, never cached as the whole */
       const hit = kept.find((k) => k.key === key);
+      if (options && options.range && !hit) return ev.get(key, options);
+      if (options && options.range) { const r = options.range, b = hit.buf.slice(r.offset, r.offset + r.length); return { key, size: hit.buf.byteLength, arrayBuffer: async () => b }; }
       if (hit) return { key, size: hit.buf.byteLength, arrayBuffer: async () => hit.buf };
       const o = await ev.get(key);
       if (!o) return o;
@@ -792,7 +795,7 @@ async function archiveProfile(inst, ev, sha, parts) {
   /* R48 (fix round 4, P10 c; K4445): the opening bytes first. A capture that does not begin with the ZIP local-file magic is no ZIP archive
      (R17's `zip` needs the magic, `formats.mjs`), so it is answered at once from its first part's head, never profiled whole. */
   try {
-    const first = await ev.get(parts[0].sha256);
+    const first = await ev.get(parts[0].sha256, { range: { offset: 0, length: Math.min(1024, parts[0].bytes) } });
     const head = first ? new Uint8Array(await first.arrayBuffer()).subarray(0, 1024) : null;
     if (head && !hasZipMagic(head.subarray(0, 4))) {
       const f = detectFormat(head, null);
