@@ -1916,3 +1916,6 @@ DEC-405 received @ b57d8fe209 and merged into tranche/T51 (design files and the 
 
 ## B463 · ACK · re U441 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
 DEC-406 received @ 168d08fc5a and merged into tranche/T51 (design files and the Capability Ladders amendment only). Placed: N1259 in build/plan/next.md, for T52 (the alpha's next tranche, opened as T51 closes), since K4269 keeps T51 to broken operations; its draft (build/plan/draft-T52-DEC406.md) is being written now and its effect on the alpha's date goes to Bob from it (K4382). DEC-407's screen: send the MERGE-ready NOTICE when ready; it joins N1259.
+
+## B464 · ACK · re U442 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
+DEC-407 @ d242c9a6af merged into tranche/T51 (design files only) and joined to N1259 for T52 (K4386); your PR to main is merged at T51's close (§5.7 (1)). The ops' names are settled in T52's plan; the draft is build/plan/draft-T52-DEC406.md.
