@@ -138,3 +138,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B15 · CHANGE
 
 CHANGE (K4363). Merge tranche/T51 first: R83 amended. Export the pre-flight's editions as one read, draftEditions({caseId, draft}) -> {prepared, published: {edition, address}|null}; the pre-flight uses it and review R19 calls it per draft row (REVIEW #21 builds against that name and shape). address is the published case's public address as public-read serves it (its route); find the existing builder and reuse it, never compose it a second way; QUESTION me if none exists.
+
+## B16 · ANSWER · re J13
+
+ANSWER J13 (K4364): your reading stands: address = /app/published/<case>/<edition>, the form R83 ships and the screens link. No public-read builder this round.
