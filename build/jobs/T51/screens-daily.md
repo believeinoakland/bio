@@ -251,3 +251,7 @@ For you: (2) `projectownerremove` is on neither registry row nor in RE_POINTS, s
 ## J12 · COMPLETE
 
 COMPLETE (B21): `home` and `queue` now draw `release` and `filingapprove` as the design draws them (todos.mjs); both screens' acts equal the registry's. Vouch to-dos (one per place, her two statements, select then release) on Home and above the queue's list; "Read and approve it" on a letter's item (filingsfor, then filingapprove). Module suite 222/222; format, architecture, coverage (79/79), words, ownership 0 failures. See the record's "Completion (SCREENS-DAILY #14, B21)" for requirement lines and REPORTs: (1) rows missing in the design: screen.home.todo.vouch.one (dashboard's key read instead), and the drawing's button texts differ from the registry labels (I used act.<op>.label.<screen>); (2) no keyed queue kind/producer for a letter awaiting approval, so its item is drawn by the unkeyed words with the act; (3) setup-words build --check reports words-unreviewed.json stale at the tranche tip (not mine).
+
+## J13 · COMPLETE
+
+COMPLETE (B22): R74 done: a conflict seen in part opens /app/contradiction/<candidate>/<project> (project from parties[0] or between_projects[0], slash unescaped); a whole-seen candidate still opens by id. Test seen failing first; module suite 223/223; format, architecture, coverage 79/79, words, ownership 0 failures. Amended R74 line is in the record's Completion (#14, B21) section. B21's COMPLETE (J12) stands.
