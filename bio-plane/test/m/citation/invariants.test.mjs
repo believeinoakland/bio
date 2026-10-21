@@ -140,6 +140,7 @@ test("R11: each check moved here with its number, code and translation unchanged
     ["SEVERED_EDGE", "C-33.19", "src/citation/index.mjs cite > is-cite-severed"],
     ["RETIRED_NOT_CITABLE", "C-33.39", "src/citation/index.mjs cite > is-cite-retired"],
     ["NO_SUCH_QUESTION", "C-33.52", "src/citation/index.mjs cite > is-cite-question"],
+    ["BAD_GROUND", "C-33.58", "src/citation/index.mjs cite > is-cite-ground"],
     ["NOT_AN_INQUIRY", "C-33.53", "src/citation/index.mjs cite > is-cite-question"],
   ]);
   assert.deepEqual(Object.entries(CITE_EXTENT_CHECKS).map(([k, r]) => [k, r.check, r.where]), [
@@ -182,7 +183,7 @@ test("K3, R1, R7, R14: the op routes — the control plane's stamps are read fro
   assert.deepEqual(Object.keys(ops).sort(), ["cite", "citeimported", "drawquestion", "reinstate", "sever", "withdrawimported"]);
   ops.cite(); ops.sever(); ops.reinstate();
   assert.deepEqual(calls[0], ["cite", { project: "P", handle: "H", viewer: "member:ann", owner: "o", note: "n", author: "member:ann",
-    identity: "member:ann", role: "supports", extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
+    identity: "member:ann", role: "supports", ground: null, extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
     found: null, question: null }]);
   const edgeArgs = { project: "P", handle: "H", viewer: "member:ann", owner: "o", reason: "why", author: "member:ann", identity: "member:ann" };
   assert.deepEqual(calls[1], ["sever", edgeArgs]);
