@@ -11,7 +11,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, V, sha, sameRowsButTitle } from "./fixture.mjs";
+import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS, PHOTO_WORDS, PHOTO_STATES,
          photoRead } from "../../../src/case-disclosures/index.mjs";
 import { OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
@@ -281,9 +281,7 @@ test("R7: a photo R6 answers with obscured is written with its original's finger
   /* case-grammar R12, R31: `obscured` written flat and read back as {copy, label, marked, kind} (T40; T47) */
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`,
     ...materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }), "---", ""].join("\n"));
-  const back = sameRowsButTitle(materialsOf(fm).materials, out.materials.rows);
-  assert.deepEqual(back.read, back.written);
-  assert.ok(back.titles);
+  assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
 });
 
 test("R29: photosOf answers the ceremony's Photos step over R6's materials — one entry per document whose capture is a photo, in materials order, with who took it, the members relying on it and their roles, its state, marks (with their withdrawals), copy, refused cover and words (photo.refused.unchecked for an unchecked photo, photo.refused.format for a refused cover marked or not, OBSCURED_LABEL for a marked copy, PUBLISHED_LABEL for a copy with nothing to obscure, else null) — and unchecked counts the photos with no standing mark, each blocking signing; it reuses R6's read and writes nothing", () => {

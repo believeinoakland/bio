@@ -440,11 +440,3 @@ export function provDoc(c) {
     origin: { kind: "named_request" },
   };
 }
-
-/** `case-grammar` R12's reader against the rows written: every field but `title` identical, and `title`, where that
- *  reader returns it, the same. (T51 fix round 4, C47: the reader answers `title` once case-grammar's R12 is met; until
- *  then it answers none, and this compares the rest.) Answers `{read, written, titles}`. */
-export function sameRowsButTitle(read, written) {
-  const bare = (rows) => rows.map(({ title, ...r }) => r);
-  return { read: bare(read), written: bare(written), titles: read.every((r, i) => !("title" in r) || r.title === written[i].title) };
-}

@@ -7,7 +7,7 @@
    `carries` and `rests` arms (N529). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, T0, sha, sameRowsButTitle } from "./fixture.mjs";
+import { world, V, T0, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, chainsOf, materialHeld, materialRows } from "../../../src/case-disclosures/index.mjs";
 import { GRADING_METHOD_VERSION, DEPTH_BOUND, recomputePair } from "../../../src/strength/index.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
@@ -74,9 +74,7 @@ test("R6, R7: materialsJudged lists every document a member's chain reaches with
       title: `Document ${DOC2}`, obscured: null }]);
   /* read back through case-grammar's one reader */
   const fm = fmOf(w, materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }));
-  const back = sameRowsButTitle(materialsOf(fm).materials, out.materials.rows);
-  assert.deepEqual(back.read, back.written);
-  assert.ok(back.titles);
+  assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
   const body = carriesBodyLines(w.cd.methodOf(), out.materials, out.group).join("\n");
   assert.ok(body.includes(word("case-disclosures.case_carries")));
   const line = (ref) => body.split("\n").find((l) => l.startsWith(`- ${ref}, `));
@@ -364,4 +362,11 @@ test("R7 (fix round 4, C47; K4438): each materials: row carries `title`, the doc
   /* control: blank words are no title */
   w.st.sql.exec(`UPDATE bundles SET title='   ' WHERE bundle_id=?`, DOC2);
   assert.equal(blocks(w, [Q]).out.materials.rows[1].title, null);
+  /* the written block (case-grammar R12): each title is in the block's lines, and the one reader gives the rows back */
+  const rows = out.materials.rows;
+  const lines = materialBlockLines({ materials: rows, attestations: out.materials.attestations });
+  assert.ok(lines.join("\n").includes(FAQ) && lines.join("\n").includes(REPORT), "the titles are written into the case document");
+  const fm = fmOf(w, lines);
+  assert.deepEqual(materialsOf(fm).materials.map((r) => [r.ref, r.title]), rows.map((r) => [r.ref, r.title]));
+  assert.deepEqual(materialsOf(fm).materials, rows);
 });
