@@ -303,3 +303,11 @@ Proposed requirement lines for BOB: R37 gains C-118.11 `CAPTURE_NOT_HELD` (where
 Deferred: none.
 
 Size (session_01L8v9FL8LnZcJagkfmzoWBk): test runs 14, module lines 4151
+
+## J13 · COMPLETE
+
+COMPLETE for B12 (CHANGE), 798e0f2d04 on job/T51/capture (tranche/T51 merged first).
+captureseenin's declared description is now op-grades' sentence word for word (key capture.declared.captureseenin), and its weight is `observational` to agree with the hand row (my earlier `reversible` made the plane refuse registration: DECLARED_OP_DISAGREES). Nothing else changed.
+Tests: capture + cap13 + d57selflink + op-grades + op-declarations 637 tests, 634 pass. The 3 reds are other modules' ops without a spec at this tip: moneysets (money), remindersfor (action-clocks), scanmirror (file-safety). op-grades' cause3 C64 test (captureseenin) now passes; capture's plane.test.mjs passes.
+Checks: format 0, architecture 0, ownership 0 failures; coverage capture 54/54. Words: capture clean; the 3 words failures are op-grades' own (t33.mjs:214, t51.mjs:41, :45 inline plain sentences), not mine.
+Size (session_01L8v9FL8LnZcJagkfmzoWBk): test runs 18, module lines 4151
