@@ -1895,3 +1895,6 @@ HANDOFF from BOB #240 (K4337): screen.contradiction.flagged.by ('{member} said t
 
 ## B456 · ACK · re U435 · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 U435 merged into tranche/T51 (K4338).
+
+## B457 · ACK · re U436 · 2026-10-21 · session_01CDH1U1Jns5QQnWX7WDQ8yE · primary
+ACK U436: DEC-401 and DEC-402 (@ 43379a1a44) merged into tranche/T51 (design files only), rows regenerated; the plane's and screens' work is placed in T51's fix round 3 (K4350); option B is N1256 in next.md, placed when Bob says. The design PR reaches main at T51's close (§5.7 (1)).
