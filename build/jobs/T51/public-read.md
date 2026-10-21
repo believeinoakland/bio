@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01FPRrUF9Cu3BMKX1o1aFaK6 · depth 2 · COMPLETE · handled B6
+**Status** · session_01YFbwaESicnaBkDk7GZ5Su5 · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -91,3 +91,19 @@ Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 4, module lines 3663
 Tests and checks: `node --test test/m/public-read/`: 227 pass, 0 fail. format: 0 failures. architecture public-read: 0 failures. words public-read: inline 5 (the 4 manifest constants and 1 registration detail, all accepted by name in B6), plain 2 (the registration details), testcopy 0.
 
 Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 5, module lines 3663
+
+## J9 · COMPLETE
+
+**C2 met (public-read R39, R3).** A published finding's `body.conclusion` and `body.falsifies` now carry the words, never a heading: the signed case document's `case_conclusions` claim and falsifier first, the front matter's authored words next, the section's own words (heading removed) last, `null` when there are none. `authored` is unchanged.
+- `publication/worker.mjs`: `sectionWords` strips the heading `sectionText` keeps (record-grammar R36 untouched); `body.conclusion`/`falsifies` read `fnd.case_words`, then `fm`, then the section.
+- `public-read/index.mjs`: `publishedCase` adds `case_words: {claim, falsifier} | null` to each `findings` entry, read from the signed document's `case_conclusions` (`caseWordsOf`), never live.
+- Test `finding-words.test.mjs` (4, written first and seen failing): concluded finding (front matter only) answers its words; signed claim before authored; control: section words answer without heading; none -> null.
+
+**For BOB (requirement text):** R39's `findings` entry list and its `body` line do not yet state the order claim -> authored -> section, nor the new `case_words` field on the entry (R3's findings). Please add them at the fold; the field is public-read's own and I kept it as the one carrier from the store to the Worker.
+
+Reading taken: where a signed claim and authored words both exist, the signed claim wins (as your START says); a section's words come after authored.
+
+Tests: `test/m/public-read/` 232 pass, 0 fail; publication 150 pass, 0 fail (1 skipped); screens-publish, plane worker, ratification converted-d, network-notices, mk6 test: 281 pass, 0 fail. checks: format 1 failure (`build/rulings.md:4298`, not mine); architecture public-read 0; coverage public-read 40 of 40, 0; words 0 findings; ownership 0 failures (4 files).
+Nothing deferred. Nothing found in other modules.
+
+Size (session_01YFbwaESicnaBkDk7GZ5Su5): test runs 7, module lines 3706

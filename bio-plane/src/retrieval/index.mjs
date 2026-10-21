@@ -786,6 +786,58 @@ export class Retrieval {
              ...(sc.undetermined ? { scope_undetermined: sc.undetermined } : {}) };
   }
 
+  /* R92: the documents the rows name, `{bundle_id, title}` by id, and for `withConclusion` the frontmatter's conclusion
+     too. The rows came through the viewer's gate (R28), so the ids read here are ones the viewer may see. */
+  #documentsOf(ids, withConclusion) {
+    const out = new Map(), uniq = [...new Set(ids.filter((i) => typeof i === "string" && i))];
+    for (let i = 0; i < uniq.length; i += 200) {
+      const part = uniq.slice(i, i + 200), marks = part.map(() => "?").join(",");
+      const sel = withConclusion ? ", bp.fm_json AS fm" : "", join = withConclusion
+        ? ` LEFT JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id` : "";
+      for (const r of this.#rows(`SELECT b.bundle_id, b.title${sel} FROM bundles b${join} WHERE b.bundle_id IN (${marks})`, ...part)) {
+        let conclusion = null;
+        if (withConclusion && r.fm) { try { const c = JSON.parse(r.fm).conclusion; conclusion = typeof c === "string" && c.trim() ? c.trim() : null; } catch { conclusion = null; } }
+        out.set(r.bundle_id, { title: r.title ?? null, conclusion });
+      }
+    }
+    return out;
+  }
+
+  /* R92: a question's excerpt, cut from "title, conclusion" (never `bundle.md`, which holds its markdown, ids and
+     hashes) around the first of the query's terms it holds, `snip` words long, the matches in `[ ]` and the cuts in `…`
+     as R6's snippet has them; with no term in those words, their start. */
+  static #questionExcerpt(title, conclusion, terms, snip) {
+    const words = [title, conclusion].filter((t) => typeof t === "string" && t.trim()).join(" ").split(/\s+/).filter(Boolean);
+    if (!words.length) return null;
+    const needles = (terms || []).map((t) => String(t).toLowerCase().replace(/\*$/, "").replace(/^"|"$/g, "").trim())
+      .flatMap((t) => t.split(/\s+/)).filter((t) => /[\p{L}\p{N}]/u.test(t));
+    const at = words.findIndex((w) => needles.some((n) => w.toLowerCase().includes(n)));
+    const n = Math.min(64, Math.max(4, Math.floor(Number(snip)) || 12));
+    const from = at < 0 ? 0 : Math.max(0, Math.min(at - Math.floor(n / 2), words.length - n));
+    const part = words.slice(from, from + n).map((w) => {
+      const low = w.toLowerCase(), hit = needles.find((x) => low.includes(x));
+      if (!hit) return w;
+      const i = low.indexOf(hit);
+      return w.slice(0, i) + "[" + w.slice(i, i + hit.length) + "]" + w.slice(i + hit.length);
+    });
+    return (from > 0 ? "\u2026 " : "") + part.join(" ") + (from + n < words.length ? " \u2026" : "");
+  }
+
+  /* R92: each hit names its document (`document {bundle_id, title}`), and a question's text excerpt is built from its
+     title and conclusion. Added before R78's decorations, which therefore cannot replace either. */
+  #namedHits(hits, plan, input) {
+    if (!hits.length) return hits;
+    const asks = hits.some((h) => normalizeType(h.object_type) === "inquiry" && h.snippet_from === "text" && h.snippet != null);
+    const docs = this.#documentsOf(hits.map((h) => h.bundle_id), asks);
+    return hits.map((h) => {
+      const d = docs.get(h.bundle_id) || { title: h.title ?? null, conclusion: null };
+      const out = { ...h, document: { bundle_id: h.bundle_id, title: d.title } };
+      if (normalizeType(h.object_type) === "inquiry" && h.snippet_from === "text" && h.snippet != null)
+        out.snippet = Retrieval.#questionExcerpt(d.title, d.conclusion, plan.terms, input.snippetChars) ?? h.snippet;
+      return out;
+    });
+  }
+
   /** R6–R9, R78, R87: `op=search`. Synchronous: a page's decorations (R78) answer synchronously too. */
   search(given = {}) {
     const sc = this.#scoped(given);
@@ -806,7 +858,7 @@ export class Retrieval {
     };
     if (mode === "page") {
       /* R78: the registered decorations add keys to the page's hits, and to nothing else in the answer. */
-      out.hits = this.#decorateHits(this.runQuery(plan.statements.page(), tally), input.viewer ?? null);
+      out.hits = this.#decorateHits(this.#namedHits(this.runQuery(plan.statements.page(), tally), plan, input), input.viewer ?? null);
     } else if (mode === "ids") {
       /* Select-all: every id in the set, ordered identically to the page so the set an operator selected is the set
          they were looking at. */
@@ -897,7 +949,7 @@ export class Retrieval {
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
-    const rows = this.#legEarnedCapture(plan.meaning.arm, this.runQuery(plan.statements.meaning(), tally));
+    const rows = this.#namedRows(plan.meaning.arm, this.#legEarnedCapture(plan.meaning.arm, this.runQuery(plan.statements.meaning(), tally)));
     /* REC-90 — THE FOUR-LEVEL STATEMENT (R13), on the same gate and the same scope. */
     const lv = this.runQuery(plan.statements.meaning({ mode: "levels" }), tally)[0] || {};
     /* REC-92 (R14) — THE CONTENT-AXIS TALLY, ONLY for an arm that searches the text index. */
@@ -920,6 +972,13 @@ export class Retrieval {
                          vocab: obs ? { states: obs.vocabulary.CONTENT_AXIS_STATES,
                                         undetermined: obs.vocabulary.CONTENT_AXIS_UNDETERMINED } : null }), input.viewer ?? null),
     };
+  }
+
+  /* R92: a passage row names the document holding its unit, `document {bundle_id, title}`. */
+  #namedRows(arm, rows) {
+    if (arm !== "passage" || !Array.isArray(rows) || !rows.length) return rows;
+    const docs = this.#documentsOf(rows.map((r) => r && r.bundle_id), false);
+    return rows.map((r) => (r && docs.has(r.bundle_id) ? { ...r, document: { bundle_id: r.bundle_id, title: docs.get(r.bundle_id).title } } : r));
   }
 
   /* R89: R13's `scope` also names the projects the viewer's sight of is existence only (`membership` R44), each

@@ -1089,7 +1089,7 @@ export class CaseAuthoring {
     /* R40 — DEC-103: the lens it was produced under, every statement of the manifest frozen above, read at this act. */
     const lensStatements = lensRead;
     /* R16 — REC-219 / D-579(a): the project's citation edges, with the version each was made against. */
-    const citations = this.#caseCitations(proj);
+    const citations = this.#caseCitations(proj, members);
     /* R14 (`case-inputs` R3) — REC-212 / §3 rule 13: WHO WROTE THE SENTENCE, established before the list is read, because it decides what
        the list may contain (a reading by the writer is not a second reading). */
     const writer = this.inputs.statementWriter(proj, theCase, edition, stmt, who, namedDraftRow);
@@ -1552,7 +1552,7 @@ export class CaseAuthoring {
     const found = [];
     const who = str(a.author);
     const auth = who && !isMachineIdentity(who) ? this.#authority(a.project ?? null, a.viewer ?? null, who) : null;
-    let judged = null, partition = null, tensions = null, rests = null, accountRead = null;
+    let judged = null, partition = null, tensions = null, rests = null, accountRead = null, capturesRead = null;
     /* R34: IT WRITES NOTHING. These reads reach the two writes `case-disclosures` makes inside its caller's transaction
        (its R23: a source id's minting, and a member document's copy queued by `case-carriage.documentCopy`, its R16;
        T39, N806), so they run inside a transaction this pre-flight rolls back, as the act's own run above does. */
@@ -1573,7 +1573,12 @@ export class CaseAuthoring {
             if (partition.ok !== false) {
               const resting = D.restingCaptures(judged.prepared);
               const facts = new Map([...new Set(resting.map((r) => r.capture))].map((sha) => [sha, D.captureFacts(sha)]));
-              found.push(...D.selfAttestedJudged(resting, facts, partition.memberRoles, a.selfAttested ?? null).refusals);
+              const selfJ = D.selfAttestedJudged(resting, facts, partition.memberRoles, a.selfAttested ?? null);
+              found.push(...selfJ.refusals);
+              /* R82 (C3; K4303): the captures the case rests on are known here whether or not op=publish refused, so step three
+                 lists them from this read when the act's own run did not reach its rows. */
+              capturesRead = D.disclosureBlocks({ resting, facts, selfAttested: selfJ, project: auth.proj, author: who,
+                                                  at: this.#when("second") }).captures;
               /* its R6, then R53: its R13's acceptances and R14's flags, read as op=publish reads them. */
               const reached = D.materialsJudged(judged.prepared, partition.memberRoles, a.viewer ?? null);
               found.push(...reached.refusals);
@@ -1645,7 +1650,7 @@ export class CaseAuthoring {
     /* R42: whether the project has a notice, asked only of a project the act's own authority fences let through. */
     const notice = auth && auth.ok !== false ? this.#workingOn(auth.proj) : null;
     /* R42 says so whenever the project has a notice: whatever reference R41 would write. */
-    const steps = this.#preflightSteps(a, answer, seen, ratify, notice, rests, account);
+    const steps = this.#preflightSteps(a, answer, seen, ratify, notice, rests && capturesRead ? { ...rests, captures: capturesRead } : rests, account);
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
   }
@@ -1694,6 +1699,10 @@ export class CaseAuthoring {
     const notReached = ok ? null : localize("case-authoring.index.not_reached_op_publish_refuses_first", "not reached: op=publish refuses first ({reason})", { reason: String(answer ? answer.reason : localize("case-authoring.index.no_answer", "no answer")) });
     const tensions = this.tensionsToDisclose({ project: a.project ?? null, targets: a.targets ?? null,
                                                target: a.target ?? null, viewer: a.viewer ?? null, author: a.author ?? null });
+    const capturesListed = (captures) => ({
+      self_attested: captures.filter((c) => c.self_attested_only)
+        .map((c) => ({ capture: c.capture, member: c.member, reason: c.acknowledgement.reason, sentence: SELF_ATTESTED_SENTENCE })),
+      not_co_attested: this.#notCoAttested(captures) });
     return [
       { step: 1, name: word("case-authoring.name.becomes_permanent"),
         says: localize("case-authoring.index.signing_publishes_this_case_edition", "Signing publishes this case edition, and each finding in it at the version pinned here. A published edition is never withdrawn or edited: it is corrected only by a later edition.")
@@ -1724,14 +1733,13 @@ export class CaseAuthoring {
               count: rests.flags.open.length, says: FLAGS_SAY },
         ...(ok ? { excluded: seen.excluded, searched: seen.searched, bias: { acknowledgement: seen.bias,
                                                                               manifest: seen.manifest },
-                   self_attested: seen.captures.filter((c) => c.self_attested_only)
-                     .map((c) => ({ capture: c.capture, member: c.member, reason: c.acknowledgement.reason,
-                                    sentence: SELF_ATTESTED_SENTENCE })),
-                   not_co_attested: this.#notCoAttested(seen.captures),
+                   ...capturesListed(seen.captures),
                    sources: seen.sources,
                    /* R34 (DEC-112 (5)): each source the case shows as "Withheld" (`case-disclosures` R4). */
                    withheld: seen.sources.filter((x) => x.basis === null) }
-               : { stated: notReached }) },
+               : { stated: notReached,
+                   /* R82 (C3; K4303): the captures are listed when known, though op=publish refused; a refusal stays in `first`. */
+                   ...(rests && rests.captures ? capturesListed(rests.captures) : {}) }) },
       /* R34 (N757; DEC-180 (3); K2206): each photo the case relies on, its marks and state, and how many are unchecked
          (`case-disclosures` R29). (T38; DEC-183 (1)) An unchecked photo never travels and blocks signing: its
          refusal, `PHOTO_UNCHECKED`, is `first` or among `blockers` (R34), its words R29's. */
@@ -1829,13 +1837,18 @@ export class CaseAuthoring {
    *  `references[]` entries of `rel: cites` that are not severed, in the document's order, each classified from its
    *  own bytes first: an `extent_capture` on the edge is the pin. Without one, what the record can say depends on how
    *  many captures it holds of the document NOW: one (`only_capture`), several (`undetermined`, never back-filled),
-   *  none (`no_capture`). A question has no bytes (`no_bytes`). Set-based: one grouped count per chunk of targets
+   *  none (`no_capture`). A question has no bytes (`no_bytes`); a finding that is not a member of this case is not cited
+   *  (C67; R16). Set-based: one grouped count per chunk of targets
    *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge. */
-  #caseCitations(project) {
+  #caseCitations(project, members) {
     const text = this.#liveText(project);
     const refs = text !== null ? (parseFrontmatter(text).data?.references || []) : [];
+    /* C67 (T51; K4303): the project cites the findings of all its drafts; this case cites its own. An edge to a finding
+       (an inquiry) stays only when that finding is a member of this case; a document's edge stays as before. */
+    const isFinding = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "inquiry";
     const edges = (Array.isArray(refs) ? refs : []).filter((r) => r && typeof r === "object" && r.rel === "cites"
-      && r.status !== "severed" && typeof r.target === "string" && r.target.trim());
+      && r.status !== "severed" && typeof r.target === "string" && r.target.trim()
+      && (!isFinding(r.target.trim()) || (members || []).includes(r.target.trim())));
     const isDocument = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information";
     const docs = [...new Set(edges.map((r) => r.target.trim()).filter(isDocument))];
     const held = new Map();

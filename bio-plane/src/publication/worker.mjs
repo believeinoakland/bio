@@ -64,6 +64,15 @@ class Unanswered extends Error {
   constructor(op, out) { super(word("publication.super.store_did_answer", { op: String(op) })); this.op = op; this.out = out; }
 }
 
+/* R39 (C2): the words of one section of a finding's bytes, its heading removed (`sectionText` keeps the heading, by
+   record-grammar R36); null when the section is absent or holds nothing but its heading. */
+function sectionWords(text, heading) {
+  const s = sectionText(text, heading);
+  const words = s === null ? "" : s.slice(heading.length).trim();
+  return words || null;
+}
+const wordsOf = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+
 /* THE PUBLISHED-STORE COMPLAINT (C-68.5, D-549). A copy installed with no store
  * for its published documents cannot hand over a published document's bytes, at
  * `publishedbytes` (a refusal) or at `publishedcase` (a finding's body stated
@@ -684,8 +693,12 @@ export async function publishedRoutes({ op, url, env, stub }) {
     const body = text
       ? { state: "published", from_sha: fnd.bundle_sha,
           question: sectionText(text, "## Question"),
-          conclusion: sectionText(text, "## Conclusion"),
-          falsifies: sectionText(text, word("conformance.falsify")),
+          /* R39 (C2): THE WORDS OF THE CLAIM AND THE FALSIFIER, never a heading: the signed case document's own claim
+             and falsifier first, the front matter's authored words next, the section's words last, null when there are
+             none. `sectionText` keeps the heading, so the section is read without it. */
+          conclusion: wordsOf(fnd.case_words?.claim) ?? wordsOf(fm?.conclusion) ?? sectionWords(text, "## Conclusion"),
+          falsifies: wordsOf(fnd.case_words?.falsifier) ?? wordsOf(fm?.falsifier)
+                     ?? sectionWords(text, word("conformance.falsify")),
           /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): a member published under rule 12
              carries no `## What This Excludes` in its own bytes — the case states it once, in
              its document — so the section is read from THAT signed document for such a member,

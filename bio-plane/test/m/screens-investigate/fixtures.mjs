@@ -67,6 +67,9 @@ export const WALK = (o = {}) => ({ ok: true, from: ENT, at: { value: "2026-10-14
 export const VOCAB = { vocabularies: { connection_kinds: { values: ["line:holds:employee", "money_flow", "mentioned_together", "proxy_for"],
   words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "co-mentioned", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "step sourced", group: "step_source" } } } } };
 VOCAB.vocabularies.connection_kinds.values.push("event_voted", "step_source");
+/** `affordances` R39: the event kinds the plane answers (scripted here, as every fixture is); the screen offers exactly what it is told. */
+export const PLANE_EVENT_KINDS = ["meeting", "vote", "award", "order", "statement", "filing", "other"];
+VOCAB.vocabularies.event_kinds = { values: [...PLANE_EVENT_KINDS], words: Object.fromEntries(PLANE_EVENT_KINDS.map((k) => [k, { word: k.replace(/_/g, " ") }])) };
 VOCAB.vocabularies.proceeding_kinds = [{ kind: "civil", label: "Civil", forum_kind: "court" }, { kind: "writ", label: "Writ", forum_kind: "court" }, { kind: "appeal", label: "Appeal", forum_kind: "court" },
   { kind: "complaint", label: "Complaint", forum_kind: "commission" }];
 /** `exploregraph`'s answer: a person one ring out and an organisation two rings out, the far node a stop (explore R21). */
@@ -155,7 +158,7 @@ export const THEME = (o = {}) => ({ ok: true, theme_id: "THEME-2026-0001", name:
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
   return {
-    peopledirectory: ok(DIRECTORY()),
+    peopledirectory: (r) => ok(r.query.show === "contracts" ? DIRECTORY({ rows: [{ entity: "ENT-2026-0005", kind: "contract", name: "Stormwater lining contract", today: {}, documents: 2, questions: 0, projects: 1, newest_added: "2026-10-02T09:00:00Z", mine: true }] }) : DIRECTORY()),
     person: ok(PERSON()),
     samepersoncandidates: ok({ ok: true, entity_id: ENT, count: 1, candidates: [{ entity_id: "ENT-2026-0019", fields: { names: { state: "agrees" }, identifiers: { state: "absent" }, posts: { state: "differs" }, life: { state: "absent" } } }], truncated: false }),
     affordances: ok(VOCAB),
@@ -185,6 +188,10 @@ export function plane(o = {}) {
     sequence: ok({ ok: true, answer: "undetermined", why: { key: "events.why.precision_held_settle", vars: {} } }),
     memberties: ok(TIES),
     heldcaptures: ok(HELD),
+    /** `reading` (extraction R76): a capture's text units, each `{extent, reference, text}`, in order. */
+    reading: (r) => ok({ ok: true, sha256: r.query && r.query.sha256, unread_pages: [], text_units: r.query && r.query.sha256 === SHA2
+      ? [{ extent: { kind: "pdf-page", page: 0 }, reference: "p1", text: "Monthly rent is due on the first.", truncated: false }]
+      : [{ extent: { kind: "pdf-page", page: 0 }, reference: "p1", text: "Lin Chen, Director of Public Works", truncated: false }, { extent: { kind: "pdf-page", page: 1 }, reference: "p2", text: "Appointed in March 2022", truncated: false }] }),
     entitieskind: (r) => ok(r.query.kind === "body" ? { ok: true, kind: "body", entities: [{ entity_id: COURT, kind: "body", label: "Alameda Housing Tribunal", forum_kind: "court" }], count: 1, truncated: false } : { ok: true, kind: "institution", entities: [], count: 0, truncated: false }),
     readingname: ok({ ok: true, entity_id: ENT, documents: [{ capture_sha: SHA, bundle_id: "INFO-2026-0001", ref: "L. Chen", label: "L. Chen", matched_alias: "L. Chen", page: 2 }], truncated: false }),
     instances: ok({ ok: true, count: 1, items: [{ progression_key: "pra", label: "A public records request", definition_version: 2, entity_id: ORG, thread_version: 1, stage_count: 4, placed_count: 1, grade: null, grade_determined: false, established: false, finding_count: 1, open_finding_count: 1, next_deadline: "2026-10-02" }], truncated: false }),

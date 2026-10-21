@@ -269,6 +269,37 @@ PAGE_B = [
 ]
 
 
+# C18 (T51 fix round 2): the walk's hard photograph, a whole page of small print, 231 words, at 110 dpi, tilted, with
+# perspective, blurred and noisy; `page-hard-blur` is the same page smaller and blurrier than any engine can read.
+HARD_TEXT = [
+    "SEAM EAST 12TH STREET BIKEWAY PROJECT STAFF REPORT",
+    "From: Director of Transportation to the Public Works Committee",
+    "Subject: Authorization of a construction contract for the East 12th Street bikeway and safety improvements",
+    "Summary: Staff recommends that the committee approve a contract with the lowest responsive bidder for the construction of protected bike lanes along East 12th Street between Fruitvale Avenue and the Lake Merritt channel. The project includes new curb ramps, signal timing changes, concrete bus boarding islands, drainage repairs and street lighting upgrades at four intersections.",
+    "Background: The city adopted its bicycle plan in the previous decade and identified this corridor as a priority because of the number of collisions involving people walking and riding. Community meetings were held over eighteen months and residents asked for physical separation from traffic, better lighting and fewer conflicts at bus stops.",
+    "Fiscal impact: Funds for the work are available from the county transportation sales tax, a state active transportation grant and the capital improvement program. No new general fund money is requested. Maintenance costs of about forty thousand dollars a year will be included in the next budget proposal.",
+    "Recommendation: Adopt a resolution authorizing the city administrator to award and execute the contract, accept the grant funds and appropriate the amounts shown in the attached schedule. Staff will return to the committee with a progress report after the first six months of construction.",
+]
+
+
+def wrapped(paragraphs, size=30, width=1870):
+    """The paragraphs broken into lines that fit `width` in the page font."""
+    f = ImageFont.load_default(size)
+    d = ImageDraw.Draw(Image.new("L", (10, 10)))
+    lines = []
+    for para in paragraphs:
+        cur = ""
+        for w in para.split():
+            t = (cur + " " + w).strip()
+            if d.textlength(t, font=f) > width - 160:
+                lines.append(cur)
+                cur = w
+            else:
+                cur = t
+        lines.append(cur)
+    return lines
+
+
 def lcg(seed):
     s = seed
     while True:
@@ -287,10 +318,15 @@ def text_page(lines, size=34, width=1870):
     return im
 
 
-def photographed(lines, tilt=0.0, scale=1.0, noise=0.0, shade=0.0, contrast=1.0, blur=0.0, seed=1, size=34, quality=72):
+def photographed(lines, tilt=0.0, scale=1.0, noise=0.0, shade=0.0, contrast=1.0, blur=0.0, seed=1, size=34, quality=72, persp=0.0):
     im = text_page(lines, size)
     if tilt:
         im = im.rotate(tilt, resample=Image.BICUBIC, expand=True, fillcolor=200)
+    if persp:
+        # a keystone: the top edge is nearer the lens' axis than the bottom, so it shrinks by `persp` of the width each side
+        W, H = im.size
+        a = persp * W
+        im = im.transform((W, H), Image.QUAD, (a, 0, 0, H, W, H, W - a, 0), resample=Image.BICUBIC, fillcolor=200)
     if scale != 1.0:
         im = im.resize((round(im.width * scale), round(im.height * scale)), Image.BILINEAR)
     if blur:
@@ -328,12 +364,14 @@ PAGES = [
     ("page-combined-a", PAGE_A, dict(tilt=2.4, scale=0.5, noise=14, shade=0.3, contrast=0.6, blur=0.6, seed=2), 2.4),
     ("page-combined-b", PAGE_B, dict(tilt=-3.1, scale=0.5, noise=14, shade=0.3, contrast=0.6, blur=0.6, seed=3), -3.1),
     ("page-big-text", PAGE_A[:3], dict(scale=1.75, size=34), 0.0),
+    ("page-hard", wrapped(HARD_TEXT), dict(tilt=2.4, scale=0.5, noise=16, shade=0.3, contrast=0.6, blur=1.0, seed=4, size=30, quality=60, persp=0.04), 2.4),
+    ("page-hard-blur", wrapped(HARD_TEXT), dict(tilt=-2.8, scale=0.43, noise=20, shade=0.3, contrast=0.6, blur=1.3, seed=5, size=30, quality=60), -2.8),
 ]
 pages = []
 for name, lines, kw, tilt in PAGES:
     data = photographed(lines, **kw)
     im = Image.open(io.BytesIO(data))
-    pages.append({"name": name, "b64": b64(data), "words": " ".join(lines), "tilt_deg": tilt,
+    pages.append({"name": name, "b64": b64(data), "words": " ".join(HARD_TEXT if name.startswith("page-hard") else lines), "tilt_deg": tilt,
                   "width": im.width, "height": im.height, "options": kw})
 pages.append({"name": "page-blank", "b64": b64(blank_photograph()), "words": "", "tilt_deg": 0.0,
               "width": 935, "height": 320, "options": {}})

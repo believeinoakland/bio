@@ -4,7 +4,7 @@
    by its key (R19); every request is compared with its owner's declaration by the harness (R104). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS, open, main, text, ops, press, last, ok, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PLAN_ID, ACTION, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, ROUTES } from "./page.mjs";
+import { SCREENS, open, main, text, ops, press, last, ok, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PLAN_ID, ACTION, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, ROUTES, PROJECT } from "./page.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { DECLARED_FIELDS } from "./declared.mjs";
 
@@ -241,10 +241,15 @@ test("R48: 'Keep this filing as your team's template' is offered once the filing
   assert.equal(p.doc.getElementById("template-name").parentNode.querySelector("label").textContent.trim(), W("screen.start-send.template.name.label"));
   assert.deepEqual(p.doc.getElementById("template-use").querySelectorAll("option").map((o) => o.textContent.trim()), [W("screen.start-send.template.use.filing"), W("screen.start-send.template.use.brief")]);
   await press(p, "templatesave", { values: { "template-name": "Records request to a city clerk", "template-use": "brief", "template-notes": "Use for the clerk." }, reason: "keep" });
-  assert.deepEqual({ ...last(p, "templatesave").body, reason: undefined }, { filing: FILING, name: "Records request to a city clerk", use: "brief", notes: "Use for the clerk.", reason: undefined });
+  assert.deepEqual({ ...last(p, "templatesave").body, reason: undefined }, { filing: FILING, name: "Records request to a city clerk", use: "brief", notes: "Use for the clerk.", project: PROJECT, reason: undefined });
   await press(p, "templatesave", { values: { "template-name": "Another", "template-use": "file", "template-notes": "" }, reason: "keep" });
   const second = last(p, "templatesave").body;
   assert.deepEqual({ filing: second.filing, name: second.name, use: second.use, notes: second.notes }, { filing: FILING, name: "Another", use: "file", notes: undefined }, "no notes: none sent");
+  // C65: the scope is the action's project (the filing's basis names one only for a determination); an action in no project sends none
+  assert.equal(second.project, PROJECT);
+  const bare = await open(STEP2, approvedPlane({ templatesave: ok({ ok: true }), action: ok({ ...ACTION, project: null }) }));
+  await press(bare, "templatesave", { values: { "template-name": "Another", "template-use": "file" }, reason: "keep" });
+  assert.ok(!("project" in last(bare, "templatesave").body), "control: no project, no scope sent");
 });
 
 test("R48: offered at every step from approval: waiting for the second approval, the send, and after the sending; control: a name that is empty is refused in place and sends nothing", async () => {

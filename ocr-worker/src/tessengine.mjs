@@ -124,7 +124,12 @@ export async function transcribeFrame(rgba, width, height, { psm = null } = {}) 
       const c = typeof b.confidence === "number" && Number.isFinite(b.confidence) ? b.confidence : null;
       regions.push({ text, rect: [r.left, r.top, r.right, r.bottom], confidence: c });
     }
-    return { ok: true, regions, grain: REGION_GRAIN, boxCount: boxes.length };
+    /* R25: the engine's own rating of each word, for the legibility a picture states. A line's rating is the mean of its
+       words', so one bad word hides its good ones; the word boxes are read from the same recognition (no second pass). */
+    const words = (engine.getTextBoxes("word") || [])
+      .filter((b) => typeof b.text === "string" && b.text.trim().length)
+      .map((b) => ({ confidence: typeof b.confidence === "number" && Number.isFinite(b.confidence) ? b.confidence : null }));
+    return { ok: true, regions, grain: REGION_GRAIN, boxCount: boxes.length, words };
   } catch (e) {
     /* A refusal is a measurement (CPDF-15's posture). It comes back as one, with
        the frame size beside it, rather than as an opaque throw — the caller

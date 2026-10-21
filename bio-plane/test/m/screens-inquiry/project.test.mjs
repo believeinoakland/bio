@@ -181,12 +181,13 @@ test("R27 R36 This project's work: its plans by name and the calculations, stand
   /* R52 (1): a kind it has none of is still listed, so the first one can be made (R27's "not listed" is retired) */
   const none = await open(at());
   assert.ok(section(none, "project.work.title").textContent.includes(word("screen.plan.name")), "no plan: the plan kind is still listed");
-  /* R36: a plan opened here is listed by name at once */
-  const o = await open(at(), { plane: { planopen: ok({ ok: true, id: "PLAN-2026-0004", title: "Ask the committee" }) } });
+  /* R36 (fix round 2, C63): a plan opened here opens its page, where the receipt is; the plan is listed by name when she returns */
+  const stubPlan = { id: "plan", reads: () => ({}), render: () => "", acts: [], words: [] };
+  const o = await open(at(), { boot: { screens: [...SCREENS, stubPlan] }, plane: { planopen: ok({ ok: true, id: "PLAN-2026-0004", title: "Ask the committee" }) } });
   fill(o, { "project-plan": "Ask the committee", "project-plan-about": Q });
   await press(o, "planopen");
   assert.deepEqual(o.byOp("planopen")[0].body, { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: Q }] });
-  assert.ok(section(o, "project.work.title").textContent.includes("Ask the committee"));
+  assert.equal(o.location.pathname, "/app/plan/PLAN-2026-0004");
 });
 
 test("R28 who can find it: the setting, its history newest first ending with how it started, and an owner's reasoned change", async () => {

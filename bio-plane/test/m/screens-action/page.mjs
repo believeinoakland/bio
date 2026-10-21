@@ -193,7 +193,8 @@ export const RECORDS_HELP = { law: "Testland Records Act", days: 7, extra_days: 
     cost: "TRA § 8", cost_electronic: "TRA § 9", inspect_photograph: "TRA § 10", purpose: "TRA § 11" } };
 export const PROFILES_WITH_HELP = (help = RECORDS_HELP) => ({ ...PROFILES, view: { ...PROFILES.view, name: "Testville", records_help: help } });
 
-export const DETERMINATION = { id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment", actor: { role: "City Administrator", body: "City" }, when: "2024-03-01" },
+export const DETERMINATION = { id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment", actor: { role: "City Administrator", body: "City" }, when: "2024-03-01", evidence: ["CON-1"] },
+  findings: [{ finding: "INQ-1" }],
   outcomes: [{ standard: "STD-1", outcome: "noncompliant" }, { standard: "STD-2", outcome: "compliant" }],
   standards: [{ standard: "STD-1", outcome: "noncompliant", in_force: true, rows: [{ requires: "a council vote", did: "adjusted without a vote" }] },
     { standard: "STD-2", outcome: "compliant", in_force: true, rows: [{ requires: "notice within 30 days", did: "noticed on day 21" }] }],
