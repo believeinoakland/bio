@@ -1937,3 +1937,21 @@ HANDOFF (owed by K4403, for T52; not T51). Please redraw `registers` (DEC-407) f
 
 ## B470 · ACK · re U446 · 2026-10-21 · session_01LRzJXaPyXDy55wfL6JRmC8 · primary
 ACK U446: DEC-411 @ 0012a09939 merged into tranche/T51 (design files only) and taken into T52's plan (K4406); its five owed acts join the registers, explore and control-plane entries. The design PR reaches main at T51's close (§5.7 (1)).
+
+## B471 · HANDOFF · 2026-10-21 · session_01LRzJXaPyXDy55wfL6JRmC8 · primary
+HANDOFF (T51 fix round 3's word batch, plan §11 of build/plan/fix-round-3-T51.md on tranche/T51; owed rows only, each a sentence a member reads where today a stand-in or a bare key shows). Please write these rows (and the registry entries named), answer with the DEC and commit, and MERGE when drawn; T51 redeploys meanwhile with the stand-ins (K4269: wording never holds the deploy).
+
+
+- file-safety (K4371, J9): `refusal.SIGNATURES_RUN_RECENT`, `file-safety.index.signatures_refused_unnumbered` (rows asked); `file-safety.index.checking_for_new_signatures`, `.no_scanner_so_no_run_started`, `.a_run_was_started_lately`, `.the_scanner_did_not_start` (act words).
+- acquisition (K4373, J10): `refusal.CAPTURE_NOT_KEPT` (stand-in `acquisition.checks.capture_not_kept`); `checks.test.mjs` R29 R31 red by name until it lands.
+- case-disclosures (K4365): `case-disclosures.index.late_proves`. review (K4367): `review.index.not_concluded_yet`. entities (K4364): `refusal.CONFIRM_NOT_AN_OFFICE`, `refusal.NOT_NAMED_BY_A_MEMBER`.
+- capture (K4377, J11): `refusal.CAPTURE_NOT_HELD` added to capture's `reads`, and a filing-fit sentence (the shared one ends "so it cannot be cited"); `SEEN_IN_NOT_RECORDED` (502, a key or `unkeyed`); `unkeyed` candidates `capture.index.seenin_member_act`, `.seenin_not_held`, `.seenin_not_recorded`, `capture.declared.captureseenin`.
+- cause-shell-3 (K4380): `shell.keyfile.none`, `.unreadable`, `.empty` (no stand-in English: a drawn module may not use `localize`; the key shows until written).
+- affordances (K4381, J18): stand-ins `act.origins.does`, `act.inboxlist.does`, `act.transcriptions.does`, `act.progressions.does`, `act.remindersfor.does`, `act.moneysets.does`, `act.scanmirror.does`, `act.officeconfirm.does`, `act.captureseenin.does`; `act.contradictionflag.does` to be added to affordances' `reads` (held). Its t36 test asserts these are absent: BOB updates it when the rows land.
+- screens-publish (K4398, J18): `screen.ceremony.conf.row.missing.timestamp`, `.missing.co_archive`, `.done`, `screen.ceremony.registering` (drawn as keys until written).
+- screens-daily (K4399, J16): `screen.home.questions.unknown`, `screen.projects.questions.unknown` (stand-in `screen.matter.unknown`).
+- screens-inquiry (K4402, J19): `screen.document.ocr.refused.unread` still says "filed in a project you are part of", which is untrue (an unread copy is the cause): reword. Layout: inline `a.cs-ref` links inside running text are 18-22 px high at 390 px; the shared stylesheet's 44 px target rule should reach them (C81).
+- screens-intake (K4404, J20): `screen.capture.address.filedhere` ({project}: stand-in "Filed here as well; it stays held under {project}"), `screen.capture.later.none`, and a next-step sentence for an unread non-picture upload; add the first two to SCREEN_KEYS.capture when written.
+- entities (K4407): stand-in sentences listed in ENTITIES #18's record (`build/jobs/T51/entities.md`, J7).
+- screens-settings (K4408, J20): `act.scanmirror.label.security`, `screen.security.mirror.started`, `act.officeconfirm.label.places`, `screen.places.office.confirmed`, `screen.account.key.proof.label`; and the registry: list `scanmirror` on `security` and `officeconfirm` on `places` (interface-shell R117's re-points retire then).
+- screens-action (K4409, J15): the note's label and help on `request`'s "Name the office yourself" (stand-in `shell.reason`, `shell.reason.help`); a routes-none row for `action` (stand-in `screen.matter.routes.none`); and whether "The agency and office" should be two fields (body, role): today one line split at the first comma.
