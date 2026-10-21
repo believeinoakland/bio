@@ -26,7 +26,11 @@
  *
  * (R46; T51 fix round, K4206) Re-taken at `MARKS_KIT_COMMIT` `aa8bdcd0b4`, the design as `tranche/T51` holds it after DEC-386 (U419,
  * K4204): the registry lists one more rungless act than at `e6d16d8f53`, `expertisewithdraw` (the kit's weight 2, Reasoned); no
- * earlier entry changed weight and none is dropped. */
+ * earlier entry changed weight and none is dropped.
+ *
+ * (R42; T51 fix round 2, C76) A read asks no reason and is never irreversible, so it carries no mark above Reversible: `accountdrafts`,
+ * `bootstrap` ("Show what each part runs", which the kit weighs Irreversible), `exportlog`, `groupdescriptiondraft`, `noticeprepare`,
+ * `pdfstructure`, `reconcile`, `runtime` and `writinghelp` take the read's mark, as `versionnotice` does (source `read`). */
 
 /* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`aa8bdcd0b4`, R46, re-taken in the
    fix round, K4206), which moved both files on from `e6d16d8f53` (the fix round's first re-take, K4193) and `7be06eb4cb` (the design's
@@ -39,13 +43,14 @@ const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
   default: `kit default at ${MARKS_KIT_COMMIT}: an op WEIGHT does not name is Reasoned`,
   dec300: localize("op-grades.marks.dec_300_5_over_the", "DEC-300 (5), over the kit at {MARKS_KIT_COMMIT}: the act weighs Reversible, so no mark is drawn for it", { MARKS_KIT_COMMIT: String(MARKS_KIT_COMMIT) }),
-  /* B30 (K4259): a read asks no reason, so it takes a read's mark (Reversible, as `sweeps`) rather than the kit's default */
+  /* B30 (K4259), C76 (fix round 2): a read asks no reason, so it takes a read's mark (Reversible, as `sweeps`) rather than the kit's weight or
+     default: `versionnotice` (K4259) and the nine reads whose kit weight said Reasoned or Irreversible */
   read: localize("op-grades.marks.k4259_read_mark", "K4259, a ruling: a read asks no reason, so it takes a read's mark, Reversible, not the kit's default"),
 };
 
 /* [op, weight name, source key], in the op's name order */
 const ROWS = [
-  ["accountdrafts", "Reasoned", "default"],
+  ["accountdrafts", "Reversible", "read"],
   ["accountreferenceremove", "Terminal", "kit"],
   ["accountreferenceset", "Reasoned", "kit"],
   ["accountusesset", "Reasoned", "kit"],
@@ -59,7 +64,7 @@ const ROWS = [
   ["biasdebt", "Reversible", "kit"],
   ["biasinhale", "Reversible", "kit"],
   ["biasmanifest", "Reversible", "kit"],
-  ["bootstrap", "Irreversible", "kit"],
+  ["bootstrap", "Reversible", "read"],
   ["capturecredentiallist", "Reversible", "kit"],
   ["capturecredentialsupply", "Reversible", "kit"],
   ["capturecredentialwithdraw", "Reversible", "kit"],
@@ -86,12 +91,12 @@ const ROWS = [
   ["explorepreset", "Reversible", "kit"],
   ["exploreverify", "Reversible", "kit"],
   ["export", "Reasoned", "default"],
-  ["exportlog", "Reasoned", "default"],
+  ["exportlog", "Reversible", "read"],
   ["findin", "Reversible", "kit"],
   ["founderhandleset", "Reasoned", "kit"],
   ["frontier", "Reversible", "kit"],
   ["gradenote", "Reversible", "kit"],
-  ["groupdescriptiondraft", "Reasoned", "default"],
+  ["groupdescriptiondraft", "Reversible", "read"],
   ["groupdescriptionset", "Reasoned", "default"],
   ["groupdomainset", "Reasoned", "kit"],
   ["groupkeynoticeseen", "Reasoned", "default"],
@@ -136,14 +141,14 @@ const ROWS = [
   ["noterevise", "Reasoned", "default"],
   ["noteturn", "Reasoned", "default"],
   ["notewrite", "Reversible", "dec300"],
-  ["noticeprepare", "Reasoned", "default"],
+  ["noticeprepare", "Reversible", "read"],
   ["officesseed", "Reasoned", "kit"],
   ["openoriginal", "Reversible", "kit"],
   ["openwithwarning", "Reasoned", "kit"],
   ["optionstartpreview", "Reversible", "kit"],
   ["passwordreset", "Reasoned", "kit"],
   ["passwordresetlink", "Reasoned", "kit"],
-  ["pdfstructure", "Reasoned", "kit"],
+  ["pdfstructure", "Reversible", "read"],
   ["placewanted", "Reasoned", "default"],
   ["procedureguides", "Reversible", "kit"],
   ["profilesset", "Reasoned", "kit"],
@@ -174,7 +179,7 @@ const ROWS = [
   ["queuesnooze", "Reversible", "kit"],
   ["readtranslate", "Reversible", "kit"],
   ["reauth", "Reasoned", "default"],
-  ["reconcile", "Reasoned", "kit"],
+  ["reconcile", "Reversible", "read"],
   ["recorddatedfact", "Reasoned", "kit"],
   ["recover", "Reasoned", "kit"],
   ["recoverycodesissue", "Reversible", "kit"],
@@ -189,7 +194,7 @@ const ROWS = [
   ["reviewrevoke", "Terminal", "kit"],
   ["revisioncompare", "Reasoned", "default"],
   ["ruleanswer", "Reversible", "kit"],
-  ["runtime", "Reasoned", "default"],
+  ["runtime", "Reversible", "read"],
   ["safeview", "Reversible", "kit"],
   ["search", "Reversible", "kit"],
   ["securitymap", "Reversible", "kit"],
@@ -225,7 +230,7 @@ const ROWS = [
   ["websitekeycreate", "Reasoned", "default"],
   ["withdrawimported", "Reasoned", "kit"],
   ["wizards", "Reversible", "kit"],
-  ["writinghelp", "Reasoned", "default"],
+  ["writinghelp", "Reversible", "read"],
 ];
 
 export const MARKS = Object.freeze(Object.fromEntries(ROWS.map(([op, weight]) => [op, weight])));
