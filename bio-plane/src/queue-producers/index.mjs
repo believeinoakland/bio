@@ -43,6 +43,7 @@
 import { normalizeType } from "../record-grammar/types.mjs";
 import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
+import { canonicalJson } from "../record-grammar/json.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, hiddenBundles, GATE_MARK } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
@@ -230,13 +231,17 @@ export class QueueProducers {
   }
   /** What a sentence calls a bundle: its title, else its id. */
   #nameOf(id) { return this.#titleOf(id) ?? (id === undefined || id === null ? "" : String(id)); }
-  /** What a sentence calls a member: her handle, else her id. */
+  /** What a sentence calls a member (C94): her handle; the founder by the handle she holds, else `member.founder.unnamed`'s word
+   *  (DEC-230), never `admin`; any other member with no handle by her id, as R46 states (the word list holds no key for a member
+   *  who has none: named in the job's QUESTION). */
   #memberName(id) {
     if (typeof id !== "string" || !id) return "";
     if (!this.#memo.names.has(id)) {
-      let facts = null;
+      let facts = null, founder = null;
       try { facts = this.#membership.memberFacts(id); } catch { facts = null; }
-      this.#memo.names.set(id, facts && typeof facts.handle === "string" && facts.handle ? facts.handle : id);
+      if (id === ROOT_ADMIN) { try { founder = this.#membership.founderHandle(); } catch { founder = null; } }
+      const handle = facts && typeof facts.handle === "string" && facts.handle ? facts.handle : typeof founder === "string" && founder ? founder : null;
+      this.#memo.names.set(id, handle ?? (id === ROOT_ADMIN ? word("member.founder.unnamed") : id));
     }
     return this.#memo.names.get(id);
   }
@@ -494,7 +499,7 @@ export class QueueProducers {
       add(feed("members", () => [...this.#obligationsEndorsementOwed(me, at), ...this.#obligationsOwnerVoteOwed(me, viewer, at),
                                  ...this.#obligationsExpertiseOwed(me, at)]));
       return {
-        items,
+        items: QueueProducers.#onePerMatter(items),
         facts: {
           objective_gap: gapFacts,
           unattributed,
@@ -513,6 +518,40 @@ export class QueueProducers {
       this.#zoneMemo = undefined;
       this.#todayMemo = undefined;
     }
+  }
+
+  /** R8 (C69; walk CA60): one item per matter. Items that are the same thing to the member who reads them are one, standing where the first
+   *  stood: a fact of an action's deadline, in whatever status and however many of its facts are due, is one to do for that action
+   *  (`local-fact-due`, action-producers R7 raises one for each fact and status; the survivor is the item with the least id, so the same
+   *  one stands at every read, and its basis names every status and fact it stands for); any other item equal to an earlier one in
+   *  everything but its id (class, kind, subject, summary, detail and basis) is that item again. Two matters, however alike their words,
+   *  are two items: a different subject, or a different basis, is a different matter. */
+  static #onePerMatter(items) {
+    const matterOf = (it) => {
+      if (it && it.kind === "local-fact-due" && it.subject && typeof it.subject.id === "string" && it.subject.id) return `fact::${it.subject.id}`;
+      try { const { id, ...rest } = it; void id; return `same::${canonicalJson([rest.class, rest.kind, rest.subject ?? null, rest.summary ?? null, rest.detail ?? null, rest.basis ?? null])}`; }
+      catch { return `id::${it && it.id}`; }
+    };
+    const groups = new Map(), order = [];
+    for (const it of items) {
+      if (!it || typeof it !== "object") continue;
+      const key = matterOf(it);
+      if (!groups.has(key)) { groups.set(key, []); order.push(key); }
+      groups.get(key).push(it);
+    }
+    const out = [];
+    for (const key of order) {
+      const g = groups.get(key);
+      const seenId = new Set(), unique = g.filter((x) => (seenId.has(x.id) ? false : (seenId.add(x.id), true)));
+      const chosen = unique.reduce((a, b) => (String(b.id) < String(a.id) ? b : a));
+      if (key.startsWith("fact::")) {
+        const basis = chosen.basis && typeof chosen.basis === "object" ? chosen.basis : {};
+        const uniq = (xs) => [...new Set(xs.filter((x) => typeof x === "string" && x))].sort();
+        out.push({ ...chosen, basis: { ...basis, statuses: uniq(unique.map((x) => x.basis && x.basis.status)),
+                                       paths: uniq(unique.map((x) => x.basis && x.basis.path)) } });
+      } else out.push(chosen);
+    }
+    return out;
   }
 
   /** PL-15 / D-213 — WHAT THE RECORD CAN SAY ABOUT A CAPTURED DOCUMENT'S PLACE
@@ -2011,8 +2050,9 @@ export class QueueProducers {
         subject: { kind: "signer_key", id: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
                    registered_by: member ?? null },
         ...(() => {
+          const name = member ? this.#memberName(member) : "";
           const key = `queue.signer-self-registered.summary${member ? "" : ".unnamed"}${k.comment ? ".comment" : ""}`;
-          return { summary: say(key, { member: member ? this.#memberName(member) : "", comment: k.comment }), summary_key: key };
+          return { summary: say(key, { member: name, comment: k.comment }), summary_key: key };
         })(),
         detail: say("queue.signer-self-registered.detail"),
         detail_key: "queue.signer-self-registered.detail",
@@ -2662,6 +2702,7 @@ export class QueueProducers {
       const project = typeof x.project === "string" && x.project ? visible(x.project) : null;    // R11
       const version = `${x.script}@${x.version}`;
       const name = typeof x.name === "string" && x.name ? x.name : version;
+      const author = x.author ? this.#memberName(x.author) : "";
       const atMs = Date.parse(x.submitted_at ?? "");
       out.push({
         id: `OBLIGATION::wizard-approval-requested::${version}::${x.owner}`,
@@ -2670,8 +2711,8 @@ export class QueueProducers {
         case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
         subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null,
                    author: x.author ?? null, project },
-        ...(x.author
-          ? { summary: say("queue.wizard-approval-requested.summary", { author: this.#memberName(x.author), name }), summary_key: "queue.wizard-approval-requested.summary" }
+        ...(author
+          ? { summary: say("queue.wizard-approval-requested.summary", { author, name }), summary_key: "queue.wizard-approval-requested.summary" }
           : { summary: say("queue.wizard-approval-requested.summary.unnamed", { name }), summary_key: "queue.wizard-approval-requested.summary.unnamed" }),
         detail: say("queue.wizard-approval-requested.detail"),
         detail_key: "queue.wizard-approval-requested.detail",
@@ -3007,7 +3048,7 @@ export class QueueProducers {
     for (const p of invited.slice(0, cap)) {
       const inv = listed.get(p.id) ?? null;
       const by = inv && inv.invited_by && typeof inv.invited_by === "object" ? inv.invited_by : null;
-      const who = !by ? null : by.founder === true && !by.handle ? word("member.founder.unnamed") : (by.handle ?? by.member ?? null);
+      const who = !by ? null : by.founder === true && !by.handle ? word("member.founder.unnamed") : (by.handle ?? (by.member ? this.#memberName(by.member) : null));
       let own = null;
       if (!(inv && inv.invited_at)) {
         const roster = this.#projectRoster.projectParticipants({ projectId: p.id, by: me });
