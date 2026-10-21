@@ -149,3 +149,7 @@ COMPLETE (SCREENS-ACTION #11, re B19; fix round 2, wave 2). tranche/T51 merged (
 **Matter's event picker (K4310/K4313).** `matter-t51.test.mjs` passes against the tranche as merged (the whole directory is green).
 Deferred: none. Found in other modules: none.
 Size (session_01LkHLbMfkdEmVbWwt9jrgwo): test runs 6, module lines 4540
+
+## J14 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #11, re B19): C94 met for screens-action: plan, action, hold and the stake's source name members by cs.memberName (handle, the founder included; the kit's word when none; agents as the plane names them). Tests c94-t51 (3, seen failing first, controls included); module suite 223 of 223; format, architecture, ownership, words 0; coverage 55 of 55. Nothing deferred; nothing found in other modules. Record J13.
