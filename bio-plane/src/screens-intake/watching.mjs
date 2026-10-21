@@ -5,15 +5,15 @@
 /* R46: the watched addresses (`monitoring`, with the pause as it stands), the sweeps (`sweeps`) and the team's members (who paused,
    who ratified). */
 function watchingReads() {
-  return { list: { op: "monitoring", query: {} }, sweeps: { op: "sweeps", query: {} }, members: { op: "memberlist" },
+  return { list: { op: "monitoring", query: {} }, sweeps: { op: "sweeps", query: {} },
            /* R48 (C56; DEC-382): the named requests, and the projects they and the sweeps are kept in */
            named: { op: "namedrequests", query: {} }, projects: { op: "projectlist" } };
 }
 
 function renderWatching(cs, view) {
   const U = view.ui || {}, D = view.data || {};
-  const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
-  const handleOf = (m) => { const x = String(m || "").replace(/^member:/, ""); return (roster.find((r) => r && r.member_id === x) || {}).handle || ""; };
+  /* C94 (interface-shell R111): a member is named by the shell's name for her id (her handle; a fallback word where none is known), never the id */
+  const handleOf = (m) => { const x = String(m || "").replace(/^member:/, ""); return x ? cs.memberName(x) : ""; };
   const named = (t) => `<span class="mk-data">${cs.esc(t)}</span>`;
   const freqs = ["hourly", "daily", "weekly", "monthly", "per_meeting"];
   /* the watching: running, or paused by whom and when; a pause or resume for an administrator (anyone else is refused in words) */
