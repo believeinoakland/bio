@@ -200,3 +200,12 @@ Applied B9 (R20, K4308). `cite` reads each field from the POST body, and from th
 Deferred: none. Other modules: the REPORT J10 is withdrawn for the two tests; the screens still move to a body as C31's other half.
 
 Size (session_01T23tysCBff1C94XfhB4Qo3): test runs 11, module lines 1704
+
+## J13 · QUESTION
+
+QUESTION (no answer needed to proceed; I carry on on this reading). Cause cite-refusal, R21.
+
+1. "Add the new passage to the group" cannot be done before the passage is cited, so that repair is `cite` itself with one more field. My reading: `cite` gains an optional `ground` (the label of a group the question already declares); on a question it is written on each new leg as `ground: <label>` (splice.mjs), so the write's own check judges it (a label not declared is refused by the write as today); on a case it is refused `GROUND_NOT_APPLICABLE` (new C-33 row, awaiting the stamp), as `role` is refused there. DECLARED_OPS' `cite` accepts gains `ground` (R19). The second repair is `inquiryground` with `{target, grounds: []}` (inquiry's own way to remove the grouping; it asks the member for a reason, which the screen collects).
+2. Shape of the answer: a top-level `repairs` beside `findings` on a BASIS_REFUSED from `cite`: `[{key, act, fields, vars}]`, `[]` when none. A repair is offered only when the basis is already grouped (labelled legs) and the refusal carries a C-2.8 finding, read from the document, never from the finding's English.
+3. Words: the design has no rows for the two repair sentences. Stand-in keys, written once with `localize`: citation.index.repair_add_to_group ("Add it to the group {ground}") and citation.index.repair_remove_grouping ("Take the grouping off, so the answer reads as its weakest citation"). The design stream writes the real rows; I change the ids if it names others.
+Proposed requirement lines go in COMPLETE: R21 amended (the `ground` field and the repair shapes), R19 (cite accepts `ground`).
