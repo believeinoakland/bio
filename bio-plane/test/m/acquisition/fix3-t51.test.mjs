@@ -85,6 +85,64 @@ test("R96 R95 (C5) controls: a single-part capture is kept as before with no `ke
   assert.equal(w2.held(sha(big)), false);
 });
 
+/* The past-memory arm (R96; record-core R87, K4363): met against a scripted double of `evidenceStore().putFromParts`, live at
+   record-core's merge. The double reads no bytes; it records its calls and answers as R87 states. */
+const withPutFromParts = (w, answer) => {
+  const calls = [];
+  const real = w.core.evidenceStore();
+  w.core.evidenceStore = () => ({ ...real, putFromParts: async (digest, partDigests) => { calls.push({ at: Date.now(), digest, partDigests }); return answer(digest, partDigests); } });
+  return calls;
+};
+
+test("R96 (C5 e): a capture too large for memory keeps its parts, and after the answer the store is asked to make the whole from them with `putFromParts`, once, each part named once in order, none read back, outside the answer's time", async () => {
+  const w = world();
+  const calls = withPutFromParts(w, async () => { await sleep(400); return { ok: true, size: 0 }; });
+  const waited = [];
+  const big = varied(32 * MIB + 1, 5);
+  const t0 = Date.now();
+  const r = await run(w, { "https://a.example/huge.pdf": octet(big) }, { locator: "https://a.example/huge.pdf" }, { waitUntil: (p) => waited.push(p), settle: false });
+  const answeredAt = Date.now();
+  assert.equal(r.status, 200);
+  assert.equal(r.body.parts, 5);
+  assert.equal(r.body.document.capture.sha256, sha(big));
+  assert.equal(calls.length, 1, "asked once");
+  assert.equal(calls[0].digest, sha(big));
+  assert.deepEqual(calls[0].partDigests, r.body.document.parts.map((p) => p.sha256), "each part named once, in order");
+  assert.ok(answeredAt - calls[0].at < 400 && !("keep" in r.body.timings.stages), "the answer did not wait for it: no keep stage");
+  assert.equal(waited.length, 1, "handed to the caller's waitUntil, so it outlives the answer");
+  await waited[0];
+  await r.settled();
+  assert.deepEqual(w.b.calls.filter((c) => c[0] === "get"), [], "no part is read back by this module");
+  assert.equal(w.b.calls.filter((c) => c[0] === "put" && c[1] === wholeKey(w, big)).length, 0, "the whole is not put by this module: the store makes it");
+  assert.ok(Date.now() - t0 >= 400);
+});
+
+test("R96 (C5 e) controls: a capture within memory is put whole by this module and never asks putFromParts; a store with no putFromParts keeps the parts as today; a refusal or a throw from it never fails the capture", async () => {
+  const w = world();
+  const calls = withPutFromParts(w, async () => ({ ok: true }));
+  const mid = varied(9 * MIB, 4);
+  const r = await run(w, { "https://a.example/mid": octet(mid) }, { locator: "https://a.example/mid" });
+  assert.equal(r.status, 200);
+  assert.equal(calls.length, 0);
+  assert.ok(w.held(sha(mid)), "within memory: put whole by this module");
+  const big = varied(32 * MIB + 1, 6);
+  const none = world();
+  const n = await run(none, { "https://a.example/huge": octet(big) }, { locator: "https://a.example/huge" });
+  assert.equal(n.status, 200);
+  assert.equal(none.held(sha(big)), false, "no way to make the whole: held in its parts, as before");
+  for (const p of n.body.document.parts) assert.ok(none.held(p.sha256));
+  for (const answer of [async () => ({ ok: false, reason: "OBJECT_TOO_LARGE" }), async () => { throw new Error("store down"); }]) {
+    const f = world();
+    const c = withPutFromParts(f, answer);
+    const waited = [];
+    const fr = await run(f, { "https://a.example/huge": octet(big) }, { locator: "https://a.example/huge" }, { waitUntil: (p) => waited.push(p) });
+    assert.equal(fr.status, 200, "the capture is kept either way");
+    await Promise.all(waited);
+    assert.equal(c.length, 1);
+    assert.deepEqual(f.prov.receipts.map((x) => x.captureSha), [sha(big)]);
+  }
+});
+
 /* ---------- C12: no fixed wait for the trusted timestamp ---------- */
 
 const slowAttest = (doc, ms, answer = () => new Response("down", { status: 503 })) => (u) =>
@@ -192,6 +250,11 @@ test("R98 (C25) controls: a plain-text capture and a binary capture answer title
   assert.equal(t.document.title, null);
   const bn = (await run(w, { "https://t.example/n.bin": octet(bin(2048)) }, { locator: "https://t.example/n.bin" })).body;
   assert.equal(bn.document.title, null);
+  /* a PDF answers none at capture (BOB's ruling K4363): the reading names its /Info /Title once read, and the screens fall back to the file name until then */
+  const pdf = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Title (A PDF title) >> endobj\ntrailer << /Info 1 0 R >>\n%%EOF");
+  const pd = (await run(w, { "https://t.example/n.pdf": () => new Response(pdf, { headers: { "content-type": "application/pdf" } }) }, { locator: "https://t.example/n.pdf" })).body;
+  assert.equal(pd.document.title, null);
+  assert.equal(pd.reading, undefined);
   const rw = world({ env: { RENDERER: { fetch: async () => new Response(JSON.stringify({ ...renderAnswer, html: "<!doctype html><html><head><title>As rendered</title></head><body><p>x</p></body></html>" })) } } });
   const rr = await run(rw, { [PAGE]: () => page(HTML("<div id=app></div>")) }, { locator: PAGE, render: true });
   assert.equal(rr.body.document.capture.method, "rendered");

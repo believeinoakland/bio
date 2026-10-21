@@ -332,6 +332,27 @@ export const MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
    for it and finds the object kept, never writing it twice. */
 const KEEPING = new Map();
 
+/** R96 (C5 e; record-core R87, K4363): a capture too large for memory is made whole by the store itself, from the parts it
+ *  holds: `ev.putFromParts(digest, partDigests)` writes one object under the digest by the store's own multipart upload,
+ *  streaming each stored part in turn, so this module reads no part back and holds no more than the part being written. It is
+ *  asked after the answer, outside the door's bound, once for a digest (a second press while the first is under way shares it),
+ *  and its refusal or failure never fails the capture, whose parts stay held and named. A store that offers no such call
+ *  (feature-detected) leaves the capture in its parts alone, as before. Answers the promise of `{ok, kept}`, or null when the
+ *  store offers no call. Never rejects. */
+function keepFromParts(ev, { sha, parts }) {
+  if (!ev || typeof ev.putFromParts !== "function") return null;
+  const going = KEEPING.get(sha);
+  if (going) return going;
+  const mine = (async () => {
+    try {
+      const r = await ev.putFromParts(sha, parts.map((p) => p.sha256));
+      return r && r.ok === true ? { ok: true, kept: true } : { ok: false, why: String(r && (r.reason || r.detail) || "refused").slice(0, 120) };
+    } catch (e) { return { ok: false, why: String(e && e.message || e).slice(0, 120) }; }
+  })().finally(() => { if (KEEPING.get(sha) === mine) KEEPING.delete(sha); });
+  KEEPING.set(sha, mine);
+  return mine;
+}
+
 /** R10, R96 (C5): keep a multipart capture whole. With `bytes`, the parts' buffers the stream already holds (one for each
  *  part, in order), the whole is assembled from them and put once under its digest with its checksum: no part is read back
  *  from the store and no part is hashed again; the store verifies the whole by the checksum it is handed, and each buffer is
@@ -1104,12 +1125,13 @@ async function acquireRun(cap, body0, opts, t) {
   let total = 0, held = [], heldBytes = 0, oversize = false;
   /* R96: each part's bytes are kept in memory while the capture stays within `MULTIPART_KEEP_MAX`, so the whole is put once when
      the stream ends with no part read back; past it they are let go and the capture is held in its parts alone. */
-  let keptParts = [], keptSize = 0;
+  let keptParts = [], keptSize = 0, firstHead = null;
   /* R10: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
   const part = async (buf) => {
     const psha = hex(await crypto.subtle.digest("SHA-256", buf));
     const heldBefore = !!(await ev.head(psha));
     if (!heldBefore) await ev.put(psha, buf);
+    if (!parts.length) firstHead = buf.slice(0, 64);   // R17's ZIP magic is read from it, so the first part is not read back
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
     if (keptParts) { keptSize += buf.length; if (keptSize > MULTIPART_KEEP_MAX) keptParts = null; else keptParts.push(buf); }
@@ -1295,12 +1317,12 @@ async function acquireRun(cap, body0, opts, t) {
   const titleBytes = renderRecorded ? renderedBytes : !multipart && keptParts && keptParts.length === 1 ? keptParts[0] : null;
   const title = titleBytes && detectFormat(titleBytes, ct || null).format === "html"
     ? titleOfBytes(titleBytes, renderRecorded ? null : res.headers.get("content-type")) : null;
-  /* R96: the first part, held in memory, is what R17's profile reads for the ZIP magic, so it is not read back from the store. */
-  const firstPart = multipart && keptParts ? keptParts[0] : null;
+  /* R96: the first bytes of the first part, held in memory, are what R17's profile reads for the ZIP magic, so it is not read back. */
+  const firstPart = multipart ? firstHead : null;
 
   /* R10, R96 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, put once from the parts held in
      memory (stage `keep`, apart from `read`), or refused in words with nothing filed. */
-  if (multipart && !renderRecorded) {
+  if (multipart && !renderRecorded && total <= MULTIPART_KEEP_MAX) {
     const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts }));
     if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
@@ -1510,6 +1532,13 @@ async function acquireRun(cap, body0, opts, t) {
                    why: "source_unreadable", detail: String(e && e.message || e).slice(0, 200) };
     }
   }
+  /* R96 (C5 e): past what memory holds, the whole is made from the stored parts by the store itself, after the answer: begun here,
+     handed to the caller's `waitUntil` (`opts.waitUntil`, else the store handed in's) so it outlives the answer, never awaited. */
+  if (multipart && !renderRecorded && total > MULTIPART_KEEP_MAX) {
+    const making = keepFromParts(ev, { sha, parts });
+    const hold = typeof opts.waitUntil === "function" ? opts.waitUntil : cap && typeof cap.waitUntil === "function" ? (p) => cap.waitUntil(p) : null;
+    if (making && hold) { try { hold(making); } catch { /* the call goes on by itself */ } }
+  }
   return answer(200, {
     ok: true, existed,
     ...(existedUndetermined ? { existed_undetermined: existedUndetermined } : {}),
@@ -1583,8 +1612,8 @@ async function addressReputation(address, given, scanner) {
  *  unreadable byte is stated, never a failed capture. The acquisition act and the knock's pull (capture R65) call it.
  *  `origin` (N615, K1683, K1773), `"member"` for bytes a member supplied by their own act (an upload) or
  *  `"fetch"` for a fetch the copy made, reaches `doctypeFor` as `ctx.origin`; absent, none is stated and a type that
- *  needs a member's own capture does not match. `firstPart` (R96), the first part's bytes when the caller holds them, is what
- *  the ZIP magic is read from, so a capture of several parts reads none back. */
+ *  needs a member's own capture does not match. `firstPart` (R96), the first bytes of the first part when the caller holds them, is
+ *  what the ZIP magic is read from, so a capture of several parts reads none back for it. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
                                   origin = null, parts = null, firstPart = null }) {
   const pv = view || { view: undefined, ids: null };
