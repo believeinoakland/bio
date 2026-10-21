@@ -118,7 +118,14 @@ test("R12 every class the six screens draw is one a served stylesheet defines (c
     for (const [id, s] of await drawings(table)) assert.ok(served(id, s.drawn()), id);
   }
   // and the real SCREENS compose under R56
-  assert.match(SHELL.interfacePage(SCREENS), /<script nonce=/);
+  /* interface-shell R1, R2: one external script element loading the shell's versioned script, its integrity the hash of that
+     script's source, and no inline script */
+  const page = SHELL.interfacePage(SCREENS);
+  const scripts = [...page.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]);
+  assert.equal(scripts.length, 1, "one script element");
+  assert.match(scripts[0], /^<script src="\/app\/shell-[^"]+\.js" integrity="sha256-[A-Za-z0-9+/=]+">$/);
+  assert.ok(page.includes(`integrity="${SHELL.interfaceScriptHash(SCREENS)}"`), "integrity is the hash of the shell's script");
+  assert.ok(SHELL.interfaceScript(SCREENS).length > 0);
   // the design's own spellings, never the old cs- ones
   const front = await open("front", { table: FULL });
   for (const c of ["mk-fronthead", "mk-frontgrid", "mk-signin", "mk-acts", "mk-small"]) assert.ok(classes(front).includes(c), c);
