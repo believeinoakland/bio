@@ -18,7 +18,8 @@
 - Terms that bind the team's use that matter to civic work, in plain words, once at connection (e.g. a provider's rules on political content, legal or public-benefit advice, disclosure of AI use).
 - Position in the owner's ordered list.
 - **The six privacy checks [Bob, 2026-10-21, AIR42]:** every entry's answer to each (met / not met / unconfirmed, with source and date); all six required by default; **the team's administrators** decide which stay required for the team, and those are locked; a project owner or member can tick or untick only the checks the administrators left unticked [Bob, revised 2026-10-21]; entries failing a required check are not offered; every change is recorded with who, when and at which level; the screen should make plain which checks are locked by the team and which the person may change. Also shown, never required: whether the terms permit this use; breach commitments.
-- **Origin setting [Bob, 2026-10-21, AIR43]:** models from Chinese developers hidden by default; the member can change the setting.
+- **Origin check [Bob, 2026-10-21, AIR43 revised]:** "not developed by a Chinese organisation" appears as a seventh check with exactly the same rules as the six privacy checks.
+- **Where a project's checks apply [Bob, 2026-10-21]:** a check a project owner ticks applies to all work done directly in that project, not to work in the record or other areas that are not project-specific; the screens should make clear, where a member works, whose checks are in force.
 
 ## C. Flows the UX must cover
 1. **Guided connection for every provider and plan; never leave the user to sort it out unsupported** [AIR30, Bob]: where to sign up, what to choose, what to copy or approve, how to confirm it works; including provider sign-in flows and the reference-instead-of-hold option for tokens [AIR32]; where a plan requires a member-controlled runtime, guidance for setting it up [AIR37].
