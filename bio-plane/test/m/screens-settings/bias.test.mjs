@@ -208,7 +208,7 @@ const WRITE = { "bi-name": "S", "bi-subject": "ENT-2026-0007", "bi-text": "T", "
 
 test("R65 C87: Propose statements from it with the policy empty, and Save the set with a required box empty, send nothing and name the box; filled, they send (control)", async () => {
   const a = await open("bias", { me: ADMIN, table: biasTable() });
-  const named = (labelKey) => said("screen.security.config.missing", { field: said(labelKey) });
+  const named = (labelKey) => said("shell.field.needed", { field: said(labelKey) });
   const none = await a.press("biasinhale", { values: { "bi-policy": "  " } });
   assert.deepEqual(none.sent, []);
   assert.equal(a.refused.text, named("screen.bias.the_policy_in_its_own"), a.refused && a.refused.text);

@@ -202,7 +202,7 @@ test("R70 C14: the picker is read once when the screen opens, by the cheap picke
 
 test("R61 C87: Draft the rule with a required box empty sends nothing and names the box; filled, it sends (control)", async () => {
   const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
-  const named = (label) => said("screen.security.config.missing", { field: label });
+  const named = (label) => said("shell.field.needed", { field: label });
   const sent = (r) => r.sent.filter((x) => x.op === "ruledraft");
   for (const [box, label] of [["gr-name", "screen.grouprules.name.label"], ["gr-amount", "screen.grouprules.amount.label"], ["gr-cite", "screen.grouprules.cite.label"], ["gr-eff", "screen.grouprules.eff.label"], ["gr-pass", "screen.grouprules.pass.label"], ["gr-why", "screen.grouprules.why.label"]]) {
     const r = await a.press("ruledraft", { values: { ...FORM, [box]: "  " }, choose: PICK });

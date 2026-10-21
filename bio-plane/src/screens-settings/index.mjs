@@ -58,21 +58,21 @@ const WORDS = {
     ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "reauth", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
   notes: [...STATES, "screen.notes.name", ...own("screen.notes."), "ai.label.untested",
     ...LABELS("notes", ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"])],
-  settings: [...STATES, ...own("screen.settings."), "screen.settings.everyone", "screen.watching.name", "screen.leads.name", ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias"]
+  settings: [...STATES, ...own("screen.settings."), "screen.settings.everyone", "screen.watching.name", "screen.leads.name", "screen.watching.purpose", "screen.leads.purpose", ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias"]
     .flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`])],
   group: [...STATES, "screen.group.name", ...own("screen.group."), "settings.set.setup", "settings.set.system", "settings.set.line.setup", "settings.set.line.system", "term.hostingaccount.means", "term.bar.team.means", "member.founder.unnamed",
     ...["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"].map((z) => `label.timezones.${z}`), "stake.group.title", "stake.group.help", "stake.group.label", "stake.group.save", "stake.set", "stake.none", "stake.history", "stake.unreadable", "ai.label.untested",  "screen.group-identity.draft.label",
-    ...own("screen.domainfile."), "shell.copy", "shell.save", "queue.export-performed.summary", "queue.export-performed.records.one", "queue.export-performed.records.other", "queue.export-performed.files.one", "queue.export-performed.files.other", "shell.card.member", ...LABELS("group", ["groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "strengthbarset", "declaredstakeset", "writinghelp", "factconfirm", "export", "exportlog"])],
-  places: [...STATES, "screen.places.name", ...own("screen.places."), "screen.grouprules.name", "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", "court.add", "court.add.name", "court.add.help", "screen.security.config.missing", "shell.card.member", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
+    ...own("screen.domainfile."), "shell.copy", "shell.save", "screen.group.hosting.now.date", "screen.group.export.count.tables.one", "screen.group.export.count.tables.other", "screen.group.domain.checked", "queue.export-performed.summary", "queue.export-performed.records.one", "queue.export-performed.records.other", "queue.export-performed.files.one", "queue.export-performed.files.other", "shell.card.member", ...LABELS("group", ["groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "strengthbarset", "declaredstakeset", "writinghelp", "factconfirm", "export", "exportlog"])],
+  places: [...STATES, "screen.places.name", ...own("screen.places."), "screen.grouprules.name", "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", "court.add", "court.add.name", "court.add.help", "shell.field.needed", "shell.card.member", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
   recovery: [...STATES, "screen.recovery.name", ...own("screen.recovery."), "screen.members.recovery.one", "screen.members.recovery.many", "screen.members.recovery.add", "member.founder.unnamed",
     ...LABELS("recovery", ["recoverycodesissue"])],
-  "group-identity": [...STATES, "screen.group-identity.name", ...own("screen.group-identity."), "ai.label.untested", "screen.security.config.missing",
+  "group-identity": [...STATES, "screen.group-identity.name", ...own("screen.group-identity."), "ai.label.untested", "shell.field.needed",
     ...LABELS("group-identity", ["groupdescriptionset", "groupdescriptiondraft"])],
   security: [...STATES, "screen.security.name", ...own("screen.security."), "period.days", "member.founder.unnamed", "instance.part.scanner.present", "instance.part.scanner.absent",
     "instance.part.safeview.present", "instance.part.safeview.absent", "instance.part.unknown", "instance.scanner.absent.step",
     ...own("file-scanner.credential."),
     // the scanner's state when it holds no signatures, under file-safety's keys (DEC-396; R77): the date and the reason each fill their own
-    "file-safety.index.no_signatures", "file-safety.index.no_signatures_since", "file-safety.index.signatures_refused", "file-safety.index.signatures_failed", "file-safety.index.signatures_not_fetched",
+    "file-safety.index.no_signatures", "file-safety.index.no_signatures_since", "file-safety.index.signatures_refused", "file-safety.index.signatures_failed", "file-safety.index.signatures_not_fetched", "screen.security.nosignatures.next",
     ...LABELS("security", ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"])],
   updates: [...STATES, "screen.updates.name", ...own("screen.updates."), "refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "settings.set.system",
     "updates.running.release_setup", "updates.earlier.installed_setup", "updates.running.head", "updates.running.release", "updates.running.checked",
@@ -84,9 +84,9 @@ const WORDS = {
   translations: [...STATES, "screen.translations.name", ...own("screen.translations."),
     ...LABELS("translations", ["translationdraft", "translationadopt", "translationgrant", "translationconfirm", "translationrevert"])],
   glossary: [...STATES, "screen.glossary.name", ...own("screen.glossary.", "glossary.term.", "state.item.")],
-  bias: [...STATES, "screen.bias.name", ...own("screen.bias."), "screen.standard.state.adopted", "shell.reason", "act.writinghelp.does", "screen.security.config.missing", "shell.card.member",
+  bias: [...STATES, "screen.bias.name", ...own("screen.bias."), "screen.standard.state.adopted", "shell.reason", "act.writinghelp.does", "shell.field.needed", "shell.card.member",
     ...LABELS("bias", ["biasmanifest", "promote", "biasadopt", "biasinhale", "biasdebt", "biasdebtresolve", "writinghelp"])],
-  grouprules: [...STATES, "screen.grouprules.name", ...own("screen.grouprules.", "screen.start-send.kind."), "member.founder.unnamed", "refusal.RULE_NEEDS_QUALIFICATION", "screen.group-identity.draft.label", "ai.label.untested", "screen.security.config.missing", "shell.card.member",
+  grouprules: [...STATES, "screen.grouprules.name", ...own("screen.grouprules.", "screen.start-send.kind."), "member.founder.unnamed", "refusal.RULE_NEEDS_QUALIFICATION", "screen.group-identity.draft.label", "ai.label.untested", "shell.field.needed", "shell.card.member",
     ...own("screen.action.kind."), ...LABELS("grouprules", ["ruleconfirm", "rulewithdraw", "ruledraft", "writinghelp"])],
 };
 

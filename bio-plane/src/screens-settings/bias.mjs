@@ -216,7 +216,7 @@ export const bias = {
         let statements = [], title = "", state = "proposed", residue = "";
         // an empty box is refused naming it (C87): the box's own label, as plain text
         const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
-        const missing = (labelKey) => ({ refuse: "screen.security.config.missing", fills: { field: plain(cs.w(labelKey)) } });
+        const missing = (labelKey) => ({ refuse: "shell.field.needed", fills: { field: plain(cs.w(labelKey)) } });
         const subjectOf = async (typed) => {
           const t = String(typed || "").trim();
           if (/^ENT-\d{4}-\d+$/.test(t)) return t;
@@ -285,7 +285,7 @@ export const bias = {
     { op: "biasinhale", rereads: [],
       send(view, el, cs) {
         const policy = String(cs.value("bi-policy") || "").trim();
-        if (!policy) return { refuse: "screen.security.config.missing", fills: { field: String(cs.w("screen.bias.the_policy_in_its_own")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
+        if (!policy) return { refuse: "shell.field.needed", fills: { field: String(cs.w("screen.bias.the_policy_in_its_own")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
         const source = String(cs.value("bi-source") || "").trim(), retrieved = String(cs.value("bi-when") || "").trim();
         return { body: Object.assign({ policy }, source ? { source } : {}, retrieved ? { retrieved } : {}) };
       },

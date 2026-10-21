@@ -394,7 +394,7 @@ test("R66 C85: Take a copy of the record sends her words as the query's note, of
   assert.deepEqual(JSON.parse(await a.b.files[0].blob.text()), MANIFEST, "the file is the answer");
   // the counts are labelled
   const offered = squash(textOf(all(a.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
-  assert.ok(offered.includes(said("queue.export-performed.records.other", { n: "40" })) && offered.includes(said("queue.export-performed.files.other", { n: "120" })), offered);
+  assert.ok(offered.includes(said("queue.export-performed.records.other", { n: "40" })) && offered.includes(said("queue.export-performed.files.other", { n: "120" })) && offered.includes(said("screen.group.export.count.tables.other", { n: "15" })), offered);
   // control: no words, no note
   const bare = await open("group", { me: FOUNDER, table: groupTable({ export: () => env(MANIFEST) }) });
   const r = await bare.press("export", { values: { "gr-exnote": "" } });
@@ -411,7 +411,7 @@ test("R18 C86: the latest check of the website draws when it was made and the pl
   const a = await open("group", { me: ADMIN, table: withLatest(absent) });
   has(a, "screen.group.domain.verdict.absent");
   const line = squash(textOf(all(a.tree, (e) => e.attrs["data-state"] === "domainverdict")[0]));
-  assert.ok(line.includes(day("2026-10-20")) && line.includes("14:03"), "when: " + line);
+  assert.ok(line.includes(said("screen.group.domain.checked", { date: day("2026-10-20"), time: "14:03" })), "when: " + line);
   assert.ok(line.includes(absent.detail), "the plane's verdict: " + line);
   // after the act the check made then is the one drawn
   const later = { ...absent, checked_at: "2026-10-21T09:30:00Z", status: 200, verdict: "mismatched", detail: "/.well-known/team.json gives another address." };
@@ -419,7 +419,7 @@ test("R18 C86: the latest check of the website draws when it was made and the pl
   const b = await open("group", { me: ADMIN, table: { ...withLatest(absent), groupidentity: () => env({ group: "eastoak", display_name: "East Oakland Watch", domain: null, domain_verified_at: null, logo: false, domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: current, well_known: null } }), groupdomainset: () => { current = later; return env({ ok: true, domain: "eastoak.example", check: later }); } } });
   await b.press("groupdomainset", { values: { "gr-domain": "eastoak.example" } });
   const line2 = squash(textOf(all(b.tree, (e) => e.attrs["data-state"] === "domainverdict")[0]));
-  assert.ok(line2.includes(day("2026-10-21")) && line2.includes("09:30") && line2.includes(later.detail), line2);
+  assert.ok(line2.includes(said("screen.group.domain.checked", { date: day("2026-10-21"), time: "09:30" })) && line2.includes(later.detail), line2);
   has(b, "screen.group.domain.verdict.mismatched");
   // control: verified draws the verified sentence and no verdict line
   const v = await open("group", { me: ADMIN, table: withLatest({ ...absent, verdict: "verified", status: 200, detail: "ok" }) });
@@ -430,10 +430,10 @@ test("R75 C88: the hosting account is not said to be recorded at setup when a fo
   const hosted = (by) => groupTable({ hostingaccess: env({ ok: true, recorded: true, current: { holders: "Rosa", note: null, recorded_by: by, at: "2026-10-04T00:00:00Z" }, history: [], limit: 50, truncated: false }) });
   // the founder, who may have recorded it again long after setup: her handle, not "when set up"
   const f = await open("group", { me: FOUNDER, table: hosted("admin") });
-  has(f, "screen.group.hosting.now", { by: "sparky", date: day("2026-10-04") });
+  has(f, "screen.group.hosting.now.date", { date: day("2026-10-04") });
   lacks(f, "screen.group.hosting.now.setup", { date: day("2026-10-04") });
   const g = await open("group", { me: MEMBER, table: hosted("member:admin") });
-  has(g, "screen.group.hosting.now", { by: said("member.founder.unnamed"), date: day("2026-10-04") });
+  has(g, "screen.group.hosting.now.date", { date: day("2026-10-04") });
   assert.ok(!/\badmin\b/.test(g.text));
   // control: no one / the machines
   has(await open("group", { me: MEMBER, table: hosted("") }), "screen.group.hosting.now.setup", { date: day("2026-10-04") });

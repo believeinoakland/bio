@@ -75,7 +75,7 @@ test("R14 C87: Save who your team is with nothing ticked or written sends nothin
   const a = await open("group-identity", { me: ADMIN, table: empty });
   const r = await a.press("groupdescriptionset", { values: { "gi-k-issue": false, "gi-k-community": false, "gi-k-other": false, "gi-focus": "  ", "gi-purpose": "" } });
   assert.deepEqual(r.sent, []);
-  assert.equal(a.refused.text, said("screen.security.config.missing", { field: said("screen.group-identity.focus.field") }), a.refused && a.refused.text);
+  assert.equal(a.refused.text, said("shell.field.needed", { field: said("screen.group-identity.focus.field") }), a.refused && a.refused.text);
   // a kind alone, or one text box alone, is something to save
   assert.deepEqual((await a.press("groupdescriptionset", { values: { "gi-k-issue": true } })).sent[0].body.kinds, ["issue"]);
   assert.equal((await a.press("groupdescriptionset", { values: { "gi-k-issue": false, "gi-purpose": "Accountability." } })).sent[0].body.purpose, "Accountability.");

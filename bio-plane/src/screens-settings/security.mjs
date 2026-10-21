@@ -105,6 +105,7 @@ export const security = {
           const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
           if (first) h += `<p data-state="nosignatures">${first}</p>`;
           if (second) h += `<p data-state="nosignatures-reason">${second}</p>`;
+          h += `<p data-state="nosignatures-next">${W(S + "nosignatures.next")}</p>`;
         }
       }
       return h;

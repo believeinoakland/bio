@@ -87,7 +87,7 @@ export const group = {
       if (latest && latest.verdict && latest.verdict !== "verified") {
         const at = latest.checked_at ? D(latest.checked_at) : "";
         const hm = /T(\d{2}:\d{2})/.exec(String(latest.checked_at || ""));
-        h += `<p data-state="domainverdict">${W(S + "domain.verdict." + (["absent", "mismatched", "undetermined"].indexOf(latest.verdict) >= 0 ? latest.verdict : "undetermined"))}${at ? ` <span class="mk-data">${E(at)}${hm ? " " + E(hm[1]) : ""}</span>` : ""}${typeof latest.detail === "string" && latest.detail ? ` <span class="rec">${E(latest.detail)}</span>` : ""}</p>`;
+        h += `<p data-state="domainverdict">${W(S + "domain.verdict." + (["absent", "mismatched", "undetermined"].indexOf(latest.verdict) >= 0 ? latest.verdict : "undetermined"))}${at && hm ? ` ${W(S + "domain.checked", { date: at, time: hm[1] })}` : ""}${typeof latest.detail === "string" && latest.detail ? ` <span class="rec">${E(latest.detail)}</span>` : ""}</p>`;
       }
       const dm = A("groupdomainset");
       if (dm) h += `${cs.field("gr-domain", S + "domain.field", { value: claim ? claim.domain : v.domain || "", autocomplete: "off" })}${dm}`;
@@ -188,7 +188,7 @@ export const group = {
       // recorded it again long after setup, is named by memberName on the day recorded: the line never claims "when set up" for a date that is not
       const recBy = cur ? String(cur.recorded_by || "").replace(/^member:/, "") : "";
       const rec = !cur ? "" : recBy === "" || recBy === "bootstrap" || recBy === "setup" ? "setup" : /^(token|class|daemon|system|seed|session|accelerator|sweep)/.test(recBy) ? "system" : "";
-      const nowLine = !cur ? "" : rec ? W(S + "hosting.now." + rec, { date: D(cur.at) }) : W(S + "hosting.now", { by: cs.memberName(recBy), date: D(cur.at) });
+      const nowLine = !cur ? "" : rec ? W(S + "hosting.now." + rec, { date: D(cur.at) }) : recBy === "admin" ? W(S + "hosting.now.date", { date: D(cur.at) }) : W(S + "hosting.now", { by: cs.memberName(recBy), date: D(cur.at) });
       let h = `<p class="mk-note">${W(S + "hosting.says")}</p>` + (cur ? `<p data-state="hosting">${nowLine} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "");
       if (hs) h += `${cs.field("gr-holders", S + "hosting.field", { rec: true, max: 500, value: cur ? cur.holders : "", autocomplete: "off" })}${cs.field("gr-hnote", S + "hosting.note", { rec: true, max: 280, value: cur && cur.note ? cur.note : "", autocomplete: "off" })}${hs}`;
       return h;
@@ -223,7 +223,7 @@ export const group = {
         const c = copy.counts || {};
         const records = Number(c.bundles) === 1 ? T("queue.export-performed.records.one") : T("queue.export-performed.records.other", { n: String(Number(c.bundles) || 0) });
         const files = Number(c.files) === 1 ? T("queue.export-performed.files.one") : T("queue.export-performed.files.other", { n: String(Number(c.files) || 0) });
-        h += `<div class="mk-msg" data-shown="copy"><p>${W("queue.export-performed.summary", { date: D(copy.at), records, files })}</p>${cs.save("bio-record-copy-" + String(copy.at).slice(0, 10) + ".json", copy.text, { label: "shell.save" })}</div>`;
+        h += `<div class="mk-msg" data-shown="copy"><p>${W("queue.export-performed.summary", { date: D(copy.at), records, files })} ${Number(c.tables) === 1 ? W(S + "export.count.tables.one") : W(S + "export.count.tables.other", { n: String(Number(c.tables) || 0) })}</p>${cs.save("bio-record-copy-" + String(copy.at).slice(0, 10) + ".json", copy.text, { label: "shell.save" })}</div>`;
       }
       h += logAct;
       if (list) h += cs.sheet(list.map((r) => cs.row("", `${data1(D(r.at))} · ${data1(r.bundles)} · ${data1(r.files)} · ${data1(r.tables)}`, "", r.note ? `<span class="rec">${E(r.note)}</span>` : "")).join("")) + `<p class="mk-note">${W(S + "export.log.cap")}</p>`;

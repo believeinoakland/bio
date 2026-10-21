@@ -174,7 +174,7 @@ test("R46 C87: Add a court with its name empty sends nothing and names the box; 
   const a = await open("places", { me: ADMIN, table: placesTable() });
   const r = await a.press("entitycreate", { data: { court: "1" }, values: { "pl-court": "   " } });
   assert.deepEqual(r.sent, []);
-  assert.equal(a.refused.text, said("screen.security.config.missing", { field: said("court.add.name") }), "the box is named: " + (a.refused && a.refused.text));
+  assert.equal(a.refused.text, said("shell.field.needed", { field: said("court.add.name") }), "the box is named: " + (a.refused && a.refused.text));
   assert.equal((await a.press("entitycreate", { data: { court: "1" }, values: { "pl-court": "Berkeley Housing Court" } })).sent.filter((x) => x.op === "entitycreate").length, 1);
 });
 

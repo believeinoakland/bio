@@ -38,7 +38,6 @@ test("R32 settings draws its sections as the design's link list: each its icon a
     assert.equal(textOf(l), said(`screen.${id}.name`), `${id}'s reference is its name alone`);
     // the purpose is a box of its own beside the reference, beneath it, never inside it
     const purpose = all(a.tree, (e) => e.attrs["data-purpose"] === id)[0];
-    if (id === "watching" || id === "leads") { assert.equal(purpose, undefined, `${id}: the design holds no purpose for it, so none is drawn`); continue; }
     assert.ok(purpose && textOf(purpose) === said(`screen.${id}.purpose`), `${id}'s purpose`);
     assert.ok(!ancestor(purpose, (e) => e === l) && purpose.parent === l.parent, `${id}: apart from the reference`);
     const sib = l.parent.children.filter((c) => c.tag);

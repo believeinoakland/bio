@@ -71,7 +71,7 @@ ${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000
         const body = { kinds, visibility: cs.value("gi-v-public") === true ? "public" : "members" };
         const other = String(cs.value("gi-other") || "").trim(), focus = String(cs.value("gi-focus") || "").trim(), purpose = String(cs.value("gi-purpose") || "").trim();
         // never saved empty (C87): with no kind ticked and nothing written, the first box to fill is named
-        if (!kinds.length && !other && !focus && !purpose) return { refuse: "screen.security.config.missing", fills: { field: String(cs.w("screen.group-identity.focus.field")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
+        if (!kinds.length && !other && !focus && !purpose) return { refuse: "shell.field.needed", fills: { field: String(cs.w("screen.group-identity.focus.field")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
         if (other) body.otherKind = other;
         if (focus) body.focus = focus;
         if (purpose) body.purpose = purpose;

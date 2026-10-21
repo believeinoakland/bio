@@ -162,7 +162,7 @@ export const places = {
         if (el.dataset.court === "1") {
           const name = String(cs.value("pl-court") || "").trim();
           // an empty box is refused naming it (C87): the box's own label, as plain text
-          if (!name) return { refuse: "screen.security.config.missing", fills: { field: String(cs.w("court.add.name")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
+          if (!name) return { refuse: "shell.field.needed", fills: { field: String(cs.w("court.add.name")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
           return { body: { kind: "body", forum_kind: "court", label: name, note: name } };
         }
         const label = String(cs.value("pl-label") || "").trim(), note = String(cs.value("pl-note") || "").trim();

@@ -223,7 +223,8 @@ test("R15, R77 C83: files are said to be checked only while signatures are held;
   lacks(none, "screen.security.files.on");
   assert.equal(all(none.tree, (e) => e.attrs["data-state"] === "files").length, 0, "no checked sentence");
   assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), said("file-safety.index.no_signatures_since", { date: day("2026-10-15T03:00:00Z") }), "since when");
-  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), said("file-safety.index.signatures_refused", { status: "403" }), "why, in words, and what an administrator can do");
+  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), said("file-safety.index.signatures_refused", { status: "403" }), "why, in words");
+  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-next")[0]), said("screen.security.nosignatures.next"), "what an administrator can do");
   // a scanner that did not answer, or none bound, claims nothing either
   for (const sc of [{ scanner: { bound: true, version: null, unreachable: true }, signatures_age_ms: null }, { scanner: { bound: false, version: null }, signatures_age_ms: null }]) {
     const o = await open("security", { me: ADMIN, table: scan(sc) });

@@ -165,7 +165,7 @@ export const grouprules = {
         // the one name the member gives; the stored `rule` or `key` is derived from it (a letter first, then letters, digits and _)
         // an empty box is refused naming it (C87): the box's own label, as plain text
         const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
-        const missing = (labelKey) => ({ refuse: "screen.security.config.missing", fills: { field: plain(cs.w(labelKey)) } });
+        const missing = (labelKey) => ({ refuse: "shell.field.needed", fills: { field: plain(cs.w(labelKey)) } });
         let slug = val("gr-name").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
         if (!slug) return missing("screen.grouprules.name.label");
         if (!/^[a-z]/.test(slug)) slug = "r_" + slug;
