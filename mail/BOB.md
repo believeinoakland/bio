@@ -1865,3 +1865,6 @@ U431 merged into tranche/T51 (K4325); keys sent to the running jobs; the registr
 
 ## B446 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 HANDOFF from BOB #240 (K4326): two rows for a timed-out capture (control-plane R105, R116 now state kept): refusal.ACQUIRE_TIMED_OUT.held (the capture was kept; it timed out after) and refusal.ACQUIRE_TIMED_OUT.undetermined (stopped, and we cannot tell what was kept). screens-intake keys them; nothing waits.
+
+## B447 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+HANDOFF from BOB #240 (K4327): two rows for the document picker's search (screens-investigate C95): form.choose.search (the search box's label) and form.choose.search.none (a search that finds no document). The job keys them; nothing waits.
