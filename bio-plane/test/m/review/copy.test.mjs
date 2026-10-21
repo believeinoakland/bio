@@ -62,8 +62,9 @@ test("R12: each finding is read as the draft's last editor may see it, for both 
   grant(w, d, 1);
   const want = [
     { target: "INQ-2026-0001-a", present: true, object_type: "inquiry", state: "concluded", role: "load_bearing",
-      text: "A's text", statement: "A's text", falsifier: null },
-    { target: "INQ-2026-0002-b", present: true, object_type: "inquiry", state: "open", role: null, text: null, statement: null, falsifier: null },
+      text: "A's text", statement: "A's text", falsifier: null, title: "INQ-2026-0001-a", concluded: true },
+    { target: "INQ-2026-0002-b", present: true, object_type: "inquiry", state: "open", role: null, text: null, statement: null, falsifier: null,
+      title: "INQ-2026-0002-b", concluded: false },
     { target: "PROJ-2026-0009-z", present: false, role: "supporting",
       detail: NO_FINDING },
     { target: "INQ-2026-0404-none", present: false, role: "supporting",
@@ -76,11 +77,16 @@ test("R12: each finding is read as the draft's last editor may see it, for both 
     w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
                    VALUES (?,?,?,?,?,?)`, pid, "adm2", "invited", 0, NOW, NOW);
   assert.equal(w.membership.inSight("PROJ-2026-0009-z", V("adm2")), true, "the reader can see z");
-  assert.deepEqual(w.r.copy({ secretSha: SECRET(1), bySecret: true }).findings, want);
-  assert.deepEqual(w.r.copy({ draft: d.draftId, viewer: V("adm2") }).findings, want, "the reader's own sight does not widen it");
+  /* R41: a finding with no words is told as not concluded yet (a plain state in `not_concluded`, null when concluded) */
+  const asRead = (fs) => fs.map(({ not_concluded: nc, ...f }) => {
+    if (f.present) assert.equal(typeof nc, f.concluded ? "object" : "string", f.target);
+    return f;
+  });
+  assert.deepEqual(asRead(w.r.copy({ secretSha: SECRET(1), bySecret: true }).findings), want);
+  assert.deepEqual(asRead(w.r.copy({ draft: d.draftId, viewer: V("adm2") }).findings), want, "the reader's own sight does not widen it");
   /* D54: an administrator neither invited nor joined to hidden P has no member door at all */
   assert.equal(JSON.stringify(w.r.copy({ draft: d.draftId, viewer: V("adm") })), DEAD);
-  assert.deepEqual(w.r.copy({ draft: d.draftId, viewer: V("ed") }).findings, want);
+  assert.deepEqual(asRead(w.r.copy({ draft: d.draftId, viewer: V("ed") }).findings), want);
   /* the editor changes: the next last editor's sight governs */
   w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
                  VALUES (?,?,?,?,?,?)`, "PROJ-2026-0009-z", "ann", "joined", 0, NOW, NOW);

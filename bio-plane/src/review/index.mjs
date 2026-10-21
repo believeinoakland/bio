@@ -77,7 +77,7 @@ import { ratificationOf, SUBJECT_POSITIONS } from "../ratification/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
-import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
+import { isMachineIdentity, parseFrontmatter, HEADINGS } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -260,23 +260,45 @@ function withoutLog(text) {
   return before ? `${before}\n${after ? `\n${after}` : ""}` : after;
 }
 
-/* R41 (L15, C46): a finding file's words without its front matter (the lines between the opening and closing `---`
-   fences) and without the Session Log. `statement` is the finding's own words: the front matter's `conclusion` (what
-   `op=conclude` wrote there) or `statement` when it holds one as a plain string, first; else the text that follows the
-   front matter. `falsifier` is what would change it, the front matter's, else null. `text` is what follows the front
-   matter. A file with no front matter answers its words unchanged (less any Session Log). */
+/* R41: an inquiry's section headings as record-grammar holds them (`## Conclusion`, `## What Would Falsify This`). */
+const CONCLUSION_HEADING = HEADINGS.inquiry.find((h) => /Conclusion/.test(h));
+const FALSIFIER_HEADING = HEADINGS.inquiry.find((h) => /Falsify/.test(h));
+
+/* R41 (C46): the text under one heading line of a finding's body, to the next `## ` heading or the end, trimmed; null
+   when the heading is absent or its section holds nothing. */
+function sectionOf(text, heading) {
+  const m = new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[ \\t]*\\r?$`, "m").exec(text);
+  if (!m) return null;
+  const rest = text.slice(m.index + m[0].length);
+  const next = rest.search(/\n## /);
+  const got = (next < 0 ? rest : rest.slice(0, next)).trim();
+  return got || null;
+}
+
+/* R41 (L15, C46; fix round 3): a finding file's words without its front matter (the lines between the opening and closing
+   `---` fences), without the Session Log and without the file's headings. `statement` is the finding's own words: the
+   front matter's `conclusion` (what `op=conclude` wrote there) or `statement` when it holds one as a plain string, first;
+   else the text of the body's `## Conclusion` section; else, for words that are not laid out in sections at all (no `## `
+   heading), the words themselves. A file laid out in sections whose Conclusion holds nothing has no statement (null:
+   not concluded yet), never its headings. `falsifier` is what would change it, the front matter's, else the body's
+   `## What Would Falsify This` section, else null. `text` is what follows the front matter. A file with no front matter
+   answers its words unchanged (less any Session Log). `concluded` says whether a statement was found. */
 function findingWords(content) {
   const raw = String(content ?? "");
   let parsed = null;
   try { parsed = parseFrontmatter(raw); } catch { parsed = null; }
+  const laid = (t) => /^## /m.test(t);
   if (!parsed || parsed.data === null || typeof parsed.data !== "object") {
     const text = withoutLog(raw);
-    return { text, statement: text, falsifier: null };
+    const statement = sectionOf(text, CONCLUSION_HEADING) ?? (laid(text) || !text.trim() ? null : text);
+    return { text, statement, falsifier: sectionOf(text, FALSIFIER_HEADING), concluded: statement !== null };
   }
   const body = withoutLog(String(parsed.body ?? "").replace(/^(?:\r?\n)+/, ""));
   const own = (k) => (typeof parsed.data[k] === "string" && parsed.data[k].trim() ? parsed.data[k].trim() : null);
-  return { text: body, statement: own("conclusion") ?? own("statement") ?? (body.trim() ? body : null),
-           falsifier: own("falsifier") };
+  const statement = own("conclusion") ?? own("statement") ?? sectionOf(body, CONCLUSION_HEADING)
+                    ?? (laid(body) || !body.trim() ? null : body);
+  return { text: body, statement, falsifier: own("falsifier") ?? sectionOf(body, FALSIFIER_HEADING),
+           concluded: statement !== null };
 }
 
 /* R13: the dry run's own throw, so a rollback is told apart from a failure. */
@@ -359,16 +381,21 @@ export class Review {
     /* D-539: THE ROLE IS THE DRAFT'S OWN AUTHORED FACT, said back whether or not the finding can be read, so an edit
        written from the answer does not lose it. It discloses nothing the target id beside it does not. */
     const role = roles && typeof roles === "object" ? roles[id] ?? null : null;
-    const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+    const b = this.#one(`SELECT b.bundle_id, b.title, b.object_type, b.current_state FROM bundles b
                          WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
     if (!b) return { target: id, present: false, role,
                      detail: localize("review.index.this_draft_names_a_finding", "this draft names a finding its editor cannot read, or one that does not exist.") };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
     /* R41 (L15): a reader reads the finding's own words, never the file's front matter. */
     const words = md ? findingWords(md.content) : null;
-    return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
+    const concluded = !!(words && words.concluded);
+    /* R41 (fix round 3): a finding with no words of its own is told as not concluded yet; the sentence is a stand-in
+       for the design's row (`review.index.not_concluded_yet`). */
+    return { target: id, present: true, title: typeof b.title === "string" && b.title.trim() ? b.title : null,
+             object_type: b.object_type, state: b.current_state, role,
              text: words ? words.text : null, statement: words ? words.statement : null,
-             falsifier: words ? words.falsifier : null };
+             falsifier: words ? words.falsifier : null, concluded,
+             not_concluded: concluded ? null : localize("review.index.not_concluded_yet", "Not concluded yet") };
   }
 
   /** R40 (L14): THE SHORT TITLE a screen draws as a draft's heading, beside the identity sentence it keeps for body text:
@@ -914,11 +941,81 @@ export class Review {
                updated_by: d.updated_by, updated_at: d.updated_at,
                /* REC-193: null where the draft predates the stamp — UNDETERMINED, not the editor. */
                statement_by: d.statement_by ?? null,
+               /* R19 (C48, C50): what the draft has prepared and published, as case-authoring states it (its R83). */
+               editions: this.#editions(ident, d),
                read: `op=reviewcopy&draft=${d.draft_id}` };
     });
     const { concluded, truncated: concludedTruncated } = this.#concluded(pid, viewer, cap);
     return { ok: true, kind: "review-drafts", project: pid, drafts, count: drafts.length,
              total, limit: cap, truncated: total > drafts.length, concluded, concluded_truncated: concludedTruncated };
+  }
+
+  /* R19 (fix round 3; case-authoring R83, K4363): what a draft has prepared and published, `{prepared, published}` for
+     the case identity it stands at, from case-authoring's one read, `draftEditions`. Nulls where it cannot answer, never
+     a throw: a list that cannot say states nothing prepared and nothing published. */
+  #editions(ident, draft) {
+    try {
+      const got = this.caseAuthoring.draftEditions({ caseId: ident.caseId, draft });
+      return { prepared: got && got.prepared != null ? got.prepared : null,
+               published: got && got.published ? got.published : null };
+    } catch { return { prepared: null, published: null }; }
+  }
+
+  /** R43 (fix round 3, C14; project-roster R42): THE DRAFTS SHARED FOR REVIEW, BY PROJECT, in reads that do not grow with
+   *  the projects asked. For each project asked: the number of its case drafts the viewer may see (R9) that hold a live
+   *  grant (R8: not revoked, not lapsed, its draft still at the case identity the grant was bound to, so a grant whose
+   *  edition has since been published is not counted), and the instant the newest such grant was issued (`null` when none).
+   *  A project the viewer may not see, or that does not exist, is `{count: 0, newest: null}`. A draft with several live
+   *  grants counts once. Writes nothing. */
+  sharedDraftsByProject({ projectIds = [], viewer = null } = {}) {
+    const ids = [...new Set((Array.isArray(projectIds) ? projectIds : []).filter((p) => typeof p === "string" && p.trim()).map((p) => p.trim()))];
+    const out = Object.fromEntries(ids.map((p) => [p, { count: 0, newest: null }]));
+    const gate = viewerPredicate(viewer);
+    if (!ids.length || gate.scope === "DENY") return out;
+    const CHUNK = 200;
+    const seen = [];
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const part = ids.slice(i, i + CHUNK);
+      const q = part.map(() => "?").join(",");
+      const rows = gate.scope === "member"
+        ? this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id IN (${q})`, ...part)
+        : this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id IN (${q}) AND ${gate.sql}`,
+                     ...part, ...gate.args);
+      for (const r of rows) seen.push(r.bundle_id);
+    }
+    const now = this.#when();
+    for (let i = 0; i < seen.length; i += CHUNK) {
+      const part = seen.slice(i, i + CHUNK);
+      const q = part.map(() => "?").join(",");
+      const grants = this.#rows(`SELECT g.draft_id, g.case_id AS bound_case, g.edition AS bound_edition, g.issued_at, g.until,
+                                        d.project_id, d.case_id AS draft_case
+                                 FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
+                                 WHERE g.revoked_at IS NULL AND d.project_id IN (${q})`, ...part);
+      const cases = [...new Set(grants.map((g) => g.draft_case).filter(Boolean))];
+      const top = new Map();
+      for (let j = 0; j < cases.length; j += CHUNK) {
+        const cq = cases.slice(j, j + CHUNK).map(() => "?").join(",");
+        for (const r of this.#rows(`SELECT case_id, MAX(edition) AS m FROM published_cases WHERE case_id IN (${cq}) GROUP BY case_id`,
+                                   ...cases.slice(j, j + CHUNK))) top.set(r.case_id, Number(r.m));
+      }
+      const drafts = new Map();
+      for (const g of grants) {
+        if (this.#lapsed(g.until, now)) continue;
+        /* R8's identity: the draft's case now (highest published edition plus one; edition 1 for none) against the bound one */
+        const named = String(g.draft_case ?? "").trim() || null;
+        const edition = named ? (top.get(named) ?? 0) + 1 : 1;
+        if ((named ?? null) !== (g.bound_case ?? null) || edition !== Number(g.bound_edition)) continue;
+        const key = g.draft_id;
+        const held = drafts.get(key);
+        if (!held || instantOrder(g.issued_at, held.issued_at) > 0) drafts.set(key, { issued_at: g.issued_at, project: g.project_id });
+      }
+      for (const { issued_at: at, project } of drafts.values()) {
+        const row = out[project];
+        row.count++;
+        if (row.newest === null || instantOrder(at, row.newest) > 0) row.newest = at;
+      }
+    }
+    return out;
   }
 
   /* R36: the questions the project has concluded (ratification R1's `caseConclusionFor` answers `concluded` for the

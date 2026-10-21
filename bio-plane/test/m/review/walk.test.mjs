@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { standard, P, V, SECRET } from "./fixture.mjs";
 import { projectViewer } from "../../../src/membership/index.mjs";
 
-const Q = "INQ-2026-0001-q", N = "INQ-2026-0002-n", L = "INQ-2026-0003-l";
+const Q = "INQ-2026-0001-q", N = "INQ-2026-0002-n", L = "INQ-2026-0003-l", W = "INQ-2026-0004-w", E = "INQ-2026-0005-e";
 const LOG = "## Session Log\n\n### Session 2026-10-21T05:37:33Z | Rested this question on 1 record (supports) | admin\n"
   + "Trigger: a part of INFO-2026-0045-a-web-page found by search in capture 118eae97\nChanges: basis legs added.\n"
   + "Reason: Setting aside the scope limit so the conclusion can be recorded\n";
@@ -17,6 +17,8 @@ const world = () => {
   w.bundle(Q, "inquiry", `---\nid: ${Q}\nobject_type: inquiry\nconclusion: "The Act requires a reply in 20 days."\nfalsifier: "A court order saying otherwise."\n---\n\n${BODY}${LOG}`);
   /* no front-matter words: a section text, then the log */
   w.bundle(N, "inquiry", `---\nid: ${N}\nobject_type: inquiry\ntitle: "No words"\n---\n\n## Question\n\nIs it open?\n\n${LOG}`);
+  /* the walk's own shape: headings with every section empty, front matter without words */
+  w.bundle(E, "inquiry", `---\nid: ${E}\nobject_type: inquiry\n---\n\n${BODY}`);
   /* a file with no front matter and no log */
   w.bundle(L, "inquiry", "plain words, no front matter\n");
   return w;
@@ -41,15 +43,51 @@ test("R41: a finding whose front matter holds the conclusion answers that conclu
   }
 });
 
-test("R41: a finding with no front-matter words answers its section text without the log; one with no log and no front matter answers its words unchanged (control, C46)", () => {
+test("R41: a finding with no front-matter words answers its Conclusion section's text without the log; one with no headings answers its words unchanged (control, C46)", () => {
   const w = world();
-  const { member, outside } = findings(w, [N, L]);
+  w.bundle(W, "inquiry", `---\nid: ${W}\ntitle: "Section words"\n---\n\n## Question\n\nIs it open?\n\n## Conclusion\n\nIt is open to all.\n\n## What Would Falsify This\n\nA statute closing it.\n\n${LOG}`);
+  const { member, outside } = findings(w, [W, L]);
   for (const fs of [member, outside]) {
+    assert.equal(fs[0].statement, "It is open to all.");
+    assert.equal(fs[0].falsifier, "A statute closing it.");
+    assert.equal(fs[0].concluded, true);
     assert.ok(noLog(fs[0].text) && noLog(fs[0].statement));
-    assert.ok(fs[0].statement.includes("Is it open?"));
-    assert.equal(fs[0].statement, fs[0].text);
-    assert.equal(fs[0].falsifier, null);
     assert.deepEqual([fs[1].text, fs[1].statement], ["plain words, no front matter\n", "plain words, no front matter\n"]);
+    assert.equal(fs[1].concluded, true);
+  }
+});
+
+test("R41: a finding whose conclusion is empty is told as not concluded yet, never as the file's headings, at both doors (C46, fix round 3)", () => {
+  const w = world();
+  const { member, outside } = findings(w, [N, E, Q]);
+  for (const [door, fs] of [["member", member], ["recipient", outside]]) {
+    for (const f of fs.slice(0, 2)) {
+      assert.equal(f.statement, null, `${door}: ${f.target}: no statement, not the headings`);
+      assert.equal(f.falsifier, null, door);
+      assert.equal(f.concluded, false, door);
+      assert.equal(typeof f.not_concluded, "string", door);
+      assert.ok(f.not_concluded.trim() && !/^#|\n## /.test(f.not_concluded), `${door}: a plain state, not a heading`);
+      assert.ok(noLog(f.text), door);
+    }
+    /* control: a finding that has words is concluded and carries no not_concluded state */
+    assert.deepEqual([fs[2].concluded, fs[2].not_concluded], [true, null], door);
+  }
+});
+
+test("R41: no finding the reader copy draws, at either door, carries a ## heading in its statement or falsifier (C46, fix round 3)", () => {
+  const w = world();
+  const { member, outside } = findings(w, [Q, N, E, L]);
+  for (const f of [...member, ...outside]) for (const s of [f.statement, f.falsifier]) assert.ok(!/(^|\n)## /.test(String(s ?? "")), String(s));
+});
+
+test("R12: a present finding answers its title, so a screen draws the question's title where it would draw the id (C46, fix round 3)", () => {
+  const w = world();
+  w.st.sql.exec(`UPDATE bundles SET title=? WHERE bundle_id=?`, "Does the Act require a reply?", Q);
+  const { member, outside } = findings(w, [Q, "INQ-2026-9999-gone"]);
+  for (const fs of [member, outside]) {
+    assert.equal(fs[0].title, "Does the Act require a reply?");
+    assert.equal(fs[1].present, false);
+    assert.equal(fs[1].title ?? null, null, "a finding the editor cannot read names no title");
   }
 });
 
