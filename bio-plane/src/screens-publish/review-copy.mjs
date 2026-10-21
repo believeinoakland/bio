@@ -103,13 +103,17 @@ export const REVIEW_COPY = Object.freeze({
     const acks = held && held.statement_acknowledgements && Array.isArray(held.statement_acknowledgements.acknowledgements) ? held.statement_acknowledgements.acknowledgements : [];
     out.push(P.sec(cs, "screen.review-copy.comments", (comments.length ? cs.sheet(comments.map(function (x, i) {
       const reader = x.author_kind === "recipient" || x.reviewer_kind === "recipient";
+      // C94: an outside reader is named as the grant names them; a member by handle, never by the member id
+      const who = reader ? x.recipient || x.author || x.reviewer || "" : cs.memberName(x.author || x.reviewer || "");
+      // C81: the reply box and its button sit under the comment, the whole width of the row, not squeezed into its end
       return cs.row("", '<span class="rec">' + cs.esc(x.text) + "</span>",
-        '<span class="meta">' + cs.w(reader ? "screen.review-copy.from.reader" : "screen.review-copy.from.member", { who: x.recipient || x.author || x.reviewer || "" })
-        + (x.at ? " · " + cs.date(x.at) : "") + "</span>",
-        reader ? cs.field("rc-reply-" + i, "screen.review-copy.reply.label", { area: true }) + cs.act("reviewcomment", { data: { index: String(i) } }) : "");
+        '<span class="meta">' + cs.w(reader ? "screen.review-copy.from.reader" : "screen.review-copy.from.member", { who: who })
+        + (x.at ? " · " + cs.date(x.at) : "") + "</span>")
+        + (reader ? '<div class="mk-acts" style="display:block;padding:0 0 12px">' + cs.field("rc-reply-" + i, "screen.review-copy.reply.label", { area: true })
+          + cs.act("reviewcomment", { data: { index: String(i) } }) + "</div>" : "");
     }).join("")) : "")
       + (acks.length ? '<ul class="mk-list" data-acked>' + acks.map(function (a) {
-        return "<li>" + cs.w("screen.review-copy.acked", { who: a.recipient || a.by || "", date: { html: a.at ? cs.date(a.at) : "" } }) + "</li>"; }).join("") + "</ul>" : "")
+        return "<li>" + cs.w("screen.review-copy.acked", { who: a.recipient || (a.by ? cs.memberName(a.by) : ""), date: { html: a.at ? cs.date(a.at) : "" } }) + "</li>"; }).join("") + "</ul>" : "")
       + P.said(view, "reviewcomment")));
     return out.join("");
   },
@@ -120,7 +124,7 @@ export const REVIEW_COPY = Object.freeze({
   acts: [
     {
       // C49: "Which draft": the project's drafts read once more, and the screen opened on the one chosen (`pickDraft`).
-      op: "casedrafts", label: "act.casedrafts.label.review-copy",
+      op: "casedrafts", label: "act.casedrafts.label.review-copy", rereads: [],
       send: function (view, el, cs) {
         view.ui.pickDraft = String(cs.value("drafts-review-copy") || "");
         return { query: { project: String(view.subject || "").split("/")[0] } };
@@ -129,7 +133,7 @@ export const REVIEW_COPY = Object.freeze({
     },
     {
       // R2: a named reader, their role and an end date; the answer's secret drawn once as the reader's link, never kept.
-      op: "reviewgrant", label: "act.reviewgrant.label.review-copy", outward: true,
+      op: "reviewgrant", label: "act.reviewgrant.label.review-copy", rereads: [], outward: true,
       refusals: { REVIEW_BAD_UNTIL: "screen.review-copy.until.bad" },
       send: async function (view, el, cs) {
         const P = view.parts;
@@ -166,7 +170,7 @@ export const REVIEW_COPY = Object.freeze({
       // R40 (A81): the browser act "Save as a file": it opens the saving (the warning, what the file carries, the one box); once the
       // box is ticked, the same act reads the copy once, makes one stamped file in the page and hands it over to save. Nothing is
       // written to the plane, stored or put in an address; the file carries no grant secret, reader's name or comment.
-      op: "reviewexport", label: "act.owed_reviewexport.label.review-copy",
+      op: "reviewexport", label: "act.owed_reviewexport.label.review-copy", rereads: [],
       send: async function (view, el, cs) {
         const P = view.parts;
         if (el.dataset.step !== "save") { cs.set("export", true); return null; }
@@ -184,13 +188,13 @@ export const REVIEW_COPY = Object.freeze({
     },
     {
       // R2: "Stop sharing" one reader.
-      op: "reviewrevoke", label: "act.reviewrevoke.label.review-copy",
+      op: "reviewrevoke", label: "act.reviewrevoke.label.review-copy", rereads: [],
       send: function (view, el) { return el.dataset.grant ? { body: { grant: el.dataset.grant } } : null; },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "reviewrevoke", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R2: "Reply" to a reader's comment.
-      op: "reviewcomment", label: "act.reviewcomment.label.review-copy",
+      op: "reviewcomment", label: "act.reviewcomment.label.review-copy", rereads: [],
       send: function (view, el, cs) {
         const text = String(cs.value("rc-reply-" + el.dataset.index) || "").trim();
         if (!text) return { refuse: "screen.review-copy.reply.needed" };

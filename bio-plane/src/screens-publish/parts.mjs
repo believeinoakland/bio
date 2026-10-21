@@ -433,4 +433,52 @@ export const PARTS = Object.freeze({
 
   /* The UTF-8 bytes of a statement the member's key signs (interface-shell R41's `{label, bytes, namespace}`). */
   bytes: function (text) { return new TextEncoder().encode(String(text)); },
+
+  /* R1, R61 (fix round 3, C46; `review` R41): a finding of a draft's copy in its own words: its title, then its statement and what would
+     change it; a finding the team has not concluded says so in the plane's own sentence; never the file's text once the answer states
+     whether it is concluded, never a heading, a log or an id. `o.text` lets the member's own editor, for an older answer that states no
+     `concluded`, fall back on the section's text; the outside reader never draws it (R61). A finding nothing is known of draws what the
+     plane says of it (`detail`), else its target. HTML. */
+  findingWords: function (cs, f, o) {
+    const title = typeof f.title === "string" && f.title.trim() ? "<b>" + cs.esc(f.title.trim()) + "</b> " : "";
+    const str = function (v) { return typeof v === "string" && v.trim() ? v.trim() : ""; };
+    if (f.concluded === false) return title + '<span class="muted" data-notconcluded>' + (str(f.not_concluded) ? cs.esc(f.not_concluded) : cs.w("review.index.not_concluded_yet")) + "</span>";
+    const words = str(f.statement) || (o && o.text && (f.concluded === undefined || f.concluded === null) ? str(f.text) : "");
+    if (!words && !title) return '<span class="rec">' + cs.esc(str(f.detail) || str(f.target)) + "</span>";
+    const why = str(f.falsifier);
+    return title + (words ? '<span class="rec">' + cs.esc(words) + "</span>" : "")
+      + (why ? '<span class="meta" data-falsifier>' + cs.w("question.concluded.falsifier", { falsifier: why }) + "</span>" : "");
+  },
+
+  /* C51 (R72): an act's progress line removed once the work it spoke of has ended. */
+  unsay: function (cs, view, key) {
+    if (view.ui.said && view.ui.said[key]) { delete view.ui.said[key]; cs.set("said", view.ui.said); }
+  },
+
+  /* R12, R13, R72 (fix round 3, C51): one sitting of the member's key over `list` (interface-shell R41's statements). With no key held in this
+     browser and a key file chosen on the Sign step, the file is read by the kit (`cs.keyFile`) and put in the sign dialog's own box, so the
+     member types only the passphrase; an unreadable or empty file is refused in the kit's word and nothing is asked of the device; with no
+     file chosen the dialog is as it was. `{signed}` is the signer's answer, or `{refuse}` a word key. */
+  sitSign: async function (cs, view, list) {
+    let file = "";
+    if (view.ui.keyHeld === false) {
+      const k = await cs.keyFile("ce-keyfile");
+      if (k.ok) file = k.text;
+      else if (k.word !== "shell.keyfile.none") return { refuse: k.word };
+    }
+    const sitting = cs.signer.sign(list);
+    if (file) {
+      // the kit draws its dialog once it has looked for a held key, and answers a second look after the first: when this one is
+      // answered the dialog is drawn, and its box is the one place a key file's text goes (interface-shell R40)
+      await cs.signer.held();
+      if (cs.value("cs-key-file") !== null) cs.fill("cs-key-file", file);
+    }
+    return { signed: await sitting };
+  },
+
+  /* R2, R62 (fix round 3, C94): a comment's or acknowledgement's author: the name an outside reader was given by the grant, as it is;
+     a member by handle, never by the member id (interface-shell R111). */
+  whoWas: function (cs, name, member) {
+    return typeof name === "string" && name.trim() ? name : member ? cs.memberName(member) : "";
+  },
 });
