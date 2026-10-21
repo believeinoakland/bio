@@ -64,3 +64,25 @@ Size (session_01FvmPgUS1f2D4dmmfN6kjNh): test runs 1, module lines 890
 Other modules, found by `node checks/run.mjs /home/user/bio` at this tip (not answer-envelope's; not touched):
 1. Coverage: live requirement ids named by no test: agent-harness R17; agent-runner R37 R38 R40; installer-steps R26 R31; journey-check R19. Coverage reports 6449 of 6456 named (4 failures). The other three modules listed in J2's REPORT are now covered.
 2. Architecture (3917 product files), format (175 modules), channels (2 participants) and words (175 modules; 0 failures) show 0 failures.
+
+## J4 · COMPLETE
+
+K4291 (CHANGE: the 16 tests red on `adminendorse: registered after the first read (R81)`) done at 20d0e9c9bc on job/T51/answer-envelope.
+
+Entries applied:
+- K4291, the walk: `families.test.mjs`'s `unreached()` imports `bio-plane/src/plane/register.mjs` before its first walk, as following's R1 fix does (8d76643e0c, plane R68). With that, the TypeError is gone and every walk-based test runs.
+- The same red, one more: `families.test.mjs`' link-sweep test (R2, R7; K1207, N506) pinned three codes, C-18.16–C-18.18. link-sweep's `SWEEP_CHECKS` now also holds C-18.24, `MACHINE_CANNOT_SET_SWEEP` (link-sweep R13, K4189; monitoring took C-18.22 and C-18.23). The expected list now names four codes and the test title names C-18.24. The check that every row decorates with its own check and words is unchanged, and so are the negative controls.
+- Not changed: no requirement line, no source file, and no negative control. Tests only.
+
+Deferred: none.
+
+REPORT (sent as J3, other modules, not changed by this job): agent-harness R17; agent-runner R37 R38 R40; installer-steps R26 R31; journey-check R19 are named by no test (coverage: 4 failures).
+
+Checks run (summary lines):
+- node --test --test-force-exit test/m/answer-envelope/ (in bio-plane, after the lockfile `node_modules` were present where the module needs them): tests 41, pass 41, fail 0. Before the fix: the walk TypeError on the R2/R7 family tests, 15 of them, and the link-sweep row assertion.
+- node checks/format.mjs /home/user/bio (via checks/run.mjs): 175 modules, 175 requirements files; 0 failures.
+- node checks/run.mjs /home/user/bio (process repo at a4c42ff34): format 0 failures; architecture: 3917 product files, 13487 relative imports; 0 failures; coverage: 6449 of 6456 live requirement ids named by a test; 4 failures, none in answer-envelope (REPORT); channels: 2 participants, 1314 outbox commits read; 0 failures; words: 175 modules, 641311 string literals read, 18009 words; 0 failures.
+- node checks/ownership.mjs /home/user/bio answer-envelope tranche/T51 job/T51/answer-envelope: 1 files changed by answer-envelope; 0 failures.
+- node bio-plane/src/setup-words/build.mjs --check: rows.mjs and words-unreviewed.json match words.json and the source (not regenerated).
+
+Size (session_01LY4Tk2jtCcFd4L7Syr6Sak): test runs 3, module lines 890
