@@ -61,3 +61,17 @@ B. A federal (and California) records-request template text. That needs a named 
 C. Both: A now, B whenever you have the texts.
 
 Please release the fix step with A (or tell me otherwise). I will wait.
+
+## J5 · COMPLETE
+
+COMPLETE, fix round 4, cause C64-template (filing-templates #15), pushed at `7cda1edbf0` on `job/T51/filing-templates`; `tranche/T51` merged in before COMPLETE. No PR.
+
+C64-template, the four fields:
+(1) Root cause (step 0 reported in J4, released by BOB's B4 = option A, K4438): the real profile's `records_request` row (oakland-alameda.mjs:519) carries no template (K921 Q1, R45); `filings.filingPrepare` (index.mjs:739-800) finds a template only through `action_kinds[kind].template` or a named one, so it answers `TEMPLATE_NOT_NAMED` with an empty list and the screen draws an empty box under an always-shown help line. California as much as federal. No template text is written (Bob's review, K921). The refusal "blank the text does not have" is screens-action's and filings' (send-steps.mjs:275-290, FILL_UNKNOWN_BLANK), the cure is in screens-action's START.
+(2) Test-gap fix: round 3 used the test profile, which holds a template; no test had a kind with none. New `bio-plane/test/m/filing-templates/c64-template.test.mjs` uses `test-harbour` (the test profile with its templates removed, records_request Tier 1: the real profile's shape), so screens-action has a real fixture.
+(3) The test (R34 R35 R14 R26): `templateByHandle` and `offeredVersion` of `@records-request` answer `NO_SUCH_TEMPLATE` (`template: null`, no text); `templatesFor({kind, use: file})` answers `{ok: true, templates: []}`; `unofferedFor` answers `[]`; nothing written; control: the test profile's template is offered with a default approved version. Red/green: the module already behaved as the requirements say, so the test passes on the unchanged code (no defect here; BOB's A needed none). To show it can fail I mutated `templateByHandle` to answer an empty text for an unresolved handle: 0 pass, 1 fail; restored; 1 pass.
+(4) Platform check: N (pure code).
+
+Requirement ids met: R14, R15, R26, R34, R35 unchanged and still met; no requirement line to propose. Nothing deferred, no open QUESTION (J4 answered by B4); no finding in another module beyond the cure already placed in screens-action.
+Tests and checks: `node --test --test-force-exit bio-plane/test/m/filing-templates/`: tests 86, pass 86, fail 0. Users: the module's services are unchanged (test-only diff), so no user suite was needed. `checks/format.mjs bio`: 0 failures. `architecture.mjs bio filing-templates`: 18 files, 65 imports, 0 failures. `coverage.mjs bio filing-templates`: 35 of 35 live ids named, 0 failures. `ownership.mjs bio filing-templates tranche/T51 job/T51/filing-templates`: 2 files changed, 0 failures. `checks/run.mjs` whole tree: no line names filing-templates; its failures are other modules' (coverage 15, words 3).
+Size (session_01KaymbcDym8ajLSiHBqjDGC): test runs 9, module lines 1939
