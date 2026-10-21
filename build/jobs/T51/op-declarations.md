@@ -370,3 +370,7 @@ I will not start the rewrite until you pick (a) or (b).
 ## J27 · REPORT
 
 Re B29: capturecredentiallist has its spec under registration; my earlier 'no spec' was a misreading. Checked under register-owners: OPS holds it (classes admin and member, machineClasses [], mutating false), SESSION_OPS.member and .admin hold it, NEEDS is null. What is missing is affordances' text: it is not in ACT_HELP and in no ACT_HELP_ABSENT ground, so it is one of the 22 in t36.test.mjs:303 (the R34 partition), which B28 holds for AFFORDANCES #41. Nothing for this module to fix; the owner's declaration (capture-sources/ops.mjs:30) is correct. The t42 'named, no spec' result I saw earlier came from my own grounding of it in an unregistered test world, which I reverted.
+
+## J28 · REPORT
+
+Re B31: merged tranche/T51 with AFFORDANCES #41 (51d3838b3c). t36.test.mjs:306 now names capturecredentiallist only (the partition's one op with no text and no ground); not grounded. One change in my module: moneysets leaves my ACT_HELP_ABSENT read ground, since affordances now explains it (the t36:332 and t50 checks named it). Suite: 233 tests, 232 pass, 1 fail (t36:306). Checks: format, architecture, words clean; ownership 0 failures.
