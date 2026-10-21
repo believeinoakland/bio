@@ -37973,42 +37973,42 @@
       "en": "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2692
+      "line": 2696
     },
     {
       "id": "op-declarations.index.an_alias_of_a_declared",
       "en": "An alias of a declared op (R21): its op's explanation serves it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2644
+      "line": 2648
     },
     {
       "id": "op-declarations.index.money_detectors_run_sweep",
       "en": "build/requirements/money-checks.md R6 (K1566): the machine's detectors run as a bounded sweep runDetectors({budgetMs, cursor}) that the scheduler fires; no member starts it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2549
+      "line": 2553
     },
     {
       "id": "op-declarations.index.reevaluation_raise_sweep",
       "en": "build/rulings.md K199 (BOB #51), reevaluation R14: 'R14's notices are raised by a bounded sweep raiseNotices({limit, after}) (op reevaluationraise, admin and daemon)', which scheduler or monitoring calls.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2547
+      "line": 2551
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs",
       "en": "src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2534
+      "line": 2538
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs_2",
       "en": "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION OF ANY ROLE REACHES IT.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2540
+      "line": 2544
     },
     {
       "id": "op-grades.marks.dec_300_5_over_the",
