@@ -53,6 +53,7 @@ const verdict = (capture_sha, tool, engine, fields) => ({ capture_sha, tool, eng
      refresh[id]()        → a reputation list refresh's answer (default {ok, list_version, fetched_at}); `NO_LOCAL_LIST`
                             for a tool with no local list
      test[id]             → {passed, detail}
+     mirror(params)       → /mirror's answer (default: 202 {ok, started}, file-scanner R6 `?async=1`)
      signatures           → the signature state /version answers (default: a set published an hour ago); `null` versions and
                             `published` is a scanner that has mirrored none
      render(sha, route)   → bytes | {code, detail}
@@ -67,11 +68,13 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
     async fetch(req) {
       const u = new URL(req.url);
       const body = req.method === "POST" ? await req.json() : null;
-      calls.push({ path: u.pathname, body, method: req.method });
+      calls.push({ path: u.pathname, search: u.search, body, method: req.method });
       const at = now();
       if (u.pathname === "/version") return reply({ ok: true, name: "file-scanner", version: "1.0.0", clamav_version: "1.4.3",
         signatures: s.signatures ?? { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
         providers: {}, reputation_lists: s.lists ?? [], renderer_version: "libreoffice 7; poppler 24", bounds: {} });
+      /* file-scanner R6 (fix round 3, C84): `POST /mirror?async=1` starts a run and answers 202 at once; `mirror(search)` scripts another answer */
+      if (u.pathname === "/mirror") return s.mirror ? s.mirror(u.searchParams) : reply({ ok: true, started: true }, 202);
       if (u.pathname === "/scan") {
         const out = [];
         for (const t of body.targets) {

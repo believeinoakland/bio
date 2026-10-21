@@ -12,7 +12,7 @@
  * and names travel in the answer's own fields. One term each (R42a, DEC-200 (5)): "file scanner", never "virus
  * scanner"; "safe view", never "safe-view maker" or "safe-copy maker". */
 import { rowWord, REASON_KEYS, PROVIDER_REASON_KEYS } from "./words.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/file-safety/index.mjs ${fn} > ${region}`;
 const row = (check, where, translation) => Object.freeze({ check, where, translation });
@@ -90,6 +90,11 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   /* R43 (T47; N941, K231): a renderer is bound, but the files waiting for a safe view could not be read. New at T47
      (T47-12); the row awaits promotion's stamp (plan T47). */
   RENDER_QUEUE_UNREADABLE: row('C-140.43', at("renderBatch", "is-render-queue-readable"), rowWord('RENDER_QUEUE_UNREADABLE')),
+  /* R49 (fix round 3, C84; K4356): a check for signatures was made under fifteen minutes ago, so no run was started. New at
+     fix round 3 of T51; the row awaits promotion's stamp and the design stream's words (`refusal.SIGNATURES_RUN_RECENT`, a
+     stand-in sentence until its row lands). */
+  SIGNATURES_RUN_RECENT: row('C-140.44', at("scanMirror", "is-signature-run-due"), localize("refusal.SIGNATURES_RUN_RECENT",
+    "Your team's Civicsmith checked for new signatures a few minutes ago, so it did not start another check just now. Try again in a quarter of an hour.")),
 });
 
 /* R6 (DEC-169 (1)): each reason a file is high risk, in the words "Opening a file" shows beside the mark, each the words of

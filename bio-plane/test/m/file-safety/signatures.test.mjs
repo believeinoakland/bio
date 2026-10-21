@@ -117,3 +117,27 @@ test("R47: a safe copy's not_scanned note is recorded once for the file and reas
   await w2.fs.requestSafeCopy({ captureSha: c, viewer: "member:m1" });
   assert.equal(w2.rows("SELECT * FROM fs_notes WHERE capture_sha = ? AND kind = 'copy'", c).length, 2, "a real verdict is a note each time it is given");
 });
+
+test("R46 (fix round 3, C83): both forms of the scanner's error are worded; a status is named only if the error's text holds one", async () => {
+  const state = async (last_error) => (await world({ scan: { signatures: { ...NONE, last_error } } }).fs.scanStatus({ viewer: boss })).no_signatures;
+  const old = await state("REFUSED:main.cvd:403");
+  assert.deepEqual([old.reason_key, old.reason_words.includes("403")], ["file-safety.index.signatures_refused", true], "the old form still names 403");
+
+  const withStatus = await state("MIRROR_REFUSED:exit 1: ERROR: Can't download main.cvd: FreshClam received error code 403 from the ClamAV CDN");
+  assert.equal(withStatus.reason_key, "file-safety.index.signatures_refused");
+  assert.ok(withStatus.reason_words.includes("403"), "a status number found in the text is named");
+  assert.ok(withStatus.reason.startsWith("MIRROR_REFUSED:exit 1"), "the scanner's own reason, as it states it");
+
+  const bare = await state("MIRROR_REFUSED:exit 1: freshclam could not reach the service");
+  assert.notEqual(bare.reason_key, "file-safety.index.signatures_failed", "worded as the service having refused, not as unfinished");
+  assert.notEqual(bare.reason_key, "file-safety.index.signatures_refused", "no number to fill");
+  assert.equal(/\d/.test(bare.reason_words), false, "names no number the error does not hold (neither the exit code nor any)");
+  assert.ok(!bare.reason_words.includes("{"), "every fill is filled");
+  const nine = await state("MIRROR_REFUSED:exit 2: main.cvd is up to date (version: 62, sigs: 6647427, f-level: 90)");
+  assert.equal(/\d/.test(nine.reason_words), false, "figures in the text that are not a status are not named as one");
+
+  /* control: an unknown error text answers the generic unfinished-download state */
+  const unknown = await state("NETWORK");
+  assert.equal(unknown.reason_key, "file-safety.index.signatures_failed");
+  assert.equal(unknown.reason, "NETWORK");
+});

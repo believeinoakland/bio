@@ -1,6 +1,6 @@
 /* file-safety — keeps every captured file safe to open without touching its bytes, digest or grade (layer 3, directly
  * after `capture`; Bob's K1913, K1928, K1929, K1939, K1949 with DEC-168, DEC-169 and DEC-173, packaged by BOB, K2008,
- * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R48).
+ * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R50).
  *
  * WHAT IT HOLDS. Verdict notes beside each capture naming tool, engine and version (R2, R3); the scan and render queue
  * (R1, R4, R12); scan holds and their release by two members or a second, different engine (R15–R19); deeper checks
@@ -45,11 +45,12 @@ export { SENTENCE_KEYS } from "./words.mjs";
 export { FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } from "./kinds.mjs";
 export { FILE_SAFETY_TABLES } from "./schema.mjs";
 import { findingKind } from "./kinds.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { localize, hasWord } from "../setup-words/index.mjs";
 
 export const FILE_SAFETY_MODULE = "file-safety";
-/* T50 (plan rule 6; setup-words R11–R13): every key this module reads, the rows' own (`refusal.<CODE>`) and the sentences'. */
-export const WORD_KEYS = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey), ...SENTENCE_KEYS]);
+/* T50 (plan rule 6; setup-words R11–R13): every key this module reads, the rows' own (`refusal.<CODE>`) and the sentences'. A row
+   whose word the design stream has not yet written (a stand-in, `checks.mjs`) is not yet read by key. */
+export const WORD_KEYS = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey).filter(hasWord), ...SENTENCE_KEYS]);
 
 /* R21: the constants, by name. `SCAN_BATCH_MAX` and `LOG_COUNT_KINDS` are `file-scanner`'s (its R16). */
 export const RESCAN_INTERVAL_MS = 604_800_000;
@@ -63,6 +64,10 @@ export { SCAN_BATCH_MAX, LOG_COUNT_KINDS };
 /* R5: a file due for more than a day is overdue. R8: the scan before first opening waits this long within the call
    before it answers `SCAN_PENDING` (the Suggestions' "a few seconds"); the scan goes on and writes its note. */
 export const OVERDUE_MS = 86_400_000;
+/* R49, R50 (fix round 3, C84): an administrator's "check now" waits this long after any attempt; a scan batch starts a run by itself
+   only when no attempt is younger than this. */
+export const MIRROR_MIN_GAP_MS = 900_000;
+export const MIRROR_SELF_START_MS = 21_600_000;
 export const SCAN_WAIT_MS = 5_000;
 /* R17: a release's reason, in characters. R28: a tool's monthly allowance. */
 export const RELEASE_REASON_MAX = 2000;
@@ -947,6 +952,7 @@ export class FileSafety {
       const now = Number.isFinite(Date.parse(at)) ? Date.parse(at) : this.now();
       /* R39: the run is kept first, so a batch the scanner refuses still counts as run (its files retried a poll later) */
       this.#keep("scan", { last: now, remaining: 0 });
+      await this.#startRunWhenNoSignatures(now);
       const due = this.#due(now);
       const batch = due.slice(0, clamp(limit, SCAN_BATCH_MAX, SCAN_BATCH_MAX));
       const out = { scanned: 0, found: 0, not_scanned: 0 };
@@ -978,6 +984,54 @@ export class FileSafety {
       this.#keep("scan", { last: now, remaining });
       return { ok: true, ...out, remaining };
     } catch { return refusal("SCANNER_UNREACHABLE", "The scan batch could not be run. No note was written."); }
+  }
+
+  /* R49, R50: the instant of the newest attempt at a signature run, the scanner's own `last_attempt` or the run this module
+     last started, whichever is later (a started run has not yet written its own); NaN when neither is known. */
+  #lastAttempt(sigs) {
+    const own = this.#kept("mirror");
+    const known = [sigs && sigs.last_attempt, own && own.started].map(msOf).filter(Number.isFinite);
+    return known.length ? Math.max(...known) : NaN;
+  }
+  /* R49, R50: asks `file-scanner` to start a run (`POST /mirror?async=1`, its R6) and remembers when. */
+  async #startRun(now) {
+    const r = await this.#scanner("/mirror?async=1", {});
+    if (r.absent) return { absent: true };
+    if (r.unreachable || r.status !== 202 || !r.body || r.body.ok === false) return { failed: (r.body && r.body.code) || "SCANNER_UNREACHABLE" };
+    this.#keep("mirror", { started: iso(now) });
+    return { started: true };
+  }
+  /* R50: when the scanner holds no published set and the newest attempt is more than six hours old, or none was made, the scan
+     batch starts one run, with no administrator's act. It never refuses or changes the batch: a state it cannot read, or a start the
+     scanner does not accept, starts nothing and is tried again at the next batch. */
+  async #startRunWhenNoSignatures(now) {
+    try {
+      const v = await this.#scanner("/version", null, { method: "GET" });
+      const ver = v.body && v.body.ok === true ? v.body : null;
+      if (!ver || !ver.signatures || Number.isFinite(Date.parse(ver.signatures.published))) return;
+      const last = this.#lastAttempt(ver.signatures);
+      if (Number.isFinite(last) && now - last <= MIRROR_SELF_START_MS) return;
+      await this.#startRun(now);
+    } catch { /* the batch goes on as R4 states it */ }
+  }
+
+  /** R49: an administrator's "check for new signatures now": starts a run and answers at once, without waiting for it. */
+  async scanMirror({ viewer = undefined, at = null } = {}) {
+    try {
+      const bar = this.#adminBar(viewer, localize("file-safety.index.checking_for_new_signatures", "checking for new signatures"));
+      if (bar) return bar;
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.no_scanner_so_no_run_started", "Your team's Civicsmith has no file scanner installed. No run was started."));
+      const now = Number.isFinite(Date.parse(at)) ? Date.parse(at) : this.now();
+      const v = await this.#scanner("/version", null, { method: "GET" });
+      const last = this.#lastAttempt(v.body && v.body.ok === true ? v.body.signatures : null);
+      /* DEC-49 REGION is-signature-run-due */
+      if (Number.isFinite(last) && now - last < MIRROR_MIN_GAP_MS)
+        return refusal("SIGNATURES_RUN_RECENT", localize("file-safety.index.a_run_was_started_lately", "A check for signatures was made a few minutes ago. No run was started."), { attempted_at: iso(last) });
+      /* END DEC-49 REGION is-signature-run-due */
+      const r = await this.#startRun(now);
+      if (r.failed) return refusal("SCANNER_UNREACHABLE", localize("file-safety.index.the_scanner_did_not_start", "The scanner did not start a run. Nothing was changed."), { scanner_code: r.failed });
+      return { ok: true, state: "started" };
+    } catch { return refusal("SCANNER_UNREACHABLE", localize("file-safety.index.the_scanner_did_not_start", "The scanner did not start a run. Nothing was changed.")); }
   }
 
   /** R5: the scanner's state for administrators, so a lag is stated, never silent. */
@@ -1015,7 +1069,12 @@ export class FileSafety {
     const at = [first && first.scanned_at, sigs.last_attempt].map(msOf).find(Number.isFinite);
     const since = Number.isFinite(at) ? iso(at) : null;
     const tried = typeof sigs.last_error === "string" && sigs.last_error ? sigs.last_error : null;
-    const status = tried && /^REFUSED:[^:]*:(\d{3})$/.exec(tried);
+    /* C83: `REFUSED:<db>:<status>` (the old download), or `MIRROR_REFUSED:exit N: <the updater's lines>` (freshclam, `file-scanner`
+       R34): a status is named only if the text holds one, as an HTTP answer (never the exit code, a version or a count) */
+    const old = tried && /^REFUSED:[^:]*:(\d{3})$/.exec(tried);
+    const refused = tried && /^MIRROR_REFUSED\b/.test(tried);
+    const found = refused && /(?:error code|status(?: code)?|http\/?[\d.]*|code)\s*[:=]?\s*([1-5]\d{2})(?!\d)|\(([1-5]\d{2})\)/i.exec(tried.replace(/^MIRROR_REFUSED:exit \d+:/, ""));
+    const status = old || (found && [null, found[1] || found[2]]);
     const date = since && since.slice(0, 10);
     return {
       since, reason: tried || "SIGNATURES_ABSENT",
@@ -1025,6 +1084,8 @@ export class FileSafety {
                     words: localize("file-safety.index.no_signatures", "The file scanner has no signatures.") }),
       ...(status ? { reason_key: "file-safety.index.signatures_refused",
                      reason_words: localize("file-safety.index.signatures_refused", "The signature service refused the download (status {status}).", { status: status[1] }) }
+        : refused ? { reason_key: "file-safety.index.signatures_refused_unnumbered",
+                      reason_words: localize("file-safety.index.signatures_refused_unnumbered", "The signature service refused the download. The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.") }
         : tried ? { reason_key: "file-safety.index.signatures_failed",
                     reason_words: localize("file-safety.index.signatures_failed", "The last download of signatures did not finish.") }
         : { reason_key: "file-safety.index.signatures_not_fetched",
@@ -1525,7 +1586,7 @@ export class FileSafety {
       /* END DEC-49 REGION is-copy-tool-on */
       const row = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, h.sha);
       if (row && ["pending", "done", "withheld"].includes(row.state)) return { ok: true, captureSha: h.sha, state: row.state };
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no_5", "Your team's Civicsmith has no file scanner installed, so no tool can be asked."), { captureSha: h.sha });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.no_scanner_so_no_run_started", "Your team's Civicsmith has no file scanner installed, so no tool can be asked."), { captureSha: h.sha });
       return { ok: true, captureSha: h.sha, state: await this.#makeCopy(h.sha, tool) };
     } catch { return refusal("SAFE_COPY_FAILED", "The safe copy could not be asked for.", { captureSha: captureSha ?? null }); }
   }
@@ -1782,6 +1843,7 @@ export function fileSafetyOps(fs, url, body, env) {
     safecopy: () => fs.safeCopy({ captureSha: sha(), viewer: viewer() }),
     scanbatch: () => fs.scanBatch({ limit: b.limit ?? q("limit") ?? undefined, at: b.at ?? q("at") ?? null }),
     scanstatus: () => fs.scanStatus({ viewer: viewer() }),
+    scanmirror: () => fs.scanMirror({ viewer: viewer(), at: b.at ?? q("at") ?? null }),
     renderbatch: () => fs.renderBatch({ limit: b.limit ?? q("limit") ?? undefined }),
     deepercheck: () => fs.requestDeeperCheck({ captureSha: sha(), viewer: viewer() }),
     deeperbatch: () => fs.deeperBatch({ limit: b.limit ?? q("limit") ?? undefined }),
@@ -1816,6 +1878,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["capture","captureSha","reason"], requires: [["capture","captureSha"],"reason"] } },
   safeview: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("file-safety.declared.safeview", "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing"),
     fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
+  scanmirror: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"),
+    fields: { accepts: ["at"], requires: [] } },
   securitytooladd: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("file-safety.declared.securitytooladd", "setting: the group's security tools, an administrator's act; moves no bundle"),
     fields: { accepts: ["providerId","template","config","credentials","handlingDigest","confirmRetention","use","monthlyLimit"], requires: ["providerId","handlingDigest"] } },
   securitytoolremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("file-safety.declared.securitytoolremove", "setting: the group's security tools, an administrator's act; moves no bundle"),
