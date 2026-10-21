@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_018BZD69KvUNUDfmGiun3BEb · depth 2 · COMPLETE · handled B11
+**Status** · session_01Wou66QFMgiLpLmx2dvGc3B · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -173,3 +173,41 @@ Tests and checks:
 - checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 5 files changed by affordances; 0 failures
 
 Size (session_018BZD69KvUNUDfmGiun3BEb): test runs 7, module lines 2775
+
+## J15 · REPORT
+
+REPORT (re B12 · CHANGE K4258), for BOB. Applied in this job; one change is op-declarations' (not mine), named below.
+
+Applied (affordances, commit 47a6215e96):
+- `strengthbarset` is held under its own text, `act.strengthbarset.does` (read through `word`, R62), and is added to `T51_DESIGN_OPS` (K4248). The reads list gives that key; `strengthbarset` is the op strength declares and screens-settings sends (`screens-settings/group.mjs`).
+- `strengthbar` is held none. The design's reads list gives no `act.strengthbar.does`; the only text it had was `strengthbarset`'s, held under `strengthbar` by the `KEY_EXCEPTIONS` alias line, which is removed. No screen sends the op `strengthbar`: the screens send `strengthbarset` (screens-settings) and `projectbarset` (screens-inquiry, which asserts it never sends `strengthbarset`). So I kept `strengthbar` nowhere; no test of mine shows a screen sending it.
+- Requirement lines: none names the key `strengthbar` (checked in build/requirements/affordances.md), so no requirement line changed.
+- Test: `B12 (T51, K4258; R48, R62)` in t36.test.mjs, seen failing first; controls: `strengthbar` holding strengthbarset's text departs from R48, and so does the table without `strengthbarset`.
+- The R48 test `R48 R53 R54 R56 R57 R61 R62` (red at the tip, J18) is green again.
+
+Consequence for op-declarations (its ACT_HELP_ABSENT; NOT changed by this job, it is op-declarations' table): with this merge, four of its tests go red until its ACT_HELP_ABSENT changes (run: `node --test test/m/op-declarations/*.test.mjs`, 246 tests, 4 fail, all four are this):
+1. R34 (K4254, affordances R48, T51_DESIGN_OPS): `strengthbarset` is explained by affordances and so must leave the unexplained group (the one near op-declarations index.mjs:2726).
+2. R75 (T50): "an op both explained and named": `strengthbarset`, the same change.
+3. R34 partition (SESSION_OPS.member): `strengthbar` is neither explained nor named, so it needs a ground in ACT_HELP_ABSENT (the design gives it no text; "no design text" is the ground the other undesigned ops use).
+4. R47, R34 (N862): `strengthbar`, the same as 3.
+Its other tests pass. Those four are the consequence BOB foresaw in J18; I have not edited op-declarations.
+
+Other reds on the tranche, not this module (already at the tip before this job, not caused by it): the affordances suite shows 32 failing tests (33 at the start of this job; the R48 test now passes). The failures are the module-load `DECLARED_OP_DISAGREES: groupdescriptiondraft description` from op-grades/declared.mjs (words-unreviewed.json is stale: `setup-words/build.mjs --check` says so), and the miniflare/workerd startup failures in plane.test.mjs and its neighbours. None names affordances' ACT_HELP.
+`node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage's six failures name agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry, screens-intake, none affordances; words: one testcopy failure in op-grades (t37.test.mjs:32), none affordances.
+
+## J16 · COMPLETE
+
+COMPLETE (re B12 · CHANGE K4258), affordances, commit 47a6215e96 on job/T51/affordances (merged tranche/T51 first, ddce873865).
+
+Entries applied: B12 · `strengthbarset` held under `act.strengthbarset.does` (added to `T51_DESIGN_OPS`); `strengthbar` held none, its key and its alias line removed. Test first, seen failing, then green (`B12 (T51, K4258; R48, R62)`, t36.test.mjs), controls seen: a text under `strengthbar` and a table without `strengthbarset` each depart from R48.
+Requirement lines: none names `strengthbar`, so none changed.
+Deferred: none in this module.
+Found in another module: op-declarations' ACT_HELP_ABSENT (REPORT J15): four of its tests go red until it moves `strengthbarset` out and grounds `strengthbar`; not edited here.
+
+Tests and checks:
+- `node --test test/m/affordances/*.test.mjs`: 282 tests, 250 pass, 32 fail. At the start of this job 33 failed; the R48 `ACT_HELP` test is now green. The 32 are the same as before (the groupdescriptiondraft DECLARED_OP_DISAGREES at load, and the workerd startup failures), none about affordances' table.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage has no affordances failure; words has no affordances finding (its one failure is op-grades' t37.test.mjs:32).
+- `node bio-plane/src/setup-words/build.mjs --check`: words-unreviewed.json stale (the expected note); no refusal naming affordances.
+- `node checks/ownership.mjs /home/user/bio affordances tranche/T51 job/T51/affordances`: 3 files (act-help.mjs, t36.test.mjs, this record), 0 failures.
+
+Size (session_01Wou66QFMgiLpLmx2dvGc3B): test runs 6, module lines 2777
