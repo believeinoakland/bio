@@ -1460,6 +1460,8 @@ export class Contradiction {
     const shownReach = reaches ? this.#parties(row, viewer) : null;
     const member = this.#memberOf(viewer);
     const m = this.#m();
+    /* R25: who took it up and in what words, from the `take_up` act the view already holds; kept once it is resolved. */
+    const takeUp = view.state === "taken_up" || view.state === "resolved" ? view.acts.find((a) => a.act === "take_up") : null;
     const between = parties && isProjectConflict(view.weight, view.state) && member
       ? parties.all.filter((p) => m && typeof m.isJoinedParticipant === "function" && m.isJoinedParticipant(p, member))
           .map((p) => ({ project: p, ...this.#partyView(row, p) }))
@@ -1472,6 +1474,7 @@ export class Contradiction {
       recommendations: this.#standing(row, view),
       reach: shownReach ? { projects: shownReach.all, truncated: shownReach.truncated } : null,
       default_question: this.#defaultQuestion(row),
+      ...(takeUp ? { taken_up: { member: takeUp.author, at: takeUp.at, words: takeUp.words ?? null } } : {}),
       ...(between.length ? { between_projects: between } : {}),
     };
   }
@@ -2477,7 +2480,11 @@ export class Contradiction {
         files: files.map((f) => (f.path === "bundle.md" ? { path: "bundle.md", text } : f)),
         meta: { object_type: "inquiry", last_updated: when } });
       if (written.ok === false) return written;
-      const concluded = this.#b().conclude({ target: id, conclusion: conclusion ?? "", version: version ?? "",
+      /* R36: no named version means no reading to adopt on a freshly taken-up question, so the member's conclusion is her
+         own reading, accepted and concluded on in one act (`basis-versions` R51; its BAD_READING reaches her). */
+      const named = typeof version === "string" ? version.trim() : "";
+      const concluded = this.#b().conclude({ target: id, conclusion: conclusion ?? "", version: named,
+        ...(named ? {} : { reading: String(conclusion ?? "") }),
         falsifier: falsifier ?? "", noFalsifier: !!noFalsifier, viewer, author: who, identity: who });
       if (concluded.ok === false) return concluded;
       const act = this.#appendAct(row, view, { act: "resolve", author: who, inquiry: id, kind: res.kind ?? null,
