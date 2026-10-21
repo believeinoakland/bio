@@ -195,3 +195,8 @@ COMPLETE (SCREENS-INQUIRY #17, fix round 2, wave 1). tranche/T51 merged (B23 STA
 **Checks:** architecture 0 failures; ownership 0 failures (14 files); setup-words build --check clean; testcopy and words 0 for screens-inquiry. coverage: R123 R124 R125 unnamed by any test: they are screens-inquiry-2's (C33, C42, C31, wave 2), not mine. format: 1 failure, build/rulings.md:4298 (K4301 states no standing-list decision), not mine. impact: screens-inquiry 35/35, control-plane 58/64, plane 11/45 run through the module only; I changed no op or declaration, so no user's suite needed re-running beyond the module's.
 **For BOB:** (a) the cite act still sends project/role/passage in the address (R125, C31 is wave 2). (b) C14: the document page's heldcaptures is one read now but still slow plane-side. (c) Found elsewhere: `objectiveprogress` has no `project_title` (a field would spare an image read); `NO_SUCH_ENTITY` says "subject", the form "party". (d) worker git: a hard reset was refused; I renamed the stale local branch to stale/job-T51-screens-inquiry-local (nothing deleted).
 Size (session_015gcVNvtk6rEPuMQrFbCNvS): test runs 9, module lines 7134
+
+## J16 · REPORT
+
+Correction to J15's Size line: module lines are 5826 (wc -l of bio-plane/src/screens-inquiry/*.mjs), not 7134.
+Size (session_015gcVNvtk6rEPuMQrFbCNvS): test runs 9, module lines 5826
