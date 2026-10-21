@@ -27,7 +27,10 @@ test("R115 (T51; K4222; K4234): a timed-out `acquire` answers the stage times th
   const reads = w.env.calls.filter((c) => c.route === "acquiretimings");
   assert.equal(reads.length, 1, "the object is asked once, for the timed-out call's stages");
   assert.equal(reads[0].params.trace, handed[0], "the read names the trace the hook was handed");
-  assert.deepEqual(late.json.timings, { stages: { fetch: 12 }, running: "read", total_ms: 40 }, "the times are the object's answer, not the door's");
+  /* R121 (amends R115): the object's record stands as it states it, and the door's own phases are beside it */
+  const { door, ...stated } = late.json.timings;
+  assert.deepEqual(stated, { stages: { fetch: 12 }, running: "read", total_ms: 40 }, "the stage times are the object's answer, not the door's");
+  assert.ok(door && Object.hasOwn(door, "acquire"), "R121: the door's phases are stated beside them");
 });
 
 test("R115 control (K4234): a call with no trace (the bootstrap credential's) answers its timeout with no stage times, and the object is asked nothing", async () => {
@@ -45,7 +48,8 @@ test("R115 control (K4234): a call with no trace (the bootstrap credential's) an
   assert.equal(late.status, 504, late.text);
   assert.equal(late.json.code, "ACQUIRE_TIMED_OUT");
   assert.equal(handed[0], undefined, "no trace reaches the hook");
-  assert.deepEqual(late.json.timings, {}, "no stage times are stated");
+  assert.deepEqual(late.json.timings.stages, {}, "no stage times are stated");
+  assert.ok(late.json.timings.door, "R121: the door's own phases are, though the object was asked nothing");
   assert.equal(w.env.calls.some((c) => c.route === "acquiretimings"), false, "the object is asked nothing");
 });
 
