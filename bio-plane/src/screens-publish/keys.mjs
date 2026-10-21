@@ -190,7 +190,7 @@ export const SCREEN_KEYS = Object.freeze({
     "refusal.NO_SUCH_CASE", "refusal.REVIEW_NO_SUCH_CASE", "screen.action.pressure.note",
     "screen.docket.edition.label", "screen.docket.edition.help", "screen.docket.edition.option", "screen.docket.capture.label", "screen.docket.capture.help", "screen.docket.capture.option", "screen.docket.capture.add",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.docket.name", "screen.docket.purpose",
-    "act.docketfile.label.docket", "act.docketfile.does", "act.docketpost.label.docket", "act.docketpost.does",
+    "act.docketfile.label.docket", "act.docketfile.does", "act.writinghelp.label.docket", "act.writinghelp.does", "screen.start-send.draft.machine", "act.docketpost.label.docket", "act.docketpost.does",
     "screen.docket.drafted", "screen.docket.entries", "screen.docket.file", "screen.docket.file.needed",
     "screen.docket.from.help", "screen.docket.from.label", "screen.docket.kind.correction",
     "screen.docket.kind.court-order", "screen.docket.kind.edition", "screen.docket.kind.label",
