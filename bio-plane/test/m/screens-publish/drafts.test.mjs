@@ -59,7 +59,7 @@ for (const [screen, path, id] of [["case-editor", ED, "drafts-case-editor"], ["r
   });
 }
 
-test("R1 R2 R3 C49 the chooser waits for every draft's scope: a draft whose copy is not yet read is not named from a guess", async () => {
+test("R1 R2 R3 R73 C49 the chooser waits for every draft's scope: a draft whose copy is not yet read is not named from a guess", async () => {
   const p = await open(RC, { plane: { casedrafts: ok(DRAFTS()), reviewcopy: (req) => (req.query.draft === OLD ? new Promise(() => {}) : ok(COPY({ draft: req.query.draft }))) } });
   assert.ok(!p.doc.getElementById("drafts-review-copy"), "no chooser while a draft's scope is unread");
   assert.ok(main(p).querySelector('[data-state="loading"]'), "drawn as loading");
@@ -70,7 +70,7 @@ test("R1 R2 R3 C49 the chooser waits for every draft's scope: a draft whose copy
 const LIVE = { [OLD]: { grants: [G("GRT-OLD", "Ms. L. Brandt · tenant organizer"), G("GRT-GONE", "Gone · editor", { revoked_at: "2026-10-08T10:00:00Z" })], comments: [] },
   [DR]: { grants: [G("GRT-NEW", "Prof. N. Iyer · housing law")], comments: [] } };
 
-test("R2 C49 the review copy lists every live review link on any draft, each with the draft it is on, each stoppable with reviewrevoke; a revoked grant leaves the list", async () => {
+test("R2 R73 C49 the review copy lists every live review link on any draft, each with the draft it is on, each stoppable with reviewrevoke; a revoked grant leaves the list", async () => {
   const p = await open(`${RC}/${DR}`, { plane: PLANE(LIVE) });
   const sec = [...main(p).querySelectorAll("section, .cs-sec")].find((s) => norm(s).includes(word("screen.review-copy.links.heading")));
   assert.ok(sec, "the section is headed screen.review-copy.links.heading");
@@ -83,7 +83,7 @@ test("R2 C49 the review copy lists every live review link on any draft, each wit
   assert.equal(stops.length, 2, "one Stop sharing for each live link");
 });
 
-test("R2 C49 stopping a link on an earlier draft sends reviewrevoke with that grant and the list is read again without it", async () => {
+test("R2 R73 C49 stopping a link on an earlier draft sends reviewrevoke with that grant and the list is read again without it", async () => {
   let gone = false;
   const p = await open(`${RC}/${DR}`, { plane: PLANE(LIVE, { reviewrevoke: () => { gone = true; return ok({ ok: true }); },
     reviewcopy: (req) => ok(COPY({ draft: req.query.draft, authored: { scope: req.query.draft === OLD ? SCOPE_OLD : SCOPE_NEW }, comments: [],
@@ -104,14 +104,14 @@ test("R2 C49 stopping a link on an earlier draft sends reviewrevoke with that gr
   assert.ok(text(p).includes("Prof. N. Iyer · housing law"), "control: the other stays");
 });
 
-test("R2 C49 a project with one draft draws no second list of links (the roster is the list); no live link anywhere draws no links section (controls)", async () => {
+test("R2 R73 C49 a project with one draft draws no second list of links (the roster is the list); no live link anywhere draws no links section (controls)", async () => {
   const one = await open(RC, { plane: { casedrafts: ok({ ...DRAFTS(), drafts: DRAFTS().drafts.slice(1) }), reviewcopy: copies(LIVE) } });
   assert.ok(!drew(one, "screen.review-copy.links.heading"), "one draft: the roster lists its links");
   const none = await open(`${RC}/${DR}`, { plane: PLANE({ [OLD]: { grants: [G("GRT-GONE", "Gone · editor", { revoked_at: "2026-10-08T10:00:00Z" })] }, [DR]: { grants: [] } }) });
   assert.ok(!drew(none, "screen.review-copy.links.heading"), "none live: no section");
 });
 
-test("R1 R3 C49 the case editor and the ceremony say how many review links are live and how many sit on an earlier draft, and lead to the review copy; none on an earlier draft says nothing (control)", async () => {
+test("R1 R3 R73 C49 the case editor and the ceremony say how many review links are live and how many sit on an earlier draft, and lead to the review copy; none on an earlier draft says nothing (control)", async () => {
   for (const [path, screen] of [[`${ED}/${DR}`, "case-editor"], [`${CER}/${DR}`, "ceremony"]]) {
     const p = await open(path, { plane: PLANE(LIVE) });
     assert.ok(drew(p, `screen.${screen}.links.live`, { count: "2", earlier: "1" }), `${screen}: 2 live, 1 on an earlier draft (the revoked one is no link)`);
@@ -122,7 +122,7 @@ test("R1 R3 C49 the case editor and the ceremony say how many review links are l
   }
 });
 
-test("R3 C49 the ceremony still draws when the drafts list could not be read: the chooser is drawn failed, the ceremony kept", async () => {
+test("R3 R73 C49 the ceremony still draws when the drafts list could not be read: the chooser is drawn failed, the ceremony kept", async () => {
   const p = await open(`${CER}/${DR}`, { plane: { casedrafts: refusedIn("SOME_REFUSAL", "The plane refused this read.") } });
   assert.ok(main(p).querySelector('[data-state="failed"]') && main(p).querySelector("h1"), "failed in its own state, the screen kept");
   assert.ok(ops(p).includes("publishpreflight"), "the ceremony's own steps are still drawn");
