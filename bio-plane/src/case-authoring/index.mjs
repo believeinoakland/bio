@@ -1659,7 +1659,7 @@ export class CaseAuthoring {
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
     /* R83 (fix round 3, C48, C50; K4356): what the record holds prepared and published for the case the call stands at;
        the act's own run is rolled back, so a minted case (which the record does not hold) states neither. */
-    const editions = this.#editionsOf(answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt);
+    const editions = this.draftEditions({ caseId: answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt });
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps, editions };
   }
 
@@ -1674,18 +1674,35 @@ export class CaseAuthoring {
     return named.length === 1 ? named[0] : null;
   }
 
-  /* R83: `{prepared, published}` of `caseId`, as the record holds them (publication R40's `case_documents` and
-     `published_cases`): `prepared` the edition number of the unsigned preparation, else null; `published` the latest
-     ratified edition with its public address (the case's page, `/app/published/<case>/<edition>`), else null. */
-  #editionsOf(caseId) {
-    if (!caseId) return { prepared: null, published: null };
-    const prep = this.#one(`SELECT edition FROM case_documents WHERE case_id=? AND sig_armored IS NULL
-                            ORDER BY edition DESC LIMIT 1`, caseId);
-    const pub = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, caseId);
-    const published = pub && pub.m != null ? Number(pub.m) : null;
-    return { prepared: prep ? Number(prep.edition) : null,
-             published: published === null ? null : { edition: published, address: `/app/published/${caseId}/${published}` } };
+  /** R83 (K4363): `draftEditions({caseId, draft})` answers `{prepared, published}` for the case identity a draft stands at,
+   *  as the record holds them (publication R40's `case_documents` and `published_cases`), the one read the pre-flight and
+   *  `review` R19's draft rows share: `prepared` the edition number of the unsigned preparation, else null; `published`
+   *  `{edition, address}` for the latest ratified edition, else null. `caseId` is the case the draft's identity names; with
+   *  none, the case the draft's own preparation produced (publication R40: a document names the draft that made it,
+   *  `draft` an id or a row), else neither is stated. Reads only and never throws. The address is the case page's,
+   *  `/app/published/<case>/<edition>`, as the screens link it. */
+  draftEditions({ caseId = null, draft = null } = {}) {
+    try {
+      let id = str(caseId);
+      if (!id && draft) {
+        const row = typeof draft === "object" ? draft : null;
+        id = str(row && (row.case_id ?? row.caseId));
+        if (!id) {
+          const made = this.#one(`SELECT case_id FROM case_documents WHERE draft_id=? ORDER BY edition DESC LIMIT 1`,
+                                 str(row ? row.draft_id : draft));
+          id = made ? made.case_id : "";
+        }
+      }
+      if (!id) return { prepared: null, published: null };
+      const prep = this.#one(`SELECT edition FROM case_documents WHERE case_id=? AND sig_armored IS NULL
+                              ORDER BY edition DESC LIMIT 1`, id);
+      const pub = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, id);
+      const published = pub && pub.m != null ? Number(pub.m) : null;
+      return { prepared: prep ? Number(prep.edition) : null,
+               published: published === null ? null : { edition: published, address: `/app/published/${id}/${published}` } };
+    } catch { return { prepared: null, published: null }; }
   }
+
 
   /* R34: ratification R18 over the text op=publish would store, with `signer` the act's author, folded into
      `{reached, refusals, why?}`. With no pre-flight offered, that is stated, never read as none. */

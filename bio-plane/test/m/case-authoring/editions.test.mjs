@@ -92,3 +92,22 @@ test("R83: a draft named by the call stands at the case its preparation names, s
   const pre = w.ca.publishPreflight({ draft: "DRAFT-1", project: P, viewer: V("alice"), author: "alice", tieAttested: true });
   assert.deepEqual(pre.editions, { prepared: 1, published: null });
 });
+
+test("R83 (K4363): draftEditions({caseId, draft}) is the one read the pre-flight uses: by case, by the draft that prepared it (id or row), never prepared states neither, and it writes nothing", () => {
+  const { w, P } = setup();
+  w.draft("DRAFT-2", P, { ...AUTHORED, targets: [Q], roles: { [Q]: "load_bearing" } });
+  const ask = { draft: "DRAFT-2", project: P, viewer: V("alice"), author: "alice", tieAttested: true };
+  assert.deepEqual(w.ca.draftEditions({ caseId: null, draft: "DRAFT-2" }), NONE, "control: never prepared");
+  assert.deepEqual(w.ca.draftEditions({}), NONE);
+  const done = w.ca.publishCase(ask);
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  const one = { prepared: 1, published: null };
+  assert.deepEqual(w.ca.draftEditions({ caseId: done.caseId }), one);
+  assert.deepEqual(w.ca.draftEditions({ draft: "DRAFT-2" }), one, "by the draft's id, from the document it made");
+  assert.deepEqual(w.ca.draftEditions({ draft: { draft_id: "DRAFT-2", case_id: null } }), one);
+  assert.deepEqual(w.ca.draftEditions({ caseId: done.caseId }), w.ca.publishPreflight(ask).editions);
+  w.ratify(done);
+  assert.deepEqual(w.ca.draftEditions({ caseId: done.caseId, draft: "DRAFT-2" }),
+                   { prepared: null, published: { edition: 1, address: `/app/published/${done.caseId}/1` } });
+  assert.deepEqual(w.ca.draftEditions({ caseId: "CASE-2026-0000" }), NONE, "a case the record does not hold");
+});
