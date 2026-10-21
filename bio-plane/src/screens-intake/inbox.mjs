@@ -47,14 +47,19 @@ function renderInbox(cs, view) {
   const ladder = (at) => `<div class="cs-ladder" data-ladder="ident" role="list" aria-label="${cs.w("screen.inbox.ladder")}">`
     + rungs.map((r, i) => `<span role="listitem" class="${i <= at ? "on" : ""}"${i === at ? ' aria-current="step"' : ""}>${cs.w(`screen.inbox.ladder.${r}`)}</span>`).join("")
     + `</div><p class="mk-small muted">${cs.w("screen.inbox.ladder.basis")}</p>`;
+  /* C28 (R7; doorbell R27): what the sender stated of the file, drawn as stated (never a type check), in the list, the detail and the knocker's
+     other material alike; nothing, not an empty label, for a knock stating neither */
+  const stated = (k) => [k.file_name, k.media_type].filter((x) => typeof x === "string" && x).map((x) => `<span class="mk-data">${cs.esc(x)}</span>`).join(" · ");
+  const statedLine = (k) => (stated(k) ? `<span class="meta">${stated(k)}</span>` : "");
   const facts = (k) => `<span class="meta">${cs.w(`screen.inbox.status.${["new", "pulled", "discarded"].includes(k.status) ? k.status : "new"}`)}</span>`
+    + statedLine(k)
     + `<span>${k.note ? cs.w("screen.inbox.note", { note: k.note }) : cs.w("screen.inbox.nonote")}</span>`
     + (same(k) ? `<span class="meta">${cs.w("screen.inbox.same", { count: same(k) })}</span>` : "")
     + (k.status === "discarded" && k.resolve_reason ? `<span class="meta">${cs.w("screen.inbox.resolved", { reason: k.resolve_reason })}</span>` : "");
   /* R10: each knock named is a reference of the kind `knock`, its card what was handed in and when (interface-shell R27) */
   const card = (k) => [size(k.bytes), k.received ? cs.date(k.received) : "", k.note || ""];
   const list = cs.state(D.list, (v) => `<div class="cs-sheet" role="list">${v.inbox.map((k) => `<div class="cs-row" role="listitem"${k.knock_id === id ? ' aria-current="true"' : ""}>`
-      + `<span>${cs.ref("knock", k.knock_id, plain(handed(k)), card(k))}${facts(k)}</span></div>`).join("")}</div>`,
+      + `<span><span style="display:inline-flex;align-items:center;max-width:100%">${cs.ref("knock", k.knock_id, plain(handed(k)), card(k))}</span>${facts(k)}</span></div>`).join("")}</div>`,
     { empty: "screen.inbox.empty" });
   const one = !id ? "" : cs.state(D.knock, (v) => {
     const k = v.item || {};
@@ -88,7 +93,7 @@ function renderInbox(cs, view) {
     const alike = L.knocker && L.knocker.pseudonym === k.pseudonym && Array.isArray(L.knocker.knocks) ? L.knocker.knocks.filter((x) => x && x.knock_id !== k.knock_id) : null;
     const knocker = !k.pseudonym || (!same(k) && !(alike && alike.length)) ? ""
       : cs.sec("screen.inbox.knocker.heading", (alike && alike.length
-          ? cs.sheet(alike.map((x) => `<div class="cs-row" role="listitem"><span>${cs.ref("knock", x.knock_id, plain(handed(x)), card(x))}</span></div>`).join(""))
+          ? cs.sheet(alike.map((x) => `<div class="cs-row" role="listitem"><span><span style="display:inline-flex;align-items:center;max-width:100%">${cs.ref("knock", x.knock_id, plain(handed(x)), card(x))}</span>${statedLine(x)}</span></div>`).join(""))
             + `<p class="mk-small muted">${cs.w("screen.inbox.knocker.same1")} ${cs.w("screen.inbox.knocker.same2")}</p>` : "")
           + `<div class="mk-acts">${cs.act("knocksof", { data: { pseudonym: k.pseudonym } })}</div>`,
         { help: ["screen.inbox.knocker.help1", "screen.inbox.knocker.help2"] });
@@ -97,8 +102,7 @@ function renderInbox(cs, view) {
     /* C28 (R7, R32): the knock's fingerprint, labelled, shown before the member decides what to do with it */
     const print = typeof k.sha256 === "string" && k.sha256 ? `<p class="mk-small"><span class="meta">${cs.w("screen.document.fingerprint")}</span> <span class="mk-data">${cs.esc(k.sha256)}</span></p>` : "";
     /* C28 (doorbell R27, B20): what the sender stated of the file, drawn as stated (never a type check) */
-    const stated = [k.file_name, k.media_type].filter((x) => typeof x === "string" && x).map((x) => `<span class="mk-data">${cs.esc(x)}</span>`).join(" · ");
-    return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${stated ? `<p class="mk-small">${stated}</p>` : ""}${print}${ladder(at)}`
+    return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${print}${ladder(at)}`
       + (k.status === "new" ? `<div class="mk-acts">${cs.act("inboxpull", { tone: "primary" })}</div>`
         /* R32 (1): discarding asks why first (`inbox.discard.why`), the words sent as `reason` */
         + cs.field("cx-why", "inbox.discard.why", { area: true, rec: true, value: L.why || "" })
@@ -196,10 +200,10 @@ export const INBOX_SCREEN = Object.freeze({
   reads: inboxReads,
   render: renderInbox,
   acts: Object.freeze([
-    Object.freeze({ op: "inboxpull", label: "act.inboxpull.label.inbox", send: sendPull, done: donePull }),
-    Object.freeze({ op: "inboxresolve", label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard, reasonField: "reason",
+    Object.freeze({ op: "inboxpull", rereads: Object.freeze(["list", "knock"]), label: "act.inboxpull.label.inbox", send: sendPull, done: donePull }),
+    Object.freeze({ op: "inboxresolve", rereads: Object.freeze(["list", "knock"]), label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard, reasonField: "reason",
                     refusals: Object.freeze({ RESOLVE_NO_REASON: "refusal.RESOLVE_NO_REASON" }) }),
-    Object.freeze({ op: "sourcelink", label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink, reasonField: "evidence" }),
-    Object.freeze({ op: "knocksof", label: "act.knocksof.label.inbox", send: sendKnocksOf, done: doneKnocksOf }),
+    Object.freeze({ op: "sourcelink", rereads: Object.freeze([]), label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink, reasonField: "evidence" }),
+    Object.freeze({ op: "knocksof", rereads: Object.freeze([]), label: "act.knocksof.label.inbox", send: sendKnocksOf, done: doneKnocksOf }),
   ]),
 });

@@ -4,7 +4,7 @@
 
 /* R1–R3: nothing is read before an act, but on the address tab (R29, R31, R38): the member's open captures (`opencaptures`,
  * for "Unfinished"), the held and vouched documents (the title of the one that holds a capture's primary, and of the copy an
- * address is already held as, R40), the members (`memberlist`, the handle of who captured that copy) and, when Add is opened
+ * address is already held as, R40) and, when Add is opened
  * from a question, the questions the member may see (`search`, as `find-in` reads them) for "For which question". */
 function captureReads(view) {
   /* the tab and the subject as `forOf` reads them: an unknown tab is the address tab */
@@ -15,12 +15,13 @@ function captureReads(view) {
   return { open: { op: "opencaptures", query: {}, empty: (v) => !v || !Array.isArray(v.captures) || !v.captures.length },
            /* C14 (capture R77, R88): the cheap picker read, once for the screen: a title and a digest per document, no examination */
            held: { op: "heldcaptures", query: { limit: 200, state: "held_and_vouched", fields: "picker" } },
-           members: { op: "memberlist" },
            /* R47, R55 (C20; DEC-394 3c): the one read of the capture requests serves the team's requests a source turned away for a
               login and the member's own "requests for later" */
            later: { op: "capturerequests", query: { limit: 50 }, empty: (v) => !v || !Array.isArray(v.requests) || !v.requests.length },
            ...(/^INQ-[A-Za-z0-9-]+$/.test(id) ? { questions: { op: "search", query: { q: "type:inquiry", limit: "200" },
-             empty: (v) => !v || !Array.isArray(v.hits) || !v.hits.length } } : {}) };
+             empty: (v) => !v || !Array.isArray(v.hits) || !v.hits.length },
+             /* C35 (R29): a hit names no project; the projects are read here and each one's questions once in `render`, so a question is told by its project */
+             projects: { op: "projectlist", empty: () => false } } : {}) };
 }
 
 /* R22 (T49; BOB's reading of J2): the subject is the route's `<tab>` or `<tab>/<id>`, the id a project (`PROJ-…`) or a
@@ -156,17 +157,38 @@ function renderCapture(cs, view) {
   const at = view.parts.forOf(view), tab = at.tab;
   const U = view.ui || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
+  /* C94 (interface-shell R111): a member is named by the handle the shell knows for her id (the founder and a member with no handle by its
+     fallback word) and linked by `memberHref`, never by the id; "" for no member */
+  const person = (id) => { const k = String(id || "").replace(/^member:/, ""); return k ? `<a class="cs-ref" href="${cs.esc(cs.memberHref(k))}" data-nav>${cs.esc(cs.memberName(k))}</a>` : ""; };
+  /* C29: a name placed before a sentence's own full stop loses its one (a title or file name that ends in a full stop would double it);
+     an ellipsis, or a name that ends in several, is left whole */
+  const bare = (t) => String(t == null ? "" : t).replace(/(?<![.\u2026])\.$/, "");
   const tabs = [["address", "screen.capture.tab.address"], ["file", "screen.capture.tab.file"], ["saw", "screen.capture.tab.saw"]]
-    .map(([k, w]) => `<span role="tab"${k === tab ? ' aria-selected="true"' : ""}><a href="/app/capture/${k}${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav${k === tab ? ' aria-current="page"' : ""}>${cs.w(w)}</a></span>`).join("");
+    /* C81: each tab is a 44 px target (the tab and its link fill the same box) */
+    .map(([k, w]) => `<span role="tab"${k === tab ? ' aria-selected="true"' : ""} style="display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box"><a href="/app/capture/${k}${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav${k === tab ? ' aria-current="page"' : ""} style="display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box">${cs.w(w)}</a></span>`).join("");
   /* R24: the capture's result links the document it made; R22: "Cite a passage" opens `find-in` over it, with the question
      chosen when the capture was made for one. Nothing is linked for a refused promotion or an answer naming no bundle. */
   const plainText = (s) => String(s).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
     ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.existed ? plainText(cs.w("screen.capture.address.existed.open")) : g.title || g.bundleId, [])}`
-      + (g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
+      /* R49 (C9): a document held under another project's home and filed here as well says so (`screen.capture.address.filedhere`, a stand-in
+         key the design has no row for yet, drawn once the table holds it); until then it says where it is filed, as a new capture does */
+      + (g.alsoHere && g.alsoHere.home && cs.w("screen.capture.address.filedhere") !== "screen.capture.address.filedhere"
+          ? ` ${cs.w("screen.capture.address.filedhere", { project: g.alsoHere.home })}`
+          : g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
       /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
       + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
       + "</p>" : "";
+  /* R2 (C17): for an upload filed under no project, whether the document was read: the text it holds (the reading's count when it states
+     one), or that no reading is held and, for a picture, that its words can't be found until it is read or typed */
+  const readLine = (u) => {
+    const r = u && u.reading;
+    if (!r || !u.filed || u.filed.id) return "";
+    if (!r.read) return said(r.picture ? "capture.picture.unread" : "screen.document.text.unread");
+    const state = r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) })
+      : cs.w(r.words ? "screen.document.text.full" : "screen.document.text.none");
+    return `<p class="mk-note" role="status" data-reading="read">${cs.w("screen.document.text.label")}: ${state}</p>`;
+  };
   /* R21: a refused promotion is drawn on its tab in words (`refusalHtml`), else the shell's own for a failure with none */
   const refusedPromotion = (t) => U.promoteRefused && U.promoteRefused.tab === t
     ? `<p class="cs-state" data-state="failed" role="alert">${U.promoteRefused.html || cs.w("shell.unread")}</p>` : "";
@@ -191,13 +213,30 @@ function renderCapture(cs, view) {
     /* R29 (N1117; DEC-321 (1)): opened from a question, "For which question", preset to it and changeable among the
        questions the member may see (`cs.choice` over record data); the routed one stays chosen though the list omits it */
     const D = view.data || {};
-    const qs = D.questions && D.questions.state === "ok" && D.questions.value && Array.isArray(D.questions.value.hits) ? D.questions.value.hits : [];
+    const seenQ = {};
+    const qs = (D.questions && D.questions.state === "ok" && D.questions.value && Array.isArray(D.questions.value.hits) ? D.questions.value.hits : [])
+      .filter((h) => { const k = String(h && h.bundle_id); if (seenQ[k]) return false; seenQ[k] = true; return true; });
+    /* C35: whose project each question is in: each project's questions read once (kept in page memory, `qs:<id>`); a question no read names
+       stays by its title */
+    const ownerOf = {};
+    const projectsRead = D.projects && D.projects.state === "ok" && D.projects.value && Array.isArray(D.projects.value.projects) ? D.projects.value.projects : [];
+    if (/^INQ-/.test(at.id)) projectsRead.forEach((pr) => {
+      const pid = String(pr.id), m = U["qs:" + pid];
+      if (!m) {
+        U["qs:" + pid] = { state: "loading", items: [] };
+        cs.call("projectquestions", { query: { project: pid, limit: "200" } }).then((a) => {
+          const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+          cs.set("qs:" + pid, v && v.ok !== false && Array.isArray(v.items) ? { state: "ok", items: v.items.map((x) => String(x.inquiry)) } : { state: "failed", items: [] });
+        }, () => cs.set("qs:" + pid, { state: "failed", items: [] }));
+      } else m.items.forEach((q) => { ownerOf[q] = String(pr.name || pid); });
+    });
+    const told = (id, t) => t + (ownerOf[id] ? " \u00b7 " + ownerOf[id] : "");
     /* C45: a question is named by its title (the one the page read for the routed question, else the search hit's), never by its id;
        one whose title cannot be read is the word for a question */
     const qWord = plainText(cs.w("shell.card.question")).replace(/<[^>]*>/g, "");
     const routedTitle = U.forq && U.forq.state === "ok" && U.forq.value && U.forq.value.question ? U.forq.value.question : "";
-    const routed = at.id && /^INQ-/.test(at.id) && !qs.some((h) => String(h.bundle_id) === at.id) ? [{ value: at.id, text: routedTitle || qWord }] : [];
-    const forq = /^INQ-/.test(at.id) ? cs.choice("ci-for", "capture.forquestion", routed.concat(qs.map((h) => ({ value: String(h.bundle_id), text: String(h.title || (String(h.bundle_id) === at.id && routedTitle) || qWord) }))), { value: at.id })
+    const routed = at.id && /^INQ-/.test(at.id) && !qs.some((h) => String(h.bundle_id) === at.id) ? [{ value: at.id, text: told(at.id, routedTitle || qWord) }] : [];
+    const forq = /^INQ-/.test(at.id) ? cs.choice("ci-for", "capture.forquestion", routed.concat(qs.map((h) => ({ value: String(h.bundle_id), text: told(String(h.bundle_id), String(h.title || (String(h.bundle_id) === at.id && routedTitle) || qWord)) }))), { value: at.id })
       + `<p class="mk-small muted">${cs.w("capture.forquestion.help")}</p>` : "";
     /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
        primary, else the address; drawn only when one is answered (R17), a read that failed drawn failed */
@@ -224,11 +263,9 @@ function renderCapture(cs, view) {
       const vouched = D.held && D.held.state === "ok" && D.held.value && Array.isArray(D.held.value.held) ? D.held.value.held : [];
       const row = vouched.find((r) => r && r.bundle_id === copy.document);
       const title = (row && row.title) || plain(cs.w("screen.held.untitled"));
-      const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
       const who = String(copy.actor || "").replace(/^member:/, "");
-      const handle = who ? ((roster.find((m) => m && m.member_id === who) || {}).handle || "") : "";
       const open = cs.ref("document", copy.document, plain(cs.w("screen.capture.openit")), [plain(cs.w("screen.capture.openit.help"))]);
-      const by = handle && copy.retrieved ? cs.w("screen.capture.a64.captured_by", { name: { html: cs.ref("member", who, handle, []) }, date: { html: cs.date(copy.retrieved) } }) : "";
+      const by = who && copy.retrieved ? cs.w("screen.capture.a64.captured_by", { name: { html: person(who) }, date: { html: cs.date(copy.retrieved) } }) : "";
       const said_ = A.state === "unchanged" ? [cs.w("screen.capture.a64.the_site_still_gives_the_same_document"), cs.w("screen.capture.a64.nothing_added")]
         : A.state === "undetermined" ? [cs.w("screen.capture.a64.undetermined")] : [];
       const held = cs.row(cs.icon("accepted"), `${cs.w("screen.capture.a64.already_in_the_record_as")} <span class="rec">${cs.esc(title)}</span>`
@@ -249,7 +286,7 @@ function renderCapture(cs, view) {
     const result = (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
-        : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title }) + made(got)
+        : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) }) + made(got)
           /* a render still being made and an attestation not yet answered, in the plane's own notes; the capture is kept */
           + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("")) : "")
       + refusedPromotion("address");
@@ -259,38 +296,62 @@ function renderCapture(cs, view) {
     const R = D.later;
     const turned = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) ? R.value.requests.filter((r) => r && r.source_reason === "login" && r.state === "refused") : [];
     const stored = (Array.isArray(U.logins) ? U.logins : []).filter((e) => e && !e.withdrawn_at);
-    const who = (m) => { const id = String(m || "").replace(/^member:/, ""); const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
-      const h = id ? ((roster.find((x) => x && x.member_id === id) || {}).handle || "") : ""; return h ? cs.ref("member", id, h, []) : ""; };
     const credNote = U.credDone
       ? (U.credDone.refused !== undefined ? `<p class="cs-state" data-state="failed" role="alert">${U.credDone.refused}</p>` : "") : "";
-    const credSec = !turned.length && !stored.length && !cs.can("capturecredentiallist") ? "" : cs.sec("screen.capture.cred.head",
-      (turned.length ? `<p class="mk-small">${cs.w("screen.capture.cred.why1")} ${cs.w("screen.capture.cred.why2")}</p>`
+    /* R47 (C20; DEC-381): "A source that asked for a login": each request a source turned away for a login, a username and a secret
+       field (the secret is typed into a password field, sent once and never drawn back), the login given and the request tried again,
+       or a retry by itself. No secret, length or digest is ever drawn. */
+    const credSec = !turned.length ? "" : cs.sec("screen.capture.cred.head",
+      `<p class="mk-small">${cs.w("screen.capture.cred.why1")} ${cs.w("screen.capture.cred.why2")}</p>`
         + cs.sheet(turned.map((r) => cs.row(cs.icon("refused"), `<b>${cs.w("screen.capture.cred.turned", { source: { html: `<span class="mk-data">${cs.esc(r.host || "")}</span>` } })}</b>`,
-          "", (who(r.principal_plane) && r.requested_at ? cs.w("screen.capture.cred.askedby", { name: { html: who(r.principal_plane) }, date: { html: cs.date(r.requested_at) }, count: Number(r.attempts) || 0 })
-            : [who(r.principal_plane), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" · ")))).join(""))
+          "", (r.principal_plane && r.requested_at ? cs.w("screen.capture.cred.askedby", { name: { html: person(r.principal_plane) }, date: { html: cs.date(r.requested_at) }, count: Number(r.attempts) || 0 })
+            : [person(r.principal_plane), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" \u00b7 ")))).join(""))
         + cs.field("cc-user", "screen.capture.cred.user", { autocomplete: "off" })
         + cs.field("cc-secret", "screen.capture.cred.secret", { type: "password", autocomplete: "off", help: ["screen.capture.cred.sealed1", "screen.capture.cred.sealed2"] })
         + turned.map((r) => `<div class="mk-acts">${cs.act("capturecredentialsupply", { tone: "primary", data: { request: r.request, host: r.host } })}${cs.act("capturerequestretry", { label: "screen.capture.cred.retry", data: { request: r.request } })}</div>`).join("")
-        + `<p class="mk-small muted">${cs.w("screen.capture.cred.only1")} ${cs.w("screen.capture.cred.only2")}</p>` : "")
-      + credNote
-      /* C78: the explanation of "Show the stored logins" sits directly under that button, before the list it explains */
-      + `<div class="mk-acts">${cs.act("capturecredentiallist")}</div>`
-      + (Array.isArray(U.logins) ? `<p class="mk-small muted">${cs.w("screen.capture.cred.listnote1")} ${cs.w("screen.capture.cred.listnote2")}</p>` : "")
-      + stored.map((e) => cs.sheet(cs.row(cs.icon("accepted"), `${cs.w("screen.capture.cred.stored", { source: { html: `<span class="mk-data">${cs.esc(e.host || "")}</span>` } })}<span class="meta">${cs.w("screen.capture.cred.notshown")}</span>`,
-          cs.act("capturecredentialwithdraw", { tone: "quiet", data: { credential: e.credential } }), (who(e.supplied_by) && e.supplied_at ? cs.w("screen.capture.cred.givenby", { name: { html: who(e.supplied_by) }, date: { html: cs.date(e.supplied_at) } })
-            : [who(e.supplied_by), e.supplied_at ? cs.date(e.supplied_at) : ""].filter(Boolean).join(" · "))))).join(""),
+        + `<p class="mk-small muted">${cs.w("screen.capture.cred.only1")} ${cs.w("screen.capture.cred.only2")}</p>`
+        + credNote,
       { help: ["screen.capture.cred.tip1", "screen.capture.cred.tip2"] });
+    /* FC-23, C78, C94 (DEC-403; screens-intake R57, proposed): "Logins for sites", the capture screen's own section. "Show the stored logins"
+       lists each login's site, what it asks for, who may use it and who gave it and when (the giver by the shell's name and address for
+       her, never her id), each with "Withdraw this login", or says none; its explanation sits directly under its own button; "Give a
+       login for a site" stores one with no refused request needed (kind, site, secret, who may use it, and the project for "This
+       project"). Nothing is listed or said before the button is pressed; no secret, length or digest is ever drawn. */
+    const projectForLogin = /^PROJ-/.test(at.id) ? at.id : U.forq && U.forq.state === "ok" && U.forq.value && U.forq.value.id ? U.forq.value.id : "";
+    const loginKind = (k) => cs.w("screen.capture.logins.kind." + (["login", "user-agent", "other"].includes(k) ? k : "other"));
+    const loginScope = (x) => cs.w("screen.capture.logins.scope." + (["group", "member", "project"].includes(x) ? x : "group"));
+    const loginRows = stored.map((e) => cs.row(cs.icon("accepted"),
+      `<b class="mk-data">${cs.esc(e.host || "")}</b><span class="meta">${cs.w("screen.capture.logins.row", { kind: { html: loginKind(e.kind) }, scope: { html: loginScope(e.scope) },
+        member: { html: person(e.supplied_by) }, date: { html: e.supplied_at ? cs.date(e.supplied_at) : "" } })}</span>`,
+      cs.act("capturecredentialwithdraw", { tone: "quiet", data: { credential: e.credential } }))).join("");
+    const give = !cs.can("capturecredentialsupply") ? "" : `<details class="mk-details"><summary>${cs.w("screen.capture.logins.give")}</summary>`
+      + cs.field("cl-host", "screen.capture.logins.site", { help: "screen.capture.logins.site.help", autocomplete: "off" })
+      + cs.choice("cl-kind", "screen.capture.logins.kind", [["login", "screen.capture.logins.kind.login"], ["user-agent", "screen.capture.logins.kind.user-agent"], ["other", "screen.capture.logins.kind.other"]], { value: "login" })
+      + cs.choice("cl-scope", "screen.capture.logins.scope", [["group", "screen.capture.logins.scope.group"], ["member", "screen.capture.logins.scope.member"],
+          ...(projectForLogin ? [["project", "screen.capture.logins.scope.project"]] : [])], { value: "group", help: "screen.capture.logins.scope.help" })
+      + cs.field("cl-name", "screen.capture.logins.name", { autocomplete: "off" })
+      + cs.field("cl-secret", "screen.capture.logins.secret", { type: "password", autocomplete: "off", help: ["screen.capture.cred.sealed1", "screen.capture.cred.sealed2"] })
+      + `<div class="mk-acts">${cs.act("capturecredentialsupply", { label: "screen.capture.logins.store", tone: "primary", data: { general: "1", project: projectForLogin } })}</div></details>`;
+    const loginsSec = !cs.can("capturecredentiallist") && !give ? "" : cs.sec("screen.capture.logins.head",
+      `<p class="mk-small">${cs.w("screen.capture.logins.about1")} ${cs.w("screen.capture.logins.about2")} ${cs.w("screen.capture.logins.about3")}</p>`
+      + `<div class="mk-acts">${cs.act("capturecredentiallist")}</div>`
+      + `<p class="mk-small muted">${cs.w("screen.capture.cred.listnote1")} ${cs.w("screen.capture.cred.listnote2")}</p>`
+      + (Array.isArray(U.logins) ? (stored.length ? cs.sheet(loginRows) : `<p class="mk-small" data-state="none">${cs.w("screen.capture.logins.none")}</p>`) : "")
+      + give);
     /* R55 (DEC-394 3c): "Your requests for later": the member's own capture requests (`capturerequests`, the one read that also serves
        R47), each with where it stands: waiting to be fetched, captured, or turned away by its source. None to list draws no section. */
     const meId = view.me && view.me.member ? String(view.me.member) : "";
     const mineLater = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) && meId
       ? R.value.requests.filter((r) => r && String(r.principal_plane || "").replace(/^member:/, "") === meId && ["requested", "draining", "captured", "refused"].includes(r.state)) : [];
-    const laterSec = !mineLater.length ? "" : cs.sec("screen.capture.later.head", `<p class="mk-small">${cs.w("screen.capture.later.about")}</p>`
-      + cs.sheet(mineLater.map((r) => {
+    /* N4: once the member has asked for the list, an empty one says so (`screen.capture.later.none`, a stand-in key until the design writes the
+       row; before it the shell's "Nothing here"); before the ask, and with none, nothing is drawn */
+    const noneLater = cs.w("screen.capture.later.none") !== "screen.capture.later.none" ? cs.w("screen.capture.later.none") : cs.w("state.empty");
+    const laterSec = !mineLater.length && !U.laterAsked ? "" : cs.sec("screen.capture.later.head", `<p class="mk-small">${cs.w("screen.capture.later.about")}</p>`
+      + (!mineLater.length ? `<p class="mk-small" data-state="none">${noneLater}</p>` : cs.sheet(mineLater.map((r) => {
         const st = r.state === "captured" ? "captured" : r.state === "refused" ? "turned" : "waiting";
         return cs.row(cs.icon(st === "captured" ? "accepted" : st === "turned" ? "refused" : "clock"), `<b class="mk-data">${cs.esc(r.address || r.host || "")}</b>`, "",
-          [cs.w("screen.capture.later." + st), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" · "));
-      }).join("")));
+          [cs.w("screen.capture.later." + st), r.requested_at ? cs.date(r.requested_at) : ""].filter(Boolean).join(" \u00b7 "));
+      }).join(""))));
     body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
       + forq
       + keep
@@ -302,6 +363,7 @@ function renderCapture(cs, view) {
       + unfinished
       + a64
       + credSec
+      + loginsSec
       + laterSec
       + (cs.can("capturerequests") ? `<div class="mk-acts">${cs.act("capturerequests")}</div>` : "")
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
@@ -318,11 +380,11 @@ function renderCapture(cs, view) {
       + `<div class="cs-field"><fieldset class="mk-checks"><legend>${cs.w("screen.capture.file.how")}</legend>`
       + how.map(([k, w]) => `<label><input type="radio" id="ci-how-${k}" name="ci-how" value="${k}"> ${cs.w(w)}</label>`).join("")
       + "</fieldset></div>"
-      + `<p class="mk-small muted">${cs.w("screen.capture.file.downloaded")} <a href="/app/capture/address${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav>${cs.w("screen.capture.file.toaddress")}</a></p>`
+      + `<p class="mk-small muted">${cs.w("screen.capture.file.downloaded")} <span style="display:inline-flex;align-items:center;max-width:100%"><a class="cs-ref" href="/app/capture/address${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav>${cs.w("screen.capture.file.toaddress")}</a></span></p>`
       + cs.field("ci-where", "screen.capture.file.where", { help: "screen.capture.file.wherehelp", value: U.where || "" })
       + cs.field("ci-what", "screen.capture.file.what", { area: true, rec: true, value: U.what || "" })
       + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.captureupload.label.capture" })}</div>`
-      + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: U.uploaded.name }) + made(U.uploaded) : "")
+      + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: bare(U.uploaded.name) }) + made(U.uploaded) + readLine(U.uploaded) : "")
       + refusedPromotion("file")
       + `<p class="mk-note">${cs.w("screen.capture.file.note")}</p>`;
   } else {
@@ -339,7 +401,7 @@ function renderCapture(cs, view) {
       + cs.field("ci-when", "screen.capture.saw.when", { help: "screen.capture.saw.whenhelp", value: U.when || "" })
       + `<p class="mk-small muted">${cs.w("photo.reminder")}</p>`
       + `<div class="mk-acts">${cs.act("testify", { tone: "primary" })}</div>`
-      + (U.testified ? said("screen.capture.saw.done", { id: { html: U.testified.id ? cs.ref("document", U.testified.id, U.testified.text || plainText(cs.w("shell.card.document")).replace(/<[^>]*>/g, ""), []) : cs.esc(U.testified.text || "") } }) : "")
+      + (U.testified ? said("screen.capture.saw.done", { id: { html: U.testified.id ? cs.ref("document", U.testified.id, bare(U.testified.text) || plainText(cs.w("shell.card.document")).replace(/<[^>]*>/g, ""), []) : cs.esc(bare(U.testified.text)) } }) : "")
       + `<p class="mk-note">${cs.w("screen.capture.saw.after")}</p>`;
   }
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`
@@ -423,8 +485,15 @@ async function doneAcquire(view, answer, cs) {
      shows is linked and no document is written (the question chosen was sent as `for`, so the plane has recorded the capture as made
      for it, acquisition R47); none that shows is promoted for the viewer below, as a new capture is. */
   if (a.existed === true) {
-    const home = await view.parts.homeOf(cs, sha);
-    if (home) { cs.set("captured", { existed: true, title, address, bundleId: home, sha, ...pend }); return; }
+    const copy = await view.parts.copyOf(cs, sha);
+    if (copy) {
+      /* R49 (C9; capture R100, R101): a capture from a project's page whose document is held under another project's home is also filed
+         in this project, as a reference, and the result says so; the document keeps its home and is linked, and shown once */
+      const more = await view.parts.alsoFiled(view, cs, copy, sha);
+      if (more.refused) cs.set("promoteRefused", { tab: "address", html: more.refused });
+      cs.set("captured", { existed: true, title, address, bundleId: copy.document, sha, ...pend, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
+      return;
+    }
   }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
@@ -436,10 +505,32 @@ async function doneAcquire(view, answer, cs) {
 /* R49 (C9, C10): the document the viewer may see that holds these bytes, asked of the record by the capture's digest (`heldat`, no
  * `check`: nothing is fetched). "" when the record shows none, the digest is not one, or the read is refused. */
 async function homeOf(cs, sha) {
-  if (typeof sha !== "string" || !sha) return "";
+  const copy = await copyOf(cs, sha);
+  return copy ? copy.document : "";
+}
+
+/* R49 (C9): the copy `heldat` answers for the digest (its `document` and `project`), or null when the record shows none. */
+async function copyOf(cs, sha) {
+  if (typeof sha !== "string" || !sha) return null;
   const held = await cs.call("heldat", { query: { sha256: sha } });
   const h = held && held.result && typeof held.result === "object" ? held.result : held;
-  return h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy.document : "";
+  return h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy : null;
+}
+
+/* R49 (C9; capture R100, R101): the subject project (R22) files a found document held under another project: `captureseenin` with the
+ * capture's digest and that project, the member's own act (the plane stamps her). Nothing is sent with no subject project, for a question
+ * that states none or could not be read, or when the document's home is the subject project (it is listed there already). Answers
+ * `{}` (nothing filed), `{filed, alsoHere: {home}}` (`home` the home project's name, "" where it has none or the plane names none) or
+ * `{refused}` (the plane's refusal in words, `refusalHtml`). */
+async function alsoFiled(view, cs, copy, sha) {
+  const filed = await view.parts.filedFor(view, cs);
+  if (!filed || !filed.id || copy.project === filed.id) return {};
+  const asked = await cs.call("captureseenin", { body: { captureSha: sha, project: filed.id } });
+  const a = asked && asked.result && typeof asked.result === "object" ? asked.result : asked;
+  if (!a || a.ok !== true) return { refused: view.parts.refusalHtml(cs, a) || cs.w("shell.unread") };
+  const homeId = typeof a.home === "string" && a.home ? a.home : typeof copy.project === "string" ? copy.project : "";
+  const home = homeId ? await view.parts.projectOf(cs, homeId) : null;
+  return { filed, alsoHere: { home: (home && home.title) || "" } };
 }
 
 /* R49 (C9): a promotion's refusal in words (`refusalHtml`). Bytes that have another home (`CAPTURE_HELD_BY_ANOTHER_BUNDLE`, provenance
@@ -571,8 +662,13 @@ async function doneUpload(view, answer, cs) {
      and none is written. None that shows is promoted for the viewer when the answer carries the document to file; without it nothing
      is written (the plane answers `existed` with no document when it has already registered a home). */
   if (a.existed === true) {
-    const home = await view.parts.homeOf(cs, sha);
-    if (home) { cs.set("uploaded", { name, existed: true, bundleId: home, title: name, sha }); return; }
+    const copy = await view.parts.copyOf(cs, sha);
+    if (copy) {
+      const more = await view.parts.alsoFiled(view, cs, copy, sha);
+      if (more.refused) cs.set("promoteRefused", { tab: "file", html: more.refused });
+      cs.set("uploaded", { name, existed: true, bundleId: copy.document, title: name, sha, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
+      return;
+    }
     if (!doc) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
   }
   const filed = await view.parts.filedFor(view, cs);
@@ -582,7 +678,20 @@ async function doneUpload(view, answer, cs) {
   const title = view.parts.titleOf(cs, { reading: isPage ? a.reading : null, doc: {}, address: "", fileName: name || String((doc && doc.name_stated && doc.name_stated.text) || "") });
   const made = await view.parts.promoteDocument(cs, { doc: doc || {}, title, locator: String((doc && doc.locator) || ""), project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
-  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha });
+  /* R2 (C17): a project-less upload's result line says whether it was read (a picture, which way to have it read) */
+  const reading = { ...view.parts.readingOf(a, doc || {}), picture: /^image\//i.test(String(sent.type || "")) };
+  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha, reading });
+}
+
+/* R2 (C17; control-plane R100, R117): whether the upload was read, from the answer: its `reading` (the answer's or its document's) and the
+ * `text_units` beside it. `{read: false}` when the answer carries none; else `{read: true, words, wordsRead, wordsTotal}` (the counts the
+ * reading states, else null). */
+function readingOf(a, doc) {
+  const r = a && a.reading && typeof a.reading === "object" ? a.reading : doc && doc.reading && typeof doc.reading === "object" ? doc.reading : null;
+  if (!r) return { read: false };
+  const units = Array.isArray(a && a.text_units) ? a.text_units : Array.isArray(doc && doc.text_units) ? doc.text_units : Array.isArray(r.text_units) ? r.text_units : [];
+  const n = (k) => (Number.isInteger(r[k]) && r[k] >= 0 ? r[k] : null);
+  return { read: true, words: units.filter((u) => u && String(u.text || "").trim()).length, wordsRead: n("words_read"), wordsTotal: n("words_total") };
 }
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */
@@ -626,6 +735,22 @@ function doneWritingHelp(view, answer, cs) {
  * `secret` ("user:secret", the form `capture-sources` R56 hands to Basic) for the refused request's host, at the team's scope; the
  * secret is read from its field and held nowhere else, never put in the page's state. Its refusals are drawn by the design's words. */
 function sendCredentialSupply(view, el, cs) {
+  /* FC-23 (DEC-403): "Store this login", from the logins section, needs no refused request: kind, site, secret, who may use it, and the project
+     for "This project"; a login's secret is `username:secret`, any other kind's the secret alone */
+  if (el && el.dataset && el.dataset.general === "1") {
+    const host = String(cs.value("cl-host") || "").trim().toLowerCase();
+    const kind = ["login", "user-agent", "other"].find((k) => k === cs.value("cl-kind")) || "login";
+    const scope = ["group", "member", "project"].find((k) => k === cs.value("cl-scope")) || "group";
+    const name = String(cs.value("cl-name") || "").trim(), secret = String(cs.value("cl-secret") || "");
+    const project = String(el.dataset.project || "");
+    if (!host) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.logins.site") } } };
+    if (kind === "login" && !name) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.logins.name") } } };
+    if (!secret) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.logins.secret") } } };
+    if (scope === "project" && !project) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.logins.scope") } } };
+    cs.set("credDone", null);
+    cs.set("credFor", null);
+    return { body: { kind, host, secret: kind === "login" ? `${name}:${secret}` : secret, scope, ...(scope === "project" ? { project } : {}) } };
+  }
   const user = String(cs.value("cc-user") || "").trim(), secret = String(cs.value("cc-secret") || "");
   const host = el && el.dataset ? String(el.dataset.host || "") : "";
   const request = el && el.dataset ? String(el.dataset.request || "") : "";
@@ -640,6 +765,8 @@ function sendCredentialSupply(view, el, cs) {
 async function doneCredentialSupply(view, answer, cs) {
   const f = (view.ui && view.ui.credFor) || {};
   cs.set("credFor", null);
+  /* the secret is typed once: the fields that held it are emptied as the login is stored, whatever it was stored for */
+  cs.fill("cl-secret", ""); cs.fill("cl-name", ""); cs.fill("cc-secret", "");
   const a = f.request ? await cs.call("capturerequestretry", { body: { request: f.request } }) : null;
   const r = a && a.result && typeof a.result === "object" ? a.result : a;
   if (r && r.ok === false) { cs.set("credDone", { refused: view.parts.refusalHtml(cs, r) }); return; }
@@ -648,6 +775,7 @@ async function doneCredentialSupply(view, answer, cs) {
   const v = l && l.result && typeof l.result === "object" ? l.result : l;
   if (v && Array.isArray(v.entries)) cs.set("logins", v.entries);
 }
+function doneCaptureRequests(view, answer, cs) { cs.set("laterAsked", true); }
 function sendCredentialRetry(view, el, cs) {
   cs.set("credDone", null);
   return { body: { request: el && el.dataset ? String(el.dataset.request || "") : "" } };
@@ -676,7 +804,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, filedFor, forOf, homeOf, projectOf, promoteDocument, refusalHtml, refusedHtml, titleOf }),
+  parts: Object.freeze({ alsoFiled, bundleFor, checkOutcome, copyOf, filedFor, forOf, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, titleOf }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     refusals: Object.freeze({ /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */
@@ -699,7 +827,7 @@ export const CAPTURE_SCREEN = Object.freeze({
     Object.freeze({ op: "capturecredentialsupply", label: "act.owed_capturecredentialsupply.label.capture", send: sendCredentialSupply, done: doneCredentialSupply, rereads: Object.freeze(["later"]), refusals: CRED_REFUSALS }),
     Object.freeze({ op: "capturerequestretry", label: "act.capturerequestretry.label.capture", send: sendCredentialRetry, done: doneCredentialRetry, rereads: Object.freeze(["later"]),
                     refusals: Object.freeze({ CAPTURE_REQUEST_NOT_RETRYABLE: function (refusal, cs) { return cs.w("screen.capture.cred.ref.notretry"); } }) }),
-    Object.freeze({ op: "capturerequests", label: "act.capturerequests.label.capture", send: () => ({ query: { limit: 50 } }), rereads: Object.freeze(["later"]) }),
+    Object.freeze({ op: "capturerequests", label: "act.capturerequests.label.capture", send: () => ({ query: { limit: 50 } }), done: doneCaptureRequests, rereads: Object.freeze(["later"]) }),
     Object.freeze({ op: "capturecredentiallist", label: "act.owed_capturecredentiallist.label.capture", send: sendCredentialList, done: doneCredentialList, rereads: Object.freeze([]) }),
     Object.freeze({ op: "capturecredentialwithdraw", label: "act.owed_capturecredentialwithdraw.label.capture", send: sendCredentialWithdraw, done: doneCredentialWithdraw, rereads: Object.freeze([]) }),
     Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, rereads: Object.freeze([]), reasonField: "words" }),

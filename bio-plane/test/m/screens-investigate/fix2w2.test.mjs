@@ -81,7 +81,7 @@ test("R34 C95 a search box narrows the picker by title, without reading the docu
   assert.deepEqual(optsOf(p, "mf-doc").map(([v]) => v), [SHA, SHA3, SHA2], "emptied: all of them");
   await type(p, "mf-doc-q", "zzz");
   assert.equal(p.doc.getElementById("mf-doc"), null, "nothing to choose");
-  drew(main(p), "state.empty");
+  drew(main(p), "form.choose.search.none");
   assert.ok(p.doc.getElementById("mf-doc-q"), "and the search stays so it can be changed");
   assert.equal(p.byOp("heldcaptures").length, 1, "narrowed on the page");
 });

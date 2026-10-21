@@ -11,7 +11,7 @@ const SEEN = { groupidentity: ok({ ok: true, group: "lakeshore", display_name: "
   projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Pothole repairs", stage: "forming" }] }), projectquestions: ok({ ok: true, items: [], cursor: null }),
   startfrom: ok({ ok: true, scripts: [], doors: [] }) };
 const NONE = { ungrouped: true, ancestors: [] };
-const ROW = (id, address) => ({ bundle_id: id, title: "Photo " + id, source: address ? { address, via: "web" } : null });
+const ROW = (id, address) => ({ bundle_id: id, title: "Photo " + id, source: address ? { address, via: "web" } : null, actor: "mai" });
 const HELD = (...rows) => ok({ ok: true, held: rows, state: "held", truncated: false, next: null });
 const LETTER = { id: "OBLIGATION::letter::ACT-1::mai", class: "OBLIGATION", kind: "filing-draft", case: NONE, assignee: "mai", summary: "A letter to approve",
   subject: { kind: "action", id: "ACT-1", title: "Demand to rescind" }, options: [{ id: "filingapprove" }], disposition: { available: false, instead: "filingapprove" } };
@@ -32,8 +32,7 @@ test("R17 (words): the words the vouch to-do and the letter's approval read are 
 for (const [where, path] of screens) {
   test(`R17 (${where}): photos the member captured and has not vouched for are one to-do for each place, "Vouch for N photos you captured on …", with the registry's act release`, async () => {
     const p = await open(path, planeOf({ heldcaptures: HELD(ROW("INF-H1", "https://city.example/gate"), ROW("INF-H2", "https://city.example/gate"), ROW("INF-H3", "https://city.example/lot")) }), SCR);
-    const mine = p.byOp("heldcaptures").filter((r) => r.query.member === "mai");
-    assert.ok(mine.length > 0, "her own captures are read by `member`");
+    assert.equal(p.byOp("heldcaptures").length, 1, "the held captures are read once, as the doors read them; her own are the rows whose actor is she (C14, P2.3)");
     const t = text(p);
     assert.ok(t.includes(word("screen.home.todo.vouch", { count: "2", place: "https://city.example/gate" })), "two photos at one place");
     assert.ok(t.includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/lot" })), "one photo at another place");

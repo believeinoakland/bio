@@ -81,3 +81,22 @@ test("R46 control: wizardrevise with adopt and no steps is not refused: the prop
   assert.deepEqual([answer.ok, answer.adopted], [true, p.proposal.id]);
   assert.equal(refusedNaming(answer, "steps"), false);
 });
+
+/* T51 fix round 3, small 2 (K4230; K4208): the screen sends `state` in the body, so the declaration accepts it there and the arm
+   reads it through `pick` (body first, then the query). The census agrees with the arm: the declared field is the one it reads. */
+test("R46 (T51 fix round 3, small 2; K4230, K4208) wizards declares `state` as the body field its arm reads, and the arm reads it from the body", () => {
+  assert.deepEqual(wz.DECLARED_OPS.wizards.fields.accepts, ["state"]);
+  const w = seeded();
+  const d = draft(w, {});
+  const url = new URL(`https://x/?op=wizards&viewer=${encodeURIComponent(F)}`);
+  const listed = wz.wizardScriptsOps(w.wz, url, { state: "draft" })["wizards"]().scripts.map((x) => x.id);
+  assert.ok(listed.includes(d.script), "the body's state=draft lists the draft");
+});
+
+test("R46 control (small 2): the wizards arm still reads state from the query: ?state=draft lists the viewer's draft, and no query without it lists it as offered", () => {
+  const w = seeded();
+  const d = draft(w, {});
+  const listed = (query) => wz.wizardScriptsOps(w.wz, new URL(`https://x/?op=wizards${query}&viewer=${encodeURIComponent(F)}`), {})["wizards"]().scripts.map((x) => x.id);
+  assert.ok(listed("&state=draft").includes(d.script), "the query's state=draft lists the draft");
+  assert.ok(!listed("").includes(d.script), "without the query the draft is not offered: the state came from the query");
+});

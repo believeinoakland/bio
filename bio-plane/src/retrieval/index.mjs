@@ -1224,7 +1224,9 @@ export class Retrieval {
    *  VIEWER may see (a total over rows the caller cannot read would say "something is hidden"). */
   listBundles({ type = null, state = null, after = null, limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
+    /* R93: the bundle's project, the empty text for a project-less bundle, read in this same statement. */
     let q = `SELECT b.bundle_id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha,
+                    COALESCE(b.project, '') AS project,
                     m.seq AS route_seq, m.at AS route_at, m.by AS route_by, m.finding AS route_finding,
                     m.state_at AS route_state_at, m.register_state AS route_register,
                     m.undetermined AS route_undetermined, m.documents_n AS route_documents_n

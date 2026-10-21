@@ -23,7 +23,7 @@ const REG_FILE = JSON.parse(src("registry.json")), LIB_T50 = JSON.parse(src("lib
 const COMMIT = "2a64c5ae77";
 const FIX = "1cc4a957f0";   /* R45: the fix round re-takes the doors and the library again */
 const LIB_R45 = JSON.parse(src("library-1cc4a957f0.json"));
-const REG_COMMIT = "654a735535";   /* the registry's pin, moved by R44, R45 and DEC-389 (R41) */
+const REG_COMMIT = "43379a1a44";   /* the registry's pin, moved by R44, R45, DEC-389 (R41) and DEC-402 (R49) */
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 const status = (s) => REG_FILE.screens.flatMap((f) => f.acts.filter((a) => a.status === s).map((a) => [f.id, a.op]));
 const OWED_OPS = [...new Set(status("owed").map(([, op]) => OWED.exec(op)[1]))];
@@ -114,7 +114,7 @@ test("R41 (T50; DEC-266, DEC-279, DEC-281) SCREEN_REGISTRY is the registry at th
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id), "the file's order");
   const acts = REG_FILE.screens.flatMap((f) => f.acts);
   assert.deepEqual([acts.length, acts.filter((a) => a.status === "declared").length, acts.filter((a) => a.status === "function").length, acts.filter((a) => a.status === "owed").length],
-                   [563, 434, 83, 46]);
+                   [564, 435, 83, 46]);
   assert.equal(OWED_OPS.length, 42, "forty-six owed acts name forty-two ops: updatelater, taskdecide and others are owed on more than one screen");
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];

@@ -243,17 +243,16 @@ test("R13 (C11) the refusal goes when the act is pressed again and succeeds, and
 
 /* ---------- C15 · R5: the words are asked for by the release version ---------- */
 
-test("R5 (C15) the words request carries the release version bootstrap answers; control: with no version answered the request carries none", async () => {
-  const p = await boot({ screens: ALL, plane: { bootstrap: ok({ ok: true, version: "0.86.0", test_instance: false }) } });
+test("R5 (C15, fix round 3 P1) the words request carries the release version the served page names, whatever bootstrap answers or whether it fails; control: a page naming none sends none", async () => {
+  const p = await boot({ screens: ALL, version: "0.86.0", plane: { bootstrap: ok({ ok: true, version: "other", test_instance: false }) } });
   const words = p.byOp("interfacewords");
   assert.equal(words.length, 1);
-  assert.equal(words[0].query.v, "0.86.0", "asked for by the release version");
-  assert.equal(p.requests.filter((r) => r.op === "interfacewords" && !r.query.v).length, 0);
-  const bare = await boot({ screens: ALL, plane: { bootstrap: ok({ ok: true, test_instance: false }) } });
-  assert.equal(bare.byOp("interfacewords")[0].query.v, undefined, "control: no version, no field");
-  const down = await boot({ screens: ALL, plane: { bootstrap: refused("X") } });
+  assert.equal(words[0].query.v, "0.86.0", "asked for by the page's release version, in hand before bootstrap answers");
+  const down = await boot({ screens: ALL, version: "0.86.0", plane: { bootstrap: refused("X") } });
   assert.equal(down.byOp("interfacewords").length, 1, "a bootstrap that fails never holds the words back");
-  assert.equal(down.byOp("interfacewords")[0].query.v, undefined);
+  assert.equal(down.byOp("interfacewords")[0].query.v, "0.86.0");
+  const bare = await boot({ screens: ALL, plane: { bootstrap: ok({ ok: true, version: "0.86.0", test_instance: false }) } });
+  assert.equal(bare.byOp("interfacewords")[0].query.v, undefined, "control: the page names no version, so no field");
 });
 
 /* ---------- B4 · R90, R11: a place word explains the act in the confirmation dialog too ---------- */

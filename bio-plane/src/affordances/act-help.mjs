@@ -36,7 +36,7 @@
  *   - `selftest` (FR-40, K4190): the word list holds `act.selftest.does` for the updates screen (DEC-376), but this module's reads
  *     list (R62) does not give it and no act this module draws is `selftest` (instance-setup's probe), so it is held none.
  * A retired op is not held. */
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../membership/index.mjs";
 
 /** T51 (K4248; U421, DEC-387): the declared ops whose `act.<op>.does` words the design's reads list for this module gives (R62), held
@@ -112,6 +112,32 @@ export const T51_DESIGN_OPS = Object.freeze([
   "triage",
 ]);
 
+/** T51 (B14, K4376; `op-declarations` J22): the declared ops whose `act.owed_<op>.does` words the design's reads list gives, held under
+ *  their ops (R61; KEY_EXCEPTIONS below). Exported so the tests can name them. */
+export const T51_OWED_OPS = Object.freeze(["expertisewithdraw", "declareorigin", "capturecredentialsupply", "capturecredentialwithdraw",
+  "citeimported", "withdrawimported", "projectclose", "importregrade", "rerunstart", "rerunpair", "rerunread", "casedetailsset",
+  "casedetails", "namedrequestset", "namedrequests", "sweepset", "sweepratify", "taskdecide"]);
+
+/** T51 (B14): `contradictionflag`'s text is in the word list as `act.contradictionflag.does` but not in the reads list (R62), so it is
+ *  held under that key and the design is asked to confirm it (one QUESTION). */
+export const T51_LIST_ONLY_OPS = Object.freeze(["contradictionflag"]);
+
+/** T51 (B14): the declared ops the word list gives no sentence for. Each is a stand-in: its plain `localize` default, read under its
+ *  own key, until the design stream's row lands (R62; setup-words R14). `localize` takes literal ids, so each is written out. Listed in
+ *  one QUESTION to BOB; the words check holds these keys to their defaults, not to `hasWord`. */
+export const T51_STANDIN_HELP = Object.freeze({
+  origins: localize("act.origins.does", "Lists, oldest first, every system members have declared this document came from, with who declared it and when. Changes nothing."),
+  inboxlist: localize("act.inboxlist.does", "Lists the knocks in the inbox, newest first, a page at a time. Changes nothing."),
+  transcriptions: localize("act.transcriptions.does", "Lists the typings a member has made of this document: each portion typed, who typed it and when. Changes nothing."),
+  progressions: localize("act.progressions.does", "Lists the progression definitions. Changes nothing."),
+  remindersfor: localize("act.remindersfor.does", "Lists this action's reminders, each with its day, who set it and its state. Changes nothing."),
+  moneysets: localize("act.moneysets.does", "Lists the money sets that concern this project, newest first. Changes nothing."),
+  scanmirror: localize("act.scanmirror.does", "Asks the group's file scanner to check for new signatures now. It answers at once and moves no document."),
+  officeconfirm: localize("act.officeconfirm.does", "An administrator confirms an office a member named."),
+  captureseenin: localize("act.captureseenin.does", "Files this held document in the project as well. It stays held under its own project."),
+});
+export const T51_STANDIN_OPS = Object.freeze(Object.keys(T51_STANDIN_HELP));
+
 /** The ops held, in the design's order (R48, R61). */
 export const ACT_HELP_OPS = Object.freeze([
   "bootstrap", "login", "unlock", "recover", "grouplanguagesset", "grouplogoset", "passwordreset", "signout",
@@ -169,6 +195,9 @@ export const ACT_HELP_OPS = Object.freeze([
   "secondlookclear", "reauth", "aliaswithdraw", "factconfirm", "projectrequest", "projectrequestwithdraw", "projectrequestanswer",
   "holdnoticeprepare", "counselpacket", "noticeprepare", "noticepost", "signeradd", "versionnotice", "actionholdrelease",
   ...T51_DESIGN_OPS,
+  ...T51_OWED_OPS,
+  ...T51_LIST_ONLY_OPS,
+  ...T51_STANDIN_OPS,
 ]);
 
 /** R69 (T51; DEC-330 owed, U348, K3810; `op-declarations` R76): the seven browser acts, each explained under its own name though none
@@ -218,6 +247,7 @@ const KEY_EXCEPTIONS = Object.freeze({
   secondlook: "act.owed_secondlook.does",
   actioninquiry: "act.owed_actioninquiry.does",
   aliaswithdraw: "act.owed_aliaswithdraw.does",
+  ...Object.fromEntries(T51_OWED_OPS.map((op) => [op, `act.owed_${op}.does`])),
 });
 
 /** Every name held: the ops in the design's order, then R69's browser acts. */
@@ -230,4 +260,5 @@ export const ACT_HELP_KEYS = Object.freeze(Object.fromEntries(HELD.filter((op) =
 
 /** R48, R61, R62, R69, R70: what each act does, each sentence read through `word`; the very object `op=affordances` answers (R49). */
 export const ACT_HELP = Object.freeze(Object.fromEntries(HELD.map((op) =>
-  [op, op === "handlechange" ? MEMBERSHIP_CHECKS.HANDLE_FIXED.translation : word(ACT_HELP_KEYS[op])])));
+  [op, op === "handlechange" ? MEMBERSHIP_CHECKS.HANDLE_FIXED.translation
+    : Object.hasOwn(T51_STANDIN_HELP, op) ? T51_STANDIN_HELP[op] : word(ACT_HELP_KEYS[op])])));

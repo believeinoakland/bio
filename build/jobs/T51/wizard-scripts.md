@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_01HJALQNVYJCEBKqDywwPMoe · depth 2 · COMPLETE · handled B19
+**Status** · session_015FfhtgWHE6mdMnqa5TBkFo · depth 2 · COMPLETE · handled B20
 
 ## J1 · BLOCKED
 
@@ -412,3 +412,40 @@ TESTS AND CHECKS
 - Impact run as above.
 
 Size (session_01HJALQNVYJCEBKqDywwPMoe): test runs 9, module lines 2865
+
+## J20 · REPORT
+
+REPORT · reds after the registry re-take at 43379a1a44 (job head 0ace868859)
+
+1. `interface-shell` R1–R6 (R21, R38) turns red, and it is caused by this job's registry change. `request` now registers `entitycreate` (DEC-402), but the `screens-action` screen does not yet serve that act. Owner: `screens-action` (its C64 half: "Name the office yourself" and `entitycreate` in request's acts). It stays red until that job lands. I changed no other module.
+
+2. Not verified against the tranche tip, and not touched by this change: `plane/release` R24 (`screen.objective.purpose` is not in the words list; objective is a screen from the 1cc4a957f0 registry) and one `store-door` declared-ops test (`groupdescriptiondraft` as a hand row disagrees with op-grades' owner row, K4247 / op-grades R49). Owners: `op-grades` and the words owner. Named, not fixed.
+
+3. `journey-check` (journey.test, group.test: 14 tests) fails in the live-instance and browser walks. It ran after `npm ci` in bio-plane/src/journey-check. Not verified against the tip; the walk needs a live instance. Named, not fixed.
+
+4. Cleared in this job: `screens-wizards` (3 tests). My first small-2 change dropped `state` from the body the screen sends. Fixed at 0ace868859: the arm reads state through `pick` (body, then query) and the declaration accepts it.
+
+Proposed line for BOB to write (R49, T51 fix round 3; C64; DEC-401, DEC-402; K4356; amends R47, R48): The registry is re-taken at 43379a1a44: SCREEN_REGISTRY_SOURCE becomes 43379a1a44, 83 screens and 564 acts (435 declared, 83 function, 46 owed; 42 owed ops); `request` registers `entitycreate`. The earlier file is kept whole beside the carried one at 654a735535. Test: the pin, the counts, `request` lists `entitycreate`, and `build-data.mjs --check` passes; a one-byte change to the generated registry fails it.
+
+## J21 · COMPLETE
+
+COMPLETE · fix round 3 of T51, wave 1 (job head 0ace868859 on job/T51/wizard-scripts, merged tranche/T51 first).
+
+CAUSES MET
+- C64 (its part): the registry re-taken at 43379a1a44 (DEC-401, DEC-402). Test R49 (new; the line is proposed in the REPORT above for BOB to write): seen failing first (the pin), with a control (a one-byte change to the generated registry fails --check). The carried file is at 43379a1a44 (83 screens, 564 acts: 435 declared, 83 function, 46 owed; 42 owed ops). The earlier file is kept whole as source/registry-654a735535.json. Only screen-registry.mjs changed among the generated files; the library and the front doors are unchanged. build-data.mjs --check passes.
+- Small 2 (K4230, K4208): the declaration census test (R46) seen failing first. The screen sends state in the body and the arm read it from the query only, so the picker was broken; the first fix (drop the field) broke screens-wizards. Corrected at 0ace868859: the arm reads state through pick (body, then query); the declaration accepts state; the tests cover the body and the query, with the query control.
+
+TESTS AND CHECKS
+- Module suite: node --test --test-force-exit bio-plane/test/m/wizard-scripts/: 134 tests, 134 pass, 0 fail.
+- Pins and counts in library, t47, t48, t50 and t51 repointed to 43379a1a44 and 564/435 (carried-file claims only; historic claims read their kept files).
+- Impact (build/plan/impact.mjs origin/tranche/T51 HEAD): 27 modules, 519 test files. Run once, interrupted by the background limit (1746 tests), then rerun in full at 0ace868859's predecessor: 4614 tests, 4591 pass, 21 fail. The 21 are: screens-wizards (3, my bug, fixed; re-run green); screens-action contract (interface-shell R1–R6, caused by entitycreate on request, see REPORT item 1); plane/release R24 and a store-door declared-ops test (not verified against the tip, see REPORT item 2); journey-check (14, live walks, see REPORT item 3).
+- checks/run.mjs: architecture 0 failures; words 0 failures; coverage: wizard-scripts is not among the failures; format: one failure, build/rulings.md:4346 (BOB's file, not this job's). ownership (tranche/T51 to job/T51/wizard-scripts): 13 files, 0 failures.
+- journey-check dependencies installed (npm ci in bio-plane/src/journey-check, not committed).
+
+DEFERRED: none.
+
+FOUND IN OTHER MODULES: screens-action (its C64 half: request's entitycreate act is not served by the screen) and op-grades / the words owner (REPORT items 1–2); journey-check (REPORT item 3). I changed none of them.
+
+WORDS: no new member-facing sentence.
+
+Size (session_015FfhtgWHE6mdMnqa5TBkFo): test runs 10, module lines 2569

@@ -698,7 +698,15 @@ test("R20 R28: every capture asks attestation's attest for a timestamp and, wher
   const g = world();
   const ok = await run(g, (u, init) => u === "https://a.example/x" ? text("x")
     : init.method === "POST" ? new Response(granted(sha("x"))) : new Response("archived", { status: 200 }), { locator: "https://a.example/x" });
-  const first = ok.body.document.attestation_attempts[0];
+  /* R20 (fix round 3, C12): no set time is waited for the timestamp, so a grant that takes more than a tick to read is recorded
+     against the capture when it ends (capture R68), not in the document the answer carried; either way the attempt is this one */
+  let first = ok.body.document.attestation_attempts[0];
+  if (first.pending) {
+    let late = null;
+    for (let i = 0; i < 500 && !(late = g.store.state.late[0]); i++) await new Promise((r) => setTimeout(r, 10));
+    assert.ok(late, "the attempt is recorded when it ends");
+    first = late.attempts[0];
+  }
   assert.deepEqual([first.ok, first.kind, first.attempted, ok.net.attest.filter((x) => x.init.method === "POST").length], [true, "rfc3161", true, 1]);
   assert.ok(g.held(first.token_sha256), "the token is held under its own digest");
   /* the archive arm's locator is itself an archive replay, so no co-archive is asked of it */

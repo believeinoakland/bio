@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_019i2asULg4gBbzGXKQyLGgG · depth 2 · COMPLETE · handled B17
+**Status** · session_01Ti86WihtuNpDK1TTmcsSAd · depth 2 · COMPLETE · handled B19
 
 ## Record (PLANE #41, T51-125)
 
@@ -210,3 +210,30 @@ COMPLETE (PLANE #45; B16): R68, R71, R5 fixed; R24 is the design's. Details in t
 **For BOB (requirement line)**: R68 now names `record-core` among the assembled owners (T51, B17). The R68 test's assertions wait on OP-GRADES #22.
 
 Size (session_019i2asULg4gBbzGXKQyLGgG): test runs 4, module lines 2
+
+## J14 · QUESTION
+
+R74 (C5, C14) is built in `bio-plane/src/plane/store.mjs` (the two getters `extraction` and `projectRoster`, beside the others in `controlPlaneOwnerOps`). Its two tests (`bio-plane/test/m/plane/fix3-r74.test.mjs`) drive the real door: `readheld` must reach extraction's one instance and `projectlist` must hand review's shared-drafts reader to project-roster. Both arms are CONTROL-PLANE #44's (its branch has neither yet), so the two tests are red on the tranche until control-plane merges. Nothing else in the suite is new-red: R24 (screen word `screen.objective.purpose`) is red as named.
+Options: (a) control-plane merges first and the two tests go green at once (reverses the START's order); (b) plane merges first and the two tests stay red by name until control-plane merges. Recommendation: (a), so no tranche state carries a red I introduced. I will hold the COMPLETE until you choose; the rest of my checks run meanwhile.
+
+## J15 · COMPLETE
+
+FIX ROUND 3, PLANE: cause met (C5, C14; K4389, B19 (b) K4393).
+
+Applied
+- R74: `bio-plane/src/plane/store.mjs`, `controlPlaneOwnerOps` getters now include `extraction: () => extractionOf(ctx)` and `projectRoster: () => projectRosterOf(ctx)`, each asked only when its op is served. Commit 53694d7fbb.
+- Tests: `bio-plane/test/m/plane/fix3-r74.test.mjs`, three tests naming R74. Fail-first seen: `no route readheld` and the missing `sharedDraftsOf`. Control (building route maps calls neither getter) passes.
+
+Accepted reds (named, B19 (b))
+- fix3-r74.test.mjs: the two door tests (readheld, projectlist) need CONTROL-PLANE #44's arms; green when it merges.
+- release.test.mjs R24: `screen.objective.purpose` not in the words list (design's, accepted red).
+
+Suite: `node --test test/m/plane/*.test.mjs`: 2 of the new/R24 reds above, all other tests pass.
+
+Checks
+- format: 0 failures. coverage (plane): 74 of 74. ownership (tranche/T51 -> job/T51/plane): 0 failures. words (plane): 0 failures.
+- architecture: 1 failure, not from my change: `bio-plane/test/m/plane/t47.test.mjs` imports `screens-wizards`, which plane does not declare in `uses`. Reported to BOB here; not fixed.
+- checks/run.mjs over other modules: journey-check R19, op-grades R53 unnamed by tests; op-grades words inline/plain (t33.mjs:214, t51.mjs:41, :45). Other modules, not fixed.
+
+Requirement line for BOB (proposed, R74 already on tranche): none new.
+Size (session_01Ti86WihtuNpDK1TTmcsSAd): test runs 3, module lines 2610

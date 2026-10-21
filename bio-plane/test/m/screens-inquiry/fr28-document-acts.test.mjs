@@ -24,16 +24,17 @@ test("R96 each of the four states of a document's text is drawn from the answer:
   }
 });
 
-test("R96 the OCR act sends the capture and ocr=1 and reads the document again; an unread, a scanned and a partial document offer it, a full one does not", async () => {
+test("R96 the OCR act sends the capture and ocr=1 and reads the document again; a scanned and a partial document offer it, an unread one does not, a full one does not", async () => {
   const p = await open(at, { plane: { pdfstructure: ok({ ok: true, reextraction: { performed: true } }) } });
   assert.ok(says(main(p), "screen.document.ocr.says", { pages: "8–10" }));
   await press(p, "pdfstructure");
   assert.deepEqual([p.byOp("pdfstructure")[0].query.sha256, p.byOp("pdfstructure")[0].query.ocr], [SHA, "1"], "the guard accepted exactly these");
   assert.equal(p.byOp("reading").length, 2, "the reading is read again");
-  for (const reading of [{ ok: true, found: false }, READING({ text_units: [], unread_pages: [] })]) {
-    const o = await open(at, { plane: { reading: ok(reading) } });
-    assert.ok(actsIn(main(o)).includes("pdfstructure"));
-  }
+  /* fix round 3 (R96, C17): a scanned copy a reading is held for offers it; a copy no reading is held for draws no act that reads it again */
+  const o = await open(at, { plane: { reading: ok(READING({ text_units: [], unread_pages: [] })) } });
+  assert.ok(actsIn(main(o)).includes("pdfstructure"));
+  const unread = await open(at, { plane: { reading: ok({ ok: true, found: false }) } });
+  assert.ok(!actsIn(main(unread)).includes("pdfstructure"), "control: an unread copy offers no re-read");
   const full = await open(at, { plane: { reading: ok(READING({ unread_pages: [] })) } });
   assert.ok(!actsIn(main(full)).includes("pdfstructure"), "control: a full document offers no OCR");
 });

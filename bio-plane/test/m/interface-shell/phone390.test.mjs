@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { interfacePage, NONCE_SLOT } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, scriptPath } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { fitSend } from "./harness.mjs";
 
@@ -37,6 +37,7 @@ const STAND_IN = {
       + cs.rows({ id: "r", pick: true, cols: ["state.loading", "state.empty", "state.failed"], items: [{ id: "a", n: long, x: long }, { id: "b", n: "short", x: "" }],
         key: function (i) { return i.id; }, name: function (i) { return cs.ref("member", i.id, i.n); }, cells: function (i) { return [cs.esc(i.x), cs.esc(i.n)]; },
         acts: function () { return cs.act("reinstate", { label: "act.reinstate.label.question", data: { target: "z" } }); } })
+      + cs.path([{ text: { text: "Check whether its route can be shown, with a long sentence of words that wraps " + long }, now: true, act: "" }, { text: { text: "Second" } }])
       + cs.strip([{ n: 1, label: { text: long } }, { n: 22, label: { text: "two" } }, { n: 3, label: { text: "three" } }, { n: 4, label: { text: "four" } }])
       + '<div role="tablist">' + ["one", "two", "three", "four", "five", "six"].map(function (t) { return '<button type="button" role="tab" class="cs-btn" data-tone="quiet">' + t + ' tab with words</button>'; }).join("") + '</div>'
       + cs.field("f1", "screen.question.name") + cs.checks("c1", { text: "legend" }, [{ value: "a", text: long }, { value: "b", text: "short", on: true }])
@@ -52,7 +53,7 @@ async function measure(width) {
   const pw = engine();
   assert.ok(pw && pw.chromium, "playwright-core is needed beside the product (`npm ci` in site/), with Chromium: this test cannot measure without them");
   assert.ok(existsSync(EXE), "Chromium is needed at CHROMIUM or /opt/pw-browsers/chromium");
-  const html = interfacePage([STAND_IN]).split(NONCE_SLOT).join("n0nce");
+  const html = interfacePage([STAND_IN]), script = interfaceScript([STAND_IN]);
   const browser = await pw.chromium.launch({ executablePath: EXE });
   try {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
@@ -66,6 +67,7 @@ async function measure(width) {
         return r.fulfill({ status: 200, contentType: f.type, body: f.encoding === "base64" ? Buffer.from(f.body, "base64") : f.body });
       }
       if (u.pathname === "/api/" || u.pathname === "/api") return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, result: PLANE }) });
+      if (u.pathname === scriptPath("0")) return r.fulfill({ status: 200, contentType: "text/javascript", body: script });
       if (u.pathname === "/version") return r.fulfill({ status: 200, contentType: "text/plain", body: "v1\n" });
       return r.fulfill({ status: 200, contentType: "text/html", body: html });
     });
@@ -89,6 +91,13 @@ async function measure(width) {
       const pick = document.querySelector("input.mk-pick"), open = document.querySelector("button.mk-open");
       out.pick = pick ? Math.round(pick.getBoundingClientRect().width) : null;
       out.open = open ? Math.round(open.getBoundingClientRect().height) : null;
+      /* C81 (fix round 3): the phone's one strip chip is drawn where the design's stylesheet shows it (inside .mk-strip-sum), with its
+         number clear of its words; the people chip and the numbered steps stay inside the screen with their numbers clear of the words */
+      const strip = document.querySelector(".mk-strip a.cs-ref");
+      out.strip = strip && seen(strip) ? { b: strip.querySelector("b").getBoundingClientRect().right, text: (() => { const r = document.createRange(); r.selectNodeContents(strip); r.setStart(strip.childNodes[1], 0); return r.getBoundingClientRect().left; })(), right: strip.getBoundingClientRect().right } : null;
+      const people = document.querySelector(".mk-people");
+      out.people = people ? Math.round(people.getBoundingClientRect().right) : null;
+      out.steps = Array.from(document.querySelectorAll(".mk-next li")).map((li) => { const sp = li.querySelector("span"); return { span: Math.round(sp.getBoundingClientRect().left), li: Math.round(li.getBoundingClientRect().left) + 12 + 24, right: Math.round(li.getBoundingClientRect().right) }; });
       const grp = document.querySelector(".cs-mast .mk-grp");
       out.mast = grp ? { right: Math.round(grp.getBoundingClientRect().right), words: grp.textContent.length } : null;
       return out;
@@ -103,6 +112,10 @@ test("R84 R89 R108 (C81) at 390 px no part of the main area or the masthead runs
   assert.deepEqual(m.small, [], "every target is at least 44 px");
   assert.ok(m.pick >= 44, "a row's tick is a 44 px target: " + m.pick);
   assert.ok(m.open >= 44, "a row's panel control is a 44 px target: " + m.open);
+  assert.ok(m.strip, "the strip's one chip is shown, not hidden by the design's own rule for a link outside .mk-strip-sum");
+  assert.ok(m.strip.b <= m.strip.text + 0.5 && m.strip.right <= 390, "its number is clear of its words and inside the screen");
+  assert.ok(m.people !== null && m.people <= 390, "the people chip stays inside the screen: " + m.people);
+  for (const st of m.steps) assert.ok(st.span >= st.li - 1 && st.right <= 390, "a step's number is clear of its words: " + JSON.stringify(st));
   assert.ok(m.mast && m.mast.right <= 390 && m.mast.words > 40, "the team's name wraps whole inside the screen");
 });
 

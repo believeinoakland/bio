@@ -26,6 +26,8 @@ const EXPECTED = {
   ARCHIVE_DEPTH_MAX: "C-139.13", ARCHIVE_TREE_TOTAL_MAX: "C-139.14", ARCHIVE_TREE_ENTRIES_MAX: "C-139.15",
   UNPACK_DAILY_BYTES: "C-139.16", UNPACK_DAILY_ENTRIES: "C-139.17", OWN_HOST_REFUSED: "C-139.18", CO_ARCHIVE_SETTING_INVALID: "C-139.19",
   NOT_AN_ARCHIVE: "C-139.20", BAD_FOR: "C-139.21",
+  /* R10, R96 (C5, K4370): the capture the store could not keep whole; its row is checks.mjs's CAPTURE_KEEP_CHECKS, tested in fix3-t51.test.mjs */
+  CAPTURE_NOT_KEPT: "C-154.1",
 };
 
 test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and the archive family C-139.1–C-139.21 (C-137.1–C-137.19 renumbered in order, N738), each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
@@ -66,8 +68,12 @@ test("R29 R31: every refusal carrying a row answers that row's check and transla
   const link = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit";
   const html = () => new Response("<!doctype html><html><body>x</body></html>", { headers: { "content-type": "text/html" } });
   const full = (w) => { for (let i = 0; i < 10; i++) w.store.renderAdmit({ allowanceMs: 1e12, reserveMs: 1000, cap: 10 }); return w; };
+  /* a 9 MiB capture is three parts; a store that refuses the whole object (over one 8 MiB part) cannot keep it whole (R96, K4370) */
+  const nineMiB = () => new Response(new Uint8Array(9 * 1024 * 1024).map((_, i) => (i % 251) ^ Math.floor(i / (8 * 1024 * 1024))));
+  const refusesWhole = (w) => { const put = w.b.put.bind(w.b); w.b.put = async (k, bytes, o) => { if (bytes.length > 8 * 1024 * 1024) throw new Error("bucket refused"); return put(k, bytes, o); }; return w; };
   /* [code, world, routes, body, opts, the same act without the condition] */
   const cases = [
+    ["CAPTURE_NOT_KEPT", refusesWhole(world()), { "https://a.example/big": nineMiB }, { locator: "https://a.example/big" }, {}, [{ "https://a.example/big": nineMiB }, { locator: "https://a.example/big" }]],
     ["EVIDENCE_STORAGE_NOT_CONFIGURED", world({ evidence: false }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" }, {}, [{ "https://a.example/x": text("x") }, { locator: "https://a.example/x" }]],
     ["CAPTURE_NOT_DRAINING", world(), {}, { via: "capture-request", locator: "https://a.example/x" }, {}, [{ "https://a.example/x": text("x") }, { locator: "https://a.example/x" }]],
     ["RENDER_FLAG_MALFORMED", world(), {}, { locator: "https://a.example/x", render: "true" }, {}, [{ "https://a.example/x": text("x") }, { locator: "https://a.example/x", render: false }]],

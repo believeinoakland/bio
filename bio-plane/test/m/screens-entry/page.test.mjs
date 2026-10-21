@@ -4,7 +4,7 @@
    the session record over. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScriptHash } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, STORE_KEY } from "../interface-shell/harness.mjs";
 import { SCREENS } from "../../../src/screens-entry/index.mjs";
 
@@ -20,8 +20,13 @@ const PLANE = {
 const main = (p) => p.doc.getElementById("cs-main");
 const storage = (p) => JSON.stringify([...p.local.entries(), ...p.store.entries()]);
 
-test("R9 interfacePage composes the six screens (interface-shell R21, R38)", () => {
-  assert.match(interfacePage(SCREENS), /<script nonce=/);
+test("R9 interfacePage composes the six screens (interface-shell R1, R2, R21, R38)", () => {
+  /* one external script element loading the shell's versioned script, its integrity the hash of that script, no inline script */
+  const page = interfacePage(SCREENS);
+  const scripts = [...page.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]);
+  assert.equal(scripts.length, 1, "one script element");
+  assert.match(scripts[0], /^<script src="\/app\/shell-[^"]+\.js" integrity="sha256-[A-Za-z0-9+/=]+">$/);
+  assert.ok(page.includes(`integrity="${interfaceScriptHash(SCREENS)}"`), "integrity is the hash of the shell's script");
 });
 
 test("R9 R11 each screen is served at its address with no session record: no Authorization header, no whoami, no rail, tabs or dock", async () => {

@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6983,
+  "screen": 7132,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1107,
+  "act": 1165,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,8 +231,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18163,
-  "protected": 1069
+  "total": 18370,
+  "protected": 1108
  },
  "words": [
   {
@@ -75699,6 +75699,1035 @@
    "note": "DEC-403: B458 1: the button giving a login ahead of any refused request (capturecredentialsupply, no request to retry)"
   },
   {
+   "key": "screen.registers.title",
+   "en": "Public registers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: h1"
+  },
+  {
+   "key": "screen.registers.crumb",
+   "en": "Public registers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: crumb"
+  },
+  {
+   "key": "screen.registers.intro",
+   "en": "Registers that public offices keep, which your team brings in whole or in part, reads ahead, searches, cites and watches. None of it needs the assistant.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: subtitle"
+  },
+  {
+   "key": "screen.registers.way.watching",
+   "en": "The public registers your team brings in and watches.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: row on the watching screen"
+  },
+  {
+   "key": "screen.registers.way.add",
+   "en": "Public registers your team brings in and watches.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: row on the Add surface"
+  },
+  {
+   "key": "screen.registers.way.link",
+   "en": "See public registers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: link text"
+  },
+  {
+   "key": "screen.registers.way.tip",
+   "en": "Public registers · registers that public offices keep, brought in whole, searched, cited and watched by a number.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: hover card of the link"
+  },
+  {
+   "key": "screen.registers.held.head",
+   "en": "Registers your team holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.held.row",
+   "en": "From {source} · brought in {date} · {rows} rows · next check {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: a register line under its name"
+  },
+  {
+   "key": "screen.registers.held.list",
+   "en": "List the registers your team holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registerlist)"
+  },
+  {
+   "key": "screen.registers.held.none.head",
+   "en": "When your team holds none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: fold"
+  },
+  {
+   "key": "screen.registers.held.none",
+   "en": "Your team holds no register yet. Bring one in below.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: the empty list"
+  },
+  {
+   "key": "screen.registers.import.head",
+   "en": "Bring in a register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.import.about",
+   "en": "Your team's Civicsmith keeps the whole register as a capture, with its source and the date. It reads the register in the background, and the team is told in the queue when it is ready.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: what an import does"
+  },
+  {
+   "key": "screen.registers.import.which",
+   "en": "Which register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.import.which.netfile",
+   "en": "Oakland campaign finance (NetFile)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.calaccess",
+   "en": "California campaign finance (CAL-ACCESS)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.fec",
+   "en": "Federal campaign finance (FEC)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.form700",
+   "en": "Economic interest filings (Form 700)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.lobbyists",
+   "en": "Oakland lobbyist directory",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.licenses",
+   "en": "State license files",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.go",
+   "en": "Bring in this register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registerimport)"
+  },
+  {
+   "key": "screen.registers.search.head",
+   "en": "Search the registers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.search.who",
+   "en": "Person or organization",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.min",
+   "en": "Smallest amount",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.max",
+   "en": "Largest amount",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.from",
+   "en": "From this date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.to",
+   "en": "Up to this date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.in",
+   "en": "In which register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.in.all",
+   "en": "Every register your team holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.search.go",
+   "en": "Search",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registersearch)"
+  },
+  {
+   "key": "screen.registers.search.row",
+   "en": "{register} · row {row} · brought in {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: a result line under the name"
+  },
+  {
+   "key": "screen.registers.search.cite",
+   "en": "Cite this row",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registerrowcite)"
+  },
+  {
+   "key": "screen.registers.search.cite.note",
+   "en": "A cited row travels as a labeled extract of the file it came from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.watch.head",
+   "en": "Watched filers, licenses and dockets",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.watch.row.quiet",
+   "en": "{register} · watched since {date} · no change yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: a watch line when nothing has changed"
+  },
+  {
+   "key": "screen.registers.watch.stop",
+   "en": "Stop watching",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registerwatchstop)"
+  },
+  {
+   "key": "screen.registers.watch.none.head",
+   "en": "When your team watches none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: fold"
+  },
+  {
+   "key": "screen.registers.watch.none",
+   "en": "Your team watches no filer, license or docket yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: the empty list"
+  },
+  {
+   "key": "screen.registers.watch.in",
+   "en": "In which register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.watch.in.court",
+   "en": "Federal court dockets (CourtListener)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.watch.number",
+   "en": "Filer number, license number or docket number",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.watch.go",
+   "en": "Watch it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registerwatch)"
+  },
+  {
+   "key": "screen.registers.watch.told",
+   "en": "Each change to a watch is one item in your queue, with how many changes there have been since you last looked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.alerts.head",
+   "en": "Alerts from outside services",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.alerts.courtlistener",
+   "en": "CourtListener sends an alert when a federal court docket changes. It needs your team's own key, and a few alerts are free.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.alerts.key",
+   "en": "Your team's CourtListener key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.alerts.key.help",
+   "en": "It is sealed when you give it and never shown again, to you or to anyone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: help"
+  },
+  {
+   "key": "screen.registers.alerts.connect",
+   "en": "Connect CourtListener",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (alertconnect)"
+  },
+  {
+   "key": "screen.registers.alerts.county",
+   "en": "A county court such as Alameda's cannot be watched automatically. It is re-checked when a member asks.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.ask.head",
+   "en": "Ask across the registers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.ask.title",
+   "en": "Ask in plain words, and have matches and watches proposed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: the paused part"
+  },
+  {
+   "key": "screen.registers.ask.later",
+   "en": "Comes after the alpha",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: the paused part"
+  },
+  {
+   "key": "screen.registers.ask.field",
+   "en": "Ask in plain words",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: field (paused)"
+  },
+  {
+   "key": "screen.registers.ask.go",
+   "en": "Ask across the registers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registerask, paused)"
+  },
+  {
+   "key": "screen.registers.ask.match",
+   "en": "Propose matches to your team's subjects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registermatch, paused)"
+  },
+  {
+   "key": "screen.registers.ask.propose",
+   "en": "Propose watches",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: button (registerwatchpropose, paused)"
+  },
+  {
+   "key": "screen.registers.ask.note",
+   "en": "This needs the assistant, which comes after the alpha, once your team can use more than one AI provider and it has been tested.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.never.head",
+   "en": "What these registers never do",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.never.watch",
+   "en": "A watch is always of a named filer, license or docket, never a search for a person.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: guardrail"
+  },
+  {
+   "key": "screen.registers.never.keep",
+   "en": "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: guardrail"
+  },
+  {
+   "key": "screen.registers.never.fec",
+   "en": "The Federal Election Commission's donor data may not be used to ask donors for money or for commercial purposes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-407: guardrail"
+  },
+  {
+   "key": "screen.follow.label",
+   "en": "Follow from here",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the one control on every person, organization, payment, donation, event and document; opens a menu"
+  },
+  {
+   "key": "screen.follow.tip",
+   "en": "Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the control's explanation"
+  },
+  {
+   "key": "screen.follow.who.money",
+   "en": "Money given or received",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.who.offices",
+   "en": "Organizations and offices held",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.who.events",
+   "en": "Events taken part in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.who.docs",
+   "en": "Documents that name them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (search)"
+  },
+  {
+   "key": "screen.follow.who.rows",
+   "en": "Register rows that name them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (registersearch)"
+  },
+  {
+   "key": "screen.follow.money.who",
+   "en": "Who paid and who received it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.money.more",
+   "en": "Other payments from the same source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.money.events",
+   "en": "Events it is tied to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.money.docs",
+   "en": "Documents that state it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (search)"
+  },
+  {
+   "key": "screen.follow.rows.match",
+   "en": "Register rows that match it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment, donation or document (registersearch)"
+  },
+  {
+   "key": "screen.follow.event.who",
+   "en": "Who took part",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.event.money",
+   "en": "Money that moved around it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.event.docs",
+   "en": "Documents that date it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (search)"
+  },
+  {
+   "key": "screen.follow.event.rows",
+   "en": "Register rows from that time",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (registersearch)"
+  },
+  {
+   "key": "screen.follow.document.who",
+   "en": "People and organizations it names",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a document (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.document.money",
+   "en": "Money it states",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a document (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.document.events",
+   "en": "Events it dates",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a document (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.conn",
+   "en": "Connections to…",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on every kind (explore, with this as the start)"
+  },
+  {
+   "key": "screen.explore.direct.head",
+   "en": "Most direct path",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.direct.how.fewest",
+   "en": "The most direct path has the fewest steps.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: how it was chosen, in plain words"
+  },
+  {
+   "key": "screen.explore.direct.how.tie",
+   "en": "If two are equally short, the one whose weakest step is strongest comes first, then the earlier date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: how it was chosen, in plain words"
+  },
+  {
+   "key": "screen.explore.direct.how.fact",
+   "en": "This is a fact about the chains, not a judgment of them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: how it was chosen, in plain words"
+  },
+  {
+   "key": "screen.explore.direct.tip.what",
+   "en": "The shortest chain between the two ends, shown first and labeled.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.direct.tip.how",
+   "en": "How it was chosen is stated in plain words, so anyone can check it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.direct.label",
+   "en": "most direct",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: label on the first chain"
+  },
+  {
+   "key": "screen.explore.direct.button",
+   "en": "Find the most direct path",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:explorepath)"
+  },
+  {
+   "key": "screen.explore.all.head",
+   "en": "Every connection between them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.all.count",
+   "en": "{count} chains found within {depth} steps, fewest steps first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: under the heading; {count} chains, {depth} the search's bound"
+  },
+  {
+   "key": "screen.explore.all.first",
+   "en": "The most direct is the first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: under the heading"
+  },
+  {
+   "key": "screen.explore.all.hub",
+   "en": "a hub: shown, not walked through",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: a chain with a hop through a hub"
+  },
+  {
+   "key": "screen.explore.all.hubstep",
+   "en": "too common to walk",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: a hop through a place linked to too many things to walk"
+  },
+  {
+   "key": "screen.explore.all.tip.what",
+   "en": "Every chain the search found between the two ends, not only the first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.all.tip.marks",
+   "en": "Each shows its steps, its weakest step and its dates; a step through a place too common to walk, or one declared with no source, is marked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.all.stops",
+   "en": "Chains that stop at a name the record lacks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.all.button",
+   "en": "List every connection",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:exploreall)"
+  },
+  {
+   "key": "screen.explore.shorter.head",
+   "en": "A chain you built",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.shorter.built",
+   "en": "built by you, step by step",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: under a chain a member built"
+  },
+  {
+   "key": "screen.explore.shorter.see",
+   "en": "See the shorter paths",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:exploreshorter)"
+  },
+  {
+   "key": "screen.explore.shorter.keep",
+   "en": "Keep mine",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:exploreshorter)"
+  },
+  {
+   "key": "screen.explore.shorter.tip.what",
+   "en": "Where you built a chain step by step, paths with fewer steps between its two ends are shown beside it: evidenced paths first, then leads.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.shorter.tip.yours",
+   "en": "Yours is never changed or replaced; you choose.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.later.walks",
+   "en": "Combined walks, such as who gave to the official whose department paid this vendor",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the paused part"
+  },
+  {
+   "key": "screen.explore.later.assist",
+   "en": "Ask the assistant to research this",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the paused part"
+  },
+  {
+   "key": "screen.explore.later.when",
+   "en": "Comes in the first beta",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the paused parts"
+  },
+  {
+   "key": "screen.registers.held.filter",
+   "en": "Kept with it, and what watching looks for: {filter}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a held register line: the filter it was brought in with"
+  },
+  {
+   "key": "screen.registers.held.row.preread",
+   "en": "From {source} · read ahead for the team {date} · {rows} rows · no project has asked yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a register line for a team pre-read"
+  },
+  {
+   "key": "screen.registers.held.whole",
+   "en": "Read in whole: watching looks for any change",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a held register line: no filter"
+  },
+  {
+   "key": "screen.registers.known.head",
+   "en": "Registers we know",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: section"
+  },
+  {
+   "key": "screen.registers.known.about",
+   "en": "Each is listed with where it comes from and how big it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.known.row",
+   "en": "From {source} · {url} · {bytes} bytes · {rows} rows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a known register line under its name"
+  },
+  {
+   "key": "screen.registers.known.officers.tag",
+   "en": "Not in the alpha",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: tag on company officers"
+  },
+  {
+   "key": "screen.registers.known.officers.note",
+   "en": "Bringing in company officers in bulk comes in the beta.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: line under company officers; no import control"
+  },
+  {
+   "key": "screen.registers.known.door.head",
+   "en": "A register we know that is not listed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: fold"
+  },
+  {
+   "key": "screen.registers.known.door.note",
+   "en": "Give its name, its address and who publishes it. It is proposed for the list, and nothing is brought in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.known.door.name",
+   "en": "Name of the register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field"
+  },
+  {
+   "key": "screen.registers.known.door.url",
+   "en": "Its address (URL)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field"
+  },
+  {
+   "key": "screen.registers.known.door.source",
+   "en": "Who publishes it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field"
+  },
+  {
+   "key": "screen.registers.known.door.go",
+   "en": "Propose this register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (registerpropose)"
+  },
+  {
+   "key": "screen.registers.import.mech",
+   "en": "Importing runs by fixed steps and never uses the assistant.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.import.part.head",
+   "en": "Whole or in part",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: heading over the filter"
+  },
+  {
+   "key": "screen.registers.import.part.empty",
+   "en": "Leave every box empty to bring in the whole register.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.import.part.prefill",
+   "en": "Filled in from the project {name}; change it as you like.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note when a project is open"
+  },
+  {
+   "key": "screen.registers.import.part.names",
+   "en": "Names or organizations",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field (registerfilter)"
+  },
+  {
+   "key": "screen.registers.import.part.ids",
+   "en": "Filer numbers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field (registerfilter)"
+  },
+  {
+   "key": "screen.registers.import.delta.go",
+   "en": "Work out what it would add",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (registerdelta)"
+  },
+  {
+   "key": "screen.registers.import.delta.row",
+   "en": "Compared with what your record holds: {rows} new rows, {bytes} bytes, about {time} to read in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: the delta before importing"
+  },
+  {
+   "key": "screen.registers.import.kept",
+   "en": "The filter is kept with the import and shown as what watching looks for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.import.dropped",
+   "en": "Phone and address columns are left out as it arrives.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note (DEC-408)"
+  },
+  {
+   "key": "screen.registers.import.preread",
+   "en": "Read it ahead, for the team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (registerpreread)"
+  },
+  {
+   "key": "screen.registers.import.preread.note",
+   "en": "Reading it ahead keeps the register, whole or in the part you chose, as a resource for the team before any project asks.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.search.cite.extract",
+   "en": "Cited as an extract of {file}, fingerprint {fingerprint}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: what a cited row shows"
+  },
+  {
+   "key": "screen.registers.search.fec.notice",
+   "en": "Under 11 CFR 104.15, the names and addresses of contributors may not be sold or used to ask for contributions or for commercial purposes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: notice on FEC rows"
+  },
+  {
+   "key": "screen.registers.search.fec.noexport",
+   "en": "Rows from this register cannot be exported as a donor list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: notice on FEC rows"
+  },
+  {
+   "key": "screen.registers.watch.auto",
+   "en": "A watch starts by itself only for what a project has said it is interested in, and it is shown with that project and its interest.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.watch.row.project",
+   "en": "{register} · watched for the project {project}, which has an interest in {interest}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a watch line started for a project"
+  },
+  {
+   "key": "screen.registers.watch.changes",
+   "en": "{count} changes since you last looked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: count on a watch"
+  },
+  {
+   "key": "screen.explore.all.cut",
+   "en": "The explorer stopped after 2 seconds and shows what it found. More may exist.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: when the search was stopped at 2 seconds; never implies completeness"
+  },
+  {
+   "key": "screen.explore.all.continue",
+   "en": "Keep looking",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (owed:explorecontinue)"
+  },
+  {
+   "key": "screen.explore.shorter.note",
+   "en": "Paths with fewer steps join the same two ends.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: beside a member's chain; never says the chain is wrong"
+  },
+  {
+   "key": "screen.explore.shorter.best",
+   "en": "The best has {short} steps, against your {mine}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: beside a member's chain"
+  },
+  {
+   "key": "screen.explore.shorter.evidenced",
+   "en": "Evidenced paths",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: sub-heading, first"
+  },
+  {
+   "key": "screen.explore.shorter.leads",
+   "en": "Leads",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: sub-heading, after the evidenced paths"
+  },
+  {
+   "key": "screen.explore.shorter.lead",
+   "en": "a lead, not evidence",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: label on each lead"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -114776,6 +115805,18 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.registers.name",
+   "en": "Public registers",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.registers.purpose",
+   "en": "The public registers your team holds: bring one in whole, search it and cite a row, watch a filer, license or docket by its number, and connect outside alerts.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "act.bootstrap.label.install",
    "en": "Continue to Cloudflare",
    "protected": true,
@@ -115898,6 +116939,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.finder",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.finder",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.finder",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.acquire.label.capture",
    "en": "Capture from an address",
    "protected": true,
@@ -116236,6 +117295,18 @@
   {
    "key": "act.thread.label.document",
    "en": "Thread it to a step",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_followfrom.label.document",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.document",
+   "en": "Search the registers",
    "protected": true,
    "source": "registry.json"
   },
@@ -116864,6 +117935,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.people",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.people",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.explore.label.person",
    "en": "Explore connections",
    "protected": true,
@@ -117026,6 +118109,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.timeline",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.timeline",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.timeline",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.timeline",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.recordfact.label.money",
    "en": "Read a figure into a money fact",
    "protected": true,
@@ -117110,6 +118217,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.money",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.money",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.money",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.money",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.calculationcreate.label.calculation",
    "en": "Work it out",
    "protected": true,
@@ -117190,6 +118321,48 @@
   {
    "key": "act.promote.label.explore",
    "en": "Open a question from this chain",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_explorecontinue.label.explore",
+   "en": "Keep looking",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_followfrom.label.explore",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.explore",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.explore",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_exploreall.label.explore",
+   "en": "List every connection between two ends",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_explorepath.label.explore",
+   "en": "Find the most direct path",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_exploreshorter.label.explore",
+   "en": "See a shorter path, or keep your own chain",
    "protected": true,
    "source": "registry.json"
   },
@@ -118156,6 +119329,108 @@
   {
    "key": "act.writinghelp.label.watching",
    "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerimport.label.registers",
+   "en": "Bring in a register",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerlist.label.registers",
+   "en": "List the registers the team holds",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.registers",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerrowcite.label.registers",
+   "en": "Cite a row as evidence",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerwatch.label.registers",
+   "en": "Watch a filer, license or docket by its number",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerwatchstop.label.registers",
+   "en": "Stop watching",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_alertconnect.label.registers",
+   "en": "Connect an outside alert service",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerask.label.registers",
+   "en": "Ask across the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registermatch.label.registers",
+   "en": "Propose matches to the team's subjects",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerwatchpropose.label.registers",
+   "en": "Propose watches",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerfilter.label.registers",
+   "en": "Choose which rows of a register to bring in",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerdelta.label.registers",
+   "en": "See what an import would add",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerpreread.label.registers",
+   "en": "Read a register ahead, for the team",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerpropose.label.registers",
+   "en": "Propose a register that is not listed",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_followfrom.label.registers",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.registers",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.registers",
+   "en": "Explore connections",
    "protected": true,
    "source": "registry.json"
   },
@@ -119178,6 +120453,120 @@
   {
    "key": "act.owed_namedrequests.does",
    "en": "Lists the requests to gather something on a schedule that you may see, with where each is looked for, when it was last tried and when it is next due.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_followfrom.does",
+   "en": "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_exploreall.does",
+   "en": "Lists every connection found between the two ends within the search's limits, each with its steps, its weakest step and its dates. It says when the search was cut short, and never that the list is complete.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_explorepath.does",
+   "en": "Shows the most direct chain between the two ends first: the fewest steps, then the strongest weakest step, then the date. It is a fact about the chains, not a judgment.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_exploreshorter.does",
+   "en": "Puts paths with fewer steps between the same two ends beside the one you built, evidenced paths first and then leads, so you can see them or keep your own. Your chain is never changed.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerimport.does",
+   "en": "Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerlist.does",
+   "en": "Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registersearch.does",
+   "en": "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerrowcite.does",
+   "en": "Cites one row of a register as evidence, with the register, its source and the date it was brought in.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerwatch.does",
+   "en": "Watches one named filer, license or docket by its number, and tells your team once in the queue when it changes. It never watches a person.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerfilter.does",
+   "en": "Chooses which rows of a register to bring in, by names, organizations, amounts, dates or filer numbers. It starts from what the project you are in is interested in, and you can change it. Leave it empty to bring in the whole register.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerdelta.does",
+   "en": "Shows what bringing in would add to your record before anything is brought in: the new rows, the bytes, and about how long it takes. It changes nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerpreread.does",
+   "en": "Reads a register ahead for the team, whole or in the part you chose, as a resource before any project asks. It runs by fixed steps and never uses the assistant.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerpropose.does",
+   "en": "Proposes a register we know that is not in the list, by its name, its address and who publishes it. Nothing is brought in.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_explorecontinue.does",
+   "en": "Keeps looking for connections after the explorer stopped at 2 seconds, and adds what it finds to what is shown. It never says the list is complete.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerwatchstop.does",
+   "en": "Stops watching one filer, license or docket. What was brought in stays in the record.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_alertconnect.does",
+   "en": "Connects an outside service that sends an alert when a watched item changes, with your team's own key for it. The key is sealed and never shown again.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerask.does",
+   "en": "Answers a question asked in plain words across the registers your team holds. It comes after the alpha, with the assistant.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registermatch.does",
+   "en": "Proposes matches between names in a register and your team's subjects, for a member to accept or reject. It comes after the alpha, with the assistant.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerwatchpropose.does",
+   "en": "Proposes filers, licenses or dockets worth watching, for a member to accept or decline. It comes after the alpha, with the assistant.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

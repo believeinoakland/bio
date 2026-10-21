@@ -10,8 +10,6 @@ function heldReads(view) {
   return { held: { op: "heldcaptures", query: { limit: 50, ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
            aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside", ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
-           /* R40 (membership R17, R147): the handles an upload's uploader is named by; the stamp names a member by id */
-           members: { op: "memberlist" },
            /* B6: a row names its project by the project's name, never by its record id */
            projects: { op: "projectlist" } };
 }
@@ -68,16 +66,16 @@ function renderHeld(cs, view) {
   const projectOf = (r) => {
     const p = r.project ? projectRows.find((x) => x && x.id === r.project) : null;
     if (!p || !p.name) return r.project ? "" : cs.w("screen.held.noproject");
-    return cs.w("screen.held.project", { project: filtered ? p.name : { html: `<a href="/app/held/${encodeURIComponent(r.project)}" data-nav>${cs.esc(p.name)}</a>` } });
+    /* C81: the link is a flex item of its own box, so the shell's phone rule gives it a 44 px target (an inline link has no height of its own) */
+    return cs.w("screen.held.project", { project: filtered ? p.name : { html: `<span style="display:inline-flex;align-items:center;max-width:100%"><a class="cs-ref" href="/app/held/${encodeURIComponent(r.project)}" data-nav>${cs.esc(p.name)}</a></span>` } });
   };
-  const roster = view.data.members && view.data.members.state === "ok" && view.data.members.value && Array.isArray(view.data.members.value.members)
-    ? view.data.members.value.members : [];
   const source = (r) => {
     const s = r.source;
     if (!s || !s.address) return "";
     if (!(s.via === "upload" || /^upload:/.test(String(s.address)))) return ` · ${cs.w("screen.held.from", { address: s.address })}`;
+    /* C94 (interface-shell R111): the uploader is named by the shell's name for her id (her handle; a fallback word where none is known), never the id */
     const id = typeof r.actor === "string" ? r.actor.replace(/^member:/, "") : "";
-    const handle = id ? ((roster.find((m) => m && m.member_id === id) || {}).handle || "") : "";
+    const handle = id ? cs.memberName(id) : "";
     const n = Number.isFinite(r.bytes) ? r.bytes : null;
     const size = n === null ? "" : n < 1024 ? cs.w("size.small") : n >= 1048576 ? cs.w("size.mb", { n: (n / 1048576).toFixed(1) }) : cs.w("size.kb", { n: String(Math.round(n / 1024)) });
     const by = handle && r.retrieved ? cs.w("document.uploaded.by", { member: handle, date: { html: cs.date(r.retrieved) } }) : "";
@@ -93,8 +91,17 @@ function renderHeld(cs, view) {
     const basis = { CAPTURE_RECEIVED_NOT_FETCHED: "screen.held.grade.received", CAPTURE_AXIS_AUTHORED: "screen.held.grade.testimony" }[g.basis];
     return `<span class="meta">${basis ? cs.w(basis) : cs.w("state.undetermined", { reason: cs.w("screen.held.grade.ungraded") })}</span>`;
   };
+  /* R4 (C23; capture R77, R100): a document filed in the project from another project (`also_here`) is marked, and said to be held under its
+     home (`screen.capture.address.filedhere`, a stand-in key until the design writes the row; before it the row's project, which is the home) */
+  const alsoHere = (r) => {
+    if (!r.also_here || typeof r.also_here !== "object") return "";
+    const id = typeof r.also_here.home === "string" ? r.also_here.home : "";
+    const home = id ? (projectRows.find((x) => x && x.id === id) || {}).name || "" : "";
+    return `<span class="meta" data-also-here="1">${home && cs.w("screen.capture.address.filedhere") !== "screen.capture.address.filedhere" ? cs.w("screen.capture.address.filedhere", { project: home }) : ""}</span>`;
+  };
   const thumb = (r) => r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256
-    ? `<span class="mk-thumb">${cs.ref("capture", r.capture.sha256, cs.w("screen.held.thumb").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
+    /* C23, C81: "Open the file" keeps its words on one line and is a 44 px target at every width (the box is as wide as its words need) */
+    ? `<span class="mk-thumb" style="display:flex;align-items:center;justify-content:center;width:auto;min-width:64px;height:auto;min-height:48px;padding:0 8px;box-sizing:border-box">${cs.ref("capture", r.capture.sha256, cs.w("screen.held.thumb").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
   const list = cs.state(view.data.held, (v) => cs.rows({
     id: "held",
     cols: ["screen.held.col"],
@@ -111,7 +118,7 @@ function renderHeld(cs, view) {
       /* C23: the one word for the state a held capture is in, the Find chip's (`state.item.review.name`) */
       + `<span class="meta">${cs.w("state.item.review.name")} · ${grade(r)} ${[age(r.age_days), projectOf(r)].filter(Boolean).join(" · ")}`
       + source(r) + "</span>"
-      + eligibility(r) + asked(r) + files(r)],
+      + alsoHere(r) + eligibility(r) + asked(r) + files(r)],
   }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
     ,
   { empty: "screen.held.empty" });
@@ -141,7 +148,7 @@ function renderHeld(cs, view) {
   const A = view.data.aside, W = Array.isArray(U.waiting) && U.waiting.length;
   const aside = W || (A && (A.state === "failed" || (A.state === "ok" && Array.isArray(A.value.held) && A.value.held.length))) ? asideSec : "";
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
-    + (filtered ? `<p class="mk-small"><a href="/app/held" data-nav>${cs.w("screen.held.name")}</a></p>` : "")
+    + (filtered ? `<p class="mk-small"><span style="display:inline-flex;align-items:center;max-width:100%"><a class="cs-ref" href="/app/held" data-nav>${cs.w("screen.held.name")}</a></span></p>` : "")
     + `<div class="mk-acts">${cs.act("heldcaptures")}</div>`
     + list
     + (U.released ? said("screen.held.released", { count: U.released }) : "")
@@ -245,7 +252,7 @@ export const HELD_SCREEN = Object.freeze({
   acts: Object.freeze([
     Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh, rereads: Object.freeze(["held"]) }),
     Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, rereads: Object.freeze(["held"]), reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
-    Object.freeze({ op: "heldsetaside", label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
-    Object.freeze({ op: "heldrestore", label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),
+    Object.freeze({ op: "heldsetaside", rereads: Object.freeze(["held", "aside"]), label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
+    Object.freeze({ op: "heldrestore", rereads: Object.freeze(["held", "aside"]), label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),
   ]),
 });

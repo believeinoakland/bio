@@ -215,6 +215,36 @@ export function finderStates() {
     const STATES = ["LOOKED_FOUND", "LOOKED_ABSENT", "LOOKED_INDETERMINATE"];
     let everywhere = true;
     let answered = 0;
+    const ui = view.ui || {};
+    const textOf = function (html) { return String(html).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
+    // A place's own words: not a digest, and not the id of the document it lies in.
+    const ownName = function (x) {
+      const named = x && typeof x === "object" ? (x.title || x.name || x.label || x.referent || x.detail || x.subject || "") : String(x);
+      const label = String(named).trim();
+      return label && !/^[0-9a-f]{12,}$/i.test(label) && label !== String(x && x.bundle_id || "") ? label : "";
+    };
+    // The places that name nothing themselves but lie in a document: their documents' titles, asked for once for all the levels
+    // (`search` over `id:` terms), kept in the page's memory under the ids asked, drawn on arrival.
+    const wanted = [];
+    LEVELS.forEach(function (level) {
+      const r = view.data["frontier_" + level];
+      const v = r && r.state === "ok" && r.value && typeof r.value === "object" ? r.value : null;
+      (v && Array.isArray(v.never_looked) ? v.never_looked : []).forEach(function (x) {
+        const id = x && typeof x === "object" && x.bundle_id ? String(x.bundle_id) : "";
+        if (id && !ownName(x) && wanted.indexOf(id) < 0) wanted.push(id);
+      });
+    });
+    const key = wanted.slice().sort().join(" ");
+    if (wanted.length && (!ui.placeTitles || ui.placeTitles.key !== key)) {
+      ui.placeTitles = { key: key, map: {} };
+      cs.call("search", { query: { q: wanted.map(function (id) { return "id:" + id; }).join(" OR "), limit: String(wanted.length) } }).then(function (a) {
+        const b = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+        const map = {};
+        (b && b.ok !== false && Array.isArray(b.hits) ? b.hits : []).forEach(function (h) { if (h && h.bundle_id && h.title) map[String(h.bundle_id)] = String(h.title); });
+        cs.set("placeTitles", { key: key, map: map });
+      }, function () { cs.set("placeTitles", { key: key, map: {} }); });
+    }
+    const titleOf = function (id) { return ui.placeTitles && ui.placeTitles.key === key && ui.placeTitles.map[id] ? ui.placeTitles.map[id] : ""; };
     const rows = LEVELS.map(function (level) {
       const r = view.data["frontier_" + level];
       if (!r || r.state === "loading") { everywhere = false; return ""; }
@@ -230,13 +260,14 @@ export function finderStates() {
       const n = typeof v.never_looked_count === "number" ? v.never_looked_count : (Array.isArray(v.never_looked) ? v.never_looked.length : 0);
       if (n > 0) {
         everywhere = false;
-        // C22: each place by its name: its title, name or label, else (document level: an address; internet level: a lead's words) its
-        // `subject`; a place with no name, or only a digest or an id, draws no item, and a level with none draws no list.
-        const items = (Array.isArray(v.never_looked) ? v.never_looked : []).slice(0, 20).map(function (x) {
-          const named = x && typeof x === "object" ? (x.title || x.name || x.label || x.referent || x.detail || (level === "document" || level === "internet" ? x.subject : "") || "") : String(x);
-          const label = String(named).trim();
-          return label && !/^[0-9a-f]{12,}$/i.test(label) ? "<li>" + cs.esc(label) + "</li>" : "";
-        }).filter(Boolean).join("");
+        // C22: every place the level counts is named, never left out and never by a digest or an id: by its own words (its title, name, label,
+        // referent or detail, else its subject when that reads as words), else by its document's title (`titleOf`, read once for all the
+        // levels), else by the plain word for a document.
+        const items = (Array.isArray(v.never_looked) ? v.never_looked : []).map(function (x) {
+          const label = ownName(x);
+          const id = x && typeof x === "object" && x.bundle_id ? String(x.bundle_id) : "";
+          return "<li>" + cs.esc(label || (id && titleOf(id)) || textOf(cs.w("shell.card.document"))) + "</li>";
+        }).join("");
         return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</span>"
           + (items ? '<ul class="mk-list">' + items + "</ul>" : ""), "", "");
       }

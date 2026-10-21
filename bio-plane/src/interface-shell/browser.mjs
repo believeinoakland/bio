@@ -85,7 +85,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (REAUTH) { const r = REAUTH; REAUTH = null; r.resolve(false); }
     if (DIALOG) { const d = DIALOG; DIALOG = null; if (d.resolve) d.resolve(d.kind === "register" ? null : false); }
     OVERLAY_REFUSAL = "";
-    S = null; ME = null; LOCKED = false; stopIdle(); stopVersion();
+    S = null; ME = null; LOCKED = false; BAND = 0; stopIdle(); stopVersion();
     clearRecord(why);
     ENTRY = { state: why, handle };
     route();
@@ -243,12 +243,30 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      device was shown (public information, kept under `cs-group` like the other device conveniences), else nothing */
   const GROUP_KEY = "cs-group";
   let GROUP_KNOWN = false, LAST_GROUP = (() => { const v = local.get(GROUP_KEY); return typeof v === "string" && v.trim() ? v : null; })();
+  /* R96 (fix round 3, C70): the count a screen reports with `cs.band(n)` (the vouch rows it counts), added to the queue's for the number the
+     masthead and the rail draw; page memory only */
+  let BAND = 0;
   let GROUP = null, TODO = null, QUEUE_COUNTS = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, KEEP_LATER = false, BOOT = null, BOOT_READ = false;
   const screenOf = (id) => SCREENS.find((s) => s.id === id) || null;
   /* R111 (fix round 2, C94): the members as `memberlist` names them, id to handle, so a screen names a member by handle and never by
      id; read when a screen first asks for a name not held, then at most every two minutes (a background read, R33) */
   const MEMBERS = new Map();
   let MEMBERS_AT = 0;
+  /* the handle a member id (or a stamp, `{member_id|member|id|by|handle}`) names, else null; the roster is read only when a screen first
+     needs a name it does not hold (a screen that names no member sends no read), and again after two minutes; the screen redraws
+     when it answers */
+  function knownHandle(id) {
+    const raw = id && typeof id === "object" ? (id.member_id ?? id.member ?? id.id ?? id.by ?? id.handle) : id;
+    const key = String(raw == null ? "" : raw).trim();
+    if (key) {
+      if (MEMBERS.has(key)) return MEMBERS.get(key);
+      if (ME && key === ME.member && typeof ME.handle === "string" && ME.handle) return ME.handle;
+      for (const h of MEMBERS.values()) if (h === key) return h;
+      if (ME && key === ME.handle) return key;
+    }
+    if (ME && Date.now() - MEMBERS_AT > 120000) loadMembers();
+    return null;
+  }
   const noteMember = (id, handle) => { if (typeof id === "string" && id && typeof handle === "string" && handle.trim()) MEMBERS.set(id, handle.trim()); };
   async function loadMembers() {
     MEMBERS_AT = Date.now();
@@ -320,27 +338,36 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const subjectless = (inst, specs) => (inst.subject === null || inst.subject === undefined || inst.subject === "") && Object.values(specs).some((x) => x && x.subject);
   /* R90 (K4072): a choice or checks that redraws re-runs the screen's `reads` with the new value in page memory: a read whose
      request changed is read once more (with the new query); with none changed the redraw sends nothing */
+  const sigOf = (sp) => JSON.stringify([sp.op, sp.query || null, sp.body || null]);
+  const readsOf = (inst) => { try { return inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { return {}; } };
+  /* R113: the reads whose request differs from the one last sent for them */
+  const changedReads = (inst) => Object.entries(readsOf(inst)).filter(([n, sp]) => inst.sig[n] !== sigOf(sp)).map(([n]) => n);
+  function rereadChanged(inst, more) {
+    const names = [...new Set(changedReads(inst).concat(more || []))];
+    if (names.length && (inst.pub || ME)) return readAll(inst, names);
+    draw();
+  }
   function redrawAfter(inst, name, value) {
     inst.ui[name] = value;
-    let specs = {};
-    try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
-    const changed = Object.entries(specs).filter(([n, sp]) => inst.sig[n] !== undefined && inst.sig[n] !== JSON.stringify([sp.op, sp.query || null, sp.body || null])).map(([n]) => n);
-    if (changed.length && (inst.pub || ME)) readAll(inst, changed); else draw();
+    rereadChanged(inst);
   }
   const live = (inst) => inst === MAIN || inst === DOCKI || inst === GUIDEI;
   async function readAll(inst, names, background) {
     let specs = {};
     try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
     const gen = ++inst.gen;
-    for (const [n, sp] of Object.entries(specs)) inst.sig[n] = JSON.stringify([sp.op, sp.query || null, sp.body || null]);
+    /* R113: a partial re-read must not discard the answers of a full read still in flight: only a newer full read does */
+    if (!names) inst.fullGen = gen;
     if (inst.key === "m" && subjectless(inst, specs)) { inst.unavail = "nothing"; return draw(); }
     const todo = Object.entries(specs).filter(([n]) => !names || names.includes(n));
+    /* R113: a read's request is remembered only when it is read, so a read left alone is compared with the last request it was sent */
+    for (const [n, sp] of todo) inst.sig[n] = sigOf(sp);
     for (const [n] of todo) if (!inst.data[n] || !names) inst.data[n] = { state: "loading", value: null, refusal: null };
     if (!names && !background) inst.unavail = null;
     draw();
     await Promise.all(todo.map(async ([n, spec]) => {
       const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
-      if (gen !== inst.gen && !names) return;
+      if (!names && gen !== inst.fullGen) return;
       inst.data[n] = outcome(spec, a, inst);
       /* R93: a read marked `refresh: true` is re-read every 45 seconds; its answer is stamped for `cs.fresh()` */
       if (spec.refresh === true) { inst.fresh[n] = a.kind === "ok" ? Date.now() : 0; armRefresh(inst, n); }
@@ -428,18 +455,33 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
          handle known, or none, a plain word by key (the founder's own when it is her id), never the id. Text, for a screen to place
          through `cs.w` fills or `cs.esc`. */
       memberName(id) {
+        const h = knownHandle(id);
+        if (h) return h;
         const raw = id && typeof id === "object" ? (id.member_id ?? id.member ?? id.id ?? id.by ?? id.handle) : id;
-        const key = String(raw == null ? "" : raw).trim();
-        if (key) {
-          if (MEMBERS.has(key)) return MEMBERS.get(key);
-          if (ME && key === ME.member && typeof ME.handle === "string" && ME.handle) return ME.handle;
-          for (const h of MEMBERS.values()) if (h === key) return h;
-          if (ME && key === ME.handle) return key;
-        }
-        /* the roster is read only when a screen first needs a name it does not hold (a screen that names no member sends no read),
-           and again after two minutes; the screen redraws when it answers */
-        if (ME && Date.now() - MEMBERS_AT > 120000) loadMembers();
-        return textOf(w(key === "admin" ? "member.founder.unnamed" : "shell.card.member"));
+        return textOf(w(String(raw == null ? "" : raw).trim() === "admin" ? "member.founder.unnamed" : "shell.card.member"));
+      },
+      /* R111 (fix round 3, C94): the address of the member an id names, by handle (`/app/members/<handle>`), the founder included; an id
+         with no handle known, the members list, never the id */
+      memberHref(id) {
+        const h = knownHandle(id);
+        return h ? hrefOf("members", h) : hrefOf("members");
+      },
+      /* R96 (fix round 3, C70): the count of the band a screen draws (the vouch rows), added to the queue's in the frame's number */
+      band(n) {
+        const k = Math.max(0, Math.floor(Number(n)) || 0);
+        if (k !== BAND) { BAND = k; Promise.resolve().then(() => draw()); }
+        return "";
+      },
+      /* the kit's load-key-file helper (D3; screens-settings, screens-publish): the text of the file chosen in the input `inputId`, or a
+         refusal in a word by key (none chosen, unreadable, empty); it sends nothing */
+      async keyFile(inputId) {
+        const el = doc.getElementById(String(inputId));
+        const f = el && el.files && el.files[0] ? el.files[0] : null;
+        if (!f) return { ok: false, word: "shell.keyfile.none" };
+        let t;
+        try { t = typeof f.text === "function" ? await f.text() : null; } catch { t = null; }
+        if (typeof t !== "string") return { ok: false, word: "shell.keyfile.unreadable" };
+        return t.trim() ? { ok: true, text: t } : { ok: false, word: "shell.keyfile.empty" };
       },
       can: (op) => can(op, inst),
       level: () => LEVEL,
@@ -818,8 +860,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const four = (readings || []).slice(0, 4);
         if (phone()) {
           const n = four.reduce((a, r) => a + (Number(r.n) || 0), 0);
-          return '<div class="mk-strip" role="region" aria-label="' + w("shell.glance.strip") + '"><a class="cs-ref" href="' + esc(placeHref("queue")) + '" data-nav><b>' + esc(n) + "</b> "
-            + w("shell.glance.strip.sum", { n: "" }).trim() + "</a></div>";
+          /* C81 (fix round 3): the design's stylesheet hides a link directly inside the strip at the phone width and shows the one inside
+             `.mk-strip-sum`, so the chip is drawn there */
+          return '<div class="mk-strip" role="region" aria-label="' + w("shell.glance.strip") + '"><span class="mk-strip-sum"><a class="cs-ref" href="' + esc(placeHref("queue")) + '" data-nav><b>' + esc(n) + "</b> "
+            + w("shell.glance.strip.sum", { n: "" }).trim() + "</a></span></div>";
         }
         /* R90: a reading's `says` (a word key or `{text}`) closes that reading's own explanation, after its label in bold */
         return '<div class="mk-strip" role="region" aria-label="' + w("shell.glance.strip") + '">' + four.map((r) =>
@@ -1173,13 +1217,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R82 (DEC-273): the team's name opens who the team is, and says so; the To do count says what waits, with every fill
        answered or no sentence */
     const groupHref = screenOf("group-identity") ? hrefOf("group-identity") : "/app";
-    const waiting = QUEUE_COUNTS ? w("shell.queue.waiting", { n: String(QUEUE_COUNTS.todo + QUEUE_COUNTS.noticed + QUEUE_COUNTS.status), todo: String(QUEUE_COUNTS.todo),
+    const waiting = QUEUE_COUNTS ? w("shell.queue.waiting", { n: String(badge()), todo: String(QUEUE_COUNTS.todo),
       noticed: String(QUEUE_COUNTS.noticed), status: String(QUEUE_COUNTS.status) }) + '<span class="more">' + w("shell.queue.open") + "</span>" : "";
     return '<header class="cs-mast">' + mark + (haveName ? '<a class="mk-grp" href="' + esc(groupHref) + '" data-nav' + tipAttr("<b>" + (shown ? soft(shown) : w("shell.group.unnamed")) + "</b>" + '<span class="more">' + w("shell.group.open") + "</span>", 1) + ">" + name + "</a>" : "") + '<span class="spacer"></span>'
       + '<a class="mk-mastsearch" href="' + placeHref("find") + '" data-nav aria-label="' + w("shell.search") + '"' + named(w("shell.search"), w("shell.search.holds")) + ">" + I("search") + (narrow ? "" : "<span>" + w("shell.search") + "</span>") + "</a>"
       + '<button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-shell="level" aria-label="' + level + '"' + named(level, w("shell.level.holds")) + ">" + I("question") + label(level) + "</button>"
       + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '" aria-label="' + w("shell.assistant") + '"' + named(w("shell.assistant"), w("shell.assistant.holds")) + ">" + I("machine") + label(w("shell.assistant")) + "</button>" : "")
-      + (TODO && !narrow ? '<a class="cs-kind mk-hide-phone" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(waiting, 1) + ">" + I("queue") + w("shell.todo", { n: String(TODO) }) + "</a>" : "")
+      + (badge() && !narrow ? '<a class="cs-kind mk-hide-phone" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(waiting, 1) + ">" + I("queue") + w("shell.todo", { n: String(badge()) }) + "</a>" : "")
       + '<span class="mk-menuwrap"><button type="button" class="mk-avatar" data-shell="menu" aria-haspopup="menu" aria-expanded="' + !!MENU + '" aria-controls="cs-menu"'
       + ' aria-label="' + (handle ? w("shell.you", { handle }) : w("shell.you.holds")) + '"' + named(handle ? w("shell.you", { handle }) : w("shell.you.holds"), w("shell.you.holds")) + ">"
       + (handle ? '<span aria-hidden="true">' + esc(handle.slice(0, 1).toUpperCase()) + "</span>" : I("subject")) + "</button>"
@@ -1211,6 +1255,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     if (band) band.innerHTML = testBandHtml();
   }
+  /* R96, R60: the number the masthead and the rail's Queue place draw: the queue's three kinds and the band a screen reports, drawn only
+     once the queue read has answered and never at zero */
+  const badge = () => (TODO === null ? 0 : TODO + BAND);
   const RAIL = ["home", "queue", "find", "add", "projects", "people", "settings"];
   const TABS = ["home", "queue", "add", "find", "more"];
   const RAIL_ICON = { home: "home", queue: "queue", find: "search", add: "add", projects: "project", people: "subject", settings: "settings", more: "settings" };
@@ -1224,7 +1271,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     const place = placeOf(route.screen);
     const rail = RAIL.map((k) => '<a href="' + placeHref(k) + '" data-nav' + (place === k ? ' aria-current="page"' : "") + tipAttr(w("rail." + k + ".holds"), RAILW < 120 ? 1 : 2) + ">"
-      + I(RAIL_ICON[k]) + w("rail." + k + ".name") + (k === "queue" && TODO ? '<span class="count">' + esc(TODO) + "</span>" : "") + "</a>").join("")
+      + I(RAIL_ICON[k]) + w("rail." + k + ".name") + (k === "queue" && badge() ? '<span class="count">' + esc(badge()) + "</span>" : "") + "</a>").join("")
       + '<button type="button" class="cs-grip" data-shell="grip" role="separator" aria-orientation="vertical" aria-label="' + w("shell.width") + '" aria-valuemin="64" aria-valuemax="320" aria-valuenow="' + RAILW + '"' + tipAttr(w("shell.width.holds"), 2) + "></button>";
     const tabs = TABS.map((k) => '<a href="' + (k === "more" ? "/app/more" : placeHref(k)) + '" data-nav'
       + ((place === k || (k === "more" && ["projects", "people", "settings", "more"].includes(place))) ? ' aria-current="page"' : "")
@@ -1274,8 +1321,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dialog-no">' + w("shell.cancel") + "</button></span></div></div>";
     }
     if (DIALOG && DIALOG.kind === "sign") {
-      const load = DIALOG.needKey ? '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend><span class="cs-field"><label for="cs-key-file">' + w("shell.signer.loadfile")
-        + '</label><textarea id="cs-key-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span><span class="cs-field"><label for="cs-key-filepass">' + w("shell.signer.loadpass")
+      const fileBox = DIALOG.fileGiven ? "" : '<span class="cs-field"><label for="cs-key-file">' + w("shell.signer.loadfile")
+        + '</label><textarea id="cs-key-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span>';
+      const load = DIALOG.needKey ? '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend>' + fileBox + '<span class="cs-field"><label for="cs-key-filepass">' + w("shell.signer.loadpass")
         + '</label><input id="cs-key-filepass" class="cs-input" type="password" autocomplete="off"></span></fieldset>' : "";
       return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-sign-t" data-overlay="sign"><h2 id="cs-sign-t">' + w("shell.signer.exactly") + "</h2><ol>"
         + DIALOG.list.map((s) => "<li><b>" + soft(s.label) + "</b><code>" + soft(s.line) + "</code></li>").join("") + "</ol>" + load + "<p>" + w("signing.ceremony.device") + "</p>"
@@ -1837,19 +1885,23 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     async forget() { SITTING = null; await idb("readwrite", (st) => st.delete("own")); return true; },
     /* R41, R47: "What your key signs, exactly", one confirmation for the whole list; one SSHSIG per statement in list
        order, or `{ok: false, declined: true}` signing nothing. With no key held, the dialog offers "Use a key file you
-       already have", loaded for this sitting only. */
-    async sign(statements) {
+       already have", loaded for this sitting only. R116: `{keyFile}`, the text `cs.keyFile` answered (or its answer), is
+       that key file handed over by the screen: with no key held the dialog then asks only its passphrase; with a key held
+       it is not used. */
+    async sign(statements, o = {}) {
       const list = (Array.isArray(statements) ? statements : []).map((s) => ({ label: String((s && s.label) || ""), bytes: bytesOf(s && s.bytes), namespace: String((s && s.namespace) || "") }));
       if (!list.length || list.some((s) => !s.namespace)) return { ok: false, declined: true };
       let key = await heldKey();
+      const given = o && o.keyFile && typeof o.keyFile === "object" ? o.keyFile.text : o && o.keyFile;
+      const keyFile = typeof given === "string" && given.trim() ? given : "";
       const shown = list.map((s) => ({ label: s.label, line: new TextDecoder().decode(s.bytes) }));
       let refusal = "";
       for (;;) {
-        const yes = await new Promise((resolve) => { DIALOG = { kind: "sign", resolve, list: shown, needKey: !key }; OVERLAY_REFUSAL = refusal; draw(); });
+        const yes = await new Promise((resolve) => { DIALOG = { kind: "sign", resolve, list: shown, needKey: !key, fileGiven: !!keyFile }; OVERLAY_REFUSAL = refusal; draw(); });
         if (!yes) return { ok: false, declined: true };
         if (!key) {
           try {
-            const seed = await unwrapKey(yes.file, yes.pass);
+            const seed = await unwrapKey(keyFile || yes.file, yes.pass);
             key = await seedKeys(seed);
             seed.fill(0);
             SITTING = key;
@@ -1877,7 +1929,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       return d.resolve(pass);
     }
     if (d.needKey) {
-      const file = valueOf("cs-key-file"), pass = valueOf("cs-key-filepass");
+      const file = d.fileGiven ? "given" : valueOf("cs-key-file"), pass = valueOf("cs-key-filepass");
       clear("cs-key-file", "cs-key-filepass");
       if (!file.trim()) { OVERLAY_REFUSAL = refusalHtml(w("shell.signer.nokey")); return draw(); }
       DIALOG = null; OVERLAY_REFUSAL = ""; draw();
@@ -1913,6 +1965,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (st && (st.busy || st.lock)) return;
     activity();
     sound("click");
+    /* R68 (fix round 3, C78): the press closes the explanation, and the redrawn button under the still pointer does not open it again
+       until the pointer has left it */
+    closeTip(); QUIETED = focusKey(btn);
     if (RING && RING.op === d.op) RING = null;
     /* R31, K3143: the guide hears each act pressed on the screen, by its op and screen only, never a value */
     if (inst === MAIN) guideCall("pressed", { op: d.op, screen: MAIN.spec.id });
@@ -2049,11 +2104,22 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
     try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
-    if (live(inst)) readAll(inst, d.spec.rereads || null);
+    if (live(inst)) readAll(inst, repeatSet(inst, d));
+  }
+  /* R113 (C14, P6): the reads an act repeats once it has succeeded: those it lists, those the screen marks as depending on its op (a
+     read's `after`), and those whose request its success changed; every read for an act that says "all", and for one that declares
+     nothing (no list, and no read names its op), as R21 says. Answers the names, or null for all. */
+  function repeatSet(inst, d) {
+    if (d.spec.rereads === "all") return null;
+    const specs = readsOf(inst);
+    const dependants = Object.entries(specs).filter(([, sp]) => Array.isArray(sp.after) && sp.after.includes(d.op)).map(([n]) => n);
+    if (d.spec.rereads == null && !dependants.length) return null;
+    const listed = Array.isArray(d.spec.rereads) ? d.spec.rereads : [];
+    return [...new Set(listed.concat(dependants, changedReads(inst)))];
   }
 
   /* ---------- explanations (R14) ---------- */
-  let TIP = null, openT = null, closeT = null, DOTS_SAID = local.get("cs-dots-said") === "1";
+  let QUIETED = null, TIP = null, openT = null, closeT = null, DOTS_SAID = local.get("cs-dots-said") === "1";
   const tipEl = () => doc.getElementById("cs-tip");
   function openTip(el) {
     clearTimeout(closeT); clearTimeout(openT);
@@ -2176,6 +2242,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       }
       const el = e.target.closest ? e.target.closest("[data-tip]") : null;
       if (!el) return;
+      if (QUIETED && focusKey(el) === QUIETED) return;
       clearTimeout(closeT);
       if (el === TIP) return;
       if (e.pointerType === "touch") return openTip(el);
@@ -2185,6 +2252,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     root.addEventListener("pointerout", (e) => {
       const el = e.target.closest ? e.target.closest("[data-tip]") : null;
       if (!el) return;
+      if (QUIETED && focusKey(el) === QUIETED) QUIETED = null;
       if (el !== TIP) { clearTimeout(openT); return; }
       if (onTipOrEl(e.relatedTarget)) return;
       clearTimeout(closeT);
@@ -2446,9 +2514,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
 
   /* ---------- start ---------- */
   async function loadWords() {
-    /* R5 (fix round 2, C15): asked for by the release version `bootstrap` answered (the release is the version), so the answer can be
-       kept for that release; with none answered the request carries none */
-    const v = BOOT && typeof BOOT.version === "string" && BOOT.version ? BOOT.version : null;
+    /* R5 (fix round 3, C15, P1): asked for by the release version the served page names (`<meta name="cs-version">`, put in at serve time,
+       so it is in hand when the shell asks; the release is the version), so the answer can be kept for that release; a page that
+       names none sends none */
+    const meta = doc.querySelector ? doc.querySelector('meta[name="cs-version"]') : null;
+    const named = meta && meta.getAttribute ? meta.getAttribute("content") : null;
+    const v = typeof named === "string" && named ? named : null;
     const a = await call("interfacewords", v ? { query: { v } } : {});
     if (a.kind !== "ok" || !a.value || !Array.isArray(a.value.words)) return;
     wordsRead = true;
@@ -2502,7 +2573,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       DOCKI = REACHABLE && screenOf("assistant") && ROUTE && (!MAIN || frameOf(MAIN.spec.id) === "working") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null;
       if (!REACHABLE) DOCK = false;
       draw();
-      if (MAIN) readAll(MAIN);
+      /* R113 (P2.1): no screen read of its own: only a read whose request now differs (it reads `view.reachable`) is read again */
+      if (MAIN) rereadChanged(MAIN);
     }
   }
   /* R36: old addresses forwarded, the fragment carried and nothing else */

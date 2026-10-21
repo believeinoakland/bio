@@ -898,7 +898,10 @@ export class Store extends DurableObject {
                                 /* (T47; K3150; control-plane R71) `clockpropose`, served through action-clocks' one instance */
                                 actionClocks: () => actionClocksOf(ctx),
                                 /* (T51; K4098; control-plane R110) `approvedunsent` (filings R53) and `checkpointsdue` (action-plans R17) */
-                                filings: () => filingsOf(ctx), actionPlans: () => actionPlansOf(ctx) }, url, body),
+                                filings: () => filingsOf(ctx), actionPlans: () => actionPlansOf(ctx),
+                                /* (T51 fix round 3; K4389; control-plane R117, R118; R74) `readHeld` (extraction R80) and
+                                   `projectList`'s `sharedDraftsOf` (project-roster R42), each asked only when its op is served */
+                                extraction: () => extractionOf(ctx), projectRoster: () => projectRosterOf(ctx) }, url, body),
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };
