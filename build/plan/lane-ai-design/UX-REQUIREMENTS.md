@@ -17,7 +17,7 @@
 - Status: listed / watch / lapsed / retired, with the reason; health (available, degraded, down).
 - Terms that bind the team's use that matter to civic work, in plain words, once at connection (e.g. a provider's rules on political content, legal or public-benefit advice, disclosure of AI use).
 - Position in the owner's ordered list.
-- **The six privacy checks [Bob, 2026-10-21, AIR42]:** every entry's answer to each (met / not met / unconfirmed, with source and date); the member choosing sees all six, all required by default, and can mark any of them not required at their discretion; entries failing a required check are not offered to them; their choice is recorded. Also shown, never required: whether the terms permit this use; breach commitments.
+- **The six privacy checks [Bob, 2026-10-21, AIR42]:** every entry's answer to each (met / not met / unconfirmed, with source and date); all six required by default; **the team's administrators** decide which stay required for the team, and those are locked; a project owner or member can tick or untick only the checks the administrators left unticked [Bob, revised 2026-10-21]; entries failing a required check are not offered; every change is recorded with who, when and at which level; the screen should make plain which checks are locked by the team and which the person may change. Also shown, never required: whether the terms permit this use; breach commitments.
 - **Origin setting [Bob, 2026-10-21, AIR43]:** models from Chinese developers hidden by default; the member can change the setting.
 
 ## C. Flows the UX must cover
@@ -27,7 +27,7 @@
 4. **Budgets and ordered accounts:** set limits, see spend, set alert thresholds, declare and reorder the ordered list; see exactly when and why work continued on a later account (every switch shown, attributed, declinable by the member) [Bob: failover allowed]; before material first goes to a provider or host not yet disclosed, including after a switch, the disclosure notice is shown and the step waits [Bob, 2026-10-21]; a use the owner switched off is refused, never moved to another account [Bob, 2026-10-21].
 5. **Cost visibility:** per account, owner, member and run; estimate before a run; actual after; "not measurable in money" for plans that report none.
 6. **Failure and outage moments:** limit reached, provider down, model retired, capability mismatch, deliberate switch: plain choices (wait, switch, continue without AI), never a silent change.
-7. **Test and send:** for a plan not in the catalogue, a flow to run Civicsmith's locked test, show the estimated cost first, show exactly what will be sent in the sealed results bundle, and send it; plus where to see results others have contributed (the central results library, summaries with grade and date).
+7. **Test and send:** for a plan not in the catalogue, a flow to run Civicsmith's locked test, show the estimated cost first, show exactly what will be sent in the sealed results bundle, and send it; plus where to see results others have contributed (the central results library: per AI, the parts it passed and its limits, speed and cost of standard jobs, who tested it and when; never test transcripts or a sending team's name without its consent) [Bob, 2026-10-21].
 8. Live progress of the assistant's work and answers shown only after Civicsmith's check, as already ruled (K3602), unchanged for every AI.
 
 ## D. Constraints
