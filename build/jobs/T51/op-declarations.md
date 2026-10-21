@@ -310,3 +310,23 @@ Options for remindersfor (action-clocks):
 (b) Amend action-clocks' declaration to admin, member and probe, then add the family read.
 
 Please pick (a) or (b) for each. I will not change either until then. `inboxlist` (cause 2) is still waiting on your answer to my first QUESTION.
+
+## J23 · BLOCKED
+
+Cause: tests. Stopping after three attempts on the reds below (JOB: BLOCKED, cause tests).
+
+Done since B26 (ANSWER to J21: cause 2 dropped, kept as is; COMPLETE says so):
+- scanmirror (file-safety) and remindersfor (action-clocks) are specced by their owners' declarations (R80). Nothing of mine is needed for the spec itself: the family entry I tried fails R81 (see J22).
+- Full op-declarations suite: 240 of 242 pass. The two reds are both about the owners' ops being in the test world:
+  1. `t36.test.mjs:135` (R32, R6): file-safety now serves 24 ops, not 23, and the test hand-lists the 23 with their sets and stamps. Adding scanmirror to that list moved the failure to `t36:149` (R32, R2–R4 spec) and `t36:192` (stamps: 19 driven, not 18). Both assume an op outside the family is an op the hand list can state, which scanmirror's owner row does not match.
+  2. `t45.test.mjs:221` (R49, R6): `action-clocks: remindersfor has no spec`. The test is not registration-aware. Registering owners (`register-owners.mjs`) fixes it, but then `t36.test.mjs:303` (R34, the affordances partition) lists 22 member ops with no affordances text and no ACT_HELP_ABSENT ground: expertisewithdraw, declareorigin, origins, capturecredentialsupply, capturecredentiallist, capturecredentialwithdraw, inboxlist, scanmirror, transcriptions, progressions, citeimported, withdrawimported, contradictionflag, projectclose, importregrade, rerunstart, rerunpair, rerunread, casedetailsset, casedetails, remindersfor, namedrequestset, namedrequests, sweepset, sweepratify, taskdecide.
+
+What is left, and needs BOB's direction (a test-policy call, P17 for you to rule):
+- Ground those 22 under `unexplained` (the mechanism for ops the design has not yet explained) and name the affordances job for their text, or
+- Leave them red until affordances explains them.
+- Accept scanmirror's owner row (admin and member) as the test's model, and let t36's R32 table, stamps and family check follow it.
+I did not choose: each is a visible policy change, and I will not hide 22 gaps by grounding them without your word.
+
+Also still open: `capturecredentiallist` is in the member set with no spec under registration (a defect of its own, not in my list of grounds). Pending CHANGEs: officeconfirm (entities) and captureseenin (capture R101) when you tell me they merge.
+
+Current state on job/T51/op-declarations: no uncommitted changes; tranche merged at 83c57d7; checks format, architecture, words clean; coverage: 6502 of 6514 ids named (the 8 failing modules are other modules). Waiting on BOB.
