@@ -186,3 +186,13 @@ COMPLETE (SCREENS-PUBLISH #11, session_014kx187U1UAhfvtZdMDfMJG), B16 applied; `
 **Tests and checks** (from `bio-plane`, node_modules present): `node --test test/m/screens-publish/`: 179 tests, 176 pass, 1 fail (R10, docket, above), 2 todo (R35's two press tests, K3717). New tests: R49 ×3 (fr30), R59, R57, R44, R51 (fr30b), R8 extended (public). Process checks: format 0 failures; architecture 0 failures; coverage 69 of 69 ids, 0 failures; ownership 0 failures (my paths only).
 
 Size (session_014kx187U1UAhfvtZdMDfMJG): test runs 9, module lines 3163
+
+## J14 · COMPLETE
+
+COMPLETE (B17, entry 1 of 1).
+**Applied.** `docket` draws `writinghelp` beside "File a docket entry", on the summary ("What it says"), only while the assistant is reachable and never under the reason; it sends `{op: "docketfile", field: "summary", told}` (nothing when nothing was typed) and fills the field with the draft labelled machine work, as `imported` does. Its label is `act.writinghelp.label.docket` (a design row, `words.json`); the screen's R10 registry test is green. Drawing note: `mock-screens.js` at `09fbb247eb` draws no "Help me write this" button on the docket (its summary field is drawn with `act: 'docketfile'` only), but the registry and the rows hold the act and your entry names it, so it is drawn as the other screens draw theirs; HANDOFF to the design if the drawing should show it.
+**Requirement line for BOB** (R8's note ends "`writinghelp` on the summary waits on wizard-scripts' registry re-take"): that wait is over; suggest "`writinghelp` on the summary is drawn only while the assistant is reachable and sends `op: docketfile`, `field: summary` and what was typed".
+**Deferred / other modules:** none found.
+**Tests (written first, seen failing):** fr30.test.mjs "R8 the assistant helps with the docket entry's summary…" (with control: no assistant, no help) and "…sends nothing when nothing was typed". Module suite: tests 181, pass 179, fail 0, todo 2 (not mine). 
+**Checks:** format 0 failures; architecture 0 failures; coverage screens-publish 69 of 69 ids named, 0 failures; ownership 0 failures; words: no finding in my module (one testcopy in op-grades, not mine).
+Size (session_01DSyTGX3VcuNJFGfRqwxGBs): test runs 4, module lines 3180
