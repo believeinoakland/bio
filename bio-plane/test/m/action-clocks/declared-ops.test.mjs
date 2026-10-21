@@ -53,3 +53,8 @@ test("R25 action-clocks declares clockadopt: its requires alone raise no refusal
   await declaredOpHolds({ op: "clockadopt", declaration: DECLARED_OPS["clockadopt"], call: mk("clockadopt", {"author":"member:alice","viewer":"member:alice"}, null, null, (fields, env) => (real(fields, env))),
     refusedNaming: named({"target":["NO_SUCH_ACTION"],"proposal":["NO_SUCH_CLOCK_PROPOSAL"]}, true), same: sameCode });
 });
+
+test("R25 R26 action-clocks declares remindersfor: its requires alone raise no refusal naming a field, the missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "remindersfor", declaration: DECLARED_OPS["remindersfor"], call: mk("remindersfor", {"viewer":"member:alice"}, null, null, (fields, env) => (fields.action ? { ...fields, action: A } : fields)),
+    refusedNaming: named({"action":["NO_SUCH_ACTION"]}, true), same: sameCode });
+});
