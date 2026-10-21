@@ -77,6 +77,10 @@ How the assistant is architected for several AIs chosen by team, project and mem
 
 Every feature and journey that does not need the assistant is walked in its own session, **JOURNEYS** (#3, `session_01RhkG3SUxrZ9ENpSuRHnBQt`, sonnet, started by BOB #194, K3576; #1, #2 archived), writing only `build/plan/lane-journeys/` (its `CHARTER.md`). The assistant's own testing is the assistant-hosting lane's. BOB reads its `HANDOFF.md` (entries `W<n>`) at takeover and at every backstop check, and turns each defect into a plan entry.
 
+## Parallel work: the performance lane (Bob, 2026-10-21; K4351)
+
+Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#1, `session_015HB1ABUMedpZ4X94giQAiz`, sonnet, started by BOB #241), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
+
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current, on Bob's **primary** account: **ROOT #7**, `session_01NBNGB2ziVqiZg4ewLgRSWm` (started by Bob 2026-10-17, replacing ROOT #5 past 55%; K3653), replaced (by Bob) when its context passes 55% of its window (Bob, 2026-10-11, K2679). ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy` is archived. On the **secondary** account, where the work runs since K4211: **ROOT #8**, `session_01R3hvN64bYHG3vPQmYmaeLR` (started by Bob 2026-10-20; K4213), which started BOB #232; ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022) is superseded. Sessions on one account are unreachable from the other. Earlier ROOTs are archived (rulings K693–K2022).
