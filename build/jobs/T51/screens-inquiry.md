@@ -177,3 +177,12 @@ COMPLETE, re B22 (CHANGE K4258, K4259, K4269, K4270). Commit 914c6b90d9 plus the
 **Found in other modules (nothing changed):** (1) `case-import`/`accepted-work`: there is no read that lists the team's accepted findings with title and edition, so the question page reads `importedcases` and then `importedcase` for each import (at most 20); one such list read would spare those. (2) In the test harness op-grades holds only three owners' grades (`fixtures.mjs`), so `citeimported` asks a reason there as `screens-publish`'s test shows; in the shipped page it is Reversible (op-grades `marks.mjs`) and asks none.
 
 Size (session_018XPnXfwxqnZG9z3Mr9Hrf4): test runs 10, module lines 5659
+
+## J14 · QUESTION
+
+QUESTION (new keys and one field, none invented; carry-on on my best reading).
+1. C17 "read N of M words": the reader gives no such field today (reading holds only text_chars/glyphs), and words.json has no key. Needed: the field name on `op=reading` (my reading: `reading.words_read`, `reading.words_total`) and a key, e.g. `screen.document.text.words` "Read {read} of {total} words". NOT drawn; deferred.
+2. C44: when the record names no opener, the head draws "Opened by Undetermined, because" with an empty reason. Needed: a key such as `screen.question.opened.unnamed` "Opened {date}" (and for the project form). The project half is fixed.
+3. C36: a web-page leg's paragraph number has no key (page legs draw "Page n"; web legs draw their words only).
+4. C58: `screen.objective.a-flow-must-exist-first` ("Name a flow your team has already declared; none exists yet, so declare one first."); a "success reached" sentence for `satisfied === true` in "How it is going".
+5. C41: the unplaced legs cannot be named: a refusal handler receives only the refusal, whose findings name none; needs the plane's finding to carry them.
