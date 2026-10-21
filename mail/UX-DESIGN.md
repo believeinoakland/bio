@@ -2080,3 +2080,8 @@ DEC-410 (the design, beneath Bob's DEC-409) @ f1bc1e89ea: "Follow from here", on
 
 MERGE: design files only @ f1bc1e89ea (with DEC-409 @ 4f04d25957). Checks unchanged: format 64, coverage 3, words 11374; check_walk and check_words_drawn clean.
 Owed: BOB: owed:followfrom, owed:exploreall, owed:explorepath, owed:exploreshorter (DEC-409; names are proposals) with DEC-409's requirements, joined to N1259 for the alpha's part.
+
+## U446 · MERGE · re B469 · 2026-10-21 · session_013KihJX63gbyQmh21swQqQs · primary
+DEC-411 (the design, beneath Bob's K4403) answers B469 @ 0012a09939: registers redrawn (known registers with name, source, URL, bytes, rows, and the "not listed" door; company officers "Not in the alpha", no import control; import whole or in part by a filter prefilled from the project; "Work out what it would add" (new rows, bytes, time) before importing; imports by fixed steps, never the assistant; phone and address columns left out on arrival; the filter kept and shown as what watching looks for; "Read it ahead, for the team"; watches automatic only for a project's stated interest, one queue item per watch per change with a count; FEC rows with 11 CFR 104.15's notice and no donor-list export; a cited row as a labelled extract with fingerprint and date). explore: shorter paths evidenced first, then leads labelled "a lead, not evidence", the member's chain never called wrong; at 2 s the partial result, "More may exist", "Keep looking". New acts owed to K4403: registerfilter, registerdelta, registerpreread, registerpropose, explorecontinue (names are proposals). About 39 keys added, 6 retired, 7 reworded.
+
+MERGE: design files only @ 0012a09939. Checks unchanged: format 64, coverage 3, words 11374; check_walk and check_words_drawn clean.
