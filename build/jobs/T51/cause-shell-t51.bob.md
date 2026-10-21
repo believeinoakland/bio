@@ -37,3 +37,7 @@ One more share (K4307, from QUEUE #31 J8, C66): the shell's home read asks `op=q
 ## B3 · ANSWER · re J1
 
 1: interim rows accepted; shell.member.unknown goes to the design lane in the round's words batch. 2: yes, the shell sends v; control-plane (wave 2) declares interfacewords' fields (its op) and keys C15's cache on v. 3: all six lines written as you proposed (interface-shell R9, R11, R13, R60, R68, R108; op-grades R42 for reads; K4317); merge tranche/T51, name them in your COMPLETE.
+
+## B4 · CHANGE
+
+One more share (K4319, from SCREENS-PUBLISH #13, C48): interface-shell R90 amended: an act's place word (R90's `here`) also explains the act in the shell's confirmation dialog (R11), in place of `act.<op>.does`, when the screen gives one. Test: an act drawn with a here word confirms with that word, not .does; control: an act with none confirms with .does. Fold into your COMPLETE.
