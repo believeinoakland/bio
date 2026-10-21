@@ -49,3 +49,13 @@ test("C64 scanmirror is graded under the ground substrate and officeconfirm Reas
   assert.equal(phoneOf("entitycreate"), true);
   assert.ok(NON_ACTS.entitycreate);
 });
+
+test("B3 (money R28) moneysets is a read beside moneyset: a NON_ACTS read reason that agrees with its owner's declaration, no rung, no ground; control: moneyset is unchanged", async () => {
+  assert.ok(NON_ACTS.moneysets.startsWith("read: ") && NON_ACTS.moneysets.endsWith("writes nothing"));
+  assert.equal(RUNGS.moneysets, undefined);
+  assert.equal(RUNG_ABSENT.moneysets, undefined);
+  assert.equal(phoneOf("moneysets"), true);
+  assert.ok(NON_ACTS.moneyset.startsWith("read: one money set"));
+  const m = await registered();
+  assert.equal(m.NON_ACTS.moneysets, NON_ACTS.moneysets, "the owner's row agrees (registration refuses a disagreement)");
+});
