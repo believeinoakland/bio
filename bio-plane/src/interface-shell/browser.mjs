@@ -2008,6 +2008,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (!(await reauthAsk())) return actState(inst, d, null);
       a = await call(d.op, req);
     }
+    /* R112 (K4334): an answer that is a refusal in form but whose code the act names in `successCodes` is the act's success: it goes
+       the way of any success below, and its sentence (the code's own row, R13's words) is drawn beside the act as done */
+    let said = null;
+    if (a.kind === "refused" && !a.server && a.coded && Array.isArray(d.spec.successCodes) && d.spec.successCodes.includes(a.code)) {
+      said = refusalWords(a, d.spec.refusals, inst);
+      a = { kind: "ok", value: a.fields, json: a.fields };
+    }
     if (a.kind !== "ok") {
       actState(inst, d, null);
       /* R21 (K4245): the act's optional `failed(view, answer, cs)` runs at once when its request is refused or not answered, so a
@@ -2033,6 +2040,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* a read (an op that is no act on the record, weight `none`) is busy while it runs and carries no `data-done` */
     actState(inst, d, d.weight === "none" ? null : heavy ? { done: true, lock: true, gen: inst.gen + 1 } : { done: true });
     if (!heavy && d.weight !== "none") setTimeout(() => { const now = ACTSTATE.get(d.key); if (now && now.done && !now.lock) { ACTSTATE.delete(d.key); paint(inst, d.key); } }, 2000);
+    /* R112: the success sentence, kept by the act's key as a refusal is (R13), so the re-read's redraw draws it again */
+    if (said !== null) {
+      const note = '<span class="cs-state" data-state="done" role="status">' + said + "</span>";
+      besideAct(ai, note);
+      REFUSED.set(d.key, note);
+    }
     /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
     try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
