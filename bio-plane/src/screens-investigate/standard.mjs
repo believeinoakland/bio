@@ -6,6 +6,7 @@
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
+import { rereading } from "./rereads.mjs";
 
 /* R56, R57: the path's project step is the project's title, read from its record as the timeline's is; a project that cannot
    be read is `crumb.project.unjoined` (drawn text left in `view.ui` by `render`, since `place` has no kit), never its id; the
@@ -29,7 +30,7 @@ function place(view) {
 function reads(view) {
   const [id, mode] = String(view.subject || "").split("/");
   const state = mode === "adopted" || mode === "all" ? mode : "open";
-  const out = { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+  const out = { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
   if (/^STD-/.test(id)) {
     out.standard = { op: "standard", query: { id }, subject: true };
     out.relations = { op: "lawrelations", query: { id } };
@@ -120,22 +121,22 @@ function render(cs, view) {
       return (list.length ? cs.sheet(list.map((p) => {
         const lab = p.label || {};
         return cs.row(lab.machine_work ? cs.mark("origin", "machine") : "",
-          `<b>${cs.esc(p.cite || p.id)}</b> · ${cs.esc(lab.says || "")} <span class="mk-small">${cs.w(S + "proposedby", { by: String(p.proposed_by || lab.by || "").replace(/^(member|class):/, ""), date: cs.date(p.proposed_at || "") })}</span>`
+          `<b>${cs.esc(p.cite || p.id)}</b> · ${cs.esc(lab.says || "")} <span class="mk-small">${cs.w(S + "proposedby", { by: P.who(cs, p.proposed_by || lab.by || ""), date: cs.date(p.proposed_at || "") })}</span>`
           + (p.why ? `<br><span class="rec">${cs.esc(p.why)}</span>` : "") + `<br><span class="mk-small">${cs.w(S + "notyet")}</span>`,
-          p.adoption ? `<span class="mk-small">${cs.w(S + "adopted", { by: String(p.adoption.by || "").replace(/^member:/, ""), date: cs.date(p.adoption.at || "") })}</span> ${cs.ref("standard", p.adoption.standard, p.adoption.standard, [])}`
+          p.adoption ? `<span class="mk-small">${cs.w(S + "adopted", { by: P.who(cs, p.adoption.by || ""), date: cs.date(p.adoption.at || "") })}</span> ${cs.ref("standard", p.adoption.standard, p.adoption.standard, [])}`
             : cs.act("standardadopt", { label: "act.standardadopt.label.standard", data: { proposal: p.id } }));
       }).join("")) : "") + (v.truncated ? `<p class="mk-small">${cs.w(S + "proposals.more")}</p>` : "");
     })));
   /* "Hold this as a standard", from a passage */
   out.push(cs.sec(S + "declare", cs.field("st-cite", S + "cite", { help: S + "cite.help" })
     + cs.choice("st-kind", S + "kindpick", ["policy", "ordinance", "regulation", "statute", "commitment", "standard"].map((k) => [k, S + "kind." + k]), {})
-    + cs.field("st-issuer", S + "issuer", {}) + P.docChoice(cs, view, "st-doc", { label: S + "text", help: S + "text.help" })
+    + cs.field("st-issuer", S + "issuer", {}) + P.docChoice(cs, view, "st-doc", { label: S + "text", help: S + "text.help", project: /^PROJ-/.test(id) ? id : /^PROJ-/.test(mode || "") ? mode : "" })
     + cs.field("st-from", S + "from", { type: "date" })
     + cs.act("standarddeclare", { label: "act.standarddeclare.label.standard", tone: "primary" })));
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
   /* R51: "Check a date": whether the standard was in force on the day chosen, as the owner answers it */
   { op: "standardinforce", label: "act.standardinforce.label.standard", rereads: [],
     send(view, el, cs) {
@@ -174,7 +175,7 @@ const acts = [
       if (["amends", "repeals"].includes(type) && !effective) return { refuse: "screen.standard.relate.effective" };
       return { body: Object.assign({ type, from: String(view.subject || ""), to, citation }, effective ? { effective } : {}) };
     } },
-];
+], ["standard", "relations", "laws", "project", "proposals", "held"]);
 
 const STANDARD_KEYS = [
   "screen.standard.sub", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",

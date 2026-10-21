@@ -7,11 +7,12 @@
 
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
+import { rereading } from "./rereads.mjs";
 
 function reads(view) {
   const id = String(view.subject || "");
   return { calc: { op: "calculation", query: { id }, subject: true, empty: (v) => !v || v.found === false },
-    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
 }
 
 /** R8's project step: the calculation's project, by its id (the project's title is read where it is drawn). */
@@ -35,7 +36,7 @@ function render(cs, view) {
     return `<div class="mk-bignum"><b>${cs.esc(fig(r.output))}</b><span>${cs.esc(r.says || "")}</span></div>`
       + cs.sec(S + "method", `<p class="rec">${cs.esc(v.method_note || (g.method && g.method.note) || v.method_version || "")}</p>`
         + (v.calculation && v.calculation.recipe ? `<pre class="mk-small">${cs.esc(JSON.stringify(v.calculation.recipe, null, 1))}</pre>` : "")
-        + `<p class="mk-small">${cs.w(S + "status." + status)}${v.accepted_by ? " · " + cs.w(S + "accepted", { by: String(v.accepted_by).replace(/^member:/, ""), date: cs.date(v.accepted_at || "") }) : ""}</p>`)
+        + `<p class="mk-small">${cs.w(S + "status." + status)}${v.accepted_by ? " · " + cs.w(S + "accepted", { by: P.who(cs, v.accepted_by), date: cs.date(v.accepted_at || "") }) : ""}</p>`)
       + cs.sec(S + "inputs", cs.sheet(((g.inputs && g.inputs.length ? g.inputs : (v.inputs || []).map((x) => ({ name: x.name, kind: x.kind, ref: x.sha || x.content_id })))).map((x) =>
         cs.row(/^[A-D]$/.test(x.grade || "") ? cs.grade("capture", x.grade) : cs.mark("gap", "unrated"),
           `<b>${cs.esc(x.name)}</b> · ${cs.esc(x.kind || "")} ${x.ref ? P.refOf(cs, x.ref, x.ref, [x.why || ""]) : ""}`, x.unbound ? cs.mark("gap", "undetermined", { reason: cs.w(S + "unbound") }) : "")).join(""))
@@ -65,12 +66,12 @@ function render(cs, view) {
         : est ? cs.state(est, () => cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })}</dd></dl>`
       + cs.sheet((s.items || []).map((it) => cs.row(`<span class="cs-kind" data-standing="${cs.esc(it.standing)}">${cs.w(S + "standing." + (["yes", "no", "disagree", "could_not_tell", "not_visited"].includes(it.standing) ? it.standing : "not_visited"))}</span>`,
         `<b>${cs.w(S + "item", { item: String(it.item) })}</b>` + (it.standing === "disagree" ? ` <span class="mk-small">${cs.w(S + "tension")}</span>` : ""),
-        (it.visits || []).map((x) => `<span>${cs.grade("testimony", x.grade || "D")} ${cs.w(S + "visit", { finding: cs.w(S + "finding." + (["yes", "no", "could_not_tell"].includes(x.finding) ? x.finding : "could_not_tell")), by: String(x.visitor || "").replace(/^member:/, ""), date: cs.date(x.observed_at || "") })} ${P.refOf(cs, x.testimony, cs.w(S + "account"), [], "capture")}</span>`).join(" "))).join(""));
+        (it.visits || []).map((x) => `<span>${cs.grade("testimony", x.grade || "D")} ${cs.w(S + "visit", { finding: cs.w(S + "finding." + (["yes", "no", "could_not_tell"].includes(x.finding) ? x.finding : "could_not_tell")), by: P.who(cs, x.visitor), date: cs.date(x.observed_at || "") })} ${P.refOf(cs, x.testimony, cs.w(S + "account"), [], "capture")}</span>`).join(" "))).join(""));
   });
   const items = spot && spot.state === "ok" ? (spot.value.items || []).map((x) => ({ value: String(x.item), text: cs.w(S + "item", { item: String(x.item) }) })) : [];
   out.push(cs.sec(S + "spot", spotInner
     + `<p class="mk-small">${cs.w("screen.help.notsays.p")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
-    + P.docChoice(cs, view, "calc-set", { label: S + "set", help: S + "set.help", passage: false }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
+    + P.docChoice(cs, view, "calc-set", { label: S + "set", help: S + "set.help", passage: false, project: c && c.project }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
     + cs.field("calc-dq", S + "dq", { area: true, rec: true })
     + cs.act("calculationdraw", { label: "act.calculationdraw.label.calculation" })
     + cs.field("calc-words", S + "words", { area: true, rec: true, help: S + "words.help" }) + cs.field("calc-observed", S + "observed", { type: "date", value: P.today(cs) })
@@ -78,16 +79,16 @@ function render(cs, view) {
     + (ui.testimony ? `<p class="mk-note">${cs.w(S + "testified")}</p>` : "")
     + cs.choice("calc-item", S + "itempick", items, {})
     + cs.checks("calc-finding", S + "finding", [["yes", S + "finding.yes", false], ["no", S + "finding.no", false], ["could_not_tell", S + "finding.could_not_tell", false]], { radio: true })
-    + P.docChoice(cs, view, "calc-photo", { label: S + "photo", help: S + "photo.help", passage: false })
+    + P.docChoice(cs, view, "calc-photo", { label: S + "photo", help: S + "photo.help", passage: false, project: c && c.project })
     + cs.act("spotcheckvisit", { label: "act.spotcheckvisit.label.calculation" }), { help: S + "spot.help" }));
   /* working it out, and a member's own spreadsheet */
   out.push(cs.sec(S + "work", cs.field("calc-q", S + "q", { rec: true }) + cs.field("calc-from", S + "from", { type: "date" }) + cs.field("calc-to", S + "to", { type: "date" })
     + cs.choice("calc-kind", S + "kind", ["count", "total", "share", "ratio", "difference", "estimate"].map((k) => [k, S + "kind." + k]), {})
     + cs.field("calc-input", S + "input", { help: S + "input.help" })
     + cs.act("calculationcreate", { label: "act.calculationcreate.label.calculation", tone: "primary" })
-    + P.docChoice(cs, view, "calc-content", { label: S + "content", help: S + "content.help", passage: false }) + cs.field("calc-header", S + "header", { help: S + "header.help" })
+    + P.docChoice(cs, view, "calc-content", { label: S + "content", help: S + "content.help", passage: false, project: c && c.project }) + cs.field("calc-header", S + "header", { help: S + "header.help" })
     + cs.act("tabledeclare", { label: "act.tabledeclare.label.calculation" })));
-  out.push(cs.sec(S + "workbook", P.docChoice(cs, view, "calc-wb", { label: S + "wb", help: S + "wb.help", passage: false }) + cs.field("calc-period", S + "period", {})
+  out.push(cs.sec(S + "workbook", P.docChoice(cs, view, "calc-wb", { label: S + "wb", help: S + "wb.help", passage: false, project: c && c.project }) + cs.field("calc-period", S + "period", {})
     + cs.act("addworkbook", { label: "act.addworkbook.label.calculation" })
     + cs.field("calc-range", S + "range.field", { help: S + "range.help" }) + cs.field("calc-table", S + "table", {}) + cs.field("calc-trange", S + "trange", {})
     + cs.act("bind", { label: "act.bind.label.calculation" })
@@ -96,7 +97,7 @@ function render(cs, view) {
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
   { op: "calculationcreate", label: "act.calculationcreate.label.calculation",
     send(view, el, cs) {
       const question = String(cs.value("calc-q") || "").trim(), input = String(cs.value("calc-input") || "").trim();
@@ -169,7 +170,7 @@ const acts = [
       return { body: Object.assign({ draw: key, item, testimony, finding }, /^[0-9a-f]{64}$/.test(photo) ? { exhibits: [photo] } : {}) };
     },
     done(view) { view.ui.testimony = null; view.ui.later = {}; } },
-];
+], ["calc"]);
 
 const CALCULATION_KEYS = [
   "screen.calculation.counts",

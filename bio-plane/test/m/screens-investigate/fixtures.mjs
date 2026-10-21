@@ -155,6 +155,10 @@ export const THEME = (o = {}) => ({ ok: true, theme_id: "THEME-2026-0001", name:
   hunches: [{ target: "INFO-2026-0002", target_kind: "document", state: "hunch", proposed_by_handle: "dev", proposed_at: "2026-10-03T09:00:00Z", proposal_note: "maybe" }],
   withdrawn: [{ target: "INFO-2026-0003", target_kind: "document", state: "withdrawn", ended_by_handle: "mai", ended_at: "2026-10-04T09:00:00Z", reason: "wrong year" }], ...o });
 
+/** The roster as `memberlist` answers it: the founder's id is `admin`, her handle `sparky`; a member may have no handle (C94). */
+export const ROSTER = { members: [{ member_id: "admin", handle: "sparky", founder: true }, { member_id: "mai", handle: "mai" }, { member_id: "dev", handle: "dev" },
+  { member_id: "ana", handle: "ana" }, { member_id: "u-2", handle: "rosa" }, { member_id: "u-3", handle: null }] };
+
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
   return {
@@ -188,6 +192,8 @@ export function plane(o = {}) {
     sequence: ok({ ok: true, answer: "undetermined", why: { key: "events.why.precision_held_settle", vars: {} } }),
     memberties: ok(TIES),
     heldcaptures: ok(HELD),
+    /** `memberlist` (membership): the roster `cs.memberName` names members from (interface-shell R111): id to handle. */
+    memberlist: ok(ROSTER),
     /** `reading` (extraction R76): a capture's text units, each `{extent, reference, text}`, in order. */
     reading: (r) => ok({ ok: true, sha256: r.query && r.query.sha256, unread_pages: [], text_units: r.query && r.query.sha256 === SHA2
       ? [{ extent: { kind: "pdf-page", page: 0 }, reference: "p1", text: "Monthly rent is due on the first.", truncated: false }]

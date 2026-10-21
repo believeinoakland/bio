@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, TRAIL, TIMELINE, PROJECT_MD, VOCAB, PLANE_EVENT_KINDS, P, ENT, SHA, SHA2, MSR, M1, M2, word, drew, notDrew } from "./fixtures.mjs";
+import { open, main, actsIn, fill, press, TRAIL, VOCAB, PLANE_EVENT_KINDS, P, ENT, SHA, SHA2, MSR, M1, M2, word, drew, notDrew } from "./fixtures.mjs";
 
 const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
 const rowOf = (p, key) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${key}"]`));
@@ -98,41 +98,7 @@ test("R4 C8 control: a figure read where no trail is open sends no propose; a re
   assert.equal(rowOf(refused, NEWFACT), undefined, "a figure no trail holds is not drawn as a row");
 });
 
-/* ---------------------------------------------------------------- C54 */
-
-const TL_P2 = "PROJ-2026-0008";
-const eventsByEntity = () => {
-  const recorded = [];
-  return {
-    recorded,
-    timeline: (r) => {
-      const set = String(r.query.set || "").split(",").filter(Boolean);
-      const mine = recorded.filter((e) => e.concerns.some((c) => set.includes(c)));
-      const base = TIMELINE();
-      return ok({ ...base, world: { ...base.world, items: base.world.items.concat(mine.map((e) => ({ event_id: e.id, kind: e.kind, status: "EventScheduled", when: null, roles: [], concerns: true, of: e.concerns, order: { undetermined: false }, participants: [], participants_total: 0, grade: "B" }))) } });
-    },
-    createevent: (r) => { const id = "EVT-2026-" + String(60 + recorded.length).padStart(4, "0"); recorded.push({ id, kind: r.body.kind, concerns: r.body.concerns || [] }); return ok({ ok: true, event_id: id }); },
-  };
-};
-
-test("R3 C54 an event recorded on a project is attached to the project and the timeline is drawn from the record: after a reload (no page memory) the event is there; control: an event of another project is absent", async () => {
-  const plane = eventsByEntity();
-  const p = await open(timeline, { plane });
-  fill(p, { "tl-doc": SHA, "tl-kind": "meeting" });
-  await press(p, "createevent", { reason: "the minutes" });
-  assert.deepEqual(plane.recorded[0].concerns, [ENT], "tied to what the project names");
-  const id = plane.recorded[0].id;
-  assert.ok(main(p).querySelector(`[data-event="${id}"]`), "drawn at once");
-  const again = await open(timeline, { plane });
-  assert.ok(main(again).querySelector(`[data-event="${id}"]`), "and after a reload, from the record");
-  const options = optsOf(again, "tl-event").map(([v]) => v);
-  assert.ok(options.includes(id), "the event can be chosen for who took part, a dated fact, a link");
-  /* another project: its document names another entity; the event is not there */
-  const other = "ENT-2026-0777";
-  const md2 = PROJECT_MD.replace(P, TL_P2).replace(ENT, other);
-  const elsewhere = await open("/app/timeline/" + TL_P2, { plane: { ...plane, image: (r) => ok(r.query.id === TL_P2 ? { "bundle.md": md2 } : { "bundle.md": PROJECT_MD }) } });
-  assert.equal(main(elsewhere).querySelector(`[data-event="${id}"]`), null, "an event of another project is absent");
-});
+/* C54 (events found by the captures they cite) is proved in fix2w2.test.mjs, the wave 2 route of events R53. */
 
 /* ---------------------------------------------------------------- C7 */
 

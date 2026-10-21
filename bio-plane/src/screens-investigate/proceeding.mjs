@@ -6,6 +6,7 @@
 
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
+import { rereading } from "./rereads.mjs";
 
 function reads(view) {
   const id = String(view.subject || "");
@@ -22,7 +23,7 @@ function reads(view) {
     parties: { op: "partiesof", query: { proceeding: id } },
     dates: { op: "proceedingdates", query: { proceeding: id } },
     follows: { op: "follows", query: {} },
-    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
     people: { op: "peopledirectory", query: { limit: "200" } },
     standards: { op: "standards", query: { limit: "200" } },
   });
@@ -137,7 +138,7 @@ function render(cs, view) {
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
   /* "Register the proceeding" from its caption: the court, the number, a neutral label (the note: the member's own words) */
   { op: "entitycreate", label: "act.entitycreate.label.proceeding", reasonField: "note",
     send(view, el, cs) {
@@ -194,7 +195,7 @@ const acts = [
       if (!from || !to || !citation) return { refuse: "screen.proceeding.link.empty" };
       return { body: { type: String(cs.value("pr-type") || "interprets"), from, to, citation } };
     } },
-];
+], ["courts", "institutions", "vocab", "entity", "parties", "dates", "follows", "people", "standards"]);
 
 const PROCEEDING_KEYS = [
   "screen.proceeding.none", "screen.proceeding.caption", "screen.proceeding.parties", "screen.proceeding.role", "screen.proceeding.roles.plaintiff",
