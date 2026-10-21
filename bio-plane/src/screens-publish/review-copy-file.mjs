@@ -38,7 +38,7 @@ export const REVIEW_COPY_FILE = Object.freeze({
       + "<p>" + cs.w("screen.review_copy.the.date.this.copy.last") + ": " + cs.date(stamp.date) + "</p><p>" + cs.w("screen.review_copy.carries.author") + ": " + E(stamp.author) + "</p>"
       + "<p>" + cs.w("screen.review_copy.the.minimum.strengths.it.was") + ": " + floors + "</p></header>";
     const excluded = list(a.excluded).map(function (x) { return "<li>" + E(text(x)) + (x && x.reason ? " · " + E(x.reason) : "") + "</li>"; }).join("");
-    const findings = list(copy.findings).map(function (f) { return "<li>" + E(text(f)) + "</li>"; }).join("");
+    const findings = list(copy.findings).map(function (f) { return "<li>" + E(f && typeof f.statement === "string" && f.statement ? f.statement : text(f)) + "</li>"; }).join("");
     const missing = list(copy.missing).map(function (m) { return "<li>" + E(text(m)) + "</li>"; }).join("");
     const gates = typeof copy.gates === "string" ? "<p>" + E(copy.gates) + "</p>" : "";
     const css = "body{font:16px/1.5 serif;margin:0;padding:96px 24px 24px}header{position:fixed;top:0;left:0;right:0;padding:8px 24px;background:#fff;border-bottom:1px solid #000;font-size:12px}"
@@ -46,7 +46,7 @@ export const REVIEW_COPY_FILE = Object.freeze({
     return "<!doctype html><html><head><meta charset=\"utf-8\"><title>" + E(c.identity || "") + "</title><style>" + css + "</style></head><body>" + stampHtml
       + "<h1>" + E(c.identity || "") + "</h1>"
       + para("screen.case-editor.scope.label", a.scope ? "<p>" + E(a.scope) + "</p>" : "")
-      + para("screen.case-editor.statement.label", a.statement ? "<p>" + E(a.statement) + "</p>" : "")
+      + para("review.statement.title", a.statement ? "<p>" + E(a.statement) + "</p>" : "")
       + para("screen.case-editor.leavesout", excluded ? "<ul>" + excluded + "</ul>" : "")
       + para("screen.published.findings", findings ? "<ol>" + findings + "</ol>" : "")
       + (gates ? gates : "") + (missing ? "<ul>" + missing + "</ul>" : "") + "</body></html>";

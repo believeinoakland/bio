@@ -68,8 +68,10 @@ const EMPTY = {
   reviewcopy: ok(COPY({ authored: {}, findings: [], statement_acknowledgements: { acknowledgements: [] }, observations: [], grants: [] })),
   publishpreflight: ok(PREFLIGHT({ first: null, blockers: [], ready: true, steps: [{ pinned: [] }, { photos: [], unchecked: 0 }, { publish_at: { zone: "America/Los_Angeles" } }] })),
   publishtensions: ok({ wrote: false, project: P, count: 0, candidates: [], says: "" }),
-  publishedcase: ok({ caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z", editions: [{ edition: 2 }],
-    manifest_sha: "a".repeat(64), findings: [], method: { timeline: [] }, people: [], captures: [] }),
+  /* the ceremony asks for the published editions of a case by `caseId` alone: the draft under it is not yet published (R71) */
+  publishedcase: (req) => ((req.query || {}).caseId && !(req.query || {}).id ? refusedIn("NOT_PUBLISHED")
+    : ok({ caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z", editions: [{ edition: 2 }],
+      manifest_sha: "a".repeat(64), findings: [], method: { timeline: [] }, people: [], captures: [] })),
   importedcases: ok({ imports: [], count: 0 }), importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease", edition: { edition: 1, findings: [] } }),
   docket: ok({ case: C, project: P, entries: [] }),
 };

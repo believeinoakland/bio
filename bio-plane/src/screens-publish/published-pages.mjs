@@ -93,13 +93,13 @@ export const PUBLISHED_PAGES = Object.freeze({
       return head + '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id) + '" data-body="' + cs.esc(body.state) + '"><p>' + strengths + "</p>"
         + (why ? '<p class="cs-state" data-state="failed" role="alert">' + why + "</p>" : "") + listed + "</article>";
     }
-    let out = head + '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id) + '"><p class="rec mk-fbody">' + cs.esc(body.conclusion || (body.authored && body.authored.conclusion) || "")
+    let out = head + '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id) + '"><p class="rec mk-fbody">' + cs.esc(P.claimOf(view, f))
       + "</p><p>" + strengths + "</p></article>";
 
     // "What would overturn it": the falsifier as signed, and, when the member chose to publish without one, who and when
     const au = body.authored && typeof body.authored === "object" ? body.authored : {};
     const ov = au.falsifier_override && typeof au.falsifier_override === "object" ? au.falsifier_override : null;
-    const falsifier = typeof au.falsifier === "string" && au.falsifier ? '<p class="rec">' + cs.esc(au.falsifier) + "</p>" : "";
+    const said = P.falsifierOf(view, f), falsifier = said ? '<p class="rec">' + cs.esc(said) + "</p>" : "";
     const over = ov ? P.fold(cs, "screen.published.falsifier.override.summary", '<div class="cs-gap" data-gap="undetermined"><span>'
       + cs.w("screen.published.falsifier.override", { member: ov.by || "", date: { html: ov.at ? cs.date(ov.at) : "" } }) + "</span></div>"
       + '<p class="mk-note">' + cs.w("screen.published.falsifier.override.explain") + "</p>") : "";
