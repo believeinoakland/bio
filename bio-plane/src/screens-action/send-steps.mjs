@@ -403,6 +403,10 @@ export const TEMPLATE_SAVE = Object.freeze({
     const name = String(cs.value("template-name") || "").trim();
     if (!name || name.length > 200 || /[\r\n]/.test(name)) return { refuse: "refusal.TEMPLATE_NAME_REFUSED" };
     const body = { filing: el.dataset.filing, name: name, use: cs.value("template-use") === "brief" ? "brief" : "file" };
+    // C65: the template is kept in the project the action belongs to, a scope its drafting rule accepts for a joined member; the filing's
+    // own basis names a project only when it rests on a determination, so a request or a start from a plan would otherwise ask for none
+    const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : null;
+    if (a && typeof a.project === "string" && a.project) body.project = a.project;
     const notes = String(cs.value("template-notes") || "").trim();
     if (notes) body.notes = notes;
     return { body: body };

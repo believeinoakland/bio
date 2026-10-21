@@ -127,9 +127,9 @@ export const matter = Object.freeze({
       const why = rev ? cs.sec("screen.matter.revise", P.note(cs, "screen.matter.a_new_determination_that_replaces_the_earlier"))
         + cs.sec("screen.matter.replaces", P.note(cs, "screen.matter.the_earlier_determination_stays_readable_with_a") + P.note(cs, "screen.matter.it_is_not_edited")) : "";
       const acts = cs.sec("screen.matter.act", P.note(cs, "screen.matter.whether_the_act_met_the_rule_with")
-        + cs.field("mt-d-event", "screen.matter.the_event_it_was_part_of", { value: act.event || "" })
+        + P.eventChoice(cs, view, k, act.event || "")
         + cs.field("mt-d-role", "screen.matter.f.role", { value: actor.role || "" }) + cs.field("mt-d-body", "screen.matter.f.body", { value: actor.body || "" })
-        + cs.field("mt-d-evidence", "screen.matter.the_evidence_that_the_act_happened", { area: true }));
+        + P.passageChoice(cs, view, k));
       const rests = cs.sec("screen.actionnew.rests", found + P.note(cs, "screen.matter.a_determination_rests_on_findings_your_team"));
       const rule = cs.sec("screen.matter.the_rule_it_is_measured_against", std
         + cs.field("mt-d-req", "screen.matter.what_the_rule_requires", { rec: true, area: true, value: row.requires || "" }) + P.help(cs, view, "mt-d-req", "determine", "requires")
@@ -146,19 +146,73 @@ export const matter = Object.freeze({
       return why + acts + rests + rule + verdict + cause + '<div class="mk-acts">' + cs.act("determine", { tone: "primary", label: rev ? "screen.matter.record_the_revised_determination" : "screen.matter.record.this" }) + "</div>"
         + '<p class="mk-small muted">' + cs.w("screen.matter.this_cannot_be_edited_afterward") + " " + cs.w("screen.matter.a_mistake_is_put_right_by_recording") + "</p>";
     },
-    // R45: the published findings the project's cases hold, picked; each case's latest edition read once; a plain field when none can be read
+    // R45 (C6): the event the act was part of, chosen among the events the project's document follows (the timeline's own set), never typed
+    eventChoice: function (cs, view, k, current) {
+      const P = view.parts;
+      const doc = P.later(cs, view, "projdoc", "image", { id: k.project }, "");
+      const text = doc.state === "ok" && doc.value && typeof doc.value["bundle.md"] === "string" ? doc.value["bundle.md"] : "";
+      const set = P.refsOf(text);
+      const tl = set.length ? P.later(cs, view, "events", "timeline", { set: set.join(",") }, "") : { state: "ok", value: {} };
+      const w = tl.state === "ok" && tl.value && tl.value.world ? tl.value.world : {};
+      const items = (Array.isArray(w.items) ? w.items : []).concat(Array.isArray(w.placed_nowhere) ? w.placed_nowhere : []);
+      const opts = items.filter(function (e) { return e && e.event_id; }).map(function (e) {
+        const day = e.when && typeof e.when === "object" ? String(e.when.value || "").slice(0, 10) : "";
+        return { value: e.event_id, text: [e.kind, day].filter(Boolean).join(" \u00b7 ") || e.event_id };
+      });
+      if (current && !opts.some(function (o) { return o.value === current; })) opts.push({ value: current, text: current });
+      if (tl.state === "loading" || doc.state === "loading") return "";
+      return opts.length ? cs.choice("mt-d-event", "screen.matter.the_event_it_was_part_of", [{ value: "", text: "" }].concat(opts), { value: current })
+        : '<p class="mk-small">' + cs.w("screen.matter.the_event_it_was_part_of") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
+    },
+    // R45 (C6): the passages that show the act, chosen among the project's documents (a passage is a whole document, as `docChoice` offers it)
+    passageChoice: function (cs, view, k) {
+      const P = view.parts;
+      const dl = P.later(cs, view, "docs", "heldcaptures", { project: k.project, limit: "200", state: "held_and_vouched" }, "");
+      if (dl.state === "loading") return "";
+      const rows = dl.state === "ok" && dl.value && Array.isArray(dl.value.held) ? dl.value.held : [];
+      const opts = rows.filter(function (r) { return r && r.bundle_id; }).map(function (r) { return { value: r.bundle_id, text: r.title || r.bundle_id }; });
+      return opts.length ? cs.checks("mt-d-evidence", "screen.matter.the_evidence_that_the_act_happened", opts)
+        : '<p class="mk-small">' + cs.w("screen.matter.the_evidence_that_the_act_happened") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
+    },
+    // the targets a project's document references, those not severed, in order: its people, organisations and events (the timeline's own set)
+    refsOf: function (text) {
+      const head = String(text || "").replace(/^---\s*\n/, "").split(/\n---\s*(?:\n|$)/)[0];
+      const refs = [];
+      let inRefs = false, cur = null;
+      head.split("\n").forEach(function (line) {
+        if (/^references:\s*$/.test(line)) { inRefs = true; return; }
+        if (inRefs && /^\s+-\s*/.test(line)) { cur = {}; refs.push(cur); }
+        if (inRefs && /^\s+/.test(line) && cur) {
+          const m = /^\s+(?:-\s*)?(\w+):\s*(.*)$/.exec(line);
+          if (m) cur[m[1]] = m[2].trim();
+          return;
+        }
+        inRefs = false;
+      });
+      return refs.filter(function (r) { return /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed"; }).map(function (r) { return r.target; })
+        .filter(function (t, i, a) { return a.indexOf(t) === i; });
+    },
+    // R45 (C6): the findings it rests on, chosen among the project's concluded questions and the published cases' findings, never typed
     findings: function (cs, view, k) {
-      const list = view.parts.later(cs, view, "published", "publishedlist", {}, "");
+      const P = view.parts;
+      const ql = P.later(cs, view, "questions", "projectquestions", { project: k.project, limit: "200" }, "");
+      const qs = ql.state === "ok" && ql.value && Array.isArray(ql.value.items) ? ql.value.items : [];
+      const list = P.later(cs, view, "published", "publishedlist", {}, "");
       const rows = list.state === "ok" && list.value && Array.isArray(list.value.cases) ? list.value.cases : [];
       const latest = {};
       rows.forEach(function (r) { if (r && r.case_id && !(latest[r.case_id] >= Number(r.edition))) latest[r.case_id] = Number(r.edition); });
+      const held = function (id) { return !!(k.d && Array.isArray(k.d.findings) && k.d.findings.some(function (x) { return (x.finding || x.id) === id; })); };
       const opts = [];
+      const add = function (id, title) { if (id && !opts.some(function (o) { return o.value === id; })) opts.push({ value: id, text: title || id, on: held(id) }); };
+      qs.forEach(function (q) { if (q && q.stance === "concluded") add(q.inquiry, q.title); });
       Object.keys(latest).slice(0, 12).forEach(function (c) {
-        const pc = view.parts.later(cs, view, "case:" + c, "publishedcase", { caseId: c, edition: String(latest[c]) }, "");
+        const pc = P.later(cs, view, "case:" + c, "publishedcase", { caseId: c, edition: String(latest[c]) }, "");
         const fs = pc.state === "ok" && pc.value && Array.isArray(pc.value.findings) ? pc.value.findings : [];
-        fs.forEach(function (f) { if (f && f.bundle_id) opts.push({ value: f.bundle_id, text: f.title || f.bundle_id, on: !!(k.d && Array.isArray(k.d.findings) && k.d.findings.some(function (x) { return (x.finding || x.id) === f.bundle_id; })) }); });
+        fs.forEach(function (f) { if (f) add(f.bundle_id, f.title); });
       });
-      return opts.length ? cs.checks("mt-d-findings", "screen.matter.f.findings", opts) : cs.field("mt-d-findings", "screen.matter.f.findings", { area: true });
+      if (ql.state === "loading" || list.state === "loading") return "";
+      return opts.length ? cs.checks("mt-d-findings", "screen.matter.f.findings", opts)
+        : '<p class="mk-small">' + cs.w("screen.matter.f.findings") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
     },
     // R50: what the breach did, recorded
     consForm: function (cs, view, k) {
@@ -427,23 +481,39 @@ export const matter = Object.freeze({
     {
       // R45: record a determination, or (with the one it replaces) revise it; exactly the fields `determine` declares
       op: "determine",
-      send: function (view, el, cs) {
+      send: async function (view, el, cs) {
         const P = view.parts, k = P.ctx(view);
         const line = function (v) { return String(v || "").replace(/\s+/g, " ").trim(); };
         const standard = line(cs.value("mt-d-std"));
         const outcome = (cs.value("mt-d-out") || [])[0] || "";
-        const evidence = P.ids(cs.value("mt-d-evidence"));
+        // C6: the event, the passages and the findings are chosen; one not chosen is refused in the words of the refusal that names it
+        const event = line(cs.value("mt-d-event"));
+        const chosen = P.ids(cs.value("mt-d-evidence"));
+        const findings = P.ids(cs.value("mt-d-findings"));
+        const prior = k.d && k.d.act && Array.isArray(k.d.act.evidence) ? k.d.act.evidence : [];
+        if (!event) return { refuse: "refusal.NO_SUCH_EVENT" };
+        if (!chosen.length && !prior.length) return { refuse: "refusal.ACT_INCOMPLETE" };
+        if (!findings.length) return { refuse: "refusal.NO_FINDINGS" };
+        // each chosen document is marked citable as a whole passage; the content ids the plane answers are the act's evidence
+        const evidence = [];
+        for (const doc of chosen) {
+          const a = await cs.call("contentmint", { body: { bundleId: doc, extent: { kind: "document" } } }).then(function (x) { return x; }, function () { return null; });
+          const r = a && a.result !== undefined ? a.result : a;
+          const id = r && r.ok !== false ? r.content_id || r.id : "";
+          if (!id) return { refuse: "refusal.ACT_INCOMPLETE" };
+          evidence.push(String(id));
+        }
         const body = {
           project: k.project,
-          act: { event: line(cs.value("mt-d-event")), actor: { role: line(cs.value("mt-d-role")), body: line(cs.value("mt-d-body")) }, evidence: evidence },
-          findings: P.ids(cs.value("mt-d-findings")).map(function (f) { return { finding: f }; }),
+          act: { event: event, actor: { role: line(cs.value("mt-d-role")), body: line(cs.value("mt-d-body")) }, evidence: evidence.length ? evidence : prior },
+          findings: findings.map(function (f) { return { finding: f }; }),
           standards: [{ standard: standard, outcome: outcome }],
           rows: [{ standard: standard, requires: line(cs.value("mt-d-req")), did: line(cs.value("mt-d-did")), reading: line(cs.value("mt-d-rd")) }],
         };
         const q = line(cs.value("mt-d-q"));
         if (outcome === "unclear" && q) body.questions = [{ question: q }];
         const cause = line(cs.value("mt-d-cause"));
-        if (cause) body.cause = { statement: cause, evidence: evidence };
+        if (cause) body.cause = { statement: cause, evidence: body.act.evidence };
         if (!P.isProject(view) && k.d) {
           // what replaces it is said in the reason the shell asks (a reasoned act), added to the body as `reason`
           body.supersedes = k.det;
