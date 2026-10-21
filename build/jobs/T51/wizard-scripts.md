@@ -328,3 +328,20 @@ DEFERRED: none.
 
 
 Size (session_01PZ9Gu5FRgJY1fJyGfYx9Tz): test runs 5, module lines 2865
+
+## J16 · REPORT
+
+REPORT · B17 (fix round 2, K4311): what the re-take of the registry at 0310c4953d brings in other modules' suites. Nothing in another module was changed (P7).
+
+The new registry holds seven acts that other modules do not yet draw or mark. Their suites now fail; each waits for its owner's job in fix round 2 (wave 1 or 2 in build/plan/fix-round-2-T51.md):
+- op-grades R42 and R46 (2 failures): `capturerequests`, `casedrafts` and `contradictionflag` have no mark in MARKS. For op-grades' job.
+- screens-intake R8 (1): capture does not yet draw `capturerequests`. For screens-intake's job (wave 2).
+- screens-publish R10 (1): case-editor does not yet draw `casedrafts`. For screens-publish's job (wave 2).
+- screens-inquiry R10 (entry 25 and document), R5 R14 to R41 (3): project does not draw `heldcaptures`; document does not draw `resolvetestify` or the owed `contradictionflag`. For screens-inquiry-2's job (wave 2).
+
+Failing on the tranche tip as well (run on a clean worktree of origin/tranche/T51 before my commit), so not from this change: store-door R17 (groupdescriptiondraft), interface-shell R23 (a place name in the shell's program text), screens-settings R39 (screen.bias.adoptfor.label is a key the module reads), plane R24 (screen purpose words).
+
+Dependencies: journey-check failed only for lack of node_modules (playwright-core); I ran `npm ci` in bio-plane/src/journey-check, as the START requires. Its suite then gave 72 pass, 7 fail, all in the local-arm journey walks and one words row for "group".
+
+REQUIREMENT FOR BOB (K4311): R47 is in my test file and not yet in build/requirements/wizard-scripts.md, because that file is outside this job's paths. Proposed text, for Bob to write or to tell me to write:
+"R47 (T51 fix round 2; K4311; DEC-394; amends R45) The registry is re-taken at `0310c4953d`. SCREEN_REGISTRY_SOURCE becomes `0310c4953d` (the design commit DEC-394 merged into tranche/T51 by K4311): 83 screens and 563 acts (433 declared, 83 function, 47 owed; 43 owed ops). The acts DEC-394 draws are registered on their screens (casedrafts on case-editor, ceremony and review-copy; heldcaptures on project; capturerequests on capture; resolvetestify on document), and its owed contradictionflag is carried apart on document (R13). capture's three owed capturecredential acts are unchanged. The earlier file is kept beside the carried one. Test: t51.test.mjs (R47): the pin, the counts, the named acts, the owed set, and a changed generated registry fails --check."
