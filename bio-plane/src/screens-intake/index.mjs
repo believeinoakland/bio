@@ -72,7 +72,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.cred.list", "screen.capture.cred.listnote1", "screen.capture.cred.listnote2", "screen.capture.cred.tip1", "screen.capture.cred.tip2",
     "act.owed_capturecredentialsupply.label.capture", "act.owed_capturecredentiallist.label.capture", "act.owed_capturecredentialwithdraw.label.capture",
     "act.capturerequestretry.label.capture",
-    "screen.watching.name", "screen.leads.name", "shell.card.question", "shell.card.document", "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE",
+    "act.capturerequests.label.capture", "screen.watching.name", "screen.leads.name", "shell.card.question", "shell.card.document", "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE", "refusal.ACQUIRE_TIMED_OUT",
     "screen.capture.later.head", "screen.capture.later.about", "screen.capture.later.waiting", "screen.capture.later.captured", "screen.capture.later.turned",
   ]),
   held: Object.freeze([

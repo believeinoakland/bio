@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_016TLvaypBQx6X3AHUVwEdcN · depth 2 · COMPLETE · handled B16
+**Status** · session_016TLvaypBQx6X3AHUVwEdcN · depth 2 · COMPLETE · handled B18
 
 ## Record
 
@@ -232,3 +232,19 @@ QUESTION (fix round 2; no answer is needed to finish what is done): words and tw
 
 COMPLETE (T51 fix round 2, B15 and B16). Causes met: C9 and C10 (R49: a visible holder is linked and nothing written; `for` rides on acquire so the plane records the ask; the other-home refusal names and links the holder; the file arm files only when the answer carries the document, REPORT 1), C11 (R50 `failed` hook), C14 my part (R77/R88: one picker read on capture, acts re-read only what they changed; Held reads its two lists once), C23 Held (R4: project filter, one state word), C25 (R54: title, file name, host and day), C29, C45, C78, C90, C91, C28 the fingerprint (the rest is the plane's and needs words: QUESTION J14), DEC-394 (3b) (R47 as built, tested) and (3c) (R55 new), J2 (render_pending, pending attestation, file_name, pickers). Requirement lines for you to fold are in my record (R55, R56 and the amendments of R3, R4, R7/R32, R25, R46, R47, R50). Suites: screens-intake 201 of 201; control-plane 324 of 324; screens-inquiry 410 of 413 (the three reds are on an untouched tranche/T51 too: registry acts, `contradictionflag`). Checks: format, architecture, words 0 findings for my files; coverage lists none of mine (the six reds are other modules'); ownership 14 files, 0 failures. Reported to you (details in my record): capture R86 existed answer carries no document; doorbell stores no name or type and no pre-pull read; capture R77 has no field for a capture with no object under its fingerprint (so vouch and OCR cannot be withheld); bundleFor could use heldat; Held needs the full read for grades. Not mine: todos.mjs, grouprules.mjs, money.mjs (C14's rest, wave 2 jobs of screens-daily, screens-settings, screens-investigate). Tests I changed because requirements were amended (R54, C29, C90, R8's act re-reads) are listed in the record.
 Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 9, module lines 2233
+
+## B17 CHANGE applied (CONTROL-PLANE #43, K4326)
+
+`acquire`'s `ACQUIRE_TIMED_OUT` is drawn by what the 504 says it `kept`: `held` and `undetermined` by `refusal.ACQUIRE_TIMED_OUT.held` / `.undetermined`, anything else by the base `refusal.ACQUIRE_TIMED_OUT`. Those two keys are not yet in the word table, so the screen falls back to the base words until they are (its test asserts the keyed word once `hasWord` holds it; the keys are not in the screen's word list yet, because the words check refuses a listed key the table lacks: add them to `SCREEN_KEYS.capture` when the rows exist). Also from the merge: the registry now lists `capturerequests` on `capture` (DEC-394 3c): "Show my requests for later" (`act.capturerequests.label.capture`) is drawn and re-reads the list. screens-intake 202 of 202; format, architecture, words 0.
+
+## J16 · COMPLETE
+
+COMPLETE (B17 applied): ACQUIRE_TIMED_OUT drawn by kept (held/undetermined keys fall back to the base words until the rows exist; add them to SCREEN_KEYS.capture then); the merged registry's capturerequests act is drawn. screens-intake 202 of 202; format, architecture, words 0; ownership 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 5, module lines 2245
+
+## B18 ANSWER applied
+
+Put-back (C28): a discarded knock offers `inboxresolve` to `new` (the shell asks the reason) labelled `act.inboxresolve.label.inbox.putback`, drawn only once that row exists in the word table (until then no raw key is drawn; the test branches on `hasWord` and must be re-read when the row lands, the done sentence's key was not named so none is drawn). Link-enough for C10 and the Held filter accepted. Waiting for CAPTURE #41 and DOORBELL #5 (name, type; `whole: false` withholding of vouch and OCR): a CHANGE then. screens-intake 203 of 203; format, architecture, words 0; ownership 0.
+
+## J17 · COMPLETE
+
+COMPLETE (B17 and B18 applied): put-back of a discarded knock drawn once act.inboxresolve.label.inbox.putback exists (no raw key before); B17 as J16. Waiting for CAPTURE #41 and DOORBELL #5 (CHANGE then). screens-intake 203 of 203; format, architecture, words 0; ownership 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 3, module lines 2250

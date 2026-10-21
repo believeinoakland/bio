@@ -100,7 +100,10 @@ function renderInbox(cs, view) {
       + (k.status === "new" ? `<div class="mk-acts">${cs.act("inboxpull", { tone: "primary" })}</div>`
         /* R32 (1): discarding asks why first (`inbox.discard.why`), the words sent as `reason` */
         + cs.field("cx-why", "inbox.discard.why", { area: true, rec: true, value: L.why || "" })
-        + `<div class="mk-acts">${cs.act("inboxresolve")}</div>` : "")
+        + `<div class="mk-acts">${cs.act("inboxresolve")}</div>`
+        /* C28 (B18): a discarded knock can be put back (`inboxresolve` to `new`, doorbell R3); the button is drawn once the design's keys exist */
+        : k.status === "discarded" && cs.w("act.inboxresolve.label.inbox.putback") !== "act.inboxresolve.label.inbox.putback"
+          ? `<div class="mk-acts">${cs.act("inboxresolve", { label: "act.inboxresolve.label.inbox.putback", data: { status: "new" } })}</div>` : "")
       + link + (door ? cs.sheet(door) : "") + knocker + reference + "</section>";
   });
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.inbox.sub")}</p></div>`
@@ -141,11 +144,14 @@ async function donePull(view, answer, cs) {
 /* R7: "Discard with a reason" (`inboxresolve` to `discarded`): a reasoned act, so the shell asks the reason first and
  * sends it as `reason` (setup-page R11's rule); `RESOLVE_NO_REASON` drawn by its words, the knock left as it was. */
 function sendDiscard(view, el, cs) {
+  /* put back: the shell asks the reason (reasonField) and the knock returns to `new` */
+  if (el && el.dataset && el.dataset.status === "new") return { body: { knockId: view.subject, status: "new" } };
   const why = String(cs.value("cx-why") || "").trim();
   if (!why) return { refuse: "refusal.RESOLVE_NO_REASON" };
   return { body: { knockId: view.subject, status: "discarded", reason: why } };
 }
 function doneDiscard(view, answer, cs) {
+  if (answer && answer.status === "new") { cs.set("discarded", false); cs.set("pulled", false); return; }
   cs.set("discarded", true);
   cs.set("pulled", false);
 }

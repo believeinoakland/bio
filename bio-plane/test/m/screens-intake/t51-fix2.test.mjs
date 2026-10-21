@@ -17,6 +17,8 @@ const PROJ = "PROJ-2026-0007", Q = "INQ-2026-0001-seven-days";
 const md = (title, extra = []) => ["---", `title: ${JSON.stringify(title)}`, ...extra, "---", "", "## Summary", ""].join("\n");
 const QPLANE = { search: ok({ hits: [{ bundle_id: Q, title: "Seven days" }] }),
   image: (r) => ok(r.query.id === Q ? { "bundle.md": md("Seven days", [`project: ${PROJ}`]) } : r.query.id === PROJ ? { "bundle.md": md("Pothole repairs") } : r.query.id === "INFO-2026-0099-elsewhere" ? { "bundle.md": md("The earlier minutes") } : null) };
+import { hasWord } from "../../../src/setup-words/index.mjs";
+const hasKey = (k) => hasWord(k);
 const anchors = (p, id) => Array.from(main(p).querySelectorAll("a")).filter((a) => String(a.getAttribute("href")).includes(id));
 
 /* ---------- C9, C10: R49 ---------- */
@@ -269,17 +271,43 @@ test("R7 R32 (C28) a knock's detail shows its fingerprint, labelled, before the 
 
 /* ---------- acquisition R5, R20: what was kept but is not finished ---------- */
 
-test("R50 a render still being made and an attestation that had not answered are said as they stand; a capture with neither says neither", async () => {
-  const doc = { ...DOC, render_pending: { session: "rs_x", since: "2026-10-01T10:00:00Z", note: "the page as a visitor saw it is still being made" },
-    attestation_attempts: [{ service: "attest", attempted: true, ok: false, pending: true, at: "2026-10-01T10:00:00Z", note: "the timestamp had not answered when this was answered" }] };
+test("R50 a render RENDER-NOTE-X and an attestation that ATTEST-NOTE-X are said as they stand; a capture with neither says neither", async () => {
+  const doc = { ...DOC, render_pending: { session: "rs_x", since: "2026-10-01T10:00:00Z", note: "RENDER-NOTE-X" },
+    attestation_attempts: [{ service: "attest", attempted: true, ok: false, pending: true, at: "2026-10-01T10:00:00Z", note: "ATTEST-NOTE-X" }] };
   const p = await open("/app/capture/address", { plane: { ...CAPTURED, acquire: ok({ ok: true, document: doc, reading: { title: "Housing notice" } }) } });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   await p.settle();
-  assert.ok(text(p).includes("the page as a visitor saw it is still being made") && text(p).includes("the timestamp had not answered when this was answered"));
+  assert.ok(text(p).includes("RENDER-NOTE-X") && text(p).includes("ATTEST-NOTE-X"));
   const q = await open("/app/capture/address", { plane: { ...CAPTURED, acquire: ok({ ok: true, document: { ...DOC, attestation_attempts: [{ service: "attest", attempted: true, ok: true }] }, reading: { title: "Housing notice" } }) } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "acquire");
   await q.settle();
-  assert.ok(!text(q).includes("still being made") && !text(q).includes("had not answered"));
+  assert.ok(!text(q).includes("RENDER-NOTE-X") && !text(q).includes("ATTEST-NOTE-X"));
+});
+
+/* ---------- control-plane R105, R116 (K4326): what a timed-out capture kept ---------- */
+
+test("R50 a timed-out capture is drawn by what it kept: held and undetermined by their keys (where the table holds them), nothing by the base words", async () => {
+  for (const kept of ["held", "undetermined", "nothing", undefined]) {
+    const p = await open("/app/capture/address", { plane: { acquire: refused("ACQUIRE_TIMED_OUT", "builder detail", 504, kept ? { kept } : {}) } });
+    fill(p, { "ci-address": ADDRESS });
+    const r = await press(p, "acquire");
+    const key = kept === "held" || kept === "undetermined" ? `refusal.ACQUIRE_TIMED_OUT.${kept}` : "refusal.ACQUIRE_TIMED_OUT";
+    assert.ok(saysIn(r.slot(), hasKey(key) ? key : "refusal.ACQUIRE_TIMED_OUT"), String(kept));
+    assert.ok(!r.slot().textContent.includes("builder detail"));
+  }
+});
+
+test("R7 (C28) a discarded knock offers put-back once the design's keys exist, sending status new; a new knock offers discard and no put-back", async () => {
+  const K = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 500, note: "n", received: "2026-10-03T10:00:00Z", status: "discarded", resolve_reason: "dup", pseudonym: null, knocker_digest: null };
+  const at = (k) => open(`/app/inbox/${k.knock_id}`, { plane: { inbox: ok({ inbox: [k] }), inboxget: ok({ ok: true, item: k }), inboxresolve: ok({ ok: true, status: "new" }) } });
+  const p = await at(K);
+  const put = main(p).querySelector('button[data-act="inboxresolve"]');
+  if (hasKey("act.inboxresolve.label.inbox.putback")) {
+    await press(p, "inboxresolve", { reason: "Mistake." });
+    assert.equal(p.byOp("inboxresolve")[0].body.status, "new");
+  } else assert.equal(put, null, "no raw key is drawn while the row is missing");
+  const n = await at({ ...K, status: "new" });
+  assert.ok(btn(n, "inboxresolve") && btn(n, "inboxpull"), "control: a new knock offers discard");
 });
