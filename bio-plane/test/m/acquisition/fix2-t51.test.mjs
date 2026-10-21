@@ -204,3 +204,26 @@ test("R5 R6 (C13) controls: a fast render files the pair at once; a render whose
   assert.deepEqual([fin.status, fin.body.reason, fin.body.filed], [502, "RENDER_FAILED", false]);
   assert.deepEqual(bad.prov.receipts.map((x) => x.captureSha), [sha(SHELL_HTML)], "only the shell has a receipt");
 });
+
+/* ---------- C25: the document's own file name, for naming it when it has no title ---------- */
+const bytes = (n = "a document") => new Response(n, { headers: { "content-type": "application/octet-stream" } });
+const withHeaders = (h) => () => new Response("a document", { headers: { "content-type": "application/pdf", ...h } });
+
+test("R16 (C25): the capture records the file name the source gives the document (Content-Disposition, else the address's own last segment when it names a file), never invented; the document's other facts are unchanged", async () => {
+  const w = world();
+  const name = async (url, headers = {}) => (await run(w, { [url]: withHeaders(headers) }, { locator: url })).body.document.capture.file_name;
+  assert.equal(await name("https://a.example/download?id=3", { "content-disposition": 'attachment; filename="INFO-2026-0042.pdf"' }), "INFO-2026-0042.pdf");
+  assert.equal(await name("https://a.example/d?id=4", { "content-disposition": "attachment; filename=plain.pdf" }), "plain.pdf");
+  assert.equal(await name("https://a.example/d?id=5", { "content-disposition": "attachment; filename=\"fallback.pdf\"; filename*=UTF-8''Fran%C3%A7ais%20minutes.pdf" }), "Français minutes.pdf", "the extended form wins");
+  assert.equal(await name("https://a.example/files/Budget%20FY27.pdf?v=2"), "Budget FY27.pdf", "the address's own last segment, decoded, query dropped");
+  /* never a path, and never a name the source did not give */
+  assert.equal(await name("https://a.example/x", { "content-disposition": 'attachment; filename="../../etc/passwd"' }), "passwd");
+  assert.equal(await name("https://a.example/agendas/council", {}), undefined, "a segment that names no file is no file name");
+  assert.equal(await name("https://a.example/", {}), undefined);
+  assert.equal(await name("https://a.example/d?id=6", { "content-disposition": "inline" }), undefined, "a disposition with no name");
+  assert.equal(await name("https://a.example/d?id=7", { "content-disposition": `attachment; filename="${"n".repeat(500)}.pdf"` }), undefined, "a name past 200 characters is not kept");
+  /* the document is otherwise what it was: with and without a name it has the same keys under `capture` but this one */
+  const a = (await run(w, { "https://a.example/a.pdf": withHeaders({}) }, { locator: "https://a.example/a.pdf" })).body.document.capture;
+  const b = (await run(w, { "https://a.example/b": withHeaders({}) }, { locator: "https://a.example/b" })).body.document.capture;
+  assert.deepEqual(Object.keys(a).filter((k) => !(k in b)), ["file_name"]);
+});

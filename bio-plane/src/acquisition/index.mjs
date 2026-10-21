@@ -149,6 +149,40 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
            basis: word("acquisition.basis.normalized_under_certain", { key: stackId.handler.key, version: stackId.handler.version }) };
 }
 
+/** R16 (T51; the walk's C25): the file name the source gives a document, for naming it when it has no title of its own: the
+ *  `Content-Disposition` header's (RFC 6266; the extended `filename*` of RFC 5987 before the plain `filename`), else the last
+ *  segment of the document's own address when that names a file (it ends in a dot and an extension). Decoded, a path taken
+ *  off it, white space trimmed, at most 200 characters; null when the source gives none, never made up from the host or the date.
+ *  Pure; never throws. */
+export const FILE_NAME_MAX = 200;
+export function fileNameOf(headers, address) {
+  const clean = (v) => {
+    if (typeof v !== "string") return null;
+    const last = v.replace(/\\/g, "/").split("/").pop().replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    return last && last.length <= FILE_NAME_MAX && last !== "." && last !== ".." ? last : null;
+  };
+  const decode = (v) => { try { return decodeURIComponent(v); } catch { return null; } };
+  try {
+    const cd = headers && typeof headers.get === "function" ? headers.get("content-disposition") : null;
+    if (typeof cd === "string") {
+      const ext = /filename\*\s*=\s*([^;]*)/i.exec(cd);
+      if (ext) {
+        const m = /^\s*([A-Za-z0-9._-]+)'[^']*'(.*)$/.exec(ext[1].trim());
+        const got = m ? (/^utf-?8$/i.test(m[1]) ? decode(m[2]) : null) : null;
+        const c = clean(got); if (c) return c;
+      }
+      const plain = /(?:^|;)\s*filename\s*=\s*("((?:[^"\\]|\\.)*)"|[^;]*)/i.exec(cd);
+      if (plain) { const c = clean(plain[2] !== undefined ? plain[2].replace(/\\(.)/g, "$1") : plain[1].trim()); if (c) return c; }
+    }
+    if (typeof address === "string") {
+      const seg = new URL(address).pathname.split("/").pop();
+      const c = clean(decode(seg));
+      if (c && /\.[A-Za-z0-9]{1,8}$/.test(c)) return c;
+    }
+  } catch { /* the source gave no name */ }
+  return null;
+}
+
 /** R17 (T51; the walk's C26): the digests of bytes this instance did not store, as `profileOf` would record them for a capture of
  *  those bytes: the stack identified from the headers, the address and the content type, then `substanceDigests`, the one
  *  function that decides whether a digest can be trusted to assert sameness. For a reader (`capture` R96's look at a site)
@@ -1388,6 +1422,8 @@ async function acquireRun(cap, body0, opts, t) {
       actor,
       sha256: sha, encoding: "binary", bytes: total,
       ...(ct ? { content_type: ct } : {}),
+      /* R16 (T51; C25): the file name the source gave the document, when it gave one, so a document with no title of its own is named by it */
+      ...(fileNameOf(res.headers, resolvedUrl || locator) ? { file_name: fileNameOf(res.headers, resolvedUrl || locator) } : {}),
       ...(renderRecorded ? {} : { transport }),
       /* R23: that a supplied credential rode the fetch, whose and at which scope, never its secret. */
       ...(crCredential ? { credentialed: { credential: crCredential.credential ?? null, kind: crCredential.kind,
