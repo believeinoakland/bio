@@ -343,7 +343,9 @@ test("R108 (control): a short answer arrives whole and byte for byte as the plan
 });
 
 test("R105 (T50; T51: N1234, DEC-329 (5); K3770): the door answers `acquire` within its bound, 25 seconds: a handler still running past it is answered the refusal `ACQUIRE_TIMED_OUT` (504, its `detail` read by the design's key `refusal.ACQUIRE_TIMED_OUT`, no sentence of this module's), never a silent stop; one that ends inside the bound is answered as it gave (control: another op is not bounded and carries neither the code nor the detail)", async () => {
-  const w = world();
+  /* the object states the call was stopped before its capture was recorded (fix round 2, C12: only then is `kept nothing` said) */
+  const w = world({ answer: (c) => (c.route === "acquiretimings"
+    ? new Response(JSON.stringify({ ok: true, result: { ok: true, stageTimes: { total_ms: 60, stages: { fetch: 55 }, running: "fetch" } } })) : null) });
   const slow = { ...defaultHooks(), acquireBoundMs: 60,
     async gatedOp(ctx) {
       if (ctx.op === "acquire") { await new Promise((r) => setTimeout(r, ctx.url.searchParams.get("wait") === "long" ? 400 : 5));

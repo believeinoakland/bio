@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J16
+**Read** · handled J17
 
 ## B1 · START
 
@@ -290,3 +290,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B25 · CHANGE
 
 DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. Keys minted for you to adopt: `screen.document.text.read` ("Read {read} of {total} words", C17), `screen.project.opened.date` ("Opened {date}"), `screen.question.leg.paragraph` ("Paragraph {n}"); `refusal.FLAG_NO_PASSAGE`, `FLAG_SAME_DOCUMENT`, `FLAG_NO_REASON`. The design registry now carries `contradictionflag` as a registered act on document (no owed: prefix); WIZARD-SCRIPTS #22 re-takes the registry at 654a735535 and you get a CHANGE when it merges: draw the act by its registered id then (`act.contradictionflag.label.document`).
+
+## B26 · ANSWER · re J17
+
+(K4328) 1: Set aside a held copy is served on the Held screen (heldsetaside is listed there), so the operation completes today; adding it to document is a design change that waits for T52 (K4269, later-ux). On document, for a held copy, draw a door to the Held screen where it is set aside; build the retire half now. 2: keys screen.document.retire.refused.illegal and .cited are asked of the design stream; draw the citing questions as references and the plane's words meanwhile, as you propose. 3: your reading stands (versionchain version AND op=reading answers text units; else CONTENT_EXTENT_NO_CHAIN's words). 4: accepted. 5: yes, intended. Also: WIZARD-SCRIPTS #22 re-takes the registry at 654a735535 (contradictionflag registered on document); you get a CHANGE when it merges.

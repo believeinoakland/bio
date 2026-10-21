@@ -11,6 +11,8 @@ import { OPS, OP_STAMPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { fresh } from "../capture/fixture.mjs";
 import { world as caseWorld, V as CV } from "../case-account/fixture.mjs";
 import { world as clockWorld, MACHINE, CLK } from "../action-clocks/fixture.mjs";
+import { boot as translationsBoot } from "../translations/fixture.mjs";
+import { translationsOps } from "../../../src/translations/index.mjs";
 import { call } from "./harness.mjs";
 import { callers } from "./door-routes.mjs";
 
@@ -64,6 +66,14 @@ const clockOf = async (fields) => {
   return controlPlaneOwnerOps({ actionClocks: () => w.c }, url("clockpropose", { ...fields, proposer: MACHINE, viewer: MACHINE }), undefined).clockpropose();
 };
 
+/* R116 (C15): `interfacewords` is translations' arm (R66), declared here because the shell sends it (K4317); every field is the
+   address's, the viewer the door's stamp */
+const wordsOf = async (fields) => {
+  const w = translationsBoot();
+  const q = new URLSearchParams({ op: "interfacewords", viewer: MEMBER, ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v)])) });
+  return translationsOps(w.m, new URL(`http://x/?${q}`), {}).interfacewords();
+};
+
 /* agent-worker R66's judgment of `step` (the stand-in: its refusal for any other step is BAD_STEP, by code) */
 const AGENT_STEPS = ["start", "code", "state", "signout"];
 const agentWorker = { fetch: async (_url, init) => {
@@ -107,6 +117,16 @@ test("R112 (K4210) clockpropose: its target and rule are required, each missing 
 test("R112 (K4210) subscriptionsignin: its step is required, a step agent-worker does not judge refused naming it by BAD_STEP; a field outside accepts is dropped", async () => {
   await declaredOpHolds({ op: "subscriptionsignin", declaration: DECLARED_OPS.subscriptionsignin, call: signinOf,
     refusedNaming: named({ step: ["BAD_STEP"] }), values: { step: "signout" }, same: sameSignin });
+});
+
+test("R116, R112 (K4317) interfacewords: it requires nothing (the viewer's own language is the default), `language` and `v` are accepted, a malformed language is refused naming it, and a field outside accepts is dropped", async () => {
+  assert.deepEqual(DECLARED_OPS.interfacewords.fields, { accepts: ["language", "v"], requires: [] });
+  await declaredOpHolds({ op: "interfacewords", declaration: DECLARED_OPS.interfacewords, call: wordsOf,
+    refusedNaming: named({ language: ["LANGUAGE_MALFORMED"] }), values: { language: "es", v: "9.8.7" }, same: sameCode });
+  /* control: `language` is read, so a malformed one is refused naming it (the declaration is not vacuous) */
+  const bad = await wordsOf({ language: "bad tag" });
+  assert.equal(bad.ok, false);
+  assert.ok(named({ language: ["LANGUAGE_MALFORMED"] })(bad, "language"), JSON.stringify(bad).slice(0, 200));
 });
 
 test("R112 (K4206, K4210) each declaration agrees with its hand row: the classes, machine classes, mutating flag, stamps and needs the door's tables hold", () => {

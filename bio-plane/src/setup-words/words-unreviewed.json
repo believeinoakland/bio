@@ -19055,6 +19055,13 @@
       "line": 27
     },
     {
+      "id": "control-plane.declared.interfacewords",
+      "en": "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/owner-ops.mjs",
+      "line": 36
+    },
+    {
       "id": "control-plane.declared.subscriptionsignin",
       "en": "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle",
       "module": "control-plane",
@@ -39674,49 +39681,49 @@
       "en": "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1686
+      "line": 1728
     },
     {
       "id": "provenance.index.capture_axis_authored",
       "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1763
+      "line": 1805
     },
     {
       "id": "provenance.index.capture_is_not_a_document",
       "en": "capture {capture} is not a document this record's register holds in {bundle}",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1231
+      "line": 1273
     },
     {
       "id": "provenance.index.deciding_who_issued_a_document",
       "en": "deciding who issued a document is a named member's act, and this call carries nobody",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1218
+      "line": 1260
     },
     {
       "id": "provenance.index.name_the_party_that_issued",
       "en": "name the party that issued the document, in at most 500 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1241
+      "line": 1283
     },
     {
       "id": "provenance.index.say_how_you_know_or",
       "en": "say how you know, or what you tried, in at most 2000 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1239
+      "line": 1281
     },
     {
       "id": "provenance.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1216
+      "line": 1258
     },
     {
       "id": "public-read.casefile.a_finding_id_a_material",

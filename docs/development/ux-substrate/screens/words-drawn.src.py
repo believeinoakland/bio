@@ -6967,6 +6967,12 @@ REWRITE.update({
   'screen.money.f.nocontract': 'Choose the contract.',   # DEC-396: B444 item 8
 })
 
+# DEC-397: B446 (K4326), B447 (K4327)
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT.held', en="The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.", protected=False, note='DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept'))
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT.undetermined', en="The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.", protected=False, note='DEC-397: B446: a timed-out capture whose kept state cannot be told'))
+W.append(dict(key='form.choose.search', en='Search your documents', protected=False, note='DEC-397: B447 (screens-investigate C95): the document picker\'s search box label'))
+W.append(dict(key='form.choose.search.none', en='No document matches. Try other words, or add the document first.', protected=False, note='DEC-397: B447: the document picker\'s search found nothing'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
