@@ -37589,6 +37589,24 @@
    "en": "1 review link is live.",
    "protected": false,
    "note": "DEC-398: B450 (C49): the singular of screen.ceremony.links.live"
+  },
+  {
+   "key": "screen.held.vouch.partsonly",
+   "en": "Only parts of this copy were kept, not the whole of what its source gave, so it cannot be vouched for. Capture it again whole, or set it aside with a reason.",
+   "protected": false,
+   "note": "DEC-399: B451 (capture R77 whole: false): why the vouch is withheld"
+  },
+  {
+   "key": "screen.inbox.knock.name",
+   "en": "File name, as the sender gave it",
+   "protected": false,
+   "note": "DEC-399: B453 (doorbell R27): label beside a knock's sender-stated file name"
+  },
+  {
+   "key": "screen.inbox.knock.type",
+   "en": "Kind of file, as the sender gave it",
+   "protected": false,
+   "note": "DEC-399: B453: label beside a knock's sender-stated media type"
   }
  ],
  "rewrite": {

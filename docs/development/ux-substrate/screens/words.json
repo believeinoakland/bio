@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6946,
+  "screen": 6949,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18124,
+  "total": 18127,
   "protected": 1068
  },
  "words": [
@@ -75431,6 +75431,27 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-398: B450 (C49): the singular of screen.ceremony.links.live"
+  },
+  {
+   "key": "screen.held.vouch.partsonly",
+   "en": "Only parts of this copy were kept, not the whole of what its source gave, so it cannot be vouched for. Capture it again whole, or set it aside with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-399: B451 (capture R77 whole: false): why the vouch is withheld"
+  },
+  {
+   "key": "screen.inbox.knock.name",
+   "en": "File name, as the sender gave it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-399: B453 (doorbell R27): label beside a knock's sender-stated file name"
+  },
+  {
+   "key": "screen.inbox.knock.type",
+   "en": "Kind of file, as the sender gave it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-399: B453: label beside a knock's sender-stated media type"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

@@ -6991,6 +6991,11 @@ W.append(dict(key='screen.review-copy.links.comments.other', en='{n} comments', 
 W.append(dict(key='screen.case-editor.links.live.one', en='1 review link is live.', protected=False, note='DEC-398: B450 (C49): the singular of screen.case-editor.links.live'))
 W.append(dict(key='screen.ceremony.links.live.one', en='1 review link is live.', protected=False, note='DEC-398: B450 (C49): the singular of screen.ceremony.links.live'))
 
+# DEC-399: B451 (K4332), B453 (K4335)
+W.append(dict(key='screen.held.vouch.partsonly', en="Only parts of this copy were kept, not the whole of what its source gave, so it cannot be vouched for. Capture it again whole, or set it aside with a reason.", protected=False, note='DEC-399: B451 (capture R77 whole: false): why the vouch is withheld'))
+W.append(dict(key='screen.inbox.knock.name', en='File name, as the sender gave it', protected=False, note='DEC-399: B453 (doorbell R27): label beside a knock\'s sender-stated file name'))
+W.append(dict(key='screen.inbox.knock.type', en='Kind of file, as the sender gave it', protected=False, note='DEC-399: B453: label beside a knock\'s sender-stated media type'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
