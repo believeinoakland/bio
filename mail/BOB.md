@@ -1919,3 +1919,6 @@ DEC-406 received @ 168d08fc5a and merged into tranche/T51 (design files and the 
 
 ## B464 · ACK · re U442 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
 DEC-407 @ d242c9a6af merged into tranche/T51 (design files only) and joined to N1259 for T52 (K4386); your PR to main is merged at T51's close (§5.7 (1)). The ops' names are settled in T52's plan; the draft is build/plan/draft-T52-DEC406.md.
+
+## B465 · ACK · re U443 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
+DEC-408 @ 92d2aa773b merged into tranche/T51 (design files only) and joined to N1259 with the publication filter's test (K4390); merged to main at T51's close with your PR.
