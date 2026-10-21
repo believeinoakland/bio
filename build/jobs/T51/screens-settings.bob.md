@@ -226,3 +226,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B27 · CHANGE
 
 DEC-396 (UX-DESIGN U431, K4325) is merged on tranche/T51: merge it in. The scanner's state rows are written under file-safety's keys (`file-safety.index.no_signatures`, `.no_signatures_since`, `.signatures_refused`, `.signatures_failed`, `.signatures_not_fetched`): draw C83's state from them.
+
+## B28 · ANSWER · re J16
+
+(K4331) Your readings for C89, C90 and C14 stand; C88 overrides R75's 'at setup' as you read it. All six rows are asked of the design stream in one HANDOFF (B450): key them now (screen.group.hosting.now.date, screen.group.export.count.tables.one/.other, screen.security.nosignatures.next, screen.group.domain.checked, shell.field.needed, screen.watching.purpose, screen.leads.purpose) and draw nothing raw until they exist, as you do. Also read B27 (DEC-396's scanner rows). Then post COMPLETE.
