@@ -421,6 +421,8 @@ export default {
       requesters: { text: "any person; no reason or use need be stated", citation: "Oakland Mun. Code §§ 2.20.230(D), 2.20.270(B)(1)",
         status: "researched", basis: "2026-10-11 actions-law" },
       basis: "2026-10-05 time-law" },
+    /* R95 (T51, C64): read live 2026-10-21 on the official text, the United States Code (2024 Edition) as govinfo.gov prints
+       it, never from memory (`test/fixtures/foia-text.mjs`); the 20-day determination and the appeal are clause (A)(i)'s and (ii)'s. */
     { level: "federal", name: "Freedom of Information Act", citation: "5 U.S.C. § 552",
       stages: [
         { stage: "request", label: "request for records", citation: "5 U.S.C. § 552(a)(3)(A)" },
@@ -428,12 +430,12 @@ export default {
         { stage: "extension_notice", label: "written notice of unusual circumstances", citation: "5 U.S.C. § 552(a)(6)(B)(i)" },
         { stage: "production", label: "records made promptly available", citation: "5 U.S.C. § 552(a)(3)(A)" },
         { stage: "denial", label: "determination denying the request", citation: "5 U.S.C. § 552(a)(6)(A)(i)" },
-        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. § 552(a)(6)(A)(i), (ii)" },
+        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. § 552(a)(6)(A)(i)" },
         { stage: "appeal_decision", label: "determination on the appeal", citation: "5 U.S.C. § 552(a)(6)(A)(ii)" },
         { stage: "court_filing", label: "complaint in the district court", citation: "5 U.S.C. § 552(a)(4)(B)" }],
       requesters: { text: "any person; an element of the intelligence community does not make records available to a foreign government entity or its representative",
-        citation: "5 U.S.C. § 552(a)(3)(A), (E)", status: "researched", basis: "2026-10-11 actions-law" },
-      basis: "2026-10-05 time-law" },
+        citation: "5 U.S.C. § 552(a)(3)(A), (E)", status: "researched", basis: "2026-10-21 foia-text" },
+      basis: "2026-10-21 foia-text" },
   ],
 
   standard_sources: [
