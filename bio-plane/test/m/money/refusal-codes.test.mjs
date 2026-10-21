@@ -1,5 +1,5 @@
 /* money R29 (fix round 4, C8-words; K4429; amends R1; K446): money's own refusal for a fiscal key the profile cannot map
-   has its own code, MONEY_BAD_PERIOD, with its real reason as the detail; BAD_PERIOD stays with following and civil-time. */
+   has its own code, MONEY_BAD_PERIOD, with its real reason as the detail; money answers no BAD_PERIOD (K4438). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded } from "./fixture.mjs";
@@ -23,10 +23,10 @@ test("R29 a fiscal key the profile holds no fiscal year for is refused MONEY_BAD
   assert.match(r.detail, /Nobody/);
 });
 
-test("R29 control: a period whose first day is after its last day is still refused BAD_PERIOD", () => {
+test("R29 control: a period whose first day is after its last day is still refused MONEY_BAD_PERIOD", () => {
   const s = seeded();
   const r = s.m.recordFact(s.fact({ period: { from: "2026-03-01", to: "2026-02-01" } }));
-  assert.equal(r.code, "BAD_PERIOD");
+  assert.equal(r.code, "MONEY_BAD_PERIOD");
 });
 
 test("R29 control: a valid fiscal key is accepted, and writes a fact", () => {
