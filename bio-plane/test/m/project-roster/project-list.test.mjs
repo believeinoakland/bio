@@ -104,12 +104,13 @@ test("R26 each project is {id, name, stage}: name its title (record-core R34), s
     { id: "PROJ-Z", name: "Zeta", stage: null, owner: null },
   ]);
   for (const p of all.projects) {
-    assert.deepEqual(Object.keys(p).sort(), ["activity", "id", "lastChange", "members", "mine", "name", "owner", "participation", "scope", "stage"], p.id);
+    assert.deepEqual(Object.keys(p).sort(), ["activity", "id", "lastChange", "members", "mine", "name", "owner", "participation", "question_count", "scope", "shared_drafts", "stage"], p.id);
     assert.equal(p.name, w.core.bundleInfo(p.id).title, `${p.id}: R34's title`);
   }
-  /* no question count, no request, nothing of the project beyond its id, title, stage, opener (R27), members and
-     activity (R28) */
-  assert.doesNotMatch(JSON.stringify(all), /question|request|participant/);
+  /* no request, nothing of the project beyond its id, title, stage, opener (R27), members, activity (R28) and R42's two
+     counts, which a project with no document or draft answers as zero and null */
+  assert.doesNotMatch(JSON.stringify(all), /request|participant/);
+  for (const p of all.projects) assert.deepEqual([p.question_count, p.shared_drafts], [0, { count: 0, newest: null }], p.id);
   /* the stage is read as recorded, at each read: a change of the recorded state shows at once */
   w.sql.exec(`UPDATE bundles SET current_state='closed' WHERE bundle_id='PROJ-A'`);
   assert.equal(w.r.projectList({ viewer: V("ann") }).projects[0].stage, "closed");
