@@ -137,6 +137,46 @@ test("R58 resolutionsFor answers `names`, one entry per entity the capture's res
   assert.deepEqual(w.e.resolutionsFor({ captureSha: sha("nm"), viewer: MACHINE }).names.find((n) => n.entity_id === other).label, null);
 });
 
+test("R14 resolutionsFor answers `unresolved`: the references of the capture no entity resolution holds, in reading order, each {ref, label, page}; a fully resolved reading answers []; a testimony or a resolution resolves one; bounded at the limit with `unresolved_truncated`", () => {
+  const w = people();
+  w.e.createEntity({ note: NOTE, kind: "office", label: "Harbour Master" });
+  w.read("INFO-1", sha("un"), [
+    { kind: "z", key: "1", label: "Zed Person", source: pg(3) },
+    byId("bar 12345", "n"),
+    { kind: "z", key: "2", label: "Harbour Master" },
+    { kind: "z", key: "3", label: "Alpha Person" },
+    { kind: "z", key: "4", label: "Mid Person", source: pg(1) },
+  ]);
+  w.e.resolve({ captureSha: sha("un") });
+  const r = w.e.resolutionsFor({ captureSha: sha("un"), viewer: MACHINE });
+  assert.deepEqual(r.unresolved, [
+    { ref: "z:1", label: "Zed Person", page: 3 },
+    { ref: "z:3", label: "Alpha Person", page: null },
+    { ref: "z:4", label: "Mid Person", page: 1 },
+  ]);
+  assert.equal(r.unresolved_truncated, false);
+  /* a member's testimony names a subject for one: it is no longer unresolved */
+  assert.equal(w.e.testify({ captureSha: sha("un"), ref: "z:3", entityId: w.pat, basis: "b" }).ok, true);
+  assert.deepEqual(w.e.resolutionsFor({ captureSha: sha("un"), viewer: MACHINE }).unresolved.map((u) => u.ref), ["z:1", "z:4"]);
+  /* the cut: by reading one past the limit */
+  const cut = w.e.resolutionsFor({ captureSha: sha("un"), limit: 1, viewer: MACHINE });
+  assert.deepEqual([cut.unresolved.map((u) => u.ref), cut.unresolved_truncated], [["z:1"], true]);
+  assert.equal(w.e.resolutionsFor({ captureSha: sha("un"), limit: 2, viewer: MACHINE }).unresolved_truncated, false);
+  /* the op answers it too */
+  assert.deepEqual(ops(w, "resolutions", { sha256: sha("un"), viewer: MACHINE }).unresolved.map((u) => u.ref), ["z:1", "z:4"]);
+});
+
+test("R14 control: a fully resolved reading answers `unresolved: []`, so does a capture with no reading; a reference read at several places is one, at its first", () => {
+  const w = people();
+  w.read("INFO-1", sha("all"), [byId("bar 12345", "n")]);
+  w.e.resolve({ captureSha: sha("all") });
+  const full = w.e.resolutionsFor({ captureSha: sha("all"), viewer: MACHINE });
+  assert.deepEqual([full.unresolved, full.unresolved_truncated], [[], false]);
+  assert.deepEqual(w.e.resolutionsFor({ captureSha: sha("nothing"), viewer: MACHINE }).unresolved, []);
+  w.read("INFO-1", sha("multi2"), [{ kind: "k", key: "1", label: "Nobody", source: pg(9), occurrences: [pg(9), pg(2)] }]);
+  assert.deepEqual(w.e.resolutionsFor({ captureSha: sha("multi2"), viewer: MACHINE }).unresolved, [{ ref: "k:1", label: "Nobody", page: 9 }]);
+});
+
 /* ---------------------------------------------------------------- R57 */
 
 test("R57 onlyByIdentifier counts a visible capture whose resolutions to the entity include `identifier` and none by reference, reference key or label: three captures carry the identifier, one also the name, answers 2; a fourth in a hidden bundle leaves it 2 to an outsider and counts for a participant", () => {
