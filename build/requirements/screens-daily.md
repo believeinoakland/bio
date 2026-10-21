@@ -213,6 +213,14 @@ Words rule (R34) stands: a sentence the design does not hold is never invented; 
 - **R84** (T51 fix round 2, C72; K4326) "What you answered" draws any act the owner answers by its own row (R79 (d)); no new rows are owed until `queue` adds derived-item receipts.
 - **R85** (T51 fix round 2, C94; interface-shell R111; K4326) Every member named on Home, the queue, Find and Projects is named by `cs.memberName` (the answered list's `by` and `to`, a set-aside finding's `decided_by`, who recorded a passage, a project's owner and members without a handle, the agreed and awaited of an endorsement and an owner vote); never by id, and an unknown member is a word and no link.
 - **R86** (T51 fix round 2, C14; capture R77; K4326) The doors' count of held captures is the picker read (`fields: "picker"`); the vouch to-dos read her own captures whole.
+- **R87** (K4399; fix round 3, C14, P2.2; project-roster R42; amends R8, R10, R64): Home and Projects draw a project's question count from its `projectlist` row's `question_count` and make no read for each project; a row answering `null` is told as not known, never as zero, and no total is drawn from a partial sum. A project's drafts shared for review are read (`casedrafts`) only for a project whose row's `shared_drafts.count` is above 0.
+- **R88** (K4399; C14, P2.3; capture R77; amends R65, R86): Home and the queue make one `heldcaptures` read, `fields: "picker"` with one `limit` of 500; the doors count its rows and the vouch to-dos keep the rows whose `actor` is the member. A member with more than 200 held captures keeps every vouch to-do.
+- **R89** (K4399; C22; amends R67): Find names every place the frontier counts, by its own words, else its document's title, else the plain word for a document; never by a digest or an id.
+- **R90** (K4399; C23): the stage boxes of Projects (and Home's project rows) start at one left edge.
+- **R91** (K4399; C70; interface-shell R96; amends R17): Home and the queue report the vouch band to the shell (`cs.band`), so the masthead and the rail's number include it.
+- **R92** (K4399; C81): Home and Projects at 390 px have nothing past the screen's edge and every target at least 44 px.
+- **R93** (K4399; queue-producers R52): an item standing for several notices closes all of them on one press, the same reason for each; a refusal on one stops the rest and is shown once.
+- **R94** (K4399; interface-shell R113): each act of the queue, Find and Find in names the reads it changes.
 
 ## Private
 
