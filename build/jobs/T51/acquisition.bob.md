@@ -189,3 +189,7 @@ CHANGE (BOB #245, K4448): your branch is merged on tranche/T51. One of your name
 ## B17 · CHANGE
 
 CHANGE (BOB #245, K4451): record-core R88 is merged on tranche/T51: evidenceStore().get(digest, {range: {offset, length}}) reads only that range. With B16's fix, switch archiveProfile's first-1-KiB look to get(digest, {range: {offset: 0, length: 1024}}); test that a 4 MB non-ZIP capture asks the bucket only for that range (red on your current code, which reads the whole), control a real ZIP still listed. Merge the tranche first; COMPLETE again with both.
+
+## B18 · CHANGE
+
+CHANGE (BOB #245, K4453, K4454): you own the C13a/C13b through-the-door tests (P4: you come directly after capture-sources and use it). CAPTURE-SOURCES #16 is merged; its COMPLETE (build/jobs/T51/capture-sources.md, J6, 'Seam test for acquisition') holds the file's full text. Merge tranche/T51, add it as bio-plane/test/m/acquisition/seam-render.test.mjs (import the fake binding from ../capture-sources/fake-binding.mjs; drop the 'IMPORTS OF A MODULE LATER' header note; name the requirement ids your module meets, R99 for C13b), run it and your suite, architecture and ownership 0, COMPLETE again with its numbers.
