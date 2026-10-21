@@ -275,3 +275,12 @@ Size (session_01T3TLLsdGuDoX11D81FT2G3): test runs 8, module lines 4079
 - Not yet on the tranche: op-declarations/screens must pass `bundle_id` on `op=heldcaptures` (declaration accepts it already).
 
 Size (session_0168CdB2iLQAE8ydXTkw6gic): test runs 14, module lines 4140
+
+## J11 · QUESTION
+
+QUESTION (words for R101 `op=captureseenin`; best reading below, I carry on and none of it blocks the job).
+
+Stand-ins in use, each a `localize` default that the design's row replaces when it lands (the list wins, so no code change then):
+1. `refusal.CAPTURE_NOT_HELD` already exists in words.json (DEC-342) and is held by setup-words, but its English ends "so it cannot be cited", which is wrong where a member is filing a document in a project, and it is not in capture's `reads` in words-reads.json. My new row C-118.11 `CAPTURE_NOT_HELD` reads it through `localize("refusal.CAPTURE_NOT_HELD", …)` in checks.mjs (not `say`, so `t50-words`' pin of WORD_KEYS to the design's `reads` list is untouched). Needed from the design: add `refusal.CAPTURE_NOT_HELD` to capture's `reads`, and either a sentence that fits filing (the same code is used by citation, lines, events, retrieval-browse and others, so a shared wording may be what they want), or tell me to use another code.
+2. Refusal codes the screen will draw for this op, with a row today: `MEMBER_SESSION_REQUIRED` (`refusal.MEMBER_SESSION_REQUIRED` exists), `PROJECT_ACT_NOT_A_PARTICIPANT` (membership's C-56.1, reused as R101 allows; `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` exists), `REQUIRED_ARGUMENT_MISSING`. One code with no catalogue row and no word: `SEEN_IN_NOT_RECORDED` (502, the write failed; `detail` only). If the design wants a sentence for it, it needs a key; otherwise it belongs on `unkeyed`.
+3. Builder diagnostics (details; `unkeyed` candidates, as B3 did for the other details): `capture.index.seenin_member_act`, `capture.index.seenin_not_held`, `capture.index.seenin_not_recorded`; and the op's description `capture.declared.captureseenin`.
