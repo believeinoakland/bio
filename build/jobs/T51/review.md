@@ -137,3 +137,7 @@ COMPLETE for fix round 2 · review (BOB's B9). Branch job/T51/review. `tranche/T
 - `node checks/run.mjs /home/user/bio`: format 1 failure (rulings.md, BOB's); architecture 0 failures; coverage no review line; words 0 failures. ownership: 1 failure, `build/requirements/review.md`, accepted at the merge (B5/B6).
 
 Size (session_01LZnjV7jBk2LxdqJLqKD4W4): test runs 12, module lines 1513
+
+## J6 · COMPLETE
+
+Fix round 2 review complete on job/T51/review. C46 (R41): a finding's statement is the front-matter conclusion first, falsifier added, the Session Log cut from text and statement at both doors. C52 (R18, review's part): reproduced (founder's bare 'admin' was NO_REVIEW_COPY; a project-carrying viewer was attributed to the spelling); comment() now names the member via the sight predicate, so the owner's reply is accepted in each spelling, a stranger/machine/absent viewer is dead. Requirement lines R18 and R41 amended by me in build/requirements/review.md (ownership lists that one file, B5/B6). Review suite 76/76; users: screens-publish, notice-producers, case-authoring, plane, publication all green; control-plane has 1 unrelated failure (R24 word test). Report: reviewCommentsLeftOut still tells only member: viewers; if C52 persists after control-plane merges, check the draft id screens-publish posts. Stale generated: the two bundles. Details in my record.
