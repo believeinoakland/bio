@@ -406,3 +406,13 @@ Suite: `node --test --test-force-exit bio-plane/test/m/control-plane/`: R121, R1
 - **`readheld` collision (B28):** the door's own store-internal route is renamed `readheldfor` (arm in `owner-ops.mjs`, call in `index.mjs`), so extraction's member op `readheld` is the one served under that name. plane's `test/m/plane/fix3-r74.test.mjs` asks the old route name `/readheld`: plane's to follow.
 - **R81 e2e (B27):** `t47-e2e.test.mjs` now asserts the count from the roster row, no `projectquestions` read and one `projectlist`; passes.
 - Suite: `node --test --test-force-exit bio-plane/test/m/control-plane/`: 369 tests, 366 pass, 3 red by name: R122 (shell and screens), C5b held-failed (extraction R80), large PDFs (plane, pdf-reader). Checks: format 0, architecture 0, coverage 89 of 89, ownership 0.
+
+## J21 · REPORT
+
+REPORT (control-plane, after B25-B28). Read B25-B28; all applied except what waits on providers.
+Built: R120's door part (`ctx.deferReading(document)` handed to an `acquire` handler; the door registers a `reading_pending` answer's digest with the plane's `pendingadd`); R121 clock (J20); the `readheld` collision fixed by renaming the door's internal route `readheldfor`; R81 e2e moved to the roster row's count; C5b door change (multipart `existed: null` asks readHeld).
+NEEDED FROM OTHERS (smallest things):
+1. PLANE #48 (or capture): the read step must skip `readAcquired` when `ctx.deferReading(answer.document)` is true and answer the document with `reading_pending: true`, no reading. `plane/door.mjs:92-95` builds `readAcquired`; `capture/ops.mjs` `captureOp` calls it. Without this my large-PDF whole-path test stays red at "the reading follows".
+2. PLANE: `test/m/plane/fix3-r74.test.mjs` asks the door's old route `/readheld`; it is now `/readheldfor`.
+3. EXTRACTION: `readHeld` of a multipart capture must find its home by the `readings` row (it names `bundle_id`) when the register has none: `promoteDocument` registers a multipart capture's parts, not its whole digest (so `homeOf(whole)` is null and `acquire` answers `existed: null` on every re-capture). Else my C5b chain stays red.
+Red by name now (3 of 369): R122 (shell, screens), C5b chain (extraction), large PDFs (plane, pdf-reader). I finish when they have merged; send CHANGE then.
