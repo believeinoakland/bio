@@ -319,3 +319,7 @@ Merged `tranche/T51` first. Each cause: one test written first and seen failing 
 - `node checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs … screens-daily`: 0 failures. `coverage.mjs … screens-daily`: 80 of 80 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: 0 failures. `setup-words/build.mjs --check`: matches.
 
 Size (session_01MP6KcJiwxsSfyUV8mCYLuL): test runs 9, module lines 4069
+
+## J15 · COMPLETE
+
+COMPLETE (B25, fix round 2 wave 2): C21 (R83) Find names every passage row's document and draws the plane's question excerpt; C94 (R85) every member id in this module is named by cs.memberName; C14 (R86) the doors read heldcaptures as fields:picker; C72 (R84) nothing to build (queue's R59 stands, the founder-by-id half is C94). Requirement lines R83-R86 proposed in my record (the file ends at R82). Suite 252/252; format, architecture, coverage 80/80, words, ownership 0 failures. REPORTs in the record: (1) C72 derived-items half not built by queue; (2) one heldcaptures per open needs source/collected_since/actor on capture's picker rows (the to-dos need them); (3) build/plan/impact.mjs errors in this checkout, no module uses screens-daily. Size (session_01MP6KcJiwxsSfyUV8mCYLuL): test runs 9, module lines 4069.
