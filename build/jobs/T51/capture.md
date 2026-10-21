@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01L8v9FL8LnZcJagkfmzoWBk · depth 2 · WORKING · handled B11
+**Status** · session_01L8v9FL8LnZcJagkfmzoWBk · depth 2 · RUNNING until 2026-10-21T15:37:27Z (node --test control-plane, plane, affordances suites (impact of DECLARED_OPS)) · handled B11
 
 ## J1 · COMPLETE
 
