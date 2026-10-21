@@ -162,3 +162,11 @@ Tests and checks:
 - `node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`: 0 files changed by citation beyond the merge, 0 failures.
 
 Size (session_0153H53S2RwjRhNVSVQfv5k8): test runs 2, module lines 1688
+
+## J9 · QUESTION
+
+QUESTION (no answer needed to proceed; I carried on on this reading). Replaces nothing.
+
+C31 needs a requirement line in `build/requirements/citation.md` that is not written. My reading, for R1/R19 or a new R20: "`cite` is a write, so its arm reads `project`, `handle`, `found`, `question`, `note`, `role` and the part's fields (`extent_*`, `content_id`) from the POST body only; the door's stamps stay in the address. A GET reaches the act with none of them and is refused as any call naming no source is (`CITE_ONE_SOURCE`), writing nothing, whatever its address carries. `found` is an object or one JSON string." The declared fields (R19) are unchanged. The tests name R1 and R19; if you write a new id, tell me and I name it.
+
+Words: I invented no sentence. A GET's refusal is the existing `CITE_ONE_SOURCE` row ("this call names neither a selection nor a passage found by search…"), which is true but does not say "use a POST". If you want a dedicated refusal (for example `CITE_NEEDS_POST`), the design stream writes its row in `words.json` first; I add the code when it exists.
