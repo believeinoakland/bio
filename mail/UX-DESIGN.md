@@ -2062,3 +2062,9 @@ DEC-407 (the design, beneath Bob's DEC-406) @ d242c9a6af: the screen `registers`
 
 MERGE: design files only (screens chain, DECISIONS.md, HANDOFF.md) @ d242c9a6af, including DEC-406 @ 168d08fc5a. Checks: format 64, coverage 3, words 11374 (unchanged); check_walk 84 screens; check_words_drawn clean.
 Owed: BOB: the ops registerimport, registerlist, registersearch, registerrowcite, registerwatch, registerwatchstop, alertconnect (alpha, DEC-406) and registerask, registermatch, registerwatchpropose (after the alpha); the names are proposals, BOB's own names replace them.
+
+## U443 · MERGE · 2026-10-21 · session_013KihJX63gbyQmh21swQqQs · primary
+DEC-408 (Bob, 2026-10-21, in the design session) @ 92d2aa773b: "I believe the proper limitations are that a home address or phone number can be kept by a member in their notes - but is never published." Consistent with K1485 (imports never bulk-copy them) and K1493 (never published; removed on a lawful demand the profile lists), which stand. The registers screen's line (screen.registers.never.keep) now reads "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published."
+
+MERGE: design files only @ 92d2aa773b (joins U442's DEC-407 and N1259). Checks unchanged (format 64, coverage 3, words 11374; walks clean).
+Owed: BOB: the publication filter's test that a home address or phone number in a member's note never reaches a published surface, with N1259.
