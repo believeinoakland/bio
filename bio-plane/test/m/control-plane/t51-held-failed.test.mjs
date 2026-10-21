@@ -14,6 +14,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { MULTIPART_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADM = "adm-c5b-0123456789abcdef", PASSWORD = "the founder's long password, C5b", ORIGIN = "https://group.example";
@@ -91,18 +93,21 @@ test("R117 (C5b, through the door, the real plane): a document promoted with a r
     assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 400));
   };
 
-  /* the starting state, by the member's own acts: the packet is captured and promoted with the reading that could not be made */
+  /* the starting state: a record promoted in round 2, with the reading the old build made of a capture it could not assemble (R-OLD: since R120 a
+     PDF this large is answered pending, so no act of today makes this reading; the capture, the whole's upload and the promotion are the member's acts) */
   const big = PACKETS["big.pdf"], sha = hex(big);
   const first = await acquire("big.pdf", "a");
   assert.equal(first.ok, true, JSON.stringify(first).slice(0, 400));
   assert.equal(first.document.capture.sha256, sha);
   assert.ok(first.document.parts && first.document.parts.length >= 5, "the packet is held in parts");
-  assert.equal(JSON.stringify(first.document.text_units ?? []).includes(WORDS), false,
-    "its reading failed for want of the whole: " + JSON.stringify(first.document.reading).slice(0, 300));
-  /* the member holds the whole (the original bytes under their digest), and the capture screen promotes the document with the reading it was answered */
+  const total = first.document.parts.reduce((n, p) => n + p.bytes, 0);
+  const failed = { content_type: "generic", reader_version: 1, read_from_text: false, found: false, entities: [], facts: {}, at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
+    basis: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(first.document.parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }),
+    page_count: null, page_boxes: null, container_extent: null, metadata: null };
+  /* the member holds the whole (the original bytes under their digest), and the capture screen promotes the document with that reading */
   const put = await plane(`/api/?op=capture&sha256=${sha}`, { method: "PUT", headers: auth, body: big });
   assert.equal(put.status, 200, (await put.text()).slice(0, 300));
-  await promote(first, "big.pdf");
+  await promote({ document: { ...first.document, reading: failed } }, "big.pdf");
   const before = await readingOf(sha);
   assert.equal(before.found, true, "the home holds a reading, and it is the failed one: " + JSON.stringify(before).slice(0, 300));
   assert.equal(JSON.stringify(before.text_units ?? []).includes(WORDS), false, "no text");
