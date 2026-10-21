@@ -1645,8 +1645,10 @@ export class Entities {
     const withdrawn = this.#withdrawnNames(page.map((r) => r.entity_id));
     const defects = this.#defectsOf(scan, [captureSha, cap], keep);
     const names = this.#namesOf(captureSha, cap);
+    const unresolved = this.#unresolvedOf(captureSha, cap);
     return { ok: true, capture_sha: captureSha, count: page.length, limit: cap, truncated,
              names: names.names, names_truncated: names.truncated,
+             unresolved: unresolved.unresolved, unresolved_truncated: unresolved.truncated,
              resolutions: page.map((r) => {
                const bundle = keep(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
                return { capture_sha: r.capture_sha, bundle_id: bundle, ref: r.ref, entity_id: r.entity_id,
@@ -1655,6 +1657,18 @@ export class Entities {
                         raised_from: r.raised_from, resolved_by: hidden ? null : r.resolved_by, at: r.at,
                         withdrawn_name: Entities.#restsOn(withdrawn, r), ...Entities.#defectsFor(defects, r) };
              }) };
+  }
+
+  /* R14: the names the reading found that no entity resolution holds: the capture's references (each at its first place)
+     with no resolution row, in reading order (the order the reading wrote them), `{ref, label, page}` (`page` as R61, null
+     where the reading cannot say), at most `cap`, `truncated` by reading one past. */
+  #unresolvedOf(captureSha, cap) {
+    const rows = this.#rows(`SELECT rr.ref, rr.label, rr.pos_kind, rr.pos FROM reading_refs rr
+                              WHERE rr.capture_sha=? AND rr.seq=0
+                                AND NOT EXISTS (SELECT 1 FROM resolutions r WHERE r.capture_sha = rr.capture_sha AND r.ref = rr.ref)
+                              ORDER BY rr.rowid LIMIT ?`, captureSha, cap + 1);
+    return { truncated: rows.length > cap,
+             unresolved: rows.slice(0, cap).map((r) => ({ ref: r.ref, label: r.label ?? null, page: pageOf(r.pos_kind, r.pos) })) };
   }
 
   /* R58: what a capture names, one entry per entity its resolutions name: the strongest resolution's grade and
@@ -2093,4 +2107,8 @@ export const DECLARED_OPS = Object.freeze({
      arm reads; a call without it answers `count: 0`, not a refusal, so no field is required. */
   entitybyalias: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("entities.declared.entitybyalias", "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing"),
     fields: { accepts: ["alias"], requires: [] } },
+  /* R62 (T51; K4243, K4337): the document screen sends it for what the reading named and left unmatched (R14's `unresolved`).
+     A read, so its class and mutating are the hand row's; without `sha256` it is refused `NO_SHA`. */
+  resolutions: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("entities.declared.resolutions", "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha"),
+    fields: { accepts: ["sha256","limit"], requires: ["sha256"] } },
 });
