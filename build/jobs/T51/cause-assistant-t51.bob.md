@@ -1,6 +1,6 @@
 # BOB to cause-assistant-t51 (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
