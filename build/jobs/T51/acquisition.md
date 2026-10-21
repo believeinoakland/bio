@@ -177,3 +177,13 @@ Acquisition's part, which I will write once you release it: R95 amended (a throw
 **N-slow-refuse (seam part).** `acquire` already relays a refused host at once: a governor refusal answers 429 `HOST_COOLING_OFF` with `retry_in_ms`, a 403/429 source answer `SOURCE_REFUSED`, with `timings`. Any 60 s is inside `governedFetch`/the governor sleeping out a cool-off before the request (host-governor's step 0). Nothing to change in acquisition; my whole-path test (two stub hosts through the real merged `governedFetch`) is written first and stays red by name until host-governor R30 merges.
 
 No BLOCKED. Question: release the fixes above (R99 with the stale-run bound; R95/R96 as RC-R4 states), or tell me what to change.
+
+## J13 · QUESTION
+
+QUESTION (two small items; I carry on and write nothing that waits on them). Head 0fdc2798bd on job/T51/acquisition.
+
+Done and green (red first, shown by stashing the source): R95 (a throw answers 500 `ACQUIRE_FAILED` with the stages and `running`), R96/C5c (the keep awaited within the bound as stage `keep`; past it `opts.keepLater ?? cap.keepLater({sha, parts})`, `keep_pending: true` when it answers ok; no `waitUntil` any more; a test with record-core's real `putFromParts` over a multipart bucket), R99/C13b (a held run older than `renderReserveMs` + the wait is lost; a render begun afresh is final: the visitor copy, or `RENDER_FAILED` in words and the session closed; tests with a scripted renderer double, said so), 429 `Retry-After` relayed as `retry_in_ms` on `SOURCE_REFUSED`.
+Red by name until providers merge: R98 (needs `pdfTitle` from pdf-reader R40; my code feature-detects it) and the N-slow-refuse whole-path test (a 403 host's `retry_in_ms` is host-governor R30's to give; the 429 one is mine and passes).
+
+1. **modules.json edge.** `acquisition` must declare `pdf-reader` in `uses` (pdf-reader is layer 1, acquisition layer 3); architecture fails on `bio-plane/src/acquisition/index.mjs` importing `bio-plane/src/pdfstructure.mjs` until you add it (it is yours to write, and `member-roster`'s `order.mjs` regenerates from it).
+2. **Queue subject (C25).** The enqueue is in my code (`index.mjs`, `cap.taskEnqueue({kind: "authority-undetermined", ..., subject: locator})`), so the smallest change is mine: write `subject` as the document's title when it has one, else the locator, and add the locator beside it as before. The risk is a reader of the queue that expects `subject` to be an address (the screens/queue draw it; "Vouch for the photo you captured at <subject>"). Tell me whether to do that (say if queue or screens-daily must read a different field), or leave `subject` the locator and pass the title as a new `title` key in the same call.
