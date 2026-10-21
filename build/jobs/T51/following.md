@@ -42,3 +42,25 @@ Findings outside this module's code (nothing here is changed by this job):
 2. `node checks/run.mjs` also reports architecture and format as clean; words, channels and ownership report 0 failures.
 
 Nothing deferred. No flaw found in another module's code by this job.
+
+## J4 · COMPLETE
+
+Applied B2 (CHANGE, the R1 red at `checks.test.mjs`, tests only; commit 8d76643e0c on job/T51/following):
+
+- Cause: `otherFamilies()` imports every plane file. `plane/store.mjs` and `plane/index.mjs` reach `plane/register.mjs` (R68), which throws (`op-declarations: adminendorse: registered after the first read (R81)`) if a table was read before its first import. The walk had read one.
+- Fix (test only): `otherFamilies()` imports `bio-plane/src/plane/register.mjs` first, before the walk, as the plane's own graph does. I first tried skipping `register.mjs` in the walk; that did not work, because the plane's other files import it transitively.
+- No source file, no requirement line changed. No test weakened: the C-137.1–20 walk and every row test are as before.
+
+Deferred: none.
+
+Tests (`bio-plane/`): `node --test --test-force-exit test/m/following/*.test.mjs`: 115 pass, 0 fail. `checks.test.mjs` alone: 33 pass, 0 fail, including `R1 C-137.1–C-137.20` (the walk) and `R18`, `R4`.
+
+Checks (process repo, against /home/user/bio on job/T51/following):
+- `checks/format.mjs`: 175 modules, 175 requirements files, 0 failures
+- `checks/architecture.mjs following`: 0 failures
+- `checks/coverage.mjs following`: 36 of 36 live ids named by a test, 0 failures
+- `checks/ownership.mjs following tranche/T51 job/T51/following`: 0 failures
+- `checks/words.mjs following`: 0 failures
+- `checks/run.mjs /home/user/bio`: no finding names `following`; four other modules' coverage gaps are in REPORT.
+
+Size (session_01CGcpL8Q6GG6DotmRFDtXaz): test runs 6, module lines 2210
