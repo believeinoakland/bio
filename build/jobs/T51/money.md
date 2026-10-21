@@ -78,3 +78,24 @@ Completion, T51 fix round 3, money #6 (session_013Lo8EBZnWAC7FpsjEcuWjd).
 No proposed requirement lines beyond R28; the `limit` key in the answer (beside `sets`, `truncated`, `next`) is mine, add it to R28's shape if wanted.
 
 Size (session_013Lo8EBZnWAC7FpsjEcuWjd): test runs 14, module lines 1478
+
+## J6 · QUESTION
+
+Fix round 4, cause C8-words (money R29), mid-job. Work committed locally as 15607d09e8 on job/T51/money (pushing with this post).
+
+**Cause, four fields**
+1. Root cause (certain): `bio-plane/src/money/index.mjs:238` and `:248` refused an unmapped fiscal key with `BAD_PERIOD`, the code `following` also answers; the translation is keyed by code, so money's real reason was hidden. Platform: N (pure code).
+2. Test gap: each module tests only its own code; the census that no two modules share a code is not in place (see question A).
+3. Failing-first: `bio-plane/test/m/money/refusal-codes.test.mjs` (R29 titles). Red before the change: `{fiscal:"FY2025-26", body:"Port Ellery Harbour District"}` and `{fiscal:"FY1999-00X", body:"Nobody"}` both answered `BAD_PERIOD`. Green after: both answer `MONEY_BAD_PERIOD`, detail names the fiscal key and body. Controls: a first day after a last day stays `BAD_PERIOD`; a valid fiscal key (`FY2013-14`) is accepted and writes a fact.
+4. Platform: N.
+
+Changed: `money/index.mjs` (two `refusal` codes), `money/test record.test.mjs` (two expectations moved to `MONEY_BAD_PERIOD` per R29). Money suite: 90 of 90 pass. Format, architecture, coverage (29 of 29 R-ids named), ownership: clean. `checks/run.mjs`: the words failures are on other modules' lines (op-grades t33, t51), not money's; I have not touched them.
+
+**Question A (decides what I build next).** R29 says `BAD_PERIOD` "remains following's and civil-time's alone" and "a census test finds no code answered by two modules". Today money still answers `BAD_PERIOD` for its other period refusals (from/to, `index.mjs:226-263`, about ten sites), and `following` and `calculations` answer it too. Options:
+- (a) Recommended: money's own period refusals (from/to too) move to `MONEY_BAD_PERIOD`, so money answers no `BAD_PERIOD`. The "refused as before" control stays a refusal; only its code changes. The calculations' use is calculations' to change; I will report it.
+- (b) Keep from/to on `BAD_PERIOD`, and scope the census to codes money answers uniquely.
+Also the census scope: a literal survey of refusal codes across `bio-plane/src` shows many codes answered by several modules, mostly shared act rows (record-grammar's `SHARED_ACT_CHECKS`, e.g. `NO_REASON` in eight modules). Recommended scope: codes not in `SHARED_ACT_CHECKS`. Please answer which of (a)/(b) and the census scope.
+
+**Question B (words).** `refusal.MONEY_BAD_PERIOD` has no row in `docs/development/ux-substrate/screens/words.json` (DESIGN handoff ask 1). I have not invented a sentence. The refusal's `detail` carries the real reason through the existing money keys (`money.index.the_profiles_fiscal_year_for`, `money.index.the_active_profiles_hold_no`). Please have the design stream write the row, or tell me the stand-in key you want.
+
+Impact: 90 modules use money; I am running their affected suites (1327 files) now and will report the counts in COMPLETE.
