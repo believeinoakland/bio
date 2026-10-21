@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01HkiEHqLtSvzj1srMtcPyNY · depth 2 · WAITING ON BOB (J14) · handled B15
+**Status** · session_01HkiEHqLtSvzj1srMtcPyNY · depth 2 · COMPLETE · handled B15
 
 ## J1 · REPORT
 
