@@ -129,9 +129,10 @@ const made = new Map();
 
 /* A string of an answer made pseudo when it is a sentence of the list, filled or not; any other string is as it was. A
    pattern is tried only by a string that starts with its first literal part, ends with its last and holds every other
-   (R30: the expression cannot match otherwise, so the result is the one of trying every pattern). */
+   (R30: the expression cannot match otherwise, so the result is the one of trying every pattern). No length bounds a
+   sentence: the list's longest are over 900 characters, and the cost is bounded by the pattern tries, not the length. */
 export function pseudoString(s) {
-  if (typeof s !== "string" || s.length < 5 || s.length > 600 || s.startsWith("[")) return s;
+  if (typeof s !== "string" || s.length < 5 || s.startsWith("[")) return s;
   const { exact, patterns } = sentences();
   if (exact.has(s)) return exact.get(s);
   if (!/\S\s+\S/.test(s)) return s;

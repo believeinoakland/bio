@@ -2,7 +2,10 @@
    Cloudflare answers it, and stateful as the installer's own fake is (newgroup/test/fixture.mjs, read, never imported):
    OAuth with PKCE (the consent page a browser is sent to, the token exchange the installer makes), the account list, the
    plan probe, the evidence buckets, each script uploaded with its bindings (`keep_bindings` applied by type), its bytes
-   read back, the workers.dev prefix and each script's address, and no Logpush job. The public release repository does
+   read back, the Durable Object classes its migrations declare (the namespaces a container application is made for), the
+   Containers applications the installer creates and rolls out (K4435: a container member installs only when the account
+   holds an application for each of its classes), the schedules set on a script, the workers.dev prefix and each script's
+   address, and no Logpush job. The public release repository does
    not answer, so the installer installs its built-in release and says why. Every call it does not answer is recorded as
    `unanswered` and refused, so the walk fails on it rather than passing over it. */
 
@@ -46,6 +49,10 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
   const enabled = new Set();
   const grants = new Map();            /* code -> {challenge, redirect, state} */
   const tokens = new Set();
+  const applications = [];
+  const classes = new Map();           /* script -> Set of Durable Object class names its migrations declared */
+  const schedules = new Map();
+  const rollouts = [];
   const unanswered = [];
   const calls = [];
   let prefix = null;
@@ -94,6 +101,11 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
       && !explicit.some((x) => x.name === b.name));
     const bindings = [...explicit, ...kept];
     scripts.set(nameOf, { bindings, source, meta });
+    /* the classes a migration declares (the whole `migrations` object or each of its `steps`) are the script's namespaces */
+    const held = classes.get(nameOf) || new Set();
+    const m = meta.migrations;
+    for (const step of m ? (m.steps || [m]) : []) for (const c of [...(step.new_classes || []), ...(step.new_sqlite_classes || [])]) held.add(c);
+    classes.set(nameOf, held);
     await onScript(nameOf, { bindings, source, meta });
     return ok({ id: nameOf });
   }
@@ -107,11 +119,31 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     /* the lists the installer reads to know the copies and parts the account holds (installer R62, R69) */
     if (rest === "/workers/scripts" && m === "GET")
       return ok([...scripts].filter(([, v]) => !v.probe).map(([id, v]) => ({ id, ...(v.meta?.migrations?.new_tag ? { migration_tag: v.meta.migrations.new_tag } : {}) })));
-    if (rest === "/containers/applications" && m === "GET") return ok([]);
+    /* the Containers applications (wrangler's own calls, which the installer makes): listed, read, created for a class's
+       namespace, rolled out to an image, deleted. A created application starts nothing (`instances: 0`) and holds no failed one. */
+    if (rest === "/containers/applications" && m === "GET") return ok(applications);
+    if (rest === "/containers/applications" && m === "POST") {
+      const body = await req.json();
+      applications.push({ id: "app" + (applications.length + 1), ...body, health: { instances: { active: 0, starting: 0, failed: 0 } } });
+      return ok(applications.at(-1));
+    }
+    if ((x = /^\/containers\/applications\/([^/]+)(\/rollouts(?:\/([^/]+))?)?$/.exec(rest))) {
+      const at = applications.findIndex((a) => a.id === x[1]);
+      if (at < 0) return no("not found", 404);
+      if (!x[2] && m === "GET") return ok(applications[at]);
+      if (!x[2] && m === "DELETE") { applications.splice(at, 1); return ok({}); }
+      if (x[2] && m === "POST") {
+        const body = await req.json();
+        rollouts.push({ id: "r" + (rollouts.length + 1), app: x[1], ...body });
+        applications[at].configuration = { ...(applications[at].configuration || {}), ...body.target_configuration };
+        return ok({ id: rollouts.at(-1).id, status: "completed" });
+      }
+      if (x[3] && m === "GET") return ok({ id: x[3], status: "completed" });
+    }
     if (rest === "/r2/buckets" && m === "GET") return ok({ buckets: [...buckets].map((n) => ({ name: n })) });
     if ((x = /^\/workers\/scripts\/([^/]+)$/.exec(rest))) {
       if (m === "PUT") return putScript(x[1], req);
-      if (m === "DELETE") { scripts.delete(x[1]); return ok({}); }
+      if (m === "DELETE") { scripts.delete(x[1]); classes.delete(x[1]); return ok({}); }
       if (m === "GET") return scripts.has(x[1]) ? new Response(scripts.get(x[1]).source,
         { headers: { "content-type": "application/javascript+module" } }) : no("not found", 404, 10007);
     }
@@ -146,7 +178,14 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     }
     if (rest === "/logpush/jobs" && m === "GET") return ok([]);
     if (rest.startsWith("/workers/durable_objects/namespaces") && m === "GET")
-      return ok([...scripts].filter(([, s]) => s.meta?.migrations).map(([n]) => ({ id: "ns-" + n, script: n, class: "Store" })));
+      return ok([...classes].filter(([n]) => scripts.has(n)).flatMap(([n, cs]) => [...cs].map((c) => ({ id: `ns-${n}-${c}`, script: n, class: c }))));
+    /* the schedules a member's `Worker` part states (installer R44) */
+    if ((x = /^\/workers\/scripts\/([^/]+)\/schedules$/.exec(rest)) && m === "PUT") {
+      if (!scripts.has(x[1])) return no("not found", 404, 10007);
+      const body = await req.json();
+      schedules.set(x[1], body.map((t) => t.cron));
+      return ok({ schedules: body });
+    }
     return null;
   }
 
@@ -171,6 +210,6 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     return new Response("the walk's fake account does not answer this", { status: 599 });
   }
 
-  return { handle, scripts, buckets, unanswered, calls, account: ACCT, prefix: () => prefix,
+  return { handle, scripts, buckets, applications, rollouts, schedules, unanswered, calls, account: ACCT, prefix: () => prefix,
     addressOf: (slug) => (prefix && enabled.has(slug) ? `https://${slug}.${prefix}.workers.dev` : null) };
 }
