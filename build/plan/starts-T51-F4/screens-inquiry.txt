@@ -1,6 +1,6 @@
 FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-inquiry tranche/T51 && git branch -m job/T51/screens-inquiry stale/screens-inquiry-local && git checkout -b job/T51/screens-inquiry origin/job/T51/screens-inquiry`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
 
-START · SCREENS-INQUIRY #N · tranche T51 · product believeinoakland/bio · depth 2 (BOB #244 is depth 1; fix round 4, wave 2; K4429)
+START · SCREENS-INQUIRY #20 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, wave 2; K4429)
 
 Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
 
@@ -50,3 +50,5 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 **Added by BOB #245 (K4445), from CAPTURE #45 (merged):** `heldcaptures` takes `bundle_ids` (capture R102): the Held screen reads `fields=picker` for the page, then the full fields only for the rows it draws (`bundle_ids`, at most 50); the Document screen reads its one document by `bundle_id`, never `limit=500` full rows. Your read-set test asserts this.
 
 **Added by BOB #245 (K4458), DEC-412 (U447, merged on tranche/T51; rows regenerated):** `screen.document.ocr.refused.unread` is reworded (an unread copy is the cause); `refusal.CAPTURE_NOT_HELD` reworded.
+
+**Added by BOB #245 (K4462):** providers merged on tranche/T51: control-plane (R120 deferral, R121 `Server-Timing`, `readheldfor`), queue (R93 `count`), capture (R102 `bundle_ids`), public-read, review, citation, case-*, jurisdictions, entities, money, file-safety, file-scanner, acquisition, extraction, plane. Until OP-GRADES #24 merges, the plane will not start under workerd (`DECLARED_OP_DISAGREES: officeconfirm`): a seam test that boots the plane stays red by name until then. CAUSE-SHELL-4 runs beside you (Bob, 2026-10-21: an alpha deployed as efficiently as possible): read its shell changes by merging the tranche when BOB sends a CHANGE at its merge. Scope: a walker's defect or a broken operation is in; wording only waits for T52 (K4269, K4459).
