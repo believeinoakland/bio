@@ -32,12 +32,12 @@
  * `bootstrap` ("Show what each part runs", which the kit weighs Irreversible), `exportlog`, `groupdescriptiondraft`, `noticeprepare`,
  * `pdfstructure`, `reconcile`, `runtime` and `writinghelp` take the read's mark, as `versionnotice` does (source `read`). */
 
-/* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`aa8bdcd0b4`, R46, re-taken in the
-   fix round, K4206), which moved both files on from `e6d16d8f53` (the fix round's first re-take, K4193) and `7be06eb4cb` (the design's
-   last merge into `tranche/T50`, K3750) */
+/* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`0310c4953d`, R46, re-taken in fix round 2,
+   K4323), which moved both files on from `aa8bdcd0b4` (K4206), `e6d16d8f53` (the fix round's first re-take, K4193) and `7be06eb4cb`
+   (the design's last merge into `tranche/T50`, K3750) */
 import { localize } from "../setup-words/index.mjs";
 
-export const MARKS_KIT_COMMIT = "aa8bdcd0b4";
+export const MARKS_KIT_COMMIT = "0310c4953d";
 
 const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
@@ -70,10 +70,12 @@ const ROWS = [
   ["capturecredentialwithdraw", "Reversible", "kit"],
   ["captureprogressions", "Reversible", "kit"],
   ["capturerequest", "Reversible", "kit"],
+  ["capturerequests", "Reversible", "kit"],
   ["capturerequestretry", "Reasoned", "default"],
   ["casedetails", "Reversible", "kit"],
   ["casedetailspublic", "Reversible", "kit"],
   ["casedetailsset", "Reversible", "kit"],
+  ["casedrafts", "Reversible", "kit"],
   ["citeimported", "Reversible", "kit"],
   ["claim", "Signed", "kit"],
   ["committedagainstpaid", "Reversible", "kit"],
