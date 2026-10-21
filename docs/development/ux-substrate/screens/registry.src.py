@@ -198,6 +198,14 @@ screen('watching', 'Watched addresses', 'working', 'Every address the team watch
 screen('registers', 'Public registers', 'working', 'The public registers the team holds (campaign finance, economic interests, lobbyists, licenses, company officers), bringing one in whole, searching and citing a row, watching a named filer, license or docket, outside alerts, and the assisted asking that comes after the alpha.',
   [('owed:registerimport DEC-406','Bring in a register'),('owed:registerlist DEC-406','List the registers the team holds'),('owed:registersearch DEC-406','Search the registers'),('owed:registerrowcite DEC-406','Cite a row as evidence'),('owed:registerwatch DEC-406','Watch a filer, license or docket by its number'),('owed:registerwatchstop DEC-406','Stop watching'),('owed:alertconnect DEC-406','Connect an outside alert service'),('owed:registerask DEC-406','Ask across the registers'),('owed:registermatch DEC-406','Propose matches to the team\'s subjects'),('owed:registerwatchpropose DEC-406','Propose watches')], [10,12,14])
 
+# DEC-411: registers and explore redrawn for K4403 (B469)
+for _s in S:
+    _extra = {'registers': [('owed:registerfilter K4403','Choose which rows of a register to bring in'),('owed:registerdelta K4403','See what an import would add'),('owed:registerpreread K4403','Read a register ahead, for the team'),('owed:registerpropose K4403','Propose a register that is not listed')],
+              'explore': [('owed:explorecontinue K4403','Keep looking')]}.get(_s['id'], [])
+    _have = {a['op'] for a in _s['acts']}
+    for _op, _l in _extra:
+        if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
+
 # DEC-242 (S4): themes on the document, the question and Find (connections R39 to R46).
 _THEME_ACTS = {'document': [('themeplace','Place it in a theme'),('themepropose','Propose it for a theme'),('themewithdraw','Reject a hunch, with a reason')],
   'question': [('themeplace','Place a passage in a theme')], 'finder': [('themeread','Filter by theme')]}
