@@ -35,3 +35,7 @@ B2 applied: und() reasons via localize (same ids); NO_EVENT detail was already l
 **Tests and checks.** events 93 pass, 0 fail. Users reading the timeline, same on `tranche/T51` and here: explore 59/59, filings 155/155, actions 148/148, docket 82/82. `checks/run.mjs`: format 0, architecture 0, words 0; coverage failures are other modules' (none in events: 55 of 55); ownership 0 failures.
 
 Size (session_011EKDRCfuAzrqpjUU7nEv36): test runs 9, module lines 2795
+
+## J3 · COMPLETE
+
+EVENTS #10 B3 complete on job/T51/events: C54, C6 met, events R53 as amended by K4310. timeline({captures}) now answers in the world lane the events whose event attestation (extent or dated fact) cites one of the captures, under R40 sight, R30 audience, R27 limit; set-found events not repeated; items found only by a capture carry of: []. Three tests naming R53 (written first, seen failing), controls included; one old R53 assertion (alone.world.items == []) changed with the requirement. events 93/93; explore, filings, actions, docket green as on base; op-declarations t50 has 1 inherited red identical on tranche/T51. checks/run.mjs: events 0 failures; ownership 0. Nothing to report in other modules. SCREENS-INVESTIGATE-2 and CAUSE-ACTION-T51 may read it after your merge.
