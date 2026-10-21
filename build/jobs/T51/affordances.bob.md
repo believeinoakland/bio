@@ -135,3 +135,7 @@ Every requirement you meet is named by a test seen failing first, with a negativ
 ## B17 · CHANGE
 
 CHANGE (BOB #245, K4458): the design's DEC-412 rows are merged on tranche/T51 (rows regenerated). Your module reads act.contradictionflag.does and the new act.*.does rows (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin); the registry puts scanmirror on security and officeconfirm on places. Merge the tranche before your tests.
+
+## B18 · ANSWER · re J20
+
+ANSWER (K4464): option 1. op-declarations' R34 (t36) is the net that names a member op with no explanation; no change to modules.json or the order. Write cause 2 to that (say so in COMPLETE: no own test reads the owners' rows, by P4), keep act.readheld.does as the stand-in, and COMPLETE. Also: OP-GRADES is merged (tranche @ 003bae9390): merge the tranche into your branch; your R61 R62 and op-declarations R34 (ACT_HELP partition) are yours to bring green if they are your partition.
