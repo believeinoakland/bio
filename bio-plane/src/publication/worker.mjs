@@ -24,6 +24,7 @@ import { serialiseContainer, containerEntries } from "../container.mjs";
 import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex } from "../public-read/casefile.mjs";
 import { inbandQuartet } from "../inband.mjs";
 import { caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
+import { legReaderOf } from "../public-read/legs.mjs";
 import { rowOf } from "../public-read/checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -664,6 +665,11 @@ export async function publishedRoutes({ op, url, env, stub }) {
      one — composing two findings' strengths into one letter is R2's
      forbidden composition arriving at case altitude, which is exactly what
      DEC-44's own negative control exists to catch. */
+  /* R41 (1): what the signed case document states of each member's legs, read once from the same bytes the store served
+     (`document`), so an entry resting on a captured document names it and the place it cites; null when the document is
+     withheld or states none, and every entry then states `document: null`. */
+  const signedFm = c.document && typeof c.document.text === "string" ? parseFrontmatter(c.document.text).data || null : null;
+  const legReader = signedFm ? legReaderOf(signedFm) : null;
   const renderFinding = async (fnd) => {
     /* D-1: THE BODY COMES FROM THE SAME BYTES AS THE FROZEN STRENGTH. The
        document is fetched from the published bucket by the finding's own
@@ -676,7 +682,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
     /* R28: a finding whose bytes a court order withholds is not fetched; its body states the withholding and its
        orders, and no basis is read from bytes that are not served. */
     if (fnd.withheld)
-      return { ...fnd, object_type: null, basis: [],
+      return { ...fnd, object_type: null, basis: [], falsifier: null,
                body: { state: "withheld", from_sha: fnd.bundle_sha, ...fnd.withheld },
                bytes: `op=publishedbytes&sha256=${fnd.bundle_sha}` };
     const md = await pubBytes(fnd.bundle_sha);
@@ -765,6 +771,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
       const rt = rtOut.result;
       registry = (rt && rt.registry) || {};
     }
+    const ofLeg = legReader ? legReader.forFinding(fnd.bundle_id) : null;
     const basis = legs.map((l) => {
       const reg = registry[l.target] || null;
       const named = l.target_edition != null ? String(l.target_edition) : null;
@@ -774,6 +781,9 @@ export async function publishedRoutes({ op, url, env, stub }) {
         grade: l.grade ?? null, grade_axis: l.grade_axis ?? null, grade_source: l.grade_source ?? null,
         target_edition: l.target_edition ?? null,
         served: !!cited,
+        /* R41 (1): the document this leg rests on, named and placed as the signed case states them, never its bytes; null
+           for a leg resting on working material (or on a finding), and where the case states no legs. */
+        document: ofLeg ? ofLeg.of(l) : null,
         cited_edition: cited
           ? { edition: cited.edition, title: cited.title, bundle_sha: cited.bundle_sha,
               ratified_at: cited.ratified_at, case_id: cited.case_id ?? null,
@@ -786,7 +796,9 @@ export async function publishedRoutes({ op, url, env, stub }) {
           : localize("public-read.worker.this_leg_is_named_and", "this leg is NAMED and not served: what it rests on is not in the published record, so this surface can say the finding cites it and can hand over nothing of it."),
       };
     });
-    return { ...fnd, object_type: normalizeType(fm?.object_type) ?? null, body, basis,
+    /* R41 (2): "What would change it", the text the finding's published bytes state (R39's `authored.falsifier`), beside the
+       case document's own words for it (`case_words`); null when the bytes state none or cannot be read. */
+    return { ...fnd, object_type: normalizeType(fm?.object_type) ?? null, body, basis, falsifier: wordsOf(fm?.falsifier),
              bytes: `op=publishedbytes&sha256=${fnd.bundle_sha}` };
   };
   const findings = [];
