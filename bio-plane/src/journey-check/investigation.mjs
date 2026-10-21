@@ -78,12 +78,16 @@ export async function connectSubscription(walk, page, base, { password, codeOf =
   }, { expect: ["REAUTH_DUE"] });
 }
 
+/* "Start a project" asks who can find the project and chooses neither (`screens-daily` `start-project.mjs`); the walk chooses hidden. */
+export const START_PROJECT_VISIBILITY = "#projects-visibility-hidden";
+
 /* Steps 2 and 3: a project with a title, opened; a question in it, opened. Answers the project's and question's
    addresses. */
 async function projectAndQuestion(walk, page, base, { title, question }) {
   let project = null, q = null;
   await walk.step(page, "2 · start a project with a title, and open it", async (p) => {
     await open(walk, p, base, "/app/projects", "projects");
+    await p.locator(START_PROJECT_VISIBILITY).check();
     await act(p, "promote", { fields: { "projects-title": title }, reason: "Tenants of 14 Lakeshore Row report water coming in." });
     if (!/^\/app\/project\//.test(where(p))) await p.locator("#cs-main a").filter({ hasText: title }).first().click();
     await settle(p);
