@@ -44,12 +44,13 @@ export const UNPACK_LIMITS = Object.freeze({ UNPACK_CALL_ENTRIES, UNPACK_CALL_BY
 export const ARCHIVE_CHECK_READS = 2;
 
 /** R48: the evidence store as one decision reads it: a `head` asked twice is answered once, and the bytes of an object
- *  (`get`, one part at most 8 MiB) are read once, the last two kept, so verifying a part (provenance R7), profiling the
+ *  (`get`, one part at most 8 MiB) are read once, the first read and the last two kept (the first part is asked again for
+ *  the ZIP magic after every other part has been verified), so verifying a part (provenance R7), profiling the
  *  capture (R17) and listing it (ooxml R27) share one read of each. Only `head` and `get` are passed on; it holds nothing
  *  beyond the call that made it; `put` is passed on. */
 export function readThrough(ev) {
   const heads = new Map();
-  const kept = [];   // [{key, buf}], the two most recently read
+  const kept = [];   // [{key, buf}], the first read and the two most recently read
   return {
     async head(key) {
       if (heads.has(key)) return heads.get(key);
@@ -63,7 +64,7 @@ export function readThrough(ev) {
       const o = await ev.get(key);
       if (!o) return o;
       const buf = await o.arrayBuffer();
-      if (buf.byteLength <= PART) { kept.push({ key, buf }); if (kept.length > 2) kept.shift(); }
+      if (buf.byteLength <= PART) { kept.push({ key, buf }); if (kept.length > 3) kept.splice(1, 1); }
       return { key, size: buf.byteLength, ...(o.checksums ? { checksums: o.checksums } : {}), arrayBuffer: async () => buf };
     },
     /* a write goes straight through, and what was asked about the key before it is asked again */

@@ -253,6 +253,69 @@ export const FOR_MAX = 200;
    limit imports it (K231; N825, K2453). */
 export const CAPTURE_MAX = 256 * 1024 * 1024;
 
+/* R10, R11 (T51; the walk's C5): a capture held in several parts is also kept WHOLE, under the whole document's own
+   fingerprint, up to this many bytes, so every reader that asks the evidence store for a capture by its digest (the reading,
+   OCR, the vouch box, `op=capture`) finds it as it finds a single part. Past it the capture is held in its parts alone, as
+   before (provenance R7 reads such a capture by its parts). CHOSEN, not measured: four parts, the most the object holds
+   in memory beside the part being read back; recorded by BOB. */
+export const MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
+
+/** R10 (C5): keep a multipart capture whole. The parts just stored are read back one at a time (each held, each its stated
+ *  size and digest), assembled, hashed against the digest the stream gave, and put under that digest with its checksum.
+ *  Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done) or
+ *  `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add up
+ *  to the digest, or a store that will not take the whole. Never throws. */
+export async function keepWhole(ev, { sha, parts, total }) {
+  if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
+  const fail = (why) => ({ ok: false, why });
+  try {
+    if (await ev.head(sha)) return { ok: true, kept: true };
+    const whole = new Uint8Array(total);
+    let at = 0;
+    for (const [i, p] of parts.entries()) {
+      const o = await ev.get(p.sha256);
+      if (!o) return fail(localize("acquisition.index.keep_part_missing", "part {n} of {parts} was not there when it was read back", { n: String(i + 1), parts: String(parts.length) }));
+      const b = new Uint8Array(await o.arrayBuffer());
+      if (b.length !== p.bytes || at + b.length > total || hex(await crypto.subtle.digest("SHA-256", b)) !== p.sha256)
+        return fail(localize("acquisition.index.keep_part_differs", "part {n} of {parts} is not what was stored", { n: String(i + 1), parts: String(parts.length) }));
+      whole.set(b, at); at += b.length;
+    }
+    if (at !== total || hex(await crypto.subtle.digest("SHA-256", whole)) !== sha)
+      return fail(localize("acquisition.index.keep_parts_do_not_add_up", "the parts do not add up to the document that arrived"));
+    await ev.put(sha, whole);
+    return { ok: true, kept: true };
+  } catch (e) {
+    return fail(localize("acquisition.index.keep_store_refused", "the store would not take it ({detail})", { detail: String(e && e.message || e).slice(0, 120) }));
+  }
+}
+/* R10 (C5): the refusal when a multipart capture cannot be kept whole; nothing is filed and the parts already stored are named by no
+   document, as TOO_LARGE's are. */
+const notKept = (parts, why) => ({ ok: false, reason: "CAPTURE_NOT_KEPT",
+  detail: localize("acquisition.index.capture_not_kept", "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again", { parts: String(parts), why: String(why) }) });
+
+/* R20, R5 (T51; the walk's C12, C13): the longest `acquire` waits, inside the door's bound, for the two slow stages that come after
+   the bytes are kept: the co-attestation (timestamp and co-archive; measured 9.6 to 21.5 s a page) and the render (3.3 to
+   17.5 s). Past its wait a stage goes on by itself and the document is answered kept, the stage pending: the attestation
+   is recorded against the capture when it ends (capture R68's `recordLateAttestations`), the render is finished by the
+   member's `continue` (R12's "Finish it"). A caller may hand its own wait as `opts.attestWaitMs` / `opts.renderWaitMs`. The
+   capture-request arm, which runs under no door's bound, waits for both. CHOSEN, not measured: together with the fetch and
+   the read they fit the door's 25 s with room; recorded by BOB. */
+export const ATTEST_WAIT_MS = 3000;
+export const RENDER_WAIT_MS = 10000;
+const LATE = Symbol("late");
+/** `{done: true, value}` when `p` settled within `ms`, else `{done: false}`; no wait at all for a non-finite `ms`. */
+async function within(p, ms) {
+  if (!Number.isFinite(ms)) return { done: true, value: await p };
+  let timer;
+  const late = new Promise((resolve) => { timer = setTimeout(() => resolve(LATE), Math.max(0, ms)); });
+  try { const v = await Promise.race([p, late]); return v === LATE ? { done: false } : { done: true, value: v }; }
+  finally { clearTimeout(timer); }
+}
+/* R5 (C13): the renders still running, by the capture session that will finish them. A render the object lost (restarted)
+   has no entry, and is rendered again when the member finishes the capture. */
+const PENDING_RENDERS = new Map();
+const PENDING_RENDER_TTL_MS = 3600000;
+
 /** R31: whether `address` is in a sweep's scope, as link-sweep R1 defines it: its normalised form equals a prefix, or
  *  continues one at a `/`. */
 function inSweepScope(address, scope) {
@@ -604,8 +667,10 @@ export async function acquire(cap, body0, opts = {}) {
   return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
     ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;
 }
-async function acquireRun(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null,
-                                       ownHosts = null, reputation: reputationTool = undefined, fileScanner = null } = {}, t) {
+async function acquireRun(cap, body0, opts, t) {
+  const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
+          reputation: reputationTool = undefined, fileScanner = null, attestWaitMs = undefined, renderWaitMs = undefined,
+          renderResume = null } = opts || {};
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
@@ -746,6 +811,7 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
      R42 (F16): no fetch goes to one of the group's own hosts, the render arm's included; refused before any request. */
   if (!archiveAsked && !session && onOwnHost(locator, own)) return answer(403, { ...ownHostRefused(locator), op });
   /* END DEC-49 REGION is-own-host */
+  if (session && session.state && session.state.render_pending) return finishRender(cap, { session, opts, t });
   if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t });
 
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
@@ -759,7 +825,8 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
   const renderAsked = Object.prototype.hasOwnProperty.call(body, "render") && body.render !== false;
   let renderer = null, renderReserved = 0, renderSlot = null;
   /* DEC-49 REGION is-render-admit */
-  if (renderAsked) {
+  if (renderAsked && renderResume) renderer = rendererFor(cap.env);   // R5 (C13): the render being finished was admitted, and paid for, when it began
+  if (renderAsked && !renderResume) {
     if (body.render !== true)
       return answer(400, { ok: false, reason: "RENDER_FLAG_MALFORMED", ...renderRow("RENDER_FLAG_MALFORMED"),
         op, detail: localize("acquisition.index.render_stringify_is_not_a", "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.", { stringify: String(JSON.stringify(body.render).slice(0, 40)) }) });
@@ -1065,7 +1132,7 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
 
   /* R6, D-64 — THE RENDER ARM, THE PAIR. From here on `sha`, `total` and `ct` name the RENDERED document, the
      bundle's primary; the shell survives as `shell` and `render.of`. */
-  let renderRecorded = null, shellRecorded = null, renderedAuth = null;
+  let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderDeferred = null;
   if (renderAsked) {
     const pageUrl = resolvedUrl || locator;
     let answerR = null, rbytes = null, rb = null;
@@ -1078,13 +1145,28 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
         op, content_type: ct || null, bytes: total, multipart,
         detail: localize("acquisition.index.the_served_bytes_are_v1", "the served bytes are {v1}, not an HTML page; nothing was filed.", { v1: String(multipart ? localize("acquisition.index.too_large_to_be_a", "too large to be a single page") : `\`${ct || "(no content type)"}\``) }) });
     }
-    /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
-    /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
+    /* R5 (T51; C13): THE RENDER IS A CONTINUATION OF THE FILED CAPTURE. It starts here and its cost is reported when it returns,
+       whenever that is; this call waits for it only up to `RENDER_WAIT_MS` (the capture-request arm, under no door's bound,
+       waits for it). Past the wait the served page is filed as it is, the render pending in a capture session the member
+       finishes (`continue`, R12), which completes the pair with the render once it has returned. A call that finishes a
+       render (`renderResume`) already holds its answer. */
+    if (renderResume) answerR = renderResume.answer;
+    else {
+      /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
+      /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
+      const run = (async () => {
+        let a;
+        try { a = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
+        catch (e) { a = { ok: false, error: String(e && e.message || e) }; }
+        try { cap.renderSpend({ ms: a && a.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
+        catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
+        return a;
+      })();
+      const got = await timed(t, "render", () => within(run, captureRequest ? Infinity : (renderWaitMs ?? RENDER_WAIT_MS)));
+      if (got.done) answerR = got.value; else renderDeferred = { run, pageUrl };
+    }
+    if (!renderDeferred) {
     stageBegin(t, "render");
-    try { answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
-    catch (e) { answerR = { ok: false, error: String(e && e.message || e) }; }
-    try { cap.renderSpend({ ms: answerR && answerR.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
-    catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
     const asked = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
@@ -1110,6 +1192,13 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
       catch { /* an unrecorded outcome is not a failed render */ }
     }
     sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;
+    }
+  }
+
+  /* R10 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, or refused in words with nothing filed. */
+  if (multipart && !renderRecorded) {
+    const kept = await timed(t, "read", () => keepWhole(ev, { sha, parts, total }));
+    if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
 
   /* R13, D-58: the acquisition receipt, UNCONDITIONALLY, for every filed capture: under the DOCUMENT address (the
@@ -1162,12 +1251,33 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
     catch { /* an unqueued task is not a failed capture; C-18.9 still refuses it at or past verified */ }
   }
 
-  /* R19: supporting files, on request. */
+  /* R19: supporting files, on request. A page whose render is still pending is walked when the render is finished, over the
+     rendered document. */
   let subs = null, subsSkipped = sessionSkip, sessionId = null;
+  if (renderDeferred && body.subresources === true && !subsSkipped)
+    subsSkipped = { reason: "RENDER_PENDING", detail: localize("acquisition.index.render_pending_files", "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture") };
   if (body.subresources === true && !subsSkipped) {
     const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
                                              retrieved, resume: null, sessionId: null, own, openedBy: actor }));
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
+  }
+
+  /* R5 (T51; C13): the render still running is parked as a capture session, which the member finishes (`continue`, R12); the
+     run is kept beside it so finishing it waits for the very render begun here. */
+  let renderPending = null;
+  if (renderDeferred) {
+    const sid = `rs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
+    const carried = {};
+    for (const k of ["subresources", "authority", "file", "coArchive"]) if (body[k] !== undefined) carried[k] = body[k];
+    try {
+      cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
+        state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } } });
+    } catch { /* the render still returns; the member captures again */ }
+    PENDING_RENDERS.set(sid, renderDeferred.run);
+    const forget = setTimeout(() => PENDING_RENDERS.delete(sid), PENDING_RENDER_TTL_MS);
+    if (forget && typeof forget.unref === "function") forget.unref();
+    renderPending = { session: sid, since: retrieved,
+      note: localize("acquisition.index.render_pending_note", "this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished") };
   }
 
   /* R17, CONSTRUCTS Step 1 (FW-3): THE PROFILE, docprofile read and never copied, over the bytes the record holds. */
@@ -1201,7 +1311,22 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
   const memberChoice = captureRequest ? captureRequest.coArchive
     : (member && typeof sessMember === "string" && sessMember ? body.coArchive : undefined);
   const coArchive = typeof memberChoice === "boolean" ? { on: memberChoice, by: "member" } : { on: coArchiveStateOf(cap.core).on, by: "group" };
-  const attestations = await timed(t, "attest", () => coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive }));
+  /* R20 (T51; C12): the attestation is requested now that the document is kept, and waited for only up to `ATTEST_WAIT_MS`
+     (the capture-request arm waits for it): past the wait the document is answered with the attempt pending, and the attempt
+     is recorded against the capture when it ends (`recordLateAttestations`, capture R68), never failing or undoing it. */
+  const attestAsked = coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive });
+  const attested = await timed(t, "attest", () => within(attestAsked, captureRequest ? Infinity : (attestWaitMs ?? ATTEST_WAIT_MS)));
+  let attestations;
+  if (attested.done) attestations = attested.value;
+  else {
+    const asking = stampSecond();
+    attestations = [{ service: "attest", attempted: true, ok: false, pending: true, at: asking,
+      note: localize("acquisition.index.attestation_pending", "the timestamp and the co-archive were asked for after the document was kept, and had not answered when this capture was answered; their outcome is recorded when they do") }];
+    attestAsked.then(async (attempts) => {
+      try { if (typeof cap.recordLateAttestations === "function") await cap.recordLateAttestations({ captureSha: sha, attempts, by: actor }); }
+      catch { /* an unrecorded late attempt leaves this one pending; the capture stands */ }
+    }).catch(() => {});
+  }
 
   const document = {
     file: `snapshots/${name}`, locator, retrieved,
@@ -1259,6 +1384,7 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
     /* R31 (K1126): only link-sweep and capture-requests' sweep arm set a sweep origin; a body's `matchedSweep` is ignored. */
     origin: captureRequest ? (crOrigin || { kind: "named_request" }) : { kind: "named_request" },
     attestation_attempts: attestations,
+    ...(renderPending ? { render_pending: renderPending } : {}),
   };
   /* R40 (K1852 (2)): an archive opens on capture, in the same call, `by` its caller and within every budget; the files it
      files are answered beside the document for the caller to promote after it. A refusal is stated there and never
@@ -1284,6 +1410,7 @@ async function acquireRun(cap, body0, { cls = null, member = false, sessMember =
     document,
     ...(forRecorded ? { for: forRecorded } : {}),
     ...(multipart ? { parts: parts.length } : {}),
+    ...(renderPending ? { render: { state: "pending", session: renderPending.session } } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
@@ -1545,6 +1672,35 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
     catch { /* likewise */ }
   }
   return { subs, skipped: null, sessionId: sid };
+}
+
+/** R5, R6, R12 (T51; C13): finish a capture whose render was still pending when it was filed. The render begun by the first call
+ *  is waited for (up to `RENDER_WAIT_MS` or the caller's `renderWaitMs`): still running, the capture is answered as it is, the
+ *  session kept; returned, the capture is run again with the render's own answer, which files the pair (the rendered document
+ *  the primary, the page as it was served beside it) without a second render, a second reservation or a second charge. A render
+ *  the object lost is rendered again, admitted and paid for as any render. The session is dropped once the pair is answered or
+ *  the render has failed (`RENDER_FAILED`, the page filed first standing). */
+async function finishRender(cap, { session, opts, t }) {
+  const { cls = null, storeName = "bio", renderWaitMs = undefined } = opts || {};
+  const rp = session.state.render_pending;
+  const running = PENDING_RENDERS.get(session.session);
+  let resume = null;
+  if (running) {
+    const got = await timed(t, "render", () => within(running, renderWaitMs ?? RENDER_WAIT_MS));
+    if (!got.done)
+      return { status: 200, body: { ok: true, existed: true,
+        continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
+                     note: word("acquisition.note.continuation_files_new") },
+        render: { state: "pending", session: session.session }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
+    resume = { answer: got.value };
+  }
+  const out = await acquireRun(cap, { ...(rp && rp.body && typeof rp.body === "object" ? rp.body : {}), locator: session.locator, render: true },
+                               { ...opts, renderResume: resume }, t);
+  if (out.status === 200 || (out.body && out.body.reason === "RENDER_FAILED")) {
+    try { cap.dropCaptureSession({ session: session.session }); } catch { /* harmless */ }
+    PENDING_RENDERS.delete(session.session);
+  }
+  return out;
 }
 
 /** R12: a continuation resumes the session's outstanding supporting files against the session's OWN primary, read
