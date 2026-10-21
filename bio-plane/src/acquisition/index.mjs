@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R47, R95–R96, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R47, R95–R98, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -19,6 +19,10 @@
  * T51 fix round 2 (the walk's C5, C12, C13, C25): a capture held in parts is also kept whole under its own digest (`keepWhole`, R10),
  * co-attestation is waited for only briefly and recorded when it ends (R20), the render is a continuation the member finishes
  * (R5, R6, R12), and the document records the file name its source gave it (R16).
+ *
+ * T51 fix round 3 (the re-walk's C5, C12, C13, C25): a capture of several parts is kept whole from the parts held in memory,
+ * once, with no read-back (R96); the trusted timestamp is waited for no set time (R20); the render arm asks the governor with
+ * a peek and the fetch books the visit once (R97); the document carries its own title (R98, `title.mjs`).
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
@@ -1579,7 +1583,8 @@ async function addressReputation(address, given, scanner) {
  *  unreadable byte is stated, never a failed capture. The acquisition act and the knock's pull (capture R65) call it.
  *  `origin` (N615, K1683, K1773), `"member"` for bytes a member supplied by their own act (an upload) or
  *  `"fetch"` for a fetch the copy made, reaches `doctypeFor` as `ctx.origin`; absent, none is stated and a type that
- *  needs a member's own capture does not match. */
+ *  needs a member's own capture does not match. `firstPart` (R96), the first part's bytes when the caller holds them, is what
+ *  the ZIP magic is read from, so a capture of several parts reads none back. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
                                   origin = null, parts = null, firstPart = null }) {
   const pv = view || { view: undefined, ids: null };
