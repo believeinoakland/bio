@@ -21,3 +21,7 @@
 - `checks/ownership.mjs` per held module (see COMPLETE).
 
 Size (session_011AxVfrLbuAWxWCRogwpj27): test runs 6, module lines 10
+
+## J1 · QUESTION
+
+R42 (and R36/R40's `/remote/version` sentence) say RemoteSession answers GET /remote/version 503 REMOTE_UNAVAILABLE. C92 needs it 200 in R5's shape while not ready: {ok:true, name:'agent-runner', version, capabilities:[]}; every other request stays 503 REMOTE_UNAVAILABLE; agent-worker R110 still answers ASSISTANT_REMOTE_NOT_READY (no passed check at that version). Built that way, bundle rebuilt. Best reading: please amend R42's wording accordingly. No answer needed to proceed.
