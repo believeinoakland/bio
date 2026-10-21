@@ -114,6 +114,8 @@
 - Before restarting a QUIET job, check its session is not in one long live turn: a restart discards that work. (K506, K510)
 - Container images are built and published by the GitHub workflow `agent-runner-image.yml` (GHCR, by digest), never in a session (Docker Hub limits, the proxy's TLS); the project's Cloudflare token is `bio-biosmoke7-deploy`, with Containers · Edit. (K1898, K1893, K1985, K1908)
 
+- **Round efficiency (K4268, after Bob's question of 2026-10-21):** a start-up refusal that holds suites is fixed first and alone; every START/CHANGE that starts a session carries the unstale route (K4267); a change to `interface-shell`, `op-grades`, `op-declarations` or `plane` is merged only after every screen suite runs on the merged tree; a module's confirmed findings go in one CHANGE, a screen job only once its providers have merged; merges are batched at each backstop check unless one unblocks a waiting job.
+
 ## 5. Standing BOB conventions
 
 - A job never strikes a `not yet met` mark: it names the met ids in its record and BOB strikes them at the merge; BOB never edits a job's record. (K460, K775, K787, K567)
