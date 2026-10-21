@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 

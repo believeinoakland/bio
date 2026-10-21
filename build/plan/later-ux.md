@@ -9,3 +9,4 @@
 - objective, contradiction, document, question, project · DEC-391's minted label keys not yet adopted (`GAP_WORDS`/`PENDING_WORDS` still in code) · screens-inquiry, K4258/K4260 · 2026-10-21
 - project page · `rerunread` finding titles not drawn (case-import R31 serves them) · K4259 · 2026-10-21
 - strength displays · `ungraded` not drawn (strength R6 serves it) · K4259 · 2026-10-21
+- objective, about-knocker, leads, watching · `screen.<id>.purpose` rows missing (plane R24 red, accepted by name until T52) · K4276 diagnosis · 2026-10-21
