@@ -289,3 +289,7 @@ BOB's answer B12 (K4438): `signatures.stage_at` and `signatures.request` (an ins
 **Tests and checks.** `node --test --test-force-exit bio-plane/test/m/file-safety/`: 84 tests, 84 pass, 0 fail. Users: notice-producers and scheduler 265 pass; op-declarations and affordances 527 of 528 (R34 `capturecredentiallist`, on the tranche tip, accepted); queue and screens-settings 452 of 453 (R15 C84, the stale test of suite-reds-753ea4db8a, screens-settings'); control-plane 355 of 356 (t47-e2e R81, on the tranche tip, a stale test). Checks: format 0 failures; architecture 0; coverage 0 (50 of 50); words for file-safety 0 (testcopy 0); ownership 0 (6 files); `setup-words/build.mjs --check`: stale-rows note only (the new stand-ins), as expected.
 
 Size (session_01Puie49xQXkuYPiR7ZSPHMk): test runs 12, module lines 2515
+
+## J12 · COMPLETE
+
+COMPLETE: C84 (RC-R7: R46, R50) and K4435's WORD_KEYS red, in build/jobs/T51/file-safety.md. Suite 84/84; checks 0 failures for file-safety; users' reds are the tranche tip's named ones. The scanner is the scripted double (file-scanner not yet merged); the real-handler seam test is screens-settings'. Stand-in keys listed in the record. Re-merge after file-scanner merges on request.
