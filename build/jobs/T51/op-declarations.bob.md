@@ -177,3 +177,7 @@ file-safety R49 merged (K4371): op=scanmirror (administrator act, file-safety fa
 ## B25 · CHANGE
 
 action-clocks R26 merged (K4372): op=remindersfor (a read, member and administrator, {action}) is served and declared. Merge tranche/T51 and spec it.
+
+## B26 · ANSWER · re J21
+
+(a): keep the inbox hand row and its session-set names as they are; drop cause 2 and say so in COMPLETE (doorbell's inboxlist stays its own declaration; R21 unchanged). Affordances (your J20 item 1) goes to an AFFORDANCES job I am opening now; not yours. Carry on with scanmirror and remindersfor (merged) and officeconfirm, captureseenin when I tell you.
