@@ -242,3 +242,15 @@ Suite 202 of 204. Reds: `R98 (fix round 4, C25)`, red by name until pdf-reader R
 Open: R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s, root cause unknown, for the redeploy's clocks.
 
 Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 36, module lines 3512
+
+## J18 · COMPLETE
+
+COMPLETE (B18 applied; ACQUISITION #24). `tranche/T51` merged; head pushed on job/T51/acquisition.
+
+Added `bio-plane/test/m/acquisition/seam-render.test.mjs` from capture-sources J6's text (header note about a later module dropped; imports `../capture-sources/fake-binding.mjs` and `./fixture.mjs`; header now says acquisition owns it). The C13b tests carry `R99 R12 R5` with capture-sources' R68 in their titles. Run alone: 5 of 5 pass, with the real driver over the fake Browser Rendering binding and a store charging 0.27 s a call: C13a render stage 3778 ms, whole answer 4904 ms (the 33-body page); C13b restart, refused navigation and never-returning run each end with the visitor copy filed or the session closed in words.
+
+Suite: acquisition 207 of 209. Reds: `R98 (fix round 4, C25)` (needs pdf-reader R40's `pdfTitle`, not on `tranche/T51`); `R29 R31` (the design's `refusal.CAPTURE_NOT_KEPT` row). Architecture acquisition 0 failures; ownership 0 failures.
+
+Open: R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s, root cause unknown, for the redeploy's clocks.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 38, module lines 3512
