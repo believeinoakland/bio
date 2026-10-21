@@ -171,3 +171,7 @@ CHANGE (K4257), with B27: (1) the words check finds one copy in your tests, `t37
 ## B29 · CHANGE
 
 CHANGE (K4258), with B27 and B28: OP-DECLARATIONS #32 has merged (`strengthbarset` out of `OP_ALIASES`, 26 aliases; `ACT_HELP_ABSENT` reads `ACT_HELP`). Merge `tranche/T51` into your branch now, then apply B27 and B28. B28 (2) comes first: the plane's start is refused `DECLARED_OP_DISAGREES: groupdescriptiondraft description` (your `NON_ACTS` row still holds the sentence DEC-390 keyed as `store-door.declared.groupdescriptiondraft`); the plane's suite reads 6 of 46 and control-plane's 315 of 327 until your merge. Run `node --test bio-plane/test/m/plane/` after your fix and report its count in your COMPLETE.
+
+## B30 · CHANGE
+
+CHANGE (K4259), with B27–B29: `versionnotice` is a read (op-declarations `mutating: false`; your row at `index.mjs:1012` says "read:") but `marks.mjs:222` marks it `Reasoned/default`, so the shell draws "Asks for a reason" on an act that asks nothing. Mark it as a read's mark (as `sweeps`', K4252), the source a ruling (K4259); state the exception in R46 if R46's "MARKS equals the kit's WEIGHT" would otherwise fail. Line for BOB.
