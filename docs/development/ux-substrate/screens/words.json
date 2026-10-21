@@ -74846,21 +74846,21 @@
   },
   {
    "key": "screen.case-editor.drafts.newest",
-   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "en": "newest",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-394: B441 1: the newest draft in the chooser on case-editor"
+   "note": "DEC-394, DEC-395 (B443): the word after the newest draft's line in the chooser on case-editor"
   },
   {
-   "key": "screen.case-editor.drafts.earlier",
-   "en": "Scope: the 2024 lease amendment",
+   "key": "screen.case-editor.drafts.item",
+   "en": "Scope: {scope} · prepared {date}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-394: B441 1: the earlier draft in the chooser on case-editor"
+   "note": "DEC-394, DEC-395 (B443): one draft in the Which draft chooser on case-editor: {scope} the draft's scope, {date} the day it was prepared"
   },
   {
    "key": "screen.case-editor.links.live",
-   "en": "2 review links are live, one of them on an earlier draft.",
+   "en": "{count} review links are live, {earlier} of them on an earlier draft.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-394: B441 1: the note naming live review links on case-editor"
@@ -74881,21 +74881,21 @@
   },
   {
    "key": "screen.ceremony.drafts.newest",
-   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "en": "newest",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-394: B441 1: the newest draft in the chooser on ceremony"
+   "note": "DEC-394, DEC-395 (B443): the word after the newest draft's line in the chooser on ceremony"
   },
   {
-   "key": "screen.ceremony.drafts.earlier",
-   "en": "Scope: the 2024 lease amendment",
+   "key": "screen.ceremony.drafts.item",
+   "en": "Scope: {scope} · prepared {date}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-394: B441 1: the earlier draft in the chooser on ceremony"
+   "note": "DEC-394, DEC-395 (B443): one draft in the Which draft chooser on ceremony: {scope} the draft's scope, {date} the day it was prepared"
   },
   {
    "key": "screen.ceremony.links.live",
-   "en": "2 review links are live, one of them on an earlier draft.",
+   "en": "{count} review links are live, {earlier} of them on an earlier draft.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-394: B441 1: the note naming live review links on ceremony"
@@ -74916,17 +74916,17 @@
   },
   {
    "key": "screen.review-copy.drafts.newest",
-   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "en": "newest",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-394: B441 1: the newest draft in the chooser on review-copy"
+   "note": "DEC-394, DEC-395 (B443): the word after the newest draft's line in the chooser on review-copy"
   },
   {
-   "key": "screen.review-copy.drafts.earlier",
-   "en": "Scope: the 2024 lease amendment",
+   "key": "screen.review-copy.drafts.item",
+   "en": "Scope: {scope} · prepared {date}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-394: B441 1: the earlier draft in the chooser on review-copy"
+   "note": "DEC-394, DEC-395 (B443): one draft in the Which draft chooser on review-copy: {scope} the draft's scope, {date} the day it was prepared"
   },
   {
    "key": "screen.review-copy.links.heading",

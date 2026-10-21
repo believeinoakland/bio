@@ -6097,3 +6097,18 @@ decided: 2026-10-21 · the design session (P17), items 1 and 3
 the design: (1) `case-editor`, `ceremony` and `review-copy` carry a "Which draft" chooser (read `casedrafts`), each draft named by its scope and the date it was prepared, the newest marked; `review-copy` lists every live review link on any draft (who, which draft, when, comments) each with "Stop sharing" (`reviewrevoke`); the editor and ceremony say how many links are live and link to it. (3a) `project`: "The project's documents" (`heldcaptures` with the project, held and vouched). (3b) the stored login was drawn by DEC-381 on `capture` (`capturecredentialsupply`, `capturecredentiallist`, `capturecredentialwithdraw`), registered `owed:` until the ops reach `main`, so its label key reads `act.owed_capturecredentialsupply.label.capture`. (3c) `capture`: "Your requests for later" (`capturerequests`), each with its state. (3d) `document`: "A name the record did not match" (`resolvetestify`, grade D, with a required reason). (3e) `document`: "This contradicts another document", drawn on the owed op `contradictionflag` (no member op exists: the contradiction ops take a run's judgement or an existing candidate).
 reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/words-drawn.src.py` (rows noted "DEC-394"); `question-federal-office.html`.
 owed: Bob: item 2 (federal offices: A, B or C). BOB: an op for UC-155's flag (`contradictionflag`: two passages and a reason, making a candidate); the stored login's act keys (owed_ prefix until the ops reach main).
+
+### DEC-395 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B443, K4321: DEC-394's drafts rows hold sample text, so interface-shell R23 fails)
+for: design
+question: How are DEC-394's draft rows worded so the shell names no place?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: on `case-editor`, `ceremony` and `review-copy`, `screen.<screen>.drafts.item` "Scope: {scope} · prepared {date}" is each draft's line (it replaces `drafts.earlier`), and `drafts.newest` is the word "newest" after the newest draft's line; `screen.case-editor.links.live` and `screen.ceremony.links.live` read "{count} review links are live, {earlier} of them on an earlier draft." The drawing marks the chooser's options and the live links' scope lines as record data. No other DEC-394 row holds sample text.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: none.
