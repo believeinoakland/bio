@@ -220,6 +220,8 @@ Told only: RC-8. RC-5(e) changed by K4356 (no ceiling: nothing a member may capt
 
 On the live copy: `op=reading&sha256=<the project-less photo's sha>` as the member and as the administrator. (b) the administrator sees a reading, the member does not → membership gates it: open the conditional `membership` job in wave 2. (a) neither sees one → `control-plane`'s C17 part (the door promoted a failed reading). The screen half is in `screens-inquiry` either way.
 
+**Probe result (K4358, `fix-round-3-c17-probe.md`):** (a). `op=reading` for INFO-2026-0080's sha answers `found:false` to both roles (before any redaction); an earlier project-less photo is read, so project-lessness is not the cause. A second upload of the same bytes answers `existed:true` with a document; `readUploaded` (control-plane index.mjs:2349) returns it unread and `doneUpload` promotes it without a reading, discarding the first upload's. `control-plane` carries it (read when `existed:true` carries a document and no reading is held for the sha, through extraction's `readHeld`); the `membership` job is not opened.
+
 ## 9. After the round
 
 1. BOB merges each wave in the order above and runs the whole suite on the merged tranche before the next wave opens (never as a gate for the deploy, K4297 (1)).
