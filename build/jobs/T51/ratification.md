@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_014wrhn7FbzULdWGZY1H4QvG · depth 2 · WORKING · handled B2
+**Status** · session_014wrhn7FbzULdWGZY1H4QvG · depth 2 · WAITING ON BOB (J7) · handled B2
 
 ## J1 · REPORT
 
