@@ -231,7 +231,7 @@ Merged tranche/T51 (437339a938). Module tests 75/75 (new: signatures 3, declared
 
 **Stand-ins (no word row yet; the design stream writes them).** `refusal.SIGNATURES_RUN_RECENT` (the new row's translation); `file-safety.index.signatures_refused_unnumbered` (the reason line for a refusal with no status); the acts and details `file-safety.index.checking_for_new_signatures`, `file-safety.index.no_scanner_so_no_run_started`, `file-safety.index.a_run_was_started_lately`, `file-safety.index.the_scanner_did_not_start`. `WORD_KEYS` lists only rows that hold a word, so the row joins it when its word lands.
 
-**Tested against a double.** file-scanner R6's `/mirror?async=1` is read from `tranche/T51` as the double the fixture scripts (202 `{ok, started}`); the real handler on the branch still answers `/mirror` synchronously, so file-scanner's half is not yet merged. Until it is, `scanMirror` would see a 200 and answer `SCANNER_UNREACHABLE`.
+**Provider merged.** file-scanner R6's `mirrorAsync` (`POST /mirror?async=1` → 202 `{ok, started: true}`) was merged to `tranche/T51` while I worked; I merged it into the branch before COMPLETE and the fixture's default answer is exactly its shape. The suite was re-run after the merge (tests 80, pass 80).
 
 **Deferred.** None in this module.
 
