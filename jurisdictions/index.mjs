@@ -680,7 +680,7 @@ function validateInto(p, errors) {
     }
     /* R96 (T51): the rule of the deadline that is the law's first-request window; checked once the deadlines are read */
     if (own(l, "response")) {
-      if (!isStr(l.response)) err(`${at}.response`, "VALUE_INVALID", "response is the rule of a deadline");
+      if (!isStr(l.response)) err(`${at}.response`, "VALUE_INVALID", localize("jurisdictions.index.response_is_the_rule_of_a_deadline", "response is the rule of a deadline"));
       else lawResponses.push({ at: `${at}.response`, rule: l.response });
     }
     if (isStr(l.name)) lawNames.add(l.name);
