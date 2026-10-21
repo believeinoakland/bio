@@ -235,7 +235,7 @@ export class Money {
       const fy = Array.isArray(view.fiscal_year) ? view.fiscal_year : [];
       const entry = fy.find((f) => f && f.body === body) || fy.find((f) => f && f.body === "*");
       if (!entry || typeof entry.start !== "string")
-        return refusal("BAD_PERIOD", localize("money.index.the_active_profiles_hold_no", "the active profiles hold no fiscal year for {body}, so {fiscal} cannot be mapped", { body: String(body), fiscal: String(p.fiscal) }));
+        return refusal("MONEY_BAD_PERIOD", localize("money.index.the_active_profiles_hold_no", "the active profiles hold no fiscal year for {body}, so {fiscal} cannot be mapped", { body: String(body), fiscal: String(p.fiscal) }));
       const years = [...p.fiscal.matchAll(/\d{4}/g)].map((m) => Number(m[0]));
       for (const y of years.flatMap((y) => [y - 1, y])) {
         let fp;
@@ -245,7 +245,7 @@ export class Money {
           return r.ok === false ? r : { ...r, key: p.fiscal, body };
         }
       }
-      return refusal("BAD_PERIOD", localize("money.index.the_profiles_fiscal_year_for", "the profile's fiscal year for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }));
+      return refusal("MONEY_BAD_PERIOD", localize("money.index.the_profiles_fiscal_year_for", "the profile's fiscal year for {body} names no period {fiscal}", { body: String(body), fiscal: String(p.fiscal) }));
     }
     return this.#range({ from: p.from, to: p.to ?? null, precision: p.precision || "day", zone });
   }
