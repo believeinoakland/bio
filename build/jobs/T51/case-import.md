@@ -1,6 +1,6 @@
 # case-import (T51)
 
-**Status** · session_01Ge3D4wpTN5PSBoW7jivuwt · depth 2 · WORKING · handled B6
+**Status** · session_01Ge3D4wpTN5PSBoW7jivuwt · depth 2 · COMPLETE · handled B6
 
 ## J1 · COMPLETE
 
