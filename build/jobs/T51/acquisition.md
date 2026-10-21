@@ -137,3 +137,25 @@ QUESTION (K4370), two items for the design stream and BOB; my job carries on wit
 
 1. The word table has no row `refusal.CAPTURE_NOT_KEPT`. CAPTURE_NOT_KEPT's row (acquisition/checks.mjs, `CAPTURE_KEEP_CHECKS`) reads its translation by `localize('acquisition.checks.capture_not_kept', <default>)`; the default is a stand-in: "the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again". When the design's row lands, the row switches to `word("refusal.CAPTURE_NOT_KEPT")`. Until then checks.test.mjs (R29 R31) is red by name on `hasWord('refusal.CAPTURE_NOT_KEPT')`.
 2. The check number is my choice: C-154.1 (C-154 is in no file; the series reaches C-153). Please confirm it or name the number, and I will change it.
+
+## J11 · COMPLETE
+
+COMPLETE: fix round 3, wave 2 (ACQUISITION #23, B9). Head bb614c49bf on job/T51/acquisition (tranche/T51 merged at 22d09993fa).
+
+Causes met
+1. C5* (K4370), CAPTURE_NOT_KEPT's catalogue row (R10, R96). `checks.mjs` gains `CAPTURE_KEEP_CHECKS` with the row (check `C-154.1`, where `src/acquisition/index.mjs acquire > is-capture-kept`, translation a stand-in: `localize('acquisition.checks.capture_not_kept', <default>)`, see QUESTION J10). `notKept` (index.mjs:404) now answers `code`, `check` and `translation` beside `reason` and the unchanged `detail`. The row is in `ACQUISITION_CHECKS`. Test: "R96 R10 (C5, K4370): the CAPTURE_NOT_KEPT refusal carries its catalogue row's code, check and translation; control: an existing refusal's row is unchanged" (fix3-t51.test.mjs). Seen failing first: `TypeError ... reading 'check'` with the change stashed; passes with it. Control: `CAPTURE_NOT_DRAINING` still `C-28.13`. The census in checks.test.mjs gained the row (`CAPTURE_NOT_KEPT: "C-154.1"`) and the R29 R31 case table gained a driven case (9 MiB, a store refusing the whole object, with a control).
+2. R98 test (K4370): a PDF with no Title entry answers `null` at capture, as one with a Title entry does (fix3-t51.test.mjs, the R98 controls test). It passes; the requirement line already states it, so no code change.
+
+Suite
+- `node --test --test-force-exit bio-plane/test/m/acquisition/`: 195 tests, 194 pass, 1 fail. The one red is `R29 R31: this module's table holds exactly ...` in checks.test.mjs, failing by name on `hasWord('refusal.CAPTURE_NOT_KEPT')`: the design's row is not in the word table yet (QUESTION J10, the stand-in in use). Accepted red, named here.
+- `checks/format.mjs`, `architecture.mjs`: part of `checks/run.mjs /home/user/bio`: format 0 failures, architecture 0 failures; words 0 failures, with no finding in acquisition. `coverage` shows 9 failures, all in other modules (agent-harness, agent-runner, capture R101, control-plane R117/R118, entities, file-safety, installer-steps, interface-shell, journey-check); none names acquisition.
+- `checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`: 0 failures.
+- `setup-words/build.mjs --check`: stale-rows note names `acquisition.checks.capture_not_kept` (expected, the stand-in); no refusal.
+
+Reported to BOB
+- QUESTION J10: the `refusal.CAPTURE_NOT_KEPT` row for the design, and confirm the check number C-154.1 (my pick, the next unused number).
+
+Declared ops: none added.
+Deferred: none.
+
+Size (session_015Ejg6oSr4Ds8qoX2TWTT9S): test runs 7, module lines 3443
