@@ -89,3 +89,19 @@ Tests: both validate and combine; the first profile's FOIA entry names `foia_res
 **For screens-action (S), to put in its START:** list `records_laws`, not deadlines; take a law's window from `response`, the kind from `label`; show the help's `records_help` block only when `block.law` is the chosen law, and otherwise the first sentence from the law's `response` (days, citation) and no California text, no "the city". I cannot do these. They are in `bio-plane/src/screens-action/`.
 
 Waiting for R96 and R97 (or your changes to them) and your choice of (a) or (b).
+
+## Fix round 4 (START B4): C64-law, C64-template — jurisdictions' part
+
+**C64-template.** (1) Root cause, reported at step 0 (J6) and released by BOB (B5, option b): the first profile's `records_request` holds no template (R45), so `filings.filingPrepare` answers `TEMPLATE_NOT_NAMED`; the refusal on typed text comes from screens-action sending fills the text does not name. No `jurisdictions` change; screens-action carries the cure (K4438). (2) Test gap and (3) failing-first test: screens-action's (S). (4) N.
+
+**C64-law.** (1) Root cause: the law picker lists deadlines (not `records_laws`), help-records reads the CPRA by rule key, and a deadline has no words. BOB corrected the target to (A)(i) `foia_response` (B5). (2) Missed because no federal fixture existed; `t51-response.test.mjs` is it at this interface. (3) `jurisdictions/test/t51-response.test.mjs`, 3 tests naming R96 and R97, red first (stashing the module and profile changes: 0 pass, 3 fail), then green (3 pass); controls: a response naming no deadline, a non-records rule, a non-string and an empty label are refused; combine withholds a disagreeing label or window. (4) N.
+
+Built: R96 `response` on a records law (validated against the profile's `records_request` deadlines; one value per law name in `combine`; set for the CPRA `records_response`, the Sunshine Ordinance `immediate_disclosure`, FOIA `foia_response`; test profile `records_answer`). R97 `label` on a deadline (FOIA "answer to a first request" / "decision on an appeal"; test profile one). One new word key `jurisdictions.index.response_is_the_rule_of_a_deadline`.
+
+Deferred: none. Found in another module: none new; screens-action is told in its START.
+
+Tests and checks: `node --test --test-force-exit jurisdictions/test/` 171 tests, 171 pass. Users (`impact.mjs origin/tranche/T51 HEAD`): screens-investigate 19/19, screens-publish 17/17, screens-action 24/24; control-plane 355 pass, 1 fail (R81 end to end), identical on the tranche tip; plane 41/43, installer 8/15 and journey-check 1/16 are missing `node_modules` (playwright-core), not this change. checks: format, architecture clean; coverage 97 of 97 ids named; words 0 findings for jurisdictions (4 remain in `op-grades`, not mine); ownership 5 files, 0 failures.
+
+Questions: J6, answered B5 (none open). Requirement ids met: R96, R97 (and R95 still).
+
+Size (session_018LcUE19WD2qKmGoB8yDoXA): test runs 14, module lines 3741
