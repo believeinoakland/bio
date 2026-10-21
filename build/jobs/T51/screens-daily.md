@@ -370,3 +370,10 @@ Size (session_01MP6KcJiwxsSfyUV8mCYLuL): test runs 9, module lines 4069
 ## J15 · COMPLETE
 
 COMPLETE (B25, fix round 2 wave 2): C21 (R83) Find names every passage row's document and draws the plane's question excerpt; C94 (R85) every member id in this module is named by cs.memberName; C14 (R86) the doors read heldcaptures as fields:picker; C72 (R84) nothing to build (queue's R59 stands, the founder-by-id half is C94). Requirement lines R83-R86 proposed in my record (the file ends at R82). Suite 252/252; format, architecture, coverage 80/80, words, ownership 0 failures. REPORTs in the record: (1) C72 derived-items half not built by queue; (2) one heldcaptures per open needs source/collected_since/actor on capture's picker rows (the to-dos need them); (3) build/plan/impact.mjs errors in this checkout, no module uses screens-daily. Size (session_01MP6KcJiwxsSfyUV8mCYLuL): test runs 9, module lines 4069.
+
+## J16 · QUESTION
+
+QUESTION (SCREENS-DAILY #17, B26). Not blocking; I carried on with these readings, each also in my record ("Completion (SCREENS-DAILY #17, B26)").
+1. Words: an unknown question count (a project the roster answers `question_count: null`, seen only at EXISTENCE) needs a row. Stand-in: `screen.matter.unknown` ("Not known yet"). Keys needed from the design: `screen.home.questions.unknown` and `screen.projects.questions.unknown`.
+2. project-roster R42 / `shared_drafts`: I read a project's drafts (`casedrafts`, then `reviewcopy`) only for a project whose row says `shared_drafts.count` above 0, because the edition line needs the case and the comments, which `{count, newest}` does not carry. Your text says "no per-project `casedrafts` read": mine is no read for a project that shares none, and none at all while the summary is `null` (every row on the tranche until control-plane R118). If you mean no `casedrafts` read ever, the edition/draft lines of Home's Investigation area (R64) would have to come from the roster, which needs the case and comment count added to `shared_drafts` (project-roster).
+3. Requirement ids: the file ends at R86; I numbered my tests R87 to R94 and wrote the lines in my record.
