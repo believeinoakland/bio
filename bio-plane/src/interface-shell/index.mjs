@@ -180,7 +180,7 @@ const asksReason = (op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op);
 
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
 export const SHELL_OPS = Object.freeze(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "infolevelset",
-  "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "signout", "unlock", "reauth", "bootstrap", "memberlist"]);
+  "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "signout", "unlock", "reauth", "bootstrap"]);
 
 /* R21: the screen contract. Throws, naming the screen, for a screen whose id the registry does not hold, an act naming
    an op `OPS` does not hold, or an op that is neither the registry's for that screen nor a named re-point. */

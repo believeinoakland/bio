@@ -15,3 +15,35 @@ QUESTION · cause-shell-t51 · one word, one request field, and the requirement 
    - R13 (C11): a refusal drawn beside an act is drawn again by every redraw, until the act is pressed again, anything else is drawn in its slot, or the screen is left.
    - R68/R9 (C78, C79): the focus put back after a redraw neither opens an explanation nor scrolls; a navigation opens the screen at the top; scroll and focus are carried only across redraws of the same screen.
    - R84/R108 (C81): the phone block of `STYLE` also gives the main column `overflow-wrap: anywhere` and 44 px targets to a row's tick and panel control, the masthead search and a box ticked beside words (its label).
+
+## J1 · QUESTION
+
+Answered by B3 (interim rows accepted, `shell.member.unknown` to the design lane; the shell sends `v`; six requirement lines written).
+
+## J2 · COMPLETE
+
+Fix round 2, wave 1: C24, C76, C77, C78 (shell part), C79 (shell part), C80, C81 (partly, below), C94 (shell part), C11 (shell part), C15 (shell part), and B2's C66 look. Tranche T51 merged at B3's lines.
+
+**Applied (requirement ids; tests in `interface-shell/fixround2.test.mjs` and `phone390.test.mjs`, each seen failing first):**
+- C24 (R7, R9): `/app/<place>` of a place holding a built screen is rewritten to that screen's address. The rail, tab and search already opened the finder in the source (`PLACE_SCREENS.find` is `["finder"]` since T47); the walk's `/app/find` was the place's own address.
+- C76 (R11, R107; op-grades R42): the Reasoned mark is drawn only where the shell asks (`markAsks`); a read draws no mark; `op-grades` marks the nine reads whose kit weight was above Reversible (bootstrap's "Irreversible" among them) Reversible by the K4259 read ruling. A test over every act of every working screen the registry lists, no hand list.
+- C77 (R109): a password field is emptied only when the act's request carried its value.
+- C78 (R68): the focus put back after a redraw opens no explanation. C79 (R9): scroll and focus are carried only across redraws of the same screen; the put-back focus never scrolls. C80 (R60): no placeholder name (no link) until `groupidentity` answers; the last name this device was shown (`cs-group`) meanwhile.
+- C94 (R111): `cs.memberName(id)`; the roster (`memberlist`) is read lazily, only when a screen asks for a name not held (a first version read it in the frame and broke screens-intake and screens-settings tests that count requests).
+- C11 (R13): the refusal beside an act is drawn again by every redraw. C15 (R5): `op=interfacewords&v=<bootstrap's version>`.
+- C81 (R84, R89, R108): phone block of `STYLE`: `overflow-wrap: anywhere` on the main column, 44 px for row ticks, panel controls, the masthead search and boxes ticked beside words; measured in Chromium at 390 px (main width, nothing past the edge, every target) with a 1280 px control.
+
+**Changed existing tests (requirement changed by C76/C80, not weakened):** `acts.test.mjs`, `design.test.mjs` R64 case, `t51.test.mjs` R90/R102 (promote draws no mark now; a mark that still draws is tested on `memberadd`); `session.test.mjs` R24 allows the device key `cs-group`; `op-grades` `t48`/`t50` take the read ruling as an exception by its source, not by name.
+
+**B2 (C66):** not found. The queue module clamps `limit` 1–500 (`clampLimit`), its door passes it through, `tasks` clamps to 1000; no declared bound or door check refuses 500. The shell's call is unchanged. Likely the walk's build or another read; the console 400 needs the live request's response body.
+
+**Deferred / reported:**
+- C81's other minor items (case-editor strip numbers over words, project list rows aligning, Home loading rule, tip over roster rows) could not be reproduced without the screens' live data; wave-2 screen jobs read `phone390.test.mjs`.
+- REPORT: acts marked Terminal/Signed by the kit with no weight (e.g. `subscriptiondisconnect`, `accountreferenceremove`, `reviewrevoke`, `signerrevokeown`) draw the mark and run on press: the same disagreement as C76 for those marks; untouched.
+- `interface-assets`: nothing changed (generated; the phone rules live in `STYLE`, R108).
+- `phone390.test.mjs` needs `playwright-core` (found in `site/node_modules`, journey-check's, or `/opt/node-tools`) and Chromium; without them it fails saying so.
+
+**Suites (merged tree):** interface-shell 262 tests, 261 pass, 1 fail (R23, fails identically on `origin/tranche/T51`); op-grades 142/142; interface-assets 22/22. Users: screens-entry 93, screens-wizards 75, screens-daily 242, screens-inquiry 384, screens-investigate 178, screens-publish 179, screens-action 214, screens-intake 181, affordances 271, queue 206, admission 58, tasks 131, op-declarations 246, control-plane 324: all pass. screens-settings 209/210 (R39 fails on the tranche too), store-door 52/53 (R17 `groupdescriptiondraft`, same on the tranche), plane 279/280 (R24, same on the tranche).
+**Checks:** format 1 failure (`build/rulings.md:4298`, BOB's); architecture 0, coverage 0 (shell 108/108, op-grades 51/51, assets 11/11); words 0 for my files; ownership (list form) 0 failures over 13 files.
+
+Size (session_013bNQKD9Hm7fy4unt8sjgMn): test runs 14, module lines 3224
