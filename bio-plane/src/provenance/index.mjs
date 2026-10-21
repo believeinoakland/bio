@@ -1173,6 +1173,23 @@ class Provenance {
     return { ok: true, bundleId, system: sys, by: who, at, seq };
   }
 
+  /** R70 — every declaration of a document's origin, oldest first (`seq` order), the standing one (R30) the last: the
+   *  declared systems a screen lists. Gated by sight and refused as R64's are; writes nothing. */
+  originsOf({ bundleId = "", viewer = null } = {}) {
+    const id = typeof bundleId === "string" ? bundleId.trim() : "";
+    if (!id) return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
+    const info = this.#record.bundleInfo(id);
+    if (!info || !this.#membership.inSight(id, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: id,
+               detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    if (String(info.type).toLowerCase() !== "information")
+      return actRefusal("ORIGIN_NOT_A_DOCUMENT",
+        `this record is a ${String(info.type).slice(0, 40)}; only a document came from a system`, { bundleId: id });
+    return { ok: true, bundleId: id,
+             origins: this.#rows(`SELECT seq, system, by, at FROM origin_declarations WHERE bundle_id = ? ORDER BY seq`, id)
+               .map((r) => ({ seq: r.seq, system: r.system, by: r.by, at: r.at })) };
+  }
+
   /** R30 — the standing declaration (the latest), or null. A reader of a document's origin asks this before any
    *  system derived from its host. */
   originOf(bundleId) {
