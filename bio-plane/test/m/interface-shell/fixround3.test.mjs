@@ -111,3 +111,28 @@ test("R117 a security screen naming scanmirror and a places screen naming office
   assert.throws(() => checkScreens([screen("places", "scanmirror")]), /places.*scanmirror/);
   assert.throws(() => checkScreens([screen("security", "groupnameset")]), /security.*groupnameset/);
 });
+
+/* R119 (fix round 3, C87 (c); K4410): an act's `ready` runs on the press before any reason box opens */
+test("R119 a reasoned act whose ready refuses opens no reason box, sends nothing and draws the refusal beside it; control: an act without ready asks the reason as before", async () => {
+  const refusing = endorse({ ready: () => ({ refuse: "refusal.CONSENSUS_REQUIRED", fills: { awaiting: "rosa" } }) });
+  const p = await boot({ screens: [screen(refusing)], path: "/app/members", plane: { whoami: ok(WHO), memberlist: ok({ members: [] }), adminendorse: ok({ ok: true }) } });
+  await p.click(p.root().querySelector('button[data-act="adminendorse"]'));
+  assert.ok(!p.root().querySelector(".mk-slot textarea"), "no reason box opens");
+  assert.equal(p.byOp("adminendorse").length, 0, "nothing is sent");
+  assert.ok(slot(p).textContent.includes(word("refusal.CONSENSUS_REQUIRED", { awaiting: "rosa" })), "the refusal is drawn beside the act");
+  const plain = await boot({ screens: [screen(endorse())], path: "/app/members", plane: { whoami: ok(WHO), memberlist: ok({ members: [] }), adminendorse: ok({ ok: true }) } });
+  await plain.click(plain.root().querySelector('button[data-act="adminendorse"]'));
+  assert.ok(plain.root().querySelector(".mk-slot textarea"), "control: the reason box opens as before");
+  assert.equal(plain.byOp("adminendorse").length, 0, "control: nothing is sent before the reason");
+});
+
+test("R119 the fills ready answers reach the act's send, with the reason asked before it; the send is handed them", async () => {
+  /* the act's functions run in the page from their own text, so the send is self-contained: it answers the fill as a refusal sentence */
+  const act = endorse({ ready: () => ({ fills: { note: "n1" } }), send: (view, btn, cs, extra) => ({ refuse: "refusal.CONSENSUS_REQUIRED", fills: { awaiting: String(extra.fills.note) } }) });
+  const p = await boot({ screens: [screen(act)], path: "/app/members", plane: { whoami: ok(WHO), memberlist: ok({ members: [] }), adminendorse: ok({ ok: true }) } });
+  await p.click(p.root().querySelector('button[data-act="adminendorse"]'));
+  assert.ok(p.root().querySelector(".mk-slot textarea"), "the reason box opens after ready answers");
+  p.root().querySelector(".mk-slot textarea").value = "because the team asked";
+  await p.click(p.root().querySelector('[data-shell="reason-send"]'));
+  assert.ok(slot(p).textContent.includes(word("refusal.CONSENSUS_REQUIRED", { awaiting: "n1" })), "the send drew the fill it was handed");
+});
