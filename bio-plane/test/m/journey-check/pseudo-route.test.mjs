@@ -37,3 +37,12 @@ test("R29 (a): the shell's script, which carries the page's words, is answered w
   assert.equal((await through({ type: "script", url: "https://elsewhere.test/x.js", contentType: "text/javascript", body: script })).fellBack, true);
   assert.equal((await through({ type: "stylesheet", url: `https://${HOST}/app/x.css`, contentType: "text/css", body: "a{}" })).fellBack, true);
 });
+
+test("R29 (a): the document's script tag carries no integrity hash once its script is rewritten (the hash is of the English script, and a browser refuses the pseudo one); the rest of the document is as it was", async () => {
+  const page = '<!doctype html><html><head><title></title></head><body><script src="/app/shell.v1.js" integrity="sha256-AAAA"></script><p id="x">kept</p></body></html>';
+  const r = await through({ type: "document", url: `https://${HOST}/app/home`, contentType: "text/html", body: page });
+  assert.ok(!/integrity=/.test(r.text), r.text);
+  assert.ok(r.text.includes('<script src="/app/shell.v1.js"></script>') && r.text.includes('<p id="x">kept</p>'));
+  const other = await through({ type: "document", url: `https://${HOST}/app/home`, contentType: "text/html", body: '<link rel="stylesheet" href="/a.css" integrity="sha256-BBBB">' });
+  assert.ok(other.text.includes('integrity="sha256-BBBB"'), "only a script's hash is dropped");
+});

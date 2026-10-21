@@ -8,7 +8,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { settle, StepFailed } from "./walker.mjs";
-import { act, control, type, open, requireDrawn } from "./journeys.mjs";
+import { act, control, type, open, requireDrawn, reveal } from "./journeys.mjs";
 import { requireWord, requireAnyWord, byWord, wordPattern, word, drawsWord } from "./words.mjs";
 import { developerWords } from "./design.mjs";
 import { NOTICE_ADDRESS, NOTICE_PASSAGE, HEAT_ADDRESS, HEAT_PASSAGE } from "./city.mjs";
@@ -87,7 +87,9 @@ async function projectAndQuestion(walk, page, base, { title, question }) {
   let project = null, q = null;
   await walk.step(page, "2 · start a project with a title, and open it", async (p) => {
     await open(walk, p, base, "/app/projects", "projects");
-    await p.locator(START_PROJECT_VISIBILITY).check();
+    const visibility = p.locator(START_PROJECT_VISIBILITY);
+    await reveal(visibility);
+    await visibility.check();
     await act(p, "promote", { fields: { "projects-title": title }, reason: "Tenants of 14 Lakeshore Row report water coming in." });
     if (!/^\/app\/project\//.test(where(p))) await p.locator("#cs-main a").filter({ hasText: title }).first().click();
     await settle(p);

@@ -195,7 +195,9 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const cookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
     if (cookies.length) headers["set-cookie"] = cookies.join("\n");
     let body = Buffer.from(await res.arrayBuffer());
-    if ((doc && /html/.test(ct)) || (script && /javascript|ecmascript/.test(ct))) body = Buffer.from(await pseudoBody(body.toString("utf8")));
+    /* the page names its script by the hash of the English one (`integrity`); the pseudo script has another, which a browser refuses */
+    if (doc && /html/.test(ct)) body = Buffer.from((await pseudoBody(body.toString("utf8"))).replace(/(<script\b[^>]*?)\s+integrity="[^"]*"/g, "$1"));
+    else if (script && /javascript|ecmascript/.test(ct)) body = Buffer.from(await pseudoBody(body.toString("utf8")));
     else if (/json/.test(ct)) body = Buffer.from(pseudoJson(body.toString("utf8")));
     await r.fulfill({ status: res.status, headers, body });
   });
