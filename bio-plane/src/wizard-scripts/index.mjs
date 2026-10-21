@@ -1730,7 +1730,7 @@ export function wizardScriptsOps(m, url, body) {
     wizardeditorgrant: () => m.wizardEditorGrant({ member: pick("member"), by: q("author") }),
     wizardeditorrevoke: () => m.wizardEditorRevoke({ grant: pick("grant"), by: q("author") }),
     wizardretire: () => m.wizardRetire({ script: pick("script"), version: pick("version"), reason: b.reason ?? null, by: q("author"), ...stamps }),
-    wizards: () => m.wizards({ state: q("state"), ...stamps }),
+    wizards: () => m.wizards({ state: pick("state"), ...stamps }),
     wizardread: () => m.wizardRead({ script: q("script"), version: q("version"), ...stamps }),
     wizardsat: () => m.wizardsAt({ screen: q("screen"), ...stamps }),
     wizardcheck: () => m.wizardCheck({ steps: b.steps, ...stamps }),
@@ -1747,7 +1747,7 @@ export function wizardScriptsOps(m, url, body) {
    by `wizardScriptsOps`, and is declared all the same. */
 export const DECLARED_OPS = Object.freeze({
   wizards: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",
-    description: word("act.wizards.does"), fields: { accepts: [], requires: [] } },
+    description: word("act.wizards.does"), fields: { accepts: ["state"], requires: [] } },
   startfrom: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
     description: word("act.startfrom.does"), fields: { accepts: ["message", "parts"], requires: [] } },
   writinghelp: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",
