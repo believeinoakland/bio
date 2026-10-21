@@ -90,3 +90,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B9 · CHANGE
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/bundler tranche/T51 && git branch -m job/T51/bundler stale/bundler-local && git checkout -b job/T51/bundler origin/job/T51/bundler`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · BUNDLER #25 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4286)
+
+Mail with `--module bundler`; record `build/jobs/T51/bundler.md`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file changes, no requirement line changes. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. Words (K3810): a test never copies a sentence people read; it asserts the key. A test never hand-lists another module's ops, rows or words (K3268).
+
+You are the module job for `bundler`, one entry, tests only (K4286). **bundler R25 (K4094)** is red at `bio-plane/test/m/bundler/bundler.test.mjs:866-867`: since 9055bb0502 (agent-runner FR-14) agent-runner's `wrangler.jsonc` declares migration v2 (`RemoteSession`), and `workerPart` reports it correctly; the test expects only v1. Bring the expectation to what R25 says: each member's Worker part states the Durable Objects and migrations its configuration owns. Prefer reading the expected migrations from the member's own configuration over a hand list (K3268); if that is not possible at R25's interface, add `{tag:"v2", classes:["RemoteSession"]}`.
+
+Read in full: bundler R25 and the test around :840-880. Run `bio-plane/test/m/bundler/` (0 fail) and `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the count and the `Size` line.
