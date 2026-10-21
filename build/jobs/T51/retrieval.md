@@ -135,3 +135,7 @@ Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 9, module lines 2924
 **For BOB (requirements, not edited here).** R91's list of declared ops (`findin`, `select`, `selectionrelease`, `frontier`, `search`) should now read `list` too. Commit `53847cb8f1` on `job/T51/retrieval`.
 
 Size (session_0184iZt7rYVPmAExGqQUio3H): test runs 3, module lines 2941
+
+## J8 · QUESTION
+
+C21 has no requirement id in build/requirements/retrieval.md. I built to this proposed line, tested as R92 (t51-fix2.test.mjs); please write it (or reword) and I re-name the tests if the id differs. **R92** (T51 fix round 2; C21) Every hit names its document and a question's excerpt is its own words. `search`'s page hits and `meaningRows`' `rows=passage` rows each carry `document {bundle_id, title}` (the bundle holding the hit or the unit; the title as the record holds it), added before R78's decorations, which cannot replace it. A hit whose object type is an inquiry and whose `snippet_from` is `text` has its `snippet` cut from the question's title and frontmatter conclusion (same brackets, ellipsis and word bound as R6's snippet), never from `bundle.md`; a passage snippet and a document's text snippet are unchanged. Test: a question hit's snippet holds no heading, INQ- id, hash or log text; a passage hit and a passage row carry the document title; control: a document hit's snippet is unchanged. Note for the screen (wave 2): rows carry `document.title` and the screen already reads that. No words needed.
