@@ -129,6 +129,6 @@ test("R55 R56 the document: a held copy is vouched for and replaced by the vouch
   assert.ok(!says(main(p), "document.held.says") && main(p).querySelector("[data-vouched]"), "replaced at once by the vouched line");
   assert.ok(actsIn(main(p)).includes("attest") && main(p).querySelector('details[data-fold="retire"]'), "attest and a folded retire at the foot");
   /* control: a document the viewer did not capture draws no held banner */
-  const o = await open("/app/document/" + D, { plane: { heldcaptures: (r) => ok({ ok: true, held: r.query.member ? [] : [{ bundle_id: D, capture: { sha256: SHA } }] }) } });
+  const o = await open("/app/document/" + D, { plane: { heldcaptures: (r) => ok({ ok: true, held: [{ bundle_id: D, capture: { sha256: SHA }, actor: "member:rosa" }] }) } });
   assert.equal(main(o).querySelector("[data-held]"), null);
 });
