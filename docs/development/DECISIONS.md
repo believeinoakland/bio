@@ -6082,3 +6082,18 @@ decided: 2026-10-21 · the design session (P17)
 the design: (1) the minutes fold's two in-place refusals keyed (`screen.action.minutes.notfound`, `.needed`). (2) `screen.home.todo.vouch.one`; a letter awaiting approval is the queue kind `letter-approval` (`queue.letter-approval.summary` with {title}, `.detail`); on the queue and Home the buttons say what they do on their row, the drawn words, while `act.<op>.label.<screen>` stays the act's name in menus and explanations; the drawn words' keys are listed in U428 (six minted: `screen.home.ailimit.set`, `.remove`, `screen.queue.explore.today`, `.mute.kind`, `.check.open`, `.hint.promote`, `.vouch.them`). (3) the docket's "Help me write this" stays: `field()` draws it under the summary whenever the team's assistant is on, as on other screens. (4) the reads lists regenerated from the tranche, so `words-reads.json` holds the updates screen's runtime keys.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-393"), `screens/words-reads.json`.
 owed: none.
+
+### DEC-394 · answered (items 1 and 3; item 2 put to Bob)
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B441, K4304: operations a member cannot finish with the screens as drawn; T51's bar, K4269/K4270)
+for: design (items 1, 3); Bob (item 2)
+question: How are a project's earlier drafts and their review links reached, and which controls complete the operations the walk found unreachable?
+why it is Bob's: items 1 and 3 are not (P17: drawing beneath his rulings); item 2 decides who may add an office, put to him on the page "Federal Records Requests" (https://claude.ai/artifact/FcRtETPqMVjaqocMQHQLTX), recommendation A (a member names the office inside the request, marked "named by a member" for an administrator to confirm).
+provisional: as below.
+alternative: none weighed for 1 and 3.
+recommendation: as below.
+reversal cost: low.
+response: items 1 and 3 none needed (the design's detail); item 2 awaits Bob.
+decided: 2026-10-21 · the design session (P17), items 1 and 3
+the design: (1) `case-editor`, `ceremony` and `review-copy` carry a "Which draft" chooser (read `casedrafts`), each draft named by its scope and the date it was prepared, the newest marked; `review-copy` lists every live review link on any draft (who, which draft, when, comments) each with "Stop sharing" (`reviewrevoke`); the editor and ceremony say how many links are live and link to it. (3a) `project`: "The project's documents" (`heldcaptures` with the project, held and vouched). (3b) the stored login was drawn by DEC-381 on `capture` (`capturecredentialsupply`, `capturecredentiallist`, `capturecredentialwithdraw`), registered `owed:` until the ops reach `main`, so its label key reads `act.owed_capturecredentialsupply.label.capture`. (3c) `capture`: "Your requests for later" (`capturerequests`), each with its state. (3d) `document`: "A name the record did not match" (`resolvetestify`, grade D, with a required reason). (3e) `document`: "This contradicts another document", drawn on the owed op `contradictionflag` (no member op exists: the contradiction ops take a run's judgement or an existing candidate).
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/words-drawn.src.py` (rows noted "DEC-394"); `question-federal-office.html`.
+owed: Bob: item 2 (federal offices: A, B or C). BOB: an op for UC-155's flag (`contradictionflag`: two passages and a reason, making a candidate); the stored login's act keys (owed_ prefix until the ops reach main).
