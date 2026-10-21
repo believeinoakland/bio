@@ -40,5 +40,7 @@ export const EXTRA = Object.freeze({
     // R38 (B15 (1)): the reply's document is offered as the docket's capture option; R52: the reminder's sentence
     "screen.docket.capture.option", "screen.reminder.on",
     // R55: a part of the minutes left empty is asked for by `findin.fieldneeded`; words that the document's reading does not hold are `ai.progress.check.fail`'s
-    "findin.fieldneeded", "ai.progress.check.fail"],
+    "findin.fieldneeded", "ai.progress.check.fail",
+    // C66: "Show the routes" with none says that none is known (the matter screen's row, a stand-in for this screen's own)
+    "screen.matter.routes.none"],
 });
