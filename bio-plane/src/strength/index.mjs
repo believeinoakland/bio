@@ -689,8 +689,10 @@ export class Strength {
     const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
     /* R5: the hunch legs this answer names, so a hunch on a target the viewer may not see is neither named nor counted. */
     const seenHunches = hunchCount(legs.filter((l) => !(l.target_id && keep(l.target_id) === null)));
-    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, hunches_left_out: seenHunches,
-             ...(withheld ? { out_of_view: true } : {}) };
+    /* R6 (T51; K4259): the ungraded members, after the redaction above: those inert on every axis, once each by target. */
+    const ungraded = ungradedEverywhere(axes);
+    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ungraded, ungraded_count: ungraded.length,
+             hunches_left_out: seenHunches, ...(withheld ? { out_of_view: true } : {}) };
   }
 
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
@@ -1571,6 +1573,20 @@ function distinctParts(legs) {
    `population`) count unseen members too, so they go whenever anything is withheld (`hidden`, which also covers a
    load-bearing member no list names). Nothing says how much was withheld: `out_of_view: true` states only that
    something was. Returns the original object when nothing is withheld. */
+/* R6 (T51; K4259): a member inert on every axis carries no grade at all, so it is ungraded; a leg graded on one axis
+   is inert on the others and is not. One entry per target, in the order the first axis names them. */
+function ungradedEverywhere(axes) {
+  const keyOf = (m) => m.target_id ?? m.bundle_id;
+  const inert = STRENGTH_AXES.map((a) => new Set((axes[a].not_load_bearing ?? []).map(keyOf)));
+  const seen = new Set();
+  return (axes[STRENGTH_AXES[0]].not_load_bearing ?? []).filter((m) => {
+    const key = keyOf(m);
+    if (seen.has(key) || !inert.every((set) => set.has(key))) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function redactAxis(axis, keep, hidden) {
   let touched = !!hidden;
   const unseen = (id) => id != null && keep(id) === null;
