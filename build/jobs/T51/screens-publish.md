@@ -284,3 +284,15 @@ COMPLETE · SCREENS-PUBLISH #14 · T51 fix round 2 (B20, B21). Merged `tranche/T
 **Deferred**: nothing. **Found in other modules**: nothing new. **Declared census ops**: this module owns none (its screens send ops other modules own; the harness compared every request with its owner's declaration, R104, all accepted, `casedrafts` with `{query: {project}}`).
 
 Size (session_012aJfMWZGFkW8VcAjPvgTSg): test runs 11, module lines 3410
+
+## J18 · QUESTION
+
+QUESTION · SCREENS-PUBLISH #15 · fix round 3 (carry on meanwhile; nothing blocks, each is my best reading)
+
+1. **Words the design has not written (one list, as your START asks).** Each is drawn as its key (interface-shell R5) until the row lands; a drawn module cannot use `localize` (its functions are serialised to the browser, and the words check counts any English in the source), so there is no English stand-in and no test holds a sentence. Keys needed:
+   - `screen.ceremony.conf.row.missing.timestamp` (C40: the document has an outside copy but still no trusted time stamp), `screen.ceremony.conf.row.missing.co_archive` (it has a time stamp but still no outside copy), `screen.ceremony.conf.row.done` (both proofs now exist). `screen.ceremony.conf.row.meta` stays for neither. The late-timestamp sentence is the plane's own (`late_words`), drawn as it gives it.
+   - `screen.ceremony.registering` (C51: the progress line while a signing key is made and registered).
+   - `shell.keyfile.none`, `.unreadable`, `.empty` (cause-shell-3's; the Sign step draws `.unreadable` / `.empty` when the key file chosen cannot be read; `.none` is never drawn).
+   - `review.index.not_concluded_yet` (review's own key): the editor and the outside reader draw the plane's `not_concluded` sentence; this key is drawn only if the answer carries none.
+2. **A gap in interface-shell for C51 (not blocking; I used what exists).** `cs.keyFile(inputId)` answers a file's text, but nothing hands that text to `cs.signer`. The Sign step now offers "Your key file" (`shell.signer.loadfile`) and, when the member signs with no key held, reads the file by `cs.keyFile` and puts its text in the kit's own sign dialog box (`cs.fill("cs-key-file", text)` once the dialog is drawn, found by a second `cs.signer.held()` that answers after the dialog is drawn), so she types only the passphrase. It works and is tested, but it depends on the dialog's box id and on the order of two signer calls. Proposal for BOB to put to interface-shell: `cs.signer.sign(statements, {keyFile})` (or `cs.signer.load({text, pass})`) so a screen hands the text over. Say if you want the proposal made a requirement; until then the screens-settings Account section can do the same.
+3. **Reading, C49 (test only).** The chooser fix held: opened on the earlier draft, each of the three screens' heading is that draft's and the chooser has it chosen; nothing changed in the code, the test (fix3.test.mjs) pins it.
