@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01RnSLEohe5ooQjmP6bd8UAC · depth 2 · WAITING ON BOB (J9) · handled B10
+**Status** · session_01RnSLEohe5ooQjmP6bd8UAC · depth 2 · WAITING ON BOB (PDF-READER #8 merge) · handled B10
 
 ## J1 · REPORT
 
