@@ -5,7 +5,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { plan as PLAN_SCREEN } from "../../../src/screens-action/plan.mjs";
 import { open, main, press, fill, says, word, section, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 import { onPhone } from "./phone.mjs";
 
@@ -55,6 +54,10 @@ test("R16 R1 C35 'Draw on a question from elsewhere': two questions of two proje
 /* planopen's answer as action-plans R1 gives it: `{ok, id, project, title, state, opened_by, at, subjects}`, the id `<PLN-year-n>-plan` (doc.mjs `planId`) */
 const OPENED = (title) => ({ ok: true, id: "PLN-2026-0003-plan", project: P, title, state: "open", opened_by: "mai", at: "2026-10-10T09:00:00Z",
   subjects: [{ subject: { kind: "inquiry", inquiry: Q }, support: null }] });
+/* A stand-in for screens-action's `plan` screen (a later module this one may not import, P4): it only reads the plan
+   its address names, which is all these tests ask of it (the plan page opened, and that plan read). */
+const PLAN_SCREEN = Object.freeze({ id: "plan", reads: (view) => ({ plan: { op: "plan", query: { id: String(view.subject || "") }, subject: true } }),
+  render: () => "", acts: [], words: [] });
 const WITH_PLAN_SCREEN = { screens: [...SCREENS, PLAN_SCREEN] };
 
 test("R1 R36 C63 'Plan what to do' on the project page opens the plan page it made, over the op's real answer and the real `plan` screen; control: a project that has a plan opens another with the same press, and links its plan by name; a refusal opens none", async () => {

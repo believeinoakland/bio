@@ -12,7 +12,7 @@ import { OPS } from "../../../src/op-declarations/index.mjs";
 import { refusedIn, silent, pending, ok } from "../interface-shell/harness.mjs";
 import { open, main, rawKeys, plane, DIRECTORY, press, fill, SCREENS, PATHS, P, ENT, MSR, CALC, PROC, ACT, STD, SHA } from "./fixtures.mjs";
 
-const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
+const REGISTRY = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 /* N1073: no hand list of other modules' ops. The reads a screen makes are those it is seen to send over the scripted plane; each
  * answered pending, refused and not at all must leave the screen standing, and draw its own state where the screen draws one (the
  * reads that only feed a title or a choice draw none). The screen's subject read and the screen's other state-drawn reads are

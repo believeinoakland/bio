@@ -224,7 +224,7 @@ test("R38 R39 R40 R41: T48's tables hold exactly these ops, none both graded and
 });
 
 /* ---- R42 ----------------------------------------------------------------------------------------------------------- */
-const REGISTRY = JSON.parse(readFileSync(root("docs/development/ux-substrate/screens/registry.json"), "utf8"));
+const REGISTRY = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 const KIT = readFileSync(root("docs/development/ux-substrate/screens/mock-kit.js"), "utf8");
 const KIT_WEIGHT = Object.fromEntries([...KIT.match(/const WEIGHT = \{([\s\S]*?)\n\};/)[1].matchAll(/([A-Za-z_0-9]+):(\d)/g)]
   .map(([, k, v]) => [k, Number(v)]));
