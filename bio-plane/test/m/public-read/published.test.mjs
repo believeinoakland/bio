@@ -87,7 +87,7 @@ test("R3 publishedCase resolves by case, by finding and by hash, and answers the
     assert.deepEqual(c.findings[0].serves.map((s) => s.to), [], "DOC is not published: not served");
     assert.deepEqual(c.findings[0].unresolved, [], "a serve edge to an unpublished target was dropped at the write");
     assert.deepEqual(c.editions, [1]);
-    assert.equal(c.document.attestor.member, "olive", "D-712: the signed case document is served");
+    assert.equal(c.document.attestor.member, "h_olive", "D-712: the signed case document is served, its signer named by her handle (R41)");
     assert.deepEqual(Object.keys(c.completeness).sort(), ["author", "statement"]);
     assert.ok("manifest" in c && "files" in c && "evidence_package" in c);
     assert.equal(c.tensions, null, "a /6 document with no tension section states none: null, never [] (R13)");
@@ -228,7 +228,7 @@ test("R12 signer and deliverer are two facts, and neither is copied from the oth
   const ed = w.pr.publishedEditions(F).editions[0];
   assert.deepEqual([ed.attestor_member, ed.delivered_by.kind], ["olive", "undetermined"]);
   const f = w.pr.publishedCase({ id: "CASE-2026-0001" }).findings[0];
-  assert.deepEqual([f.attestor.member, f.delivered_by.kind], ["olive", "undetermined"]);
+  assert.deepEqual([f.attestor.member, f.delivered_by.kind], ["h_olive", "undetermined"], "publishedCase names her by her handle (R41), the lists by her id");
 });
 
 test("R13 undetermined is stated and never filled: a deliverer, an acknowledgement list a document is silent about, the tensions of a document before /5", () => {

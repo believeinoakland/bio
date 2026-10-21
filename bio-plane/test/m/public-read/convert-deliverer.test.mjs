@@ -129,8 +129,10 @@ test("R3 (deliverer) publishedCase states who delivered its case document and ea
   for (const pc of [w.pr.publishedCase({ caseId: CASE }), w.pr.publishedCase({ id: LEAD }), w.read("publishedcase", { id: CASE })]) {
     assert.equal(pc.ok, true);
     const f = pc.findings[0];
-    assert.deepEqual([f.bundle_id, f.attestor.member, f.delivered_by], [LEAD, "iris", MEMBER_IS("gus")]);
-    assert.deepEqual([pc.document.attestor.member, pc.document.delivered_by], ["iris", FOUNDER_IS]);
+    /* R41 (3): the answer names each member by her handle (the fixture's `h_<id>`); the manifest it serves is the stored
+       bytes, hash-pinned, and says what it was signed with */
+    assert.deepEqual([f.bundle_id, f.attestor.member, f.delivered_by], [LEAD, "h_iris", MEMBER_IS("h_gus")]);
+    assert.deepEqual([pc.document.attestor.member, pc.document.delivered_by], ["h_iris", FOUNDER_IS]);
     /* the manifest it serves beside the findings: the case document's deliverer is read there, the finding's too */
     assert.equal(pc.manifest_sha, out.manifest_sha);
     assert.deepEqual([pc.manifest.case_document.attestor.member, pc.manifest.case_document.delivered_by], ["iris", FOUNDER_IS]);
@@ -139,21 +141,21 @@ test("R3 (deliverer) publishedCase states who delivered its case document and ea
   /* the loose edition: in no case, delivered by the founder */
   const loose = w.pr.publishedCase({ id: LOOSE });
   assert.deepEqual([loose.ok, loose.caseId, loose.findings[0].attestor.member, loose.findings[0].delivered_by],
-                   [true, null, "iris", FOUNDER_IS]);
+                   [true, null, "h_iris", FOUNDER_IS]);
   /* the legacy rows: signer named, deliverer undetermined, on the finding, the document and the served manifest */
   const lc = w.pr.publishedCase({ caseId: LEGACY_CASE });
   assert.equal(lc.manifest_sha, legacyOut.manifest_sha);
-  for (const [who, d] of [["finding", lc.findings[0]], ["document", lc.document], ["manifest document", lc.manifest.case_document],
-                          ["manifest finding", lc.manifest.findings[0]]]) {
-    assert.equal(d.attestor.member, "iris", `${who}: the signer is still named`);
+  for (const [who, d, named] of [["finding", lc.findings[0], "h_iris"], ["document", lc.document, "h_iris"],
+                                 ["manifest document", lc.manifest.case_document, "iris"], ["manifest finding", lc.manifest.findings[0], "iris"]]) {
+    assert.equal(d.attestor.member, named, `${who}: the signer is still named`);
     assert.ok(isUndetermined(d.delivered_by), `${who}: undetermined, not iris: ${JSON.stringify(d.delivered_by)}`);
   }
   const oldLoose = w.pr.publishedCase({ id: OLD_LOOSE });
-  assert.equal(oldLoose.findings[0].attestor.member, "iris");
+  assert.equal(oldLoose.findings[0].attestor.member, "h_iris");
   assert.ok(isUndetermined(oldLoose.findings[0].delivered_by));
   /* the Worker's public case read relays the same */
   const r = await (await route(w, env, "publishedcase", { id: CASE })).json();
-  assert.deepEqual([kindOf(r.findings[0].delivered_by), kindOf(r.manifest.case_document.delivered_by)], ["member:gus", "founder"]);
+  assert.deepEqual([kindOf(r.findings[0].delivered_by), kindOf(r.manifest.case_document.delivered_by)], ["member:h_gus", "founder"]);
 });
 
 test("R6 (deliverer) the container a stranger holds carries delivered_by beside every attestor, and its verify sentence says which field the signature covers and which is this group's Civicsmith's record (T34-87, DEC-149: no \"this instance\")", async () => {
