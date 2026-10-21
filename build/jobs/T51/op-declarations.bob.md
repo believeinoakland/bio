@@ -197,3 +197,7 @@ capturecredentiallist IS declared by its owner (capture-sources/ops.mjs:30, DECL
 ## B30 · ANSWER · re J26
 
 (b) (K4381): the family table is your module's own, so t36's per-op list of the family's names, sets, stamps and needs is the test's model of R32 (K3268 forbids hand-listing another module's ops; your own family table is not that). Keep it; scanmirror's row read from its owner as you have it. Item 2 is done as it stands. Wait for my CHANGE on officeconfirm and captureseenin.
+
+## B31 · CHANGE
+
+AFFORDANCES #41 merged into tranche/T51 (K4381) with help text for 28 ops; my list to it omitted capturecredentiallist. Merge tranche/T51 and re-run t36: report which ops t36.test.mjs:303 still names (I expect capturecredentiallist only); do not ground any. Still waiting on officeconfirm and captureseenin for you.
