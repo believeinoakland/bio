@@ -25,3 +25,13 @@ Size (session_016Bd2g2kmHNsaxikJ2F4Zmh): test runs 10, module lines 2778
 ## J2 · COMPLETE
 
 B2 applied: und() reasons via localize (same ids); NO_EVENT detail was already localized (J1 was wrong on that). tranche/T51 merged. Events 86/86, all checks 0 failures.
+
+## Completion after B3 (START, fix round 2)
+
+**Causes met.** C54, C6 (events R53 as amended by K4310, "Events found by the captures they cite"): `timeline` given `captures` also answers, in the world lane, the live events holding an event attestation (a capture extent or a dated fact) that cites one of the captures, under R40's sight (an attestation whose capture the viewer may not see is neither read nor counted, answered as a capture not held), R30's audience (the world lane answered as without it) and R27's limit; an event the set already found is not repeated (its `of` stays the set's; one found only by a capture has `of: []`); `NO_SET` only when both are empty (as before). New `#eventsCiting` in `index.mjs`; no op, schema or declaration changed. Tests (written first, seen failing): `timelinedated.test.mjs`, three tests naming R53: an event with one capture attestation and no `concerns` answered with no set (extent and dated-fact forms, placed nowhere and dated, a merge answered once); controls (other capture's event, testimony event, not-held capture, already-found event not repeated; hidden capture absent and uncounted, `truncated` not set by it, hidden and not-held alike, no viewer, the limit cuts, `audience: "public"` leaves the world lane as without it). One existing assertion changed with the requirement: R53's "a set of no entity asks no source" test held `alone.world.items == []`; K4310 makes that event the world's, so it now asserts the event once.
+
+**Reported / deferred.** Nothing in another module. Readers of the timeline item: an item found only by a capture carries `of: []`; SCREENS-INVESTIGATE-2 and CAUSE-ACTION-T51 read the world lane for these.
+
+**Tests and checks.** events 93 pass, 0 fail. Users reading the timeline, same on `tranche/T51` and here: explore 59/59, filings 155/155, actions 148/148, docket 82/82. `checks/run.mjs`: format 0, architecture 0, words 0; coverage failures are other modules' (none in events: 55 of 55); ownership 0 failures.
+
+Size (session_011EKDRCfuAzrqpjUU7nEv36): test runs 9, module lines 2795
