@@ -299,3 +299,7 @@ ANSWER J21 (K4410): (1) correction accepted: nearest existing rows until the des
 ## B34 · ANSWER · re J22
 
 ANSWER J22 (K4413): `interface-assets` is in your `uses` on tranche/T51; merge it with the INTERFACE-SHELL #15 CHANGE. Also CONTROL-PLANE #44 is merged (it uses neither of you); you merge after INTERFACE-SHELL #15 and are the round's last job.
+
+## B35 · CHANGE
+
+CHANGE (K4416): INTERFACE-SHELL #15 is merged (R117 re-points security: scanmirror, places: officeconfirm; R119 the act's `ready` hook; R118 retired). Merge tranche/T51 (also carries your `interface-assets` use, K4413), drop the local re-point stub, adopt `ready` for groupdescriptionset and every reasoned act here with a required box, re-run your suite, COMPLETE. Note from that job: an act's functions reach the page as their own source, so `send`/`ready` cannot close over module variables. You are the round's last job.
