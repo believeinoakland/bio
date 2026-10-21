@@ -115,3 +115,21 @@ CHANGE B5 (K4259) applied on job/T51/provenance. Requirement lines for you (alre
 - R53 amended (eight ops) and R68 amended (`origins` in DECLARED_OPS: read, mutating false, stamps viewer, needs null, accepts/requires bundleId).
 Tests: provenance suite 152 pass, 0 fail (ops.test.mjs R70 x2, declared-ops.test.mjs). Checks: format 0, architecture 0, coverage 55 of 55, words 0 in provenance, ownership 1 failure = requirements file (accepted, B4). run.mjs: one testcopy, in op-grades t37.test.mjs:32 (not mine; report to op-grades' owner). setup-words rows.mjs stale for provenance.declared.origins (expected, BOB regenerates).
 Size (session_01SJghwe9gJrhumMZWa29ifY): test runs 3, module lines 2850
+
+## Work log · START B6 (fix round 2, K4323; C14's bound), PROVENANCE #26 (session_01PGsKtVkrKE46i1fEEmd3sp, restart; cursor kept at B5)
+
+Applied: `captureGrades(captureShas)` in `provenance/index.mjs`: one answer per digest asked, in order, each exactly what `captureGrade` answers. `#grade` now reads a capture's register flag and receipts through one shared statement (`#loadFacts`, `json_each` over the digests, `UNION ALL` of `register` and `captured_locators`), so a batch costs one read, plus one more per level of archive nesting when a digest is a file cut out of an archive whose rows were not asked (R59). `captureGrade` keeps its signature and answers (its old four statements are now one). A non-list answers `[]`; an unknown or malformed digest answers as `captureGrade` does.
+Tests (`test/m/provenance/grade-batch.test.mjs`, written against a method that did not exist, so seen failing first): equal answers to per-capture calls over a mixed set (direct, archive, doorbell, upload, unruled, authored testimony, archive and its cut-out file, repeated and `sha256:`/upper-case spellings, unknown); read count 1 per batch (2 with an unasked archive; control: per-capture calls read at least once each); controls for unknown, malformed, empty and non-list input. They are named R71, the id proposed below.
+Users run (they call `captureGrade`): acquisition 185, calculations 62, capture 218, case-disclosures 103, connections 146, consequences 69, events 93, filings 157, leg-earning 57, lines 36, money 79, people 79, sources 44, workbooks 29: all pass. `screens-inquiry`: 410 pass, 3 fail (R5/R10 act-label tests), identical with `provenance/index.mjs` as it was at the tranche, so inherited, not mine. The full impact set is 116 of 175 modules by layer position; I ran the direct callers.
+Checks: format 0 failures; architecture 0; coverage 55 of 55 live ids; words 0 in provenance (dev 2, unkeyed 87 as before); ownership: see COMPLETE.
+Deferred: none. Flaws in other modules: none new. `capture` adopting `captureGrades` is a later CHANGE (B6).
+
+Size (session_01PGsKtVkrKE46i1fEEmd3sp): test runs 14, module lines 3051
+
+## J7 · COMPLETE
+
+B6 applied on job/T51/provenance. Requirement line for you to write (BOB writes `build/requirements/`):
+- NEW R71 (T51; K4323, C14's bound): `captureGrades(captureShas)` answers, for each digest asked and in order, the grade `captureGrade` answers for it, reading the record once for the batch (one more read per level of archive nesting when a file cut out of an archive is asked without its archive); a digest the record does not hold, a malformed one, answers as `captureGrade` does; a value that is no list answers `[]`; writes nothing. Test: `grade-batch.test.mjs` (equal answers over a mixed set, one read per batch, controls).
+`capture` can adopt `captureGrades` in its held-captures read now (CHANGE to capture when you choose).
+Suite: provenance 155 pass, 0 fail. Direct users of `captureGrade` pass; `screens-inquiry` has 3 inherited failures, same without my change. Checks: format, architecture, coverage (55 of 55), words 0 in provenance.
+Size (session_01PGsKtVkrKE46i1fEEmd3sp): test runs 14, module lines 3051
