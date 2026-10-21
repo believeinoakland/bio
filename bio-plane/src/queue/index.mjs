@@ -1076,7 +1076,7 @@ export class Queue {
    *  about, `case` is where it is filed. Collapsing them is how a queue
    *  invents a home. */
   queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false, answered = false,
-              aside = false, after = null } = {}) {
+              aside = false, after = null, count = false } = {}) {
     const flag = (v) => v === true || v === "true" || v === "1";
     /* R55 (N1094; DEC-240 (D3)): the muted list, in place of the feed: asked for by `muted: true` (or the query's "true" or
        "1"), it answers what this member has muted and takes neither `sort` nor `limit`. */
@@ -1411,6 +1411,10 @@ export class Queue {
     }
     items.length = 0;
     items.push(...admitted);
+
+    /* R93 (T51 fix round 4, P9; K4429): the number of open items the list would hold (after the mutes and the project
+       decisions, before the limit's cut), without the list, so the frame's bell and sidebar do not read the whole feed. */
+    if (flag(count)) return { ok: true, member: me, count: items.length };
 
     /* R40 (DEC-10 (a)): a snoozed case's items are MARKED, never withheld: a surface may hold them back until the
        instant, and the plane keeps reporting them (a snooze defers re-notification; it removes nothing). */
@@ -2534,7 +2538,7 @@ export function queueOps(q, url, body) {
   return {
     /* R53 (N983): judged at this module's clock; a `now` in the query or the body is never read. */
     queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), limit: s("limit"), sort: s("sort"),
-                              muted: s("muted"), answered: s("answered"), aside: s("aside"), after: s("after") }),
+                              muted: s("muted"), answered: s("answered"), aside: s("aside"), after: s("after"), count: s("count") }),
     queuemute: () => q.queueMute({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q.queueSnooze({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q.proposeDispose({ ...(body || {}), viewer: s("viewer"), identity: s("identity") }),
@@ -2549,8 +2553,9 @@ export function queueOps(q, url, body) {
 export function queueAnswer(r, { gate } = {}) {
   if (!r || r.ok !== true) return { status: 400, refusal: r };
   /* R55, R59, R61: the muted list, what a member answered and the set-aside findings are each the answer in place of the
-     feed: they have no items to decorate. */
-  if (Array.isArray(r.muted) || Array.isArray(r.answered) || Array.isArray(r.aside)) return { status: 200, result: r };
+     feed: they have no items to decorate. R93: nor has the count. */
+  if (Array.isArray(r.muted) || Array.isArray(r.answered) || Array.isArray(r.aside) || (typeof r.count === "number" && !Array.isArray(r.items)))
+    return { status: 200, result: r };
   return { status: 200, result: {
     ...r,
     items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),
