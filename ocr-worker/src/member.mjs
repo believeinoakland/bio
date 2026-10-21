@@ -41,7 +41,7 @@
 import { renderPageToPixels, REFUSALS as RENDER_REFUSALS } from "../../pdf-worker/src/pagepixels.mjs";
 import { pngToSamples, samplesToRgba } from "./pngsamples.mjs";
 import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
-import { CAP, MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES, PICTURE_MAX_EDGE, REFUSALS, chooseChunk, frameBytesOf, isPicture } from "./contract.mjs";
+import { CAP, MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES, PICTURE_MAX_EDGE, REFUSALS, LEGIBLE_CONFIDENCE, LEGIBLE_NOTE_BELOW, LEGIBLE_REFUSE_BELOW, chooseChunk, frameBytesOf, isPicture } from "./contract.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* The namespace set (R16) and the plane ops this member calls (none) are declared in `contract.mjs`, which imports
@@ -178,6 +178,17 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
       });
     }
     const boxes = Number.isInteger(out.boxCount) ? out.boxCount : (out.regions || []).length;
+    /* R25: a picture states how much of its text the engine rated as read, by the engine's own rating of each word
+       (`out.words`); a PDF page is answered as before, and an engine that gave no words states nothing. */
+    let legibility = null;
+    if (picture && regions.length && Array.isArray(out.words) && out.words.length) {
+      const words = out.words.length;
+      const confident = out.words.filter((w) => typeof w.confidence === "number" && w.confidence >= LEGIBLE_CONFIDENCE).length;
+      legibility = { words, confident_words: confident, share: Math.round((confident / words) * 100) / 100 };
+      if (legibility.share < LEGIBLE_REFUSE_BELOW)
+        return { ok: false, reason: "PICTURE_NOT_LEGIBLE", detail: REFUSALS.PICTURE_NOT_LEGIBLE, page, legibility,
+                 why: REFUSALS.PICTURE_NOT_LEGIBLE };
+    }
     if (!regions.length)
       return { ok: false, reason: "NOTHING_TRANSCRIBED", detail: REFUSALS.NOTHING_TRANSCRIBED, page,
                boxes, blank, unanchored,
@@ -191,6 +202,7 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
                dpi: rendered.page_geometry ? rendered.page_geometry.dpi : null,
                pixels_sha256: rendered.pixels_sha256 || null },
       confidence_floor: confidenceFloor,
+      ...(legibility ? { legibility } : {}),
     };
   }
 
@@ -214,6 +226,9 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
     if (one.unrated)
       notes.push(localize("ocr-worker.member.unrated_region_s_came_back", "{unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.", { unrated: String(one.unrated) }));
 
+    if (one.legibility && one.legibility.share < LEGIBLE_NOTE_BELOW)
+      notes.push(localize("ocr-worker.member.the_picture_is_only_partly_legible", "the engine rated {confident} of the {words} words it read in this picture as read; the rest may be wrong or missing, so this reading is partial.", { confident: String(one.legibility.confident_words), words: String(one.legibility.words) }));
+
     return {
       ok: true,
       engine: engine.name,
@@ -228,6 +243,7 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
       grain: one.grain,
       deferred,
       image: one.image,
+      ...(one.legibility ? { legibility: one.legibility } : {}),
       notes,
     };
   }

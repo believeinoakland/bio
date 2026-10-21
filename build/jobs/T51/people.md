@@ -1,6 +1,6 @@
 # people (T51)
 
-**Status** · session_01VLYyVmHthCsTAnJoos37ea · depth 2 · COMPLETE · handled B7
+**Status** · session_01ECyVAGFG2gSJzC9b78r7qH · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
@@ -142,3 +142,23 @@ Tests (new `orgclaims.test.mjs`, 4 tests naming R1/R7): an organization pair cla
 Deferred: none. Found elsewhere: nothing new; screens-investigate (FR-29) can now fill the organization page from these reads.
 
 Size (session_01VLYyVmHthCsTAnJoos37ea): test runs 6, module lines 2276
+
+## J10 · COMPLETE
+
+**Fix round 2, wave 1 · people: C7 met (R9 "An organisation's facts"). COMPLETE.**
+
+Applied
+- `recordPersonFact` (R9) takes an `institution`, `body` or `movement`: `name`, `address`, `contact` are recorded as for a person (R10 unchanged: an address or contact by a machine is `CONTACT_NOT_IMPORTED`, `publishable: false`); `birth`, `death`, `locality` are refused `NOT_A_PERSON` naming the entity, writing nothing (new `ORGANISATION_FACT_KINDS`; word `people.index.org_fact_kinds`, a new `localize` id, rows.mjs stale for it). Any other entity kind (office, fund, source) stays `NOT_A_PERSON`; an unknown kind stays `UNKNOWN_FACT_KIND`. The facts read back through `personAt` (`facts`, member = the organisation) and withdraw by R11; no op's fields changed, `DECLARED_OPS` unchanged.
+- Requirement R9 in `build/requirements/people.md`: the *(not yet met: T51)* marker removed (a test now names it); Status line updated.
+- Tests: new `orgfacts.test.mjs` (2 tests naming R9), seen failing first (`institution name` refused NOT_A_PERSON), controls: birth/death/locality refused with no row written; person's six kinds unchanged; office refused. `orgclaims.test.mjs`: its control now uses `birth` (a `name` fact is an organisation's now).
+
+Runs
+- `node --test test/m/people/*.test.mjs` (bio-plane): tests 79, pass 79, fail 0.
+- Users of people (strength 173, control-plane 324, affordances 281, corpus-export 27, queue 206, scheduler 135: all pass; plane 279 pass, 1 fail, the same 1 fails on `tranche/T51`'s people, so not from this change). The impact list's 82 modules were not all run; the others do not touch facts.
+- Checks: architecture people 0; coverage people 42 of 42; words people 0 findings; ownership: the one failure is `build/requirements/people.md`, the file K4210 has accepted at my merge; format: 1 failure, `build/rulings.md:4298` (K4301 states no standing-list decision), not mine.
+
+Deferred: none. Found elsewhere: `build/rulings.md` K4301 lacks the standing-list line (format check fails on it); screens-investigate should draw the act on this merged code (same wave).
+
+Note: an earlier commit on this branch (3976b9f286) carries a model-naming Co-Authored-By line; this round's commit has none.
+
+Size (session_01ECyVAGFG2gSJzC9b78r7qH): test runs 8, module lines 1868

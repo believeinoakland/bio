@@ -45,7 +45,7 @@ export function finderStates() {
   };
 
   /* ---- R55: the whole record as one sortable table ---- */
-  const table = function (cs, ui, browse, screenOf, kindWord) {
+  const table = function (cs, ui, browse, screenOf, kindWord, pickBox) {
     const COLS = ["item", "kind", "state", "updated"];
     const sort = ui["sort:finder"] && typeof ui["sort:finder"] === "object" ? ui["sort:finder"] : null;
     const valueOf = function (it, col) {
@@ -64,7 +64,7 @@ export function finderStates() {
     const body = items.map(function (it) {
       const id = String(it.id);
       const sc = screenOf(it.kind, id);
-      return "<tr><td>" + cs.ref(sc, id, String(it.title || ""), []) + "</td><td>" + kindWord(it, sc) + "</td><td>" + chip(cs, sc === "document" ? "document" : sc === "question" ? "question" : sc === "action" ? "action" : sc === "plan" ? "plan" : "entity", it.state) + '</td><td data-sort="'
+      return "<tr><td>" + pickBox(id, String(it.title || "")) + cs.ref(sc, id, String(it.title || ""), []) + "</td><td>" + kindWord(it, sc) + "</td><td>" + chip(cs, sc === "document" ? "document" : sc === "question" ? "question" : sc === "action" ? "action" : sc === "plan" ? "plan" : "entity", it.state) + '</td><td data-sort="'
         + cs.esc(String(it.last_changed || "")) + '">' + (it.last_changed ? cs.date(String(it.last_changed)) : "") + "</td></tr>";
     }).join("");
     return '<p class="mk-small">' + cs.w("screen.finder.table.intro") + '</p><p class="mk-small"><b>' + count + "</b></p>"
@@ -210,7 +210,7 @@ export function finderStates() {
   // "Somebody has looked everywhere" (R77) is said only when every level answered, was read and has no place left unlooked.
   const frontier = function (cs, view) {
     const LEVELS = ["document", "content", "meaning", "internet"];
-    const STATES = ["LOOKED_FOUND", "LOOKED_ABSENT", "NOT_LOOKED"];
+    const STATES = ["LOOKED_FOUND", "LOOKED_ABSENT", "LOOKED_INDETERMINATE"];
     let everywhere = true;
     let answered = 0;
     const rows = LEVELS.map(function (level) {
@@ -228,17 +228,28 @@ export function finderStates() {
       const n = typeof v.never_looked_count === "number" ? v.never_looked_count : (Array.isArray(v.never_looked) ? v.never_looked.length : 0);
       if (n > 0) {
         everywhere = false;
+        // C22: each place by its name: its title, name or label, else (document level: an address; internet level: a lead's words) its
+        // `subject`; a place with no name, or only a digest or an id, draws no item, and a level with none draws no list.
         const items = (Array.isArray(v.never_looked) ? v.never_looked : []).slice(0, 20).map(function (x) {
-          const label = x && typeof x === "object" ? (x.title || x.referent || x.authority || x.detail || "") : String(x);
-          return "<li>" + cs.esc(String(label)) + "</li>";
-        }).join("");
+          const named = x && typeof x === "object" ? (x.title || x.name || x.label || x.referent || x.detail || (level === "document" || level === "internet" ? x.subject : "") || "") : String(x);
+          const label = String(named).trim();
+          return label && !/^[0-9a-f]{12,}$/i.test(label) ? "<li>" + cs.esc(label) + "</li>" : "";
+        }).filter(Boolean).join("");
         return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</span>"
           + (items ? '<ul class="mk-list">' + items + "</ul>" : ""), "", "");
       }
-      // Nothing left unlooked: the states its tally names (a count apiece), "looked, found" and "looked, not found".
+      // Nothing left unlooked: the states its tally names (a count apiece), each by its word. The log's `PRESENT` is "looked, found" (as
+      // `LOOKED_FOUND` is, the two counted together); a look that could not tell is told by the log's own held word; a state with no
+      // word held is not drawn as its code (BOB: `screen.answers.state.LOOKED_INDETERMINATE` for the design lane).
       const tally = v.tally && typeof v.tally === "object" ? v.tally : {};
-      const said = Object.keys(tally).filter(function (s) { return Number(tally[s]) > 0 && s !== "NEVER_LOOKED"; }).map(function (s) {
-        return cs.w("screen.answers.look", { level: { html: cs.w("screen.answers.level." + level) }, state: { html: STATES.indexOf(s) >= 0 ? cs.w("screen.answers.state." + s) : cs.w("screen.answers.state.other", { state: s }) } }) + " (" + cs.esc(String(tally[s])) + ")";
+      const counts = {};
+      Object.keys(tally).forEach(function (s) {
+        const key = s === "PRESENT" || s === "LOOKED_FOUND" ? "LOOKED_FOUND" : s;
+        counts[key] = (counts[key] || 0) + (Number(tally[s]) || 0);
+      });
+      const said = Object.keys(counts).filter(function (s) { return counts[s] > 0 && STATES.indexOf(s) >= 0; }).map(function (s) {
+        const state = s === "LOOKED_INDETERMINATE" ? cs.w("refusal.LOOKED_INDETERMINATE") : cs.w("screen.answers.state." + s);
+        return (s === "LOOKED_INDETERMINATE" ? state : cs.w("screen.answers.look", { level: { html: cs.w("screen.answers.level." + level) }, state: { html: state } })) + " (" + cs.esc(String(counts[s])) + ")";
       });
       return cs.row(cs.icon("nobody"), name + (said.length ? '<span class="meta">' + said.join(" · ") + "</span>" : ""), "", "");
     }).filter(Boolean);

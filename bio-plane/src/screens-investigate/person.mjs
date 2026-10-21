@@ -56,7 +56,7 @@ function render(cs, view) {
   const handleOf = (by) => String(by || "").replace(/^member:/, "");
   /* each item cited, dated and graded: its passage a reference to the capture, its grade one mark */
   const cite = (c, label) => (c && (c.captureSha || c.capture_sha)
-    ? P.refOf(cs, c.captureSha || c.capture_sha, label || cs.w(S + "source"), [c.extent && c.extent.page !== undefined ? cs.w(S + "page", { page: String(Number(c.extent.page) + 1) }) : ""], "capture")
+    ? P.refOf(cs, c.captureSha || c.capture_sha, label || docTitle(c.captureSha || c.capture_sha) || cs.w(S + "source"), [c.extent && c.extent.page !== undefined ? cs.w(S + "page", { page: String(Number(c.extent.page) + 1) }) : ""], "capture")
     : cs.mark("gap", "undetermined", { reason: cs.w(S + "nocitation") }));
   const span = (v) => {
     if (!v) return "";
@@ -191,7 +191,7 @@ function render(cs, view) {
     + (orgPage ? `<p class="mk-small">${cs.w(S + "kind.help.org")}</p>` : "")
     + cs.field("person-fact-value", S + "fact.value", { rec: true })
     + cs.field("person-fact-from", S + "fact.from", { type: "date" })
-    + P.docChoice(cs, view, "person-fact-doc")
+    + P.docChoice(cs, view, "person-fact-doc", { passage: false, drive: true }) + P.passagePick(cs, view, "person-fact-doc", "person-fact-passage", P.later)
     + cs.act("recordpersonfact", { label: "act.recordpersonfact.label.person" })
     + cs.field("person-follow", S + "follow.address", { help: S + "follow.help" })
     + cs.act("followregister", { label: "act.followregister.label.person" });
@@ -243,6 +243,16 @@ function render(cs, view) {
   if (ent) {
     const says = [aliasSec(), tiesSec("entity.relation.none"), namingSec()];
     says.push(`<div class="mk-acts">${cs.act("connect", { label: org ? "entity.connect.org" : "entity.connect" })}</div>`);
+    /* C60: what "Connect" found, said: no document names them yet (and why: a document names them once it is matched), else how many, each listed */
+    const cn = view.ui.connected;
+    if (cn) {
+      const heldRows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+      const titleOfBundle = (b) => { const r = heldRows.find((x) => x && x.bundle_id === b); return (r && r.title) || ""; };
+      says.push(cn.n
+        ? `<p class="mk-small" data-connected="${cs.esc(String(cn.n))}">${cs.w("screen.people.counts", { list: cs.w("screen.people.count." + (cn.n === 1 ? "document" : "documents"), { n: String(cn.n) }) })}</p>`
+          + (cn.ends.length ? cs.sheet(cn.ends.map((b) => `<span data-connected-doc="${cs.esc(b)}">${cs.row("", P.refOf(cs, b, titleOfBundle(b) || P.plain(cs, S + "source"), [], "document"), "")}</span>`).join("")) : "")
+        : `<p class="mk-small" data-connected="0">${cs.w("screen.people.counts.none")} ${cs.w("entity.naming.says")}</p>`);
+    }
     out.push(cs.sec(org ? "entity.says.title.org" : "entity.says.title", says.join(""), { help: org ? "entity.says.help.org" : "entity.says.help" }));
   }
 
@@ -316,7 +326,7 @@ const acts = [
   { op: "recordpersonfact", label: "act.recordpersonfact.label.person",
     send(view, el, cs) {
       const value = String(cs.value("person-fact-value") || "").trim();
-      const citation = view.parts.chosen(cs, "person-fact-doc");
+      const citation = view.parts.chosen(cs, "person-fact-doc", "person-fact-passage");
       if (!value || !citation) return { refuse: "screen.person.fact.empty" };
       const from = String(cs.value("person-fact-from") || "").trim();
       return { body: { person: String(view.subject || ""), kind: String(cs.value("person-fact-kind") || "name"), value,
@@ -428,7 +438,13 @@ const acts = [
     done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "connect", label: "entity.connect",
     send(view) { return { body: { entityId: String(view.subject || "") } }; },
-    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const ends = [];
+      for (const c of r && Array.isArray(r.connections) ? r.connections : []) for (const b of [c.a_bundle_id, c.b_bundle_id]) if (typeof b === "string" && b && !ends.includes(b)) ends.push(b);
+      view.ui.connected = r && r.ok !== false ? { n: Number(r.documents) || 0, ends } : null;
+      cs.set("pn", (view.ui.pn || 0) + 1);
+    } },
   /* the assistant's draft of the words of a tie's why or of the basis, labeled and kept only by the member's own act */
   { op: "writinghelp", label: "act.writinghelp.label.person", reasonField: "told", rereads: [],
     send(view, el, cs) {

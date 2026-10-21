@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ADMIN } from "../interface-shell/harness.mjs";
 import { open, main, text, tipOf, drew, drewIn, day, word, hasWord, ops, press, fill, tick, last, ok, refused, refusedIn, pending, silent, plane, rawKeys,
-  PREFLIGHT, COPY, P, DR, C, E1, B1, GRANT_UNTIL } from "./fixtures.mjs";
+  PREFLIGHT, COPY, PUBLISHED_CASE, P, DR, C, E1, B1, GRANT_UNTIL } from "./fixtures.mjs";
 
 const PUBLIC = { session: null };
 const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -255,7 +255,7 @@ test("R32 a project with a draft draws the ceremony as R3 says (the newest draft
 
 /* ---------- R33, R34: corrections and orders, the public docket ---------- */
 
-const withCorrections = (corrections) => ({ publishedcase: ok({ ...plane().publishedcase.json.result, corrections }) });
+const withCorrections = (corrections) => ({ publishedcase: ok({ ...PUBLISHED_CASE, corrections }) });
 const section = (p) => main(p).querySelectorAll("h2").find((h) => h.textContent === word("screen.published.corrections.heading")).closest("section");
 
 test("R33 R34 the page draws Corrections and orders after the timeline and before the people named: none, one and several since it was published, each with the docket sentence", async () => {
@@ -367,7 +367,7 @@ test("R35 the account's refusals are drawn by key, refusal.BAD_ACCOUNT in a fold
 /* ---------- R36: publishedcase read asynchronously ---------- */
 
 test("R36 over a plane that answers publishedcase after a delay, the page and its corrections line appear only with the answer, never as none; a rejected read is drawn failed", async () => {
-  const slow = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: delay(200, ok({ ...plane().publishedcase.json.result, corrections: { count: 1, last: { seq: 2, kind: "withdrawal", date: "2026-12-01" } } })) } });
+  const slow = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: delay(200, ok({ ...PUBLISHED_CASE, corrections: { count: 1, last: { seq: 2, kind: "withdrawal", date: "2026-12-01" } } })) } });
   assert.ok(!drew(slow, "screen.published.corrections.none") && !drew(slow, "screen.published.corrections.heading"), "nothing drawn from a read that has not answered");
   assert.ok(main(slow).querySelector('[data-state="loading"]'), "loading while it waits");
   await new Promise((r) => setTimeout(r, 300));
@@ -383,7 +383,7 @@ test("R36 over a plane that answers publishedcase after a delay, the page and it
 test("R36 \"Check a file you hold\" waits for the read by that hash: a slow answer is drawn once it arrives, and one that failed or was not answered is drawn failed, never as the fingerprint being absent or elsewhere", async () => {
   const pins = [E1, B1];
   const verify = (req) => ok(pins.includes(req.query.sha256) ? { published: true, sha256: req.query.sha256, matches: [{ bundle_id: "FND-2026-0031", published: "2026-11-19T14:00:00Z" }] } : { published: false, sha256: req.query.sha256, matches: [] });
-  const base = plane().publishedcase.json.result;
+  const base = PUBLISHED_CASE;
   const slowby = { verify, publishedcase: (req) => (req.query.sha256 ? delay(150, ok({ ...base, asked: "FND-2026-0031", findings: [{ ...base.findings[0], version_sha: B1 }] }))() : ok(base)) };
   const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: slowby });
   fill(p, { "pb-sha": B1 });

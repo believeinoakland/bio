@@ -25,6 +25,8 @@ export const findIn = Object.freeze({
         op: "search", query: { q: "type:inquiry", limit: "200" },
         empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
       };
+      // C35: each question is told by its project's name (a hit names none); the projects are read here and each one's questions in `render`.
+      out.projects = { op: "projectlist", empty: function () { return false; } };
     }
     // R26: a project scope is named by the project's title, read from its document.
     if (s.indexOf("PROJ-") === 0) out.project = { op: "image", query: { id: s } };
@@ -101,12 +103,30 @@ export const findIn = Object.freeze({
     // the find was opened with, with no "None yet"; when there are none, `screen.document.cite.noquestion` says to open one first.
     const pq = view.data.projectquestions && view.data.projectquestions.state === "ok" && view.data.projectquestions.value && Array.isArray(view.data.projectquestions.value.items)
       ? view.data.projectquestions.value.items.map(function (x) { return { bundle_id: String(x.inquiry), title: x.title }; }) : null;
-    const qs = pq || (view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
-      ? view.data.questions.value.hits : []);
+    const hits = view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
+      ? view.data.questions.value.hits : [];
+    // C35: whose project each question is in: each project's questions read once (page memory `qs:<id>`); a question no read names stays by its title.
+    const ownerOf = {};
+    const pl = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.projects) ? view.data.projects.value.projects : [];
+    if (!pq) pl.forEach(function (p) {
+      const id = String(p.id);
+      const m = ui["qs:" + id];
+      if (!m) {
+        ui["qs:" + id] = { state: "loading", items: [] };
+        cs.call("projectquestions", { query: { project: id, limit: "200" } }).then(function (a) {
+          const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+          cs.set("qs:" + id, v && v.ok !== false && Array.isArray(v.items) ? { state: "ok", items: v.items.map(function (x) { return String(x.inquiry); }) } : { state: "failed", items: [] });
+        }, function () { cs.set("qs:" + id, { state: "failed", items: [] }); });
+      } else {
+        m.items.forEach(function (q) { ownerOf[q] = String(p.name || id); });
+      }
+    });
+    const seen = {};
+    const qs = pq || hits.filter(function (h) { const k = String(h.bundle_id); if (seen[k]) return false; seen[k] = true; return true; });
     // R39 (K3562): the question the route chose stays chosen, though the list of questions does not name it.
     const routedQ = ui.question && !qs.some(function (h) { return String(h.bundle_id) === String(ui.question); }) ? [{ value: String(ui.question), text: String(ui.question) }] : [];
     // None is preselected unless the find was opened with one: the first line only asks to choose (it is not a "None yet" choice).
-    const options = (ui.question ? [] : [{ value: "", text: cs.w("findin.question.choose") }]).concat(routedQ, qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) }; }));
+    const options = (ui.question ? [] : [{ value: "", text: cs.w("findin.question.choose") }]).concat(routedQ, qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) + (ownerOf[String(h.bundle_id)] ? " · " + ownerOf[String(h.bundle_id)] : "") }; }));
     const question = routedQ.length || qs.length
       ? cs.choice("findin-question", "findin.question.choose", options, { value: ui.question || "" }) + '<p class="mk-small muted">' + cs.w("screen.find-in.question.help") + "</p>"
       : '<p class="mk-note">' + cs.w("screen.document.cite.noquestion") + "</p>";

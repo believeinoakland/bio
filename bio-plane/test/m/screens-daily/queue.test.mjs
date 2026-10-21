@@ -407,3 +407,58 @@ test("R74: a conflict the member sees only half of opens `<candidate>/<project>`
   assert.deepEqual(await opensOf({ class: "FINDING", kind: "tension", subject: { kind: "contradiction_notice", id: "N-1", candidate: "CAND-2", parties: [{ project: "PROJ-9" }] } }), ["/app/contradiction/CAND-2/PROJ-9"]);
   assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty", subject: { kind: "contradiction_candidate", id: "CAND-3" } }), ["/app/contradiction/CAND-3"]);
 });
+
+// C73 (fix round 2): the line says how the list is sorted, and the vouch to-dos follow the sort.
+const HELD1 = { ok: true, held: [{ bundle_id: "INF-H1", title: "Photo", source: { address: "https://city.example/gate", via: "web" }, collected_since: "2026-10-03T10:00:00Z" }], state: "held", truncated: false, next: null };
+const SORTED = [
+  { id: "TSK-A", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), age: { since: "2026-10-05T10:00:00Z" }, due: day(2), summary: "Alpha item", options: [], disposition: { instead: "taskresolve" } },
+  { id: "TSK-B", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-2", "The Coliseum lease"), age: { since: "2026-10-01T10:00:00Z" }, summary: "Bravo item", options: [], disposition: { instead: "taskresolve" } },
+  { id: "F-C", class: "FINDING", kind: "tension", case: PROJ("PROJ-2", "The Coliseum lease"), age: { since: "2026-09-20T10:00:00Z" }, summary: "Charlie item", options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "F-C", projects: ["PROJ-2"] } },
+];
+const orderOf = (p) => main(p).querySelectorAll(".cs-row").map((r) => text(p, r)).map((t) => (t.includes("Alpha") ? "A" : t.includes("Bravo") ? "B" : t.includes("Charlie") ? "C" : t.includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })) ? "V" : "?")).filter((x) => x !== "?").join("");
+
+test("R2, C73: after a sort the line names the sort and no longer says the list is grouped by case; by case it still says grouped; the vouch to-dos follow the sort", async () => {
+  const plane = { queue: ok({ items: SORTED, item_count: 3 }), heldcaptures: (req) => ok(req.query.member ? HELD1 : { ok: true, held: [] }) };
+  const grouped = word("screen.queue.grouped");
+  for (const s of ["added", "due", "kind"]) {
+    const p = await open("/app/queue/" + s, plane);
+    const line = text(p, main(p).querySelector("p.mk-sub"));
+    assert.ok(line.includes(word("screen.queue.sorted", { sort: word(`screen.queue.sort.${s}`) })), `sorted by ${s}`);
+    assert.ok(!line.includes(grouped), `${s}: not grouped by case`);
+    assert.ok(line.includes(word("screen.queue.count.many", { n: "4" })), "the vouch to-do is counted");
+  }
+  const byCase = await open("/app/queue/case", plane);
+  assert.ok(text(byCase, main(byCase).querySelector("p.mk-sub")).includes(grouped), "control: by case it is grouped by case");
+  const dflt = await open("/app/queue", plane);
+  assert.ok(text(dflt, main(dflt).querySelector("p.mk-sub")).includes(grouped), "control: the default is grouped by case");
+  assert.equal(orderOf(dflt), "ABCV", "by case: the group of no case is last with the vouch to-do in it");
+  assert.equal(orderOf(await open("/app/queue/added", plane)), "AVBC", "by time added, newest first: the to-do arose on 3 October");
+  // The list is drawn by case in the order the sort gives the cases; the to-do in no case comes after the items the sort puts before it.
+  assert.equal(orderOf(await open("/app/queue/due", plane)), "ABCV", "by time due: after the item with a day due and the to-dos with none");
+  assert.equal(orderOf(await open("/app/queue/kind", plane)), "ABCV", "by kind: its group follows the cases the sort reaches first");
+});
+
+// C75 (fix round 2): forward to a member is a pick list, and forwarding to oneself is refused in words.
+test("R3, C75: forwarding is a choice of the group's members; forwarding to oneself is refused in words and sends nothing; one member sends her handle", async () => {
+  const items = [{ id: "TSK-2", class: "OBLIGATION", kind: "check", case: PROJ("PROJ-1", "Pothole repairs"), summary: "s", options: [{ id: "taskforward" }] }];
+  const roster = ok({ members: [
+    { member_id: "mai", handle: "mai", role: "member", status: "active" }, { member_id: "ana", handle: "ana", role: "member", status: "active" },
+    { member_id: "bo", handle: "bo", role: "member", status: "invited" }, { member_id: "admin", handle: null, founder: true, role: "admin", status: "active" }] });
+  const p = await open("/app/queue", { queue: ok({ items }), memberlist: roster, taskforward: ok({ ok: true }),
+    whoami: ok({ tokenClass: "member", session: true, member: "mai", handle: "mai", capabilities: ["contribute"] }) });
+  const f = button(p, "taskforward").dataset.f;
+  const choice = p.doc.getElementById(f + "-to");
+  assert.equal(choice.tagName.toLowerCase(), "select", "a choice, not a box to type a handle in");
+  assert.deepEqual(choice.querySelectorAll("option").map((o) => o.getAttribute("value")).filter(Boolean), ["mai", "ana"], "the group's active members who have a handle");
+  const none = await press(p, "taskforward");
+  assert.equal(p.byOp("taskforward").length, 0, "no one chosen, nothing sent");
+  assert.equal(beside(p, none), word("screen.queue.fieldfirst"));
+  const self = await press(p, "taskforward", { values: { [f + "-to"]: "mai" } });
+  assert.equal(p.byOp("taskforward").length, 0, "oneself is refused before anything is sent");
+  assert.equal(beside(p, self), word("refusal.ALREADY_THEIRS"));
+  await press(p, "taskforward", { values: { [f + "-to"]: "ana" } });
+  assert.deepEqual(last(p, "taskforward").body, { id: "TSK-2", to: "ana" }, "control: another member is sent");
+  // Control: when the group's members are not answered the handle is typed as before.
+  const typed = await open("/app/queue", { queue: ok({ items }), memberlist: refused("NOT_YET", "No.", 500), taskforward: ok({ ok: true }) });
+  assert.equal(typed.doc.getElementById(button(typed, "taskforward").dataset.f + "-to").tagName.toLowerCase(), "input");
+});

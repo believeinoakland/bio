@@ -68,13 +68,16 @@ export const REVIEW_COPY = Object.freeze({
     })) + P.said(view, "reviewrevoke"));
 
     // Sharing with a named reader: a name, a role and an end date; the secret shown once as the reader's link (R2).
-    out.push(cs.sec("screen.review-copy.share", cs.field("rc-name", "screen.review-copy.name.label", { rec: true })
+    // C66 (fix round 2): the boxes are drawn with their button; a member who may not share is shown none of them (and only the file)
+    const grant = cs.act("reviewgrant", { tone: "primary" }), file = view.ui.export ? "" : cs.act("reviewexport", { data: { step: "open" } });
+    out.push(grant ? cs.sec("screen.review-copy.share", cs.field("rc-name", "screen.review-copy.name.label", { rec: true })
       + cs.field("rc-role", "screen.review-copy.role.label", { rec: true, help: "screen.review-copy.role.help" })
       + cs.field("rc-until", "screen.review-copy.until.label", { type: "date", help: "screen.review-copy.until.help" })
-      + '<div class="mk-acts">' + cs.act("reviewgrant", { tone: "primary" }) + (view.ui.export ? "" : cs.act("reviewexport", { data: { step: "open" } })) + "</div>" + P.said(view, "reviewgrant")
+      + '<div class="mk-acts">' + grant + file + "</div>" + P.said(view, "reviewgrant")
       + (view.ui.link ? '<div class="cs-sheet" data-reader-link><span class="id">' + cs.esc(view.ui.link.href) + "</span><p>"
         + cs.w("screen.review-copy.link.for", { who: view.ui.link.who }) + " <b>" + cs.w("screen.review-copy.noemail") + "</b></p><p class=\"muted\">"
-        + cs.w("screen.review-copy.link.once") + "</p></div>" : "")));
+        + cs.w("screen.review-copy.link.once") + "</p></div>" : ""))
+      : file ? '<div class="mk-acts">' + file + "</div>" : "");
 
     // R40 (A81): "Save as a file": the warning, what the file carries, the one box, and the file handed over to save
     if (view.ui.export) {

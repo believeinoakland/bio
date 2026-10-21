@@ -1,6 +1,6 @@
 # filings (T51)
 
-**Status** · session_011P9WhQpNaxxpwvt6fZhKcn · depth 2 · COMPLETE · handled B9
+**Status** · session_01BpfWkadwTvmZqGLPzN8bte · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -83,3 +83,19 @@ Requirement line for BOB: R59's answer list gains `exhibits` and `venue_standard
 Deferred: none. Found in other modules: none new.
 Tests and checks: `node --test bio-plane/test/m/filings/`: tests 155, pass 155, fail 0. format 0 failures; architecture filings 0; coverage filings 67 of 67; ownership 3 files, 0 failures. node_modules installed for the five lockfile directories that lacked them (K4113).
 Size (session_011P9WhQpNaxxpwvt6fZhKcn): test runs 2, module lines 3759
+
+## J8 · COMPLETE · re B10
+
+Fix round 2 (B10) applied on `job/T51/filings`, pushed; tranche/T51 merged in first.
+
+**C65 · R32** A new template's scope is the project the request names, else the action's (`a.project`), else the filing basis's, as the module's other acts take it. Found: `templateSave` already took a named `project` first, so a request naming the project was already saved; the defect was that the action's own project was never consulted, and the basis's is empty for an action resting on no determination. Now `str(project) || str(act.project) || str(basis.project) || null`.
+
+**Requirement line for BOB (R32, to fold):** "A new template's `project` is the one the request names, else the action's, else the project the draft's basis names; with none of the three, `filing-templates` refuses `TEMPLATE_SCOPE_REFUSED` (its R3)."
+
+**Tests** (`fix-round.test.mjs`, written first; the action-names-its-project one seen failing, TEMPLATE_SCOPE_REFUSED): for an action resting on no determination, (a) request names no project and none exists: still refused TEMPLATE_SCOPE_REFUSED (control); request names its project: saved, scope `{project}`; (b) the action names its own project, the request none: saved in the action's project.
+
+**Runs:** `node --test bio-plane/test/m/filings/`: tests 157, pass 157, fail 0. Dependents (screens-action 220/220; control-plane stamps-action 4/4; op-declarations 237/238 and op-grades 140/142: the same failures with my change stashed, inherited, not filings'). `checks/run.mjs`: format 0, architecture 0, words 0 failures; coverage failures are other modules' (screens-inquiry, screens-intake, screens-publish, ...), none filings. ownership filings: 0 failures.
+
+Deferred: none. Found in other modules: none new.
+
+Size (session_01BpfWkadwTvmZqGLPzN8bte): test runs 6, module lines 3763

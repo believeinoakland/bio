@@ -6,7 +6,7 @@ import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
+import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, PUBLISHED_CASE, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -45,7 +45,7 @@ test("R6 \"Check the signature\" (verify, the manifest's sha) and \"Read the cas
   assert.ok(drew(q, "screen.published.verify.no"));
 });
 
-const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...plane().publishedcase.json.result, captures }), ...o });
+const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...PUBLISHED_CASE, captures }), ...o });
 const opens = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').filter((b) => b.textContent.includes(word("screen.published.evidence.open")));
 
 test("R19 each evidence row with a full SHA-256 opens its bytes through publishedbytes by that hash, as a public op with no Authorization header", async () => {
@@ -110,7 +110,7 @@ test("R19 a refused download says why and saves nothing; an edition with no mani
   await p.settle();
   assert.equal(p.files.length, 0);
   assert.match(text(p), /A part of the case file is missing\./);
-  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok({ ...plane().publishedcase.json.result, manifest_sha: "" }) } });
+  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok({ ...PUBLISHED_CASE, manifest_sha: "" }) } });
   assert.equal(download(q), undefined);
   const silent = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: ok(null) } });
   await silent.click(download(silent));
@@ -250,7 +250,7 @@ test("R9 the knock's refusals are drawn by their words; nothing chosen sends not
    `verify` says whether a hash is published; `publishedcase` read by a finding's pinned hash names its case and finding, and
    answers a file's hash (evidence) `NOT_PUBLISHED`, so the edition's own parts name the finding for a file. */
 const FIND = "FND-2026-0031";
-const EDITION = () => plane().publishedcase.json.result;
+const EDITION = () => PUBLISHED_CASE;
 const checkButton = (p) => main(p).querySelectorAll('button[data-act="verify"]').find((b) => b.getAttribute("data-check") === "1");
 const checkIt = (p, typed) => press(p, "verify", { nth: 1, values: { "pb-sha": typed } });
 const published = (pins, o = {}) => ({

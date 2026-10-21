@@ -267,7 +267,7 @@ export const PUBLISHED = Object.freeze({
         }
         const body = i >= 0 ? findings[i].body || {} : {};
         // A hash the group published that no finding of this edition rests on is "elsewhere"; one it never published is "no".
-        P.say(cs, view, "check", i >= 0 ? cs.w("published.check.yes", { n: String(i + 1), finding: body.conclusion || body.question || findings[i].title || "" })
+        P.say(cs, view, "check", i >= 0 ? cs.w("published.check.yes", { n: String(i + 1), finding: P.claimOf(view, findings[i]) || body.question || findings[i].title || "" })
           : cs.w(published ? "published.check.elsewhere" : "published.check.no"), i >= 0);
         return { stay: true };
       },

@@ -1,6 +1,6 @@
 # BOB to filings (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -75,3 +75,22 @@ ANSWER J4 (K4213): all five readings stand. (1) `resolutions: [{sentence, resolu
 CHANGE (K4236): FILINGS #25, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
 Entry: `filingRead` (R59, `op=filingread`) answers a prepared draft "as it was stored, so a reload between preparing and approving loses nothing", but its answer omits the draft's stored `exhibits` and `venue_standard` (R25; stored at `index.mjs` ~854, answered by the prepare call ~865), so screens-action's send steps lose the exhibits after a reload (SCREENS-ACTION #7 J6 (6)). Answer both, as stored, in `filingRead`; a draft stored before they existed answers `exhibits: []` and `venue_standard: null`. Requirement line for BOB: R59's answer list gains `exhibits` and `venue_standard` (R25), as stored (K4236). Test at the interface: prepare, then `filingread` answers the same exhibits and standard; control: an older row with neither.
 Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, your code and the tests naming R59 and R25, whole; a document you can only read in part stops you (BLOCKED, reading). Words (K3930): no sentence in code or tests. Model sonnet, medium effort; workers sonnet medium (reading), haiku low (mechanical). Merges before screens-action #8, which draws the exhibits from your answer.
+
+## B10 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/filings tranche/T51 && git branch -m job/T51/filings stale/filings-local && git checkout -b job/T51/filings origin/job/T51/filings`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · FILINGS #26 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, added by K4313)
+
+Mail with `--module filings`; record `build/jobs/T51/filings.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `filings`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your cause** (found by CAUSE-ACTION-T51, the real site of C65):
+1. **C65** A filing template cannot be saved for an action that rests on no determination: `templateSave` (`filings/index.mjs:2871`) takes a new template's project only from the filing basis's `project`, empty for such an action, so filing-templates R3 refuses every author `TEMPLATE_SCOPE_REFUSED`; its other sites read `a.project || basis.project` (`:1487`, `:1643`, `:2773`). Requirement: a new template's scope is the project the request names, else the basis's project, as the module's other acts take it; write the line in your record (I fold it) and test it: a template saved for an action resting on no determination, its project named, is saved; control: one naming no project and no basis project is still refused.
+
+Read in full (never in part): filings' lines on templates and their scope, `templateSave` and the three sites named; filing-templates R1, R3 (read, not yours); the tests naming those lines; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/filings/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio filings tranche/T51 job/T51/filings`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).

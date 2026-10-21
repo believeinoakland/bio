@@ -208,7 +208,7 @@ test("R24 nothing the shell does records who opened what: no storage holds a rea
   const p = await boot({ screens: SCREENS, path: "/app/held", plane: { heldcaptures: HELD, image: IMAGE } });
   for (const a of p.root().querySelectorAll("a[data-nav]")) await p.click(a);
   await p.click(p.root().querySelector('a[href="/app/held"]') || p.root().querySelector("a[data-nav]"));
-  for (const k of p.local.keys()) assert.match(k, /^(cs-(level|theme|railw|level-asked|first:[\w-]*)|bio-session(:active)?)$/, k);
+  for (const k of p.local.keys()) assert.match(k, /^(cs-(level|theme|railw|level-asked|group|first:[\w-]*)|bio-session(:active)?)$/, k);
   for (const [k, v] of p.local) if (k !== STORE_KEY) assert.doesNotMatch(v, /held|document|home|members|\/app/);
   assert.deepEqual([...p.store.keys()], []);
   /* the ops the frame and the fixture screens declare they call: the shell's own list, and each fixture screen's reads (R24) */
