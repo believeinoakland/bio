@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_013NDvbTWUS73nhaNbAc4Gek · depth 2 · COMPLETE · handled B18
+**Status** · session_01LkHLbMfkdEmVbWwt9jrgwo · depth 2 · COMPLETE · handled B18
 
 ## J1 · REPORT
 
@@ -138,3 +138,18 @@ Found in other modules / for BOB.
 - Requirement line for BOB: R55 can drop "not yet met": the fold, the `minutes` sent and the entry's says are as written above.
 
 Size (session_013NDvbTWUS73nhaNbAc4Gek): test runs 6, module lines 4535
+
+## J13 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #11, re B19; fix round 2, wave 2). tranche/T51 merged (interface-shell's `cs.memberName`, R111, was already on it).
+
+**C94 (my part).** Every site of the module that draws a member id now names the member through `cs.memberName(id)`: `plan` (who opened it, on the page and in the project's list; the list's old `admin` special case is gone), `action` (who sent the first entry, who marked pressure, who approved a template or a guide, who stated the laws, who proposed a law or a tier, who set the tier), `hold` (who marked what wants a hold), and the stake's source on the send steps (`set_by`). An agent (`agent:…`) is not a member and is drawn as the plane names it, as before. The matter's actor is a role and a body, not a member, and is unchanged. No member link is built from an id in this module.
+**Tests** (`c94-t51.test.mjs`, 3; written first and seen failing, 3 of 3): the founder `admin` draws her handle `sparky`, an ordinary `u-2` draws `rosa`, and no id text is on the page; control: a member with no handle (`u-3`) draws the kit's word `shell.card.member`, and an agent proposer is drawn as the agent. They name the existing ids R1, R12, R17, R21, R25, R31, R32 (no new requirement line is written; BOB may add one for C94 if wanted). `page.mjs` now gives the plane a roster (`memberlist`) so the fixtures' ids resolve to handles.
+**Suites.** screens-action 223 of 223. No service I provide changed, so no other module's suite is affected (`impact.mjs`: 0). Checks: format 0, architecture 0, coverage 55 of 55, ownership 0, words 0.
+**Matter's event picker (K4310/K4313).** `matter-t51.test.mjs` passes against the tranche as merged (the whole directory is green).
+Deferred: none. Found in other modules: none.
+Size (session_01LkHLbMfkdEmVbWwt9jrgwo): test runs 6, module lines 4540
+
+## J14 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #11, re B19): C94 met for screens-action: plan, action, hold and the stake's source name members by cs.memberName (handle, the founder included; the kit's word when none; agents as the plane names them). Tests c94-t51 (3, seen failing first, controls included); module suite 223 of 223; format, architecture, ownership, words 0; coverage 55 of 55. Nothing deferred; nothing found in other modules. Record J13.

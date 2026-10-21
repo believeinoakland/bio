@@ -69,7 +69,7 @@ export const plan = Object.freeze({
             return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + cs.w("state.loading") + "</p>";
           }
         }
-        const who = function (by) { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? cs.w("member.founder.unnamed") : cs.esc(id); };
+        const who = function (by) { return cs.esc(cs.memberName(String(by || "").replace(/^member:/, ""))); };
         return ro + title + (v.truncated ? '<p class="mk-note">' + cs.w("screen.plan.list.more") + "</p>" : "") + cs.sec("screen.plan.list", cs.sheet(live.concat(closed).map(function (x) {
           const st = ["open", "paused", "closed"].includes(x.state) ? x.state : "closed";
           return cs.row("", '<a class="cs-ref" href="/app/plan/' + encodeURIComponent(x.id) + '" data-nav>' + cs.esc(x.title || x.id) + "</a>"
@@ -235,7 +235,7 @@ export const plan = Object.freeze({
       const projectRef = projectHit && projectHit.title ? cs.ref("project", p.project, projectHit.title, [projectHit.title]) : "";
       // the plan's opening: when and by whom
       const opened = p.opened_at && p.opened_by
-        ? cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) }, name: String(p.opened_by).replace(/^member:/, "") }) : "";
+        ? cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) }, name: cs.memberName(String(p.opened_by).replace(/^member:/, "")) }) : "";
       const head = P.readOnly(cs, "screen.plan.name") + cs.title(p.title || p.id)
         + '<p class="mk-sub">' + cs.w("screen.plan.state." + (["open", "paused", "closed"].includes(p.state) ? p.state : "open"))
         + (opened ? " · " + opened : "") + (projectRef ? " · " + projectRef : "") + "</p>"

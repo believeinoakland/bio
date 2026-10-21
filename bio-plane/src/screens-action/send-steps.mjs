@@ -114,7 +114,7 @@ export function stakeLines(cs, view) {
     if (m === null || m === undefined) matter = cs.w("stake.none");
     else if (typeof m !== "object" || typeof m.stake !== "string" || !m.stake.trim() || m.stake === "undetermined") matter = unreadable();
     else {
-      const by = String(m.set_by || "").replace(/^member:/, "");
+      const by = m.set_by ? cs.memberName(String(m.set_by).replace(/^member:/, "")) : "";
       const from = m.source === "action" || m.source === "project" ? m.source : "";
       matter = '<span class="rec">' + cs.esc(m.stake) + "</span>"
         + (from && by && m.set_at ? ' <span class="muted">· ' + cs.w("stake.source." + from, { who: by, date: { html: cs.date(m.set_at) } }) + "</span>" : "");
