@@ -10,6 +10,7 @@ const WSHOW = { Reasoned: 'Asks for a reason', Terminal: 'Ends something', Signe
 const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
+  owed_followfrom:1, owed_exploreall:1, owed_explorepath:1, owed_exploreshorter:1,
   owed_registerimport:1, owed_registerlist:1, owed_registersearch:1, owed_registerrowcite:1, owed_registerwatch:1, owed_registerwatchstop:1, owed_alertconnect:2, owed_registerask:1, owed_registermatch:1, owed_registerwatchpropose:1,
   contradictionflag:2, owed_citeimported:1, owed_withdrawimported:2, owed_namedrequestset:1, owed_sweepset:1, owed_sweepratify:1,
   owed_casedetailsset:1, owed_casedetails:1, owed_casedetailspublic:1, templatesave:1, reattest:1, captureaccount:2,
@@ -102,6 +103,17 @@ const sheet = inner => `<div class="cs-sheet">${inner}</div>`;
 const row = (a, b, c = '', meta = '') => `<div class="cs-row">${a}<span>${b}</span>${c}${meta ? `<span class="meta">${meta}</span>` : ''}</div>`;
 const note = t => `<p class="mk-note">${t}</p>`;
 const acts = (...b) => `<div class="mk-acts">${b.join('')}</div>`;
+/* DEC-410: "Follow from here" (DEC-409): one control, the same on every person, organization, payment, donation, event and
+   document. It opens a small menu of the other dimensions; each is one act that opens that dimension's screen already
+   scoped to the item, in place. Ops reuse the target screen's own act where it exists (search, explore, registersearch). */
+const FOLLOW_OP = 'owed:followfrom DEC-409', FOLLOW_ROWS = 'owed:registersearch DEC-406';
+const FOLLOW = {
+  who: [['Money given or received', FOLLOW_OP], ['Organizations and offices held', FOLLOW_OP], ['Events taken part in', FOLLOW_OP], ['Documents that name them', 'search'], ['Register rows that name them', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  money: [['Who paid and who received it', FOLLOW_OP], ['Other payments from the same source', FOLLOW_OP], ['Events it is tied to', FOLLOW_OP], ['Documents that state it', 'search'], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  event: [['Who took part', FOLLOW_OP], ['Money that moved around it', FOLLOW_OP], ['Documents that date it', 'search'], ['Register rows from that time', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  document: [['People and organizations it names', FOLLOW_OP], ['Money it states', FOLLOW_OP], ['Events it dates', FOLLOW_OP], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']]
+};
+const follow = kind => `<details class="mk-details mk-follow" data-follow="${kind}"><summary data-tip="${esc('Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.')}">Follow from here</summary><div class="mk-acts">${FOLLOW[kind].map(([l, op]) => btn(op, l, { tone: 'quiet' })).join('')}</div></details>`;
 const machine = (who, inner) => `<div class="cs-machinework">${inner}<span class="by">${I('machine')}Machine work · the assistant, at ${who === 'you' ? 'your request' : esc(who) + '\'s request'}</span></div>`;
 const wizmark = (n, names) => `<button type="button" class="cs-wizmark" title="${esc(names)}">${I('wizard')}Show me how${n > 1 ? ` (${n})` : ''}</button>`;
 const crumbs = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map(esc).join(' <i>›</i> ')}</nav>`;
