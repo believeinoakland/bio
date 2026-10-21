@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J11
+**Read** · handled J13
 
 ## B1 · START
 
@@ -138,3 +138,11 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B15 · CHANGE
 
 CHANGE (K4363). Merge tranche/T51 first: R83 amended. Export the pre-flight's editions as one read, draftEditions({caseId, draft}) -> {prepared, published: {edition, address}|null}; the pre-flight uses it and review R19 calls it per draft row (REVIEW #21 builds against that name and shape). address is the published case's public address as public-read serves it (its route); find the existing builder and reuse it, never compose it a second way; QUESTION me if none exists.
+
+## B16 · ANSWER · re J13
+
+ANSWER J13 (K4364): your reading stands: address = /app/published/<case>/<edition>, the form R83 ships and the screens link. No public-read builder this round.
+
+## B17 · CHANGE
+
+CHANGE (K4365; C40's last hop, found by CASE-DISCLOSURES #15, now merged). Merge tranche/T51 first (case-disclosures R2 amended and merged). Your #notCoAttested (index.mjs:1679-1692) builds each not_co_attested row as {capture, by, findings} only, dropping the facts the capture row c already carries: add timestamp_at, co_archive, missing, late, timestamp_late and late_words from c to each row, so screens-publish can say which proof exists late and which is missing. Test (seen failing first): after a late timestamp the pre-flight's not_co_attested row carries timestamp_late: true, late_words, missing: ['co_archive']; control: a capture with no attempt carries both missing and is not late.

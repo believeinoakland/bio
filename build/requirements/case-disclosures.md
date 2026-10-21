@@ -61,7 +61,7 @@ This module judges each against the owner's lists and the record at the act, and
 
 #### Each document's grade and co-attestation, and its source (N364; DEC-81 items 1 and 3, DEC-78 item 5)
 
-- **R2** (was `case-authoring` R35)
+- **R2** (was `case-authoring` R35) (Fix round 3, C40; K4365) `timestamp_late` is true when the timestamp is one a late attempt made, and `late_words` then states "late: proves the bytes existed by <at>, not at capture" by its key (else null); `missing` names which of timestamp and co_archive is still absent. The gate's `CO_ATTESTATION_UNACKNOWLEDGED` entries and the disclosure capture rows carry the same.
   - **The captures.** `restingCaptures(prepared)` answers `[{member, capture}]`, one level deep: each document leg's content-row capture, else every capture its target registers. An inquiry leg names none. The list is in member order, then leg order, each pair once.
   - **One capture's facts.** `captureFacts(sha)` answers:
     - the capture's grade (`provenance.captureGrade`);
