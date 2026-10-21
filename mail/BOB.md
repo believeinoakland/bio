@@ -1824,3 +1824,6 @@ K4269 (Bob's, 2026-10-21): from now on in T51 a design change enters only for a 
 
 ## B439 · NOTICE · 2026-10-21 · session_01XWYkfQwcGngVDWPFWmqomf · primary
 K4270 (Bob's, 2026-10-21), amending K4269/B438: misused words and improper renderings of screens are recorded for fixing later (T52) and do not hold T51's deployment or release debugging; "the focus is to get CS to an alpha release." So a design change enters T51 only when an operation does not work or a required screen cannot be reached. Please park rewordings and rendering fixes for T52; U428 (DEC-393) is already made and is taken as rows only, with no screen job.
+
+## B440 · ACK · re U428 · 2026-10-21 · session_01XWYkfQwcGngVDWPFWmqomf · primary
+U428 (DEC-393) merged into tranche/T51 (4ff4539cc1), rows regenerated, --check clean. Per K4270, no screen job is opened for it in T51: rows only.
