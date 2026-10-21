@@ -2643,7 +2643,9 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    (K4254, B18) `affordances` holds the text of 53 ops that were named here (its `T51_DESIGN_OPS`, `accountdrafts`, `accountpropose`;
    with `standardinforce` and `sweeps`, which it already held), so they leave their grounds: no op is both explained and named
    (R34), and the partition tests read `ACT_HELP` itself (`test/m/op-declarations/help.mjs`), never a hand list. `strengthbarset`
-   is no alias (R21): strength declares it itself, so it is no longer under the alias ground. */
+   is no alias (R21): strength declares it itself, so it is no longer under the alias ground.
+   (K4262, B20) `affordances` holds `strengthbarset`'s help under its own name and none for `strengthbar` (no screen sends it,
+   and the design gives it no text): `strengthbarset` leaves the unexplained ground and `strengthbar` takes it. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: localize("op-declarations.index.an_alias_of_a_declared", "An alias of a declared op (R21): its op's explanation serves it."),
     ops: frozenList([
@@ -2723,7 +2725,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "standardinforcethroughwithdraw", "standardpropose", "standardrelease", "standingaiswitch", "statusreportsave",
       "stepaccept", "stepbywhen", "stepcostadd", "stepcostremove", "stepcreate", "stepdelete", "stepend", "steplearn",
       "stepoutcome", "stepproduct", "steprefer", "stepreminder", "stepsrunai", "stepstart", "stepwait",
-      "stepwaitremove", "strengthbarset", "successrevise", "templateapprove", "templatecomment", "templatedraft", "templategrantrevoke",
+      "stepwaitremove", "strengthbar", "successrevise", "templateapprove", "templatecomment", "templatedraft", "templategrantrevoke",
       "templatepropose", "templateretire", "templatereview", "templatereviewgrant", "templaterevise",
       "templatesubmit", "theorypropose", "translationmark", "unfollow", "unpack", "uselink", "usesfreeze",
       "useunlink", "usewithdraw", "waitlook", "websitekeyrevoke", "websitekeyset", "wizardeditorgrant",

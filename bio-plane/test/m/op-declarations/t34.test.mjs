@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { REGISTERED } from "./register-owners.mjs";
+import { explained } from "./help.mjs";
 import { browserActs, OWED_BY_FIX_ROUND, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
@@ -143,9 +144,12 @@ test("R21 (K4254): strengthbarset is no alias of strengthbar — strength declar
   assert.deepEqual(stamps("strengthbarset"), ["author", "viewer"]);
   assert.equal(OP_FAMILIES.strength.owner, "strength");
   assert.ok(Object.hasOwn(OP_FAMILIES.strength.kinds, "strengthbarset"));
-  /* R34: under no alias ground; until affordances holds its text (it holds strengthbar's), the last */
-  const grounds = Object.entries(O.ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes("strengthbarset")).map(([k]) => k);
-  assert.deepEqual(grounds, ["unexplained"]);
+  /* R34 (K4262, B20): affordances explains strengthbarset under its own name, so it is named under no ground; strengthbar, which no
+     screen sends and the design gives no text, takes the unexplained ground */
+  assert.ok(explained("strengthbarset") && !explained("strengthbar"));
+  const groundsOf = (op) => Object.entries(O.ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
+  assert.deepEqual(groundsOf("strengthbarset"), []);
+  assert.deepEqual(groundsOf("strengthbar"), ["unexplained"]);
   /* negative control */
   for (const al of ["createevent", "filingrecordsent", "adoptversion"]) assert.ok(Object.hasOwn(OP_ALIASES, al), al);
 });
