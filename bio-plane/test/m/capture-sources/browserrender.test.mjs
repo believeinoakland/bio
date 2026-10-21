@@ -425,3 +425,22 @@ test("R68 control: a page with no sub-resources states the four phases, a zero b
   assert.equal(cap.requests.filter((r) => r.body_text === "x").length, SUBRESOURCE_CAP);
   assert.equal(cap.requests.filter((r) => typeof r.body_unavailable === "string").length, 10);
 });
+
+test("R68 R8 (C13a, P7): a page of 33 bodies rendered by the real driver and kept by keepRenderBodies against a store charging 0.27 s a trip: the bodies are collected and kept in under 6 s, each digest in its request's place", async () => {
+  const { keepRenderBodies } = await import("../../../src/render.mjs");
+  const { createHash } = await import("node:crypto");
+  const page = { requests: Array.from({ length: 33 }, (_, i) => ({ url: `https://${HOST}/s${i}.js`, type: "Script", status: 200, end: "finished", bodyText: `body ${i} `.padEnd(2000, "x") })) };
+  const held = new Map();
+  const trip = () => new Promise((r) => setTimeout(r, 270));
+  const t0 = Date.now();
+  const a = await render("/zion", {}, { binding: fakeBinding({ "/zion": page }) });
+  const out = await keepRenderBodies(a, {
+    sha256: async (b) => createHash("sha256").update(b).digest("hex"),
+    put: async (d, b) => { await trip(); if (held.has(d)) return; await trip(); held.set(d, b); } });
+  const took = Date.now() - t0;
+  assert.ok(took < 6000, `${took} ms`);
+  a.requests.forEach((r, i) => {
+    assert.equal(out[i].sha256, createHash("sha256").update(r.body_text).digest("hex"), `request ${i}`);
+    assert.ok(held.has(out[i].sha256));
+  });
+});
