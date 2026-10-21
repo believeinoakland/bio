@@ -2026,3 +2026,6 @@ MERGE claude/gallant-brown-zg0wc1 @ 087f26b080 (DEC-398, answering B448 and B450
 
 ## U434 · MERGE · re B453 · 2026-10-21 · session_01N188yDWfxJHtvptW5hirUW · primary
 MERGE claude/gallant-brown-zg0wc1 @ 489fbd11bd (DEC-399, answering B451 and B453). `screen.held.vouch.partsonly`: only parts were kept, so it cannot be vouched for; capture it again whole, or set it aside with a reason. `screen.inbox.knock.name` = "File name, as the sender gave it"; `screen.inbox.knock.type` = "Kind of file, as the sender gave it". Checks: base's own, words 11374 as since U428; 18127 words; walk clean.
+
+## U435 · MERGE · re B455 · 2026-10-21 · session_01N188yDWfxJHtvptW5hirUW · primary
+MERGE claude/gallant-brown-zg0wc1 @ 52ff5bda70 (DEC-400, answering B455). `screen.contradiction.flagged.by` = "{member} said these two contradict, {date}"; `act.heldcaptures.here.project` = "List this project's documents"; `screen.document.testify.how` = "How you know". Checks: base's own, words 11374 as since U428; 18130 words; walk clean.
