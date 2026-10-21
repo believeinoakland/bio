@@ -179,3 +179,7 @@ You are the **module job** (P8, mechanics §6) for `interface-shell`. Your diff 
 
 **Your causes:**
 1. **An answer that is a success drawn as a refusal** (SCREENS-SETTINGS #13 REPORT, K4334; C89's shell half). Some acts answer a named code that is the act's success, not a failure: `adminendorse` answers that the endorsement is recorded and more are needed, and `memberadd` for an administrator beyond the second answers `CONSENSUS_REQUIRED` with who must still endorse; the kit draws both as a red refusal, so screens-settings sends its own request to work round it. Requirement (new line, proposed by you; read your act and refusal requirements whole): an act may name the answer codes that are its success; such an answer is drawn as done, in the success style, with the code's own row as its sentence, and the act's named re-reads run as after any success. Test: `adminendorse`'s recorded-and-pending answer is drawn as done and re-reads; control: a real refusal of the same act is still drawn as a refusal. screens-settings adopting it (dropping its own request) is a later CHANGE: REPORT when merged.
+
+## B28 · CHANGE
+
+From SCREENS-INQUIRY #18 (K4337, C66's shell half): the console's op=queue&limit=500 is your frame read (bio-plane/src/interface-shell/browser.mjs:2450); queue clamps 1-500 (R6) but the walk saw a 400: ask a limit the queue serves (200, as screens-inquiry's dashproject now does) and test it. Merge tranche/T51 first.
