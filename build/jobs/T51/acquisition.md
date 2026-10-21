@@ -78,3 +78,35 @@ Two things in fix round 3 need a call in a module I do not hold. I carry on with
 **2. C25, a PDF's Title entry (R98).** HTML (`<title>`, else first heading) I build in `acquisition/title.mjs`, cleaned by reading-pipeline R34's rule. For a PDF the only reader of `/Info /Title` is pdf-reader's `extractPdfStructure` (R39, `metadata.title`), which reads every page: 355 ms for a 33-page 276 KB agenda, so seconds for a 16 MiB PDF inside the 25 s bound. I need a cheap Info-only export from pdf-reader (for example `pdfTitleOf(bytes)`, R39's decoding with no text read), reached through `format-registry` (acquisition's existing edge) or a new `acquisition uses pdf-reader` edge (BOB's, modules.json). Until then a PDF answers `title: null` (a stand-in, named in my record), so screens fall back to the file name as today.
 
 No other blocker. Wave 1's host-governor peek (R29) is not on `tranche/T51` yet; I test C13 against a scripted double of `governorAdmit({host, peek: true})` and re-run against the real one when I merge it.
+
+## J7 · COMPLETE
+
+Fix round 3 (B6) applied for acquisition, head `2510f56d67` plus this entry's commit, `tranche/T51` merged at its tip (5515153cd5 and later; host-governor's peek is NOT on it yet).
+
+**Causes met**
+- **C5 (a), R96 R10 R11 R95**: `acquire` keeps each part's bytes in memory while the capture stays within `MULTIPART_KEEP_MAX` and puts the whole once under the whole digest when the stream ends (`keepWhole` with `bytes`): no part read back, no second digest of the parts, each buffer released as it is copied. Stage `keep` is timed apart from `read`; a single-part capture states no `keep`. A second press while the first is under way waits on the keep under way (`KEEPING`) and leaves one object. R17's ZIP-magic read of the first part also uses the held bytes (no `get` at all on a multipart capture). `keepWhole(ev, {sha, parts, total})` without `bytes` is unchanged, so `capture`'s upload path (capture/index.mjs:711) still works.
+- **C12, R20 R95**: no set time is waited for the timestamp (`ATTEST_WAIT_MS` and `opts.attestWaitMs` removed; nothing outside this module used them). The answer carries the attempt pending unless it already ended; the late outcome is recorded by `recordLateAttestations` as before; a failing attest still files the document and records the failure. **One reading for BOB to confirm:** the capture-request arm (`captureRequest` present) still waits for the attempt to end, as before (no door bound; a drain run may not outlive its handler). R20's text says "acquire answers as soon as the document is kept" without naming that arm. If BOB wants the drain arm to answer at once too, it is the one expression `captureRequest ? Infinity : 0` in `acquireRun`.
+- **C13, R97 R9 R5**: the render arm asks the governor with `governorAdmit({host, peek: true})`; the fetch then books once. Tested against fixture.mjs's stand-in governor, which answers `peek` as host-governor R29 states it (writes nothing, counts grants), because R29 is not on `tranche/T51` yet (`grep peek host-governor/index.mjs` empty at my last merge). **After host-governor's job merges, re-run `node --test --test-force-exit bio-plane/test/m/acquisition/fix3-t51.test.mjs`**; until the real governor honours `peek`, the live render arm books twice, as before.
+- **C25 (d), R98, HTML arm only**: `document.title` (`title.mjs`: `<title>`, else first heading, cleaned by reading-pipeline R34's rule, stated here beside its user because that module is later in the order); the rendered document's title for a render pair; `null` for plain text, a binary, a capture of several parts, and for a document with no title.
+
+**Not met (marks kept on the requirement lines)**
+- **R96's past-memory arm (C5 e)**: the evidence store (record-core `evidenceStore()`: `head`, `get`, `put`) offers no multipart upload, and the whole's digest, the object key, is known only at the stream's end. QUESTION J6 names the call I need. A capture past 32 MiB is still held in parts only. No test written for it; R96 keeps its *(not yet met: T51)* mark.
+- **R98's PDF arm**: needs a cheap Info-only title export from pdf-reader (extractPdfStructure reads every page; 355 ms for a 33-page 276 KB file). QUESTION J6. A PDF answers `title: null` for now (a stand-in), so R98 keeps its mark.
+
+**Requirement lines**: BOB wrote R20, R95–R98 before my START. I only removed the *(not yet met: T51)* mark from R20, R95 and R97, which my tests now name (K4210; the ownership check lists `build/requirements/acquisition.md`, accepted at the merge).
+
+**Tests** (`bio-plane/test/m/acquisition/fix3-t51.test.mjs`, new, each seen failing first; controls beside each): R96/R10/R11/R95 (16 MiB+5, put 1.5 s: answered in about 6 s, whole put once with its checksum, 4 puts, 0 gets, `keep` and `read` apart), second press, single-part and refused-whole controls; R20 (a 2 s attestation answered at once, recorded late; fast and failing controls); R97 and its controls; R98 and its controls. Changed in step with the requirements: `fix2-t51.test.mjs` (its read-back-refusal test and its two waited-attestation tests are superseded by the above and removed), `acquire.test.mjs` R20 R28 (a grant slower than a tick is read from the late record), `fixture.mjs` (governor stand-in peek and grants; `run` keeps the scripted network up until a pending attestation is recorded, unless `settle: false`: without it a late attestation reached the real network).
+
+**Checks** (run in this session)
+- `node --test --test-force-exit bio-plane/test/m/acquisition/`: tests 191, pass 191, fail 0 (three runs after the last change; baseline before was 185/185).
+- Users' suites, all green: capture 228 (+ cap13-reuse-pages, d57selflink), doorbell 84, capture-requests 129, extraction 197, monitoring 168, file-safety 75, reading-pipeline 150, link-sweep 41, case-carriage 90, control-plane 342 with the two capture loose tests, plane + ratification 531: 530 pass, 1 fail = `plane/release.test.mjs` R24 (DEC-149 words), red identically on the tranche tip, not mine. `impact.mjs` names 112 modules (1642 of 2174 test files) through acquisition's index; I ran the direct users above, not all.
+- `checks/format.mjs`: 1 failure, `build/rulings.md:4346` (K4349 states no standing-list decision), BOB's, not mine.
+- `checks/architecture.mjs acquisition`: 0 failures. `checks/coverage.mjs acquisition`: 52 of 52 live ids named, 0 failures.
+- `checks/run.mjs`: words 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); no finding names acquisition; coverage lists other modules' ids only.
+- `checks/ownership.mjs acquisition tranche/T51 job/T51/acquisition`: 1 listing, `build/requirements/acquisition.md` (accepted, K4210); every other changed file is inside my paths and tests.
+
+**Found in other modules (P9)**: none new. `plane/release.test.mjs` R24 is red on the tranche tip.
+
+**Deferred**: R96 past memory, R98 PDF (above).
+
+Size (session_01Y3snL5ogNuP2LEHaz82PG4): test runs 9, module lines 3401
