@@ -1,6 +1,6 @@
 # cause-action-t51 (T51)
 
-**Status** · session_01HXzP2YgzLf6LWSpraLDFPx · depth 2 · COMPLETE · handled B1
+**Status** · session_01HXzP2YgzLf6LWSpraLDFPx · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
@@ -45,3 +45,12 @@ Size (session_01HXzP2YgzLf6LWSpraLDFPx): test runs 34, module lines 8760
 ## J2 · COMPLETE
 
 COMPLETE. Causes met: C6 (screens-action R45), C53 (R1, R44 c), C62 and C63 (my parts: step 2's project; the plan's checks named by place), C65 (filing-templates R3 and screens-action R48: the template act sends the action's project), C66 (my parts: reply words and quote shown back; "Show the routes" says none), C68 (action-clocks R2: deadlines in the office's own level order). Suites: screens-action 220, action-clocks 84, filing-templates 85, all pass; users (affordances, action-plans, plan-work, screens-investigate, filings, action-producers, op-declarations, wizard-scripts, answer-envelope) pass. Checks: architecture, words, channels 0 failures; coverage none of my modules; ownership (cause form) 15 files, 0 failures; format fails only on build/rulings.md:4298 (not mine). Reported to you in my record: the real C65 site is `filings.templateSave` (project defaults from the basis only); the Brown Act line of C63 has no source in screens-action (it is record data); C66's console 400 is screens-inquiry/dashproject.mjs:30 and the review-copy sentence is screens-publish; action-clocks R2 and jurisdictions want a line on the deadline order and a federal level. See QUESTION J1 for the evidence reading of C6 and the word rows wished for. Size (session_01HXzP2YgzLf6LWSpraLDFPx): test runs 34, module lines 8760.
+
+## CHANGE B2 (J3)
+
+C6's event picker now asks `timeline` with the project's capture shas (`captures`, events R53 as amended, K4310) alongside the references of the project's document as `set` when it has any; it waits for the documents read before asking, so one call is made. `matter-t51.test.mjs` "R45 (C6)" asserts both queries and the captures-only case. `screens-action` 220 pass. Whether EVENTS #10 has merged: I could not tell from the tranche tip (merged `origin/tranche/T51` at B2); the test uses the scripted plane, so re-run after EVENTS merges if you want it proven against the real answer.
+Size (session_01HXzP2YgzLf6LWSpraLDFPx): test runs 36, module lines 8770
+
+## J3 · COMPLETE
+
+CHANGE B2 applied: Matter's event picker reads timeline by the project's capture shas (plus the document's references as set); tranche/T51 merged; screens-action 220 pass. Built against a scripted plane: if EVENTS #10 has not merged, CHANGE me again when it has.
