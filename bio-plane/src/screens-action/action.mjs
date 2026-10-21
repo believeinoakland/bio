@@ -58,7 +58,8 @@ export const action = Object.freeze({
         return true;
       });
     },
-    who: function (by) { return String(by || "").replace(/^member:/, ""); },
+    // C94 (R56): a member is named by her handle, never by her id; an agent (`agent:…`) is not a member and is named as the plane names it
+    who: function (cs, by) { const id = String(by || "").replace(/^member:/, ""); return id && !/^agent:/.test(id) ? cs.memberName(id) : id; },
     // R38: a word the design holds (`cs.w` answers the escaped key for one it does not); a field or option with none is not drawn
     // and is reported to BOB as a missing key (K3366), never worded here.
     has: function (cs, key) { return cs.w(key) !== cs.esc(key); },
@@ -162,7 +163,7 @@ export const action = Object.freeze({
       // R28: the kind in its words, a profile's own kind by its label, never "Other"
       const kindName = P.kindWord(cs, typeof a.kind === "string" && a.kind ? a.kind : "other", false, voc.action_kind_labels);
       const sub = [kindName, office ? cs.w("screen.action.to", { office: office }) : "", holder ? cs.w("screen.request.holder", { holder: holder }) : "",
-        first ? cs.w("screen.action.sentby", { date: { html: cs.date(first.at) }, who: String(first.author || "").replace(/^member:/, "") }) : "",
+        first ? cs.w("screen.action.sentby", { date: { html: cs.date(first.at) }, who: P.who(cs, first.author) }) : "",
         cs.w("screen.plan.actionstate." + state)].filter(Boolean).join(" · ");
       const head = P.readOnly(cs, "screen.action.name") + cs.title(typeof a.title === "string" && a.title ? a.title : null) + '<p class="mk-sub">' + sub + "</p>"
         + (a.confidential ? '<p class="mk-note">' + cs.w("screen.action.confidential") + "</p>" : "");
@@ -324,7 +325,7 @@ export const action = Object.freeze({
       const marks = function (items) {
         return cs.sheet(items.map(function (m) {
           const at = m.arrived && m.arrived.action ? cs.w("screen.action.pressuremark.reply", { ord: String(m.arrived.ord) }) : cs.w("screen.action.pressuremark.record");
-          const who = P.who(m.by);
+          const who = P.who(cs, m.by);
           const legal = m.kind === "legal";
           const hold = !legal ? "" : m.hold === "in_place" ? cs.w("screen.action.held") : m.hold === "released" ? "" : cs.w("screen.action.holdnone");
           return cs.row(cs.date(m.at), (legal ? cs.w("screen.action.legalmark", { member: who })
@@ -356,7 +357,7 @@ export const action = Object.freeze({
         const offered = Array.isArray(t.versions) ? t.versions : [];
         const not = Array.isArray(t.not_offered) ? t.not_offered : [];
         const rows = t.court_petition ? "" : offered.map(function (v) {
-          const by = typeof v.approved_by === "string" && v.approved_by ? P.who(v.approved_by) : "";
+          const by = typeof v.approved_by === "string" && v.approved_by ? P.who(cs, v.approved_by) : "";
           return cs.row("", cs.esc(v.name || v.template || ""), v.approved_at && by
             ? '<span class="meta">' + cs.w("screen.action.templates.approved", { member: by, date: { html: cs.date(v.approved_at) } }) + "</span>" : "", "");
         }).concat(not.map(function (n) {
@@ -375,7 +376,7 @@ export const action = Object.freeze({
       const guides = gd.state === "ok" && gd.value && Array.isArray(gd.value.guides) ? gd.value.guides : [];
       const guideRows = guides.map(function (g) {
         const from = g.origin === "group"
-          ? cs.w("screen.action.templates.approved", { member: P.who(g.approved_by), date: { html: g.approved_at ? cs.date(g.approved_at) : "" } }) : cs.w("screen.action.profilefact.from");
+          ? cs.w("screen.action.templates.approved", { member: P.who(cs, g.approved_by), date: { html: g.approved_at ? cs.date(g.approved_at) : "" } }) : cs.w("screen.action.profilefact.from");
         return (Array.isArray(g.items) ? g.items : []).map(function (it) {
           return cs.row("", cs.esc(it.route || "") + '<span class="meta">' + (it.expect ? cs.w("screen.action.guide.expect", { expectation: it.expect }) + " · " : "") + (it.citation ? cs.w("screen.action.guide.source", { citation: it.citation }) + " · " : "") + from + "</span>", "", "");
         }).join("");
@@ -407,13 +408,13 @@ export const action = Object.freeze({
       };
       const lawsStated = gl.state === "stated" && stated.length
         ? cs.sheet(stated.map(function (l) { return cs.row("", lawLine(l), "", ""); }).join(""))
-          + (gl.by && gl.at ? '<p class="mk-note">' + cs.w("law.stated", { who: P.who(gl.by), date: { html: cs.date(gl.at) } }) + "</p>" : "")
+          + (gl.by && gl.at ? '<p class="mk-note">' + cs.w("law.stated", { who: P.who(cs, gl.by), date: { html: cs.date(gl.at) } }) + "</p>" : "")
         : '<p class="mk-note">' + cs.w("law.undetermined") + "</p>";
       const lawProposals = a.governing_laws_proposals && Array.isArray(a.governing_laws_proposals.proposals) ? a.governing_laws_proposals.proposals : [];
       const lawProposed = lawProposals.length
         ? '<p class="eyebrow">' + cs.w("law.proposed") + "</p>" + cs.sheet(lawProposals.map(function (x) {
           return cs.row("", (Array.isArray(x.laws) ? x.laws : []).map(lawLine).join("<br>"),
-            '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("law.proposal.not", { who: P.who(x.by), date: { html: cs.date(x.at) } }) + "</span>", "");
+            '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("law.proposal.not", { who: P.who(cs, x.by), date: { html: cs.date(x.at) } }) + "</span>", "");
         }).join("")) : "";
       // R54: "Change the law…" and "Propose another law…" share one list of laws, drawn once with both acts under it; with no laws
       // offered neither act is drawn (E3, DEC-384)
@@ -432,12 +433,12 @@ export const action = Object.freeze({
       const shownPs = riskPs.filter(function (x) { return !x.machine_work || view.reachable; });
       const riskProposed = shownPs.length
         ? '<p class="eyebrow">' + cs.w("risk.proposed") + "</p>" + cs.sheet(shownPs.map(function (x) {
-          return cs.row("", cs.w("risk.proposal", { who: P.who(x.by), tier: String(x.tier), words: tierWords(x.tier) }),
+          return cs.row("", cs.w("risk.proposal", { who: P.who(cs, x.by), tier: String(x.tier), words: tierWords(x.tier) }),
             '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("risk.proposal.not") + "</span>", "");
         }).join("")) : "";
       const riskSec = cs.sec("risk.title",
         '<p class="mk-note">' + (tier === "undetermined" ? cs.w("risk.tier.undetermined") : cs.w("risk.tier", { tier: String(tier) }) + " · " + tierWords(tier)) + "</p>"
-        + (latest ? '<p class="mk-note">' + cs.w("risk.set", { who: P.who(latest.by), date: { html: cs.date(latest.at) }, reason: latest.reason, prior: tierWords(latest.prior) }) + "</p>" : "")
+        + (latest ? '<p class="mk-note">' + cs.w("risk.set", { who: P.who(cs, latest.by), date: { html: cs.date(latest.at) }, reason: latest.reason, prior: tierWords(latest.prior) }) + "</p>" : "")
         + riskProposed
         + cs.choice("risk-tier", "risk.title", [1, 2, 3].map(function (t) { return [String(t), "risk.tier." + t]; }))
         + '<div class="mk-acts">' + cs.act("actionrisktier", { label: "risk.revise" }) + "</div>", { help: "risk.help" });

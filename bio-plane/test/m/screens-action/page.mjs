@@ -243,6 +243,8 @@ export const DATA_PLANE = {
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),
   affordances: ok(AFFORDANCES), holdsdue: ok(HOLDS_DUE), projectlist: ok(ROSTER), templatesforaction: ok(TEMPLATES), procedureguides: ok(GUIDES),
   actions: ok(ACTIONS), queue: ok({ items: [] }),
+  // the roster the fixtures' member ids are named from (C94, interface-shell R111): each id's handle is its own
+  memberlist: ok({ members: ["mai", "dev", "ana", "asha"].map((h) => ({ member_id: h, handle: h })) }),
 };
 export const ROUTES = {
   plan: `/app/plan/${PLAN_ID}`, "start-send": `/app/start-send/${PLAN_ID}~opt-1`, request: `/app/request/${ACTION_ID}`,
