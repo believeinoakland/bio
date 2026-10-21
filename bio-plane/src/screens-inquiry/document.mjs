@@ -32,7 +32,15 @@
  *
  * CR-19 (R81, R82): the second "Read it" tab compares the revision a question cites with the current copy (matched by the leg's
  * `extent_capture` to `bundlehistory`'s `capture_sha`), by the browser act `revisioncompare`; the original-file card draws the
- * file's kind from the reading's format id and its size from `bytes`, and none without `bytes`. */
+ * file's kind from the reading's format id and its size from `bytes`, and none without `bytes`.
+ *
+ * T51 fix round 2 (SCREENS-INQUIRY #18): R125 (C31) `cite` sends `{project, role, found}` in the body, the question choice redraws (`ui.citeQuestion`)
+ * and the passage a question holds a leg on is marked as cited by it; R123 (C33) a held copy offers no retire, only a door to Held (BOB B26), and
+ * `retire`'s `CITED` and `ILLEGAL_TRANSITION` are drawn in their own sentences (the citing questions as references; never the release act's);
+ * R55 (C40) `attest` asks the co-archive for a public https address and says which of the two confirmations is missing; R124 (C42) `adoptversion`
+ * only where the newer copy was captured and has a reading chain (`moveOffer`); R3 (C95) the cite picker's search box, titles and dates; interface-shell
+ * R111 (C94) members by `cs.memberName`; R96 (C17) "Read N of M words"; R126 (`resolvetestify`) and R127 (`contradictionflag`), DEC-394 (3d, 3e);
+ * R117 (C41) a refused version names its unplaced legs by their documents' titles. */
 
 import { checkOutcome } from "../screens-intake/index.mjs";
 
@@ -131,7 +139,13 @@ function render(cs, view) {
   const out = [];
   const T = (k, f) => view.parts.plain(cs, k, f);
   const W = (k, f) => cs.w(k, f);
-  const who = (x) => view.parts.who(cs, x);
+  /* C94 (interface-shell R111): a member the record names is drawn by her handle (`cs.memberName`, the founder included), an id with no handle known
+     by the kit's plain word, never the id; the module's own `who` only where the kit does not hold the function */
+  const who = (x) => {
+    const id = x && typeof x === "object" ? x : String(x == null ? "" : x).replace(/^(member:|token:)/, "");
+    if (id === "") return "";
+    return typeof cs.memberName === "function" ? cs.memberName(id) : view.parts.who(cs, x);
+  };
   /* R6, R65: a moment with its time of day, through `time.at` ({date} by `cs.date`, {time} through `time.clock`, 12 hours) */
   const at = (iso) => {
     const t = new Date(String(iso || ""));
@@ -176,12 +190,14 @@ function render(cs, view) {
   const gradeObj = gr && gr.state === "ok" && gr.value && gr.value.grade ? gr.value.grade : null;
   const letter = gradeObj && /^[A-D]$/.test(String(gradeObj.grade || "")) ? String(gradeObj.grade) : "";
   const isHeld = !!row;
+  /* capture R77 (B27): a held row answers `whole` (true, false or null); only `whole: false` (a part of the capture is missing) withholds vouching and the OCR re-read */
+  const incomplete = !!row && row.whole === false;
   const vouched = ui.outcome && ui.outcome.release && ui.outcome.release.ok === true;
-  if (isHeld && !vouched) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
+  if (isHeld && !vouched && !incomplete) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
     + cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
     + cs.field("document-release-mitigation", "screen.document.release.mitigation", { area: true, rec: true })
     + cs.act("release", { label: "act.release.label.document", data: { document: id }, tone: "primary" }) + own("release") + "</div>");
-  else if (vouched) out.push(`<p class="mk-note" data-vouched="1">${cs.w("document.vouched", { member: view.parts.who(cs, view.me && (view.me.handle || view.me.member) || ""), date: { html: cs.date(new Date(cs.now()).toISOString(), { year: true }) } })}</p>`);
+  else if (vouched) out.push(`<p class="mk-note" data-vouched="1">${cs.w("document.vouched", { member: who(view.me && (view.me.member || view.me.handle) || ""), date: { html: cs.date(new Date(cs.now()).toISOString(), { year: true }) } })}</p>`);
   /* R113: a copy a member has stopped using says so, whatever page she meets it on; no second retirement is offered */
   const retiredNow = String(doc.current_state || "") === "retired";
   if (retiredNow) out.push(`<p class="mk-note" data-retired="1"><b>${cs.w("state.item.retired.name")}</b> ${cs.w("state.item.retired.means")}</p>`);
@@ -196,12 +212,16 @@ function render(cs, view) {
   const words0 = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.filter((p) => p && String(p.text || "").trim()) : [];
   const blind0 = rv0 && Array.isArray(rv0.unread_pages) ? rv0.unread_pages.filter((n) => Number.isInteger(n) && n >= 0) : [];
   const textState = !sha ? "" : reading.state === "empty" ? "unread" : rv0 ? (!words0.length ? "none" : blind0.length ? "partial" : "full") : "";
+  /* R96 (C17; reading-pipeline R35): the reading counts its words, `words_read` of `words_total`; drawn only when it states both */
+  const wordsOf = (k) => { const v = rv0 ? (rv0[k] !== undefined ? rv0[k] : rv0.reading && typeof rv0.reading === "object" ? rv0.reading[k] : undefined) : undefined; return Number.isInteger(v) && v >= 0 ? v : null; };
+  const wRead = wordsOf("words_read"), wTotal = wordsOf("words_total");
   /* R66: the head's fingerprint is the first one shortened, with its tip */
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha, letter }, tone: "quiet" }) + "</span></div>"
     + (textState ? `<div><span class="v"><span data-text-state="${textState}"${textState === "full" || textState === "none" ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
-      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") : "") + "</span></span></div>" : "")
+      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") : "") + "</span>"
+      + (wRead !== null && wTotal !== null ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
   if (ui.gradenote) {
@@ -236,10 +256,18 @@ function render(cs, view) {
   }
   if (project && ownTitle) for (const qid of ownQ) if (!projectOf.has(qid)) projectOf.set(qid, ownTitle);
   const optionOf = (value, title) => (projectOf.get(value) ? { value, key: "screen.document.cite.option", fills: { question: title, project: projectOf.get(value) } } : { value, text: title });
-  const askable = qs.map((q) => ({ value: String(q.bundle_id), title: String(q.title || q.bundle_id) }));
-  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), title: String(c.title || c.question) });
-  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value))).map((o) => optionOf(o.value, o.title));
+  const askable = qs.map((q) => ({ value: String(q.bundle_id), title: String(q.title || q.bundle_id), created: q.created ? String(q.created) : "" }));
+  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), title: String(c.title || c.question), created: "" });
   const preset = heldFor.length ? String(heldFor[0].question) : "";
+  /* C95 (R3): the picker is narrowed by the text typed in its search box (the title, whatever the case), the question chosen kept though the search
+     hides it; each option carries its title and, where the list row states it, its date as data text (`screen.document.cite.option` has no
+     date fill, so the date is joined to the title in `cs.date`'s plain form) */
+  const needle = String(ui.citeSearch || "").trim().toLowerCase();
+  const keepQ = String(ui.citeQuestion || preset || "");
+  const plainDate = (iso) => String(iso ? cs.date(String(iso), { year: true }) : "").replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+  const shownQ = askable.filter((o) => !needle || o.value === keepQ || o.title.toLowerCase().includes(needle));
+  const cites = shownQ.filter((o) => ownQ.has(o.value)).concat(shownQ.filter((o) => !ownQ.has(o.value)))
+    .map((o) => optionOf(o.value, o.created && plainDate(o.created) ? o.title + " \u00b7 " + plainDate(o.created) : o.title));
   /* the reading section is built once the revisions it compares are read (R81), in the slot it holds here */
   const readingAt = out.push("") - 1;
   const readingBody = () => secOf("document.read.title", reading, (r) => {
@@ -249,12 +277,41 @@ function render(cs, view) {
     if (!list.length) return originalCard + `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
     /* nothing is preselected unless the capture was held for a question: then the first choice says to choose one, never a blank
        (R118); a cite with it unchosen is refused in place */
-    const pick = cites.length
-      ? cs.choice("document-cite-question", "screen.document.cite.question", (preset ? [] : [{ value: "", key: "screen.document.cite.choose" }]).concat(cites), { value: preset })
+    const pick = askable.length
+      ? cs.field("document-cite-search", "shell.search", { typing: (c, v, value) => c.set("citeSearch", String(value || "")) })
+        + cs.choice("document-cite-question", "screen.document.cite.question", (preset ? [] : [{ value: "", key: "screen.document.cite.choose" }]).concat(cites), { value: preset, redraw: "citeQuestion" })
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
-    const pickHelp = cites.length ? `<p class="mk-small">${cs.w("screen.document.cite.question.help")}</p><p class="mk-small">${cs.w("document.read.cite.help")}</p>` : "";
+    const pickHelp = askable.length ? `<p class="mk-small">${cs.w("screen.document.cite.question.help")}</p><p class="mk-small">${cs.w("document.read.cite.help")}</p>` : "";
+    /* R125 (C31): the question chosen (the choice redraws the page: `ui.citeQuestion`), else the one the copy was held for, else the one the last cite
+       went into; a passage is marked as cited by it when it holds a leg on this document at that passage. A leg's part is what `citation` writes from
+       `found.extent`, each field `f` as `extent_f` (its R1), so a passage's extent is matched field by field to the leg's. */
+    const chosenQ = String(ui.citeQuestion || preset || (ui.citeDone && ui.citeDone.question) || "");
+    const chosenImg = chosenQ ? later("qimg:" + chosenQ, "image", { id: chosenQ }) : null;
+    const chosenFront = chosenImg && chosenImg.state === "ok" && chosenImg.value && typeof chosenImg.value["bundle.md"] === "string" ? view.parts.front(chosenImg.value["bundle.md"]) : null;
+    const extentBag = (e) => {
+      const bag = {};
+      for (const [k, v] of Object.entries(e && typeof e === "object" ? e : {})) {
+        if (v === undefined || v === null) continue;
+        bag["extent_" + k] = Array.isArray(v) ? "[" + v.join(", ") + "]" : typeof v === "object" ? JSON.stringify(v) : String(v);
+      }
+      return bag;
+    };
+    const legAt = (leg, e) => {
+      const bag = extentBag(e);
+      const keys = Object.keys(bag).filter((k) => k !== "extent_kind");
+      if (!keys.length) return false;
+      if (leg.extent_kind !== undefined && leg.extent_kind !== "" && bag.extent_kind !== undefined && String(leg.extent_kind) !== bag.extent_kind) return false;
+      return keys.every((k) => String(leg[k] === undefined ? "" : leg[k]) === bag[k]);
+    };
+    const citedHere = (e) => !!chosenFront && (chosenFront.lists.basis || []).some((l) => l && String(l.target) === id && legAt(l, e));
+    const citedMark = (e) => {
+      if (!citedHere(e)) return "";
+      const named = askable.find((o) => o.value === chosenQ);
+      const qtitle = chosenFront.title ? String(chosenFront.title) : named ? named.title : "";
+      return `<span class="mk-small" data-passage-cited="${cs.esc(chosenQ)}"><b>${W("screen.finder.cite.cited")}</b> ${cs.ref("question", chosenQ, qtitle || T("state.undetermined", { reason: "" }), [qtitle])}</span>`;
+    };
     /* C30: what the last cite did, drawn beside the passages: cited, or already resting on a passage of this document (which one, and the
        question to narrow it on). The question's own legs on this document name the passage, at the record's page + 1 (R78). */
     const citeDoneHtml = () => {
@@ -310,8 +367,8 @@ function render(cs, view) {
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
       return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
-        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
-        + (extent && cites.length ? cs.act("cite", { label: "document.read.cite",
+        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + citedMark(extent) + "</blockquote>"
+        + (extent && askable.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + pickHelp + none + citeDoneHtml() + own("cite");
   }, { help: "document.read.help" });
@@ -340,7 +397,7 @@ function render(cs, view) {
     const fm = String((rv0 && rv0.format) || (rd && rd.text_container) || "");
     return /^image\//i.test(ct) || /^(jpe?g|png|gif|webp|tiff?|bmp)$/i.test(fm);
   })();
-  if (textState && textState !== "full" && sha) {
+  if (textState && textState !== "full" && sha && !incomplete) {
     if (isPicture) {
       if (view.reachable && !drewTranscribe) out.push(`<div class="mk-acts">${cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } })}</div>`);
     } else {
@@ -413,6 +470,17 @@ function render(cs, view) {
     const versions = vc && vc.state === "ok" && vc.value && Array.isArray(vc.value.versions) ? vc.value.versions : [];
     const dateOfSha = (s) => { const v = versions.find((x) => x && (x.capture_sha === s || x.sha256 === s)); return v && v.first_retrieved ? String(v.first_retrieved) : ""; };
     const newestOf = (list) => list.filter(Boolean).sort().pop() || "";
+    /* R124 (C42; BOB's pending reading, QUESTION J17: kept in this one function so it is easy to change): "Move my citations to this copy" is
+       offered only where the newer copy was captured (it is one of `versionchain`'s versions, a capture with a register row, not a change merely
+       observed) and has a reading chain (`op=reading` for its digest answers text units). "chain", "nochain" (captured, no text), "nothing"
+       (never captured) or "wait" (the reading is not yet read). */
+    const moveOffer = (newer) => {
+      if (!newer || !versions.some((x) => x && (x.capture_sha === newer || x.sha256 === newer))) return "nothing";
+      const rd = later("reading:" + newer, "reading", { sha256: newer });
+      if (rd.state === "loading") return "wait";
+      const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units.filter((u) => u && String(u.text || "").trim()) : [];
+      return units.length ? "chain" : "nochain";
+    };
     const seenQ = new Set();
     const rows = [];
     for (const x of backs.filter((b) => b && b.from_type === "inquiry" && b.from)) {
@@ -471,8 +539,10 @@ function render(cs, view) {
         if (lines.length) meta.push(unseen(lines.join(" · ")));
         /* a newer copy is taken up or declined by a notice (reevaluation R15), so each open notice carries its two acts */
         acts = open.map((o) => { const nid = String(o.notice || o.id);
+          const offer = moveOffer(String(o.newer_capture || ""));
           return cs.field("document-version-why-" + nid, "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
-            + cs.act("adoptversion", { label: "act.adoptversion.label.document", data: { notice: nid } })
+            + (offer === "chain" ? cs.act("adoptversion", { label: "act.adoptversion.label.document", data: { notice: nid } })
+              : offer === "nochain" ? `<p class="mk-small" data-move="nochain">${W("refusal.CONTENT_EXTENT_NO_CHAIN")}</p>` : "")
             + cs.act("keepversion", { label: "act.keepversion.label.document", data: { notice: nid } }); }).join("");
         if (nt.state === "failed") meta.push(cs.state(nt, () => ""));
       } else {
@@ -707,7 +777,43 @@ function render(cs, view) {
     const names = rs.state === "ok" && rs.value && Array.isArray(rs.value.names) ? rs.value.names.filter((n) => n && n.entity_id) : [];
     const conns = cn.state === "ok" && cn.value && Array.isArray(cn.value.connections) ? cn.value.connections : [];
     const matches = rs.state === "ok" && rs.value && Array.isArray(rs.value.resolutions) ? rs.value.resolutions.filter((x) => x && x.ref && x.entity_id) : [];
+    /* DEC-394 (3d, 3e; R126, R127): two folds beneath the matches. The names the record matched to no subject are those `resolutions` states as
+       `unresolved` (entities R11's `unresolved`, `{ref, label, page?}`); the read states none today, so with none the fold is not drawn. */
+    const quote = (t) => "\u201c" + String(t) + "\u201d";
+    const excerpt = (t) => { const x = String(t).replace(/\s+/g, " ").trim(); return x.length > 90 ? x.slice(0, 89) + "\u2026" : x; };
+    const unmatched = rs.state === "ok" && rs.value && Array.isArray(rs.value.unresolved) ? rs.value.unresolved.filter((x) => x && x.ref) : [];
+    const testifyHtml = unmatched.length
+      ? `<details class="mk-details" data-fold="testify"><summary>${W("screen.document.testify.head")}</summary><p class="mk-note">${W("screen.document.testify.note1")} ${W("screen.document.testify.note2")} ${W("screen.document.testify.note3")}</p>`
+        + cs.choice("document-testify-which", "screen.document.testify.which", unmatched.map((x, i) => ({ value: String(i), text: quote(x.label || x.ref) + (pg(Number(x.page)) !== null && x.page !== null && x.page !== undefined && x.page !== "" ? " \u00b7 " + T("screen.document.passage.where", { page: pg(Number(x.page)) }) : "") })), { value: "0" })
+        + `<p class="mk-small">${W("screen.document.testify.which.help")}</p>`
+        + cs.field("document-testify-who", "screen.document.testify.who", {})
+        + cs.field("document-testify-how", "entity.naming.basis", { area: true, rec: true, help: ["screen.document.testify.how.help", "screen.document.testify.how.help2"] })
+        + cs.act("resolvetestify", { label: "act.resolvetestify.label.document", data: { sha } }) + own("resolvetestify") + "</details>" : "";
+    /* R127: a passage of this reading beside a passage of another document the member can see; the other document is chosen (the choice redraws the
+       page, `ui.flagOther`) and its passages are its own reading's */
+    const flagUnits = (r) => (r && r.state === "ok" && r.value && Array.isArray(r.value.text_units) ? r.value.text_units : []).filter((u) => u && String(u.text || "").trim() && u.extent && typeof u.extent === "object");
+    const flagLabel = (u) => quote(excerpt(u.text)) + (u.extent && u.extent.kind === "pdf-page" && Number.isInteger(u.extent.page) ? " \u00b7 " + T("screen.document.passage.where", { page: u.extent.page + 1 }) : "");
+    const flagDocs = later("docs", "list", { type: "information", limit: "500" });
+    const flagOthers = flagDocs.state === "ok" && flagDocs.value && Array.isArray(flagDocs.value.bundles)
+      ? flagDocs.value.bundles.filter((b) => b && b.bundle_id && String(b.bundle_id) !== id && String(b.object_type || "").toLowerCase() === "information") : [];
+    const flagHere = flagUnits(reading);
+    const flagPick = String(ui.flagOther || "");
+    const flagImg = flagPick ? later("flagimg:" + flagPick, "image", { id: flagPick }) : null;
+    let flagSha = "";
+    try { const fp = JSON.parse(String(flagImg && flagImg.state === "ok" && flagImg.value ? flagImg.value["data/provenance.json"] || "" : "")); const c0 = fp && fp.documents && fp.documents[0] && fp.documents[0].capture ? String(fp.documents[0].capture.sha256 || "") : ""; flagSha = /^[0-9a-f]{64}$/.test(c0) ? c0 : ""; } catch { flagSha = ""; }
+    const flagThere = flagSha ? flagUnits(later("flagread:" + flagSha, "reading", { sha256: flagSha })) : [];
+    const flagHtml = flagHere.length && flagOthers.length
+      ? `<details class="mk-details" data-fold="contradict"><summary>${W("screen.document.contradict.head")}</summary><p class="mk-note">${W("screen.document.contradict.note1")} ${W("screen.document.contradict.note2")}</p>`
+        + cs.choice("document-flag-here", "screen.document.contradict.here", [{ value: "", text: "" }].concat(flagHere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: "" })
+        + `<p class="mk-small">${W("screen.document.contradict.here.help")}</p>`
+        + cs.choice("document-flag-other", "screen.document.contradict.other", [{ value: "", text: "" }].concat(flagOthers.map((b) => ({ value: String(b.bundle_id), text: String(b.title || b.bundle_id) }))), { value: flagPick, redraw: "flagOther" })
+        + (flagPick ? cs.choice("document-flag-there", "screen.document.contradict.other", [{ value: "", text: "" }].concat(flagThere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: "" }) : "")
+        + `<p class="mk-small">${W("screen.document.contradict.other.help")}</p>`
+        + cs.field("document-flag-why", "screen.document.contradict.why", { area: true, rec: true, help: "screen.document.contradict.why.help" })
+        + cs.act("contradictionflag", { data: { sha } }) + own("contradictionflag") + "</details>" : "";
+    const folds = testifyHtml + flagHtml;
     if (rs.state === "failed") out.push(cs.sec("document.names.title", cs.state(rs, () => ""), { help: "document.names.help" }));
+    else if (!names.length && folds) out.push(folds);
     else if (names.length) {
       const people = names.some((n) => n.kind === "person");
       const labelOf = new Map(names.map((n) => [String(n.entity_id), String(n.label || n.entity_id)]));
@@ -747,7 +853,7 @@ function render(cs, view) {
           + `<p class="mk-small">${W("screen.document.defect.which.help")}</p>`
           + cs.field("document-defect-why", "screen.document.defect.why", { area: true, rec: true, help: "screen.document.defect.why.help" })
           + `<p class="mk-note">${W("screen.document.defect.at")}</p>` + cs.act("resolutiondefect", { label: "act.resolutiondefect.label.document", data: { sha } }) + own("resolutiondefect") + "</details>" : "")
-        + cs.act("explore", { label: "act.explore.label.document", data: { from: id } }), { help: "document.names.help" }));
+        + folds + cs.act("explore", { label: "act.explore.label.document", data: { from: id } }), { help: "document.names.help" }));
     }
   }
 
@@ -778,8 +884,8 @@ function render(cs, view) {
       if (r.state !== "ok" || !r.value) continue;
       const mine = (x) => x && (String(x.document || "") === id || String(x.target || "").split(/[#/:?]/)[0] === id);
       for (const m of (Array.isArray(r.value.members) ? r.value.members : []).filter(mine))
-        lines.push(`<p class="mk-small" data-theme="${cs.esc(t.theme_id)}"><b>${cs.esc(String(t.name || ""))}</b> ${pageOf(m.page) !== null ? cs.w("screen.document.theme.page", { page: String(pageOf(m.page)), name: String(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" }, note: String(m.note || "") })
-          : cs.w("screen.document.theme.whole", { kind: T("shell.card.document"), name: String(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" } })}`
+        lines.push(`<p class="mk-small" data-theme="${cs.esc(t.theme_id)}"><b>${cs.esc(String(t.name || ""))}</b> ${pageOf(m.page) !== null ? cs.w("screen.document.theme.page", { page: String(pageOf(m.page)), name: who(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" }, note: String(m.note || "") })
+          : cs.w("screen.document.theme.whole", { kind: T("shell.card.document"), name: who(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" } })}`
           + cs.act("themewithdraw", { label: "act.themewithdraw.label.document", data: { theme: String(t.theme_id), target: String(m.target || id) } }) + "</p>");
       for (const h of (Array.isArray(r.value.hunches) ? r.value.hunches : []).filter(mine))
         lines.push(`<p class="mk-small" data-hunch="${cs.esc(t.theme_id)}"><span class="cs-hunch" data-mark="hunch">${cs.w("theme.hunch.mark")}</span> <b>${cs.esc(String(t.name || ""))}</b> ${cs.w("screen.document.theme.proposed", { page: String(pageOf(h.page) === null ? "" : pageOf(h.page)), date: { html: h.proposed_at ? cs.date(String(h.proposed_at), { year: true }) : "" }, note: String(h.proposal_note || "") })}`
@@ -833,7 +939,9 @@ function render(cs, view) {
       + cs.choice("document-watch-freq", "screen.capture.address.freq", ["daily", "weekly", "monthly", "hourly", "per_meeting"].map((f) => [f, "screen.capture.address.freq." + f]), { value: "daily" })
       + cs.act("monitorset", { label: "act.monitorset.label.document", data: { document: id } }) + own("monitorset")
       + (watched ? cs.act("monitor", { label: "act.monitor.label.document", data: { document: id } }) + own("monitor") : ""))
-    + (retiredNow ? "" : `<details class="mk-details" data-fold="retire"><summary>${cs.w("document.retire.fold")}</summary><p class="mk-small">${cs.w("document.retire.when")}</p>`
+    /* R123 (C33; BOB B26): a held copy is not retired but set aside, on the Held screen: no retire here, only a door to that screen */
+    + (retiredNow ? "" : isHeld && !vouched ? `<p><a class="cs-btn" data-tone="quiet" href="/app/held" data-nav data-held-door="1">${W("screen.held.name")}</a></p>`
+      : `<details class="mk-details" data-fold="retire"><summary>${cs.w("document.retire.fold")}</summary><p class="mk-small">${cs.w("document.retire.when")}</p>`
       + cs.act("retire", { label: "document.retire.label", data: { document: id } }) + own("retire") + "</details>")));
 
   /* R108 (C23; DEC-381): "Where this document came from", after "This copy": the system it came from, declared by a member with her name
@@ -880,11 +988,35 @@ function findingsRefusal(refusal, cs) {
   const f = (Array.isArray(r.findings) ? r.findings : []).find((x) => x && typeof x === "object" && (x.code || x.translation || x.detail));
   if (f) {
     const key = f.code ? "refusal." + f.code : "";
-    if (key && cs.w(key) !== key) return cs.w(key);
-    return (f.check ? '<span class="id">' + cs.esc(String(f.check)) + "</span> " : "") + cs.esc(String(f.translation || f.detail || ""));
+    /* R117 (C41; basis-version-grammar R11): a finding that refuses a version for legs left unplaced carries `legs`, the ids of those legs; each is
+       named by its document's title (`legTitles`, read by the act's `failed`), the plain word `shell.card.document` for one with none, drawn once */
+    const ids = Array.isArray(f.legs) ? f.legs.map(String).filter(Boolean) : [];
+    const titles = r.legTitles && typeof r.legTitles === "object" ? r.legTitles : {};
+    const names = ids.map((id) => (titles[id] ? cs.esc(String(titles[id])) : cs.w("shell.card.document")));
+    const legs = names.length ? ' <span data-finding-legs="1">' + names.filter((n, i) => names.indexOf(n) === i).join(", ") + "</span>" : "";
+    if (key && cs.w(key) !== key) return cs.w(key) + legs;
+    return (f.check ? '<span class="id">' + cs.esc(String(f.check)) + "</span> " : "") + cs.esc(String(f.translation || f.detail || "")) + legs;
   }
   const generic = "refusal." + String(r.code || r.reason || "");
   return cs.w(generic) !== generic ? cs.w(generic) : r.translation ? cs.esc(String(r.translation)) : cs.w("shell.unread");
+}
+
+/** C41 (R117): before a refused version is drawn, the titles of the documents its first finding's `legs` name are read (`image`), handed to
+ *  `findingsRefusal` as `legTitles`. Self-contained. */
+async function legTitlesFailed(view, answer, cs) {
+  if (!answer || answer.kind !== "refused") return;
+  const f = (Array.isArray(answer.fields && answer.fields.findings) ? answer.fields.findings : []).find((x) => x && typeof x === "object" && (x.code || x.translation || x.detail));
+  const ids = f && Array.isArray(f.legs) ? f.legs.map(String).filter(Boolean) : [];
+  const legTitles = {};
+  for (const id of ids) {
+    try {
+      const a = await cs.call("image", { query: { id } });
+      const r = a && a.result !== undefined ? a.result : a;
+      const t = r && typeof r["bundle.md"] === "string" ? view.parts.front(r["bundle.md"]).title : "";
+      if (t) legTitles[id] = String(t);
+    } catch { /* a leg whose document cannot be read is named by the plain word */ }
+  }
+  answer.fields = Object.assign({}, answer.fields, { legTitles });
 }
 
 /** R3's, R15's, R32's, R56's and R61's acts. */
@@ -917,14 +1049,14 @@ const acts = [
   /* R32, R69: a newer version's notice decided here: adopt it with her reason, or keep the version cited; the rows re-read their
      notices, so a decided row is drawn as decided */
   /* C41 (R35, R50, R117): a basis version the plane refused is drawn by its first finding, as a refused basis is */
-  { op: "adoptversion", label: "act.adoptversion.label.document", reasonField: "why", rereads: ["backlinks"], refusals: { BASIS_VERSION_REFUSED: findingsRefusal },
+  { op: "adoptversion", label: "act.adoptversion.label.document", reasonField: "why", rereads: ["backlinks"], failed: legTitlesFailed, refusals: { BASIS_VERSION_REFUSED: findingsRefusal },
     send(view, el, cs) {
       const notice = String(el.dataset.notice || "");
       const why = String(cs.value("document-version-why-" + notice) || "").trim();
       return { body: { notice, why } };
     },
     done(view, answer, cs) { cs.set("later", Object.fromEntries(Object.entries(view.ui.later || {}).filter(([k]) => !k.startsWith("renotices:")))); } },
-  { op: "keepversion", label: "act.keepversion.label.document", rereads: ["backlinks"], refusals: { BASIS_VERSION_REFUSED: findingsRefusal },
+  { op: "keepversion", label: "act.keepversion.label.document", rereads: ["backlinks"], failed: legTitlesFailed, refusals: { BASIS_VERSION_REFUSED: findingsRefusal },
     send(view, el, cs) {
       const notice = String(el.dataset.notice || "");
       const why = String(cs.value("document-version-why-" + notice) || "").trim();
@@ -975,14 +1107,20 @@ const acts = [
       cs.set("citeNone", false);
       const role = cs.value("document-cite-role") === "cuts_against" ? "cuts_against" : "supports";
       view.ui.citing = question;
-      return { query: { project: question, role, found: el.dataset.found || "" } };
+      /* R125 (C31; citation R20): the citing object, the role and the passage found go in the body, none in the address; `found` as the object it is */
+      let found = el.dataset.found || "";
+      try { found = JSON.parse(found); } catch { /* sent as the string it is */ }
+      return { body: { project: question, role, found } };
     },
     /* C30 (R3, R49): the answer is read, never left silent: what was cited, or that the question already rests on a passage of this document
        (citation answers 200 with `cited: []` and `alreadyCited`); the page then names the passage and links the question, where it is narrowed */
     done(view, answer, cs) {
       const r = answer && answer.result !== undefined ? answer.result : answer;
       const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x) : []);
-      cs.set("citeDone", { question: String((r && r.inquiry) || view.ui.citing || ""), cited: list(r && r.cited), already: list(r && r.alreadyCited) });
+      const q = String((r && r.inquiry) || view.ui.citing || "");
+      /* the question's bundle is read again, so the passage cited is marked from its legs (R125) */
+      if (list(r && r.cited).length) cs.set("later", Object.assign({}, view.ui.later, { ["qimg:" + q]: null }));
+      cs.set("citeDone", { question: q, cited: list(r && r.cited), already: list(r && r.alreadyCited) });
     } },
   /* reasoned: the member's own acknowledgment is its reason (interface-shell R11, DEC-88), so no second one is asked */
   { op: "release", label: "act.release.label.document", reasonField: "acknowledgment",
@@ -1005,13 +1143,60 @@ const acts = [
       }, () => said("release", null));
       return null;
     } },
+  /* R55 (C40; attestation R3): one act obtains the trusted timestamp and the co-archive: the archive is asked (`archive: true` with the address) only
+     for the document's own public https address (a hostname with a dot, not a local name or an address of numbers), and for no other; the answer
+     says in words which of the two is still missing */
   { op: "attest", label: "act.attest.label.document",
-    send(view, el) { return { body: { sha256: el.dataset.sha || "" } }; },
-    done(view, answer, cs) { cs.set("outcome", Object.assign({}, view.ui.outcome, { attest: { ok: true, html: cs.w("screen.document.attest.done") } })); } },
+    refusals: { NO_ATTESTATION: (r, cs) => {
+      const k = "refusal.NO_ATTESTATION";
+      if (r.archive) return cs.w("filings.archive_trusted_timestamp");
+      return cs.w(k) !== k ? cs.w(k) : r.translation ? cs.esc(String(r.translation)) : cs.w("shell.unread");
+    } },
+    send(view, el, cs) {
+      const body = { sha256: el.dataset.sha || "" };
+      const md = view.data.capture && view.data.capture.state === "ok" ? String(view.data.capture.value["bundle.md"] || "") : "";
+      const loc = md && !/Authored through op=testify/.test(md) ? String(view.parts.front(md).maps.source && view.parts.front(md).maps.source.locator || "") : "";
+      let u = null;
+      try { u = new URL(loc); } catch { u = null; }
+      const host = u ? u.hostname : "";
+      if (u && u.protocol === "https:" && host.includes(".") && !/^[\d.]+$/.test(host) && !host.includes(":") && !/(^|\.)(localhost|local|internal|localdomain)$/i.test(host)) { body.archive = true; body.locator = loc; }
+      return { body };
+    },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const html = r && r.archive ? cs.w("screen.document.attest.done") : cs.w("filings.trusted_timestamp_archive");
+      cs.set("outcome", Object.assign({}, view.ui.outcome, { attest: { ok: true, html } }));
+    } },
   /* R113 (L11): Confirm, with her reason, selects this copy and then retires it with the handle; the shell draws the plane's refusal beside
      the act and, on success, the page says the copy is retired by key and reads the document again. A reason is the member's: with none
      nothing is sent. A select that fails draws its own refusal and sends no retire. */
   { op: "retire", label: "act.retire.label.document", rereads: ["capture"],
+    /* R123 (C33): the plane's two refusals in sentences of their own, never the release act's. `failed` hands the refusal the page's own citers (their
+       titles, from `backlinks`) since a refusal's function sees only the refusal and the kit. A sentence is drawn only where a word is held for it
+       (`screen.document.retire.refused.cited`, `.illegal`: wanted, not yet held); `ILLEGAL_TRANSITION` otherwise draws nothing, and `CITED` the
+       plane's own words with the questions that cite the copy, each a door to its page, where a citation is removed. */
+    failed(view, answer) {
+      if (!answer || answer.kind !== "refused") return;
+      const d = view.data && view.data.backlinks;
+      const backs = d && d.state === "ok" && d.value && Array.isArray(d.value.backlinks) ? d.value.backlinks : [];
+      answer.fields = Object.assign({}, answer.fields, { pageCiters: backs.filter((b) => b && b.from).map((b) => ({ id: String(b.from), type: String(b.from_type || ""), title: String(b.from_title || "") })) });
+    },
+    refusals: {
+      ILLEGAL_TRANSITION: (r, cs) => { const k = "screen.document.retire.refused.illegal"; return cs.w(k) !== k ? cs.w(k) : ""; },
+      CITED: (r, cs) => {
+        const page = Array.isArray(r.pageCiters) ? r.pageCiters : [];
+        const named = (Array.isArray(r.offenders) ? r.offenders : []).flatMap((o) => (o && Array.isArray(o.citedBy) ? o.citedBy : [])).map(String);
+        const ids = named.length ? named.filter((x, i) => named.indexOf(x) === i) : page.filter((c) => c.type === "inquiry").map((c) => c.id);
+        const refs = ids.map((id) => {
+          const hit = page.find((c) => c.id === id);
+          const title = hit && hit.title ? hit.title : cs.w("state.undetermined", { reason: "" });
+          const kind = /^INQ-/.test(id) ? "question" : /^PROJ-/.test(id) ? "project" : /^INFO-/.test(id) ? "document" : "record";
+          return `<span data-citer="${cs.esc(id)}">${cs.ref(kind, id, hit && hit.title ? hit.title : title, [hit && hit.title ? hit.title : ""])}</span>`;
+        }).join(" ");
+        const k = "screen.document.retire.refused.cited";
+        if (cs.w(k) !== k) { const said = cs.w(k, { questions: { html: refs } }); return said.includes(refs) ? said : said + " " + refs; }
+        return (r.translation ? cs.esc(String(r.translation)) + " " : "") + refs;
+      } },
     dialog: [{ name: "reason", label: "screen.document.retire.reason" }],
     async send(view, el, cs, extra) {
       const reason = String(((extra && extra.fields) || {}).reason || "").trim();
@@ -1119,6 +1304,43 @@ const acts = [
       return { body: { captureSha: String(el.dataset.sha || ""), ref: String(m.ref), entityId: String(m.entity_id), reason } };
     },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { resolutions: null })); } },
+  /* R126 (DEC-394 (3d); entities R12): from her own knowledge, who a name the record matched to no subject is, and how she knows (grade D); her
+     words are the reason, so no second one is asked */
+  { op: "resolvetestify", label: "act.resolvetestify.label.document", reasonField: "basis",
+    refusals: { NO_BASIS: "screen.document.testify.refused" },
+    send(view, el, cs) {
+      const L = view.ui.later || {};
+      const rows = L.resolutions && L.resolutions.state === "ok" && L.resolutions.value && Array.isArray(L.resolutions.value.unresolved)
+        ? L.resolutions.value.unresolved.filter((x) => x && x.ref) : [];
+      const at = String(cs.value("document-testify-which") || "");
+      const m = at !== "" && /^\d+$/.test(at) ? rows[Number(at)] : null;
+      if (!m) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.document.testify.which") } } };
+      const entityId = String(cs.value("document-testify-who") || "").trim();
+      if (!entityId) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.document.testify.who") } } };
+      const basis = String(cs.value("document-testify-how") || "").trim();
+      if (!basis) return { refuse: "screen.document.testify.refused" };
+      return { body: { captureSha: String(el.dataset.sha || ""), ref: String(m.ref), entityId, basis } };
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { resolutions: null })); } },
+  /* R127 (DEC-394 (3e); contradiction R61): a passage here set beside a passage of another document as a contradiction her project settles, with her
+     reason; nothing is sent without both passages and the reason, each refused by its own refusal's key. The label is the registry's (a one-line
+     change if the registry is re-taken). */
+  { op: "contradictionflag", label: "act.contradictionflag.label.document", reasonField: "reason",
+    send(view, el, cs) {
+      const L = view.ui.later || {};
+      const units = (r) => (r && r.state === "ok" && r.value && Array.isArray(r.value.text_units) ? r.value.text_units : []).filter((u) => u && String(u.text || "").trim() && u.extent && typeof u.extent === "object");
+      const hereAt = String(cs.value("document-flag-here") || "");
+      const here = hereAt !== "" && /^\d+$/.test(hereAt) ? units(L.reading)[Number(hereAt)] : null;
+      const otherId = String(cs.value("document-flag-other") || "");
+      let otherSha = "";
+      try { const img = L["flagimg:" + otherId]; const pj = JSON.parse(String(img && img.state === "ok" && img.value ? img.value["data/provenance.json"] || "" : "")); const c0 = pj && pj.documents && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : ""; otherSha = /^[0-9a-f]{64}$/.test(c0) ? c0 : ""; } catch { otherSha = ""; }
+      const thereAt = String(cs.value("document-flag-there") || "");
+      const there = otherSha && thereAt !== "" && /^\d+$/.test(thereAt) ? units(L["flagread:" + otherSha])[Number(thereAt)] : null;
+      if (!here || !there) return { refuse: "refusal.FLAG_NO_PASSAGE" };
+      const reason = String(cs.value("document-flag-why") || "").trim();
+      if (!reason) return { refuse: "refusal.FLAG_NO_REASON" };
+      return { body: { here: { capture: String(el.dataset.sha || ""), extent: here.extent }, other: { capture: otherSha, extent: there.extent }, reason } };
+    } },
   /* R108 (C23; DEC-381): the system this document came from, declared with her name and the date (provenance R64); a second declaration is
      added beside the first and never replaces it, so each answer is kept in the list the page draws */
   { op: "declareorigin", label: "act.owed_declareorigin.label.document",
@@ -1194,7 +1416,10 @@ const words = Object.freeze([
   "screen.document.said_by", "screen.capture.file.how", "screen.capture.file.where", "screen.capture.file.what", "screen.finder.cite.cited", "screen.finder.a17.left_as_it_was", "screen.finder.a17.the_question_already_cited_it",
   "theme.section", "theme.never.evidence", "theme.place", "theme.propose", "theme.hunch.mark", "screen.document.theme.page",
   "screen.document.theme.whole", "screen.document.theme.proposed", "progression.threadedto", "progression.followed", "progression.thread.here",
-  "shell.card.document", "act.themewithdraw.label.document",
+  "shell.card.document", "screen.held.name", "screen.document.retire.refused.illegal", "screen.document.retire.refused.cited", "shell.search", "act.resolvetestify.label.document", "act.contradictionflag.label.document", "entity.naming.basis",
+  ...["head", "note1", "note2", "note3", "which", "which.help", "who", "how.help", "how.help2", "refused"].map((k) => "screen.document.testify." + k),
+  ...["head", "note1", "note2", "here", "here.help", "other", "other.help", "why", "why.help"].map((k) => "screen.document.contradict." + k),
+  "refusal.FLAG_NO_PASSAGE", "refusal.FLAG_SAME_DOCUMENT", "refusal.FLAG_NO_REASON", "filings.trusted_timestamp_archive", "filings.archive_trusted_timestamp", "refusal.NO_ATTESTATION", "act.themewithdraw.label.document",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.scale.subject.name", "mark.scale.subject.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
   "state.empty", "state.loading", "state.failed", "state.undetermined", "shell.reason", "shell.reason.help", "shell.unread", "shell.copy",
@@ -1203,7 +1428,7 @@ const words = Object.freeze([
   "document.names.title", "document.names.help", "document.names.row", "document.names.chosen.record", "document.names.chosen.member",
   /* T51 (R65–R69, R78): the record of this copy, the fingerprints, the links in five groups, the names, "Your citations, leg by leg" */
   "time.at", "time.clock", "time.am", "time.pm", "document.versions.thiscopy", "state.item.retired.name",
-  "refusal.NO_SUCH_BUNDLE", "refusal.NO_BUNDLE", "refusal.NO_SHA", "refusal.VERSION_NOTICE_NO_INQUIRY", "refusal.VERSION_NOTICE_NO_SUBJECT",
+  "refusal.CONTENT_EXTENT_NO_CHAIN", "refusal.NO_SUCH_BUNDLE", "refusal.NO_BUNDLE", "refusal.NO_SHA", "refusal.VERSION_NOTICE_NO_INQUIRY", "refusal.VERSION_NOTICE_NO_SUBJECT",
   "act.owed_linkopen.label.document", "act.owed_linkopen.does", "act.owed_revisioncompare.label.document", "act.owed_revisioncompare.does",
   "act.owed_hashcopy.label.document", "act.owed_hashcopy.does", "act.versionnotice.does",
   ...["fingerprints.head", "revision.title", "revisions.compare", "revisions.with", "revisions.compare.act", "fingerprint.setonly",
@@ -1229,7 +1454,7 @@ const words = Object.freeze([
   "capture.fieldneeded", "shell.reason.needed", "progression.steps", "screen.capture.address.freq", "state.item.retired.means",
   ...["daily", "weekly", "monthly", "hourly", "per_meeting"].map((f) => "screen.capture.address.freq." + f),
   "screen.document.cite.option", "screen.document.cite.choose", "screen.document.unwatched.head", "screen.document.unwatched",
-  "screen.document.text.tip", "screen.document.text.partial", "screen.document.ocr.says", "screen.document.ocr.refused.capable", "screen.document.ocr.refused.member",
+  "screen.document.text.tip", "screen.document.text.read", "screen.document.text.partial", "screen.document.ocr.says", "screen.document.ocr.refused.capable", "screen.document.ocr.refused.member",
   "screen.document.ocr.refused.unread", "act.pdfstructure.label.document", "act.transcriptionattest.label.document", "act.provenanceroute.label.document",
   "act.connectionassert.label.document", "act.resolutiondefect.label.document", "act.owed_declareorigin.label.document",
   ...["summary", "row", "status", "note", "note.help", "at", "refused.self", "refused.note"].map((k) => "screen.document.attest." + k),

@@ -1,4 +1,4 @@
-/* screens-inquiry R105 (FR-28 entry 22; C48; DEC-374; `contradiction` R30-R36, R50-R54): the screen `contradiction`, "Two documents
+/* screens-inquiry R105, R40 (FR-28 entry 22; C48; DEC-374; `contradiction` R25, R30-R36, R50-R54, R61): the screen `contradiction`, "Two documents
  * in tension" (Projects › <project> › Two documents in tension; the registry's 7 acts), at `/app/contradiction/<candidate>`, or
  * `/app/contradiction/<candidate>/<project>` for a conflict the member sees half (the project is the party the notice came to).
  *
@@ -16,9 +16,11 @@
  * both travel as `reason`; `question`; `reason` for dismiss, the reason she chose; `conclusion`; `text`), `contradictionoptin`'s
  * words being optional, the shell's own reason box asks (a shell mark, not a declared field). Every sentence is read by key (R44);
  * a design word `words.json` does not hold would be listed in `GAP_WORDS` and drawn as its key until the design stream writes it (none now).
- * Self-contained functions (interface-shell R21 (1)). */
+ * A candidate a member flagged (`contradictionflag`, R61) draws her reason in her words with her name and the day, and no machine mark; a member
+ * the reads name is drawn by her handle, never her id (C94; R40). Self-contained functions (interface-shell R21 (1)). */
 
 import { COMMON } from "./common.mjs";
+import { named } from "./question.mjs";
 
 const S = "screen.contradiction.";
 
@@ -99,6 +101,9 @@ function place(view) {
 function render(cs, view) {
   const P = view.parts, K = P.K, S = K.S, W = cs.w, E = cs.esc, ui = view.ui, d = view.data || {};
   const { candidate, project: part } = P.parse(view.subject);
+  /* C94 (R40): a member the reads name is drawn by her handle (the kit's `cs.memberName`), never the id; the founder with no handle known by
+     `member.founder.unnamed`, any other member with none by a plain word; `P.who` is the fallback where the kit holds no `memberName` */
+  const whoIs = (x) => P.named(cs, x, "", P.who);
   const hold = (id, inner) => `<div data-cd="${id}">${inner}</div>`;
   const note = (...keys) => `<p class="mk-note">${keys.map((k) => W(k)).join(" ")}</p>`;
   const acts = (...b) => `<div class="mk-acts">${b.join("")}</div>`;
@@ -160,7 +165,7 @@ function render(cs, view) {
     const rr = P.later(cs, ui, "resp", "contradictionresponses", { candidate, project: part }, String(ui.seq || 0));
     const list = rr.state === "ok" && rr.value && Array.isArray(rr.value.responses) ? rr.value.responses : (n.responses || []);
     if (list.length) out.push(cs.sec(S + "responses", cs.sheet(list.map((r) => {
-      const who = r.own ? P.who(cs, r.author, "") : [r.project && r.project.name, r.cover, r.email].filter(Boolean).join(" · ");
+      const who = r.own ? whoIs(r.author) : [r.project && r.project.name, r.cover, r.email].filter(Boolean).join(" · ");
       return `<div data-response="${E(r.response || "")}" data-own="${r.own ? "yes" : "no"}">${cs.row(cs.icon("testimony"), `<span class="rec mk-data">“${E(r.text || "")}”</span>`, "",
         `<span class="mk-data">${E(who)}${r.at ? " · " + cs.date(r.at, { year: true }) : ""}</span>`)}</div>`;
     }).join(""))));
@@ -192,12 +197,17 @@ function render(cs, view) {
     return `<div data-fact="${name}">${cs.row(cs.icon(icon), `<span class="mk-data">${show(f.a)} · ${show(f.b)}</span>`, "")}</div>`;
   };
   const m = c.machine && typeof c.machine === "object" ? c.machine : null;
+  /* R105 (`contradiction` R61, R25): a candidate a member flagged carries `flagged_by: {member, at, reason}` and no machine's judgement: her reason
+     in her words (data, quoted), with her name and the day, and no machine mark. Her line holds no sentence of this module's (the design gives
+     none: reported); without a reason there is no line. */
+  const fb = c.flagged_by && typeof c.flagged_by === "object" && typeof c.flagged_by.reason === "string" && c.flagged_by.reason.trim() ? c.flagged_by : null;
   const rows = fact("stated_date", "timeline") + fact("doctype", "document");
   const dateFact = facts.find((x) => x && x.fact === "stated_date" && x.undetermined !== true && x.a && x.b);
   out.push(cs.sec(S + "why.they.are.side.by.side",
     (c.why ? `<p data-why="1">${E(c.why)}</p>` : "")
     + (m && m.reason ? `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}${m.label === "world" ? " " + W(S + "the.assistant.s.judgement.not.a") : ""}`
       + `<p class="rec mk-data">“${E(m.reason)}”</p></div>` : "")
+    + (fb ? `<div data-flagged-by="1"><p class="rec mk-data">“${E(fb.reason.trim())}”</p><p class="mk-small mk-data">${E(whoIs(fb.member))}${fb.at ? " · " + cs.date(String(fb.at), { year: true }) : ""}</p></div>` : "")
     + (rows ? cs.sheet(rows) : ""),
     { help: [S + "help.why.these.two.were.put.together", S + "help.the.sentence.in.quotes.is.the"] }));
   if (state === "closed") return hold("closed", out.join("") + note(S + "someone.already.closed.this.and.it"));
@@ -241,7 +251,7 @@ function render(cs, view) {
     const iread = P.later(cs, ui, "inq", "image", { id: c.inquiry });
     const qref = c.inquiry ? cs.ref("question", c.inquiry, P.titleOf(iread) || undetermined()) : "";
     out.push(cs.sec(S + "taken.up", `<p>${qref}</p>`
-      + (takenUp && qref ? `<p data-taken-up="1">${W(S + "member.took.this.up.as.a", { member: P.who(cs, takenUp.member, ""), question: { html: qref }, date: { html: takenUp.at ? cs.date(String(takenUp.at), { year: true }) : "" } })}</p>` : "")
+      + (takenUp && qref ? `<p data-taken-up="1">${W(S + "member.took.this.up.as.a", { member: whoIs(takenUp.member), question: { html: qref }, date: { html: takenUp.at ? cs.date(String(takenUp.at), { year: true }) : "" } })}</p>` : "")
       + `<p>${W(S + "it.stays.open.here.until.the")}</p>`));
     const vr = P.later(cs, ui, "versions", "basisversions", { id: c.inquiry });
     const accepted = vr.state === "ok" && vr.value && Array.isArray(vr.value.versions) ? vr.value.versions.filter((v) => v && v.state === "accepted" && v.hidden !== true) : [];
@@ -377,4 +387,4 @@ const words = Object.freeze([...BORROWED, "mark.origin.machine.name", "mark.orig
 
 /** R105: "Two documents in tension" (interface-shell R21), with the readers it shares as its parts. */
 export const CONTRADICTION_SCREEN = Object.freeze({ id: "contradiction", reads, place, render, acts, words,
-  parts: Object.freeze({ K, parse, titleOf, found, later: COMMON.later, plain: COMMON.plain, who: COMMON.who }) });
+  parts: Object.freeze({ K, parse, titleOf, found, later: COMMON.later, plain: COMMON.plain, who: COMMON.who, named }) });

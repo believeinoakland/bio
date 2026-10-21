@@ -12,7 +12,10 @@
  *   reading, no read answers it (Private, Suggestions);
  *   "The story so far" (`cs.storyline`) from `timeline`; "Activity" (`cs.initials`, `cs.activity`) from `projectlist`.
  * A project she is not in draws R60's states; a name is a handle, the unnamed founder by `member.founder.unnamed` (R40); no
- * record id is a title (R39). Self-contained functions (interface-shell R21 (1)); the shared readers are the screen's `parts`. */
+ * record id is a title (R39). Self-contained functions (interface-shell R21 (1)); the shared readers are the screen's `parts`.
+ * Fix round 3 (T51): the queue is asked within the door's bound, 200 (C66; R79); a member the reads name is drawn by her handle, never her id (C94; R40). */
+
+import { named } from "./question.mjs";
 
 /** R79: the reads, each `{op, query}` as its owner documents it. */
 function reads(view) {
@@ -27,7 +30,9 @@ function reads(view) {
     participants: { op: "projectparticipants", query: { projectId: id } },
     bar: { op: "strengthbarof", query: { project: id } },
     questions: { op: "projectquestions", query: { project: id, limit: "100" }, empty: () => false },
-    queue: { op: "queue", query: { limit: "500" }, empty: (v) => !v || !Array.isArray(v.items) || !v.items.length },
+    /* C66: the queue is asked within the door's bound (`queue` R6: a limit of 1 to 500, default 200; the walk saw `limit=500` answered 400, and the
+       fix round caps the ask at 200): the default and the cap, 200 */
+    queue: { op: "queue", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.items) || !v.items.length },
     drafts: { op: "casedrafts", query: { project: id }, empty: (v) => !v || !Array.isArray(v.drafts) || !v.drafts.length },
     docs: { op: "heldcaptures", query: { project: id, limit: "200" }, empty: held },
     ...(me ? { mine: { op: "heldcaptures", query: { project: id, member: String(me), limit: "500" }, empty: held } } : {}),
@@ -57,6 +62,9 @@ function render(cs, view) {
   const P = view.parts;
   const W = (k, f) => cs.w(k, f);
   const T = (k, f) => P.plain(cs, k, f);
+  /* C94 (R40): a member the reads name is drawn by her handle (the kit's `cs.memberName`), the unnamed founder and any member with no
+     handle known by a plain word, never the id; `P.who` is the fallback where the kit holds no `memberName` */
+  const whoIs = (x, founder) => P.named(cs, x, founder, P.who);
   /* a read the screen makes as it draws, once for its request (`req` is `{query}` or `{body}`); a failed one keeps only its
      own words, never a code */
   const ask = (key, op, req) => {
@@ -92,7 +100,7 @@ function render(cs, view) {
     ? d.participants.value.participants.find((x) => x && x.handle && x.handle === me) : null;
   const invited = !!(roster && roster.state === "invited");
   if (seen || listed || invited) {
-    const owners = seen && Array.isArray(seen.owners) && seen.owners.length ? seen.owners.map((o) => P.who(cs, o)).join(", ") : "";
+    const owners = seen && Array.isArray(seen.owners) && seen.owners.length ? seen.owners.map((o) => whoIs(o)).join(", ") : "";
     if (!invited && !listed) return out.join("") + P.unavailable(cs);
     /* the registry lists no `projectjoin`, `projectrequest` or `projectrequestwithdraw` on `dash-project` (REPORT): the ask is
        the project page's own (`project`), which this page opens */
@@ -109,7 +117,7 @@ function render(cs, view) {
   /* the head: the objective, its owner by handle and its stage, in one line */
   const STAGES = ["forming", "investigating", "matured", "closed"];
   const stage = d.stage && d.stage.state === "ok" && d.stage.value ? d.stage.value.stage : null;
-  const owners = active.filter((x) => Number(x.owner)).map((x) => P.who(cs, x)).filter(Boolean);
+  const owners = active.filter((x) => Number(x.owner)).map((x) => whoIs(x)).filter(Boolean);
   const line = [];
   if (doc && doc.objective && doc.objective !== title) line.push(`<span class="rec">${cs.esc(doc.objective)}</span>`);
   if (owners.length) line.push(W("screen.projects.owner", { handle: owners.join(", ") }));
@@ -269,7 +277,7 @@ function render(cs, view) {
   /* Members: the count, with their handles in words */
   if (d.participants && d.participants.state === "failed") tiles.push(failedState(d.participants));
   else if (active.length) {
-    const names = active.map((x) => P.who(cs, x)).filter(Boolean);
+    const names = active.map((x) => whoIs(x)).filter(Boolean);
     tiles.push(cs.reading({ label: "screen.dash-project.tile.members", value: String(active.length), change: names.length ? { text: names.join(", ") } : null }));
   }
   if (tiles.length) out.push(cs.sec("screen.dash-project.glance.heading", `<div class="mk-tiles">${tiles.join("")}</div>`));
@@ -309,7 +317,7 @@ function render(cs, view) {
   if (listFailed) out.push(cs.sec("screen.dash-project.activity.heading", failedState(listFailed)));
   else if (listPending) out.push(cs.sec("screen.dash-project.activity.heading", cs.state({ state: "loading" }, () => "")));
   else if (row) {
-    const names = Array.isArray(row.members) ? row.members.map((m) => P.who(cs, m)).filter(Boolean) : [];
+    const names = Array.isArray(row.members) ? row.members.map((m) => whoIs(m)).filter(Boolean) : [];
     const weeks = Array.isArray(row.activity) && row.activity.length === 8 ? row.activity.map((n) => Number(n) || 0) : null;
     const older = weeks ? weeks[0] + weeks[1] + weeks[2] + weeks[3] : 0, newer = weeks ? weeks[4] + weeks[5] + weeks[6] + weeks[7] : 0;
     const said = newer === 0 || newer * 2 < older ? "shell.glance.quiet" : newer * 2 >= older * 3 ? "shell.glance.busy" : "shell.glance.steady";
@@ -371,5 +379,5 @@ const words = Object.freeze([
 
 /** The project's dashboard (interface-shell R21), with the module's shared readers as its parts. */
 export function dashProjectScreen(parts) {
-  return Object.freeze({ id: "dash-project", reads, place, render, acts, words, parts });
+  return Object.freeze({ id: "dash-project", reads, place, render, acts, words, parts: Object.freeze({ ...parts, named }) });
 }

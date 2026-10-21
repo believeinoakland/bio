@@ -165,11 +165,13 @@ test("R3 acts send what their owners take", async () => {
   await nextPage(p);
   fill(p, { "document-cite-question": Q, "document-cite-role": "cuts_against" });
   await press(p, "cite", { within: main(p).querySelectorAll("blockquote")[0].nextElementSibling });
-  const cite = p.byOp("cite")[0].query;
-  assert.deepEqual([cite.project, cite.role, JSON.parse(cite.found)], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, kind: "passage" }]);
+  /* R125 (C31): the fields are in the body, not the address */
+  const cite = p.byOp("cite")[0].body;
+  assert.deepEqual([cite.project, cite.role, typeof cite.found === "string" ? JSON.parse(cite.found) : cite.found], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, kind: "passage" }]);
   await press(p, "attest");
   await p.click(p.root().querySelector('[data-shell="confirm"]'));
-  assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA });
+  /* R55 (C40): the co-archive is asked for a public https address */
+  assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA, archive: true, locator: "https://example.org/ai-4-12.pdf" });
   await press(p, "monitor");
   assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: D });
   /* R78: the picker draws the record's page 8 as its own 9; the extent sent is the record's number */
@@ -201,7 +203,7 @@ test("R3 release and retire act on a selection of this document, made first, and
   await p.click(dlg.querySelector('[data-shell="confirm"]'));
   await p.settle();
   assert.deepEqual([p.byOp("retire")[0].query.handle, p.byOp("retire")[0].query.reason], ["SEL-9", "superseded"]);
-  assert.ok(p.root().textContent.includes("This copy is cited by a question"), "the shell draws the plane's refusal beside the act");
+  assert.ok(p.root().textContent.includes(word("screen.document.retire.refused.cited", { questions: "" }).split("  ")[0].slice(0, 20)), "R123: the refusal is drawn beside the act in its own sentence, by key");
 });
 
 test("R3 controls: a release, a transcription and a claim with nothing written are refused by their words; no question to cite in, no cite", async () => {

@@ -129,6 +129,8 @@ export function plane(o = {}) {
     origins: ok({ ok: true, bundleId: D, origins: [] }),
     provenanceroutes: ok({ ok: true, bundleId: D, state: "verified", objectType: "information", route: { applies: true, assessed: false, marked: false, finding: "NEVER_LOOKED" } }),
     transcriptions: ok({ ok: true, bundle_id: D, transcriptions: [], count: 0, truncated: false, cursor: null }),
+    /* interface-shell R111 (C94): the roster `memberlist` answers, id to handle, for the handles these fixtures name */
+    memberlist: ok({ ok: true, members: ["dev", "mai", "rosa", "ben", "ana"].map((h) => ({ member_id: h, handle: h })) }),
     ...(o.plane || {}),
   };
 }

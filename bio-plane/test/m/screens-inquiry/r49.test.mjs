@@ -24,7 +24,7 @@ test("R49 R61 a document captured for question Q in project P draws Q preselecte
   assert.deepEqual(values(p), [Q, Q2, OTHER], "P's questions first, then the others she may cite into; with one preselected no choose option is drawn (R118)");
   assert.equal(choice(p).value, Q, "Q preselected");
   await press(p, "cite", { within: cite(p) });
-  assert.equal(p.byOp("cite")[0].query.project, Q, "the passage is cited into the question the capture was held for");
+  assert.equal(p.byOp("cite")[0].body.project, Q, "the passage is cited into the question the capture was held for");
 });
 
 test("R49 R61 a captured question the list does not give is still offered, and preselected", async () => {

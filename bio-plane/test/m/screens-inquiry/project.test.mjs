@@ -48,7 +48,8 @@ test("R1 the project drawn: title, objective, stage, its questions with their st
   assert.deepEqual(rows[0].querySelectorAll(".cs-grade").map((g) => g.textContent.slice(-1)), ["B", "C"]);
   assert.equal(rows[1].querySelectorAll('.cs-gap[data-gap="unrated"]').length, 2);
   assert.ok(says(m, "screen.project.account.member"));
-  assert.deepEqual(actsIn(m).sort(), ["drawquestion", "findin", "planopen", "projectbarset", "projectleave", "projectstakeset", "promote"]);
+  /* changed in fix round 3 (DEC-394 (3a), R128): the registry lists `heldcaptures` on the project, drawn as "List this project's documents" */
+  assert.deepEqual(actsIn(m).sort(), ["drawquestion", "findin", "heldcaptures", "planopen", "projectbarset", "projectleave", "projectstakeset", "promote"]);
   assert.ok(!actsIn(m).includes("strengthbarset"), "the group's bar is never set from a project (R10)");
   await p.settle();
   assert.equal(p.byOp("inquirystrength").length, 2, "each strength read once, not at every redraw");

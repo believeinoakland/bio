@@ -470,7 +470,9 @@ test("R2 R39 (K3402) the question says who opened it, by handle from the record'
   assert.doesNotMatch(main(p).textContent, /\{name\}/);
   assert.ok(main(p).textContent.includes("The 2026 performance report"), "the document's title");
   for (const el of main(p).querySelectorAll("a.cs-ref, .rec, .mk-ev")) assert.doesNotMatch(el.textContent, /INFO-2026-0002-2026-118/, "never the record id");
-  /* control: a record that names no opener draws undetermined, never the placeholder */
+  /* control: a record that names no opener draws `screen.project.opened.date`, never an undetermined name and never the placeholder
+     (changed in fix round 3: R2, C44 now says so; it drew "Opened by" with an undetermined name) */
   const none = await open(at, { images: { [Q]: { "bundle.md": md } }, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
-  assert.ok(main(none).querySelector(".mk-sub").textContent.includes(lead("screen.question.opened") + word("state.undetermined", { reason: "" }).trim()));
+  assert.ok(main(none).querySelector(".mk-sub").textContent.includes(word("screen.project.opened.date", { date: day("2026-10-03") }).trim()));
+  assert.doesNotMatch(main(none).querySelector(".mk-sub").textContent, /\{name\}/);
 });
