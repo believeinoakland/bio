@@ -366,3 +366,7 @@ The family ops have no declared row; their shape is the family's kind (READ, SIG
 (a) Derive the op names from keysOf(fileSafetyOps) and the family kinds from OP_FAMILIES['file-safety'], and read each declared op's row from its owner's DECLARED_OPS. The kind shapes (READ, SIGHT, ADMIN_ACT) remain in the test as the model of each kind, not as a list of ops. This is about a day of test rewrite across four tests.
 (b) Keep the per-op table and say so in the ruling: a hand list of the family's op names is the test's own model of R32, and K3268 does not cover op names owned by this module's family table.
 I will not start the rewrite until you pick (a) or (b).
+
+## J27 · REPORT
+
+Re B29: capturecredentiallist has its spec under registration; my earlier 'no spec' was a misreading. Checked under register-owners: OPS holds it (classes admin and member, machineClasses [], mutating false), SESSION_OPS.member and .admin hold it, NEEDS is null. What is missing is affordances' text: it is not in ACT_HELP and in no ACT_HELP_ABSENT ground, so it is one of the 22 in t36.test.mjs:303 (the R34 partition), which B28 holds for AFFORDANCES #41. Nothing for this module to fix; the owner's declaration (capture-sources/ops.mjs:30) is correct. The t42 'named, no spec' result I saw earlier came from my own grounding of it in an unregistered test world, which I reverted.
