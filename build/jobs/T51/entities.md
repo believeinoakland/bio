@@ -159,3 +159,7 @@ Best reading and my plan unless you say otherwise: keep look-first as the defaul
 **Tests and checks.** `node --test --test-force-exit bio-plane/test/m/entities/`: 156 pass, 0 fail. Users run (offices created): actions 147/1 (the expected red above), duties, instance-setup, filings, escalation, conformance, consequences, following, people, screens-action 229, screens-settings 246/1, retrieval-browse, op-grades, op-declarations 244/1, affordances, money, lines, events, calculations, wizard-scripts, inquiry, bias, case-disclosures, screens-entry, screens-investigate: all pass but the three named; screens-settings (R15 C84) and op-declarations (R34) fail identically on `tranche/T51`'s tip. format, architecture, coverage (64 of 64), words, ownership: 0 failures. No generated artifact edited; `bio-plane/dist` still embeds entities' source (stale, BOB regenerates).
 
 Size (session_01KsYNk1nPchfRUwMdahprpu): test runs 12, module lines 3,150
+
+## J10 · COMPLETE
+
+COMPLETE (ENTITIES #19): C64-more provider met (look-first for a member's office, existed:true, nothing written); four fields, proposed R65 line and counts are in build/jobs/T51/entities.md. Entities 156 pass; checks 0 failures. One expected red: actions t33 'R9 R47 actionCreate fills an office arm's entity id...' (B10). No open question.
