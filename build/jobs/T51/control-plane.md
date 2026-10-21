@@ -264,3 +264,15 @@ control-plane fix round 2 (C15, C52, C12, contradictionflag): built and pushed (
 **Reds on the tranche that are not mine:** op-grades R42, R46 (`capturerequests` is rungless with no mark; fails identically with my change reverted); plane R24 (a screen title words check, as cause-capture-t51 found).
 
 **Generated, stale:** `setup-words/rows.mjs` lacks `control-plane.declared.interfacewords` (my new `localize` key); regenerate with `node bio-plane/src/setup-words/build.mjs`.
+
+## Completion (fix round 2, B16/B17)
+
+**Causes met.** C15: R116 (cache, etag/304, gzip, `interfacewords` declared in `DECLARED_OPS`; `t51-interfacewords`, `declared-ops`). C52: R20, R29 pinned through the real door over the real review, two drafts (`t51-reviewcomment`); no door change. C12: R105, R115 (`kept` held/nothing/undetermined, detail by key; `t51-acquire-timings`), continuation answer relayed whole (R58). `contradictionflag`: gated and stamped from its owner's declaration (`t51-contradictionflag`); no row of mine. Requirements R105, R112, R116 amended (BOB accepted, K4326).
+
+**Deferred.** None. Words owed to the design stream: `refusal.ACQUIRE_TIMED_OUT.held`, `.undetermined` (read when they exist).
+
+**Other modules.** affordances `register-owners.mjs` should register contradiction's `DECLARED_OPS` (catalogue 'N345's ops' red); op-grades R42, R46 (`capturerequests`) and plane R24 red on the tranche without my change.
+
+**Checks.** control-plane suite 340/340; format 0; architecture 0; coverage 84/84; words 0 for control-plane; ownership: only `build/requirements/control-plane.md` (accepted).
+
+Size (session_018BaB4jyWLrTAiLbGV6EXVS): test runs 9, module lines 3,990

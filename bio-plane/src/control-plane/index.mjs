@@ -58,7 +58,7 @@ import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, to
    it), asked of the Worker environment alone. */
 import { AiRuns } from "../ai-runs/index.mjs";
 /* R99 (T49; K3366, K3368; DEC-257, DEC-258): every member-facing sentence is read by key through setup-words. */
-import { word } from "../setup-words/index.mjs";
+import { word, hasWord } from "../setup-words/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { instanceGroupOp, groupIdentityOp, groupLogoAsset } from "../setup.mjs";
@@ -201,6 +201,11 @@ const ACQUIRE_BOUND_MS = 25000;
    object states for it (`stageTimes`): `held` once its stage `receipt` (the capture's record, acquisition R13) has ended, for the
    attestation, the profile and the rest come after it and never undo it (R20); `nothing` while it had not; `undetermined` when the
    object states no stage (a call with no trace, or an object that answers none), where the door claims nothing. */
+/* the design's key for each state; the two it was asked for (K4326) are read when the design holds them, never a sentence of this module's */
+function detailKey(kept) {
+  const key = kept === "nothing" ? "refusal.ACQUIRE_TIMED_OUT" : `refusal.ACQUIRE_TIMED_OUT.${kept}`;
+  return kept === "nothing" || hasWord(key) ? key : null;
+}
 function keptOf(times) {
   const stages = times && typeof times === "object" && times.stages && typeof times.stages === "object" ? times.stages : null;
   if (!stages) return "undetermined";
@@ -2307,7 +2312,7 @@ export function makeFetch(hooks = {}) {
         const stages = await acquireStages();
         const kept = keptOf(stages);
         return json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op, store: storeName, tokenClass: cls,
-                      ...(kept === "nothing" ? { detail: word("refusal.ACQUIRE_TIMED_OUT") } : {}), kept, timings: stages }, 504);
+                      ...(detailKey(kept) ? { detail: word(detailKey(kept)) } : {}), kept, timings: stages }, 504);
       }, (e) => { clearTimeout(timer); throw e; });
     };
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,

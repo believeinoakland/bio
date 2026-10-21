@@ -9,7 +9,7 @@ import { O, world, call, opCalls, hex64, member, FORGED } from "./harness.mjs";
 import { ok, callers, routesForSessions } from "./door-routes.mjs";
 
 const { OPS, OP_STAMPS, NEEDS } = O;
-const FLAG = { here: { capture: "a".repeat(64), extent: "p1" }, other: { capture: "b".repeat(64), extent: "p2" }, reason: "they give different dates" };
+const FLAG = { here: { capture: "a".repeat(64), extent: "p1" }, other: { capture: "b".repeat(64), extent: "p2" }, reason: "r1" };
 
 test("R2, R26 (contradiction R61): `contradictionflag` is an op with a spec, a member's act that needs `contribute`, stamped `author` and `viewer`, and no machine credential reaches it", () => {
   assert.ok(Object.hasOwn(OPS, "contradictionflag"), "the registration took the owner's row");
