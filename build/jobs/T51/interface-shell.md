@@ -246,3 +246,17 @@ The frame's own `queue` read (`browser.mjs`, the masthead/rail count) asked `lim
 Module suite 269 of 269; format, architecture, coverage (108 of 108), words 0 failures. The J17 line for R112 stands.
 
 Size (session_018xL836aY5gPSaoL972peEg): test runs 12, module lines 3004
+
+## J19 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #14 · fix round 3, wave 2 provider · C51* (SCREENS-PUBLISH #15's REPORT, K4398).
+
+**Met: interface-shell R116** (`cs.signer.sign(statements, {keyFile})`). `keyFile` is the text `cs.keyFile` answered (or its `{ok, text}` answer). With no key held the sign dialog then draws no key-file box and asks only the passphrase; a wrong passphrase is refused beside the dialog and the text is kept for the retry; the right one signs with that key. With a key held `keyFile` is not used and the dialog asks neither a file nor a passphrase. A `BIOKEY-RAW1.` file given this way signs on a blank passphrase. The existing dialog path (no `keyFile`, the file box and `cs-key-file` filled by id) is unchanged, so screens-publish's merged code works as before. SCREENS-SETTINGS can use `cs.signer.sign(list, {keyFile: (await cs.keyFile(id)).text})`. No new words, no new census op.
+
+**Tests** (`signer.test.mjs`, written first and seen failing: the dialog still drew `#cs-key-file`): "R116 a screen signs with a key file's text and no key held …" (file made by `register({passphrase, defer})`, wrong then right passphrase, verified with `verifySshsig`, no key or passphrase in storage or any request) and "R116 control: with a key held …" (held key signs, no file box or passphrase field; the RAW1 file signs). Also named R114 and R115 in the titles of their existing tests (`cause3.test.mjs`), which coverage found unnamed in my module.
+
+**Runs.** `bio-plane/test/m/interface-shell/`: 283 tests, 282 pass, 1 fail: `kit.test.mjs` R50 "scanmirror: declared by its owner" — red on the tranche tip too (before my change: 281 tests, 1 fail); `op-declarations` does not yet declare `scanmirror` (file-safety R49 / RC-7 provider). Named, not fixed. `build/plan/impact.mjs tranche/T51 HEAD`: affected modules 0 of 175 (the change is inside the shell's program; no other module's tests read it). Checks: format 0 failures; architecture 0; coverage for interface-shell 113 of 113, 0 failures; ownership 0 failures. The whole-product coverage and words runs show reds in other modules only (agent-harness, agent-runner, control-plane, entities, installer-steps, journey-check, op-grades, screens-publish; words in `op-grades` t33/t51), none in my files.
+
+**Reported to BOB.** The R50 red above (needs `scanmirror` declared by `op-declarations`). Proposed requirement line: none; R116 is already written. Deferred: none. Nothing found in another module beyond the above.
+
+Size (session_01NH5dcSiHndngPRW6Doo7DH): test runs 6, module lines 2630
