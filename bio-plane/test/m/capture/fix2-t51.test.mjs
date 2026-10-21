@@ -142,7 +142,7 @@ test("R77 R88 (C14): 60 held rows are answered in a bounded number of store read
   assert.ok(c.n <= 40, `${c.n} reads for the vouched list of ${r3.held.length} rows`);
 });
 
-test("R77 R88 (C14): the picker read returns the same rows with fewer fields (the document, its title, its capture's digest, its standing) and asks nothing of the examination, the questions or the archives", async () => {
+test("R77 R88 (C14): the picker read returns the same rows with fewer fields (the document, its title, its source, when collected, its capture's digest and actor, its standing) and asks nothing of the examination, the questions or the archives", async () => {
   const w = bigWorld(60);
   const full = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 1000, state: "held_and_vouched" });
   w.asked.examined = 0; w.asked.read = 0;
@@ -151,7 +151,7 @@ test("R77 R88 (C14): the picker read returns the same rows with fewer fields (th
   assert.deepEqual(pick.held.map((r) => r.bundle_id), full.held.map((r) => r.bundle_id), "the same rows in the same order");
   assert.deepEqual(pick.held.map((r) => [r.title, r.capture ? r.capture.sha256 : null, r.standing]),
                    full.held.map((r) => [r.title, r.capture ? r.capture.sha256 : null, r.standing]));
-  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["bundle_id", "capture", "project", "standing", "title"], "fewer fields");
+  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "project", "source", "standing", "title"], "fewer fields");
   assert.deepEqual([w.asked.examined, w.asked.read], [0, 0], "the examination and the questions are not asked");
   assert.ok(k.n <= 6, `${k.n} reads`);
   assert.deepEqual([pick.state, pick.limit, pick.truncated, pick.next], [full.state, full.limit, full.truncated, full.next], "the page is the same");
@@ -247,4 +247,75 @@ test("R96 (C26): a baseline with no determined digest cannot tell whether the si
   assert.equal(plain.changed.state, "undetermined");
   /* a conditional 304 is unchanged as before; a look that fails is undetermined as before */
   assert.equal((await checkAt((await heldCopy(ORIGINAL)).f, "gone", { status: 410 })).changed.state, "undetermined");
+});
+
+/* ---------- fix round 2, cause 1 (K4326): the held read grades a page in one batch ---------- */
+
+/* provenance with the batch (its R71) and the single grade, each counted */
+const batchWorld = (n) => {
+  const w = bigWorld(n);
+  const calls = { batch: [], single: [] };
+  const grade = (d) => ({ grade: "B", route: "direct", determined: true, basis: "measured", why: `fetched ${d.slice(0, 6)}` });
+  w.c.provenance = Object.assign(w.c.provenance, {
+    captureGrade(d) { calls.single.push(d); return grade(d); },
+    captureGrades(ds) { calls.batch.push([...ds]); return ds.map(grade); },
+  });
+  return { ...w, calls, grade };
+};
+
+test("R77 (K4326; provenance R71): a page of held captures is graded in one captureGrades call, each distinct digest once, and the answers equal the per-capture ones; captureGrade is not asked", async () => {
+  const w = batchWorld(40);
+  const r = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 1000, state: "held_and_vouched" });
+  const withCapture = r.held.filter((x) => x.capture);
+  assert.ok(withCapture.length > 20);
+  assert.equal(w.calls.batch.length, 1, "one batch for the page");
+  assert.deepEqual(w.calls.single, [], "no capture is graded on its own");
+  assert.deepEqual([...w.calls.batch[0]].sort(), [...new Set(withCapture.map((x) => x.capture.sha256))].sort(), "each distinct digest asked once");
+  for (const x of withCapture) assert.deepEqual(x.capture.grade, w.grade(x.capture.sha256), x.bundle_id);
+  /* each page is its own batch */
+  const two = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 5 });
+  assert.equal(w.calls.batch.length, 2);
+  assert.equal(w.calls.batch[1].length, two.held.filter((x) => x.capture).length);
+});
+
+test("R77 (K4326) control: an empty page reads no grade; a provenance with no batch is asked per capture as before; a batch that throws, or answers no list or non-objects, reads each grade null with the digest still named", async () => {
+  const w = batchWorld(6);
+  const none = await w.c.heldCaptures({ viewer: "junk", now: NOW, limit: 10 });
+  assert.deepEqual(none.held, []);
+  assert.deepEqual([w.calls.batch.length, w.calls.single.length], [0, 0], "an empty page reads nothing");
+  /* no batch served */
+  const old = batchWorld(6);
+  old.c.provenance.captureGrades = undefined;
+  const o = await old.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 1000 });
+  assert.equal(old.calls.single.length, new Set(o.held.filter((x) => x.capture).map((x) => x.capture.sha256)).size);
+  assert.ok(o.held.filter((x) => x.capture).every((x) => x.capture.grade?.grade === "B"));
+  for (const captureGrades of [() => { throw new Error("down"); }, () => "x", () => null, (ds) => ds.map(() => "B"), async (ds) => ds.map(() => ({ grade: "B" }))]) {
+    const b = batchWorld(6);
+    b.c.provenance.captureGrades = captureGrades;
+    const x = await b.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 1000 });
+    const held = x.held.filter((r) => r.capture);
+    assert.ok(held.length >= 3 && held.every((r) => r.capture.grade === null && /^[0-9a-f]{64}$/.test(r.capture.sha256)), String(captureGrades));
+  }
+});
+
+/* ---------- fix round 2, cause 2 (K4326): the picker row's source, collected_since and actor ---------- */
+
+test("R77 (K4326): the picker row carries source, collected_since and actor exactly as the full row gives them, nothing heavier (no grade, no questions, no eligibility, no bytes); the full read is unchanged", async () => {
+  const w = batchWorld(60);
+  const full = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 1000, state: "held_and_vouched" });
+  const batches = w.calls.batch.length;
+  const k = counting(w.s);
+  const pick = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 1000, state: "held_and_vouched", fields: "picker" });
+  assert.ok(k.n <= 8, `${k.n} reads`);
+  assert.equal(w.calls.batch.length, batches, "the picker asks no grade");
+  assert.deepEqual(pick.held.map((r) => [r.bundle_id, r.source, r.collected_since, r.actor]), full.held.map((r) => [r.bundle_id, r.source, r.collected_since, r.actor]));
+  assert.ok(pick.held.some((r) => r.source) && pick.held.some((r) => r.actor) && pick.held.some((r) => !r.actor) && pick.held.some((r) => !r.source), "the world holds every shape");
+  for (const r of pick.held) for (const heavy of ["grade", "captured_for", "eligible", "bytes", "retrieved", "age_days", "archive", "files"]) assert.equal(heavy in r, false, heavy);
+  /* control: the full read is as it was */
+  const again = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, limit: 1000, state: "held_and_vouched" });
+  assert.deepEqual(again, full);
+  /* control: a viewer's sight limits the picker as it limits the list */
+  const m2 = await w.c.heldCaptures({ viewer: "member:m2", now: NOW, limit: 1000, fields: "picker" });
+  const m2full = await w.c.heldCaptures({ viewer: "member:m2", now: NOW, limit: 1000 });
+  assert.deepEqual(m2.held.map((r) => r.bundle_id), m2full.held.map((r) => r.bundle_id));
 });

@@ -211,8 +211,8 @@ export const HELD_SORTS = Object.freeze(["age", "source", "project"]);
    restores from (R81); T51: `held_and_vouched`, the held ones with the documents a member has vouched for. */
 export const HELD_STATES = Object.freeze(["held", "set_aside", "held_and_vouched"]);
 /* R77 (T51; C14): the rows `heldCaptures` answers: `full` (R77's fields) or `picker`, the cheap read for a screen that lists documents
-   to choose among: the document, its title, its project, its capture's digest and its standing, and nothing that asks the
-   examination, the questions or the archives. */
+   to choose among: the document, its title, its project, its source, when it was collected, its capture's digest and actor and its
+   standing, and nothing that asks the examination, the questions, the archives or a grade. */
 export const HELD_FIELDS = Object.freeze(["full", "picker"]);
 /* R77 (DEC-167 (8); K1881, BOB's): the most held files an archive's row carries; the rest are read through
    `acquisition.archiveList`. */
@@ -1415,8 +1415,12 @@ export class Capture {
     /* R77 (T51; C14): what the page's rows need of the store is read for the whole page at once, never for each row in turn. */
     const facts = this.#pageFacts(page.map((r) => r.bundle_id), { aside, vouched, picker: shape === "picker" });
     if (shape === "picker") {
+      /* R77 (T51 fix round 2): and the three a screen's to-do reads of a row: `source`, `collected_since` and `actor`, as the full row gives them. */
       const rows = page.map((r) => ({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
+                                      source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
+                                      collected_since: r.since,
                                       capture: facts.first.has(r.bundle_id) ? { sha256: facts.first.get(r.bundle_id).capture_sha } : null,
+                                      actor: this.#captureFacts(facts.first.get(r.bundle_id) ?? null, facts).actor,
                                       standing: r.standing === VOUCHED_STATE ? VOUCHED_STATE : "collected" }));
       return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
                next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
@@ -1424,18 +1428,9 @@ export class Capture {
     /* R91: R78's examination and the archive grouping, asked once for each document the page shows, together, under the
        page's one wait. */
     const answers = await this.#pageAnswers(page, { viewer, rowOf, vouched, facts });
-    const grades = new Map();
-    const gradeOf = (sha) => {
-      if (!grades.has(sha)) {
-        let grade = null;
-        try {
-          const g = typeof this.provenance?.captureGrade === "function" ? this.provenance.captureGrade(sha) : null;
-          grade = g && typeof g === "object" && typeof g.then !== "function" ? g : null;
-        } catch { grade = null; }
-        grades.set(sha, grade);
-      }
-      return grades.get(sha);
-    };
+    /* R77 (T51 fix round 2; C14): the page's captures are graded in one batch (provenance R71), never one read for each. */
+    const grades = this.#gradesOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha));
+    const gradeOf = (sha) => grades.get(sha) ?? null;
     const rows = [];
     for (const r of page) {
       const since = Date.parse(r.since);
@@ -1456,6 +1451,30 @@ export class Capture {
     }
     return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+  }
+
+  /* R77 (T51 fix round 2; C14's bound): the grades of a page's captures, a Map from digest to `provenance.captureGrade`'s
+     answer whole, read in ONE batch (`provenance.captureGrades`, its R71), each distinct digest once; a digest nothing answers
+     for, or an answer that is no object (a promise, a string), maps to null, as a throw of the whole batch does. A provenance
+     that serves no batch is asked one digest at a time, as before. An empty page asks nothing. */
+  #gradesOf(shas) {
+    const out = new Map();
+    const distinct = [...new Set(shas.filter((s) => typeof s === "string" && s))];
+    if (!distinct.length) return out;
+    const plain = (g) => (g && typeof g === "object" && typeof g.then !== "function" ? g : null);
+    try {
+      if (typeof this.provenance?.captureGrades === "function") {
+        const got = this.provenance.captureGrades(distinct);
+        distinct.forEach((s, i) => out.set(s, Array.isArray(got) ? plain(got[i]) : null));
+      } else {
+        for (const s of distinct) {
+          let g = null;
+          try { g = typeof this.provenance?.captureGrade === "function" ? plain(this.provenance.captureGrade(s)) : null; } catch { g = null; }
+          out.set(s, g);
+        }
+      }
+    } catch { for (const s of distinct) out.set(s, null); }
+    return out;
   }
 
   /* R88 (T51): a row's `standing`, `collected` or `verified`, and for a vouched one `vouched: {by, at}`, the author and
@@ -1501,7 +1520,7 @@ export class Capture {
                  (`data/provenance.json`, acquisition R17), so that a capture profiled as no archive is not asked of the archive's
                  listing, and a document whose profile cannot be read is;
        opened    the captures acquisition recorded opening as archives.
-     `picker` reads only the captures. Each read that fails reads as nothing known, which the row states as it always has. */
+     `picker` reads only the captures and their actors. Each read that fails reads as nothing known, which the row states as it always has. */
   #pageFacts(bundleIds, { aside = false, vouched = false, picker = false } = {}) {
     const facts = { captures: new Map(), first: new Map(), actor: new Map(), retrieved: new Map(), asks: new Map(),
                     setAside: new Map(), history: new Map(), formats: new Map(), opened: new Set() };
@@ -1517,11 +1536,11 @@ export class Capture {
       facts.captures.get(r.bundle_id).push(r.capture_sha);
       if (Number(r.rn) === 1) facts.first.set(r.bundle_id, { capture_sha: r.capture_sha, bytes: r.bytes });
     }
-    if (picker) return facts;
     const shas = JSON.stringify([...facts.first.values()].map((r) => r.capture_sha));
     for (const r of read(`SELECT capture_sha, actor FROM (SELECT capture_sha, actor, ROW_NUMBER() OVER (PARTITION BY capture_sha ORDER BY at, actor) AS rn
                              FROM capture_actors WHERE capture_sha IN (SELECT value FROM json_each(?))) WHERE rn = 1`, shas))
       facts.actor.set(r.capture_sha, r.actor);
+    if (picker) return facts;
     for (const r of read(`SELECT capture_sha, first_retrieved AS at FROM (SELECT capture_sha, first_retrieved, ROW_NUMBER() OVER (PARTITION BY capture_sha
                              ORDER BY julianday(first_retrieved), first_retrieved) AS rn FROM captured_locators
                             WHERE capture_sha IN (SELECT value FROM json_each(?))) WHERE rn = 1`, shas))
