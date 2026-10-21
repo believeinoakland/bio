@@ -79,7 +79,7 @@ test("R12 the materials: and material_attestations: blocks round-trip as flat ro
   assert.deepEqual(fm.materials.map((r) => Object.keys(r)), MATERIALS.map(() => [...CG.MATERIAL_FIELDS]), "flat rows");
   assert.deepEqual(fm.material_attestations.map((r) => Object.keys(r)), ATTESTATIONS.map(() => [...CG.MATERIAL_ATTESTATION_FIELDS]));
   const m = CG.materialsOf(fm);
-  assert.deepEqual(m.materials, MATERIALS.map((r) => ({ ...r, obscured: null })),
+  assert.deepEqual(m.materials, MATERIALS.map((r) => ({ ...r, title: null, obscured: null })),
                    "every material as written, included and rests_under as handed; a row stating no obscured answers null");
   assert.deepEqual(m.attestations, [
     ATTESTATIONS[0],
@@ -101,7 +101,7 @@ test("R12 the writer says nothing it was not handed: a kind or rests_under outsi
     attestations: [{ ref: "R", by_kind: "friend", by: "x", level: "name", signature: "s" },
                    { ref: "R", by_kind: "member", by: "y", level: "boss", signature: "t" }] }))));
   assert.deepEqual(odd.materials, [{ ref: "R", kind: null, sha: null, text_sha: null, origin: null, archived_copy: null,
-                                     included: false, rests_under: null, obscured: null }]);
+                                     included: false, rests_under: null, title: null, obscured: null }]);
   assert.deepEqual(odd.attestations, [
     { ref: "R", by_kind: null, by: "x", level: null, at: null, signature: "s", recorded_in: null },
     { ref: "R", by_kind: "member", by: null, level: null, at: null, signature: null, recorded_in: null }],

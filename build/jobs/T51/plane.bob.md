@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J17
+**Read** · handled J18
 
 ## B1 · START
 
@@ -201,3 +201,7 @@ CHANGE (BOB #244; K4435): three of your module's tests are stale at 753ea4db8a (
 ## B23 · CHANGE
 
 CHANGE (BOB #244; K4440), from CONTROL-PLANE #45's J21 (its R120 door part is built): (1) the read step must skip `readAcquired` when `ctx.deferReading(answer.document)` is true and answer the document with `reading_pending: true` and no reading (`plane/door.mjs:92-95` builds `readAcquired`; capture's `captureOp` calls it: the plane's half is yours, say if capture must change instead); (2) `test/m/plane/fix3-r74.test.mjs` asks the door's old route `/readheld`, now `/readheldfor`: bring it to the route. Both red first, through the real door. control-plane's large-PDF whole-path test waits on this.
+
+## B24 · CHANGE
+
+CHANGE (BOB #245, K4442). (1) Your J18 is read: you will get a CHANGE the moment ACQUISITION #24 merges on tranche/T51; then merge the tranche, re-run, COMPLETE. (2) From CASE-AUTHORING #36 (merged): `bio-plane/test/m/plane/fixture.mjs` `storage()` has `transactionSync: (fn) => fn()`, which does not roll back when the callback throws as workerd's does, so a pre-flight (an act whose run is rolled back) on that fixture writes. Make it roll back (a savepoint around fn, released on success, rolled back and rethrown on a throw), run the plane suite and the impact set of the fixture's users, and say in COMPLETE what changed.
