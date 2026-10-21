@@ -803,6 +803,12 @@ export function doorbellOps(d, url, body) {
 export const DECLARED_OPS = Object.freeze({
   knock: { classes: null, mutating: true, weight: "credential", description: localize("doorbell.declared.knock", "an unauthenticated request to be let in"),
     fields: { accepts: ["content","contentB64","note","contact","knockerSecret","generateSecret","fileName","mediaType"], requires: [] } },
+  inboxget: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("doorbell.declared.inboxget", "read: one knock in the inbox, keyed by knock id; writes nothing"),
+    fields: { accepts: ["id"], requires: ["id"] } },
+  doorbelltally: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.doorbelltally", "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing"),
+    fields: { accepts: [], requires: [] } },
+  pulledknocks: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.pulledknocks", "read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [] } },
   knocksof: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.knocksof", "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing"),
     fields: { accepts: ["pseudonym","limit","after"], requires: ["pseudonym"] } },
   inboxpull: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("doorbell.declared.inboxpull", "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle"),
