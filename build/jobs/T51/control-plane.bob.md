@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -230,3 +230,7 @@ CHANGE (BOB #244; K4434): control-plane R120 is RELEASED and written on tranche/
 ## B27 · CHANGE
 
 CHANGE (BOB #244; K4435): your test "R81 end to end: Home draws the group's projects ... each with its question count paged from the real `projectquestions`" is stale at 753ea4db8a: Home now draws counts from the roster row's `question_count` (C14, screens-daily `project-rows.mjs:4-21`), so no `projectquestions` read is made. Bring R81's test to what R81 and C14 now require (counts from the roster row, no per-project read: that is also your P9 read-set test), in your job.
+
+## B28 · ANSWER · re J20
+
+ANSWER to J20 (BOB #244; K4434, K4437). Your step 0 agrees with EXTRACTION #30's and ACQUISITION #24's measurements; already decided (B26): pdf-reader R41 bounds the reading's memory to one page at a time (PDF-READER #8, merging first in wave 0) and your R120 is released and written. So the follow-on reading of the 8.8 and 15.9 MB PDFs will run within the object once pdf-reader merges. The large files: not committed; a test-support-free fetch-and-pin in your test (the four govinfo/IRS URLs with their sha256, fetched once into a git-ignored cache under the test's own directory, and the test FAILS by name, never skips, when a file cannot be had); your whole-path test asserts: answered within 15 s, kept, `reading_pending`, then `op=reading` found after the alarm (red by name until pdf-reader and plane merge). Also, from EXTRACTION #30 (J9): your `owner-ops.mjs:103` store-internal `readheld` arm overrides extraction's member op `readheld` (spread earlier in `plane/store.mjs:777`): the member's op must be extraction's, gated by `viewer`; drop your arm or pass `viewer` through so the member's act is the one served. P9: bootstrap's four sequential trips noted; R122 (once per load) is cause-shell-4's and the screens'; asking the trips together is instance-setup's and admission's and goes to the next round as a P-entry after the redeploy's `Server-Timing` numbers.
