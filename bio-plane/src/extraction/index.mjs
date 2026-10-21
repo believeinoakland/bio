@@ -1950,7 +1950,7 @@ export function extractionOps(x, url, body, env) {
        as a viewer who may see nothing, never as the door's own call. */
     readheld: () => {
       const sha = q("sha") ?? (body && body.sha);
-      if (typeof sha !== "string" || !sha) return noSha("a read of a held document is about one captured document, named by its fingerprint");
+      if (typeof sha !== "string" || !sha) return noSha(localize("extraction.index.readheld_no_sha", "a read of a held document is about one captured document, named by its fingerprint"));
       return x.readHeld({ sha, viewer: q("viewer") ?? "", storeName: q("store") || "bio", env });
     },
     /* R71: the control plane's stamps in the query; `by` is its author stamp. */
@@ -1966,7 +1966,7 @@ export function extractionOps(x, url, body, env) {
 export const DECLARED_OPS = Object.freeze({
   pagetranscribe: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("extraction.declared.pagetranscribe", "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle"),
     fields: { accepts: ["sha256","project"], requires: ["sha256"] } },
-  readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
+  readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "undetermined", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
     fields: { accepts: ["sha"], requires: ["sha"] } },
   pdfstructure: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.pdfstructure.label.document",
     fields: { accepts: ["sha256","ocr"], requires: ["sha256"] } },
