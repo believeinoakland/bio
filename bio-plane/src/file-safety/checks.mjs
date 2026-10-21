@@ -95,6 +95,10 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
      stand-in sentence until its row lands). */
   SIGNATURES_RUN_RECENT: row('C-140.44', at("scanMirror", "is-signature-run-due"), localize("refusal.SIGNATURES_RUN_RECENT",
     "Your team's Civicsmith checked for new signatures a few minutes ago, so it did not start another check just now. Try again in a quarter of an hour.")),
+  /* R50 (fix round 4, C84; K4429): the scanner shows a run alive (its stage under fifteen minutes old), so no second one was started.
+     Words owed by the design stream as `refusal.SIGNATURES_RUN_UNDER_WAY`; a stand-in sentence until its row lands. */
+  SIGNATURES_RUN_UNDER_WAY: row('C-140.45', at("scanMirror", "is-signature-run-under-way"), localize("refusal.SIGNATURES_RUN_UNDER_WAY",
+    "Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.")),
 });
 
 /* R6 (DEC-169 (1)): each reason a file is high risk, in the words "Opening a file" shows beside the mark, each the words of

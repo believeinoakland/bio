@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const notice = (id, o = {}) => ({ notice: id, kind: "leg", holder: "INQ-1", ord: 0, target: "INF-1", content_id: "c".repeat(64),
   capture_sha: "a", newer_capture: "b", grade: "affected", affects: "the passage moved", raised_at: iso(NOW - 60000), state: "open", ...o });
@@ -22,6 +23,13 @@ test("R52: two notices of one newer version on one holder and target are one ite
 test("R52: a newer version of the same target is a new item", () => {
   const items = read([notice("RN-1"), notice("RN-2", { newer_capture: "c2" })]);
   assert.deepEqual(items.map((i) => i.id).sort(), ["FINDING::newer-capture-affects-reference::RN-1", "FINDING::newer-capture-affects-reference::RN-2"]);
+});
+
+test("R52 (C69): a newer capture no one has graded reads as undetermined, and its two notices are one item", () => {
+  const items = read([notice("RN-1", { grade: null }), notice("RN-2", { grade: null, ord: 1 })]);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].detail_key, "queue.newer-capture-affects-reference.detail");
+  assert.ok(items[0].detail.includes(`read as ${word("queue.fill.grade.undetermined")}.`), items[0].detail);
 });
 
 test("R52: control: the same newer version on another holder, or another target, is another matter", () => {

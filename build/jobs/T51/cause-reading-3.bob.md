@@ -1,6 +1,6 @@
 # BOB to cause-reading-3 (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
