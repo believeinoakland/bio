@@ -201,3 +201,7 @@ capturecredentiallist IS declared by its owner (capture-sources/ops.mjs:30, DECL
 ## B31 · CHANGE
 
 AFFORDANCES #41 merged into tranche/T51 (K4381) with help text for 28 ops; my list to it omitted capturecredentiallist. Merge tranche/T51 and re-run t36: report which ops t36.test.mjs:303 still names (I expect capturecredentiallist only); do not ground any. Still waiting on officeconfirm and captureseenin for you.
+
+## B32 · CHANGE
+
+capture R101 merged (K4391): op=captureseenin is declared by its owner (capture DECLARED_OPS). Merge tranche/T51 and let your tests read it as they read scanmirror's; officeconfirm follows when ENTITIES merges.
