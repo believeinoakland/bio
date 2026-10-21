@@ -1545,9 +1545,8 @@ const NON_ACTS_DATA = {
   publishatcancel: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishschedule: "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
   /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung.
-     K4247: store-door's declared sentence for this read is `store-door.declared.groupdescriptiondraft`, which the design's
-     word list does not key yet (words check, missingkey), so this row keeps its sentence until BOB rules (R51). */
-  groupdescriptiondraft: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
+     K4247, B28 (DEC-390): store-door's declared word for this read is keyed, so the row reads it (R51). */
+  groupdescriptiondraft: word("store-door.declared.groupdescriptiondraft"),
   writinghelp: word("act.writinghelp.does"),
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
      T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs, T42's in ./t42.mjs, T45's in

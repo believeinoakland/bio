@@ -98,3 +98,23 @@ export async function collectDeclaredOps(root) {
   }
   return { ops, owners, duplicates: Object.entries(who).filter(([, ids]) => ids.length > 1).map(([op, ids]) => ({ op, owners: ids })) };
 }
+
+/* ---- the registered instance (R42, R46; B27) --------------------------------------------------------------------------- */
+let registeredN = 0;
+/** A fresh instance of this module with every owner's `DECLARED_OPS` registered (R49, R50), so the rungless acts are the acts
+ *  no owner grades either: a grade an owner declares is read from the registered tables, never typed here. */
+export async function registeredOpGrades() {
+  const { ops, owners, duplicates } = await collectDeclaredOps(new URL("../../../../", import.meta.url).pathname);
+  if (duplicates.length) throw new Error(`an op declared twice: ${JSON.stringify(duplicates)}`);
+  const byOwner = {};
+  for (const [op, row] of Object.entries(ops)) (byOwner[owners[op]] ??= {})[op] = row;
+  const m = await import(`../../../src/op-grades/index.mjs?registered=${registeredN++}`);
+  m.registerDeclaredOps(byOwner);
+  return m;
+}
+
+/** op-declarations' alias table (R17, B27), read by path as the other modules' rows are: a test reads it, the module imports nothing. */
+export async function declaredAliases() {
+  const path = join(new URL("../../../../", import.meta.url).pathname, "bio-plane", "src", "op-declarations", "index.mjs");
+  return (await import(pathToFileURL(path).href)).OP_ALIASES;
+}

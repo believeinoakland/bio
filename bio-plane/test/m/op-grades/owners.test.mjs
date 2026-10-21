@@ -8,7 +8,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          aliased, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
-import { readRows, declaredSentence, doesSentence } from "./declared.mjs";
+import { readRows, declaredSentence, doesSentence, declaredAliases } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ");
@@ -291,10 +291,13 @@ test("R17: every op T34 declares carries the grade read from its owner, each gat
   notMachine([...Object.keys(T34_WRITES), ...T34_READS]);
 });
 
-test("R17: each of op-declarations R21's 27 aliases takes its op's very grade and reason through one frozen table — an "
-   + "alias never differs from its op", () => {
+test("R17: each of op-declarations R21's aliases takes its op's very grade and reason through one frozen table — an "
+   + "alias never differs from its op", async () => {
   assert.ok(Object.isFrozen(OP_ALIASES));
-  assert.equal(Object.keys(OP_ALIASES).length, 27);
+  /* the count is op-declarations' own alias table, read by path as the declared rows are (declared.mjs), never a written number (B27) */
+  const DECLARED_ALIASES = await declaredAliases();
+  assert.deepEqual(Object.keys(OP_ALIASES).sort(), Object.keys(DECLARED_ALIASES).sort());
+  assert.ok(Object.keys(OP_ALIASES).length > 0);
   /* K2054: `expunge` is no alias since K1901 (`personexpunge` is a declared op), so nothing grades it */
   assert.ok(!Object.hasOwn(OP_ALIASES, "expunge"));
   assert.deepEqual([RUNGS.expunge, RUNG_ABSENT.expunge, NON_ACTS.expunge], [undefined, undefined, undefined]);

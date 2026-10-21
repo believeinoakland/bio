@@ -39,6 +39,8 @@ const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
   default: `kit default at ${MARKS_KIT_COMMIT}: an op WEIGHT does not name is Reasoned`,
   dec300: localize("op-grades.marks.dec_300_5_over_the", "DEC-300 (5), over the kit at {MARKS_KIT_COMMIT}: the act weighs Reversible, so no mark is drawn for it", { MARKS_KIT_COMMIT: String(MARKS_KIT_COMMIT) }),
+  /* B30 (K4259): a read asks no reason, so it takes a read's mark (Reversible, as `sweeps`) rather than the kit's default */
+  read: localize("op-grades.marks.k4259_read_mark", "K4259, a ruling: a read asks no reason, so it takes a read's mark, Reversible, not the kit's default"),
 };
 
 /* [op, weight name, source key], in the op's name order */
@@ -219,7 +221,7 @@ const ROWS = [
   ["translationgrant", "Reasoned", "default"],
   ["unlock", "Reversible", "kit"],
   ["verify", "Reversible", "kit"],
-  ["versionnotice", "Reasoned", "default"],
+  ["versionnotice", "Reversible", "read"],
   ["websitekeycreate", "Reasoned", "default"],
   ["withdrawimported", "Reasoned", "kit"],
   ["wizards", "Reversible", "kit"],
