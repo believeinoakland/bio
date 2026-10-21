@@ -230,3 +230,15 @@ Checks: architecture acquisition 0 failures; ownership 0 failures.
 Open: P10 (c) as in J15 (record-core R88 ranged get, your CHANGE); R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s root cause unknown, for the redeploy's clocks.
 
 Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 33, module lines 3507
+
+## J17 · COMPLETE
+
+COMPLETE (B17 applied; ACQUISITION #24). `tranche/T51` merged (record-core R88 on it); head pushed on job/T51/acquisition.
+
+P10 (c) closed: `archiveProfile` asks the store for `get(digest, {range: {offset: 0, length: 1024}})` (`unpack.mjs`); `readThrough` passes a ranged get to the store uncached, and answers it from its cache when the whole part was already read (so a store with no stored checksum, whose provenance R7 check reads the part anyway, costs no extra read). Test (t50, "R48 (P10 c)"): a 4 MB non-ZIP held capture (stored with its checksum, as R2 holds it) answers NOT_AN_ARCHIVE and every bucket `get` carries the range offset 0, length 1024; red on the previous code (it asked for the whole object), green now; control: a real ZIP is still listed (2 entries). The fixture bucket now honours `range` and records the option.
+
+Suite 202 of 204. Reds: `R98 (fix round 4, C25)`, red by name until pdf-reader R40's `pdfTitle` merges; `R29 R31`, the design's `refusal.CAPTURE_NOT_KEPT` row. N-slow-refuse green (B16). Architecture acquisition 0 failures; ownership 0 failures.
+
+Open: R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s, root cause unknown, for the redeploy's clocks.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 36, module lines 3512
