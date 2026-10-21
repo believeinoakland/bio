@@ -1458,7 +1458,7 @@ export class Capture {
     if (!HELD_FIELDS.includes(shape)) return Capture.#badArgument("heldcaptures", "fields", HELD_FIELDS.join(" | "), shape);
     /* R77 (fix round 4; P10): `bundle_ids` names the documents a screen draws; only they are answered, in the page's order. */
     const picked = Capture.#idsOf(bundleIds);
-    if (picked === null) return Capture.#badArgument("heldcaptures", "bundle_ids", `a list of at most ${HELD_IDS_MAX} document ids`, bundleIds);
+    if (picked === null) return Capture.#badArgument("heldcaptures", "bundle_ids", localize("capture.index.bundle_ids_shape", "a list of at most {max} document ids", { max: HELD_IDS_MAX }), bundleIds);
     const cap = limitOf(limit);
     const from = after ? keyOf(after, 3) : null;
     if (after && !from) return badCursor();
