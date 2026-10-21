@@ -113,7 +113,7 @@ test("R104 (T50; N1174, B-14; DEC-299 (11), DEC-301 (3); R2, R82): an address ou
     assert.equal(r.status, 404, path);
     assert.match(r.headers.get("content-type"), /^text\/html/, path);
     assert.equal(r.headers.get("cache-control"), "no-store", path);
-    assert.match(r.headers.get("content-security-policy") ?? "", /script-src[^;]*'nonce-/, `${path}: the page policy and its nonce`);
+    assert.match(r.headers.get("content-security-policy") ?? "", /script-src 'self' 'sha256-[A-Za-z0-9+/]{43}='/, `${path}: the page policy and its nonce`);
     assert.equal(pageOf(r), page, `${path}: the interface's own page`);
   }
   for (const path of ["/tour", "/tour/", "/doorbell", "/doorbell/"]) {

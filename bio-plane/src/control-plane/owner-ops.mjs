@@ -99,13 +99,13 @@ export function controlPlaneOwnerOps(of, url, body) {
        read a home that has no reading once its bytes are held whole. The act is extraction's in-process `readHeld`, answered as
        it answers (`{ok, read, why?}`); `sha` and `store` are the door's, from the capture's answer and the namespace it landed in.
        The arm exists once the plane hands the getter `of.extraction` (a door without it routes no `readheld`). */
-    ...(typeof of.extraction === "function" ? {
+    ...(typeof of?.extraction === "function" ? {
       readheld: () => of.extraction().readHeld({ sha: q("sha"), storeName: q("store") || "bio" }) } : {}),
     /* R118 (fix round 3, C14, P2.2; project-roster R42, review R43): `projectlist` is project-roster's read, handed the reader of
        the drafts shared for review, review's `sharedDraftsByProject({projectIds, viewer})`, as its `sharedDraftsOf`; project-roster
        calls it once for the page's projects. It replaces the roster's own arm (the one that reads `env.sharedDraftsOf`, which the
        door never holds), with the same request fields. Present once the plane hands the getter `of.projectRoster`. */
-    ...(typeof of.projectRoster === "function" ? {
+    ...(typeof of?.projectRoster === "function" ? {
       projectlist: () => of.projectRoster().projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after"),
         sharedDraftsOf: (asked) => of.review().sharedDraftsByProject(asked) }) } : {}),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
