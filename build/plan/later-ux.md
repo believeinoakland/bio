@@ -14,3 +14,4 @@
 - contradiction · `GAP_WORDS` emptied; its keys could be re-pointed to DEC-391's names · screens-inquiry J13 · 2026-10-21
 - objective · `PENDING_WORDS` all held, the list can go; aspirations' parties and flows are still typed lists, pickers could serve them · screens-inquiry J13 · 2026-10-21
 - bias (settings) · `screen.bias.adoptfor.label` read by `bias.mjs:141` has no row (screens-settings R39 red, accepted by name until T52) · CAUSE-TESTS-T51 J1 · 2026-10-21
+- every screen · the mark and the asking agree (K4199): an act marked "Asks for a reason" asks before it runs, on-press acts' marks lowered; the reason box per press, `triage`'s and `contradictionoptin`'s optional reasons (K4254, K4259) · moved from T51's second pass by K4281 · 2026-10-21
