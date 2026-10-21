@@ -1,5 +1,5 @@
 /* screens-action, fix round 3 (T51; C64; DEC-401, DEC-402): "Name the office yourself" on `request`. A member who finds no office known
-   to hold such records names one (the agency and office, where requests go, the law it goes under), saved for the team through
+   to hold such records names one (the agency and the office within it, where requests go, the law it goes under; DEC-412), saved for the team through
    `entitycreate`, marked as named by a member, and chosen for the request. Every sentence is asserted by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -18,14 +18,15 @@ test("R20, R4 (C64, DEC-402): with no office known a member names one: the fold,
   said(p, "screen.request.nooffice");
   said(p, "screen.request.nooffice.admin");
   for (const k of ["screen.request.nameoffice.head", "screen.request.nameoffice.note", "screen.request.nameoffice.name", "screen.request.nameoffice.name.help", "screen.request.nameoffice.where",
-    "screen.request.nameoffice.where.help", "screen.request.nameoffice.law", "screen.request.nameoffice.law.help", "screen.request.nameoffice.use.help"]) said(p, k);
+    "screen.request.nameoffice.where.help", "screen.request.nameoffice.law", "screen.request.nameoffice.law.help", "screen.request.nameoffice.use.help",
+    "screen.request.nameoffice.role", "screen.request.nameoffice.role.help", "screen.request.nameoffice.why", "screen.request.nameoffice.why.help"]) said(p, k);
   assert.deepEqual(ops(p), ["entitycreate"], "the one act the dead end offers: no start and no later step");
   assert.deepEqual(p.doc.getElementById("req-noff-law").querySelectorAll("option").map((o) => o.value), ["0", "1"], "the profile's records laws");
   assert.equal(p.doc.getElementById("req-what"), null);
   const bare = await press(p, "entitycreate", {});
   assert.equal(p.byOp("entitycreate").length, 0, "no name: refused in place, nothing sent");
   assert.ok(text(p, p.root().querySelector(`[data-slot="${bare.getAttribute("data-ai")}"]`)).includes(W("findin.fieldneeded", { field: W("screen.request.nameoffice.name") })));
-  await press(p, "entitycreate", { values: { "req-noff-name": HUD, "req-noff-where": "https://foiaonline.example/hud", "req-noff-law": "1", "req-noff-note": "It answers records requests for HUD in California." } });
+  await press(p, "entitycreate", { values: { "req-noff-name": HUD.split(", ")[0], "req-noff-role": HUD.split(", ")[1], "req-noff-where": "https://foiaonline.example/hud", "req-noff-law": "1", "req-noff-note": "It answers records requests for HUD in California." } });
   assert.deepEqual(last(p, "entitycreate").body, { kind: "office", label: HUD, contact: { kind: "portal", value: "https://foiaonline.example/hud" }, law: FOIA,
     note: "It answers records requests for HUD in California." });
   assert.ok(main(p).querySelector('[data-named="1"]').textContent.includes(W("screen.request.nameoffice.mark")), "the office is drawn marked as named by a member");

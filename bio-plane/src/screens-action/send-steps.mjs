@@ -96,6 +96,14 @@ export function kindsOf(cs, view, lower) {
   }).filter(Boolean);
 }
 
+/** C64-more: an office by its role and body, each once: an office named by its agency alone (role and body the same words) is
+ *  drawn once, never "Office, Office". */
+export function officeLine(ad) {
+  const parts = [ad && ad.role, ad && (ad.body || ad.organisation)].filter(function (x) { return typeof x === "string" && x.trim(); })
+    .map(function (x) { return x.trim(); });
+  return parts.filter(function (x, i) { return parts.findIndex(function (y) { return y.toLowerCase() === x.toLowerCase(); }) === i; }).join(", ");
+}
+
 /** R21: "Sent with" and "In this matter", from `stakeatpreparation` (`filings` R62: `group_stake`, `matter_stake`) and the
  *  team's name from `groupidentity`. A stake that cannot be read says so in its fold, open whenever drawn, never none. */
 export function stakeLines(cs, view) {

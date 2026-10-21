@@ -6,7 +6,7 @@
    office known to hold such records the screen says so and points an administrator to where one is added (R20); on every
    preparation it draws the matter's stake (R21).
    Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, officeLine, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
 
 export const request = Object.freeze({
   id: "request",
@@ -45,7 +45,7 @@ export const request = Object.freeze({
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines, readOnly: readOnly,
+    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines, readOnly: readOnly, officeLine: officeLine,
     isRequest: function () { return true; },
     // R20, R39: the offices known: those the member's last "Choose the office" answered, for the name she picked; none are known
     // before she asks (null), and a request opened with no subject at all knows none.
@@ -114,9 +114,10 @@ export const request = Object.freeze({
         const fold = '<details class="mk-details"><summary>' + cs.w("screen.request.nameoffice.head") + "</summary>"
           + '<p class="mk-note">' + cs.w("screen.request.nameoffice.note") + "</p>"
           + cs.field("req-noff-name", "screen.request.nameoffice.name", { help: "screen.request.nameoffice.name.help" })
+          + cs.field("req-noff-role", "screen.request.nameoffice.role", { help: "screen.request.nameoffice.role.help" })
           + cs.field("req-noff-where", "screen.request.nameoffice.where", { help: "screen.request.nameoffice.where.help" })
-          // the note `entities` R1 requires, in her own words: the drawing holds no field for it, so the kit's reason field stands in (REPORTed)
-          + cs.field("req-noff-note", "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
+          // the note `entities` R1 requires, in her own words (DEC-412)
+          + cs.field("req-noff-note", "screen.request.nameoffice.why", { area: true, rec: true, help: "screen.request.nameoffice.why.help" })
           + (laws.length ? cs.choice("req-noff-law", "screen.request.nameoffice.law", laws.map(function (l, i) {
             return { value: String(i), text: [l.name, l.citation].filter(Boolean).join(" · ") };
           })) + '<p class="mk-note">' + cs.w("screen.request.nameoffice.law.help") + "</p>" : "")
@@ -139,7 +140,7 @@ export const request = Object.freeze({
       if (!offices.length) return head + askStep + noOffice(String(view.ui.subject || ""));
       const pick = cs.choice("req-office", "screen.request.office", offices.map(function (o, i) {
         const a = o.addressee || {};
-        return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
+        return { value: String(i), text: P.officeLine(a) };
       }), { value: String(view.ui.office || 0) }) + '<p class="mk-note">' + cs.w("screen.request.office.help") + "</p>"
         + (named ? '<p class="mk-small" data-named="1">' + cs.w("screen.request.nameoffice.mark") + "</p>" : "");
       // "Start the request" is drawn once an office is chosen
@@ -148,7 +149,7 @@ export const request = Object.freeze({
       return head + askStep + cs.sec("screen.request.step.office", pick) + what + '<p class="mk-note">' + help + "</p>";
     }
     return head + cs.state("action", function (a) {
-      const office = a.addressee ? cs.esc([a.addressee.role, a.addressee.body].filter(Boolean).join(", "))
+      const office = a.addressee ? cs.esc(P.officeLine(a.addressee))
         + (a.addressee.holder_on_date && a.addressee.holder_on_date.holder ? " · " + cs.w("screen.request.holder", { holder: a.addressee.holder_on_date.holder }) : "") : "";
       const sub = '<p class="mk-sub">' + office + "</p>";
       // the laws a member stated, as `action` answers them (`actions` R25: `{state, laws, by, at}`)
@@ -194,14 +195,20 @@ export const request = Object.freeze({
       },
     },
     {
-      // C64 (DEC-402; `entities` R63): "Use this office": the office she names herself, saved for the team marked as named by a member and chosen for
-      // this request; her words on why it belongs are the act's reason (`note`). An agency and office is one line: before its first comma is the
-      // body, after it the role, as the addressee R9 states an office.
+      // C64 (DEC-402, DEC-412; `entities` R63, R65): "Use this office": the office she names herself, saved for the team marked as named by a
+      // member and chosen for this request; her words on why it belongs are the act's reason (`note`). The agency and the office within it are
+      // two fields, the agency the addressee's body and the office its role (the agency's name for both when she names no office within it);
+      // the entity is labelled by both, and naming the same office again answers the first entry (`existed`), which is chosen.
       op: "entitycreate",
       reasonField: "note",
       send: function (view, el, cs) {
-        const label = String(cs.value("req-noff-name") || "").trim();
-        if (!label) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.request.nameoffice.name") } } };
+        const agency = String(cs.value("req-noff-name") || "").trim();
+        if (!agency) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.request.nameoffice.name") } } };
+        const within = String(cs.value("req-noff-role") || "").trim();
+        const role = within || agency;
+        // what she typed, for `done`: the answer's label is the entity's, which a first naming may have written another way
+        view.ui.officeForm = { agency: agency, role: role };
+        const label = within && within.toLowerCase() !== agency.toLowerCase() ? agency + ", " + within : agency;
         const body = { kind: "office", label: label, note: String(cs.value("req-noff-note") || "").trim() };
         const contact = view.parts.contactOf(cs.value("req-noff-where"));
         if (contact) body.contact = contact;
@@ -214,11 +221,9 @@ export const request = Object.freeze({
       rereads: [],
       done: function (view, answer, cs) {
         const r = answer && answer.result !== undefined ? answer.result : answer;
-        if (!r || typeof r.entity_id !== "string" || typeof r.label !== "string") return;
-        const cut = r.label.indexOf(",");
-        const body = cut > 0 ? r.label.slice(0, cut).trim() : r.label;
-        const role = cut > 0 && r.label.slice(cut + 1).trim() ? r.label.slice(cut + 1).trim() : r.label;
-        cs.set("offices", [{ addressee: { state: "named", kind: "office", role: role, body: body, entity_id: r.entity_id } }]);
+        const f = view.ui.officeForm;
+        if (!r || typeof r.entity_id !== "string" || !f) return;
+        cs.set("offices", [{ addressee: { state: "named", kind: "office", role: f.role, body: f.agency, entity_id: r.entity_id } }]);
         cs.set("office", 0);
         cs.set("chosen", true);
         cs.set("named", true);

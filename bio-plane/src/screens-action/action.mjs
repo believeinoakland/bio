@@ -7,7 +7,7 @@
    where a reply's date has passed with none recorded, behind a fold on any other. The subject is the action's id. It holds
    no member-facing English (R19). Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, readOnly, kindWord, later, WRITE_HELP } from "./send-steps.mjs";
+import { draftsOf, stepOf, readOnly, kindWord, later, officeLine, WRITE_HELP } from "./send-steps.mjs";
 
 // R23: `actioninquiry` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -49,7 +49,7 @@ export const action = Object.freeze({
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, readOnly: readOnly, kindWord: kindWord,
+    draftsOf: draftsOf, stepOf: stepOf, readOnly: readOnly, kindWord: kindWord, officeLine: officeLine,
     later: later,
     // R16: the laws the profile names for this kind of action (each citation once), with the window the profile gives.
     lawsOf: function (profiles, kind) {
@@ -156,7 +156,7 @@ export const action = Object.freeze({
         + cs.w("screen." + screen + ".name") + '</a><span class="mk-small" data-purpose="' + screen + '">' + cs.w("screen." + screen + ".purpose") + "</span></div>";
     };
     return cs.state("action", function (a) {
-      const office = a.addressee ? [a.addressee.role, a.addressee.body].filter(Boolean).join(", ") : "";
+      const office = a.addressee ? P.officeLine(a.addressee) : "";
       const holder = a.addressee && a.addressee.holder_on_date && a.addressee.holder_on_date.holder ? a.addressee.holder_on_date.holder : "";
       const corr = Array.isArray(a.correspondence) ? a.correspondence : [];
       const sent = corr.filter(function (c) { return c.direction === "sent"; });
