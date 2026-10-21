@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01CLRkcMHppRTA6yFfn5t1Zg · depth 2 · COMPLETE · handled B16
+**Status** · session_019i2asULg4gBbzGXKQyLGgG · depth 2 · COMPLETE · handled B17
 
 ## Record (PLANE #41, T51-125)
 
@@ -191,3 +191,22 @@ COMPLETE (PLANE #44; B15): pushed. `gatedOp` hands `trace` to captureOp; the obj
 ## J12 · COMPLETE
 
 COMPLETE (PLANE #45; B16): R68, R71, R5 fixed; R24 is the design's. Details in the record. (3) R68: declarations.mjs assembles wizard-scripts, queue, control-plane. (4) R71: test counts the control-plane door's own ops (subscriptionsignin) and registered public reads (casedetailspublic) as reachable; both were routed. (2) R5: test expects sweeps, sweepset, sweepratify. (1) R24: screen.contradiction.purpose is missing in the design's words.json (SCREEN_HELP in mock-refs.js has no contradiction entry); the design's to add; test unchanged, red. Suite 279 of 280 (only R24); t46-e2e, t47-e2e 7 of 7. Checks: format, architecture, coverage 73/73, ownership 0 failures. Requirement lines: R68 lists wizard-scripts, queue, control-plane among assembled owners; R71 counts door-own ops and public reads as reachable. R73 text still yours.
+
+## J13 · COMPLETE · re B17
+
+## Record: CHANGE B17 (K4262) · PLANE #46
+
+- (B17) `record-core` is added to `plane/declarations.mjs`: a static import of `DECLARED_OPS` beside the others, and an `OWNERS` entry in `build/modules.json` order (after `member-roster`). Two lines of module code (`c23360679f`).
+- The `allocid` row (record-core R85) is accepted by both hand registrations (`op-declarations`, `op-grades`), checked alone in a process of its own.
+- R68 test (`declarations.test.mjs`): the plane's start is refused at import by `DECLARED_OP_DISAGREES: groupdescriptiondraft description` (op-grades), the accepted red by name (K4258, until OP-GRADES #22 merges). That refusal names no other op, so the test cannot reach its assertions yet. The whole plane suite is held by the same refusal until OP-GRADES #22 merges; then re-run `node --test bio-plane/test/m/plane/`.
+- Checks (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; ownership 0 failures (1 file, `bio-plane/src/plane/declarations.mjs`). Coverage and words show failures in other modules only (below).
+- Deferred: none.
+- Node modules installed where missing (K4113): `agent-runner`, `bio-plane/src/journey-check`, `file-scanner`, `sheet-worker`, `site`.
+
+**Found in other modules (for BOB)**
+- Coverage: live ids named by no test: `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19; `screens-inquiry` R110, R119; `screens-intake` R53.
+- Words: `testcopy` at `bio-plane/test/m/op-grades/t37.test.mjs:32` (`translation-directed`, op-grades).
+
+**For BOB (requirement line)**: R68 now names `record-core` among the assembled owners (T51, B17). The R68 test's assertions wait on OP-GRADES #22.
+
+Size (session_019i2asULg4gBbzGXKQyLGgG): test runs 4, module lines 2
