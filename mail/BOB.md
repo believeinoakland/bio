@@ -1877,3 +1877,6 @@ U432 merged into tranche/T51 (K4330).
 
 ## B450 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 HANDOFF from BOB #240 (K4331): rows the running and merged jobs key (none holds a merge). Settings: screen.group.hosting.now.date 'Recorded on {date}:' (C88); screen.group.export.count.tables.one / .other ('1 table', '{n} tables', C85); screen.security.nosignatures.next (what an administrator does when the scanner holds no signatures, C83); screen.group.domain.checked 'Checked {date} at {time}.' (C86); shell.field.needed, a neutral 'Fill in {field} first. Nothing was sent.' (C87); screen.watching.purpose and screen.leads.purpose (C91). Drafts (C49): a live-link row's 'shared {date}' and '{n} comments' rows; a singular for screen.<screen>.links.live (one link). The knock put-back done sentence (B448).
+
+## B451 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+HANDOFF from BOB #240 (K4332): one row: why a held copy cannot be vouched for when only its parts are kept (capture R77 whole: false; screens-intake withholds the vouch), e.g. screen.held.vouch.partsonly.
