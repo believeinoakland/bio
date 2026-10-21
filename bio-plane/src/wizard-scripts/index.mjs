@@ -1747,7 +1747,7 @@ export function wizardScriptsOps(m, url, body) {
    by `wizardScriptsOps`, and is declared all the same. */
 export const DECLARED_OPS = Object.freeze({
   wizards: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",
-    description: word("act.wizards.does"), fields: { accepts: ["state"], requires: [] } },
+    description: word("act.wizards.does"), fields: { accepts: [], requires: [] } },
   startfrom: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
     description: word("act.startfrom.does"), fields: { accepts: ["message", "parts"], requires: [] } },
   writinghelp: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",

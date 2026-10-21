@@ -81,3 +81,17 @@ test("R46 control: wizardrevise with adopt and no steps is not refused: the prop
   assert.deepEqual([answer.ok, answer.adopted], [true, p.proposal.id]);
   assert.equal(refusedNaming(answer, "steps"), false);
 });
+
+/* T51 fix round 3, small 2 (K4230; K4208): the arm reads `state` from the query (`q("state")`), never from the body, so the
+   declaration names no body field. The census agrees with the arm; the control is the arm's own read of the query. */
+test("R46 (T51 fix round 3, small 2; K4230, K4208) wizards declares no body field: its state is read from the query, the arm's only read of it", () => {
+  assert.deepEqual(wz.DECLARED_OPS.wizards.fields.accepts, []);
+});
+
+test("R46 control (small 2): the wizards arm still reads state from the query: ?state=draft lists the viewer's draft, and no query without it lists it as offered", () => {
+  const w = seeded();
+  const d = draft(w, {});
+  const listed = (query) => wz.wizardScriptsOps(w.wz, new URL(`https://x/?op=wizards${query}&viewer=${encodeURIComponent(F)}`), {})["wizards"]().scripts.map((x) => x.id);
+  assert.ok(listed("&state=draft").includes(d.script), "the query's state=draft lists the draft");
+  assert.ok(!listed("").includes(d.script), "without the query the draft is not offered: the state came from the query");
+});
