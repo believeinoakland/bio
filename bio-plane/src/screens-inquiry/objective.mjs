@@ -27,6 +27,8 @@ function reads(view) {
   const me = view.me && view.me.member;
   return {
     progress: { op: "objectiveprogress", query: { project: id }, subject: true, empty: () => false },
+    /* C62: the project's own record, for the crumb's title (R39: never its id); a project she cannot read names none */
+    project: { op: "image", query: { id }, empty: () => false },
     gaps: { op: "objectivegaps", query: { project: id }, empty: () => false },
     proposals: { op: "intentproposals", query: { project: id }, empty: () => false },
     aspirations: { op: "aspirations", query: { project: id, ...(me ? { member: String(me) } : {}) }, empty: () => false },
@@ -34,11 +36,16 @@ function reads(view) {
   };
 }
 
-/** The path's project step (R39: the project's title as the record states it, never its id). */
+/** The path's project step (R39, C62: the project's title as its own record states it, never its id). */
 function place(view) {
   const id = String(view.subject || "");
   const p = view.data && view.data.progress;
-  return { project: { id, title: p && p.state === "ok" && p.value && p.value.project_title ? String(p.value.project_title) : "" } };
+  const d = view.data && view.data.project;
+  const text = d && d.state === "ok" && d.value && typeof d.value["bundle.md"] === "string" ? d.value["bundle.md"] : "";
+  const m = /^title:\s*(.*)$/m.exec(text.split(/\n---\s*\n/)[0] || "");
+  let title = m ? m[1].trim() : "";
+  try { if (title.startsWith("\"")) title = JSON.parse(title); } catch { /* the raw value is drawn */ }
+  return { project: { id, title: title || (p && p.state === "ok" && p.value && p.value.project_title ? String(p.value.project_title) : "") } };
 }
 
 function render(cs, view) {
@@ -56,7 +63,7 @@ function render(cs, view) {
   const quote = (s) => `<span class="rec">“${cs.esc(s)}”</span>`;
   const note = (k) => `<p class="mk-small muted">${W(K(k))}</p>`;
   const gap = (...ks) => `<div class="cs-gap" data-gap="refused">${cs.icon("refused")}<span>${ks.map((k) => W(K(k))).join(" ")}</span></div>`;
-  const fold = (summary, inner) => `<details class="mk-details"><summary>${W(summary)}</summary>${inner}</details>`;
+  const fold = (summary, inner, open) => `<details class="mk-details"${open ? " open" : ""}><summary>${W(summary)}</summary>${inner}</details>`;
   const day = (iso) => (iso ? cs.date(String(iso), { year: true }) : "");
   const help = (fid, field, forop) => (view.reachable ? `<div class="mk-acts">${cs.act("writinghelp", { data: { field, id: fid, forop } })}</div>` : "");
   const failed = (r) => (r && r.state === "failed" ? cs.state(r, () => "") : r && r.state === "loading" ? cs.state({ state: "loading" }, () => "") : "");
@@ -119,6 +126,9 @@ function render(cs, view) {
   const letters = [{ value: "", text: "–" }, ...["A", "B", "C", "D"].map((l) => ({ value: l, text: l }))];
   const measure = note("say-which-payments-or-records-count-what-each-mu") + note("the-screen-then-counts-them-from-your-documents")
     + flowField
+    /* C58: where the group holds no flow, the field takes a typed key; a flow must exist before a measure can name it, said here and not
+       only after the plane's refusal */
+    + (flows.size ? "" : `<p class="mk-small" data-note="flowfirst">${W("refusal.INTENT_NO_SUCH_PROGRESSION")}</p>`)
     + (readFailed ? cs.state(readFailed, () => "") : "")
     + (parties.size ? cs.choice("ob-ent", K("about-which-party"), opts(parties), { value: cond && cond.entity || "" }) : cs.field("ob-ent", K("about-which-party"), {}))
     + cs.field("ob-rel", K("linked-to-it-as-optional"), { value: cond && cond.relation || "" })
@@ -131,7 +141,8 @@ function render(cs, view) {
     + note("if-the-objective-or-the-party-you-chose-names-a") + note("you-can-still-go-on")
     + fold(K("when-the-measure-is-not-accepted"), gap("only-a-named-member-can-set-it-and-only-a-member", "if-you-have-not-joined-ask-to-join-first")
       + gap("a-reason-is-required-also-to-remove-the-measure", "say-why-and-save-again") + gap("the-measure-names-a-flow-a-party-or-a-stage-the", "choose-from-the-lists-and-save-again"));
-  out.push(cs.sec(K("what-success-means"), means + fold(K("set-how-success-is-measured"), measure)));
+  /* C58: choosing a flow redraws the page, and the form she had open stays open */
+  out.push(cs.sec(K("what-success-means"), means + fold(K("set-how-success-is-measured"), measure, !!ui.obflow)));
 
   /* how it is going: counted by the plane on every read, never typed in */
   if (pr) {
@@ -142,11 +153,13 @@ function render(cs, view) {
       const line = [Number(pr.matched) > 0 && shortN > 0 ? W(K("rent-payments-meet-the-measure-are-short"), { met: String(met), short: String(shortN) }) : "",
         pr.satisfied === false && share ? W(K("success-needs-so-it-is-not-yet-reached"), { share }) : ""].filter(Boolean).join(" ");
       if (line) rows.push(cs.row(cs.icon("status"), line, "", day(pr.computed_at)));
+      /* C58: a measure nothing matches (or one cut at its bound) is told in the plane's own words for it, never left a blank section */
+      if (typeof pr.satisfied_why === "string" && pr.satisfied_why) rows.push(cs.row(cs.icon("undetermined"), cs.esc(pr.satisfied_why), ""));
       if (und > 0) rows.push(cs.row(cs.icon("undetermined"), W(K("not-yet-decidable-of-the-short-payments-may-stil"), { count: String(und) }), ""));
       if (pr.satisfied === null && Number(pr.matched) > 0) rows.push(cs.row(cs.icon("undetermined"), cs.mark("gap", "undetermined"), ""));
       if (rows.length) rows.push(note("this-is-counted-again-each-time-you-open-the-scr"));
     } else rows.push(note("not-counted-yet-no-measure-of-success-is-set"));
-    out.push(cs.sec(K("how-it-is-going"), rows.join("")));
+    if (rows.length) out.push(cs.sec(K("how-it-is-going"), rows.join("")));
   }
 
   /* what is still short: one row for each shortfall the plane names */
@@ -342,7 +355,7 @@ const words = Object.freeze([
     "when-linking-is-refused", "a-closed-goal-takes-no-new-objective", "choose-an-open-goal-or-open-a-new-one", "a-closed-goal-stays-readable-with-its-projects-a", "you-cannot-reopen-it",
     "when-closing-is-refused", "a-goal-closes-with-its-reason", "write-why-and-try-again", "a-goal-already-closed-stays-as-it-is"].map((s) => "screen.objective." + s),
   "queue.objective-gap.detail.stages", "queue.objective-gap.detail.grade", "draft.machine.label", "shell.reason.needed", "state.empty", "state.loading", "state.failed", "shell.unread",
-  "mark.gap.undetermined.name", "mark.gap.undetermined.means",
+  "mark.gap.undetermined.name", "mark.gap.undetermined.means", "refusal.INTENT_NO_SUCH_PROGRESSION",
 ]);
 
 /** A project's objective (interface-shell R21), with the module's shared readers as its parts. */
