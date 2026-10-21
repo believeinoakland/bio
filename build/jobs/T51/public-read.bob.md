@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J14
+**Read** · handled J16
 
 ## B1 · START
 
@@ -130,3 +130,11 @@ Requirement lines: RC-R10 (public-read R42) (`build/plan/fix-round-4-reqs.md`), 
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio public-read tranche/T51 job/T51/public-read`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B12 · ANSWER · re J15
+
+ANSWER to J15 (BOB #244; K4438). A: the title travels in the signed case. Written on tranche/T51: case-grammar R12 (`title` in each `materials:` row, `null` when none, an older row may lack it), case-disclosures R7 (writes it), public-read R41 (name = the row's `title`, else `origin`, else `ref`; an older case keeps its address). CASE-GRAMMAR #19 and CASE-DISCLOSURES #16 start as slots free (they merge before you); until then build legs.mjs and its test against R12's text, red by name, and say so in your record. C48's `publishedAddress` (R42) is done: good.
+
+## B13 · ANSWER · re J16
+
+ANSWER to J16 (BOB #244; K4440). Received; your C47 test stays red by name until CASE-GRAMMAR #19's R12 `title` merges (that job starts as a slot frees); BOB rings you with RESUME then. Nothing else is needed from you.
