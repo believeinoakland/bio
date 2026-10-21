@@ -1,6 +1,6 @@
 # money (T51)
 
-**Status** · session_01EALiSa4XrZJimPmaSkDTWA · depth 2 · COMPLETE · handled B2
+**Status** · session_013Lo8EBZnWAC7FpsjEcuWjd · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -56,3 +56,25 @@ Act needed: push the branch from /home/user/bio with `git push -u origin job/T51
 ## J4 · COMPLETE
 
 Pushed. The product commits are on origin: `6ce8fb314c` (the change) and `97587a6881` (merge of tranche/T51) reached origin with the mail pushes; `git push origin HEAD:job/T51/money` reports up to date. This withdraws J3 BLOCKED. Nothing else changed: the record in J2 COMPLETE stands, with the same checks and the Size line `test runs 4, module lines 1424`.
+
+## J5 · COMPLETE
+
+Completion, T51 fix round 3, money #6 (session_013Lo8EBZnWAC7FpsjEcuWjd).
+
+**Cause met: C8 + N1, money R28** (my part: the read). `moneySets({concerns, purpose?, limit, after, viewer}) → {ok: true, sets, limit, truncated, next}` (`op=moneysets`, served by the ops map and declared in `DECLARED_OPS` as a read, classes admin/member/probe, accepts concerns/purpose/limit/after, requires concerns). Sets whose `concerns` equal the id asked, newest first by creation (`at`, then insertion), each `{set_id, purpose, label, concerns, inclusions, exclusions}` with the facts the viewer may see; `purpose` narrows (`UNKNOWN_PURPOSE` otherwise); bounded 1–500 (default 100); `next` is the last set_id of a cut page and `after` continues from it (`BAD_AFTER` for an id not in the list). An id naming a bundle the viewer cannot see (a project, membership R43 through `#visibleBundle`) answers exactly as an id naming nothing: `{ok: true, sets: [], truncated: false, next: null}`, the id not echoed. No write change.
+
+**The confirmation asked for:** a trail started in a project carries the project in its `concerns` if the caller passes it: `createSet` keeps one `concerns` string for a trail, with no kind check, so a project id is held as given (a write change is not needed). The screen that starts a trail must send `concerns=<project id>` (screens-investigate, wave 2). Nothing to ask BOB.
+
+**Tests** (`bio-plane/test/m/money/moneysets.test.mjs`, 7 tests, all named R28, seen failing first with `moneySets is not a function`): four trails in one project listed newest first in the set's shape; another project's trail not listed; a hidden project lists none and equals an id naming nothing (also viewer ""); controls: a set with no concerns is listed under no id, `purpose: attribution` lists no trail on a project and does list the attribution set on its contract, `purpose: trail` on the contract lists none; bound, `truncated`, `next`, no repeat or gap across pages; read writes nothing and `readSet` and `createSet` unchanged; the ops-map arm and the declaration. `ops.test.mjs` line 8 gained `moneysets` in R18's list of arms (the arm count is the requirement; nothing weakened).
+
+**Runs:** money 86/86; money-checks 48/48, duties 75/75, people 79/79, explore 59/59, query-language 57/57, retrieval-browse 51/51, retrieval 178/178, calculations 62/62, strength 177/177, op-grades 145/145, control-plane 340/340. Checks: architecture 0 failures; words 0 failures (money); coverage money 28 of 28 live ids named (0 failures); ownership 0 failures (4 files); format 1 failure, `build/rulings.md:4346` K4349 (BOB's file, not mine, red on the tranche tip). impact.mjs flags 90 modules because `DECLARED_OPS` is a shared table; I ran the direct users above, not all 1304 files.
+
+**For BOB (REPORT, other modules, P9):**
+1. `moneysets` has no spec yet: `op-declarations` (its spec for the op, and a NEEDS row of null for a read, R17–R20) and `op-grades` (a "read" row beside `moneyset`, t33.mjs line ~213) must add it. Until then two suites are red on my branch only because of the new op: `op-declarations` t33.test.mjs:290 (R19, R6: "money" lists `moneysets` as served with no spec) and `affordances` t33.test.mjs:195 (R12 R24: `moneysets` unaccounted). The rest of both suites pass.
+2. `plane` release.test.mjs:78 (R24) fails "screen.objective.purpose is held by the words list": nothing of money's; not checked against the tranche tip, I believe it is red there (words list of the design stream).
+3. Words: no new member-facing sentence on a drawn screen; the three new refusal details are `localize` ids (`money.index.money_sets_are_listed_by`, `…a_money_sets_purpose_is_2`, `…after_names_no_set_in`), so there is no word-table stand-in to list.
+4. R28's text in `build/requirements/money.md` says "a set holds `concerns`"; the Terms still say `concerns?` is one entity or none and name events, entities and a line, not a project (RC-11 in fix-round-3-reqs.md). BOB to line the Terms up.
+
+No proposed requirement lines beyond R28; the `limit` key in the answer (beside `sets`, `truncated`, `next`) is mine, add it to R28's shape if wanted.
+
+Size (session_013Lo8EBZnWAC7FpsjEcuWjd): test runs 14, module lines 1478
