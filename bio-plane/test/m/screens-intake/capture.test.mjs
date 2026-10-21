@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { open as openPage, html, text, main, btn, fill, press, ok, refused, refusedIn, rawKeys, word, hasWord, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
+import { open as openPage, untitled, html, text, main, btn, fill, press, ok, refused, refusedIn, rawKeys, word, hasWord, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 /* a document named on the page is a link only where the `document` screen is served: the stand-in serves it */
@@ -16,7 +16,7 @@ const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
 const SHA = "a".repeat(64);
 const DOC = { capture: { sha256: SHA, bytes: 1200, encoding: "binary", content_type: "application/pdf" }, file: "snapshots/a.pdf", title: null };
 /* R50 (I-03): a document with no title is "A {kind} from {site}", by the keys, never the address's file part */
-const UNTITLED = word("screen.capture.address.untitled", { kind: word("document.kind.pdf"), site: "www.example.gov" });
+const UNTITLED = untitled();
 /* R49: `acquire` says `existed: true` of bytes the object store held; the record is asked (`heldat` by digest) for the document the viewer sees */
 const HELD_BY_SHA = (document = "INFO-2026-0002-report") => (req) => (req.query.sha256 ? ok({ ok: true, held: true, copy: { sha256: SHA, document, project: null, retrieved: "2026-10-01T10:00:00Z", actor: "member:x", grade: null, address: ADDRESS },
   versions: 1, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } }) : NOT_HELD);
@@ -108,7 +108,8 @@ test("R1 (N747) an answer carrying promoted is not promoted again by the screen"
 
 const CAPTURED = { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0001" }),
                    promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) };
-const BUNDLE = "INFO-2026-0001-a-pdf-from-www-example-gov";
+const slugOf = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
+const BUNDLE = `INFO-2026-0001-${slugOf(UNTITLED)}`;
 
 test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an information bundle at collected that meets verified's entry, and links the document", async () => {
   const p = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0007" }),
@@ -118,7 +119,7 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   await p.settle();
   assert.deepEqual(p.byOp("allocid")[0].query, { op: "allocid", prefix: "INFO", year: String(new Date().getUTCFullYear()) });
   const b = p.byOp("promote")[0].body;
-  assert.equal(b.bundleId, "INFO-2026-0007-a-pdf-from-www-example-gov");
+  assert.equal(b.bundleId, `INFO-2026-0007-${slugOf(UNTITLED)}`);
   assert.equal(b.base, null);
   assert.equal(b.meta.object_type, "information");
   assert.equal(b.meta.current_state, "collected");
@@ -519,7 +520,7 @@ test("R3 (K3171) the recorded testimony is named by the bundle_id provenance's t
   const p = await open("/app/capture/saw", { plane: { testify: ok(TESTIFIED) } });
   fill(p, { "ci-words": "The pothole is still open.", "ci-where": "6012 Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
   await press(p, "testify");
-  assert.ok(says(p, "screen.capture.saw.done", { id: "INFO-2026-0009-observation" }));
+  assert.ok(main(p).querySelector('a[href*="INFO-2026-0009-observation"]') && text(p).includes(word("screen.capture.saw.done", { id: "\u0000" }).split("\u0000")[0]), "C29: the result links the document it made");
   assert.doesNotMatch(text(p), new RegExp("f".repeat(16)), "never the capture's digest");
   /* control: an answer naming no bundle draws no testimony id */
   const q = await open("/app/capture/saw", { plane: { testify: ok({ ok: true, id: "INFO-2026-0010-x" }) } });
@@ -533,7 +534,7 @@ test("R3 testify sends the member's words with where, and when as observedAt; ne
   fill(p, { "ci-words": "The pothole is still open.", "ci-where": "6012 Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
   await press(p, "testify");
   assert.deepEqual(p.byOp("testify")[0].body, { words: `The pothole is still open.\n\n${word("screen.capture.saw.wherein", { where: "6012 Seminary Ave" })}`, observedAt: "2026-10-04T09:10:00Z" });
-  assert.ok(says(p, "screen.capture.saw.done", { id: "INFO-2026-0009-observation" }));
+  assert.ok(main(p).querySelector('a[href*="INFO-2026-0009-observation"]') && text(p).includes(word("screen.capture.saw.done", { id: "\u0000" }).split("\u0000")[0]), "C29: the result links the document it made");
   const q = await open("/app/capture/saw");
   fill(q, { "ci-words": "x", "ci-where": "y", "ci-when": "2999-01-01T00:00:00Z" });
   assert.ok(saysIn((await press(q, "testify")).slot(), "screen.capture.saw.badwhen"));
@@ -709,7 +710,7 @@ test("R33 a page that states no title and whose address gives only a host is tit
   }
 });
 
-test("R33 control: a capture whose reading is null (or absent) is titled by R50's untitled sentence, its kind and site, never the address's file part; a blank title is none", async () => {
+test("R33 control: a capture whose reading is null (or absent) is titled by R54's rule, its host and the day, never the address's file part; a blank title is none", async () => {
   for (const reading of [null, undefined, { title: "   " }, { title: null }]) {
     const p = await open("/app/capture", { plane: { opencaptures: OPEN0, ...CAPTURED, acquire: ok({ ok: true, document: DOC, ...(reading === undefined ? {} : { reading }) }) } });
     fill(p, { "ci-address": ADDRESS });

@@ -94,7 +94,9 @@ function renderInbox(cs, view) {
         { help: ["screen.inbox.knocker.help1", "screen.inbox.knocker.help2"] });
     const door = typeof k.capture_sha === "string" && k.capture_sha && src
       ? cs.row(cs.icon("person"), cs.w("screen.inbox.source.line"), cs.ref("source", k.capture_sha, plain(cs.w("screen.about-knocker.name")), [cs.w("screen.inbox.source.line")])) : "";
-    return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${ladder(at)}`
+    /* C28 (R7, R32): the knock's fingerprint, labelled, shown before the member decides what to do with it */
+    const print = typeof k.sha256 === "string" && k.sha256 ? `<p class="mk-small"><span class="meta">${cs.w("screen.document.fingerprint")}</span> <span class="mk-data">${cs.esc(k.sha256)}</span></p>` : "";
+    return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${print}${ladder(at)}`
       + (k.status === "new" ? `<div class="mk-acts">${cs.act("inboxpull", { tone: "primary" })}</div>`
         /* R32 (1): discarding asks why first (`inbox.discard.why`), the words sent as `reason` */
         + cs.field("cx-why", "inbox.discard.why", { area: true, rec: true, value: L.why || "" })

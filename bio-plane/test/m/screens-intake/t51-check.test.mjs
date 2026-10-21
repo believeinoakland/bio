@@ -2,13 +2,13 @@
  * answers draw four different sentences, by key. `checkOutcome` is the one drawing `screens-inquiry` imports. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, text, fill, press, ok, word, says, DOCUMENT_STUB } from "./page.mjs";
+import { open as openPage, untitled, text, fill, press, ok, word, says, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS, checkOutcome } from "../../../src/screens-intake/index.mjs";
 
 const NOT_HELD = ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } });
 const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
 const DOC = { capture: { sha256: "a".repeat(64), bytes: 10, encoding: "binary", content_type: "application/pdf" }, file: "snapshots/a.pdf", title: null };
-const TITLE = word("screen.capture.address.untitled", { kind: word("document.kind.pdf"), site: "www.example.gov" });
+const TITLE = untitled();
 const checked = async (answer) => {
   const p = await openPage("/app/capture/address", { screens: [...SCREENS, DOCUMENT_STUB], plane: { heldat: NOT_HELD, acquire: ok({ ok: true, document: DOC }),
     allocid: ok({ ok: true, id: "INFO-2026-0001" }), promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }), monitor: ok(answer) } });
