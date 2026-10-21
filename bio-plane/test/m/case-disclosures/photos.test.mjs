@@ -270,11 +270,11 @@ test("R7: a photo R6 answers with obscured is written with its original's finger
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: p, text_sha: held.text_sha, origin: `https://example.org/${DOC}`,
       archived_copy: w.cd.captureFacts(p).co_archive, included: false, rests_under: "load_bearing",
-      obscured: rowOf(OB(COPY)) },
+      title: `Document ${DOC}`, obscured: rowOf(OB(COPY)) },
     { ref: DOC2, kind: "document", sha: d, text_sha: reached.materials[1].held.text_sha, origin: null,
-      archived_copy: null, included: true, rests_under: "load_bearing", obscured: null },
+      archived_copy: null, included: true, rests_under: "load_bearing", title: `Document ${DOC2}`, obscured: null },
     { ref: DOC3, kind: "document", sha: n, text_sha: reached.materials[2].held.text_sha, origin: null,
-      archived_copy: null, included: false, rests_under: "load_bearing", obscured: rowOf(PUB(COPY2)) }]);
+      archived_copy: null, included: false, rests_under: "load_bearing", title: `Document ${DOC3}`, obscured: rowOf(PUB(COPY2)) }]);
   const kinds = (ref) => out.materials.attestations.filter((a) => a.ref === ref).map((a) => a.by_kind);
   const own = (ref) => kinds(ref).filter((k) => k !== "co_attestation");
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");

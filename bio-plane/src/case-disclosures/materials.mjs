@@ -53,7 +53,9 @@ export function materialHeld(m, io) {
  *  `{copy, label, kind}` for a member document, `kind` case-carriage's marker as R6 handed it (R32; T47, N953), so the
  *  signed edition records which kind of copy it carries; R6's `label_key` is the reader's surface's and is not written. Its
  *  fingerprints, origin and archived copy stay the original's. `facts(sha)` is R2's read of a capture (grade,
- *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `registered(sha)` its register row,
+ *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `title(m)` the document's title as its
+ *  capture holds it (T51 fix round 4, C47; K4438: `null` when it holds none, and an observation's row is `null` without
+ *  asking), `registered(sha)` its register row,
  *  `member(m)` the attesting member's row or rows as R10 states them, `group` the producing group's slug. Rows, in the
  *  materials' order:
  *   - the attesting member's (`member`): the capturing member's signed accounts, or an observation's author, as their
@@ -62,12 +64,13 @@ export function materialHeld(m, io) {
  *   - the project's (`project`): the register row holding it in the project's record, `recorded_in` its bundle;
  *   - the group's (`group`): one row whose signature is the literal `case`, the case document's own.
  *  No new table and no new act holds the project's or the group's attestation. */
-export function materialRows(materials, { project, group, at, facts, origin, registered, member }) {
+export function materialRows(materials, { project, group, at, facts, origin, registered, member, title = () => null }) {
   const rows = [], attestations = [];
   for (const m of materials) {
     const f = m.kind === "document" ? facts(m.sha) : null;
     rows.push({ ref: m.ref, kind: m.kind, sha: m.sha, text_sha: m.held.text_sha, origin: origin(m.sha),
                 archived_copy: f ? f.co_archive ?? null : null, included: m.included, rests_under: m.rests_under,
+                title: m.kind === "document" ? title(m) : null,
                 obscured: m.obscured ? { copy: m.obscured.copy, label: m.obscured.label,
                                          ...(typeof m.obscured.marked === "boolean" ? { marked: m.obscured.marked } : {}),
                                          kind: m.obscured.kind ?? null }

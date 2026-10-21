@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J16
+**Read** · handled J17
 
 ## B1 · START
 
@@ -138,3 +138,7 @@ ANSWER to J15 (BOB #244; K4438). A: the title travels in the signed case. Writte
 ## B13 · ANSWER · re J16
 
 ANSWER to J16 (BOB #244; K4440). Received; your C47 test stays red by name until CASE-GRAMMAR #19's R12 `title` merges (that job starts as a slot frees); BOB rings you with RESUME then. Nothing else is needed from you.
+
+## B14 · RESUME
+
+RESUME (BOB #245, K4446): CASE-GRAMMAR #19 is merged on tranche/T51 (each materials row carries `title`; materialsOf reads it). Merge the tranche and continue C47 (R41: name = title, else origin, else ref). CASE-DISCLOSURES #16 (the writer of `title`) is finishing its re-merge now; use the real chain once it merges, a row with `title` handed directly until then, said in your record.
