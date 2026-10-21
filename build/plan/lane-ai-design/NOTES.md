@@ -237,3 +237,110 @@ Documents: Claude Code "Legal and compliance" and "Authentication" pages (printe
 **Authentication page.** Methods: subscription OAuth login; Console login (keyless or with a key); cloud providers (Bedrock, Vertex, Foundry); gateway with corporate SSO; `claude setup-token` (one-year model-requests-only token, "It does not save the token anywhere"); `ANTHROPIC_API_KEY`; `ANTHROPIC_AUTH_TOKEN`; `apiKeyHelper` ("short-lived tokens fetched from a vault"); Anthropic profiles and Workload Identity Federation. Storage on Linux and in containers is plaintext `~/.claude/.credentials.json` (0600) with no secret-store integration; password-manager rules NOT ADDRESSED. Precedence: cloud-provider variables, then `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, `apiKeyHelper`, `CLAUDE_CODE_OAUTH_TOKEN`, profiles, then `/login`: **a stray API key in a container silently overrides the member's subscription (and who pays)**; bare mode ignores the setup-token; background sessions stop when the login expires. Third-party apps and hosting for others: not addressed on this page.
 **Usage Policy (effective 2026-11-12).** Applies to "the end users of products or services integrating Claude"; "do not categorically prohibit use by any particular industry". Universal standards bearing on Civicsmith: privacy ("compile, aggregate, or enrich personal data from multiple sources to build profiles of individuals … without those individuals' awareness and agreement, in furtherance of use prohibited"); disinformation and deceptive campaigns (fake personas, astroturfing, concealed sponsorship "of content or messaging intended to influence public opinion, officials"); **"Do Not Undermine Democratic Processes"** (concealed automated calls to voters or officials, false statements attributed to real candidates or officials, false political or electoral information, disrupting electoral processes, voter suppression: framed as deception, concealment and disruption; lawful campaigning, lobbying and advocacy are not banned as such and the words are NOT ADDRESSED); surveillance (tracking people "without that person's consent", dossiers to "harass, intimidate, surveil", with carve-outs for "aggregated or anonymized analysis … authorized security research, legal research and analysis by law enforcement agencies or courts, or journalism"); platform abuse: "Resell, proxy, or otherwise provide access to Claude through unauthorized means, including services that route requests through consumer subscriptions or misrepresent the product or client being used". **High-risk use cases** (legal rights and documents, public-benefits eligibility, legal status and adjudication among eleven areas) require "a qualified person" to "meaningfully review a High-risk AI Recommendation" before delivery and that the affected individual "be clearly told that AI was used"; excluded: "General information or educational content", "Internal drafting, research, summarization, or analysis that is not the ultimate High-risk AI Recommendation delivered", and wholly favourable decisions. Consumer-facing chatbots must disclose that the user is talking to AI at the start of each session. "Users are responsible for ensuring that agents they build or deploy … comply". No civic, nonprofit, lobbying or watchdog carve-out; no adjusted-safeguard programme except for cyber and life sciences; appeals and notice periods NOT ADDRESSED.
 **Shape these facts give an Anthropic entry (no decision):** (1) API account owned by the team or member under the Commercial Terms: allowed for the customer's own end users; (2) a member's subscription: Anthropic permits an end user signing in to the unmodified Claude Code binary with their own subscription, including on a platform that hosts it, and bars storing Claude.ai credentials or session tokens, routing through consumer plans on users' behalf, and bots or scripts on consumer plans unless explicitly permitted; **K3061 (Bob) decided that holding the token is allowed, which sits against AT-17's text**: shown, not resolved; (3) Team/Enterprise seats: U-1 remains open; (4) the Usage Policy's democratic-processes, privacy and high-risk sections are the ones to design around, and they match Civicsmith's own rule that the machine proposes and the member authors.
+
+## Q2e · Nebius Token Factory and a same-model price comparison (read 2026-10-21 by a sonnet/medium worker at Bob's request; provider pages only; fetch summaries, quotes as relayed; exact figures to re-verify in the console)
+
+
+### Part A - Nebius Token Factory
+
+#### A1. What it is, operator, regions, jurisdiction
+- URL https://docs.tokenfactory.nebius.com/ (read 2026-10-21, no date shown): "a platform for working with large language models, from experimenting to production" (playground, inference API, fine-tuning, integrations). OpenAI client libraries work by changing base URL to https://api.tokenfactory.nebius.com/v1/.
+- URL https://nebius.com/services/token-factory (read 2026-10-21): "Access leading open models, optimize inference, choose how you deploy"; serverless inference and dedicated endpoints. Former name "AI Studio": NOT confirmed on the provider's page (OPEN). Only a third-party tracker (not official) said it was rebranded in 2026.
+- Operator: https://docs.tokenfactory.nebius.com/legal/legal-quick-guide (no "last updated" date): "Your contract for Nebius Token Factory is with the applicable Nebius entity identified in the relevant Terms of Service" (group headed by Nebius Group N.V.). Which entity applies to a US/EU customer: OPEN.
+- Governing law: current Token Factory supplemental terms https://docs.nebius.com/legal/token-factory (publication and effective date both Sept 15, 2026) contain no governing-law clause ("part of the Nebius Services Agreement"). Legal quick guide: "The DPA is governed by the law specified in those Terms of Service." The ARCHIVED terms (https://docs.tokenfactory.nebius.com/legal/archive/terms-of-service-20250401) were relayed as Netherlands law, Amsterdam courts. Current governing law: OPEN (likely Dutch, unconfirmed).
+- Regions: legal guide: public endpoints "The processing location is decided dynamically, is not tied to any single data center" (shown as "Global"); "for dedicated endpoints the data-center region is fixed as part of the endpoint configuration." https://nebius.com/services/token-factory/enterprise-grade-inference: "optional regional deployment in EU or US data centers"; FAQ says data centers in Finland, France, US. Per-model region in the public catalog (https://tokenfactory.nebius.com/model-catalog.md): eu-north1 (Finland), us-central1, us-north1, uk-south1, eu-west2.
+
+#### A2. Models and prices (USD per 1M tokens) - https://tokenfactory.nebius.com/model-catalog.md (read 2026-10-21, no date on page)
+The official price page https://nebius.com/token-factory/prices redirects (301) to https://tokenfactory.nebius.com/organization/prices, which returned only a title (JS-rendered; not readable). The catalog above plus https://tokenfactory.nebius.com/api/public/models_info are the official sources used. The /v1/models API returned 401 (not retried; no auth).
+No "fast"/"base" flavors seen: every model in models_info has a single flavor ID, label "cheap". The `-fast` suffix appears only in one docs example (Meta-Llama-3.1-8B-Instruct-fast), which is not in the current catalog. Flavor tiers: OPEN.
+Batch discount: no figure found; docs only say "Use Batch API for async workloads - it has significantly higher limits." Batch price: OPEN. Fine-tune and dedicated pricing: OPEN (not read; see docs billing-policy page).
+
+Model | in / cached / out | context K | quant (if stated) | developer / origin
+- DeepSeek V4.1 Flash | 0.30 / 0.01 / 1.20 | 1048 | | DeepSeek - CHINESE
+- DeepSeek-V4-Flash-0731 | 0.14 / 0.01 / 0.28 | 1024 | | CHINESE
+- DeepSeek-V4-Pro | 1.75 / - / 3.50 | 1000 | | CHINESE
+- DeepSeek-V4-Pro-0813 | 1.32 / 0.04 / 3.96 | 979 | | CHINESE
+- Gemma-3-27b-it | 0.10 / - / 0.30 | 110 | fp8 | Google
+- Muse Spark Open | 1.25 / 0.15 / 4.25 | 1048 | | Meta (vision)
+- MiniMax-M3 | 0.30 / 0.06 / 1.20 | 1049 | | MiniMax - CHINESE
+- Kimi-K2.6 | 0.95 / 0.16 / 4.00 | 256 | | Moonshot - CHINESE
+- Kimi-K2.7-Code | 0.95 / 0.15 / 4.00 | 256 | | CHINESE
+- Kimi-K3 | 3.00 / 0.30 / 15.00 | 1024 | | CHINESE
+- Hermes-4-405B | 1.00 / - / 3.00 | 128 | fp8 (per OpenRouter) | Nous Research (US)
+- Nemotron 3.5 Super VL | 0.30 / 0.06 / 0.90 | 1024 | bf16 | NVIDIA (vision)
+- Nemotron-3-Nano-30B-A3B | 0.06 / - / 0.24 | 262 | fp8 | NVIDIA
+- Nemotron-3-Super-120b-a12b | 0.30 / 0.06 / 0.90 | 256 | fp4 | NVIDIA
+- Nemotron-3-Ultra-550b-a55b | 1.00 / 0.12 / 3.00 | 1024 | fp4 | NVIDIA
+- Nemotron-3.5-Lightning | 0.06 / - / 0.24 | 1024 | bf16 | NVIDIA
+- gpt-oss-120b | 0.15 / - / 0.60 | 131 | fp4 | OpenAI
+- MiniCPM-V-4_5 | 0.658 / - / 1.11 | 32 | | OpenBMB (Chinese-origin, Tsinghua-linked; origin per my knowledge, not the page)
+- Qwen3-235B-A22B-Instruct-2507 | 0.20 / - / 0.60 | 262 | | Alibaba - CHINESE
+- Qwen3-30B-A3B-Instruct-2507 | 0.10 / - / 0.30 | 262 | | CHINESE
+- Qwen3-Embedding-8B | 0.01 / - / n/a | 41 | | CHINESE (embedding)
+- Qwen3.5-397B-A17B | 0.60 / 0.12 / 3.60 | 262 | | CHINESE
+- Qwen3.8-27B | 0.45 / 0.10 / 3.00 | 262 | | CHINESE
+- Reflection Beam 1.0 | 0.25 / 0.05 / 1.00 | 1048 | | Reflection (US)
+- GLM-5.1 | 1.40 / - / 4.40 | 200 | | Zhipu/Z.ai - CHINESE
+- GLM-5.2 | 1.40 / 0.14 / 4.40 | 1024 | | CHINESE
+- GLM-5.3 | 1.40 / 0.26 / 4.40 | 1024 | | CHINESE
+- GLM-5.3-Flash | 0.15 / 0.03 / 0.50 | 1024 | | CHINESE
+Not in the current catalog: Llama 3.x/4 (an older third-party aggregator and a Nebius cookbook mentioned Llama-3.3-70B at $0.13/$0.40; not on the official catalog today), gpt-oss-20b (a Nebius model page https://nebius.com/services/token-factory/models/openai-gpt-oss says "gpt-oss-20B: from $0.05 per 1M input tokens" but it is not in the catalog; OPEN), Mistral.
+Page https://nebius.com/services/token-factory/models/openai-gpt-oss: gpt-oss-120B "from $0.15 per 1M input tokens".
+
+#### A3. API
+- OpenAI-compatible: yes (docs home, above). Also a Responses API (https://docs.tokenfactory.nebius.com/api-reference/inference/create-a-response.md listed; models_info use_cases include "responses_api" for Nemotron).
+- Function calling: https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling.md says "The model does not execute the functions itself"; the page gives no supported-model list. models_info use_cases list function_calling for gpt-oss-120b, Gemma-3-27b-it, and all Nemotron entries shown.
+- Structured output: https://docs.tokenfactory.nebius.com/ai-models-inference/json.md: "Use `JSON mode` tag in on a model card to find a model with structured output supported"; "Different models has different structured output capabilities." Strict JSON-schema enforcement per model: OPEN. gpt-oss-120b has tag "JSON mode".
+- Streaming: cached-tokens page says "Set `stream_options.include_usage` to `true`" for usage in streams, implying streaming; per-model streaming of tool calls: OPEN.
+- Image input: catalog Type "image2text" for Nemotron 3.5 Super VL, Muse Spark Open, MiniCPM-V; Gemma-3-27b-it use_cases include "image" (models_info) though catalog Type says text2text. 
+- Context windows: see table (gpt-oss-120b 131072; Gemma-3-27b 110000 though tag says 131K).
+- Usage fields: https://docs.tokenfactory.nebius.com/cached-tokens.md: `prompt_tokens`, `completion_tokens`, `total_tokens`, `prompt_tokens_details.cached_tokens` (Responses: `input_tokens_details.cached_tokens`). "Caching is implicit: you don't need to change your requests". Cost field in responses: OPEN (not mentioned).
+- Rate limits: https://docs.tokenfactory.nebius.com/ai-models-inference/rate-limits.md: auto-scaling limits, "The limit can grow to 20 x your base allocation"; HTTP 429 with `Retry-After`; headers `x-ratelimit-remaining-requests/tokens`. Enterprise page: Starter "400K TPM / 600 RPM baseline"; Enterprise "Unlimited throughput".
+
+#### A4. Data terms
+- Training: legal quick guide: "We do not use your content to train, fine-tune or improve any AI models."
+- Retention: "Unless you enable Zero Data Retention, we keep your inputs and outputs to speed up inference" (Speculative Decoding); retained data "stored in Finland (EU)". ZDR: "your inputs (prompts) and outputs (responses) are not stored on our systems after each request is processed"; enabled org-wide from account profile page; written confirmation from support. NOTE: a search-result snippet of the same page said ZDR is "enabled by default"; the page fetch said opt-in ("Unless you enable"). Default state: OPEN - conflicting relays; verify in the console. Supplemental terms 5.3: Nebius may "remove, screen, or delete any Inputs or Outputs at any time"; 5.4 customer opt-out of storage.
+- Human review: not addressed on the pages read (OPEN).
+- Sub-processors: "at least fifteen (15) days' prior notice" before adding/replacing; list at docs.nebius.com/legal/sub-processors_tofa (not read).
+- DPA: "by signing up and agreeing to the Terms of Service, you are covered by the DPA."
+- SLA: https://nebius.com/services/token-factory/enterprise-grade-inference: Enterprise "99.9% SLA with reserved capacity and fail-over"; Starter "Best-effort 99% availability." Compliance claim: "Certified for SOC 2 Type II, HIPAA and ISO 27001" (audit reports under NDA).
+
+#### A5. Account and terms
+- Account: sign-up at https://tokenfactory.nebius.com; API key (Token API/SDK Key) authenticates; projects and per-project collaborator permissions (https://docs.tokenfactory.nebius.com/team-access/overview.md). Whether keys are created per project: OPEN. OAuth / "connect" flow for third-party apps: none found (OPEN).
+- Billing: card required to finish onboarding (https://docs.tokenfactory.nebius.com/other-capabilities/billing-new.md); "New accounts get $1 in trial credit, valid for 30 days" (as relayed).
+- End users: supplemental terms https://docs.nebius.com/legal/token-factory: "Customer Product" = product/application "developed, managed, or distributed by Customer" that integrates the service; End Users include individuals using "a Customer Product that integrates it"; 2.5 API/SDK right is "non-sublicensable, non-transferable"; customer responsible for key security and "any activity that occurs while using Customer's Token API/SDK Key"; 4: no use of Output "to develop any service that competes with the Services". No explicit resale or key-sharing clause in the supplemental terms; Services Agreement not read (OPEN).
+- Programs: Nebius Builder Program https://nebius.com/builders-terms-and-conditions: "USD $25 in Nebius Token Factory credits", expire 90 days, "Production or revenue-generating use isn't allowed". No startup/nonprofit-specific program found on the page (OPEN).
+
+### Part B - Price comparison (USD per 1M tokens, in / out), read 2026-10-21
+Nebius source: model catalog above. Others: Together https://www.together.ai/pricing (no date shown); Fireworks https://docs.fireworks.ai/serverless/pricing (no date; Standard tier); Groq https://console.groq.com/docs/models (no date; the pricing page https://groq.com/pricing showed no prices); Cloudflare https://developers.cloudflare.com/workers-ai/platform/pricing/ ("Last updated Oct 20, 2026"); OpenRouter https://openrouter.ai/api/v1/models/<id>/endpoints (live API listing).
+
+| model | Nebius (flavor) in/out | Together | Fireworks (Standard) | Groq | Cloudflare | OpenRouter cheapest (provider) | notes |
+|---|---|---|---|---|---|---|---|
+| gpt-oss-120b | 0.15 / 0.60 (single flavor, fp4) | 0.15 / 0.60 | 0.15 / 0.60 (cached 0.015; Priority 0.18/0.72) | 0.15 / 0.60 | 0.35 / 0.75 | 0.03 / 0.15 (Near AI fp4, Venice int4); Nebius listed fp4 0.15/0.60 | 24 providers on OpenRouter; Nebius, Together, Groq, Bedrock, SiliconFlow tie at 0.15/0.60 |
+| gpt-oss-20b | not in catalog (page says "from $0.05" input) | not in serverless table (fine-tune only) | not listed individually; size-band rate "More than 16B: $0.90" in/out is my reading, unconfirmed | 0.075 / 0.30 | 0.20 / 0.30 | 0.018 / 0.09 (Darkbloom fp8); Nebius NOT listed | |
+| Gemma 3 27B it | 0.10 / 0.30 (fp8) | not listed (Gemma 4 31B 0.39/0.97) | not listed individually; band rates unconfirmed | not listed | not listed (Gemma 3 12B 0.345/0.556; Gemma 4 26B A4B 0.10/0.30) | 0.08 / 0.16 (DeepInfra fp8); Nebius listed 0.10/0.30 | only 5 providers |
+| Nemotron-3-Nano-30B-A3B | 0.06 / 0.24 (fp8) | not listed | not listed (Nemotron 3.5 Lightning 30B A3B 0.05/0.20) | not listed | not listed | 0.05 / 0.20 (Novita fp4); Nebius listed fp8 0.06/0.24 | Nebius Nemotron-3.5-Lightning 0.06/0.24 bf16 vs Fireworks 0.05/0.20 |
+| Nemotron-3-Super-120b-a12b | 0.30 / 0.90 (fp4) | not listed (Nemotron 3.5 Super VL 0.15/0.50) | not listed | not listed | 0.50 / 1.50 | 0.08 in (DekaLLM fp8) / 0.40 out (DeepInfra bf16); Nebius NOT listed | |
+| Nemotron 3.5 Super VL | 0.30 / 0.90 (bf16) | 0.15 / 0.50 (cached 0.02) | not listed | not listed | not listed | not checked | |
+| Nemotron-3-Ultra | 1.00 / 3.00 (fp4) | not listed | 0.60 / 2.40 (Preview) | - | - | not checked | |
+| Hermes-4-405B | 1.00 / 3.00 (fp8) | not listed | not listed | not listed | not listed | 1.00 / 3.00 (Nebius, sole provider) | |
+| Llama 3.3 70B | not in catalog | 1.04 / 1.04 | not listed | "ContactSales" | 0.293 / 2.253 (fp8 fast) | not checked | for reference only |
+
+### What this means (facts, not recommendations)
+- The Nebius catalog today has 28 entries; 17 are from Chinese developers (DeepSeek, Qwen, Kimi, MiniMax, GLM) plus MiniCPM (OpenBMB); non-Chinese text models are gpt-oss-120b, Gemma-3-27b-it, Hermes-4-405B, Muse Spark Open, Reflection Beam, and 5 NVIDIA Nemotron models.
+- No Llama and no Mistral model is in the Nebius catalog on this date.
+- On gpt-oss-120b, Nebius, Together, Groq and Fireworks (Standard) list the same 0.15/0.60. Cloudflare lists higher (0.35/0.75). Several OpenRouter providers list 0.03/0.15.
+- On Gemma 3 27B and Nemotron-3-Nano, Nebius is on OpenRouter but not the cheapest; on Hermes-4-405B it is the only OpenRouter provider.
+- Nebius states a cached-input price for some models only; gpt-oss-120b and Gemma-3-27b show none, whereas Fireworks lists cached 0.015 for gpt-oss-120b.
+- Nebius lists no fast/base flavor split in the current catalog.
+- Nebius public endpoints process in a dynamically chosen location; fixed region only on dedicated endpoints. Retained data (when ZDR is off) is stored in Finland.
+- Nebius states no training on customer content and offers an org-level ZDR switch.
+- Rate-limit baseline on Starter: 400K TPM / 600 RPM; SLA only on Enterprise (99.9%).
+
+### OPEN
+- AI Studio former name (not on official pages); current governing law and contracting entity; Services Agreement terms on resale/key sharing; whether ZDR is on by default (conflicting relays); human review; cost field in API responses; per-model JSON-schema strictness and tool-call streaming; batch price; dedicated/fine-tune prices; fast/base flavors; gpt-oss-20b on Nebius; per-project keys; OAuth connect flow; startup/nonprofit programs; Fireworks/Groq/Together prices for Gemma 3 27B and Nemotron-3-Nano/Super (not listed individually); OpenRouter 120b page earlier showed "$0.03/$0.15" headline, matches cheapest above; Nemotron 3.5 Super VL, Ultra and Muse Spark OpenRouter checks not done.
+- All figures are via a summariser; exact numbers should be re-verified in the console before commitment.
+### BLOCKED
+- https://tokenfactory.nebius.com/organization/prices (JS page, title only; not worked around).
+- https://api.tokenfactory.nebius.com/v1/models (401 without a key; not attempted further).
+- https://groq.com/pricing (no price content returned); https://fireworks.ai/pricing (prices on docs page instead).
