@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -73,3 +73,11 @@ Read in full (never in part): acquisition R10, R11, R20, R47, R95, R96, R97, R98
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, use a stand-in (the key with a plain `localize` default, named in your record as a stand-in) until the design's rows land, and carry on; never block on them and never invent the final sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/acquisition/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B7 · ANSWER · re J6
+
+ANSWER J6 (K4363). Merge tranche/T51 first. (1) Past memory: record-core R87 (new) is evidenceStore().putFromParts(digest, partDigests) -> {ok, size} | refusal: the store's own multipart upload under the digest known at the end, streaming held parts, one part in memory. RECORD-CORE runs in wave 2. Build (a) now; past MULTIPART_KEEP_MAX keep the parts as today and, when the store answers putFromParts (feature-detect it), call it after the answer (ctx.waitUntil / outside the door's bound), then the door's readHeld reads the whole (control-plane R117). Test the call path against a scripted double of putFromParts; name the past-memory arm 'met against a double, live at RECORD-CORE's merge' in COMPLETE. (2) PDF title: answer title: null for a PDF at capture; the reading names it once read (reading-pipeline R34 via pdf-reader metadata.title), so screens-intake R54's one rule falls back to the file name until then. No new edge. Your HTML title as planned.
+
+## B8 · CHANGE
+
+host-governor R29 (governorAdmit({host, peek:true}): answers admission or refusal and books nothing) is merged into tranche/T51 (K4367), with capture-sources R68 and capture R77/R100. Merge tranche/T51 into your branch before finishing, and pass peek:true where the render path admits (acquisition/index.mjs ~912, your entry (c), R97), so one host visit books once.

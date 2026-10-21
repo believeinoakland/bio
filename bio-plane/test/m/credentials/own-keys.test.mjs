@@ -84,8 +84,8 @@ test("R9 a key another member holds is never rebound, whatever its state, its or
 test("R9 a registration: active, origin self, registered by the member, every administrator (membership R86) notified; it attests", async () => {
   const w = await keyWorld();
   const r = reg(w, "bob", "AAAAbobkey", "bob's laptop");
-  assert.deepEqual({ ...r, detail: null }, { ok: true, keyB64: "AAAAbobkey", memberId: "bob", status: "active", origin: "self",
-    registered_by: "bob", existed: false, notified: ["admin", "second"], detail: null });
+  assert.deepEqual({ ...r, detail: null, timings: null }, { ok: true, keyB64: "AAAAbobkey", memberId: "bob", status: "active", origin: "self",
+    registered_by: "bob", existed: false, notified: ["admin", "second"], detail: null, timings: null });
   assert.equal(typeof r.detail, "string");
   assert.deepEqual(keyRow(w, "AAAAbobkey"), { member_id: "bob", status: "active", status_by: "bob", origin: "self",
     registered_by: "bob", comment: "bob's laptop" });
@@ -110,8 +110,8 @@ test("R9 a key the member already holds: active, existed: true and nothing rewri
   reg(w, "bob", "AAAAbobkey", "laptop");
   const before = w.snapshot();
   const again = reg(w, "bob", "AAAAbobkey", "a new comment");
-  assert.deepEqual({ ...again, detail: null }, { ok: true, keyB64: "AAAAbobkey", memberId: "bob", status: "active", origin: "self",
-    registered_by: "bob", existed: true, notified: ["admin", "second"], detail: null });
+  assert.deepEqual({ ...again, detail: null, timings: null }, { ok: true, keyB64: "AAAAbobkey", memberId: "bob", status: "active", origin: "self",
+    registered_by: "bob", existed: true, notified: ["admin", "second"], detail: null, timings: null });
   assert.equal(w.snapshot(), before, "nothing written");
   /* one an administrator registered for them stays an administrator's registration (R8) */
   w.c.signerAdd({ keyB64: "AAAAgiven", memberId: "bob", by: "second" });
@@ -172,4 +172,49 @@ test("R10 signerRevokeOwn: never refused for a key the member holds, in any stat
   assert.deepEqual([next.ok, next.existed, listed(w, "AAAAbob3").attests], [true, false, true], "a replacement is a new R9");
   assert.equal(w.c.signerSet({ keyB64: "AAAAbob3", status: "revoked", by: "second" }).ok, true, "an administrator revokes any key (R7)");
   assert.equal(listed(w, "AAAAbob3").attests, false);
+});
+
+/* C51 (fix round 3; the walk's registration took 37.6 s): the arm answers within a bounded count of store calls and times
+   its stages. The counts, not wall time, are what the test holds (K4354's bar is the whole act's, the door's included). */
+const countCalls = (w, fn) => {
+  const orig = w.sql.exec;
+  let n = 0;
+  w.sql.exec = (...a) => { n += 1; return orig(...a); };
+  try { return [fn(), n]; } finally { w.sql.exec = orig; }
+};
+
+test("R9 C51 a registration's store calls are bounded and do not grow with the team or the keys held; a refusal is no dearer", async () => {
+  const small = await keyWorld();
+  const [first, nSmall] = countCalls(small, () => reg(small, "bob", "AAAAbobkey"));
+  assert.equal(first.ok, true);
+  const big = await world().group(...Array.from({ length: 12 }, (_, i) => `m${i}`));
+  for (let i = 0; i < 60; i++) big.c.signerAdd({ keyB64: `AAAAfiller${i}`, memberId: `m${i % 12}`, by: "admin" });
+  const [, nBig] = countCalls(big, () => reg(big, "m3", "AAAAnewkey"));
+  assert.ok(nSmall <= 6, `${nSmall} store calls`);
+  assert.equal(nBig, nSmall, "the same calls with twelve members and sixty keys");
+  const [again, nAgain] = countCalls(small, () => reg(small, "bob", "AAAAbobkey"));
+  assert.equal(again.existed, true);
+  assert.ok(nAgain <= nSmall, "a key already held is no dearer");
+  const [held, nHeld] = countCalls(small, () => reg(small, "ann", "AAAAbobkey"));
+  assert.equal(held.reason, "SIGNER_KEY_HELD_BY_ANOTHER");
+  assert.ok(nHeld <= nSmall, "a refusal is no dearer");
+});
+
+test("R9 C51 a registration's answer carries timings: the total and each stage that ran, whole non-negative milliseconds; an administrator is still told", async () => {
+  const w = await keyWorld();
+  const r = reg(w, "bob", "AAAAbobkey");
+  assert.deepEqual(Object.keys(r.timings).sort(), ["stages", "total_ms"]);
+  assert.deepEqual(Object.keys(r.timings.stages).sort(), ["lookup", "notify", "standing", "write"]);
+  const parts = Object.values(r.timings.stages);
+  for (const ms of [r.timings.total_ms, ...parts]) assert.ok(Number.isInteger(ms) && ms >= 0, String(ms));
+  assert.ok(parts.reduce((a, b) => a + b, 0) <= r.timings.total_ms, "the stages sum to no more than the total");
+  /* a key already held writes nothing, so it has no `write` stage */
+  const again = reg(w, "bob", "AAAAbobkey");
+  assert.deepEqual(Object.keys(again.timings.stages).sort(), ["lookup", "notify", "standing"]);
+  /* control: the timings change nothing but their own key, and every administrator is still told */
+  assert.deepEqual({ ...r, timings: null, detail: null }, { ok: true, keyB64: "AAAAbobkey", memberId: "bob", status: "active",
+    origin: "self", registered_by: "bob", existed: false, notified: ["admin", "second"], detail: null, timings: null });
+  assert.deepEqual(r.notified, w.m.activeAdmins());
+  /* a refusal carries no timings: its keys are exactly the refusal's */
+  assert.ok(!("timings" in reg(w, "ann", "AAAAbobkey")));
 });

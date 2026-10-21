@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_014WjdhuWBuYxto9rwEbpv6a · depth 2 · COMPLETE · handled B13
+**Status** · session_01Czk6fsMgDJE7nbPVmgPw5X · depth 2 · COMPLETE · handled B17
 
 ## Completion record (T51, B1 START)
 
@@ -213,3 +213,49 @@ QUESTION (B12, C3 and C67): two requirement lines are not written; my best readi
 ## J11 · COMPLETE
 
 COMPLETE (B12, B13; fix round 2, wave 1). C3 (R82 as amended): the pre-flight's step three lists `not_co_attested` and `self_attested` whenever the roster and roles are judged, whether or not `op=publish` refused; the refusal stays in `first`; an unjudgeable roster states it and lists none. C67 (my part, R16 as amended): a case carries an edge to a finding only when it is a member; documents as before. Tests written first and seen red: fixround2.test.mjs (R82 x4, R16 x2). case-authoring 214/214; users review 73/73, case-check 34/34, screens-publish 179 pass 0 fail, plane 279/280 (R24 words test in release.test.mjs is red on tranche/T51 itself). architecture, coverage 54/54, words and ownership: 0 failures; format fails only on build/rulings.md:4298 (K4301, not mine). Nothing deferred. For screens-publish (wave 2): the ceremony can draw Retry and the reason box from step three's `not_co_attested` with no change of shape; its C67 half (no minutes line when none relied on) is theirs. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2889.
+
+## J12 · COMPLETE
+
+COMPLETE (B14; fix round 3, wave 1). Causes met: C48 and C50 (R83), small 3 (R77 as amended).
+
+**C48, C50 (R83).** `publishPreflight` now answers `editions: {prepared, published}` at the top of its answer, for the case identity the call stands at (R7, R9): the case it names, else the one published case its members serve, else the one their unsigned preparation names (`#caseStood`); `newCase` stands at none. `prepared` is the edition number of the unsigned preparation the record holds (`case_documents`, unsigned), else null; `published` is `{edition, address}` for the latest ratified edition of the case, else null (`#editionsOf`). A refused pre-flight states them too; a minted case (the rolled-back run's id, which the record does not hold) states neither; a published edition is never stated as prepared. The second preparation of one draft already answered the same case, the same edition and `minted: false` (R7, R8, R13); a test now holds it. Reads only; the pre-flight still rolls back.
+- **Reading taken (address):** the public address is the case page the screens draw, `/app/published/<case>/<edition>` (screens-publish R6, R37). The requirement does not spell the form; BOB, tell me if it should be the `op=publishedcase&case=&edition=` read instead.
+- **For `review` (R19):** its job states the same two fields; this module's `#editionsOf` is a private method, so `review` reads the record itself (the same two tables, publication R40) or through whatever service BOB names; I export nothing new.
+
+**Small 3 (R77 as amended).** `#minutesStep` answers `minutes: {undetermined: true}` and no rows when the source answers undetermined, throws, answers no list or a malformed row (case-inputs R19 reads those), or the door is not bound on the instance; reached rows are unchanged. Reading taken: "not bound" is the door missing, not "no source registered", which case-inputs R19's own control answers `rows: []` (a reached, empty read); the existing test of that stays.
+
+**Tests (written first, seen failing).** `editions.test.mjs`: R83 x5 (never prepared and refused-first and newCase state none; prepared 1 on every later call and under another refusal; published edition 1 with its address and prepared null, then edition 2 prepared beside it; a second preparation same case/edition `minted: false`, one document; a draft named by the call reads prepared 1 after it was null). `minutes.test.mjs`: one R77 test (non-list, malformed row, door not bound each undetermined; control reached rows unchanged), red before the source change with `minutesComparisonsOn is not a function`.
+
+**Deferred.** None. **Found in other modules.** None new; `review` R19 owes the same fields (its job). The proposed lines: none; R83 and R77 are met as written.
+
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/case-authoring/`: 220 of 220 pass.
+- Users: `review` 76/76, `case-check` 34/34, `screens-publish` 210 pass, 0 fail (212 tests, 2 not run as pass).
+- `checks/run.mjs`: architecture 0 failures; coverage fails for 15 other modules (none case-authoring); words 0 failures; format 1 failure, `build/rulings.md:4346` (K4349, not mine, red on the tranche tip). `checks/ownership.mjs case-authoring tranche/T51 job/T51/case-authoring`: 4 files, 0 failures.
+- Merged `origin/tranche/T51` into my branch before the checks (no `review` merge was pending).
+
+Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 9, module lines 2921
+
+## J13 · QUESTION · re B15
+
+QUESTION (B15): no builder of a published case's public address exists in public-read (it has only docketAddress, op=docketpublic&case=); the address is composed inline by the screens (screens-publish ceremony.mjs:120, published-parts.mjs:9: /app/published/<case> and /app/published/<encodeURIComponent(case/edition)>). I will not compose a second way in earnest, but need one value: best reading, address = /app/published/<case>/<edition> (the form R83 already ships, equal to what the screens link for an edition). Carrying on with it in draftEditions({caseId, draft}). If public-read should own a builder (public-read is not mine), tell me its export name and I will import it.
+
+## J14 · COMPLETE · re B15
+
+COMPLETE (B15, K4363). `draftEditions({caseId, draft})` is a public method of the case-authoring instance (`caseAuthoringOf(host).draftEditions`), answering `{prepared, published: {edition, address}|null}`; the pre-flight's `editions` is now that one read (no second path). `caseId` is the case the draft's identity names; with none, `draft` (an id, or a row with `case_id`) resolves to the case its own preparation produced (`case_documents.draft_id`); neither held states `{prepared: null, published: null}`. It reads only and never throws. REVIEW #21 calls it per draft row.
+
+Address: no builder exists in public-read (only `docketAddress`); see my QUESTION J13. Until BOB names one, address = `/app/published/<case>/<edition>`, the form the screens link. If a builder is named, the change is one import in this method.
+
+Tests: `editions.test.mjs` +1 (R83/K4363: by case, by draft id, by row, never prepared, published, equals the pre-flight's answer, unknown case). case-authoring 221/221; review 76/76; architecture and words 0 failures; ownership 0 failures; format's one failure is `build/rulings.md` (not mine). Merged `origin/tranche/T51` first.
+
+Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 12, module lines 2938
+
+## J15 · COMPLETE · re B17
+
+COMPLETE (B17, K4365; C40's last hop). Merged tranche/T51 first (case-disclosures R2 amended). `#notCoAttested` now builds each `not_co_attested` row as `{capture, by, findings, timestamp_at, co_archive, missing, late, timestamp_late, late_words}`, the last six from the capture row it already carries, so screens-publish can say which proof exists late and which is missing.
+
+Test (seen failing first): `fixround2.test.mjs`, R82/C40: with no attempt the row misses both (`["timestamp","co_archive"]`), not late, no words (control); after a late timestamp it is `timestamp_late: true`, `late: true`, `missing: ["co_archive"]`, `timestamp_at` set, `late_words` naming it. Three older R82 tests deep-equal on the original three fields; they now compare those three through a `core` helper (the row grew, their claim is unchanged).
+
+case-authoring 222/222; screens-publish 210 pass 0 fail; review 76/76; architecture, words, ownership 0 failures; format's one failure is build/rulings.md (not mine).
+
+Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 16, module lines 2943

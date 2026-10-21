@@ -67,3 +67,24 @@ test("R26 doorbell declares pulledknocks: its requires alone raise no refusal na
   await declaredOpHolds({ op: "pulledknocks", declaration: DECLARED_OPS["pulledknocks"], call: mk("pulledknocks", {}),
     refusedNaming: named({}), same: sameOk });
 });
+
+/* fix round 3, Small 1 (K4320, K4208): the inbox list is declared where it is routed, as `inboxlist`; `inbox` stays the alias the screens send */
+test("R26 doorbell declares inboxlist where the route is: every op the module declares is a route of its ops map, and the list is the one routed", async () => {
+  assert.ok(DECLARED_OPS["inboxlist"], "inboxlist is declared");
+  const { c } = fresh({ evidence: bucket(), env: { INSTANCE_NAME: "i" } });
+  const routes = Object.keys(doorbellOps(c, new URL("http://x/"), null));
+  for (const op of Object.keys(DECLARED_OPS)) assert.ok(routes.includes(op), `${op} is declared but not routed`);
+  assert.ok(routes.includes("inboxlist"));
+  await declaredOpHolds({ op: "inboxlist", declaration: DECLARED_OPS["inboxlist"], call: mk("inboxlist", {"viewer":"member:m1"}),
+    refusedNaming: named({"status":["BAD_STATUS"],"sort":["REQUIRED_ARGUMENT_MISSING"],"dir":["REQUIRED_ARGUMENT_MISSING"]}), same: sameOk });
+});
+
+test("R26 doorbell control: the declared list reads like the inbox list the screens send as `inbox`: member classes, no write, and the route answers the list", async () => {
+  const d = DECLARED_OPS.inboxlist;
+  assert.deepEqual(d.classes, ["admin", "member", "probe"]);
+  assert.equal(d.mutating, false);
+  const env = await mkKnocked();
+  const url = new URL("http://x/?op=inboxlist&viewer=member:m1");
+  const a = doorbellOps(env.c, url, null).inboxlist();
+  assert.equal(a.inbox.some((r) => r.knock_id === env.knockId), true);
+});
