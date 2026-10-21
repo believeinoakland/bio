@@ -206,3 +206,19 @@ COMPLETE (B24, B25) for `interface-shell` in T51, merged `tranche/T51` first.
 **Checks.** Module suite 243 of 243; screens-* suites identical to the base (pass/fail counts unchanged); format 0, architecture 0, words 0 for interface-shell (the run's 24 testcopy are other modules'), coverage 107 of 107, ownership 0, `setup-words build --check` clean.
 
 Size (session_01KQHd3HJbcAh8FMDw347XK5): test runs 12, module lines 2893
+
+## J16 · COMPLETE
+
+COMPLETE (after B26, K4259) for `interface-shell` in T51. Pushed at ea97f9fd32.
+
+**Entry applied.** `ref` (browser.mjs) draws the `<b>` lead only when `shell.card.<kind>` is held; a kind with no word is its facts alone, nothing if none, as `theme` was. The old exemption by name (`theme`) and the `someFact` test are gone. Test (written first, seen failing): `fixround.test.mjs` "R106 an objective reference with no facts draws no empty lead…" (no `<b>` with no facts or a list of null and ""; control: `published` keeps its word). `dash-action` stays out of REF_SCREENS.
+
+**Requirement line for BOB (amends R106's last sentence):** "A kind with no `shell.card.<kind>` word is drawn with the item's own facts alone, as `theme` is (R81); an item with no facts either has no card heading and no tip (the reference is a link, or a label, only)."
+
+**A red my change causes in another module (REPORT).** `screens-investigate` `common.test.mjs:77` (R10 "every record item a screen names is a reference with its card"), assertion at :82: on `timeline`, a `statement` reference carries no `data-tip`. It had one only because the old `ref` drew an empty `<b></b>` for a kind with no word and no facts; that tip said nothing. The fix is that module's: give the reference facts, or relax the test to references that have something to say. I did not touch it.
+
+**Other reds, not mine (same before and after my change, compared):** `screens-publish` 1 (R10, the nine registry screens' acts), `screens-investigate` R10 acts (`linewithdraw`).
+
+**Tests and checks.** `node --test bio-plane/test/m/interface-shell/`: 244 tests, 244 pass. Screen suites run: screens-inquiry 372/0, screens-intake 179/0, screens-daily 207/0, screens-settings 209/0, screens-action 210/0, screens-publish 176/1 fail (not mine), screens-investigate 174/2 fail (one mine, above). `checks/run.mjs`: format 0, architecture 0, words 1 failure (op-grades' test copy, not this module), coverage 6 failures (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry R110 R119, screens-intake R53; none interface-shell). Ownership: 0 failures.
+
+Size (session_01PJfJCZsnNnrrxo4GRZ1ehd): test runs 8, module lines 2892
