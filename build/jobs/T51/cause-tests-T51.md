@@ -43,3 +43,33 @@ Suites (summary lines):
 - screens-settings: tests 210, pass 209, fail 1 (R39 contract, pre-existing, see above).
 
 Waiting on Bob's ruling for item 3. When it comes I finish: COMPLETE, the Size line, and the record.
+
+## J2 · COMPLETE
+
+COMPLETE, as B2 directs (K4278): item 3 is partly done. The registration stays (the plane's way); the totality #324 stays red, accepted by name and taken to BOB's trace.
+
+Applied (tests only, in the held modules' test paths; pushed at 04d3585164):
+1. control-plane r53-routes: declaration acts' author is token:<class> for a caller with no session (DECLARATION_ACTIONS from op-declarations; MACHINE_AUTHOR_PREFIX), the member for a session. Reproduced.
+2. control-plane t46-e2e: waits on finished.release > 0 before the held-captures read, as line 173 does. Not reproduced (passed before and after).
+3. control-plane register-declared: registers with op-declarations and op-grades. Partly done: #324 stays red (22 stale names and export unpublished; see J1).
+4. plane split: list form without bundleId; bundleId case against provenanceRouteOf. Reproduced.
+5. screens-intake capture: bounded wait for the promote request at :489, and the same pattern at :498 in the same test. Not reproduced.
+6. screens-settings kit: press with wait waits up to 20 s by time for the request. Not reproduced.
+
+Deferred: none of the six. Item 3's totality is with BOB (J1, B2).
+
+Suites (summary lines, after the changes):
+- control-plane (all files): tests 324, pass 323, fail 1 (#324, item 3 as accepted).
+- plane (test/m/plane): tests 280, pass 279, fail 1 (R24 purpose rows, T52).
+- screens-intake (all files): tests 181, pass 181, fail 0.
+- screens-settings (all files): tests 210, pass 209, fail 1 (R39 contract, T52, K4270).
+- plane system test/system/migrate-released.test.mjs: PENDING. It runs past 500 s here; a background run was still going when I posted this. Its result follows in a later entry if it ends.
+
+Checks:
+- format (checks/format.mjs /home/user/bio): 175 modules, 175 requirements files; 0 failures.
+- architecture, each held module: 0 failures.
+- coverage, each held module: control-plane 83/83, plane 73/73, screens-intake 52/52, screens-settings 76/76 live ids named by a test.
+- ownership, control-plane,plane,screens-intake,screens-settings against origin/tranche/T51, prep-branch checks: 0 failures.
+- checks/run.mjs /home/user/bio: format 0, architecture 0, channels 0, words 0; coverage 5 failures, all in modules that are not held here (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry).
+
+Size (session_013Uk1PvTsixvPCzxY7RSnZQ): test runs 17, module lines 13832 (control-plane 3957, plane 2607, screens-intake 2163, screens-settings 5105; src/<module>/*.mjs).
