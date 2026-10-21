@@ -27,3 +27,7 @@
 - `checks/ownership.mjs`, run once per held module: each reports only the other held module's files and this record as outside its paths (the check takes one module); no file outside the two modules and this record.
 
 Size (session_013H6tZYM9trYPdt2QpsTre1): test runs 15, module lines 2990
+
+## J1 · COMPLETE
+
+C41 (basis-version-grammar R11) and C17 (reading-pipeline R35) met, tests first. R11: VERSION_PARTITION_INCOMPLETE carries legs, the target ids of every unplaced supporting leg. R35: a reading with text units carries words_total and words_read (below-floor OCR region words counted in the total as a count only, never as text). Suites: basis-version-grammar 33/33, reading-pipeline 149/149; users basis-versions 182/182, extraction 193/193, content 142/142, events 90/90. checks: format, architecture, words 0 failures; coverage's 10 failures are other modules only. Two existing tests changed on purpose (pieces.test.mjs peels the two new keys as it does R28's and R34's, registration.test.mjs drops legs from the golden compare), see my record. For other modules (my record, 'Reported to BOB'): extraction's re-read (index.mjs:1310, :1512) must also set words_total/words_read from textWordsFor and store/answer them; screens-inquiry reads reading.words_read/words_total and finding.legs and lists the word row it needs. Size (session_013H6tZYM9trYPdt2QpsTre1): test runs 15, module lines 2990.
