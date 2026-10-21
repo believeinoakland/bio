@@ -2,7 +2,8 @@
  * self-contained, interface-shell R21). State b is one matter the project follows through a progression: its steps in order
  * with the documents threaded to them, how sure the chain is, and the findings; state c is the progression itself: its steps,
  * its basis, every version. A finding reports and never decides, and nothing here says "overdue" or "late": the sentence of a
- * missing step is the finding's own `says` (progressions R45), read through `word`, never composed here. */
+ * missing step is the finding's own `says` (progressions R45), read through `word`, never composed here. The three sections that
+ * are the reads `instance` (states a and b) and `progression` (state c) carry that act, as the design draws them (B14). */
 
 export const TIMELINE_PARTS = Object.freeze({
   /** R33 (2): one matter (`instance`), drawn under the project's timeline. */
@@ -60,7 +61,7 @@ export const TIMELINE_PARTS = Object.freeze({
       const chain = m.grade_determined && m.grade ? `<p>${cs.grade("capture", m.grade)}</p>` : `<p>${cs.w("progression.chain.undetermined")}</p>`;
       return `<p class="mk-sub"><b>${cs.esc((m.entity && m.entity.label) || "")}</b> · ${cs.w("progression.followed", { progression: cs.esc(m.label || ""), n: String(m.definition_version) })}</p>`
         + `<p class="mk-note">${cs.w("progression.finding.never")}</p>`
-        + cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.steps" })
+        + P.actSec(cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.steps" }), "instance")
         + cs.sec("progression.chain", chain, { help: S + "tip.sure" })
         + (findings.length ? cs.sec("progression.findings", cs.sheet(findings.map(findingRow).join("")), { help: S + "tip.findings" }) : "")
         + fold("progression.thread", cs.choice("pm-thread-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-thread-doc") + cs.act("thread", { label: "progression.thread" }))
@@ -95,7 +96,7 @@ export const TIMELINE_PARTS = Object.freeze({
       /* R45: the six parts of a step's line, in order, each by its label */
       const columns = `<p class="mk-small" data-columns="steps">${["key", "label", "after", "within", "required", "cardinality"].map((c) => cs.w("progression.steps.label." + c)).join(" | ")}</p>`;
       return `<p class="mk-sub"><b>${cs.esc(v.label || "")}</b> · ${sub(v.version, v.declared_by, v.at)}</p>`
-        + cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.stepsdef" })
+        + view.parts.actSec(cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.stepsdef" }), "progression")
         + cs.sec("progression.basis", `<p>${basisOf(v.basis)}</p>` + cs.sheet(versions.map((x) => cs.row("", `<span class="mk-small">${sub(x.version, x.declared_by, x.at)}</span> ${basisOf(x.basis)}`)).join("")), { help: S + "tip.basis" })
         + fold("progression.revise", `<p class="mk-small">${cs.w("progression.revise.help")}</p>` + cs.field("pd-rv-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" }) + cs.field("pd-rv-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
           + columns + cs.field("pd-rv-steps", "progression.steps", { area: true, rec: true, value: stepsText, help: "progression.steps.help" })

@@ -126,3 +126,26 @@ test("R50 B423 a statement that an office is responsible for is drawn by its own
     : x.query.entity === OFFICE && x.query.kinds === "custodian_of,responsible_for" ? [{ line_id: "LIN-8", kind: "responsible_for", from: OFFICE, to: SUBJECT, valid: null, assertion: "B", basis: { captureSha: SHA, extent: { kind: "pdf-page", page: 3 } } }] : [] }) }) });
   drew(secOf(r, "screen.person.keeper.heading"), "screen.person.keeper.line.responsible", { subject: "Street repair and potholes" });
 });
+
+/* B14 entry 1 (K4259; registry at 09fbb247eb): each kept line carries the design's "Withdraw this statement, with a reason" */
+test("R50 B14 each statement standing in Records its offices keep is drawn with linewithdraw (the registry's label); pressing it asks the reason, sends the line's id with it, and the lines are read again; control: a withdrawn line draws no act, a person's page none", async () => {
+  let withdrawn = false;
+  const line = (id, kind) => ({ line_id: id, kind, from: OFFICE, to: SUBJECT, valid: null, assertion: "B", basis: { captureSha: SHA, extent: { kind: "pdf-page", page: 3 } }, withdrawn: null });
+  const plane = keeperPlane({ linewithdraw: () => { withdrawn = true; return ok({ ok: true, line_id: "LIN-5" }); },
+    linesof: (x) => ok({ ok: true, entity: x.query.entity, truncated: false, lines: x.query.kinds === "post_in" ? [{ line_id: "LIN-1", kind: "post_in", from: OFFICE, to: ORG }]
+      : x.query.entity === OFFICE && x.query.kinds === "custodian_of,responsible_for" ? [line("LIN-6", "responsible_for"), ...(withdrawn ? [] : [line("LIN-5", "custodian_of")]), { ...line("LIN-7", "custodian_of"), withdrawn: { by: "member:mai", at: "2026-10-05T09:00:00Z", reason: "x" } }] : [] }) });
+  const p = await open(at, { plane });
+  const sec = secOf(p, "screen.person.keeper.heading");
+  const buttons = sec.querySelectorAll('button[data-act="linewithdraw"]');
+  assert.equal(buttons.length, 2, "one for each standing statement, none for the withdrawn one");
+  for (const b of buttons) assert.equal(b.textContent.startsWith(word("act.linewithdraw.label.person")), true, "the registry's own label");
+  assert.equal(buttons[0].closest(".cs-row").querySelectorAll(".cs-grade").length, 1, "the row keeps its source's grade");
+  await press(p, "linewithdraw", { el: buttons[1], reason: "recorded by mistake" });
+  assert.deepEqual(p.byOp("linewithdraw")[0].body, { lineId: "LIN-5", reason: "recorded by mistake" });
+  assert.equal(secOf(p, "screen.person.keeper.heading").querySelectorAll('button[data-act="linewithdraw"]').length, 1, "read again: the withdrawn statement is no longer standing");
+  const q = await open(at, { plane });
+  await press(q, "linewithdraw", { el: button(q, "linewithdraw") });
+  assert.equal(q.byOp("linewithdraw").length, 0, "no reason, nothing sent");
+  const person = await open("/app/person/" + ENT, { plane: keeperPlane() });
+  assert.ok(button(person, "linewithdraw") === null, "control: a person's page draws none");
+});

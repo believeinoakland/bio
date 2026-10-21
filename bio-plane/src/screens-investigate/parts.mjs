@@ -42,6 +42,11 @@ export const PARTS = Object.freeze({
   plain(cs, key, fills) {
     return cs.w(key, fills).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
   },
+  /** B14 (K4259): a section that is itself the read of a registry act the design draws as a section, not a button (`instance`,
+   *  `progression`): the section carries the act in `data-act`, as the design's `sec(…, {act})` does. Answers HTML. */
+  actSec(html, op) {
+    return String(html).replace(/^<section class="cs-section"/, '<section class="cs-section" data-act="' + String(op).replace(/[^a-z]/g, "") + '"');
+  },
   /** R44: an undetermined answer's reason, `{key, vars}`, drawn through its word (`vars` that are themselves reasons likewise,
    *  an owner's as that owner answered it); a reason that is no held key (a bare string, a key the page does not carry) is
    *  `state.undetermined` over the module's own plain reason, never English of ours and never the key's name. Answers HTML. */
@@ -223,13 +228,12 @@ export const PARTS = Object.freeze({
       const c = classOf(s);
       const ev = (Array.isArray(s.evidence) ? s.evidence : []).map((e) => (e.capture_sha ? cs.ref("capture", e.capture_sha, cs.w(o.words.cited), []) : e.source ? cs.esc(String(e.source)) : "")).filter(Boolean).join(" ");
       const letter = s.grade && /^[A-D]$/.test(s.grade.assertion || "") ? cs.grade("connection", s.grade.assertion) : "";
-      /* R35, R17: a step a member backed with a passage shows who attached it and when beside its citation, and offers its withdrawal */
+      /* R35, R17: a step a member backed with a passage shows who attached it and when beside its citation, */
       const by = s.kind === "step_source" && s.attached_by
         ? ` <span class="mk-small" data-attached="${cs.esc(s.id)}">${cs.w(o.words.attached, { by: String(s.attached_by).replace(/^member:/, ""), date: cs.date(s.at || "") })}</span>` : "";
-      const wd = s.kind === "step_source" && o && o.withdraw ? cs.act("stepsourcewithdraw", { label: o.words.withdraw, data: { id: s.id } }) : "";
       return cs.row(letter, `<b>${cs.esc(label(s.from))}</b> → <i>${cs.esc(s.word || s.kind)}</i> → <b>${cs.esc(label(s.to))}</b>`
         + (c === "lead" ? ` <b>${cs.w(s.label === "hunch" || s.class === "hunch" ? o.words.hunch : o.words.declared)}</b>` : ""),
-        (ev ? ev : c === "lead" ? "" : cs.mark("gap", "undetermined", { reason: cs.w(o.words.nosource) })) + by + wd);
+        (ev ? ev : c === "lead" ? "" : cs.mark("gap", "undetermined", { reason: cs.w(o.words.nosource) })) + by);
     }).join("");
     const trail = (o && Array.isArray(o.trail) ? o.trail : [centre]);
     const trailHtml = `<div class="mk-trail"><span class="k" data-tip="${cs.esc(cs.w("connection.graph.trail.means"))}">${cs.w("connection.graph.trail.label")}</span>`

@@ -103,13 +103,13 @@ test("R18 the money trail draws the graph with the trail's set as the centre; a 
   assert.ok(main(q).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.money.graph")).querySelector('[data-state="failed"]'));
 });
 
-test("R35 a step_source step shows who attached the source and when beside its citation and offers stepsourcewithdraw; control: a step of another kind shows neither", async () => {
+test("R35 a step_source step shows who attached the source and when beside its citation; B14: it offers no withdrawal (the design draws none on explore); control: a step of another kind shows neither", async () => {
   const gr = GRAPH();
   gr.steps = gr.steps.concat([{ id: "REL-9", from: ENT, to: GRAPH_PERSON, kind: "step_source", word: "step sourced", class: "evidentiary", attached_by: "member:mai", at: "2026-10-05T09:00:00Z", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA }], valid: {} }]);
-  const p = await open(PATHS.explore, { plane: { exploregraph: ok(gr), stepsourcewithdraw: ok({ ok: true }) } });
+  const p = await open(PATHS.explore, { plane: { exploregraph: ok(gr) } });
   const g = graphOf(p);
   drew(g, "screen.explore.attached", { by: "mai", date: dayOf("2026-10-05") });
-  assert.equal(g.querySelectorAll('button[data-act="stepsourcewithdraw"]').length, 1, "one withdrawal, for the one attached source");
+  assert.equal(g.querySelectorAll('button[data-act="stepsourcewithdraw"]').length, 0, "no withdrawal control: the design draws none");
   const q = await open(PATHS.explore);
   assert.equal(graphOf(q).querySelectorAll('[data-attached]').length, 0);
 });

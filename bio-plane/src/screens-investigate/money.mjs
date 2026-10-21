@@ -132,7 +132,7 @@ function render(cs, view) {
   const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
   const groups = P.groupMap(vocab);
   const gq = P.later(cs, view, "graph", "exploregraph", { body: { centre: id, at: { value: P.today(cs), precision: "day", zone: "UTC" }, rings: 2 } });
-  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: (k) => groups[k] || null, trail: [id], act: null, names: { [id]: set ? set.label || id : id }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached", withdraw: "screen.explore.withdraw" } }))));
+  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: (k) => groups[k] || null, trail: [id], act: null, names: { [id]: set ? set.label || id : id }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached" } }))));
   out.push(cs.state("trail", view, () => `<div class="mk-tablebar"><a class="cs-btn" data-tone="quiet" data-nav href="/app/money/${encodeURIComponent(id)}${onlyGaps ? "" : "/undetermined"}" aria-pressed="${onlyGaps}">`
     + cs.w(onlyGaps ? S + "filter.all" : nGaps ? S + "filter.gaps" : S + "filter.gaps.none", { n: String(nGaps) }) + "</a></div>"
     + (shown.length ? cs.rows({ id: "money", pick: true, items: shown, key: (e) => e.key, name: (e) => e.key,
