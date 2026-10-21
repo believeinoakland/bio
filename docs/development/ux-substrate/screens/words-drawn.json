@@ -18722,9 +18722,9 @@
   },
   {
    "key": "refusal.CAPTURE_NOT_HELD",
-   "en": "Your team's Civicsmith holds no captured document like that, or you cannot see it, so it cannot be cited. Nothing was written.",
+   "en": "Your team's Civicsmith holds no captured document like that, or you cannot see it. Nothing was written.",
    "protected": false,
-   "note": "DEC-342: citing a capture the record lacks or hides"
+   "note": "DEC-342: citing a capture the record lacks or hides; DEC-412: B471 capture (K4377): reworded without \"so it cannot be cited\" so it also fits filing a document in a project (captureseenin)"
   },
   {
    "key": "refusal.CAP_NOT_A_GRADE",
@@ -28718,9 +28718,9 @@
   },
   {
    "key": "screen.document.ocr.refused.unread",
-   "en": "Civicsmith holds no reading of this copy that you can see, so there is nothing to replace. A copy is read when it is filed in a project you are part of.",
+   "en": "This copy has not been read yet, so there is no reading to replace. Once it has been read, you can ask for a fresh reading here.",
    "protected": false,
-   "note": "DEC-375: B398 C21 (extraction pdfstructure): refusal under the OCR button"
+   "note": "DEC-375: B398 C21 (extraction pdfstructure): refusal under the OCR button; DEC-412: B471 screens-inquiry (K4402): reworded, the cause is that the copy is unread"
   },
   {
    "key": "screen.document.attest.summary",
@@ -37640,15 +37640,15 @@
   },
   {
    "key": "screen.request.nameoffice.name",
-   "en": "The agency and office",
+   "en": "The agency",
    "protected": false,
-   "note": "DEC-402: field"
+   "note": "DEC-402: field; DEC-412: B471 screens-action (K4409): the field was one line, now two (the agency, the office within it)"
   },
   {
    "key": "screen.request.nameoffice.name.help",
-   "en": "As the agency names the office that answers records requests.",
+   "en": "The agency that holds the records, as it names itself.",
    "protected": false,
-   "note": "DEC-402: help"
+   "note": "DEC-402: help; DEC-412: B471 screens-action: for the agency alone"
   },
   {
    "key": "screen.request.nameoffice.where",
@@ -38699,6 +38699,300 @@
    "en": "a lead, not evidence",
    "protected": false,
    "note": "DEC-411: label on each lead"
+  },
+  {
+   "key": "refusal.SIGNATURES_RUN_RECENT",
+   "en": "Your team's Civicsmith checked for new signatures a few minutes ago, so it did not start another check just now. Try again in a quarter of an hour.",
+   "protected": false,
+   "note": "DEC-412: B471 file-safety (K4371): the refusal when a check for signatures was made under fifteen minutes ago"
+  },
+  {
+   "key": "file-safety.index.signatures_refused_unnumbered",
+   "en": "The signature service refused the download. The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.",
+   "protected": false,
+   "note": "DEC-412: B471 file-safety (K4371): the reason line under the no-signatures line when the service refused and gave no status; the sibling of file-safety.index.signatures_refused without {status}"
+  },
+  {
+   "key": "file-safety.index.checking_for_new_signatures",
+   "en": "checking for new signatures",
+   "protected": false,
+   "note": "DEC-412: B471 file-safety (K4371): act phrase that fills the administrators-only refusal when a member who is not an administrator asks for a check"
+  },
+  {
+   "key": "file-safety.index.no_scanner_so_no_run_started",
+   "en": "Your team's Civicsmith has no file scanner installed, so no check for signatures was started. Whoever installed it can add a scanner.",
+   "protected": false,
+   "note": "DEC-412: B471 file-safety (K4371): detail of the check-for-signatures refusal when no scanner is installed"
+  },
+  {
+   "key": "file-safety.index.a_run_was_started_lately",
+   "en": "A check for new signatures was made a few minutes ago, so no new check was started. Try again in a quarter of an hour.",
+   "protected": false,
+   "note": "DEC-412: B471 file-safety (K4371): detail of the check-for-signatures refusal when one ran under fifteen minutes ago"
+  },
+  {
+   "key": "file-safety.index.the_scanner_did_not_start",
+   "en": "The file scanner did not start a check, so nothing was changed. Try again in a few minutes.",
+   "protected": false,
+   "note": "DEC-412: B471 file-safety (K4371): detail of the check-for-signatures refusal when the scanner did not answer"
+  },
+  {
+   "key": "refusal.CAPTURE_NOT_KEPT",
+   "en": "The document arrived in several parts, but your team's Civicsmith could not keep it whole, so nothing was filed. Capture it again.",
+   "protected": false,
+   "note": "DEC-412: B471 acquisition (K4373): the refusal when a document that came in parts could not be kept whole (stand-in acquisition.checks.capture_not_kept)"
+  },
+  {
+   "key": "case-disclosures.index.late_proves",
+   "en": "The time stamp was asked for late: it shows the document existed by {at}, not when it was captured.",
+   "protected": false,
+   "note": "DEC-412: B471 case-disclosures (K4365): beside a document whose time stamp was made late; {at} the instant the time stamp proves"
+  },
+  {
+   "key": "review.index.not_concluded_yet",
+   "en": "Not concluded yet",
+   "protected": false,
+   "note": "DEC-412: B471 review (K4367): beside a finding whose conclusion section is empty"
+  },
+  {
+   "key": "refusal.CONFIRM_NOT_AN_OFFICE",
+   "en": "Only an office that a member named can be confirmed, and this subject is not an office. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4364): confirming a subject that is not an office"
+  },
+  {
+   "key": "refusal.NOT_NAMED_BY_A_MEMBER",
+   "en": "A member did not name this office, so there is nothing to confirm. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4364): confirming an office no member named, or one already confirmed"
+  },
+  {
+   "key": "entities.index.an_office_is_confirmed_by",
+   "en": "an office a member named is confirmed by its id",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): detail of the refusal when no office is named to confirm"
+  },
+  {
+   "key": "entities.index.confirming_an_office_a_member",
+   "en": "confirming an office a member named",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): act phrase that fills the administrators-only refusal"
+  },
+  {
+   "key": "entities.index.only_an_office_a_member",
+   "en": "Only an office that a member named can be confirmed, and this subject is a {kind}. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): detail of the not-an-office refusal; {kind} what the subject is"
+  },
+  {
+   "key": "entities.index.this_office_was_not_named",
+   "en": "A member did not name this office, so there is nothing to confirm. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): detail of the not-named-by-a-member refusal"
+  },
+  {
+   "key": "entities.index.where_requests_go_and_the",
+   "en": "Where requests go and the law they go under belong only to an office, and a {kind} has neither. Nothing was written.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): refusal when an address or law is given for something that is not an office; {kind} what it is"
+  },
+  {
+   "key": "entities.index.where_requests_go_is_a",
+   "en": "Where requests go needs a kind and a value. The kind is one of {CONTACT_KINDS}. Nothing was written.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): refusal when the address for requests is not given as a kind and a value; {CONTACT_KINDS} the kinds, comma-separated"
+  },
+  {
+   "key": "entities.index.the_law_requests_go_under",
+   "en": "The law requests go under has to be one your team's places name{v1}. Nothing was written.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): refusal for a law the team's places do not name; {v1} is built by the code: a colon and the laws they name, or '; they name none'"
+  },
+  {
+   "key": "entities.declared.officeconfirm",
+   "en": "Confirms an office that a member named, so it no longer carries that mark, and records who confirmed it and when. No name, alias or note changes. Only an administrator can.",
+   "protected": false,
+   "note": "DEC-412: B471 entities (K4407, J7): the declared op description, worded for members"
+  },
+  {
+   "key": "refusal.SEEN_IN_NOT_RECORDED",
+   "en": "Your team's Civicsmith could not write the record, so the document was not filed in the project. Try again; if it happens again, tell an administrator.",
+   "protected": false,
+   "note": "DEC-412: B471 capture (K4377): captureseenin when the write failed (502)"
+  },
+  {
+   "key": "shell.keyfile.none",
+   "en": "No key file was chosen. Choose your key file, then try again.",
+   "protected": false,
+   "note": "DEC-412: B471 cause-shell-3 (K4380): the key file box was empty when the member pressed on"
+  },
+  {
+   "key": "shell.keyfile.unreadable",
+   "en": "That file couldn't be read, so nothing was loaded. Choose your key file again.",
+   "protected": false,
+   "note": "DEC-412: B471 cause-shell-3 (K4380): the chosen file could not be read"
+  },
+  {
+   "key": "shell.keyfile.empty",
+   "en": "That file is empty, so nothing was loaded. Choose your key file.",
+   "protected": false,
+   "note": "DEC-412: B471 cause-shell-3 (K4380): the chosen file holds nothing"
+  },
+  {
+   "key": "act.origins.does",
+   "en": "Lists, oldest first, every system members have said this document came from, with who said so and when. It changes nothing.",
+   "protected": false,
+   "note": "DEC-412: B471 affordances (K4381): origins"
+  },
+  {
+   "key": "act.inboxlist.does",
+   "en": "Lists the items handed in to your team's Inbox, newest first, a page at a time. It changes nothing.",
+   "protected": false,
+   "note": "DEC-412: B471 affordances (K4381): inboxlist"
+  },
+  {
+   "key": "act.transcriptions.does",
+   "en": "Lists the text members have typed in for this document: each portion, who typed it and when. It changes nothing.",
+   "protected": false,
+   "note": "DEC-412: B471 affordances (K4381): transcriptions"
+  },
+  {
+   "key": "act.progressions.does",
+   "en": "Lists the progressions your team has declared. It changes nothing.",
+   "protected": false,
+   "note": "DEC-412: B471 affordances (K4381): progressions"
+  },
+  {
+   "key": "act.remindersfor.does",
+   "en": "Lists this action's reminders, each with its day, who set it and where it stands. It changes nothing.",
+   "protected": false,
+   "note": "DEC-412: B471 affordances (K4381): remindersfor"
+  },
+  {
+   "key": "act.moneysets.does",
+   "en": "Lists the money trails that concern this project, newest first. It changes nothing.",
+   "protected": false,
+   "note": "DEC-412: B471 affordances (K4381): moneysets"
+  },
+  {
+   "key": "act.captureseenin.does",
+   "en": "Files this held document in the project as well. It stays held under its own project.",
+   "protected": false,
+   "note": "DEC-412: B471 affordances (K4381): captureseenin"
+  },
+  {
+   "key": "screen.ceremony.conf.row.missing.timestamp",
+   "en": "no trusted time stamp; an outside copy is kept",
+   "protected": false,
+   "note": "DEC-412: B471 screens-publish (K4398): a document under Documents without a second confirmation that has the outside copy but no time stamp"
+  },
+  {
+   "key": "screen.ceremony.conf.row.missing.co_archive",
+   "en": "a trusted time stamp, but no outside copy",
+   "protected": false,
+   "note": "DEC-412: B471 screens-publish (K4398): the same row for a document that has the time stamp but no outside copy"
+  },
+  {
+   "key": "screen.ceremony.conf.row.done",
+   "en": "a trusted time stamp and an outside copy are both in place",
+   "protected": false,
+   "note": "DEC-412: B471 screens-publish (K4398): the same row for a document that now has both"
+  },
+  {
+   "key": "screen.ceremony.registering",
+   "en": "Making your signing key and registering it with your team. This can take a moment.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-publish (K4398): shown while the signing key is made and registered"
+  },
+  {
+   "key": "screen.home.questions.unknown",
+   "en": "Questions: not shown to you",
+   "protected": false,
+   "note": "DEC-412: B471 screens-daily (K4399): on Home, a project's question count when the record shows you only that the project exists"
+  },
+  {
+   "key": "screen.projects.questions.unknown",
+   "en": "Questions: not shown to you",
+   "protected": false,
+   "note": "DEC-412: B471 screens-daily (K4399): on Projects, a project's question count when the record shows you only that the project exists"
+  },
+  {
+   "key": "screen.capture.address.filedhere",
+   "en": "Filed here as well. It stays held under {project}.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-intake (K4404): a document held under another project and filed here too; {project} the project it is held under"
+  },
+  {
+   "key": "screen.capture.later.none",
+   "en": "You have not asked for any address to be captured later.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-intake (K4404): the list of requests for later, once asked for and empty"
+  },
+  {
+   "key": "screen.document.text.unread.next",
+   "en": "Until a copy is read, its words can't be found or cited. Check again soon; if it stays unread, ask a team administrator.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-intake (K4404): under Unread, the next step for an uploaded file that is not a picture"
+  },
+  {
+   "key": "act.scanmirror.label.security",
+   "en": "Check for new signatures now",
+   "protected": false,
+   "note": "DEC-412: B471 screens-settings (K4408): the button on Security (scanmirror)"
+  },
+  {
+   "key": "screen.security.mirror.started",
+   "en": "The scanner has been asked to check for new signatures. The result shows here once it has finished.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-settings (K4408): after scanmirror is pressed"
+  },
+  {
+   "key": "act.officeconfirm.label.places",
+   "en": "Confirm this office",
+   "protected": false,
+   "note": "DEC-412: B471 screens-settings (K4408): the button beside an office a member named, on Places (officeconfirm)"
+  },
+  {
+   "key": "screen.places.office.confirmed",
+   "en": "This office is confirmed.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-settings (K4408): after officeconfirm, also when it was already confirmed"
+  },
+  {
+   "key": "screen.account.key.proof.label",
+   "en": "Register this signing key as yours",
+   "protected": false,
+   "note": "DEC-412: B471 screens-settings (K4408): the one statement the signing box shows when a key from a file you already have is registered"
+  },
+  {
+   "key": "screen.request.nameoffice.role",
+   "en": "The office within it",
+   "protected": false,
+   "note": "DEC-412: B471 screens-action (K4409): field, the office within the agency (the role of the office entity)"
+  },
+  {
+   "key": "screen.request.nameoffice.role.help",
+   "en": "The office that answers records requests, as the agency names it.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-action (K4409): help"
+  },
+  {
+   "key": "screen.request.nameoffice.why",
+   "en": "Why you are naming this office",
+   "protected": false,
+   "note": "DEC-412: B471 screens-action (K4409): the note's label on Name the office yourself"
+  },
+  {
+   "key": "screen.request.nameoffice.why.help",
+   "en": "Say how you know this office holds the records. It is kept with the office, under your name.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-action (K4409): the note's help"
+  },
+  {
+   "key": "screen.action.routes.none",
+   "en": "No route is known for this kind of action yet.",
+   "protected": false,
+   "note": "DEC-412: B471 screens-action (K4409): the routes list of an action page when it is empty"
   }
  ],
  "rewrite": {
