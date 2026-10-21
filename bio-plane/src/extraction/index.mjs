@@ -34,7 +34,7 @@ import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import * as pipeline from "../reading-pipeline/index.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
-         readingFromWire, decodeView, textCountsOf, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
+         readingFromWire, decodeView, textCountsOf, textWordsFor, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
          compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, tier4Pages,
          AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE } from "../reading-pipeline/index.mjs";
 import { localize } from "../setup-words/index.mjs";
@@ -254,6 +254,7 @@ export function n26MigratedReading(reading, map, text, { at = null } = {}) {
   }
   for (const k of ["text_chars", "text_glyphs", "text_undetermined"])
     if (Object.prototype.hasOwnProperty.call(reading, k)) { Object.assign(next, textCountsOf(text)); break; }
+  if (Object.prototype.hasOwnProperty.call(reading, "words_total")) Object.assign(next, textWordsFor(text));
   next.migrated = { ...(reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {}),
     n26: { at, moved,
            why: "this reading was made before N26, when every branch of an mc:AlternateContent was read, so its "
@@ -320,6 +321,7 @@ export function n439MigratedReading(reading, map, text, { at = null } = {}) {
   }
   for (const k of ["text_chars", "text_glyphs", "text_undetermined"])
     if (Object.prototype.hasOwnProperty.call(reading, k)) { Object.assign(next, textCountsOf(text)); break; }
+  if (Object.prototype.hasOwnProperty.call(reading, "words_total")) Object.assign(next, textWordsFor(text));
   next.migrated = { ...(reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {}),
     n439: { at, moved,
             why: "this reading was made before N439, when every branch of an mc:AlternateContent on a slide was read, "
@@ -1462,6 +1464,8 @@ export class Extraction {
                                                        container: "pdf", planeVersion: e.VERSION || null });
         /* N139 (reading-pipeline R17): the re-read's own counts, by the acquire path's rule. */
         { const n = textCountsOf(t3.i2text); if (n) Object.assign(reading, n); }
+        /* reading-pipeline R35 (C17): the re-read counts its words as the first reading does. */
+        { const n = textWordsFor(t3.i2text); if (n) Object.assign(reading, n); }
         /* reading-pipeline R28 (K1557, CHANGE B4): what the pdf entry emitted beside the text, unaltered, by the read's own
            rule: its `metadata` or null, and `cells` only for a workbook or a `.docx` (R70), never for a pdf. */
         Object.assign(reading, emittedFieldsOf(t3.i2text));
@@ -1680,6 +1684,8 @@ export class Extraction {
     reading.provenance = await readingProvenance({ text: t4.i2text, chain, tier: t4.wiredTier, container: fmt,
                                                    planeVersion: e.VERSION || null });
     { const n = textCountsOf(t4.i2text); if (n) Object.assign(reading, n); }
+    /* reading-pipeline R35 (C17): the re-read counts its words as the first reading does. */
+    { const n = textWordsFor(t4.i2text); if (n) Object.assign(reading, n); }
     Object.assign(reading, emittedFieldsOf(t4.i2text));
     /* R74 (T46; N897 (2)): the test-instance label the plane handed in for this act, recorded on the reading it writes;
        a label already stored stays, whatever this act was admitted by. */
