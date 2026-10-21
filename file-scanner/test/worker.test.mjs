@@ -75,6 +75,11 @@ test('R10 through the binding: the bundle answers R8 and R9 from its env, and it
     assert.equal(r.error, 'MIRROR_REFUSED:exit 58: 403 Forbidden');
   } finally { globalThis.fetch = saved; }
   assert.deepEqual(hosts, [], 'the Worker itself reaches no host');
+  // R6: through the Worker's own fetch, the async start hands the run to the platform's waitUntil and answers 202.
+  const handed = [];
+  const a = await mod.default.fetch(new Request('https://file-scanner/mirror?async=1', { method: 'POST' }), { ...env, SCANNER }, { waitUntil: (p) => handed.push(p) });
+  assert.deepEqual([a.status, await a.json(), handed.length], [202, { ok: true, started: true }, 1]);
+  assert.equal((await handed[0]).ok, false, 'the run it handed over ended in the updater\'s refusal');
   assert.deepEqual(asked[0], ['file-scanner-signature-updater', 'POST', asked[0][2], '1'], 'the run goes to the signature-updater instance');
   assert.ok(asked.every(([n, , , h]) => n === 'file-scanner-signature-updater' && h === '1'), 'and to no other instance');
   assert.ok(bucket.calls.filter(([op]) => op === 'put').every(([, k]) => k.startsWith('clamav/')));

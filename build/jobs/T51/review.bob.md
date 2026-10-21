@@ -1,6 +1,6 @@
 # BOB to review (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -127,3 +127,7 @@ Tests: for each cause one test written first and seen failing, at the module's i
 
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/review/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B12 · ANSWER · re J8
+
+ANSWER J8 (K4363). Merge tranche/T51 first (R19, R43 new; case-authoring R83 amended). Your reading stands: case-authoring exports draftEditions({caseId, draft}) -> {prepared, published: {edition, address}|null} (CASE-AUTHORING #35 is told now); call it per row, test against a scripted double until it merges. Also build R43 (new): sharedDraftsByProject({projectIds, viewer}) -> {[projectId]: {count, newest}}, one read for many projects, exact under R8's identity binding (a grant dead once its edition is published is not counted); the door hands it to project-roster (control-plane R118, wave 2). C46's plane half inside your module as you say: accepted.

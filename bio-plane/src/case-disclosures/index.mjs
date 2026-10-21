@@ -357,6 +357,9 @@ export class CaseDisclosures {
     return { capture: sha, grade: g.grade ?? null, grade_basis: g.basis ?? null, grade_why: g.why ?? null,
              co_attested: !!(ts && ca), missing: [...(ts ? [] : ["timestamp"]), ...(ca ? [] : ["co_archive"])], timestamp_at: ts ? ts.at : null, co_archive: ca ? ca.locator : null,
              late: !!((ts && ts.late) || (ca && ca.late)),
+             /* C40: a timestamp made by `reattest` is the attempt it is: marked late, with when it proves the bytes existed. */
+             timestamp_late: !!(ts && ts.late),
+             late_words: ts && ts.late && ts.at ? localize("case-disclosures.index.late_proves", "late: proves the bytes existed by {at}, not at capture", { at: String(ts.at) }) : null,
              accounts_read: accounts.map((a) => ({ by: a.by ?? null, at: a.at ?? null, text: String(a.text ?? ""),
                                                   signature: a.signature == null ? null : String(a.signature) })) };
   }
@@ -401,13 +404,13 @@ export class CaseDisclosures {
       : [...(f.timestamp_at ? [] : ["timestamp"]), ...(f.co_archive ? [] : ["co_archive"])];
     const unacknowledged = [...facts.values()].filter((f) => f.grade === EARNED_CAPTURE_CEILING && !f.co_attested
       && membersOf.get(f.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f.capture))
-      .map((f) => ({ ...f, missing: lacks(f) }));
+      .map((f) => ({ ...f, missing: lacks(f), timestamp_late: !!f.timestamp_late, late_words: f.late_words ?? null }));
     /* DEC-49 REGION is-co-attestation-acknowledged */
     if (unacknowledged.length)
       refusals.push(disclosureRefusal("CO_ATTESTATION_UNACKNOWLEDGED", {
         unacknowledged: unacknowledged.map((f) => ({ capture: f.capture, members: membersOf.get(f.capture), grade: f.grade,
                                                      timestamp_at: f.timestamp_at, co_archive: f.co_archive,
-                                                     missing: f.missing })),
+                                                     missing: f.missing, timestamp_late: f.timestamp_late, late_words: f.late_words })),
         detail: localize("case-disclosures.index.length_load_bearing_grade_earned", "{length} load-bearing Grade {EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive ({map}). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.", { length: String(unacknowledged.length), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), map: String(unacknowledged.map((f) => localize("case-disclosures.index.capture_lacking", "{capture} under {members}, lacking {missing}", { capture: String(f.capture), members: String(membersOf.get(f.capture).join(", ")), missing: String(f.missing.map((m) => m === "timestamp" ? localize("case-disclosures.index.missing_timestamp", "the trusted timestamp") : localize("case-disclosures.index.missing_co_archive", "the co-archive")).join(" and ")) })).join("; ")) }) }));
     /* END DEC-49 REGION is-co-attestation-acknowledged */
     const noReason = [...byCapture.values()].filter((d) => !d.reason);

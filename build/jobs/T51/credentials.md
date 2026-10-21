@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01PVXWdCkqAhUVeYE1E8cxT4 · depth 2 · COMPLETE · handled B8
+**Status** · session_019Weuk3yVSt11Vsjp9xvR7M · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -200,3 +200,35 @@ Tests and checks:
 - `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (outside the paths). B6 accepts this listing of that one file at merge.
 
 Size (session_019uitbe7o6WXsqjVUksVxFY): test runs 3, module lines 2699
+
+## J11 · QUESTION
+
+QUESTION (C51, the 37.6 s registration): the credentials arm is not where the time goes, so the dominant stage sits in a module I do not hold.
+
+Measured at the module's interface, real SQLite and real membership (the credentials test world): `signerRegisterOwn` takes 0.4 to 2 ms and makes 5 store calls (the member's row, the key's row, the insert, membership's list of active administrators, the credentials row for that list). The count is the same with 2 members and 0 keys or 12 members and 60 keys. The administrator "notification" is not a fan-out: the answer's `notified` is membership's list read at the act, and the feed reads the key's row later. No hash or other costly work is in the arm. So 37.6 s is not credentials' own work.
+
+Stages that remain, none mine: (1) the control plane / admission path in front of `signerregister` (the op has weight `credential`; whether an act of that weight triggers a password hash, a re-ask check or a session read before the store door is for admission and control-plane to say); (2) the store door's dispatch around `dispatch.mjs:427`; (3) the browser: the key made in the member's own browser (WebCrypto) and, per the walk, a fresh key made at each signing, which belongs to screens-publish / screens-settings (wave 2). I cannot name which from here without a live run: the arm's `timings` now carries the plane's part, so a walk on biosmoke8 that reads the answer will show the arm at 0 to 2 ms and place the rest on the door or the browser.
+
+Best reading: ask the control-plane job (and screens-publish) to time the door and the browser stages for C51; mine is met and proven. Nothing here blocks me, so I carry on to COMPLETE.
+
+## J12 · COMPLETE
+
+COMPLETE · fix round 3 (B9), CREDENTIALS #25. Commits on `job/T51/credentials`; `tranche/T51` merged at its tip (482aff3dcf) before this entry.
+
+**Cause met: C51 (the plane's part), requirement R9 (signerregister, served as signerregisterown).**
+- Measured first, at the module's interface (real SQLite, real membership): `signerRegisterOwn` takes 0.4 to 2 ms and makes 5 store calls (the member's row, the key's row, the insert, membership's active administrators, the credentials row that list reads). No hash, no fan-out: the administrator "notice" is membership's list read at the act, and the feed reads the key's row later. The cost behind the walker's 37.6 s is therefore not this module's; the stage and numbers are in J11 (QUESTION) for the control-plane and screens-publish jobs.
+- Built: a successful registration's answer carries `timings: {total_ms, stages}`, whole non-negative milliseconds, stages `standing`, `lookup`, `write` (absent when the key is already the member's) and `notify`; the stages sum to no more than the total. A refusal carries no `timings` (its key set is unchanged, so every refusal test stands). Nothing else in the answer changed; the administrators are still told (`notified`).
+- Tests, written first and seen failing (the timings test failed before the change; the store-call test describes the arm as it already was, so it held and is the bound, not a fix): `own-keys.test.mjs` "R9 C51 a registration's store calls are bounded …" (at most 6 calls; the same count with 12 members and 60 keys as with a small team; a key already held and a refusal are no dearer) and "R9 C51 a registration's answer carries timings …" (the keys, the whole numbers, the sum, no `write` stage for a held key, no timings on a refusal; control: `notified` equals membership's `activeAdmins()`). Two existing exact-shape assertions on a success (`own-keys.test.mjs` R9 registration and held key; `t51.test.mjs` R81 founder) now set the new `timings` key aside and stay strict about every other key; nothing was weakened.
+
+**Proposed requirement line for BOB to write (R9, amend):** "A registration that succeeds carries `timings: {total_ms, stages}`: the whole milliseconds the arm took and each stage that ran (`standing`, `lookup`, `write`, `notify`), the stages summing to no more than `total_ms`; a registration makes a bounded number of store calls (at most six) whatever the size of the team or of the roster. Refusals carry no `timings`." Test: the two above.
+
+**Deferred:** nothing. **Found in other modules, not changed:** the stage behind C51's 37.6 s (J11): the door and control-plane path for a `credential`-weight op, or the browser's key making; `build/rulings.md:4346` fails the format check (K4349 states no standing-list decision), on the tranche tip, not mine.
+`setup-words --check`: no new words in this change.
+
+**Tests and checks:**
+- `node --test --test-force-exit "test/m/credentials/*.test.mjs"` (bio-plane): tests 186, pass 186, fail 0.
+- Users of the arm (15 test files naming `signerRegisterOwn`/`signerregister`: screens-inquiry, screens-settings, ratification, op-declarations, interface-shell, screens-publish, op-grades, store-door, control-plane): tests 213, pass 213, fail 0. `build/plan/impact.mjs` names 105 modules by its shared-table rule (`DECLARED_OPS` is unchanged by this change); I ran the ones that read this answer, not all 1,507 files.
+- `checks/format.mjs`: 175 modules, 175 requirements files; 1 failure, `build/rulings.md:4346`, not mine.
+- `checks/architecture.mjs credentials`: 30 product files; 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named by a test; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/ownership.mjs credentials tranche/T51 job/T51/credentials`: 4 files changed; 0 failures.
+
+Size (session_019Weuk3yVSt11Vsjp9xvR7M): test runs 5, module lines 2708

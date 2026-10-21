@@ -266,7 +266,8 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     assert.ok(Number.isInteger(words_total) && words_total > 0 && words_total === words_read, `${name}: R35's counts, equal`);
     /* R34 (T50) adds `title` on purpose, null for a PDF and an office capture (no entry states one); every other byte
        stays pinned. */
-    assert.equal(title, null, `${name}: R34's title is present and null`);
+    /* K4363: a PDF reads the /Info Title its structure reader states (this fixture's is "Agenda"). */
+    assert.equal(title, name === "pdf" ? "Agenda" : null, `${name}: R34's title is present`);
     assert.ok(metadata === null || (metadata && typeof metadata === "object"), `${name}: R28's metadata is present`);
     if (name === "docx") assert.deepEqual(cells, {}, "docx: a body with no tables reads cells {}");
     else assert.equal(cells, undefined, `${name}: no cells for a document that is neither a workbook nor a .docx`);

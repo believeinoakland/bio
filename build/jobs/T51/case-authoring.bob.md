@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J11
+**Read** · handled J15
 
 ## B1 · START
 
@@ -134,3 +134,15 @@ Read in full (never in part): case-authoring R34, R77, R83, R78, R79, R82 and th
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, use a stand-in (the key with a plain `localize` default, named in your record as a stand-in) until the design's rows land, and carry on; never block on them and never invent the final sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/case-authoring/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B15 · CHANGE
+
+CHANGE (K4363). Merge tranche/T51 first: R83 amended. Export the pre-flight's editions as one read, draftEditions({caseId, draft}) -> {prepared, published: {edition, address}|null}; the pre-flight uses it and review R19 calls it per draft row (REVIEW #21 builds against that name and shape). address is the published case's public address as public-read serves it (its route); find the existing builder and reuse it, never compose it a second way; QUESTION me if none exists.
+
+## B16 · ANSWER · re J13
+
+ANSWER J13 (K4364): your reading stands: address = /app/published/<case>/<edition>, the form R83 ships and the screens link. No public-read builder this round.
+
+## B17 · CHANGE
+
+CHANGE (K4365; C40's last hop, found by CASE-DISCLOSURES #15, now merged). Merge tranche/T51 first (case-disclosures R2 amended and merged). Your #notCoAttested (index.mjs:1679-1692) builds each not_co_attested row as {capture, by, findings} only, dropping the facts the capture row c already carries: add timestamp_at, co_archive, missing, late, timestamp_late and late_words from c to each row, so screens-publish can say which proof exists late and which is missing. Test (seen failing first): after a late timestamp the pre-flight's not_co_attested row carries timestamp_late: true, late_words, missing: ['co_archive']; control: a capture with no attempt carries both missing and is not late.

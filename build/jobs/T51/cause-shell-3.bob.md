@@ -1,6 +1,6 @@
 # BOB to cause-shell-3 (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -31,3 +31,11 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/answer-envelope
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
 
 **Expected reds (BOB's decision D5, K4360):** once cause-shell-3 merges, control-plane's page and end-to-end tests that expect a nonce or the inline script go red until control-plane (wave 2, R75) merges. These reds are expected: name them in your COMPLETE; cause-shell-3 does not fix them (they are control-plane's).
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K4364). Merge tranche/T51 first: record-grammar is now in interface-shell's uses. All five contracts accepted as you state them (1 script/hash/scriptPath/withPagePolicy({scriptHashes}); 2 R113 with after:[op] and 'all', undeclared keeps R21; 3 cs.band(n), screens-daily calls it in wave 2; 4 scanmirror RUNG_ABSENT ground substrate, officeconfirm reasoned, both ADMIN_ACTS, MEMBER_SCREEN_ACTS={entitycreate:['request']} with memberMayDo; 5 cs.keyFile with stand-in keys). Propose the requirement lines in COMPLETE. 6: screens-daily's finder test and control-plane's page tests are made current by their wave-2 jobs (told); journey-check's pseudo test I make current myself after your merge; name them as expected reds in COMPLETE.
+
+## B3 · CHANGE
+
+money R28 merged into tranche/T51 (K4369): money now serves and declares op=moneysets (a read). op-grades (yours) needs its grade row beside moneyset (t33.mjs ~213), a read. Merge tranche/T51 into your branch and add it; op-declarations' spec is OP-DECLARATIONS #34's. Also merged since your start: acquisition, record-core, capture, project-roster, review, case-authoring and others (K4367, K4369).

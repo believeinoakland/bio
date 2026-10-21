@@ -1,6 +1,6 @@
 # BOB to project-roster (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -86,3 +86,7 @@ Read in full (never in part): project-roster's lines on `projectlist`, the roste
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, use a stand-in (the key with a plain `localize` default, named in your record as a stand-in) until the design's rows land, and carry on; never block on them and never invent the final sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/project-roster/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio project-roster tranche/T51 job/T51/project-roster`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B8 · ANSWER · re J5
+
+ANSWER J5 (K4363). Merge tranche/T51 first (R42 amended). (1) question_count: your reading stands: restate basis-versions R41's rule over record-core's read contract in one statement; R42 now cites that rule, so a drift is a defect of either side. (2) shared_drafts: do not restate review's tables. projectList takes an optional reader handed in, sharedDraftsOf(projectIds, viewer) -> {[projectId]: {count, newest}} (review R43, built now by REVIEW #21), called once for the page's projects; with none handed in every row answers shared_drafts: null. Test with a scripted double of the reader; the door wires review's reader in wave 2 (control-plane R118).

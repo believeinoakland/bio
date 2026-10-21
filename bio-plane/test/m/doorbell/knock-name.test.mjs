@@ -80,3 +80,32 @@ test("R27: the name and type are never in the knock's answer to the sender and a
   assert.equal(listed(c, k.knockId).file_name, "d.txt");
   assert.equal(listed(c, k.knockId).media_type, "text/plain");
 });
+
+/* fix round 3, C28 (K4356): the knock reads `knocksof` and `inboxget` both carry the name and type the sender stated. */
+const knocksOfRow = (c, pseudonym, id) => c.knocksOf({ pseudonym }).knocks.find((r) => r.knock_id === id);
+const SECRET = "a-knocker-secret-of-enough-length";
+
+test("R27 R15: knocksof answers the file name and media type a knock stated, and inboxget answers the same pair", async () => {
+  const { c, send } = setup();
+  const a = await (await send({ contentText: "tip", knockerSecret: SECRET, fileName: "memo-2026.pdf", mediaType: "application/pdf" })).json();
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const row = knocksOfRow(c, a.pseudonym, a.knockId);
+  assert.equal(row.file_name, "memo-2026.pdf");
+  assert.equal(row.media_type, "application/pdf");
+  const got = c.inboxGet(a.knockId).item;
+  assert.deepEqual([got.file_name, got.media_type], [row.file_name, row.media_type]);
+  /* each read answers the sender's pair as the list does, bounded the same way */
+  assert.deepEqual([listed(c, a.knockId).file_name, listed(c, a.knockId).media_type], [row.file_name, row.media_type]);
+});
+
+test("R27 R15 control: a knock that stated neither answers both absent (null) through knocksof as through inboxget", async () => {
+  const { c, send } = setup();
+  const a = await (await send({ contentText: "tip", knockerSecret: SECRET })).json();
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const row = knocksOfRow(c, a.pseudonym, a.knockId);
+  assert.equal("file_name" in row && "media_type" in row, true);
+  assert.equal(row.file_name, null);
+  assert.equal(row.media_type, null);
+  assert.equal(c.inboxGet(a.knockId).item.file_name, null);
+  assert.equal(c.inboxGet(a.knockId).item.media_type, null);
+});

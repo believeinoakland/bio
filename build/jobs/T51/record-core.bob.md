@@ -1,6 +1,6 @@
 # BOB to record-core (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -28,3 +28,22 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio record-core tranche/T51 job/T51/record-core`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B3 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/record-core tranche/T51 && git branch -m job/T51/record-core stale/record-core-local && git checkout -b job/T51/record-core origin/job/T51/record-core`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · RECORD-CORE #26 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #241 is depth 1; fix round 3, wave 1 (a freed slot, K4219), K4365)
+
+Mail with `--module record-core`; record `build/jobs/T51/record-core.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `record-core`. Your diff touches only that module's paths and tests and your record. This is fix round 3 of T51, planned whole in `build/plan/fix-round-3-T51.md` (K4356: its section 4 summarises your causes, section 5 holds the requirement changes RC-n). The causes are the build walk's (`build/plan/walk-T51-build/CAUSES.md`; C-numbers below are its, read the entries of yours whole), re-walked on biosmoke8 (`build/plan/walk-T51-rewalk/A.md` and `B.md`; the finding ids below are those files' rows); the diagnosis of C84, C5, C17 and C9 is `build/plan/fix-round-3-diagnosis.md` (read the sections of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first. Wave 1 runs together and merges providers first (plan section 3): a provider named below as merged before you is read from `tranche/T51` when you merge it again before your COMPLETE; until then test against a scripted double of its interface and say so in your record. Every requirement you meet is named by a test seen failing first, with a negative control; BOB has written these lines on tranche/T51: see `build/plan/fix-round-3-reqs.md`; propose any further line in your COMPLETE for BOB to write (BOB writes `build/requirements/`). Run your suite, then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean (reds also on the tranche tip are named, not fixed). Declare every census op you own (K4208).
+
+**Your cause:**
+1. **C5, the whole of a large capture** (re-walk A E07 and the two NEW multi-part PDFs, 8.8 and 15.9 MB, ending 504 in `read`; diagnosis `fix-round-3-diagnosis.md` C5). Requirement **R87** (new, K4363): `evidenceStore().putFromParts(digest, partDigests) → {ok, size}` or a refusal: write the object under `digest` by the store's own multipart upload (R2 `createMultipartUpload` / `uploadPart` / `complete`, the key known since the caller passes the whole digest), streaming each part's bytes in order from the store, at most one part in memory, completing only when every part was read and the bytes' SHA-256 equals `digest`; otherwise abort, write nothing, and refuse naming why (a part missing, the digest not matching, the store's own object bound). A digest already held answers `{ok: true, already: true}`. ACQUISITION #22 calls it (feature-detected) outside the door's bound for a capture past `MULTIPART_KEEP_MAX`, and the door's `readHeld` then reads the whole (control-plane R117). R38 (`{head, get, put}`) stays as it is; this adds a fourth call.
+   Tests (seen failing first, a negative control each): three parts of a 40 MiB fixture make one object whose bytes hash to the digest, never more than one part held at a time (measure it with a store double that records concurrent holdings); a wrong digest aborts and leaves nothing; a missing part is refused and nothing is written; control: a held digest answers `already`; `null` store (none bound) is unchanged (R38).
+   Read in full: your requirements (both parts), R38 and R87, your code under `bio-plane/src/record-core/`, the tests naming R38. Nothing in your module's other services changes.
+
+Run: `node --test --test-force-exit bio-plane/test/m/record-core/` and `bio-plane/test/stats-disclosure.test.mjs`, then the users `build/plan/impact.mjs tranche/T51 HEAD` names that read the evidence store (acquisition, extraction, capture at least). Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio record-core tranche/T51 job/T51/record-core`.
+
+COMPLETE with the cause met (C5's store half, R87), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your module's own code only).

@@ -1866,12 +1866,59 @@ export class RecordCore {
     if (!bucket) return null;
     const prefix = typeof this.#evidencePrefix === "function" ? this.#evidencePrefix() : this.#evidencePrefix;
     const key = (digest) => `${prefix ?? ""}${String(digest)}`;
-    return {
+    const store = {
       head: (digest) => bucket.head(key(digest)),
       get: (digest) => bucket.get(key(digest)),
       put: (digest, bytes) => bucket.put(key(digest), bytes, { sha256: String(digest) }),
     };
+    /* R87: offered only by a bucket that has R2's multipart upload, so a caller feature-detects it */
+    if (typeof bucket.createMultipartUpload === "function")
+      store.putFromParts = (digest, partDigests) => putFromParts(bucket, key, digest, partDigests);
+    return store;
   }
+}
+
+/* ---- the evidence store's whole object from parts (R87) ---- */
+
+const DIGEST = /^[0-9a-f]{64}$/;
+
+/** R87 (fix round 3, C5; K4363): the object under `digest`, made by the bucket's own multipart upload from the parts it holds
+ *  under `partDigests`, each read in order and handed on as one upload part, so one part is in memory at a time. The upload
+ *  completes only when every part was read and the bytes' SHA-256 is `digest`; otherwise it is aborted and nothing is
+ *  written. A digest already held answers `{ok: true, already: true}`. Never throws. */
+async function putFromParts(bucket, key, digest, partDigests) {
+  /* DEC-49 REGION is-evidence-parts-refused */
+  if (typeof digest !== "string" || !DIGEST.test(digest) || !Array.isArray(partDigests) || partDigests.length === 0
+      || !partDigests.every((d) => typeof d === "string" && DIGEST.test(d)))
+    return rowRefusal("EVIDENCE_PARTS_MALFORMED", localize("record-core.index.a_whole_document_is_named", "A whole document is named by its fingerprint and the fingerprints of its parts, in order, and at least one part. Nothing was kept."));
+  try { if (await bucket.head(key(digest))) return { ok: true, already: true }; } catch { /* a head that fails is told below, by the upload */ }
+  let upload = null;
+  const stop = async () => { try { if (upload) await upload.abort(); } catch { /* an upload that cannot be aborted holds no object */ } };
+  try {
+    upload = await bucket.createMultipartUpload(key(digest));
+    const sha = createSha256(), done = []; let size = 0;
+    for (let i = 0; i < partDigests.length; i++) {
+      const o = await bucket.get(key(partDigests[i]));
+      if (!o) {
+        await stop();
+        return rowRefusal("EVIDENCE_PART_MISSING", localize("record-core.index.a_part_of_the_document", "Part {n} of {parts} of the document was not held. Nothing was kept.", { n: String(i + 1), parts: String(partDigests.length) }), { part: i + 1 });
+      }
+      let bytes = new Uint8Array(await o.arrayBuffer());
+      sha.update(bytes); size += bytes.length;
+      done.push(await upload.uploadPart(i + 1, bytes));
+      bytes = null;
+    }
+    if (sha.hex() !== digest) {
+      await stop();
+      return rowRefusal("EVIDENCE_DIGEST_MISMATCH", localize("record-core.index.the_parts_do_not_hash", "The parts, read in order, do not hash to the document's fingerprint. Nothing was kept."));
+    }
+    await upload.complete(done);
+    return { ok: true, size };
+  } catch (e) {
+    await stop();
+    return rowRefusal("EVIDENCE_STORE_REFUSED", localize("record-core.index.the_store_would_not_take", "The store would not take the document whole ({why}). Nothing was kept.", { why: String(e && e.message || e).slice(0, 160) }));
+  }
+  /* END DEC-49 REGION is-evidence-parts-refused */
 }
 
 /* ---- the routes (R72, R73) ---- */
