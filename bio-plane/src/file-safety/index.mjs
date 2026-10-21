@@ -1586,7 +1586,7 @@ export class FileSafety {
       /* END DEC-49 REGION is-copy-tool-on */
       const row = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, h.sha);
       if (row && ["pending", "done", "withheld"].includes(row.state)) return { ok: true, captureSha: h.sha, state: row.state };
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.no_scanner_so_no_run_started", "Your team's Civicsmith has no file scanner installed, so no tool can be asked."), { captureSha: h.sha });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no_5", "Your team's Civicsmith has no file scanner installed, so no tool can be asked."), { captureSha: h.sha });
       return { ok: true, captureSha: h.sha, state: await this.#makeCopy(h.sha, tool) };
     } catch { return refusal("SAFE_COPY_FAILED", "The safe copy could not be asked for.", { captureSha: captureSha ?? null }); }
   }
@@ -1878,7 +1878,7 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["capture","captureSha","reason"], requires: [["capture","captureSha"],"reason"] } },
   safeview: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("file-safety.declared.safeview", "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing"),
     fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
-  scanmirror: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"),
+  scanmirror: { classes: ["admin","member"], machineClasses: [], mutating: true, stamps: ["viewer"], needs: null, weight: "substrate", description: localize("file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"),
     fields: { accepts: ["at"], requires: [] } },
   securitytooladd: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("file-safety.declared.securitytooladd", "setting: the group's security tools, an administrator's act; moves no bundle"),
     fields: { accepts: ["providerId","template","config","credentials","handlingDigest","confirmRetention","use","monthlyLimit"], requires: ["providerId","handlingDigest"] } },
