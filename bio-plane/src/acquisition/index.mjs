@@ -44,6 +44,7 @@ import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
+import { titleOfBytes } from "./title.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
@@ -314,54 +315,76 @@ export const FOR_MAX = 200;
    limit imports it (K231; N825, K2453). */
 export const CAPTURE_MAX = 256 * 1024 * 1024;
 
-/* R10, R11 (T51; the walk's C5): a capture held in several parts is also kept WHOLE, under the whole document's own
+/* R10, R11, R96 (T51; the walk's C5): a capture held in several parts is also kept WHOLE, under the whole document's own
    fingerprint, up to this many bytes, so every reader that asks the evidence store for a capture by its digest (the reading,
-   OCR, the vouch box, `op=capture`) finds it as it finds a single part. Past it the capture is held in its parts alone, as
-   before (provenance R7 reads such a capture by its parts). CHOSEN, not measured: four parts, the most the object holds
-   in memory beside the part being read back; recorded by BOB. */
+   OCR, the vouch box, `op=capture`) finds it as it finds a single part. The parts' bytes are held in memory while they stay
+   under it, and the whole is put once when the body ends, with no part read back. Past it the capture is held in its parts
+   alone, as before (provenance R7 reads such a capture by its parts), until the object store offers a way to make the whole
+   from parts without reading them (R96's past-memory arm). CHOSEN, not measured: four parts, the most the object holds in
+   memory beside the whole it assembles; recorded by BOB. */
 export const MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
 
-/** R10 (C5): keep a multipart capture whole. The parts just stored are read back one at a time (each held, each its stated
- *  size and digest), assembled, hashed against the digest the stream gave, and put under that digest with its checksum.
- *  Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done) or
- *  `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add up
- *  to the digest, or a store that will not take the whole. Never throws. */
-export async function keepWhole(ev, { sha, parts, total }) {
+/* R96: the keeps under way, by the whole's digest, so a second press of the same capture while the first is under way waits
+   for it and finds the object kept, never writing it twice. */
+const KEEPING = new Map();
+
+/** R10, R96 (C5): keep a multipart capture whole. With `bytes`, the parts' buffers the stream already holds (one for each
+ *  part, in order), the whole is assembled from them and put once under its digest with its checksum: no part is read back
+ *  from the store and no part is hashed again; the store verifies the whole by the checksum it is handed, and each buffer is
+ *  released as it is copied. Without them (a caller that holds none: `capture`'s upload of a file the member sent) the parts
+ *  just stored are read back one at a time, each held, each its stated size and digest, assembled and hashed against the
+ *  digest given. Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
+ *  or `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add
+ *  up to the digest, or a store that will not take the whole. Never throws. */
+export async function keepWhole(ev, { sha, parts, total, bytes = null }) {
   if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
   const fail = (why) => ({ ok: false, why });
-  try {
-    if (await ev.head(sha)) return { ok: true, kept: true };
-    const whole = new Uint8Array(total);
-    let at = 0;
-    for (const [i, p] of parts.entries()) {
-      const o = await ev.get(p.sha256);
-      if (!o) return fail(localize("acquisition.index.keep_part_missing", "part {n} of {parts} was not there when it was read back", { n: String(i + 1), parts: String(parts.length) }));
-      const b = new Uint8Array(await o.arrayBuffer());
-      if (b.length !== p.bytes || at + b.length > total || hex(await crypto.subtle.digest("SHA-256", b)) !== p.sha256)
-        return fail(localize("acquisition.index.keep_part_differs", "part {n} of {parts} is not what was stored", { n: String(i + 1), parts: String(parts.length) }));
-      whole.set(b, at); at += b.length;
+  const held = Array.isArray(bytes) && bytes.length === parts.length && bytes.every((b) => b instanceof Uint8Array) ? bytes : null;
+  const work = async () => {
+    try {
+      if (await ev.head(sha)) return { ok: true, kept: true };
+      const whole = new Uint8Array(total);
+      let at = 0;
+      for (const [i, p] of parts.entries()) {
+        let b;
+        if (held) { b = held[i]; held[i] = null; }
+        else {
+          const o = await ev.get(p.sha256);
+          if (!o) return fail(localize("acquisition.index.keep_part_missing", "part {n} of {parts} was not there when it was read back", { n: String(i + 1), parts: String(parts.length) }));
+          b = new Uint8Array(await o.arrayBuffer());
+        }
+        if (b.length !== p.bytes || at + b.length > total || (!held && hex(await crypto.subtle.digest("SHA-256", b)) !== p.sha256))
+          return fail(localize("acquisition.index.keep_part_differs", "part {n} of {parts} is not what was stored", { n: String(i + 1), parts: String(parts.length) }));
+        whole.set(b, at); at += b.length;
+      }
+      if (at !== total || (!held && hex(await crypto.subtle.digest("SHA-256", whole)) !== sha))
+        return fail(localize("acquisition.index.keep_parts_do_not_add_up", "the parts do not add up to the document that arrived"));
+      await ev.put(sha, whole);
+      return { ok: true, kept: true };
+    } catch (e) {
+      return fail(localize("acquisition.index.keep_store_refused", "the store would not take it ({detail})", { detail: String(e && e.message || e).slice(0, 120) }));
     }
-    if (at !== total || hex(await crypto.subtle.digest("SHA-256", whole)) !== sha)
-      return fail(localize("acquisition.index.keep_parts_do_not_add_up", "the parts do not add up to the document that arrived"));
-    await ev.put(sha, whole);
-    return { ok: true, kept: true };
-  } catch (e) {
-    return fail(localize("acquisition.index.keep_store_refused", "the store would not take it ({detail})", { detail: String(e && e.message || e).slice(0, 120) }));
+  };
+  const going = KEEPING.get(sha);
+  if (going) {
+    const r = await going;
+    try { if (r.ok && await ev.head(sha)) return r; } catch { /* kept by the other press in another store, or not at all: keep it here */ }
   }
+  const mine = work().finally(() => { if (KEEPING.get(sha) === mine) KEEPING.delete(sha); });
+  KEEPING.set(sha, mine);
+  return mine;
 }
 /* R10 (C5): the refusal when a multipart capture cannot be kept whole; nothing is filed and the parts already stored are named by no
    document, as TOO_LARGE's are. */
 const notKept = (parts, why) => ({ ok: false, reason: "CAPTURE_NOT_KEPT",
   detail: localize("acquisition.index.capture_not_kept", "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again", { parts: String(parts), why: String(why) }) });
 
-/* R20, R5 (T51; the walk's C12, C13): the longest `acquire` waits, inside the door's bound, for the two slow stages that come after
-   the bytes are kept: the co-attestation (timestamp and co-archive; measured 9.6 to 21.5 s a page) and the render (3.3 to
-   17.5 s). Past its wait a stage goes on by itself and the document is answered kept, the stage pending: the attestation
-   is recorded against the capture when it ends (capture R68's `recordLateAttestations`), the render is finished by the
-   member's `continue` (R12's "Finish it"). A caller may hand its own wait as `opts.attestWaitMs` / `opts.renderWaitMs`. The
-   capture-request arm, which runs under no door's bound, waits for both. CHOSEN, not measured: together with the fetch and
-   the read they fit the door's 25 s with room; recorded by BOB. */
-export const ATTEST_WAIT_MS = 3000;
+/* R20, R5 (T51; the walk's C12, C13): the longest `acquire` waits, inside the door's bound, for the render (3.3 to 17.5 s), which
+   comes after the bytes are kept. Past its wait it goes on by itself and the document is answered kept, the render pending,
+   to be finished by the member's `continue` (R12's "Finish it"). A caller may hand its own wait as `opts.renderWaitMs`. The
+   capture-request arm, which runs under no door's bound, waits for it. CHOSEN, not measured: together with the fetch and the
+   read it fits the door's 25 s with room; recorded by BOB. The co-attestation (timestamp and co-archive; measured 9.6 to
+   21.5 s a page) is waited for no set time (R20, fix round 3, C12): see `acquireRun`. */
 export const RENDER_WAIT_MS = 10000;
 const LATE = Symbol("late");
 /** `{done: true, value}` when `p` settled within `ms`, else `{done: false}`; no wait at all for a non-finite `ms`. */
@@ -730,7 +753,7 @@ export async function acquire(cap, body0, opts = {}) {
 }
 async function acquireRun(cap, body0, opts, t) {
   const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
-          reputation: reputationTool = undefined, fileScanner = null, attestWaitMs = undefined, renderWaitMs = undefined,
+          reputation: reputationTool = undefined, fileScanner = null, renderWaitMs = undefined,
           renderResume = null } = opts || {};
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
@@ -904,12 +927,13 @@ async function acquireRun(cap, body0, opts, t) {
         detail: renderer.kind === "browser-binding-without-driver"
           ? localize("acquisition.index.browser_is_bound_to_something", "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.")
           : localize("acquisition.index.no_renderer_is_bound_to", "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.") });
-    /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. */
+    /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. R97: this admission is only ASKED (host-governor R29's
+       peek, which writes nothing); the fetch the visit then makes books the governor once, so one visit is one grant. */
     let rHost = null;
     try { rHost = new URL(locator).host; } catch { rHost = null; }
     if (rHost && cap.governor) {
       let g = null;
-      try { g = await cap.governor.governorAdmit({ host: rHost }); } catch { g = null; }
+      try { g = await cap.governor.governorAdmit({ host: rHost, peek: true }); } catch { g = null; }
       if (g && g.admitted === false)
         return answer(429, { ok: false, reason: "RENDER_HOST_COOLING_OFF", ...renderRow("RENDER_HOST_COOLING_OFF"),
           op, host: rHost, retry_in_ms: g.retry_in_ms || 0,
@@ -1074,6 +1098,9 @@ async function acquireRun(cap, body0, opts, t) {
      own write). */
   const partHeldBefore = [];
   let total = 0, held = [], heldBytes = 0, oversize = false;
+  /* R96: each part's bytes are kept in memory while the capture stays within `MULTIPART_KEEP_MAX`, so the whole is put once when
+     the stream ends with no part read back; past it they are let go and the capture is held in its parts alone. */
+  let keptParts = [], keptSize = 0;
   /* R10: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
   const part = async (buf) => {
     const psha = hex(await crypto.subtle.digest("SHA-256", buf));
@@ -1081,6 +1108,7 @@ async function acquireRun(cap, body0, opts, t) {
     if (!heldBefore) await ev.put(psha, buf);
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
+    if (keptParts) { keptSize += buf.length; if (keptSize > MULTIPART_KEEP_MAX) keptParts = null; else keptParts.push(buf); }
   };
   const flush = async (all = true) => {
     while (heldBytes >= PART || (all && heldBytes > 0)) {
@@ -1193,7 +1221,7 @@ async function acquireRun(cap, body0, opts, t) {
 
   /* R6, D-64 — THE RENDER ARM, THE PAIR. From here on `sha`, `total` and `ct` name the RENDERED document, the
      bundle's primary; the shell survives as `shell` and `render.of`. */
-  let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderDeferred = null;
+  let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderDeferred = null, renderedBytes = null;
   if (renderAsked) {
     const pageUrl = resolvedUrl || locator;
     let answerR = null, rbytes = null, rb = null;
@@ -1242,6 +1270,7 @@ async function acquireRun(cap, body0, opts, t) {
     const rsha = await sha256Hex(rbytes);
     const renderedExisted = !!(await ev.head(rsha));
     if (!renderedExisted) await ev.put(rsha, rbytes);
+    renderedBytes = rbytes;
     stageEnd(t);
     shellRecorded = { file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
                       method: localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"), ...(ct ? { content_type: ct } : {}), transport };
@@ -1256,9 +1285,19 @@ async function acquireRun(cap, body0, opts, t) {
     }
   }
 
-  /* R10 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, or refused in words with nothing filed. */
+  /* R98 (T51; C25): the document's own title, read from the bytes this call holds: the rendered document when the capture is a
+     render, else the single part of a page; none for a capture of several parts (past what a title is read from) or one that is
+     not HTML. A fact read from the bytes, not a reading (R8): nothing is invented from a file name, a heading elsewhere or the host. */
+  const titleBytes = renderRecorded ? renderedBytes : !multipart && keptParts && keptParts.length === 1 ? keptParts[0] : null;
+  const title = titleBytes && detectFormat(titleBytes, ct || null).format === "html"
+    ? titleOfBytes(titleBytes, renderRecorded ? null : res.headers.get("content-type")) : null;
+  /* R96: the first part, held in memory, is what R17's profile reads for the ZIP magic, so it is not read back from the store. */
+  const firstPart = multipart && keptParts ? keptParts[0] : null;
+
+  /* R10, R96 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, put once from the parts held in
+     memory (stage `keep`, apart from `read`), or refused in words with nothing filed. */
   if (multipart && !renderRecorded) {
-    const kept = await timed(t, "read", () => keepWhole(ev, { sha, parts, total }));
+    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts }));
     if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
 
@@ -1350,7 +1389,7 @@ async function acquireRun(cap, body0, opts, t) {
      read only from a member's own capture (court-doctypes R2) never matches a fetch. */
   stageBegin(t, "profile");
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
-                                    retrieved, origin: "fetch", parts: renderRecorded ? null : parts });
+                                    retrieved, origin: "fetch", parts: renderRecorded ? null : parts, firstPart });
   /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
      detection over the stored export's BYTES, whole (an OpenDocument package is recognised by its central directory,
      which lies past the first KiB `profile.format` reads for any export of real size): a detection that fell back to
@@ -1372,11 +1411,12 @@ async function acquireRun(cap, body0, opts, t) {
   const memberChoice = captureRequest ? captureRequest.coArchive
     : (member && typeof sessMember === "string" && sessMember ? body.coArchive : undefined);
   const coArchive = typeof memberChoice === "boolean" ? { on: memberChoice, by: "member" } : { on: coArchiveStateOf(cap.core).on, by: "group" };
-  /* R20 (T51; C12): the attestation is requested now that the document is kept, and waited for only up to `ATTEST_WAIT_MS`
-     (the capture-request arm waits for it): past the wait the document is answered with the attempt pending, and the attempt
-     is recorded against the capture when it ends (`recordLateAttestations`, capture R68), never failing or undoing it. */
+  /* R20 (T51; C12, fix round 3 P4a): the attestation is requested now that the document is kept and NO SET TIME IS WAITED for it:
+     the answer returns with the attempt pending unless it has already ended, and the attempt is recorded against the capture
+     when it ends (`recordLateAttestations`, capture R68), never failing or undoing it. The capture-request arm, which runs
+     under no door's bound, waits for the attempt to end, so the document it files records it. */
   const attestAsked = coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive });
-  const attested = await timed(t, "attest", () => within(attestAsked, captureRequest ? Infinity : (attestWaitMs ?? ATTEST_WAIT_MS)));
+  const attested = await timed(t, "attest", () => within(attestAsked, captureRequest ? Infinity : 0));
   let attestations;
   if (attested.done) attestations = attested.value;
   else {
@@ -1391,6 +1431,7 @@ async function acquireRun(cap, body0, opts, t) {
 
   const document = {
     file: `snapshots/${name}`, locator, retrieved,
+    title,
     profile,
     /* R15, D-97: authority mirrors verdict / basis / at: the STATE always, the basis dated in both cases. */
     ...(renderedAuth ? renderedAuth : {
@@ -1540,7 +1581,7 @@ async function addressReputation(address, given, scanner) {
  *  `"fetch"` for a fetch the copy made, reaches `doctypeFor` as `ctx.origin`; absent, none is stated and a type that
  *  needs a member's own capture does not match. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
-                                  origin = null, parts = null }) {
+                                  origin = null, parts = null, firstPart = null }) {
   const pv = view || { view: undefined, ids: null };
   let profileText = "", profileBytes = null;
   if (profilesAsText(ct, total, multipart)) {
@@ -1578,7 +1619,7 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
      ooxml's listing over the stored parts as a range source answering whole with neither an OPC content-type map nor an
      ODF `mimetype` in it, so an office or OpenDocument file is never profiled `zip`; a declared type never makes one. */
   if (!formatBytes && Array.isArray(parts) && parts.length) {
-    const z = await zipPastBound(ev, parts);
+    const z = await zipPastBound(ev, parts, firstPart);
     if (z) profile.format = z;
     else if (profile.format && profile.format.format === "zip")
       profile.format = { format: "undetermined", confidence: "none",
@@ -1594,10 +1635,11 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
 /** R17: whether bytes held in `parts` (`[{sha256, bytes}]`, in order) are a plain ZIP archive, read without holding them
  *  whole: the ZIP magic in the first part, then `ooxml.listArchive` over the parts as a range source. Answers the format
  *  registry's shape for `zip`, or null. Never throws. */
-async function zipPastBound(ev, parts) {
+async function zipPastBound(ev, parts, firstPart = null) {
   try {
-    const first = await ev.get(parts[0].sha256);
-    if (!first || !hasZipMagic(new Uint8Array(await first.arrayBuffer()).subarray(0, 4))) return null;
+    let head = firstPart instanceof Uint8Array ? firstPart : null;
+    if (!head) { const first = await ev.get(parts[0].sha256); head = first ? new Uint8Array(await first.arrayBuffer()) : null; }
+    if (!head || !hasZipMagic(head.subarray(0, 4))) return null;
     const l = await listArchive(partsSource(ev, parts));
     if (!l.ok) return null;
     const names = new Set(l.entries.map((e) => normalizePartName(e.name || "")));
