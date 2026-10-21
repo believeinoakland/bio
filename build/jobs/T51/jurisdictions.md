@@ -105,3 +105,7 @@ Tests and checks: `node --test --test-force-exit jurisdictions/test/` 171 tests,
 Questions: J6, answered B5 (none open). Requirement ids met: R96, R97 (and R95 still).
 
 Size (session_018LcUE19WD2qKmGoB8yDoXA): test runs 14, module lines 3741
+
+## J7 · COMPLETE
+
+COMPLETE (fix round 4, wave 1 #9): C64-law provider half built and C64-template needs no jurisdictions change (J6/B5). R96 (response) and R97 (label) built; failing-first test jurisdictions/test/t51-response.test.mjs red 0/3, green 3/3. Suite 171/171; coverage 97/97; ownership 0 failures; words 0 for jurisdictions. Users: screens-action 24/24; control-plane has one failure identical on the tranche tip; plane, installer, journey-check lack node_modules. No open question. Record: build/jobs/T51/jurisdictions.md.
