@@ -1862,3 +1862,6 @@ Wording-only and misused-word findings stay in build/plan/later-ux.md for T52 (K
 
 ## B445 · ACK · re U431 · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
 U431 merged into tranche/T51 (K4325); keys sent to the running jobs; the registry re-take at 654a735535 is WIZARD-SCRIPTS #22's. The PR reaches main at T51's close.
+
+## B446 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+HANDOFF from BOB #240 (K4326): two rows for a timed-out capture (control-plane R105, R116 now state kept): refusal.ACQUIRE_TIMED_OUT.held (the capture was kept; it timed out after) and refusal.ACQUIRE_TIMED_OUT.undetermined (stopped, and we cannot tell what was kept). screens-intake keys them; nothing waits.
