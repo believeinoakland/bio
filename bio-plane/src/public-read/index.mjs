@@ -846,6 +846,18 @@ export class PublicRead {
     }) };
   }
 
+  /** R42 (fix round 4, C48/N6; RC-R10): the one builder of a published case's public address, `/app/published/<case>/<edition>`
+   *  written as the shell's route opens it (the subject one encoded part, as the screens' own links write it). `null` for a case
+   *  or an edition that holds no row in the published projection (an edition prepared or signed and not published is none), and
+   *  for a case or edition not named. Reads the projection only (R10). */
+  publishedAddress({ case: caseId = null, edition = null } = {}) {
+    const id = typeof caseId === "string" ? caseId.trim() : "";
+    const n = typeof edition === "number" || (typeof edition === "string" && /^\d+$/.test(edition.trim())) ? Number(edition) : NaN;
+    if (!id || !Number.isInteger(n) || n < 1) return null;
+    if (!this.#one(`SELECT case_id FROM published_cases WHERE case_id=? AND edition=? LIMIT 1`, id, n)) return null;
+    return "/app/published/" + encodeURIComponent(`${id}/${n}`);
+  }
+
   /** R38 (T51-75; DEC-330 A37): what each published case froze for one question. `id` is the question's record id, the
    *  `bundle_id` of the finding published from it. One entry for every published case edition whose roster pins a
    *  published edition of that finding, in `case_id` then case `edition` order (an edition waiting to be published has
