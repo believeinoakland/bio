@@ -4,6 +4,7 @@
    stand-in, every request it makes answered by the same plane: Home's projects with their question counts, a wizard
    started from one of Home's front doors, and the doorbell's page handing over a file with no credential, read back
    through the real ops. */
+import "./register-declared.mjs";
 import "../../sandbox.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -11,8 +12,9 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { boot } from "../interface-shell/harness.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
+const { boot } = await import("../interface-shell/harness.mjs");
+const { APP_SCREENS, GUIDE } = await import("./app-screens.mjs");
+const { OPS } = await import("../../../src/op-declarations/index.mjs");
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADM = "adm-e2e47-0123456789abcdef", PASSWORD = "the founder's long password, T47";
@@ -67,7 +69,7 @@ const asFounder = async (url, init = {}) => (await toPlane(url, { ...init, heade
    the plane. */
 async function appAt(path, who = session) {
   const html = await (await mf.dispatchFetch(`${ORIGIN}${path}`)).text();
-  const p = await boot({ html, session: who, path, plane: real });
+  const p = await boot({ screens: APP_SCREENS, guide: GUIDE, html, session: who, path, plane: real });
   await run(p);
   return p;
 }
@@ -249,7 +251,7 @@ test("R81 end to end: the doorbell's page at `/app/doorbell`, booted with no ses
   /* every answer the knock is given, as the plane gave it */
   const knocks = [];
   const plane = { ...real, knock: async (req) => { const a = await answerOf(await toPlane(req.url, req.init)); knocks.push(a); return a; } };
-  const p = await boot({ html, session: null, path: "/app/doorbell", plane });
+  const p = await boot({ screens: APP_SCREENS, guide: GUIDE, html, session: null, path: "/app/doorbell", plane });
   await until(p, () => main(p) && main(p).querySelector('button[data-act="knock"]') && p.doc.getElementById("db-file")
     && /e2e-town-47/.test(text(main(p))));
   assert.equal(p.byOp("whoami").length, 0, "no session read on the public frame");

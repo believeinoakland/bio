@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-action/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS, hasWord, word } from "../../../src/setup-words/index.mjs";
-import { checkScreens, interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
+import { checkScreens, interfacePage, interfaceScript, interfaceScriptHash, scriptPath, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
 import { open, main, crumbs, text, ops, ok, refused, textNodes, wordChecker, servedClasses, MEMBER, DATA_PLANE, ROUTES, PLAN_ID, ACTION_ID, DET, ESC, PROJECT, PLAN, ACTION, DETERMINATION,
   CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE, ADMIN, STAKE, FUTURE_ACTION, PROFILES_WITH_HELP, draft, COMPLIANCE_SAYS } from "./page.mjs";
@@ -133,7 +133,11 @@ const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's c
   "Code Civ. Proc. § 425.16", "a notice of claim", "a letter from the owner's lawyer", "The rent dispute", "Closed means repaired", "ana", "30 September 2026", "1 October 2026", "9 October 2026"];
 
 test("R1–R6, R9 (interface-shell R8, R21): the shell serves the six screens: each route draws its screen under its path, from its own source", async () => {
-  assert.match(interfacePage(SCREENS), /<script nonce="__CSP_NONCE__">/);
+  // interface-shell R1, R2: the page loads the shell as one external versioned script with its hash; no inline script and no nonce
+  const page = interfacePage(SCREENS, { version: "0.0.1" });
+  assert.ok(page.includes(`<script src="${scriptPath("0.0.1")}" integrity="${interfaceScriptHash(SCREENS)}"></script>`));
+  assert.ok(!/<script(?![^>]*\ssrc=)/.test(page) && !page.includes("nonce"), "no inline script and no nonce");
+  assert.ok(interfaceScript(SCREENS).length > 1000, "the screens are the script's");
   for (const [id, path] of Object.entries(ROUTES)) {
     const p = await open(path, DATA_PLANE);
     assert.ok(main(p).querySelector("nav.cs-crumbs [aria-current]"), `${id} under its path`);

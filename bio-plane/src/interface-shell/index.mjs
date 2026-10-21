@@ -150,6 +150,9 @@ const isBrowserAct = (op, screenId) => Object.hasOwn(browserActs(), op) && brows
    session's token (`LOCKED_OPS`), not a re-point. */
 export const RE_POINTS = Object.freeze({
   explore: Object.freeze(["stepsourcewithdraw"]),
+  /* R117 (fix round 3; C84, C64): each until the registry lists the op on that screen */
+  security: Object.freeze(["scanmirror"]),
+  places: Object.freeze(["officeconfirm"]),
 });
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);

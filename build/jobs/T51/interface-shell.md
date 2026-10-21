@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01NH5dcSiHndngPRW6Doo7DH · depth 2 · COMPLETE · handled B28
+**Status** · session_01XNRmAuR8VXqdzNrDodxNZ8 · depth 2 · COMPLETE · handled B33
 
 ## J1 · BLOCKED
 
@@ -260,3 +260,34 @@ COMPLETE · INTERFACE-SHELL #14 · fix round 3, wave 2 provider · C51* (SCREENS
 **Reported to BOB.** The R50 red above (needs `scanmirror` declared by `op-declarations`). Proposed requirement line: none; R116 is already written. Deferred: none. Nothing found in another module beyond the above.
 
 Size (session_01NH5dcSiHndngPRW6Doo7DH): test runs 6, module lines 2630
+
+## J20 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #15 (session_01XNRmAuR8VXqdzNrDodxNZ8) · T51 · entries B29 to B33 (fix round 3; C51*, C84, C64, C87 (c))
+
+**Met**
+- **B29 · R116 (C51*)**: verified, not rebuilt. Session #14 built it (J19). This session re-ran `signer.test.mjs`: both R116 tests pass.
+- **B30 · R117 (C84, C64)**: `RE_POINTS` gains `security: ["scanmirror"]` and `places: ["officeconfirm"]`. Test (`fixround3.test.mjs`, seen failing first: "screen security's act scanmirror is not the registry's for it"): both served; control: another unlisted op on those screens still throws. Amended the exact `RE_POINTS` assertions in `t50` (R73) and `design` (R55) to the three entries.
+- **B30 · kit R50** ("scanmirror: declared by its owner") now passes. The cause was the test, not `RE_POINTS`: `kit.test.mjs` never registered the owners' declarations, so `OPS` lacked `scanmirror`. It now imports `register.mjs` as the other composing tests do.
+- **B31 / B33 · R118**: built (a `screen` field on every act request), then retired by B33 and reverted (`36680b3573` reverts `3430ea7a82`: field, harness exemption, test). Check B31 asked for: under the owners' declarations, 25 distinct ops in the test traffic would refuse an extra `screen` field (for example `promote`, `adminendorse`, `login`, `cite`, `memberadd`, `knock`). Moot now that R118 is retired.
+- **B32 · R119 (C87 (c))**: an act's `ready(view, el, cs)` runs on the press before any reason box opens (`readyFirst` in `browser.mjs`). `{refuse}` is drawn beside the act and nothing is asked; `{fills}` reach the send as `extra.fills`. Tests (`fixround3.test.mjs`, both seen failing first): "R119 a reasoned act whose ready refuses …" (control: an act without `ready` still asks the reason) and "R119 the fills ready answers reach the act's send …".
+
+**Requirement lines for BOB**
+- R117 and R119 are met and tested; BOB clears the "(not yet met: T51)" marker at merge. Nothing new proposed. R118 is retired per B33; nothing to write.
+- Note for screen authors: an act's functions reach the page as their own source, so a `send` or `ready` cannot close over test or module variables. My first R119 draft failed for that reason, not for a product fault.
+
+**Suites and checks**
+- Module: `node --test bio-plane/test/m/interface-shell/*.test.mjs`: 286 tests, 286 pass.
+- Affected modules (`impact.mjs origin/tranche/T51 HEAD`): 13 modules. I ran the other modules' 275 affected files on the final code: 2610 tests, 2594 pass, 14 fail. Those 12 files were re-run on the tranche tip at the same merge (`263b820968`): the same 7 failures on both, so none is from this module. The 7 are: R10 (two), R1–R13 (interface-shell R21, R38), R24 (DEC-149), R5 R14–R16 ..., R81 end to end (Home's projects), and "the shell serves the screens: interfacePage passes its R21 check".
+- Module checks: format 0 failures; architecture 0; coverage 115 of 115; words: no finding in this module; `setup-words --check`: no line for this module; ownership (`interface-shell`, `origin/tranche/T51`, `job/T51/interface-shell`): 7 files, 0 failures.
+- `checks/run.mjs /home/user/bio`: failures only in other modules (listed below).
+
+**Reported to BOB (other modules; not fixed here)**
+- `op-grades/src/op-grades/t33.mjs:214`, `t51.mjs:41` and `:45`: inline sentences (words check). `t51` :41 and :45 are the `scanmirror` and `officeconfirm` rows, which are op-grades' own.
+- Coverage named by no test: agent-harness R17; agent-runner R37, R38, R40; control-plane R117, R118; installer-steps R26, R31; journey-check R19; jurisdictions R95; op-grades R53; screens-publish R74 to R79.
+- Architecture: `screens-inquiry/fr4-project.test.mjs` imports `screens-action/plan.mjs` before it is in the order; `screens-inquiry/phone.mjs` imports `interface-assets` it does not declare.
+- Words testcopy: `screens-inquiry/fr4-document.test.mjs:115–116`.
+
+**Found in this module's paths:** none beyond the above. Deferred: none.
+
+Size (session_01XNRmAuR8VXqdzNrDodxNZ8): test runs 29, module lines 3124

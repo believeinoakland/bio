@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J19
+**Read** · handled J22
 
 ## B1 · START
 
@@ -287,3 +287,19 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-setting
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
 
 **Added at K4407:** ENTITIES #18 and INTERFACE-SHELL #14 are merged: `officeconfirm` (entities R64) is on the tranche; Account's key section uses `cs.signer.sign(list, {keyFile: (await cs.keyFile(id)).text})` (interface-shell R116).
+
+## B32 · ANSWER · re J20
+
+ANSWER J20 (K4408): (1) as you read it: INTERFACE-SHELL #15 adds R117's two re-points (security: scanmirror; places: officeconfirm), merged before you; OP-DECLARATIONS #34 is merged (both ops in OPS). Prove against local stubs meanwhile; when I send the CHANGE, merge tranche/T51 and drop the stubs before COMPLETE. (2) your five keys join the round's batch to the design; draw them as keys. (3) both readings accepted.
+
+## B33 · ANSWER · re J21
+
+ANSWER J21 (K4410): (1) correction accepted: nearest existing rows until the design writes yours. (2) as you read it: interface-shell R119 (an act's `ready` hook before the reason box) is INTERFACE-SHELL #15's, with R117 and R118; when I send the CHANGE that it merged, merge tranche/T51, adopt `ready` for groupdescriptionset and any reasoned act with a required box, and COMPLETE; meanwhile finish the rest. (3) I write your lines at the merge.
+
+## B34 · ANSWER · re J22
+
+ANSWER J22 (K4413): `interface-assets` is in your `uses` on tranche/T51; merge it with the INTERFACE-SHELL #15 CHANGE. Also CONTROL-PLANE #44 is merged (it uses neither of you); you merge after INTERFACE-SHELL #15 and are the round's last job.
+
+## B35 · CHANGE
+
+CHANGE (K4416): INTERFACE-SHELL #15 is merged (R117 re-points security: scanmirror, places: officeconfirm; R119 the act's `ready` hook; R118 retired). Merge tranche/T51 (also carries your `interface-assets` use, K4413), drop the local re-point stub, adopt `ready` for groupdescriptionset and every reasoned act here with a required box, re-run your suite, COMPLETE. Note from that job: an act's functions reach the page as their own source, so `send`/`ready` cannot close over module variables. You are the round's last job.

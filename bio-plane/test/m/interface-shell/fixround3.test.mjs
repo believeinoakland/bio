@@ -1,9 +1,11 @@
 /* interface-shell R112 (fix round 2, wave 3; K4334, C89's shell half): an act may name the answer codes that are its success.
    Such an answer is drawn as done, in the success style, with the code's own row as its sentence, and the act's re-reads run
    as after any success; a code it does not name is a refusal as ever. Every sentence is read through `setup-words` (R70). */
+import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refused, silent, ADMIN, fitSend } from "./harness.mjs";
+import { checkScreens } from "../../../src/interface-shell/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const WHO = { ...ADMIN, capabilities: ["contribute", "administer", "create_projects", "publish"] };
@@ -98,4 +100,39 @@ test("R7 (C66) the frame's own queue read asks a limit the queue serves (200), i
   assert.ok(frame.length >= 1, "the frame reads the queue");
   for (const r of frame) assert.equal(r.query.limit, "200");
   assert.ok(p.byOp("queue").some((r) => r.query.limit === "5"), "the screen's own read keeps its limit");
+});
+
+/* R117 (fix round 3; C84, C64): the two acts the registry does not yet list on their screens are named re-points, each until it does */
+test("R117 a security screen naming scanmirror and a places screen naming officeconfirm are served; control: another unlisted op on those screens still throws", () => {
+  const screen = (id, op) => ({ id, render: () => "", acts: [{ op }] });
+  assert.equal(checkScreens([screen("security", "scanmirror")]), true);
+  assert.equal(checkScreens([screen("places", "officeconfirm")]), true);
+  assert.throws(() => checkScreens([screen("security", "officeconfirm")]), /security.*officeconfirm/);
+  assert.throws(() => checkScreens([screen("places", "scanmirror")]), /places.*scanmirror/);
+  assert.throws(() => checkScreens([screen("security", "groupnameset")]), /security.*groupnameset/);
+});
+
+/* R119 (fix round 3, C87 (c); K4410): an act's `ready` runs on the press before any reason box opens */
+test("R119 a reasoned act whose ready refuses opens no reason box, sends nothing and draws the refusal beside it; control: an act without ready asks the reason as before", async () => {
+  const refusing = endorse({ ready: () => ({ refuse: "refusal.CONSENSUS_REQUIRED", fills: { awaiting: "rosa" } }) });
+  const p = await boot({ screens: [screen(refusing)], path: "/app/members", plane: { whoami: ok(WHO), memberlist: ok({ members: [] }), adminendorse: ok({ ok: true }) } });
+  await p.click(p.root().querySelector('button[data-act="adminendorse"]'));
+  assert.ok(!p.root().querySelector(".mk-slot textarea"), "no reason box opens");
+  assert.equal(p.byOp("adminendorse").length, 0, "nothing is sent");
+  assert.ok(slot(p).textContent.includes(word("refusal.CONSENSUS_REQUIRED", { awaiting: "rosa" })), "the refusal is drawn beside the act");
+  const plain = await boot({ screens: [screen(endorse())], path: "/app/members", plane: { whoami: ok(WHO), memberlist: ok({ members: [] }), adminendorse: ok({ ok: true }) } });
+  await plain.click(plain.root().querySelector('button[data-act="adminendorse"]'));
+  assert.ok(plain.root().querySelector(".mk-slot textarea"), "control: the reason box opens as before");
+  assert.equal(plain.byOp("adminendorse").length, 0, "control: nothing is sent before the reason");
+});
+
+test("R119 the fills ready answers reach the act's send, with the reason asked before it; the send is handed them", async () => {
+  /* the act's functions run in the page from their own text, so the send is self-contained: it answers the fill as a refusal sentence */
+  const act = endorse({ ready: () => ({ fills: { note: "n1" } }), send: (view, btn, cs, extra) => ({ refuse: "refusal.CONSENSUS_REQUIRED", fills: { awaiting: String(extra.fills.note) } }) });
+  const p = await boot({ screens: [screen(act)], path: "/app/members", plane: { whoami: ok(WHO), memberlist: ok({ members: [] }), adminendorse: ok({ ok: true }) } });
+  await p.click(p.root().querySelector('button[data-act="adminendorse"]'));
+  assert.ok(p.root().querySelector(".mk-slot textarea"), "the reason box opens after ready answers");
+  p.root().querySelector(".mk-slot textarea").value = "because the team asked";
+  await p.click(p.root().querySelector('[data-shell="reason-send"]'));
+  assert.ok(slot(p).textContent.includes(word("refusal.CONSENSUS_REQUIRED", { awaiting: "n1" })), "the send drew the fill it was handed");
 });

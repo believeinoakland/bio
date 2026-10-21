@@ -43,7 +43,7 @@ const machineAdmits = (op) => ["admin", "member", "probe", "daemon", "ai"].filte
 const both = (op) => SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op);
 
 const ROOT = new URL("../../../../", import.meta.url);
-const registry = JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/registry.json", ROOT), "utf8"));
+const registry = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 
 /* The kinds R77 to R79 give, each with the spec and the NEEDS row (stated here, not read from OP_KINDS). */
 const KINDS = {

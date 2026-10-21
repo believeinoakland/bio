@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_018BaB4jyWLrTAiLbGV6EXVS · depth 2 · COMPLETE · handled B17
+**Status** · session_01JarNVWj3jh7A31SRkU57RG · depth 2 · COMPLETE · handled B23
 
 ## J1 · QUESTION
 
@@ -280,3 +280,79 @@ Size (session_018BaB4jyWLrTAiLbGV6EXVS): test runs 9, module lines 3,990
 ## J13 · COMPLETE
 
 control-plane fix round 2 complete (C15 R116, C52 pinned, C12 R105/R115 kept state, contradictionflag verified). Suite 340/340, architecture/format/words/coverage 0, ownership only the requirements file. Record: Completion (fix round 2). Reds not mine: affordances catalogue (register-owners lacks contradiction), op-grades R42/R46, plane R24.
+
+## J14 · QUESTION
+
+control-plane T51 fix round 3: ONE thing needs plane (not mine), and I need your reading on two others. My best reading is being built; correct it and I change it.
+
+**Needs plane (2 one-line getters).** The door can reach an owner's in-process act only through the door's own map (`controlPlaneOwnerOps(of, url, body)`, `bio-plane/src/control-plane/owner-ops.mjs`), where `of` is a set of getters that `plane/store.mjs:894` hands it. Two services I must call have no getter:
+1. `extraction.readHeld` (extraction R80; R117): needs `extraction: () => extractionOf(ctx)`.
+2. `project-roster.projectList` with `sharedDraftsOf` (R118): needs `projectRoster: () => projectRosterOf(ctx)`.
+The `env.sharedDraftsOf` that `projectRosterOps(r, url, body, env)` reads (project-roster index.mjs:1419) is the Durable Object's own env, which the door never holds, so the door cannot put a function there. I build: a store-internal arm `readheld` (no spec, so no caller reaches it, as `capturestepproduct`) calling `of.extraction().readHeld({sha, storeName})`, and an arm `projectlist` that replaces project-roster's, calling `of.projectRoster().projectList({viewer, limit, after, sharedDraftsOf: (a) => of.review().sharedDraftsByProject(a)})`. Please send PLANE a CHANGE to add the two getters (`extraction`, `projectRoster`) to that `of`. Until it merges, the real-plane tests of R117 and R118 are red by name (the door-with-doubles tests are green); I work around nothing.
+
+**Readings built (R117).**
+1. The door asks `readHeld` after any `acquire` or `captureupload` answer that is `ok` with `existed: true`, by the digest the answer names (`document.capture.sha256`, else `capture.sha256`), whether or not it carries a document: a registered second upload answers no document (capture index.mjs:738) yet is exactly the "home with no reading" case. A new capture (`existed: false`) is read as R100 reads it; an `existed: true` acquire answer already carries its reading (acquire always reads), so it only gets `readHeld`.
+2. An `existed: true` upload answer WITH a document (capture's interrupted-upload arm) and `readHeld` answering `why: NO_HOME`: the door reads the document as R100 reads a new upload (`extractread`) and answers it with `reading` and `text_units`. A failed read is answered as R100 answers one (the refusal), never an unread document the screen could promote. `READING_HELD` and `NO_WHOLE_OBJECT` leave the answer as it was. A refusal or silence of `readHeld` itself never changes the answer.
+3. No `existed: true` trigger for "kept whole" (acquisition R96 adds no field); if you want one, tell me the field.
+
+**Other.** None for now; I will REPORT anything further in COMPLETE.
+
+## Completion (fix round 3, B18; CONTROL-PLANE #44)
+
+**Causes met.** C15 (R75): the shell's script is served at `/app/shell-<version>.js`, `text/javascript`, `public, max-age=31536000, immutable`, only for the plane's own version (another is 404); the page policy names its hash (`withPagePolicy(res, {scriptHashes})`), no nonce; the page keeps `no-store`. C5 and C17 (R117): after an `acquire` or `captureupload` answered `existed: true` the door asks `readHeld` (store-internal arm `readheld`); an upload answered `existed: true` with a document and `NO_HOME` is read by the door as R100 reads a new upload; a failed read is answered as R100 answers one; a refusal of `readHeld` changes nothing. C14 (R118): arm `projectlist` hands review's `sharedDraftsByProject` to `projectList` as `sharedDraftsOf`.
+
+**Readings (accepted, B19).** `readHeld` is asked for any `existed: true` answer naming a digest, document or not (a registered second upload answers none). Both new arms exist only when the plane hands the getters `of.extraction` and `of.projectRoster` (PLANE #47, plane R74).
+
+**K4364/K4371/K4380.** `t51-routes.test.mjs` routes `officeconfirm`, `scanmirror`, `moneysets`, `captureseenin`, `remindersfor`; `t36-door` takes file-safety's op count from its map; `t46-app`, `t46-e2e`, `t47-e2e`, `page-policy`, `doors`, `t50-door` are current against the external script (e2e suites run the script over `app-screens.mjs`, registered first). `signerregister` measured on the real plane (Miniflare, 4 runs): whole call 9–23 ms (a `whoami` is 5–10 ms); admission (session, re-ask) 2–7 ms; store dispatch plus arm 2–15 ms, the arm 0–1 ms. Nothing in the door or the arm holds the 37.6 s; it is not spent there, so nothing was cut.
+
+**Red by name, not mine.** (1) Until PLANE #47 merges: the real-plane tests in `r117-held` and `r118-shared` (green with the two getters applied locally, then reverted). (2) `t51-routes`: `officeconfirm` (entities R64) and `captureseenin` (capture R101) have no owner map entry or declaration yet. (3) affordances' "unaccounted" (R2, R41), as at baseline.
+
+**For BOB.** (a) `money` is not in control-plane's `uses`, so `moneysets` is checked for declaration and routing but not against money's map; add `money` as a test-only use if you want that. (b) R118 reads: the arm replaces project-roster's own `projectlist` arm. (c) Checks naming other modules (coverage R101, R64, R114, R115, op-grades words) are not control-plane's.
+
+**Tests and checks.** Control-plane suite 343 tests: 338 pass with the getters applied; after fixes (`t41-door`, `t50-door`) the only reds are those named above. Format 0, architecture 0, coverage 86 of 86, ownership 0, words none in control-plane.
+
+Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 12, module lines 4,076
+
+## J15 · COMPLETE
+
+control-plane fix round 3 complete: C15 R75 (versioned immutable script, hash policy), C5/C17 R117 (readHeld, door reads no-home upload), C14 R118 (sharedDraftsOf), routes and page tests current. Reds by name: real-plane R117/R118 tests until PLANE #47; officeconfirm and captureseenin until entities R64 and capture R101 merge; affordances unaccounted. signerregister measured: 9-23 ms whole, nothing to cut. Ask: add money as test-only use. Record has details.
+
+## Re-completion (B20, K4397)
+
+Merged `tranche/T51` (plane R74): the real-plane tests of R117 and R118 and `plane/fix3-r74` pass; `captureseenin` routes. Control-plane suite 356 tests, 354 pass, 2 red and not mine: `officeconfirm` (entities R64, not merged) and affordances' unaccounted (R2, R41, as at baseline).
+
+Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 14, module lines 4,103
+
+## J16 · COMPLETE · re B20
+
+Re B20: merged tranche, real-plane R117/R118 and plane/fix3-r74 pass. Suite 354 of 356; red and not mine: officeconfirm (entities R64 unmerged), affordances unaccounted.
+
+## Re-completion (B21, K4399)
+
+`money` is in control-plane's uses; `t51-routes` now reads money's map for `moneysets`. Architecture 0 failures; `t51-routes` 4 of 5 (red: `officeconfirm`, entities R64 unmerged). Rest as in the re-completion above.
+
+Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 15, module lines 4,103
+
+## J17 · COMPLETE · re B21
+
+Re B21: merged; t51-routes reads money's map for moneysets; architecture 0. Only red of mine: officeconfirm (entities R64 unmerged).
+
+## J18 · QUESTION
+
+control-plane R119 (B22): I cannot build it as written, because its premise does not hold on the tranche. Measured through the door (merged tranche, harness): a member's `entitycreate` is admitted and reaches entities with no `screen`, with `screen: request` and with `screen: places` alike. `OPS.entitycreate.classes` is `["admin","member","probe"]` (op-declarations index.mjs:1146; entities' own declaration says the same), so no door gate stands in her way today, and entities itself marks any non-administrator's office `named_by_member` without asking the screen (entities index.mjs:604: "Which screen may send the act is the door's"). So the control ("without it, or from `places`, refused") cannot be met by any change in the door while the row admits members. Also no op in the tables has classes that exclude `member` yet pass a member session's gate (`SESSION_OPS.member`), so "an op whose classes admit only an administrator" names nothing a member could reach.
+
+Options, my recommendation first:
+1. (Recommended) op-declarations/entities narrow `entitycreate`'s classes to `["admin","probe"]` with a note (a member's act is the screen-gated exception, op-grades R52). I then build the door half: a member's session refused `CLASS_FORBIDDEN` for an op is re-admitted when `memberMayDo(op, screen)` is true for the `screen` the request names (read from the address, else the JSON body), by re-running admission with `member` added to that one request's classes, nothing else changed; any other op, screen or caller is refused as before. Tested through the door with `entitycreate`: `screen: request` reaches entities, no `screen` and `screen: places` refused.
+2. Drop R119 and leave entitycreate open to members: the door does nothing, and the mark `named_by_member` is all there is.
+3. Make entities refuse a non-administrator's office unless the door stamps `screen`: the door then stamps the screen it was sent, from the same `memberMayDo`. (More of entities' work.)
+I build nothing until you answer.
+
+## Re-completion (B22, B23)
+
+R119 (J18): BOB retired it (K4411): `entitycreate` already admits members and entities marks the office, so the door builds nothing for it. Merged `tranche/T51` (the retired line, `officeconfirm` on the tranche); `t46-app`, `t51-routes` (5 of 5 now), `r117-held`, `r118-shared`, `page-policy` pass (24 of 24). The last full run (356 tests) had two reds, `officeconfirm` (since cleared) and affordances' unaccounted (not mine). I merged before INTERFACE-SHELL #15 and SCREENS-SETTINGS #15 landed, as BOB said "COMPLETE with what you have".
+
+Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 17, module lines 4,103
+
+## J19 · COMPLETE · re B23
+
+Re B23: R119 retired, nothing built; merged tranche; t51-routes 5 of 5, R117/R118/R75 tests pass. Complete with what I have; I merged before INTERFACE-SHELL #15 and SCREENS-SETTINGS #15.

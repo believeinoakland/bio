@@ -122,7 +122,7 @@ test("R46: MARKS equals the kit's WEIGHT at that commit for every rungless regis
 
 test("R46: every rungless registered act has an entry, and the registry's watchitem, secondlook, secondlookclear, "
    + "projectstakeset, actionstake and actioninquiry hold no mark", async () => {
-  const REGISTRY = JSON.parse(readFileSync(root("docs/development/ux-substrate/screens/registry.json"), "utf8"));
+  const REGISTRY = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
   const nameOf = (a) => (a.startsWith("owed:") ? a.slice(5).split(" ")[0] : a);
   const ops = [...new Set(REGISTRY.screens.flatMap((s) => s.acts.map((a) => nameOf(a.op))))];
   /* rungless over the registered tables (R49): an op its owner grades (strengthbarset, reasoned) needs no mark of its own */

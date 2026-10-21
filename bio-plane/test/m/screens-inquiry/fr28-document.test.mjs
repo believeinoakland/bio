@@ -357,7 +357,7 @@ test("R118 control: a testimony offers neither watching nor checking and says no
 
 /* ---- R10 ---- */
 test("R10 the document draws exactly its registry acts, each labelled by a word the table holds", () => {
-  const REG = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
+  const REG = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
   const want = REG.screens.find((s) => s.id === "document").acts.map((a) => a.op.replace(/^owed:(\w+) DEC-\d+$/, "$1"));
   const screen = SCREENS.find((s) => s.id === "document");
   assert.deepEqual(screen.acts.map((a) => a.op).sort(), want.sort(), "the registry's acts, no more and no fewer (captureprogressions among them, B22 entry 2)");

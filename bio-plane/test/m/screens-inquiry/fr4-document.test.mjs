@@ -105,6 +105,8 @@ test("R96 R97 R3 C17 typed words are drawn without Nothing here; control: a read
 });
 
 /* ---- C25 / R3: the record's name ---- */
+/* a reading's title in the fixture: a document's own name, never a word-table sentence */
+const READ_TITLE = "Street repair order 7-3";
 const headOf = (p) => text(main(p).querySelector("h1"));
 test("R3 C25 the page is named by the record's one rule: the reading's title, else the title the capture states, else its file name, else its host and day; a document with a title draws it", async () => {
   const slugged = DOCUMENT_MD.replace('title: "Pothole repair policy, Administrative Instruction 4.12"', 'title: "ai-4-12.pdf"');
@@ -112,8 +114,8 @@ test("R3 C25 the page is named by the record's one rule: the reading's title, el
   const byFile = await openWith(at, { images: docWith(slugged, { capture: { file_name: "ai-4-12.pdf" } }), plane: UNREAD });
   assert.equal(headOf(byFile), "ai-4-12.pdf", "the file name the source states");
   /* once read, the reading's title */
-  const read = await openWith(at, { images: docWith(slugged, { capture: { file_name: "ai-4-12.pdf" } }), plane: { reading: ok(READING({ title: "Administrative Instruction 4.12" })) } });
-  assert.equal(headOf(read), "Administrative Instruction 4.12", "the reading's title");
+  const read = await openWith(at, { images: docWith(slugged, { capture: { file_name: "ai-4-12.pdf" } }), plane: { reading: ok(READING({ title: READ_TITLE })) } });
+  assert.equal(headOf(read), READ_TITLE, "the reading's title");
   /* the title the capture's document states (acquisition R98) */
   const stated = await openWith(at, { images: docWith(slugged, { title: "Notice 2026-118" }), plane: UNREAD });
   assert.equal(headOf(stated), "Notice 2026-118", "the title the capture states");

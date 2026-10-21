@@ -11,7 +11,7 @@ import { OPS, BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
 import { refusedIn, silent, pending, ok } from "../interface-shell/harness.mjs";
 import { open, main, rawKeys, plane, word, inquiryMd, INQUIRY_REFS, LEGS, SCREENS, P, Q, D } from "./fixtures.mjs";
 
-const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
+const REGISTRY = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 const PATHS = { project: "/app/project/" + P, question: "/app/question/" + Q, document: "/app/document/" + D, projectai: "/app/projectai/" + P };
 /* the reads each screen draws in one of the four states, by the screen's own read names (N1073: the ops are read from its
    declaration, never hand-listed); the rest feed what is drawn (titles, choices); the document's reading and versions are
