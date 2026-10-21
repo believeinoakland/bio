@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01ALmoG5zY9hNNTsdddSrGb9 · depth 2 · COMPLETE · handled B6
+**Status** · session_01RNKFMerseiVz1hP5LfR1JD · depth 2 · COMPLETE · handled B7
 
 ## J1 · REPORT
 
@@ -129,3 +129,27 @@ Checks: format 0 failures; architecture 0; words 0; ownership 0; coverage 10 fai
 Nothing deferred. Nothing found in another module. No generated artifact made stale.
 
 Size (session_01ALmoG5zY9hNNTsdddSrGb9): test runs 14, module lines 3329
+
+## J7 · COMPLETE
+
+Fix round 3, wave 1, cause **C5 (my part: the repair act)**, met by **extraction R80**.
+
+Built: `Extraction.readHeld({sha, storeName?, env?}) → {ok, read, why?, bundle_id?, found?}` in `bio-plane/src/extraction/index.mjs`, an in-process act the door calls (not an op, so no census declaration). When `provenance.homeOf(sha)` names a home, no `readings` row exists, and the evidence store holds an object under the sha (`head`), it reads the stored document (the bundle's `data/provenance.json` entry, else `{capture:{sha256}}` as the migrations do) through `read`, and writes the reading for the home bundle with R19's writer (`composed: true`, `profileFormat` from the document), one transaction with history and index, R24 listeners and R69 after-read run as for any reading. Otherwise it writes nothing and answers `{ok: true, read: false, why}`. It writes no bundle, no register row, no promotion. The `readings` row is looked at again inside the write, so a reading that lands while the bytes are read stands; a second call changes nothing.
+
+Tests (`bio-plane/test/m/extraction/r80.test.mjs`, 10, written first and seen failing with `readHeld is not a function`): a parts-only home gets its reading once the whole is held (`op=reading` answers found, bundle is the home); a second call changes nothing; no bundle written; the OCR re-read (R31, R32) answered 409 `REEXTRACT_NOT_READ` before and runs after; failed reading recorded once (R45); listeners run (R24). Controls: a digest with a reading, a digest with no home, a home with no whole object, a malformed digest, a store with no provenance each write nothing; the three `why` answers differ.
+
+Decision for BOB (record in rulings): `why` is a stable code, not a sentence: `NO_HOME`, `READING_HELD`, `NO_WHOLE_OBJECT`. The door must not show it to a member as is; if a screen needs words, that is a word-table row the design stream writes. No keys needed from me.
+
+Entries for control-plane's R117: call `extraction.readHeld({sha, storeName, env})` and await it; it answers `read: false` (never throws on the cases above); `read` itself never throws. Wave 2 test against the real act now exists on `job/T51/extraction`.
+
+Deferred: none. Found in other modules: none. Provider doubles: none needed (acquisition's keep-whole is not read by this act; it asks only whether the object is held).
+
+Tests and checks:
+- `node --test --test-force-exit bio-plane/test/m/extraction/`: 207 tests, 207 pass, 0 fail (before: 197).
+- `bio-plane/test/m/control-plane/` (the door's suite, the act's only future caller): 340 pass, 0 fail.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD` names 107 modules, because `index.mjs` holds `DECLARED_OPS` (a shared table I did not touch); I ran only extraction and control-plane, the act having no caller yet. BOB may want the rest run at the wave's merge.
+- `checks/coverage.mjs extraction`: 56 of 56 live ids named, 0 failures. `checks/architecture.mjs`: 0 failures. words: 0 failures. `checks/ownership.mjs extraction origin/tranche/T51 job/T51/extraction`: 0 failures (3 files, all mine).
+- `checks/run.mjs`: format has 1 failure, `build/rulings.md:4346` (K4349 states no standing-list decision), BOB's file and on the tranche tip, not mine.
+- Environment: `file-scanner`, `bio-plane/src/journey-check`, `sheet-worker`, `agent-runner`, `site` have a lockfile and no `node_modules` here (K4113); none is an input to extraction's or control-plane's suite, so I did not install them.
+
+Size (session_01RNKFMerseiVz1hP5LfR1JD): test runs 6, module lines 3354

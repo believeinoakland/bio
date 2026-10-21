@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_01QauuYoWqCoXNu8JWm2WmuR · depth 2 · COMPLETE · handled B2
+**Status** · session_018K9QjDh8UDnKT5iYTG88A5 · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -51,3 +51,13 @@ C40 (R2): CO_ATTESTATION_UNACKNOWLEDGED now carries `missing` per capture (`["ti
 For BOB (screens-inquiry's half, wave 2): `attest` does NOT write the co-archive from what the document page sends. attestation R3 asks the co-archive only with `archive: true` and a public https `locator`; `screens-inquiry/document.mjs:940-942` sends `{sha256}` alone, so the timestamp is obtained and the co-archive never is. No change belongs in `attestation` (R1-R3 are right); the act must send `archive: true` and the document's public locator, and draw what the gate's `missing` (or the answer's attempts) says is still absent. Requirement-id note: no new id was written for C39/C40 in this file; the tests name R2 and R16, whose lines they meet.
 Ran: case-disclosures 103 pass, 0 fail; case-authoring 208 pass; case-account 48 pass. checks/run.mjs: architecture 0 failures; format and coverage failures shown are not this module's (rulings.md:4298 K4301; other modules' ids); words 0 for case-disclosures; setup-words --check: stale-rows note only (names my new localize id, expected); ownership 0 failures (4 files).
 Size (session_01QauuYoWqCoXNu8JWm2WmuR): test runs 7, module lines 2395
+
+## J5 · COMPLETE
+
+COMPLETE: fix round 3, case-disclosures, cause C40 (my part), requirement R2.
+Why the pre-flight shows neither proof after `reattest`: `capture.lateAttestationsOf` is right and `captureFacts` already read it (a late successful timestamp counted, stated `late`; test "R2: a timestamp or co-archive obtained late"). The loss is one hop later, in case-authoring: `#notCoAttested` (case-authoring/index.mjs:1679-1692) builds the pre-flight's `not_co_attested` rows as `{capture, by, findings}` only, dropping the facts the capture rows (`disclosureBlocks` `captures`) carry, so screens-publish (ceremony.mjs:200-208) has nothing to draw but its fixed "no trusted time stamp, no outside copy". Nothing is wrong in capture or attestation.
+Built (case-disclosures): `captureFacts` now also answers `timestamp_late` (the timestamp is one `reattest` made) and `late_words` (null, or the key `case-disclosures.index.late_proves`, "late: proves the bytes existed by {at}, not at capture"); `missing` ([timestamp, co_archive] still absent) and `timestamp_at` were already there. The same two fields ride on the gate's `CO_ATTESTATION_UNACKNOWLEDGED` entries and on every `disclosureBlocks` capture row. Test "R2 (C40)" (seen failing first): after a late timestamp the facts show `timestamp_at` (late), `timestamp_late: true`, `missing: ["co_archive"]`, `late_words`; the gate entry and the capture row carry the same; controls: no attempt misses both and is not late; a failed late attempt counts nothing; a timestamp made at capture is not late.
+FOR BOB (case-authoring is not mine, P9): `#notCoAttested` should add `timestamp_at`, `co_archive`, `missing`, `late`, `timestamp_late`, `late_words` from the capture row `c` (they are already on it) to each `not_co_attested` row; screens-publish then draws `late_words` and the `missing` proof. Without that, the page cannot say it. Stand-in: `case-disclosures.index.late_proves` is a plain `localize` default until the design stream writes the row (no new row requested beyond that key).
+Proposed R2 amendment (BOB writes requirements): in "One capture's facts" add: "`timestamp_late` is true when the timestamp is one a late attempt made, and `late_words` then states 'late: proves the bytes existed by <at>, not at capture' (else null); `missing` names which of timestamp and co_archive is still absent. The gate's `CO_ATTESTATION_UNACKNOWLEDGED` entries and the disclosure capture rows carry the same."
+Ran: case-disclosures 104 pass, 0 fail; case-authoring 214 pass; case-account 48 pass. checks/run.mjs: architecture 0 failures, words 0 failures, ownership 0 failures (3 files); format 1 failure (rulings.md:4346 K4349, not mine) and coverage failures all in other modules (case-authoring R83 etc., not mine); setup-words --check: stale-rows note only, naming my new localize id (expected).
+Size (session_018K9QjDh8UDnKT5iYTG88A5): test runs 5, module lines 2417
