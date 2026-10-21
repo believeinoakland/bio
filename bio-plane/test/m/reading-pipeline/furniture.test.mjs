@@ -178,6 +178,7 @@ test("R32 (fix round 4, C19; K4429): the saved nps.gov Grand Canyon page yields 
     assert.ok(page.includes(f), `the saved page holds ${f}`);
     assert.ok(!a.includes(f), `no unit is ${f}`);
   }
+  assert.ok(!a.some((t) => t.includes("Explore subjects")), "the subject gallery goes");
   for (const c of ["What pass should you pick?", "Know before you go!", "A special use permit is required for certain filming"])
     assert.ok(a.some((t) => t.includes(c)), `a unit still holds ${c}`);
   assert.deepEqual(a, (await readAs(page)).text_units.map((u) => u.text));
@@ -188,7 +189,7 @@ test("R32 (fix round 4, C19; K4429): a block named furniture by a token of its c
   for (const f of ['<div class="ParkFooter"><h2>Park footer</h2><p>PO Box 129</p></div>', '<div id="contact-info"><h3>Contact Info</h3></div>',
     '<div class="breadcrumb"><span>Home</span><span>Parks</span></div>',
     '<div class="Sidebar"><h3>Related pages</h3></div>', '<div class="ContentPromos"><h2>Explore Grand Canyon</h2></div>',
-    '<div class="site-search"><h3>Search</h3></div>'])
+    '<div class="site-search"><h3>Search</h3></div>', '<div class="CarouselGallery"><h2>Explore subjects and stories related to this park</h2></div>'])
     assert.deepEqual(await words(withMain(f)), NOTICE.slice(0, 2), f);
   const roleMain = `<html><body><div role="main"><p>The council adopted the shelter repair standard on 3 March 2025.</p></div><div class="page-footer"><h3>Contact Info</h3></div></body></html>`;
   assert.deepEqual(await words(roleMain), ["The council adopted the shelter repair standard on 3 March 2025."]);

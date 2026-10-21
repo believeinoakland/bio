@@ -1006,7 +1006,7 @@ const moreFurniture = (name, attrs, markup, after) => isFurnitureByAttribute(nam
    of its `class` or `id` (split at `-`, `_` and camel-case humps) and holds no sentence of body prose goes, when the
    page has a region: a `main` element, else an `article`, else an element whose `role` is `main`. A sentence is a run of
    three or more words ending in a full stop, `!` or `?`, outside a heading, a label, a link and a control. */
-const NAME_WORDS = new Set(["footer", "contact", "search", "breadcrumb", "breadcrumbs", "share", "social", "sidebar", "related", "explore", "promo", "promos"]);
+const NAME_WORDS = new Set(["footer", "contact", "search", "breadcrumb", "breadcrumbs", "share", "social", "sidebar", "related", "explore", "promo", "promos", "gallery", "carousel"]);
 const nameWords = (t) => t.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase().split(/[\s_-]+/).filter(Boolean);
 const isNamedFurniture = (attrs) => classTokens(attrs).some((t) => nameWords(t).some((w) => NAME_WORDS.has(w)));
 const NON_PROSE = /<(a|h[1-6]|label|button|select|option|textarea|script|style)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?<\/\1\s*>/gi;
