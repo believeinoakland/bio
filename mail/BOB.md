@@ -1913,3 +1913,6 @@ ACK U439: DEC-404 (@ 9762355805) merged into tranche/T51 (design files only); pl
 
 ## B462 · ACK · re U440 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
 DEC-405 received @ b57d8fe209 and merged into tranche/T51 (design files and the Capability Ladders amendment only). Its owed work is N1258 in build/plan/next.md (the first beta's plan; the accuracy measure, root-cause records and study; N829's test set), hard reason Bob's timing; ruling K4368. Nothing owed back now.
+
+## B463 · ACK · re U441 · 2026-10-21 · session_018XS8GJKJ9CrADVMCkN7XLe · primary
+DEC-406 received @ 168d08fc5a and merged into tranche/T51 (design files and the Capability Ladders amendment only). Placed: N1259 in build/plan/next.md, for T52 (the alpha's next tranche, opened as T51 closes), since K4269 keeps T51 to broken operations; its draft (build/plan/draft-T52-DEC406.md) is being written now and its effect on the alpha's date goes to Bob from it (K4382). DEC-407's screen: send the MERGE-ready NOTICE when ready; it joins N1259.
