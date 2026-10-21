@@ -35,7 +35,7 @@ test("C64 a member's entitycreate is admitted from the request screen and refuse
   assert.throws(() => { MEMBER_SCREEN_ACTS.entitycreate.push("people"); }, TypeError, "frozen");
 });
 
-test("C64 (K4379, K4380) scanmirror is graded under the ground substrate, officeconfirm Reversible and captureseenin under the ground observational, each with its NON_ACTS publication row that agrees with its owner's declaration (a scripted double until the owner has merged); control: other ops' grades are unchanged", async () => {
+test("R53 C64 (K4379, K4380) scanmirror is graded under the ground substrate, officeconfirm Reversible and captureseenin under the ground observational, each with its NON_ACTS publication row that agrees with its owner's declaration (a scripted double until the owner has merged); control: other ops' grades are unchanged", async () => {
   assert.equal(RUNG_ABSENT.scanmirror.ground, "substrate");
   assert.equal(RUNGS.officeconfirm, "reversible");
   assert.equal(RUNG_ABSENT.captureseenin.ground, "observational");
@@ -55,7 +55,7 @@ test("C64 (K4379, K4380) scanmirror is graded under the ground substrate, office
   for (const [op, row] of Object.entries({ ...RUNG_ABSENT })) assert.deepEqual(m.RUNG_ABSENT[op], row, `${op}: a hand row is unchanged`);
 });
 
-test("B3 (money R28) moneysets, a read its owner declares beside moneyset, has a hand row that agrees with the owner's declaration (R49, R50; registration refuses a disagreement): a NON_ACTS read reason, no rung, no ground; control: moneyset's hand row is unchanged", async () => {
+test("R53 B3 (money R28) moneysets, a read its owner declares beside moneyset, has a hand row that agrees with the owner's declaration (R49, R50; registration refuses a disagreement): a NON_ACTS read reason, no rung, no ground; control: moneyset's hand row is unchanged", async () => {
   assert.ok(NON_ACTS.moneysets.startsWith("read: "));
   const m = await registered();
   assert.equal(m.NON_ACTS.moneysets, NON_ACTS.moneysets);
@@ -67,7 +67,7 @@ test("B3 (money R28) moneysets, a read its owner declares beside moneyset, has a
   assert.ok(NON_ACTS.moneyset.startsWith("read: one money set"));
 });
 
-test("B5 (action-clocks R26) remindersfor is a read: a NON_ACTS read reason that agrees with its owner's declaration, no rung, no ground, phone true; control: clocksrunning is unchanged", async () => {
+test("R53 B5 (action-clocks R26) remindersfor is a read: a NON_ACTS read reason that agrees with its owner's declaration, no rung, no ground, phone true; control: clocksrunning is unchanged", async () => {
   assert.ok(NON_ACTS.remindersfor.startsWith("read: ") && NON_ACTS.remindersfor.includes("writes nothing"));
   assert.equal(RUNGS.remindersfor, undefined);
   assert.equal(RUNG_ABSENT.remindersfor, undefined);

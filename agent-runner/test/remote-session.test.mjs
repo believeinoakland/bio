@@ -35,7 +35,7 @@ test('R42 the Worker exports RemoteSession beside AgentRunner and the default ha
   } finally { restore(); }
 });
 
-test('R42 C92 GET /remote/version answers 200 in R5\'s shape while not ready, so the part reads present, not absent', async () => {
+test('R40 R42 C92 GET /remote/version answers 200 in R5\'s shape while not ready, so the part reads present, not absent', async () => {
   const h = await recorded();
   try {
     const res = await h.session.fetch(new Request('https://remote-session/remote/version'));
