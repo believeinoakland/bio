@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01SEkZkEvrW6ukwiw4b8mKpD · depth 2 · COMPLETE · handled B15
+**Status** · session_01QLncWLte6oxmKhPKXXRUyy · depth 2 · COMPLETE · handled B19
 
 ## J1 · QUESTION
 
@@ -177,3 +177,35 @@ Tests/checks: module suite 178 tests, 178 pass, 0 fail. format 0; architecture s
 Deferred: none. Other modules: nothing new.
 
 Size (session_01SEkZkEvrW6ukwiw4b8mKpD): test runs 12, module lines 3029
+
+## J14 · QUESTION
+
+QUESTION (C54, C6 my part; the half is in `events`, not mine). The Timeline cannot keep an event attached to a project whose document names no person, organization or event, and Matter's event picker has nothing to read.
+What I found: `timeline` answers the events concerning the entity or event ids in its `set`, and refuses `NO_SET` otherwise with "a project's scope is resolved by its caller" (events R28). `createEvent` takes `concerns` of a registered entity or an EVT only (a PROJ- is NO_SUCH_ENTITY); the `project` argument at events/index.mjs:475 belongs to a testimony attestation and only scopes who may see it. The screen takes `set` from the project document's references (ENT-/EVT-), so: a project whose document names an entity keeps an event recorded here (the screen sends `concerns` = that entity; I prove it by reload), but a project whose document names none loses the event at the next visit, and the design's own sentence `screen.timeline.noset` ("Start with Record an event") cannot be true. There is no op that adds a reference to a project document, and none that lists a project's events.
+My best reading, the smallest change that makes both halves true: `events` accepts a project (`PROJ-`, one the viewer sees) as a `concerns` end of `createEvent`, and `timeline` (and `eventsfor`) accept a `PROJ-` id in `set`, answering the events whose concerns include it. Then the screen sends `concerns: [project, ...]` and reads `set` = the project id plus the document's references; Matter's picker (cause-action-t51) reads `timeline` with `set` = the project. Who holds it, and when? Until then I keep what works (events tied to the project's named entities, plus the page-memory list) and report C54 and my part of C6 as partly met, blocked on events.
+
+## J15 · QUESTION
+
+QUESTION (C8's "follow days" box; words rows). Neither stops the work; I carry on and use stand-ins.
+1. C8 says "the follow days box is not named as required". There is no days box on the money trail (`money.mjs` draws the figure form and "Start a money trail" only), and none anywhere else in screens-investigate (grep for days). Which screen and field did the walk mean (E36)? If it is another module's, say whose; I have changed nothing for it.
+2. Word rows I need and the design has not given (no sentence invented; each stand-in is named): (a) the project's Standard screen now lists the standards the record holds (C61): its heading `screen.standard.held` ("Standards the team holds"; stand-in: `screen.standard.name`, "Standard") and a sentence for a cut list ("More standards are held than are shown"; stand-in: none, the cut is not said); (b) "Committed against paid" now chooses the contract (R23, C57): `screen.money.f.contract` still ends "(a record id)" and `screen.money.f.nocontract` says "Name the contract by its record id": both want rewording for a choice ("The contract, for committed against paid" / "Choose the contract"; stand-ins: the two rows as they stand); (c) a figure proposed to a trail by the member who read it (C8) is drawn by `money`'s own label `screen.money.proposed`, "proposed by the machine; not included", which is false for a member's proposal: a member-proposal row ("proposed by a member; not included") is the design's, and `money`'s `readSet` would answer it by who proposed (money's, BOB's).
+
+## J16 · COMPLETE
+
+COMPLETE · screens-investigate · fix round 2, wave 1. C56, C57, C8, C59, C60, C61, C62 met; C54 and my part of C6 PARTLY met (events half, B17); C7 screen half met (people's half is People #13's, not yet merged on my tip).
+
+Causes (requirement ids): C56 R34 (the event kinds offered are `affordances`' `event_kinds`, no hand list; unread = failed); C57 R4, R23 (committed against paid chooses the contract from `peopledirectory` show=contracts; none held = empty state and a refusal in words); C8 R4 (recordfact success sends `moneysetpropose` {setId, factId, method} for the open trail; rows come from the trail's proposals, `ui.recent` gone; a refused proposal drawn); C59 R34 (person: passage picker `cs.words` from the chosen document's `reading`, the first selected unit's extent sent, else the whole document; cited documents named by title); C60 R32 (connect: empty answer says `screen.people.counts.none` + `entity.naming.says`, else the count and each document); C61 R8 (standard page: words from `content` + `reading`, document named, never the content id; project Standard screen lists `standards` with doors `/app/standard/<STD>/<PROJ>`); C62 R56 (that door carries the project, so the standard's path names it); C7 R53 (sends `recordpersonfact`->`personfact` for the three kinds, draws the recorded fact; no Born/Died/Locality).
+
+Needed from the plane for C54/C6 (for SCREENS-INVESTIGATE-2): `events` accepts a project (PROJ-) as a `concerns` end of `createEvent`, and `timeline` accepts a PROJ- in `set` (events concerning it). The screen then sends `concerns:[project,...]` and reads `set` = project + document references; today it ties the event to the project's first named entity and keeps `ui.added` as a bridge.
+
+Deferred: the passage picker on the other forms (timeline, money, standard): same parts, but one `reading` read per visit each, so BOB's call; the held-standards list says nothing when cut off (no word row).
+Reports for BOB: (1) C8's "follow days" box is not in this module (J15). (2) Word rows wanted (J15): `screen.standard.held`, a cut-list sentence, rewording of `screen.money.f.contract`/`.nocontract`, a member-proposal label for `screen.money.proposed`. (3) C60: resolution happens when a reading is made, with no back-fill when an entity or alias is added later; a memo read earlier names the person only after a member matches it. By design, not a fault; a back-fill is a policy choice. (4) `op-declarations` OPS: `moneysetpropose` is unexplained/ungrounded for a screen send; check it is callable by a member session. (5) Existing tests changed on purpose: person R1 control (first document held is now the default choice), money R4 (figure now a row via the trail's proposals).
+
+Tests: `node --test --test-force-exit test/m/screens-investigate/`: 191 tests, 0 fail after the person control change; with the nine other files that name my module (plane t47/t50, op-declarations t50/t51, interface-shell declared/t50, action-clocks t51, control-plane t46-app, people why): 285 pass, 0 fail. New file fix2.test.mjs (11 tests); seen failing on the old code: all but C7 and C54's (both passed before, as the screen half was already right). Checks: format 0 for my files (one failure is rulings.md K4301, not mine); architecture 0 for my files; coverage screens-investigate not among failures; words 0; ownership 0 failures.
+
+Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 14, module lines 3119
+
+## J17 · COMPLETE
+
+COMPLETE · screens-investigate · CHANGE B19 applied. Merged tranche/T51 (PEOPLE #13, people R9 serves an organisation's name, address and contact facts). C7 proved against it: people's own `orgfacts.test.mjs` (the plane records the three kinds for institution, body, movement and `personAt` reads them back) and my C7 test (the page sends `recordpersonfact` for the three kinds only and draws the recorded fact, no Born/Died/Locality) pass together: 22 pass, 0 fail (with organization.test.mjs). No code change was needed. C7 is now met in full. B18 read: stand-ins kept.
+Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 15, module lines 3119
