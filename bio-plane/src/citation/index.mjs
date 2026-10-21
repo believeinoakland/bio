@@ -380,6 +380,30 @@ export class Citation {
       from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
   }
 
+  /* R21: the labels a question's `grounds[]` declares, from its document. */
+  #declaredGrounds(project) {
+    const d = this.#document(project, null);
+    return d.ok && Array.isArray(d.data.grounds)
+      ? d.data.grounds.filter((g) => g && typeof g === "object" && typeof g.ground === "string" && g.ground.trim()).map((g) => g.ground.trim())
+      : [];
+  }
+
+  /* R21: the acts that clear a refused grouping, named from the DOCUMENT and the write's finding code, never from the
+     finding's English. A basis is grouped whole or not at all (C-2.8), so a new leg beside a grouped basis is refused until
+     it joins a group or the grouping is taken off. Each repair is `{key, act, fields, text}`: the word's key, the op to
+     send, the fields that op needs beyond the member's own (a reason for the regrouping is the member's), and its sentence. */
+  #groupingRepairs(project, data, promoted) {
+    const labels = this.#declaredGrounds(project);
+    const labelled = (Array.isArray(data.basis) ? data.basis : []).some((l) => l && typeof l === "object" && typeof l.ground === "string" && l.ground.trim());
+    if (!labels.length || !labelled || !Array.isArray(promoted.findings) || !promoted.findings.some((f) => f && f.check === "C-2.8")) return [];
+    return [
+      ...labels.map((ground) => ({ key: "citation.index.repair_add_to_group", act: "cite", fields: { ground },
+        text: localize("citation.index.repair_add_to_group", "Add it to the group {ground}", { ground }) })),
+      { key: "citation.index.repair_remove_grouping", act: "inquiryground", fields: { target: project, grounds: [] },
+        text: localize("citation.index.repair_remove_grouping", "Take the grouping off, so the answer reads as its weakest citation") },
+    ];
+  }
+
   /* ---- cite (R1–R3) ---- */
 
   /** R1–R3: CITING, at weight `report` (R7): material, or a question, becomes part of what a case or a question rests
@@ -396,7 +420,7 @@ export class Citation {
    *     that judges it again at the write.
    *   - IT ASKS ONE THING ABOUT A TARGET'S STATE, ON BOTH ARMS: whether the group RETIRED it (R5). */
   cite({ project = null, handle = null, found = null, question = null, viewer = null, owner = null,
-         note = "", author = null, role = null, extent = null, identity = null } = {}) {
+         note = "", author = null, role = null, extent = null, identity = null, ground = null } = {}) {
     /* T35 (N698, DEC-164 (4), (5)): WHAT IS CITED, from ONE source, asked before anything else. A selection (`handle`,
        with an optional `extent`), or one match "Find in this" answered (`found`, retrieval R73), which stands in place
        of both: its document is the one member, its extent that member's part. Being found changes no judgement: the
@@ -516,6 +540,17 @@ export class Citation {
                detail: localize("citation.index.a_role_says_what_material", "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.") };
     }
     /* END DEC-49 REGION is-cite-role */
+
+    /* R21: the group a new leg joins, a label the question already declares; refused by name on a case (no groups) and for a
+       label the question does not declare, never dropped. Whether the grouping is whole is the write's. */
+    /* DEC-49 REGION is-cite-ground — C-33.58. */
+    const gl = given(ground) ? String(ground).trim() : null;
+    const declaredGrounds = ontoInquiry ? this.#declaredGrounds(project) : [];
+    if (gl !== null && !declaredGrounds.includes(gl))
+      return { ok: false, reason: "BAD_GROUND", ...rowOf(CITE_CHECKS, "BAD_GROUND"), project, handle, got: gl,
+               grounds: declaredGrounds, drift: sel.drift,
+               detail: localize("citation.index.bad_ground", "a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.", { ground: gl }) };
+    /* END DEC-49 REGION is-cite-ground */
 
     /* Every member must be CITABLE: information, or a QUESTION, on both arms (REC-72: a case may draw on a question;
        REC-37: a question rests on material or another question, DEC-23). A question citing ITSELF is not caught here:
@@ -638,6 +673,7 @@ export class Citation {
         return { ok: false, reason: "BASIS_REFUSED", project, handle, drift: sel.drift,
                  findings: exErrs.map((x) => ({ check: x.check, code: x.code ?? null,
                                                 detail: x.message, repairs: x.repairs ?? [] })),
+                 repairs: [],
                  detail: localize("citation.index.the_part_of_the_document_refused", "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite.") };
     }
 
@@ -691,14 +727,15 @@ export class Citation {
         return this.content.captureFor(target);
       };
       filled = add.map((target) => {
+        const grp = gl !== null ? { ground: gl } : {};
         const earned = reg && reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
         const pin = pinOf(target);
         const pinned = pin ? { extent_capture: pin } : {};
         /* ONLY THE CONNECTION AXIS IS FILLED: the capture axis's earned value is a ceiling, not a measurement. */
         return earned && earned.grade
           ? { target, role: rl, grade: earned.grade, grade_axis: "connection", grade_source: "resolution",
-              note: nt, why: earned.why, ...legFields, ...pinned }
-          : { target, role: rl, note: nt, why: null, ...legFields, ...pinned };
+              note: nt, why: earned.why, ...grp, ...legFields, ...pinned }
+          : { target, role: rl, note: nt, why: null, ...grp, ...legFields, ...pinned };
       });
       /* references FIRST and only where the document does not already carry the target: C-6.3 refuses a leg whose
          target is not in references[], and the two projections of one document must not disagree. */
@@ -766,7 +803,9 @@ export class Citation {
     /* THE WRITE'S REFUSALS COME BACK UNCHANGED (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASIS_CYCLE; since T42 the
        machine-passage read R11 asks, inquiry R62 with run-productions R25: PROPOSAL_NOT_TAKEN_UP,
        MACHINE_PASSAGE_UNCHECKED; N834): this act composes legs; the write judges them. No seam of its own (K2608). */
-    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
+    if (!promoted.ok)
+      return { ...promoted, project, handle, drift: sel.drift,
+               ...(promoted.reason === "BASIS_REFUSED" ? { repairs: ontoInquiry && gl === null ? this.#groupingRepairs(project, doc.data, promoted) : [] } : {}) };
 
     return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
              cited: add.slice().sort(), alreadyCited: already.sort(), severed: [], question: questionId,
@@ -1096,7 +1135,7 @@ export function citationOps(c, url, body) {
       project: s("project"), handle: s("handle"), viewer: q("viewer"), owner: q("owner"),
       note: s("note") ?? "", author: q("author"), identity: q("identity"),
       /* REC-37: the leg's ROLE, read only on the inquiry arm and REFUSED rather than dropped on the other. */
-      role: s("role"),
+      role: s("role"), ground: s("ground"),
       /* REC-97 / IC-90: every parameter the leg-part grammar could own arrives WHOLE and the act decides, by name,
          which ones it carries; a named `get()` per field is what once dropped a part in silence. None sent is an empty
          bag, which is `document`. */
@@ -1132,7 +1171,7 @@ export function citationOps(c, url, body) {
 export const DECLARED_OPS = Object.freeze({
   cite: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reversible",
     description: localize("citation.declared.cite", "cites material or a question into a case's references or a question's basis, and sever takes it back"),
-    fields: { accepts: ["project", "handle", "found", "question", "note", "role", ...Object.keys(EXTENT_PARAMS)],
+    fields: { accepts: ["project", "handle", "found", "question", "note", "role", "ground", ...Object.keys(EXTENT_PARAMS)],
               requires: ["project", ["handle", "found"]] } },
   drawquestion: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reversible",
     description: localize("citation.declared.drawquestion", "project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle"),
