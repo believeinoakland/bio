@@ -144,6 +144,32 @@ test("R4, R67: frontier is read at each of its four levels and draws one row for
   assert.ok(text(fewer).includes(word("screen.finder.nobody.one")), "R25: one place, the singular key");
 });
 
+test("R67, R4 (C22): a place is drawn by its name, no empty list item is drawn, and every look state the plane answers is drawn as a word, never as its code", async () => {
+  const html = HTMLF();
+  const SHA = "a".repeat(64);
+  const per = {
+    // places nobody looked at: an address and a lead's words are names; a digest and an id are not, and draw no item
+    document: { ...GOT, never_looked_count: 3, never_looked: [{ subject: "https://oakland.example/budget.pdf", from_document: "INF-1" }, { subject: SHA, from_document: "INF-2" }, { subject: "" }] },
+    content: { ...GOT, never_looked_count: 2, never_looked: [{ subject: SHA, bundle_id: "INF-3" }, { subject: "b".repeat(64), bundle_id: "INF-4" }] },
+    // every look state the plane's observation log answers
+    meaning: { ...GOT, tally: { PRESENT: 5, LOOKED_ABSENT: 2, LOOKED_INDETERMINATE: 3, LOOKED_FOUND: 1, NEVER_LOOKED: 9, partial: 1 } },
+    internet: GOT,
+  };
+  const p = await open("/app/finder", frontierPlane(per), { html });
+  await press(p, "frontier", { reason: R });
+  const rowOf = (l) => rowsOfLevels(p).find((r) => r.querySelector("b").textContent === word("screen.answers.level." + l));
+  assert.ok(text(p, rowOf("document")).includes("https://oakland.example/budget.pdf"), "control: a place with a name draws it");
+  assert.ok(text(p, rowOf("document")).includes(word("screen.finder.nobody", { n: "3" })), "the count is the answer's");
+  assert.equal(main(p).querySelectorAll("li").filter((li) => !li.textContent.trim()).length, 0, "no empty list item");
+  assert.equal(rowOf("document").querySelectorAll("li").length, 1, "only the place with a name is an item");
+  assert.equal(rowOf("content").querySelectorAll("ul").length, 0, "a level whose places have no name draws no list at all");
+  assert.doesNotMatch(text(p), /[0-9a-f]{64}/, "no digest is drawn");
+  const meaning = text(p, rowOf("meaning"));
+  for (const code of ["PRESENT", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "LOOKED_FOUND", "NEVER_LOOKED", "partial"]) assert.ok(!meaning.includes(code), `${code} is drawn as a word`);
+  assert.ok(meaning.includes(word("screen.answers.state.LOOKED_FOUND")) && meaning.includes(word("screen.answers.state.LOOKED_ABSENT")));
+  assert.ok(meaning.includes(word("refusal.LOOKED_INDETERMINATE")), "a look that could not tell is told in the plane's own held word");
+});
+
 test("R77: \"Somebody has looked everywhere\" is drawn only when every level answered and none has a place left unlooked", async () => {
   const html = HTMLF();
   const open1 = async (per) => { const p = await open("/app/finder", frontierPlane(per), { html }); await press(p, "frontier", { reason: R }); return p; };

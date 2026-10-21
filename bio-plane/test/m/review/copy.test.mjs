@@ -62,8 +62,8 @@ test("R12: each finding is read as the draft's last editor may see it, for both 
   grant(w, d, 1);
   const want = [
     { target: "INQ-2026-0001-a", present: true, object_type: "inquiry", state: "concluded", role: "load_bearing",
-      text: "A's text", statement: "A's text" },
-    { target: "INQ-2026-0002-b", present: true, object_type: "inquiry", state: "open", role: null, text: null, statement: null },
+      text: "A's text", statement: "A's text", falsifier: null },
+    { target: "INQ-2026-0002-b", present: true, object_type: "inquiry", state: "open", role: null, text: null, statement: null, falsifier: null },
     { target: "PROJ-2026-0009-z", present: false, role: "supporting",
       detail: NO_FINDING },
     { target: "INQ-2026-0404-none", present: false, role: "supporting",

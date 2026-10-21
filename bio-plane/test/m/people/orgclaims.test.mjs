@@ -71,5 +71,5 @@ test("R1 a person pair is claimed and its candidates answered as before, and a p
   const inst = w.entity("institution", "Dana Lee Foundation");
   assert.equal(w.p.claimIdentity(claim(w, a, b)).ok, true);
   assert.deepEqual(w.p.samePersonCandidates({ entityId: a, viewer: ANN }).candidates.map((x) => x.entity_id), [b]);
-  assert.equal(w.p.recordPersonFact({ person: inst, kind: "name", value: "x", valid: { from: null, to: null }, citation: {}, by: ANN }).reason, "NOT_A_PERSON");
+  assert.equal(w.p.recordPersonFact({ person: inst, kind: "birth", value: "x", valid: { from: null, to: null }, citation: {}, by: ANN }).reason, "NOT_A_PERSON");
 });

@@ -252,8 +252,16 @@ function render(cs, view) {
       const t = x.title || T("state.undetermined", { reason: "" });
       const st = later("strength:" + q, "inquirystrength", { id: q });
       const grades = cs.state(st, (s) => {
-        const ax = (a) => (s[a] && s[a].state === "graded" ? cs.grade(a, s[a].grade)
-          : cs.mark("gap", s[a] && s[a].state === "undetermined" ? "undetermined" : "unrated", { reason: (s[a] && s[a].detail) || "" }));
+        /* C43 (R39, R116): the card names no record id: an unrated axis is told once, by its mark (the question page's compact form,
+           which draws no reason on the quiet axis), and an undetermined axis's reason has any record id put back into the plain
+           word for a document, as the question page does for a leg with no title */
+        const bare = (text) => String(text || "").replace(/\b(?:INQ|INFO|PROJ|EVT|CALC|STD|DET)-\d{4}-\d{4}[\w-]*/g, () => T("shell.card.document"));
+        const told = new Set();
+        const ax = (a) => {
+          if (s[a] && s[a].state === "graded") return cs.grade(a, s[a].grade);
+          if (s[a] && s[a].state === "undetermined") { const why = bare(s[a].detail); const first = !told.has(why); told.add(why); return cs.mark("gap", "undetermined", { reason: first ? why : "" }); }
+          return cs.mark("gap", "unrated", { reason: "" });
+        };
         return `<span class="cs-strength">${ax("capture")}${ax("connection")}</span>`;
       });
       return cs.row("", cs.ref("question", q, t, [t]), grades);
@@ -440,6 +448,8 @@ function render(cs, view) {
       const awaitingNames = rm ? (Array.isArray(rm.awaiting) && rm.awaiting.length ? rm.awaiting : seatedOwners.map((o) => o.handle).filter((h) => h !== x.handle && !agreedOf(rm).includes(String(h)))).map((h) => P.who(cs, h)).join(", ") : "";
       const acts = self && Number(x.owner)
         ? (rm ? `<span class="mk-small" data-standdown="opened">${W("project.owners.standdown.opened", { awaiting: awaitingNames })}</span>`
+          /* C90 (R75, R29): the only owner has no vote that could carry: the act is not drawn, and the row says to add another owner first */
+          : seatedOwners.length < 2 ? `<span class="mk-small" data-standdown="sole">${W("refusal.LAST_OWNER")}</span>`
           : cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle), mode: "open" } }))
         : owner && !self && x.handle && x.state === "joined" ? (Number(x.owner) ? (rm && !agreedOf(rm).includes(String(me))
           ? cs.act("projectownerremove", { label: "project.owners.agree.remove", fills: { who: name }, data: { handle: String(x.handle), mode: "open" } }) : "") : cs.act("projectowneradd", { label: "act.projectowneradd.label.project", data: { handle: String(x.handle) } }))
@@ -774,6 +784,8 @@ const acts = [
       const r = answer && answer.result !== undefined ? answer.result : answer;
       if (!r || !r.id) return;
       cs.set("plans", (Array.isArray(view.ui.plans) ? view.ui.plans : []).concat([{ id: String(r.id), title: String(r.title || "") }]));
+      /* C63 (R1, R36): the plan opened is its own page, where the receipt is: the press opens it with the plan as subject */
+      cs.go("plan", String(r.id));
     },
     /* R117: the same for an action's basis refused with its findings */
     refusals: { ACTION_BASIS_REFUSED: (r, cs) => {

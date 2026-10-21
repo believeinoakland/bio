@@ -605,3 +605,52 @@ test("R64: controls: a member who is not an administrator sends no securitymap a
   const a = text(quiet, main(quiet).querySelector('[data-area="action"]'));
   assert.ok(!a.includes(word("screen.home.rd.clocks")) && !a.includes(word("home.move.theirs")), "no clock reading at zero");
 });
+
+// C74, C96 (fix round 2): an invitation is drawn once, its Join says which project, and a row's Open opens its subject.
+const INVITATION = (project, name) => ({ id: `OBLIGATION::project-invitation::${project}::mai`, class: "OBLIGATION", kind: "project-invitation", assignee: "mai", assignee_role: "member",
+  subject: { kind: "project", id: project, name }, basis: { inviter: "rosa" }, options: [{ id: "projectjoin" }], disposition: { available: false, instead: "projectjoin" } });
+const INVITED = ok({ ok: true, projects: [{ id: "PROJ-8", name: "Library hours", stage: "forming", participation: "invited" }, { id: "PROJ-9", name: "Park lights", stage: "forming", participation: "invited" },
+  { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", participation: "joined" }] });
+
+test("R29, C74: a project the member is invited to is one row on Home though the queue holds its invitation too; an invitation the list does not know is drawn from the queue", async () => {
+  const p = await open("/app", { ...PLANE, projectlist: INVITED, queue: ok({ items: [INVITATION("PROJ-9", "Park lights")], item_count: 1 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  const joins = main(p).querySelectorAll('button[data-act="projectjoin"]');
+  assert.equal(joins.length, 2, "PROJ-8 and PROJ-9 once each, not PROJ-9 twice");
+  assert.deepEqual(joins.map((b) => b.dataset.project).sort(), ["PROJ-8", "PROJ-9"]);
+  assert.ok(!text(p).includes(word("queue.project-invitation.detail")) || main(p).querySelectorAll("section")[0].querySelectorAll(".cs-row").length === 2, "one row for each project in Needs you");
+  assert.equal(main(p).querySelectorAll("section").filter((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word("screen.home.needsgroup")).length, 0, "and none under Needs the group");
+  // Control: the project is not in the list the member is invited to, so the queue's own invitation is the one drawn.
+  const only = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", participation: "joined" }] }),
+    queue: ok({ items: [INVITATION("PROJ-9", "Park lights")], item_count: 1 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  assert.equal(main(only).querySelectorAll('button[data-act="projectjoin"]').length, 1);
+});
+
+test("R29, C96: two invitations draw two distinct labels, each naming its project", async () => {
+  const p = await open("/app", { ...PLANE, projectlist: INVITED, queue: ok({ items: [], item_count: 0 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  const labels = main(p).querySelectorAll('button[data-act="projectjoin"]').map((b) => b.getAttribute("aria-label"));
+  assert.equal(labels.length, 2);
+  assert.equal(new Set(labels).size, 2, "distinct");
+  assert.ok(labels.some((l) => l.includes("Library hours")) && labels.some((l) => l.includes("Park lights")));
+  assert.ok(labels.every((l) => l.startsWith(word("act.projectjoin.label.home"))), "the label's own word leads");
+  // Control: a joined project offers none; the queue's invitation for a project with a name is told apart the same way.
+  const item = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [] }), queue: ok({ items: [INVITATION("PROJ-8", "Library hours"), INVITATION("PROJ-9", "Park lights")], item_count: 2 }), projectjoin: ok({ ok: true }) });
+  await settle();
+  const two = main(item).querySelectorAll('button[data-act="projectjoin"]').map((b) => b.getAttribute("aria-label"));
+  assert.equal(new Set(two).size, 2);
+});
+
+test("R17, C74: a row's Open opens its subject's screen; a subject that opens nothing draws no Open, not a link to the queue", async () => {
+  const items = [
+    { id: "CONDITION::a", class: "CONDITION", kind: "reply", summary: "A reply is due", subject: { kind: "action", id: "ACT-2" } },
+    { id: "CONDITION::b", class: "CONDITION", kind: "request-awaiting", summary: "A request is awaited", subject: { kind: "capture_request", id: "CR-1" } },
+  ];
+  const p = await open("/app", { ...PLANE, queue: ok({ items, item_count: 2 }) }, { screens: withScreens("action") });
+  await settle();
+  const rowOf = (needle) => main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes(needle));
+  const opens = (r) => r.querySelectorAll("a[data-nav]").filter((a) => a.textContent === word("screen.home.open")).map((a) => a.getAttribute("href"));
+  assert.deepEqual(opens(rowOf("A reply is due")), ["/app/action/ACT-2"], "its subject's screen");
+  assert.deepEqual(opens(rowOf("A request is awaited")), [], "no Open to the queue");
+});

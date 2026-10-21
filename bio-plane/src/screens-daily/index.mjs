@@ -56,11 +56,13 @@ const MONEY_KINDS = ["allocation", "balance", "behested", "contribution", "debt"
 
 // R75: the decisions the record routes to a member, on Home and the queue: the form's words, and the items' own rows for an endorsement,
 // an owner vote and an expertise (B422). R79 (b): an item with no sentence of its own, drawn by the unkeyed pair on both.
-const ROUTED = ["screen.queue.forward.to", "screen.queue.fieldfirst", "queue.unkeyed.summary", "queue.unkeyed.detail", "queue.source.untitled", "queue.owed.nobody",
+const ROUTED = ["screen.queue.forward.to", "refusal.ALREADY_THEIRS", "screen.queue.fieldfirst", "queue.unkeyed.summary", "queue.unkeyed.detail", "queue.source.untitled", "queue.owed.nobody",
   ...["item", "open", "question", "know", "cannot", "issuer.label", "issuer.help1", "issuer.help2", "how.label", "how.help1", "how.help2", "tried.label", "tried.help1", "tried.help",
     "fine1", "fine2", "leaves", "record", "refused.basis", "refused.issuer1", "refused.issuer2", "refused.yours1", "refused.yours2"].map((k) => `screen.queue.routed.auth.${k}`),
   "queue.endorsement-owed.summary", "queue.endorsement-owed.detail", "queue.endorsement-owed.owner.summary.add", "queue.endorsement-owed.owner.summary.remove",
   "queue.endorsement-owed.owner.detail", "queue.expertise-confirmation-owed.summary", "queue.expertise-confirmation-owed.detail"];
+// R82: the invitation `adminendorse` answers, kept and shown once with the sentence that no email is sent (as Members does).
+const INVITE = ["screen.members.invite.shown", "screen.members.invite.noemail"];
 const ROUTED_ACTS = (screen) => [...ACTS(screen, ["adminendorse", "projectowneradd", "expertiseconfirm", "taskforward"]), `act.owed_taskdecide.label.${screen}`, "act.owed_taskdecide.does"];
 
 // R65: the doors to Held captures and the Inbox, on Home and the queue; on Home, the line that says how many wait for a member to look.
@@ -81,7 +83,7 @@ const WORDS_OF = {
     ...START, "file.trigger.home", "screen.home.title.needed",
     "screen.home.script", "home.ready.title", "screen.home.invite", "screen.home.saywho", "screen.home.first.invite", "screen.home.first.identity", "screen.home.first.project",
     "act.promote.here.home", ...JOIN, ...OURS, "home.strip.ours_passed.one", "home.strip.ours_passed.other", "home.strip.ours_passed.opens", "screen.home.request.grant", "screen.home.request.decline",
-    "act.projectrequestanswer.label.home", ...ROUTED, ...ROUTED_ACTS("home"),
+    "act.projectrequestanswer.label.home", ...ROUTED, ...ROUTED_ACTS("home"), ...INVITE,
     "screen.home.strip.you", "screen.home.strip.group", "screen.home.needsyou", "screen.home.needsyou.holds", "screen.home.needsgroup", "screen.home.needsgroup.holds",
     "screen.home.open", "screen.home.why", "screen.home.fieldfirst", "screen.home.move.admin", "screen.home.move.member", "screen.home.move.anyone",
     "screen.home.areas", "screen.home.areas.holds", ...["investigation", "action", "members", "administration"].map((a) => `screen.home.area.${a}`),
@@ -113,12 +115,12 @@ const WORDS_OF = {
     "screen.queue.hint.not", "screen.queue.hint.not.text", "screen.queue.forward.to", "screen.queue.snooze.until", "screen.queue.reminder.on", "screen.queue.fieldfirst",
     "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop",
     // R68, R69, R75, R79: Defer beside Dismiss, a snoozed case and "Bring back", the routed decisions, the helps, the day picker, the answered rows.
-    "screen.queue.defer", "screen.queue.bringback", "screen.queue.snoozed.head", "screen.queue.snoozed.holds", "screen.queue.snoozed.until", ...ROUTED, ...ROUTED_ACTS("queue"), "queue.act.dothis.help", "queue.act.open.help", "screen.queue.snooze.pick", "queue.signer-self-registered.members",
+    "screen.queue.defer", "screen.queue.bringback", "screen.queue.snoozed.head", "screen.queue.snoozed.holds", "screen.queue.snoozed.until", ...ROUTED, ...ROUTED_ACTS("queue"), ...INVITE, "queue.act.dothis.help", "queue.act.open.help", "screen.queue.snooze.pick", "queue.signer-self-registered.members",
     "queue.answered.done", "queue.answered.dismissed", "queue.answered.dismissed.noreason", "queue.answered.muted", "queue.answered.generic",
     // R58 to R61: choosing several items, what was answered, the feeds' honesty and the set-aside findings.
     "queue.multi.entry", "queue.multi.choose", "queue.multi.head", "queue.multi.head2", "queue.multi.chosen", "queue.multi.chosen.one", "queue.multi.done",
     "queue.multi.forward", "queue.multi.snooze", "queue.multi.snooze.help", "queue.multi.dismiss", "queue.multi.refused", "queue.multi.result", "queue.multi.result.one",
-    "queue.multi.why.letter", "queue.multi.why.check", "queue.answered.forwarded.unnamed", "queue.multi.back", "screen.finder.pick", "screen.finder.pickfirst", "shell.unread",
+    "queue.multi.why.letter", "queue.multi.why.check", "queue.multi.done.help2", "queue.answered.forwarded.unnamed", "queue.multi.back", "screen.finder.pick", "screen.finder.pickfirst", "shell.unread",
     "queue.answered.title", "queue.answered.head", "queue.answered.heading", "queue.answered.help", "queue.answered.byyou", "queue.answered.bymember", "queue.answered.byother",
     "queue.answered.forwarded", "queue.answered.snoozed", "queue.answered.snoozed.meta", "time.at", "time.clock", "time.am", "time.pm",
     "queue.aside.help", "queue.aside.help2", "queue.aside.dismissed", "queue.aside.dismissed.bymember", "queue.aside.deferred", "queue.aside.deferred.bymember", "queue.aside.v2",

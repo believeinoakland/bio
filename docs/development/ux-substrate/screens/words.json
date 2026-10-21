@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6857,
+  "screen": 6908,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1093,
+  "act": 1103,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,8 +231,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18009,
-  "protected": 1061
+  "total": 18070,
+  "protected": 1068
  },
  "words": [
   {
@@ -74712,6 +74712,363 @@
    "note": "DEC-393: B437 2: queue, the button of release on held captures, as drawn in place"
   },
   {
+   "key": "screen.capture.later.head",
+   "en": "Your requests for later",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: capture: section title over the list of Ask for a capture later requests"
+  },
+  {
+   "key": "screen.capture.later.about",
+   "en": "Each address you asked to have captured later, and where it stands.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: capture: line under the section title"
+  },
+  {
+   "key": "screen.capture.later.waiting",
+   "en": "Waiting to be fetched",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: capture: state of a request not yet fetched"
+  },
+  {
+   "key": "screen.document.testify.head",
+   "en": "A name the record did not match",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: summary of the fold in People and organizations it names"
+  },
+  {
+   "key": "screen.document.testify.note1",
+   "en": "Some names this copy uses were matched to no subject.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: note in the fold"
+  },
+  {
+   "key": "screen.document.testify.note2",
+   "en": "If you know who or what one is, say so and how you know.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: note in the fold"
+  },
+  {
+   "key": "screen.document.testify.note3",
+   "en": "It is your word, graded D, the lowest grade, and it never lowers a stronger match.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: note in the fold"
+  },
+  {
+   "key": "screen.document.testify.which.help",
+   "en": "The names this copy uses that the record matched to no subject.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: help on Which name"
+  },
+  {
+   "key": "screen.document.testify.who",
+   "en": "Who or what it is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: label of the subject choice"
+  },
+  {
+   "key": "screen.document.testify.how.help",
+   "en": "Say how you know, in your own words.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: help on How you know"
+  },
+  {
+   "key": "screen.document.testify.how.help2",
+   "en": "It is kept beside the match.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: help on How you know"
+  },
+  {
+   "key": "screen.document.testify.refused",
+   "en": "Say how you know this first. Nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: refusal when no basis is given, before: Nothing was recorded."
+  },
+  {
+   "key": "screen.project.docs.about1",
+   "en": "Every document filed under this project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: line under The project's documents"
+  },
+  {
+   "key": "screen.project.docs.about2",
+   "en": "Open one to read it, cite a passage or retire it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: line under The project's documents"
+  },
+  {
+   "key": "screen.project.docs.none1",
+   "en": "Nothing is filed under this project yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: empty state of the documents list"
+  },
+  {
+   "key": "screen.project.docs.none2",
+   "en": "Add a document and it appears here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: empty state of the documents list"
+  },
+  {
+   "key": "screen.project.docs.listhelp",
+   "en": "Shows every document filed under this project, the ones waiting for a vouch and the ones already vouched for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: tip on List this project's documents (the help of heldcaptures here)"
+  },
+  {
+   "key": "screen.case-editor.drafts.help",
+   "en": "The drafts of this project, each named by its scope and the date it was prepared.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.drafts.choose",
+   "en": "Choosing one shows that draft.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.drafts.newest",
+   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the newest draft in the chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.drafts.earlier",
+   "en": "Scope: the 2024 lease amendment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the earlier draft in the chooser on case-editor"
+  },
+  {
+   "key": "screen.case-editor.links.live",
+   "en": "2 review links are live, one of them on an earlier draft.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the note naming live review links on case-editor"
+  },
+  {
+   "key": "screen.ceremony.drafts.help",
+   "en": "The drafts of this project, each named by its scope and the date it was prepared.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.drafts.choose",
+   "en": "Choosing one shows that draft.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.drafts.newest",
+   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the newest draft in the chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.drafts.earlier",
+   "en": "Scope: the 2024 lease amendment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the earlier draft in the chooser on ceremony"
+  },
+  {
+   "key": "screen.ceremony.links.live",
+   "en": "2 review links are live, one of them on an earlier draft.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the note naming live review links on ceremony"
+  },
+  {
+   "key": "screen.review-copy.drafts.help",
+   "en": "The drafts of this project, each named by its scope and the date it was prepared.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.drafts.choose",
+   "en": "Choosing one shows that draft.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the help of the Which draft chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.drafts.newest",
+   "en": "Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the newest draft in the chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.drafts.earlier",
+   "en": "Scope: the 2024 lease amendment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the earlier draft in the chooser on review-copy"
+  },
+  {
+   "key": "screen.review-copy.links.heading",
+   "en": "Every live review link",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: the section of live links on any draft"
+  },
+  {
+   "key": "screen.review-copy.links.note",
+   "en": "A link on an earlier draft keeps working until you stop it here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: note under the live links"
+  },
+  {
+   "key": "screen.review-copy.links.help",
+   "en": "Every review link still working on any draft of this project: who it was shared with, which draft, when, and how many comments that reader made.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 1: help of the live links section"
+  },
+  {
+   "key": "screen.project.docs.head",
+   "en": "The project's documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: section title"
+  },
+  {
+   "key": "screen.document.testify.which",
+   "en": "Which name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: document: label of the name choice"
+  },
+  {
+   "key": "screen.capture.later.captured",
+   "en": "Captured",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: capture: state of a request that was fetched"
+  },
+  {
+   "key": "screen.capture.later.turned",
+   "en": "Turned away",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: capture: state of a request its source refused"
+  },
+  {
+   "key": "screen.project.docs.kind.web",
+   "en": "Web page",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: kind of a document in the list"
+  },
+  {
+   "key": "screen.project.docs.kind.sheet",
+   "en": "Spreadsheet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: kind of a document in the list"
+  },
+  {
+   "key": "screen.project.docs.kind.photo",
+   "en": "Photo",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: kind of a document in the list"
+  },
+  {
+   "key": "screen.project.docs.captured",
+   "en": "captured",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3: project: before the date a document was captured"
+  },
+  {
+   "key": "screen.document.contradict.head",
+   "en": "This contradicts another document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e: fold title on the document screen"
+  },
+  {
+   "key": "screen.document.contradict.note1",
+   "en": "If a passage here and a passage in another document cannot both be true, say so.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e"
+  },
+  {
+   "key": "screen.document.contradict.note2",
+   "en": "The two are set side by side as a contradiction for your project to settle.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e"
+  },
+  {
+   "key": "screen.document.contradict.here",
+   "en": "The passage here",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e: field"
+  },
+  {
+   "key": "screen.document.contradict.here.help",
+   "en": "Select the words on the page, or choose a passage you cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e: help"
+  },
+  {
+   "key": "screen.document.contradict.other",
+   "en": "The other document and its passage",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e: field"
+  },
+  {
+   "key": "screen.document.contradict.other.help",
+   "en": "A document your team holds, and the passage in it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e: help"
+  },
+  {
+   "key": "screen.document.contradict.why",
+   "en": "How they disagree",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e: the reason field"
+  },
+  {
+   "key": "screen.document.contradict.why.help",
+   "en": "In your own words, up to 500 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-394: B441 3e: help"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -114923,6 +115280,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.capturerequests.label.capture",
+   "en": "Show my requests for later",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.monitorset.label.capture",
    "en": "Watch this address",
    "protected": true,
@@ -115193,6 +115556,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.resolvetestify.label.document",
+   "en": "Say who this name is",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_contradictionflag.label.document",
+   "en": "Say these two contradict",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.themeplace.label.document",
    "en": "Place it in a theme",
    "protected": true,
@@ -115453,6 +115828,12 @@
   {
    "key": "act.owed_projectclose.label.project",
    "en": "Close this project with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.heldcaptures.label.project",
+   "en": "List this project's documents",
    "protected": true,
    "source": "registry.json"
   },
@@ -116669,6 +117050,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.casedrafts.label.case-editor",
+   "en": "Which draft",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.whatchangedpropose.label.case-editor",
    "en": "Draft \"what changed\"",
    "protected": true,
@@ -116729,6 +117116,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.casedrafts.label.review-copy",
+   "en": "Which draft",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.reviewgrant.label.review-copy",
    "en": "Share for review",
    "protected": true,
@@ -116749,6 +117142,12 @@
   {
    "key": "act.owed_reviewexport.label.review-copy",
    "en": "Save as a file",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.casedrafts.label.ceremony",
+   "en": "Which draft",
    "protected": true,
    "source": "registry.json"
   },
@@ -117653,6 +118052,12 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.casedrafts.does",
+   "en": "Lists the project's drafts of the case, each named by its scope and the date it was prepared, the newest marked.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.accountdrafts.does",
    "en": "Lists every draft the assistant made of this case's account, oldest first, each with how it was ordered and what Civicsmith marked.",
    "protected": false,
@@ -117867,6 +118272,12 @@
   {
    "key": "act.capturerequest.does",
    "en": "Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.capturerequests.does",
+   "en": "Lists the requests you asked for later, each with where it stands: waiting, being fetched, captured, turned away or expired. It changes nothing.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -118095,6 +118506,12 @@
   {
    "key": "act.owed_declareorigin.does",
    "en": "Records, with your name and the date, the system this document came from. A second declaration is added beside the first and never replaces it. The document itself does not change.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_contradictionflag.does",
+   "en": "Sets a passage here beside a passage in another document as a contradiction your project settles, with your reason. It changes neither document.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

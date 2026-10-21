@@ -1075,25 +1075,37 @@ export function citationOf(host, deps) {
    from the caller (R7). */
 function foundParam(raw) {
   if (raw === null || raw === undefined) return null;
+  if (typeof raw !== "string") return raw;
   try { return JSON.parse(raw); } catch { return raw; }
 }
 
-export function citationOps(c, url) {
+export function citationOps(c, url, body) {
   const q = (key) => url.searchParams.get(key);
+  /* C31, R20 (K4308): `cite` WRITES, so it takes its fields from the POST body; where the body does not carry one, the
+     address's value is still read (a caller not yet moved), and the body wins where both are sent. A call naming no source
+     is refused CITE_ONE_SOURCE, writing nothing. The door's stamps (`viewer`, `owner`, `author`, `identity`) stay in the
+     address. Weight is read from nowhere (R7). */
+  const b = isObj(body) ? body : {};
+  const has = (key) => b[key] !== undefined && b[key] !== null;
+  const s = (key) => (has(key) ? String(b[key]) : q(key));
+  const bag = [...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_"));
+  const part = Object.fromEntries([...bag, ...Object.entries(b).filter(([k]) => k === "content_id" || k.startsWith("extent_"))
+                                                              .map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])]);
   return {
     cite: () => c.cite({
-      project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
-      note: q("note") ?? "", author: q("author"), identity: q("identity"),
+      project: s("project"), handle: s("handle"), viewer: q("viewer"), owner: q("owner"),
+      note: s("note") ?? "", author: q("author"), identity: q("identity"),
       /* REC-37: the leg's ROLE, read only on the inquiry arm and REFUSED rather than dropped on the other. */
-      role: q("role"),
+      role: s("role"),
       /* REC-97 / IC-90: every parameter the leg-part grammar could own arrives WHOLE and the act decides, by name,
          which ones it carries; a named `get()` per field is what once dropped a part in silence. None sent is an empty
          bag, which is `document`. */
-      extent: Object.fromEntries([...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_"))),
-      /* T35 (N698): a found match travels as one JSON parameter, read whole; one that does not parse is passed on as
-         sent, for FOUND_MALFORMED to name. `question` is the optional question it was looked for for. */
-      found: foundParam(q("found")),
-      question: q("question"),
+      extent: part,
+      /* T35 (N698): a found match travels as one value, read whole: an object, or one JSON string parsed; one that does
+         not parse is passed on as sent, for FOUND_MALFORMED to name. `question` is the optional question it was looked
+         for for. */
+      found: foundParam(has("found") ? b.found : q("found")),
+      question: s("question"),
     }),
     sever: () => c.sever({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
                            reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),

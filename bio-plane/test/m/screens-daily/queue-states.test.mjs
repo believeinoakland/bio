@@ -65,6 +65,28 @@ test("R58: Mark them done sends taskresolve once with the chosen items; the outc
   assert.ok(p.byOp("queue").length >= 1);
 });
 
+test("R58, C71: a set act over a mix says why for every item it does not handle: a reason key on each kept row, none on a handled one", async () => {
+  const expert = task("E1", { kind: "expertise-confirmation-owed", subject: { kind: "member", id: "M-9", label: "tenant law" }, disposition: { available: false, instead: "expertiseconfirm" }, options: [{ id: "expertiseconfirm" }] });
+  const endorse = task("D1", { kind: "endorsement-owed", subject: { kind: "member", id: "M-8" }, disposition: { available: false, instead: "adminendorse" }, options: [{ id: "adminendorse" }] });
+  const letter = task("L1", { kind: "filing-approval", disposition: { available: false, instead: "filingapprove" }, options: [] });
+  const p = await open("/app/queue/choose", { queue: queueOf([task("T1"), expert, endorse, letter]),
+    taskresolve: ok({ ok: true, count: 1, applied: 1, retained: 0, items: [{ index: 0, outcome: "applied", asked: { id: "T1" } }] }) });
+  await choose(p, ["T1", "E1", "D1", "L1"]);
+  await press(p, "taskresolve", { nth: 0 });
+  assert.deepEqual(last(p, "taskresolve").body.items, [{ id: "T1" }], "only the item the set act reaches is sent");
+  const rows = main(p).querySelectorAll(".cs-row").map((r) => text(p, r));
+  const kept = rows.filter((r) => r.includes(word("queue.multi.refused")));
+  assert.equal(kept.length, 3);
+  const reasons = ["queue.multi.why.letter", "queue.multi.why.check", "queue.multi.done.help2"].map((k) => word(k));
+  for (const r of kept) assert.ok(reasons.some((x) => r.includes(x)), "a reason on every kept row: " + r);
+  assert.ok(text(p, main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes("Do E1"))).includes(word("queue.multi.done.help2")), "an item that needs the member's own reason says so, not nothing");
+  assert.ok(text(p, main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes("Do L1"))).includes(word("queue.multi.why.letter")));
+  // Control: the handled row carries none of them.
+  const done = rows.filter((r) => r.includes(word("queue.multi.done")) && r.includes("Do T1"));
+  assert.equal(done.length, 1);
+  for (const x of reasons) assert.ok(!done[0].includes(x), "a handled row draws no reason");
+});
+
 test("R58: an item that is a check another member asked of you stays with the check's reason, its own door beside it", async () => {
   const check = task("C1", { kind: "check", disposition: { available: false, instead: "taskresolve" }, options: [] });
   const p = await open("/app/queue/choose", { queue: queueOf([task("T1"), check]),
