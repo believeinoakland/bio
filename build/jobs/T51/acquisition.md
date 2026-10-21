@@ -124,3 +124,9 @@ B7 applied on top of J7 (head pushed on job/T51/acquisition; `tranche/T51` merge
 **Checks after B7**: acquisition suite 193 of 193 (two runs); capture + doorbell 312 of 312; architecture 0 failures; coverage 52 of 52; words 0 failures; ownership: the one listing `build/requirements/acquisition.md` (accepted, K4210).
 
 Size (session_01Y3snL5ogNuP2LEHaz82PG4): test runs 14, module lines 3426
+
+## J9 · COMPLETE
+
+B8 applied: `tranche/T51` merged (host-governor R29's peek is on it). The render arm already passes `peek: true` (index.mjs:961); R97 is now also proved through the real `HostGovernor` (new test in fix3-t51.test.mjs: one render-arm visit leaves `granted` at 1; a peek creates no state), beside the stand-in test. One flake found after the merge under load (the 2 s late-attestation wait, 6 s) was widened to 20 s in the test only. Acquisition suite 193 of 193 on two runs, then 194 with the new test in the file (12 of 12 in fix3). Checks unchanged: ownership lists only `build/requirements/acquisition.md`.
+
+Size (session_01Y3snL5ogNuP2LEHaz82PG4): test runs 18, module lines 3430
