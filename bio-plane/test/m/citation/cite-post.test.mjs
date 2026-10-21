@@ -17,37 +17,36 @@ async function held() {
   return { w, p, handle };
 }
 
-test("R1, R19: cite with its fields in the POST body cites, and the stamps are still the address's", async () => {
+test("R20, R1, R19: cite with its fields in the POST body cites, and the stamps are still the address's", async () => {
   const { w, p, handle } = await held();
   const r = citationOps(w.cit, url(), { project: p, handle, note: "from the body" }).cite();
   assert.deepEqual([r.ok, r.cited], [true, ["INFO-2026-0001"]]);
   assert.match(w.md(p), /from the body/);
 });
 
-test("R1, R19: cite as a GET (no body) refuses and writes nothing, even with every field in the address; control: the same fields as a body cite", async () => {
+test("R20: a call with the fields only in the address still cites (a caller not yet moved), and the body wins where both are sent", async () => {
   const { w, p, handle } = await held();
-  const before = w.md(p);
   const g = citationOps(w.cit, url({ project: p, handle, note: "in the address" }), null).cite();
-  assert.equal(g.ok, false, "a GET cannot cite");
-  assert.equal(w.md(p), before, "nothing was written");
-  assert.deepEqual(w.fm(p).references ?? [], [], "no edge was written");
-  const post = citationOps(w.cit, url(), { project: p, handle, note: "in the address" }).cite();
-  assert.equal(post.ok, true, "control: the same fields, as a body, cite");
-  assert.notEqual(w.md(p), before);
+  assert.equal(g.ok, true, "the address's fields are still read");
+  const w2 = await held();
+  const both = citationOps(w2.w.cit, url({ project: "NOPE", handle: "sel-none", note: "address" }), { project: w2.p, handle: w2.handle, note: "body" }).cite();
+  assert.equal(both.ok, true, "the body's project and handle won");
+  assert.match(w2.w.md(w2.p), /body/);
+  assert.doesNotMatch(w2.w.md(w2.p), /address/);
 });
 
-test("R1, R19: a body field wins nowhere over the address: a field only in the address is not read (the project, the handle, the note and the found match)", async () => {
+test("R20, R1: a GET naming no source is refused CITE_ONE_SOURCE and writes nothing; control: the same call with a handle cites", async () => {
   const { w, p, handle } = await held();
   const before = w.md(p);
-  for (const q of [{ project: p }, { handle }, { project: p, handle }, { project: p, handle, note: "n" },
-                   { project: p, found: JSON.stringify({ capture_sha: "a".repeat(64), extent: { kind: "pdf-page", page: 0 } }) }]) {
-    const r = citationOps(w.cit, url(q), {}).cite();
-    assert.equal(r.ok, false, JSON.stringify(Object.keys(q)));
+  for (const body of [null, {}]) {
+    const r = citationOps(w.cit, url({ project: p }), body).cite();
+    assert.deepEqual([r.ok, r.reason], [false, "CITE_ONE_SOURCE"]);
   }
   assert.equal(w.md(p), before, "nothing was written");
+  assert.equal(citationOps(w.cit, url({ project: p }), { handle }).cite().ok, true, "control");
 });
 
-test("R1, R19: the part and the role travel in the body (flat `extent_*` and `content_id`), and a found match as an object or as one JSON string", async () => {
+test("R20, R1, R19: the part and the role travel in the body (flat `extent_*` and `content_id`), and a found match as an object or as one JSON string", async () => {
   const w = world();
   w.info("INFO-2026-0001");
   const q = w.inquiry("INQ-2026-0001");
@@ -65,7 +64,7 @@ test("R1, R19: the part and the role travel in the body (flat `extent_*` and `co
   assert.equal(bad.reason, "FOUND_MALFORMED", "a string that does not parse is passed on as sent");
 });
 
-test("R7, R19: no weight is read from the body either, and the declaration still accepts the same fields", async () => {
+test("R7, R20: no weight is read from the body either, and the declaration still accepts the same fields", async () => {
   const { w, p, handle } = await held();
   const r = citationOps(w.cit, url(), { project: p, handle, weight: "refuse" }).cite();
   assert.deepEqual([r.ok, r.weight], [true, "report"]);

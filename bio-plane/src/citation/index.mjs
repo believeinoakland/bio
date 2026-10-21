@@ -1081,11 +1081,16 @@ function foundParam(raw) {
 
 export function citationOps(c, url, body) {
   const q = (key) => url.searchParams.get(key);
-  /* C31, R1, R19: `cite` WRITES, so it is a POST and takes every field from the body; the door hands a GET a null body, and
-     then no field reaches the act and it refuses (CITE_ONE_SOURCE) without writing, whatever the address carries. The
-     door's stamps (`viewer`, `owner`, `author`, `identity`) stay in the address. Weight is read from nowhere (R7). */
+  /* C31, R20 (K4308): `cite` WRITES, so it takes its fields from the POST body; where the body does not carry one, the
+     address's value is still read (a caller not yet moved), and the body wins where both are sent. A call naming no source
+     is refused CITE_ONE_SOURCE, writing nothing. The door's stamps (`viewer`, `owner`, `author`, `identity`) stay in the
+     address. Weight is read from nowhere (R7). */
   const b = isObj(body) ? body : {};
-  const s = (key) => (b[key] === undefined || b[key] === null ? null : String(b[key]));
+  const has = (key) => b[key] !== undefined && b[key] !== null;
+  const s = (key) => (has(key) ? String(b[key]) : q(key));
+  const bag = [...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_"));
+  const part = Object.fromEntries([...bag, ...Object.entries(b).filter(([k]) => k === "content_id" || k.startsWith("extent_"))
+                                                              .map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])]);
   return {
     cite: () => c.cite({
       project: s("project"), handle: s("handle"), viewer: q("viewer"), owner: q("owner"),
@@ -1095,12 +1100,11 @@ export function citationOps(c, url, body) {
       /* REC-97 / IC-90: every parameter the leg-part grammar could own arrives WHOLE and the act decides, by name,
          which ones it carries; a named `get()` per field is what once dropped a part in silence. None sent is an empty
          bag, which is `document`. */
-      extent: Object.fromEntries(Object.entries(b).filter(([k]) => k === "content_id" || k.startsWith("extent_"))
-                                               .map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])),
+      extent: part,
       /* T35 (N698): a found match travels as one value, read whole: an object, or one JSON string parsed; one that does
          not parse is passed on as sent, for FOUND_MALFORMED to name. `question` is the optional question it was looked
          for for. */
-      found: foundParam(b.found),
+      found: foundParam(has("found") ? b.found : q("found")),
       question: s("question"),
     }),
     sever: () => c.sever({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
