@@ -45,12 +45,14 @@ export { SENTENCE_KEYS } from "./words.mjs";
 export { FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } from "./kinds.mjs";
 export { FILE_SAFETY_TABLES } from "./schema.mjs";
 import { findingKind } from "./kinds.mjs";
-import { localize, hasWord } from "../setup-words/index.mjs";
+import { localize, WORD_ROWS } from "../setup-words/index.mjs";
 
 export const FILE_SAFETY_MODULE = "file-safety";
 /* T50 (plan rule 6; setup-words R11–R13): every key this module reads, the rows' own (`refusal.<CODE>`) and the sentences'. A row
-   whose word the design stream has not yet written (a stand-in, `checks.mjs`) is not yet read by key. */
-export const WORD_KEYS = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey).filter(hasWord), ...SENTENCE_KEYS]);
+   whose word the design stream has not yet written (a stand-in, `checks.mjs`) is not yet read by key: the list holds a stand-in
+   as a row of source "code" once regenerated, so a key is read only when its row is the design's. */
+const designRow = (key) => WORD_ROWS.some((r) => r[0] === key && r[5] === "design");
+export const WORD_KEYS = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey).filter(designRow), ...SENTENCE_KEYS]);
 
 /* R21: the constants, by name. `SCAN_BATCH_MAX` and `LOG_COUNT_KINDS` are `file-scanner`'s (its R16). */
 export const RESCAN_INTERVAL_MS = 604_800_000;
@@ -986,36 +988,43 @@ export class FileSafety {
     } catch { return refusal("SCANNER_UNREACHABLE", "The scan batch could not be run. No note was written."); }
   }
 
-  /* R49, R50: the instant of the newest attempt at a signature run, the scanner's own `last_attempt` or the run this module
-     last started, whichever is later (a started run has not yet written its own); NaN when neither is known. */
-  #lastAttempt(sigs) {
-    const own = this.#kept("mirror");
-    const known = [sigs && sigs.last_attempt, own && own.started].map(msOf).filter(Number.isFinite);
-    return known.length ? Math.max(...known) : NaN;
+  /* R46, R49, R50 (fix round 4, C84): a run the scanner shows unfinished: `last_error` `RUN_STARTED` with its `stage` and the
+     instant of its latest stage (`stage_at`, else `last_attempt`). Alive while that instant is under `MIRROR_MIN_GAP_MS` old,
+     stopped after (the cron resumes it); null when the scanner shows no unfinished run. */
+  static #runOf(sigs, now) {
+    if (!sigs || typeof sigs !== "object" || sigs.last_error !== "RUN_STARTED") return null;
+    const at = [sigs.stage_at, sigs.last_attempt].map(msOf).find(Number.isFinite);
+    return { alive: Number.isFinite(at) && now - at < MIRROR_MIN_GAP_MS, stage: typeof sigs.stage === "string" ? sigs.stage : null,
+             at: Number.isFinite(at) ? at : null };
   }
-  /* R49, R50: asks `file-scanner` to start a run (`POST /mirror?async=1`, its R6) and remembers when. */
-  async #startRun(now) {
+  /* R49, R50: asks `file-scanner` to start a run (`POST /mirror?async=1`, its R6). What it asked is the scanner's to remember: it
+     writes the run's start itself, and the guards read that, never a note of this module's (R50). */
+  async #startRun() {
     const r = await this.#scanner("/mirror?async=1", {});
     if (r.absent) return { absent: true };
     if (r.unreachable || r.status !== 202 || !r.body || r.body.ok === false) return { failed: (r.body && r.body.code) || "SCANNER_UNREACHABLE" };
-    this.#keep("mirror", { started: iso(now) });
     return { started: true };
   }
   /* R50: when the scanner holds no published set and the newest attempt is more than six hours old, or none was made, the scan
-     batch starts one run, with no administrator's act. It never refuses or changes the batch: a state it cannot read, or a start the
-     scanner does not accept, starts nothing and is tried again at the next batch. */
+     batch starts one run, with no administrator's act. A run alive, or a request open, is the cron's to finish: nothing is started.
+     It never refuses or changes the batch: a state it cannot read, or a start the scanner does not accept, starts nothing and is
+     tried again at the next batch. */
   async #startRunWhenNoSignatures(now) {
     try {
       const v = await this.#scanner("/version", null, { method: "GET" });
       const ver = v.body && v.body.ok === true ? v.body : null;
       if (!ver || !ver.signatures || Number.isFinite(Date.parse(ver.signatures.published))) return;
-      const last = this.#lastAttempt(ver.signatures);
+      const sigs = ver.signatures;
+      const run = FileSafety.#runOf(sigs, now);
+      if ((run && run.alive) || sigs.request || sigs.requested_at) return;
+      const last = msOf(sigs.last_attempt);
       if (Number.isFinite(last) && now - last <= MIRROR_SELF_START_MS) return;
-      await this.#startRun(now);
+      await this.#startRun();
     } catch { /* the batch goes on as R4 states it */ }
   }
 
-  /** R49: an administrator's "check for new signatures now": starts a run and answers at once, without waiting for it. */
+  /** R49: an administrator's "check for new signatures now": starts a run and answers at once, without waiting for it. R50
+   *  (fix round 4): a run the scanner shows alive refuses in words that say a check is under way; a stopped one does not block. */
   async scanMirror({ viewer = undefined, at = null } = {}) {
     try {
       const bar = this.#adminBar(viewer, localize("file-safety.index.checking_for_new_signatures", "checking for new signatures"));
@@ -1023,12 +1032,19 @@ export class FileSafety {
       if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.no_scanner_so_no_run_started", "Your team's Civicsmith has no file scanner installed. No run was started."));
       const now = Number.isFinite(Date.parse(at)) ? Date.parse(at) : this.now();
       const v = await this.#scanner("/version", null, { method: "GET" });
-      const last = this.#lastAttempt(v.body && v.body.ok === true ? v.body.signatures : null);
+      const sigs = v.body && v.body.ok === true ? v.body.signatures : null;
+      const run = FileSafety.#runOf(sigs, now);
+      /* DEC-49 REGION is-signature-run-under-way */
+      if (run && run.alive)
+        return refusal("SIGNATURES_RUN_UNDER_WAY", localize("file-safety.index.a_run_is_under_way", "A check for signatures is already under way. No run was started."),
+                       { started_at: iso(run.at), stage: run.stage });
+      /* END DEC-49 REGION is-signature-run-under-way */
+      const last = run ? NaN : msOf(sigs && sigs.last_attempt);
       /* DEC-49 REGION is-signature-run-due */
       if (Number.isFinite(last) && now - last < MIRROR_MIN_GAP_MS)
         return refusal("SIGNATURES_RUN_RECENT", localize("file-safety.index.a_run_was_started_lately", "A check for signatures was made a few minutes ago. No run was started."), { attempted_at: iso(last) });
       /* END DEC-49 REGION is-signature-run-due */
-      const r = await this.#startRun(now);
+      const r = await this.#startRun();
       if (r.failed) return refusal("SCANNER_UNREACHABLE", localize("file-safety.index.the_scanner_did_not_start", "The scanner did not start a run. Nothing was changed."), { scanner_code: r.failed });
       return { ok: true, state: "started" };
     } catch { return refusal("SCANNER_UNREACHABLE", localize("file-safety.index.the_scanner_did_not_start", "The scanner did not start a run. Nothing was changed.")); }
@@ -1046,7 +1062,7 @@ export class FileSafety {
       const lists = ver && Array.isArray(ver.reputation_lists) ? ver.reputation_lists.map((l) => Date.parse(l.fetched_at)).filter(Number.isFinite) : [];
       const due = this.#due(now);
       return { ok: true,
-        ...(ver && !Number.isFinite(published) ? { no_signatures: this.#noSignatures(ver.signatures) } : {}),
+        ...(ver && !Number.isFinite(published) ? { no_signatures: this.#noSignatures(ver.signatures, now) } : {}),
         scanner: ver ? { bound: true, version: ver.version, clamav_version: ver.clamav_version, signatures: ver.signatures }
           : { bound: !!this.#scannerBinding(), version: null, ...(this.#scannerBinding() ? { unreachable: true } : {}) },
         renderer: ver ? { bound: true, version: ver.renderer_version } : { bound: !!this.#scannerBinding(), version: null },
@@ -1062,7 +1078,7 @@ export class FileSafety {
   /* R46: what is true when the scanner holds no signatures: the date it has had none since (the first file it could not scan
      for want of them, else the last time it tried, else none), its reason as it states it, and both in members' words by
      key, never "waiting". Read from the scanner's own state and this module's notes; writes nothing. */
-  #noSignatures(state) {
+  #noSignatures(state, now) {
     const sigs = state && typeof state === "object" ? state : {};
     const first = this.#one(`SELECT scanned_at FROM fs_notes WHERE kind = 'scan' AND tool = 'clamav' AND result = 'not_scanned'
                              AND reason = 'SIGNATURES_ABSENT' ORDER BY seq LIMIT 1`);
@@ -1076,13 +1092,15 @@ export class FileSafety {
     const found = refused && /(?:error code|status(?: code)?|http\/?[\d.]*|code)\s*[:=]?\s*([1-5]\d{2})(?!\d)|\(([1-5]\d{2})\)/i.exec(tried.replace(/^MIRROR_REFUSED:exit \d+:/, ""));
     const status = old || (found && [null, found[1] || found[2]]);
     const date = since && since.slice(0, 10);
+    /* R46 (fix round 4, C84): an unfinished run is worded as one, at its stage, or as stopped; never as a refusal */
+    const run = FileSafety.#runOf(sigs, now);
     return {
       since, reason: tried || "SIGNATURES_ABSENT",
       ...(since ? { key: "file-safety.index.no_signatures_since",
                     words: localize("file-safety.index.no_signatures_since", "The file scanner has had no signatures since {date}.", { date }) }
                 : { key: "file-safety.index.no_signatures",
                     words: localize("file-safety.index.no_signatures", "The file scanner has no signatures.") }),
-      ...(status ? { reason_key: "file-safety.index.signatures_refused",
+      ...(run ? FileSafety.#runWords(run) : status ? { reason_key: "file-safety.index.signatures_refused",
                      reason_words: localize("file-safety.index.signatures_refused", "The signature service refused the download (status {status}).", { status: status[1] }) }
         : refused ? { reason_key: "file-safety.index.signatures_refused_unnumbered",
                       reason_words: localize("file-safety.index.signatures_refused_unnumbered", "The signature service refused the download. The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.") }
@@ -1091,6 +1109,25 @@ export class FileSafety {
         : { reason_key: "file-safety.index.signatures_not_fetched",
             reason_words: localize("file-safety.index.signatures_not_fetched", "No download of signatures has finished yet.") }),
     };
+  }
+
+  /* R46 (fix round 4, C84): the words of an unfinished run, by key: under way at its stage, or stopped and to be resumed. */
+  static #runWords(run) {
+    if (!run.alive)
+      return { reason_key: "file-safety.index.signatures_run_stopped",
+               reason_words: localize("file-safety.index.signatures_run_stopped", "The last check for signatures stopped before it finished. It will be resumed shortly.") };
+    switch (run.stage) {
+      case "seed": return { reason_key: "file-safety.index.signatures_run_seed",
+        reason_words: localize("file-safety.index.signatures_run_seed", "A check for signatures is under way: it is preparing the signatures the file scanner already holds.") };
+      case "download": return { reason_key: "file-safety.index.signatures_run_download",
+        reason_words: localize("file-safety.index.signatures_run_download", "A check for signatures is under way: it is downloading the signatures that changed.") };
+      case "stage": return { reason_key: "file-safety.index.signatures_run_stage",
+        reason_words: localize("file-safety.index.signatures_run_stage", "A check for signatures is under way: it is setting the new signatures aside to check them.") };
+      case "verify": return { reason_key: "file-safety.index.signatures_run_verify",
+        reason_words: localize("file-safety.index.signatures_run_verify", "A check for signatures is under way: it is checking that the new signatures are genuine.") };
+      default: return { reason_key: "file-safety.index.signatures_run_under_way",
+        reason_words: localize("file-safety.index.signatures_run_under_way", "A check for signatures is under way.") };
+    }
   }
 
   /* ===== the group's security tools (R27–R32) ===== */
