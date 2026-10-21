@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { REF_SCREENS, ADMIN_ACTS, interfacePage, checkGuide } from "../../../src/interface-shell/index.mjs";
+import { REF_SCREENS, ADMIN_ACTS, interfacePage, interfaceScript, checkGuide } from "../../../src/interface-shell/index.mjs";
 import { fitSend, boot, ok, refused, ADMIN, STORE_KEY, nestedTips } from "./harness.mjs";
 import { ALL, HELD, FRONT, PERSON, DOORBELL, JOIN } from "./screens.fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -325,7 +325,7 @@ test("R31 (K3143) checkGuide: the guide's ops and acts each an op OPS holds; int
   assert.throws(() => interfacePage(ALL, { guide: { ...GUIDE, ops: ["nosuchop"] } }), /guide.*nosuchop.*OPS/);
   assert.throws(() => interfacePage(ALL, { guide: { ...GUIDE, acts: [{ op: "zz" }] } }), /guide.*zz/);
   assert.throws(() => interfacePage(ALL, { guide: { ...GUIDE, render: undefined } }), /guide/);
-  assert.ok(interfacePage(ALL, { guide: GUIDE }).includes("wizardsat"));
+  assert.ok(interfaceScript(ALL, { guide: GUIDE }).includes("wizardsat"));
 });
 
 test("R49 cs.image(op, params, {alt}) fetches the image with the session's Authorization header and draws it from an object address the page made, never a credential in an address; released when the screen closes; control: a refusal draws no image", async () => {

@@ -491,9 +491,10 @@ const GOT = {
 test("R98 cs.download with verify hashes the bytes in the browser before any file is made: matching bytes download; altered bytes save nothing and answer DIGEST_MISMATCH with expected and got; control: without verify a download saves as before", async () => {
   const body = new Uint8Array([1, 2, 3, 4, 5, 250]);
   const page = async (verify) => {
-    const screen = { ...GOT, acts: [{ op: "search", async send(view, el, cs) { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: VERIFY }))); return null; } }] };
-    const src = interfacePage([screen]).replace("VERIFY", JSON.stringify(verify));
-    return boot({ screens: [screen], path: "/app/finder", html: src.split("__CSP_NONCE__").join("n0nce"), plane: { openoriginal: bytes(body, "application/octet-stream") } });
+    /* the screen's function is self-contained, so the digest asked for is written into its source */
+    const send = new Function("view", "el", "cs", `return (async () => { cs.set("dl", JSON.stringify(await cs.download("openoriginal", { query: { capture: "c1" }, name: "x.bin", verify: ${JSON.stringify(verify)} }))); return null; })();`);
+    const screen = { ...GOT, acts: [{ op: "search", send }] };
+    return boot({ screens: [screen], path: "/app/finder", plane: { openoriginal: bytes(body, "application/octet-stream") } });
   };
   const press = async (p) => {
     await p.click('button[data-act="search"]');

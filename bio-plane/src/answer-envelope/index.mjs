@@ -22,6 +22,10 @@ import { word, localize } from "../setup-words/index.mjs";
 const PAGE_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; "
   + "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
 const pagePolicy = (nonce) => `${PAGE_POLICY}; script-src 'nonce-${nonce}'`;
+/* R6 (fix round 3, C15, P2.4; K4359): the interface page carries no inline script, so its policy names the shell's versioned script by
+   its hash (`interface-shell` exports it) with this origin, and no nonce */
+const SCRIPT_HASH = /^sha256-[A-Za-z0-9+/]{43}=$/;
+const hashPolicy = (hashes) => `${PAGE_POLICY}; script-src 'self' ${hashes.map((h) => `'${h}'`).join(" ")}`;
 
 /* `interfacePage`'s slot (`interface-shell` R1, R2; was `setup-page` R28, K2038): the literal the page holds in each
    script element's `nonce` attribute, which every HTML body served gets the response's nonce in place of, wherever it
@@ -81,14 +85,23 @@ function stampScripts(html, nonce) {
 
 /* An HTML answer leaves with a fresh nonce, its policy naming it and its script elements carrying it; any other answer
    leaves as it came. A body that cannot be read is the door's fault, answered as R5's. */
-async function withPagePolicy(res) {
+/* whether an HTML text holds a script element with text of its own (no `src`), whatever its spelling */
+const hasInlineScript = (html) => (html.replace(/<!--[\s\S]*?-->/g, "").match(/<script\b[^>]*>/gi) || []).some((tag) => !/\ssrc\s*=/i.test(tag)) || html.includes(NONCE_SLOT);
+async function withPagePolicy(res, opts = {}) {
   const type = res && res.headers ? res.headers.get("content-type") || "" : "";
   if (!/^\s*text\/html\b/i.test(type)) return res;
   let text;
   try { text = await res.text(); } catch (e) { return planeInternalError(e, null); }
-  const nonce = pageNonce();
   const headers = new Headers(res.headers);
   headers.delete("content-length");
+  /* R6: hashes handed in by the page's owner, every one well formed, and a page with no inline script: the hash policy, no nonce, the
+     page's bytes as shipped. Any other HTML keeps the nonce rule. */
+  const hashes = Array.isArray(opts && opts.scriptHashes) ? opts.scriptHashes : [];
+  if (hashes.length && hashes.every((h) => typeof h === "string" && SCRIPT_HASH.test(h)) && !hasInlineScript(text)) {
+    headers.set("content-security-policy", hashPolicy(hashes));
+    return new Response(text, { status: res.status, statusText: res.statusText, headers });
+  }
+  const nonce = pageNonce();
   headers.set("content-security-policy", pagePolicy(nonce));
   return new Response(stampScripts(text.replaceAll(NONCE_SLOT, nonce), nonce), { status: res.status, statusText: res.statusText, headers });
 }

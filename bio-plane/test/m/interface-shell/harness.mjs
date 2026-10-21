@@ -3,7 +3,7 @@
    page makes is recorded with its address, op, query, headers and body; the plane answers each op from a table (a value,
    a refusal, no answer, or never), with the frame's own reads answered by default. Timers are a fake clock, so the
    explanations' timings (R14) are read exactly. */
-import { interfacePage, NONCE_SLOT } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, NONCE_SLOT } from "../../../src/interface-shell/index.mjs";
 import { webcrypto } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { declaredOpsOf } from "../../declared-ops.mjs";
@@ -100,7 +100,14 @@ export const STORE_KEY = "bio-session";
 
 /* One response as the door makes it (answer-envelope R6): a fresh nonce in every slot. */
 export function served(html, nonce = "n0nce") { return html.split(NONCE_SLOT).join(nonce); }
-export const scriptOf = (html) => { const at = html.lastIndexOf("<script"); return html.slice(html.indexOf(">", at) + 1, html.lastIndexOf("</script>")); };
+/* the shell's script of a page: the external script (R1, fix round 3) is `interfaceScript` over the screens and guide the page was built from;
+   a page that still holds an inline script (another module's HTML) gives that text */
+export const scriptOf = (html, screens, options = {}) => {
+  if (screens !== undefined) return interfaceScript(screens, options);
+  const at = html.lastIndexOf("<script");
+  if (/<script\b[^>]*\bsrc=/i.test(html.slice(at, html.indexOf(">", at) + 1))) throw new Error("scriptOf: the page's script is external; pass the screens it was built from");
+  return html.slice(html.indexOf(">", at) + 1, html.lastIndexOf("</script>"));
+};
 
 const tick = () => new Promise((r) => setImmediate(r));
 export async function settle(n = 40) {
@@ -149,8 +156,9 @@ export function fakeIndexedDB(dbs = new Map()) {
  * Answers `{doc, win, requests, root, clock, settle, click, fire, back, assigned, store, local, byOp, location, ...}`:
  * `store` is the tab's sessionStorage, `local` its localStorage.
  */
-export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, declared = collectOwnerRows() } = {}) {
-  html = html || served(interfacePage(screens, { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}) }));
+export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, version = null, declared = collectOwnerRows() } = {}) {
+  const options = { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}), ...(version ? { version } : {}) };
+  html = html || served(interfacePage(screens, options));
   const doc = documentOf(html);
   const requests = [], polls = [];
   const answers = { ...FRAME, ...plane };
@@ -239,7 +247,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     /* the page's clock is the fake one: `Date.now()` advances with `clock.tick` (cs.now, K3002) */
     const base = Date.now();
     const FakeDate = class extends Date { static now() { return base + clock.at(); } };
-    new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(html))(win, clock.setTimeout, clock.clearTimeout, FakeDate);
+    new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(html, screens, options))(win, clock.setTimeout, clock.clearTimeout, FakeDate);
     await settle();
   }
   page.byOp = (op) => (op === "version" ? polls : requests).filter((r) => r.op === op);
