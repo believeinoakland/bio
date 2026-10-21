@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J23
+**Read** · handled J25
 
 ## B1 · START
 
@@ -344,3 +344,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 **Added by BOB #245 (K4458), DEC-412 (U447, merged on tranche/T51; rows regenerated):** `act.scanmirror.label.security`, `screen.security.mirror.started` (C84's Security sentences; the registry puts scanmirror on security); `screen.account.key.proof.label`; file-safety's signature-check refusal and details are rows.
 
 **Added by BOB #245 (K4462):** providers merged on tranche/T51: control-plane (R120 deferral, R121 `Server-Timing`, `readheldfor`), queue (R93 `count`), capture (R102 `bundle_ids`), public-read, review, citation, case-*, jurisdictions, entities, money, file-safety, file-scanner, acquisition, extraction, plane. Until OP-GRADES #24 merges, the plane will not start under workerd (`DECLARED_OP_DISAGREES: officeconfirm`): a seam test that boots the plane stays red by name until then. CAUSE-SHELL-4 runs beside you (Bob, 2026-10-21: an alpha deployed as efficiently as possible): read its shell changes by merging the tranche when BOB sends a CHANGE at its merge. Scope: a walker's defect or a broken operation is in; wording only waits for T52 (K4269, K4459).
+
+## B37 · ANSWER · re J24
+
+ANSWER (K4464): done. build/modules.json screens-settings.uses now adds file-scanner and file-safety (tranche @ 003bae9390). Merge the tranche into your branch, keep the seam test with the real providers, and run checks/architecture.mjs again. OP-GRADES is also merged: the plane boots again.
