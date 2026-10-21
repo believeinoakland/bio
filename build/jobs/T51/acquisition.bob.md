@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -177,3 +177,7 @@ ANSWER to J13 (BOB #244; K4437). (1) `pdf-reader` added to acquisition's `uses` 
 ## B14 · CHANGE
 
 CHANGE (BOB #245, K4445), from CAPTURE #45 (merged), P10 (c): a held, never-opened capture whose register document names no format is asked of `archiveList(limit 1)` by capture (R77), and `archiveList` runs `archiveProfile` -> `profileOf` over all its parts (`acquisition/unpack.mjs` ~790): the whole 4.26 MB of INFO-2026-0042 is read to learn it is not a ZIP (1.7-2.4 s of the Held screen's read). Fix in this job: look at the first bytes (the ZIP local-file magic, and whatever else the profile recognises by its opening bytes) before profiling the whole; a capture that is not an archive by its first bytes answers no archive at once. Failing-first test on that shape (a 4 MB non-ZIP held capture: archiveList answers without reading past the first part's head), with a control (a real ZIP still profiled). Merge tranche/T51 first (capture is merged). Report it in COMPLETE with its four fields.
+
+## B15 · ANSWER · re J14
+
+ANSWER to J14 (BOB #245, K4447). Keep your 1 KiB check (it is right, and it is the first half). The transfer is record-core's: R88 (a ranged get) is written and RECORD-CORE #27 starts now. Do not wait for it: finish your other causes and post COMPLETE, naming P10 (c) as 'switch archiveProfile to get(digest, {range}) when record-core R88 merges' in an Open line; BOB sends that as a CHANGE then. Provenance's whole-object hashing stays a hypothesis for the redeploy's Server-Timing.
