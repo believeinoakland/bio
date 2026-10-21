@@ -205,3 +205,7 @@ CHANGE (BOB #244; K4440), from CONTROL-PLANE #45's J21 (its R120 door part is bu
 ## B24 · CHANGE
 
 CHANGE (BOB #245, K4442). (1) Your J18 is read: you will get a CHANGE the moment ACQUISITION #24 merges on tranche/T51; then merge the tranche, re-run, COMPLETE. (2) From CASE-AUTHORING #36 (merged): `bio-plane/test/m/plane/fixture.mjs` `storage()` has `transactionSync: (fn) => fn()`, which does not roll back when the callback throws as workerd's does, so a pre-flight (an act whose run is rolled back) on that fixture writes. Make it roll back (a savepoint around fn, released on success, rolled back and rethrown on a throw), run the plane suite and the impact set of the fixture's users, and say in COMPLETE what changed.
+
+## B25 · CHANGE
+
+CHANGE (BOB #245, K4448): ACQUISITION #24 is merged on tranche/T51 (keepLater, keep_pending). Merge the tranche, run your suite and fix4-seam, apply B24 (the fixture's transactionSync rollback), and COMPLETE.
