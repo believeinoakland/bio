@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
-import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { word, hasWord, WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { T51_DESIGN_OPS, T51_OWED_OPS, T51_LIST_ONLY_OPS, T51_STANDIN_OPS, T51_STANDIN_HELP } from "../../../src/affordances/act-help.mjs";
 
 const { ACT_HELP, ACT_HELP_KEYS, BROWSER_ACTS, affordancesAnswer } = A;
@@ -211,7 +211,8 @@ test("R61 R62 (T51, B14; K4376): the ops op-declarations' registration leaves wi
   assert.equal(ACT_HELP.contradictionflag, word("act.contradictionflag.does"));
   for (const op of T51_STANDIN_OPS) {
     assert.equal(ACT_HELP[op], T51_STANDIN_HELP[op], op);
-    assert.equal(hasWord(`act.${op}.does`), false, `${op} has no word-list sentence yet: a stand-in`);
+    // a stand-in: no row the design wrote (since K4422 the regenerated table holds the code's own default, source "code")
+    assert.notEqual(WORD_ROWS.find((r) => r[0] === `act.${op}.does`)?.[5], "design", `${op} has no design sentence yet: a stand-in`);
   }
   const without = (op) => Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== op));
   for (const op of [...T51_OWED_OPS, ...T51_LIST_ONLY_OPS, ...T51_STANDIN_OPS]) assert.equal(meetsR48(without(op)), false, op);
