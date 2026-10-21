@@ -55,3 +55,65 @@ Home's own 81 API reads, in order of cost:
 
 ## Not yet done (queued, in order)
 `BASELINE.md` (all screens, both widths, both roles); per-op server time in the plane (queue 1 s, groupidentity 0.5 s); the render timed per phase; the plane's Durable Object and bundle (30.4 of 32 MiB); fleet workers; the client's start-up; re-measure after the next redeploy.
+
+# RE-MEASURE after fix round 3 (tranche/T51 @ 753ea4db8a, deploy run 39662704568), 2026-10-21 19:45-20:40 UTC
+
+**Method and load.** As before (`tools/probe.mjs`, `ops.mjs`, `post.mjs`; administrator, 1280 px, direct to the copy). "Drawn" is the time from the address being opened to the last API read finishing (the screen's data is all in; `networkidle` overstates it by 0.5 s and, on Inbox, by 30 s because of a later request; screenshots `shots/inbox-r3.png`, `shots/doc-r3.png` show both screens drawn properly). Two re-walkers were on the copy throughout (Walk T51 rewalk3 A/B), so every figure includes their load; the single-read figures (alone, repeated 5×) show the floor. Two passes per screen (cold = first, warm = second).
+
+## Results against the bar (screen/act 2 s; capture 15 s)
+| Item | Before | Now (cold / warm) | Bar | Verdict |
+|---|---|---|---|---|
+| Home | 7.2-8.4 s, 87 req | 4.7 / 4.5 s, 38 req (31 API) | 2 s | miss (halved) |
+| Queue | 7.0-7.4 s, 103 reads | 4.0 / 3.6 s, 23 req | 2 s | miss |
+| Project | 9.6 s | 4.1 / 3.7 s, 48 req (11 `projectquestions`) | 2 s | miss |
+| Held | 13 s | 4.7 / 5.6 s | 2 s | miss |
+| Inbox | 8.9 s | 1.8 / 4.1 s | 2 s | cold meets, warm misses (server load) |
+| Document | 5.7-6.4 s, 50 reads | 3.2 / 1.6 s, 39 req | 2 s | warm meets |
+| Add (`/app/capture`) | 7.2 s | 2.4 / 1.7 s | 2 s | warm meets |
+| `interfacewords` second load | 1 MB every load | served from the browser's cache (`private, max-age=31536000, immutable`, 0 bytes), first load still 1 MB | cached | **P1 met** |
+| Page HTML | 4.3 MB, no-store | shell is `/app/shell-0.86.0.js` (cached); page 876 KB → small | – | **P2.4 landed** |
+| Plain capture (iana) | 4.0-4.7 s | **2.3 s** wall (plane 1.1 s: fetch 0.6, read 0.2, profile 0.3, **attest 0**) | 15 s | met |
+| Visitor capture, iana | 14-17 s | **8.1 s** (fetch 0.34, render 6.4) | 15 s | met |
+| Visitor capture, legistar People | 17-19 s, 504 | **18.9 / 18.1 s** (render 15.7 / 13.6) | 15 s | **miss** → P7 |
+| Visitor capture, legistar Departments | 16.7 s, 504 | **24.3 s** (render 19.8, read 1.05) | 15 s | **miss** → P7 |
+| PDF 140 KB (IRS W-9) | – | 4.8 s wall (read stage 1.07 s) | 15 s | met |
+| PDF 2.5 MB (govinfo BUDGET-2025-BUD) | – | **502 `STORE_DID_NOT_ANSWER` at 17-20 s, 3 of 3** | 15 s | **miss** → P8 |
+| PDF 8.8 MB (BUDGET-2025-PER) | 504 at 26 s | **504 `ACQUIRE_TIMED_OUT` at 25 s (37 s wall), 2 of 2** | 15 s | **miss** → P8 |
+| PDF 15.9 MB (BUDGET-2024-APP) | 504 at 25.8 s | **504 (62 s wall)** | 15 s | **miss** → P8 |
+| C12's acts (Share for review, reply, Prepare the draft, Confirm ties) | 5.1-7.5 s | **not measured**: the cause (the whole-screen re-read) is fixed in source (`interface-shell/browser.mjs:2127-2131`, dependants); measuring needs an act on a seeded project, next | 2 s | open |
+| Key registration (`signerregister`) | 37.6 s | **not measured**: it writes the administrator's signing key, outside my own projects; needs a test member of its own: BOB to name one or leave it to the walkers | 2 s | open |
+| `STORE_DID_NOT_ANSWER` | first-try 502 after a pause | seen on the 2.5 MB PDF every time (P8), never on a page, a small PDF or a read | – | cause below |
+
+What landed and held, by measurement: P1 (words cached), P2.2 (`projectlist` now carries `question_count` and `shared_drafts`: `casedrafts` 17 → 3, `projectquestions` gone from Home), P2.3 for the picker read (`heldcaptures` picker 0.31 s alone, was 1.9 s), P2.4 (shell cached), P4a and P4b (attest 0 s; fetch under render 0.2-0.6 s, was 4-8 s), P6's mechanism. Home 87 → 38 requests, Queue 103 → 23.
+
+## P7 · the visitor render's real cost is a sequential store write for every sub-resource (legistar 15-25 s)
+- **Measured.** Legistar People: the browser's own render time (`render.elapsed_ms`) 4.25 s; the render stage 13.6 s; 33 sub-resources kept, 2.4 MB. iana: browser 4.0 s, render stage 6.4 s, 9 sub-resources. The unexplained time is 9.4 s over 33 bodies = 0.28 s each, and 2.4 s over 9 = 0.27 s each: one evidence-store round trip (~0.27 s, the same unit the plain captures show) per body.
+- **Root cause.** `render.mjs:343` (`keepRenderBodies`): `await sha256(bytes); await put(digest, bytes)` inside a `for` over the requests, one at a time; the stage called "render" (`acquisition/index.mjs:1230-1245`) includes it. The browser side (`browserrender.mjs:193`, `collectBodies`) is also one body at a time but sits inside the browser's own 4.25 s.
+- **Owner.** `capture-sources` (`render.mjs`) with `acquisition` (the stage it counts it in).
+- **Fix.** Keep the bodies with a small number in flight (8 at a time, as `capture/index.mjs` already does for `#wholeOf`), the digest and the put in each lane; skip the put when a head says it is held (bodies shared by the pages of one site are). Same for `collectBodies`.
+- **Expected gain.** 33 bodies: 9.4 s → about 1.5 s. Legistar People 18 s → about 10 s, Departments 24 s → about 14 s (bar 15 s); iana 8 s → 6 s.
+- **Risk.** Order of the `subresources` list must stay the order requested (collect results by index).
+
+## P8 · PDFs above about 2 MB cannot be captured (`STORE_DID_NOT_ANSWER` at 2.5 MB, the door's 25 s at 8.8 and 15.9 MB)
+- **Measured.** 140 KB PDF: read stage 1.07 s (a 7 KB page: 0.2 s). 2.5 MB: 502 `STORE_DID_NOT_ANSWER` after 17-20 s, three runs, each time on a fresh address; the same copy answered other reads and a small capture seconds later. 8.8 MB: 504 at 25 s, twice. 15.9 MB: 504. On every failure `timings` is `{}`, so the stage that is slow is not in the answer.
+- **Root cause (partly located).** The plane's one-after-another evidence-store calls: per 8 MiB part `head` + `put`, then `head` + `put` of the whole (`acquisition/index.mjs:1121-1131`, `keepWhole` `:364-401`), at about 0.27 s per call on the plain captures, does not by itself reach 17 s for 2.5 MB (one part). So something else holds for 17-20 s on a PDF of 2.5 MB: the next stage for a PDF is the profile/reading (`docprofile`, `pdf-worker`), and `STORE_DID_NOT_ANSWER` is the store door's answer when the Durable Object does not reply in time, which fits a store busy in a long synchronous job. I could not see which from outside; the answer carries no timings on failure.
+- **Owner.** `acquisition` (stages, the timings on failure), `docprofile`/`pdf-worker` (the PDF work), `capture` (what the store is asked in one call).
+- **Fix to propose.** (1) First, make the stage clock survive a timeout and a store refusal (the answer already has `timings`; it is empty on exactly the failures that need it): then one run names the stage. (2) The lane runs it again on a deploy carrying that, with the 2.5 MB PDF (one part: the cheapest reproduction) and fixes what it names; I will not guess a fix from here.
+- **Risk.** None for (1).
+
+## P9 · every screen still draws in 3.6-5 s because the frame costs more than the screen
+- **Measured, alone and repeated 5×** (so not the walkers' load): `whoami` 0.20 s, `bootstrap` **1.0-1.3 s for 452 bytes**, `groupidentity` 0.58 s for 2.5 KB, `queue` 0.69-0.82 s for 117 KB, `projectlist` 0.31 s, `heldcaptures` picker 0.31 s. In a page load, the same reads take 1.5-3 s (contention with the other reads and the walkers).
+- **What is left of the double work.** Home: `queue` 2-3×, `casedrafts` 3×, `bootstrap` 2-3×, `groupidentity` 2×; Queue: `queue` 3×; Project: `projectquestions` 11× (one per question's page of the project), `inquirystrength` 2×.
+- **Likely causes** (read, not yet timed inside the plane): `bootstrap` does something expensive for a 452-byte answer (it is called three times per load); `queue` ships 117 KB each time and is asked for by the frame (limit 200), the screen itself, and a third reader.
+- **Owner.** `control-plane` (`bootstrap`), `queue` module, `interface-shell` (the frame's reads), the screens (their own repeats).
+- **Fix to propose.** `bootstrap` once per load, and found why it costs 1 s (a per-op timer in the plane, next); the queue read once per load shared by frame and screen; `queue` answers a count for the frame and the list only for the Queue screen.
+- **Expected gain.** Home/Queue/Project to about 2.5-3 s; the last half second to the bar needs the plane's per-op cost found.
+
+## P10 · Held and the document page's full-row `heldcaptures` are still 3.3-4.1 s
+- **Measured.** Alone: full rows (limit 500) 3.7-4.2 s for 27 rows (about 150 ms per row), picker rows 0.31 s. The Held screen (4.7 / 5.6 s) and the Document screen read the full rows.
+- **Root cause.** As P2.3: per row the batch examination, archive grouping, R83 reader, grade and an evidence-store `head` (`capture/index.mjs` `#pageAnswers`, `#wholeOf`); the picker skips them. Fix round 3 moved the screens that only needed the picker; Held and Document still need the rest for the rows they draw.
+- **Fix.** Read the page of rows as the picker (fast), and the heavy fields for the rows on screen only (10 at a time, or when a row opens), and run the per-row work with lanes (as `#wholeOf`) instead of one row at a time.
+- **Expected gain.** Held 4.7 s → about 1.5 s.
+
+## Not done in this pass
+The acts (C12) and key registration, as above; the member's side and 390 px; the plane's per-op timer for P9. The baseline file (`BASELINE.md`) has not been written and is superseded by this table for the screens re-measured.
