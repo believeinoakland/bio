@@ -170,7 +170,8 @@ test("R3 acts send what their owners take", async () => {
   assert.deepEqual([cite.project, cite.role, typeof cite.found === "string" ? JSON.parse(cite.found) : cite.found], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, kind: "passage" }]);
   await press(p, "attest");
   await p.click(p.root().querySelector('[data-shell="confirm"]'));
-  assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA });
+  /* R55 (C40): the co-archive is asked for a public https address */
+  assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA, archive: true, locator: "https://example.org/ai-4-12.pdf" });
   await press(p, "monitor");
   assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: D });
   /* R78: the picker draws the record's page 8 as its own 9; the extent sent is the record's number */
