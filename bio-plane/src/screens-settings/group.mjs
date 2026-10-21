@@ -257,6 +257,7 @@ export const group = {
   acts: [
     // R52: the name saved is acknowledged, or that it was already the name, so nothing changed
     { op: "groupnameset", rereads: ["identity"],
+      ready(view, el, cs) { if (!String(cs.value("gr-name") || "").trim()) return { refuse: "screen.group.name.empty" }; },
       send(view, el, cs) {
         const name = String(cs.value("gr-name") || "").trim();
         if (!name) return { refuse: "screen.group.name.empty" };
@@ -294,6 +295,7 @@ export const group = {
         return { raw: f, rawType: f.type };
       } },
     { op: "groupdomainset", rereads: ["identity"],
+      ready(view, el, cs) { if (!String(cs.value("gr-domain") || "").trim()) return { refuse: "screen.group.domain.empty" }; },
       send(view, el, cs) { const domain = String(cs.value("gr-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.group.domain.empty" }; },
       refusals: { GROUP_DOMAIN_MALFORMED: "screen.domainfile.refused.malformed", NOT_AN_ADMIN: "screen.domainfile.refused.notadmin" } },
     // R66: a copy of the record, with the founder's words for the list; the manifest it answers is the copy itself and is kept nowhere on the page,
@@ -321,6 +323,7 @@ export const group = {
     { op: "courtnoticeset", rereads: ["court"],
       send(view, el, cs) { return { body: { choice: cs.value("gr-court-tell") === true ? "tell" : "dont" } }; } },
     { op: "hostingaccessset", rereads: ["hosting"],
+      ready(view, el, cs) { if (!String(cs.value("gr-holders") || "").trim()) return { refuse: "screen.group.hosting.empty" }; },
       send(view, el, cs) {
         const holders = String(cs.value("gr-holders") || "").trim(), note = String(cs.value("gr-hnote") || "").trim();
         return holders ? { body: note ? { holders, note } : { holders } } : { refuse: "screen.group.hosting.empty" };

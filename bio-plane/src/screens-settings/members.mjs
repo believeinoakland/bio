@@ -283,6 +283,8 @@ export const members = {
     // with who must still endorse it; that answer is this act's success, drawn by the shell as done with the members' handles
     { op: "memberadd", rereads: ["roster", "recovery"], successCodes: ["CONSENSUS_REQUIRED"],
       refusals: { CONSENSUS_REQUIRED: function (refusal, cs) { return cs.w("refusal.CONSENSUS_REQUIRED", { awaiting: (Array.isArray(refusal.awaiting) ? refusal.awaiting : []).map(function (x) { return cs.memberName(String(x)); }).join(", ") }); } },
+      // R119: an invitation with no short id or no cover is refused before any reason is asked
+      ready(view, el, cs) { if (!String(cs.value("mi-id") || "").trim() || !String(cs.value("mi-cover") || "").trim()) return { refuse: "screen.members.invite.incomplete" }; },
       send(view, el, cs) {
         const vocabulary = view.me && Array.isArray(view.me.vocabulary) && view.me.vocabulary.length ? view.me.vocabulary : ["contribute", "publish", "create_projects"];
         const memberId = String(cs.value("mi-id") || "").trim(), cover = String(cs.value("mi-cover") || "").trim();
@@ -341,6 +343,11 @@ export const members = {
       send(view, el) { return { body: { keyB64: el.dataset.key, status: el.dataset.status === "active" ? "active" : "revoked" } }; } },
     // the public line the member gave, split: its base64 field and any words after it (R55); a line not of that shape sends nothing
     { op: "signeradd", rereads: ["signers"],
+      ready(view, el, cs) {
+        const parts = String(cs.value("ms-line") || "").trim().split(/\s+/);
+        if (!String(cs.value("ms-who") || "").trim()) return { refuse: "refusal.NO_SUCH_MEMBER" };
+        if (parts.length < 2 || !/^[a-z][a-z0-9@.-]*$/.test(parts[0]) || !/^AAAA[A-Za-z0-9+/=]+$/.test(parts[1])) return { refuse: "refusal.BAD_KEY" };
+      },
       send(view, el, cs) {
         const memberId = String(cs.value("ms-who") || "").trim();
         const parts = String(cs.value("ms-line") || "").trim().split(/\s+/);
@@ -354,6 +361,7 @@ export const members = {
     { op: "invitewithdraw", rereads: ["roster"],
       send(view, el) { return { body: { memberId: el.dataset.member } }; } },
     { op: "websitekeycreate", rereads: [],
+      ready(view, el, cs) { const dailyCap = Number(cs.value("mw-cap")); if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" }; },
       send(view, el, cs) {
         const dailyCap = Number(cs.value("mw-cap"));
         if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" };
@@ -362,6 +370,7 @@ export const members = {
       },
       done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.key) cs.set("websiteKey", a.key); } },
     { op: "joinlinkenable", rereads: [],
+      ready(view, el, cs) { const dailyCap = Number(cs.value("mw-cap")); if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" }; },
       send(view, el, cs) {
         const dailyCap = Number(cs.value("mw-cap"));
         if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" };

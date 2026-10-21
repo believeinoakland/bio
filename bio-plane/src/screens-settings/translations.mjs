@@ -95,6 +95,7 @@ export const translations = {
 
   acts: [
     { op: "translationgrant", rereads: [],
+      ready(view, el, cs) { if (!String(cs.value("tr-member") || "").trim().replace(/^member:/, "")) return { refuse: "screen.translations.grant.nomember" }; },
       send(view, el, cs) {
         const member = String(cs.value("tr-member") || "").trim().replace(/^member:/, "");
         if (!member) return { refuse: "screen.translations.grant.nomember" };

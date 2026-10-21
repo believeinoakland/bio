@@ -66,6 +66,11 @@ ${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000
   acts: [
     // the whole record each time (membership R109 appends a record): kinds, the other kind, focus, purpose, visibility
     { op: "groupdescriptionset", rereads: ["description"],
+      // R119 (C87 (c)): with no kind ticked and nothing written, the first box to fill is named before any reason is asked
+      ready(view, el, cs) {
+        const kinds = ["professional", "issue", "community", "catch-all", "other"].filter((k) => cs.value("gi-k-" + k) === true);
+        if (!kinds.length && !String(cs.value("gi-other") || "").trim() && !String(cs.value("gi-focus") || "").trim() && !String(cs.value("gi-purpose") || "").trim()) return { refuse: "shell.field.needed", fills: { field: String(cs.w("screen.group-identity.focus.field")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
+      },
       send(view, el, cs) {
         const kinds = ["professional", "issue", "community", "catch-all", "other"].filter((k) => cs.value("gi-k-" + k) === true);
         const body = { kinds, visibility: cs.value("gi-v-public") === true ? "public" : "members" };

@@ -129,6 +129,7 @@ export const teamai = {
   acts: [
     // the key in the request's body only, never drawn again; then switched on, as setup-page R18 does
     { op: "groupkeyset", rereads: ["groupkey", "uses", "history"],
+      ready(view, el, cs) { if (!String(cs.value("mk-key" + ((view.ui && view.ui.keyGen) || 0)) || "").trim()) return { refuse: "screen.members.key.nokey" }; },
       send(view, el, cs) { const key = String(cs.value("mk-key" + ((view.ui && view.ui.keyGen) || 0)) || "").trim(); return key ? { body: { key } } : { refuse: "screen.members.key.nokey" }; },
       // the field drawn anew, empty (the shell keeps a field's value by its id, R10); the shell does not await `done`:
       // the switch is sent, then the screen opened again, which reads everything anew

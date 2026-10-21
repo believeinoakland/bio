@@ -174,6 +174,16 @@ export const security = {
       done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.from && a.to) cs.set("period", { from: a.from, to: a.to }); } },
     // the entry's config by its names, its credentials in the body only, its handling's digest, then tested at once
     { op: "securitytooladd", rereads: ["tools", "events", "scan"],
+      // R119: a field the entry needs, left empty, is named before any reason is asked
+      ready(view, el, cs) {
+        const cat = view.data && view.data.catalogue && view.data.catalogue.value ? view.data.catalogue.value.offered || [] : [];
+        const t = cat.find((x) => x.provider_id === el.dataset.provider);
+        if (!t) return;
+        const p = "sa-" + String(t.provider_id).replace(/[^A-Za-z0-9_-]/g, "_");
+        for (const c of Array.isArray(t.config) ? t.config : []) if (c && c.name && c.required && !String(cs.value(p + "-c-" + c.name) || "").trim()) return { refuse: "screen.security.config.missing", fills: { field: c.label || c.name } };
+        for (const k of Array.isArray(t.credentials) ? t.credentials : []) if (!String(cs.value(p + "-k-" + k) || "")) return { refuse: "screen.security.config.missing", fills: { field: k } };
+        if (t.template && !String(cs.value(p + "-host") || "").trim()) return { refuse: "screen.security.config.missing", fills: { field: "host" } };
+      },
       send(view, el, cs) {
         const cat = view.data && view.data.catalogue && view.data.catalogue.value ? view.data.catalogue.value.offered || [] : [];
         const t = cat.find((x) => x.provider_id === el.dataset.provider);

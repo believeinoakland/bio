@@ -147,6 +147,10 @@ export const grouprules = {
   // the registry's four acts. `ruledraft` and `writinghelp` are held until the design draws the draft form (QUESTION J1); neither is drawn yet
   acts: [
     { op: "ruleconfirm", rereads: ["rules"],
+      ready(view, el, cs) {
+        const statement = String(cs.value("gr-q-" + el.dataset.rule) || "").trim();
+        if (el.dataset.needs === "1" && !(statement && statement.length <= 500)) return { refuse: "refusal.RULE_NEEDS_QUALIFICATION" };
+      },
       send(view, el, cs) {
         const rule = el.dataset.rule;
         const statement = String(cs.value("gr-q-" + rule) || "").trim();

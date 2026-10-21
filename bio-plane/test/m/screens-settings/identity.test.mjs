@@ -94,3 +94,21 @@ test("R14 C87 (c): Save who your team is with an empty box names the box and ask
   const filled = await a.press("groupdescriptionset", { values: { "gi-focus": "Repair." } });
   assert.equal(filled.sent.filter((x) => x.op === "groupdescriptionset").length, 1);
 });
+
+test("R14 C87 (c) (interface-shell R119): the other reasoned acts with a required box refuse an empty one before any reason is asked, and send nothing", async () => {
+  const F = await import("./fixtures.mjs");
+  const cases = [
+    ["members", F.membersTable(), "memberadd", {}],
+    ["members", F.membersTable(), "websitekeycreate", { "mw-cap": "" }],
+    ["group", F.groupTable(), "groupnameset", { "gr-name": " " }],
+    ["group", F.groupTable(), "hostingaccessset", { "gr-holders": "" }],
+    ["teamai", F.teamaiTable(), "groupkeyset", {}],
+  ];
+  for (const [screen, table, op, values] of cases) {
+    const o = await open(screen, { me: ADMIN, table });
+    const r = await o.press(op, { reason: null, values });
+    assert.equal(r.asked, false, `${op}: no reason box`);
+    assert.deepEqual(r.sent, [], `${op}: nothing sent`);
+    assert.ok(o.refused, `${op}: refused beside the act`);
+  }
+});
