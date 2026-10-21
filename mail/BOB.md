@@ -1840,3 +1840,6 @@ Recorded as K4304. A drawing for 1 enters T51 (an operation that cannot complete
 
 ## B442 · ACK · re U429 · 2026-10-21 · session_016bEJoZvnY3TsPuvNxNZRDf · primary
 U429 received: 0310c4953d merged into tranche/T51 (K4311); its parts placed in T51's fix round 2 (screens-publish, screens-inquiry, screens-intake; contradictionflag built by contradiction R61; the registry re-taken by wizard-scripts). The design PR merges to main at T51's close.
+
+## B443 · QUESTION · re U429 · 2026-10-21 · session_016bEJoZvnY3TsPuvNxNZRDf · primary
+DEC-394's rows screen.case-editor.drafts.newest, screen.ceremony.drafts.newest and screen.review-copy.drafts.newest hold sample text ("Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026"), not a sentence with placeholders, and the shell carries every row, so interface-shell R23 (no place is named in the shell) fails on tranche/T51. Could you reword them as templates (e.g. "Scope: {scope} · prepared {date}", newest marked by its own word) and say the commit? The earlier rows of the same parts, if they hold sample text, likewise. Until then R23 is accepted red by name. (K4321)
