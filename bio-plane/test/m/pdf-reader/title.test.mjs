@@ -195,7 +195,7 @@ test("R40: bytes that are not a PDF, and every damaged form, answer null and nev
     92: { dict: "/Type /Metadata /Filter /FlateDecode", data: bomb } }, { trailer: "/Root 1 0 R" });
   const t1 = performance.now();
   assert.equal(pdfTitle(hostile), null);
-  assert.ok(performance.now() - t1 < 1500, "a deflate bomb is bounded");
+  assert.ok(performance.now() - t1 < 300, "a deflate bomb is cut at the bound, not inflated (12 ms bounded, over a second not)");
   // reference cycles and absurd indices
   const cyc = indexed({ 1: CATALOG, 2: PAGES, 91: "<< /Title 92 0 R >>", 92: "93 0 R", 93: "92 0 R" }, { trailer: "/Root 1 0 R /Info 91 0 R" });
   assert.equal(pdfTitle(cyc), null);
