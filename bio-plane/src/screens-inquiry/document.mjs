@@ -190,8 +190,10 @@ function render(cs, view) {
   const gradeObj = gr && gr.state === "ok" && gr.value && gr.value.grade ? gr.value.grade : null;
   const letter = gradeObj && /^[A-D]$/.test(String(gradeObj.grade || "")) ? String(gradeObj.grade) : "";
   const isHeld = !!row;
+  /* capture R77 (B27): a held row answers `whole` (true, false or null); only `whole: false` (a part of the capture is missing) withholds vouching and the OCR re-read */
+  const incomplete = !!row && row.whole === false;
   const vouched = ui.outcome && ui.outcome.release && ui.outcome.release.ok === true;
-  if (isHeld && !vouched) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
+  if (isHeld && !vouched && !incomplete) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
     + cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
     + cs.field("document-release-mitigation", "screen.document.release.mitigation", { area: true, rec: true })
     + cs.act("release", { label: "act.release.label.document", data: { document: id }, tone: "primary" }) + own("release") + "</div>");
@@ -395,7 +397,7 @@ function render(cs, view) {
     const fm = String((rv0 && rv0.format) || (rd && rd.text_container) || "");
     return /^image\//i.test(ct) || /^(jpe?g|png|gif|webp|tiff?|bmp)$/i.test(fm);
   })();
-  if (textState && textState !== "full" && sha) {
+  if (textState && textState !== "full" && sha && !incomplete) {
     if (isPicture) {
       if (view.reachable && !drewTranscribe) out.push(`<div class="mk-acts">${cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } })}</div>`);
     } else {
@@ -1414,7 +1416,7 @@ const words = Object.freeze([
   "screen.document.said_by", "screen.capture.file.how", "screen.capture.file.where", "screen.capture.file.what", "screen.finder.cite.cited", "screen.finder.a17.left_as_it_was", "screen.finder.a17.the_question_already_cited_it",
   "theme.section", "theme.never.evidence", "theme.place", "theme.propose", "theme.hunch.mark", "screen.document.theme.page",
   "screen.document.theme.whole", "screen.document.theme.proposed", "progression.threadedto", "progression.followed", "progression.thread.here",
-  "shell.card.document", "screen.held.name", "shell.search", "act.resolvetestify.label.document", "act.contradictionflag.label.document", "entity.naming.basis",
+  "shell.card.document", "screen.held.name", "screen.document.retire.refused.illegal", "screen.document.retire.refused.cited", "shell.search", "act.resolvetestify.label.document", "act.contradictionflag.label.document", "entity.naming.basis",
   ...["head", "note1", "note2", "note3", "which", "which.help", "who", "how.help", "how.help2", "refused"].map((k) => "screen.document.testify." + k),
   ...["head", "note1", "note2", "here", "here.help", "other", "other.help", "why", "why.help"].map((k) => "screen.document.contradict." + k),
   "refusal.FLAG_NO_PASSAGE", "refusal.FLAG_SAME_DOCUMENT", "refusal.FLAG_NO_REASON", "filings.trusted_timestamp_archive", "filings.archive_trusted_timestamp", "refusal.NO_ATTESTATION", "act.themewithdraw.label.document",

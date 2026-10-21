@@ -118,6 +118,7 @@ test("R123 R113 C33 retire answered CITED draws the questions that cite the copy
   assert.deepEqual(refs.map((a) => a.getAttribute("href")), ["/app/question/" + Q, "/app/question/" + Q2], "both questions, each a door to its page");
   assert.deepEqual(refs.map(text), ["Seven days?", "Does closed mean repaired?"], "named by their titles");
   assert.ok(!says(slot, "refusal.ILLEGAL_TRANSITION"), "never the release act's sentence");
+  assert.ok(text(slot).includes(word("screen.document.retire.refused.cited", { questions: "" }).split("{")[0].trim().slice(0, 20)), "the cited sentence is drawn by its key");
   /* control: without the refusal's own list the page's questions that cite the copy are drawn */
   const q = await openWith(at, { plane: { ...SELECT, ...TWO_CITERS, retire: cited({ offenders: undefined }) } });
   const slot2 = await retireIt(q);
@@ -129,6 +130,7 @@ test("R123 R113 C33 retire answered ILLEGAL_TRANSITION does not draw the release
   const p = await openWith(at, { plane: { ...SELECT, retire: illegal } });
   const slot = await retireIt(p);
   assert.ok(!says(slot, "refusal.ILLEGAL_TRANSITION") && !text(slot).includes(word("refusal.ILLEGAL_TRANSITION")), "not the release sentence");
+  assert.ok(says(slot, "screen.document.retire.refused.illegal"), "its own sentence, by key");
   assert.equal(p.byOp("retire").length, 1, "the retire was sent");
   /* control: a vouched, uncited copy retires as before */
   const state = { retired: false };
@@ -345,4 +347,14 @@ test("R127 DEC-394 contradictionflag: a passage here and a passage in another do
   }
   const alone = await openWith(at);
   assert.equal(flagFold(alone), null, "control: no other document to set it beside, no fold");
+});
+
+test("R55 R123 capture R77 a held row that is not whole (whole: false) withholds the vouch box and the OCR re-read; whole: true and whole: null draw them", async () => {
+  const row = (whole) => ok({ ok: true, held: [{ ...HELD_ROW, whole }] });
+  const no = await openWith(at, { plane: { heldcaptures: row(false) } });
+  assert.equal(main(no).querySelector("[data-held]"), null, "no vouch box on a copy that is not whole");
+  for (const w of [true, null]) {
+    const yes = await openWith(at, { plane: { heldcaptures: row(w) } });
+    assert.ok(main(yes).querySelector("[data-held]"), "whole " + w + " draws the vouch box");
+  }
 });

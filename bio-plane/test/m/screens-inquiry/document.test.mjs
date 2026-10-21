@@ -203,7 +203,7 @@ test("R3 release and retire act on a selection of this document, made first, and
   await p.click(dlg.querySelector('[data-shell="confirm"]'));
   await p.settle();
   assert.deepEqual([p.byOp("retire")[0].query.handle, p.byOp("retire")[0].query.reason], ["SEL-9", "superseded"]);
-  assert.ok(p.root().textContent.includes("This copy is cited by a question"), "the shell draws the plane's refusal beside the act");
+  assert.ok(p.root().textContent.includes(word("screen.document.retire.refused.cited", { questions: "" }).split("  ")[0].slice(0, 20)), "R123: the refusal is drawn beside the act in its own sentence, by key");
 });
 
 test("R3 controls: a release, a transcription and a claim with nothing written are refused by their words; no question to cite in, no cite", async () => {
