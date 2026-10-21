@@ -58,7 +58,7 @@ export const CEREMONY = Object.freeze({
     const copy = copyR && copyR.state === "ok" ? copyR.value : null;
     const c = copy && copy.case ? copy.case : {};
     const out = [cs.title(P.titleOf2(cs, copy, c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null), { thing: "case" }),
-      P.noCase(cs, copy), '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"];
+      P.noCase(cs, copy)];
     if (!copy) { out.push(cs.state(copyR, function () { return ""; })); return out.join(""); }
     // R50: the requests name the draft and the project, and add only what the member attested in this step (`P.attested`)
     const args = Object.assign(P.caseArgs(copy, draft), ui.attestedBody || {});
@@ -89,6 +89,7 @@ export const CEREMONY = Object.freeze({
         findings: (Array.isArray(rec.citations) ? rec.citations : []).filter(function (x) { return x && mine[x.target] && /^[0-9a-f]{64}$/.test(String(x.version || "")); })
           .map(function (x) { return { target: x.target, bundleSha: x.version }; }) };
     }
+    if (prepared && !ui.prepared) ui.prepared = prepared; // the acts of the Sign step read it from page memory
     const caseId = prepared ? prepared.caseId : c.case_id;
     const sched = caseId ? P.later(cs, view, "schedule", "publishschedule", { query: { case: caseId } },
       function (v) { return !v || !Array.isArray(v.editions) || v.editions.length === 0; }) : null;
@@ -310,7 +311,9 @@ export const CEREMONY = Object.freeze({
     if ((prepared || phone) && !published && !waiting && !(ui.signed && ui.signed.at)) {
       const doc = prepared && !phone ? P.later(cs, view, "document", "casedocument", { query: { case: prepared.caseId, edition: String(prepared.edition) } }) : null;
       const zone = signStep && signStep.publish_at && (signStep.publish_at.zone || signStep.publish_at.time_zone) || "";
-      let sign = '<p class="mk-explain">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
+      // R70: preparing publishes nothing; the Sign step is the one that says publishing makes the edition permanent
+      let sign = '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"
+        + '<p class="mk-explain">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
       if (phone) sign += '<p role="status" data-phone>' + cs.w("signing.ceremony.phone", { project: projectTitle }) + "</p>";
       else {
         sign += '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.when") + "</legend>"

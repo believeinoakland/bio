@@ -137,11 +137,16 @@ test("R70 C48 once the edition is prepared the page draws one state: the prepare
 });
 
 test("R70 C48 a reload draws the prepared edition again, read from the record; a draft whose edition was never prepared draws no Sign (control)", async () => {
-  const p = await open(CER, { plane: { casedocument: ok(DOCUMENT()) } });
+  const p = await open(CER, { boot: { idb: await keptKey() }, plane: { casedocument: ok(DOCUMENT()) } });
   assert.ok(drew(p, "screen.ceremony.prepared", { edition: "2" }), "the record holds the prepared edition");
   assert.ok(ops(p).includes("caseratify"), "Sign is offered on the reloaded page");
   assert.ok(!main(p).querySelector("[data-blockers]"));
   assert.equal(last(p, "casedocument").query.edition, "2");
+  await press(p, "caseratify", { reason: R });
+  await answerSign(p, true, "caseratify");
+  const b = last(p, "caseratify").body;
+  assert.deepEqual([b.caseId, b.edition, b.expectedSha], [C, 2, SHA], "the reloaded page signs the edition the record holds");
+  assert.deepEqual(b.members.map((m) => [m.id, m.sha]), [["FND-2026-0031", B1], ["INFO-2026-0004", E1]], "its findings pinned from the record");
   const never = await open(CER, { plane: { casedocument: refusedIn("NO_CASE_DOCUMENT") } });
   assert.ok(!drew(never, "screen.ceremony.prepared", { edition: "2" }) && !ops(never).includes("caseratify"));
   assert.ok(main(never).querySelector("[data-blockers]"));

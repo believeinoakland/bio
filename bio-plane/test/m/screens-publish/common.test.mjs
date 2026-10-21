@@ -156,7 +156,7 @@ test("R24 what each screen draws is the word's text read through setup-words, fi
   const draws = [
     [`/app/case-editor/${P}`, {}, [["screen.case-editor.ladder"], ["screen.case-editor.leavesout"], ["screen.case-editor.ack.by", { who: "mai" }]]],
     [`/app/review-copy/${P}`, {}, [["screen.review-copy.heading", { case: "The Coliseum lease", edition: "2" }], ["screen.review-copy.share"]]],
-    [`/app/ceremony/${P}/${DR}`, {}, [["screen.ceremony.permanent"], ["screen.ceremony.heading", { case: "The Coliseum lease", edition: "2" }]]],
+    [`/app/ceremony/${P}/${DR}`, {}, [["screen.ceremony.heading", { case: "The Coliseum lease", edition: "2" }]]],
     [`/app/published/${C}`, { session: null }, [["screen.published.howtoread"], ["screen.published.whose", { group: "River Town" }], ["published.check.title"], ["published.check.field.help"]]],
     ["/app/imported/IMP-2026-0001", {}, [["screen.imported.findings"], ["screen.imported.result.part"]]],
     [`/app/docket/${P}/${C}`, {}, [["screen.docket.order"], ["screen.docket.sub", { case: C }]]],
@@ -168,6 +168,12 @@ test("R24 what each screen draws is the word's text read through setup-words, fi
     for (const [k, vars] of keys) assert.ok(drew(p, k, vars), `${path}: ${k}`);
   }
   assert.throws(() => word("screen.published.whose", {}), (e) => e.code === "WORD_VAR_MISSING", "control: a word missing a fill is no word");
+  /* R70 (fix round 2, C48): only the Sign step says that publishing makes the edition permanent */
+  const signing = await open(`/app/ceremony/${P}/${DR}`, { boot: { idb: await keptKey() } });
+  assert.ok(!drew(signing, "screen.ceremony.permanent"), "R70: not before the edition is prepared");
+  tick(signing, "ce-tie", "yes");
+  await press(signing, "publish", { reason: "r" });
+  assert.ok(drew(signing, "screen.ceremony.permanent"), "R70: the Sign step says it");
 });
 
 /* K3171 (JOURNEY-CHECK #1 J4 (2)): a screen whose subject is absent from its address sends no subject read and draws
