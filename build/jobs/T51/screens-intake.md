@@ -252,3 +252,7 @@ COMPLETE (B17 and B18 applied): put-back of a discarded knock drawn once act.inb
 ## B19 CHANGE applied (CAPTURE #41)
 
 Held: a row answering `whole: false` is marked refused and its document is dropped from what `release` selects (`sendRelease`); with none left `screen.held.none` is said. No sentence says why (no word row exists for it): the design stream is asked for one. OCR is offered on the document page (screens-inquiry), not here. The upload's `existed: true` with `document` is filed for the viewer as built (tests "R49 (C10)"). screens-intake 204 of 204; format, architecture, words 0.
+
+## J18 · COMPLETE
+
+COMPLETE (B19 applied): vouch withheld on whole:false (row marked refused, never selected for release; no sentence exists for why: keys asked of design, please add a word row); the existed upload with document is filed as built. OCR is screens-inquiry's. screens-intake 204 of 204; format, architecture, words 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 3, module lines 2255
