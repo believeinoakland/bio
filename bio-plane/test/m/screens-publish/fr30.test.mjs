@@ -244,3 +244,25 @@ test("R63 R65 a draft naming no case says so in the fold by review's sentence; t
   assert.ok(drew(none, "screen.case-editor.comments.none") && !none.doc.querySelector("[data-comments] a"));
   assert.ok(!none.doc.querySelector('[data-fold="screen.case-editor.nocase.summary"]'), "a draft naming a case draws no such fold");
 });
+
+test("R8 the assistant helps with the docket entry's summary only while it is reachable: it sends the summary for docketfile and fills the field with its draft (B17; B420 2); not reachable draws no help (control)", async () => {
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+  const p = await open(DOCKET, { plane: { ...reach, writinghelp: ok({ ok: true, text: "The Administrator replied on 15 October.", untested: true }) } });
+  const helps = p.root().querySelectorAll('button[data-act="writinghelp"]');
+  assert.equal(helps.length, 1, "one help, on the summary");
+  assert.equal(helps[0].getAttribute("data-field"), "summary");
+  assert.equal(helps[0].getAttribute("data-forop"), "docketfile");
+  assert.equal(helps[0].getAttribute("data-id"), "dk-summary");
+  await press(p, "writinghelp", { values: { "dk-summary": "admin replied 15 oct" } });
+  assert.deepEqual(last(p, "writinghelp").body, { op: "docketfile", field: "summary", told: "admin replied 15 oct" });
+  assert.equal(p.doc.getElementById("dk-summary").value, "The Administrator replied on 15 October.");
+  const off = await open(DOCKET);
+  assert.equal(off.root().querySelectorAll('button[data-act="writinghelp"]').length, 0, "control: no assistant, no help");
+});
+
+test("R8 the summary's help sends nothing when nothing was typed (control)", async () => {
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+  const p = await open(DOCKET, { plane: { ...reach, writinghelp: ok({ ok: true, text: "x" }) } });
+  await press(p, "writinghelp", { values: { "dk-summary": "" } });
+  assert.equal(p.byOp("writinghelp").length, 0);
+});
