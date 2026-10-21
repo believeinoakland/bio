@@ -124,3 +124,27 @@ test("R98 (T51; K4206; R69): through the op an account is dated by the server, a
   const inProcess = await f.c.recordCaptureAccount({ captureSha: d, text: TEXT, signature, by: "m1", at: "2026-09-02T00:00:00Z" });
   assert.deepEqual([inProcess.ok, inProcess.at], [true, "2026-09-02T00:00:00Z"], "an in-process caller's instant is kept");
 });
+
+/* K4208 (wave 3): the census reads the screens send, declared by their owner */
+const HELD_SHA = "abababababababababababababababababababababababababababababababab";
+
+test("R97 capture declares heldat (K4208): its requires alone raise no refusal naming a field, a call with neither address nor sha256 is refused naming one, and a field outside accepts is dropped", async () => {
+  await declaredOpHolds({ op: "heldat", declaration: DECLARED_OPS["heldat"], call: mk("heldat", { viewer: "member:ann" }),
+    refusedNaming: named({}), values: { address: "https://s.example/p", sha256: HELD_SHA } });
+});
+
+test("R97 capture declares capturegrade (K4208): its requires alone raise no refusal naming a field, a call with neither capture nor captureSha is refused naming captureSha, and a field outside accepts is dropped", async () => {
+  await declaredOpHolds({ op: "capturegrade", declaration: DECLARED_OPS["capturegrade"], call: mk("capturegrade", { viewer: "member:ann" }),
+    refusedNaming: (answer, field) => named({})(answer, field === "capture" ? "captureSha" : field), values: { capture: HELD_SHA, captureSha: HELD_SHA } });
+});
+
+test("R97 capture declares captureaccounts (K4208): it requires nothing (an absent digest reads as an unknown one), accepts the digest as capture or captureSha, and a field outside accepts is dropped", async () => {
+  await declaredOpHolds({ op: "captureaccounts", declaration: DECLARED_OPS["captureaccounts"], call: mk("captureaccounts", { viewer: "member:ann" }),
+    refusedNaming: named({}), values: { capture: HELD_SHA, captureSha: HELD_SHA } });
+  /* control: the digest is read from either field, and the unknown digest answers the same lists */
+  const f = await fresh({ evidence: bucket(), env: { INSTANCE_NAME: "i" } });
+  const viaQuery = captureOps(f.c, new URL(`http://x/?op=captureaccounts&viewer=member:ann&capture=${HELD_SHA}`), {}, f.c.env).captureaccounts();
+  const viaBody = captureOps(f.c, new URL("http://x/?op=captureaccounts&viewer=member:ann"), { captureSha: HELD_SHA }, f.c.env).captureaccounts();
+  assert.deepEqual(viaQuery, viaBody);
+  assert.equal(viaQuery.captureSha, HELD_SHA);
+});

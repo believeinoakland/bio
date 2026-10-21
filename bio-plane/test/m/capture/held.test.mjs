@@ -103,7 +103,9 @@ test("R77 (DEC-97 (1)): heldCaptures lists the Information documents at collecte
                                  /* R77 (T51): the capture's own facts; the fixture's register holds no size */
                                  actor: "m1", retrieved: "2026-01-01T00:00:00Z", bytes: null,
                                  /* R77 (T51 fix round 2): this fixture has no evidence store, so whether it holds the copy whole is undetermined */
-                                 whole: null });
+                                 whole: null,
+                                 /* R77 (T51 fix round 2, wave 3): the full row's format id as the register holds it; this fixture's register document names none */
+                                 format: null });
   const three = r.held.find((x) => x.bundle_id === "INFO-3");
   assert.deepEqual([three.collected_since, three.age_days, three.source], ["2026-03-01T00:00:00Z", 10, null],
                    "back at collected: aged from when its state last moved; no receipt, no source");

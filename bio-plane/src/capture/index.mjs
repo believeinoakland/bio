@@ -1459,6 +1459,7 @@ export class Capture {
                   ...(grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})),
                   capture: reg ? { sha256: reg.capture_sha, grade: gradeOf(reg.capture_sha) } : null,
                   ...this.#captureFacts(reg, facts),
+                  format: reg ? facts.formats.get(reg.capture_sha) ?? null : null,
                   whole: wholeOf(r.bundle_id),
                   ...(aside ? { set_aside: facts.setAside.get(r.bundle_id) ?? null } : {}),
                   ...(vouched ? this.#standingOf(r.bundle_id, r.standing, facts.history.get(r.bundle_id) ?? null) : {}) });
@@ -3083,6 +3084,17 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["captureSha","locator"], requires: ["captureSha"] } },
   heldrestore: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldrestore", "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record"),
     fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
+  /* K4208 (T51 FR-52, wave 3): the census reads the screens send. `heldat` takes exactly one of `address` and `sha256` (R96; the
+     refusal names the one it was given, or `address` when neither); `by` and `viewer` are stamps. `check` is accepted, never required. */
+  heldat: { classes: ["admin","member","probe"], machineClasses: ["admin","probe"], mutating: false, weight: "read", description: localize("capture.declared.heldat", "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record"),
+    fields: { accepts: ["address","sha256","check"], requires: [["address","sha256"]] } },
+  /* R95: the digest is `capture` in the query or `captureSha` in the body; a missing one is the required-argument refusal naming `captureSha`. */
+  capturegrade: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.capturegrade", "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
+  /* R69: an absent or malformed digest answers as an unknown one does, with no accounts (an unseen capture and an unknown one read alike),
+     so it is not required: no refusal names it. */
+  captureaccounts: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.captureaccounts", "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [] } },
   /* K4206 (T51 FR-52): `acquire` hands its body to acquisition's act, which reads these fields; a call with none of locator,
      continue or address is refused naming the locator (BAD_LOCATOR), an archive call without address naming it (BAD_ADDRESS).
      `matchedSweep` is never read from the body (acquisition R31), so it is not declared. */
