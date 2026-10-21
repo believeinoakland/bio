@@ -95,3 +95,7 @@ Size (session_01RV4G2Edww7FayCK93fNip7): test runs 3, module lines 2425
 **Tests and checks.** New tests seen failing first; negative control (dropping the "no resolution" condition) fails 2 tests. `node --test --test-force-exit bio-plane/test/m/entities/*.test.mjs`: 142 pass, 0 fail. Direct users of entities (all test dirs of modules whose uses name it): 2 fail, identical to the tranche tip (`R24` DEC-149 words, `R17` groupdescriptiondraft); same test names, no new red. format 0 failures; architecture 0; coverage 62 of 62; words 0; ownership 0 (HEAD ca83658d7a).
 
 Size (session_012itnSuHrePTTFaLFKMtKqc): test runs 6, module lines 2447
+
+## J5 · COMPLETE
+
+B5 (K4337 cause 1) done, pushed. resolutionsFor/op=resolutions answers unresolved [{ref,label,page}] + unresolved_truncated (reading order, bounded, [] when fully resolved); resolutions declared in DECLARED_OPS. entities tests 142/0; direct users: same 2 reds as tranche tip; format/architecture/coverage 62of62/words/ownership clean. Requirement lines for R14 and R62 in my record (Completion B5). Size: test runs 6, module lines 2447.
