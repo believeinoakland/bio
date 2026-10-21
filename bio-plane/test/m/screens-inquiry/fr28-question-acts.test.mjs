@@ -180,8 +180,11 @@ test("R103 control: a finding with no reminder draws none (R20); an empty note s
 
 /* ------------------------------------------------------------------------------------------------------------------ R104 */
 
+/* fix round 2, C34: the state move is for a question whose own state is concluded; one concluded within a project is withdrawn (fr2-question.test.mjs) */
+const OWN_CONCLUDED = { images: { [Q]: { "bundle.md": grouped().replace("object_type: inquiry\n", "object_type: inquiry\ncurrent_state: concluded\n") } } };
+
 test("R104 a concluded question offers 'Reopen this finding, with a reason', the reason required: sent as the target and the reason; an empty reason sends nothing", async () => {
-  const p = await open(at, { ...A, plane: { basisversions: CONCLUDED, reopen: ok({ ok: true, target: Q, to: "open" }) } });
+  const p = await open(at, { ...OWN_CONCLUDED, plane: { basisversions: CONCLUDED, reopen: ok({ ok: true, target: Q, to: "open" }) } });
   const fold = main(p).querySelector("details[data-reopen]");
   assert.ok(fold && says(fold.querySelector("summary"), "screen.question.reopen.summary"));
   assert.deepEqual(rawKeys(fold), [], "every sentence the reopen fold draws is a held word");
@@ -199,7 +202,7 @@ test("R104 a concluded question offers 'Reopen this finding, with a reason', the
 
 test("R104 the owner's refusals are drawn by the design's words: no reason, a reason that cannot be kept, a finding in no published case", async () => {
   for (const [code, key] of [["NO_REASON", "screen.question.reopen.refused.noreason"], ["BAD_REASON", "screen.question.reopen.refused.badreason"], ["NOT_SET_DOWN", "screen.question.reopen.refused.notsetdown"]]) {
-    const p = await open(at, { ...A, plane: { basisversions: CONCLUDED, reopen: refusedIn(code) } });
+    const p = await open(at, { ...OWN_CONCLUDED, plane: { basisversions: CONCLUDED, reopen: refusedIn(code) } });
     fill(p, { "question-reopen-why": "a reason" });
     assert.ok(says(await press(p, "reopen", { within: main(p).querySelector("details[data-reopen]") }), key), code);
   }
