@@ -43,7 +43,7 @@ const SOURCES = ["queue.source-modified.one", "queue.source-modified.many", "que
   "queue.source.detail", "queue.source.untitled"];
 const PROJECT_ROWS = (w) => [`${w}.questions.one`, `${w}.questions.many`, `${w}.owner`, `${w}.owner.none`, `${w}.lastchange`, `${w}.lastchange.none`,
   `${w}.truncated`, `${w}.stage.means`, `${w}.stage.none`, ...["forming", "investigating", "matured", "closed"].map((s) => `${w}.stage.${s}`),
-  "member.founder.unnamed", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "project.rescue.title.nodate"];
+  "member.founder.unnamed", "screen.matter.unknown", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "project.rescue.title.nodate"];
 // R25, R30: "Start a project".
 const START = ["project.start.title", "project.start.title.help", "project.start.go", "project.visibility.title", "project.visibility.start.hidden",
   "project.visibility.start.discoverable", "project.visibility.start.later", "project.visibility.start.required"];

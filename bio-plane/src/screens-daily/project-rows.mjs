@@ -2,10 +2,10 @@
    and by the Projects screen. A screen part (interface-shell R21, K3002): self-contained, handed to each screen as
    `view.parts.projectRows` and called from its `render`. Each row is the project as `projectlist` answers it (project-roster
    R26: `{id, name, stage}`), a reference opening `project`, with its question count and its stage on the ladder Forming,
-   Investigating, Matured, Closed. A project's count (never drawn at zero, R21) is read from `projectquestions` (basis-versions R50), paged to its end
-   (a page may hold fewer than its limit while more follow, so only a null cursor ends it); while its pages are read the
-   count says it is loading, and a failed read says so, never "no questions". Counts are kept in the screen's page memory
-   (`view.ui["count:<id>"]`, one key each), so a redraw reads none again. With `glance` (the Projects screen, R10; DEC-201 (8), DEC-214 (3)) each
+   Investigating, Matured, Closed. A project's count (never drawn at zero, R21) is the row's own `question_count` (project-roster R42;
+   fix round 3, C14), so no project is read one by one; a row answering `null` (seen only at existence) is told as not known, never
+   as none. Each row opens with the project's icon and its stage boxes sit in the row's second column, so the boxes and the glance
+   share one left edge under the name (C23). With `glance` (the Projects screen, R10; DEC-201 (8), DEC-214 (3)) each
    row also draws its owner (project-roster R27: `{member, handle}`, or `null` when its opener is no longer an active
    member), its members (`cs.initials(handles)`), its activity over eight weeks (`cs.activity(weeks, word)`, the word
    chosen here) and its last change, as `projectlist`
@@ -15,40 +15,21 @@
 
 export function projectRows(cs, view, w, glance, join, states) {
   const STAGES = ["forming", "investigating", "matured", "closed"];
-  const ui = view.ui;
-  // Each project's count lives under its own key of the page's memory (`count:<id>`), so an answer is a plain write of its own key
-  // and never a read-modify-write of a shared object: answers that land together, or across a redraw, cannot lose one another.
-  // One project's count, paged to the end; the outcome lands in page memory and redraws the screen.
-  const count = function (id) {
-    ui["count:" + id] = { state: "loading" };
-    let n = 0;
-    const page = function (after) {
-      const query = { project: id, limit: "500" };
-      if (after) query.after = after;
-      return cs.call("projectquestions", { query: query }).then(function (a) {
-        const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
-        if (!v || v.ok === false || !Array.isArray(v.items)) return { state: "failed" };
-        n += v.items.length;
-        return v.cursor ? page(String(v.cursor)) : { state: "ok", n: n };
-      }, function () { return { state: "failed" }; });
-    };
-    page(null).then(function (r) { cs.set("count:" + id, r); });
-  };
-  const countOf = function (id) {
-    const c = ui["count:" + id];
-    if (!c) { count(id); return cs.state({ state: "loading" }, null); }
-    if (c.state === "loading") return cs.state({ state: "loading" }, null);
-    if (c.state === "failed") return cs.state({ state: "failed", refusal: null }, null);
-    // R21 (DEC-219 (3)): no count at zero.
-    if (!c.n) return "";
-    return "<span>" + (c.n === 1 ? cs.w(w + ".questions.one") : cs.w(w + ".questions.many", { n: String(c.n) })) + "</span>";
+  // C14 (P2.2; project-roster R42): the count is the roster row's own `question_count`, so no project is read one by one. A project the
+  // viewer sees only at existence answers `null`: that is told as not known, never as zero; a count at zero is not drawn (R21).
+  const countOf = function (p) {
+    const n = p.question_count;
+    if (typeof n !== "number" || !isFinite(n)) return "<span>" + cs.w("screen.matter.unknown") + "</span>";
+    if (!n) return "";
+    return "<span>" + (n === 1 ? cs.w(w + ".questions.one") : cs.w(w + ".questions.many", { n: String(n) })) + "</span>";
   };
   const ladder = function (state) {
     if (state === null || state === undefined || state === "") {
-      return '<span class="cs-ladder" data-ladder="stage">' + cs.w("state.undetermined", { reason: cs.w(w + ".stage.none") }) + "</span>";
+      return '<span class="cs-ladder" data-ladder="stage" style="grid-column:2/-1">' + cs.w("state.undetermined", { reason: cs.w(w + ".stage.none") }) + "</span>";
     }
     const at = STAGES.indexOf(String(state).toLowerCase());
-    return '<div class="cs-ladder" data-ladder="stage" aria-label="' + cs.w(w + ".stage.means") + '">'
+    // C23: the boxes start in the row's second column, under the name, so they share one left edge whatever the name beside them.
+    return '<div class="cs-ladder" data-ladder="stage" style="grid-column:2/-1;max-width:40rem" aria-label="' + cs.w(w + ".stage.means") + '">'
       + STAGES.map(function (s, i) {
         return '<span class="' + (at >= 0 && i <= at ? "on" : "") + '"' + (i === at ? ' aria-current="step"' : "") + ">"
           + cs.w(w + ".stage." + s) + "</span>";
@@ -90,7 +71,7 @@ export function projectRows(cs, view, w, glance, join, states) {
       const joinAct = join && states && states[id] === "invited" ? cs.act("projectjoin", { label: join, data: { project: id } }) : "";
       // R72 (C84; project-roster R39): a stranded project, every owner gone, is marked; the row opens the project, where the rescue is.
       const rescue = p.rescue_open === true ? '<span class="meta">' + cs.w("project.rescue.title.nodate") + "</span>" : "";
-      return cs.row("", cs.ref("project", id, p.name || id, []) + rescue + (function () { const c = countOf(id); return c ? '<span class="meta">' + c + "</span>" : ""; })()
+      return cs.row(cs.icon("project"), cs.ref("project", id, p.name || id, []) + rescue + (function () { const c = countOf(p); return c ? '<span class="meta">' + c + "</span>" : ""; })()
         + (joinAct ? '<span class="meta">' + joinAct + "</span>" : ""), ladder(p.stage), glanceOf(p));
     }).join("")) + (list && list.truncated ? '<p class="mk-note">' + cs.w(w + ".truncated") + "</p>" : "");
   };

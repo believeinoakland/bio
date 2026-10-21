@@ -14,6 +14,7 @@ import { participation } from "./participation.mjs";
 import { homeReadings } from "./home-readings.mjs";
 import { doors } from "./doors.mjs";
 import { todos } from "./todos.mjs";
+import { notices } from "./notices.mjs";
 import { routed, ROUTED_REFUSALS } from "./routed.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 
@@ -22,7 +23,7 @@ const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : [];
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors, routed, todos },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings, doors, routed, todos, notices },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -47,8 +48,7 @@ export const home = Object.freeze({
       held: view.parts.doors().reads().held,
       inbox: view.parts.doors().reads().inbox,
     };
-    // R17 (B21): the photos she captured and has not vouched for, each place a to-do of hers.
-    Object.assign(out, view.parts.todos().reads(view));
+    // R17 (B21): the photos she captured and has not vouched for, each place a to-do of hers, are rows of the `held` read above (C14, P2.3).
     if (view.me && view.me.member && !(view.me.administer === true || (Array.isArray(view.me.capabilities) && view.me.capabilities.indexOf("create_projects") >= 0))) {
       out.members = { op: "memberlist", empty: list("members") };
     }
@@ -129,7 +129,7 @@ export const home = Object.freeze({
       (Array.isArray(d.acts) ? d.acts : []).forEach(add);
       if (d.instead) add(d.instead);
       return ops.map(function (op) {
-        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "", subject: it.subject && it.subject.id ? String(it.subject.id) : "",
+        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "", notices: view.parts.notices().of(it), subject: it.subject && it.subject.id ? String(it.subject.id) : "",
           project: it.subject && it.subject.id ? String(it.subject.id) : "", who: it.subject && it.subject.requester ? String(it.subject.requester) : (it.fills && it.fills.who ? String(it.fills.who) : "") };
         // R42: an owner answers a request to join with Grant or Decline.
         if (op === "projectrequestanswer") {
@@ -258,6 +258,8 @@ export const home = Object.freeze({
     const vouching = view.parts.todos().vouch(cs, view, "home");
     // C70: while her captures are being read the count is not whole, so neither the strip nor "Needs you" is drawn from it yet: once, whole.
     const waiting = view.parts.todos().loading(view);
+    // C70: the shell's number adds the vouch rows (the band) to the queue's own; once her captures are read this reports how many are drawn.
+    if (!waiting) cs.band(vouching.n);
     const mineCount = forMe.length + invited.length + vouching.n;
     const readings = [];
     if (!firstVisit && mineCount) readings.push({ n: mineCount, label: "screen.home.strip.you", screen: "queue" });
@@ -332,9 +334,9 @@ export const home = Object.freeze({
     };
     const pv = ok(data.projects);
     const plist = pv && Array.isArray(pv.projects) ? pv.projects : [];
-    const countOf = function (p) { return ui["count:" + String(p.id)]; };
-    const counted = plist.length && plist.every(function (p) { const c = countOf(p); return c && c.state === "ok"; })
-      ? plist.reduce(function (a, p) { return a + countOf(p).n; }, 0) : null;
+    // C14 (P2.2): the total of the questions is the rows' own counts; while one is not known (a project seen only at existence) no total is drawn.
+    const counted = plist.length && plist.every(function (p) { return typeof p.question_count === "number" && isFinite(p.question_count); })
+      ? plist.reduce(function (a, p) { return a + p.question_count; }, 0) : null;
     const latest = plist.filter(function (p) { return p.lastChange; }).sort(function (a, b) { return String(b.lastChange).localeCompare(String(a.lastChange)); })[0];
     const ACTION = /^(action|request|milestone|step|plan|filing|escalation|litigation)/;
     const actionMine = forMe.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
@@ -406,10 +408,10 @@ export const home = Object.freeze({
     { op: "adoptversion", label: "act.adoptversion.label.home", reasonField: "why", rereads: ["queue"],
       send: function (view, el, cs) {
         const why = String(cs.value(el.dataset.f + "-why") || "").trim();
-        return why ? { body: { notice: el.dataset.notice, why: why } } : { refuse: "screen.home.fieldfirst" };
+        return why ? view.parts.notices().send(cs, "adoptversion", el, { why: why }) : { refuse: "screen.home.fieldfirst" };
       } },
     { op: "keepversion", label: "act.keepversion.label.home", rereads: ["queue"],
-      send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
+      send: function (view, el, cs) { return view.parts.notices().send(cs, "keepversion", el, {}); } },
     // R75: the decisions the record routes to a member, and passing a task on; each item leaves with the next read of the queue.
     { op: "taskforward", label: "act.taskforward.label.home", rereads: ["queue"],
       send: function (view, el, cs) {
@@ -430,7 +432,7 @@ export const home = Object.freeze({
     ...OWED({ op: "taskdecide", label: "act.owed_taskdecide.label.home", reasonField: "basis", refusals: ROUTED_REFUSALS, rereads: ["queue"],
       send: function (view, el, cs) { return view.parts.routed().decide(cs, el); } }),
     // R17 (B21): vouching for the photos she captured (re-reading her captures and the doors), and approving a letter drafted for the group.
-    { op: "release", label: "act.release.label.home", reasonField: "acknowledgment", rereads: ["mine", "held"],
+    { op: "release", label: "act.release.label.home", reasonField: "acknowledgment", rereads: ["held"],
       send: function (view, el, cs) { return view.parts.todos().release(view, el, cs); } },
     { op: "filingapprove", label: "act.filingapprove.label.home", rereads: ["queue"],
       send: function (view, el, cs) { return view.parts.todos().approve(view, el, cs); } },
