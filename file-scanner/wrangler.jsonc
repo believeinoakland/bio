@@ -38,7 +38,7 @@
   "containers": [
     {
       "class_name": "FileScanner",
-      "image": "docker.io/civicsmith/file-scanner-scanner@sha256:33dae2681b82e1c4da7ce170b693944bcdd1a1313e15ae2f7f2d43df202a1410",
+      "image": "docker.io/civicsmith/file-scanner-scanner@sha256:26257d937f0d072fb933964afea45649123c44a5c618a27763b9843745bf8cfc",
       "instance_type": "standard-1",
       "max_instances": 3
     },
