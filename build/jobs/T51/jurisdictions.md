@@ -68,3 +68,24 @@ Runs: `node --test --test-force-exit jurisdictions/test/`: 155 tests, 155 pass, 
 Deferred: none. Not mine, found: (1) the plane and fleet bundles are stale against the tranche tip (`fleetbundles.test.mjs` fails with STALE BUNDLE on `tranche/T51` itself, agent-worker among them); and they embed the first profile, so BOB's regeneration at the layer close picks this change up (manifest §14). (2) coverage reds on the tranche tip: agent-harness R17, agent-runner R37 R38 R40, control-plane R117 R118, installer-steps R26 R31, journey-check R19, op-grades R53, screens-publish R74 R75 R77 R78 R79. (3) `R95` of jurisdictions still reads "*(not yet met: T51)*" in `build/requirements/jurisdictions.md`; BOB removes it. Census ops: none owned. Proposed line for BOB: none further.
 
 Size (session_0194frecaoH7BeRExWJzuGjv): test runs 9, module lines 3727
+
+## J6 · QUESTION
+
+STEP 0 for C64-template and C64-law (jurisdictions side). Read live on tranche/T51 merged into my branch. I need two requirement lines from you before I build; my best reading is in each.
+
+**C64-template, root cause (the empty draft).** The first profile's `records_request` kind holds no `template` or `templates` (R45: none until approved, K921 Q1). With no named template and no profile template, `filings.filingPrepare` (bio-plane/src/filings/index.mjs, the `!named && !profileTpl` branch) answers `TEMPLATE_NOT_NAMED` ("the profile holds no file template for this kind"), so the box stays empty. `filing-templates.templatesFor({kind, use:"file"})` is by kind, never by law: no template anywhere is federal. Nothing in `jurisdictions` is wrong; the profile is silent by R45.
+Options: (a) a federal profile template: R40 requires `authored_by` and `approved_by` (two different people), `reviews`, `approved_at` and a K-basis. That is an approval only you can give, and the schema picks templates by kind, not law (R81 would need `law`). (b) No profile template: the fix is screens-action's (it must send only the fills the typed text names, which also clears the "blank the text does not have" refusal, and say in words that no team template exists). **Recommend (b)**; no `jurisdictions` change for C64-template.
+
+**C64-law, root cause (certain).** Three facts, two of them outside my module.
+1. screens-action's law picker (`request.mjs`, `P.laws`) lists the profile's `deadlines` for `records_request`, not its `records_laws`. So the member picks "5 U.S.C. § 552(a)(6)(A)(i)" or "(A)(ii)" as if they were laws, and the walker's pick (A)(ii) is the *appeal* rule `foia_appeal_response`. The first-request window is (A)(i), `foia_response`. Your plan and R9 line say "(A)(ii)" for a first request. That conflates the two, so please confirm the target is (A)(i) for a first request.
+2. `help-records` reads the CPRA by rule key (`d.rule === "records_response"`), and the first profile holds no `records_help` (R93: owed, N1201). So every law's help is California's.
+3. A deadline has only a `rule` key and no words, so the due-date line draws `foia_appeal_response` raw.
+
+**What I propose (new lines for you to write; I build them on your word):**
+- **R96** (amends R7, R76) A `records_laws` entry may carry `response`: the `rule` of the `deadlines` entry that is the law's first-request window, which must exist and apply to `records_request`, else `VALUE_INVALID`. The first profile sets it: CPRA `records_response`, Sunshine Ordinance `immediate_disclosure`, FOIA `foia_response`. One value per key under the law's `name` (R15). A screen then draws a law's window from its own `response` row and never guesses.
+- **R97** (amends R26) A `deadlines` entry may carry `label`: the rule's name in the profile's words (FOIA: "answer to a first request" for `foia_response`, "decision on an appeal" for `foia_appeal_response`, each read from the same statute text as R95). One value per key under `rule` and `applies_to` (R15). Absent, the screen has no words and says so (R27).
+Tests: both validate and combine; the first profile's FOIA entry names `foia_response` whose citation is (A)(i); control: a `response` naming no deadline is refused.
+
+**For screens-action (S), to put in its START:** list `records_laws`, not deadlines; take a law's window from `response`, the kind from `label`; show the help's `records_help` block only when `block.law` is the chosen law, and otherwise the first sentence from the law's `response` (days, citation) and no California text, no "the city". I cannot do these. They are in `bio-plane/src/screens-action/`.
+
+Waiting for R96 and R97 (or your changes to them) and your choice of (a) or (b).
