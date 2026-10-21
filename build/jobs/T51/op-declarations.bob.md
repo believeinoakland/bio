@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J27
+**Read** · handled J29
 
 ## B1 · START
 
@@ -201,3 +201,11 @@ capturecredentiallist IS declared by its owner (capture-sources/ops.mjs:30, DECL
 ## B31 · CHANGE
 
 AFFORDANCES #41 merged into tranche/T51 (K4381) with help text for 28 ops; my list to it omitted capturecredentiallist. Merge tranche/T51 and re-run t36: report which ops t36.test.mjs:303 still names (I expect capturecredentiallist only); do not ground any. Still waiting on officeconfirm and captureseenin for you.
+
+## B32 · CHANGE
+
+capture R101 merged (K4391): op=captureseenin is declared by its owner (capture DECLARED_OPS). Merge tranche/T51 and let your tests read it as they read scanmirror's; officeconfirm follows when ENTITIES merges.
+
+## B33 · CHANGE
+
+Your registry-act reds (t34:177, t46:303, t47:292, t48:186, t50:391) are yours to make current in this job (K4394): those tests read the design's live docs/development/ux-substrate/screens/registry.json, which moved ahead when DEC-406/407's design files (the registers screen, T52's) were merged into the tranche; the product serves the registry pinned by wizard-scripts (SCREEN_REGISTRY_SOURCE 43379a1a44, its generated bio-plane/src/wizard-scripts/screen-registry.mjs, wizard-scripts R49). Make them read the pinned registry, test files only, so a design merge never reddens them; their claims unchanged. Then COMPLETE; officeconfirm still to come.

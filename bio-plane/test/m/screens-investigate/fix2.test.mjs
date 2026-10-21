@@ -130,7 +130,8 @@ test("R53 C7 an institution's Address fact from a document is recorded (the fact
 
 /* ---------------------------------------------------------------- C59 */
 
-const wordsOf = (p, id) => p.doc.getElementById(id);
+/* each document's words are their own selection: the id is the picker's plus the first 12 of the digest (C59) */
+const wordsOf = (p, id) => p.doc.querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith(id + "-"));
 const pickWord = async (p, id, i) => { const w = wordsOf(p, id).querySelectorAll('[data-shell="word"]')[i]; await p.click(w); await p.settle(); };
 
 test("R34 C59 choosing a document draws the passage picker from that document's reading; the act sends the chosen extent; the fact row names its document; control: nothing selected is the whole document", async () => {

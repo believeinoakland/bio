@@ -58,3 +58,4 @@
 - Document · the cited-copy refusal names the question but offers no door to remove its citations (re-walk B FC-24, C33) · K4357 · 2026-10-21
 - Money · the period sentence says "A follow names the days it covers" (re-walk B E36) · K4357 · 2026-10-21
 - Vouch for this copy · marked "Asks for a reason" and asks nothing: joins the K4199 line (re-walk B C76, CA31, E09) · K4357 · 2026-10-21
+- screens-publish · published page · inline links ("Finding n", "Edition n", "its docket") 18–22 px high at 390 px; running text in the drawing · SCREENS-PUBLISH #15 J19 · 2026-10-21

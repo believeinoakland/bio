@@ -37817,6 +37817,408 @@
    "en": "Store this login",
    "protected": false,
    "note": "DEC-403: B458 1: the button giving a login ahead of any refused request (capturecredentialsupply, no request to retry)"
+  },
+  {
+   "key": "screen.registers.title",
+   "en": "Public registers",
+   "protected": false,
+   "note": "DEC-407: h1"
+  },
+  {
+   "key": "screen.registers.crumb",
+   "en": "Public registers",
+   "protected": false,
+   "note": "DEC-407: crumb"
+  },
+  {
+   "key": "screen.registers.intro",
+   "en": "Registers that public offices keep, which your team brings in whole, searches, cites and watches. None of it needs the assistant.",
+   "protected": false,
+   "note": "DEC-407: subtitle"
+  },
+  {
+   "key": "screen.registers.way.watching",
+   "en": "The public registers your team brings in and watches.",
+   "protected": false,
+   "note": "DEC-407: row on the watching screen"
+  },
+  {
+   "key": "screen.registers.way.add",
+   "en": "Public registers your team brings in and watches.",
+   "protected": false,
+   "note": "DEC-407: row on the Add surface"
+  },
+  {
+   "key": "screen.registers.way.link",
+   "en": "See public registers",
+   "protected": false,
+   "note": "DEC-407: link text"
+  },
+  {
+   "key": "screen.registers.way.tip",
+   "en": "Public registers · registers that public offices keep, brought in whole, searched, cited and watched by a number.",
+   "protected": false,
+   "note": "DEC-407: hover card of the link"
+  },
+  {
+   "key": "screen.registers.held.head",
+   "en": "Registers your team holds",
+   "protected": false,
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.held.row",
+   "en": "From {source} · brought in {date} · {rows} rows · next check {date}",
+   "protected": false,
+   "note": "DEC-407: a register line under its name"
+  },
+  {
+   "key": "screen.registers.held.list",
+   "en": "List the registers your team holds",
+   "protected": false,
+   "note": "DEC-407: button (registerlist)"
+  },
+  {
+   "key": "screen.registers.held.none.head",
+   "en": "When your team holds none",
+   "protected": false,
+   "note": "DEC-407: fold"
+  },
+  {
+   "key": "screen.registers.held.none",
+   "en": "Your team holds no register yet. Bring one in below.",
+   "protected": false,
+   "note": "DEC-407: the empty list"
+  },
+  {
+   "key": "screen.registers.import.head",
+   "en": "Bring in a register",
+   "protected": false,
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.import.about",
+   "en": "Your team's Civicsmith keeps the whole register as a capture, with its source and the date. It reads the register in the background, and the team is told in the queue when it is ready.",
+   "protected": false,
+   "note": "DEC-407: what an import does"
+  },
+  {
+   "key": "screen.registers.import.which",
+   "en": "Which register",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.import.which.netfile",
+   "en": "Oakland campaign finance (NetFile)",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.calaccess",
+   "en": "California campaign finance (CAL-ACCESS)",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.fec",
+   "en": "Federal campaign finance (FEC)",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.form700",
+   "en": "Economic interest filings (Form 700)",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.lobbyists",
+   "en": "Oakland lobbyist directory",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.licenses",
+   "en": "State license files",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.officers",
+   "en": "Company officers",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.which.other",
+   "en": "Another register: give its address below",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.import.address",
+   "en": "The register's address, if it is not in the list",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.import.address.help",
+   "en": "Where the register is published. Leave it empty to bring in the one chosen above.",
+   "protected": false,
+   "note": "DEC-407: help"
+  },
+  {
+   "key": "screen.registers.import.go",
+   "en": "Bring in this register",
+   "protected": false,
+   "note": "DEC-407: button (registerimport)"
+  },
+  {
+   "key": "screen.registers.search.head",
+   "en": "Search the registers",
+   "protected": false,
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.search.who",
+   "en": "Person or organization",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.min",
+   "en": "Smallest amount",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.max",
+   "en": "Largest amount",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.from",
+   "en": "From this date",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.to",
+   "en": "Up to this date",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.in",
+   "en": "In which register",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.search.in.all",
+   "en": "Every register your team holds",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.search.go",
+   "en": "Search",
+   "protected": false,
+   "note": "DEC-407: button (registersearch)"
+  },
+  {
+   "key": "screen.registers.search.row",
+   "en": "{register} · row {row} · brought in {date}",
+   "protected": false,
+   "note": "DEC-407: a result line under the name"
+  },
+  {
+   "key": "screen.registers.search.cite",
+   "en": "Cite this row",
+   "protected": false,
+   "note": "DEC-407: button (registerrowcite)"
+  },
+  {
+   "key": "screen.registers.search.cite.note",
+   "en": "A cited row carries its register, its source and the date it was brought in.",
+   "protected": false,
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.watch.head",
+   "en": "Watched filers, licenses and dockets",
+   "protected": false,
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.watch.row",
+   "en": "{register} · watched since {date} · last changed {date}",
+   "protected": false,
+   "note": "DEC-407: a watch line under its number"
+  },
+  {
+   "key": "screen.registers.watch.row.quiet",
+   "en": "{register} · watched since {date} · no change yet",
+   "protected": false,
+   "note": "DEC-407: a watch line when nothing has changed"
+  },
+  {
+   "key": "screen.registers.watch.stop",
+   "en": "Stop watching",
+   "protected": false,
+   "note": "DEC-407: button (registerwatchstop)"
+  },
+  {
+   "key": "screen.registers.watch.none.head",
+   "en": "When your team watches none",
+   "protected": false,
+   "note": "DEC-407: fold"
+  },
+  {
+   "key": "screen.registers.watch.none",
+   "en": "Your team watches no filer, license or docket yet.",
+   "protected": false,
+   "note": "DEC-407: the empty list"
+  },
+  {
+   "key": "screen.registers.watch.in",
+   "en": "In which register",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.watch.in.court",
+   "en": "Federal court dockets (CourtListener)",
+   "protected": false,
+   "note": "DEC-407: option"
+  },
+  {
+   "key": "screen.registers.watch.number",
+   "en": "Filer number, license number or docket number",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.watch.go",
+   "en": "Watch it",
+   "protected": false,
+   "note": "DEC-407: button (registerwatch)"
+  },
+  {
+   "key": "screen.registers.watch.told",
+   "en": "You are told once in your queue when it changes.",
+   "protected": false,
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.alerts.head",
+   "en": "Alerts from outside services",
+   "protected": false,
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.alerts.courtlistener",
+   "en": "CourtListener sends an alert when a federal court docket changes. It needs your team's own key, and a few alerts are free.",
+   "protected": false,
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.alerts.key",
+   "en": "Your team's CourtListener key",
+   "protected": false,
+   "note": "DEC-407: field"
+  },
+  {
+   "key": "screen.registers.alerts.key.help",
+   "en": "It is sealed when you give it and never shown again, to you or to anyone.",
+   "protected": false,
+   "note": "DEC-407: help"
+  },
+  {
+   "key": "screen.registers.alerts.connect",
+   "en": "Connect CourtListener",
+   "protected": false,
+   "note": "DEC-407: button (alertconnect)"
+  },
+  {
+   "key": "screen.registers.alerts.county",
+   "en": "A county court such as Alameda's cannot be watched automatically. It is re-checked when a member asks.",
+   "protected": false,
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.ask.head",
+   "en": "Ask across the registers",
+   "protected": false,
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.ask.title",
+   "en": "Ask in plain words, and have matches and watches proposed",
+   "protected": false,
+   "note": "DEC-407: the paused part"
+  },
+  {
+   "key": "screen.registers.ask.later",
+   "en": "Comes after the alpha",
+   "protected": false,
+   "note": "DEC-407: the paused part"
+  },
+  {
+   "key": "screen.registers.ask.field",
+   "en": "Ask in plain words",
+   "protected": false,
+   "note": "DEC-407: field (paused)"
+  },
+  {
+   "key": "screen.registers.ask.go",
+   "en": "Ask across the registers",
+   "protected": false,
+   "note": "DEC-407: button (registerask, paused)"
+  },
+  {
+   "key": "screen.registers.ask.match",
+   "en": "Propose matches to your team's subjects",
+   "protected": false,
+   "note": "DEC-407: button (registermatch, paused)"
+  },
+  {
+   "key": "screen.registers.ask.propose",
+   "en": "Propose watches",
+   "protected": false,
+   "note": "DEC-407: button (registerwatchpropose, paused)"
+  },
+  {
+   "key": "screen.registers.ask.note",
+   "en": "This needs the assistant, which comes after the alpha, once your team can use more than one AI provider and it has been tested.",
+   "protected": false,
+   "note": "DEC-407: note"
+  },
+  {
+   "key": "screen.registers.never.head",
+   "en": "What these registers never do",
+   "protected": false,
+   "note": "DEC-407: section"
+  },
+  {
+   "key": "screen.registers.never.watch",
+   "en": "A watch is always of a named filer, license or docket, never a search for a person.",
+   "protected": false,
+   "note": "DEC-407: guardrail"
+  },
+  {
+   "key": "screen.registers.never.keep",
+   "en": "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published.",
+   "protected": false,
+   "note": "DEC-407: guardrail"
+  },
+  {
+   "key": "screen.registers.never.fec",
+   "en": "The Federal Election Commission's donor data may not be used to ask donors for money or for commercial purposes.",
+   "protected": false,
+   "note": "DEC-407: guardrail"
   }
  ],
  "rewrite": {

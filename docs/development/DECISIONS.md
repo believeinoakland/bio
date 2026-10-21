@@ -6278,3 +6278,48 @@ decided: 2026-10-21 · Bob
 the design: in the alpha, unassisted: a member imports a public register whole (NetFile, CAL-ACCESS, FEC; Form 700; Oakland's lobbyist directory; state licence files; company officers), each import a capture with its source and date, processed in the background; searches it and cites a row; watches a named filer, licence or docket and is told once when it changes; receives outside alerts where a service offers them (CourtListener for federal dockets), the rest re-checked or followed by hand. After the alpha, assisted (plain-words asking across registers, proposed matches to the team's subjects, proposed watches), once support for several AI providers (N1220) is in, tested and judged functional. The guardrails K1484, K1485, K1492, K1493 and the FEC's purpose limit stand. Both parts drawn now, on the screen `registers` (the next DEC).
 reasoning recorded in: this entry; `docs/architecture/BIO_Capability_Ladders_v0_1.md` (Status "Amended 2026-10-21 (DEC-406)", §5A.5 "RULED 2026-10-21"); the screens page's gap "Public registers and outside alerts".
 owed: BOB: the alpha's plan carries the unassisted part (requirements: register imports as background captures, a register's rows searchable and citable, a watch by named identifier with a queue item on change, outside alerts through monitoring, the guardrails' tests), with the people and money groundwork it needs, and its effect on the alpha's date reported to Bob; the assisted part placed after the alpha with N1220. Design: the screen `registers` drawn (the next DEC).
+
+### DEC-407 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-406: registers drawn now)
+for: design
+question: How is DEC-406 drawn?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: a new screen `registers`, "Public registers" (rail Add; journeys 10, 12, 14), reached from Add's capture screen and from Watched addresses: "Registers your team holds" (source, when brought in, rows, next check; an empty line); "Bring in a register" (the known registers, or another by its address; kept whole as a capture with its source and date, read in the background, the team told in the queue when it is ready); "Search the registers" (person or organization, amounts, dates, register; "Cite this row"); "Watched filers, licenses and dockets" (watch by number, "Stop watching", told once in the queue on change); "Alerts from outside services" (CourtListener for federal dockets with the team's own sealed key; a county court such as Alameda's re-checked when a member asks); "Ask across the registers", drawn paused as "Comes after the alpha" (plain-words asking, proposed matches to subjects, proposed watches); "What these registers never do" (a watch is of a named filer, license or docket, never a search for a person; no home address or phone number kept, neither ever published; the FEC's donor-data limit). Acts all owed to DEC-406: registerimport, registerlist, registersearch, registerrowcite, registerwatch, registerwatchstop, alertconnect; paused: registerask, registermatch, registerwatchpropose. 67 keys `screen.registers.*`.
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-refs.js`, `screens/words-drawn.src.py` (rows noted "DEC-407").
+owed: BOB: the ops above (names are proposals; BOB's own names replace them) with DEC-406's requirements.
+
+### DEC-408 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob, on DEC-407's guardrail line)
+for: Bob
+question: May a home address or phone number be kept at all, and where?
+why it is Bob's: doctrine on personal facts (K1485, K1493).
+provisional: DEC-407 drew "An import never keeps a home address or a phone number, and neither is ever published."
+alternative: none put.
+recommendation: none put (Bob's own clarification).
+reversal cost: low.
+response: "I believe the proper limitations are that a home address or phone number can be kept by a member in their notes - but is never published."
+decided: 2026-10-21 · Bob
+the design: consistent with K1485 and K1493, which stand: an import never bulk-copies home addresses or phone numbers (K1485); a member may keep one in their own notes; it is never published (K1493), and it is removed on a lawful demand the place's profile lists (California Gov. Code 7928.215: an official's home address or phone number, within 48 hours; K1493). `registers`' line now reads "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published." (key screen.registers.never.keep).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: BOB: the publication filter's test that a home address or phone number in a member's note never reaches a published surface, with N1259.
+
+### DEC-409 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's direction: "The support for the assistant doing research on people, events, money, donations, and other dimensions should be robust ... The UX for members doing similar investigations should also be rich, powerful, efficient, and robust.")
+for: Bob
+question: What does "follow the money, and every other dimension" commit Civicsmith to, and when?
+why it is Bob's: doctrine, requirements and release scope (P17).
+provisional: Capability Ladders §2 CONNECTIONS (K1469, K1487): one `explore` across every owner, cited and graded, weakest hop governing, bounded; screens People, Timeline, Money trail, Explore connections, Find drawn; people and money layers largely unbuilt (the 2026-10-05 study).
+alternative: B, combined walks in the alpha too; C, "Follow from here", combined walks and the assistant all in the first beta.
+recommendation: A: the alpha carries each dimension's tools, the registers and "Follow from here"; the first beta the combined walks and the assistant's research.
+reversal cost: medium (scope of the alpha and the first beta).
+response: "Sure, efficiency is counted in steps, but if the first way a connection is made across multiple hops may not be the most direct. Just as in math a problem can be 'simplified', the system should include support for recognizing all meaningful connections, though also be able to find the must [most] direct path. The choice is A today, but B in the first beta."
+decided: 2026-10-21 · Bob
+the design: as folded in Capability Ladders §2 CONNECTIONS "RULED 2026-10-21": the doctrine (following the trail in every dimension, singly and in combination, is the core, for members and the assistant through the same explorer); the alpha: each dimension's tools, the registers, "Follow from here" from any item into any dimension in place; the first beta: combined walks across dimensions and the assistant's research across every dimension (measured as DEC-405); between two things, every meaningful connection within bounds and the most direct path (fewest hops, then the strongest weakest hop, then date; never a judgment score), and a member's step-by-step chain "simplified" by showing a shorter cited path beside it; robust measured (a real Oakland matter per combined walk, K4354's 2 seconds, acts counted against a target set before the walk).
+reasoning recorded in: this entry; `docs/architecture/BIO_Capability_Ladders_v0_1.md` (Status "Amended 2026-10-21 (DEC-409)"; §2 CONNECTIONS "RULED 2026-10-21").
+owed: BOB: the alpha's plan (with N1259) carries "Follow from here" across the dimension screens and `explore`'s all-connections and most-direct-path reads with the simplified-chain offer, and their tests; the first beta's (with N1258) the combined walks and the assistant's research across dimensions, with the step targets and Oakland test matters. Design: "Follow from here", all connections, most direct path and "a shorter path" drawn (the next DEC).

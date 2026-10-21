@@ -5616,6 +5616,69 @@
     }
    ],
    "journeys": []
+  },
+  {
+   "id": "registers",
+   "name": "Public registers",
+   "frame": "working",
+   "purpose": "The public registers the team holds (campaign finance, economic interests, lobbyists, licenses, company officers), bringing one in whole, searching and citing a row, watching a named filer, license or docket, outside alerts, and the assisted asking that comes after the alpha.",
+   "acts": [
+    {
+     "op": "owed:registerimport DEC-406",
+     "label": "Bring in a register",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerlist DEC-406",
+     "label": "List the registers the team holds",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerrowcite DEC-406",
+     "label": "Cite a row as evidence",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerwatch DEC-406",
+     "label": "Watch a filer, license or docket by its number",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerwatchstop DEC-406",
+     "label": "Stop watching",
+     "status": "owed"
+    },
+    {
+     "op": "owed:alertconnect DEC-406",
+     "label": "Connect an outside alert service",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerask DEC-406",
+     "label": "Ask across the registers",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registermatch DEC-406",
+     "label": "Propose matches to the team's subjects",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerwatchpropose DEC-406",
+     "label": "Propose watches",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    10,
+    12,
+    14
+   ]
   }
  ]
 }

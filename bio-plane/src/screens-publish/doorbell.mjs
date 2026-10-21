@@ -54,7 +54,7 @@ export const DOORBELL = Object.freeze({
   acts: [
     {
       // R9: "Hand it over": the file, the note and the secret phrase, sent with no credential; refusals by their words.
-      op: "knock", label: "act.knock.label.doorbell",
+      op: "knock", label: "act.knock.label.doorbell", rereads: [],
       refusals: { KNOCK_EMPTY: "screen.doorbell.refused.empty", KNOCK_PAYLOAD_TOO_LARGE: "screen.doorbell.refused.large",
         KNOCK_ENVELOPE_TOO_LARGE: "screen.doorbell.refused.large", KNOCKER_SECRET_WEAK: "screen.doorbell.refused.weak",
         RATE_IP: "screen.doorbell.refused.rate", RATE_GLOBAL: "screen.doorbell.refused.rate", BAD_CONTENT: "screen.doorbell.refused.content",
@@ -89,7 +89,7 @@ export const DOORBELL = Object.freeze({
     {
       // R56: "Send my answer": agree, or take the agreement back; with no answer chosen nothing is sent. Every failure is one
       // refusal (`SECRET_NOT_RECOGNISED`), drawn in its fold with the rate sentences.
-      op: "knockerconsent", label: "act.knockerconsent.label.doorbell",
+      op: "knockerconsent", label: "act.knockerconsent.label.doorbell", rereads: [],
       refusals: { SECRET_NOT_RECOGNISED: function (r, cs) { return cs.w("screen.doorbell.consent.refused.secret"); },
         RATE_IP: function (r, cs) { return cs.w("screen.doorbell.consent.refused.rate") + " " + cs.w("screen.doorbell.consent.refused.rate.next"); },
         RATE_GLOBAL: function (r, cs) { return cs.w("screen.doorbell.consent.refused.rate") + " " + cs.w("screen.doorbell.consent.refused.rate.next"); } },

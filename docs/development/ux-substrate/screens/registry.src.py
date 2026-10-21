@@ -194,6 +194,10 @@ screen('leads', 'Leads', 'working', 'Write down something you were told, record 
 screen('watching', 'Watched addresses', 'working', 'Every address the team watches, pausing the watching, what is due and the sweeps.',
   [('monitoring','List every watched address'),('monitorpause','Pause or resume the watching'),('monitorslate','Read what is due'),('sweeps','See the sweeps'),('owed:namedrequests DEC-382','List every named request'),('owed:namedrequestset DEC-382','Ask for this to be gathered on a schedule'),('owed:sweepset DEC-382','Define a sweep'),('owed:sweepratify DEC-382','Ratify or stop a sweep'),('writinghelp','Help me write this')], [])
 
+# DEC-407: the screen registers (DEC-406): public registers brought in whole, searched, cited and watched; outside alerts; the assisted part comes after the alpha.
+screen('registers', 'Public registers', 'working', 'The public registers the team holds (campaign finance, economic interests, lobbyists, licenses, company officers), bringing one in whole, searching and citing a row, watching a named filer, license or docket, outside alerts, and the assisted asking that comes after the alpha.',
+  [('owed:registerimport DEC-406','Bring in a register'),('owed:registerlist DEC-406','List the registers the team holds'),('owed:registersearch DEC-406','Search the registers'),('owed:registerrowcite DEC-406','Cite a row as evidence'),('owed:registerwatch DEC-406','Watch a filer, license or docket by its number'),('owed:registerwatchstop DEC-406','Stop watching'),('owed:alertconnect DEC-406','Connect an outside alert service'),('owed:registerask DEC-406','Ask across the registers'),('owed:registermatch DEC-406','Propose matches to the team\'s subjects'),('owed:registerwatchpropose DEC-406','Propose watches')], [10,12,14])
+
 # DEC-242 (S4): themes on the document, the question and Find (connections R39 to R46).
 _THEME_ACTS = {'document': [('themeplace','Place it in a theme'),('themepropose','Propose it for a theme'),('themewithdraw','Reject a hunch, with a reason')],
   'question': [('themeplace','Place a passage in a theme')], 'finder': [('themeread','Filter by theme')]}

@@ -14,13 +14,13 @@ import assert from "node:assert/strict";
 
 const { browser } = await import("../../../src/journey-check/run.mjs");
 const { escapedOnPage, escapedIn, withoutPseudo, pseudoBody, pseudoValue, pseudoString, pseudoJson, DATA } = await import("../../../src/journey-check/pseudo.mjs");
-const { interfacePage } = await import("../../../src/interface-shell/index.mjs");
+const { interfaceScript } = await import("../../../src/interface-shell/index.mjs");
 const { ASSET_FILES } = await import("../../../src/interface-assets/index.mjs");
 const { SCREENS: ENTRY } = await import("../../../src/screens-entry/index.mjs");
 const { SCREENS: SETTINGS } = await import("../../../src/screens-settings/index.mjs");
 const { SCREENS: DAILY } = await import("../../../src/screens-daily/index.mjs");
 const { WORD_ROWS, word } = await import("../../../src/setup-words/index.mjs");
-const { boot, ok, served, ADMIN } = await import("../interface-shell/harness.mjs");
+const { boot, ok, ADMIN } = await import("../interface-shell/harness.mjs");
 const { world } = await import("../file-safety/fixture.mjs");
 const { default: OAKLAND } = await import("../../../../jurisdictions/profiles/oakland-alameda.mjs");
 
@@ -74,8 +74,13 @@ const pseudoAnswers = (table) => Object.fromEntries(Object.entries(table).map(([
 /* A screen drawn by the interface's own page under the pseudo rows, then read in a browser with the interface's stylesheets.
    `plane` is the table the screen reads; `pseudoed: false` leaves the answers as the plane gave them. */
 async function drawn(path, { plane = PLANE, pseudoed = true, beside = "", at = "</main>", entered = [] } = {}) {
-  const html = await pseudoBody(served(interfacePage(SCREENS)));
-  const p = await boot({ screens: SCREENS, html, plane: pseudoed ? pseudoAnswers(plane) : plane, path });
+  /* interface-shell R1, R2: the page loads the shell's script from an external element, so the words are in that script, which is
+     made pseudo here and run by the page (the harness's own run is off) */
+  const script = await pseudoBody(interfaceScript(SCREENS));
+  const p = await boot({ screens: SCREENS, plane: pseudoed ? pseudoAnswers(plane) : plane, path, run: false });
+  const base = Date.now();
+  const FakeDate = class extends Date { static now() { return base + p.clock.at(); } };
+  new Function("window", "setTimeout", "clearTimeout", "Date", script)(p.win, p.clock.setTimeout, p.clock.clearTimeout, FakeDate);
   await p.settle(120);
   const markup = p.root().innerHTML.replace(at, `${beside}${at}`);
   const ctx = await B.newContext({ viewport: { width: 1280, height: 900 } });
