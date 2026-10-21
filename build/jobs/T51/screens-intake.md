@@ -292,3 +292,7 @@ Merged `tranche/T51` first. Every cause below has a test seen failing first with
 
 **Not mine, reported:** the C17 door half (control-plane R117); the document page's and Find's names after reading (R54); the 2 s bar for Add, Held and Inbox is the performance lane's re-measure; `plane/t47.test.mjs` imports `screens-wizards` it does not declare (architecture red on the tranche tip, not mine); coverage reds of agent-harness, agent-runner, control-plane, entities, installer-steps, interface-shell, journey-check and op-grades are theirs (new ids their jobs will name).
 
+
+**Suites (B22):** screens-intake 241 of 241 (was 204); screens-inquiry 447 of 447; control-plane 333 of 340, the seven reds (`t46-e2e` R75, `t46-app` R81, `t47-e2e` R81 x3, `t36-door` R61/R29, `totality` R2/R41) are red on `origin/tranche/T51` too, run there, not mine. Checks: format 0, architecture 0, coverage 55 of 55, words 0, ownership 0 (the whole-product run's reds are other modules'). I own no census op to declare.
+
+Size (session_0173nrFoFHQot9QMnmzzRxdP): test runs 9, module lines 2620
