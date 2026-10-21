@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01RJ9Po6vVrCTxSZ695UZtwZ · depth 2 · WAITING ON BOB (J16) · handled B14
+**Status** · session_01RJ9Po6vVrCTxSZ695UZtwZ · depth 2 · WORKING · handled B14
 
 ## J1 · QUESTION
 
