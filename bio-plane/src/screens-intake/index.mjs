@@ -76,6 +76,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.later.head", "screen.capture.later.about", "screen.capture.later.waiting", "screen.capture.later.captured", "screen.capture.later.turned",
     /* R2 (T51 fix round 3, C17): whether a project-less upload was read */
     "screen.document.text.label", "screen.document.text.full", "screen.document.text.none", "screen.document.text.read", "screen.document.text.unread", "capture.picture.unread",
+    /* R49, R2, N4 (T51 fix round 4; DEC-412): the rows the design wrote for the filing of a found document, the none of "requests for later" and the next step of an unread upload */
+    "screen.capture.address.filedhere", "screen.capture.later.none", "screen.document.text.unread.next",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",
@@ -95,6 +97,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.untitled", "screen.held.vouchbad", "screen.held.vouchmissing", "screen.held.waiting",
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
     "screen.capture.openit", "screen.capture.openit.help", "state.item.review.name", "screen.held.name",
+    "screen.capture.address.filedhere", "shell.unread",
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",
