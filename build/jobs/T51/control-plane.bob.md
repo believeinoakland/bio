@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -152,3 +152,7 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/control-plane/`
 **Added at K4380 (CAUSE-SHELL-3 merged):** the interface page now loads the shell as one external versioned script (`/app/shell-<version>.js`, `integrity`, `<meta name="cs-version">`, no inline script, no nonce; interface-shell R1, R2; answer-envelope R6). Your `t46-app`, `t46-e2e`, `t47-e2e` (three) look for `<script nonce=` or inline shell data in the served page: make them current against the external script (`interfaceScript`), test files only, the requirement unchanged.
 
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B19 · ANSWER · re J14
+
+Your three R117 readings are accepted as built (K4389). The two getters: plane R74 (new), PLANE #47 opened now to add extraction and projectRoster to the of handed to controlPlaneOwnerOps; it merges before you, and I CHANGE you then. Until it merges your real-plane tests of R117 and R118 are red by name; build your arms against the getters as named.

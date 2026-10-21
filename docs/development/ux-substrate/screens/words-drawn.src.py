@@ -7104,7 +7104,7 @@ W.append(dict(key='screen.registers.ask.propose', en='Propose watches', protecte
 W.append(dict(key='screen.registers.ask.note', en='This needs the assistant, which comes after the alpha, once your team can use more than one AI provider and it has been tested.', protected=False, note='DEC-407: note'))
 W.append(dict(key='screen.registers.never.head', en='What these registers never do', protected=False, note='DEC-407: section'))
 W.append(dict(key='screen.registers.never.watch', en='A watch is always of a named filer, license or docket, never a search for a person.', protected=False, note='DEC-407: guardrail'))
-W.append(dict(key='screen.registers.never.keep', en='An import never keeps a home address or a phone number, and neither is ever published.', protected=False, note='DEC-407: guardrail'))
+W.append(dict(key='screen.registers.never.keep', en='An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published.', protected=False, note='DEC-407: guardrail'))
 W.append(dict(key='screen.registers.never.fec', en="The Federal Election Commission's donor data may not be used to ask donors for money or for commercial purposes.", protected=False, note='DEC-407: guardrail'))
 
 keys = [x['key'] for x in W]
