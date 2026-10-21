@@ -1,6 +1,6 @@
 /* plane R74 (T51 fix round 3; C5, C14; K4389; control-plane R117, R118): the door's owner getters hand `extraction` and
    `projectRoster` to `controlPlaneOwnerOps`, each asked only when its op is served. Driven through the real store: the
-   door's `readheld` arm reaches extraction's one instance, and `projectlist` reads project-roster's one instance with
+   door's `readheldfor` arm reaches extraction's one instance, and `projectlist` reads project-roster's one instance with
    review's shared-drafts reader handed in. Each spy replaces a method on the one instance the store's getter returns. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -10,12 +10,12 @@ import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 
 const SHA = "b".repeat(64);
 
-test("R74 (fix round 3, C5; K4389; extraction R80, control-plane R117): through the real store, the door's readheld arm reaches extraction's one instance; a different op does not", async () => {
+test("R74 (fix round 3, C5; K4389; extraction R80, control-plane R117): through the real store, the door's readheldfor arm reaches extraction's one instance; a different op does not", async () => {
   const x = await store();
   const ex = extractionOf(x.ctx);
   const held = [];
   ex.readHeld = async (args) => { held.push(args); return { ok: true, read: false, why: "NO_HOME" }; };
-  const answer = JSON.parse(JSON.stringify(await x.call(`/readheld?sha=${SHA}`)));
+  const answer = JSON.parse(JSON.stringify(await x.call(`/readheldfor?sha=${SHA}`)));
   assert.equal(held.length, 1, "the arm called extraction's readHeld once, on the one instance");
   assert.equal(held[0].sha, SHA);
   assert.equal(answer.ok, true, JSON.stringify(answer));
@@ -44,7 +44,7 @@ test("R74 (fix round 3; K4389) control: the store's getters are lazy, so a store
   const ex = extractionOf(x.ctx);
   let read = 0;
   ex.readHeld = async () => { read += 1; return { ok: true, read: false }; };
-  x.routes("/readheld?sha=" + SHA, null);
+  x.routes("/readheldfor?sha=" + SHA, null);
   x.routes("/projectlist?viewer=member:ann", null);
   assert.deepEqual([called, read], [0, 0], "building the route maps calls neither");
 });
