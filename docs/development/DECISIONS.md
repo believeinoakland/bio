@@ -6217,3 +6217,18 @@ decided: 2026-10-21 · the design session (P17)
 the design: `request`'s dead end now reads "If you know which office holds them, name it yourself below." and opens "Name the office yourself": the agency and office, where requests go, the law it goes under (which sets the due date), and "Use this office" (`entitycreate`, now on `request`'s acts), which saves the office for the team, marked "Named by a member" until an administrator confirms it, and chooses it for this request. BOB owes: `entitycreate` admitted to a member from `request` for an office, with the mark, and the administrator's confirm on Places and offices.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-402").
 owed: BOB: as above; B (federal offices built in) placed when time and tokens allow.
+
+### DEC-403 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B458, K4356, K4357: T51 fix round 3, operations a member still cannot finish)
+for: design
+question: How does a member see and give a stored login for a site, and where are the subject-naming and hand-flag controls drawn?
+why it is Bob's: it is not (P17): drawing beneath his rulings (DEC-381).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) `capture` gains "Logins for sites", standing on its own, not only under a refused request: "Show the stored logins" (`capturecredentiallist`), each login's site and line "{kind} · {scope} · given by {member}, {date}" with "Withdraw this login" (`capturecredentialwithdraw`); the empty line "No login is stored yet. Give one below when a site asks for it."; "Give a login for a site": the site (host), what it asks for (the three kinds: login, user-agent, other), who may use it (member, project, team), username, secret, "Store this login" (`capturecredentialsupply`). (2) Both are drawn since DEC-394 (U429, merged K4311) on `document`: in "People and organizations it names", the fold "A name the record did not match" (`resolvetestify`); and the fold "This contradicts another document" (`contradictionflag`, registered since DEC-396). The live copy lacks them because no screen job has built them yet.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/words-drawn.src.py` (rows noted "DEC-403").
+owed: none.
