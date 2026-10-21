@@ -160,10 +160,11 @@ export const members = {
     // redraw at once and send nothing (interface-shell R90): ticking "look after the team's Civicsmith" draws what it hands over and the
     // invitation waits for the administrator's answer (R72; DEC-384 T-05)
     const add = cs.act("memberadd");
+    // the shell reads the members' handles when a screen first asks for a name it does not hold: ask for the administrators' once the roster is
+    // drawn, so a proposal's sentence ("still to endorse: ...") names them by handle when the act is answered (R2; interface-shell R111, R112)
+    if (admin) for (const m of roster) if (m.role === "admin" && m.member_id) cs.memberName(String(m.member_id));
     if (add) {
-      const shown = (ui.invite ? `<div class="mk-msg" data-shown="invite"><p>${W(S + "invite.shown", { handle: ui.invite.memberId, expires: D(ui.invite.expires) })}</p><p><code>${E(ui.invite.link)}</code></p></div>` : "")
-        // C89: a proposal the plane recorded, and who must still endorse it, is done and said so (not drawn as a refusal)
-        + (ui.proposed ? `<div class="mk-msg" data-shown="proposed"><p>${W("refusal.CONSENSUS_REQUIRED", { awaiting: (Array.isArray(ui.proposed.awaiting) ? ui.proposed.awaiting : []).map((x) => cs.memberName(String(x))).join(", ") })}</p></div>` : "");
+      const shown = (ui.invite ? `<div class="mk-msg" data-shown="invite"><p>${W(S + "invite.shown", { handle: ui.invite.memberId, expires: D(ui.invite.expires) })}</p><p><code>${E(ui.invite.link)}</code></p></div>` : "");
       const caps = [...vocabulary, "administer"];
       let picked = Array.isArray(ui.inviteCaps) ? ui.inviteCaps : ["contribute"];
       // "Go back" is answered here: the grant is unticked and the question forgotten
@@ -278,8 +279,11 @@ export const members = {
   },
 
   acts: [
-    { op: "memberadd", rereads: ["roster", "recovery"],
-      async send(view, el, cs) {
+    // C89 (interface-shell R112): beyond the second administrator an invitation is a proposal the plane records and answers `CONSENSUS_REQUIRED`
+    // with who must still endorse it; that answer is this act's success, drawn by the shell as done with the members' handles
+    { op: "memberadd", rereads: ["roster", "recovery"], successCodes: ["CONSENSUS_REQUIRED"],
+      refusals: { CONSENSUS_REQUIRED: function (refusal, cs) { return cs.w("refusal.CONSENSUS_REQUIRED", { awaiting: (Array.isArray(refusal.awaiting) ? refusal.awaiting : []).map(function (x) { return cs.memberName(String(x)); }).join(", ") }); } },
+      send(view, el, cs) {
         const vocabulary = view.me && Array.isArray(view.me.vocabulary) && view.me.vocabulary.length ? view.me.vocabulary : ["contribute", "publish", "create_projects"];
         const memberId = String(cs.value("mi-id") || "").trim(), cover = String(cs.value("mi-cover") || "").trim();
         if (!memberId || !cover) return { refuse: "screen.members.invite.incomplete" };
@@ -288,34 +292,13 @@ export const members = {
         if (caps.indexOf("administer") >= 0 && !(view.ui && view.ui.adminOk === "yes")) { cs.set("inviteCaps", caps); return null; }
         const body = { memberId, cover, capabilities: caps.filter((v) => v !== "administer") };
         if (caps.indexOf("administer") >= 0) body.role = "admin";
-        // C89: beyond the second administrator an invitation is a proposal the plane records and answers as owing endorsements. That is done,
-        // not a refusal: it is sent here, said as done, and the roster read again to show the proposed member. Any other answer is the shell's.
-        const listed = view.data && view.data.roster && view.data.roster.state === "ok" && view.data.roster.value && Array.isArray(view.data.roster.value.members) ? view.data.roster.value.members : [];
-        if (body.role === "admin" && listed.filter((m) => m.role === "admin" && m.status === "active").length >= 2) {
-          const ans = await cs.call("memberadd", { body });
-          const r = ans && ans.result !== undefined ? ans.result : ans;
-          const reread = async () => { const l = await cs.call("memberlist"); const lr = l && l.result !== undefined ? l.result : l; if (lr && Array.isArray(lr.members)) view.data.roster = { state: "ok", value: lr, refusal: null }; };
-          if (r && r.ok === false && r.proposed === true && (r.code === "CONSENSUS_REQUIRED" || r.reason === "CONSENSUS_REQUIRED")) {
-            await reread();
-            cs.set("adminOk", undefined);
-            cs.set("proposed", { memberId, awaiting: Array.isArray(r.awaiting) ? r.awaiting : [] });
-            return null;
-          }
-          // accepted outright: what the act's `done` and re-reads do, done here, since the request is not sent twice
-          if (r && r.ok === true) {
-            await reread();
-            cs.set("adminOk", undefined);
-            if (r.invite) cs.set("invite", { memberId: r.memberId, expires: r.expires, link: (view.origin || "") + "/#invite=" + encodeURIComponent(r.invite) });
-            return null;
-          }
-        }
         return { body };
       },
       done(view, answer, cs) {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         if (a && a.invite) cs.set("invite", { memberId: a.memberId, expires: a.expires, link: (view.origin || "") + "/#invite=" + encodeURIComponent(a.invite) });
-        if (view.ui && view.ui.proposed) cs.set("proposed", null);
-        // the next invitation asks again
+        // the next invitation asks again, and its fields are empty: the button stays drawn, so the shell's sentence for the answer stands beside it
+        cs.fill("mi-id", ""); cs.fill("mi-cover", "");
         if (view.ui && view.ui.adminOk !== undefined) cs.set("adminOk", undefined);
       } },
     { op: "membercaps", rereads: ["roster"],
@@ -326,7 +309,9 @@ export const members = {
       } },
     { op: "memberset", rereads: ["roster", "recovery"],
       send(view, el) { return { body: { memberId: el.dataset.member, status: el.dataset.status } }; } },
-    { op: "adminendorse", rereads: ["roster", "recovery"],
+    // the endorsement that leaves others still to endorse is `CONSENSUS_REQUIRED`, this act's success (interface-shell R112; C89)
+    { op: "adminendorse", rereads: ["roster", "recovery"], successCodes: ["CONSENSUS_REQUIRED"],
+      refusals: { CONSENSUS_REQUIRED: function (refusal, cs) { return cs.w("refusal.CONSENSUS_REQUIRED", { awaiting: (Array.isArray(refusal.awaiting) ? refusal.awaiting : []).map(function (x) { return cs.memberName(String(x)); }).join(", ") }); } },
       send(view, el) { return { body: { memberId: el.dataset.member } }; },
       done(view, answer, cs) {
         const a = answer && answer.result !== undefined ? answer.result : answer;
