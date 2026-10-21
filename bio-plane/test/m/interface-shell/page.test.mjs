@@ -3,7 +3,7 @@
 import test from "node:test";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
-import { interfacePage, NONCE_SLOT, PATHS, checkScreens } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, scriptPath, NONCE_SLOT, PATHS, checkScreens } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { randomBytes } from "node:crypto";
@@ -23,14 +23,15 @@ const handlers = (html) => {
 };
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "withheld", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 
-test("R1 R56 one document: <html lang> en until the member's language is read, interface-assets' civicsmith.css and then shell.css linked before the shell's own style, the icon sprite absent (icons referenced from /app/assets/icons.svg), one script with the nonce slot, no member text outside the words", async () => {
+test("R1 R56 one document: <html lang> en until the member's language is read, interface-assets' civicsmith.css and then shell.css linked before the shell's own style, the icon sprite absent (icons referenced from /app/assets/icons.svg), one external script at the version's address with no nonce slot, no member text outside the words", async () => {
   const html = interfacePage(ALL);
   assert.match(html, /^<!doctype html>\n<html lang="en">/);
   assert.deepEqual([...html.matchAll(/<link\b[^>]*>/g)].map((m) => m[0]), ['<link rel="stylesheet" href="/app/assets/civicsmith.css">', '<link rel="stylesheet" href="/app/assets/shell.css">']);
   assert.ok(html.indexOf("shell.css") < html.indexOf("<style>"), "both before the shell's own style");
   assert.doesNotMatch(html, /<symbol\b|<svg[^>]*>\s*<defs/, "no inline sprite");
   assert.equal(scripts(html).length, 1);
-  assert.equal(scripts(html)[0].trim(), `nonce="${NONCE_SLOT}"`);
+  assert.match(scripts(html)[0].trim(), new RegExp(`^src="${scriptPath("0").replace(/[.]/g, "\\.")}" integrity="sha256-`));
+  assert.equal(html.includes(NONCE_SLOT), false, "no nonce slot (R1, fix round 3)");
   const before = documentOf(html);
   assert.deepEqual(textNodes(before.body).map((t) => t.data.trim()).filter(Boolean), [], "no text but the script's words");
   assert.equal(/<title>([^<]*)<\/title>/.exec(html)[1], "", "even the title is drawn from the words");
@@ -51,10 +52,10 @@ test("R1 no secret: the page holds no session token or key, and the session it r
 
 test("R2 no resource on another origin in any src, href, @import, url() or fetch, and no typeface but interface-assets' (the page loads none itself)", async () => {
   const html = interfacePage(ALL);
-  for (const m of html.replace(/<script[\s\S]*<\/script>/, "").matchAll(/\b(?:src|href)\s*=\s*"([^"]*)"/g)) assert.match(m[1], /^\/(?!\/)/, m[0]);
+  for (const m of html.matchAll(/\b(?:src|href)\s*=\s*"([^"]*)"/g)) assert.match(m[1], /^\/(?!\/)/, m[0]);
   assert.doesNotMatch(html, /@import|@font-face|url\(\s*["']?(?:https?:|\/\/)/i);
   /* the words are data (a word may tell a member what an address starts with); the program and the screens name no origin */
-  assert.doesNotMatch(scriptOf(html).replace(/"words":\[[\s\S]*?\],"ops":/, '"words":[],"ops":'), /https?:\/\/|["'`]\/\//, "the script names no other origin");
+  assert.doesNotMatch(scriptOf(html, ALL).replace(/"words":\[[\s\S]*?\],"ops":/, '"words":[],"ops":'), /https?:\/\/|["'`]\/\//, "the script names no other origin");
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: { image: IMAGE } });
   for (const el of p.root().querySelectorAll("[href], [src]")) assert.match(el.getAttribute("href") || el.getAttribute("src"), /^\/(?!\/)/);
   assert.ok(p.requests.length > 3);
@@ -65,8 +66,8 @@ test("R2 no resource on another origin in any src, href, @import, url() or fetch
 
 test("R2 no inline event-handler attribute, no javascript: address and no script made from a string, in the page or anything it draws", async () => {
   const html = interfacePage(ALL);
-  assert.deepEqual(handlers(html.replace(/<script[\s\S]*<\/script>/, "")), []);
-  assert.doesNotMatch(scriptOf(html), /\beval\s*\(|new\s+Function\b|setTimeout\(\s*["'`]|setInterval\(\s*["'`]|javascript:/);
+  assert.deepEqual(handlers(html), []);
+  assert.doesNotMatch(scriptOf(html, ALL), /\beval\s*\(|new\s+Function\b|setTimeout\(\s*["'`]|setInterval\(\s*["'`]|javascript:/);
   for (const path of ["/app", "/app/held", "/app/document/c1", "/app/members", "/app/settings"]) {
     const p = await boot({ screens: ALL, path, plane: { image: IMAGE, heldcaptures: ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }] }) } });
     assert.deepEqual(handlers(p.root().innerHTML), [], path);
@@ -75,21 +76,16 @@ test("R2 no inline event-handler attribute, no javascript: address and no script
   assert.equal(handlers('<a href="javascript:x">a</a><b onclick="x">b</b>').length, 2);
 });
 
-/* One response as the door makes it (answer-envelope R6, which is not in this module's uses; its own test and control-plane's
-   end-to-end suite serve this page through the real door): a fresh 128-bit nonce, its policy, every slot filled. */
-const door = (html) => { const nonce = randomBytes(16).toString("base64"); return { policy: `default-src 'self'; script-src 'nonce-${nonce}'`, body: html.split(NONCE_SLOT).join(nonce) }; };
-
-test("R2 served as the door serves it, every script element carries the response's nonce, the policy names it, two responses differ and no slot is left", async () => {
-  const [a, b] = [door(interfacePage(ALL)), door(interfacePage(ALL))];
-  assert.notEqual(a.policy, b.policy);
-  for (const { policy, body } of [a, b]) {
-    const nonce = /script-src 'nonce-([^']+)'/.exec(policy)[1];
-    assert.equal(body.includes(NONCE_SLOT), false);
-    const s = scripts(body);
-    assert.equal(s.length, 1);
-    for (const attrs of s) assert.equal(/\bnonce="([^"]*)"/.exec(attrs)[1], nonce);
-  }
-  assert.equal(interfacePage(ALL).split(NONCE_SLOT).length - 1, 1, "the slot is nowhere but in the script's nonce");
+test("R2 (fix round 3) served as the door serves it, the page holds one script element loading the shell's versioned script and no inline script; two responses are the same page and the script is the same bytes (nothing per response: no nonce, no slot)", async () => {
+  const [a, b] = [interfacePage(ALL, { version: "r1" }), interfacePage(ALL, { version: "r1" })];
+  assert.equal(a, b);
+  const s = scripts(a);
+  assert.equal(s.length, 1);
+  assert.match(s[0], new RegExp(`\\bsrc="${scriptPath("r1")}"`));
+  assert.equal(/<script\b[^>]*>[^<]/i.test(a), false, "no inline script");
+  assert.equal(a.includes(NONCE_SLOT) || /\bnonce=/.test(a), false);
+  assert.equal(interfaceScript(ALL), interfaceScript(ALL));
+  assert.notEqual(scriptPath("r1"), scriptPath("r2"), "a new release has a new address");
 });
 
 test("R21 interfacePage throws, naming the screen, for a screen whose id is not in SCREEN_REGISTRY, an act naming an op OPS does not hold, or an op neither the registry's for that screen nor a named re-point; a valid set passes", () => {
@@ -135,7 +131,7 @@ test("R23 no place is named in the shell's behaviour or words: its words, paths 
   const PLACES = /Oakland|California|Alameda|Coliseum|Lakeshore|San Francisco|Berkeley|United States|\bCity of\b/;
   for (const [k, en] of WORD_ROWS.filter(([k]) => /^(shell|rail|tab)\./.test(k))) assert.doesNotMatch(en, PLACES, k);
   assert.doesNotMatch(JSON.stringify(PATHS), PLACES);
-  assert.doesNotMatch(scriptOf(interfacePage([])), PLACES);
+  assert.doesNotMatch(scriptOf(interfacePage([]), []), PLACES);
   /* control: the pattern finds one */
   assert.match("the Coliseum lease", PLACES);
 });

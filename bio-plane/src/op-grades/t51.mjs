@@ -18,6 +18,7 @@ export const T51_NON_ACTS = {
   bundlehistory: "read: a bundle's revisions and states, newest first (`promotion` R58); writes nothing",
   checkpointsdue: "read: the plan checkpoints due, answered to a viewer who sees the plan (`action-plans` R17); writes nothing",
   clocksrunning: "read: the clocks a member has running, counted (`action-clocks` R24); writes nothing",
+  remindersfor: "read: an action's reminders, each with its entry, its day, who set it and its state; writes nothing (action-clocks R26)",   // fix round 3, B5
   entityidonly: "read: entities by id, with no further fields (`entities` R57); writes nothing",
   entitysimilar: "read: entities similar to a name, checked before another is added (`entities` R60); writes nothing",
   heldat: "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record",
@@ -26,4 +27,22 @@ export const T51_NON_ACTS = {
   subjectsnamed: "read: the subjects a name matches, for Find's subject route (`entities` R59); writes nothing",
   versioncompare: "read: two versions of a basis compared (`basis-versions` R55); writes nothing",
   rulefields: "read: the fields a drafted rule's entry carries for a section, with their kinds and choices (`local-facts` R18); writes nothing",
+};
+
+/* ---- fix round 3 (K4379, K4380; B6, B7): THE THREE MUTATING ACTS' GRADES, each by its owner's weight, with its NON_ACTS publication row.
+ * `scanmirror` (`file-safety` R49; an administrator asks the scanner for new signatures; moves no bundle) is the substrate; `officeconfirm`
+ * (`entities` R64; an administrator confirms an office a member named) weighs Reversible; `captureseenin` (`capture` R101; a member records
+ * once that she filed a held document in a project; a repeat changes nothing, nothing takes it back, no reason is asked) is an observation.
+ * The sentences are the owners' descriptions, word for word (R50 (b): a disagreement refuses the registration). ---- */
+export const T51_RUNGS = {
+  officeconfirm: "reversible",   // entities R64 · R3: an administrator's confirmation takes back nothing a member said; the mark returns by naming again
+};
+export const T51_RUNG_ABSENT = {
+  scanmirror: { ground: "substrate", is: "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle" },
+  captureseenin: { ground: "observational", is: "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)" },
+};
+export const T51_ACT_NON_ACTS = {
+  scanmirror: "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle",
+  officeconfirm: "office-directed: an administrator confirms an office a member named; clears the mark and records who confirmed it and when, and changes no name, alias or note (entities R64)",
+  captureseenin: "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)",
 };

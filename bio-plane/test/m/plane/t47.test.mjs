@@ -21,6 +21,8 @@ import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 import { draftOnObject } from "../../../src/plane/ask.mjs";
+import { interfaceScript, interfaceScriptHash } from "../../../src/interface-shell/index.mjs";
+import { GUIDE as WIZARD_GUIDE } from "../../../src/screens-wizards/index.mjs";
 
 /* Instants and minted ids differ between two objects; everything else must not. */
 const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
@@ -215,21 +217,32 @@ test("R48 (T47; N1002; DEC-201; control-plane R81, R82): the page the plane's Wo
     assert.match(res.headers.get("content-type") || "", /^text\/html/, path);
     pages[path] = await res.text();
   }
-  let screens = 0;
+  /* interface-shell R1, R2: the page loads the shell's script from one external element, its integrity the hash of that script;
+     the renders are drawn by that script, so they are looked for in it (answer-envelope R6 may stamp the element with a nonce) */
+  const all = [];
   for (const mod of SCREEN_MODULES) {
     let SCREENS;
     try { ({ SCREENS } = await import(`../../../src/${mod}/index.mjs`)); } catch (e) { assert.fail(`${mod}: ${String(e && e.message).split("\n")[0]}`); }
     assert.ok(Array.isArray(SCREENS) && SCREENS.length > 0, `${mod} offers screens`);
-    for (const s of SCREENS) {
-      screens++;
-      for (const [path, page] of Object.entries(pages))
-        assert.ok(page.includes(String(s.render)), `${path}: ${mod}'s ${s.id} is not drawn by the page`);
-    }
+    all.push(...SCREENS);
+  }
+  const script = interfaceScript(all, { guide: WIZARD_GUIDE });
+  const hash = interfaceScriptHash(all, { guide: WIZARD_GUIDE });
+  for (const [path, page] of Object.entries(pages)) {
+    const tags = [...page.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]);
+    assert.equal(tags.length, 1, `${path}: one script element`);
+    assert.match(tags[0], /^<script (nonce="[^"]*" )?src="\/app\/shell-[^"]+\.js" integrity="sha256-[A-Za-z0-9+/=]+">$/, path);
+    assert.ok(page.includes(`integrity="${hash}"`), `${path}: the page's script is the shell's script over these screens`);
+  }
+  let screens = 0;
+  for (const s of all) {
+    screens++;
+    assert.ok(script.includes(String(s.render)), `${s.id}'s render is not in the shell's script the page loads`);
   }
   assert.ok(screens >= SCREEN_MODULES.length);
-  /* negative control: a render no module offers is not in the page */
+  /* negative control: a render no module offers is not in the shell's script */
   const probe = function render() { return "zz-probe-screen-t47"; };
-  assert.equal(pages["/app"].includes(String(probe)), false);
+  assert.equal(script.includes(String(probe)), false);
 });
 
 /* ===== R45 (T47; K3150; control-plane R71): the owner map's action-clocks getter ===== */

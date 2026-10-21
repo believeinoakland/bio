@@ -4430,6 +4430,15 @@
      "modules": [
       "filings"
      ]
+    },
+    {
+     "op": "entitycreate",
+     "label": "Use this office",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "op-declarations"
+     ]
     }
    ],
    "journeys": [
