@@ -937,6 +937,8 @@ const NON_ACTS_DATA = {
   capture: "substrate: byte movement, content-addressed",
   acquire: "substrate: the fetch layer (M2')",
   linkproject: "substrate: admits an observed link as an edge, keyed by capture",
+  /* K4279 (R5): an administrator-session act, not object-directed; the sentence is corpus-export's declared row, word for word (R50 (b)). */
+  export: "writes an export manifest of what is already there",
   /* Capture-directed: their subject is a capture sha, not a bundle's state.
      REC-38: NOT acts here, and their member-facing METADATA is published all
      the same — `affordances`' CAPTURE_ACTS carries the label, decorateAct adds the
