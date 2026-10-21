@@ -23,3 +23,7 @@ CHANGE (K4280): CAUSE-TESTS-T51 is merged into tranche/T51 (its control-plane re
 ## B3 · RESUME
 
 RESUME (K4282): your RUNNING time (02:14) has passed and nothing has been pushed since 01:54. If your affordances run finished, read its result, run op-grades' and control-plane's suites (at most two at once), and post COMPLETE with the counts and your Size line. If a test is red, say which and why in a QUESTION.
+
+## B4 · ANSWER · re J1
+
+ANSWER (re J1; K4282). (a) for the T41 R12 check and op-declarations' R12 R24 check only where they assert the stale rule you changed (a NON_ACTS key carried ungated is not stale): bring them to the new R12 text. Everything else red on your baseline is not yours: BOB traces it (it was green at 639fa02cf3, so a later merge caused it). Then post COMPLETE with the counts.
