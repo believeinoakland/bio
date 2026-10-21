@@ -1036,8 +1036,8 @@ console.log("\n--- B8 · R23: a photograph of a printed sentence, transcribed in
     t(`R23 ${format}: 200 ok:true, with the fields R8 names and R25's legibility`, [status, body.ok, keys(body)],
       [200, true, ["cap", "confidence_floor", "deferred", "engine", "grain", "image", "legibility", "measured_by", "model", "notes", "ok", "pages", "version"]]);
     t(`R25 ${format}: the legibility the real engine rated, in the real bundle (words, their confident share, the engine's own ratings)`,
-      [body.legibility.words > 0, body.legibility.confident_words <= body.legibility.words,
-       body.legibility.share === Math.round((body.legibility.confident_words / body.legibility.words) * 100) / 100], [true, true, true]);
+      [body.legibility?.words > 0, body.legibility?.confident_words <= body.legibility?.words,
+       body.legibility?.share === Math.round((body.legibility?.confident_words / body.legibility?.words) * 100) / 100], [true, true, true]);
     t(`R23 ${format}: R8's constants hold for a picture as for a page`,
       [body.engine, body.version, body.model, body.cap, body.grain, body.deferred, body.measured_by === MEASURED_BY],
       ["tesseract-wasm", "0.11.0", "tessdata_fast/eng", "C", "line", [], true]);
