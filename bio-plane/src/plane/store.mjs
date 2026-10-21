@@ -84,6 +84,7 @@ import { investigationOf } from "../investigation/index.mjs";
 import { investigationOps } from "../investigation/ops.mjs";
 import { publishScheduleOps } from "../publish-schedule/index.mjs";
 import { controlPlaneOwnerOps } from "../control-plane/owner-ops.mjs";
+import { ownerGettersOf } from "./owners.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
 import { queueOf, Queue } from "../queue/index.mjs";
@@ -904,17 +905,7 @@ export class Store extends DurableObject {
          each owner's one instance on this storage through getters, each asked only when its op is served. */
       /* (T42; N839; K2656) `caseAccount`, the plane's one case-account instance (R38), for control-plane R71's account
          ops; never case-authoring's pass-through. */
-      ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAccount: () => caseAccountOf(ctx),
-                                review: () => reviewOf(ctx), legEarning: () => legEarningOf(ctx), capture: () => captureOf(ctx),
-                                steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
-                                questionExplorer: () => questionExplorerOf(ctx),
-                                /* (T47; K3150; control-plane R71) `clockpropose`, served through action-clocks' one instance */
-                                actionClocks: () => actionClocksOf(ctx),
-                                /* (T51; K4098; control-plane R110) `approvedunsent` (filings R53) and `checkpointsdue` (action-plans R17) */
-                                filings: () => filingsOf(ctx), actionPlans: () => actionPlansOf(ctx),
-                                /* (T51 fix round 3; K4389; control-plane R117, R118; R74) `readHeld` (extraction R80) and
-                                   `projectList`'s `sharedDraftsOf` (project-roster R42), each asked only when its op is served */
-                                extraction: () => extractionOf(ctx), projectRoster: () => projectRosterOf(ctx) }, url, body),
+      ...controlPlaneOwnerOps(ownerGettersOf(ctx, env), url, body),   /* the getters are owners.mjs' (K4435) */
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };
