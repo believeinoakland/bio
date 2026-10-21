@@ -87,6 +87,22 @@ export const action = Object.freeze({
         return { ord: ord, c: c, kind: kind };
       });
     },
+    // C66: the reply as recorded, line by line, each by the design's label for it; a part the entry does not carry is not drawn. The
+    // member's words and the office's are record data (escaped), the kind and the decision by the design's key where it holds one.
+    shownBack: function (cs, c) {
+      const has = function (v) { return typeof v === "string" ? v.trim() !== "" : v !== undefined && v !== null; };
+      const line = function (labelKey, value) { return '<span class="meta" data-recorded="' + labelKey.split(".").pop() + '">' + cs.w(labelKey) + ": " + value + "</span>"; };
+      const word = function (fam, token) { return cs.w(fam + token) !== cs.esc(fam + token) ? cs.w(fam + token) : cs.esc(token); };
+      const out = [];
+      if (has(c.account)) out.push(line("screen.action.reply.account", cs.esc(c.account)));
+      if (has(c.stage)) out.push(line("screen.action.what.kind.of.reply", word("screen.action.reply.stage.", c.stage)));
+      if (has(c.outcome)) out.push(line("screen.action.what.the.office.decided", word("screen.action.reply.outcome.", c.outcome)));
+      if (has(c.exemptions)) out.push(line("screen.action.the.exemptions.the.office.cites", cs.esc(c.exemptions)));
+      if (has(c.due_by)) out.push(line("screen.action.the.office.says.it.will.answer", cs.date(c.due_by) + (has(c.due_cite) ? " · " + cs.esc(c.due_cite) : "")));
+      if (has(c.quote_amount)) out.push(line("screen.action.the.amount.quoted", cs.esc(String(c.quote_amount)) + (has(c.quote_currency) ? " " + cs.esc(c.quote_currency) : "")
+        + (has(c.quote_basis) ? " · " + cs.esc(c.quote_basis) : "")));
+      return out.join("");
+    },
     // The states an action may move to from where it stands (actions' state edges).
     moves: function (from) {
       return { planned: ["active", "abandoned"], active: ["awaiting_response", "resolved", "abandoned"],
@@ -290,6 +306,9 @@ export const action = Object.freeze({
             + cs.field("pressure-note-" + c.ord, "screen.action.pressure.note") + cs.act("actionpressure", { data: { ord: String(c.ord) } }) : "";
         return cs.row(cs.date(c.at), cs.w(c.direction === "no_response" ? "screen.action.noresponse" : "screen.action.received")
           + (c.party ? " · " + cs.esc(c.party) : "") + (c.medium ? " · " + cs.esc(c.medium) : "") + (pr ? '<span class="meta">' + pr + "</span>" : "")
+          // C66: what was recorded with the reply, shown back as the record holds it: the words, the kind, the decision, the exemptions
+          // cited, the date the office said it would answer by, and a quoted fee
+          + P.shownBack(cs, c)
           // R55: a recorded entry's minutes, said once beside it with the meeting and its day
           + (e.minutes && e.minutes.meeting ? '<span class="meta" data-minutes="' + c.ord + '">' + cs.w("screen.action.minutes.says") + " · " + cs.esc(e.minutes.meeting)
             + (e.minutes.date ? " · " + cs.date(e.minutes.date) : "") + "</span>" : ""), "", mark);
@@ -366,7 +385,7 @@ export const action = Object.freeze({
       const guideAct = cs.can("actioncorrespond") ? cs.act("procedureguides", {}) : "";
       const guideSec = gd.state === "failed" ? tips("screen.action.guide.heading", cs.state({ state: "failed", refusal: gd.refusal }), "screen.action.guide.tip1", "screen.action.guide.tip2")
         : guideRows || guideAct ? tips("screen.action.guide.heading", '<p class="mk-small">' + cs.w("screen.action.profilefact.from") + " · " + cs.w("screen.action.guide.order") + " · " + cs.w("guide.procedure.legalinfo") + "</p>"
-          + (guideRows ? cs.sheet(guideRows) : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"
+          + (guideRows ? cs.sheet(guideRows) : gd.state === "ok" ? '<p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>" : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"
           + (guideAct ? '<div class="mk-acts">' + guideAct + "</div>" : ""), "screen.action.guide.tip1", "screen.action.guide.tip2") : "";
 
       // R16: the law it goes under: the laws a member stated (each by level and citation, with the window the group's places

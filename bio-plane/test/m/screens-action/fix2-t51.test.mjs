@@ -3,7 +3,7 @@
    shown back; "Show the routes" says when none). Behaviour at the interface only; every sentence is read by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, crumbs, text, ok, W, D, DATA_PLANE, PLAN, PLAN_ID, ACTION_ID, PROJECT, DET } from "./page.mjs";
+import { open, main, crumbs, text, ok, W, D, DATA_PLANE, PLAN, PLAN_ID, ACTION, ACTION_ID, ROUTES, PROJECT, DET } from "./page.mjs";
 
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
@@ -39,4 +39,29 @@ test("R1 (C63): a plan's checks name the option or the phase by its place in the
   assert.ok(strip.includes(W("action-plans.says.phase_checkpoint_leads", { id: "Phase 1", miss: W("screen.plan.judged.not_met") })));
   // control: the check whose sentence needs a fact the data does not carry (the day the phase can start) is drawn in the plan's own words
   assert.ok(strip.includes("opt-1's regulated date falls before phase p1 can start (2026-12-01)"));
+});
+
+const sectionOf = (p, headingKey) => main(p).querySelectorAll("section.cs-section").find((s) => text(p, s.querySelector("h2")) === W(headingKey));
+
+test("R5, R38 (C66): a reply's recorded words, kind, decision, exemptions, answer-by date and quoted fee are shown back beside it; control: an entry that carries none shows none", async () => {
+  const corr = ACTION.correspondence.map((c) => (c.ord === 2 ? { ...c, account: "They will send the logs in two parts.", stage: "fee_estimate", outcome: "partial",
+    exemptions: "Gov. Code 7927.705", due_by: "2026-11-20", due_cite: "Gov. Code § 7922.535(b)", quote_amount: "1083.00", quote_currency: "USD", quote_basis: "copying" } : c));
+  const p = await open(ROUTES.action, { ...DATA_PLANE, action: ok({ ...ACTION, correspondence: corr }) });
+  const row = main(p).querySelectorAll(".cs-row").map((r) => text(p, r)).find((t) => t.includes(W("screen.action.received")));
+  for (const s of ["They will send the logs in two parts.", W("screen.action.reply.stage.fee_estimate"), W("screen.action.reply.outcome.partial"), "Gov. Code 7927.705",
+    D("2026-11-20"), "Gov. Code § 7922.535(b)", "1083.00 USD", "copying"]) assert.ok(row.includes(s), s);
+  for (const k of ["screen.action.reply.account", "screen.action.what.kind.of.reply", "screen.action.what.the.office.decided", "screen.action.the.amount.quoted"]) assert.ok(row.includes(W(k)), k);
+  // control: the plain fixture's reply carries none of it
+  const q = await open(ROUTES.action, DATA_PLANE);
+  assert.equal(main(q).querySelectorAll("[data-recorded]").length, 0);
+});
+
+test("R31 (C66): 'Show the routes' says when the kind holds none; control: a kind with routes lists them and says no such thing", async () => {
+  const none = await open(ROUTES.action, { ...DATA_PLANE, procedureguides: ok({ ok: true, kind: "records_request", guides: [], withheld: [], label: {} }) });
+  const sec = sectionOf(none, "screen.action.guide.heading");
+  assert.ok(sec, "the section is drawn");
+  assert.ok(sec.querySelector('.cs-state[data-state="empty"]'), "and says there is nothing");
+  const some = await open(ROUTES.action, DATA_PLANE);
+  assert.ok(!sectionOf(some, "screen.action.guide.heading").querySelector('.cs-state[data-state="empty"]'));
+  assert.ok(text(some, sectionOf(some, "screen.action.guide.heading")).includes("Ask in writing, naming the records"));
 });
