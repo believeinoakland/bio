@@ -252,3 +252,4 @@ On the live copy: `op=reading&sha256=<the project-less photo's sha>` as the memb
 - cause-shell-3 (K4380): `shell.keyfile.none`, `.unreadable`, `.empty` (no stand-in English: a drawn module may not use `localize`; the key shows until written).
 - affordances (K4381, J18): stand-ins `act.origins.does`, `act.inboxlist.does`, `act.transcriptions.does`, `act.progressions.does`, `act.remindersfor.does`, `act.moneysets.does`, `act.scanmirror.does`, `act.officeconfirm.does`, `act.captureseenin.does`; `act.contradictionflag.does` to be added to affordances' `reads` (held). Its t36 test asserts these are absent: BOB updates it when the rows land.
 - screens-publish (K4398, J18): `screen.ceremony.conf.row.missing.timestamp`, `.missing.co_archive`, `.done`, `screen.ceremony.registering` (drawn as keys until written).
+- screens-daily (K4399, J16): `screen.home.questions.unknown`, `screen.projects.questions.unknown` (stand-in `screen.matter.unknown`).
