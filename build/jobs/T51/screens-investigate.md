@@ -204,3 +204,8 @@ Reports for BOB: (1) C8's "follow days" box is not in this module (J15). (2) Wor
 Tests: `node --test --test-force-exit test/m/screens-investigate/`: 191 tests, 0 fail after the person control change; with the nine other files that name my module (plane t47/t50, op-declarations t50/t51, interface-shell declared/t50, action-clocks t51, control-plane t46-app, people why): 285 pass, 0 fail. New file fix2.test.mjs (11 tests); seen failing on the old code: all but C7 and C54's (both passed before, as the screen half was already right). Checks: format 0 for my files (one failure is rulings.md K4301, not mine); architecture 0 for my files; coverage screens-investigate not among failures; words 0; ownership 0 failures.
 
 Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 14, module lines 3119
+
+## J17 · COMPLETE
+
+COMPLETE · screens-investigate · CHANGE B19 applied. Merged tranche/T51 (PEOPLE #13, people R9 serves an organisation's name, address and contact facts). C7 proved against it: people's own `orgfacts.test.mjs` (the plane records the three kinds for institution, body, movement and `personAt` reads them back) and my C7 test (the page sends `recordpersonfact` for the three kinds only and draws the recorded fact, no Born/Died/Locality) pass together: 22 pass, 0 fail (with organization.test.mjs). No code change was needed. C7 is now met in full. B18 read: stand-ins kept.
+Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 15, module lines 3119
