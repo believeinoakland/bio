@@ -247,3 +247,15 @@ COMPLETE (SCREENS-SETTINGS #13, fix round 2: B26, with B27 and B28). Tranche mer
 **Tests and checks:** module suite 231 tests, 231 pass, 0 fail. Users (impact.mjs): screens-inquiry + journey-check 411 tests, 3 fail (the pre-existing three); control-plane + plane 394 tests, 3 fail (pre-existing). `checks/run.mjs`: format 0; architecture 0; words 0 (testcopy 0); coverage 7 failures, none in screens-settings. `ownership.mjs`: 28 files, 0 failures.
 
 Size (session_01LsvhfCo9erwiifxJZrNarX): test runs 45, module lines 5223
+
+## J18 · COMPLETE
+
+COMPLETE (re B29): DEC-398 merged; the six stand-ins are replaced by the rows.
+- C88 `screen.group.hosting.now.date` for the founder's record ("Recorded on {date}:"); a named member keeps "Recorded by <handle> on <date>:".
+- C85 `screen.group.export.count.tables.one/.other` beside the records and files of the offered copy.
+- C83 `screen.security.nosignatures.next` under the no-signature state.
+- C86 `screen.group.domain.checked {date, time}` replaces the bare data.
+- C87 `shell.field.needed` replaces `screen.security.config.missing` in every named-box refusal.
+- C91 `screen.watching.purpose` and `screen.leads.purpose` drawn under their doors.
+Tests updated to assert the new keys. Module suite 231 of 231; format, architecture, words 0 failures; ownership 0 failures. Deferred: none. The list of copies keeps its three bare figures (unchanged, outside the cause).
+Size (session_01LsvhfCo9erwiifxJZrNarX): test runs 48, module lines 5230
