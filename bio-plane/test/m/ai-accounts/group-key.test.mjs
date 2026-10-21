@@ -179,8 +179,12 @@ test("R7 (was credentials R35) accountFor: the member's own reference when held 
   w.c.groupKeySwitch({ on: true, by: "second" });
   /* the group key serves only an active member, after their notice */
   assert.deepEqual(shape(await w.c.accountFor({ member: "bob", act: ask("bob") })), refusal("GROUP_KEY_NOTICE_DUE"));
-  for (const m of ["cal", "ghost", "admin"])
+  for (const m of ["cal", "ghost"])
     assert.deepEqual(shape(await w.c.accountFor({ member: m, act: ask(m) })), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"), m);
+  /* the founder, once claimed, is an active member (member-roster R76): her notice first, then the group key */
+  assert.deepEqual(shape(await w.c.accountFor({ member: "admin", act: ask("admin") })), refusal("GROUP_KEY_NOTICE_DUE"));
+  w.c.groupKeyNoticeSeen({ member: "admin", by: "admin" });
+  assert.deepEqual(await w.c.accountFor({ member: "admin", act: ask("admin") }), { ok: true, kind: "apikey", level: "group", key: KEY });
   w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" });
   const served = w.snapshot();
   for (const kind of ["ask", "run", "standing"])
