@@ -163,8 +163,13 @@ export async function open(id, { me, table, subject = null, reachable = false, w
     const before = b.requests.length;
     b.fire(btn, "click");
     await b.settle(80);
-    // an act whose send awaits the browser's own work (the signer's key, WebCrypto) is waited for until it is sent
-    for (let i = 0; i < 200 && wait && !b.requests.slice(before).some((r) => r.op === op); i++) await new Promise((res) => setTimeout(res, 5)).then(() => b.settle(10));
+    // an act whose send awaits the browser's own work (the signer's key, WebCrypto) is waited for until its request is sent,
+    // bounded by time: a fixed number of polls gives up before a slow key is made
+    const until = Date.now() + 20000;
+    while (wait && Date.now() < until && !b.requests.slice(before).some((r) => r.op === op)) {
+      await new Promise((res) => setTimeout(res, 5));
+      await b.settle(10);
+    }
     const ta = doc.getElementById("cs-reason-" + String(ai).replace(":", "-"));
     // a member gives the reason an act asks (interface-shell R107); a test that means to leave it unanswered passes `reason: null`
     const give = reason === undefined ? SHELL_REASON : reason;

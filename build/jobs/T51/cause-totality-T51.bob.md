@@ -15,3 +15,7 @@ You are a **cause job** (P8, mechanics §6a) holding `affordances` and `op-grade
 2. **op-grades R5** (new text on its line): a hand NON_ACTS row for `export`, its sentence exactly the owner's description (corpus-export's declared row), so R50 (b) agrees. Add a test naming R5's new clause.
 
 Read in full: both requirement lines and the requirements they cite (affordances R12; op-grades R5, R13, R17, R49, R50), `unaccounted` in affordances' source, op-grades' NON_ACTS data and its registration (`declared.mjs` `register`), and the tests naming those ids. Run affordances', op-grades' and control-plane's suites (control-plane as the user; #324 must turn green) and `checks/run.mjs`. COMPLETE with the ids met, the suites' counts and the `Size` line. No member operation changes.
+
+## B2 · CHANGE
+
+CHANGE (K4280): CAUSE-TESTS-T51 is merged into tranche/T51 (its control-plane register-declared.mjs registration with op-grades is there). Merge tranche/T51 into your branch now before reproducing #324.
