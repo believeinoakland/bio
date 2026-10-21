@@ -90,7 +90,9 @@ const AS_CAPTURE_MADE_THEM = {
           ["note","TEXT",0,null,0],["contact","TEXT",0,null,0],["received","TEXT",1,null,0],["status","TEXT",1,"'new'",0],["resolved","TEXT",0,null,0],
           ["resolved_by","TEXT",0,null,0],["resolve_reason","TEXT",0,null,0],["knocker_digest","TEXT",0,null,0],["pseudonym","TEXT",0,null,0],
           ["capture_sha","TEXT",0,null,0],["pulled_by","TEXT",0,null,0],["pulled_at","TEXT",0,null,0],["pulled_document","TEXT",0,null,0],
-          ["content_b64","TEXT",0,null,0]],
+          ["content_b64","TEXT",0,null,0],
+          /* R27 (T51): the two columns a knock's stated name and type gained, additive and null on every older row */
+          ["file_name","TEXT",0,null,0],["media_type","TEXT",0,null,0]],
   knock_rate: [["bucket","TEXT",0,null,1],["count","INTEGER",1,null,0]],
   knock_key: [["id","INTEGER",0,null,1],["key_hex","TEXT",1,null,0],["created","TEXT",1,null,0]],
   knocker_key: [["id","INTEGER",0,null,1],["key_hex","TEXT",1,null,0],["created","TEXT",1,null,0]],
@@ -127,10 +129,10 @@ test("R25: a running store's inbox, keys and tally are kept as they are, with no
   old.db.exec(`INSERT INTO inbox (knock_id, sha256, bytes, received) VALUES ('KNOCK-old', '${H("1")}', 1, '2026-01-01T00:00:00Z')`);
   new Doorbell(old, { capture: { env: {} }, record: null }).migrate();
   const cols = old.sql.exec(`PRAGMA table_info(inbox)`).map((r) => r.name);
-  for (const c of ["knocker_digest", "pseudonym", "capture_sha", "pulled_by", "pulled_at", "pulled_document", "content_b64", "resolve_reason"])
+  for (const c of ["knocker_digest", "pseudonym", "capture_sha", "pulled_by", "pulled_at", "pulled_document", "content_b64", "resolve_reason", "file_name", "media_type"])
     assert.ok(cols.includes(c), c);
   assert.equal(old.sql.exec(`SELECT count(*) n FROM inbox`)[0].n, 1, "the row kept");
-  /* the DDL is capture's, unchanged: each of the six tables' columns read as capture made them */
+  /* the DDL is capture's, with R27's two additive columns on the inbox: each of the six tables' columns read as capture made them */
   const viaDoorbell = storage();
   new Doorbell(viaDoorbell, { capture: { env: {} }, record: null }).migrate();
   for (const t of SIX) assert.deepEqual(columns(viaDoorbell, t), AS_CAPTURE_MADE_THEM[t], t);
