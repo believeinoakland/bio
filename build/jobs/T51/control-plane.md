@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01JarNVWj3jh7A31SRkU57RG · depth 2 · COMPLETE · handled B23
+**Status** · session_0141p3Yo3JkgRCshMDkrEkBj · depth 2 · COMPLETE · handled B30
 
 ## J1 · QUESTION
 
@@ -356,3 +356,80 @@ Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 17, module lines 4,103
 ## J19 · COMPLETE · re B23
 
 Re B23: R119 retired, nothing built; merged tranche; t51-routes 5 of 5, R117/R118/R75 tests pass. Complete with what I have; I merged before INTERFACE-SHELL #15 and SCREENS-SETTINGS #15.
+
+## J20 · QUESTION
+
+STEP-0 REPORT, C5a/P8 (and P9's per-op time). Built and pushed (d73153e7cc): R121, the door's clock. Every answer carries `Server-Timing` (the op, then `do-<route>` for each call to the object); an `acquire` that is stopped, or answered 502/504/`STORE_DID_NOT_ANSWER`/`CAPTURE_NOT_KEPT`, carries `timings.door` = `{acquire, reading, promote}` (`{started_ms, elapsed_ms}`, `running: true` while open, `null` if not reached) beside `timings.stages` (`{}` when the object states none). The phases are told by the route the call reaches in the door's own isolate (the plane's door asks the object `acquire`, then `extractread`), so nothing in plane, capture or extraction changes. Tests: `t51-server-timing.test.mjs` (5, red then green); R115's two tests amended. Control-plane suite 358 of 361 (3 reds below).
+
+(1) ROOT CAUSE, from a run, not inferred. L: the real plane object and the real pdf-worker over their service binding, under Miniflare/workerd, the network scripted with the four saved files (govinfo and the IRS), the door's clock on. Phases of one `acquire` (`Server-Timing`; ms):
+| file | acquire (object route) | reading (`extractread`) | total |
+| IRS 140 KB | 79 | 429 | 526 |
+| BUDGET-2025-BUD 2.5 MB | 6,787 (`fetch` stage 6,582: see (c)) | 3,859 | 10,704 |
+| BUDGET-2025-PER 8.8 MB | 681 | 9,645 | 10,380 |
+| BUDGET-2024-APP 15.9 MB | 1,067 | 34,459 | 35,580 |
+The capture is ~1 s (fetch 20-30 ms here, keep 140-230 ms, receipt 1-3 ms); the READING is the slow phase, growing with size. Why the object dies: the reading runs in the object's isolate (tier 1, `extractPdfStructure`). Measured in plain node on the same files: heap grows 109 MB (2.5 MB file), 224 MB (8.8 MB), 108 MB with 17.2 s of CPU (15.9 MB); with V8 held to 110 MB (the isolate's 128 MB less the runtime) the 8.8 MB file dies "JavaScript heap out of memory" and the 2.5 MB one survives with 3x the CPU (GC thrash); at 64 MB both die. So hypothesis H holds: past about 2 MB a PDF's reading exhausts the object's 128 MB (and at 15.9 MB its 30 s CPU), the object is reset, its in-memory stage record is lost (`timings: {}`) and the door sees silence (`STORE_DID_NOT_ANSWER`, or the 25 s bound). Caveat I can state: local workerd enforces neither 128 MB nor the CPU limit and runs the Worker and the object on one thread, so the 25 s timer cannot fire during the object's CPU burst here (the 35 s run answered 200, no 504); the phases and sizes are measured, the cut is production's. Numbers are this container's CPU; the live copy is slower.
+(c) Seen on the way, not mine: the 2.5 MB file's `fetch` stage was 6.6 s right after the IRS file from the same host: the governor's per-host spacing; relevant to host-governor/acquisition (N-slow-refuse). And the earlier "acquire 502 at 60 s" may be the same wait.
+
+(2) Why the tests missed it: scripted store, no real PDF ever read in a real object (class b). Test-gap fix: the real-size files through the real door and objects; I will add them as the failing-first whole-path test once the fix is released (the files are under the scratchpad, not the repo: the 15.9 MB one is too big to commit; tell me if you want them as fixtures or fetched).
+
+P9, bootstrap's 1 s: under L, `bootstrap` is 4 sequential trips to the object (`session`, `doorwindow`, `bootstrap`, `bootstrapfacts`) and 10-30 ms of work on an empty instance; `whoami` is one (`session`). On the live copy `whoami` costs 0.20 s, so each trip is ~0.2-0.25 s and bootstrap's ~1 s is four trips in a row, not work. `session` and `doorwindow` are admission's; `bootstrap`+`bootstrapfacts` are instance-setup's `bootstrapOp` (`setup.mjs`). Fix is one read per load (R122, cause-shell-4 and the screens) and, for instance-setup/admission, asking the trips together. The live number per op arrives with the deploy (`Server-Timing`).
+
+DECISION I NEED (BOB's): release the fix step? My recommendation: yes, RC-R1 (R120: keep first, answer when kept, reading follows by `readHeld`), because the capture alone is ~1 s and the 25 s failure goes. BUT RC-R1 alone is not enough and must not be written as if it were: the follow-on reading of an 8.8 MB or 15.9 MB PDF would still run in the same object, exhaust it and reset it (taking concurrent work with it), so `op=reading` would never become `found`. The reading must be bounded to what an isolate holds: either tier 1 reads page by page and lets go of each page, or a PDF over a stated size is read only through pdf-worker in page ranges, or it is recorded as a failed reading in words ("too large to read here") that C5b's `readheld` can replace later. That is extraction's / pdf-reader's, not mine: please assign it (a new cause, C5d?) and say which, so the whole-path test (three PDFs + the 140 KB through the real door) can go green. Until then my whole-path test for the three files can only assert what RC-R1 gives: answered within 15 s, capture kept, reading `pending`.
+
+## Record: fix round 4 (CONTROL-PLANE #45, session_0141p3Yo3JkgRCshMDkrEkBj, B24)
+
+Work so far (the fix step waits on BOB's release, QUESTION J20).
+
+**Built (pushed).**
+- R121, the door's clock: new `control-plane/phase-clock.mjs`; `planeDoor` reaches the object through a clocked environment, so every answer carries `Server-Timing` (the op, then `do-<route>` per call to the object) and the phases of an `acquire` are told by the route reached (`acquire`, `extractread`) plus the door's own `promote`; an `acquire` answered 502/504/`STORE_DID_NOT_ANSWER`/`CAPTURE_NOT_KEPT` carries `timings.door` beside `timings.stages` (`{}` when the object states none). Test `t51-server-timing.test.mjs` (5), seen red then green; R115's two tests amended (`t51-acquire-timings.test.mjs`).
+- R122 seam test `t51-bootstrap.test.mjs`: Home, Queue and a Project each send one `bootstrap` through the real plane and the real page. RED by name until cause-shell-4 (shell) and the screens merge: today Home asks `bootstrap` 2, `groupidentity` 2, `queue` 2.
+- C5b: `readHeldAfterAcquire` also asks `readHeld` for a multipart `acquire` answered `existed: null` (the register names no row for the whole); test in `r117-held.test.mjs`, red then green. Seam test `t51-held-failed.test.mjs` (the walker's chain through the real plane: 33 MiB PDF in 5 parts, reading fails for want of the whole, the original bytes put under their digest, promoted by the capture screen, the address captured again): RED by name at "the reading has its text now" until extraction's R80 (replace a failed reading once) merges.
+
+**Step 0, C5a/P8 (numbers; L = real plane and pdf-worker under Miniflare, network scripted with the saved files).**
+| file | acquire ms | reading (`extractread`) ms | total ms |
+| IRS 140 KB | 79 | 429 | 526 |
+| BUDGET-2025-BUD 2.5 MB | 6,787 (fetch 6,582: governor spacing after the previous file from the same host) | 3,859 | 10,704 |
+| BUDGET-2025-PER 8.8 MB | 681 | 9,645 | 10,380 |
+| BUDGET-2024-APP 15.9 MB | 1,067 | 34,459 | 35,580 |
+Tier 1 alone in node: heap +109 MB (2.5 MB), +224 MB (8.8 MB), +108 MB and 17.2 s CPU (15.9 MB); with V8 held to 110 MB the 8.8 MB file dies out of memory, at 64 MB the 2.5 MB one too. So the reading, not the capture, is the slow phase and it exhausts the object's 128 MB past about 2 MB. Local workerd enforces neither the memory nor the CPU limit and runs Worker and object on one thread, so the 504 itself is not reproduced locally.
+`bootstrap`: four sequential trips to the object (`session`, `doorwindow`, `bootstrap`, `bootstrapfacts`), 10-30 ms of work locally; on the live copy about 0.2-0.25 s a trip.
+P (read-only, smoke copy): INFO-2026-0042 is `INFO-2026-0042-a-pdf-from-www-oaklandca-gov`, capture 7b7db7d3…, 4,259,275 bytes, `whole: true`; `op=reading` for it answers `found: false` (no reading row), not the walker's `found: true, reader_found: false`; INFO-2026-0080 (`f021bf80…`, a photo) also `found: false`.
+
+**Not mine, found.** (a) The 2.5 MB file's 6.6 s `fetch` stage: host-governor spacing (N-slow-refuse's owners). (b) `promoteDocument` (screens-intake) registers a multipart capture's parts, not its whole digest, so `registerHolds(whole)` is false and `acquire` answers `existed: null` on every re-capture of a multipart document; extraction's `readHeld` must find the home by the readings row (it names `bundle_id`) when the register has none. (c) `t47-e2e.test.mjs` R81 "Home draws the group's projects" is red on the tranche tip before my change (projectquestions not asked in 20 s).
+
+Suite: `node --test --test-force-exit bio-plane/test/m/control-plane/`: R121, R117 new tests pass; reds named above (R122 and held-failed by name; t47-e2e R81 before my change).
+
+## Record: fix round 4, after B25-B28 (CONTROL-PLANE #45)
+
+- **R120 (released K4434), the door's part, built.** The door hands an `acquire` handler `ctx.deferReading(document)`: true for a PDF over 2 MB, or for any document once less than 8 s of the 25 s bound is left; a handler's answer `reading_pending: true` is followed by the door registering the digest with the plane's alarm, `POST pendingadd?kind=reading&sha=&store=` (a refusal or silence changes nothing the caller receives). Test `t51-defer-reading.test.mjs` (4, handler scripted as the plane's part). **The plane's/capture's part is not mine**: `plane/door.mjs` builds `readAcquired`, and capture's `captureOp` calls it; they must skip it when `ctx.deferReading(answer.document)` is true and answer `reading_pending: true` with the document and no reading. REPORT J21 asks BOB to give it to PLANE #48 / capture.
+- **Whole path** `t51-large-pdfs.test.mjs`: the four files fetched once into a git-ignored `.cache/` and pinned by SHA-256 (the test fails by name when one cannot be had); asserts answered < 15 s, kept, `reading_pending`, promoted by the capture screen, `op=reading` found with text after the alarm; the 140 KB W-9 answered with its reading. RED by name at "the reading follows" until plane and pdf-reader merge.
+- **`readheld` collision (B28):** the door's own store-internal route is renamed `readheldfor` (arm in `owner-ops.mjs`, call in `index.mjs`), so extraction's member op `readheld` is the one served under that name. plane's `test/m/plane/fix3-r74.test.mjs` asks the old route name `/readheld`: plane's to follow.
+- **R81 e2e (B27):** `t47-e2e.test.mjs` now asserts the count from the roster row, no `projectquestions` read and one `projectlist`; passes.
+- Suite: `node --test --test-force-exit bio-plane/test/m/control-plane/`: 369 tests, 366 pass, 3 red by name: R122 (shell and screens), C5b held-failed (extraction R80), large PDFs (plane, pdf-reader). Checks: format 0, architecture 0, coverage 89 of 89, ownership 0.
+
+## J21 · REPORT
+
+REPORT (control-plane, after B25-B28). Read B25-B28; all applied except what waits on providers.
+Built: R120's door part (`ctx.deferReading(document)` handed to an `acquire` handler; the door registers a `reading_pending` answer's digest with the plane's `pendingadd`); R121 clock (J20); the `readheld` collision fixed by renaming the door's internal route `readheldfor`; R81 e2e moved to the roster row's count; C5b door change (multipart `existed: null` asks readHeld).
+NEEDED FROM OTHERS (smallest things):
+1. PLANE #48 (or capture): the read step must skip `readAcquired` when `ctx.deferReading(answer.document)` is true and answer the document with `reading_pending: true`, no reading. `plane/door.mjs:92-95` builds `readAcquired`; `capture/ops.mjs` `captureOp` calls it. Without this my large-PDF whole-path test stays red at "the reading follows".
+2. PLANE: `test/m/plane/fix3-r74.test.mjs` asks the door's old route `/readheld`; it is now `/readheldfor`.
+3. EXTRACTION: `readHeld` of a multipart capture must find its home by the `readings` row (it names `bundle_id`) when the register has none: `promoteDocument` registers a multipart capture's parts, not its whole digest (so `homeOf(whole)` is null and `acquire` answers `existed: null` on every re-capture). Else my C5b chain stays red.
+Red by name now (3 of 369): R122 (shell, screens), C5b chain (extraction), large PDFs (plane, pdf-reader). I finish when they have merged; send CHANGE then.
+
+## Completion: fix round 4 (CONTROL-PLANE #45, B30)
+
+Merged `tranche/T51` (plane's `deferReading`/`reading_pending`, extraction's `readHeld` and member op, acquisition's keep). Door's internal route is `readheldfor` (extraction's member op `readheld` is the one served); plane `fix3-r74` 3 of 3.
+
+**C5a / P8** (1) Root cause, from the step-0 run (J20; BOB's release B26/B28): the reading, not the capture, is the slow phase (ms, capture/reading: 2.5 MB 6.8 s*/3.9 s; 8.8 MB 0.7/9.6 s; 15.9 MB 1.1/34.5 s; *governor spacing) and it exhausts the object's 128 MB (tier 1 heap +109/+224/+108 MB, 17 s CPU at 15.9 MB). (2) Test gap fixed: real-size files through the real door and objects: `t51-large-pdfs.test.mjs` (four files fetched once, pinned by SHA-256, git-ignored `.cache/`, fails by name when a file cannot be had). (3) Failing-first, seen red then green: `t51-server-timing.test.mjs` (R121), `t51-defer-reading.test.mjs` (R120, door part). The walker's whole path `t51-large-pdfs.test.mjs` was red at "the reading follows" before plane merged; now the 140 KB file answers with its reading and the 2.5 MB file is kept, pending, then read by the alarm; it is RED by name at the 8.8 MB file ("found after the alarm: found false") until PDF-READER #8 (pdf-reader R41, the reading within the object's memory) merges. (4) L: done (numbers above; local workerd enforces neither the memory nor the CPU limit, nor separates Worker and object threads, so the 504 itself is the redeploy's); P: INFO-2026-0042 = `INFO-2026-0042-a-pdf-from-www-oaklandca-gov`, 4,259,275 bytes, whole held, `op=reading` `found: false`; INFO-2026-0080 (photo) `found: false`.
+**C5b** (1) certain as the plan says, plus: a multipart capture is registered by parts, so `acquire` answers `existed: null` and the door asked `readHeld` only for `existed: true`; now also for a multipart `existed: null`. (2) Fixture: the chain `t51-held-failed.test.mjs` through the real plane: a 33 MiB PDF captured, the whole put under its digest, promoted with the reading the round-2 build made (stored shape, R-OLD: since R120 no act of today makes it), captured again: `op=reading` has the text; controls: the replaced reading stands, a reading with text is not replaced. (3) Red before extraction merged (reading unchanged), green now; door-level `r117-held.test.mjs` red then green. (4) P: above; L for a 21 MB reading: the large-PDF test's 15.9 MB file, red until pdf-reader merges.
+**P9** `Server-Timing` on every answer (R121) built and tested; `bootstrap` costs four sequential trips to the object (`session`, `doorwindow`, `bootstrap`, `bootstrapfacts`); R122's test `t51-bootstrap.test.mjs` is RED by name until cause-shell-4 and the screens merge (Home today: `bootstrap`, `groupidentity`, `queue` twice each). B27: `t47-e2e` R81 now asserts the roster row's count, no `projectquestions`, one `projectlist`.
+
+Requirement ids met: R120 (door part), R121, R117 amended, R122 (test written). Suite `bio-plane/test/m/control-plane/`: 369 tests, 367 pass, 2 red by name (R122; the 8.8 MB step of the large-PDF test); plane suite 296 of 297 (R24, the design's); case-authoring 225 of 225. Checks: format 0, architecture 0, coverage 89 of 89, ownership 0, words 0. Impact: control-plane 71/71, plane 43/47 files, case-authoring 1/35.
+Proposed lines for BOB: R120 as written; `readheldfor` as the door's internal route (R117's text names `readheld`).
+
+Size (session_0141p3Yo3JkgRCshMDkrEkBj): test runs 40, module lines 4,265
+
+## J22 · COMPLETE
+
+COMPLETE (CONTROL-PLANE #45, B30). Applied: R121 (clock, Server-Timing), R120 door part (deferReading, pendingadd), C5b (multipart existed:null asks readHeld; chain test green with extraction merged), readheld collision (door's route is `readheldfor`), R81 e2e on the roster row. Suite 367 of 369; the two reds, by name: (1) large-PDF whole path (`t51-large-pdfs.test.mjs`): fw9 and 2.5 MB pass; the 8.8 MB file is not read by the alarm until PDF-READER #8 (pdf-reader R41) merges; (2) R122 `t51-bootstrap.test.mjs` until cause-shell-4 and the screens merge. Plane fix3-r74 3 of 3; plane suite 296/297 (R24, design's); checks all 0. Four fields per cause in the record.
