@@ -216,3 +216,7 @@ FR-02 · bundler is done; pushed to job/T51/bundler (9c76d0cd7f). Applied: R39 (
 ## J10 · REPORT
 
 Ownership check: 1 failure, build/requirements/bundler.md is outside bundler's paths, tests and job record. B8 told me to write the NEW R39 and R40 lines first, so I did (that file's diff is only those two lines and the Status line). If BOB keeps the requirements file as its own, take the two lines from my commit 9c76d0cd7f and drop the file from my branch; nothing else in the ownership check fails.
+
+## J11 · COMPLETE
+
+COMPLETE (B9, CHANGE). R25 over the fleet: agent-runner's expected migrations are now read from its own wrangler.jsonc (v1 AgentRunner, v2 RemoteSession), not a hand list; the binding stays hand-listed. Test-only change, one file. Results: bundler tests 135 pass, 0 fail; checks/run.mjs: format, architecture, words 0 failures; coverage of bundler 40 of 40; ownership 0 failures. Other modules' coverage gaps (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19) are reported, not mine. Record: build/jobs/T51/bundler.md, Size line included. Pushed job/T51/bundler at 3bc868c6db.
