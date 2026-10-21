@@ -24,3 +24,7 @@
 **Tests and checks (tranche tip merged):** `bio-plane/test/m/text-chain/` 130/130; `bio-plane/test/m/reading-pipeline/` 163/163; users: `extraction` 197/197, `content` + `d606-perpage-ocr` + `tier2-wire` 144/144, `events` 93/93. `checks/run.mjs`: architecture 0; words 0; format 1 failure (`build/rulings.md:4346`, K4349, not mine); coverage: reading-pipeline names 35 of 35 live ids (the 16 failures are other modules' not-yet-met ids); ownership: 1 listing, `build/requirements/reading-pipeline.md` (accepted, K4210). Census ops: none owned.
 
 Size (session_016amsJDgJtJwETAspBMXPqe): test runs 11, module lines 3911
+
+## J1 · COMPLETE
+
+C19 met: reading-pipeline R32 'More furniture' (dialogs, gov/cookie banners, share bars, link-only/control-only blocks, skip/leaving notices dropped inside main/article too; region rule kept). furniture.test.mjs 13 tests (9 seen failing first), 3 saved pages (nps, justice, acgov) read without the walker's furniture; reading-pipeline 163/163, text-chain 130/130, users extraction 197, content+2 144, events 93. C25 my part: the reading already carries the page title (walker's index.htm page reads its <title>); cause is acquire answers no reading so screens-intake titleOf falls to file_name 'index.htm'; fixed by acquisition R98 document.title, nothing in my modules. For BOB: literal 'only links' also drops link-cards (e.g. nps 'Plan Your Adventure...'); one-condition narrowing possible. Details in my record. Size (session_016amsJDgJtJwETAspBMXPqe): test runs 11, module lines 3911.
