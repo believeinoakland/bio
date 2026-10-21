@@ -202,7 +202,9 @@ test("R75 end to end: `capture` uploads a file's raw bytes with its statement th
   await quiet(h);
   await answered(h, "select");
   await answered(h, "release");
-  /* the release's answer is ratification's own (R20–R24), relayed by the door as given */
+  /* the release's answer is ratification's own (R20–R24), relayed by the door as given: the read below is sent only once
+     the plane has answered the page's release (before this, the page's request was only sent) */
+  await waitFor(h, () => (finished.release ?? 0) > 0);
   const [rel] = h.byOp("release");
   assert.equal(rel.method, "POST");
   const after = await (await toPlane("/api/?op=heldcaptures&limit=200", { headers: { authorization: `Bearer ${session.t}` } })).json();
