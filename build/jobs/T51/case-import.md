@@ -107,3 +107,15 @@ FR-16 (B3, answered by B4): done, all case-import tests green (155 pass). Requir
 - `setup-words/build.mjs --check`: rows stale, as expected (new ids); no refusal names case-import.
 
 Size (session_01X57Fb2cus6hqAi1q2mRhhA): test runs 14, module lines 2680
+
+## J6 · COMPLETE
+
+B5 (K4259) applied; B6 route taken (stale local branch kept as `stale/case-import-local`), `mail start` done.
+
+**Entry applied.** R31: each finding row of `rerunread` carries `title`, read by `#findingTitle` from the `title` of the imported case file's `findings/<id>/finding.md` front matter through `fileOf` (path from `case-grammar.caseFilePath`); `null` when the file or the title is absent, never the id. No case-level title. Requirement: R31 amended in `build/requirements/case-import.md` itself (no new id), the Status line names it; it stays marked not yet met: T51 as before. Test `R31 each finding row of rerunread carries its title…` in `rerun.test.mjs`, written first and seen failing; control: findings with no title answer null. The fixture's `findingText`/`caseFile` take an optional `titles` (bytes unchanged without it).
+
+**Deferred.** None. **Found in other modules.** Nothing new beyond J5's list. Reds not mine in `checks/run.mjs`: coverage gaps in agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry (R110, R119), screens-intake (R53); words `testcopy` in op-grades `t37.test.mjs:32`. Screens that draw the project page can now read `title`; `setup-words` rows unchanged (no new word id).
+
+**Tests and checks.** `node --test bio-plane/test/m/case-import/`: 156 pass, 0 fail (was 155). format 0 failures; architecture (case-import) 0; coverage (case-import) 33 of 33; words: nothing in case-import; ownership case-import tranche/T51 job/T51/case-import: 1 file changed in the check (requirements file, accepted at the merge, B4), 0 failures. Tranche not merged into my branch (no file I read changed).
+
+Size (session_01Ge3D4wpTN5PSBoW7jivuwt): test runs 4, module lines 2689
