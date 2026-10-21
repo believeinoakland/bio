@@ -173,8 +173,9 @@ export async function pseudoBody(body) {
   });
 }
 
-/* Routes a browser context's documents and fetches of `host` through `fetchCopy` and answers them with pseudo words (R29 (a)): a
-   document's word pairs, and the JSON a screen fetches; all else falls back to the routes before it. */
+/* Routes a browser context's documents, scripts and fetches of `host` through `fetchCopy` and answers them with pseudo words (R29 (a)):
+   the word pairs of a document or of the shell's own script (the page's words stand in that script since interface-shell's fix
+   round 3, R1: the page carries no words itself), and the JSON a screen fetches; all else falls back to the routes before it. */
 export async function pseudoRoute(context, { host, fetchCopy }) {
   await context.route("**/*", async (r) => {
     const req = r.request();
@@ -182,7 +183,8 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const type = req.resourceType();
     if (u.host !== host) return r.fallback();
     const doc = type === "document" && req.method() === "GET";
-    if (!doc && type !== "fetch" && type !== "xhr") return r.fallback();
+    const script = type === "script" && req.method() === "GET";
+    if (!doc && !script && type !== "fetch" && type !== "xhr") return r.fallback();
     const init = { method: req.method(), headers: req.headers() };
     const sent = req.postDataBuffer();
     if (sent && !["GET", "HEAD"].includes(req.method())) init.body = sent;
@@ -193,7 +195,7 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const cookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
     if (cookies.length) headers["set-cookie"] = cookies.join("\n");
     let body = Buffer.from(await res.arrayBuffer());
-    if (doc && /html/.test(ct)) body = Buffer.from(await pseudoBody(body.toString("utf8")));
+    if ((doc && /html/.test(ct)) || (script && /javascript|ecmascript/.test(ct))) body = Buffer.from(await pseudoBody(body.toString("utf8")));
     else if (/json/.test(ct)) body = Buffer.from(pseudoJson(body.toString("utf8")));
     await r.fulfill({ status: res.status, headers, body });
   });
