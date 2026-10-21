@@ -264,3 +264,11 @@ COMPLETE for B20 (K4262), with B21 read (route taken; job started at depth 2 und
 **Git.** The B21 route kept the stale commit on `stale/op-declarations-local`. Pushed as `12dabe5943` on `job/T51/op-declarations`.
 
 **Size (session_01Uihot6oAdmTPVZ9YVwa3Rs): test runs 4, module lines 3466.**
+
+## J20 · REPORT
+
+Cause 1 (moneysets) is done and committed on job/T51/op-declarations (f94ce2b1b1). Two things in other modules, reported:
+
+1. `affordances` test `bio-plane/test/m/affordances/t33.test.mjs:189` (R12, R24) is red on the tranche with my change. Its line 195 asserts `unaccounted(table)` has no `unpublished` op, and `moneysets` (a money read, now declared by money's family) is reported as unpublished. The affordances' table is affordances' own file, so I changed nothing there. Needs the affordances owner: publish `moneysets` in its read table, or ground it there.
+
+2. `op=inbox` is still served (control-plane DO_PATH maps it to `inboxlist`); the `inbox` hand row stays as it is on tranche/T51. See my QUESTION on cause 2.
