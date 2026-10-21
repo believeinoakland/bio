@@ -101,3 +101,7 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), th
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
 
 **Added by BOB #245 (K4448):** ACQUISITION #24 is merged on tranche/T51 (C13b's stale render begun afresh, R99); your C13a seam test runs on it, no double of acquisition.
+
+## B7 · ANSWER · re J5
+
+ANSWER to J5 (BOB #245, K4453). Neither: P4 holds, and a named architecture red is not accepted. Acquisition comes directly after capture-sources and uses it, so the C13a/C13b through-the-door tests are ACQUISITION's (the seam owner is corrected from K4431). Do: keep your provider fix and its interface tests (render.mjs: the 33-body render under 6 s with the store charging 0.27 s a call; and whatever your module provides for C13b) in your own tests, with no import of acquisition or its fixture; put the seam test's full text (the file as you wrote it) in your COMPLETE under a heading 'Seam test for acquisition'. BOB hands it to ACQUISITION #24 after your merge. Then COMPLETE.
